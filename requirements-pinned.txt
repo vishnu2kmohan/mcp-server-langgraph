@@ -16,7 +16,7 @@ PyJWT==2.8.0
 cryptography==42.0.2
 
 # OpenTelemetry Core
-opentelemetry-api==1.22.0
+opentelemetry-api==1.37.0
 opentelemetry-sdk==1.37.0
 
 # OpenTelemetry Instrumentation
@@ -30,7 +30,8 @@ opentelemetry-exporter-otlp-proto-http==1.22.0
 openfga-sdk==0.5.0
 
 # Secrets Management
-infisical-python==2.3.5
+# infisical-python==2.3.5  # Commented out - requires Rust toolchain to build
+# Install manually if needed: pip install infisical-python>=2.1.0
 
 # Utilities
 python-dotenv==1.0.1
