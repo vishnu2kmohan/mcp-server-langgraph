@@ -32,5 +32,5 @@ bandit==1.8.6
 safety==3.0.1
 
 # Type stubs
-types-PyYAML==6.0.12.12
+types-PyYAML==6.0.12.20250915
 types-requests==2.32.4.20250913
