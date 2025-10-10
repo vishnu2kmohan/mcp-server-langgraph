@@ -1,0 +1,298 @@
+# Default values for langgraph-agent
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+image:
+  repository: langgraph-agent
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    # AWS EKS IRSA
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/langgraph-agent-role
+    # GKE Workload Identity
+    # iam.gke.io/gcp-service-account: langgraph-agent@PROJECT_ID.iam.gserviceaccount.com
+    # Azure AKS Workload Identity
+    # azure.workload.identity/client-id: "AZURE_CLIENT_ID"
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8000"
+  prometheus.io/path: "/metrics/prometheus"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+  annotations: {}
+    # AWS EKS Network Load Balancer
+    # service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    # GKE
+    # cloud.google.com/neg: '{"ingress": true}'
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # For AWS ALB
+    # kubernetes.io/ingress.class: alb
+    # alb.ingress.kubernetes.io/scheme: internet-facing
+    # alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: langgraph-agent.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: langgraph-agent-tls
+      hosts:
+        - langgraph-agent.example.com
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 4
+          periodSeconds: 30
+      selectPolicy: Max
+
+nodeSelector: {}
+
+tolerations:
+  - key: "workload"
+    operator: "Equal"
+    value: "ai-agents"
+    effect: "NoSchedule"
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - langgraph-agent
+          topologyKey: kubernetes.io/hostname
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Network Policy
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Health checks
+healthChecks:
+  startup:
+    path: /health/startup
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+  liveness:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Application configuration
+config:
+  serviceName: "langgraph-mcp-agent"
+  environment: "production"
+  logLevel: "INFO"
+  modelName: "claude-3-5-sonnet-20241022"
+  modelTemperature: "0.7"
+  modelMaxTokens: "4096"
+  maxIterations: "10"
+  enableCheckpointing: "true"
+  enableTracing: "true"
+  enableMetrics: "true"
+  enableConsoleExport: "false"
+
+# Secrets configuration
+secrets:
+  # Use existingSecret to reference an existing secret
+  existingSecret: ""
+
+  # Or provide secrets here (NOT recommended for production)
+  # Use External Secrets Operator or cloud-native secret management instead
+  anthropicApiKey: ""
+  jwtSecretKey: ""
+  openfgaStoreId: ""
+  openfgaModelId: ""
+  infisicalClientId: ""
+  infisicalClientSecret: ""
+  infisicalProjectId: ""
+
+# External Secrets Operator integration
+externalSecrets:
+  enabled: false
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager  # or azure-key-vault, gcp-secret-manager, vault
+    kind: SecretStore
+  data:
+    - secretKey: anthropic-api-key
+      remoteRef:
+        key: langgraph-agent/anthropic-api-key
+    - secretKey: jwt-secret-key
+      remoteRef:
+        key: langgraph-agent/jwt-secret-key
+    - secretKey: openfga-store-id
+      remoteRef:
+        key: langgraph-agent/openfga-store-id
+    - secretKey: openfga-model-id
+      remoteRef:
+        key: langgraph-agent/openfga-model-id
+
+# OpenFGA dependency
+openfga:
+  enabled: true
+  postgresql:
+    enabled: true
+  service:
+    type: ClusterIP
+    port: 8080
+
+# PostgreSQL dependency
+postgresql:
+  enabled: true
+  auth:
+    username: openfga
+    password: openfga
+    database: openfga
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+
+# Service Mesh (Istio/Linkerd)
+serviceMesh:
+  enabled: false
+  istio:
+    gateway:
+      enabled: false
+    virtualService:
+      enabled: false
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+
+# Kong API Gateway integration
+kong:
+  enabled: false
+  # Hosts for Kong ingress
+  hosts:
+    - langgraph-agent.example.com
+  # Path configuration
+  path: /
+  pathType: Prefix
+  # Strip path prefix
+  stripPath: "false"
+  # Preserve host header
+  preserveHost: "true"
+  # Protocols
+  protocols:
+    - https
+    - http
+  # Timeouts (milliseconds)
+  timeouts:
+    connect: 60000
+    read: 300000
+    write: 300000
+  # TLS configuration
+  tls:
+    enabled: true
+    secretName: langgraph-agent-tls
+  # Kong plugins to apply
+  plugins:
+    - rate-limit-basic
+    - request-size-limit
+    - cors
+    - prometheus
+  # Additional annotations
+  annotations: {}
+  # Rate limiting tier
+  rateLimitTier: basic  # basic, premium, enterprise

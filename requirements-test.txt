@@ -1,0 +1,35 @@
+# Test dependencies for LangGraph MCP Agent
+
+# Main dependencies (pinned versions)
+-r requirements.txt
+
+# Testing framework
+pytest==8.0.0
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-timeout==2.2.0
+pytest-xdist==3.5.0  # Parallel test execution
+
+# Test utilities
+httpx==0.26.0  # For testing HTTP endpoints
+respx==0.20.2  # Mock httpx
+faker==22.0.0  # Generate test data
+
+# Code quality
+black==24.1.1
+flake8==7.0.0
+mypy==1.8.0
+isort==5.13.2
+pylint==3.0.3
+
+# Coverage reporting
+coverage[toml]==7.4.1
+
+# Security scanning
+bandit==1.7.6
+safety==3.0.1
+
+# Type stubs
+types-PyYAML==6.0.12.12
+types-requests==2.31.0.20240125

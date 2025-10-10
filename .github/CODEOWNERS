@@ -1,0 +1,37 @@
+# Code Owners for LangGraph MCP Agent
+# These users will be automatically requested for review when someone opens a pull request
+
+# Default owners for everything in the repo
+* @YOUR_ORG/maintainers
+
+# Authentication and Security
+/auth.py @YOUR_ORG/security-team
+/openfga_client.py @YOUR_ORG/security-team
+/secrets_manager.py @YOUR_ORG/security-team
+/setup_openfga.py @YOUR_ORG/security-team
+
+# Infrastructure and DevOps
+/.github/ @YOUR_ORG/devops-team
+/kubernetes/ @YOUR_ORG/devops-team
+/kustomize/ @YOUR_ORG/devops-team
+/helm/ @YOUR_ORG/devops-team
+/docker-compose.yml @YOUR_ORG/devops-team
+/Dockerfile @YOUR_ORG/devops-team
+
+# MCP Server
+/mcp_server*.py @YOUR_ORG/backend-team
+/agent.py @YOUR_ORG/backend-team
+
+# Tests
+/tests/ @YOUR_ORG/qa-team @YOUR_ORG/backend-team
+/pytest.ini @YOUR_ORG/qa-team
+
+# Documentation
+/*.md @YOUR_ORG/docs-team
+/docs/ @YOUR_ORG/docs-team
+/.mcp/ @YOUR_ORG/docs-team
+
+# Dependencies
+/requirements*.txt @YOUR_ORG/maintainers
+/setup.py @YOUR_ORG/maintainers
+/pyproject.toml @YOUR_ORG/maintainers

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "langgraph-agent.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "langgraph-agent.labels" . | nindent 4 }}
+data:
+  environment: {{ .Values.config.environment | quote }}
+  log_level: {{ .Values.config.logLevel | quote }}
+  model_name: {{ .Values.config.modelName | quote }}
+  model_temperature: {{ .Values.config.modelTemperature | quote }}
+  model_max_tokens: {{ .Values.config.modelMaxTokens | quote }}
+  max_iterations: {{ .Values.config.maxIterations | quote }}
+  enable_checkpointing: {{ .Values.config.enableCheckpointing | quote }}
+  enable_tracing: {{ .Values.config.enableTracing | quote }}
+  enable_metrics: {{ .Values.config.enableMetrics | quote }}
+  enable_console_export: {{ .Values.config.enableConsoleExport | quote }}

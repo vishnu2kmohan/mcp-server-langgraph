@@ -1,0 +1,176 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "langgraph-agent.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "langgraph-agent.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "langgraph-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "langgraph-agent.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "langgraph-agent.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      {{- if .Values.openfga.enabled }}
+      initContainers:
+      - name: wait-for-openfga
+        image: busybox:1.36
+        command: ['sh', '-c']
+        args:
+        - |
+          until nc -z {{ .Release.Name }}-openfga 8080; do
+            echo "Waiting for OpenFGA..."
+            sleep 2
+          done
+          echo "OpenFGA is ready!"
+      {{- end }}
+
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: SERVICE_NAME
+          value: {{ .Values.config.serviceName | quote }}
+        - name: ENVIRONMENT
+          value: {{ .Values.config.environment | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.config.logLevel | quote }}
+        - name: MODEL_NAME
+          value: {{ .Values.config.modelName | quote }}
+        - name: MODEL_TEMPERATURE
+          value: {{ .Values.config.modelTemperature | quote }}
+        - name: MODEL_MAX_TOKENS
+          value: {{ .Values.config.modelMaxTokens | quote }}
+        - name: MAX_ITERATIONS
+          value: {{ .Values.config.maxIterations | quote }}
+        - name: ENABLE_CHECKPOINTING
+          value: {{ .Values.config.enableCheckpointing | quote }}
+        - name: ENABLE_TRACING
+          value: {{ .Values.config.enableTracing | quote }}
+        - name: ENABLE_METRICS
+          value: {{ .Values.config.enableMetrics | quote }}
+        - name: ENABLE_CONSOLE_EXPORT
+          value: {{ .Values.config.enableConsoleExport | quote }}
+        {{- if .Values.openfga.enabled }}
+        - name: OPENFGA_API_URL
+          value: "http://{{ .Release.Name }}-openfga:{{ .Values.openfga.service.port }}"
+        {{- end }}
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: anthropic-api-key
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: jwt-secret-key
+        - name: OPENFGA_STORE_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: openfga-store-id
+        - name: OPENFGA_MODEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: openfga-model-id
+        - name: INFISICAL_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: infisical-client-id
+              optional: true
+        - name: INFISICAL_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: infisical-client-secret
+              optional: true
+        - name: INFISICAL_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: infisical-project-id
+              optional: true
+        startupProbe:
+          httpGet:
+            path: {{ .Values.healthChecks.startup.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.healthChecks.startup.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthChecks.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthChecks.startup.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthChecks.startup.failureThreshold }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.healthChecks.liveness.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.healthChecks.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthChecks.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthChecks.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthChecks.liveness.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.healthChecks.readiness.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.healthChecks.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthChecks.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthChecks.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthChecks.readiness.failureThreshold }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/.cache
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

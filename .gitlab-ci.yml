@@ -1,0 +1,123 @@
+# GitLab CI/CD Pipeline
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  HELM_VERSION: "3.13.0"
+
+stages:
+  - test
+  - build
+  - deploy-dev
+  - deploy-staging
+  - deploy-production
+
+.kubectl_setup: &kubectl_setup
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - chmod +x kubectl
+  - mv kubectl /usr/local/bin/
+
+.helm_setup: &helm_setup
+  - curl -fsSL https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | tar -xz
+  - mv linux-amd64/helm /usr/local/bin/
+  - helm version
+
+test:
+  stage: test
+  image: python:3.11-slim
+  script:
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov pytest-asyncio
+    - pytest tests/ --cov=. --cov-report=xml --cov-report=term
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+lint:
+  stage: test
+  image: python:3.11-slim
+  script:
+    - pip install ruff black mypy
+    - ruff check .
+    - black --check .
+    - mypy . --ignore-missing-imports || true
+
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_TAG .
+    - docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:latest
+    - docker push $IMAGE_TAG
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main
+    - develop
+    - tags
+
+deploy:dev:
+  stage: deploy-dev
+  image: alpine/k8s:1.28.3
+  before_script:
+    - *kubectl_setup
+    - echo "$KUBECONFIG_DEV" | base64 -d > kubeconfig
+    - export KUBECONFIG=$(pwd)/kubeconfig
+  script:
+    - kubectl apply -k kustomize/overlays/dev
+    - kubectl rollout status deployment/dev-langgraph-agent -n langgraph-agent-dev --timeout=5m
+  environment:
+    name: development
+    url: https://dev.langgraph-agent.example.com
+  only:
+    - develop
+
+deploy:staging:
+  stage: deploy-staging
+  image: alpine/k8s:1.28.3
+  before_script:
+    - *kubectl_setup
+    - echo "$KUBECONFIG_STAGING" | base64 -d > kubeconfig
+    - export KUBECONFIG=$(pwd)/kubeconfig
+  script:
+    - kubectl apply -k kustomize/overlays/staging
+    - kubectl rollout status deployment/staging-langgraph-agent -n langgraph-agent-staging --timeout=5m
+  environment:
+    name: staging
+    url: https://staging.langgraph-agent.example.com
+  only:
+    - main
+
+deploy:production:
+  stage: deploy-production
+  image: alpine/k8s:1.28.3
+  before_script:
+    - *kubectl_setup
+    - *helm_setup
+    - echo "$KUBECONFIG_PROD" | base64 -d > kubeconfig
+    - export KUBECONFIG=$(pwd)/kubeconfig
+  script:
+    - |
+      helm upgrade --install langgraph-agent ./helm/langgraph-agent \
+        --namespace langgraph-agent \
+        --create-namespace \
+        --set image.tag=$CI_COMMIT_TAG \
+        --set secrets.anthropicApiKey=$ANTHROPIC_API_KEY \
+        --set secrets.jwtSecretKey=$JWT_SECRET_KEY \
+        --set secrets.openfgaStoreId=$OPENFGA_STORE_ID \
+        --set secrets.openfgaModelId=$OPENFGA_MODEL_ID \
+        --wait \
+        --timeout 10m
+    - kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+  environment:
+    name: production
+    url: https://langgraph-agent.example.com
+  when: manual
+  only:
+    - tags

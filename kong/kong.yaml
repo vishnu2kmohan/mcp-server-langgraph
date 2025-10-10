@@ -1,0 +1,204 @@
+# Kong Declarative Configuration (DB-less mode)
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: langgraph-agent
+    url: http://langgraph-agent.langgraph-agent.svc.cluster.local:80
+    protocol: http
+    connect_timeout: 60000
+    read_timeout: 300000
+    write_timeout: 300000
+    retries: 3
+
+    routes:
+      - name: langgraph-agent-public
+        paths:
+          - /
+        strip_path: false
+        preserve_host: true
+        protocols:
+          - http
+          - https
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        https_redirect_status_code: 301
+
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 60
+              hour: 1000
+              policy: redis
+              redis_host: redis
+              redis_port: 6379
+              fault_tolerant: true
+              hide_client_headers: false
+
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 10
+              size_unit: megabytes
+
+          - name: cors
+            config:
+              origins:
+                - "*"
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - OPTIONS
+              headers:
+                - Accept
+                - Content-Type
+                - Authorization
+              credentials: true
+              max_age: 3600
+
+          - name: prometheus
+            config:
+              per_consumer: true
+
+          - name: request-transformer
+            config:
+              add:
+                headers:
+                  - X-Kong-Request-Id:$(uuid)
+
+      - name: langgraph-agent-premium
+        paths:
+          - /premium
+        strip_path: true
+        preserve_host: true
+        protocols:
+          - https
+
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 300
+              hour: 10000
+              policy: redis
+              redis_host: redis
+              redis_port: 6379
+              fault_tolerant: true
+
+          - name: jwt
+            config:
+              claims_to_verify:
+                - exp
+              key_claim_name: iss
+
+      - name: langgraph-agent-enterprise
+        paths:
+          - /enterprise
+        strip_path: true
+        preserve_host: true
+        protocols:
+          - https
+
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 1000
+              hour: 100000
+              policy: redis
+              redis_host: redis
+              redis_port: 6379
+              fault_tolerant: true
+
+consumers:
+  - username: free-tier-user
+    custom_id: free-tier
+    keyauth_credentials:
+      - key: free-tier-api-key
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 60
+          hour: 1000
+
+  - username: premium-tier-user
+    custom_id: premium-tier
+    keyauth_credentials:
+      - key: premium-tier-api-key
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 300
+          hour: 10000
+
+  - username: enterprise-tier-user
+    custom_id: enterprise-tier
+    jwt_secrets:
+      - key: enterprise-issuer
+        algorithm: HS256
+        secret: enterprise-jwt-secret
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 1000
+          hour: 100000
+
+plugins:
+  - name: prometheus
+    config:
+      per_consumer: true
+
+  - name: request-size-limiting
+    config:
+      allowed_payload_size: 10
+      size_unit: megabytes
+
+  - name: bot-detection
+    config:
+      allow:
+        - googlebot
+        - bingbot
+
+  - name: http-log
+    config:
+      http_endpoint: http://logstash:8080/kong
+      method: POST
+      timeout: 10000
+
+upstreams:
+  - name: langgraph-agent-upstream
+    algorithm: round-robin
+    slots: 10000
+    healthchecks:
+      active:
+        type: http
+        http_path: /health
+        timeout: 10
+        concurrency: 10
+        healthy:
+          interval: 10
+          successes: 2
+          http_statuses:
+            - 200
+        unhealthy:
+          interval: 10
+          http_failures: 3
+          timeouts: 3
+          http_statuses:
+            - 429
+            - 500
+            - 503
+      passive:
+        type: http
+        healthy:
+          successes: 5
+        unhealthy:
+          http_failures: 5
+          timeouts: 2
+    targets:
+      - target: langgraph-agent.langgraph-agent.svc.cluster.local:80
+        weight: 100

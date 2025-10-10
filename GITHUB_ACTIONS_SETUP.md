@@ -1,0 +1,457 @@
+# GitHub Actions Setup Guide
+
+Complete guide for setting up and configuring GitHub Actions for the LangGraph MCP Agent.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Required Secrets](#required-secrets)
+- [Workflows](#workflows)
+- [Branch Protection](#branch-protection)
+- [Environment Configuration](#environment-configuration)
+- [Troubleshooting](#troubleshooting)
+
+## Overview
+
+This repository includes comprehensive GitHub Actions workflows for:
+
+- **CI/CD Pipeline** (`ci.yaml`) - Test, build, and deploy
+- **Pull Request Checks** (`pr-checks.yaml`) - Automated PR validation
+- **Security Scanning** (`security-scan.yaml`) - Daily security scans
+- **Release Automation** (`release.yaml`) - Automated releases
+- **Stale Issues** (`stale.yaml`) - Issue/PR management
+
+## Required Secrets
+
+### GitHub Repository Secrets
+
+Navigate to: **Settings → Secrets and variables → Actions**
+
+#### Application Secrets
+
+```bash
+# Anthropic API Key (required for tests)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# JWT Secret (for authentication)
+JWT_SECRET_KEY=$(openssl rand -base64 32)
+
+# OpenFGA Configuration (from setup_openfga.py)
+OPENFGA_STORE_ID=01HXXX...
+OPENFGA_MODEL_ID=01HYYY...
+```
+
+#### Infrastructure Secrets (Optional)
+
+```bash
+# Kubernetes Configuration (base64 encoded)
+KUBECONFIG_DEV=$(cat ~/.kube/config | base64)
+KUBECONFIG_STAGING=$(cat ~/.kube/config | base64)
+KUBECONFIG_PROD=$(cat ~/.kube/config | base64)
+
+# MCP Registry Token (for publishing)
+MCP_REGISTRY_TOKEN=your-registry-token
+
+# PyPI Token (for package publishing)
+PYPI_TOKEN=pypi-...
+
+# Slack Webhooks (for notifications)
+SLACK_WEBHOOK=https://hooks.slack.com/services/...
+SLACK_SECURITY_WEBHOOK=https://hooks.slack.com/services/...
+```
+
+#### Container Registry
+
+GitHub Container Registry (ghcr.io) uses `GITHUB_TOKEN` automatically - no setup needed.
+
+### Environment Secrets
+
+For deployment environments: **Settings → Environments**
+
+#### Development Environment
+
+Create environment: `development`
+
+**Secrets:**
+- `KUBECONFIG_DEV`
+- `ANTHROPIC_API_KEY`
+- `JWT_SECRET_KEY`
+- `OPENFGA_STORE_ID`
+- `OPENFGA_MODEL_ID`
+
+**Protection rules:** None (auto-deploy)
+
+#### Staging Environment
+
+Create environment: `staging`
+
+**Secrets:**
+- `KUBECONFIG_STAGING`
+- `ANTHROPIC_API_KEY`
+- `JWT_SECRET_KEY`
+- `OPENFGA_STORE_ID`
+- `OPENFGA_MODEL_ID`
+
+**Protection rules:**
+- Required reviewers: 1
+- Deployment branches: `main` only
+
+#### Production Environment
+
+Create environment: `production`
+
+**Secrets:**
+- `KUBECONFIG_PROD`
+- `ANTHROPIC_API_KEY`
+- `JWT_SECRET_KEY`
+- `OPENFGA_STORE_ID`
+- `OPENFGA_MODEL_ID`
+
+**Protection rules:**
+- Required reviewers: 2+ (security team)
+- Deployment branches: Tags only (`v*.*.*`)
+- Wait timer: 5 minutes
+
+## Workflows
+
+### 1. CI/CD Pipeline (`ci.yaml`)
+
+**Triggers:**
+- Push to `main` or `develop`
+- Pull requests to `main`
+- Release creation
+
+**Jobs:**
+1. **Test** - Run unit and integration tests
+2. **Lint** - Code quality checks
+3. **Build** - Docker image build and push
+4. **Deploy Dev** - Auto-deploy to development (on `develop`)
+5. **Deploy Staging** - Auto-deploy to staging (on `main`)
+6. **Deploy Prod** - Manual deploy to production (on release)
+
+**Badge:**
+```markdown
+[![CI/CD](https://github.com/YOUR_ORG/langgraph_mcp_agent/actions/workflows/ci.yaml/badge.svg)](https://github.com/YOUR_ORG/langgraph_mcp_agent/actions/workflows/ci.yaml)
+```
+
+### 2. Pull Request Checks (`pr-checks.yaml`)
+
+**Triggers:**
+- Pull request opened/updated/reopened
+
+**Jobs:**
+1. **PR Metadata** - Validate PR title (Conventional Commits)
+2. **Test Matrix** - Test on Python 3.10, 3.11, 3.12
+3. **Lint** - Code quality and formatting
+4. **Security** - Security scans
+5. **Docker** - Build test
+6. **Size Check** - Large file detection
+7. **Dependency Review** - Scan for vulnerable dependencies
+8. **Auto Label** - Apply labels based on changed files
+9. **Comment** - Post check results
+
+**Setup:**
+```bash
+# Create labeler configuration (already exists)
+cat .github/labeler.yml
+```
+
+### 3. Security Scan (`security-scan.yaml`)
+
+**Triggers:**
+- Daily at 2 AM UTC
+- Push to `main`
+- Pull requests
+- Manual dispatch
+
+**Jobs:**
+1. **Trivy** - Container vulnerability scanning
+2. **Dependency Check** - Python package vulnerabilities
+3. **CodeQL** - Static code analysis
+4. **Secrets Scan** - TruffleHog secrets detection
+5. **License Check** - License compliance
+
+**Required:**
+- Enable **CodeQL** in repository settings
+- Configure **Security tab** for SARIF uploads
+
+### 4. Release Automation (`release.yaml`)
+
+**Triggers:**
+- Git tags matching `v*.*.*`
+
+**Jobs:**
+1. **Create Release** - Generate changelog and GitHub release
+2. **Build Images** - Multi-arch Docker images (amd64, arm64)
+3. **Publish Helm** - Push Helm chart to OCI registry
+4. **Publish PyPI** - Publish Python package (stable only)
+5. **Update MCP Registry** - Update MCP registry entry
+6. **Notify** - Send Slack notifications
+
+**Usage:**
+```bash
+# Create and push tag
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+
+# Or create release via GitHub UI
+```
+
+### 5. Stale Issue Management (`stale.yaml`)
+
+**Triggers:**
+- Daily at midnight
+
+**Configuration:**
+- Issues: 60 days inactive → stale, 7 days → close
+- PRs: 30 days inactive → stale, 7 days → close
+- Exempt labels: `pinned`, `security`, `bug`, `critical`
+
+## Branch Protection
+
+### Main Branch Protection
+
+Navigate to: **Settings → Branches → Branch protection rules**
+
+Create rule for `main`:
+
+```yaml
+Branch name pattern: main
+
+Protection rules:
+☑ Require a pull request before merging
+  ☑ Require approvals: 2
+  ☑ Dismiss stale pull request approvals when new commits are pushed
+  ☑ Require review from Code Owners
+
+☑ Require status checks to pass before merging
+  ☑ Require branches to be up to date before merging
+  Required checks:
+    - Test
+    - Lint
+    - Security Scan
+    - Docker Build Test
+
+☑ Require conversation resolution before merging
+☑ Require signed commits
+☑ Include administrators
+☑ Restrict who can push to matching branches
+  - @YOUR_ORG/maintainers
+```
+
+### Develop Branch Protection
+
+Create rule for `develop`:
+
+```yaml
+Branch name pattern: develop
+
+Protection rules:
+☑ Require a pull request before merging
+  ☑ Require approvals: 1
+
+☑ Require status checks to pass before merging
+  Required checks:
+    - Test
+    - Lint
+
+☑ Require conversation resolution before merging
+```
+
+## Environment Configuration
+
+### Setting Up Kubeconfig
+
+```bash
+# Encode kubeconfig for GitHub Actions
+cat ~/.kube/config | base64 > kubeconfig.b64
+
+# Create secret
+gh secret set KUBECONFIG_PROD < kubeconfig.b64
+
+# Clean up
+rm kubeconfig.b64
+```
+
+### Testing Secrets Locally
+
+```bash
+# Install GitHub CLI
+brew install gh  # macOS
+# or
+apt install gh   # Linux
+
+# Login
+gh auth login
+
+# Test secrets
+gh secret list
+
+# Run workflow locally with act
+brew install act
+act -j test -s ANTHROPIC_API_KEY=your-key
+```
+
+## Codecov Integration
+
+### Setup Codecov
+
+1. **Sign up** at https://codecov.io with GitHub
+2. **Enable repository** in Codecov dashboard
+3. **Get upload token** (optional - GITHUB_TOKEN works)
+4. **Add badge** to README:
+
+```markdown
+[![codecov](https://codecov.io/gh/YOUR_ORG/langgraph_mcp_agent/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_ORG/langgraph_mcp_agent)
+```
+
+### Codecov Configuration
+
+Create `.codecov.yml`:
+
+```yaml
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 5%
+    patch:
+      default:
+        target: 80%
+
+comment:
+  layout: "header, diff, files"
+  behavior: default
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Tests Failing - Missing API Key
+
+**Error:** `ANTHROPIC_API_KEY not set`
+
+**Solution:**
+```bash
+gh secret set ANTHROPIC_API_KEY -b"sk-ant-..."
+```
+
+#### 2. Kubeconfig Not Working
+
+**Error:** `Unable to connect to cluster`
+
+**Solution:**
+```bash
+# Ensure base64 encoded
+cat ~/.kube/config | base64 -w 0 | gh secret set KUBECONFIG_PROD
+
+# Test decode
+echo "$KUBECONFIG_PROD" | base64 -d > test-kubeconfig
+kubectl --kubeconfig=test-kubeconfig get nodes
+```
+
+#### 3. Docker Build Fails
+
+**Error:** `buildx not found`
+
+**Solution:** Already handled in workflow with `docker/setup-buildx-action@v3`
+
+#### 4. CodeQL Initialization Fails
+
+**Error:** `CodeQL not initialized`
+
+**Solution:**
+1. Go to **Settings → Code security and analysis**
+2. Enable **CodeQL analysis**
+3. Re-run workflow
+
+#### 5. Dependabot PRs Not Auto-Merging
+
+**Setup auto-merge:**
+```bash
+# Enable auto-merge in repository settings
+# Settings → General → Pull Requests → Allow auto-merge
+
+# Or via CLI
+gh repo edit --enable-auto-merge
+```
+
+### Debugging Workflows
+
+#### View Logs
+
+```bash
+# List workflow runs
+gh run list --workflow=ci.yaml
+
+# View specific run
+gh run view <run-id>
+
+# Download logs
+gh run download <run-id>
+```
+
+#### Re-run Failed Jobs
+
+```bash
+# Re-run specific workflow
+gh run rerun <run-id>
+
+# Re-run only failed jobs
+gh run rerun <run-id> --failed
+```
+
+#### Enable Debug Logging
+
+Add secrets:
+```bash
+gh secret set ACTIONS_STEP_DEBUG -b"true"
+gh secret set ACTIONS_RUNNER_DEBUG -b"true"
+```
+
+## Best Practices
+
+### 1. Secret Rotation
+
+```bash
+# Rotate secrets regularly
+gh secret set JWT_SECRET_KEY -b"$(openssl rand -base64 32)"
+
+# Update in environments too
+gh secret set JWT_SECRET_KEY -e production -b"new-secret"
+```
+
+### 2. Workflow Optimization
+
+- Use `cache: 'pip'` for faster Python setup
+- Use `cache-from: type=gha` for Docker builds
+- Run independent jobs in parallel
+- Use `if` conditions to skip unnecessary jobs
+
+### 3. Security
+
+- Never log secrets
+- Use `secrets.GITHUB_TOKEN` instead of PAT when possible
+- Limit secret access with environments
+- Review Dependabot PRs before merging
+
+## Additional Resources
+
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Workflow Syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+- [Security Hardening](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
+- [Encrypted Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+
+## Support
+
+For GitHub Actions issues:
+1. Check workflow logs
+2. Review this documentation
+3. Search [GitHub Community](https://github.com/community)
+4. Open an issue with `ci-cd` label
+
+---
+
+**Last Updated**: 2025-01-10

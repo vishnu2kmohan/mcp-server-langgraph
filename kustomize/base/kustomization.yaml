@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: langgraph-agent
+
+resources:
+  - ../../kubernetes/base/namespace.yaml
+  - ../../kubernetes/base/deployment.yaml
+  - ../../kubernetes/base/service.yaml
+  - ../../kubernetes/base/configmap.yaml
+  - ../../kubernetes/base/secret.yaml
+  - ../../kubernetes/base/serviceaccount.yaml
+  - ../../kubernetes/base/hpa.yaml
+  - ../../kubernetes/base/pdb.yaml
+  - ../../kubernetes/base/networkpolicy.yaml
+
+commonLabels:
+  app: langgraph-agent
+  managed-by: kustomize
+
+images:
+  - name: langgraph-agent
+    newTag: latest

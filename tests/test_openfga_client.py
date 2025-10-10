@@ -1,0 +1,318 @@
+"""Unit tests for openfga_client.py - OpenFGA Integration"""
+import pytest
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from openfga_sdk.client.models import ClientCheckRequest, ClientWriteRequest, ClientTuple
+
+
+@pytest.mark.unit
+@pytest.mark.openfga
+class TestOpenFGAClient:
+    """Test OpenFGAClient class"""
+
+    @patch('openfga_client.OpenFgaClient')
+    def test_init(self, mock_sdk_client):
+        """Test OpenFGA client initialization"""
+        from openfga_client import OpenFGAClient
+
+        client = OpenFGAClient(
+            api_url="http://localhost:8080",
+            store_id="test-store",
+            model_id="test-model"
+        )
+
+        assert client.api_url == "http://localhost:8080"
+        assert client.store_id == "test-store"
+        assert client.model_id == "test-model"
+        mock_sdk_client.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_check_permission_allowed(self, mock_sdk_client):
+        """Test permission check returns True"""
+        from openfga_client import OpenFGAClient
+
+        # Mock the check response
+        mock_response = MagicMock()
+        mock_response.allowed = True
+
+        mock_instance = AsyncMock()
+        mock_instance.check.return_value = mock_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient(
+            api_url="http://localhost:8080",
+            store_id="test-store",
+            model_id="test-model"
+        )
+
+        result = await client.check_permission(
+            user="user:alice",
+            relation="executor",
+            object="tool:chat"
+        )
+
+        assert result is True
+        mock_instance.check.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_check_permission_denied(self, mock_sdk_client):
+        """Test permission check returns False"""
+        from openfga_client import OpenFGAClient
+
+        mock_response = MagicMock()
+        mock_response.allowed = False
+
+        mock_instance = AsyncMock()
+        mock_instance.check.return_value = mock_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+        result = await client.check_permission(
+            user="user:bob",
+            relation="admin",
+            object="organization:acme"
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_check_permission_error(self, mock_sdk_client):
+        """Test permission check handles errors"""
+        from openfga_client import OpenFGAClient
+
+        mock_instance = AsyncMock()
+        mock_instance.check.side_effect = Exception("OpenFGA unavailable")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        with pytest.raises(Exception, match="OpenFGA unavailable"):
+            await client.check_permission(
+                user="user:alice",
+                relation="executor",
+                object="tool:chat"
+            )
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_write_tuples_success(self, mock_sdk_client):
+        """Test writing relationship tuples"""
+        from openfga_client import OpenFGAClient
+
+        mock_instance = AsyncMock()
+        mock_instance.write.return_value = MagicMock()
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        tuples = [
+            {
+                "user": "user:alice",
+                "relation": "executor",
+                "object": "tool:chat"
+            },
+            {
+                "user": "user:bob",
+                "relation": "member",
+                "object": "organization:acme"
+            }
+        ]
+
+        await client.write_tuples(tuples)
+
+        mock_instance.write.assert_called_once()
+        call_args = mock_instance.write.call_args[0][0]
+        assert isinstance(call_args, ClientWriteRequest)
+        assert len(call_args.writes) == 2
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_write_tuples_error(self, mock_sdk_client):
+        """Test write tuples handles errors"""
+        from openfga_client import OpenFGAClient
+
+        mock_instance = AsyncMock()
+        mock_instance.write.side_effect = Exception("Write failed")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        tuples = [{"user": "user:alice", "relation": "executor", "object": "tool:chat"}]
+
+        with pytest.raises(Exception, match="Write failed"):
+            await client.write_tuples(tuples)
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_delete_tuples_success(self, mock_sdk_client):
+        """Test deleting relationship tuples"""
+        from openfga_client import OpenFGAClient
+
+        mock_instance = AsyncMock()
+        mock_instance.write.return_value = MagicMock()
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        tuples = [
+            {
+                "user": "user:alice",
+                "relation": "executor",
+                "object": "tool:chat"
+            }
+        ]
+
+        await client.delete_tuples(tuples)
+
+        mock_instance.write.assert_called_once()
+        call_args = mock_instance.write.call_args[0][0]
+        assert isinstance(call_args, ClientWriteRequest)
+        assert len(call_args.deletes) == 1
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_delete_tuples_error(self, mock_sdk_client):
+        """Test delete tuples handles errors"""
+        from openfga_client import OpenFGAClient
+
+        mock_instance = AsyncMock()
+        mock_instance.write.side_effect = Exception("Delete failed")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        tuples = [{"user": "user:alice", "relation": "executor", "object": "tool:chat"}]
+
+        with pytest.raises(Exception, match="Delete failed"):
+            await client.delete_tuples(tuples)
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_list_objects_success(self, mock_sdk_client):
+        """Test listing accessible objects"""
+        from openfga_client import OpenFGAClient
+
+        mock_response = MagicMock()
+        mock_response.objects = ["tool:chat", "tool:search", "tool:analyze"]
+
+        mock_instance = AsyncMock()
+        mock_instance.list_objects.return_value = mock_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        result = await client.list_objects(
+            user="user:alice",
+            relation="executor",
+            object_type="tool"
+        )
+
+        assert len(result) == 3
+        assert "tool:chat" in result
+        assert "tool:search" in result
+        assert "tool:analyze" in result
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_list_objects_empty(self, mock_sdk_client):
+        """Test listing objects with no results"""
+        from openfga_client import OpenFGAClient
+
+        mock_response = MagicMock()
+        mock_response.objects = []
+
+        mock_instance = AsyncMock()
+        mock_instance.list_objects.return_value = mock_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        result = await client.list_objects(
+            user="user:bob",
+            relation="admin",
+            object_type="organization"
+        )
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_list_objects_error(self, mock_sdk_client):
+        """Test list objects handles errors"""
+        from openfga_client import OpenFGAClient
+
+        mock_instance = AsyncMock()
+        mock_instance.list_objects.side_effect = Exception("List failed")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        with pytest.raises(Exception, match="List failed"):
+            await client.list_objects(
+                user="user:alice",
+                relation="executor",
+                object_type="tool"
+            )
+
+
+@pytest.mark.integration
+@pytest.mark.openfga
+class TestOpenFGAIntegration:
+    """Integration tests for OpenFGA (requires running OpenFGA instance)"""
+
+    @pytest.mark.skip(reason="Requires running OpenFGA instance")
+    @pytest.mark.asyncio
+    async def test_full_authorization_flow(self):
+        """Test complete authorization flow with real OpenFGA"""
+        from openfga_client import OpenFGAClient
+
+        # This test requires actual OpenFGA server
+        client = OpenFGAClient(
+            api_url="http://localhost:8080",
+            store_id=None,  # Would need to be created
+            model_id=None   # Would need to be created
+        )
+
+        # Write relationship
+        await client.write_tuples([
+            {
+                "user": "user:alice",
+                "relation": "executor",
+                "object": "tool:chat"
+            }
+        ])
+
+        # Check permission
+        allowed = await client.check_permission(
+            user="user:alice",
+            relation="executor",
+            object="tool:chat"
+        )
+        assert allowed is True
+
+        # List objects
+        tools = await client.list_objects(
+            user="user:alice",
+            relation="executor",
+            object_type="tool"
+        )
+        assert "tool:chat" in tools
+
+        # Delete relationship
+        await client.delete_tuples([
+            {
+                "user": "user:alice",
+                "relation": "executor",
+                "object": "tool:chat"
+            }
+        ])
+
+        # Verify permission removed
+        allowed = await client.check_permission(
+            user="user:alice",
+            relation="executor",
+            object="tool:chat"
+        )
+        assert allowed is False

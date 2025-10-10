@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1.0.0",
+  "registry": {
+    "name": "langgraph-agent",
+    "displayName": "LangGraph AI Agent",
+    "shortDescription": "Production AI agent with OpenFGA authorization and full observability",
+    "icon": "https://raw.githubusercontent.com/your-org/langgraph-mcp-agent/main/.mcp/icon.png",
+    "screenshots": [
+      "https://raw.githubusercontent.com/your-org/langgraph-mcp-agent/main/.mcp/screenshots/dashboard.png",
+      "https://raw.githubusercontent.com/your-org/langgraph-mcp-agent/main/.mcp/screenshots/tracing.png"
+    ],
+    "featured": false,
+    "verified": false
+  },
+  "endpoints": {
+    "production": {
+      "url": "https://langgraph-agent.example.com",
+      "transport": "http",
+      "healthCheck": "https://langgraph-agent.example.com/health"
+    },
+    "staging": {
+      "url": "https://staging.langgraph-agent.example.com",
+      "transport": "http",
+      "healthCheck": "https://staging.langgraph-agent.example.com/health"
+    }
+  },
+  "pricing": {
+    "model": "tiered",
+    "tiers": [
+      {
+        "name": "Free",
+        "price": 0,
+        "currency": "USD",
+        "interval": "month",
+        "limits": {
+          "requests": {
+            "minute": 60,
+            "hour": 1000,
+            "month": 50000
+          },
+          "features": ["basic-tools", "basic-auth"]
+        }
+      },
+      {
+        "name": "Premium",
+        "price": 49,
+        "currency": "USD",
+        "interval": "month",
+        "limits": {
+          "requests": {
+            "minute": 300,
+            "hour": 10000,
+            "month": 500000
+          },
+          "features": ["all-tools", "jwt-auth", "priority-support"]
+        }
+      },
+      {
+        "name": "Enterprise",
+        "price": "custom",
+        "currency": "USD",
+        "interval": "month",
+        "limits": {
+          "requests": {
+            "minute": 1000,
+            "hour": 100000,
+            "month": "unlimited"
+          },
+          "features": ["all-tools", "custom-auth", "sla", "dedicated-support", "on-premise"]
+        }
+      }
+    ]
+  },
+  "compliance": {
+    "soc2": false,
+    "hipaa": false,
+    "gdpr": true,
+    "iso27001": false
+  },
+  "support": {
+    "email": "support@example.com",
+    "slack": "https://example.slack.com",
+    "github": "https://github.com/your-org/langgraph-mcp-agent/issues",
+    "documentation": "https://docs.example.com/langgraph-agent"
+  },
+  "metrics": {
+    "uptime": {
+      "url": "https://status.example.com/langgraph-agent",
+      "sla": 99.9
+    },
+    "latency": {
+      "p50": 100,
+      "p95": 500,
+      "p99": 1000,
+      "unit": "ms"
+    }
+  }
+}

@@ -1,0 +1,138 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "langgraph-mcp-agent"
+version = "1.0.0"
+description = "Production-ready LangGraph agent with MCP, OpenFGA, and multi-LLM support"
+readme = "README.md"
+authors = [
+    {name = "LangGraph MCP Agent Contributors", email = "maintainers@example.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "langgraph>=0.2.28",
+    "langchain-core>=0.3.15",
+    "litellm>=1.52.3",
+    "mcp>=1.1.2",
+    "PyJWT>=2.8.0",
+    "cryptography>=42.0.2",
+    "opentelemetry-api>=1.22.0",
+    "opentelemetry-sdk>=1.22.0",
+    "opentelemetry-instrumentation-logging>=0.43b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.22.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.22.0",
+    "openfga-sdk>=0.5.1",
+    "infisical-python>=2.1.7",
+    "python-dotenv>=1.0.1",
+    "pydantic>=2.5.3",
+    "pydantic-settings>=2.1.0",
+    "httpx>=0.26.0",
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "sse-starlette>=1.8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.3",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "black>=24.1.1",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+    "isort>=5.13.2",
+    "bandit>=1.7.6",
+]
+
+[project.scripts]
+langgraph-mcp = "mcp_server:main"
+langgraph-mcp-http = "mcp_server_streamable:main"
+
+[project.urls]
+Homepage = "https://github.com/YOUR_ORG/langgraph_mcp_agent"
+Documentation = "https://github.com/YOUR_ORG/langgraph_mcp_agent/blob/main/README.md"
+Repository = "https://github.com/YOUR_ORG/langgraph_mcp_agent"
+Issues = "https://github.com/YOUR_ORG/langgraph_mcp_agent/issues"
+Changelog = "https://github.com/YOUR_ORG/langgraph_mcp_agent/blob/main/CHANGELOG.md"
+
+[tool.black]
+line-length = 127
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+  | __pycache__
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 127
+skip_gitignore = true
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers --tb=short"
+markers = [
+    "unit: Unit tests (fast, no external dependencies)",
+    "integration: Integration tests (may require external services)",
+    "e2e: End-to-end tests (full system tests)",
+    "slow: Slow tests (> 1 second)",
+    "auth: Authentication/authorization tests",
+    "openfga: OpenFGA integration tests",
+    "infisical: Infisical integration tests",
+    "mcp: MCP protocol tests",
+    "observability: OpenTelemetry/metrics/logging tests",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/virtualenv/*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

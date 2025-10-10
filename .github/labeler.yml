@@ -1,0 +1,72 @@
+# Auto-labeler configuration
+
+# Documentation
+documentation:
+  - '**/*.md'
+  - 'docs/**/*'
+  - '.mcp/*.json'
+
+# Tests
+tests:
+  - 'tests/**/*'
+  - '**/*test*.py'
+  - 'pytest.ini'
+
+# CI/CD
+ci-cd:
+  - '.github/**/*'
+  - '.gitlab-ci.yml'
+  - 'Makefile'
+
+# Dependencies
+dependencies:
+  - 'requirements*.txt'
+  - 'setup.py'
+  - 'pyproject.toml'
+
+# Docker
+docker:
+  - 'Dockerfile*'
+  - 'docker-compose*.yml'
+  - '.dockerignore'
+
+# Kubernetes
+kubernetes:
+  - 'kubernetes/**/*'
+  - 'kustomize/**/*'
+  - 'helm/**/*'
+
+# Authentication/Authorization
+auth:
+  - 'auth.py'
+  - 'openfga_client.py'
+  - 'setup_openfga.py'
+
+# Secrets Management
+secrets:
+  - 'secrets_manager.py'
+  - 'setup_infisical.py'
+
+# Observability
+observability:
+  - 'observability.py'
+  - 'health_check.py'
+
+# MCP Server
+mcp:
+  - 'mcp_server*.py'
+  - 'examples/*client*.py'
+
+# Agent
+agent:
+  - 'agent.py'
+
+# Configuration
+config:
+  - 'config.py'
+  - '.env*'
+  - 'settings.py'
+
+# Security
+security:
+  - any: ['auth.py', 'secrets_manager.py', 'openfga_client.py']

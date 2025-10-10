@@ -1,0 +1,28 @@
+apiVersion: v2
+name: langgraph-agent
+description: A Helm chart for LangGraph MCP Agent with OpenFGA and Infisical
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://github.com/your-org/langgraph-mcp-agent
+sources:
+  - https://github.com/your-org/langgraph-mcp-agent
+maintainers:
+  - name: Your Team
+    email: team@example.com
+keywords:
+  - ai
+  - langgraph
+  - mcp
+  - openfga
+  - infisical
+  - observability
+dependencies:
+  - name: openfga
+    version: "0.1.0"
+    repository: "https://openfga.github.io/helm-charts"
+    condition: openfga.enabled
+  - name: postgresql
+    version: "13.2.0"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled

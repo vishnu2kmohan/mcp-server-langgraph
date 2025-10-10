@@ -1,0 +1,231 @@
+{
+  "schemaVersion": "1.0.0",
+  "name": "langgraph-agent",
+  "displayName": "LangGraph AI Agent",
+  "version": "1.0.0",
+  "description": "Production-ready AI agent with fine-grained authorization (OpenFGA), secrets management (Infisical), and full observability (OpenTelemetry)",
+  "author": {
+    "name": "Your Organization",
+    "email": "team@example.com",
+    "url": "https://github.com/your-org/langgraph-mcp-agent"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/your-org/langgraph-mcp-agent",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/langgraph-mcp-agent.git"
+  },
+  "transports": {
+    "stdio": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "env": {}
+    },
+    "streamable-http": {
+      "url": "https://langgraph-agent.example.com",
+      "endpoint": "/message",
+      "streaming": true
+    },
+    "http-sse": {
+      "url": "https://langgraph-agent.example.com",
+      "endpoints": {
+        "sse": "/sse",
+        "messages": "/messages",
+        "tools": "/tools",
+        "resources": "/resources"
+      },
+      "deprecated": true,
+      "deprecationMessage": "SSE transport is deprecated. Use streamable-http instead."
+    }
+  },
+  "capabilities": {
+    "tools": {
+      "listSupported": true,
+      "callSupported": true
+    },
+    "resources": {
+      "listSupported": true,
+      "readSupported": true
+    },
+    "prompts": {
+      "listSupported": false,
+      "getSupported": false
+    },
+    "sampling": {
+      "supported": false
+    },
+    "logging": {
+      "supported": true,
+      "level": "info"
+    }
+  },
+  "tools": [
+    {
+      "name": "chat",
+      "description": "Chat with the AI agent. The agent can help with questions, research, and problem-solving.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The user message to send to the agent"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username for authentication"
+          },
+          "thread_id": {
+            "type": "string",
+            "description": "Optional thread ID for conversation continuity"
+          }
+        },
+        "required": ["message", "username"]
+      },
+      "examples": [
+        {
+          "message": "Explain quantum computing in simple terms",
+          "username": "alice"
+        }
+      ]
+    },
+    {
+      "name": "get_conversation",
+      "description": "Retrieve a conversation thread by ID",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "thread_id": {
+            "type": "string",
+            "description": "Thread ID to retrieve"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username for authentication"
+          }
+        },
+        "required": ["thread_id", "username"]
+      }
+    },
+    {
+      "name": "list_conversations",
+      "description": "List all conversations the user has access to",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username for authentication"
+          }
+        },
+        "required": ["username"]
+      }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "agent://config",
+      "name": "Agent Configuration",
+      "description": "Current agent configuration and settings",
+      "mimeType": "application/json"
+    }
+  ],
+  "configuration": {
+    "required": {
+      "ANTHROPIC_API_KEY": {
+        "type": "string",
+        "description": "Anthropic API key for Claude",
+        "secret": true
+      }
+    },
+    "optional": {
+      "JWT_SECRET_KEY": {
+        "type": "string",
+        "description": "Secret key for JWT signing",
+        "secret": true,
+        "default": "change-this-in-production"
+      },
+      "OPENFGA_API_URL": {
+        "type": "string",
+        "description": "OpenFGA server URL",
+        "default": "http://localhost:8080"
+      },
+      "OPENFGA_STORE_ID": {
+        "type": "string",
+        "description": "OpenFGA store ID",
+        "secret": true
+      },
+      "OPENFGA_MODEL_ID": {
+        "type": "string",
+        "description": "OpenFGA authorization model ID",
+        "secret": true
+      },
+      "LOG_LEVEL": {
+        "type": "string",
+        "description": "Logging level",
+        "default": "INFO",
+        "enum": ["DEBUG", "INFO", "WARNING", "ERROR"]
+      }
+    }
+  },
+  "tags": [
+    "ai",
+    "agent",
+    "langgraph",
+    "anthropic",
+    "claude",
+    "authorization",
+    "openfga",
+    "observability",
+    "opentelemetry"
+  ],
+  "categories": [
+    "ai-agents",
+    "productivity",
+    "development"
+  ],
+  "features": {
+    "authentication": {
+      "supported": true,
+      "methods": ["jwt", "api-key"]
+    },
+    "authorization": {
+      "supported": true,
+      "provider": "OpenFGA",
+      "model": "relationship-based"
+    },
+    "observability": {
+      "tracing": true,
+      "metrics": true,
+      "logging": true,
+      "provider": "OpenTelemetry"
+    },
+    "rateLimiting": {
+      "supported": true,
+      "provider": "Kong API Gateway",
+      "tiers": ["free", "premium", "enterprise"]
+    }
+  },
+  "deployment": {
+    "kubernetes": {
+      "supported": true,
+      "platforms": ["GKE", "EKS", "AKS", "Rancher", "Tanzu"],
+      "helm": true,
+      "kustomize": true
+    },
+    "docker": {
+      "supported": true,
+      "image": "ghcr.io/your-org/langgraph-agent",
+      "platforms": ["linux/amd64", "linux/arm64"]
+    }
+  },
+  "healthCheck": {
+    "endpoint": "/health",
+    "interval": 30
+  },
+  "documentation": {
+    "readme": "https://github.com/your-org/langgraph-mcp-agent/blob/main/README.md",
+    "deployment": "https://github.com/your-org/langgraph-mcp-agent/blob/main/KUBERNETES_DEPLOYMENT.md",
+    "openfga": "https://github.com/your-org/langgraph-mcp-agent/blob/main/README_OPENFGA_INFISICAL.md",
+    "kong": "https://github.com/your-org/langgraph-mcp-agent/blob/main/KONG_INTEGRATION.md"
+  }
+}

@@ -1,0 +1,47 @@
+{{- if .Values.kong.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "langgraph-agent.fullname" . }}-kong
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "langgraph-agent.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: kong
+    {{- if .Values.kong.plugins }}
+    konghq.com/plugins: {{ .Values.kong.plugins | join "," }}
+    {{- end }}
+    konghq.com/strip-path: {{ .Values.kong.stripPath | quote }}
+    konghq.com/protocols: {{ .Values.kong.protocols | join "," }}
+    konghq.com/preserve-host: {{ .Values.kong.preserveHost | quote }}
+    konghq.com/connect-timeout: {{ .Values.kong.timeouts.connect | quote }}
+    konghq.com/read-timeout: {{ .Values.kong.timeouts.read | quote }}
+    konghq.com/write-timeout: {{ .Values.kong.timeouts.write | quote }}
+    {{- with .Values.kong.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: kong
+  {{- if .Values.kong.tls.enabled }}
+  tls:
+  - hosts:
+    {{- range .Values.kong.hosts }}
+    - {{ . }}
+    {{- end }}
+    secretName: {{ .Values.kong.tls.secretName }}
+  {{- end }}
+  rules:
+  {{- range .Values.kong.hosts }}
+  - host: {{ . }}
+    http:
+      paths:
+      - path: {{ $.Values.kong.path }}
+        pathType: {{ $.Values.kong.pathType }}
+        backend:
+          service:
+            name: {{ include "langgraph-agent.fullname" $ }}
+            port:
+              number: {{ $.Values.service.port }}
+  {{- end }}
+{{- end }}

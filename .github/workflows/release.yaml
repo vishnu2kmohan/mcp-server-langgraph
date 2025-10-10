@@ -1,0 +1,213 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Generate changelog
+      id: changelog
+      uses: metcalfc/changelog-generator@v4.3.1
+      with:
+        myToken: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        body: |
+          ## Changes in this Release
+
+          ${{ steps.changelog.outputs.changelog }}
+
+          ## Docker Images
+
+          ```bash
+          docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          docker pull ghcr.io/${{ github.repository }}:latest
+          ```
+
+          ## Kubernetes Deployment
+
+          ```bash
+          helm upgrade --install langgraph-agent \
+            oci://ghcr.io/${{ github.repository }}/charts/langgraph-agent \
+            --version ${{ github.ref_name }}
+          ```
+
+          ## Documentation
+
+          - [Installation Guide](README.md)
+          - [Kubernetes Deployment](KUBERNETES_DEPLOYMENT.md)
+          - [Testing Guide](TESTING.md)
+          - [MCP Registry](MCP_REGISTRY.md)
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+
+  build-and-push:
+    name: Build and Push Release Images
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=raw,value=latest
+
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: ${{ matrix.platform }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  publish-helm:
+    name: Publish Helm Chart
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.13.0'
+
+    - name: Package Helm chart
+      run: |
+        helm package helm/langgraph-agent --version ${{ github.ref_name }}
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push Helm chart
+      run: |
+        helm push langgraph-agent-${{ github.ref_name }}.tgz oci://ghcr.io/${{ github.repository }}/charts
+
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install build tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build package
+      run: python -m build
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: twine upload dist/*
+
+  update-mcp-registry:
+    name: Update MCP Registry
+    runs-on: ubuntu-latest
+    needs: [build-and-push, publish-helm]
+    if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Update manifest version
+      run: |
+        sed -i 's/"version": ".*"/"version": "${{ github.ref_name }}"/' .mcp/manifest.json
+        sed -i 's/"version": ".*"/"version": "${{ github.ref_name }}"/' .mcp/registry.json
+
+    - name: Publish to MCP Registry
+      env:
+        MCP_REGISTRY_TOKEN: ${{ secrets.MCP_REGISTRY_TOKEN }}
+      run: |
+        if [ -n "$MCP_REGISTRY_TOKEN" ]; then
+          bash scripts/publish_to_registry.sh
+        else
+          echo "MCP_REGISTRY_TOKEN not set, skipping registry publication"
+        fi
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [build-and-push, publish-helm]
+    if: always()
+    steps:
+    - name: Slack Notification
+      uses: 8398a7/action-slack@v3
+      if: ${{ secrets.SLACK_WEBHOOK }}
+      with:
+        status: ${{ job.status }}
+        text: |
+          Release ${{ github.ref_name }} has been published!
+          Docker: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          Helm: oci://ghcr.io/${{ github.repository }}/charts/langgraph-agent
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

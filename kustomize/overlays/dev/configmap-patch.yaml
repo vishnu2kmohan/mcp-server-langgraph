@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: langgraph-agent-config
+data:
+  environment: "development"
+  log_level: "DEBUG"
+  enable_console_export: "true"

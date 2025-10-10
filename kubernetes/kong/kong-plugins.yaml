@@ -1,0 +1,317 @@
+---
+# Basic rate limiting for all users (fallback)
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-basic
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: rate-limiting
+  config:
+    minute: 60
+    hour: 1000
+    policy: local
+    fault_tolerant: true
+    hide_client_headers: false
+    redis_ssl: false
+    redis_ssl_verify: false
+
+---
+# Premium tier rate limiting
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-premium
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: rate-limiting
+  config:
+    minute: 300
+    hour: 10000
+    policy: redis
+    fault_tolerant: true
+    hide_client_headers: false
+    redis_host: redis
+    redis_port: 6379
+    redis_database: 0
+
+---
+# Enterprise tier rate limiting (very high limits)
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-enterprise
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: rate-limiting
+  config:
+    minute: 1000
+    hour: 100000
+    policy: redis
+    fault_tolerant: true
+    hide_client_headers: false
+    redis_host: redis
+    redis_port: 6379
+    redis_database: 0
+
+---
+# Request size limiting
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-size-limit
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: request-size-limiting
+  config:
+    allowed_payload_size: 10
+    size_unit: megabytes
+    require_content_length: false
+
+---
+# Response rate limiting (for streaming responses)
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: response-ratelimit
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: response-ratelimiting
+  config:
+    limits:
+      tokens:
+        minute: 50000
+        hour: 1000000
+
+---
+# JWT authentication plugin
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: jwt-auth
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: jwt
+  config:
+    uri_param_names:
+      - jwt
+    cookie_names:
+      - jwt
+    claims_to_verify:
+      - exp
+    maximum_expiration: 86400
+    key_claim_name: iss
+
+---
+# API key authentication plugin
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: api-key-auth
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: key-auth
+  config:
+    key_names:
+      - apikey
+      - x-api-key
+    key_in_body: false
+    hide_credentials: true
+
+---
+# CORS plugin
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: cors
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: cors
+  config:
+    origins:
+      - "*"
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    headers:
+      - Accept
+      - Accept-Version
+      - Content-Length
+      - Content-MD5
+      - Content-Type
+      - Date
+      - X-Auth-Token
+      - Authorization
+    exposed_headers:
+      - X-Auth-Token
+      - X-RateLimit-Limit
+      - X-RateLimit-Remaining
+      - X-RateLimit-Reset
+    credentials: true
+    max_age: 3600
+
+---
+# Request transformer (add headers)
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-transformer
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: request-transformer
+  config:
+    add:
+      headers:
+        - X-Kong-Request-Id:$(uuid)
+        - X-Forwarded-Proto:https
+    remove:
+      headers:
+        - X-Legacy-Header
+
+---
+# Prometheus metrics
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: prometheus
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: prometheus
+  config:
+    per_consumer: true
+
+---
+# IP restriction (whitelist/blacklist)
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: ip-restriction
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: ip-restriction
+  config:
+    # allow:
+    #   - 10.0.0.0/8
+    #   - 172.16.0.0/12
+    # deny:
+    #   - 192.168.1.100
+
+---
+# Bot detection
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: bot-detection
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: bot-detection
+  config:
+    allow:
+      - googlebot
+      - bingbot
+    deny:
+      - scrapy
+      - curl
+
+---
+# Request termination (circuit breaker)
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-termination
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+  annotations:
+    kubernetes.io/ingress.class: kong
+spec:
+  plugin: request-termination
+  config:
+    status_code: 503
+    message: "Service temporarily unavailable"
+  disabled: true  # Enable during maintenance
+
+---
+# HTTP Log (for audit)
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: http-log
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: http-log
+  config:
+    http_endpoint: http://logstash:8080/kong
+    method: POST
+    timeout: 10000
+    keepalive: 60000
+    flush_timeout: 2
+    retry_count: 10
+    queue_size: 1000
+
+---
+# Advanced rate limiting with tiers based on consumer
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-advanced
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  plugin: rate-limiting-advanced
+  config:
+    limit:
+      - 100
+    window_size:
+      - 60
+    sync_rate: 10
+    namespace: langgraph-agent-rate-limit
+    strategy: redis
+    redis:
+      host: redis
+      port: 6379
+      database: 0
+      timeout: 2000
+    hide_client_headers: false
+    consumer_groups:
+      - free_tier
+      - premium_tier
+      - enterprise_tier
+    enforce_consumer_groups: true
+    consumer_groups_limits:
+      free_tier:
+        - 10
+      premium_tier:
+        - 100
+      enterprise_tier:
+        - 1000

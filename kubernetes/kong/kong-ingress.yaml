@@ -1,0 +1,205 @@
+---
+# Kong Ingress for LangGraph Agent HTTP/SSE transport with rate limiting
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: langgraph-agent
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+    transport: http-sse
+  annotations:
+    kubernetes.io/ingress.class: kong
+    # Apply rate limiting plugin
+    konghq.com/plugins: rate-limit-basic,request-size-limit,cors,prometheus,jwt-auth
+    # Strip path prefix
+    konghq.com/strip-path: "true"
+    # Protocol
+    konghq.com/protocols: https,http
+    # Preserve host
+    konghq.com/preserve-host: "true"
+    # Timeouts (extended for SSE)
+    konghq.com/connect-timeout: "60000"
+    konghq.com/read-timeout: "86400000"  # 24 hours for SSE
+    konghq.com/write-timeout: "86400000"  # 24 hours for SSE
+    # TLS
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: kong
+  tls:
+  - hosts:
+    - langgraph-agent.example.com
+    secretName: langgraph-agent-tls
+  rules:
+  - host: langgraph-agent.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent
+            port:
+              number: 80
+
+---
+# Kong Ingress for premium tier (different rate limits)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: langgraph-agent-premium
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+    tier: premium
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/plugins: rate-limit-premium,request-size-limit,cors,prometheus,jwt-auth
+    konghq.com/strip-path: "true"
+    konghq.com/protocols: https
+spec:
+  ingressClassName: kong
+  tls:
+  - hosts:
+    - premium.langgraph-agent.example.com
+    secretName: langgraph-agent-premium-tls
+  rules:
+  - host: premium.langgraph-agent.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent
+            port:
+              number: 80
+
+---
+# Kong Ingress for enterprise tier (highest limits)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: langgraph-agent-enterprise
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+    tier: enterprise
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/plugins: rate-limit-enterprise,request-size-limit,cors,prometheus,jwt-auth
+    konghq.com/strip-path: "true"
+    konghq.com/protocols: https
+spec:
+  ingressClassName: kong
+  tls:
+  - hosts:
+    - enterprise.langgraph-agent.example.com
+    secretName: langgraph-agent-enterprise-tls
+  rules:
+  - host: enterprise.langgraph-agent.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent
+            port:
+              number: 80
+
+---
+# KongIngress resource for custom routing and service behavior
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  name: langgraph-agent-ingress-config
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+spec:
+  # Proxy behavior
+  proxy:
+    protocol: http
+    path: /
+    connect_timeout: 60000
+    read_timeout: 300000
+    write_timeout: 300000
+    retries: 3
+
+  # Route configuration
+  route:
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - PATCH
+      - OPTIONS
+    strip_path: false
+    preserve_host: true
+    protocols:
+      - https
+      - http
+    https_redirect_status_code: 301
+    regex_priority: 0
+
+  # Upstream configuration
+  upstream:
+    algorithm: round-robin
+    slots: 10000
+    healthchecks:
+      active:
+        type: http
+        http_path: /health
+        timeout: 10
+        concurrency: 10
+        healthy:
+          interval: 10
+          successes: 2
+          http_statuses:
+            - 200
+            - 302
+        unhealthy:
+          interval: 10
+          http_failures: 3
+          tcp_failures: 3
+          timeouts: 3
+          http_statuses:
+            - 429
+            - 500
+            - 503
+      passive:
+        type: http
+        healthy:
+          successes: 5
+          http_statuses:
+            - 200
+            - 201
+            - 202
+            - 203
+            - 204
+            - 205
+            - 206
+            - 207
+            - 208
+            - 226
+            - 300
+            - 301
+            - 302
+            - 303
+            - 304
+            - 305
+            - 306
+            - 307
+            - 308
+        unhealthy:
+          http_failures: 5
+          tcp_failures: 2
+          timeouts: 2
+          http_statuses:
+            - 429
+            - 500
+            - 503
+    hash_on: none
+    hash_fallback: none

@@ -1,0 +1,105 @@
+---
+# Ingress for StreamableHTTP transport (primary)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: langgraph-agent-streamable
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+    transport: streamable-http
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # StreamableHTTP annotations
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    # Request size
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,Accept"
+    nginx.ingress.kubernetes.io/cors-expose-headers: "X-Request-ID,X-RateLimit-Limit,X-RateLimit-Remaining"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - mcp.langgraph-agent.example.com
+    secretName: langgraph-agent-streamable-tls
+  rules:
+  - host: mcp.langgraph-agent.example.com
+    http:
+      paths:
+      # StreamableHTTP endpoint
+      - path: /message
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent
+            port:
+              number: 80
+      # Other endpoints
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent
+            port:
+              number: 80
+
+---
+# Ingress for HTTP/SSE transport (deprecated, legacy support)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: langgraph-agent-sse
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+    transport: http-sse
+    deprecated: "true"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # SSE-specific annotations
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    # Keep-alive for SSE
+    nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "86400"
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - mcp.langgraph-agent.example.com
+    secretName: langgraph-agent-http-tls
+  rules:
+  - host: mcp.langgraph-agent.example.com
+    http:
+      paths:
+      # SSE endpoint (use headless service for session affinity)
+      - path: /sse
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent-sse
+            port:
+              number: 8000
+      # Regular HTTP endpoints
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent
+            port:
+              number: 80

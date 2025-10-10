@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: langgraph-agent-config
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+data:
+  environment: "production"
+  log_level: "INFO"
+  model_name: "claude-3-5-sonnet-20241022"
+  model_temperature: "0.7"
+  model_max_tokens: "4096"
+  max_iterations: "10"
+  enable_checkpointing: "true"
+  enable_tracing: "true"
+  enable_metrics: "true"
+  enable_console_export: "false"
