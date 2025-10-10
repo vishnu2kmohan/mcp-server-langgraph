@@ -28,7 +28,7 @@ pylint==3.0.3
 coverage[toml]==7.4.1
 
 # Security scanning
-bandit==1.7.6
+bandit==1.8.6
 safety==3.0.1
 
 # Type stubs
