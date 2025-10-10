@@ -29,10 +29,14 @@ class TestAgentState:
 class TestAgentGraph:
     """Test LangGraph agent creation and execution"""
 
-    @patch('agent.ChatAnthropic')
-    def test_create_agent_graph(self, mock_anthropic):
+    @patch('llm_factory.create_llm_from_config')
+    def test_create_agent_graph(self, mock_create_llm):
         """Test agent graph is created successfully"""
         from agent import create_agent_graph
+
+        # Mock the LLM
+        mock_llm = MagicMock()
+        mock_create_llm.return_value = mock_llm
 
         graph = create_agent_graph()
 
@@ -40,14 +44,14 @@ class TestAgentGraph:
         assert hasattr(graph, 'invoke')
         assert hasattr(graph, 'stream')
 
-    @patch('agent.ChatAnthropic')
-    def test_route_input_to_respond(self, mock_anthropic):
+    @patch('agent.create_llm_from_config')
+    def test_route_input_to_respond(self, mock_create_llm):
         """Test routing to direct response"""
         from agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Hello! I can help you.")
-        mock_anthropic.return_value = mock_model
+        mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
 
@@ -65,14 +69,14 @@ class TestAgentGraph:
         assert len(result["messages"]) > 1
         assert result["next_action"] == "end"
 
-    @patch('agent.ChatAnthropic')
-    def test_route_input_to_tools(self, mock_anthropic):
+    @patch('agent.create_llm_from_config')
+    def test_route_input_to_tools(self, mock_create_llm):
         """Test routing to tools when keywords detected"""
         from agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Search completed.")
-        mock_anthropic.return_value = mock_model
+        mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
 
@@ -89,14 +93,14 @@ class TestAgentGraph:
         # Should go through tools node
         assert len(result["messages"]) > 2
 
-    @patch('agent.ChatAnthropic')
-    def test_route_with_calculate_keyword(self, mock_anthropic):
+    @patch('agent.create_llm_from_config')
+    def test_route_with_calculate_keyword(self, mock_create_llm):
         """Test routing detects calculate keyword"""
         from agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Calculation result")
-        mock_anthropic.return_value = mock_model
+        mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
 
@@ -112,14 +116,14 @@ class TestAgentGraph:
         assert result is not None
         assert result["next_action"] == "end"
 
-    @patch('agent.ChatAnthropic')
-    def test_agent_with_conversation_history(self, mock_anthropic):
+    @patch('agent.create_llm_from_config')
+    def test_agent_with_conversation_history(self, mock_create_llm):
         """Test agent handles conversation history"""
         from agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Follow-up response")
-        mock_anthropic.return_value = mock_model
+        mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
 
@@ -139,14 +143,14 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 3
 
-    @patch('agent.ChatAnthropic')
-    def test_checkpointing_works(self, mock_anthropic):
+    @patch('agent.create_llm_from_config')
+    def test_checkpointing_works(self, mock_create_llm):
         """Test conversation checkpointing"""
         from agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Response")
-        mock_anthropic.return_value = mock_model
+        mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
 
@@ -173,10 +177,8 @@ class TestAgentGraph:
         # Second result should have more messages due to checkpointing
         assert len(result2["messages"]) > len(result1["messages"])
 
-    @patch('agent.ChatAnthropic')
-    def test_state_accumulation(self, mock_anthropic):
+    def test_state_accumulation(self):
         """Test that messages accumulate in state"""
-        from agent import create_agent_graph
         from agent import AgentState
         import operator
 

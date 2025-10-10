@@ -42,10 +42,12 @@ class TestJWTBenchmarks:
     @pytest.fixture
     def sample_payload(self):
         """Sample JWT payload."""
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         return {
             "sub": "test-user",
-            "exp": datetime.utcnow() + timedelta(hours=1),
-            "iat": datetime.utcnow(),
+            "exp": now + timedelta(hours=1),
+            "iat": now,
             "roles": ["user", "developer"],
         }
 
@@ -93,6 +95,7 @@ class TestJWTBenchmarks:
 
         Requirement: Token validation should take < 2ms on average.
         """
+        from datetime import timezone
         # Create tokens with various expiration times
         token = jwt.encode(sample_payload, jwt_config["secret_key"], algorithm=jwt_config["algorithm"])
 
@@ -100,8 +103,9 @@ class TestJWTBenchmarks:
             try:
                 decoded = jwt.decode(token, jwt_config["secret_key"], algorithms=[jwt_config["algorithm"]])
                 # Verify expiration
-                exp = datetime.fromtimestamp(decoded["exp"])
-                return exp > datetime.utcnow()
+                exp = datetime.fromtimestamp(decoded["exp"], tz=timezone.utc)
+                now = datetime.now(timezone.utc)
+                return exp > now
             except jwt.ExpiredSignatureError:
                 return False
 
@@ -110,7 +114,7 @@ class TestJWTBenchmarks:
 
         assert result is True
 
-        # Performance assertion: < 2ms average
+        # Performance assertion: < 2ms on average
         assert benchmark.stats["mean"] < 0.002, f"JWT validation took {benchmark.stats['mean']*1000:.2f}ms (target: < 2ms)"
 
 

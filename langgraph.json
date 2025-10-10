@@ -3,7 +3,7 @@
     "."
   ],
   "graphs": {
-    "agent": "./langgraph/agent.py:graph"
+    "agent": "./langgraph_platform/agent.py:graph"
   },
   "env": {
     "ANTHROPIC_API_KEY": "",
