@@ -17,7 +17,7 @@ cryptography==42.0.2
 
 # OpenTelemetry Core
 opentelemetry-api==1.22.0
-opentelemetry-sdk==1.22.0
+opentelemetry-sdk==1.37.0
 
 # OpenTelemetry Instrumentation
 opentelemetry-instrumentation-logging==0.43b0
