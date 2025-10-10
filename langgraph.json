@@ -17,7 +17,7 @@
     "OPENFGA_STORE_ID": "",
     "OPENFGA_MODEL_ID": ""
   },
-  "python_version": "3.11",
+  "python_version": "3.13",
   "dockerfile_lines": [],
   "pip_config_overrides": []
 }
