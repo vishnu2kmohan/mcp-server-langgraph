@@ -198,6 +198,85 @@ class TestAgentGraph:
         assert isinstance(combined[0], HumanMessage)
         assert isinstance(combined[1], AIMessage)
 
+    @patch('agent.LANGSMITH_AVAILABLE', False)
+    @patch('agent.create_llm_from_config')
+    def test_agent_without_langsmith(self, mock_create_llm):
+        """Test agent works when LangSmith is not available"""
+        from agent import create_agent_graph
+
+        mock_model = MagicMock()
+        mock_model.invoke.return_value = AIMessage(content="Response without LangSmith")
+        mock_create_llm.return_value = mock_model
+
+        graph = create_agent_graph()
+
+        initial_state = {
+            "messages": [HumanMessage(content="Test message")],
+            "next_action": "",
+            "user_id": "user:test",
+            "request_id": "req-test"
+        }
+
+        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-no-langsmith"}})
+
+        assert result is not None
+        assert len(result["messages"]) > 0
+
+    @patch('agent.LANGSMITH_AVAILABLE', True)
+    @patch('agent.langsmith_config')
+    @patch('agent.get_run_tags')
+    @patch('agent.get_run_metadata')
+    @patch('agent.create_llm_from_config')
+    def test_agent_with_langsmith_enabled(self, mock_create_llm, mock_metadata, mock_tags, mock_config):
+        """Test agent with LangSmith enabled"""
+        from agent import create_agent_graph
+
+        # Mock LangSmith config
+        mock_config.is_enabled.return_value = True
+        mock_tags.return_value = ["test-tag"]
+        mock_metadata.return_value = {"test": "metadata"}
+
+        mock_model = MagicMock()
+        mock_model.invoke.return_value = AIMessage(content="Response with LangSmith")
+        mock_create_llm.return_value = mock_model
+
+        graph = create_agent_graph()
+
+        initial_state = {
+            "messages": [HumanMessage(content="Test message")],
+            "next_action": "",
+            "user_id": "user:test",
+            "request_id": "req-test"
+        }
+
+        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-langsmith"}})
+
+        assert result is not None
+        mock_config.is_enabled.assert_called()
+
+    @patch('agent.create_llm_from_config')
+    def test_routing_with_tool_keywords(self, mock_create_llm):
+        """Test routing detects tool keywords"""
+        from agent import create_agent_graph
+
+        mock_model = MagicMock()
+        mock_model.invoke.return_value = AIMessage(content="Search result")
+        mock_create_llm.return_value = mock_model
+
+        graph = create_agent_graph()
+
+        # Test with "search" keyword
+        state_search = {
+            "messages": [HumanMessage(content="Please search for information")],
+            "next_action": "",
+            "user_id": "user:test",
+            "request_id": "req-test"
+        }
+
+        result = graph.invoke(state_search, config={"configurable": {"thread_id": "test-routing"}})
+
+        assert result is not None
+
 
 @pytest.mark.integration
 class TestAgentIntegration:

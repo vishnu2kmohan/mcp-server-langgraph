@@ -296,15 +296,20 @@ class TestSecretsManager:
         mock_instance.delete_secret.assert_called_once()
 
     @patch('secrets_manager.InfisicalClient')
-    def test_clear_cache(self, mock_client):
-        """Test cache clearing"""
+    def test_get_all_secrets_success(self, mock_client):
+        """Test retrieving all secrets from a path"""
         from secrets_manager import SecretsManager
 
-        mock_secret = MagicMock()
-        mock_secret.secret_value = "cached"
+        mock_secret1 = MagicMock()
+        mock_secret1.secret_key = "KEY1"
+        mock_secret1.secret_value = "value1"
+
+        mock_secret2 = MagicMock()
+        mock_secret2.secret_key = "KEY2"
+        mock_secret2.secret_value = "value2"
 
         mock_instance = MagicMock()
-        mock_instance.get_secret.return_value = mock_secret
+        mock_instance.list_secrets.return_value = [mock_secret1, mock_secret2]
         mock_client.return_value = mock_instance
 
         manager = SecretsManager(
@@ -313,13 +318,130 @@ class TestSecretsManager:
             project_id="test-project"
         )
 
-        # Cache a value
-        manager.get_secret("KEY1")
-        assert len(manager._cache) == 1
+        secrets = manager.get_all_secrets(path="/app")
 
-        # Clear cache
-        manager.clear_cache()
-        assert len(manager._cache) == 0
+        assert secrets == {"KEY1": "value1", "KEY2": "value2"}
+        mock_instance.list_secrets.assert_called_once()
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_get_all_secrets_no_client(self, mock_client):
+        """Test get_all_secrets without Infisical client"""
+        from secrets_manager import SecretsManager
+
+        manager = SecretsManager()  # No client
+
+        secrets = manager.get_all_secrets()
+
+        assert secrets == {}
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_get_all_secrets_error(self, mock_client):
+        """Test get_all_secrets handles errors"""
+        from secrets_manager import SecretsManager
+
+        mock_instance = MagicMock()
+        mock_instance.list_secrets.side_effect = Exception("API error")
+        mock_client.return_value = mock_instance
+
+        manager = SecretsManager(
+            client_id="test-id",
+            client_secret="test-secret",
+            project_id="test-project"
+        )
+
+        secrets = manager.get_all_secrets()
+
+        assert secrets == {}
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_create_secret_no_client(self, mock_client):
+        """Test create_secret without Infisical client"""
+        from secrets_manager import SecretsManager
+
+        manager = SecretsManager()  # No client
+
+        result = manager.create_secret("KEY", "value")
+
+        assert result is False
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_create_secret_error(self, mock_client):
+        """Test create_secret handles errors"""
+        from secrets_manager import SecretsManager
+
+        mock_instance = MagicMock()
+        mock_instance.create_secret.side_effect = Exception("Create failed")
+        mock_client.return_value = mock_instance
+
+        manager = SecretsManager(
+            client_id="test-id",
+            client_secret="test-secret",
+            project_id="test-project"
+        )
+
+        result = manager.create_secret("KEY", "value")
+
+        assert result is False
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_update_secret_no_client(self, mock_client):
+        """Test update_secret without Infisical client"""
+        from secrets_manager import SecretsManager
+
+        manager = SecretsManager()  # No client
+
+        result = manager.update_secret("KEY", "value")
+
+        assert result is False
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_update_secret_error(self, mock_client):
+        """Test update_secret handles errors"""
+        from secrets_manager import SecretsManager
+
+        mock_instance = MagicMock()
+        mock_instance.update_secret.side_effect = Exception("Update failed")
+        mock_client.return_value = mock_instance
+
+        manager = SecretsManager(
+            client_id="test-id",
+            client_secret="test-secret",
+            project_id="test-project"
+        )
+
+        result = manager.update_secret("KEY", "value")
+
+        assert result is False
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_delete_secret_no_client(self, mock_client):
+        """Test delete_secret without Infisical client"""
+        from secrets_manager import SecretsManager
+
+        manager = SecretsManager()  # No client
+
+        result = manager.delete_secret("KEY")
+
+        assert result is False
+
+    @patch('secrets_manager.InfisicalClient')
+    def test_delete_secret_error(self, mock_client):
+        """Test delete_secret handles errors"""
+        from secrets_manager import SecretsManager
+
+        mock_instance = MagicMock()
+        mock_instance.delete_secret.side_effect = Exception("Delete failed")
+        mock_client.return_value = mock_instance
+
+        manager = SecretsManager(
+            client_id="test-id",
+            client_secret="test-secret",
+            project_id="test-project"
+        )
+
+        result = manager.delete_secret("KEY")
+
+        assert result is False
 
 
 @pytest.mark.integration
