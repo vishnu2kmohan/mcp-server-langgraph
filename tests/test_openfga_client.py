@@ -256,6 +256,204 @@ class TestOpenFGAClient:
                 object_type="tool"
             )
 
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_expand_relation_success(self, mock_sdk_client):
+        """Test expanding a relation to see all users with access"""
+        from openfga_client import OpenFGAClient
+
+        mock_tree = MagicMock()
+        mock_tree.model_dump.return_value = {
+            "root": {
+                "name": "tool:chat#executor",
+                "leaf": {
+                    "users": {"users": ["user:alice", "user:bob"]}
+                }
+            }
+        }
+
+        mock_response = MagicMock()
+        mock_response.tree = mock_tree
+
+        mock_instance = AsyncMock()
+        mock_instance.expand.return_value = mock_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        result = await client.expand_relation(
+            relation="executor",
+            object="tool:chat"
+        )
+
+        assert "root" in result
+        mock_instance.expand.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_expand_relation_empty(self, mock_sdk_client):
+        """Test expanding relation with no tree"""
+        from openfga_client import OpenFGAClient
+
+        mock_response = MagicMock()
+        mock_response.tree = None
+
+        mock_instance = AsyncMock()
+        mock_instance.expand.return_value = mock_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        result = await client.expand_relation(
+            relation="executor",
+            object="tool:chat"
+        )
+
+        assert result == {}
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_expand_relation_error(self, mock_sdk_client):
+        """Test expand relation handles errors"""
+        from openfga_client import OpenFGAClient
+
+        mock_instance = AsyncMock()
+        mock_instance.expand.side_effect = Exception("Expand failed")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        with pytest.raises(Exception, match="Expand failed"):
+            await client.expand_relation(
+                relation="executor",
+                object="tool:chat"
+            )
+
+
+@pytest.mark.unit
+@pytest.mark.openfga
+class TestOpenFGAAuthorizationModel:
+    """Test OpenFGAAuthorizationModel class"""
+
+    def test_get_model_definition(self):
+        """Test authorization model definition"""
+        from openfga_client import OpenFGAAuthorizationModel
+
+        model = OpenFGAAuthorizationModel.get_model_definition()
+
+        assert model["schema_version"] == "1.1"
+        assert "type_definitions" in model
+
+        # Check all expected types are defined
+        types = [td["type"] for td in model["type_definitions"]]
+        assert "user" in types
+        assert "organization" in types
+        assert "tool" in types
+        assert "conversation" in types
+        assert "role" in types
+
+    def test_organization_relations(self):
+        """Test organization type has correct relations"""
+        from openfga_client import OpenFGAAuthorizationModel
+
+        model = OpenFGAAuthorizationModel.get_model_definition()
+        org_type = next(td for td in model["type_definitions"] if td["type"] == "organization")
+
+        assert "member" in org_type["relations"]
+        assert "admin" in org_type["relations"]
+
+    def test_tool_relations(self):
+        """Test tool type has correct relations"""
+        from openfga_client import OpenFGAAuthorizationModel
+
+        model = OpenFGAAuthorizationModel.get_model_definition()
+        tool_type = next(td for td in model["type_definitions"] if td["type"] == "tool")
+
+        assert "owner" in tool_type["relations"]
+        assert "executor" in tool_type["relations"]
+        assert "organization" in tool_type["relations"]
+
+    def test_conversation_relations(self):
+        """Test conversation type has correct relations"""
+        from openfga_client import OpenFGAAuthorizationModel
+
+        model = OpenFGAAuthorizationModel.get_model_definition()
+        conv_type = next(td for td in model["type_definitions"] if td["type"] == "conversation")
+
+        assert "owner" in conv_type["relations"]
+        assert "viewer" in conv_type["relations"]
+        assert "editor" in conv_type["relations"]
+
+
+@pytest.mark.unit
+@pytest.mark.openfga
+class TestOpenFGAUtilityFunctions:
+    """Test utility functions for OpenFGA"""
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_initialize_openfga_store(self, mock_sdk_client):
+        """Test initializing OpenFGA store with authorization model"""
+        from openfga_client import OpenFGAClient, initialize_openfga_store
+
+        # Mock store creation
+        mock_store_response = MagicMock()
+        mock_store_response.id = "test-store-id"
+
+        # Mock model creation
+        mock_model_response = MagicMock()
+        mock_model_response.authorization_model_id = "test-model-id"
+
+        mock_instance = AsyncMock()
+        mock_instance.create_store.return_value = mock_store_response
+        mock_instance.write_authorization_model.return_value = mock_model_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+        store_id = await initialize_openfga_store(client)
+
+        assert store_id == "test-store-id"
+        assert client.store_id == "test-store-id"
+        assert client.model_id == "test-model-id"
+        mock_instance.create_store.assert_called_once()
+        mock_instance.write_authorization_model.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_initialize_openfga_store_error(self, mock_sdk_client):
+        """Test initialize store handles errors"""
+        from openfga_client import OpenFGAClient, initialize_openfga_store
+
+        mock_instance = AsyncMock()
+        mock_instance.create_store.side_effect = Exception("Store creation failed")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        with pytest.raises(Exception, match="Store creation failed"):
+            await initialize_openfga_store(client)
+
+    @pytest.mark.asyncio
+    @patch('openfga_client.OpenFgaClient')
+    async def test_seed_sample_data(self, mock_sdk_client):
+        """Test seeding sample data"""
+        from openfga_client import OpenFGAClient, seed_sample_data
+
+        mock_instance = AsyncMock()
+        mock_instance.write.return_value = MagicMock()
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+        await seed_sample_data(client)
+
+        # Verify write was called
+        mock_instance.write.assert_called_once()
+
+        # Verify we wrote tuples (sample data has 10 tuples)
+        call_args = mock_instance.write.call_args[0][0]
+        assert isinstance(call_args, ClientWriteRequest)
+        assert len(call_args.writes) == 10
+
 
 @pytest.mark.integration
 @pytest.mark.openfga
