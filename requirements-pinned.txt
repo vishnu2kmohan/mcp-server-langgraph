@@ -34,7 +34,7 @@ infisical-python==2.1.7
 
 # Utilities
 python-dotenv==1.0.1
-pydantic==2.5.3
+pydantic==2.12.0
 pydantic-settings==2.1.0
 httpx==0.26.0
 
