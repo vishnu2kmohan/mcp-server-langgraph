@@ -1,0 +1,192 @@
+{
+  "version": "1.0",
+  "name": "mcp-server-langgraph",
+  "description": "Production-ready LangGraph agent with MCP, OpenFGA, and multi-LLM support",
+
+  "language": {
+    "primary": "python",
+    "version": "3.11",
+    "style": "black",
+    "lineLength": 127
+  },
+
+  "codeStyle": {
+    "formatter": "black",
+    "formatterArgs": ["--line-length=127"],
+    "importSorter": "isort",
+    "importSorterArgs": ["--profile=black", "--line-length=127"],
+    "linter": "flake8",
+    "linterArgs": ["--max-line-length=127", "--extend-ignore=E203,W503"],
+    "typeChecker": "mypy",
+    "typeCheckerArgs": ["--ignore-missing-imports", "--warn-unused-configs"]
+  },
+
+  "patterns": {
+    "authentication": {
+      "description": "Always use JWT authentication with OpenFGA authorization",
+      "example": "from auth import AuthMiddleware\nawait auth.verify_token(token)\nawait openfga_client.check(user, relation, object)"
+    },
+    "observability": {
+      "description": "Add OpenTelemetry tracing, logging, and metrics",
+      "example": "with tracer.start_as_current_span('operation'):\n    logger.info('event', extra={'context': 'data'})\n    metrics.counter.add(1, {'label': 'value'})"
+    },
+    "asyncIO": {
+      "description": "Use async/await for all I/O operations",
+      "example": "async def fetch_data():\n    async with httpx.AsyncClient() as client:\n        response = await client.get(url)\n        return response.json()"
+    },
+    "errorHandling": {
+      "description": "Use specific exceptions and proper error handling",
+      "example": "try:\n    result = await operation()\nexcept ValidationError as e:\n    raise HTTPException(422, detail=str(e))\nexcept PermissionError:\n    raise HTTPException(403)"
+    },
+    "inputValidation": {
+      "description": "Always validate inputs with Pydantic models",
+      "example": "from pydantic import BaseModel, Field\n\nclass Request(BaseModel):\n    message: str = Field(..., min_length=1, max_length=10000)"
+    }
+  },
+
+  "conventions": {
+    "naming": {
+      "classes": "PascalCase",
+      "functions": "snake_case",
+      "constants": "UPPER_SNAKE_CASE",
+      "private": "_leading_underscore"
+    },
+    "imports": {
+      "order": ["standard", "third-party", "local"],
+      "grouping": true,
+      "sorting": "alphabetical"
+    },
+    "docstrings": {
+      "style": "google",
+      "required": ["public_functions", "classes", "modules"],
+      "optional": ["private_functions"]
+    },
+    "typeHints": {
+      "required": true,
+      "level": "strict",
+      "annotations": ["arguments", "returns"]
+    }
+  },
+
+  "security": {
+    "rules": [
+      "Never hardcode secrets or API keys",
+      "Always validate JWT tokens before processing requests",
+      "Check OpenFGA authorization before protected operations",
+      "Use Pydantic for all input validation",
+      "Never log passwords, tokens, or secrets",
+      "Use environment variables or Infisical for configuration"
+    ],
+    "patterns": {
+      "secrets": "settings.{secret_name}",
+      "auth": "await auth.verify_token(token)",
+      "authz": "await openfga_client.check(user, relation, object)",
+      "validation": "class Request(BaseModel): ..."
+    }
+  },
+
+  "testing": {
+    "framework": "pytest",
+    "markers": {
+      "unit": "Fast tests, no external dependencies",
+      "integration": "Tests with real services",
+      "e2e": "End-to-end system tests",
+      "benchmark": "Performance benchmark tests"
+    },
+    "coverage": {
+      "target": 80,
+      "critical": 90
+    },
+    "mocking": {
+      "preferred": "pytest-mock",
+      "asyncMocks": "unittest.mock.AsyncMock"
+    }
+  },
+
+  "performance": {
+    "targets": {
+      "agent_response_p95": "5s",
+      "llm_call_p95": "10s",
+      "authorization_p95": "50ms",
+      "jwt_validation_p95": "2ms"
+    },
+    "optimization": [
+      "Use async/await for all I/O",
+      "Implement connection pooling",
+      "Cache OpenFGA model definitions",
+      "Use streaming for large responses"
+    ]
+  },
+
+  "files": {
+    "agent": "agent.py",
+    "mcp_servers": ["mcp_server.py", "mcp_server_streamable.py", "mcp_server_http.py"],
+    "auth": "auth.py",
+    "authorization": "openfga_client.py",
+    "config": "config.py",
+    "observability": "observability.py",
+    "tests": "tests/",
+    "docs": ["README.md", "DEVELOPMENT.md", "CONTRIBUTING.md"]
+  },
+
+  "dependencies": {
+    "core": [
+      "langgraph>=0.2.28",
+      "litellm>=1.52.3",
+      "mcp>=1.1.2",
+      "fastapi>=0.109.0",
+      "uvicorn>=0.27.0"
+    ],
+    "security": [
+      "PyJWT>=2.8.0",
+      "openfga-sdk>=0.5.1",
+      "infisical-python>=2.1.7"
+    ],
+    "observability": [
+      "opentelemetry-api>=1.22.0",
+      "opentelemetry-sdk>=1.22.0"
+    ],
+    "testing": [
+      "pytest>=8.0.0",
+      "pytest-asyncio>=0.23.3",
+      "pytest-cov>=4.1.0",
+      "pytest-benchmark>=4.0.0"
+    ]
+  },
+
+  "suggestions": {
+    "prioritize": [
+      "Security best practices",
+      "Type safety with hints",
+      "Async/await patterns",
+      "Observability instrumentation",
+      "Comprehensive error handling"
+    ],
+    "avoid": [
+      "Hardcoded secrets",
+      "Synchronous I/O in async code",
+      "Missing authorization checks",
+      "Unvalidated user inputs",
+      "Deep nesting (>3 levels)"
+    ]
+  },
+
+  "contextFiles": [
+    "README.md",
+    "DEVELOPMENT.md",
+    ".cursorrules",
+    ".openai/codex-instructions.md",
+    "agent.py",
+    "config.py",
+    "auth.py",
+    "observability.py"
+  ],
+
+  "prompts": {
+    "codeGeneration": "Generate Python code following black formatting (127 char lines), with type hints, Google-style docstrings, proper error handling, and observability (tracing, logging, metrics). Include comprehensive tests.",
+    "refactoring": "Refactor to improve code quality while maintaining backward compatibility. Add missing type hints, improve error handling, add observability, and update tests.",
+    "testing": "Generate comprehensive pytest tests including happy path, error cases, edge cases, and benchmarks where applicable. Mock external dependencies.",
+    "documentation": "Generate Google-style docstrings with clear descriptions, argument documentation, return value documentation, and raised exceptions.",
+    "security": "Review code for security issues: hardcoded secrets, missing authorization, unvalidated inputs, improper error handling, sensitive data logging."
+  }
+}

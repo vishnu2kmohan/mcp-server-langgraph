@@ -22,7 +22,7 @@ from config import settings
 
 
 app = FastAPI(
-    title="LangGraph MCP Agent",
+    title="MCP Server with LangGraph",
     description="AI Agent with fine-grained authorization and observability",
     version=settings.service_version,
     docs_url="/docs",
@@ -376,7 +376,7 @@ mcp_server = MCPAgentHTTPServer()
 async def root():
     """Root endpoint with server info"""
     return {
-        "name": "LangGraph MCP Agent",
+        "name": "MCP Server with LangGraph",
         "version": settings.service_version,
         "transport": "http-sse",
         "protocol": "mcp",

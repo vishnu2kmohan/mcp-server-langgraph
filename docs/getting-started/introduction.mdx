@@ -1,0 +1,191 @@
+---
+title: Introduction
+description: 'Welcome to MCP Server with LangGraph - A production-ready MCP server with enterprise features'
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="Hero Dark"
+/>
+
+## What is MCP Server with LangGraph?
+
+MCP Server with LangGraph is a **production-ready** MCP server implementation that combines the power of [LangGraph](https://langchain-ai.github.io/langgraph/) with the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), enhanced with enterprise-grade security, observability, and multi-cloud deployment capabilities.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/getting-started/quickstart"
+  >
+    Get up and running in 5 minutes
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Explore the API endpoints
+  </Card>
+  <Card
+    title="Deploy to LangGraph Platform"
+    icon="cloud"
+    href="/deployment/langgraph-platform"
+  >
+    One-command serverless deployment
+  </Card>
+  <Card
+    title="View on GitHub"
+    icon="github"
+    href="https://github.com/vishnu2kmohan/mcp_server_langgraph"
+  >
+    Star us on GitHub
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion icon="brain" title="Multi-LLM Support">
+    Support for 100+ LLM providers via [LiteLLM](https://docs.litellm.ai/):
+    - **Anthropic Claude** (3.5 Sonnet, 3 Opus)
+    - **OpenAI GPT** (GPT-4, GPT-4 Turbo)
+    - **Google Gemini** (2.5 Flash, 2.5 Pro)
+    - **Azure OpenAI**
+    - **AWS Bedrock**
+    - **Local Models** via Ollama (Llama 3.1, Qwen 2.5, Mistral)
+
+    Automatic fallback and retry logic ensures high availability.
+  </Accordion>
+
+  <Accordion icon="shield" title="Enterprise Security">
+    Production-grade security features:
+    - **JWT Authentication** - Secure token-based auth
+    - **OpenFGA Authorization** - Fine-grained relationship-based access control (Zanzibar model)
+    - **Infisical Integration** - Centralized secrets management
+    - **Audit Logging** - Complete security event tracking
+    - **Network Policies** - Kubernetes-native network isolation
+  </Accordion>
+
+  <Accordion icon="chart-line" title="Dual Observability">
+    Complete visibility with dual observability stack:
+    - **LangSmith** - LLM-specific tracing, prompt engineering, evaluations, cost tracking
+    - **OpenTelemetry** - Distributed tracing with Jaeger, infrastructure metrics
+    - **Prometheus** - Metrics collection and alerting
+    - **Grafana Dashboards** - Pre-built visualizations
+    - **Structured Logging** - JSON logs with trace correlation
+  </Accordion>
+
+  <Accordion icon="cloud" title="Multi-Cloud Deployment">
+    Deploy anywhere with confidence:
+    - **LangGraph Platform** - One-command serverless deployment (2 minutes)
+    - **Google Cloud Run** - Serverless GCP with auto-scaling (10 minutes)
+    - **Kubernetes** - Production-grade K8s on GKE, EKS, AKS (1-2 hours)
+    - **Helm Charts** - Flexible, customizable K8s deployments
+    - **Docker** - Quick Docker Compose setup for dev/test (15 minutes)
+    - **GitOps Ready** - ArgoCD, FluxCD compatible
+  </Accordion>
+</AccordionGroup>
+
+## Architecture
+
+```mermaid
+graph TB
+    Client[MCP Client] -->|MCP Protocol| Server[MCP Server]
+    Server --> Auth[JWT Auth]
+    Auth --> AuthZ[OpenFGA AuthZ]
+    AuthZ --> Agent[LangGraph Agent]
+    Agent --> LLM[LLM Provider]
+    Agent --> Tools[Agent Tools]
+    Server --> Otel[OpenTelemetry]
+    Otel --> Jaeger[Jaeger Tracing]
+    Otel --> Prom[Prometheus]
+    Prom --> Grafana[Grafana]
+    Server --> Secrets[Infisical]
+```
+
+## Use Cases
+
+<CardGroup cols={3}>
+  <Card title="AI Assistants" icon="robot">
+    Build intelligent assistants with multi-turn conversations and context awareness
+  </Card>
+  <Card title="Automation Agents" icon="wand-magic-sparkles">
+    Create autonomous agents that execute complex workflows
+  </Card>
+  <Card title="Enterprise AI" icon="building">
+    Deploy secure, compliant AI systems for enterprise use
+  </Card>
+  <Card title="Research Platforms" icon="flask">
+    Build research tools with multiple model support
+  </Card>
+  <Card title="Customer Support" icon="headset">
+    Intelligent support bots with fine-grained permissions
+  </Card>
+  <Card title="DevOps Automation" icon="gears">
+    AI-powered infrastructure management and monitoring
+  </Card>
+</CardGroup>
+
+## Why Choose MCP Server with LangGraph?
+
+<Note>
+  Most AI agent frameworks are proof-of-concepts. MCP Server with LangGraph is **production-ready** from day one.
+</Note>
+
+| Feature | PoC Frameworks | MCP Server with LangGraph |
+|---------|---------------|---------------------|
+| **Authentication** | ❌ None | ✅ JWT + OpenFGA |
+| **Multi-LLM** | ⚠️ Single provider | ✅ 100+ providers |
+| **Observability** | ❌ Basic logs | ✅ Full OTEL stack |
+| **Secrets** | ⚠️ .env files | ✅ Infisical integration |
+| **Kubernetes** | ❌ None | ✅ Production manifests |
+| **Security** | ⚠️ Basic | ✅ Enterprise-grade |
+| **Documentation** | ⚠️ README only | ✅ Complete guides |
+| **Testing** | ❌ Minimal | ✅ 70%+ coverage |
+
+## Community & Support
+
+<CardGroup cols={2}>
+  <Card title="GitHub Discussions" icon="comments" href="https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions">
+    Ask questions and share ideas
+  </Card>
+  <Card title="Issue Tracker" icon="bug" href="https://github.com/vishnu2kmohan/mcp_server_langgraph/issues">
+    Report bugs and request features
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/advanced/contributing">
+    Help improve the project
+  </Card>
+  <Card title="Security" icon="shield-halved" href="/security/overview">
+    Report security vulnerabilities
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<Steps>
+  <Step title="Install">
+    Follow the [Quick Start](/getting-started/quickstart) guide to install and configure
+  </Step>
+  <Step title="Configure">
+    Set up your [LLM provider](/guides/multi-llm-setup) and [authentication](/getting-started/authentication)
+  </Step>
+  <Step title="Deploy">
+    Deploy to [Docker](/deployment/docker) or [Kubernetes](/deployment/kubernetes)
+  </Step>
+  <Step title="Monitor">
+    Set up [observability](/deployment/monitoring) and monitoring
+  </Step>
+</Steps>
+
+---
+
+<Info>
+  **Ready to get started?** Jump to the [Quick Start guide](/getting-started/quickstart) to have your agent running in 5 minutes!
+</Info>

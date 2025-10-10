@@ -1,0 +1,298 @@
+---
+title: API Reference
+description: 'Complete API reference for MCP Server with LangGraph'
+---
+
+## Overview
+
+The MCP Server with LangGraph exposes a RESTful API following the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) specification with additional custom endpoints for health checks and metrics.
+
+## Base URL
+
+<CodeGroup>
+```bash Local Development
+http://localhost:8000
+```
+
+```bash Production
+https://your-domain.com
+```
+
+```bash Kubernetes
+http://langgraph-agent.langgraph-agent.svc.cluster.local:8000
+```
+</CodeGroup>
+
+## Authentication
+
+All API requests require JWT authentication.
+
+### Getting a Token
+
+<CodeGroup>
+```python Python
+from auth import AuthMiddleware
+
+auth = AuthMiddleware(secret_key="your-secret-key")
+token = auth.create_token("username", expires_in=3600)
+```
+
+```bash cURL
+curl -X POST http://localhost:8000/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"username": "alice", "password": "password"}'
+```
+
+```javascript JavaScript
+const response = await fetch('http://localhost:8000/auth/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    username: 'alice',
+    password: 'password'
+  })
+});
+
+const { token } = await response.json();
+```
+</CodeGroup>
+
+### Using the Token
+
+Include the token in the `Authorization` header:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## Rate Limiting
+
+<Info>
+  Rate limits are enforced via Kong API Gateway when enabled.
+</Info>
+
+| Tier | Requests/Minute | Burst |
+|------|----------------|-------|
+| **Free** | 60 | 10 |
+| **Standard** | 300 | 50 |
+| **Premium** | 1000 | 100 |
+
+When rate limited, you'll receive a `429 Too Many Requests` response:
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests",
+  "retry_after": 60
+}
+```
+
+## Response Format
+
+All successful responses follow this structure:
+
+```json
+{
+  "content": "Response content",
+  "role": "assistant",
+  "model": "gemini-2.5-flash-002",
+  "usage": {
+    "prompt_tokens": 25,
+    "completion_tokens": 150,
+    "total_tokens": 175
+  },
+  "trace_id": "abc123-def456-ghi789",
+  "authorized": true
+}
+```
+
+## Error Handling
+
+Error responses include detailed information:
+
+```json
+{
+  "error": "authentication_failed",
+  "message": "Invalid or expired token",
+  "trace_id": "abc123-def456",
+  "timestamp": "2025-10-10T12:34:56Z"
+}
+```
+
+### HTTP Status Codes
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| `200` | OK | Request successful |
+| `400` | Bad Request | Invalid request parameters |
+| `401` | Unauthorized | Missing or invalid token |
+| `403` | Forbidden | Insufficient permissions |
+| `404` | Not Found | Resource not found |
+| `429` | Too Many Requests | Rate limit exceeded |
+| `500` | Internal Server Error | Server error |
+| `503` | Service Unavailable | Service temporarily unavailable |
+
+## API Endpoints
+
+<CardGroup cols={2}>
+  <Card title="MCP Endpoints" icon="message" href="/api-reference/mcp-endpoints">
+    Core MCP protocol operations
+  </Card>
+  <Card title="Health Checks" icon="heart-pulse" href="/api-reference/health-checks">
+    Kubernetes health probes
+  </Card>
+  <Card title="Messages" icon="comments" href="/api-reference/mcp/messages">
+    Send messages to the agent
+  </Card>
+  <Card title="Tools" icon="wrench" href="/api-reference/mcp/tools">
+    List and execute tools
+  </Card>
+</CardGroup>
+
+## SDK Libraries
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    from langgraph_mcp import MCPClient
+
+    client = MCPClient(
+        base_url="http://localhost:8000",
+        api_key="your-token"
+    )
+
+    response = await client.send_message(
+        "Hello, how can you help me?"
+    )
+    ```
+
+    <Warning>
+      Python SDK is coming soon. Use the HTTP API directly for now.
+    </Warning>
+  </Tab>
+
+  <Tab title="JavaScript">
+    ```javascript
+    import { MCPClient } from '@langgraph/mcp-client';
+
+    const client = new MCPClient({
+      baseURL: 'http://localhost:8000',
+      apiKey: 'your-token'
+    });
+
+    const response = await client.sendMessage(
+      'Hello, how can you help me?'
+    );
+    ```
+
+    <Warning>
+      JavaScript SDK is coming soon. Use fetch/axios for now.
+    </Warning>
+  </Tab>
+
+  <Tab title="cURL">
+    ```bash
+    curl -X POST http://localhost:8000/message \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "query": "Hello, how can you help me?",
+        "context": {}
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+## OpenAPI Specification
+
+Download the complete OpenAPI spec:
+
+<Card title="OpenAPI Spec" icon="file-code" href="/api-reference/openapi.json">
+  Download `openapi.json` for import into Postman, Insomnia, etc.
+</Card>
+
+Or view it interactively:
+
+<CodeGroup>
+```bash Swagger UI
+http://localhost:8000/docs
+```
+
+```bash ReDoc
+http://localhost:8000/redoc
+```
+</CodeGroup>
+
+## Versioning
+
+The API uses URL versioning:
+
+```http
+/v1/message
+/v1/tools
+/v1/health
+```
+
+Current version: **v1**
+
+<Note>
+  Version 1 is stable and production-ready. Breaking changes will increment the version number.
+</Note>
+
+## Common Patterns
+
+### Streaming Responses
+
+```python
+async with client.stream_message("Tell me a long story") as stream:
+    async for chunk in stream:
+        print(chunk.content, end='', flush=True)
+```
+
+### Batch Requests
+
+```python
+messages = [
+    "What is AI?",
+    "Explain machine learning",
+    "What is deep learning?"
+]
+
+responses = await client.batch_send(messages)
+```
+
+### Context Management
+
+```python
+# Maintain conversation context
+context = {}
+
+response1 = await client.send_message(
+    "My name is Alice",
+    context=context
+)
+context.update(response1.context)
+
+response2 = await client.send_message(
+    "What's my name?",
+    context=context
+)
+# Response: "Your name is Alice"
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="MCP Endpoints" icon="code" href="/api-reference/mcp-endpoints">
+    Explore MCP protocol endpoints
+  </Card>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Learn about auth and authorization
+  </Card>
+  <Card title="Health Checks" icon="heart-pulse" href="/api-reference/health-checks">
+    Kubernetes health probes
+  </Card>
+  <Card title="Examples" icon="book" href="/guides/examples">
+    See code examples
+  </Card>
+</CardGroup>

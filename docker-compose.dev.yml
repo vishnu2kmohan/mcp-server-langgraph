@@ -1,0 +1,41 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  agent:
+    # Use local code with hot reload
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for dev dependencies
+    command: python -m uvicorn mcp_server_streamable:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      # Mount entire project for hot reload
+      - .:/app
+      - /app/__pycache__
+      - /app/.pytest_cache
+    environment:
+      # Development-specific settings
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - ENABLE_CONSOLE_EXPORT=true
+      - LANGSMITH_TRACING=false  # Disable by default in dev to avoid costs
+    # Expose additional ports for debugging
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # debugpy port
+
+  # Use in-memory storage for faster startup
+  openfga:
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=memory
+      - OPENFGA_LOG_LEVEL=debug
+
+  # Minimal Postgres for development
+  postgres:
+    environment:
+      - POSTGRES_USER=openfga
+      - POSTGRES_PASSWORD=openfga_dev
+      - POSTGRES_DB=openfga

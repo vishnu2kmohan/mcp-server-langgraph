@@ -110,6 +110,15 @@ pytest --cov=. --cov-report=term-missing
 
 <!-- Add any other context about the PR here -->
 
+## For First-Time Contributors
+
+Welcome! 🎉 Thank you for your contribution. Here are some helpful tips:
+
+- Don't worry if you haven't filled everything perfectly - maintainers will help
+- If CI fails, check the error messages and ask for help if needed
+- Join our [Discussions](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions) for questions
+- Read our [CONTRIBUTING.md](../CONTRIBUTING.md) guide for more details
+
 ---
 
 **Reviewer Guidelines:**
@@ -119,3 +128,4 @@ pytest --cov=. --cov-report=term-missing
 - Ensure CI/CD pipeline passes
 - Review security implications
 - Validate documentation updates
+- Be welcoming and constructive, especially for first-time contributors

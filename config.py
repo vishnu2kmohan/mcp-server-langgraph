@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """Application settings with Infisical secrets support"""
 
     # Service
-    service_name: str = "langgraph-mcp-agent"
+    service_name: str = "mcp-server-langgraph"
     service_version: str = "1.0.0"
     environment: str = "development"
 
@@ -25,6 +25,16 @@ class Settings(BaseSettings):
     enable_console_export: bool = True
     enable_tracing: bool = True
     enable_metrics: bool = True
+
+    # LangSmith Observability
+    langsmith_api_key: Optional[str] = None
+    langsmith_project: str = "mcp-server-langgraph"
+    langsmith_endpoint: str = "https://api.smith.langchain.com"
+    langsmith_tracing: bool = False  # Enable LangSmith tracing
+    langsmith_tracing_v2: bool = True  # Use v2 tracing (recommended)
+
+    # Observability Backend Selection
+    observability_backend: str = "both"  # opentelemetry, langsmith, both
 
     # Logging
     log_level: str = "INFO"
@@ -87,6 +97,11 @@ class Settings(BaseSettings):
     infisical_client_id: Optional[str] = None
     infisical_client_secret: Optional[str] = None
     infisical_project_id: Optional[str] = None
+
+    # LangGraph Platform
+    langgraph_api_key: Optional[str] = None
+    langgraph_deployment_url: Optional[str] = None
+    langgraph_api_url: str = "https://api.langchain.com"
 
     class Config:
         env_file = ".env"
@@ -157,6 +172,20 @@ class Settings(BaseSettings):
         if not self.openfga_model_id:
             self.openfga_model_id = secrets_mgr.get_secret(
                 "OPENFGA_MODEL_ID",
+                fallback=None
+            )
+
+        # Load LangSmith configuration
+        if not self.langsmith_api_key:
+            self.langsmith_api_key = secrets_mgr.get_secret(
+                "LANGSMITH_API_KEY",
+                fallback=None
+            )
+
+        # Load LangGraph Platform configuration
+        if not self.langgraph_api_key:
+            self.langgraph_api_key = secrets_mgr.get_secret(
+                "LANGGRAPH_API_KEY",
                 fallback=None
             )
 

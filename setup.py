@@ -1,4 +1,4 @@
-"""Setup configuration for LangGraph MCP Agent"""
+"""Setup configuration for MCP Server with LangGraph"""
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -8,14 +8,14 @@ with open("requirements-pinned.txt", "r", encoding="utf-8") as fh:
     requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
 
 setup(
-    name="langgraph-mcp-agent",
+    name="mcp-server-langgraph",
     version="1.0.0",
-    author="LangGraph MCP Agent Contributors",
+    author="MCP Server with LangGraph Contributors",
     author_email="maintainers@example.com",
-    description="Production-ready LangGraph agent with MCP, OpenFGA, and multi-LLM support",
+    description="Production-ready MCP server with LangGraph, OpenFGA, and multi-LLM support",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/YOUR_ORG/langgraph_mcp_agent",
+    url="https://github.com/vishnu2kmohan/mcp_server_langgraph",
     packages=find_packages(exclude=["tests", "tests.*", "examples", "examples.*"]),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -51,8 +51,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "langgraph-mcp=mcp_server:main",
-            "langgraph-mcp-http=mcp_server_streamable:main",
+            "mcp-server=mcp_server:main",
+            "mcp-server-http=mcp_server_streamable:main",
         ],
     },
     include_package_data=True,
@@ -60,8 +60,8 @@ setup(
         "": ["*.yaml", "*.yml", "*.json", "*.md"],
     },
     project_urls={
-        "Bug Reports": "https://github.com/YOUR_ORG/langgraph_mcp_agent/issues",
-        "Source": "https://github.com/YOUR_ORG/langgraph_mcp_agent",
-        "Documentation": "https://github.com/YOUR_ORG/langgraph_mcp_agent/blob/main/README.md",
+        "Bug Reports": "https://github.com/vishnu2kmohan/mcp_server_langgraph/issues",
+        "Source": "https://github.com/vishnu2kmohan/mcp_server_langgraph",
+        "Documentation": "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/README.md",
     },
 )

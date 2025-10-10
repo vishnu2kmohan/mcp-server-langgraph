@@ -1,0 +1,301 @@
+---
+title: Quick Start
+description: 'Get MCP Server with LangGraph running in 5 minutes'
+---
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Python 3.10+** (3.11+ recommended)
+- **Docker & Docker Compose** (for infrastructure)
+- **Git** (for cloning the repository)
+- An **LLM API key** (Google Gemini recommended for free tier)
+
+<Tip>
+  We recommend [Google Gemini](https://aistudio.google.com/apikey) for getting started - it's free and has generous limits!
+</Tip>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+    cd mcp_server_langgraph
+    ```
+  </Step>
+
+  <Step title="Create Virtual Environment">
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    Or use the Makefile:
+    ```bash
+    make install
+    ```
+  </Step>
+
+  <Step title="Start Infrastructure">
+    This starts OpenFGA, Jaeger, Prometheus, and Grafana:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+    Verify services are running:
+    ```bash
+    docker-compose ps
+    ```
+  </Step>
+
+  <Step title="Setup OpenFGA">
+    Initialize the authorization system:
+
+    ```bash
+    python setup_openfga.py
+    ```
+
+    Save the output `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID` - you'll need them next.
+  </Step>
+
+  <Step title="Configure Environment">
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env` with your values:
+    ```bash
+    # Get free API key from https://aistudio.google.com/apikey
+    GOOGLE_API_KEY=your-api-key-here
+
+    # From previous step
+    OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+    OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYY
+
+    # JWT secret (change in production!)
+    JWT_SECRET_KEY=your-secret-key-change-in-production
+    ```
+  </Step>
+
+  <Step title="Test the Installation">
+    Run the example client:
+
+    ```bash
+    python example_client.py
+    ```
+
+    You should see the agent responding to queries! 🎉
+  </Step>
+</Steps>
+
+## Verify Installation
+
+Check that all services are accessible:
+
+<CodeGroup>
+```bash Health Check
+curl http://localhost:8080/healthz  # OpenFGA
+```
+
+```bash Jaeger UI
+open http://localhost:16686
+```
+
+```bash Prometheus
+open http://localhost:9090
+```
+
+```bash Grafana
+open http://localhost:3000  # admin/admin
+```
+</CodeGroup>
+
+## Your First Request
+
+Let's send a message to the agent:
+
+<CodeGroup>
+```python Python
+from example_client import create_client, send_message
+
+# Create authenticated client
+client = create_client("alice")
+
+# Send a message
+response = send_message(client, "Hello! What can you help me with?")
+print(response)
+```
+
+```bash cURL
+# First, get a JWT token (in production, use proper auth)
+TOKEN=$(python -c "from auth import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
+
+# Send a message
+curl -X POST http://localhost:8000/message \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Hello! What can you help me with?"}'
+```
+
+```javascript JavaScript
+const axios = require('axios');
+
+// Get token (implement proper auth in production)
+const token = 'your-jwt-token';
+
+// Send message
+const response = await axios.post('http://localhost:8000/message', {
+  query: 'Hello! What can you help me with?'
+}, {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+console.log(response.data);
+```
+</CodeGroup>
+
+## Understanding the Response
+
+The agent returns a structured response:
+
+```json
+{
+  "content": "I can help you with...",
+  "role": "assistant",
+  "model": "gemini-2.5-flash-002",
+  "usage": {
+    "prompt_tokens": 25,
+    "completion_tokens": 150,
+    "total_tokens": 175
+  },
+  "trace_id": "abc123...",
+  "authorized": true
+}
+```
+
+<ResponseField name="content" type="string">
+  The agent's response text
+</ResponseField>
+
+<ResponseField name="role" type="string">
+  Always "assistant" for agent responses
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  The LLM model used (supports fallback)
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  Token usage statistics for cost tracking
+</ResponseField>
+
+<ResponseField name="trace_id" type="string">
+  OpenTelemetry trace ID for debugging
+</ResponseField>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configure Authentication" icon="key" href="/getting-started/authentication">
+    Set up JWT and user management
+  </Card>
+  <Card title="Add Authorization" icon="shield" href="/getting-started/authorization">
+    Configure fine-grained permissions with OpenFGA
+  </Card>
+  <Card title="Switch LLM Providers" icon="shuffle" href="/guides/multi-llm-setup">
+    Use Anthropic, OpenAI, or local models
+  </Card>
+  <Card title="Deploy to Production" icon="cloud" href="/deployment/overview">
+    Kubernetes, Helm, and production setup
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port already in use">
+    If port 8080 or 8000 is already in use:
+
+    ```bash
+    # Check what's using the port
+    lsof -i :8080  # macOS/Linux
+    netstat -ano | findstr :8080  # Windows
+
+    # Stop Docker services
+    docker-compose down
+
+    # Restart
+    docker-compose up -d
+    ```
+  </Accordion>
+
+  <Accordion title="OpenFGA connection refused">
+    Ensure OpenFGA is running:
+
+    ```bash
+    docker-compose ps openfga
+    docker-compose logs openfga
+
+    # Restart if needed
+    docker-compose restart openfga
+    ```
+  </Accordion>
+
+  <Accordion title="API key invalid">
+    Verify your API key:
+
+    ```bash
+    # Check .env file
+    cat .env | grep API_KEY
+
+    # Test directly
+    curl https://generativelanguage.googleapis.com/v1/models?key=YOUR_KEY
+    ```
+
+    Get a new key from [Google AI Studio](https://aistudio.google.com/apikey)
+  </Accordion>
+
+  <Accordion title="Module not found">
+    Ensure virtual environment is activated:
+
+    ```bash
+    # Check Python path
+    which python  # Should show venv path
+
+    # Reactivate if needed
+    source venv/bin/activate
+
+    # Reinstall dependencies
+    pip install -r requirements.txt
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  **Need more help?** Check the [Development Setup](/advanced/development-setup) guide or ask in [GitHub Discussions](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions).
+</Note>
+
+## What's Next?
+
+Now that you have the agent running:
+
+1. **Explore the code** - Check out `agent.py` to see how the LangGraph agent works
+2. **Try different models** - Follow the [Multi-LLM Setup](/guides/multi-llm-setup) guide
+3. **Configure security** - Set up proper [authentication](/getting-started/authentication)
+4. **Deploy it** - Follow the [deployment guides](/deployment/overview)
+
+<Info>
+  **Pro Tip:** Star the [GitHub repository](https://github.com/vishnu2kmohan/mcp_server_langgraph) to stay updated with new features!
+</Info>

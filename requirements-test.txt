@@ -10,6 +10,7 @@ pytest-cov==4.1.0
 pytest-mock==3.12.0
 pytest-timeout==2.2.0
 pytest-xdist==3.5.0  # Parallel test execution
+pytest-benchmark==4.0.0  # Performance benchmarking
 
 # Test utilities
 httpx==0.26.0  # For testing HTTP endpoints

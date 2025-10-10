@@ -1,0 +1,159 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: mcp-server-langgraph
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+spec:
+  template:
+    metadata:
+      annotations:
+        # Scale to zero when idle
+        autoscaling.knative.dev/minScale: '0'
+        autoscaling.knative.dev/maxScale: '100'
+
+        # CPU and memory allocation
+        run.googleapis.com/cpu-throttling: 'true'
+        run.googleapis.com/startup-cpu-boost: 'true'
+
+        # VPC connector (if using VPC for OpenFGA, etc.)
+        # run.googleapis.com/vpc-access-connector: projects/PROJECT_ID/locations/REGION/connectors/CONNECTOR_NAME
+        # run.googleapis.com/vpc-access-egress: private-ranges-only
+
+        # Cloud SQL (if using managed database)
+        # run.googleapis.com/cloudsql-instances: PROJECT_ID:REGION:INSTANCE_NAME
+
+        # Execution environment
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: mcp-server-langgraph-sa
+      containers:
+      - name: mcp-server-langgraph
+        image: gcr.io/PROJECT_ID/mcp-server-langgraph:latest
+        ports:
+        - name: http1
+          containerPort: 8000
+
+        # Resources
+        resources:
+          limits:
+            cpu: '2'
+            memory: 2Gi
+
+        # Environment variables
+        env:
+        - name: PORT
+          value: "8000"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+
+        # LLM Configuration
+        - name: DEFAULT_LLM_PROVIDER
+          value: "anthropic"
+        - name: DEFAULT_LLM_MODEL
+          value: "claude-3-5-sonnet-20241022"
+
+        # Secrets from Secret Manager
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret-key
+              key: latest
+
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: anthropic-api-key
+              key: latest
+
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-api-key
+              key: latest
+
+        # OpenFGA Configuration (if using managed OpenFGA or self-hosted)
+        - name: OPENFGA_API_URL
+          value: "https://openfga.example.com"
+
+        - name: OPENFGA_STORE_ID
+          valueFrom:
+            secretKeyRef:
+              name: openfga-store-id
+              key: latest
+
+        - name: OPENFGA_MODEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: openfga-model-id
+              key: latest
+
+        # Infisical Configuration (if using)
+        - name: INFISICAL_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: infisical-client-id
+              key: latest
+
+        - name: INFISICAL_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: infisical-client-secret
+              key: latest
+
+        # OpenTelemetry Configuration
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "https://otel-collector.example.com:4317"
+
+        - name: OTEL_SERVICE_NAME
+          value: "mcp-server-langgraph"
+
+        - name: OTEL_TRACES_EXPORTER
+          value: "otlp"
+
+        - name: OTEL_METRICS_EXPORTER
+          value: "otlp"
+
+        # Google Cloud specific
+        - name: GOOGLE_CLOUD_PROJECT
+          value: "PROJECT_ID"
+
+        # Startup probe
+        startupProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+
+  traffic:
+  - percent: 100
+    latestRevision: true

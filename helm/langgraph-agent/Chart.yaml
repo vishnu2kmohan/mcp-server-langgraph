@@ -1,12 +1,12 @@
 apiVersion: v2
 name: langgraph-agent
-description: A Helm chart for LangGraph MCP Agent with OpenFGA and Infisical
+description: A Helm chart for MCP Server with LangGraph with OpenFGA and Infisical
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
-home: https://github.com/your-org/langgraph-mcp-agent
+home: https://github.com/your-org/mcp-server-langgraph
 sources:
-  - https://github.com/your-org/langgraph-mcp-agent
+  - https://github.com/your-org/mcp-server-langgraph
 maintainers:
   - name: Your Team
     email: team@example.com

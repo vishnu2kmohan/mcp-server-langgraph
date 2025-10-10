@@ -82,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Version 1.0.0 - Production Release
 
-This is the first production-ready release of LangGraph MCP Agent. The codebase includes:
+This is the first production-ready release of MCP Server with LangGraph. The codebase includes:
 
 - **Production-grade infrastructure**: Kubernetes, Helm, Docker, CI/CD
 - **Enterprise security**: OpenFGA, JWT, secrets management, RBAC
@@ -112,4 +112,4 @@ None (initial release)
 
 ---
 
-[1.0.0]: https://github.com/YOUR_ORG/langgraph_mcp_agent/releases/tag/v1.0.0
+[1.0.0]: https://github.com/vishnu2kmohan/mcp_server_langgraph/releases/tag/v1.0.0

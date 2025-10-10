@@ -1,6 +1,6 @@
 # Security Audit Checklist
 
-Comprehensive security audit checklist for production deployment of LangGraph MCP Agent.
+Comprehensive security audit checklist for production deployment of MCP Server with LangGraph.
 
 ## Quick Security Scan
 
@@ -275,7 +275,7 @@ safety check --json --output safety-report.json
 pip-audit --format json --output pip-audit-report.json
 
 # Container scanning
-trivy image ghcr.io/YOUR_ORG/langgraph-agent:1.0.0
+trivy image ghcr.io/vishnu2kmohan/langgraph-agent:1.0.0
 
 # Kubernetes manifest scanning
 kubesec scan kubernetes/base/*.yaml

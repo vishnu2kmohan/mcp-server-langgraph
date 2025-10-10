@@ -1,0 +1,190 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "MCP Server with LangGraph",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "GitHub",
+    "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Deployment",
+      "url": "deployment"
+    },
+    {
+      "name": "Guides",
+      "url": "guides"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph"
+    },
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions"
+    },
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "url": "https://yourdomain.com/blog"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "getting-started/introduction",
+        "getting-started/quickstart",
+        "getting-started/installation",
+        "getting-started/first-request"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "getting-started/architecture",
+        "getting-started/authentication",
+        "getting-started/authorization",
+        "getting-started/observability",
+        "getting-started/langsmith-tracing"
+      ]
+    },
+    {
+      "group": "API Documentation",
+      "pages": [
+        "api-reference/introduction",
+        "api-reference/authentication",
+        "api-reference/mcp-endpoints",
+        "api-reference/health-checks"
+      ]
+    },
+    {
+      "group": "MCP Protocol",
+      "pages": [
+        "api-reference/mcp/messages",
+        "api-reference/mcp/tools",
+        "api-reference/mcp/resources"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/multi-llm-setup",
+        "guides/google-gemini",
+        "guides/anthropic-claude",
+        "guides/openai-gpt",
+        "guides/local-models"
+      ]
+    },
+    {
+      "group": "Authorization",
+      "pages": [
+        "guides/openfga-setup",
+        "guides/permission-model",
+        "guides/relationship-tuples"
+      ]
+    },
+    {
+      "group": "Secrets Management",
+      "pages": [
+        "guides/infisical-setup",
+        "guides/secret-rotation",
+        "guides/environment-config"
+      ]
+    },
+    {
+      "group": "Deployment",
+      "pages": [
+        "deployment/overview",
+        "deployment/langgraph-platform",
+        "deployment/cloud-run",
+        "deployment/docker",
+        "deployment/kubernetes",
+        "deployment/helm",
+        "deployment/production-checklist"
+      ]
+    },
+    {
+      "group": "LangGraph Platform",
+      "pages": [
+        "deployment/platform/quickstart",
+        "deployment/platform/configuration",
+        "deployment/platform/secrets",
+        "deployment/platform/monitoring",
+        "deployment/platform/ci-cd"
+      ]
+    },
+    {
+      "group": "Kubernetes",
+      "pages": [
+        "deployment/kubernetes/gke",
+        "deployment/kubernetes/eks",
+        "deployment/kubernetes/aks",
+        "deployment/kubernetes/kustomize"
+      ]
+    },
+    {
+      "group": "Advanced",
+      "pages": [
+        "deployment/kong-gateway",
+        "deployment/monitoring",
+        "deployment/scaling",
+        "deployment/disaster-recovery"
+      ]
+    },
+    {
+      "group": "Security",
+      "pages": [
+        "security/overview",
+        "security/best-practices",
+        "security/audit-checklist",
+        "security/compliance"
+      ]
+    },
+    {
+      "group": "Development",
+      "pages": [
+        "advanced/contributing",
+        "advanced/testing",
+        "advanced/development-setup",
+        "advanced/troubleshooting"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/vishnu2kmohan/mcp_server_langgraph",
+    "twitter": "https://twitter.com/yourhandle"
+  },
+  "analytics": {
+    "ga4": {
+      "measurementId": "G-XXXXXXXXXX"
+    }
+  }
+}

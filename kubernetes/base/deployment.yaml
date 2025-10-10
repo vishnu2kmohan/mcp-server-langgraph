@@ -60,7 +60,7 @@ spec:
 
         env:
         - name: SERVICE_NAME
-          value: "langgraph-mcp-agent"
+          value: "mcp-server-langgraph"
         - name: ENVIRONMENT
           valueFrom:
             configMapKeyRef:

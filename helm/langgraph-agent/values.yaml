@@ -167,7 +167,7 @@ healthChecks:
 
 # Application configuration
 config:
-  serviceName: "langgraph-mcp-agent"
+  serviceName: "mcp-server-langgraph"
   environment: "production"
   logLevel: "INFO"
   modelName: "claude-3-5-sonnet-20241022"

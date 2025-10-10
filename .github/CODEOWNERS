@@ -1,37 +1,28 @@
 # Code Owners for LangGraph MCP Agent
 # These users will be automatically requested for review when someone opens a pull request
 
-# Default owners for everything in the repo
-* @YOUR_ORG/maintainers
+# Default owner for everything in the repo
+* @vishnu2kmohan
 
-# Authentication and Security
-/auth.py @YOUR_ORG/security-team
-/openfga_client.py @YOUR_ORG/security-team
-/secrets_manager.py @YOUR_ORG/security-team
-/setup_openfga.py @YOUR_ORG/security-team
+# Authentication and Security (critical files require owner review)
+/auth.py @vishnu2kmohan
+/openfga_client.py @vishnu2kmohan
+/secrets_manager.py @vishnu2kmohan
+/setup_openfga.py @vishnu2kmohan
 
 # Infrastructure and DevOps
-/.github/ @YOUR_ORG/devops-team
-/kubernetes/ @YOUR_ORG/devops-team
-/kustomize/ @YOUR_ORG/devops-team
-/helm/ @YOUR_ORG/devops-team
-/docker-compose.yml @YOUR_ORG/devops-team
-/Dockerfile @YOUR_ORG/devops-team
+/.github/ @vishnu2kmohan
+/kubernetes/ @vishnu2kmohan
+/kustomize/ @vishnu2kmohan
+/helm/ @vishnu2kmohan
+/docker-compose.yml @vishnu2kmohan
+/Dockerfile @vishnu2kmohan
 
-# MCP Server
-/mcp_server*.py @YOUR_ORG/backend-team
-/agent.py @YOUR_ORG/backend-team
+# Core MCP Server implementation
+/mcp_server*.py @vishnu2kmohan
+/agent.py @vishnu2kmohan
 
-# Tests
-/tests/ @YOUR_ORG/qa-team @YOUR_ORG/backend-team
-/pytest.ini @YOUR_ORG/qa-team
-
-# Documentation
-/*.md @YOUR_ORG/docs-team
-/docs/ @YOUR_ORG/docs-team
-/.mcp/ @YOUR_ORG/docs-team
-
-# Dependencies
-/requirements*.txt @YOUR_ORG/maintainers
-/setup.py @YOUR_ORG/maintainers
-/pyproject.toml @YOUR_ORG/maintainers
+# Dependencies (require careful review)
+/requirements*.txt @vishnu2kmohan
+/setup.py @vishnu2kmohan
+/pyproject.toml @vishnu2kmohan

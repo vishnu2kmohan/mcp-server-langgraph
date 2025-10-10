@@ -16,7 +16,7 @@ processors:
     attributes:
       - key: service.name
         action: upsert
-        value: langgraph-mcp-agent
+        value: mcp-server-langgraph
 
   # Memory limiter to prevent OOM
   memory_limiter:

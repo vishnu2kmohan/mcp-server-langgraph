@@ -171,7 +171,7 @@ def check_production_status(result: ValidationResult) -> None:
             result.add_fail("Package development status unclear")
 
         # Check for placeholder values
-        if "YOUR_ORG" in content or "example.com" in content:
+        if "vishnu2kmohan" in content or "example.com" in content:
             result.add_warning("Placeholder organization names in pyproject.toml")
 
 
@@ -350,7 +350,7 @@ def check_documentation(result: ValidationResult) -> None:
 def main():
     """Main validation function"""
     print(f"\n{BOLD}{BLUE}{'='*60}{RESET}")
-    print(f"{BOLD}{BLUE}LangGraph MCP Agent - Production Readiness Validation{RESET}")
+    print(f"{BOLD}{BLUE}MCP Server with LangGraph - Production Readiness Validation{RESET}")
     print(f"{BOLD}{BLUE}{'='*60}{RESET}\n")
 
     strict = "--strict" in sys.argv

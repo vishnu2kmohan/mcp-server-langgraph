@@ -1,0 +1,55 @@
+{
+  "projectName": "langgraph_mcp_agent",
+  "projectOwner": "vishnu2kmohan",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "gitmoji",
+  "contributors": [],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "badgeTemplate": "[![All Contributors](https://img.shields.io/github/all-contributors/<%= projectOwner %>/<%= projectName %> ?color=ee8449&style=flat-square)](#contributors)",
+  "contributorTemplate": "<a href=\"<%= contributor.profile %>\"><img src=\"<%= contributor.avatar_url %>\" width=\"<%= options.imageSize %>px;\" alt=\"<%= contributor.name %>\"/><br /><sub><b><%= contributor.name %></b></sub></a>",
+  "types": {
+    "code": {
+      "symbol": "💻",
+      "description": "Code",
+      "link": "[<%= symbol %>](<%= commit %>)"
+    },
+    "doc": {
+      "symbol": "📖",
+      "description": "Documentation",
+      "link": "[<%= symbol %>](<%= commit %>)"
+    },
+    "test": {
+      "symbol": "⚠️",
+      "description": "Tests",
+      "link": "[<%= symbol %>](<%= commit %>)"
+    },
+    "bug": {
+      "symbol": "🐛",
+      "description": "Bug reports",
+      "link": "[<%= symbol %>](<%= commit %>)"
+    },
+    "ideas": {
+      "symbol": "🤔",
+      "description": "Ideas & Planning"
+    },
+    "review": {
+      "symbol": "👀",
+      "description": "Reviewed Pull Requests"
+    },
+    "infra": {
+      "symbol": "🚇",
+      "description": "Infrastructure"
+    },
+    "security": {
+      "symbol": "🛡️",
+      "description": "Security"
+    }
+  }
+}

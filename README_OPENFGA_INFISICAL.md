@@ -1,4 +1,4 @@
-# LangGraph MCP Agent with OpenFGA & Infisical
+# MCP Server with LangGraph with OpenFGA & Infisical
 
 Complete integration guide for fine-grained authorization and secrets management.
 

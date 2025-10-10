@@ -1,14 +1,24 @@
 """
 LangGraph Functional API Agent with full observability and multi-provider LLM support
+Includes OpenTelemetry and LangSmith tracing integration
 """
-from typing import Annotated, TypedDict, Literal
+from typing import Annotated, TypedDict, Literal, Optional
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.runnables import RunnableConfig
 import operator
 
 from llm_factory import create_llm_from_config
 from config import settings
+
+# Import LangSmith config if available
+try:
+    from langsmith_config import langsmith_config, get_run_metadata, get_run_tags
+    LANGSMITH_AVAILABLE = True
+except ImportError:
+    LANGSMITH_AVAILABLE = False
+    langsmith_config = None
 
 
 class AgentState(TypedDict):
@@ -20,10 +30,25 @@ class AgentState(TypedDict):
 
 
 def create_agent_graph():
-    """Create the LangGraph agent using functional API with LiteLLM"""
+    """Create the LangGraph agent using functional API with LiteLLM and observability"""
 
     # Initialize the model via LiteLLM factory
     model = create_llm_from_config(settings)
+
+    # Create runnable config for LangSmith tracing if available
+    def get_runnable_config(
+        user_id: Optional[str] = None,
+        request_id: Optional[str] = None
+    ) -> Optional[RunnableConfig]:
+        """Get runnable config with LangSmith metadata"""
+        if not LANGSMITH_AVAILABLE or not langsmith_config.is_enabled():
+            return None
+
+        return RunnableConfig(
+            run_name="mcp-server-langgraph",
+            tags=get_run_tags(user_id),
+            metadata=get_run_metadata(user_id, request_id)
+        )
 
     # Define node functions
     def route_input(state: AgentState) -> AgentState:

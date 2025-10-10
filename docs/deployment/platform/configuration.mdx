@@ -1,0 +1,283 @@
+---
+title: Platform Configuration
+description: 'Configure your LangGraph Platform deployment'
+icon: 'gear'
+---
+
+## Configuration File
+
+The `langgraph.json` file in your project root defines your deployment configuration:
+
+```json langgraph.json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "agent": "./langgraph/agent.py:graph"
+  },
+  "env": {
+    "ANTHROPIC_API_KEY": "",
+    "OPENAI_API_KEY": "",
+    "LANGSMITH_TRACING": "true",
+    "LANGSMITH_PROJECT": "mcp-server-langgraph"
+  },
+  "python_version": "3.11"
+}
+```
+
+## Configuration Options
+
+<ParamField path="dependencies" type="array" required>
+  List of dependency sources. Use `["."]` to include current directory, or specify paths to local packages.
+
+  ```json
+  "dependencies": [".", "../shared-libs"]
+  ```
+</ParamField>
+
+<ParamField path="graphs" type="object" required>
+  Map of graph names to their module paths. Format: `"name": "path/to/file.py:variable"`
+
+  ```json
+  "graphs": {
+    "agent": "./langgraph/agent.py:graph",
+    "assistant": "./langgraph/assistant.py:assistant_graph"
+  }
+  ```
+
+  The variable name (after `:`) must be a compiled LangGraph graph.
+</ParamField>
+
+<ParamField path="env" type="object">
+  Environment variables for your deployment. **Never** put actual API keys here - use LangSmith secrets instead.
+
+  ```json
+  "env": {
+    "MODEL_NAME": "claude-3-5-sonnet-20241022",
+    "LANGSMITH_TRACING": "true"
+  }
+  ```
+</ParamField>
+
+<ParamField path="python_version" type="string">
+  Python version: `"3.10"`, `"3.11"`, or `"3.12"`. Default: `"3.11"`
+</ParamField>
+
+<ParamField path="dockerfile_lines" type="array">
+  Custom Dockerfile commands to run during build.
+
+  ```json
+  "dockerfile_lines": [
+    "RUN apt-get update && apt-get install -y curl",
+    "RUN pip install custom-package"
+  ]
+  ```
+</ParamField>
+
+## Graph Definition
+
+Your graph must be defined in a Python module and exported as a variable:
+
+```python langgraph/agent.py
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+
+# Define your graph
+workflow = StateGraph(...)
+workflow.add_node("agent", agent_node)
+workflow.set_entry_point("agent")
+workflow.add_edge("agent", END)
+
+# IMPORTANT: Export as 'graph' variable
+graph = workflow.compile(checkpointer=MemorySaver())
+```
+
+<Warning>
+  The variable name in `langgraph.json` must match the exported variable name in your Python file.
+</Warning>
+
+## Dependencies
+
+Dependencies are specified in `langgraph/requirements.txt`:
+
+```txt langgraph/requirements.txt
+langgraph>=0.2.0
+langchain-core>=0.3.0
+langchain-anthropic>=0.2.0
+langchain-openai>=0.2.0
+langsmith>=0.1.0
+```
+
+<Tip>
+  Keep dependencies minimal for faster builds and lower cold start times.
+</Tip>
+
+## Environment Variables
+
+### Setting Variables
+
+Set environment variables in two ways:
+
+1. **langgraph.json** - For non-sensitive config
+2. **LangSmith Secrets** - For API keys and sensitive data
+
+```bash
+# Set secrets (recommended for API keys)
+langsmith secret set ANTHROPIC_API_KEY "your-key"
+langsmith secret set OPENAI_API_KEY "your-key"
+```
+
+### Available at Runtime
+
+Access environment variables in your code:
+
+```python
+import os
+
+api_key = os.environ["ANTHROPIC_API_KEY"]
+model_name = os.environ.get("MODEL_NAME", "claude-3-5-sonnet-20241022")
+```
+
+## Multiple Environments
+
+Create separate deployments for each environment:
+
+<Tabs>
+  <Tab title="Development">
+    ```bash
+    # Deploy to dev
+    langgraph deploy my-agent-dev --tag development
+
+    # Use dev-specific secrets
+    langsmith secret set ANTHROPIC_API_KEY "dev-key" --deployment my-agent-dev
+    ```
+  </Tab>
+
+  <Tab title="Staging">
+    ```bash
+    # Deploy to staging
+    langgraph deploy my-agent-staging --tag staging
+
+    # Use staging-specific LangSmith project
+    LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
+    ```
+  </Tab>
+
+  <Tab title="Production">
+    ```bash
+    # Deploy to production
+    langgraph deploy my-agent-prod --tag production
+
+    # Use production secrets
+    langsmith secret set ANTHROPIC_API_KEY "prod-key" --deployment my-agent-prod
+    ```
+  </Tab>
+</Tabs>
+
+## Advanced Configuration
+
+### Custom Build Steps
+
+Add custom build commands:
+
+```json
+{
+  "dockerfile_lines": [
+    "RUN apt-get update && apt-get install -y build-essential",
+    "RUN pip install --no-cache-dir torch torchvision"
+  ]
+}
+```
+
+### Multiple Graphs
+
+Deploy multiple graphs in one deployment:
+
+```json
+{
+  "graphs": {
+    "chat": "./langgraph/chat.py:chat_graph",
+    "analysis": "./langgraph/analysis.py:analysis_graph",
+    "summary": "./langgraph/summary.py:summary_graph"
+  }
+}
+```
+
+Access via different endpoints:
+- `POST /chat/invoke`
+- `POST /analysis/invoke`
+- `POST /summary/invoke`
+
+## Validation
+
+Validate your configuration before deploying:
+
+```bash
+# Test locally
+langgraph dev
+
+# Verify graph can be imported
+python -c "from langgraph.agent import graph; print(graph)"
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Secrets Management" icon="key" href="/deployment/platform/secrets">
+    Manage API keys securely
+  </Card>
+  <Card title="Deploy Now" icon="rocket" href="/deployment/platform/quickstart">
+    Deploy your configured agent
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/platform/monitoring">
+    Monitor your deployment
+  </Card>
+  <Card title="CI/CD" icon="infinity" href="/deployment/platform/ci-cd">
+    Automate deployments
+  </Card>
+</CardGroup>
+
+## Reference
+
+<AccordionGroup>
+  <Accordion title="Example langgraph.json">
+    ```json
+    {
+      "dependencies": ["."],
+      "graphs": {
+        "agent": "./langgraph/agent.py:graph"
+      },
+      "env": {
+        "MODEL_NAME": "claude-3-5-sonnet-20241022",
+        "LANGSMITH_TRACING": "true",
+        "LANGSMITH_PROJECT": "my-agent-prod",
+        "MAX_ITERATIONS": "10"
+      },
+      "python_version": "3.11",
+      "dockerfile_lines": []
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Example graph export">
+    ```python
+    from langgraph.graph import StateGraph, END
+    from langgraph.checkpoint.memory import MemorySaver
+    from typing import TypedDict, Annotated
+
+    class State(TypedDict):
+        messages: Annotated[list, "The conversation messages"]
+
+    def agent_node(state: State):
+        # Your agent logic
+        return state
+
+    workflow = StateGraph(State)
+    workflow.add_node("agent", agent_node)
+    workflow.set_entry_point("agent")
+    workflow.add_edge("agent", END)
+
+    # Export for platform
+    graph = workflow.compile(checkpointer=MemorySaver())
+    ```
+  </Accordion>
+</AccordionGroup>

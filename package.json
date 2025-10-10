@@ -1,0 +1,13 @@
+{
+  "name": "mcp-server-langgraph-docs",
+  "version": "1.0.0",
+  "description": "Documentation for MCP Server with LangGraph",
+  "scripts": {
+    "dev": "mintlify dev",
+    "build": "mintlify build",
+    "install:mintlify": "npm install -g mintlify"
+  },
+  "keywords": ["documentation", "mintlify", "ai", "mcp", "langgraph"],
+  "author": "vishnu2kmohan",
+  "license": "MIT"
+}

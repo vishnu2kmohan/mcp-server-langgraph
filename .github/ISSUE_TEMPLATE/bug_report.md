@@ -36,7 +36,7 @@ Steps to reproduce the behavior:
 - [ ] Other: ___________
 
 **Version:**
-- LangGraph MCP Agent version: <!-- e.g., v1.0.0 -->
+- MCP Server with LangGraph version: <!-- e.g., v1.0.0 -->
 - Python version: <!-- e.g., 3.11.5 -->
 - OS: <!-- e.g., Ubuntu 22.04, macOS 14, Windows 11 -->
 

@@ -1,6 +1,6 @@
 # GitHub Actions Setup Guide
 
-Complete guide for setting up and configuring GitHub Actions for the LangGraph MCP Agent.
+Complete guide for setting up and configuring GitHub Actions for the MCP Server with LangGraph.
 
 ## Table of Contents
 
@@ -131,7 +131,7 @@ Create environment: `production`
 
 **Badge:**
 ```markdown
-[![CI/CD](https://github.com/YOUR_ORG/langgraph_mcp_agent/actions/workflows/ci.yaml/badge.svg)](https://github.com/YOUR_ORG/langgraph_mcp_agent/actions/workflows/ci.yaml)
+[![CI/CD](https://github.com/vishnu2kmohan/mcp_server_langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp_server_langgraph/actions/workflows/ci.yaml)
 ```
 
 ### 2. Pull Request Checks (`pr-checks.yaml`)
@@ -236,7 +236,7 @@ Protection rules:
 ☑ Require signed commits
 ☑ Include administrators
 ☑ Restrict who can push to matching branches
-  - @YOUR_ORG/maintainers
+  - @vishnu2kmohan/maintainers
 ```
 
 ### Develop Branch Protection
@@ -302,7 +302,7 @@ act -j test -s ANTHROPIC_API_KEY=your-key
 4. **Add badge** to README:
 
 ```markdown
-[![codecov](https://codecov.io/gh/YOUR_ORG/langgraph_mcp_agent/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_ORG/langgraph_mcp_agent)
+[![codecov](https://codecov.io/gh/vishnu2kmohan/mcp_server_langgraph/branch/main/graph/badge.svg)](https://codecov.io/gh/vishnu2kmohan/mcp_server_langgraph)
 ```
 
 ### Codecov Configuration

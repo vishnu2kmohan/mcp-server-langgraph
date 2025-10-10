@@ -15,6 +15,7 @@ help:
 	@echo "  make test-unit        Run unit tests only"
 	@echo "  make test-integration Run integration tests"
 	@echo "  make test-coverage    Run tests with coverage report"
+	@echo "  make benchmark        Run performance benchmarks"
 	@echo "  make test-auth        Test OpenFGA authorization (manual)"
 	@echo "  make test-mcp         Test MCP server (manual)"
 	@echo ""
@@ -83,6 +84,11 @@ test-auth:
 test-mcp:
 	@echo "Testing MCP server..."
 	python example_client.py
+
+benchmark:
+	@echo "Running performance benchmarks..."
+	pytest -m benchmark -v --benchmark-only --benchmark-autosave
+	@echo "✓ Benchmark results saved"
 
 # Code quality
 lint:

@@ -22,11 +22,31 @@ from config import settings
 
 
 app = FastAPI(
-    title="LangGraph MCP Agent",
+    title="MCP Server with LangGraph",
     description="AI Agent with fine-grained authorization and observability - StreamableHTTP transport",
     version=settings.service_version,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "mcp",
+            "description": "Model Context Protocol (MCP) endpoints for agent interaction",
+        },
+        {
+            "name": "health",
+            "description": "Health check and system status endpoints",
+        },
+        {
+            "name": "auth",
+            "description": "Authentication and authorization endpoints",
+        },
+    ],
+    responses={
+        401: {"description": "Unauthorized - Invalid or missing authentication token"},
+        403: {"description": "Forbidden - Insufficient permissions"},
+        429: {"description": "Too Many Requests - Rate limit exceeded"},
+        500: {"description": "Internal Server Error"},
+    },
 )
 
 # CORS middleware
@@ -377,7 +397,7 @@ mcp_server = MCPAgentStreamableServer()
 async def root():
     """Root endpoint with server info"""
     return {
-        "name": "LangGraph MCP Agent",
+        "name": "MCP Server with LangGraph",
         "version": settings.service_version,
         "transport": "streamable-http",
         "protocol": "mcp",

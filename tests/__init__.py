@@ -1,1 +1,1 @@
-"""Test suite for LangGraph MCP Agent"""
+"""Test suite for MCP Server with LangGraph"""

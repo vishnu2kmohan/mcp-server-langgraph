@@ -1,6 +1,6 @@
 # Kubernetes Deployment Guide
 
-Complete guide for deploying LangGraph MCP Agent to Kubernetes (GKE, EKS, AKS, Rancher, VMware Tanzu).
+Complete guide for deploying MCP Server with LangGraph to Kubernetes (GKE, EKS, AKS, Rancher, VMware Tanzu).
 
 ## Table of Contents
 

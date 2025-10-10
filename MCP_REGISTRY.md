@@ -14,7 +14,7 @@ Complete guide for deploying LangGraph Agent to the Model Context Protocol (MCP)
 
 ## Overview
 
-The LangGraph MCP Agent supports multiple MCP transports:
+The MCP Server with LangGraph supports multiple MCP transports:
 - **stdio** (Standard Input/Output) - For local/desktop applications
 - **HTTP/SSE** (Server-Sent Events) - For web applications and remote access
 
@@ -518,4 +518,4 @@ rate(mcp_messages_total{status="error"}[5m])
 
 For registry-related issues:
 - Registry support: registry-support@modelcontextprotocol.io
-- Agent issues: https://github.com/your-org/langgraph-mcp-agent/issues
+- Agent issues: https://github.com/your-org/mcp-server-langgraph/issues

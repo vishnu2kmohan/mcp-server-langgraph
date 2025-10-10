@@ -1,0 +1,406 @@
+---
+title: Monitoring & Observability
+description: 'Monitor your LangGraph Platform deployments with LangSmith'
+icon: 'chart-line'
+---
+
+## Overview
+
+LangGraph Platform deployments automatically integrate with LangSmith for comprehensive observability. Every request is traced with full LLM details.
+
+<Info>
+  **Built-in Tracing**: No configuration needed - all deployments are automatically traced in LangSmith.
+</Info>
+
+## Viewing Traces
+
+<Steps>
+  <Step title="Access LangSmith">
+    Go to [smith.langchain.com](https://smith.langchain.com/)
+  </Step>
+
+  <Step title="Select Project">
+    Choose your project (e.g., "mcp-server-langgraph")
+  </Step>
+
+  <Step title="View Traces">
+    See all requests with:
+    - Full prompts and completions
+    - Token usage and costs
+    - Latency breakdown
+    - Error details
+  </Step>
+</Steps>
+
+## What's Captured
+
+Every trace includes:
+
+<CardGroup cols={2}>
+  <Card title="LLM Calls" icon="comments">
+    - Full prompts sent to LLM
+    - Complete model responses
+    - Token counts (input/output)
+    - Model parameters
+    - Latency per call
+  </Card>
+
+  <Card title="Agent Steps" icon="list-check">
+    - Routing decisions
+    - Tool invocations
+    - State transitions
+    - Conditional flows
+    - Execution order
+  </Card>
+
+  <Card title="Metadata" icon="tags">
+    - User ID and session ID
+    - Request timestamp
+    - Environment (prod/staging)
+    - Custom tags
+    - Deployment version
+  </Card>
+
+  <Card title="Errors" icon="triangle-exclamation">
+    - Full stack traces
+    - Input that caused error
+    - Error context
+    - Failure timing
+    - Retry attempts
+  </Card>
+</CardGroup>
+
+## Metrics Dashboard
+
+View key metrics in LangSmith:
+
+### Request Volume
+- Total invocations over time
+- Requests per second
+- Peak traffic periods
+
+### Latency
+- **P50 Latency**: Median response time
+- **P95 Latency**: 95th percentile
+- **P99 Latency**: 99th percentile
+- **Max Latency**: Slowest requests
+
+### Success Rate
+- Successful requests (200 OK)
+- Failed requests (4xx, 5xx)
+- Error rate percentage
+- Error types breakdown
+
+### Token Usage
+- Total tokens consumed
+- Input vs output tokens
+- Tokens per request
+- Token usage trends
+
+### Cost Tracking
+- Estimated costs by model
+- Cost per user/session
+- Daily/monthly spend
+- Cost breakdown by feature
+
+## Filtering Traces
+
+### By Status
+
+```
+status:error
+status:success
+```
+
+### By Latency
+
+```
+latency > 5s
+latency < 1s
+```
+
+### By User
+
+```
+metadata.user_id:"alice@example.com"
+```
+
+### By Tags
+
+```
+tags:"production"
+tags:"high-priority"
+```
+
+### By Date
+
+```
+timestamp > 2025-10-01
+timestamp < 2025-10-10
+```
+
+## Debugging Workflow
+
+<Steps>
+  <Step title="Find Failing Traces">
+    Filter by `status:error` and sort by timestamp descending
+  </Step>
+
+  <Step title="Analyze Error">
+    Click on trace to see:
+    - Exact input that caused failure
+    - Full Python stack trace
+    - All steps before error
+    - Timing information
+  </Step>
+
+  <Step title="Compare with Success">
+    Find similar successful trace and compare side-by-side
+  </Step>
+
+  <Step title="Fix and Redeploy">
+    Fix issue in code and redeploy:
+    ```bash
+    langgraph deploy
+    ```
+  </Step>
+
+  <Step title="Verify Fix">
+    Monitor new traces to confirm error is resolved
+  </Step>
+</Steps>
+
+## Performance Optimization
+
+### Identify Slow Traces
+
+1. Filter: `latency > 5s`
+2. Sort by latency descending
+3. Expand trace to see timing breakdown
+4. Identify bottlenecks:
+   - Slow LLM calls → Try faster model
+   - Slow tool calls → Add caching
+   - Redundant calls → Optimize logic
+
+### Example Optimization
+
+**Before**: 8.5s total latency
+- LLM call 1: 3.2s
+- Tool call: 2.1s
+- LLM call 2: 3.2s
+
+**Optimization**: Add caching to tool call
+
+**After**: 4.5s total latency
+- LLM call 1: 3.2s
+- Tool call (cached): 0.1s
+- LLM call 2: 1.2s (smaller context)
+
+## Alerts
+
+Set up alerts in LangSmith:
+
+<Steps>
+  <Step title="Go to Project Settings">
+    Navigate to Settings → Alerts
+  </Step>
+
+  <Step title="Create Alert Rule">
+    Configure alert conditions:
+    - **High Error Rate**: Error rate > 5%
+    - **High Latency**: P95 > 5 seconds
+    - **Budget Exceeded**: Daily cost > $50
+  </Step>
+
+  <Step title="Configure Notifications">
+    Choose notification channels:
+    - Email
+    - Slack
+    - Webhook
+    - PagerDuty
+  </Step>
+</Steps>
+
+## Custom Metadata
+
+Add custom metadata to traces for better filtering:
+
+```python
+from langchain_core.runnables import RunnableConfig
+
+config = RunnableConfig(
+    tags=["premium-user", "high-priority"],
+    metadata={
+        "user_id": "alice@example.com",
+        "session_id": "sess_abc123",
+        "feature": "analysis",
+        "cost_center": "sales"
+    }
+)
+
+result = await graph.ainvoke(input, config=config)
+```
+
+Now filter in LangSmith:
+- `tags:"premium-user"`
+- `metadata.cost_center:"sales"`
+- `metadata.feature:"analysis"`
+
+## Datasets & Evaluation
+
+### Create Dataset from Production
+
+<Steps>
+  <Step title="Filter Successful Traces">
+    Filter: `status:success AND tags:"production"`
+  </Step>
+
+  <Step title="Select Examples">
+    Choose representative traces (varied inputs/outputs)
+  </Step>
+
+  <Step title="Add to Dataset">
+    Click "Add to Dataset" → Name it "prod-examples-oct-2025"
+  </Step>
+</Steps>
+
+### Run Evaluation
+
+Compare model performance:
+
+```python
+from langsmith import Client
+
+client = Client()
+
+# Test on production dataset
+results = client.run_on_dataset(
+    dataset_name="prod-examples-oct-2025",
+    llm_or_chain_factory=lambda: graph,
+    project_name="eval-claude-vs-gpt4"
+)
+```
+
+View results in LangSmith to compare:
+- Latency
+- Token usage
+- Cost
+- Quality (with custom evaluators)
+
+## Viewing Logs
+
+### Via CLI
+
+```bash
+# Stream logs in real-time
+langgraph deployment logs my-agent-prod --follow
+
+# View recent logs
+langgraph deployment logs my-agent-prod --limit 100
+
+# Filter by level
+langgraph deployment logs my-agent-prod --level ERROR
+```
+
+### Via LangSmith UI
+
+Logs are included in each trace - expand trace to see full logs.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Consistent Tagging">
+    ```python
+    # Good: Consistent tags
+    tags=["production", "premium-tier", "chat-feature"]
+
+    # Bad: Inconsistent tags
+    tags=["prod", "Premium User", "CHAT"]
+    ```
+  </Accordion>
+
+  <Accordion title="Add Business Context">
+    ```python
+    metadata={
+        "user_id": "alice@example.com",
+        "user_tier": "premium",
+        "cost_center": "sales",
+        "session_id": "sess_123",
+        "request_source": "mobile_app"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Monitor Key Metrics Daily">
+    Check daily:
+    - Error rate (should be < 1%)
+    - P95 latency (should be < 5s)
+    - Daily cost (should be within budget)
+    - User satisfaction (via feedback)
+  </Accordion>
+
+  <Accordion title="Set Up Alerts">
+    Configure alerts for:
+    - Error rate > 5%
+    - P95 latency > 5s
+    - Daily cost > $100
+    - Budget 80% consumed
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No traces appearing">
+    **Solution**:
+    - Verify `LANGSMITH_TRACING=true` in environment
+    - Check LangSmith API key is set
+    - Confirm correct project name
+    - Make test request to generate trace
+  </Accordion>
+
+  <Accordion title="Traces missing metadata">
+    **Solution**:
+    ```python
+    # Ensure metadata is passed to invoke
+    config = RunnableConfig(
+        tags=["your-tags"],
+        metadata={"user_id": "alice"}
+    )
+    result = await graph.ainvoke(input, config=config)
+    ```
+  </Accordion>
+
+  <Accordion title="High latency in traces">
+    **Investigation**:
+    1. Expand trace to see timing breakdown
+    2. Identify slowest step
+    3. Optimize:
+       - LLM calls: Try faster model or smaller prompts
+       - Tool calls: Add caching or parallel execution
+       - State operations: Optimize state size
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="LangSmith Tracing" icon="chart-mixed" href="/getting-started/langsmith-tracing">
+    Complete LangSmith guide
+  </Card>
+  <Card title="CI/CD" icon="infinity" href="/deployment/platform/ci-cd">
+    Automate deployments
+  </Card>
+  <Card title="Configuration" icon="gear" href="/deployment/platform/configuration">
+    Optimize configuration
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/deployment/platform/quickstart">
+    Deploy your agent
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+  **All set!** Your LangGraph Platform deployment is automatically monitored with comprehensive LangSmith tracing.
+</Check>

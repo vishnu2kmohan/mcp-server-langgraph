@@ -3,12 +3,12 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "langgraph-mcp-agent"
+name = "mcp-server-langgraph"
 version = "1.0.0"
-description = "Production-ready LangGraph agent with MCP, OpenFGA, and multi-LLM support"
+description = "Production-ready MCP server with LangGraph, OpenFGA, and multi-LLM support"
 readme = "README.md"
 authors = [
-    {name = "LangGraph MCP Agent Contributors", email = "maintainers@example.com"}
+    {name = "MCP Server with LangGraph Contributors", email = "maintainers@example.com"}
 ]
 license = {text = "MIT"}
 classifiers = [
@@ -27,6 +27,7 @@ requires-python = ">=3.10"
 dependencies = [
     "langgraph>=0.2.28",
     "langchain-core>=0.3.15",
+    "langsmith>=0.1.0",
     "litellm>=1.52.3",
     "mcp>=1.1.2",
     "PyJWT>=2.8.0",
@@ -58,6 +59,7 @@ dev = [
     "mypy>=1.8.0",
     "isort>=5.13.2",
     "bandit>=1.7.6",
+    "langgraph-cli>=0.1.0",
 ]
 
 [project.scripts]
@@ -65,11 +67,11 @@ langgraph-mcp = "mcp_server:main"
 langgraph-mcp-http = "mcp_server_streamable:main"
 
 [project.urls]
-Homepage = "https://github.com/YOUR_ORG/langgraph_mcp_agent"
-Documentation = "https://github.com/YOUR_ORG/langgraph_mcp_agent/blob/main/README.md"
-Repository = "https://github.com/YOUR_ORG/langgraph_mcp_agent"
-Issues = "https://github.com/YOUR_ORG/langgraph_mcp_agent/issues"
-Changelog = "https://github.com/YOUR_ORG/langgraph_mcp_agent/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/vishnu2kmohan/langgraph_mcp_agent"
+Documentation = "https://github.com/vishnu2kmohan/langgraph_mcp_agent/blob/main/README.md"
+Repository = "https://github.com/vishnu2kmohan/langgraph_mcp_agent"
+Issues = "https://github.com/vishnu2kmohan/langgraph_mcp_agent/issues"
+Changelog = "https://github.com/vishnu2kmohan/langgraph_mcp_agent/blob/main/CHANGELOG.md"
 
 [tool.black]
 line-length = 127
@@ -96,6 +98,24 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+# Stricter type checking for production
+disallow_untyped_defs = true
+disallow_any_unimported = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+check_untyped_defs = true
+# Allow some flexibility for third-party libraries
+disallow_untyped_calls = false
+# Exclude test files from strict checking
+exclude = [
+    "tests/",
+    "test_.*\\.py$",
+    "conftest\\.py$",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -113,6 +133,7 @@ markers = [
     "infisical: Infisical integration tests",
     "mcp: MCP protocol tests",
     "observability: OpenTelemetry/metrics/logging tests",
+    "benchmark: Performance benchmark tests",
 ]
 
 [tool.coverage.run]

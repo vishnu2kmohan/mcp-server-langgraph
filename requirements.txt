@@ -1,6 +1,12 @@
 # LangGraph and LangChain
-langgraph>=0.2.0
-langchain-core>=0.3.0
+langgraph>=0.2.28
+langchain-core>=0.3.15
+
+# LangSmith for observability
+langsmith>=0.1.0
+
+# LangGraph CLI for platform deployment
+langgraph-cli>=0.1.0
 
 # LiteLLM for multi-provider LLM support
 litellm>=1.50.0

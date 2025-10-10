@@ -4,7 +4,7 @@ Quick setup guide for using Google Gemini 2.5 models (default configuration).
 
 ## Why Gemini 2.5?
 
-The LangGraph MCP Agent defaults to **Gemini 2.5 Flash** for several reasons:
+The MCP Server with LangGraph defaults to **Gemini 2.5 Flash** for several reasons:
 
 ✅ **Latest Technology** - Google's newest model family (2025)
 ✅ **Fastest Performance** - Sub-second response times

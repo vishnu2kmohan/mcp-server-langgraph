@@ -1,6 +1,70 @@
 version: '3.8'
 
 services:
+  # MCP Server with LangGraph - Main Application
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Service Configuration
+      - SERVICE_NAME=mcp-server-langgraph
+      - ENVIRONMENT=development
+
+      # LLM Provider (default to Google Gemini)
+      - LLM_PROVIDER=${LLM_PROVIDER:-google}
+      - MODEL_NAME=${MODEL_NAME:-gemini-2.5-flash-002}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      # Authentication
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-change-in-production}
+
+      # OpenFGA
+      - OPENFGA_API_URL=http://openfga:8080
+      - OPENFGA_STORE_ID=${OPENFGA_STORE_ID}
+      - OPENFGA_MODEL_ID=${OPENFGA_MODEL_ID}
+
+      # OpenTelemetry
+      - OTLP_ENDPOINT=http://otel-collector:4317
+      - ENABLE_TRACING=true
+      - ENABLE_METRICS=true
+
+      # LangSmith (optional)
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_TRACING=${LANGSMITH_TRACING:-false}
+      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-mcp-server-langgraph-dev}
+      - OBSERVABILITY_BACKEND=${OBSERVABILITY_BACKEND:-opentelemetry}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      # Mount code for hot reload during development
+      - ./src:/app/src:ro
+      - ./config.py:/app/config.py:ro
+      - ./agent.py:/app/agent.py:ro
+      - ./llm_factory.py:/app/llm_factory.py:ro
+      - ./observability.py:/app/observability.py:ro
+      - ./langsmith_config.py:/app/langsmith_config.py:ro
+    networks:
+      - observability
+    depends_on:
+      openfga:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # OpenFGA - Fine-grained Authorization
   openfga:
     image: openfga/openfga:latest
@@ -11,7 +75,7 @@ services:
     ports:
       - "8080:8080" # HTTP API
       - "8081:8081" # gRPC API
-      - "3000:3000" # Playground UI
+      - "3001:3000" # Playground UI (avoid conflict with Grafana)
     networks:
       - observability
     healthcheck:

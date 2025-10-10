@@ -1,0 +1,106 @@
+{
+  "_copy_without_render": [
+    "*.pyc",
+    "__pycache__",
+    ".git",
+    ".github/workflows/*.yaml",
+    "docs/getting-started/*.mdx"
+  ],
+
+  "project_name": "My MCP Server",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
+  "project_short_description": "A LangGraph agent exposed via Model Context Protocol",
+  "author_name": "Your Name",
+  "author_email": "your.email@example.com",
+  "github_username": "yourusername",
+  "version": "0.1.0",
+
+  "python_version": ["3.11", "3.10", "3.12"],
+
+  "mcp_transports": {
+    "stdio": "Standard I/O transport (for Claude Desktop, etc.)",
+    "http_sse": "HTTP with Server-Sent Events",
+    "streamable_http": "StreamableHTTP (recommended)",
+    "all": "All three transports"
+  },
+
+  "use_authentication": ["yes", "no"],
+  "authentication_method": ["jwt", "api_key", "none"],
+
+  "use_authorization": ["yes", "no"],
+  "authorization_backend": ["openfga", "simple_rbac", "none"],
+
+  "use_secrets_manager": ["yes", "no"],
+  "secrets_backend": ["infisical", "env_only"],
+
+  "llm_providers": {
+    "all": "Support all 100+ LiteLLM providers",
+    "openai_only": "OpenAI models only",
+    "anthropic_only": "Anthropic Claude only",
+    "local_only": "Local models (Ollama) only",
+    "custom": "Custom selection"
+  },
+
+  "observability_level": {
+    "full": "OpenTelemetry + Prometheus + Grafana + Jaeger",
+    "basic": "Basic logging and metrics",
+    "minimal": "Logging only"
+  },
+
+  "include_kubernetes": ["yes", "no"],
+  "kubernetes_flavor": ["helm", "kustomize", "both", "none"],
+
+  "include_docker": ["yes", "no"],
+
+  "testing_level": {
+    "comprehensive": "Unit + Integration + E2E + Benchmarks",
+    "standard": "Unit + Integration",
+    "basic": "Unit tests only",
+    "minimal": "Basic smoke tests"
+  },
+
+  "include_ci_cd": ["yes", "no"],
+  "ci_platform": ["github_actions", "gitlab_ci", "none"],
+
+  "include_pre_commit": ["yes", "no"],
+
+  "code_style": {
+    "strict": "Black + isort + flake8 + mypy + bandit (strict)",
+    "standard": "Black + isort + flake8",
+    "minimal": "Black only"
+  },
+
+  "license": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "GPL-3.0",
+    "Proprietary"
+  ],
+
+  "include_documentation": ["yes", "no"],
+  "documentation_format": ["mintlify", "mkdocs", "sphinx", "basic_markdown"],
+
+  "deployment_target": {
+    "production": "Full production setup (K8s, monitoring, security)",
+    "cloudrun": "Google Cloud Run serverless deployment",
+    "staging": "Staging environment setup",
+    "development": "Local development only",
+    "all": "All environments"
+  },
+
+  "include_cloudrun": ["yes", "no"],
+
+  "include_examples": ["yes", "no"],
+
+  "project_visibility": ["public", "private"],
+
+  "_jinja2_env_vars": {
+    "block_start_string": "{%",
+    "block_end_string": "%}",
+    "variable_start_string": "{{",
+    "variable_end_string": "}}",
+    "comment_start_string": "{#",
+    "comment_end_string": "#}"
+  }
+}

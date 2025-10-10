@@ -1,0 +1,341 @@
+---
+title: Google Cloud Run
+description: 'Deploy to Google Cloud Run for serverless GCP deployment'
+icon: 'google'
+---
+
+## Overview
+
+Deploy the MCP Server with LangGraph to Google Cloud Run for fully managed, serverless hosting on Google Cloud Platform.
+
+<Info>
+  **Serverless GCP**: Auto-scaling from 0 to 100+ instances with pay-per-use pricing.
+</Info>
+
+## Quick Start
+
+### One-Command Deployment
+
+```bash
+cd cloudrun
+./deploy.sh --setup
+```
+
+This automated script will:
+1. Enable required GCP APIs
+2. Create service account
+3. Configure Secret Manager
+4. Build Docker image
+5. Deploy to Cloud Run
+6. Output the service URL
+
+### Manual Deployment
+
+```bash
+# Build and deploy
+gcloud run deploy mcp-server-langgraph \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated
+```
+
+## Benefits
+
+<CardGroup cols={2}>
+  <Card title="Serverless" icon="cloud">
+    Scale to zero when idle. Auto-scale to 100+ instances under load.
+  </Card>
+  <Card title="Pay-Per-Use" icon="dollar-sign">
+    Only charged during request processing. No idle costs.
+  </Card>
+  <Card title="Automatic HTTPS" icon="lock">
+    Free SSL certificates and automatic certificate renewal.
+  </Card>
+  <Card title="Secret Manager" icon="key">
+    Integrated with Google Cloud Secret Manager for secure configuration.
+  </Card>
+  <Card title="Fast Deployment" icon="bolt">
+    Deploy in 2-3 minutes with automatic rollback on failure.
+  </Card>
+  <Card title="Global" icon="globe">
+    Deploy to regions worldwide for low latency.
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+1. **Google Cloud account** with billing enabled
+2. **gcloud CLI** installed: [Install Guide](https://cloud.google.com/sdk/docs/install)
+3. **Docker** (optional, for local testing)
+
+## Configuration
+
+### Secret Manager Setup
+
+Store API keys securely:
+
+```bash
+# Run interactive setup
+cd cloudrun
+./setup-secrets.sh
+```
+
+Or manually:
+
+```bash
+# Create secrets
+echo -n "your-jwt-secret" | gcloud secrets create jwt-secret-key --data-file=-
+echo -n "sk-ant-..." | gcloud secrets create anthropic-api-key --data-file=-
+echo -n "sk-..." | gcloud secrets create openai-api-key --data-file=-
+```
+
+### Service Configuration
+
+Edit `cloudrun/service.yaml`:
+
+```yaml
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '0'  # Scale to zero
+        autoscaling.knative.dev/maxScale: '100'  # Max instances
+    spec:
+      containers:
+      - resources:
+          limits:
+            cpu: '2'
+            memory: 2Gi
+```
+
+## Deployment
+
+### Initial Deployment
+
+```bash
+# Using script
+cd cloudrun
+./deploy.sh --setup
+
+# Using gcloud
+gcloud run deploy mcp-server-langgraph \
+  --image gcr.io/PROJECT_ID/mcp-server-langgraph:latest \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated
+```
+
+### Update Deployment
+
+```bash
+# Rebuild and redeploy
+cd cloudrun
+./deploy.sh
+
+# Or
+gcloud run deploy mcp-server-langgraph --source .
+```
+
+### Rollback
+
+```bash
+# List revisions
+gcloud run revisions list --service mcp-server-langgraph
+
+# Rollback to previous revision
+gcloud run services update-traffic mcp-server-langgraph \
+  --to-revisions REVISION_NAME=100
+```
+
+## Monitoring
+
+### View Logs
+
+```bash
+# Stream logs
+gcloud run services logs tail mcp-server-langgraph --follow
+
+# View recent logs
+gcloud run services logs read mcp-server-langgraph --limit 100
+```
+
+### Cloud Console
+
+Access metrics in Cloud Console:
+- Request count and latency
+- CPU and memory utilization
+- Instance count over time
+- Error rates
+
+## Scaling
+
+### Configure Autoscaling
+
+```bash
+gcloud run services update mcp-server-langgraph \
+  --min-instances 1 \
+  --max-instances 100 \
+  --concurrency 80
+```
+
+**Strategies**:
+
+<AccordionGroup>
+  <Accordion title="Scale to Zero (Cost-Optimized)">
+    ```bash
+    --min-instances 0
+    --cpu-throttling
+    ```
+
+    - **Pros**: Lowest cost
+    - **Cons**: 1-2s cold start
+    - **Use**: Dev, low-traffic apps
+  </Accordion>
+
+  <Accordion title="Warm Pool (Low Latency)">
+    ```bash
+    --min-instances 3
+    --no-cpu-throttling
+    ```
+
+    - **Pros**: No cold starts
+    - **Cons**: Higher baseline cost
+    - **Use**: Production, latency-sensitive
+  </Accordion>
+
+  <Accordion title="Hybrid (Balanced)">
+    ```bash
+    --min-instances 1
+    --max-instances 50
+    ```
+
+    - **Pros**: Balance cost and latency
+    - **Cons**: Some cold starts during spikes
+    - **Use**: Most production workloads
+  </Accordion>
+</AccordionGroup>
+
+## Security
+
+### Network Security
+
+```bash
+# Restrict to internal traffic only
+gcloud run services update mcp-server-langgraph \
+  --ingress internal
+
+# Or allow only from load balancer
+gcloud run services update mcp-server-langgraph \
+  --ingress internal-and-cloud-load-balancing
+```
+
+### VPC Access
+
+Connect to private resources:
+
+```bash
+# Create VPC connector
+gcloud compute networks vpc-access connectors create mcp-connector \
+  --region us-central1 \
+  --network default \
+  --range 10.8.0.0/28
+
+# Use connector
+gcloud run services update mcp-server-langgraph \
+  --vpc-connector mcp-connector \
+  --vpc-egress private-ranges-only
+```
+
+### Authentication
+
+```bash
+# Require authentication
+gcloud run services update mcp-server-langgraph \
+  --no-allow-unauthenticated
+
+# Grant access to specific users
+gcloud run services add-iam-policy-binding mcp-server-langgraph \
+  --member="user:alice@example.com" \
+  --role="roles/run.invoker"
+```
+
+## Cost Optimization
+
+<Tip>
+  **Estimated costs**: $5-30/month for typical usage (10K requests/day)
+</Tip>
+
+**Optimization tips**:
+1. **Scale to zero** when idle (`--min-instances 0`)
+2. **CPU throttling** for cost savings
+3. **Right-size resources** (start with 1 CPU, 1Gi memory)
+4. **Request bundling** to reduce request count charges
+5. **Caching** to reduce LLM API calls
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="503 Service Unavailable">
+    **Causes**:
+    - Container startup timeout
+    - Health check failures
+    - Insufficient memory
+
+    **Solutions**:
+    ```bash
+    # Increase timeout and memory
+    gcloud run services update mcp-server-langgraph \
+      --timeout 600 \
+      --memory 4Gi
+    ```
+  </Accordion>
+
+  <Accordion title="Secret Access Denied">
+    **Cause**: Service account lacks permissions
+
+    **Solution**:
+    ```bash
+    gcloud secrets add-iam-policy-binding SECRET_NAME \
+      --member="serviceAccount:SERVICE_ACCOUNT_EMAIL" \
+      --role="roles/secretmanager.secretAccessor"
+    ```
+  </Accordion>
+
+  <Accordion title="Cold Start Latency">
+    **Solutions**:
+    - Use `--min-instances 1` or higher
+    - Enable startup CPU boost (default in service.yaml)
+    - Optimize Docker image size
+  </Accordion>
+</AccordionGroup>
+
+## Complete Guide
+
+For detailed deployment instructions, see:
+
+<Card title="Cloud Run Deployment Guide" icon="book" href="/CLOUDRUN_DEPLOYMENT.md">
+  Complete 500+ line deployment guide with all options and best practices
+</Card>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy Now" icon="rocket" href="#quick-start">
+    Follow quick start guide above
+  </Card>
+  <Card title="Configure Monitoring" icon="chart-line" href="/deployment/monitoring">
+    Set up observability and alerts
+  </Card>
+  <Card title="Production Checklist" icon="list-check" href="/deployment/production-checklist">
+    Pre-deployment security checklist
+  </Card>
+  <Card title="Compare Platforms" icon="code-compare" href="/deployment/overview">
+    Choose the right deployment option
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+  **Ready to deploy?** Run `cd cloudrun && ./deploy.sh --setup` to deploy to Google Cloud Run!
+</Check>

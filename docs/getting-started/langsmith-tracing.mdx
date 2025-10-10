@@ -1,0 +1,399 @@
+---
+title: LangSmith Tracing
+description: 'Comprehensive LLM observability with LangSmith'
+icon: 'chart-mixed'
+---
+
+## Overview
+
+LangSmith provides specialized observability for LLM applications, complementing OpenTelemetry's infrastructure monitoring with LLM-specific insights.
+
+<Info>
+  **Dual Observability**: This project supports both OpenTelemetry (infrastructure) and LangSmith (LLM-specific) tracing simultaneously.
+</Info>
+
+## Why LangSmith?
+
+LangSmith gives you superpowers for debugging and optimizing LLM applications:
+
+<CardGroup cols={2}>
+  <Card title="Trace Every LLM Call" icon="magnifying-glass">
+    See exact prompts, completions, and intermediate steps
+  </Card>
+  <Card title="Prompt Engineering" icon="wand-magic-sparkles">
+    Iterate on prompts using real production data
+  </Card>
+  <Card title="Create Datasets" icon="database">
+    Build test datasets from production traces
+  </Card>
+  <Card title="Compare Models" icon="code-compare">
+    Run evaluations to compare model performance
+  </Card>
+  <Card title="Track Costs" icon="dollar-sign">
+    Monitor LLM API costs per user and session
+  </Card>
+  <Card title="Collect Feedback" icon="comments">
+    Gather user ratings and analyze trends
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+### 1. Create LangSmith Account
+
+<Steps>
+  <Step title="Sign Up">
+    Visit [smith.langchain.com](https://smith.langchain.com/) and create a free account
+  </Step>
+  <Step title="Create Project">
+    Create a new project (e.g., "mcp-server-langgraph")
+  </Step>
+  <Step title="Get API Key">
+    Go to Settings → API Keys → Create API Key
+  </Step>
+</Steps>
+
+### 2. Configure Environment
+
+Add to your `.env` file:
+
+```bash
+# LangSmith Configuration
+LANGSMITH_API_KEY=lsv2_pt_your_key_here
+LANGSMITH_TRACING=true
+LANGSMITH_PROJECT=mcp-server-langgraph
+
+# Enable dual observability
+OBSERVABILITY_BACKEND=both  # OpenTelemetry + LangSmith
+```
+
+### 3. Start Tracing
+
+That's it! All agent invocations are now automatically traced:
+
+```python
+from agent import agent_graph
+
+# This is automatically traced in LangSmith
+result = agent_graph.invoke({
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "user_id": "alice",
+    "request_id": "req123"
+})
+```
+
+### 4. View Traces
+
+Visit [smith.langchain.com](https://smith.langchain.com/) to see your traces in real-time!
+
+## What's Captured
+
+Every trace includes:
+
+<AccordionGroup>
+  <Accordion title="LLM Calls">
+    - Full prompts sent to LLM
+    - Complete model responses
+    - Token counts (input/output)
+    - Model parameters (temperature, max_tokens)
+    - Latency breakdown
+  </Accordion>
+
+  <Accordion title="Agent Steps">
+    - Routing decisions
+    - Tool invocations
+    - Intermediate states
+    - Conditional logic flows
+  </Accordion>
+
+  <Accordion title="Metadata">
+    - User ID and session ID
+    - Request source
+    - Environment (dev/staging/prod)
+    - Custom tags
+  </Accordion>
+
+  <Accordion title="Errors">
+    - Full Python stack traces
+    - Input that caused error
+    - Error context and timing
+  </Accordion>
+</AccordionGroup>
+
+## Adding Custom Metadata
+
+Enrich traces with business context:
+
+```python
+from langsmith_config import langsmith_config
+from langchain_core.runnables import RunnableConfig
+
+# Create rich run configuration
+config = langsmith_config.create_run_config(
+    run_name="premium-user-analysis",
+    user_id="alice@company.com",
+    request_id="req789",
+    tags=["premium", "priority-high", "sales-dept"],
+    metadata={
+        "session_id": "sess_abc123",
+        "request_source": "slack",
+        "cost_center": "sales",
+        "user_tier": "premium"
+    }
+)
+
+# Use in invocation
+result = agent_graph.invoke(inputs, config=config)
+```
+
+Now you can filter traces by:
+- **User tier**: Find all premium user interactions
+- **Department**: Analyze usage by cost center
+- **Priority**: Debug high-priority requests first
+
+## Datasets and Evaluation
+
+### Create Dataset from Traces
+
+<Steps>
+  <Step title="Filter Traces">
+    In LangSmith UI, filter for successful traces from the last week
+  </Step>
+  <Step title="Select Examples">
+    Click "Add to Dataset" and select representative examples
+  </Step>
+  <Step title="Name Dataset">
+    Save as "prod-examples-2025-01"
+  </Step>
+</Steps>
+
+### Run Evaluations
+
+Compare model performance:
+
+```python
+from langsmith import Client
+
+client = Client()
+
+# Run evaluation on dataset
+results = client.run_on_dataset(
+    dataset_name="prod-examples-2025-01",
+    llm_or_chain_factory=lambda: agent_graph,
+    project_name="eval-gpt4-vs-claude"
+)
+```
+
+View results in LangSmith UI to see:
+- **Latency comparison**: Which model is faster?
+- **Cost analysis**: Which is more cost-effective?
+- **Quality metrics**: Custom evaluators for accuracy
+
+## Collecting User Feedback
+
+Capture user ratings on responses:
+
+```python
+from langsmith import Client
+
+client = Client()
+
+# After agent response
+client.create_feedback(
+    run_id=run_id,  # From trace
+    key="user_rating",
+    score=1.0,  # 1.0 = thumbs up, 0.0 = thumbs down
+    comment="Very helpful response!",
+    source_info={"user_id": "alice"}
+)
+```
+
+<Tip>
+  Integrate feedback collection into your UI to gather real user sentiment on responses.
+</Tip>
+
+## Debugging with LangSmith
+
+### Find Failing Traces
+
+<Steps>
+  <Step title="Filter by Status">
+    In LangSmith UI, filter: `status:error`
+  </Step>
+  <Step title="Sort by Time">
+    Sort by timestamp descending to see recent failures
+  </Step>
+  <Step title="Analyze">
+    Click on trace to see full error context:
+    - Exact input that caused failure
+    - Full Python stack trace
+    - All intermediate steps before error
+    - Timing information
+  </Step>
+</Steps>
+
+### Optimize Slow Traces
+
+Find performance bottlenecks:
+
+1. **Filter**: `latency > 5s`
+2. **Sort**: By latency descending
+3. **Expand trace**: See timing breakdown
+4. **Identify bottleneck**:
+   - Slow LLM calls → Try faster model
+   - Slow tool calls → Add caching
+   - Redundant calls → Optimize logic
+
+### Compare Traces
+
+Compare successful vs. failed traces side-by-side:
+
+<Steps>
+  <Step title="Select Two Traces">
+    Shift+click to select two traces
+  </Step>
+  <Step title="Click Compare">
+    See side-by-side diff of inputs, steps, outputs
+  </Step>
+  <Step title="Identify Differences">
+    Find what caused different outcomes
+  </Step>
+</Steps>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Project Organization">
+    Create separate projects for each environment:
+    - `my-agent-dev` - Development
+    - `my-agent-staging` - Staging
+    - `my-agent-prod` - Production
+
+    ```bash
+    # Set project per environment
+    LANGSMITH_PROJECT=my-agent-prod
+    ```
+  </Accordion>
+
+  <Accordion title="Tagging Strategy">
+    Use consistent, searchable tags:
+    - **Environment**: `production`, `staging`, `development`
+    - **User tier**: `free`, `pro`, `enterprise`
+    - **Feature**: `chat`, `analysis`, `search`
+    - **Priority**: `high`, `medium`, `low`
+  </Accordion>
+
+  <Accordion title="Cost Monitoring">
+    Track costs in LangSmith:
+    1. Go to project → Analytics
+    2. View "Cost Over Time" chart
+    3. Set budget alerts
+    4. Identify high-cost users/features
+  </Accordion>
+
+  <Accordion title="Sampling (High Volume)">
+    For very high traffic, sample traces:
+
+    ```python
+    import random
+
+    # Trace 10% of requests
+    if random.random() < 0.1:
+        config = RunnableConfig(tags=["sampled"])
+    ```
+  </Accordion>
+
+  <Accordion title="Privacy Compliance">
+    Redact sensitive data before logging:
+
+    ```python
+    def redact_pii(text):
+        import re
+        text = re.sub(r'\b[\w.-]+@[\w.-]+\.\w+\b', '[EMAIL]', text)
+        text = re.sub(r'\b\d{3}-\d{3}-\d{4}\b', '[PHONE]', text)
+        return text
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Integration with OpenTelemetry
+
+This project supports **both** observability systems simultaneously:
+
+| Feature | OpenTelemetry | LangSmith |
+|---------|---------------|-----------|
+| **Infrastructure Metrics** | ✅ CPU, memory, network | ❌ |
+| **Distributed Tracing** | ✅ Service-to-service | ⚠️ Limited |
+| **LLM Call Tracing** | ⚠️ Basic | ✅ Full details |
+| **Prompt Engineering** | ❌ | ✅ |
+| **Model Evaluation** | ❌ | ✅ |
+| **Cost Tracking** | ❌ | ✅ |
+| **User Feedback** | ❌ | ✅ |
+
+<Note>
+  **Best of both worlds**: Use OpenTelemetry for infrastructure monitoring and LangSmith for LLM-specific insights.
+</Note>
+
+## Example Code
+
+See complete examples in the repository:
+
+<CodeGroup>
+```python examples/langsmith_tracing.py
+# Basic tracing
+from agent import agent_graph
+
+result = agent_graph.invoke({
+    "messages": [{"role": "user", "content": "Hello"}],
+    "user_id": "alice"
+})
+```
+
+```python Advanced metadata
+from langsmith_config import langsmith_config
+
+config = langsmith_config.create_run_config(
+    run_name="user-query",
+    user_id="alice",
+    tags=["production", "premium"],
+    metadata={"session_id": "sess123"}
+)
+
+result = agent_graph.invoke(inputs, config=config)
+```
+
+```python Feedback collection
+from langsmith import Client
+
+client = Client()
+client.create_feedback(
+    run_id=run_id,
+    key="thumbs",
+    score=1.0,
+    comment="Great response!"
+)
+```
+</CodeGroup>
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="LangSmith Docs" icon="book" href="https://docs.langchain.com/langsmith">
+    Official LangSmith documentation
+  </Card>
+  <Card title="Integration Guide" icon="file" href="/LANGSMITH_INTEGRATION.md">
+    Detailed integration guide
+  </Card>
+  <Card title="API Reference" icon="code" href="https://docs.smith.langchain.com/api-reference">
+    LangSmith API reference
+  </Card>
+  <Card title="Example Code" icon="github" href="https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/examples/langsmith_tracing.py">
+    Complete code examples
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+  **Ready to trace?** Just set `LANGSMITH_TRACING=true` in your `.env` and all agent invocations will be automatically traced!
+</Check>

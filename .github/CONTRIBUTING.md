@@ -1,4 +1,4 @@
-# Contributing to LangGraph MCP Agent
+# Contributing to MCP Server with LangGraph
 
 Thank you for your interest in contributing! This document provides guidelines and instructions for contributing to the project.
 
@@ -22,22 +22,24 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/langgraph_mcp_agent.git
-   cd langgraph_mcp_agent
+   git clone https://github.com/YOUR_USERNAME/mcp_server_langgraph.git
+   cd mcp_server_langgraph
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/YOUR_ORG/langgraph_mcp_agent.git
+   git remote add upstream https://github.com/vishnu2kmohan/mcp_server_langgraph.git
    ```
 
 ## Development Setup
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.10+ (3.11+ recommended)
 - Docker and Docker Compose
-- kubectl (for Kubernetes development)
-- Helm 3+ (for Helm chart development)
+- Git
+- kubectl (optional, for Kubernetes development)
+- Helm 3+ (optional, for Helm chart development)
+- An LLM API key (Google Gemini, Anthropic Claude, or OpenAI)
 
 ### Install Dependencies
 
@@ -353,11 +355,27 @@ Look for issues labeled `good first issue`:
 
 Check issues labeled `enhancement` for requested features.
 
-## Questions?
+## Getting Help
 
-- **Issues**: For bugs and feature requests
-- **Discussions**: For questions and general discussion
-- **Email**: maintainers@example.com
+### Where to Ask Questions
+
+- **GitHub Discussions**: For questions, ideas, and general discussion
+- **GitHub Issues**: For bug reports and feature requests (use templates)
+- **Documentation**: Check our comprehensive guides first
+  - [README.md](../README.md) - Getting started
+  - [TESTING.md](../TESTING.md) - Testing guide
+  - [PRODUCTION_DEPLOYMENT.md](../PRODUCTION_DEPLOYMENT.md) - Deployment
+  - [SECURITY_AUDIT.md](../SECURITY_AUDIT.md) - Security
+
+### Response Time
+
+- **Critical bugs**: 24-48 hours
+- **Feature requests**: 1-2 weeks
+- **Questions**: 2-5 business days
+
+### Community Support
+
+We welcome community members helping each other! If you know the answer to someone's question, please share your knowledge.
 
 ## License
 
@@ -365,4 +383,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-**Thank you for contributing to LangGraph MCP Agent!** 🚀
+**Thank you for contributing to MCP Server with LangGraph!** 🚀

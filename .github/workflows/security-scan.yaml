@@ -19,12 +19,12 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Build Docker image
-      run: docker build -t langgraph-mcp-agent:scan .
+      run: docker build -t mcp-server-langgraph:scan .
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'langgraph-mcp-agent:scan'
+        image-ref: 'mcp-server-langgraph:scan'
         format: 'sarif'
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH'

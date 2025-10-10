@@ -1,0 +1,347 @@
+# Cursor AI Rules for LangGraph MCP Agent
+
+## Project Overview
+This is a production-ready LangGraph agent with Model Context Protocol (MCP) implementation, featuring:
+- Multi-LLM support via LiteLLM (100+ providers)
+- Fine-grained authorization with OpenFGA
+- Secrets management with Infisical
+- OpenTelemetry observability
+- Kubernetes-ready deployment
+
+## Code Style Guidelines
+
+### Python
+- **Line length**: 127 characters (enforced by black)
+- **Formatter**: black with `--line-length=127`
+- **Import sorting**: isort with `--profile=black`
+- **Type hints**: Always use type hints for function signatures
+- **Docstrings**: Use Google-style docstrings
+- **Naming conventions**:
+  - Classes: PascalCase
+  - Functions/methods: snake_case
+  - Constants: UPPER_SNAKE_CASE
+  - Private methods: _leading_underscore
+
+### File Organization
+- Keep files focused and under 500 lines when possible
+- Group related functionality together
+- Use clear, descriptive file names
+
+## Architecture Patterns
+
+### Agent Design
+- Use LangGraph's functional API for stateless operations
+- Implement proper state management with checkpointing
+- Keep agent logic separate from transport layer (MCP)
+
+### Authentication & Authorization
+- Always validate JWT tokens before processing requests
+- Use OpenFGA for fine-grained authorization checks
+- Never hardcode credentials or secrets
+- Use Infisical or environment variables for secrets
+
+### Error Handling
+- Use specific exception types
+- Log errors with trace context
+- Return user-friendly error messages
+- Never expose internal stack traces to clients
+
+### Observability
+- Add OpenTelemetry spans for all major operations
+- Use structured logging with context
+- Track metrics for performance-critical paths
+- Include trace IDs in all logs
+
+## Testing Guidelines
+
+### Test Structure
+- Unit tests: Mark with `@pytest.mark.unit`
+- Integration tests: Mark with `@pytest.mark.integration`
+- E2E tests: Mark with `@pytest.mark.e2e`
+- Benchmarks: Mark with `@pytest.mark.benchmark`
+
+### Test Coverage
+- Aim for >80% code coverage
+- Focus on critical paths and edge cases
+- Mock external dependencies (LLMs, OpenFGA, Infisical)
+
+### Test Organization
+```python
+# Good test structure
+def test_feature_happy_path():
+    """Test normal operation"""
+    pass
+
+def test_feature_error_handling():
+    """Test error conditions"""
+    pass
+
+def test_feature_edge_cases():
+    """Test boundary conditions"""
+    pass
+```
+
+## Security Best Practices
+
+### Authentication
+- Use strong JWT secret keys (256 bits minimum)
+- Set appropriate token expiration times (≤1 hour for production)
+- Validate all token claims (exp, iat, iss, sub)
+
+### Authorization
+- Check permissions before every protected operation
+- Use least-privilege principle
+- Log all authorization failures
+
+### Input Validation
+- Validate all user inputs
+- Sanitize data before processing
+- Use Pydantic models for request validation
+
+### Secrets Management
+- Never commit secrets to git
+- Use Infisical or environment variables
+- Rotate secrets regularly
+- Log secret access (but not values)
+
+## Performance Guidelines
+
+### Response Times
+- Target: p95 < 5 seconds for agent responses
+- LLM calls: p95 < 10 seconds
+- Authorization checks: p95 < 50ms
+- JWT validation: p95 < 2ms
+
+### Resource Management
+- Use async/await for I/O operations
+- Implement proper connection pooling
+- Clean up resources in finally blocks
+- Monitor memory usage
+
+### Caching
+- Cache OpenFGA model definitions
+- Cache LLM responses when appropriate
+- Use TTL for cached data
+- Implement cache invalidation strategy
+
+## API Design
+
+### FastAPI Endpoints
+- Use clear, RESTful naming
+- Include OpenAPI documentation
+- Define Pydantic models for requests/responses
+- Add appropriate HTTP status codes
+- Include error schemas
+
+### MCP Protocol
+- Follow MCP specification strictly
+- Support all three transport modes (stdio, HTTP/SSE, StreamableHTTP)
+- Implement proper error responses
+- Add telemetry to all operations
+
+## Documentation
+
+### Code Documentation
+- Add docstrings to all public functions/classes
+- Include usage examples in docstrings
+- Document complex algorithms
+- Keep comments up to date
+
+### API Documentation
+- Use OpenAPI/Swagger annotations
+- Provide request/response examples
+- Document authentication requirements
+- Include error codes and meanings
+
+## Git Workflow
+
+### Commits
+- Use conventional commit format: `type(scope): message`
+- Types: feat, fix, docs, style, refactor, test, chore
+- Keep commits focused and atomic
+- Write clear commit messages
+
+### Branches
+- main: Production-ready code
+- develop: Integration branch
+- feature/*: New features
+- fix/*: Bug fixes
+- docs/*: Documentation updates
+
+## Dependencies
+
+### Adding Dependencies
+- Pin exact versions in requirements-pinned.txt
+- Add new dependencies to requirements.txt
+- Update both files together
+- Test thoroughly before committing
+
+### Dependency Updates
+- Review security advisories regularly
+- Test updates in staging first
+- Update CHANGELOG.md
+- Run full test suite
+
+## Deployment
+
+### Environment Variables
+- Use .env.example as template
+- Never commit actual .env files
+- Document all environment variables
+- Provide sensible defaults
+
+### Kubernetes
+- Use Kustomize for environment overlays
+- Implement health checks (liveness, readiness)
+- Set resource limits and requests
+- Use secrets for sensitive data
+
+### Monitoring
+- Expose Prometheus metrics
+- Configure alerts for critical issues
+- Use Grafana dashboards
+- Monitor error rates and latencies
+
+## Common Tasks
+
+### Adding a New Tool
+1. Define tool in agent.py
+2. Add input schema with Pydantic
+3. Implement handler function
+4. Add authorization check
+5. Add telemetry spans
+6. Write unit tests
+7. Update documentation
+
+### Adding a New LLM Provider
+1. Verify LiteLLM support
+2. Add provider configuration
+3. Test authentication
+4. Add cost tracking
+5. Update documentation
+
+### Adding a New MCP Transport
+1. Implement transport protocol
+2. Add authentication middleware
+3. Implement error handling
+4. Add telemetry
+5. Write integration tests
+6. Update documentation
+
+## AI Assistant Behavior
+
+### Code Generation
+- Follow project code style
+- Include type hints
+- Add docstrings
+- Consider error handling
+- Add logging where appropriate
+
+### Refactoring
+- Maintain backward compatibility
+- Update tests
+- Update documentation
+- Keep changes focused
+
+### Bug Fixes
+- Identify root cause first
+- Add regression test
+- Fix minimal code
+- Update CHANGELOG.md
+
+## Common Pitfalls to Avoid
+
+### Security
+- ❌ Don't hardcode secrets
+- ❌ Don't skip authorization checks
+- ❌ Don't expose internal errors to users
+- ❌ Don't log sensitive data
+
+### Performance
+- ❌ Don't make synchronous LLM calls in request handlers
+- ❌ Don't query OpenFGA for every field access
+- ❌ Don't keep database connections open unnecessarily
+
+### Architecture
+- ❌ Don't couple agent logic to MCP transport
+- ❌ Don't bypass observability instrumentation
+- ❌ Don't skip input validation
+
+### Testing
+- ❌ Don't skip edge case tests
+- ❌ Don't mock too much (integration tests)
+- ❌ Don't commit failing tests
+
+## File Patterns
+
+### Python Files
+```python
+"""Module docstring explaining purpose."""
+
+import standard_library
+import third_party
+import local_module
+
+from typing import Type, Hints
+
+# Constants
+CONSTANT_VALUE = "value"
+
+# Classes
+class MyClass:
+    """Class docstring."""
+
+    def __init__(self):
+        """Initialize."""
+        pass
+
+    def public_method(self) -> None:
+        """Public method."""
+        pass
+
+    def _private_method(self) -> None:
+        """Private method."""
+        pass
+
+# Functions
+def my_function(arg: str) -> int:
+    """
+    Function docstring.
+
+    Args:
+        arg: Description
+
+    Returns:
+        Description
+    """
+    pass
+```
+
+### Test Files
+```python
+"""Test module docstring."""
+
+import pytest
+from module import function
+
+@pytest.mark.unit
+def test_function_happy_path():
+    """Test normal operation."""
+    result = function("input")
+    assert result == "expected"
+
+@pytest.mark.unit
+def test_function_error_case():
+    """Test error handling."""
+    with pytest.raises(ValueError):
+        function("invalid")
+```
+
+## Resources
+
+- **Architecture**: See README.md and ARCHITECTURE.md
+- **Deployment**: See KUBERNETES_DEPLOYMENT.md and PRODUCTION_DEPLOYMENT.md
+- **Security**: See SECURITY_AUDIT.md and SECURITY_REVIEW.md
+- **Contributing**: See CONTRIBUTING.md and DEVELOPMENT.md
+- **Testing**: See TESTING.md
+- **API Docs**: Run server and visit /docs

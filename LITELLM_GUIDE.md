@@ -1,6 +1,6 @@
 # LiteLLM Integration Guide
 
-Complete guide for using multiple LLM providers with the LangGraph MCP Agent.
+Complete guide for using multiple LLM providers with the MCP Server with LangGraph.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ Complete guide for using multiple LLM providers with the LangGraph MCP Agent.
 
 ## Overview
 
-The LangGraph MCP Agent uses [LiteLLM](https://docs.litellm.ai/) to support **100+ LLM providers** with a unified interface. This allows you to:
+The MCP Server with LangGraph uses [LiteLLM](https://docs.litellm.ai/) to support **100+ LLM providers** with a unified interface. This allows you to:
 
 - ✅ Switch between providers without code changes
 - ✅ Use open-source models (Llama, Qwen, Mistral, etc.)

@@ -181,7 +181,7 @@ async def test_auth():
 async def main():
     """Run all tests"""
     print("=" * 60)
-    print("LangGraph MCP Agent - Example Client")
+    print("MCP Server with LangGraph - Example Client")
     print("=" * 60)
 
     # Test authentication first

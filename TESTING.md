@@ -1,6 +1,6 @@
 # Testing Guide
 
-Comprehensive testing guide for the LangGraph MCP Agent.
+Comprehensive testing guide for the MCP Server with LangGraph.
 
 ## Quick Start
 

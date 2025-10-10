@@ -17,7 +17,7 @@ Instead, please report them via one of the following methods:
 
 ### Preferred Method: GitHub Security Advisories
 
-1. Go to the [Security tab](https://github.com/YOUR_ORG/langgraph_mcp_agent/security/advisories)
+1. Go to the [Security tab](https://github.com/vishnu2kmohan/mcp_server_langgraph/security/advisories)
 2. Click "Report a vulnerability"
 3. Fill out the form with details
 
@@ -97,10 +97,10 @@ JWT_SECRET_KEY="secret"  # Never in production!
 
 ```bash
 # ✅ DO: Use specific version tags
-docker pull ghcr.io/YOUR_ORG/langgraph-mcp-agent:v1.2.3
+docker pull ghcr.io/vishnu2kmohan/mcp-server-langgraph:v1.2.3
 
 # ❌ DON'T: Use 'latest' in production
-docker pull ghcr.io/YOUR_ORG/langgraph-mcp-agent:latest
+docker pull ghcr.io/vishnu2kmohan/mcp-server-langgraph:latest
 ```
 
 #### Kubernetes Deployments
@@ -222,7 +222,7 @@ We recognize and thank security researchers who help improve our security:
 ## Contact
 
 - **Security Email**: security@example.com
-- **Security Team**: @YOUR_ORG/security-team
+- **Security Team**: @vishnu2kmohan/security-team
 - **PGP Key**: [Link to PGP public key]
 
 ## Additional Resources

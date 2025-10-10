@@ -1,72 +1,140 @@
-# Auto-labeler configuration
+# Auto-labeler configuration for PRs
+# Uses changed-files pattern matching
 
 # Documentation
 documentation:
-  - '**/*.md'
-  - 'docs/**/*'
-  - '.mcp/*.json'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.md'
+      - '**/*.mdx'
+      - 'docs/**/*'
+      - 'mint.json'
+      - '.mcp/*.json'
 
 # Tests
 tests:
-  - 'tests/**/*'
-  - '**/*test*.py'
-  - 'pytest.ini'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'tests/**/*'
+      - '**/*test*.py'
+      - 'test_*.py'
+      - '*_test.py'
+      - 'pytest.ini'
+      - 'conftest.py'
+      - 'TESTING.md'
 
 # CI/CD
 ci-cd:
-  - '.github/**/*'
-  - '.gitlab-ci.yml'
-  - 'Makefile'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/workflows/**/*'
+      - '.github/actions/**/*'
+      - '.gitlab-ci.yml'
+      - 'Makefile'
+      - '.pre-commit-config.yaml'
 
 # Dependencies
 dependencies:
-  - 'requirements*.txt'
-  - 'setup.py'
-  - 'pyproject.toml'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'requirements*.txt'
+      - 'setup.py'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - 'package*.json'
+      - 'yarn.lock'
 
 # Docker
 docker:
-  - 'Dockerfile*'
-  - 'docker-compose*.yml'
-  - '.dockerignore'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Dockerfile*'
+      - 'docker-compose*.yml'
+      - '.dockerignore'
 
-# Kubernetes
-kubernetes:
-  - 'kubernetes/**/*'
-  - 'kustomize/**/*'
-  - 'helm/**/*'
+# Kubernetes/Deployment
+deployment:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'kubernetes/**/*'
+      - 'kustomize/**/*'
+      - 'helm/**/*'
+      - 'k8s/**/*'
+      - 'KUBERNETES_DEPLOYMENT.md'
+      - 'PRODUCTION_DEPLOYMENT.md'
 
 # Authentication/Authorization
 auth:
-  - 'auth.py'
-  - 'openfga_client.py'
-  - 'setup_openfga.py'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'auth.py'
+      - 'openfga_client.py'
+      - 'setup_openfga.py'
 
 # Secrets Management
 secrets:
-  - 'secrets_manager.py'
-  - 'setup_infisical.py'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'secrets_manager.py'
+      - 'setup_infisical.py'
 
 # Observability
 observability:
-  - 'observability.py'
-  - 'health_check.py'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'observability.py'
+      - 'health_check.py'
+      - 'monitoring/**/*'
+      - 'grafana/**/*'
 
 # MCP Server
 mcp:
-  - 'mcp_server*.py'
-  - 'examples/*client*.py'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'mcp_server*.py'
+      - 'examples/*client*.py'
 
-# Agent
+# Agent/Core
 agent:
-  - 'agent.py'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'agent.py'
+      - 'graph.py'
+      - 'models.py'
+      - 'prompt*.py'
 
 # Configuration
 config:
-  - 'config.py'
-  - '.env*'
-  - 'settings.py'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'config.py'
+      - '.env*'
+      - 'settings.py'
+      - '*.yaml'
+      - '*.yml'
+      - '*.toml'
+      - '*.ini'
+      - '.editorconfig'
 
 # Security
 security:
-  - any: ['auth.py', 'secrets_manager.py', 'openfga_client.py']
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'auth.py'
+      - 'secrets_manager.py'
+      - 'openfga_client.py'
+      - 'SECURITY*.md'
+      - '.github/workflows/security-scan.yaml'
+      - 'scripts/validate_production.py'
+
+# Community
+community:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'CODE_OF_CONDUCT.md'
+      - 'CONTRIBUTING.md'
+      - 'DEVELOPMENT.md'
+      - '.github/SUPPORT.md'
+      - '.github/FUNDING.yml'
+      - '.github/ISSUE_TEMPLATE/**/*'
+      - '.github/PULL_REQUEST_TEMPLATE.md'

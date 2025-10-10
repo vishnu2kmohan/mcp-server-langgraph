@@ -1,0 +1,488 @@
+---
+title: CI/CD Integration
+description: 'Automate LangGraph Platform deployments with CI/CD pipelines'
+icon: 'infinity'
+---
+
+## Overview
+
+Automate your LangGraph Platform deployments with continuous integration and deployment pipelines. Deploy on every commit, with automated testing and rollback capabilities.
+
+<Info>
+  **Automated Deployments**: Push to main → CI/CD tests → Auto-deploy to production
+</Info>
+
+## GitHub Actions
+
+### Quick Setup
+
+<Steps>
+  <Step title="Add LangSmith API Key">
+    Go to GitHub repo → Settings → Secrets → New repository secret
+
+    Name: `LANGCHAIN_API_KEY`
+    Value: Your LangSmith API key from [smith.langchain.com/settings](https://smith.langchain.com/settings)
+  </Step>
+
+  <Step title="Create Workflow File">
+    ```bash
+    mkdir -p .github/workflows
+    cp .github/workflows/deploy-langgraph-platform.yml .github/workflows/
+    ```
+  </Step>
+
+  <Step title="Push to GitHub">
+    ```bash
+    git add .github/workflows/deploy-langgraph-platform.yml
+    git commit -m "Add LangGraph Platform CI/CD"
+    git push
+    ```
+  </Step>
+</Steps>
+
+### Full Workflow
+
+```yaml .github/workflows/deploy-langgraph-platform.yml
+name: Deploy to LangGraph Platform
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -e .
+          pip install pytest pytest-asyncio
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  deploy-staging:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install LangGraph CLI
+        run: pip install langgraph-cli
+
+      - name: Deploy to Staging
+        env:
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+        run: |
+          langgraph deploy mcp-server-langgraph-staging --tag staging
+
+      - name: Smoke Test Staging
+        run: |
+          langgraph deployment invoke mcp-server-langgraph-staging \
+            --input '{"messages": [{"role": "user", "content": "test"}]}'
+
+  deploy-production:
+    needs: deploy-staging
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install LangGraph CLI
+        run: pip install langgraph-cli
+
+      - name: Deploy to Production
+        env:
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+        run: |
+          langgraph deploy mcp-server-langgraph-prod \
+            --tag production \
+            --tag "$(git rev-parse --short HEAD)"
+
+      - name: Verify Deployment
+        run: |
+          langgraph deployment get mcp-server-langgraph-prod
+
+      - name: Smoke Test Production
+        run: |
+          langgraph deployment invoke mcp-server-langgraph-prod \
+            --input '{"messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+### Environment Protection Rules
+
+Set up deployment approvals in GitHub:
+
+<Steps>
+  <Step title="Go to Repository Settings">
+    Settings → Environments → New environment
+  </Step>
+
+  <Step title="Create 'production' Environment">
+    - Name: `production`
+    - Enable "Required reviewers"
+    - Add reviewers (team leads)
+    - Set deployment branch: `main` only
+  </Step>
+
+  <Step title="Create 'staging' Environment">
+    - Name: `staging`
+    - No approvals needed
+    - Auto-deploy on push to main
+  </Step>
+</Steps>
+
+## GitLab CI/CD
+
+```yaml .gitlab-ci.yml
+stages:
+  - test
+  - deploy-staging
+  - deploy-production
+
+variables:
+  PYTHON_VERSION: "3.11"
+
+test:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install -e .
+    - pip install pytest pytest-asyncio
+    - pytest tests/ -v
+
+deploy-staging:
+  stage: deploy-staging
+  image: python:${PYTHON_VERSION}
+  environment:
+    name: staging
+    url: https://mcp-server-langgraph-staging.langchain.com
+  script:
+    - pip install langgraph-cli
+    - langgraph deploy mcp-server-langgraph-staging --tag staging
+    - |
+      langgraph deployment invoke mcp-server-langgraph-staging \
+        --input '{"messages": [{"role": "user", "content": "test"}]}'
+  only:
+    - main
+
+deploy-production:
+  stage: deploy-production
+  image: python:${PYTHON_VERSION}
+  environment:
+    name: production
+    url: https://mcp-server-langgraph-prod.langchain.com
+  when: manual
+  script:
+    - pip install langgraph-cli
+    - langgraph deploy mcp-server-langgraph-prod --tag production --tag "$CI_COMMIT_SHORT_SHA"
+    - langgraph deployment get mcp-server-langgraph-prod
+  only:
+    - main
+```
+
+## CircleCI
+
+```yaml .circleci/config.yml
+version: 2.1
+
+orbs:
+  python: circleci/python@2.1.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run tests
+          command: pytest tests/ -v
+
+  deploy-staging:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - run:
+          name: Install LangGraph CLI
+          command: pip install langgraph-cli
+      - run:
+          name: Deploy to Staging
+          command: |
+            langgraph deploy mcp-server-langgraph-staging --tag staging
+      - run:
+          name: Smoke Test
+          command: |
+            langgraph deployment invoke mcp-server-langgraph-staging \
+              --input '{"messages": [{"role": "user", "content": "test"}]}'
+
+  deploy-production:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - run:
+          name: Install LangGraph CLI
+          command: pip install langgraph-cli
+      - run:
+          name: Deploy to Production
+          command: |
+            langgraph deploy mcp-server-langgraph-prod \
+              --tag production \
+              --tag "${CIRCLE_SHA1:0:7}"
+
+workflows:
+  test-and-deploy:
+    jobs:
+      - test
+      - deploy-staging:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main
+      - hold-production:
+          type: approval
+          requires:
+            - deploy-staging
+      - deploy-production:
+          requires:
+            - hold-production
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always Test Before Deploy">
+    ```yaml
+    jobs:
+      test:
+        # Run unit tests, integration tests
+
+      deploy:
+        needs: test  # Only deploy if tests pass
+    ```
+  </Accordion>
+
+  <Accordion title="Use Staging Environment">
+    ```yaml
+    deploy-staging:
+      # Deploy to staging first
+      # Run smoke tests
+
+    deploy-production:
+      needs: deploy-staging  # Only deploy to prod if staging succeeds
+    ```
+  </Accordion>
+
+  <Accordion title="Tag Deployments">
+    ```bash
+    # Tag with git commit SHA
+    langgraph deploy my-agent-prod --tag "$(git rev-parse --short HEAD)"
+
+    # Tag with semantic version
+    langgraph deploy my-agent-prod --tag "v1.2.3"
+
+    # Tag with timestamp
+    langgraph deploy my-agent-prod --tag "deploy-$(date +%Y%m%d-%H%M%S)"
+    ```
+  </Accordion>
+
+  <Accordion title="Require Approvals for Production">
+    Use GitHub Environments or GitLab's manual approval:
+
+    ```yaml
+    deploy-production:
+      environment: production  # Requires approval
+      when: manual
+    ```
+  </Accordion>
+
+  <Accordion title="Run Smoke Tests">
+    ```bash
+    # After deployment, verify it works
+    langgraph deployment invoke my-agent-prod \
+      --input '{"messages": [{"role": "user", "content": "health check"}]}' \
+      --timeout 30
+    ```
+  </Accordion>
+
+  <Accordion title="Notify on Deployment">
+    ```yaml
+    - name: Notify Slack
+      if: success()
+      uses: slackapi/slack-github-action@v1
+      with:
+        payload: |
+          {
+            "text": "✅ Deployed to production: ${{ github.sha }}"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Rollback Strategy
+
+### Automatic Rollback on Failure
+
+```yaml
+- name: Deploy to Production
+  id: deploy
+  run: langgraph deploy my-agent-prod --tag production
+
+- name: Smoke Test
+  id: test
+  run: |
+    langgraph deployment invoke my-agent-prod \
+      --input '{"messages": [{"role": "user", "content": "test"}]}'
+
+- name: Rollback on Failure
+  if: failure() && steps.deploy.outcome == 'success'
+  run: |
+    # Get previous revision
+    PREV_REVISION=$(langgraph deployment list | grep my-agent-prod | awk 'NR==2 {print $2}')
+    # Rollback
+    langgraph deployment rollback my-agent-prod --revision $PREV_REVISION
+```
+
+### Manual Rollback
+
+```bash
+# List revisions
+langgraph deployment list my-agent-prod
+
+# Rollback to specific revision
+langgraph deployment rollback my-agent-prod --revision 42
+
+# Or rollback to previous
+langgraph deployment rollback my-agent-prod
+```
+
+## Multi-Environment Strategy
+
+<Tabs>
+  <Tab title="Development">
+    **Trigger**: Every push to `develop` branch
+
+    ```yaml
+    deploy-dev:
+      if: github.ref == 'refs/heads/develop'
+      run: langgraph deploy my-agent-dev --tag development
+    ```
+  </Tab>
+
+  <Tab title="Staging">
+    **Trigger**: Every push to `main` branch
+
+    ```yaml
+    deploy-staging:
+      if: github.ref == 'refs/heads/main'
+      run: langgraph deploy my-agent-staging --tag staging
+    ```
+  </Tab>
+
+  <Tab title="Production">
+    **Trigger**: Manual approval or git tag
+
+    ```yaml
+    deploy-production:
+      if: startsWith(github.ref, 'refs/tags/v')
+      environment: production
+      run: langgraph deploy my-agent-prod --tag ${{ github.ref_name }}
+    ```
+  </Tab>
+</Tabs>
+
+## Monitoring Deployments
+
+View deployment status:
+
+```bash
+# Get deployment info
+langgraph deployment get my-agent-prod
+
+# Stream logs
+langgraph deployment logs my-agent-prod --follow
+
+# View in LangSmith
+# https://smith.langchain.com → Select project → View traces
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Authentication failed">
+    **Symptom**: `401 Unauthorized`
+
+    **Solution**: Verify `LANGCHAIN_API_KEY` secret is set correctly in CI/CD platform.
+  </Accordion>
+
+  <Accordion title="Deployment timeout">
+    **Symptom**: Deployment takes too long
+
+    **Solution**:
+    - Optimize dependencies in `langgraph/requirements.txt`
+    - Reduce Docker image size
+    - Check network connectivity
+  </Accordion>
+
+  <Accordion title="Smoke test fails">
+    **Symptom**: Test invocation returns error
+
+    **Solution**:
+    - Check deployment logs: `langgraph deployment logs`
+    - Verify secrets are set
+    - Test locally first with `langgraph dev`
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/deployment/platform/quickstart">
+    Deploy your first agent
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/platform/monitoring">
+    Monitor deployments
+  </Card>
+  <Card title="Secrets" icon="key" href="/deployment/platform/secrets">
+    Manage secrets in CI/CD
+  </Card>
+  <Card title="Configuration" icon="gear" href="/deployment/platform/configuration">
+    Configure deployments
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+  **CI/CD Ready!** Your LangGraph Platform deployments are now automated with testing, staging, and production workflows.
+</Check>

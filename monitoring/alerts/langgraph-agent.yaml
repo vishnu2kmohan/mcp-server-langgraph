@@ -1,0 +1,296 @@
+# Prometheus Alert Rules for MCP Server with LangGraph
+# Deploy to Prometheus with: kubectl apply -f langgraph-agent.yaml
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: langgraph-agent-alerts
+  namespace: langgraph-agent
+  labels:
+    app: langgraph-agent
+    prometheus: kube-prometheus
+spec:
+  groups:
+    # High Priority - Critical Service Health
+    - name: langgraph_agent.critical
+      interval: 30s
+      rules:
+        - alert: ServiceDown
+          expr: up{job="langgraph-agent"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            component: service
+          annotations:
+            summary: "LangGraph Agent service is down"
+            description: "The LangGraph Agent service has been down for more than 2 minutes."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/service-down.md"
+            dashboard_url: "https://grafana.example.com/d/langgraph-agent/overview"
+
+        - alert: HighErrorRate
+          expr: |
+            (
+              rate(agent_calls_failed_total[5m])
+              /
+              (rate(agent_calls_successful_total[5m]) + rate(agent_calls_failed_total[5m]))
+            ) > 0.10
+          for: 5m
+          labels:
+            severity: critical
+            component: agent
+          annotations:
+            summary: "High error rate detected (>10%)"
+            description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/high-error-rate.md"
+
+        - alert: AuthenticationFailureSpike
+          expr: |
+            rate(auth_failures_total[5m]) > 10
+          for: 2m
+          labels:
+            severity: critical
+            component: auth
+          annotations:
+            summary: "Authentication failure spike detected"
+            description: "More than 10 authentication failures per second over the last 2 minutes. Possible attack."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/auth-spike.md"
+
+        - alert: AuthorizationFailureSpike
+          expr: |
+            rate(authz_failures_total[5m]) > 5
+          for: 5m
+          labels:
+            severity: warning
+            component: authz
+          annotations:
+            summary: "Authorization failure spike detected"
+            description: "More than 5 authorization failures per second over the last 5 minutes."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/authz-spike.md"
+
+    # High Priority - Performance Degradation
+    - name: langgraph_agent.performance
+      interval: 30s
+      rules:
+        - alert: HighResponseTime
+          expr: |
+            histogram_quantile(0.95,
+              rate(agent_response_duration_bucket[5m])
+            ) > 5000
+          for: 5m
+          labels:
+            severity: warning
+            component: performance
+          annotations:
+            summary: "High response time detected (p95 > 5s)"
+            description: "95th percentile response time is {{ $value }}ms over the last 5 minutes."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/high-latency.md"
+
+        - alert: SlowLLMResponses
+          expr: |
+            histogram_quantile(0.95,
+              rate(llm_request_duration_bucket[5m])
+            ) > 10000
+          for: 5m
+          labels:
+            severity: warning
+            component: llm
+          annotations:
+            summary: "Slow LLM responses detected (p95 > 10s)"
+            description: "95th percentile LLM response time is {{ $value }}ms."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/slow-llm.md"
+
+        - alert: HighMemoryUsage
+          expr: |
+            (
+              container_memory_working_set_bytes{pod=~"langgraph-agent-.*"}
+              /
+              container_spec_memory_limit_bytes{pod=~"langgraph-agent-.*"}
+            ) > 0.85
+          for: 5m
+          labels:
+            severity: warning
+            component: resources
+          annotations:
+            summary: "High memory usage detected (>85%)"
+            description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/high-memory.md"
+
+        - alert: HighCPUUsage
+          expr: |
+            (
+              rate(container_cpu_usage_seconds_total{pod=~"langgraph-agent-.*"}[5m])
+              /
+              container_spec_cpu_quota{pod=~"langgraph-agent-.*"}
+            ) > 0.80
+          for: 10m
+          labels:
+            severity: warning
+            component: resources
+          annotations:
+            summary: "High CPU usage detected (>80%)"
+            description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its CPU limit."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/high-cpu.md"
+
+    # Medium Priority - Availability
+    - name: langgraph_agent.availability
+      interval: 1m
+      rules:
+        - alert: PodRestartingFrequently
+          expr: |
+            rate(kube_pod_container_status_restarts_total{pod=~"langgraph-agent-.*"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+            component: kubernetes
+          annotations:
+            summary: "Pod restarting frequently"
+            description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/pod-restarts.md"
+
+        - alert: InsufficientReplicas
+          expr: |
+            kube_deployment_status_replicas_available{deployment="langgraph-agent"} < 2
+          for: 5m
+          labels:
+            severity: warning
+            component: kubernetes
+          annotations:
+            summary: "Insufficient replicas running"
+            description: "Only {{ $value }} replicas are available. Expected at least 2 for HA."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/insufficient-replicas.md"
+
+        - alert: HealthCheckFailing
+          expr: |
+            probe_success{job="langgraph-agent-health"} == 0
+          for: 3m
+          labels:
+            severity: critical
+            component: health
+          annotations:
+            summary: "Health check failing"
+            description: "Health check endpoint is not responding."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/health-check-failing.md"
+
+    # Medium Priority - Dependencies
+    - name: langgraph_agent.dependencies
+      interval: 1m
+      rules:
+        - alert: OpenFGAConnectionFailing
+          expr: |
+            openfga_client_errors_total > 0
+          for: 3m
+          labels:
+            severity: critical
+            component: openfga
+          annotations:
+            summary: "OpenFGA connection failing"
+            description: "Unable to connect to OpenFGA service. Authorization checks may fail."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/openfga-down.md"
+
+        - alert: LLMProviderErrors
+          expr: |
+            rate(llm_provider_errors_total[5m]) > 0.1
+          for: 5m
+          labels:
+            severity: warning
+            component: llm
+          annotations:
+            summary: "LLM provider errors detected"
+            description: "{{ $value }} errors per second from LLM provider {{ $labels.provider }}."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/llm-provider-errors.md"
+
+        - alert: InfisicalConnectionFailing
+          expr: |
+            infisical_client_errors_total > 0
+          for: 5m
+          labels:
+            severity: warning
+            component: secrets
+          annotations:
+            summary: "Infisical connection failing"
+            description: "Unable to fetch secrets from Infisical. Using cached/fallback values."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/infisical-down.md"
+
+    # Low Priority - Capacity Planning
+    - name: langgraph_agent.capacity
+      interval: 5m
+      rules:
+        - alert: HighRequestRate
+          expr: |
+            rate(agent_tool_calls_total[5m]) > 100
+          for: 15m
+          labels:
+            severity: info
+            component: capacity
+          annotations:
+            summary: "High request rate detected"
+            description: "Request rate is {{ $value }} requests/second. Consider scaling up."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/scale-up.md"
+
+        - alert: LowRequestRate
+          expr: |
+            rate(agent_tool_calls_total[30m]) < 0.1
+          for: 1h
+          labels:
+            severity: info
+            component: capacity
+          annotations:
+            summary: "Low request rate detected"
+            description: "Request rate is {{ $value }} requests/second. Consider scaling down."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/scale-down.md"
+
+        - alert: DiskSpaceRunningLow
+          expr: |
+            (
+              node_filesystem_avail_bytes{mountpoint="/"}
+              /
+              node_filesystem_size_bytes{mountpoint="/"}
+            ) < 0.15
+          for: 10m
+          labels:
+            severity: warning
+            component: storage
+          annotations:
+            summary: "Disk space running low (<15%)"
+            description: "Only {{ $value | humanizePercentage }} disk space remaining on {{ $labels.instance }}."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/low-disk-space.md"
+
+    # Security Alerts
+    - name: langgraph_agent.security
+      interval: 1m
+      rules:
+        - alert: UnauthorizedAccessAttempts
+          expr: |
+            sum(rate(auth_failures_total[5m])) by (reason) > 1
+          for: 5m
+          labels:
+            severity: warning
+            component: security
+          annotations:
+            summary: "Unauthorized access attempts detected"
+            description: "{{ $value }} failed authentication attempts per second (reason: {{ $labels.reason }})."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/unauthorized-access.md"
+
+        - alert: SuspiciousActivityPattern
+          expr: |
+            rate(authz_failures_total[1m]) > 5
+          for: 2m
+          labels:
+            severity: critical
+            component: security
+          annotations:
+            summary: "Suspicious activity pattern detected"
+            description: "High rate of authorization failures may indicate enumeration attack."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/suspicious-activity.md"
+
+        - alert: TokenValidationFailures
+          expr: |
+            rate(jwt_validation_errors_total[5m]) > 2
+          for: 3m
+          labels:
+            severity: warning
+            component: security
+          annotations:
+            summary: "Token validation failures detected"
+            description: "{{ $value }} JWT validation errors per second."
+            runbook_url: "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/docs/runbooks/token-validation-failures.md"

@@ -1,6 +1,6 @@
 # Kong API Gateway Integration Guide
 
-Complete guide for integrating LangGraph MCP Agent with Kong API Gateway for rate limiting, authentication, and API management.
+Complete guide for integrating MCP Server with LangGraph with Kong API Gateway for rate limiting, authentication, and API management.
 
 ## Table of Contents
 

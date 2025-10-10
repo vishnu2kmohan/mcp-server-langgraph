@@ -1,13 +1,28 @@
-# LangGraph MCP Agent with OpenFGA & Infisical
+# MCP Server with LangGraph + OpenFGA & Infisical
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](PRODUCTION_DEPLOYMENT.md)
+[![Use This Template](https://img.shields.io/badge/use-this%20template-blue.svg?logo=cookiecutter)](TEMPLATE_USAGE.md)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](KUBERNETES_DEPLOYMENT.md)
 [![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](SECURITY_AUDIT.md)
 
-A production-ready LangGraph agent exposed via Model Context Protocol (MCP) with comprehensive authentication, fine-grained authorization (OpenFGA), secrets management (Infisical), and OpenTelemetry-based observability.
+A **production-ready cookie-cutter template** for building MCP servers with LangGraph's Functional API. Features comprehensive authentication (JWT), fine-grained authorization (OpenFGA), secrets management (Infisical), and OpenTelemetry-based observability.
+
+**🎯 Opinionated, production-grade foundation for your MCP server projects.**
+
+## 🚀 Use This Template
+
+```bash
+# Generate your own MCP server project
+pip install cookiecutter
+cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+
+# Answer a few questions and get a fully configured project!
+```
+
+**See [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md) for detailed instructions.**
 
 ## Features
 
@@ -18,10 +33,12 @@ A production-ready LangGraph agent exposed via Model Context Protocol (MCP) with
 - **Authentication**: JWT-based authentication with token validation
 - **Fine-Grained Authorization**: OpenFGA (Zanzibar-style) relationship-based access control
 - **Secrets Management**: Infisical integration for secure secret storage and retrieval
-- **Distributed Tracing**: OpenTelemetry tracing with Jaeger backend
-- **Metrics**: Prometheus-compatible metrics for monitoring
+- **Dual Observability**: OpenTelemetry + LangSmith for comprehensive monitoring
+  - **OpenTelemetry**: Distributed tracing with Jaeger, metrics with Prometheus
+  - **LangSmith**: LLM-specific tracing, prompt engineering, evaluations
 - **Structured Logging**: JSON logging with trace context correlation
 - **Full Observability Stack**: Docker Compose setup with OpenFGA, Jaeger, Prometheus, and Grafana
+- **LangGraph Platform**: Deploy to managed LangGraph Cloud with one command
 - **Automatic Fallback**: Resilient multi-model fallback for high availability
 
 ## Architecture
@@ -66,49 +83,77 @@ A production-ready LangGraph agent exposed via Model Context Protocol (MCP) with
 
 ## Quick Start
 
-1. **Install dependencies**:
-```bash
-pip install -r requirements.txt
-```
+### 🐳 Docker Compose (Recommended)
 
-2. **Start infrastructure**:
+Get the complete stack running in 2 minutes:
+
 ```bash
-docker-compose up -d
+# Quick start script handles everything
+./scripts/docker-compose-quickstart.sh
 ```
 
 This starts:
+- **Agent API**: http://localhost:8000 (MCP agent)
 - **OpenFGA**: http://localhost:8080 (authorization)
+- **OpenFGA Playground**: http://localhost:3001
 - **Jaeger UI**: http://localhost:16686 (distributed tracing)
 - **Prometheus**: http://localhost:9090 (metrics)
 - **Grafana**: http://localhost:3000 (visualization, admin/admin)
 - **PostgreSQL**: localhost:5432 (OpenFGA storage)
 
-3. **Setup OpenFGA**:
+**Then setup OpenFGA**:
 ```bash
-python setup_openfga.py
+python scripts/setup_openfga.py
+# Add OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
+docker-compose restart agent
 ```
 
-Save the generated `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID` to your `.env` file.
-
-4. **Setup Infisical** (Optional):
+**Test the agent**:
 ```bash
-python setup_infisical.py
+curl http://localhost:8000/health
 ```
 
-5. **Configure environment**:
+See [Docker Compose documentation](docs/deployment/docker.mdx) for details.
+
+### 🐍 Local Python Development
+
+1. **Install dependencies**:
+```bash
+pip install -r requirements.txt
+```
+
+2. **Start infrastructure** (without agent):
+```bash
+# Start only supporting services
+docker-compose up -d openfga postgres otel-collector jaeger prometheus grafana
+```
+
+3. **Configure environment**:
 ```bash
 cp .env.example .env
-# Edit .env with your GOOGLE_API_KEY and OpenFGA IDs
-# Get your Gemini API key from: https://aistudio.google.com/apikey
+# Edit .env with your API keys:
+# - GOOGLE_API_KEY (get from https://aistudio.google.com/apikey)
+# - ANTHROPIC_API_KEY or OPENAI_API_KEY (optional)
 ```
 
-6. **Test the system**:
+4. **Setup OpenFGA**:
 ```bash
-# Test OpenFGA authorization
-python example_openfga_usage.py
+python scripts/setup_openfga.py
+# Save OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
+```
 
-# Test MCP server
-python example_client.py
+5. **Run the agent locally**:
+```bash
+python mcp_server_streamable.py
+```
+
+6. **Test**:
+```bash
+# Test with example client
+python examples/example_client.py
+
+# Or curl
+curl http://localhost:8000/health
 ```
 
 ## Usage
@@ -134,7 +179,7 @@ Add to your MCP client config (e.g., Claude Desktop):
   "mcpServers": {
     "langgraph-agent": {
       "command": "python",
-      "args": ["/path/to/langgraph_mcp_agent/mcp_server.py"]
+      "args": ["/path/to/mcp_server_langgraph/mcp_server.py"]
     }
   }
 }
@@ -201,7 +246,33 @@ See `auth.py:30-50` for user definitions.
 
 ## Observability
 
-### Distributed Tracing
+This project supports **dual observability**: OpenTelemetry for infrastructure metrics and LangSmith for LLM-specific tracing.
+
+### LangSmith Tracing (LLM Observability)
+
+LangSmith provides comprehensive LLM and agent observability:
+
+**Setup**:
+```bash
+# Add to .env
+LANGSMITH_API_KEY=your-key-from-smith.langchain.com
+LANGSMITH_TRACING=true
+LANGSMITH_PROJECT=mcp-server-langgraph
+```
+
+**Features**:
+- 🔍 **Automatic Tracing**: All LLM calls and agent steps traced
+- 🎯 **Prompt Engineering**: Iterate on prompts with production data
+- 📊 **Evaluations**: Compare model performance on datasets
+- 💬 **User Feedback**: Collect and analyze user ratings
+- 💰 **Cost Tracking**: Monitor LLM API costs per user/session
+- 🐛 **Debugging**: Root cause analysis with full context
+
+**View traces**: https://smith.langchain.com/
+
+See **[LANGSMITH_INTEGRATION.md](LANGSMITH_INTEGRATION.md)** for complete LangSmith guide.
+
+### OpenTelemetry Tracing (Infrastructure)
 
 Every request is traced end-to-end with OpenTelemetry:
 
@@ -271,7 +342,7 @@ All settings via environment variables, Infisical, or `.env` file:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SERVICE_NAME` | Service identifier | `langgraph-mcp-agent` |
+| `SERVICE_NAME` | Service identifier | `mcp-server-langgraph` |
 | `OTLP_ENDPOINT` | OpenTelemetry collector | `http://localhost:4317` |
 | `JWT_SECRET_KEY` | Secret for JWT signing | (loaded from Infisical) |
 | `ANTHROPIC_API_KEY` | Anthropic API key | (loaded from Infisical) |
@@ -322,7 +393,58 @@ Example queries:
 - [ ] Use separate OpenFGA stores per environment
 - [ ] Enable MFA for Infisical access
 
-## Kubernetes Deployment
+## Deployment Options
+
+### LangGraph Platform (Managed Cloud)
+
+Deploy to LangGraph Platform for fully managed, serverless hosting:
+
+```bash
+# Install CLI
+pip install langgraph-cli
+
+# Login
+langgraph login
+
+# Deploy
+langgraph deploy
+```
+
+**Benefits**:
+- ✅ Zero infrastructure management
+- ✅ Integrated LangSmith observability
+- ✅ Automatic versioning and rollbacks
+- ✅ Built-in scaling and load balancing
+- ✅ One-command deployment
+
+See **[LANGGRAPH_PLATFORM_DEPLOYMENT.md](LANGGRAPH_PLATFORM_DEPLOYMENT.md)** for complete platform guide.
+
+### Google Cloud Run (Serverless)
+
+Deploy to Google Cloud Run for fully managed, serverless deployment:
+
+```bash
+# Quick deploy
+cd cloudrun
+./deploy.sh --setup
+
+# Or use gcloud directly
+gcloud run deploy mcp-server-langgraph \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated
+```
+
+**Benefits**:
+- ✅ Serverless autoscaling (0 to 100+ instances)
+- ✅ Pay only for actual usage
+- ✅ Automatic HTTPS and SSL certificates
+- ✅ Integrated with Google Secret Manager
+- ✅ Built-in monitoring and logging
+
+See **[CLOUDRUN_DEPLOYMENT.md](CLOUDRUN_DEPLOYMENT.md)** for complete Cloud Run guide.
+
+### Kubernetes Deployment
 
 The agent is fully containerized and ready for Kubernetes deployment. Supported platforms:
 - Google Kubernetes Engine (GKE)
@@ -331,7 +453,7 @@ The agent is fully containerized and ready for Kubernetes deployment. Supported 
 - Rancher
 - VMware Tanzu
 
-### Quick Deploy
+**Quick Deploy**:
 
 ```bash
 # Build and push image
@@ -406,14 +528,72 @@ GET /resources        # List resources
 
 See **[MCP_REGISTRY.md](MCP_REGISTRY.md)** for registry deployment and transport configuration.
 
+## Contributors
+
+Thanks to all the amazing people who have contributed to this project! 🙌
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification.
+
+Want to be listed here? See [CONTRIBUTING.md](.github/CONTRIBUTING.md)!
+
+## Support
+
+Need help? Check out our [Support Guide](.github/SUPPORT.md) for:
+
+- 📚 Documentation links
+- 💬 Where to ask questions
+- 🐛 How to report bugs
+- 🔒 Security reporting
+
 ## License
 
-MIT
+MIT - see [LICENSE](LICENSE) file for details
+
+## Acknowledgments
+
+Built with:
+- [LangGraph](https://github.com/langchain-ai/langgraph) - Agent framework
+- [MCP](https://modelcontextprotocol.io/) - Model Context Protocol
+- [OpenFGA](https://openfga.dev/) - Authorization
+- [LiteLLM](https://github.com/BerriAI/litellm) - Multi-LLM support
+- [OpenTelemetry](https://opentelemetry.io/) - Observability
+
+Special thanks to the open source community!
 
 ## Contributing
 
-Contributions welcome! Please ensure:
-- Tests pass
-- Code follows style guidelines
-- Documentation is updated
-- Observability is maintained
+We welcome contributions from the community! 🎉
+
+### Quick Start for Contributors
+
+1. **Read the guides**:
+   - [CONTRIBUTING.md](.github/CONTRIBUTING.md) - Contribution guidelines
+   - [DEVELOPMENT.md](DEVELOPMENT.md) - Developer setup
+
+2. **Find something to work on**:
+   - [Good First Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/good%20first%20issue)
+   - [Help Wanted](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/help%20wanted)
+
+3. **Get help**:
+   - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions)
+   - [Support Guide](.github/SUPPORT.md)
+
+### Contribution Areas
+
+- 💻 **Code**: Features, bug fixes, performance improvements
+- 📖 **Documentation**: Guides, tutorials, API docs
+- 🧪 **Testing**: Unit tests, integration tests, test coverage
+- 🔒 **Security**: Security improvements, audits
+- 🌐 **Translations**: i18n support (future)
+- 💡 **Ideas**: Feature requests, architecture discussions
+
+All contributors will be recognized in our [Contributors](#contributors) section!

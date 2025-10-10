@@ -1,0 +1,209 @@
+name: Deploy to LangGraph Platform
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: test
+    if: github.ref == 'refs/heads/staging' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.deployment_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install LangGraph CLI
+        run: |
+          pip install langgraph-cli langsmith
+
+      - name: Deploy to LangGraph Platform (Staging)
+        id: deploy
+        env:
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+        run: |
+          # Deploy to staging
+          langgraph deploy mcp-server-langgraph-staging --tag staging
+
+          # Get deployment URL
+          DEPLOYMENT_URL=$(langgraph deployment get mcp-server-langgraph-staging --json | grep -o '"url":"[^"]*"' | cut -d'"' -f4 || echo "")
+
+          # Set output
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+
+          echo "✓ Deployed to staging"
+          echo "URL: $DEPLOYMENT_URL"
+
+      - name: Test deployment
+        env:
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+        run: |
+          # Basic smoke test
+          langgraph deployment invoke mcp-server-langgraph-staging \
+            --input '{"messages": [{"role": "user", "content": "Hello, this is a test"}]}'
+
+          echo "✓ Deployment test passed"
+
+      - name: Notify Slack (on failure)
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "❌ LangGraph Platform deployment to staging failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Failed* :x:\n*Environment:* staging\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+
+  deploy-production:
+    name: Deploy to Production
+    needs: test
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.deployment_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install LangGraph CLI
+        run: |
+          pip install langgraph-cli langsmith
+
+      - name: Deploy to LangGraph Platform (Production)
+        id: deploy
+        env:
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+        run: |
+          # Deploy to production
+          langgraph deploy mcp-server-langgraph-prod --tag production
+
+          # Get deployment URL
+          DEPLOYMENT_URL=$(langgraph deployment get mcp-server-langgraph-prod --json | grep -o '"url":"[^"]*"' | cut -d'"' -f4 || echo "")
+
+          # Set output
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+
+          echo "✓ Deployed to production"
+          echo "URL: $DEPLOYMENT_URL"
+
+      - name: Test deployment
+        env:
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+        run: |
+          # Basic smoke test
+          langgraph deployment invoke mcp-server-langgraph-prod \
+            --input '{"messages": [{"role": "user", "content": "Hello, this is a test"}]}'
+
+          echo "✓ Production deployment test passed"
+
+      - name: Create deployment tag
+        run: |
+          git tag "deploy-$(date +'%Y%m%d-%H%M%S')"
+          git push origin --tags
+
+      - name: Notify Slack (success)
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "✅ LangGraph Platform deployment to production succeeded",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Successful* :white_check_mark:\n*Environment:* production\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}\n*URL:* ${{ steps.deploy.outputs.deployment_url }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify Slack (on failure)
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "❌ LangGraph Platform deployment to production failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Failed* :x:\n*Environment:* production\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}"
+                  }
+                }
+              ]
+            }

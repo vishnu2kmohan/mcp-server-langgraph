@@ -14,7 +14,7 @@ from openfga_client import OpenFGAClient
 from secrets_manager import get_secrets_manager
 
 
-app = FastAPI(title="LangGraph MCP Agent Health")
+app = FastAPI(title="MCP Server with LangGraph Health")
 
 
 class HealthResponse(BaseModel):

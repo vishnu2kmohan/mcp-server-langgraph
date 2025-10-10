@@ -1,0 +1,539 @@
+---
+title: Docker Compose
+description: 'Local development and testing with Docker Compose'
+icon: 'docker'
+---
+
+## Overview
+
+Run the complete MCP Server with LangGraph stack locally with Docker Compose for development and testing. Includes all services: agent, OpenFGA, OpenTelemetry, Jaeger, Prometheus, and Grafana.
+
+<Info>
+  **Quick Setup**: Get the full stack running in 2 minutes with one script.
+</Info>
+
+## Quick Start
+
+### One-Command Setup
+
+```bash
+./scripts/docker-compose-quickstart.sh
+```
+
+This script will:
+1. Check prerequisites (Docker, Docker Compose)
+2. Create `.env` from template if needed
+3. Validate configuration
+4. Build and start all services
+5. Wait for health checks
+6. Display service URLs
+
+<Check>
+  **All services running!** Agent, OpenFGA, Jaeger, Prometheus, and Grafana are now available.
+</Check>
+
+### Manual Setup
+
+<Steps>
+  <Step title="Create .env file">
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env` and add your API keys:
+    ```bash
+    # At minimum, add one LLM API key
+    GOOGLE_API_KEY=your-key-here
+    # or
+    ANTHROPIC_API_KEY=sk-ant-your-key
+    # or
+    OPENAI_API_KEY=sk-your-key
+    ```
+  </Step>
+
+  <Step title="Start services">
+    ```bash
+    docker-compose up -d
+    ```
+
+    First build takes 2-3 minutes. Subsequent starts are under 30 seconds.
+  </Step>
+
+  <Step title="Verify health">
+    ```bash
+    curl http://localhost:8000/health
+    ```
+
+    Expected response:
+    ```json
+    {
+      "status": "healthy",
+      "service": "mcp-server-langgraph",
+      "version": "1.0.0"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Services
+
+<CardGroup cols={3}>
+  <Card title="Agent API" icon="robot">
+    **Port**: 8000
+
+    Main MCP agent service with LangGraph
+
+    [http://localhost:8000](http://localhost:8000)
+  </Card>
+
+  <Card title="OpenFGA" icon="shield">
+    **Port**: 8080 (API), 3001 (UI)
+
+    Authorization service
+
+    [http://localhost:3001](http://localhost:3001)
+  </Card>
+
+  <Card title="Jaeger" icon="magnifying-glass">
+    **Port**: 16686
+
+    Distributed tracing UI
+
+    [http://localhost:16686](http://localhost:16686)
+  </Card>
+
+  <Card title="Prometheus" icon="chart-line">
+    **Port**: 9090
+
+    Metrics collection
+
+    [http://localhost:9090](http://localhost:9090)
+  </Card>
+
+  <Card title="Grafana" icon="chart-simple">
+    **Port**: 3000
+
+    Visualization dashboards
+
+    [http://localhost:3000](http://localhost:3000)
+  </Card>
+
+  <Card title="PostgreSQL" icon="database">
+    **Port**: 5432
+
+    OpenFGA database
+
+    Internal use
+  </Card>
+</CardGroup>
+
+## Development Mode
+
+Use development mode for hot reload and debugging:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+**Development features**:
+- 🔄 **Hot reload** - Code changes restart server automatically
+- 🐛 **Debug logging** - LOG_LEVEL=DEBUG
+- 📁 **Volume mounts** - Local code mounted in container
+- 🔍 **Debugger port** - Port 5678 for debugpy
+
+### Hot Reload Example
+
+```bash
+# Start in dev mode
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# In another terminal, edit code
+vim agent.py
+
+# Save file - server automatically reloads!
+# Check logs to see reload
+docker-compose logs -f agent
+```
+
+## Testing
+
+### Run Tests
+
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio httpx
+
+# Start services
+docker-compose up -d
+
+# Wait for health
+./scripts/wait-for-health.sh
+
+# Run tests
+pytest tests/
+
+# Stop services
+docker-compose down
+```
+
+### Test Agent Endpoint
+
+```bash
+# Simple health check
+curl http://localhost:8000/health
+
+# Test agent with message
+curl -X POST http://localhost:8000/messages \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages": [{
+      "role": "user",
+      "content": "What is the weather like?"
+    }]
+  }'
+
+# Test with authentication (if enabled)
+curl -X POST http://localhost:8000/messages \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
+  -d '{
+    "messages": [{
+      "role": "user",
+      "content": "Hello!"
+    }]
+  }'
+```
+
+## Configuration
+
+### Environment Variables
+
+Configure via `.env` file:
+
+```bash
+# LLM Provider
+LLM_PROVIDER=google
+MODEL_NAME=gemini-2.5-flash-002
+GOOGLE_API_KEY=your-key-here
+
+# Authentication
+JWT_SECRET_KEY=your-secret-key
+
+# Observability
+OBSERVABILITY_BACKEND=both  # opentelemetry, langsmith, both
+LANGSMITH_TRACING=false  # Enable for LangSmith
+```
+
+### Service URLs (Docker Compose)
+
+Services communicate via Docker network:
+
+```bash
+# In docker-compose.yml, agent uses internal URLs:
+OPENFGA_API_URL=http://openfga:8080
+OTLP_ENDPOINT=http://otel-collector:4317
+```
+
+### Custom Configuration
+
+Override settings with environment variables:
+
+```bash
+# Use different model
+MODEL_NAME=claude-3-5-sonnet-20241022 docker-compose up
+
+# Enable debug logging
+LOG_LEVEL=DEBUG docker-compose up
+
+# Use OpenAI instead of Google
+LLM_PROVIDER=openai MODEL_NAME=gpt-4o docker-compose up
+```
+
+## Observability
+
+### View Traces in Jaeger
+
+<Steps>
+  <Step title="Open Jaeger UI">
+    Go to [http://localhost:16686](http://localhost:16686)
+  </Step>
+
+  <Step title="Select Service">
+    Choose `mcp-server-langgraph` from dropdown
+  </Step>
+
+  <Step title="Find Traces">
+    Click "Find Traces" to see all requests with timing
+  </Step>
+
+  <Step title="Analyze">
+    Click on trace to see:
+    - LLM calls with prompts
+    - Tool invocations
+    - Timing breakdown
+    - Error details
+  </Step>
+</Steps>
+
+### Prometheus Metrics
+
+View metrics at [http://localhost:9090](http://localhost:9090):
+
+```promql
+# Request rate
+rate(http_requests_total[5m])
+
+# Error rate
+rate(http_requests_total{status=~"5.."}[5m])
+
+# Request duration
+histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+# LLM token usage
+sum(llm_tokens_total) by (model)
+```
+
+### Grafana Dashboards
+
+Access at [http://localhost:3000](http://localhost:3000) (admin/admin):
+
+Pre-configured datasources:
+- **Prometheus** - Metrics
+- **Jaeger** - Traces
+
+Create dashboards for:
+- Request volume and latency
+- Error rates
+- LLM token usage
+- System resources
+
+## OpenFGA Setup
+
+Set up authorization model:
+
+```bash
+# Start services
+docker-compose up -d
+
+# Wait for OpenFGA
+sleep 5
+
+# Run setup script
+python scripts/setup_openfga.py
+
+# Copy store and model IDs to .env
+# OPENFGA_STORE_ID=...
+# OPENFGA_MODEL_ID=...
+
+# Restart agent to use new IDs
+docker-compose restart agent
+```
+
+## Common Commands
+
+<AccordionGroup>
+  <Accordion title="Start services">
+    ```bash
+    # Production mode
+    docker-compose up -d
+
+    # Development mode with hot reload
+    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+    # Build from scratch
+    docker-compose up -d --build
+
+    # Start specific service
+    docker-compose up -d agent
+    ```
+  </Accordion>
+
+  <Accordion title="View logs">
+    ```bash
+    # All services
+    docker-compose logs -f
+
+    # Specific service
+    docker-compose logs -f agent
+
+    # Last 100 lines
+    docker-compose logs --tail=100 agent
+
+    # Since timestamp
+    docker-compose logs --since 2025-10-10T10:00:00
+    ```
+  </Accordion>
+
+  <Accordion title="Stop services">
+    ```bash
+    # Stop all
+    docker-compose down
+
+    # Stop and remove volumes (clean slate)
+    docker-compose down -v
+
+    # Stop specific service
+    docker-compose stop agent
+    ```
+  </Accordion>
+
+  <Accordion title="Debug service">
+    ```bash
+    # Execute shell in running container
+    docker-compose exec agent /bin/bash
+
+    # View environment variables
+    docker-compose exec agent env
+
+    # Check Python packages
+    docker-compose exec agent pip list
+
+    # Run Python script
+    docker-compose exec agent python -c "import sys; print(sys.version)"
+    ```
+  </Accordion>
+
+  <Accordion title="Restart service">
+    ```bash
+    # Restart agent after code changes (production mode)
+    docker-compose restart agent
+
+    # Rebuild and restart
+    docker-compose up -d --build agent
+    ```
+  </Accordion>
+
+  <Accordion title="Scale services">
+    ```bash
+    # Run 3 agent replicas (requires load balancer)
+    docker-compose up -d --scale agent=3
+
+    # Note: Need to configure load balancer for multiple replicas
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Agent service fails to start">
+    **Check logs**:
+    ```bash
+    docker-compose logs agent
+    ```
+
+    **Common causes**:
+    - Missing API key in `.env`
+    - Invalid API key
+    - Port 8000 already in use
+    - OpenFGA not ready
+
+    **Solutions**:
+    ```bash
+    # Verify .env has API key
+    grep API_KEY .env
+
+    # Check port
+    lsof -i :8000
+
+    # Restart with fresh build
+    docker-compose down
+    docker-compose up -d --build
+    ```
+  </Accordion>
+
+  <Accordion title="Port conflicts">
+    **Symptom**: `Bind for 0.0.0.0:8000 failed: port is already allocated`
+
+    **Solution**: Change ports in `docker-compose.yml`:
+    ```yaml
+    agent:
+      ports:
+        - "8001:8000"  # Map 8001 external to 8000 internal
+    ```
+  </Accordion>
+
+  <Accordion title="Services can't communicate">
+    **Symptom**: `Connection refused` errors
+
+    **Check**:
+    ```bash
+    # Verify all services on same network
+    docker network inspect mcp_server_langgraph_observability
+
+    # Verify service names resolve
+    docker-compose exec agent ping openfga
+    ```
+
+    **Solution**: Ensure all services use `networks: [observability]`
+  </Accordion>
+
+  <Accordion title="Slow build times">
+    **Solutions**:
+    - Use BuildKit: `DOCKER_BUILDKIT=1 docker-compose build`
+    - Cache dependencies: Mount pip cache
+    - Use lighter base images: Already using `python:3.11-slim`
+  </Accordion>
+
+  <Accordion title="Out of disk space">
+    **Clean up**:
+    ```bash
+    # Remove unused images
+    docker image prune -a
+
+    # Remove unused volumes
+    docker volume prune
+
+    # Remove all stopped containers
+    docker container prune
+
+    # Nuclear option - remove everything
+    docker system prune -a --volumes
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Production Considerations
+
+<Warning>
+  Docker Compose is **not recommended for production**. Use for development and testing only.
+</Warning>
+
+For production, use:
+- **LangGraph Platform** - Serverless, managed hosting
+- **Cloud Run** - Serverless GCP deployment
+- **Kubernetes** - Production-grade orchestration
+
+### Why Not Docker Compose in Production?
+
+| Feature | Docker Compose | Production Platforms |
+|---------|---------------|---------------------|
+| **Scaling** | Manual, single host | Auto-scaling, multi-host |
+| **High Availability** | ❌ Single point of failure | ✅ Replicas, health checks |
+| **Load Balancing** | ❌ Limited | ✅ Built-in |
+| **Secrets** | ⚠️ Environment files | ✅ Encrypted, rotated |
+| **Monitoring** | ⚠️ Basic | ✅ Enterprise-grade |
+| **Updates** | ⚠️ Manual, downtime | ✅ Rolling, zero-downtime |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup OpenFGA" icon="shield" href="/guides/openfga-setup">
+    Configure authorization
+  </Card>
+  <Card title="Run Tests" icon="flask" href="/advanced/testing">
+    Test your changes
+  </Card>
+  <Card title="Deploy to Cloud" icon="cloud" href="/deployment/overview">
+    Deploy to production
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/monitoring">
+    Set up observability
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+  **Ready to develop?** Run `./scripts/docker-compose-quickstart.sh` to start coding!
+</Check>

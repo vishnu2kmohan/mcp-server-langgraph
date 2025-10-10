@@ -1,0 +1,201 @@
+---
+title: LangGraph Platform Quickstart
+description: 'Get your agent deployed to LangGraph Platform in 2 minutes'
+icon: 'rocket'
+---
+
+## Deploy in 3 Steps
+
+<Steps>
+  <Step title="Install CLI">
+    ```bash
+    pip install langgraph-cli
+    ```
+  </Step>
+
+  <Step title="Login to LangChain">
+    ```bash
+    langgraph login
+    ```
+
+    This will prompt for your LangSmith API key. Get it from [smith.langchain.com/settings](https://smith.langchain.com/settings).
+  </Step>
+
+  <Step title="Deploy">
+    ```bash
+    langgraph deploy
+    ```
+
+    Your agent is now live on LangGraph Platform!
+  </Step>
+</Steps>
+
+<Check>
+  **Deployment complete!** Your agent is now running on LangGraph Platform with automatic scaling and built-in LangSmith tracing.
+</Check>
+
+## What Happens During Deployment
+
+When you run `langgraph deploy`, the CLI:
+
+1. **Packages your code** - Bundles your agent and dependencies
+2. **Uploads to platform** - Securely transfers to LangGraph Platform
+3. **Provisions infrastructure** - Creates serverless compute resources
+4. **Deploys your graph** - Makes your agent available via API
+5. **Returns endpoint URL** - Gives you the deployment URL
+
+## Test Your Deployment
+
+### Via CLI
+
+```bash
+langgraph deployment invoke my-agent \
+  --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
+```
+
+### Via HTTP
+
+```bash
+curl -X POST https://your-deployment.langchain.com/invoke \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "input": {
+      "messages": [{"role": "user", "content": "Hello!"}]
+    }
+  }'
+```
+
+### Via Python SDK
+
+```python
+from langgraph_sdk import get_client
+
+client = get_client(url="https://your-deployment.langchain.com")
+response = client.runs.stream(
+    assistant_id="agent",
+    input={"messages": [{"role": "user", "content": "Hello!"}]}
+)
+
+for chunk in response:
+    print(chunk)
+```
+
+## View Traces in LangSmith
+
+All invocations are automatically traced in LangSmith:
+
+1. Go to [smith.langchain.com](https://smith.langchain.com/)
+2. Select your project
+3. See all traces with full LLM details
+
+## Local Testing First
+
+Test locally before deploying:
+
+```bash
+# Start local dev server
+langgraph dev
+
+# In another terminal, test
+langgraph deployment invoke --local \
+  --input '{"messages": [{"role": "user", "content": "Test"}]}'
+```
+
+## Deployment Commands
+
+<AccordionGroup>
+  <Accordion title="Deploy with custom name">
+    ```bash
+    langgraph deploy my-agent-prod
+    ```
+  </Accordion>
+
+  <Accordion title="Deploy with tag">
+    ```bash
+    langgraph deploy my-agent-prod --tag v1.0.0
+    ```
+  </Accordion>
+
+  <Accordion title="List deployments">
+    ```bash
+    langgraph deployment list
+    ```
+  </Accordion>
+
+  <Accordion title="View logs">
+    ```bash
+    langgraph deployment logs my-agent-prod --follow
+    ```
+  </Accordion>
+
+  <Accordion title="Rollback">
+    ```bash
+    langgraph deployment rollback my-agent-prod --revision 3
+    ```
+  </Accordion>
+
+  <Accordion title="Delete deployment">
+    ```bash
+    langgraph deployment delete my-agent-prod
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/deployment/platform/configuration">
+    Configure your deployment settings
+  </Card>
+  <Card title="Secrets Management" icon="key" href="/deployment/platform/secrets">
+    Manage API keys and secrets
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/platform/monitoring">
+    Monitor with LangSmith
+  </Card>
+  <Card title="CI/CD" icon="infinity" href="/deployment/platform/ci-cd">
+    Automate deployments
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Login fails">
+    **Solution**: Ensure you're using a valid LangSmith API key from [smith.langchain.com/settings](https://smith.langchain.com/settings).
+
+    ```bash
+    # Re-login
+    langgraph logout
+    langgraph login
+    ```
+  </Accordion>
+
+  <Accordion title="Deployment fails">
+    **Common causes**:
+    - Missing dependencies in `langgraph/requirements.txt`
+    - Invalid `langgraph.json` configuration
+    - Graph import errors
+
+    **Solution**: Test locally first with `langgraph dev`
+  </Accordion>
+
+  <Accordion title="Graph not found error">
+    **Solution**: Verify `langgraph.json` has correct graph path:
+
+    ```json
+    {
+      "graphs": {
+        "agent": "./langgraph/agent.py:graph"
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<Info>
+  **Need help?** Check the [full deployment guide](/deployment/langgraph-platform) or visit [LangChain docs](https://docs.langchain.com/langgraph/cloud/).
+</Info>

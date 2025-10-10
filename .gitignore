@@ -134,3 +134,18 @@ yarn.lock
 
 # MCP test outputs
 mcp_test_*.json
+
+# Mintlify
+.mintlify/
+_site/
+
+# AI Tools (user-specific)
+.vscode/.ropeproject/
+.vscode/tags
+.cursor/settings.json
+.cursor/cache/
+
+# IDE workspace files (user-specific)
+*.code-workspace
+.idea/workspace.xml
+.idea/tasks.xml

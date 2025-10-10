@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-Complete guide for deploying LangGraph MCP Agent to production environments.
+Complete guide for deploying MCP Server with LangGraph to production environments.
 
 ## Table of Contents
 
@@ -66,8 +66,8 @@ python scripts/validate_production.py
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_ORG/langgraph_mcp_agent.git
-cd langgraph_mcp_agent
+git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+cd mcp_server_langgraph
 
 # Create production environment file
 cp .env.example .env.production
@@ -82,7 +82,7 @@ vim .env.production
 
 ```bash
 # Service
-SERVICE_NAME=langgraph-mcp-agent
+SERVICE_NAME=mcp-server-langgraph
 SERVICE_VERSION=1.0.0
 ENVIRONMENT=production
 
@@ -302,8 +302,8 @@ kubectl apply -f kubernetes/otel-collector/
 ```bash
 # Build multi-arch image
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t ghcr.io/YOUR_ORG/langgraph-agent:1.0.0 \
-  -t ghcr.io/YOUR_ORG/langgraph-agent:latest \
+  -t ghcr.io/vishnu2kmohan/langgraph-agent:1.0.0 \
+  -t ghcr.io/vishnu2kmohan/langgraph-agent:latest \
   --push .
 ```
 
@@ -314,7 +314,7 @@ helm upgrade --install langgraph-agent ./helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --values helm/langgraph-agent/values-production.yaml \
-  --set image.repository=ghcr.io/YOUR_ORG/langgraph-agent \
+  --set image.repository=ghcr.io/vishnu2kmohan/langgraph-agent \
   --set image.tag=1.0.0 \
   --set replicaCount=3 \
   --set autoscaling.enabled=true \
@@ -338,7 +338,7 @@ kubectl rollout status deployment/langgraph-agent -n langgraph-agent
 replicaCount: 3
 
 image:
-  repository: ghcr.io/YOUR_ORG/langgraph-agent
+  repository: ghcr.io/vishnu2kmohan/langgraph-agent
   tag: "1.0.0"
   pullPolicy: IfNotPresent
 
@@ -417,7 +417,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/YOUR_ORG/langgraph_mcp_agent
+    repoURL: https://github.com/vishnu2kmohan/mcp_server_langgraph
     targetRevision: v1.0.0
     path: helm/langgraph-agent
     helm:

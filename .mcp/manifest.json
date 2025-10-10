@@ -7,13 +7,13 @@
   "author": {
     "name": "Your Organization",
     "email": "team@example.com",
-    "url": "https://github.com/your-org/langgraph-mcp-agent"
+    "url": "https://github.com/your-org/mcp-server-langgraph"
   },
   "license": "MIT",
-  "homepage": "https://github.com/your-org/langgraph-mcp-agent",
+  "homepage": "https://github.com/your-org/mcp-server-langgraph",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/langgraph-mcp-agent.git"
+    "url": "https://github.com/your-org/mcp-server-langgraph.git"
   },
   "transports": {
     "stdio": {
@@ -223,9 +223,9 @@
     "interval": 30
   },
   "documentation": {
-    "readme": "https://github.com/your-org/langgraph-mcp-agent/blob/main/README.md",
-    "deployment": "https://github.com/your-org/langgraph-mcp-agent/blob/main/KUBERNETES_DEPLOYMENT.md",
-    "openfga": "https://github.com/your-org/langgraph-mcp-agent/blob/main/README_OPENFGA_INFISICAL.md",
-    "kong": "https://github.com/your-org/langgraph-mcp-agent/blob/main/KONG_INTEGRATION.md"
+    "readme": "https://github.com/your-org/mcp-server-langgraph/blob/main/README.md",
+    "deployment": "https://github.com/your-org/mcp-server-langgraph/blob/main/KUBERNETES_DEPLOYMENT.md",
+    "openfga": "https://github.com/your-org/mcp-server-langgraph/blob/main/README_OPENFGA_INFISICAL.md",
+    "kong": "https://github.com/your-org/mcp-server-langgraph/blob/main/KONG_INTEGRATION.md"
   }
 }

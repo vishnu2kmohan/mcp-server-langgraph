@@ -155,8 +155,8 @@ export MCP_SERVER_URL=https://langgraph-agent.example.com
 
 \`\`\`bash
 # Clone repository
-git clone https://github.com/your-org/langgraph-mcp-agent.git
-cd langgraph-mcp-agent
+git clone https://github.com/your-org/mcp-server-langgraph.git
+cd mcp-server-langgraph
 
 # Install dependencies
 pip install -r requirements.txt
@@ -196,14 +196,14 @@ Optional:
 
 ## Documentation
 
-- [README](https://github.com/your-org/langgraph-mcp-agent/blob/main/README.md)
-- [Kubernetes Deployment](https://github.com/your-org/langgraph-mcp-agent/blob/main/KUBERNETES_DEPLOYMENT.md)
-- [OpenFGA Integration](https://github.com/your-org/langgraph-mcp-agent/blob/main/README_OPENFGA_INFISICAL.md)
-- [Kong Integration](https://github.com/your-org/langgraph-mcp-agent/blob/main/KONG_INTEGRATION.md)
+- [README](https://github.com/your-org/mcp-server-langgraph/blob/main/README.md)
+- [Kubernetes Deployment](https://github.com/your-org/mcp-server-langgraph/blob/main/KUBERNETES_DEPLOYMENT.md)
+- [OpenFGA Integration](https://github.com/your-org/mcp-server-langgraph/blob/main/README_OPENFGA_INFISICAL.md)
+- [Kong Integration](https://github.com/your-org/mcp-server-langgraph/blob/main/KONG_INTEGRATION.md)
 
 ## Support
 
-- GitHub Issues: https://github.com/your-org/langgraph-mcp-agent/issues
+- GitHub Issues: https://github.com/your-org/mcp-server-langgraph/issues
 - Email: support@example.com
 
 ## License

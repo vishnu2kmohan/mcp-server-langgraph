@@ -1,0 +1,464 @@
+---
+title: LangGraph Platform
+description: 'Deploy to LangGraph Platform in one command'
+icon: 'rocket'
+---
+
+## Overview
+
+LangGraph Platform is LangChain's fully managed hosting service for LangGraph applications. Deploy your agent to production with a single command.
+
+<Info>
+  **Zero Infrastructure**: No servers, no containers, no configuration. Just deploy and go.
+</Info>
+
+## Why LangGraph Platform?
+
+<CardGroup cols={2}>
+  <Card title="Serverless" icon="cloud">
+    No infrastructure management. Auto-scaling from zero to thousands of requests.
+  </Card>
+  <Card title="Integrated Observability" icon="chart-line">
+    Built-in LangSmith tracing. Every request automatically traced.
+  </Card>
+  <Card title="One-Command Deploy" icon="bolt">
+    `langgraph deploy` - that's it. Deployment in seconds.
+  </Card>
+  <Card title="Versioning" icon="code-branch">
+    Automatic versioning and instant rollbacks.
+  </Card>
+  <Card title="Secrets Management" icon="key">
+    Secure secrets via LangSmith. No .env files in production.
+  </Card>
+  <Card title="Global CDN" icon="globe">
+    Edge deployment for low latency worldwide.
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+### 1. Install CLI
+
+```bash
+pip install langgraph-cli
+```
+
+### 2. Login to LangChain
+
+```bash
+langgraph login
+```
+
+This will prompt for your LangSmith API key (get it from [smith.langchain.com/settings](https://smith.langchain.com/settings)).
+
+### 3. Deploy
+
+```bash
+langgraph deploy
+```
+
+That's it! Your agent is now live on LangGraph Platform.
+
+<Check>
+  **Deployment complete** in under 2 minutes!
+</Check>
+
+## Configuration
+
+### langgraph.json
+
+The `langgraph.json` file configures your deployment:
+
+```json langgraph.json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "agent": "./langgraph/agent.py:graph"
+  },
+  "env": {
+    "ANTHROPIC_API_KEY": "",
+    "LANGSMITH_TRACING": "true",
+    "LANGSMITH_PROJECT": "mcp-server-langgraph"
+  },
+  "python_version": "3.11"
+}
+```
+
+<ParamField path="dependencies" type="array">
+  List of dependency sources. `["."]` means current directory.
+</ParamField>
+
+<ParamField path="graphs" type="object">
+  Map of graph names to module paths. Format: `"name": "path/to/file.py:variable"`
+</ParamField>
+
+<ParamField path="env" type="object">
+  Environment variables. Use LangSmith secrets for sensitive values.
+</ParamField>
+
+<ParamField path="python_version" type="string">
+  Python version: `3.10`, `3.11`, or `3.12`
+</ParamField>
+
+### Setting Secrets
+
+Store API keys securely in LangSmith:
+
+```bash
+# Set LLM API keys
+langsmith secret set ANTHROPIC_API_KEY "your-key"
+langsmith secret set OPENAI_API_KEY "your-key"
+
+# Set authentication secret
+langsmith secret set JWT_SECRET_KEY "your-secret"
+
+# View secrets
+langsmith secret list
+```
+
+<Warning>
+  **Never** hardcode API keys in code or commit them to git. Always use LangSmith secrets.
+</Warning>
+
+## Deployment Commands
+
+### Deploy
+
+```bash
+# Deploy with automatic name
+langgraph deploy
+
+# Deploy with specific name
+langgraph deploy my-agent-prod
+
+# Deploy with environment tag
+langgraph deploy my-agent-prod --tag production
+```
+
+### Test Locally First
+
+```bash
+# Start local dev server
+langgraph dev
+
+# Test in another terminal
+langgraph deployment invoke --local \
+  --input '{"messages": [{"role": "user", "content": "test"}]}'
+```
+
+### Invoke Deployed Graph
+
+```bash
+# Basic invocation
+langgraph deployment invoke my-agent-prod \
+  --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
+
+# With configuration
+langgraph deployment invoke my-agent-prod \
+  --input '{"messages": [{"role": "user", "content": "Analyze"}]}' \
+  --config '{"configurable": {"user_id": "alice"}}'
+
+# Stream responses
+langgraph deployment invoke my-agent-prod \
+  --input '{"messages": [{"role": "user", "content": "Story"}]}' \
+  --stream
+```
+
+### Manage Deployments
+
+```bash
+# List all deployments
+langgraph deployment list
+
+# Get deployment details
+langgraph deployment get my-agent-prod
+
+# View logs
+langgraph deployment logs my-agent-prod --follow
+
+# Rollback to previous version
+langgraph deployment rollback my-agent-prod --revision 4
+
+# Delete deployment
+langgraph deployment delete my-agent-prod
+```
+
+## Environment Management
+
+### Multiple Environments
+
+Create separate deployments for each environment:
+
+```bash
+# Staging
+langgraph deploy my-agent-staging --tag staging
+
+# Production
+langgraph deploy my-agent-prod --tag production
+```
+
+### Environment Variables
+
+Set environment-specific variables:
+
+```bash
+# Staging uses different LangSmith project
+LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
+
+# Production
+LANGSMITH_PROJECT=my-agent-prod langgraph deploy my-agent-prod
+```
+
+## Monitoring
+
+### LangSmith Integration
+
+All deployments automatically integrate with LangSmith:
+
+<Steps>
+  <Step title="View Traces">
+    Go to [smith.langchain.com](https://smith.langchain.com/) and select your project
+  </Step>
+  <Step title="Monitor Performance">
+    See request latency, token usage, and error rates in real-time
+  </Step>
+  <Step title="Debug Issues">
+    Click on any trace to see full LLM interactions and intermediate steps
+  </Step>
+</Steps>
+
+### Metrics Available
+
+- **Request Count**: Total invocations
+- **Latency (P50, P95, P99)**: Response time percentiles
+- **Success Rate**: Percentage of successful requests
+- **Token Usage**: Tokens consumed per request
+- **Cost**: Estimated costs by LLM provider
+- **Error Rate**: Failed requests over time
+
+### Set Up Alerts
+
+Configure alerts in LangSmith:
+
+1. Go to Project Settings → Alerts
+2. Create alert rules:
+   - High error rate (>5%)
+   - High latency (P95 >5s)
+   - Budget exceeded
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml .github/workflows/deploy.yml
+name: Deploy to LangGraph Platform
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install LangGraph CLI
+        run: pip install langgraph-cli
+
+      - name: Deploy
+        env:
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+        run: langgraph deploy my-agent-prod --tag production
+```
+
+See complete workflow in `.github/workflows/deploy-langgraph-platform.yml`.
+
+### GitLab CI
+
+```yaml .gitlab-ci.yml
+deploy:
+  stage: deploy
+  image: python:3.11
+  script:
+    - pip install langgraph-cli
+    - langgraph deploy my-agent-prod --tag production
+  only:
+    - main
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Test Locally First">
+    Always test with `langgraph dev` before deploying:
+
+    ```bash
+    # Start local server
+    langgraph dev
+
+    # Test thoroughly
+    # Then deploy
+    langgraph deploy
+    ```
+  </Accordion>
+
+  <Accordion title="Use Staging Environment">
+    Deploy to staging before production:
+
+    ```bash
+    # Deploy to staging
+    langgraph deploy my-agent-staging
+
+    # Test staging thoroughly
+    langgraph deployment invoke my-agent-staging --input '...'
+
+    # If good, deploy to production
+    langgraph deploy my-agent-prod
+    ```
+  </Accordion>
+
+  <Accordion title="Version Your Deployments">
+    Tag deployments with versions:
+
+    ```bash
+    langgraph deploy my-agent-prod --tag v1.2.0
+
+    # Or use git commit
+    langgraph deploy my-agent-prod --tag "$(git rev-parse --short HEAD)"
+    ```
+  </Accordion>
+
+  <Accordion title="Monitor After Deploy">
+    Watch logs after deployment:
+
+    ```bash
+    langgraph deployment logs my-agent-prod --follow
+    ```
+
+    Check LangSmith for errors and latency spikes.
+  </Accordion>
+
+  <Accordion title="Use Secrets for All Keys">
+    Never put API keys in `langgraph.json`:
+
+    ```bash
+    # Good: Use LangSmith secrets
+    langsmith secret set ANTHROPIC_API_KEY "..."
+
+    # Bad: In langgraph.json
+    # "env": {"ANTHROPIC_API_KEY": "sk-ant-..."}  ❌
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Deployment Fails with 'Graph not found'">
+    **Symptom**: `Error: Could not find graph 'agent'`
+
+    **Solution**:
+    - Verify `langgraph.json` has correct graph path
+    - Ensure file exists at `./langgraph/agent.py`
+    - Check variable name is `graph` (not `agent_graph`)
+
+    ```json
+    {
+      "graphs": {
+        "agent": "./langgraph/agent.py:graph"  // ✅ Correct
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Authentication Errors">
+    **Symptom**: `401 Unauthorized`
+
+    **Solution**:
+    ```bash
+    # Re-login
+    langgraph logout
+    langgraph login
+
+    # Verify
+    langgraph whoami
+    ```
+  </Accordion>
+
+  <Accordion title="Missing Dependencies">
+    **Symptom**: `ModuleNotFoundError` in logs
+
+    **Solution**:
+    - Add missing package to `langgraph/requirements.txt`
+    - Redeploy: `langgraph deploy`
+  </Accordion>
+
+  <Accordion title="Environment Variable Not Set">
+    **Symptom**: Agent fails with missing API key
+
+    **Solution**:
+    ```bash
+    # Set secret
+    langsmith secret set ANTHROPIC_API_KEY "your-key"
+
+    # Verify
+    langsmith secret list
+
+    # Redeploy
+    langgraph deploy
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Comparison with Other Platforms
+
+| Feature | LangGraph Platform | Cloud Run | Kubernetes |
+|---------|-------------------|-----------|------------|
+| **Setup Time** | 2 minutes | 15 minutes | 1+ hours |
+| **Infrastructure** | ✅ None | ⚠️ Minimal | ❌ Complex |
+| **Scaling** | ✅ Automatic | ✅ Automatic | ⚠️ Manual config |
+| **LangSmith Integration** | ✅ Built-in | ⚠️ Manual | ⚠️ Manual |
+| **Versioning** | ✅ Built-in | ⚠️ Manual | ⚠️ Manual |
+| **Cost** | Pay-per-use | Pay-per-use | Fixed + usage |
+| **Best For** | Quick production deployments | GCP-native apps | Enterprise, self-hosted |
+
+## Pricing
+
+LangGraph Platform uses pay-per-use pricing:
+
+- **Free Tier**: 1M requests/month
+- **Compute**: Charged per execution time
+- **No Minimum**: Pay only for what you use
+
+<Note>
+  **Cost-Effective**: For most applications, LangGraph Platform is more cost-effective than running dedicated servers.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Platform Quickstart" icon="play" href="/deployment/platform/quickstart">
+    Step-by-step deployment guide
+  </Card>
+  <Card title="Configuration" icon="gear" href="/deployment/platform/configuration">
+    Advanced configuration options
+  </Card>
+  <Card title="Secrets Management" icon="key" href="/deployment/platform/secrets">
+    Managing secrets and environment variables
+  </Card>
+  <Card title="CI/CD Setup" icon="infinity" href="/deployment/platform/ci-cd">
+    Automate deployments
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+  **Ready to deploy?** Run `langgraph login` and `langgraph deploy` to get your agent live in minutes!
+</Check>
