@@ -41,6 +41,12 @@ cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - **LangGraph Platform**: Deploy to managed LangGraph Cloud with one command
 - **Automatic Fallback**: Resilient multi-model fallback for high availability
 
+## 📚 Documentation
+
+- **[Full Documentation](https://mcp-server-langgraph.mintlify.app)** - Complete guides, API reference, and tutorials
+- **[API Documentation](/docs)** - Interactive OpenAPI/Swagger UI (when running locally)
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Mintlify documentation deployment instructions
+
 ## Architecture
 
 ```

@@ -535,6 +535,47 @@ from health_check import app as health_app
 app.mount("/health", health_app)
 
 
+# Documentation routes
+from fastapi.responses import HTMLResponse, RedirectResponse
+from pathlib import Path
+
+@app.get("/documentation", response_class=HTMLResponse)
+@app.get("/docs-redirect", response_class=HTMLResponse)
+async def documentation_redirect():
+    """Redirect to Mintlify documentation"""
+    docs_path = Path(__file__).parent / "docs" / "index.html"
+    if docs_path.exists():
+        return HTMLResponse(content=docs_path.read_text())
+    else:
+        # Fallback to direct redirect
+        return RedirectResponse(url="https://mcp-server-langgraph.mintlify.app")
+
+
+@app.get("/")
+async def root():
+    """Root endpoint with API information and links"""
+    return {
+        "service": "MCP Server with LangGraph",
+        "version": settings.service_version,
+        "description": "AI Agent with fine-grained authorization and observability",
+        "endpoints": {
+            "api_docs": "/docs",
+            "redoc": "/redoc",
+            "documentation": "/documentation",
+            "health": "/health",
+            "tools": "/tools",
+            "resources": "/resources",
+            "sse": "/sse",
+            "messages": "/messages"
+        },
+        "external_links": {
+            "full_documentation": "https://mcp-server-langgraph.mintlify.app",
+            "github": "https://github.com/vishnu2kmohan/mcp_server_langgraph",
+            "issues": "https://github.com/vishnu2kmohan/mcp_server_langgraph/issues"
+        }
+    }
+
+
 if __name__ == "__main__":
     logger.info(f"Starting MCP HTTP/SSE server on port {settings.get_secret('PORT', fallback='8000')}")
 
