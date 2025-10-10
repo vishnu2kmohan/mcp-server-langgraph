@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # Testing framework
-pytest==8.0.0
+pytest>=8.2.0
 pytest-asyncio==0.26.0
 pytest-cov==4.1.0
 pytest-mock==3.12.0
@@ -13,7 +13,7 @@ pytest-xdist==3.5.0  # Parallel test execution
 pytest-benchmark==4.0.0  # Performance benchmarking
 
 # Test utilities
-httpx==0.26.0  # For testing HTTP endpoints
+# httpx version already specified in requirements.txt
 respx==0.20.2  # Mock httpx
 faker==22.0.0  # Generate test data
 
@@ -29,7 +29,7 @@ coverage[toml]==7.10.7
 
 # Security scanning
 bandit==1.8.6
-safety==3.0.1
+safety>=3.6.2  # Updated for Pydantic 2.x compatibility
 
 # Type stubs
 types-PyYAML==6.0.12.12

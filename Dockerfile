@@ -1,15 +1,23 @@
 # Multi-stage build for LangGraph MCP Agent
-FROM python:3.13-slim as builder
+FROM python:3.13-slim AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies
+# Install build dependencies including Rust for infisical-python
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     make \
+    curl \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && rm -rf /var/lib/apt/lists/*
+
+# Add Rust to PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Set PyO3 forward compatibility for Python 3.13
+ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
 # Copy requirements
 COPY requirements.txt .
