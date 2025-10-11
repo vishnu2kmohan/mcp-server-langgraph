@@ -1,0 +1,26 @@
+[run]
+omit =
+    */venv/*
+    */tests/*
+    */__pycache__/*
+    */site-packages/*
+    example_*.py
+    setup_*.py
+    mcp_server.py
+    mcp_server_http.py
+    mcp_server_streamable.py
+    langgraph_platform/*
+    langsmith_config.py
+    llm_factory.py
+    hooks/*
+    scripts/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
