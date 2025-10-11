@@ -25,10 +25,16 @@ def mock_agent():
     return mock
 
 
+@pytest.fixture
+def mock_pydantic_agent_class():
+    """Mock Pydantic AI Agent class to avoid API key requirements."""
+    with patch("pydantic_ai_agent.Agent") as mock_agent_class:
+        yield mock_agent_class
+
+
 # Tests for PydanticAIAgentWrapper
 @pytest.mark.unit
-@pytest.mark.asyncio
-async def test_pydantic_agent_wrapper_initialization(mock_settings):
+def test_pydantic_agent_wrapper_initialization(mock_settings, mock_pydantic_agent_class):
     """Test Pydantic AI agent wrapper initializes correctly."""
     from pydantic_ai_agent import PydanticAIAgentWrapper
 
@@ -40,7 +46,7 @@ async def test_pydantic_agent_wrapper_initialization(mock_settings):
 
 
 @pytest.mark.unit
-def test_get_pydantic_model_name_google(mock_settings):
+def test_get_pydantic_model_name_google(mock_settings, mock_pydantic_agent_class):
     """Test model name mapping for Google provider."""
     from pydantic_ai_agent import PydanticAIAgentWrapper
 
@@ -49,7 +55,7 @@ def test_get_pydantic_model_name_google(mock_settings):
 
 
 @pytest.mark.unit
-def test_get_pydantic_model_name_anthropic(mock_settings):
+def test_get_pydantic_model_name_anthropic(mock_settings, mock_pydantic_agent_class):
     """Test model name mapping for Anthropic provider."""
     from pydantic_ai_agent import PydanticAIAgentWrapper
 
@@ -65,7 +71,7 @@ def test_get_pydantic_model_name_anthropic(mock_settings):
 
 
 @pytest.mark.unit
-def test_get_pydantic_model_name_openai(mock_settings):
+def test_get_pydantic_model_name_openai(mock_settings, mock_pydantic_agent_class):
     """Test model name mapping for OpenAI provider."""
     from pydantic_ai_agent import PydanticAIAgentWrapper
 
@@ -78,7 +84,7 @@ def test_get_pydantic_model_name_openai(mock_settings):
 
 
 @pytest.mark.unit
-def test_format_conversation():
+def test_format_conversation(mock_settings, mock_pydantic_agent_class):
     """Test conversation formatting."""
     from pydantic_ai_agent import PydanticAIAgentWrapper
 
