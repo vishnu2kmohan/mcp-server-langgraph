@@ -161,13 +161,13 @@ def create_initial_git():
     """Initialize git repository if requested."""
     if "{{ cookiecutter.project_visibility }}" in ["public", "private"]:
         import subprocess
+
         try:
             subprocess.run(["git", "init"], check=True, capture_output=True)
             subprocess.run(["git", "add", "."], check=True, capture_output=True)
-            subprocess.run([
-                "git", "commit", "-m",
-                "Initial commit from mcp-server-langgraph template"
-            ], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "commit", "-m", "Initial commit from mcp-server-langgraph template"], check=True, capture_output=True
+            )
             print("✓ Initialized git repository with initial commit")
         except subprocess.CalledProcessError:
             print("⚠ Could not initialize git repository (git may not be installed)")
@@ -183,9 +183,9 @@ def print_next_steps():
     use_docker = "{{ cookiecutter.include_docker }}" == "yes"
     use_k8s = "{{ cookiecutter.include_kubernetes }}" == "yes"
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(f"🎉 Successfully generated: {project_name}")
-    print("="*70)
+    print("=" * 70)
 
     print("\n📋 Next Steps:\n")
 
@@ -242,9 +242,9 @@ def print_next_steps():
     print(f"   - GitHub: https://github.com/{{ cookiecutter.github_username }}/{project_slug}")
     print(f"   - Documentation: README.md")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Happy coding! 🚀")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def main():
@@ -256,5 +256,5 @@ def main():
     print_next_steps()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

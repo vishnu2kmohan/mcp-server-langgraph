@@ -1,21 +1,22 @@
 """
 Unified observability setup with OpenTelemetry and LangSmith support
 """
+
 import logging
 import sys
-from typing import Any
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
+from typing import Any
 
-from opentelemetry import trace, metrics
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import ConsoleMetricExporter, PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader, ConsoleMetricExporter
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 # Configuration
@@ -31,7 +32,7 @@ class ObservabilityConfig:
         service_name: str = SERVICE_NAME,
         otlp_endpoint: str = OTLP_ENDPOINT,
         enable_console_export: bool = True,
-        enable_langsmith: bool = False
+        enable_langsmith: bool = False,
     ):
         self.service_name = service_name
         self.otlp_endpoint = otlp_endpoint
@@ -49,11 +50,9 @@ class ObservabilityConfig:
 
     def _setup_tracing(self):
         """Configure distributed tracing"""
-        resource = Resource.create({
-            "service.name": self.service_name,
-            "service.version": "1.0.0",
-            "deployment.environment": "production"
-        })
+        resource = Resource.create(
+            {"service.name": self.service_name, "service.version": "1.0.0", "deployment.environment": "production"}
+        )
 
         provider = TracerProvider(resource=resource)
 
@@ -73,9 +72,7 @@ class ObservabilityConfig:
 
     def _setup_metrics(self):
         """Configure metrics collection"""
-        resource = Resource.create({
-            "service.name": self.service_name
-        })
+        resource = Resource.create({"service.name": self.service_name})
 
         # OTLP metric exporter
         otlp_metric_exporter = OTLPMetricExporter(endpoint=self.otlp_endpoint)
@@ -89,10 +86,7 @@ class ObservabilityConfig:
             console_reader = PeriodicExportingMetricReader(console_metric_exporter)
             readers.append(console_reader)
 
-        provider = MeterProvider(
-            resource=resource,
-            metric_readers=readers
-        )
+        provider = MeterProvider(resource=resource, metric_readers=readers)
 
         metrics.set_meter_provider(provider)
         self.meter = metrics.get_meter(__name__)
@@ -103,40 +97,26 @@ class ObservabilityConfig:
 
     def _create_metrics(self):
         """Create standard metrics for the service"""
-        self.tool_calls = self.meter.create_counter(
-            name="agent.tool.calls",
-            description="Number of tool calls",
-            unit="1"
-        )
+        self.tool_calls = self.meter.create_counter(name="agent.tool.calls", description="Number of tool calls", unit="1")
 
         self.successful_calls = self.meter.create_counter(
-            name="agent.calls.successful",
-            description="Number of successful calls",
-            unit="1"
+            name="agent.calls.successful", description="Number of successful calls", unit="1"
         )
 
         self.failed_calls = self.meter.create_counter(
-            name="agent.calls.failed",
-            description="Number of failed calls",
-            unit="1"
+            name="agent.calls.failed", description="Number of failed calls", unit="1"
         )
 
         self.auth_failures = self.meter.create_counter(
-            name="auth.failures",
-            description="Number of authentication failures",
-            unit="1"
+            name="auth.failures", description="Number of authentication failures", unit="1"
         )
 
         self.authz_failures = self.meter.create_counter(
-            name="authz.failures",
-            description="Number of authorization failures",
-            unit="1"
+            name="authz.failures", description="Number of authorization failures", unit="1"
         )
 
         self.response_time = self.meter.create_histogram(
-            name="agent.response.duration",
-            description="Response time distribution",
-            unit="ms"
+            name="agent.response.duration", description="Response time distribution", unit="ms"
         )
 
     def _setup_logging(self):
@@ -149,7 +129,7 @@ class ObservabilityConfig:
         logs_dir.mkdir(exist_ok=True)
 
         # Configure log format
-        log_format = '%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s'
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s"
         formatter = logging.Formatter(log_format)
 
         # Console handler (stdout)
@@ -160,10 +140,7 @@ class ObservabilityConfig:
         # Rotating file handler (size-based rotation)
         # Rotates when file reaches 10MB, keeps 5 backup files
         rotating_handler = RotatingFileHandler(
-            filename=logs_dir / f'{self.service_name}.log',
-            maxBytes=10 * 1024 * 1024,  # 10MB
-            backupCount=5,
-            encoding='utf-8'
+            filename=logs_dir / f"{self.service_name}.log", maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"  # 10MB
         )
         rotating_handler.setLevel(logging.INFO)
         rotating_handler.setFormatter(formatter)
@@ -171,35 +148,24 @@ class ObservabilityConfig:
         # Time-based rotating handler (daily rotation)
         # Rotates daily at midnight, keeps 30 days of logs
         daily_handler = TimedRotatingFileHandler(
-            filename=logs_dir / f'{self.service_name}-daily.log',
-            when='midnight',
-            interval=1,
-            backupCount=30,
-            encoding='utf-8'
+            filename=logs_dir / f"{self.service_name}-daily.log", when="midnight", interval=1, backupCount=30, encoding="utf-8"
         )
         daily_handler.setLevel(logging.INFO)
         daily_handler.setFormatter(formatter)
 
         # Error log handler (only ERROR and CRITICAL)
         error_handler = RotatingFileHandler(
-            filename=logs_dir / f'{self.service_name}-error.log',
+            filename=logs_dir / f"{self.service_name}-error.log",
             maxBytes=10 * 1024 * 1024,  # 10MB
             backupCount=5,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
 
         # Configure root logger
         logging.basicConfig(
-            level=logging.INFO,
-            format=log_format,
-            handlers=[
-                console_handler,
-                rotating_handler,
-                daily_handler,
-                error_handler
-            ]
+            level=logging.INFO, format=log_format, handlers=[console_handler, rotating_handler, daily_handler, error_handler]
         )
 
         self.logger = logging.getLogger(self.service_name)
@@ -242,6 +208,7 @@ class ObservabilityConfig:
 # Check if LangSmith should be enabled from environment or config
 try:
     from config import settings
+
     enable_langsmith_flag = settings.langsmith_tracing and settings.observability_backend in ("langsmith", "both")
 except ImportError:
     enable_langsmith_flag = False

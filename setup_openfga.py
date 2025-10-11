@@ -3,13 +3,10 @@
 Setup script for OpenFGA authorization model and sample data
 """
 import asyncio
-from openfga_client import (
-    OpenFGAClient,
-    initialize_openfga_store,
-    seed_sample_data
-)
+
 from config import settings
 from observability import logger
+from openfga_client import OpenFGAClient, initialize_openfga_store, seed_sample_data
 
 
 async def setup_openfga():
@@ -50,46 +47,17 @@ async def setup_openfga():
     # Verify with some checks
     print("\n5. Verifying authorization checks...")
     test_cases = [
-        {
-            "user": "user:alice",
-            "relation": "executor",
-            "object": "tool:chat",
-            "expected": True
-        },
-        {
-            "user": "user:bob",
-            "relation": "executor",
-            "object": "tool:chat",
-            "expected": True
-        },
-        {
-            "user": "user:alice",
-            "relation": "owner",
-            "object": "conversation:thread_1",
-            "expected": True
-        },
-        {
-            "user": "user:bob",
-            "relation": "owner",
-            "object": "conversation:thread_1",
-            "expected": False
-        },
-        {
-            "user": "user:bob",
-            "relation": "viewer",
-            "object": "conversation:thread_1",
-            "expected": True
-        }
+        {"user": "user:alice", "relation": "executor", "object": "tool:chat", "expected": True},
+        {"user": "user:bob", "relation": "executor", "object": "tool:chat", "expected": True},
+        {"user": "user:alice", "relation": "owner", "object": "conversation:thread_1", "expected": True},
+        {"user": "user:bob", "relation": "owner", "object": "conversation:thread_1", "expected": False},
+        {"user": "user:bob", "relation": "viewer", "object": "conversation:thread_1", "expected": True},
     ]
 
     all_passed = True
     for i, test in enumerate(test_cases, 1):
         try:
-            result = await client.check_permission(
-                user=test["user"],
-                relation=test["relation"],
-                object=test["object"]
-            )
+            result = await client.check_permission(user=test["user"], relation=test["relation"], object=test["object"])
 
             status = "✓" if result == test["expected"] else "✗"
             if result != test["expected"]:
@@ -111,7 +79,8 @@ async def setup_openfga():
 
     # Show relationship examples
     print("\n📋 Sample Relationships Created:")
-    print("""
+    print(
+        """
     Organizations:
       - user:alice is member of organization:acme
       - user:alice is admin of organization:acme
@@ -129,7 +98,8 @@ async def setup_openfga():
     Roles:
       - user:alice has role:premium
       - user:bob has role:standard
-    """)
+    """
+    )
 
     print("\n🔧 Next Steps:")
     print("1. Update .env with the store_id and model_id shown above")

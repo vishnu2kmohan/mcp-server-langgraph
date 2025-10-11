@@ -1,7 +1,9 @@
 """Unit tests for secrets_manager.py - Infisical Integration"""
-import pytest
+
 import os
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 @pytest.mark.unit
@@ -9,7 +11,7 @@ from unittest.mock import MagicMock, patch, PropertyMock
 class TestSecretsManager:
     """Test SecretsManager class"""
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_init_with_credentials(self, mock_client):
         """Test initialization with provided credentials"""
         from secrets_manager import SecretsManager
@@ -19,7 +21,7 @@ class TestSecretsManager:
             client_id="test-client-id",
             client_secret="test-client-secret",
             project_id="test-project",
-            environment="prod"
+            environment="prod",
         )
 
         assert manager.site_url == "https://app.infisical.com"
@@ -28,7 +30,7 @@ class TestSecretsManager:
         assert manager.client is not None
         mock_client.assert_called_once()
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_init_without_credentials(self, mock_client):
         """Test initialization without credentials falls back gracefully"""
         from secrets_manager import SecretsManager
@@ -37,12 +39,15 @@ class TestSecretsManager:
 
         assert manager.client is None
 
-    @patch('secrets_manager.InfisicalClient')
-    @patch.dict(os.environ, {
-        'INFISICAL_CLIENT_ID': 'env-client-id',
-        'INFISICAL_CLIENT_SECRET': 'env-client-secret',
-        'INFISICAL_PROJECT_ID': 'env-project-id'
-    })
+    @patch("secrets_manager.InfisicalClient")
+    @patch.dict(
+        os.environ,
+        {
+            "INFISICAL_CLIENT_ID": "env-client-id",
+            "INFISICAL_CLIENT_SECRET": "env-client-secret",
+            "INFISICAL_PROJECT_ID": "env-project-id",
+        },
+    )
     def test_init_from_environment(self, mock_client):
         """Test initialization reads from environment variables"""
         from secrets_manager import SecretsManager
@@ -53,21 +58,18 @@ class TestSecretsManager:
         assert manager.client is not None
         mock_client.assert_called_once()
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_init_client_error(self, mock_client):
         """Test initialization handles client creation errors"""
         from secrets_manager import SecretsManager
 
         mock_client.side_effect = Exception("Connection failed")
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret")
 
         assert manager.client is None
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_secret_success(self, mock_client):
         """Test successfully retrieving a secret"""
         from secrets_manager import SecretsManager
@@ -79,23 +81,16 @@ class TestSecretsManager:
         mock_instance.get_secret.return_value = mock_secret
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         value = manager.get_secret("API_KEY")
 
         assert value == "secret-value-123"
         mock_instance.get_secret.assert_called_once_with(
-            secret_name="API_KEY",
-            project_id="test-project",
-            environment="dev",
-            path="/"
+            secret_name="API_KEY", project_id="test-project", environment="dev", path="/"
         )
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_secret_with_path(self, mock_client):
         """Test retrieving secret from specific path"""
         from secrets_manager import SecretsManager
@@ -107,11 +102,7 @@ class TestSecretsManager:
         mock_instance.get_secret.return_value = mock_secret
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         value = manager.get_secret("DB_PASSWORD", path="/database")
 
@@ -119,7 +110,7 @@ class TestSecretsManager:
         call_args = mock_instance.get_secret.call_args
         assert call_args[1]["path"] == "/database"
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_secret_caching(self, mock_client):
         """Test secret caching works"""
         from secrets_manager import SecretsManager
@@ -131,11 +122,7 @@ class TestSecretsManager:
         mock_instance.get_secret.return_value = mock_secret
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         # First call - should hit Infisical
         value1 = manager.get_secret("API_KEY", use_cache=True)
@@ -147,7 +134,7 @@ class TestSecretsManager:
         assert value2 == "cached-value"
         assert mock_instance.get_secret.call_count == 1  # Not called again
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_secret_no_cache(self, mock_client):
         """Test getting secret without caching"""
         from secrets_manager import SecretsManager
@@ -159,11 +146,7 @@ class TestSecretsManager:
         mock_instance.get_secret.return_value = mock_secret
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         # First call
         value1 = manager.get_secret("API_KEY", use_cache=False)
@@ -173,8 +156,8 @@ class TestSecretsManager:
         value2 = manager.get_secret("API_KEY", use_cache=False)
         assert mock_instance.get_secret.call_count == 2
 
-    @patch('secrets_manager.InfisicalClient')
-    @patch.dict(os.environ, {'TEST_SECRET': 'env-fallback-value'})
+    @patch("secrets_manager.InfisicalClient")
+    @patch.dict(os.environ, {"TEST_SECRET": "env-fallback-value"})
     def test_get_secret_fallback_to_env(self, mock_client):
         """Test fallback to environment variable when client unavailable"""
         from secrets_manager import SecretsManager
@@ -185,21 +168,18 @@ class TestSecretsManager:
 
         assert value == "env-fallback-value"
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_secret_fallback_to_default(self, mock_client):
         """Test fallback to default value when not found"""
         from secrets_manager import SecretsManager
 
         manager = SecretsManager()  # No credentials
 
-        value = manager.get_secret(
-            "NONEXISTENT_KEY",
-            fallback="default-value"
-        )
+        value = manager.get_secret("NONEXISTENT_KEY", fallback="default-value")
 
         assert value == "default-value"
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_secret_error_uses_fallback(self, mock_client):
         """Test error in retrieval uses fallback"""
         from secrets_manager import SecretsManager
@@ -208,18 +188,14 @@ class TestSecretsManager:
         mock_instance.get_secret.side_effect = Exception("Infisical error")
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         value = manager.get_secret("API_KEY", fallback="error-fallback")
 
         assert value == "error-fallback"
 
-    @patch('secrets_manager.InfisicalClient')
-    @patch.dict(os.environ, {'API_KEY': 'env-value'})
+    @patch("secrets_manager.InfisicalClient")
+    @patch.dict(os.environ, {"API_KEY": "env-value"})
     def test_get_secret_error_tries_env_first(self, mock_client):
         """Test error tries environment variable before fallback"""
         from secrets_manager import SecretsManager
@@ -228,17 +204,13 @@ class TestSecretsManager:
         mock_instance.get_secret.side_effect = Exception("Infisical error")
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         value = manager.get_secret("API_KEY", fallback="default")
 
         assert value == "env-value"
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_create_secret_success(self, mock_client):
         """Test creating a new secret"""
         from secrets_manager import SecretsManager
@@ -247,17 +219,13 @@ class TestSecretsManager:
         mock_instance.create_secret.return_value = MagicMock()
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         manager.create_secret("NEW_KEY", "new-value")
 
         mock_instance.create_secret.assert_called_once()
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_update_secret_success(self, mock_client):
         """Test updating an existing secret"""
         from secrets_manager import SecretsManager
@@ -266,17 +234,13 @@ class TestSecretsManager:
         mock_instance.update_secret.return_value = MagicMock()
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         manager.update_secret("EXISTING_KEY", "updated-value")
 
         mock_instance.update_secret.assert_called_once()
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_delete_secret_success(self, mock_client):
         """Test deleting a secret"""
         from secrets_manager import SecretsManager
@@ -285,17 +249,13 @@ class TestSecretsManager:
         mock_instance.delete_secret.return_value = MagicMock()
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         manager.delete_secret("OLD_KEY")
 
         mock_instance.delete_secret.assert_called_once()
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_all_secrets_success(self, mock_client):
         """Test retrieving all secrets from a path"""
         from secrets_manager import SecretsManager
@@ -312,18 +272,14 @@ class TestSecretsManager:
         mock_instance.list_secrets.return_value = [mock_secret1, mock_secret2]
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         secrets = manager.get_all_secrets(path="/app")
 
         assert secrets == {"KEY1": "value1", "KEY2": "value2"}
         mock_instance.list_secrets.assert_called_once()
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_all_secrets_no_client(self, mock_client):
         """Test get_all_secrets without Infisical client"""
         from secrets_manager import SecretsManager
@@ -334,7 +290,7 @@ class TestSecretsManager:
 
         assert secrets == {}
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_get_all_secrets_error(self, mock_client):
         """Test get_all_secrets handles errors"""
         from secrets_manager import SecretsManager
@@ -343,17 +299,13 @@ class TestSecretsManager:
         mock_instance.list_secrets.side_effect = Exception("API error")
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         secrets = manager.get_all_secrets()
 
         assert secrets == {}
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_create_secret_no_client(self, mock_client):
         """Test create_secret without Infisical client"""
         from secrets_manager import SecretsManager
@@ -364,7 +316,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_create_secret_error(self, mock_client):
         """Test create_secret handles errors"""
         from secrets_manager import SecretsManager
@@ -373,17 +325,13 @@ class TestSecretsManager:
         mock_instance.create_secret.side_effect = Exception("Create failed")
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         result = manager.create_secret("KEY", "value")
 
         assert result is False
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_update_secret_no_client(self, mock_client):
         """Test update_secret without Infisical client"""
         from secrets_manager import SecretsManager
@@ -394,7 +342,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_update_secret_error(self, mock_client):
         """Test update_secret handles errors"""
         from secrets_manager import SecretsManager
@@ -403,17 +351,13 @@ class TestSecretsManager:
         mock_instance.update_secret.side_effect = Exception("Update failed")
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         result = manager.update_secret("KEY", "value")
 
         assert result is False
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_delete_secret_no_client(self, mock_client):
         """Test delete_secret without Infisical client"""
         from secrets_manager import SecretsManager
@@ -424,7 +368,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch('secrets_manager.InfisicalClient')
+    @patch("secrets_manager.InfisicalClient")
     def test_delete_secret_error(self, mock_client):
         """Test delete_secret handles errors"""
         from secrets_manager import SecretsManager
@@ -433,11 +377,7 @@ class TestSecretsManager:
         mock_instance.delete_secret.side_effect = Exception("Delete failed")
         mock_client.return_value = mock_instance
 
-        manager = SecretsManager(
-            client_id="test-id",
-            client_secret="test-secret",
-            project_id="test-project"
-        )
+        manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         result = manager.delete_secret("KEY")
 
@@ -459,7 +399,7 @@ class TestSecretsManagerIntegration:
             client_id=os.getenv("TEST_INFISICAL_CLIENT_ID"),
             client_secret=os.getenv("TEST_INFISICAL_CLIENT_SECRET"),
             project_id=os.getenv("TEST_INFISICAL_PROJECT_ID"),
-            environment="dev"
+            environment="dev",
         )
 
         # Create secret

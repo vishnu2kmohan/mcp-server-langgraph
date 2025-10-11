@@ -1,7 +1,9 @@
 """Integration tests for MCP StreamableHTTP transport"""
-import pytest
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -38,13 +40,7 @@ class TestMCPStreamableHTTP:
             "jsonrpc": "2.0",
             "id": 1,
             "method": "initialize",
-            "params": {
-                "protocolVersion": "0.1.0",
-                "clientInfo": {
-                    "name": "test-client",
-                    "version": "1.0.0"
-                }
-            }
+            "params": {"protocolVersion": "0.1.0", "clientInfo": {"name": "test-client", "version": "1.0.0"}},
         }
 
         response = client.post("/message", json=request)
@@ -91,10 +87,7 @@ class TestMCPStreamableHTTP:
         from mcp_server_streamable import app
 
         client = TestClient(app)
-        request = {
-            "not": "valid",
-            "jsonrpc": "nope"
-        }
+        request = {"not": "valid", "jsonrpc": "nope"}
 
         response = client.post("/message", json=request)
 
@@ -128,23 +121,14 @@ class TestMCPEndToEnd:
                     "jsonrpc": "2.0",
                     "id": 1,
                     "method": "initialize",
-                    "params": {
-                        "protocolVersion": "0.1.0",
-                        "clientInfo": {"name": "test", "version": "1.0"}
-                    }
-                }
+                    "params": {"protocolVersion": "0.1.0", "clientInfo": {"name": "test", "version": "1.0"}},
+                },
             )
             assert init_response.status_code == 200
 
             # List tools
             tools_response = await client.post(
-                f"{base_url}/message",
-                json={
-                    "jsonrpc": "2.0",
-                    "id": 2,
-                    "method": "tools/list",
-                    "params": {}
-                }
+                f"{base_url}/message", json={"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
             )
             assert tools_response.status_code == 200
             tools = tools_response.json()["result"]["tools"]
@@ -157,14 +141,8 @@ class TestMCPEndToEnd:
                     "jsonrpc": "2.0",
                     "id": 3,
                     "method": "tools/call",
-                    "params": {
-                        "name": "chat",
-                        "arguments": {
-                            "message": "Hello!",
-                            "username": "alice"
-                        }
-                    }
-                }
+                    "params": {"name": "chat", "arguments": {"message": "Hello!", "username": "alice"}},
+                },
             )
             assert call_response.status_code == 200
             result = call_response.json()

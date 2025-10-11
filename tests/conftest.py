@@ -1,4 +1,5 @@
 """Pytest configuration and shared fixtures"""
+
 import asyncio
 import os
 import sys
@@ -42,12 +43,12 @@ def mock_mcp_modules():
     mock_server_instance.auth = MagicMock()
 
     # Patch the class before any imports
-    with patch('mcp_server_streamable.MCPAgentStreamableServer', return_value=mock_server_instance):
+    with patch("mcp_server_streamable.MCPAgentStreamableServer", return_value=mock_server_instance):
         # Return dict with all mocks for test access
         yield {
-            'server_instance': mock_server_instance,
-            'tool_manager': mock_tool_manager,
-            'resource_manager': mock_resource_manager
+            "server_instance": mock_server_instance,
+            "tool_manager": mock_tool_manager,
+            "resource_manager": mock_resource_manager,
         }
 
 
@@ -84,17 +85,7 @@ def mock_openfga_response():
         "check": {"allowed": True},
         "list_objects": {"objects": ["tool:chat", "tool:search"]},
         "write": {"writes": []},
-        "read": {
-            "tuples": [
-                {
-                    "key": {
-                        "user": "user:alice",
-                        "relation": "executor",
-                        "object": "tool:chat"
-                    }
-                }
-            ]
-        }
+        "read": {"tuples": [{"key": {"user": "user:alice", "relation": "executor", "object": "tool:chat"}}]},
     }
 
 
@@ -103,16 +94,8 @@ def mock_infisical_response():
     """Mock Infisical API responses"""
     return {
         "secrets": [
-            {
-                "secretKey": "JWT_SECRET_KEY",
-                "secretValue": "test-jwt-secret",
-                "version": 1
-            },
-            {
-                "secretKey": "ANTHROPIC_API_KEY",
-                "secretValue": "sk-ant-test-key",
-                "version": 1
-            }
+            {"secretKey": "JWT_SECRET_KEY", "secretValue": "test-jwt-secret", "version": 1},
+            {"secretKey": "ANTHROPIC_API_KEY", "secretValue": "sk-ant-test-key", "version": 1},
         ]
     }
 
@@ -120,8 +103,9 @@ def mock_infisical_response():
 @pytest.fixture
 def mock_jwt_token():
     """Generate a mock JWT token"""
-    import jwt
     from datetime import datetime, timedelta
+
+    import jwt
 
     payload = {
         "sub": "alice",
@@ -134,23 +118,13 @@ def mock_jwt_token():
 @pytest.fixture
 def mock_user_alice():
     """Mock user alice"""
-    return {
-        "username": "alice",
-        "tier": "premium",
-        "organization": "acme",
-        "roles": ["admin", "user"]
-    }
+    return {"username": "alice", "tier": "premium", "organization": "acme", "roles": ["admin", "user"]}
 
 
 @pytest.fixture
 def mock_user_bob():
     """Mock user bob"""
-    return {
-        "username": "bob",
-        "tier": "standard",
-        "organization": "acme",
-        "roles": ["user"]
-    }
+    return {"username": "bob", "tier": "standard", "organization": "acme", "roles": ["user"]}
 
 
 @pytest.fixture
@@ -160,7 +134,7 @@ def mock_agent_state():
         "messages": [HumanMessage(content="Hello, what can you do?")],
         "next_action": "respond",
         "user_id": "alice",
-        "request_id": "test-request-123"
+        "request_id": "test-request-123",
     }
 
 
@@ -212,13 +186,7 @@ def mock_mcp_request():
         "jsonrpc": "2.0",
         "id": 1,
         "method": "tools/call",
-        "params": {
-            "name": "chat",
-            "arguments": {
-                "message": "What is 2+2?",
-                "username": "alice"
-            }
-        }
+        "params": {"name": "chat", "arguments": {"message": "What is 2+2?", "username": "alice"}},
     }
 
 
@@ -229,13 +197,7 @@ def mock_mcp_initialize_request():
         "jsonrpc": "2.0",
         "id": 1,
         "method": "initialize",
-        "params": {
-            "protocolVersion": "0.1.0",
-            "clientInfo": {
-                "name": "test-client",
-                "version": "1.0.0"
-            }
-        }
+        "params": {"protocolVersion": "0.1.0", "clientInfo": {"name": "test-client", "version": "1.0.0"}},
     }
 
 
@@ -272,26 +234,10 @@ async def mock_infisical_client(mock_infisical_response):
 def sample_openfga_tuples():
     """Sample OpenFGA relationship tuples"""
     return [
-        {
-            "user": "user:alice",
-            "relation": "executor",
-            "object": "tool:chat"
-        },
-        {
-            "user": "user:alice",
-            "relation": "admin",
-            "object": "organization:acme"
-        },
-        {
-            "user": "user:bob",
-            "relation": "member",
-            "object": "organization:acme"
-        },
-        {
-            "user": "organization:acme#member",
-            "relation": "executor",
-            "object": "tool:search"
-        }
+        {"user": "user:alice", "relation": "executor", "object": "tool:chat"},
+        {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
+        {"user": "user:bob", "relation": "member", "object": "organization:acme"},
+        {"user": "organization:acme#member", "relation": "executor", "object": "tool:search"},
     ]
 
 
@@ -307,6 +253,7 @@ def temp_checkpoint_dir(tmp_path):
 @pytest.fixture
 def async_context_manager():
     """Helper to create async context managers for mocking"""
+
     def _create(return_value):
         class AsyncContextManager:
             async def __aenter__(self):

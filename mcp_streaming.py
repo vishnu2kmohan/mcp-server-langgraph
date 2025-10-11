@@ -3,12 +3,14 @@ MCP Streaming with Pydantic AI Validation
 
 Provides type-safe streaming responses for MCP server with validation.
 """
-from typing import AsyncIterator, Optional
-from pydantic import BaseModel, Field
-import json
-import asyncio
 
-from observability import logger, tracer, metrics
+import asyncio
+import json
+from typing import AsyncIterator, Optional
+
+from pydantic import BaseModel, Field
+
+from observability import logger, metrics, tracer
 
 
 class StreamChunk(BaseModel):
@@ -16,14 +18,8 @@ class StreamChunk(BaseModel):
 
     content: str = Field(description="Content chunk")
     chunk_index: int = Field(description="Index in the stream sequence")
-    is_final: bool = Field(
-        default=False,
-        description="Whether this is the final chunk"
-    )
-    metadata: dict[str, str] = Field(
-        default_factory=dict,
-        description="Chunk metadata"
-    )
+    is_final: bool = Field(default=False, description="Whether this is the final chunk")
+    metadata: dict[str, str] = Field(default_factory=dict, description="Chunk metadata")
 
 
 class StreamedResponse(BaseModel):
@@ -33,10 +29,7 @@ class StreamedResponse(BaseModel):
     total_length: int = Field(description="Total content length")
     chunk_count: int = Field(description="Number of chunks received")
     is_complete: bool = Field(description="Whether stream completed successfully")
-    error_message: Optional[str] = Field(
-        default=None,
-        description="Error message if stream failed"
-    )
+    error_message: Optional[str] = Field(default=None, description="Error message if stream failed")
 
     def get_full_content(self) -> str:
         """
@@ -60,11 +53,7 @@ class MCPStreamingValidator:
         """Initialize streaming validator."""
         self.active_streams: dict[str, list[StreamChunk]] = {}
 
-    async def validate_chunk(
-        self,
-        chunk_data: dict,
-        stream_id: str
-    ) -> Optional[StreamChunk]:
+    async def validate_chunk(self, chunk_data: dict, stream_id: str) -> Optional[StreamChunk]:
         """
         Validate a single stream chunk.
 
@@ -92,11 +81,7 @@ class MCPStreamingValidator:
 
                 logger.debug(
                     "Chunk validated",
-                    extra={
-                        "stream_id": stream_id,
-                        "chunk_index": chunk.chunk_index,
-                        "content_length": len(chunk.content)
-                    }
+                    extra={"stream_id": stream_id, "chunk_index": chunk.chunk_index, "content_length": len(chunk.content)},
                 )
 
                 metrics.successful_calls.add(1, {"operation": "validate_chunk"})
@@ -104,11 +89,7 @@ class MCPStreamingValidator:
                 return chunk
 
             except Exception as e:
-                logger.error(
-                    f"Chunk validation failed: {e}",
-                    extra={"stream_id": stream_id},
-                    exc_info=True
-                )
+                logger.error(f"Chunk validation failed: {e}", extra={"stream_id": stream_id}, exc_info=True)
 
                 metrics.failed_calls.add(1, {"operation": "validate_chunk"})
                 span.record_exception(e)
@@ -129,16 +110,10 @@ class MCPStreamingValidator:
             span.set_attribute("stream.id", stream_id)
 
             if stream_id not in self.active_streams:
-                logger.warning(
-                    f"Attempted to finalize unknown stream: {stream_id}"
-                )
+                logger.warning(f"Attempted to finalize unknown stream: {stream_id}")
 
                 return StreamedResponse(
-                    chunks=[],
-                    total_length=0,
-                    chunk_count=0,
-                    is_complete=False,
-                    error_message="Stream not found"
+                    chunks=[], total_length=0, chunk_count=0, is_complete=False, error_message="Stream not found"
                 )
 
             chunks = self.active_streams[stream_id]
@@ -155,7 +130,7 @@ class MCPStreamingValidator:
                 total_length=total_length,
                 chunk_count=chunk_count,
                 is_complete=is_complete,
-                error_message=None if is_complete else "Stream incomplete"
+                error_message=None if is_complete else "Stream incomplete",
             )
 
             span.set_attribute("stream.total_length", total_length)
@@ -168,8 +143,8 @@ class MCPStreamingValidator:
                     "stream_id": stream_id,
                     "total_length": total_length,
                     "chunk_count": chunk_count,
-                    "is_complete": is_complete
-                }
+                    "is_complete": is_complete,
+                },
             )
 
             # Clean up
@@ -181,9 +156,7 @@ class MCPStreamingValidator:
 
 
 async def stream_validated_response(
-    content: str,
-    chunk_size: int = 100,
-    stream_id: Optional[str] = None
+    content: str, chunk_size: int = 100, stream_id: Optional[str] = None
 ) -> AsyncIterator[str]:
     """
     Stream response with validation as newline-delimited JSON.
@@ -205,35 +178,25 @@ async def stream_validated_response(
 
         try:
             # Split content into chunks
-            chunks = [
-                content[i:i + chunk_size]
-                for i in range(0, len(content), chunk_size)
-            ]
+            chunks = [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)]
 
             total_chunks = len(chunks)
             span.set_attribute("stream.total_chunks", total_chunks)
 
             logger.info(
                 "Starting validated stream",
-                extra={
-                    "stream_id": stream_id,
-                    "total_chunks": total_chunks,
-                    "content_length": len(content)
-                }
+                extra={"stream_id": stream_id, "total_chunks": total_chunks, "content_length": len(content)},
             )
 
             # Stream each chunk
             for idx, chunk_content in enumerate(chunks):
-                is_final = (idx == total_chunks - 1)
+                is_final = idx == total_chunks - 1
 
                 chunk = StreamChunk(
                     content=chunk_content,
                     chunk_index=idx,
                     is_final=is_final,
-                    metadata={
-                        "stream_id": stream_id,
-                        "total_chunks": str(total_chunks)
-                    }
+                    metadata={"stream_id": stream_id, "total_chunks": str(total_chunks)},
                 )
 
                 # Yield as newline-delimited JSON
@@ -245,30 +208,18 @@ async def stream_validated_response(
             metrics.successful_calls.add(1, {"operation": "stream_validated"})
 
         except Exception as e:
-            logger.error(
-                f"Streaming failed: {e}",
-                extra={"stream_id": stream_id},
-                exc_info=True
-            )
+            logger.error(f"Streaming failed: {e}", extra={"stream_id": stream_id}, exc_info=True)
 
             metrics.failed_calls.add(1, {"operation": "stream_validated"})
             span.record_exception(e)
 
             # Yield error chunk
-            error_chunk = StreamChunk(
-                content="",
-                chunk_index=-1,
-                is_final=True,
-                metadata={"error": str(e)}
-            )
+            error_chunk = StreamChunk(content="", chunk_index=-1, is_final=True, metadata={"error": str(e)})
 
             yield json.dumps(error_chunk.model_dump()) + "\n"
 
 
-async def stream_agent_response(
-    response_content: str,
-    include_metadata: bool = True
-) -> AsyncIterator[str]:
+async def stream_agent_response(response_content: str, include_metadata: bool = True) -> AsyncIterator[str]:
     """
     Stream agent response with optional metadata.
 
@@ -290,10 +241,7 @@ async def stream_agent_response(
                 content="",
                 chunk_index=-1,
                 is_final=True,
-                metadata={
-                    "type": "completion",
-                    "total_length": str(len(response_content))
-                }
+                metadata={"type": "completion", "total_length": str(len(response_content))},
             )
 
             yield json.dumps(metadata_chunk.model_dump()) + "\n"

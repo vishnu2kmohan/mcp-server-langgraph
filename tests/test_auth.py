@@ -1,8 +1,10 @@
 """Unit tests for auth.py - Authentication and Authorization"""
-import pytest
-import jwt
+
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import jwt
+import pytest
 
 from auth import AuthMiddleware, require_auth, verify_token
 
@@ -61,18 +63,11 @@ class TestAuthMiddleware:
         mock_openfga.check_permission.return_value = True
 
         auth = AuthMiddleware(openfga_client=mock_openfga)
-        result = await auth.authorize(
-            user_id="user:alice",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
 
         assert result is True
         mock_openfga.check_permission.assert_called_once_with(
-            user="user:alice",
-            relation="executor",
-            object="tool:chat",
-            context=None
+            user="user:alice", relation="executor", object="tool:chat", context=None
         )
 
     @pytest.mark.asyncio
@@ -82,11 +77,7 @@ class TestAuthMiddleware:
         mock_openfga.check_permission.return_value = False
 
         auth = AuthMiddleware(openfga_client=mock_openfga)
-        result = await auth.authorize(
-            user_id="user:bob",
-            relation="admin",
-            resource="organization:acme"
-        )
+        result = await auth.authorize(user_id="user:bob", relation="admin", resource="organization:acme")
 
         assert result is False
 
@@ -97,11 +88,7 @@ class TestAuthMiddleware:
         mock_openfga.check_permission.side_effect = Exception("OpenFGA connection error")
 
         auth = AuthMiddleware(openfga_client=mock_openfga)
-        result = await auth.authorize(
-            user_id="user:alice",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
 
         # Should fail closed (deny access)
         assert result is False
@@ -110,11 +97,7 @@ class TestAuthMiddleware:
     async def test_authorize_fallback_admin_access(self):
         """Test fallback authorization grants admin full access"""
         auth = AuthMiddleware()  # No OpenFGA client
-        result = await auth.authorize(
-            user_id="user:admin",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:admin", relation="executor", resource="tool:chat")
 
         assert result is True
 
@@ -122,11 +105,7 @@ class TestAuthMiddleware:
     async def test_authorize_fallback_premium_user(self):
         """Test fallback authorization for premium user"""
         auth = AuthMiddleware()
-        result = await auth.authorize(
-            user_id="user:alice",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
 
         assert result is True
 
@@ -134,11 +113,7 @@ class TestAuthMiddleware:
     async def test_authorize_fallback_standard_user(self):
         """Test fallback authorization for standard user"""
         auth = AuthMiddleware()
-        result = await auth.authorize(
-            user_id="user:bob",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:bob", relation="executor", resource="tool:chat")
 
         assert result is True
 
@@ -146,11 +121,7 @@ class TestAuthMiddleware:
     async def test_authorize_fallback_viewer_access(self):
         """Test fallback authorization for viewer relation"""
         auth = AuthMiddleware()
-        result = await auth.authorize(
-            user_id="user:alice",
-            relation="viewer",
-            resource="conversation:123"
-        )
+        result = await auth.authorize(user_id="user:alice", relation="viewer", resource="conversation:123")
 
         assert result is True
 
@@ -158,11 +129,7 @@ class TestAuthMiddleware:
     async def test_authorize_fallback_unknown_user(self):
         """Test fallback authorization denies unknown user"""
         auth = AuthMiddleware()
-        result = await auth.authorize(
-            user_id="user:unknown",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:unknown", relation="executor", resource="tool:chat")
 
         assert result is False
 
@@ -173,11 +140,7 @@ class TestAuthMiddleware:
         mock_openfga.list_objects.return_value = ["tool:chat", "tool:search"]
 
         auth = AuthMiddleware(openfga_client=mock_openfga)
-        resources = await auth.list_accessible_resources(
-            user_id="user:alice",
-            relation="executor",
-            resource_type="tool"
-        )
+        resources = await auth.list_accessible_resources(user_id="user:alice", relation="executor", resource_type="tool")
 
         assert len(resources) == 2
         assert "tool:chat" in resources
@@ -188,11 +151,7 @@ class TestAuthMiddleware:
     async def test_list_accessible_resources_no_openfga(self):
         """Test listing resources without OpenFGA returns empty list"""
         auth = AuthMiddleware()  # No OpenFGA
-        resources = await auth.list_accessible_resources(
-            user_id="user:alice",
-            relation="executor",
-            resource_type="tool"
-        )
+        resources = await auth.list_accessible_resources(user_id="user:alice", relation="executor", resource_type="tool")
 
         assert resources == []
 
@@ -203,11 +162,7 @@ class TestAuthMiddleware:
         mock_openfga.list_objects.side_effect = Exception("OpenFGA error")
 
         auth = AuthMiddleware(openfga_client=mock_openfga)
-        resources = await auth.list_accessible_resources(
-            user_id="user:alice",
-            relation="executor",
-            resource_type="tool"
-        )
+        resources = await auth.list_accessible_resources(user_id="user:alice", relation="executor", resource_type="tool")
 
         assert resources == []
 
@@ -265,7 +220,7 @@ class TestAuthMiddleware:
             "sub": "user:alice",
             "username": "alice",
             "exp": datetime.utcnow() - timedelta(hours=1),
-            "iat": datetime.utcnow() - timedelta(hours=2)
+            "iat": datetime.utcnow() - timedelta(hours=2),
         }
         expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
 
@@ -303,6 +258,7 @@ class TestRequireAuthDecorator:
     @pytest.mark.asyncio
     async def test_require_auth_success(self):
         """Test decorator allows authorized request"""
+
         @require_auth()
         async def protected_function(username: str = None, user_id: str = None):
             return f"Success for {user_id}"
@@ -313,6 +269,7 @@ class TestRequireAuthDecorator:
     @pytest.mark.asyncio
     async def test_require_auth_no_credentials(self):
         """Test decorator blocks request without credentials"""
+
         @require_auth()
         async def protected_function(username: str = None, user_id: str = None):
             return "Success"
@@ -323,6 +280,7 @@ class TestRequireAuthDecorator:
     @pytest.mark.asyncio
     async def test_require_auth_invalid_user(self):
         """Test decorator blocks invalid user"""
+
         @require_auth()
         async def protected_function(username: str = None, user_id: str = None):
             return "Success"

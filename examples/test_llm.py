@@ -4,13 +4,14 @@ Test LLM providers with LiteLLM integration
 """
 import asyncio
 import sys
+
 from langchain_core.messages import HumanMessage
 
 # Add parent directory to path
-sys.path.insert(0, '..')
+sys.path.insert(0, "..")
 
-from llm_factory import create_llm_from_config
 from config import settings
+from llm_factory import create_llm_from_config
 
 
 async def test_llm():
@@ -54,11 +55,7 @@ async def test_llm():
 
     # Test more complex query
     print("Testing complex query...")
-    messages = [
-        HumanMessage(
-            content="Explain what LangGraph is in one sentence."
-        )
-    ]
+    messages = [HumanMessage(content="Explain what LangGraph is in one sentence.")]
 
     try:
         response = await llm.ainvoke(messages)
@@ -118,19 +115,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Test LLM providers")
-    parser.add_argument(
-        "--multi",
-        action="store_true",
-        help="Test multiple providers"
-    )
-    parser.add_argument(
-        "--provider",
-        help="Override provider (anthropic, openai, google, ollama)"
-    )
-    parser.add_argument(
-        "--model",
-        help="Override model name"
-    )
+    parser.add_argument("--multi", action="store_true", help="Test multiple providers")
+    parser.add_argument("--provider", help="Override provider (anthropic, openai, google, ollama)")
+    parser.add_argument("--model", help="Override model name")
 
     args = parser.parse_args()
 

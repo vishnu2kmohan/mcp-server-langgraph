@@ -4,12 +4,15 @@ LiteLLM Factory for Multi-Provider LLM Support
 Supports: Anthropic, OpenAI, Google (Gemini), Azure OpenAI, AWS Bedrock,
 Ollama (Llama, Qwen, Mistral, etc.)
 """
+
 import os
-from typing import Optional, Any, Dict
-from litellm import completion, acompletion
+from typing import Any, Dict, Optional
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from litellm import acompletion, completion
 from litellm.utils import ModelResponse
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from observability import logger, tracer, metrics
+
+from observability import logger, metrics, tracer
 
 
 class LLMFactory:
@@ -29,7 +32,7 @@ class LLMFactory:
         timeout: int = 60,
         enable_fallback: bool = True,
         fallback_models: Optional[list[str]] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize LLM Factory
@@ -59,12 +62,7 @@ class LLMFactory:
         self._setup_environment()
 
         logger.info(
-            "LLM Factory initialized",
-            extra={
-                "provider": provider,
-                "model": model_name,
-                "fallback_enabled": enable_fallback
-            }
+            "LLM Factory initialized", extra={"provider": provider, "model": model_name, "fallback_enabled": enable_fallback}
         )
 
     def _setup_environment(self):
@@ -132,7 +130,7 @@ class LLMFactory:
                 "temperature": kwargs.get("temperature", self.temperature),
                 "max_tokens": kwargs.get("max_tokens", self.max_tokens),
                 "timeout": kwargs.get("timeout", self.timeout),
-                **self.kwargs
+                **self.kwargs,
             }
 
             try:
@@ -145,19 +143,14 @@ class LLMFactory:
 
                 logger.info(
                     "LLM invocation successful",
-                    extra={
-                        "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0
-                    }
+                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},
                 )
 
                 return AIMessage(content=content)
 
             except Exception as e:
                 logger.error(
-                    f"LLM invocation failed: {e}",
-                    extra={"model": self.model_name, "provider": self.provider},
-                    exc_info=True
+                    f"LLM invocation failed: {e}", extra={"model": self.model_name, "provider": self.provider}, exc_info=True
                 )
 
                 metrics.failed_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
@@ -192,7 +185,7 @@ class LLMFactory:
                 "temperature": kwargs.get("temperature", self.temperature),
                 "max_tokens": kwargs.get("max_tokens", self.max_tokens),
                 "timeout": kwargs.get("timeout", self.timeout),
-                **self.kwargs
+                **self.kwargs,
             }
 
             try:
@@ -204,10 +197,7 @@ class LLMFactory:
 
                 logger.info(
                     "Async LLM invocation successful",
-                    extra={
-                        "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0
-                    }
+                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},
                 )
 
                 return AIMessage(content=content)
@@ -216,7 +206,7 @@ class LLMFactory:
                 logger.error(
                     f"Async LLM invocation failed: {e}",
                     extra={"model": self.model_name, "provider": self.provider},
-                    exc_info=True
+                    exc_info=True,
                 )
 
                 metrics.failed_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
@@ -233,10 +223,7 @@ class LLMFactory:
             if fallback_model == self.model_name:
                 continue  # Skip if it's the same model
 
-            logger.warning(
-                f"Trying fallback model: {fallback_model}",
-                extra={"primary_model": self.model_name}
-            )
+            logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
 
             try:
                 formatted_messages = self._format_messages(messages)
@@ -245,28 +232,19 @@ class LLMFactory:
                     messages=formatted_messages,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
-                    timeout=self.timeout
+                    timeout=self.timeout,
                 )
 
                 content = response.choices[0].message.content
 
-                logger.info(
-                    "Fallback successful",
-                    extra={"fallback_model": fallback_model}
-                )
+                logger.info("Fallback successful", extra={"fallback_model": fallback_model})
 
-                metrics.successful_calls.add(1, {
-                    "operation": "llm.fallback",
-                    "model": fallback_model
-                })
+                metrics.successful_calls.add(1, {"operation": "llm.fallback", "model": fallback_model})
 
                 return AIMessage(content=content)
 
             except Exception as e:
-                logger.error(
-                    f"Fallback model {fallback_model} failed: {e}",
-                    exc_info=True
-                )
+                logger.error(f"Fallback model {fallback_model} failed: {e}", exc_info=True)
                 continue
 
         raise RuntimeError("All models failed including fallbacks")
@@ -277,10 +255,7 @@ class LLMFactory:
             if fallback_model == self.model_name:
                 continue
 
-            logger.warning(
-                f"Trying fallback model: {fallback_model}",
-                extra={"primary_model": self.model_name}
-            )
+            logger.warning(f"Trying fallback model: {fallback_model}", extra={"primary_model": self.model_name})
 
             try:
                 formatted_messages = self._format_messages(messages)
@@ -289,28 +264,19 @@ class LLMFactory:
                     messages=formatted_messages,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
-                    timeout=self.timeout
+                    timeout=self.timeout,
                 )
 
                 content = response.choices[0].message.content
 
-                logger.info(
-                    "Async fallback successful",
-                    extra={"fallback_model": fallback_model}
-                )
+                logger.info("Async fallback successful", extra={"fallback_model": fallback_model})
 
-                metrics.successful_calls.add(1, {
-                    "operation": "llm.fallback_async",
-                    "model": fallback_model
-                })
+                metrics.successful_calls.add(1, {"operation": "llm.fallback_async", "model": fallback_model})
 
                 return AIMessage(content=content)
 
             except Exception as e:
-                logger.error(
-                    f"Async fallback model {fallback_model} failed: {e}",
-                    exc_info=True
-                )
+                logger.error(f"Async fallback model {fallback_model} failed: {e}", exc_info=True)
                 continue
 
         raise RuntimeError("All async models failed including fallbacks")
@@ -342,19 +308,25 @@ def create_llm_from_config(config) -> LLMFactory:
     provider_kwargs = {}
 
     if config.llm_provider == "azure":
-        provider_kwargs.update({
-            "api_base": config.azure_api_base,
-            "api_version": config.azure_api_version,
-        })
+        provider_kwargs.update(
+            {
+                "api_base": config.azure_api_base,
+                "api_version": config.azure_api_version,
+            }
+        )
     elif config.llm_provider == "bedrock":
-        provider_kwargs.update({
-            "aws_secret_access_key": config.aws_secret_access_key,
-            "aws_region_name": config.aws_region,
-        })
+        provider_kwargs.update(
+            {
+                "aws_secret_access_key": config.aws_secret_access_key,
+                "aws_region_name": config.aws_region,
+            }
+        )
     elif config.llm_provider == "ollama":
-        provider_kwargs.update({
-            "api_base": config.ollama_base_url,
-        })
+        provider_kwargs.update(
+            {
+                "api_base": config.ollama_base_url,
+            }
+        )
 
     return LLMFactory(
         provider=config.llm_provider,
@@ -365,5 +337,5 @@ def create_llm_from_config(config) -> LLMFactory:
         timeout=config.model_timeout,
         enable_fallback=config.enable_fallback,
         fallback_models=config.fallback_models,
-        **provider_kwargs
+        **provider_kwargs,
     )

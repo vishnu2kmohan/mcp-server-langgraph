@@ -4,35 +4,26 @@ Pydantic AI Agent - Type-safe agent implementation with structured outputs
 This module provides strongly-typed agent responses using Pydantic AI,
 ensuring LLM outputs match expected schemas and improving reliability.
 """
+
 from typing import Annotated, Literal, Optional
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
-from pydantic_ai.models import Model, KnownModelName
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from pydantic_ai.models import KnownModelName, Model
 
 from config import settings
-from observability import logger, tracer, metrics
+from observability import logger, metrics, tracer
 
 
 # Structured Response Models
 class RouterDecision(BaseModel):
     """Routing decision with reasoning for agent workflow."""
 
-    action: Literal["use_tools", "respond", "clarify"] = Field(
-        description="Next action to take in the agent workflow"
-    )
-    reasoning: str = Field(
-        description="Explanation of why this action was chosen"
-    )
-    tool_name: Optional[str] = Field(
-        default=None,
-        description="Name of tool to use if action is 'use_tools'"
-    )
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Confidence score for this decision (0-1)"
-    )
+    action: Literal["use_tools", "respond", "clarify"] = Field(description="Next action to take in the agent workflow")
+    reasoning: str = Field(description="Explanation of why this action was chosen")
+    tool_name: Optional[str] = Field(default=None, description="Name of tool to use if action is 'use_tools'")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score for this decision (0-1)")
 
 
 class ToolExecution(BaseModel):
@@ -41,43 +32,19 @@ class ToolExecution(BaseModel):
     tool_name: str = Field(description="Name of the executed tool")
     result: str = Field(description="Tool execution result")
     success: bool = Field(description="Whether tool execution succeeded")
-    error_message: Optional[str] = Field(
-        default=None,
-        description="Error message if execution failed"
-    )
-    metadata: dict[str, str] = Field(
-        default_factory=dict,
-        description="Additional metadata about the execution"
-    )
+    error_message: Optional[str] = Field(default=None, description="Error message if execution failed")
+    metadata: dict[str, str] = Field(default_factory=dict, description="Additional metadata about the execution")
 
 
 class AgentResponse(BaseModel):
     """Final agent response with confidence and metadata."""
 
-    content: str = Field(
-        description="The main response content to show to the user"
-    )
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Confidence in this response (0-1)"
-    )
-    requires_clarification: bool = Field(
-        default=False,
-        description="Whether the agent needs more information"
-    )
-    clarification_question: Optional[str] = Field(
-        default=None,
-        description="Question to ask user if clarification needed"
-    )
-    sources: list[str] = Field(
-        default_factory=list,
-        description="Sources or references used to generate response"
-    )
-    metadata: dict[str, str] = Field(
-        default_factory=dict,
-        description="Additional response metadata"
-    )
+    content: str = Field(description="The main response content to show to the user")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence in this response (0-1)")
+    requires_clarification: bool = Field(default=False, description="Whether the agent needs more information")
+    clarification_question: Optional[str] = Field(default=None, description="Question to ask user if clarification needed")
+    sources: list[str] = Field(default_factory=list, description="Sources or references used to generate response")
+    metadata: dict[str, str] = Field(default_factory=dict, description="Additional response metadata")
 
 
 class PydanticAIAgentWrapper:
@@ -88,11 +55,7 @@ class PydanticAIAgentWrapper:
     match expected schemas for improved reliability and debugging.
     """
 
-    def __init__(
-        self,
-        model_name: Optional[str] = None,
-        provider: Optional[str] = None
-    ):
+    def __init__(self, model_name: Optional[str] = None, provider: Optional[str] = None):
         """
         Initialize Pydantic AI agent wrapper.
 
@@ -116,7 +79,7 @@ Your job is to analyze user messages and decide the best action:
 - 'respond': If you can answer directly without tools
 - 'clarify': If the request is unclear or needs more information
 
-Always provide clear reasoning and a confidence score."""
+Always provide clear reasoning and a confidence score.""",
         )
 
         self.response_agent = Agent(
@@ -125,16 +88,12 @@ Always provide clear reasoning and a confidence score."""
             system_prompt="""You are a helpful AI assistant.
 Provide clear, accurate, and helpful responses to user questions.
 If you're uncertain, indicate that in your confidence score.
-If you need clarification, set requires_clarification=True and ask a specific question."""
+If you need clarification, set requires_clarification=True and ask a specific question.""",
         )
 
         logger.info(
             "Pydantic AI agent wrapper initialized",
-            extra={
-                "model": self.model_name,
-                "provider": self.provider,
-                "pydantic_model": self.pydantic_model_name
-            }
+            extra={"model": self.model_name, "provider": self.provider, "pydantic_model": self.pydantic_model_name},
         )
 
     def _get_pydantic_model_name(self) -> str:
@@ -158,17 +117,10 @@ If you need clarification, set requires_clarification=True and ask a specific qu
             return f"openai:{self.model_name}"
         else:
             # Default: try simple name
-            logger.warning(
-                f"Unknown provider '{self.provider}', using model name directly",
-                extra={"model": self.model_name}
-            )
+            logger.warning(f"Unknown provider '{self.provider}', using model name directly", extra={"model": self.model_name})
             return self.model_name
 
-    async def route_message(
-        self,
-        message: str,
-        context: Optional[dict] = None
-    ) -> RouterDecision:
+    async def route_message(self, message: str, context: Optional[dict] = None) -> RouterDecision:
         """
         Determine the appropriate action for a user message.
 
@@ -198,11 +150,7 @@ If you need clarification, set requires_clarification=True and ask a specific qu
 
                 logger.info(
                     "Message routed",
-                    extra={
-                        "action": decision.action,
-                        "confidence": decision.confidence,
-                        "reasoning": decision.reasoning
-                    }
+                    extra={"action": decision.action, "confidence": decision.confidence, "reasoning": decision.reasoning},
                 )
 
                 metrics.successful_calls.add(1, {"operation": "route_message"})
@@ -210,20 +158,12 @@ If you need clarification, set requires_clarification=True and ask a specific qu
                 return decision
 
             except Exception as e:
-                logger.error(
-                    f"Routing failed: {e}",
-                    extra={"message": message},
-                    exc_info=True
-                )
+                logger.error(f"Routing failed: {e}", extra={"message": message}, exc_info=True)
                 metrics.failed_calls.add(1, {"operation": "route_message"})
                 span.record_exception(e)
                 raise
 
-    async def generate_response(
-        self,
-        messages: list[BaseMessage],
-        context: Optional[dict] = None
-    ) -> AgentResponse:
+    async def generate_response(self, messages: list[BaseMessage], context: Optional[dict] = None) -> AgentResponse:
         """
         Generate a typed response to user messages.
 
@@ -252,18 +192,15 @@ If you need clarification, set requires_clarification=True and ask a specific qu
 
                 span.set_attribute("response.length", len(response.content))
                 span.set_attribute("response.confidence", response.confidence)
-                span.set_attribute(
-                    "response.requires_clarification",
-                    response.requires_clarification
-                )
+                span.set_attribute("response.requires_clarification", response.requires_clarification)
 
                 logger.info(
                     "Response generated",
                     extra={
                         "confidence": response.confidence,
                         "requires_clarification": response.requires_clarification,
-                        "content_length": len(response.content)
-                    }
+                        "content_length": len(response.content),
+                    },
                 )
 
                 metrics.successful_calls.add(1, {"operation": "generate_response"})
@@ -271,11 +208,7 @@ If you need clarification, set requires_clarification=True and ask a specific qu
                 return response
 
             except Exception as e:
-                logger.error(
-                    f"Response generation failed: {e}",
-                    extra={"message_count": len(messages)},
-                    exc_info=True
-                )
+                logger.error(f"Response generation failed: {e}", extra={"message_count": len(messages)}, exc_info=True)
                 metrics.failed_calls.add(1, {"operation": "generate_response"})
                 span.record_exception(e)
                 raise
@@ -303,10 +236,7 @@ If you need clarification, set requires_clarification=True and ask a specific qu
 
 
 # Factory function for easy integration
-def create_pydantic_agent(
-    model_name: Optional[str] = None,
-    provider: Optional[str] = None
-) -> PydanticAIAgentWrapper:
+def create_pydantic_agent(model_name: Optional[str] = None, provider: Optional[str] = None) -> PydanticAIAgentWrapper:
     """
     Create a Pydantic AI agent wrapper.
 

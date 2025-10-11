@@ -1,7 +1,9 @@
 """Unit tests for agent.py - LangGraph Agent"""
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 
 
 @pytest.mark.unit
@@ -16,7 +18,7 @@ class TestAgentState:
             "messages": [HumanMessage(content="Hello")],
             "next_action": "respond",
             "user_id": "user:alice",
-            "request_id": "req-123"
+            "request_id": "req-123",
         }
 
         assert len(state["messages"]) == 1
@@ -29,7 +31,7 @@ class TestAgentState:
 class TestAgentGraph:
     """Test LangGraph agent creation and execution"""
 
-    @patch('llm_factory.create_llm_from_config')
+    @patch("llm_factory.create_llm_from_config")
     def test_create_agent_graph(self, mock_create_llm):
         """Test agent graph is created successfully"""
         from agent import create_agent_graph
@@ -41,10 +43,10 @@ class TestAgentGraph:
         graph = create_agent_graph()
 
         assert graph is not None
-        assert hasattr(graph, 'invoke')
-        assert hasattr(graph, 'stream')
+        assert hasattr(graph, "invoke")
+        assert hasattr(graph, "stream")
 
-    @patch('agent.create_llm_from_config')
+    @patch("agent.create_llm_from_config")
     def test_route_input_to_respond(self, mock_create_llm):
         """Test routing to direct response"""
         from agent import create_agent_graph
@@ -59,7 +61,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="Hello, what can you do?")],
             "next_action": "",
             "user_id": "user:alice",
-            "request_id": "req-123"
+            "request_id": "req-123",
         }
 
         result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-1"}})
@@ -69,7 +71,7 @@ class TestAgentGraph:
         assert len(result["messages"]) > 1
         assert result["next_action"] == "end"
 
-    @patch('agent.create_llm_from_config')
+    @patch("agent.create_llm_from_config")
     def test_route_input_to_tools(self, mock_create_llm):
         """Test routing to tools when keywords detected"""
         from agent import create_agent_graph
@@ -84,7 +86,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="Please search for information about Python")],
             "next_action": "",
             "user_id": "user:bob",
-            "request_id": "req-456"
+            "request_id": "req-456",
         }
 
         result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-2"}})
@@ -93,7 +95,7 @@ class TestAgentGraph:
         # Should go through tools node
         assert len(result["messages"]) > 2
 
-    @patch('agent.create_llm_from_config')
+    @patch("agent.create_llm_from_config")
     def test_route_with_calculate_keyword(self, mock_create_llm):
         """Test routing detects calculate keyword"""
         from agent import create_agent_graph
@@ -108,7 +110,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="Calculate 2 + 2")],
             "next_action": "",
             "user_id": "user:alice",
-            "request_id": "req-789"
+            "request_id": "req-789",
         }
 
         result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-3"}})
@@ -116,7 +118,7 @@ class TestAgentGraph:
         assert result is not None
         assert result["next_action"] == "end"
 
-    @patch('agent.create_llm_from_config')
+    @patch("agent.create_llm_from_config")
     def test_agent_with_conversation_history(self, mock_create_llm):
         """Test agent handles conversation history"""
         from agent import create_agent_graph
@@ -131,11 +133,11 @@ class TestAgentGraph:
             "messages": [
                 HumanMessage(content="What is Python?"),
                 AIMessage(content="Python is a programming language."),
-                HumanMessage(content="Tell me more")
+                HumanMessage(content="Tell me more"),
             ],
             "next_action": "",
             "user_id": "user:alice",
-            "request_id": "req-999"
+            "request_id": "req-999",
         }
 
         result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-4"}})
@@ -143,7 +145,7 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 3
 
-    @patch('agent.create_llm_from_config')
+    @patch("agent.create_llm_from_config")
     def test_checkpointing_works(self, mock_create_llm):
         """Test conversation checkpointing"""
         from agent import create_agent_graph
@@ -161,7 +163,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="First message")],
             "next_action": "",
             "user_id": "user:alice",
-            "request_id": "req-1"
+            "request_id": "req-1",
         }
         result1 = graph.invoke(state1, config={"configurable": {"thread_id": thread_id}})
 
@@ -170,7 +172,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="Second message")],
             "next_action": "",
             "user_id": "user:alice",
-            "request_id": "req-2"
+            "request_id": "req-2",
         }
         result2 = graph.invoke(state2, config={"configurable": {"thread_id": thread_id}})
 
@@ -179,15 +181,16 @@ class TestAgentGraph:
 
     def test_state_accumulation(self):
         """Test that messages accumulate in state"""
-        from agent import AgentState
         import operator
+
+        from agent import AgentState
 
         # Verify that the Annotated type with operator.add works
         state: AgentState = {
             "messages": [HumanMessage(content="First")],
             "next_action": "respond",
             "user_id": "user:alice",
-            "request_id": "req-1"
+            "request_id": "req-1",
         }
 
         # Simulate message accumulation
@@ -198,8 +201,8 @@ class TestAgentGraph:
         assert isinstance(combined[0], HumanMessage)
         assert isinstance(combined[1], AIMessage)
 
-    @patch('agent.LANGSMITH_AVAILABLE', False)
-    @patch('agent.create_llm_from_config')
+    @patch("agent.LANGSMITH_AVAILABLE", False)
+    @patch("agent.create_llm_from_config")
     def test_agent_without_langsmith(self, mock_create_llm):
         """Test agent works when LangSmith is not available"""
         from agent import create_agent_graph
@@ -214,7 +217,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="Test message")],
             "next_action": "",
             "user_id": "user:test",
-            "request_id": "req-test"
+            "request_id": "req-test",
         }
 
         result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-no-langsmith"}})
@@ -222,7 +225,7 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 0
 
-    @patch('agent.create_llm_from_config')
+    @patch("agent.create_llm_from_config")
     def test_agent_with_langsmith_enabled(self, mock_create_llm):
         """Test agent with LangSmith configuration"""
         from agent import create_agent_graph
@@ -238,7 +241,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="Test message")],
             "next_action": "",
             "user_id": "user:test",
-            "request_id": "req-test"
+            "request_id": "req-test",
         }
 
         result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-langsmith"}})
@@ -246,7 +249,7 @@ class TestAgentGraph:
         assert result is not None
         assert len(result["messages"]) > 0
 
-    @patch('agent.create_llm_from_config')
+    @patch("agent.create_llm_from_config")
     def test_routing_with_tool_keywords(self, mock_create_llm):
         """Test routing detects tool keywords"""
         from agent import create_agent_graph
@@ -262,7 +265,7 @@ class TestAgentGraph:
             "messages": [HumanMessage(content="Please search for information")],
             "next_action": "",
             "user_id": "user:test",
-            "request_id": "req-test"
+            "request_id": "req-test",
         }
 
         result = graph.invoke(state_search, config={"configurable": {"thread_id": "test-routing"}})
@@ -278,6 +281,7 @@ class TestAgentIntegration:
     def test_real_llm_invocation(self):
         """Test with real Anthropic API"""
         import os
+
         from agent import create_agent_graph
 
         if not os.getenv("ANTHROPIC_API_KEY"):
@@ -289,7 +293,7 @@ class TestAgentIntegration:
             "messages": [HumanMessage(content="What is 2+2?")],
             "next_action": "",
             "user_id": "user:test",
-            "request_id": "integration-test"
+            "request_id": "integration-test",
         }
 
         result = graph.invoke(state, config={"configurable": {"thread_id": "integration"}})

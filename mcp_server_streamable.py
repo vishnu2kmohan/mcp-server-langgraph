@@ -2,24 +2,24 @@
 MCP Server with StreamableHTTP transport
 Implements the MCP StreamableHTTP specification (replaces deprecated SSE)
 """
+
 import asyncio
 import json
 from typing import Any, AsyncIterator
-from fastapi import FastAPI, Request, HTTPException, Response
-from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
+import uvicorn
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
 from mcp.server import Server
-from mcp.types import Tool, TextContent, Resource, JSONRPCMessage
+from mcp.types import JSONRPCMessage, Resource, TextContent, Tool
 from pydantic import BaseModel, Field
 
-from agent import agent_graph, AgentState
-from observability import tracer, logger, metrics
+from agent import AgentState, agent_graph
 from auth import AuthMiddleware
-from openfga_client import OpenFGAClient
 from config import settings
-
+from observability import logger, metrics, tracer
+from openfga_client import OpenFGAClient
 
 app = FastAPI(
     title="MCP Server with LangGraph",
@@ -62,6 +62,7 @@ app.add_middleware(
 
 class ChatInput(BaseModel):
     """Input schema for chat tool"""
+
     message: str = Field(description="The user message to send to the agent")
     username: str = Field(description="Username for authentication")
     thread_id: str | None = Field(default=None, description="Optional thread ID for conversation continuity")
@@ -78,8 +79,7 @@ class MCPAgentStreamableServer:
 
         # Initialize auth with OpenFGA
         self.auth = AuthMiddleware(
-            secret_key=settings.jwt_secret_key or "change-this-in-production",
-            openfga_client=self.openfga
+            secret_key=settings.jwt_secret_key or "change-this-in-production", openfga_client=self.openfga
         )
 
         self._setup_handlers()
@@ -89,20 +89,13 @@ class MCPAgentStreamableServer:
         if settings.openfga_store_id and settings.openfga_model_id:
             logger.info(
                 "Initializing OpenFGA client",
-                extra={
-                    "store_id": settings.openfga_store_id,
-                    "model_id": settings.openfga_model_id
-                }
+                extra={"store_id": settings.openfga_store_id, "model_id": settings.openfga_model_id},
             )
             return OpenFGAClient(
-                api_url=settings.openfga_api_url,
-                store_id=settings.openfga_store_id,
-                model_id=settings.openfga_model_id
+                api_url=settings.openfga_api_url, store_id=settings.openfga_store_id, model_id=settings.openfga_model_id
             )
         else:
-            logger.warning(
-                "OpenFGA not configured, authorization will use fallback mode"
-            )
+            logger.warning("OpenFGA not configured, authorization will use fallback mode")
             return None
 
     def _setup_handlers(self):
@@ -117,41 +110,33 @@ class MCPAgentStreamableServer:
                     Tool(
                         name="chat",
                         description="Chat with the AI agent. The agent can help with questions, research, and problem-solving.",
-                        inputSchema=ChatInput.model_json_schema()
+                        inputSchema=ChatInput.model_json_schema(),
                     ),
                     Tool(
                         name="get_conversation",
                         description="Retrieve a conversation thread by ID",
                         inputSchema={
                             "type": "object",
-                            "properties": {
-                                "thread_id": {"type": "string"},
-                                "username": {"type": "string"}
-                            },
-                            "required": ["thread_id", "username"]
-                        }
+                            "properties": {"thread_id": {"type": "string"}, "username": {"type": "string"}},
+                            "required": ["thread_id", "username"],
+                        },
                     ),
                     Tool(
                         name="list_conversations",
                         description="List all conversations the user has access to",
                         inputSchema={
                             "type": "object",
-                            "properties": {
-                                "username": {"type": "string"}
-                            },
-                            "required": ["username"]
-                        }
-                    )
+                            "properties": {"username": {"type": "string"}},
+                            "required": ["username"],
+                        },
+                    ),
                 ]
 
         @self.server.call_tool()
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
-            with tracer.start_as_current_span(
-                "mcp.call_tool",
-                attributes={"tool.name": name}
-            ) as span:
+            with tracer.start_as_current_span("mcp.call_tool", attributes={"tool.name": name}) as span:
                 logger.info(f"Tool called: {name}", extra={"tool": name, "args": arguments})
                 metrics.tool_calls.add(1, {"tool": name})
 
@@ -172,8 +157,7 @@ class MCPAgentStreamableServer:
 
                     if not auth_result["authorized"]:
                         logger.warning(
-                            "Authentication failed",
-                            extra={"username": username, "reason": auth_result.get("reason")}
+                            "Authentication failed", extra={"username": username, "reason": auth_result.get("reason")}
                         )
                         metrics.auth_failures.add(1)
                         raise PermissionError(f"Authentication failed: {auth_result.get('reason', 'unknown')}")
@@ -184,31 +168,17 @@ class MCPAgentStreamableServer:
                 # Check OpenFGA authorization
                 resource = f"tool:{name}"
 
-                authorized = await self.auth.authorize(
-                    user_id=user_id,
-                    relation="executor",
-                    resource=resource
-                )
+                authorized = await self.auth.authorize(user_id=user_id, relation="executor", resource=resource)
 
                 if not authorized:
                     logger.warning(
                         "Authorization failed (OpenFGA)",
-                        extra={
-                            "user_id": user_id,
-                            "resource": resource,
-                            "relation": "executor"
-                        }
+                        extra={"user_id": user_id, "resource": resource, "relation": "executor"},
                     )
                     metrics.authz_failures.add(1, {"resource": resource})
                     raise PermissionError(f"Not authorized to execute {resource}")
 
-                logger.info(
-                    "Authorization granted",
-                    extra={
-                        "user_id": user_id,
-                        "resource": resource
-                    }
-                )
+                logger.info("Authorization granted", extra={"user_id": user_id, "resource": resource})
 
                 # Route to appropriate handler
                 if name == "chat":
@@ -224,20 +194,9 @@ class MCPAgentStreamableServer:
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
-                return [
-                    Resource(
-                        uri="agent://config",
-                        name="Agent Configuration",
-                        mimeType="application/json"
-                    )
-                ]
+                return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]
 
-    async def _handle_chat(
-        self,
-        arguments: dict[str, Any],
-        span,
-        user_id: str
-    ) -> list[TextContent]:
+    async def _handle_chat(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
         """Handle chat tool invocation"""
         with tracer.start_as_current_span("agent.chat"):
             message = arguments["message"]
@@ -250,29 +209,14 @@ class MCPAgentStreamableServer:
             # Check if user can access this conversation
             conversation_resource = f"conversation:{thread_id}"
 
-            can_edit = await self.auth.authorize(
-                user_id=user_id,
-                relation="editor",
-                resource=conversation_resource
-            )
+            can_edit = await self.auth.authorize(user_id=user_id, relation="editor", resource=conversation_resource)
 
             if not can_edit:
-                logger.warning(
-                    "User cannot edit conversation",
-                    extra={
-                        "user_id": user_id,
-                        "thread_id": thread_id
-                    }
-                )
+                logger.warning("User cannot edit conversation", extra={"user_id": user_id, "thread_id": thread_id})
                 raise PermissionError(f"Not authorized to edit conversation {thread_id}")
 
             logger.info(
-                "Processing chat message",
-                extra={
-                    "thread_id": thread_id,
-                    "user_id": user_id,
-                    "message_preview": message[:100]
-                }
+                "Processing chat message", extra={"thread_id": thread_id, "user_id": user_id, "message_preview": message[:100]}
             )
 
             # Create initial state
@@ -280,18 +224,14 @@ class MCPAgentStreamableServer:
                 "messages": [{"role": "user", "content": message}],
                 "next_action": "",
                 "user_id": user_id,
-                "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None
+                "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,
             }
 
             # Run the agent graph
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await asyncio.to_thread(
-                    agent_graph.invoke,
-                    initial_state,
-                    config
-                )
+                result = await asyncio.to_thread(agent_graph.invoke, initial_state, config)
 
                 # Extract response
                 response_message = result["messages"][-1]
@@ -300,35 +240,17 @@ class MCPAgentStreamableServer:
                 span.set_attribute("response.length", len(response_text))
                 metrics.successful_calls.add(1, {"tool": "chat"})
 
-                logger.info(
-                    "Chat response generated",
-                    extra={
-                        "thread_id": thread_id,
-                        "response_length": len(response_text)
-                    }
-                )
+                logger.info("Chat response generated", extra={"thread_id": thread_id, "response_length": len(response_text)})
 
-                return [TextContent(
-                    type="text",
-                    text=response_text
-                )]
+                return [TextContent(type="text", text=response_text)]
 
             except Exception as e:
-                logger.error(
-                    f"Error processing chat: {e}",
-                    extra={"error": str(e), "thread_id": thread_id},
-                    exc_info=True
-                )
+                logger.error(f"Error processing chat: {e}", extra={"error": str(e), "thread_id": thread_id}, exc_info=True)
                 metrics.failed_calls.add(1, {"tool": "chat", "error": type(e).__name__})
                 span.record_exception(e)
                 raise
 
-    async def _handle_get_conversation(
-        self,
-        arguments: dict[str, Any],
-        span,
-        user_id: str
-    ) -> list[TextContent]:
+    async def _handle_get_conversation(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
         """Retrieve conversation history"""
         with tracer.start_as_current_span("agent.get_conversation"):
             thread_id = arguments["thread_id"]
@@ -336,56 +258,27 @@ class MCPAgentStreamableServer:
             # Check if user can view this conversation
             conversation_resource = f"conversation:{thread_id}"
 
-            can_view = await self.auth.authorize(
-                user_id=user_id,
-                relation="viewer",
-                resource=conversation_resource
-            )
+            can_view = await self.auth.authorize(user_id=user_id, relation="viewer", resource=conversation_resource)
 
             if not can_view:
-                logger.warning(
-                    "User cannot view conversation",
-                    extra={
-                        "user_id": user_id,
-                        "thread_id": thread_id
-                    }
-                )
+                logger.warning("User cannot view conversation", extra={"user_id": user_id, "thread_id": thread_id})
                 raise PermissionError(f"Not authorized to view conversation {thread_id}")
 
             # In production, retrieve from checkpoint storage
             # For now, return placeholder
-            return [TextContent(
-                type="text",
-                text=f"Conversation history for thread {thread_id}"
-            )]
+            return [TextContent(type="text", text=f"Conversation history for thread {thread_id}")]
 
-    async def _handle_list_conversations(
-        self,
-        arguments: dict[str, Any],
-        span,
-        user_id: str
-    ) -> list[TextContent]:
+    async def _handle_list_conversations(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
         """List all conversations user has access to"""
         with tracer.start_as_current_span("agent.list_conversations"):
             # Get all conversations user can view
             conversations = await self.auth.list_accessible_resources(
-                user_id=user_id,
-                relation="viewer",
-                resource_type="conversation"
+                user_id=user_id, relation="viewer", resource_type="conversation"
             )
 
-            logger.info(
-                "Listed conversations",
-                extra={
-                    "user_id": user_id,
-                    "count": len(conversations)
-                }
-            )
+            logger.info("Listed conversations", extra={"user_id": user_id, "count": len(conversations)})
 
-            return [TextContent(
-                type="text",
-                text=f"Accessible conversations: {', '.join(conversations)}"
-            )]
+            return [TextContent(type="text", text=f"Accessible conversations: {', '.join(conversations)}")]
 
 
 # Initialize the MCP server
@@ -401,17 +294,12 @@ async def root():
         "version": settings.service_version,
         "transport": "streamable-http",
         "protocol": "mcp",
-        "endpoints": {
-            "message": "/message",
-            "tools": "/tools",
-            "resources": "/resources",
-            "health": "/health"
-        },
+        "endpoints": {"message": "/message", "tools": "/tools", "resources": "/resources", "health": "/health"},
         "capabilities": {
             "tools": {"listSupported": True, "callSupported": True},
             "resources": {"listSupported": True, "readSupported": True},
-            "streaming": True
-        }
+            "streaming": True,
+        },
     }
 
 
@@ -442,13 +330,7 @@ async def handle_message(request: Request):
             span.set_attribute("mcp.method", message.get("method", "unknown"))
             span.set_attribute("mcp.id", str(message.get("id", "")))
 
-            logger.info(
-                "Received MCP message",
-                extra={
-                    "method": message.get("method"),
-                    "id": message.get("id")
-                }
-            )
+            logger.info("Received MCP message", extra={"method": message.get("method"), "id": message.get("id")})
 
             method = message.get("method")
             message_id = message.get("id")
@@ -460,29 +342,20 @@ async def handle_message(request: Request):
                     "id": message_id,
                     "result": {
                         "protocolVersion": "0.1.0",
-                        "serverInfo": {
-                            "name": "langgraph-agent",
-                            "version": settings.service_version
-                        },
+                        "serverInfo": {"name": "langgraph-agent", "version": settings.service_version},
                         "capabilities": {
                             "tools": {"listChanged": False},
                             "resources": {"listChanged": False},
                             "prompts": {},
-                            "logging": {}
-                        }
-                    }
+                            "logging": {},
+                        },
+                    },
                 }
                 return JSONResponse(response)
 
             elif method == "tools/list":
                 tools = await mcp_server.server._tool_manager.list_tools()
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": message_id,
-                    "result": {
-                        "tools": [tool.model_dump() for tool in tools]
-                    }
-                }
+                response = {"jsonrpc": "2.0", "id": message_id, "result": {"tools": [tool.model_dump() for tool in tools]}}
                 return JSONResponse(response)
 
             elif method == "tools/call":
@@ -494,17 +367,12 @@ async def handle_message(request: Request):
                 accept_header = request.headers.get("accept", "")
                 supports_streaming = "text/event-stream" in accept_header or "application/x-ndjson" in accept_header
 
-                result = await mcp_server.server._tool_manager.call_tool(
-                    tool_name,
-                    arguments
-                )
+                result = await mcp_server.server._tool_manager.call_tool(tool_name, arguments)
 
                 response_data = {
                     "jsonrpc": "2.0",
                     "id": message_id,
-                    "result": {
-                        "content": [item.model_dump() for item in result]
-                    }
+                    "result": {"content": [item.model_dump() for item in result]},
                 }
 
                 # If streaming is supported, stream the response
@@ -512,10 +380,7 @@ async def handle_message(request: Request):
                     return StreamingResponse(
                         stream_jsonrpc_response(response_data),
                         media_type="application/x-ndjson",
-                        headers={
-                            "X-Content-Type-Options": "nosniff",
-                            "Cache-Control": "no-cache"
-                        }
+                        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache"},
                     )
                 else:
                     return JSONResponse(response_data)
@@ -525,9 +390,7 @@ async def handle_message(request: Request):
                 response = {
                     "jsonrpc": "2.0",
                     "id": message_id,
-                    "result": {
-                        "resources": [res.model_dump() for res in resources]
-                    }
+                    "result": {"resources": [res.model_dump() for res in resources]},
                 }
                 return JSONResponse(response)
 
@@ -540,20 +403,19 @@ async def handle_message(request: Request):
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": {
-                        "contents": [{
-                            "uri": resource_uri,
-                            "mimeType": "application/json",
-                            "text": json.dumps({"config": "placeholder"})
-                        }]
-                    }
+                        "contents": [
+                            {
+                                "uri": resource_uri,
+                                "mimeType": "application/json",
+                                "text": json.dumps({"config": "placeholder"}),
+                            }
+                        ]
+                    },
                 }
                 return JSONResponse(response)
 
             else:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Unknown method: {method}"
-                )
+                raise HTTPException(status_code=400, detail=f"Unknown method: {method}")
 
     except PermissionError as e:
         logger.warning(f"Permission denied: {e}")
@@ -562,11 +424,8 @@ async def handle_message(request: Request):
             content={
                 "jsonrpc": "2.0",
                 "id": message.get("id") if "message" in locals() else None,
-                "error": {
-                    "code": -32001,
-                    "message": str(e)
-                }
-            }
+                "error": {"code": -32001, "message": str(e)},
+            },
         )
     except Exception as e:
         logger.error(f"Error handling message: {e}", exc_info=True)
@@ -575,11 +434,8 @@ async def handle_message(request: Request):
             content={
                 "jsonrpc": "2.0",
                 "id": message.get("id") if "message" in locals() else None,
-                "error": {
-                    "code": -32603,
-                    "message": str(e)
-                }
-            }
+                "error": {"code": -32603, "message": str(e)},
+            },
         )
 
 
@@ -587,22 +443,19 @@ async def handle_message(request: Request):
 async def list_tools():
     """List available tools (convenience endpoint)"""
     tools = await mcp_server.server._tool_manager.list_tools()
-    return {
-        "tools": [tool.model_dump() for tool in tools]
-    }
+    return {"tools": [tool.model_dump() for tool in tools]}
 
 
 @app.get("/resources")
 async def list_resources():
     """List available resources (convenience endpoint)"""
     resources = await mcp_server.server._resource_manager.list_resources()
-    return {
-        "resources": [res.model_dump() for res in resources]
-    }
+    return {"resources": [res.model_dump() for res in resources]}
 
 
 # Include health check routes
 from health_check import app as health_app
+
 app.mount("/health", health_app)
 
 
@@ -614,5 +467,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(settings.get_secret("PORT", fallback="8000")),
         log_level=settings.log_level.lower(),
-        access_log=True
+        access_log=True,
     )

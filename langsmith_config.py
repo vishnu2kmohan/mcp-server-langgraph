@@ -1,8 +1,10 @@
 """
 LangSmith configuration and integration for LangGraph agent observability
 """
+
 import os
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from config import settings
 
 
@@ -34,9 +36,7 @@ def configure_langsmith() -> bool:
 
 
 def get_run_metadata(
-    user_id: Optional[str] = None,
-    request_id: Optional[str] = None,
-    additional_metadata: Optional[Dict[str, Any]] = None
+    user_id: Optional[str] = None, request_id: Optional[str] = None, additional_metadata: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     Create metadata for LangSmith runs.
@@ -69,10 +69,7 @@ def get_run_metadata(
     return metadata
 
 
-def get_run_tags(
-    user_id: Optional[str] = None,
-    additional_tags: Optional[list[str]] = None
-) -> list[str]:
+def get_run_tags(user_id: Optional[str] = None, additional_tags: Optional[list[str]] = None) -> list[str]:
     """
     Create tags for LangSmith runs.
 
@@ -129,7 +126,7 @@ class LangSmithConfig:
         user_id: Optional[str] = None,
         request_id: Optional[str] = None,
         tags: Optional[list[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Create a run configuration for LangChain/LangGraph execution.

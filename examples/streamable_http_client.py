@@ -4,6 +4,7 @@ Example client for MCP StreamableHTTP transport
 """
 import asyncio
 import json
+
 import httpx
 
 
@@ -12,56 +13,32 @@ class MCPStreamableClient:
 
     def __init__(self, url: str, auth_token: str | None = None):
         self.url = url
-        self.headers = {
-            "Content-Type": "application/json"
-        }
+        self.headers = {"Content-Type": "application/json"}
         if auth_token:
             self.headers["Authorization"] = f"Bearer {auth_token}"
 
     async def send_message(self, method: str, params: dict | None = None, message_id: int = 1):
         """Send a JSON-RPC message to the MCP server"""
-        message = {
-            "jsonrpc": "2.0",
-            "method": method,
-            "id": message_id
-        }
+        message = {"jsonrpc": "2.0", "method": method, "id": message_id}
         if params:
             message["params"] = params
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                self.url,
-                json=message,
-                headers=self.headers,
-                timeout=30.0
-            )
+            response = await client.post(self.url, json=message, headers=self.headers, timeout=30.0)
             response.raise_for_status()
             return response.json()
 
     async def send_streaming_message(self, method: str, params: dict | None = None, message_id: int = 1):
         """Send a message and receive streaming response"""
-        message = {
-            "jsonrpc": "2.0",
-            "method": method,
-            "id": message_id
-        }
+        message = {"jsonrpc": "2.0", "method": method, "id": message_id}
         if params:
             message["params"] = params
 
         # Request streaming response
-        headers = {
-            **self.headers,
-            "Accept": "application/x-ndjson"
-        }
+        headers = {**self.headers, "Accept": "application/x-ndjson"}
 
         async with httpx.AsyncClient() as client:
-            async with client.stream(
-                "POST",
-                self.url,
-                json=message,
-                headers=headers,
-                timeout=30.0
-            ) as response:
+            async with client.stream("POST", self.url, json=message, headers=headers, timeout=30.0) as response:
                 response.raise_for_status()
 
                 # Read streaming response line by line
@@ -71,13 +48,9 @@ class MCPStreamableClient:
 
     async def initialize(self):
         """Initialize the MCP session"""
-        return await self.send_message("initialize", {
-            "protocolVersion": "0.1.0",
-            "clientInfo": {
-                "name": "example-client",
-                "version": "1.0.0"
-            }
-        })
+        return await self.send_message(
+            "initialize", {"protocolVersion": "0.1.0", "clientInfo": {"name": "example-client", "version": "1.0.0"}}
+        )
 
     async def list_tools(self):
         """List available tools"""
@@ -85,10 +58,7 @@ class MCPStreamableClient:
 
     async def call_tool(self, name: str, arguments: dict, streaming: bool = False):
         """Call a tool"""
-        params = {
-            "name": name,
-            "arguments": arguments
-        }
+        params = {"name": name, "arguments": arguments}
 
         if streaming:
             async for chunk in self.send_streaming_message("tools/call", params):
@@ -143,14 +113,7 @@ async def main():
     # Call tool (non-streaming)
     print("3. Calling tool (non-streaming)...")
     try:
-        async for response in client.call_tool(
-            "chat",
-            {
-                "message": "What is 2+2?",
-                "username": "alice"
-            },
-            streaming=False
-        ):
+        async for response in client.call_tool("chat", {"message": "What is 2+2?", "username": "alice"}, streaming=False):
             content = response["result"]["content"][0]["text"]
             print(f"   ✓ Response: {content[:100]}...")
     except Exception as e:
@@ -162,12 +125,7 @@ async def main():
     print("4. Calling tool (streaming)...")
     try:
         async for chunk in client.call_tool(
-            "chat",
-            {
-                "message": "Explain quantum computing",
-                "username": "alice"
-            },
-            streaming=True
+            "chat", {"message": "Explain quantum computing", "username": "alice"}, streaming=True
         ):
             if "result" in chunk:
                 content = chunk["result"]["content"][0]["text"]

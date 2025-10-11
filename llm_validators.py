@@ -3,14 +3,15 @@ LLM Response Validators using Pydantic AI
 
 Provides type-safe validation and structured extraction from LLM responses.
 """
-from typing import Optional, Any, TypeVar, Generic
-from pydantic import BaseModel, Field, ValidationError
+
+from typing import Any, Generic, Optional, TypeVar
+
 from langchain_core.messages import AIMessage, BaseMessage
+from pydantic import BaseModel, Field, ValidationError
 
-from observability import logger, tracer, metrics
+from observability import logger, metrics, tracer
 
-
-T = TypeVar('T', bound=BaseModel)
+T = TypeVar("T", bound=BaseModel)
 
 
 class ValidatedResponse(Generic[T]):
@@ -22,11 +23,7 @@ class ValidatedResponse(Generic[T]):
     """
 
     def __init__(
-        self,
-        data: T,
-        raw_content: str,
-        validation_success: bool = True,
-        validation_errors: Optional[list[str]] = None
+        self, data: T, raw_content: str, validation_success: bool = True, validation_errors: Optional[list[str]] = None
     ):
         """
         Initialize validated response.
@@ -54,14 +51,8 @@ class ValidatedResponse(Generic[T]):
 class EntityExtraction(BaseModel):
     """Extracted entities from text."""
 
-    entities: list[dict[str, str]] = Field(
-        description="List of extracted entities with type and value"
-    )
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Confidence in extraction quality"
-    )
+    entities: list[dict[str, str]] = Field(description="List of extracted entities with type and value")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence in extraction quality")
 
 
 class IntentClassification(BaseModel):
@@ -69,29 +60,16 @@ class IntentClassification(BaseModel):
 
     intent: str = Field(description="Primary intent category")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
-    sub_intents: list[str] = Field(
-        default_factory=list,
-        description="Secondary or related intents"
-    )
-    parameters: dict[str, str] = Field(
-        default_factory=dict,
-        description="Extracted parameters for the intent"
-    )
+    sub_intents: list[str] = Field(default_factory=list, description="Secondary or related intents")
+    parameters: dict[str, str] = Field(default_factory=dict, description="Extracted parameters for the intent")
 
 
 class SentimentAnalysis(BaseModel):
     """Sentiment analysis result."""
 
     sentiment: str = Field(description="Overall sentiment (positive/negative/neutral)")
-    score: float = Field(
-        ge=-1.0,
-        le=1.0,
-        description="Sentiment score (-1 to 1)"
-    )
-    emotions: list[str] = Field(
-        default_factory=list,
-        description="Detected emotions"
-    )
+    score: float = Field(ge=-1.0, le=1.0, description="Sentiment score (-1 to 1)")
+    emotions: list[str] = Field(default_factory=list, description="Detected emotions")
 
 
 class SummaryExtraction(BaseModel):
@@ -100,11 +78,7 @@ class SummaryExtraction(BaseModel):
     summary: str = Field(description="Concise summary of content")
     key_points: list[str] = Field(description="Key points from content")
     length: int = Field(description="Character count of summary")
-    compression_ratio: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Ratio of summary to original length"
-    )
+    compression_ratio: float = Field(ge=0.0, le=1.0, description="Ratio of summary to original length")
 
 
 class LLMValidator:
@@ -115,11 +89,7 @@ class LLMValidator:
     """
 
     @staticmethod
-    def validate_response(
-        response: AIMessage | str,
-        model_class: type[T],
-        strict: bool = False
-    ) -> ValidatedResponse[T]:
+    def validate_response(response: AIMessage | str, model_class: type[T], strict: bool = False) -> ValidatedResponse[T]:
         """
         Validate LLM response against a Pydantic model.
 
@@ -147,13 +117,14 @@ class LLMValidator:
             try:
                 # Attempt to parse as JSON first (for structured outputs)
                 import json
+
                 try:
                     data_dict = json.loads(content)
                     validated = model_class(**data_dict)
                 except json.JSONDecodeError:
                     # Not JSON, try to parse as text
                     # This requires the model to handle string input
-                    validated = model_class(content=content) if hasattr(model_class, 'content') else None
+                    validated = model_class(content=content) if hasattr(model_class, "content") else None
 
                     if validated is None:
                         raise ValueError(
@@ -164,20 +135,12 @@ class LLMValidator:
                 span.set_attribute("validation.success", True)
 
                 logger.info(
-                    "Response validated successfully",
-                    extra={
-                        "model": model_class.__name__,
-                        "content_length": len(content)
-                    }
+                    "Response validated successfully", extra={"model": model_class.__name__, "content_length": len(content)}
                 )
 
                 metrics.successful_calls.add(1, {"operation": "validate_response"})
 
-                return ValidatedResponse(
-                    data=validated,
-                    raw_content=content,
-                    validation_success=True
-                )
+                return ValidatedResponse(data=validated, raw_content=content, validation_success=True)
 
             except ValidationError as e:
                 span.set_attribute("validation.success", False)
@@ -185,13 +148,7 @@ class LLMValidator:
 
                 errors = [str(err) for err in e.errors()]
 
-                logger.warning(
-                    "Response validation failed",
-                    extra={
-                        "model": model_class.__name__,
-                        "errors": errors
-                    }
-                )
+                logger.warning("Response validation failed", extra={"model": model_class.__name__, "errors": errors})
 
                 metrics.failed_calls.add(1, {"operation": "validate_response"})
 
@@ -206,31 +163,20 @@ class LLMValidator:
                     empty_data = None
 
                 return ValidatedResponse(
-                    data=empty_data,
-                    raw_content=content,
-                    validation_success=False,
-                    validation_errors=errors
+                    data=empty_data, raw_content=content, validation_success=False, validation_errors=errors
                 )
 
             except Exception as e:
                 span.record_exception(e)
 
-                logger.error(
-                    f"Unexpected validation error: {e}",
-                    exc_info=True
-                )
+                logger.error(f"Unexpected validation error: {e}", exc_info=True)
 
                 metrics.failed_calls.add(1, {"operation": "validate_response"})
 
                 if strict:
                     raise
 
-                return ValidatedResponse(
-                    data=None,
-                    raw_content=content,
-                    validation_success=False,
-                    validation_errors=[str(e)]
-                )
+                return ValidatedResponse(data=None, raw_content=content, validation_success=False, validation_errors=[str(e)])
 
     @staticmethod
     def extract_entities(response: AIMessage | str) -> ValidatedResponse[EntityExtraction]:
@@ -243,11 +189,7 @@ class LLMValidator:
         Returns:
             ValidatedResponse with EntityExtraction data
         """
-        return LLMValidator.validate_response(
-            response,
-            EntityExtraction,
-            strict=False
-        )
+        return LLMValidator.validate_response(response, EntityExtraction, strict=False)
 
     @staticmethod
     def classify_intent(response: AIMessage | str) -> ValidatedResponse[IntentClassification]:
@@ -260,11 +202,7 @@ class LLMValidator:
         Returns:
             ValidatedResponse with IntentClassification data
         """
-        return LLMValidator.validate_response(
-            response,
-            IntentClassification,
-            strict=False
-        )
+        return LLMValidator.validate_response(response, IntentClassification, strict=False)
 
     @staticmethod
     def analyze_sentiment(response: AIMessage | str) -> ValidatedResponse[SentimentAnalysis]:
@@ -277,11 +215,7 @@ class LLMValidator:
         Returns:
             ValidatedResponse with SentimentAnalysis data
         """
-        return LLMValidator.validate_response(
-            response,
-            SentimentAnalysis,
-            strict=False
-        )
+        return LLMValidator.validate_response(response, SentimentAnalysis, strict=False)
 
     @staticmethod
     def extract_summary(response: AIMessage | str) -> ValidatedResponse[SummaryExtraction]:
@@ -294,17 +228,10 @@ class LLMValidator:
         Returns:
             ValidatedResponse with SummaryExtraction data
         """
-        return LLMValidator.validate_response(
-            response,
-            SummaryExtraction,
-            strict=False
-        )
+        return LLMValidator.validate_response(response, SummaryExtraction, strict=False)
 
 
-def validate_llm_response(
-    response: AIMessage | str,
-    expected_model: type[T]
-) -> ValidatedResponse[T]:
+def validate_llm_response(response: AIMessage | str, expected_model: type[T]) -> ValidatedResponse[T]:
     """
     Convenience function to validate LLM response.
 

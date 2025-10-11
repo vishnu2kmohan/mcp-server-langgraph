@@ -7,20 +7,24 @@ This example demonstrates:
 3. Collecting user feedback
 4. Analyzing traces programmatically
 """
+
 import os
-from langchain_core.messages import HumanMessage
-from langchain_core.runnables import RunnableConfig
 
 # Import agent
 import sys
+
+from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agent import agent_graph
-from langsmith_config import langsmith_config, get_run_metadata, get_run_tags
+from langsmith_config import get_run_metadata, get_run_tags, langsmith_config
 
 # Import LangSmith client for feedback
 try:
     from langsmith import Client
+
     LANGSMITH_AVAILABLE = True
 except ImportError:
     print("⚠ LangSmith not installed. Install with: pip install langsmith")
@@ -35,11 +39,9 @@ def example_basic_tracing():
     print("=" * 60)
 
     # Simple invocation - automatically traced if LANGSMITH_TRACING=true
-    result = agent_graph.invoke({
-        "messages": [HumanMessage(content="What is LangGraph?")],
-        "user_id": "user123",
-        "request_id": "req456"
-    })
+    result = agent_graph.invoke(
+        {"messages": [HumanMessage(content="What is LangGraph?")], "user_id": "user123", "request_id": "req456"}
+    )
 
     print(f"\nResponse: {result['messages'][-1].content}")
     print("\n✓ Check LangSmith UI to see the trace!")
@@ -56,10 +58,7 @@ def example_custom_metadata():
     # Create custom run configuration
     config = RunnableConfig(
         run_name="premium-user-query",
-        tags=get_run_tags(
-            user_id="alice@company.com",
-            additional_tags=["premium", "priority-high", "sales-dept"]
-        ),
+        tags=get_run_tags(user_id="alice@company.com", additional_tags=["premium", "priority-high", "sales-dept"]),
         metadata=get_run_metadata(
             user_id="alice@company.com",
             request_id="req789",
@@ -67,17 +66,20 @@ def example_custom_metadata():
                 "session_id": "sess_abc123",
                 "request_source": "web",
                 "cost_center": "sales",
-                "user_tier": "premium"
-            }
-        )
+                "user_tier": "premium",
+            },
+        ),
     )
 
     # Invoke with configuration
-    result = agent_graph.invoke({
-        "messages": [HumanMessage(content="Analyze this quarter's performance")],
-        "user_id": "alice@company.com",
-        "request_id": "req789"
-    }, config=config)
+    result = agent_graph.invoke(
+        {
+            "messages": [HumanMessage(content="Analyze this quarter's performance")],
+            "user_id": "alice@company.com",
+            "request_id": "req789",
+        },
+        config=config,
+    )
 
     print(f"\nResponse: {result['messages'][-1].content}")
     print("\n✓ Check LangSmith UI - this trace has rich metadata!")
@@ -96,11 +98,13 @@ def example_collect_feedback():
         return
 
     # First, make a request
-    result = agent_graph.invoke({
-        "messages": [HumanMessage(content="Explain deployment options")],
-        "user_id": "bob@company.com",
-        "request_id": "req999"
-    })
+    result = agent_graph.invoke(
+        {
+            "messages": [HumanMessage(content="Explain deployment options")],
+            "user_id": "bob@company.com",
+            "request_id": "req999",
+        }
+    )
 
     print(f"\nResponse: {result['messages'][-1].content[:100]}...")
 
@@ -111,7 +115,8 @@ def example_collect_feedback():
     # In practice, you'd capture this from the trace or use a callback
 
     # Example feedback submission (requires run_id from actual trace)
-    print("""
+    print(
+        """
 To collect feedback in production:
 
 1. Capture run_id from trace:
@@ -133,7 +138,8 @@ To collect feedback in production:
    - Go to your project
    - Click "Feedback" tab
    - Analyze trends
-""")
+"""
+    )
 
 
 def example_error_tracking():
@@ -144,11 +150,9 @@ def example_error_tracking():
 
     try:
         # Intentionally cause an error (empty messages)
-        result = agent_graph.invoke({
-            "messages": [],  # This will cause an error
-            "user_id": "test_user",
-            "request_id": "error_test"
-        })
+        result = agent_graph.invoke(
+            {"messages": [], "user_id": "test_user", "request_id": "error_test"}  # This will cause an error
+        )
     except Exception as e:
         print(f"\n✗ Error occurred: {type(e).__name__}: {e}")
         print("\n✓ Error is traced in LangSmith!")
@@ -173,17 +177,14 @@ def example_analyze_traces():
     print("\n📊 Fetching recent traces...")
 
     try:
-        runs = list(client.list_runs(
-            project_name=os.getenv("LANGSMITH_PROJECT", "default"),
-            limit=5
-        ))
+        runs = list(client.list_runs(project_name=os.getenv("LANGSMITH_PROJECT", "default"), limit=5))
 
         print(f"\nFound {len(runs)} recent traces:")
         for run in runs:
             print(f"\n  Run ID: {run.id}")
             print(f"  Status: {run.status}")
             print(f"  Latency: {run.latency:.2f}s" if run.latency else "  Latency: N/A")
-            print(f"  Tokens: {run.total_tokens}" if hasattr(run, 'total_tokens') else "  Tokens: N/A")
+            print(f"  Tokens: {run.total_tokens}" if hasattr(run, "total_tokens") else "  Tokens: N/A")
 
     except Exception as e:
         print(f"\n⚠ Could not fetch traces: {e}")

@@ -1,9 +1,12 @@
 """
 Configuration management with Infisical secrets integration
 """
+
 import os
-from pydantic_settings import BaseSettings
 from typing import Optional
+
+from pydantic_settings import BaseSettings
+
 from secrets_manager import get_secrets_manager
 
 
@@ -77,11 +80,7 @@ class Settings(BaseSettings):
 
     # Fallback Models (for resilience)
     enable_fallback: bool = True
-    fallback_models: list[str] = [
-        "gemini-2.5-pro",
-        "claude-3-5-sonnet-20241022",
-        "gpt-4o"
-    ]
+    fallback_models: list[str] = ["gemini-2.5-pro", "claude-3-5-sonnet-20241022", "gpt-4o"]
 
     # Agent
     max_iterations: int = 10
@@ -114,10 +113,7 @@ class Settings(BaseSettings):
 
         # Load JWT secret
         if not self.jwt_secret_key:
-            self.jwt_secret_key = secrets_mgr.get_secret(
-                "JWT_SECRET_KEY",
-                fallback="change-this-in-production"
-            )
+            self.jwt_secret_key = secrets_mgr.get_secret("JWT_SECRET_KEY", fallback="change-this-in-production")
             # Warn if using default secret in production
             if self.jwt_secret_key == "change-this-in-production" and self.environment == "production":
                 raise ValueError(
@@ -127,67 +123,37 @@ class Settings(BaseSettings):
 
         # Load LLM API keys based on provider
         if not self.anthropic_api_key:
-            self.anthropic_api_key = secrets_mgr.get_secret(
-                "ANTHROPIC_API_KEY",
-                fallback=None
-            )
+            self.anthropic_api_key = secrets_mgr.get_secret("ANTHROPIC_API_KEY", fallback=None)
 
         if not self.openai_api_key:
-            self.openai_api_key = secrets_mgr.get_secret(
-                "OPENAI_API_KEY",
-                fallback=None
-            )
+            self.openai_api_key = secrets_mgr.get_secret("OPENAI_API_KEY", fallback=None)
 
         if not self.google_api_key:
-            self.google_api_key = secrets_mgr.get_secret(
-                "GOOGLE_API_KEY",
-                fallback=None
-            )
+            self.google_api_key = secrets_mgr.get_secret("GOOGLE_API_KEY", fallback=None)
 
         if not self.azure_api_key:
-            self.azure_api_key = secrets_mgr.get_secret(
-                "AZURE_API_KEY",
-                fallback=None
-            )
+            self.azure_api_key = secrets_mgr.get_secret("AZURE_API_KEY", fallback=None)
 
         if not self.aws_access_key_id:
-            self.aws_access_key_id = secrets_mgr.get_secret(
-                "AWS_ACCESS_KEY_ID",
-                fallback=None
-            )
+            self.aws_access_key_id = secrets_mgr.get_secret("AWS_ACCESS_KEY_ID", fallback=None)
 
         if not self.aws_secret_access_key:
-            self.aws_secret_access_key = secrets_mgr.get_secret(
-                "AWS_SECRET_ACCESS_KEY",
-                fallback=None
-            )
+            self.aws_secret_access_key = secrets_mgr.get_secret("AWS_SECRET_ACCESS_KEY", fallback=None)
 
         # Load OpenFGA configuration
         if not self.openfga_store_id:
-            self.openfga_store_id = secrets_mgr.get_secret(
-                "OPENFGA_STORE_ID",
-                fallback=None
-            )
+            self.openfga_store_id = secrets_mgr.get_secret("OPENFGA_STORE_ID", fallback=None)
 
         if not self.openfga_model_id:
-            self.openfga_model_id = secrets_mgr.get_secret(
-                "OPENFGA_MODEL_ID",
-                fallback=None
-            )
+            self.openfga_model_id = secrets_mgr.get_secret("OPENFGA_MODEL_ID", fallback=None)
 
         # Load LangSmith configuration
         if not self.langsmith_api_key:
-            self.langsmith_api_key = secrets_mgr.get_secret(
-                "LANGSMITH_API_KEY",
-                fallback=None
-            )
+            self.langsmith_api_key = secrets_mgr.get_secret("LANGSMITH_API_KEY", fallback=None)
 
         # Load LangGraph Platform configuration
         if not self.langgraph_api_key:
-            self.langgraph_api_key = secrets_mgr.get_secret(
-                "LANGGRAPH_API_KEY",
-                fallback=None
-            )
+            self.langgraph_api_key = secrets_mgr.get_secret("LANGGRAPH_API_KEY", fallback=None)
 
     def get_secret(self, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """

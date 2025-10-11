@@ -2,23 +2,26 @@
 LangGraph Platform-compatible agent definition
 This module defines the graph for deployment to LangGraph Platform
 """
-from typing import Annotated, TypedDict, Literal
-from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import MemorySaver
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+
 import operator
-import sys
 import os
+import sys
+from typing import Annotated, Literal, TypedDict
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, START, StateGraph
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from llm_factory import create_llm_from_config
 from config import settings
+from llm_factory import create_llm_from_config
 
 
 class AgentState(TypedDict):
     """State for the agent graph"""
+
     messages: Annotated[list[BaseMessage], operator.add]
     next_action: str
     user_id: str | None
@@ -38,8 +41,7 @@ def create_graph():
 
         if isinstance(last_message, HumanMessage):
             # Determine if this needs tools or direct response
-            if any(keyword in last_message.content.lower()
-                   for keyword in ["search", "calculate", "lookup"]):
+            if any(keyword in last_message.content.lower() for keyword in ["search", "calculate", "lookup"]):
                 state["next_action"] = "use_tools"
             else:
                 state["next_action"] = "respond"
@@ -52,26 +54,16 @@ def create_graph():
 
         # In real implementation, bind tools to model
         # For now, simulate a tool response
-        tool_response = AIMessage(
-            content="Tool execution completed. Processing results..."
-        )
+        tool_response = AIMessage(content="Tool execution completed. Processing results...")
 
-        return {
-            **state,
-            "messages": [tool_response],
-            "next_action": "respond"
-        }
+        return {**state, "messages": [tool_response], "next_action": "respond"}
 
     def generate_response(state: AgentState) -> AgentState:
         """Generate final response using LLM"""
         messages = state["messages"]
         response = model.invoke(messages)
 
-        return {
-            **state,
-            "messages": [response],
-            "next_action": "end"
-        }
+        return {**state, "messages": [response], "next_action": "end"}
 
     def should_continue(state: AgentState) -> Literal["use_tools", "respond", "end"]:
         """Conditional edge function"""
@@ -93,7 +85,7 @@ def create_graph():
         {
             "use_tools": "tools",
             "respond": "respond",
-        }
+        },
     )
     workflow.add_edge("tools", "respond")
     workflow.add_edge("respond", END)

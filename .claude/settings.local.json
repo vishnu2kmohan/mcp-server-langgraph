@@ -33,7 +33,14 @@
       "Bash(gh run watch:*)",
       "Bash(gh run view:*)",
       "Bash(pip index versions:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git pull:*)",
+      "Bash(uv:*)",
+      "Bash(flake8:*)",
+      "Bash(mypy:*)",
+      "Bash(bandit:*)",
+      "Bash(black:*)",
+      "Bash(isort:*)"
     ],
     "deny": [],
     "ask": []

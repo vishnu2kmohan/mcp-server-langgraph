@@ -10,13 +10,13 @@ Usage:
     python scripts/validate_production.py --strict
 """
 
+import json
 import os
-import sys
 import re
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Tuple, Dict
-import json
+from typing import Dict, List, Tuple
 
 # ANSI color codes
 GREEN = "\033[92m"
@@ -75,12 +75,7 @@ def check_git_repository(result: ValidationResult) -> None:
 
         # Check for uncommitted changes
         try:
-            output = subprocess.run(
-                ["git", "status", "--porcelain"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            output = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, check=True)
             if output.stdout.strip():
                 result.add_warning("Uncommitted changes detected")
             else:
@@ -286,11 +281,7 @@ def check_security(result: ValidationResult) -> None:
 
     # Check if bandit is available
     try:
-        output = subprocess.run(
-            ["bandit", "--version"],
-            capture_output=True,
-            check=False
-        )
+        output = subprocess.run(["bandit", "--version"], capture_output=True, check=False)
         if output.returncode == 0:
             result.add_info("Run 'bandit -r . -x ./tests,./venv -ll' for security scan")
         else:
@@ -388,7 +379,7 @@ def main():
     if result.is_production_ready(strict):
         print(f"{BOLD}{GREEN}✓ PRODUCTION READY{RESET}")
         print(f"\nThis codebase meets production deployment standards.")
-        if summary['warnings'] > 0:
+        if summary["warnings"] > 0:
             print(f"Address {summary['warnings']} warnings before deployment.")
         sys.exit(0)
     else:

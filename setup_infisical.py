@@ -3,8 +3,9 @@
 Setup script for Infisical secrets management
 """
 import os
-from secrets_manager import SecretsManager
+
 from observability import logger
+from secrets_manager import SecretsManager
 
 
 def setup_infisical():
@@ -38,11 +39,7 @@ def setup_infisical():
     print(f"   Site: {os.getenv('INFISICAL_SITE_URL', 'https://app.infisical.com')}")
     print(f"   Project: {project_id}")
 
-    secrets_mgr = SecretsManager(
-        client_id=client_id,
-        client_secret=client_secret,
-        project_id=project_id
-    )
+    secrets_mgr = SecretsManager(client_id=client_id, client_secret=client_secret, project_id=project_id)
 
     if not secrets_mgr.client:
         print("   ✗ Failed to connect to Infisical")
@@ -56,17 +53,13 @@ def setup_infisical():
         "JWT_SECRET_KEY": "super-secret-jwt-key-change-in-production-12345",
         "ANTHROPIC_API_KEY": "sk-ant-api03-...",  # Placeholder
         "DATABASE_PASSWORD": "secure-db-password-123",
-        "API_SECRET": "api-secret-key-xyz"
+        "API_SECRET": "api-secret-key-xyz",
     }
 
     for key, value in sample_secrets.items():
         try:
             # Try to create, will fail if exists
-            success = secrets_mgr.create_secret(
-                key=key,
-                value=value,
-                secret_comment=f"Sample secret created by setup script"
-            )
+            success = secrets_mgr.create_secret(key=key, value=value, secret_comment=f"Sample secret created by setup script")
 
             if success:
                 print(f"   ✓ Created: {key}")
@@ -110,17 +103,20 @@ def setup_infisical():
     print("=" * 60)
 
     print("\n📋 Secrets Management:")
-    print("""
+    print(
+        """
     The application will now:
     1. Try to load secrets from Infisical first
     2. Fall back to environment variables if Infisical unavailable
     3. Use default values as last resort
 
     Secrets are cached in memory for performance.
-    """)
+    """
+    )
 
     print("\n🔧 Usage in Code:")
-    print("""
+    print(
+        """
     from secrets_manager import get_secrets_manager
 
     secrets_mgr = get_secrets_manager()
@@ -134,7 +130,8 @@ def setup_infisical():
     # Create/update secrets
     secrets_mgr.create_secret("NEW_SECRET", "value")
     secrets_mgr.update_secret("EXISTING_SECRET", "new_value")
-    """)
+    """
+    )
 
     print("\n🔐 Best Practices:")
     print("1. Never commit secrets to version control")

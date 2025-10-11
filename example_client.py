@@ -1,9 +1,12 @@
 """
 Example client for testing the MCP agent server with OpenFGA and Infisical
 """
+
 import asyncio
+
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+
 from auth import AuthMiddleware
 from config import settings
 
@@ -26,10 +29,7 @@ async def test_chat():
     print(f"   Bob: {bob_token[:30]}...")
 
     # Server parameters
-    server_params = StdioServerParameters(
-        command="python",
-        args=["mcp_server.py"]
-    )
+    server_params = StdioServerParameters(command="python", args=["mcp_server.py"])
 
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
@@ -45,12 +45,7 @@ async def test_chat():
             # Test 1: Chat without auth (should fail)
             print("\n--- Test 1: Chat without auth (should fail) ---")
             try:
-                response = await session.call_tool(
-                    "chat",
-                    arguments={
-                        "message": "What is the capital of France?"
-                    }
-                )
+                response = await session.call_tool("chat", arguments={"message": "What is the capital of France?"})
                 print(f"   ✗ Unexpected success!")
             except Exception as e:
                 print(f"   ✓ Expected error: {e}")
@@ -63,8 +58,8 @@ async def test_chat():
                     arguments={
                         "message": "Explain quantum computing in simple terms",
                         "thread_id": "thread_1",
-                        "username": "alice"
-                    }
+                        "username": "alice",
+                    },
                 )
                 print(f"   ✓ Response: {response.content[0].text[:150]}...")
             except Exception as e:
@@ -78,8 +73,8 @@ async def test_chat():
                     arguments={
                         "message": "What are the best practices for API design?",
                         "thread_id": "thread_2",
-                        "username": "bob"
-                    }
+                        "username": "bob",
+                    },
                 )
                 print(f"   ✓ Response: {response.content[0].text[:150]}...")
             except Exception as e:
@@ -89,11 +84,7 @@ async def test_chat():
             print("\n--- Test 4: Alice retrieves conversation:thread_1 ---")
             try:
                 response = await session.call_tool(
-                    "get_conversation",
-                    arguments={
-                        "thread_id": "thread_1",
-                        "username": "alice"
-                    }
+                    "get_conversation", arguments={"thread_id": "thread_1", "username": "alice"}
                 )
                 print(f"   ✓ Response: {response.content[0].text}")
             except Exception as e:
@@ -102,13 +93,7 @@ async def test_chat():
             # Test 5: Bob tries to access Alice's conversation (should succeed as viewer)
             print("\n--- Test 5: Bob views conversation:thread_1 (as viewer) ---")
             try:
-                response = await session.call_tool(
-                    "get_conversation",
-                    arguments={
-                        "thread_id": "thread_1",
-                        "username": "bob"
-                    }
-                )
+                response = await session.call_tool("get_conversation", arguments={"thread_id": "thread_1", "username": "bob"})
                 print(f"   ✓ Response: {response.content[0].text}")
             except Exception as e:
                 print(f"   ✗ Error: {e}")
@@ -116,12 +101,7 @@ async def test_chat():
             # Test 6: List conversations
             print("\n--- Test 6: Alice lists her conversations ---")
             try:
-                response = await session.call_tool(
-                    "list_conversations",
-                    arguments={
-                        "username": "alice"
-                    }
-                )
+                response = await session.call_tool("list_conversations", arguments={"username": "alice"})
                 print(f"   ✓ Response: {response.content[0].text}")
             except Exception as e:
                 print(f"   ✗ Error: {e}")
@@ -130,12 +110,7 @@ async def test_chat():
             print("\n--- Test 7: Unknown user attempts access ---")
             try:
                 response = await session.call_tool(
-                    "chat",
-                    arguments={
-                        "message": "Hello",
-                        "thread_id": "thread_1",
-                        "username": "unknown_user"
-                    }
+                    "chat", arguments={"message": "Hello", "thread_id": "thread_1", "username": "unknown_user"}
                 )
                 print(f"   ✗ Unexpected success!")
             except Exception as e:

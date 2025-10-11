@@ -1,10 +1,13 @@
 """
 Infisical integration for secure secrets management
 """
+
 import os
-from typing import Dict, Any, Optional
-from infisical_client import InfisicalClient, ClientSettings, AuthenticationOptions, UniversalAuthMethod
-from observability import tracer, logger
+from typing import Any, Dict, Optional
+
+from infisical_client import AuthenticationOptions, ClientSettings, InfisicalClient, UniversalAuthMethod
+
+from observability import logger, tracer
 
 
 class SecretsManager:
@@ -20,7 +23,7 @@ class SecretsManager:
         client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
         project_id: Optional[str] = None,
-        environment: str = "dev"
+        environment: str = "dev",
     ):
         """
         Initialize Infisical secrets manager
@@ -42,45 +45,27 @@ class SecretsManager:
         client_secret = client_secret or os.getenv("INFISICAL_CLIENT_SECRET")
 
         if not client_id or not client_secret:
-            logger.warning(
-                "Infisical credentials not provided, using fallback mode"
-            )
+            logger.warning("Infisical credentials not provided, using fallback mode")
             self.client = None
             return
 
         # Configure Infisical client
         try:
-            self.client = InfisicalClient(ClientSettings(
-                site_url=site_url,
-                auth=AuthenticationOptions(
-                    universal_auth=UniversalAuthMethod(
-                        client_id=client_id,
-                        client_secret=client_secret
-                    )
+            self.client = InfisicalClient(
+                ClientSettings(
+                    site_url=site_url,
+                    auth=AuthenticationOptions(
+                        universal_auth=UniversalAuthMethod(client_id=client_id, client_secret=client_secret)
+                    ),
                 )
-            ))
+            )
 
-            logger.info(
-                "Infisical secrets manager initialized",
-                extra={
-                    "site_url": site_url,
-                    "environment": environment
-                }
-            )
+            logger.info("Infisical secrets manager initialized", extra={"site_url": site_url, "environment": environment})
         except Exception as e:
-            logger.error(
-                f"Failed to initialize Infisical client: {e}",
-                exc_info=True
-            )
+            logger.error(f"Failed to initialize Infisical client: {e}", exc_info=True)
             self.client = None
 
-    def get_secret(
-        self,
-        key: str,
-        path: str = "/",
-        use_cache: bool = True,
-        fallback: Optional[str] = None
-    ) -> Optional[str]:
+    def get_secret(self, key: str, path: str = "/", use_cache: bool = True, fallback: Optional[str] = None) -> Optional[str]:
         """
         Get a secret from Infisical
 
@@ -101,17 +86,12 @@ class SecretsManager:
 
             # Check cache first
             if use_cache and cache_key in self._cache:
-                logger.debug(
-                    "Secret retrieved from cache",
-                    extra={"key": key}
-                )
+                logger.debug("Secret retrieved from cache", extra={"key": key})
                 return self._cache[cache_key]
 
             # Fallback if client not initialized
             if not self.client:
-                logger.warning(
-                    f"Infisical client not available, using fallback for {key}"
-                )
+                logger.warning(f"Infisical client not available, using fallback for {key}")
                 # Try environment variable first
                 env_value = os.getenv(key)
                 if env_value:
@@ -120,10 +100,7 @@ class SecretsManager:
 
             try:
                 secret = self.client.get_secret(
-                    secret_name=key,
-                    project_id=self.project_id,
-                    environment=self.environment,
-                    path=path
+                    secret_name=key, project_id=self.project_id, environment=self.environment, path=path
                 )
 
                 value = secret.secret_value
@@ -132,23 +109,13 @@ class SecretsManager:
                 if use_cache:
                     self._cache[cache_key] = value
 
-                logger.info(
-                    "Secret retrieved from Infisical",
-                    extra={
-                        "key": key,
-                        "path": path
-                    }
-                )
+                logger.info("Secret retrieved from Infisical", extra={"key": key, "path": path})
 
                 span.set_attribute("secret.found", True)
                 return value
 
             except Exception as e:
-                logger.error(
-                    f"Failed to retrieve secret '{key}': {e}",
-                    extra={"key": key, "path": path},
-                    exc_info=True
-                )
+                logger.error(f"Failed to retrieve secret '{key}': {e}", extra={"key": key, "path": path}, exc_info=True)
                 span.record_exception(e)
                 span.set_attribute("secret.found", False)
 
@@ -160,11 +127,7 @@ class SecretsManager:
 
                 return fallback
 
-    def get_all_secrets(
-        self,
-        path: str = "/",
-        use_cache: bool = True
-    ) -> Dict[str, str]:
+    def get_all_secrets(self, path: str = "/", use_cache: bool = True) -> Dict[str, str]:
         """
         Get all secrets from a path
 
@@ -181,16 +144,9 @@ class SecretsManager:
                 return {}
 
             try:
-                secrets = self.client.list_secrets(
-                    project_id=self.project_id,
-                    environment=self.environment,
-                    path=path
-                )
+                secrets = self.client.list_secrets(project_id=self.project_id, environment=self.environment, path=path)
 
-                result = {
-                    secret.secret_key: secret.secret_value
-                    for secret in secrets
-                }
+                result = {secret.secret_key: secret.secret_value for secret in secrets}
 
                 # Cache all secrets
                 if use_cache:
@@ -198,30 +154,15 @@ class SecretsManager:
                         cache_key = f"{path}:{key}"
                         self._cache[cache_key] = value
 
-                logger.info(
-                    "Retrieved all secrets from path",
-                    extra={
-                        "path": path,
-                        "count": len(result)
-                    }
-                )
+                logger.info("Retrieved all secrets from path", extra={"path": path, "count": len(result)})
 
                 return result
 
             except Exception as e:
-                logger.error(
-                    f"Failed to retrieve secrets from path '{path}': {e}",
-                    exc_info=True
-                )
+                logger.error(f"Failed to retrieve secrets from path '{path}': {e}", exc_info=True)
                 return {}
 
-    def create_secret(
-        self,
-        key: str,
-        value: str,
-        path: str = "/",
-        secret_comment: Optional[str] = None
-    ) -> bool:
+    def create_secret(self, key: str, value: str, path: str = "/", secret_comment: Optional[str] = None) -> bool:
         """
         Create a new secret in Infisical
 
@@ -246,33 +187,22 @@ class SecretsManager:
                     project_id=self.project_id,
                     environment=self.environment,
                     path=path,
-                    secret_comment=secret_comment
+                    secret_comment=secret_comment,
                 )
 
                 # Update cache
                 cache_key = f"{path}:{key}"
                 self._cache[cache_key] = value
 
-                logger.info(
-                    "Secret created in Infisical",
-                    extra={"key": key, "path": path}
-                )
+                logger.info("Secret created in Infisical", extra={"key": key, "path": path})
 
                 return True
 
             except Exception as e:
-                logger.error(
-                    f"Failed to create secret '{key}': {e}",
-                    exc_info=True
-                )
+                logger.error(f"Failed to create secret '{key}': {e}", exc_info=True)
                 return False
 
-    def update_secret(
-        self,
-        key: str,
-        value: str,
-        path: str = "/"
-    ) -> bool:
+    def update_secret(self, key: str, value: str, path: str = "/") -> bool:
         """
         Update an existing secret
 
@@ -291,36 +221,22 @@ class SecretsManager:
 
             try:
                 self.client.update_secret(
-                    secret_name=key,
-                    secret_value=value,
-                    project_id=self.project_id,
-                    environment=self.environment,
-                    path=path
+                    secret_name=key, secret_value=value, project_id=self.project_id, environment=self.environment, path=path
                 )
 
                 # Update cache
                 cache_key = f"{path}:{key}"
                 self._cache[cache_key] = value
 
-                logger.info(
-                    "Secret updated in Infisical",
-                    extra={"key": key, "path": path}
-                )
+                logger.info("Secret updated in Infisical", extra={"key": key, "path": path})
 
                 return True
 
             except Exception as e:
-                logger.error(
-                    f"Failed to update secret '{key}': {e}",
-                    exc_info=True
-                )
+                logger.error(f"Failed to update secret '{key}': {e}", exc_info=True)
                 return False
 
-    def delete_secret(
-        self,
-        key: str,
-        path: str = "/"
-    ) -> bool:
+    def delete_secret(self, key: str, path: str = "/") -> bool:
         """
         Delete a secret
 
@@ -337,29 +253,18 @@ class SecretsManager:
                 return False
 
             try:
-                self.client.delete_secret(
-                    secret_name=key,
-                    project_id=self.project_id,
-                    environment=self.environment,
-                    path=path
-                )
+                self.client.delete_secret(secret_name=key, project_id=self.project_id, environment=self.environment, path=path)
 
                 # Remove from cache
                 cache_key = f"{path}:{key}"
                 self._cache.pop(cache_key, None)
 
-                logger.info(
-                    "Secret deleted from Infisical",
-                    extra={"key": key, "path": path}
-                )
+                logger.info("Secret deleted from Infisical", extra={"key": key, "path": path})
 
                 return True
 
             except Exception as e:
-                logger.error(
-                    f"Failed to delete secret '{key}': {e}",
-                    exc_info=True
-                )
+                logger.error(f"Failed to delete secret '{key}': {e}", exc_info=True)
                 return False
 
     def invalidate_cache(self, key: Optional[str] = None):
@@ -390,8 +295,7 @@ def get_secrets_manager() -> SecretsManager:
 
     if _secrets_manager is None:
         _secrets_manager = SecretsManager(
-            site_url=os.getenv("INFISICAL_SITE_URL", "https://app.infisical.com"),
-            environment=os.getenv("ENVIRONMENT", "dev")
+            site_url=os.getenv("INFISICAL_SITE_URL", "https://app.infisical.com"), environment=os.getenv("ENVIRONMENT", "dev")
         )
 
     return _secrets_manager

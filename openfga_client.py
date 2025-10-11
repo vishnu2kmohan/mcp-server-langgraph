@@ -1,18 +1,15 @@
 """
 OpenFGA integration for fine-grained relationship-based access control
 """
-import asyncio
-from typing import Dict, List, Any, Optional
-from openfga_sdk import OpenFgaClient, ClientConfiguration
-from openfga_sdk.client.models import ClientWriteRequest, ClientTuple, ClientCheckRequest
-from openfga_sdk.models import (
-    AuthorizationModel,
-    TypeDefinition,
-    Metadata,
-    RelationMetadata,
-)
 
-from observability import tracer, logger, metrics
+import asyncio
+from typing import Any, Dict, List, Optional
+
+from openfga_sdk import ClientConfiguration, OpenFgaClient
+from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
+from openfga_sdk.models import AuthorizationModel, Metadata, RelationMetadata, TypeDefinition
+
+from observability import logger, metrics, tracer
 
 
 class OpenFGAClient:
@@ -23,12 +20,7 @@ class OpenFGAClient:
     based on relationships between users, resources, and roles.
     """
 
-    def __init__(
-        self,
-        api_url: str = "http://localhost:8080",
-        store_id: Optional[str] = None,
-        model_id: Optional[str] = None
-    ):
+    def __init__(self, api_url: str = "http://localhost:8080", store_id: Optional[str] = None, model_id: Optional[str] = None):
         """
         Initialize OpenFGA client
 
@@ -42,22 +34,12 @@ class OpenFGAClient:
         self.model_id = model_id
 
         # Configure client
-        configuration = ClientConfiguration(
-            api_url=api_url,
-            store_id=store_id,
-            authorization_model_id=model_id
-        )
+        configuration = ClientConfiguration(api_url=api_url, store_id=store_id, authorization_model_id=model_id)
 
         self.client = OpenFgaClient(configuration)
         logger.info("OpenFGA client initialized", extra={"api_url": api_url})
 
-    async def check_permission(
-        self,
-        user: str,
-        relation: str,
-        object: str,
-        context: Optional[Dict[str, Any]] = None
-    ) -> bool:
+    async def check_permission(self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None) -> bool:
         """
         Check if user has permission via relationship
 
@@ -76,12 +58,7 @@ class OpenFGAClient:
             span.set_attribute("object", object)
 
             try:
-                request = ClientCheckRequest(
-                    user=user,
-                    relation=relation,
-                    object=object,
-                    contextual_tuples=[]
-                )
+                request = ClientCheckRequest(user=user, relation=relation, object=object, contextual_tuples=[])
 
                 response = await self.client.check(request)
                 allowed = response.allowed
@@ -89,13 +66,7 @@ class OpenFGAClient:
                 span.set_attribute("allowed", allowed)
 
                 logger.info(
-                    "Permission check",
-                    extra={
-                        "user": user,
-                        "relation": relation,
-                        "object": object,
-                        "allowed": allowed
-                    }
+                    "Permission check", extra={"user": user, "relation": relation, "object": object, "allowed": allowed}
                 )
 
                 # Track metrics
@@ -108,9 +79,7 @@ class OpenFGAClient:
 
             except Exception as e:
                 logger.error(
-                    f"OpenFGA check failed: {e}",
-                    extra={"user": user, "relation": relation, "object": object},
-                    exc_info=True
+                    f"OpenFGA check failed: {e}", extra={"user": user, "relation": relation, "object": object}, exc_info=True
                 )
                 span.record_exception(e)
                 metrics.failed_calls.add(1, {"operation": "check_permission"})
@@ -126,22 +95,12 @@ class OpenFGAClient:
         """
         with tracer.start_as_current_span("openfga.write_tuples"):
             try:
-                client_tuples = [
-                    ClientTuple(
-                        user=t["user"],
-                        relation=t["relation"],
-                        object=t["object"]
-                    )
-                    for t in tuples
-                ]
+                client_tuples = [ClientTuple(user=t["user"], relation=t["relation"], object=t["object"]) for t in tuples]
 
                 request = ClientWriteRequest(writes=client_tuples)
                 await self.client.write(request)
 
-                logger.info(
-                    "Tuples written to OpenFGA",
-                    extra={"count": len(tuples)}
-                )
+                logger.info("Tuples written to OpenFGA", extra={"count": len(tuples)})
 
                 metrics.successful_calls.add(1, {"operation": "write_tuples"})
 
@@ -159,33 +118,18 @@ class OpenFGAClient:
         """
         with tracer.start_as_current_span("openfga.delete_tuples"):
             try:
-                client_tuples = [
-                    ClientTuple(
-                        user=t["user"],
-                        relation=t["relation"],
-                        object=t["object"]
-                    )
-                    for t in tuples
-                ]
+                client_tuples = [ClientTuple(user=t["user"], relation=t["relation"], object=t["object"]) for t in tuples]
 
                 request = ClientWriteRequest(deletes=client_tuples)
                 await self.client.write(request)
 
-                logger.info(
-                    "Tuples deleted from OpenFGA",
-                    extra={"count": len(tuples)}
-                )
+                logger.info("Tuples deleted from OpenFGA", extra={"count": len(tuples)})
 
             except Exception as e:
                 logger.error(f"Failed to delete tuples: {e}", exc_info=True)
                 raise
 
-    async def list_objects(
-        self,
-        user: str,
-        relation: str,
-        object_type: str
-    ) -> List[str]:
+    async def list_objects(self, user: str, relation: str, object_type: str) -> List[str]:
         """
         List all objects of a type that user has relation to
 
@@ -199,22 +143,13 @@ class OpenFGAClient:
         """
         with tracer.start_as_current_span("openfga.list_objects"):
             try:
-                response = await self.client.list_objects(
-                    user=user,
-                    relation=relation,
-                    type=object_type
-                )
+                response = await self.client.list_objects(user=user, relation=relation, type=object_type)
 
                 objects = response.objects or []
 
                 logger.info(
                     "Objects listed",
-                    extra={
-                        "user": user,
-                        "relation": relation,
-                        "object_type": object_type,
-                        "count": len(objects)
-                    }
+                    extra={"user": user, "relation": relation, "object_type": object_type, "count": len(objects)},
                 )
 
                 return objects
@@ -223,11 +158,7 @@ class OpenFGAClient:
                 logger.error(f"Failed to list objects: {e}", exc_info=True)
                 raise
 
-    async def expand_relation(
-        self,
-        relation: str,
-        object: str
-    ) -> Dict[str, Any]:
+    async def expand_relation(self, relation: str, object: str) -> Dict[str, Any]:
         """
         Expand a relation to see all users with access
 
@@ -240,10 +171,7 @@ class OpenFGAClient:
         """
         with tracer.start_as_current_span("openfga.expand"):
             try:
-                response = await self.client.expand(
-                    relation=relation,
-                    object=object
-                )
+                response = await self.client.expand(relation=relation, object=object)
 
                 return response.tree.model_dump() if response.tree else {}
 
@@ -281,105 +209,66 @@ class OpenFGAAuthorizationModel:
         return {
             "schema_version": "1.1",
             "type_definitions": [
-                {
-                    "type": "user",
-                    "relations": {},
-                    "metadata": {
-                        "relations": {}
-                    }
-                },
+                {"type": "user", "relations": {}, "metadata": {"relations": {}}},
                 {
                     "type": "organization",
-                    "relations": {
-                        "member": {
-                            "this": {}
-                        },
-                        "admin": {
-                            "this": {}
-                        }
-                    },
+                    "relations": {"member": {"this": {}}, "admin": {"this": {}}},
                     "metadata": {
                         "relations": {
                             "member": {"directly_related_user_types": [{"type": "user"}]},
-                            "admin": {"directly_related_user_types": [{"type": "user"}]}
+                            "admin": {"directly_related_user_types": [{"type": "user"}]},
                         }
-                    }
+                    },
                 },
                 {
                     "type": "tool",
                     "relations": {
-                        "owner": {
-                            "this": {}
-                        },
+                        "owner": {"this": {}},
                         "executor": {
                             "union": {
                                 "child": [
                                     {"this": {}},
                                     {"computedUserset": {"relation": "owner"}},
-                                    {"tupleToUserset": {
-                                        "tupleset": {"relation": "organization"},
-                                        "computedUserset": {"relation": "member"}
-                                    }}
+                                    {
+                                        "tupleToUserset": {
+                                            "tupleset": {"relation": "organization"},
+                                            "computedUserset": {"relation": "member"},
+                                        }
+                                    },
                                 ]
                             }
                         },
-                        "organization": {
-                            "this": {}
-                        }
+                        "organization": {"this": {}},
                     },
                     "metadata": {
                         "relations": {
                             "owner": {"directly_related_user_types": [{"type": "user"}]},
                             "executor": {"directly_related_user_types": [{"type": "user"}]},
-                            "organization": {"directly_related_user_types": [{"type": "organization"}]}
+                            "organization": {"directly_related_user_types": [{"type": "organization"}]},
                         }
-                    }
+                    },
                 },
                 {
                     "type": "conversation",
                     "relations": {
-                        "owner": {
-                            "this": {}
-                        },
-                        "viewer": {
-                            "union": {
-                                "child": [
-                                    {"this": {}},
-                                    {"computedUserset": {"relation": "owner"}}
-                                ]
-                            }
-                        },
-                        "editor": {
-                            "union": {
-                                "child": [
-                                    {"this": {}},
-                                    {"computedUserset": {"relation": "owner"}}
-                                ]
-                            }
-                        }
+                        "owner": {"this": {}},
+                        "viewer": {"union": {"child": [{"this": {}}, {"computedUserset": {"relation": "owner"}}]}},
+                        "editor": {"union": {"child": [{"this": {}}, {"computedUserset": {"relation": "owner"}}]}},
                     },
                     "metadata": {
                         "relations": {
                             "owner": {"directly_related_user_types": [{"type": "user"}]},
                             "viewer": {"directly_related_user_types": [{"type": "user"}]},
-                            "editor": {"directly_related_user_types": [{"type": "user"}]}
+                            "editor": {"directly_related_user_types": [{"type": "user"}]},
                         }
-                    }
+                    },
                 },
                 {
                     "type": "role",
-                    "relations": {
-                        "assignee": {
-                            "this": {}
-                        }
-                    },
-                    "metadata": {
-                        "relations": {
-                            "assignee": {"directly_related_user_types": [{"type": "user"}]}
-                        }
-                    }
-                }
-            ]
+                    "relations": {"assignee": {"this": {}}},
+                    "metadata": {"relations": {"assignee": {"directly_related_user_types": [{"type": "user"}]}}},
+                },
+            ],
         }
 
 
@@ -396,9 +285,7 @@ async def initialize_openfga_store(client: OpenFGAClient) -> str:
     with tracer.start_as_current_span("openfga.initialize_store"):
         try:
             # Create store
-            store = await client.client.create_store(
-                body={"name": "langgraph-agent-store"}
-            )
+            store = await client.client.create_store(body={"name": "langgraph-agent-store"})
             store_id = store.id
 
             logger.info(f"OpenFGA store created", extra={"store_id": store_id})
@@ -409,15 +296,10 @@ async def initialize_openfga_store(client: OpenFGAClient) -> str:
 
             # Write authorization model
             model_def = OpenFGAAuthorizationModel.get_model_definition()
-            model_response = await client.client.write_authorization_model(
-                body=model_def
-            )
+            model_response = await client.client.write_authorization_model(body=model_def)
             model_id = model_response.authorization_model_id
 
-            logger.info(
-                f"OpenFGA authorization model created",
-                extra={"model_id": model_id}
-            )
+            logger.info(f"OpenFGA authorization model created", extra={"model_id": model_id})
 
             # Update client with model ID
             client.model_id = model_id
@@ -439,16 +321,13 @@ async def seed_sample_data(client: OpenFGAClient):
         {"user": "user:alice", "relation": "member", "object": "organization:acme"},
         {"user": "user:bob", "relation": "member", "object": "organization:acme"},
         {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
-
         # Tool permissions
         {"user": "user:alice", "relation": "executor", "object": "tool:chat"},
         {"user": "user:bob", "relation": "executor", "object": "tool:chat"},
         {"user": "organization:acme", "relation": "organization", "object": "tool:chat"},
-
         # Conversation ownership
         {"user": "user:alice", "relation": "owner", "object": "conversation:thread_1"},
         {"user": "user:bob", "relation": "viewer", "object": "conversation:thread_1"},
-
         # Role assignments
         {"user": "user:alice", "relation": "assignee", "object": "role:premium"},
         {"user": "user:bob", "relation": "assignee", "object": "role:standard"},

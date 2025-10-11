@@ -7,10 +7,11 @@ This example demonstrates:
 3. Streaming responses from platform
 4. Handling errors
 """
+
+import json
 import os
 import sys
-import json
-from typing import Dict, Any
+from typing import Any, Dict
 
 # For local testing
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,7 +31,7 @@ def test_local_graph():
     test_inputs = {
         "messages": [HumanMessage(content="What is LangGraph Platform?")],
         "user_id": "test_user",
-        "request_id": "test_001"
+        "request_id": "test_001",
     }
 
     print(f"\nInput: {test_inputs['messages'][0].content}")
@@ -58,14 +59,14 @@ def test_platform_deployment():
         print("  3. Set LANGGRAPH_DEPLOYMENT_URL environment variable")
         print("\nOr use CLI directly:")
         print("  langgraph deployment invoke <deployment-name> \\")
-        print("    --input '{\"messages\": [{\"role\": \"user\", \"content\": \"test\"}]}'")
+        print('    --input \'{"messages": [{"role": "user", "content": "test"}]}\'')
         return
 
     print(f"\nDeployment URL: {deployment_url}")
     print("\n⚠ Platform invocation requires HTTP client")
     print("Use the LangGraph CLI instead:")
     print(f"\nlanggraph deployment invoke <deployment-name> \\")
-    print(f"  --input '{{\"messages\": [{{\"role\": \"user\", \"content\": \"test\"}}]}}'")
+    print(f'  --input \'{{"messages": [{{"role": "user", "content": "test"}}]}}\'')
 
 
 def test_with_cli():
@@ -78,28 +79,22 @@ def test_with_cli():
         {
             "name": "Basic Invocation",
             "command": """langgraph deployment invoke mcp-server-langgraph \\
-  --input '{"messages": [{"role": "user", "content": "Hello!"}]}'"""
+  --input '{"messages": [{"role": "user", "content": "Hello!"}]}'""",
         },
         {
             "name": "With User Context",
             "command": """langgraph deployment invoke mcp-server-langgraph \\
   --input '{"messages": [{"role": "user", "content": "Analyze data"}], "user_id": "alice"}' \\
-  --config '{"configurable": {"user_id": "alice", "request_id": "req123"}}'"""
+  --config '{"configurable": {"user_id": "alice", "request_id": "req123"}}'""",
         },
         {
             "name": "Streaming Response",
             "command": """langgraph deployment invoke mcp-server-langgraph \\
   --input '{"messages": [{"role": "user", "content": "Tell me a story"}]}' \\
-  --stream"""
+  --stream""",
         },
-        {
-            "name": "Check Deployment Status",
-            "command": "langgraph deployment get mcp-server-langgraph"
-        },
-        {
-            "name": "View Logs",
-            "command": "langgraph deployment logs mcp-server-langgraph --follow"
-        }
+        {"name": "Check Deployment Status", "command": "langgraph deployment get mcp-server-langgraph"},
+        {"name": "View Logs", "command": "langgraph deployment logs mcp-server-langgraph --follow"},
     ]
 
     for example in examples:
@@ -119,25 +114,25 @@ def test_error_handling():
         {
             "name": "Empty Messages",
             "input": {"messages": [], "user_id": "test", "request_id": "err001"},
-            "expected_error": True
+            "expected_error": True,
         },
         {
             "name": "Invalid Message Type",
             "input": {"messages": ["not a message object"], "user_id": "test", "request_id": "err002"},
-            "expected_error": True
-        }
+            "expected_error": True,
+        },
     ]
 
     for test in test_cases:
         print(f"\nTest: {test['name']}")
         try:
-            result = agent_graph.invoke(test['input'])
-            if test['expected_error']:
+            result = agent_graph.invoke(test["input"])
+            if test["expected_error"]:
                 print("  ✗ Expected error but succeeded")
             else:
                 print("  ✓ Success")
         except Exception as e:
-            if test['expected_error']:
+            if test["expected_error"]:
                 print(f"  ✓ Expected error: {type(e).__name__}")
             else:
                 print(f"  ✗ Unexpected error: {e}")

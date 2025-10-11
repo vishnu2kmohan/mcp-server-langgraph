@@ -1,11 +1,13 @@
 """
 Authentication and Authorization middleware with OpenFGA integration
 """
-import jwt
+
 import time
-from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any, Dict, Optional
+
+import jwt
 
 from observability import logger, tracer
 from openfga_client import OpenFGAClient
@@ -20,33 +22,16 @@ class AuthMiddleware:
     """
 
     def __init__(
-        self,
-        secret_key: str = "your-secret-key-change-in-production",
-        openfga_client: Optional[OpenFGAClient] = None
+        self, secret_key: str = "your-secret-key-change-in-production", openfga_client: Optional[OpenFGAClient] = None
     ):
         self.secret_key = secret_key
         self.openfga = openfga_client
 
         # User database (in production, use real database)
         self.users_db = {
-            "alice": {
-                "user_id": "user:alice",
-                "email": "alice@acme.com",
-                "roles": ["user", "premium"],
-                "active": True
-            },
-            "bob": {
-                "user_id": "user:bob",
-                "email": "bob@acme.com",
-                "roles": ["user"],
-                "active": True
-            },
-            "admin": {
-                "user_id": "user:admin",
-                "email": "admin@acme.com",
-                "roles": ["admin"],
-                "active": True
-            }
+            "alice": {"user_id": "user:alice", "email": "alice@acme.com", "roles": ["user", "premium"], "active": True},
+            "bob": {"user_id": "user:bob", "email": "bob@acme.com", "roles": ["user"], "active": True},
+            "admin": {"user_id": "user:admin", "email": "admin@acme.com", "roles": ["admin"], "active": True},
         }
 
     async def authenticate(self, username: str) -> Dict[str, Any]:
@@ -67,41 +52,23 @@ class AuthMiddleware:
                 user = self.users_db[username]
 
                 if not user["active"]:
-                    logger.warning(
-                        "User account inactive",
-                        extra={"username": username}
-                    )
+                    logger.warning("User account inactive", extra={"username": username})
                     return {"authorized": False, "reason": "account_inactive"}
 
-                logger.info(
-                    "User authenticated",
-                    extra={
-                        "username": username,
-                        "user_id": user["user_id"]
-                    }
-                )
+                logger.info("User authenticated", extra={"username": username, "user_id": user["user_id"]})
 
                 return {
                     "authorized": True,
                     "username": username,
                     "user_id": user["user_id"],
                     "email": user["email"],
-                    "roles": user["roles"]
+                    "roles": user["roles"],
                 }
 
-            logger.warning(
-                "Authentication failed - user not found",
-                extra={"username": username}
-            )
+            logger.warning("Authentication failed - user not found", extra={"username": username})
             return {"authorized": False, "reason": "user_not_found"}
 
-    async def authorize(
-        self,
-        user_id: str,
-        relation: str,
-        resource: str,
-        context: Optional[Dict[str, Any]] = None
-    ) -> bool:
+    async def authorize(self, user_id: str, relation: str, resource: str, context: Optional[Dict[str, Any]] = None) -> bool:
         """
         Check if user is authorized using OpenFGA
 
@@ -123,21 +90,13 @@ class AuthMiddleware:
             if self.openfga:
                 try:
                     authorized = await self.openfga.check_permission(
-                        user=user_id,
-                        relation=relation,
-                        object=resource,
-                        context=context
+                        user=user_id, relation=relation, object=resource, context=context
                     )
 
                     span.set_attribute("auth.authorized", authorized)
                     logger.info(
                         "Authorization check (OpenFGA)",
-                        extra={
-                            "user_id": user_id,
-                            "relation": relation,
-                            "resource": resource,
-                            "authorized": authorized
-                        }
+                        extra={"user_id": user_id, "relation": relation, "resource": resource, "authorized": authorized},
                     )
 
                     return authorized
@@ -145,20 +104,14 @@ class AuthMiddleware:
                 except Exception as e:
                     logger.error(
                         f"OpenFGA authorization check failed: {e}",
-                        extra={
-                            "user_id": user_id,
-                            "relation": relation,
-                            "resource": resource
-                        },
-                        exc_info=True
+                        extra={"user_id": user_id, "relation": relation, "resource": resource},
+                        exc_info=True,
                     )
                     # Fail closed - deny access on error
                     return False
 
             # Fallback: simple permission check
-            logger.warning(
-                "OpenFGA not available, using fallback authorization"
-            )
+            logger.warning("OpenFGA not available, using fallback authorization")
 
             # Extract username from user_id
             username = user_id.split(":")[-1] if ":" in user_id else user_id
@@ -182,12 +135,7 @@ class AuthMiddleware:
 
             return False
 
-    async def list_accessible_resources(
-        self,
-        user_id: str,
-        relation: str,
-        resource_type: str
-    ) -> list[str]:
+    async def list_accessible_resources(self, user_id: str, relation: str, resource_type: str) -> list[str]:
         """
         List all resources user has access to
 
@@ -204,29 +152,17 @@ class AuthMiddleware:
             return []
 
         try:
-            resources = await self.openfga.list_objects(
-                user=user_id,
-                relation=relation,
-                object_type=resource_type
-            )
+            resources = await self.openfga.list_objects(user=user_id, relation=relation, object_type=resource_type)
 
             logger.info(
                 "Listed accessible resources",
-                extra={
-                    "user_id": user_id,
-                    "relation": relation,
-                    "resource_type": resource_type,
-                    "count": len(resources)
-                }
+                extra={"user_id": user_id, "relation": relation, "resource_type": resource_type, "count": len(resources)},
             )
 
             return resources
 
         except Exception as e:
-            logger.error(
-                f"Failed to list accessible resources: {e}",
-                exc_info=True
-            )
+            logger.error(f"Failed to list accessible resources: {e}", exc_info=True)
             return []
 
     def create_token(self, username: str, expires_in: int = 3600) -> str:
@@ -251,19 +187,12 @@ class AuthMiddleware:
             "email": user["email"],
             "roles": user["roles"],
             "exp": datetime.utcnow() + timedelta(seconds=expires_in),
-            "iat": datetime.utcnow()
+            "iat": datetime.utcnow(),
         }
 
         token = jwt.encode(payload, self.secret_key, algorithm="HS256")
 
-        logger.info(
-            "Token created",
-            extra={
-                "username": username,
-                "user_id": user["user_id"],
-                "expires_in": expires_in
-            }
-        )
+        logger.info("Token created", extra={"username": username, "user_id": user["user_id"], "expires_in": expires_in})
 
         return token
 
@@ -282,9 +211,7 @@ class AuthMiddleware:
 
 
 def require_auth(
-    relation: Optional[str] = None,
-    resource: Optional[str] = None,
-    openfga_client: Optional[OpenFGAClient] = None
+    relation: Optional[str] = None, resource: Optional[str] = None, openfga_client: Optional[OpenFGAClient] = None
 ):
     """
     Decorator for requiring authentication/authorization
@@ -294,6 +221,7 @@ def require_auth(
         resource: Resource to check access to
         openfga_client: OpenFGA client instance
     """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -314,14 +242,14 @@ def require_auth(
             # Authorize if relation and resource specified
             if relation and resource:
                 if not await auth.authorize(user_id, relation, resource):
-                    raise PermissionError(
-                        f"Not authorized: {user_id} cannot {relation} {resource}"
-                    )
+                    raise PermissionError(f"Not authorized: {user_id} cannot {relation} {resource}")
 
             # Add user_id to kwargs if authenticated
             kwargs["user_id"] = user_id
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 

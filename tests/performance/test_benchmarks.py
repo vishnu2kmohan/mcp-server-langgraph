@@ -1,11 +1,12 @@
 """Performance benchmarks for critical system components."""
 
 import time
-from typing import Dict, Any
-import pytest
-from unittest.mock import Mock, patch
-import jwt
 from datetime import datetime, timedelta
+from typing import Any, Dict
+from unittest.mock import Mock, patch
+
+import jwt
+import pytest
 
 
 # Benchmark utilities
@@ -43,6 +44,7 @@ class TestJWTBenchmarks:
     def sample_payload(self):
         """Sample JWT payload."""
         from datetime import timezone
+
         now = datetime.now(timezone.utc)
         return {
             "sub": "test-user",
@@ -96,6 +98,7 @@ class TestJWTBenchmarks:
         Requirement: Token validation should take < 2ms on average.
         """
         from datetime import timezone
+
         # Create tokens with various expiration times
         token = jwt.encode(sample_payload, jwt_config["secret_key"], algorithm=jwt_config["algorithm"])
 
@@ -146,9 +149,7 @@ class TestOpenFGABenchmarks:
         """
 
         async def check_authorization():
-            return await mock_openfga_client.check(
-                user="user:test-user", relation="viewer", object="document:test-doc"
-            )
+            return await mock_openfga_client.check(user="user:test-user", relation="viewer", object="document:test-doc")
 
         # Run benchmark
         result = await benchmark(check_authorization)
@@ -349,14 +350,11 @@ class TestResourceBenchmarks:
         assert len(result["messages"]) == 1000
 
         # Performance assertion: < 50ms
-        assert (
-            benchmark.stats["mean"] < 0.050
-        ), f"Deserialization took {benchmark.stats['mean']*1000:.2f}ms (target: < 50ms)"
+        assert benchmark.stats["mean"] < 0.050, f"Deserialization took {benchmark.stats['mean']*1000:.2f}ms (target: < 50ms)"
 
 
 # Add asyncio import for async benchmarks
 import asyncio
-
 
 # Benchmark configuration
 pytestmark = pytest.mark.benchmark

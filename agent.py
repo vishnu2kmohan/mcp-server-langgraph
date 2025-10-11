@@ -3,21 +3,24 @@ LangGraph Functional API Agent with full observability and multi-provider LLM su
 Includes OpenTelemetry and LangSmith tracing integration
 Enhanced with Pydantic AI for type-safe routing and responses
 """
-from typing import Annotated, TypedDict, Literal, Optional
-from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import MemorySaver
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
-from langchain_core.runnables import RunnableConfig
-import operator
-import asyncio
 
-from llm_factory import create_llm_from_config
+import asyncio
+import operator
+from typing import Annotated, Literal, Optional, TypedDict
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, START, StateGraph
+
 from config import settings
+from llm_factory import create_llm_from_config
 from observability import logger
 
 # Import Pydantic AI for type-safe responses
 try:
-    from pydantic_ai_agent import create_pydantic_agent, RouterDecision, AgentResponse
+    from pydantic_ai_agent import AgentResponse, RouterDecision, create_pydantic_agent
+
     PYDANTIC_AI_AVAILABLE = True
 except ImportError:
     PYDANTIC_AI_AVAILABLE = False
@@ -25,7 +28,8 @@ except ImportError:
 
 # Import LangSmith config if available
 try:
-    from langsmith_config import langsmith_config, get_run_metadata, get_run_tags
+    from langsmith_config import get_run_metadata, get_run_tags, langsmith_config
+
     LANGSMITH_AVAILABLE = True
 except ImportError:
     LANGSMITH_AVAILABLE = False
@@ -34,6 +38,7 @@ except ImportError:
 
 class AgentState(TypedDict):
     """State for the agent graph"""
+
     messages: Annotated[list[BaseMessage], operator.add]
     next_action: str
     user_id: str | None
@@ -55,24 +60,16 @@ def create_agent_graph():
             pydantic_agent = create_pydantic_agent()
             logger.info("Pydantic AI agent initialized for type-safe routing")
         except Exception as e:
-            logger.warning(
-                f"Failed to initialize Pydantic AI agent: {e}",
-                exc_info=True
-            )
+            logger.warning(f"Failed to initialize Pydantic AI agent: {e}", exc_info=True)
 
     # Create runnable config for LangSmith tracing if available
-    def get_runnable_config(
-        user_id: Optional[str] = None,
-        request_id: Optional[str] = None
-    ) -> Optional[RunnableConfig]:
+    def get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str] = None) -> Optional[RunnableConfig]:
         """Get runnable config with LangSmith metadata"""
         if not LANGSMITH_AVAILABLE or not langsmith_config.is_enabled():
             return None
 
         return RunnableConfig(
-            run_name="mcp-server-langgraph",
-            tags=get_run_tags(user_id),
-            metadata=get_run_metadata(user_id, request_id)
+            run_name="mcp-server-langgraph", tags=get_run_tags(user_id), metadata=get_run_metadata(user_id, request_id)
         )
 
     # Define node functions
@@ -88,10 +85,7 @@ def create_agent_graph():
                     decision = asyncio.run(
                         pydantic_agent.route_message(
                             last_message.content,
-                            context={
-                                "user_id": state.get("user_id", "unknown"),
-                                "message_count": str(len(state["messages"]))
-                            }
+                            context={"user_id": state.get("user_id", "unknown"), "message_count": str(len(state["messages"]))},
                         )
                     )
 
@@ -102,17 +96,10 @@ def create_agent_graph():
 
                     logger.info(
                         "Pydantic AI routing decision",
-                        extra={
-                            "action": decision.action,
-                            "confidence": decision.confidence,
-                            "reasoning": decision.reasoning
-                        }
+                        extra={"action": decision.action, "confidence": decision.confidence, "reasoning": decision.reasoning},
                     )
                 except Exception as e:
-                    logger.error(
-                        f"Pydantic AI routing failed, using fallback: {e}",
-                        exc_info=True
-                    )
+                    logger.error(f"Pydantic AI routing failed, using fallback: {e}", exc_info=True)
                     # Fallback to simple routing
                     state = _fallback_routing(state, last_message)
             else:
@@ -124,8 +111,7 @@ def create_agent_graph():
     def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentState:
         """Fallback routing logic without Pydantic AI"""
         # Determine if this needs tools or direct response
-        if any(keyword in last_message.content.lower()
-               for keyword in ["search", "calculate", "lookup"]):
+        if any(keyword in last_message.content.lower() for keyword in ["search", "calculate", "lookup"]):
             state["next_action"] = "use_tools"
         else:
             state["next_action"] = "respond"
@@ -141,15 +127,9 @@ def create_agent_graph():
 
         # In real implementation, bind tools to model
         # For now, simulate a tool response
-        tool_response = AIMessage(
-            content="Tool execution completed. Processing results..."
-        )
+        tool_response = AIMessage(content="Tool execution completed. Processing results...")
 
-        return {
-            **state,
-            "messages": [tool_response],
-            "next_action": "respond"
-        }
+        return {**state, "messages": [tool_response], "next_action": "respond"}
 
     def generate_response(state: AgentState) -> AgentState:
         """Generate final response using LLM with Pydantic AI validation"""
@@ -164,8 +144,8 @@ def create_agent_graph():
                         messages,
                         context={
                             "user_id": state.get("user_id", "unknown"),
-                            "routing_confidence": str(state.get("routing_confidence", 0.0))
-                        }
+                            "routing_confidence": str(state.get("routing_confidence", 0.0)),
+                        },
                     )
                 )
 
@@ -177,25 +157,18 @@ def create_agent_graph():
                     extra={
                         "confidence": typed_response.confidence,
                         "requires_clarification": typed_response.requires_clarification,
-                        "sources": typed_response.sources
-                    }
+                        "sources": typed_response.sources,
+                    },
                 )
             except Exception as e:
-                logger.error(
-                    f"Pydantic AI response generation failed, using fallback: {e}",
-                    exc_info=True
-                )
+                logger.error(f"Pydantic AI response generation failed, using fallback: {e}", exc_info=True)
                 # Fallback to standard LLM
                 response = model.invoke(messages)
         else:
             # Standard LLM response
             response = model.invoke(messages)
 
-        return {
-            **state,
-            "messages": [response],
-            "next_action": "end"
-        }
+        return {**state, "messages": [response], "next_action": "end"}
 
     def should_continue(state: AgentState) -> Literal["use_tools", "respond", "end"]:
         """Conditional edge function"""
@@ -217,7 +190,7 @@ def create_agent_graph():
         {
             "use_tools": "tools",
             "respond": "respond",
-        }
+        },
     )
     workflow.add_edge("tools", "respond")
     workflow.add_edge("respond", END)
