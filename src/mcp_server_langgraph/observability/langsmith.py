@@ -5,7 +5,7 @@ LangSmith configuration and integration for LangGraph agent observability
 import os
 from typing import Any, Dict, Optional
 
-from config import settings
+from mcp_server_langgraph.core.config import settings
 
 
 def configure_langsmith() -> bool:

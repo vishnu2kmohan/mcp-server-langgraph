@@ -63,7 +63,7 @@ def event_loop():
 @pytest.fixture
 def mock_settings():
     """Mock settings for testing"""
-    from config import Settings
+    from mcp_server_langgraph.core.config import Settings
 
     return Settings(
         service_name="test-service",

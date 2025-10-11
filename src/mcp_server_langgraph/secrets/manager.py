@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 from infisical_client import AuthenticationOptions, ClientSettings, InfisicalClient, UniversalAuthMethod
 
-from observability import logger, tracer
+from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
 class SecretsManager:

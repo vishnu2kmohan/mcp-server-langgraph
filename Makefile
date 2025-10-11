@@ -63,13 +63,13 @@ setup-infra:
 
 setup-openfga:
 	@echo "Setting up OpenFGA..."
-	python setup_openfga.py
+	python scripts/setup_openfga.py
 	@echo ""
 	@echo "⚠️  Remember to update .env with OPENFGA_STORE_ID and OPENFGA_MODEL_ID"
 
 setup-infisical:
 	@echo "Setting up Infisical..."
-	python setup_infisical.py
+	python scripts/setup_infisical.py
 
 test:
 	pytest -v
@@ -86,11 +86,11 @@ test-coverage:
 
 test-auth:
 	@echo "Testing OpenFGA authorization..."
-	python example_openfga_usage.py
+	python examples/openfga_usage.py
 
 test-mcp:
 	@echo "Testing MCP server..."
-	python example_client.py
+	python examples/client_stdio.py
 
 benchmark:
 	@echo "Running performance benchmarks..."
@@ -154,10 +154,10 @@ security-check:
 
 # Running servers
 run:
-	python mcp_server.py
+	python -m mcp_server_langgraph.mcp.server_stdio
 
 run-streamable:
-	python mcp_server_streamable.py
+	python -m mcp_server_langgraph.mcp.server_streamable
 
 logs:
 	docker-compose logs -f

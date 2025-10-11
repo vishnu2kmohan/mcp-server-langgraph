@@ -40,7 +40,7 @@ class TestJWTProperties:
     @settings(max_examples=50, deadline=2000)
     def test_jwt_encode_decode_roundtrip(self, username, expiration):
         """Property: JWT encode/decode should be reversible"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -60,7 +60,7 @@ class TestJWTProperties:
     @settings(max_examples=30, deadline=2000)
     def test_jwt_requires_correct_secret(self, username, secret1, secret2):
         """Property: JWT verification requires the correct secret key"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         assume(secret1 != secret2)
 
@@ -79,7 +79,7 @@ class TestJWTProperties:
     @settings(max_examples=20, deadline=2000)
     def test_expired_tokens_rejected(self, username):
         """Property: Expired tokens should always be rejected"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -102,7 +102,7 @@ class TestJWTProperties:
     @settings(max_examples=20, deadline=2000)
     def test_token_expiration_time_honored(self, username, expiration):
         """Property: Token expiration should match requested time"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -131,7 +131,7 @@ class TestAuthorizationProperties:
     @pytest.mark.asyncio
     async def test_authorization_is_deterministic(self, user_id, relation, resource):
         """Property: Same authorization check should give same result"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -151,7 +151,7 @@ class TestAuthorizationProperties:
     @pytest.mark.asyncio
     async def test_admin_always_authorized(self, resource):
         """Property: Admin users should always be authorized (fallback mode)"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
         # No OpenFGA client - fallback mode
@@ -166,7 +166,7 @@ class TestAuthorizationProperties:
     @pytest.mark.asyncio
     async def test_openfga_failure_denies_access(self, user_id, relation, resource):
         """Property: OpenFGA errors should deny access (fail-closed)"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -183,7 +183,7 @@ class TestAuthorizationProperties:
     @pytest.mark.asyncio
     async def test_inactive_users_denied(self, username):
         """Property: Inactive users should never be authorized"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -217,7 +217,7 @@ class TestPermissionInheritance:
     @pytest.mark.asyncio
     async def test_org_membership_grants_tool_access(self, org_user, tool_name):
         """Property: Organization members should have access to org tools"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -245,7 +245,7 @@ class TestPermissionInheritance:
     @pytest.mark.asyncio
     async def test_ownership_implies_all_permissions(self, owner, resource):
         """Property: Resource owners should have all permissions"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -274,7 +274,7 @@ class TestSecurityInvariants:
     @settings(max_examples=20, deadline=2000)
     def test_token_payload_not_user_controlled(self, username, malicious_payload):
         """Property: User cannot inject arbitrary claims into JWT"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -295,7 +295,7 @@ class TestSecurityInvariants:
     @settings(max_examples=20, deadline=2000)
     def test_tokens_contain_user_id_not_password(self, username):
         """Property: JWT should never contain sensitive data like passwords"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -315,7 +315,7 @@ class TestSecurityInvariants:
     @pytest.mark.asyncio
     async def test_failed_auth_does_not_leak_info(self, username, attempts):
         """Property: Failed authentication should not reveal whether user exists"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -352,7 +352,7 @@ class TestAuthorizationEdgeCases:
     @pytest.mark.asyncio
     async def test_malformed_user_ids_handled(self, user_id):
         """Property: Malformed user IDs should not crash the system"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -372,7 +372,7 @@ class TestAuthorizationEdgeCases:
     @pytest.mark.asyncio
     async def test_malformed_resources_handled(self, resource):
         """Property: Malformed resource IDs should not crash the system"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 

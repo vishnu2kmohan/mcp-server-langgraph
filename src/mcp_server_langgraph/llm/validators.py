@@ -9,7 +9,7 @@ from typing import Generic, Optional, TypeVar
 from langchain_core.messages import AIMessage
 from pydantic import BaseModel, Field, ValidationError
 
-from observability import logger, metrics, tracer
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 T = TypeVar("T", bound=BaseModel)
 

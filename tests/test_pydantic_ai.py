@@ -39,7 +39,7 @@ def mock_pydantic_agent_class():
 @pytest.mark.unit
 def test_pydantic_agent_wrapper_initialization(mock_settings, mock_pydantic_agent_class):
     """Test Pydantic AI agent wrapper initializes correctly."""
-    from pydantic_ai_agent import PydanticAIAgentWrapper
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     wrapper = PydanticAIAgentWrapper()
 
@@ -51,7 +51,7 @@ def test_pydantic_agent_wrapper_initialization(mock_settings, mock_pydantic_agen
 @pytest.mark.unit
 def test_get_pydantic_model_name_google(mock_settings, mock_pydantic_agent_class):
     """Test model name mapping for Google provider."""
-    from pydantic_ai_agent import PydanticAIAgentWrapper
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     wrapper = PydanticAIAgentWrapper(provider="google")
     assert wrapper.pydantic_model_name == "gemini-2.5-flash-002"
@@ -60,7 +60,7 @@ def test_get_pydantic_model_name_google(mock_settings, mock_pydantic_agent_class
 @pytest.mark.unit
 def test_get_pydantic_model_name_anthropic(mock_settings, mock_pydantic_agent_class):
     """Test model name mapping for Anthropic provider."""
-    from pydantic_ai_agent import PydanticAIAgentWrapper
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     mock_settings.llm_provider = "anthropic"
     mock_settings.model_name = "claude-3-5-sonnet-20241022"
@@ -73,7 +73,7 @@ def test_get_pydantic_model_name_anthropic(mock_settings, mock_pydantic_agent_cl
 @pytest.mark.unit
 def test_get_pydantic_model_name_openai(mock_settings, mock_pydantic_agent_class):
     """Test model name mapping for OpenAI provider."""
-    from pydantic_ai_agent import PydanticAIAgentWrapper
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     wrapper = PydanticAIAgentWrapper(provider="openai", model_name="gpt-4o")
 
@@ -83,7 +83,7 @@ def test_get_pydantic_model_name_openai(mock_settings, mock_pydantic_agent_class
 @pytest.mark.unit
 def test_format_conversation(mock_settings, mock_pydantic_agent_class):
     """Test conversation formatting."""
-    from pydantic_ai_agent import PydanticAIAgentWrapper
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     wrapper = PydanticAIAgentWrapper()
 
@@ -100,7 +100,7 @@ def test_format_conversation(mock_settings, mock_pydantic_agent_class):
 @pytest.mark.unit
 def test_router_decision_model():
     """Test RouterDecision Pydantic model."""
-    from pydantic_ai_agent import RouterDecision
+    from mcp_server_langgraph.llm.pydantic_agent import RouterDecision
 
     decision = RouterDecision(action="use_tools", reasoning="User requested a search", tool_name="search", confidence=0.9)
 
@@ -115,7 +115,7 @@ def test_router_decision_validation():
     """Test RouterDecision validates confidence range."""
     from pydantic import ValidationError
 
-    from pydantic_ai_agent import RouterDecision
+    from mcp_server_langgraph.llm.pydantic_agent import RouterDecision
 
     # Valid confidence
     decision = RouterDecision(action="respond", reasoning="Direct answer", confidence=0.5)
@@ -134,7 +134,7 @@ def test_router_decision_validation():
 @pytest.mark.unit
 def test_agent_response_model():
     """Test AgentResponse Pydantic model."""
-    from pydantic_ai_agent import AgentResponse
+    from mcp_server_langgraph.llm.pydantic_agent import AgentResponse
 
     response = AgentResponse(
         content="Here is your answer",
@@ -154,7 +154,7 @@ def test_agent_response_model():
 @pytest.mark.unit
 def test_agent_response_defaults():
     """Test AgentResponse has sensible defaults."""
-    from pydantic_ai_agent import AgentResponse
+    from mcp_server_langgraph.llm.pydantic_agent import AgentResponse
 
     response = AgentResponse(content="Simple response", confidence=0.7)
 
@@ -168,8 +168,8 @@ def test_agent_response_defaults():
 @pytest.mark.unit
 def test_validated_response():
     """Test ValidatedResponse container."""
-    from llm_validators import ValidatedResponse
-    from pydantic_ai_agent import AgentResponse
+    from mcp_server_langgraph.llm.validators import ValidatedResponse
+    from mcp_server_langgraph.llm.pydantic_agent import AgentResponse
 
     data = AgentResponse(content="test", confidence=0.9)
 
@@ -184,7 +184,7 @@ def test_validated_response():
 @pytest.mark.unit
 def test_validated_response_with_errors():
     """Test ValidatedResponse with errors."""
-    from llm_validators import ValidatedResponse
+    from mcp_server_langgraph.llm.validators import ValidatedResponse
 
     validated = ValidatedResponse(
         data=None, raw_content="invalid", validation_success=False, validation_errors=["Error 1", "Error 2"]
@@ -198,7 +198,7 @@ def test_validated_response_with_errors():
 @pytest.mark.unit
 def test_entity_extraction_model():
     """Test EntityExtraction model."""
-    from llm_validators import EntityExtraction
+    from mcp_server_langgraph.llm.validators import EntityExtraction
 
     extraction = EntityExtraction(
         entities=[{"type": "person", "value": "John"}, {"type": "organization", "value": "Acme Corp"}], confidence=0.95
@@ -212,7 +212,7 @@ def test_entity_extraction_model():
 @pytest.mark.unit
 def test_intent_classification_model():
     """Test IntentClassification model."""
-    from llm_validators import IntentClassification
+    from mcp_server_langgraph.llm.validators import IntentClassification
 
     intent = IntentClassification(
         intent="search_query",
@@ -230,7 +230,7 @@ def test_intent_classification_model():
 @pytest.mark.unit
 def test_sentiment_analysis_model():
     """Test SentimentAnalysis model."""
-    from llm_validators import SentimentAnalysis
+    from mcp_server_langgraph.llm.validators import SentimentAnalysis
 
     sentiment = SentimentAnalysis(sentiment="positive", score=0.75, emotions=["joy", "excitement"])
 
@@ -242,7 +242,7 @@ def test_sentiment_analysis_model():
 @pytest.mark.unit
 def test_summary_extraction_model():
     """Test SummaryExtraction model."""
-    from llm_validators import SummaryExtraction
+    from mcp_server_langgraph.llm.validators import SummaryExtraction
 
     summary = SummaryExtraction(
         summary="This is a summary", key_points=["Point 1", "Point 2", "Point 3"], length=19, compression_ratio=0.25
@@ -258,7 +258,7 @@ def test_summary_extraction_model():
 @pytest.mark.unit
 def test_stream_chunk_model():
     """Test StreamChunk model."""
-    from mcp_streaming import StreamChunk
+    from mcp_server_langgraph.mcp.streaming import StreamChunk
 
     chunk = StreamChunk(content="Hello", chunk_index=0, is_final=False, metadata={"stream_id": "test"})
 
@@ -271,7 +271,7 @@ def test_stream_chunk_model():
 @pytest.mark.unit
 def test_streamed_response_model():
     """Test StreamedResponse model."""
-    from mcp_streaming import StreamChunk, StreamedResponse
+    from mcp_server_langgraph.mcp.streaming import StreamChunk, StreamedResponse
 
     chunks = [
         StreamChunk(content="Hello", chunk_index=0, is_final=False),
@@ -290,7 +290,7 @@ def test_streamed_response_model():
 @pytest.mark.asyncio
 async def test_streaming_validator():
     """Test MCPStreamingValidator."""
-    from mcp_streaming import MCPStreamingValidator
+    from mcp_server_langgraph.mcp.streaming import MCPStreamingValidator
 
     validator = MCPStreamingValidator()
 
@@ -322,7 +322,7 @@ async def test_stream_validated_response():
     """Test stream_validated_response function."""
     import json
 
-    from mcp_streaming import stream_validated_response
+    from mcp_server_langgraph.mcp.streaming import stream_validated_response
 
     content = "Test content"
     chunks = []
@@ -351,7 +351,7 @@ async def test_stream_validated_response():
 @pytest.mark.asyncio
 async def test_streaming_validator_validation_error():
     """Test MCPStreamingValidator with validation error."""
-    from mcp_streaming import MCPStreamingValidator
+    from mcp_server_langgraph.mcp.streaming import MCPStreamingValidator
 
     validator = MCPStreamingValidator()
 
@@ -368,7 +368,7 @@ async def test_streaming_validator_validation_error():
 @pytest.mark.asyncio
 async def test_streaming_validator_finalize_unknown_stream():
     """Test finalizing an unknown stream."""
-    from mcp_streaming import MCPStreamingValidator
+    from mcp_server_langgraph.mcp.streaming import MCPStreamingValidator
 
     validator = MCPStreamingValidator()
 
@@ -406,7 +406,7 @@ def test_llm_validator_with_json_response():
     """Test LLMValidator.validate_response with JSON input."""
     import json
 
-    from llm_validators import EntityExtraction, LLMValidator
+    from mcp_server_langgraph.llm.validators import EntityExtraction, LLMValidator
 
     response_data = {"entities": [{"type": "person", "value": "Alice"}], "confidence": 0.95}
     json_response = json.dumps(response_data)
@@ -425,7 +425,7 @@ def test_llm_validator_with_aimessage():
 
     from langchain_core.messages import AIMessage
 
-    from llm_validators import LLMValidator, SentimentAnalysis
+    from mcp_server_langgraph.llm.validators import LLMValidator, SentimentAnalysis
 
     response_data = {"sentiment": "positive", "score": 0.8, "emotions": ["joy"]}
     message = AIMessage(content=json.dumps(response_data))
@@ -440,7 +440,7 @@ def test_llm_validator_with_aimessage():
 @pytest.mark.unit
 def test_llm_validator_validation_error_non_strict():
     """Test LLMValidator.validate_response with validation error in non-strict mode."""
-    from llm_validators import EntityExtraction, LLMValidator
+    from mcp_server_langgraph.llm.validators import EntityExtraction, LLMValidator
 
     # Invalid JSON
     invalid_response = "not valid json"
@@ -454,7 +454,7 @@ def test_llm_validator_validation_error_non_strict():
 @pytest.mark.unit
 def test_llm_validator_validation_error_strict():
     """Test LLMValidator.validate_response with validation error in strict mode."""
-    from llm_validators import EntityExtraction, LLMValidator
+    from mcp_server_langgraph.llm.validators import EntityExtraction, LLMValidator
 
     invalid_response = "not valid json"
 
@@ -466,7 +466,7 @@ def test_llm_validator_validation_error_strict():
 @pytest.mark.unit
 def test_llm_validator_unexpected_error_non_strict():
     """Test LLMValidator.validate_response with unexpected error in non-strict mode."""
-    from llm_validators import LLMValidator
+    from mcp_server_langgraph.llm.validators import LLMValidator
 
     # Create a response that will cause an unexpected error during parsing
     class BrokenModel:
@@ -483,7 +483,7 @@ def test_llm_validator_extract_entities():
     """Test LLMValidator.extract_entities convenience method."""
     import json
 
-    from llm_validators import LLMValidator
+    from mcp_server_langgraph.llm.validators import LLMValidator
 
     response_data = {
         "entities": [{"type": "person", "value": "Bob"}, {"type": "location", "value": "NYC"}],
@@ -502,7 +502,7 @@ def test_llm_validator_classify_intent():
     """Test LLMValidator.classify_intent convenience method."""
     import json
 
-    from llm_validators import LLMValidator
+    from mcp_server_langgraph.llm.validators import LLMValidator
 
     response_data = {
         "intent": "search_query",
@@ -523,7 +523,7 @@ def test_llm_validator_analyze_sentiment():
     """Test LLMValidator.analyze_sentiment convenience method."""
     import json
 
-    from llm_validators import LLMValidator
+    from mcp_server_langgraph.llm.validators import LLMValidator
 
     response_data = {"sentiment": "negative", "score": 0.75, "emotions": ["anger", "frustration"]}
     response = json.dumps(response_data)
@@ -539,7 +539,7 @@ def test_llm_validator_extract_summary():
     """Test LLMValidator.extract_summary convenience method."""
     import json
 
-    from llm_validators import LLMValidator
+    from mcp_server_langgraph.llm.validators import LLMValidator
 
     response_data = {
         "summary": "This is a summary",

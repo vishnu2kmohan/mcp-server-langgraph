@@ -4,7 +4,7 @@ Setup script for Infisical secrets management
 """
 import os
 
-from secrets_manager import SecretsManager
+from mcp_server_langgraph.secrets.manager import SecretsManager
 
 
 def setup_infisical():
@@ -116,7 +116,7 @@ def setup_infisical():
     print("\n🔧 Usage in Code:")
     print(
         """
-    from secrets_manager import get_secrets_manager
+    from mcp_server_langgraph.secrets.manager import get_secrets_manager
 
     secrets_mgr = get_secrets_manager()
 

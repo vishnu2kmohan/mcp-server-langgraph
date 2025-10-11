@@ -143,7 +143,7 @@ class TestAgentPerformance:
     @pytest.mark.slow
     def test_agent_response_time_p95(self):
         """Agent response p95 should be under 5 seconds"""
-        from agent import agent_graph
+        from mcp_server_langgraph.core.agent import agent_graph
 
         messages = [HumanMessage(content="What is 2+2?")]
 
@@ -154,7 +154,7 @@ class TestAgentPerformance:
             mock_create_llm.return_value = mock_llm
 
             # Recreate graph with mock
-            from agent import create_agent_graph
+            from mcp_server_langgraph.core.agent import create_agent_graph
 
             graph = create_agent_graph()
 
@@ -175,7 +175,7 @@ class TestAgentPerformance:
     @pytest.mark.slow
     def test_message_formatting_performance(self):
         """Message formatting should be fast (<2ms p95)"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test")
 
@@ -201,7 +201,7 @@ class TestAuthPerformance:
     @pytest.mark.slow
     async def test_jwt_validation_performance(self):
         """JWT validation should be very fast (<2ms p95)"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret-key")
         token = auth.create_token("alice")
@@ -219,7 +219,7 @@ class TestAuthPerformance:
     @pytest.mark.slow
     async def test_authorization_check_performance(self):
         """Authorization checks should be fast (<50ms p95)"""
-        from auth import AuthMiddleware
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
@@ -248,7 +248,7 @@ class TestLLMPerformance:
     @pytest.mark.slow
     async def test_llm_call_latency(self):
         """LLM calls should complete reasonably fast"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model")
 

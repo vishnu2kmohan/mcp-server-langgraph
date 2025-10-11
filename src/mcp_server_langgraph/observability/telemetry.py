@@ -191,7 +191,7 @@ class ObservabilityConfig:
     def _setup_langsmith(self):
         """Configure LangSmith tracing"""
         try:
-            from langsmith_config import langsmith_config
+            from mcp_server_langgraph.observability.langsmith import langsmith_config
 
             if langsmith_config.is_enabled():
                 print("✓ LangSmith integration enabled")
@@ -208,7 +208,7 @@ class ObservabilityConfig:
 # Initialize global observability with LangSmith support
 # Check if LangSmith should be enabled from environment or config
 try:
-    from config import settings
+    from mcp_server_langgraph.core.config import settings
 
     enable_langsmith_flag = settings.langsmith_tracing and settings.observability_backend in ("langsmith", "both")
 except ImportError:

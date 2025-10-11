@@ -6,7 +6,7 @@ from typing import Optional
 
 from pydantic_settings import BaseSettings
 
-from secrets_manager import get_secrets_manager
+from mcp_server_langgraph.secrets.manager import get_secrets_manager
 
 
 class Settings(BaseSettings):

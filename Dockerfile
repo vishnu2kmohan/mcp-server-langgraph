@@ -68,6 +68,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the StreamableHTTP server by default (can override with CMD)
-# Use mcp_server_streamable.py for modern StreamableHTTP transport
-# Use mcp_server.py for stdio transport
-CMD ["python", "mcp_server_streamable.py"]
+# Use mcp-server-streamable for modern StreamableHTTP transport
+# Use mcp-server for stdio transport
+CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]

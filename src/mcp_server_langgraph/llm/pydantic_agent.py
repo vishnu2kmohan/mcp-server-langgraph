@@ -11,8 +11,8 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
-from config import settings
-from observability import logger, metrics, tracer
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
 # Structured Response Models

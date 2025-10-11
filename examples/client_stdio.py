@@ -7,8 +7,8 @@ import asyncio
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from auth import AuthMiddleware
-from config import settings
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
+from mcp_server_langgraph.core.config import settings
 
 
 async def test_chat():

@@ -10,7 +10,7 @@ from typing import AsyncIterator, Optional
 
 from pydantic import BaseModel, Field
 
-from observability import logger, metrics, tracer
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
 class StreamChunk(BaseModel):

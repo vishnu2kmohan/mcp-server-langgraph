@@ -13,13 +13,13 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
-from config import settings
-from llm_factory import create_llm_from_config
-from observability import logger
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.llm.factory import create_llm_from_config
+from mcp_server_langgraph.observability.telemetry import logger
 
 # Import Pydantic AI for type-safe responses
 try:
-    from pydantic_ai_agent import create_pydantic_agent
+    from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
     PYDANTIC_AI_AVAILABLE = True
 except ImportError:
@@ -28,7 +28,7 @@ except ImportError:
 
 # Import LangSmith config if available
 try:
-    from langsmith_config import get_run_metadata, get_run_tags, langsmith_config
+    from mcp_server_langgraph.observability.langsmith import get_run_metadata, get_run_tags, langsmith_config
 
     LANGSMITH_AVAILABLE = True
 except ImportError:

@@ -8,8 +8,8 @@ from typing import Any, Dict, Optional
 
 import jwt
 
-from observability import logger, tracer
-from openfga_client import OpenFGAClient
+from mcp_server_langgraph.observability.telemetry import logger, tracer
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 
 class AuthMiddleware:

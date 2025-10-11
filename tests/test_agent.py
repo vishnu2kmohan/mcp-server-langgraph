@@ -12,7 +12,7 @@ class TestAgentState:
 
     def test_agent_state_structure(self):
         """Test AgentState can be created with required fields"""
-        from agent import AgentState
+        from mcp_server_langgraph.core.agent import AgentState
 
         state: AgentState = {
             "messages": [HumanMessage(content="Hello")],
@@ -34,7 +34,7 @@ class TestAgentGraph:
     @patch("llm_factory.create_llm_from_config")
     def test_create_agent_graph(self, mock_create_llm):
         """Test agent graph is created successfully"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         # Mock the LLM
         mock_llm = MagicMock()
@@ -49,7 +49,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_route_input_to_respond(self, mock_create_llm):
         """Test routing to direct response"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Hello! I can help you.")
@@ -74,7 +74,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_route_input_to_tools(self, mock_create_llm):
         """Test routing to tools when keywords detected"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Search completed.")
@@ -98,7 +98,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_route_with_calculate_keyword(self, mock_create_llm):
         """Test routing detects calculate keyword"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Calculation result")
@@ -121,7 +121,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_agent_with_conversation_history(self, mock_create_llm):
         """Test agent handles conversation history"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Follow-up response")
@@ -148,7 +148,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_checkpointing_works(self, mock_create_llm):
         """Test conversation checkpointing"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Response")
@@ -183,7 +183,7 @@ class TestAgentGraph:
         """Test that messages accumulate in state"""
         import operator
 
-        from agent import AgentState
+        from mcp_server_langgraph.core.agent import AgentState
 
         # Verify that the Annotated type with operator.add works
         state: AgentState = {
@@ -205,7 +205,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_agent_without_langsmith(self, mock_create_llm):
         """Test agent works when LangSmith is not available"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Response without LangSmith")
@@ -228,7 +228,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_agent_with_langsmith_enabled(self, mock_create_llm):
         """Test agent with LangSmith configuration"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Response")
@@ -252,7 +252,7 @@ class TestAgentGraph:
     @patch("agent.create_llm_from_config")
     def test_routing_with_tool_keywords(self, mock_create_llm):
         """Test routing detects tool keywords"""
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
         mock_model.invoke.return_value = AIMessage(content="Search result")
@@ -282,7 +282,7 @@ class TestAgentIntegration:
         """Test with real Anthropic API"""
         import os
 
-        from agent import create_agent_graph
+        from mcp_server_langgraph.core.agent import create_agent_graph
 
         if not os.getenv("ANTHROPIC_API_KEY"):
             pytest.skip("ANTHROPIC_API_KEY not set")

@@ -23,7 +23,7 @@ def test_local_graph():
     print("Testing Graph Locally")
     print("=" * 60)
 
-    from agent import agent_graph
+    from mcp_server_langgraph.core.agent import agent_graph
 
     # Test invocation
     test_inputs = {
@@ -106,7 +106,7 @@ def test_error_handling():
     print("Testing Error Handling")
     print("=" * 60)
 
-    from agent import agent_graph
+    from mcp_server_langgraph.core.agent import agent_graph
 
     test_cases = [
         {

@@ -12,7 +12,7 @@ class TestFeatureFlags:
 
     def test_default_feature_flags(self):
         """Test default feature flag values"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
@@ -26,7 +26,7 @@ class TestFeatureFlags:
 
     def test_environment_variable_override(self):
         """Test that environment variables override defaults"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         with patch.dict(
             os.environ,
@@ -44,7 +44,7 @@ class TestFeatureFlags:
 
     def test_numeric_flag_validation(self):
         """Test numeric flag values and validation"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
@@ -58,7 +58,7 @@ class TestFeatureFlags:
         """Test numeric flags enforce min/max constraints"""
         from pydantic import ValidationError
 
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         # Test confidence threshold must be between 0 and 1
         with pytest.raises(ValidationError):
@@ -73,7 +73,7 @@ class TestFeatureFlags:
 
     def test_is_feature_enabled(self):
         """Test is_feature_enabled helper method"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
@@ -83,7 +83,7 @@ class TestFeatureFlags:
 
     def test_get_feature_value(self):
         """Test get_feature_value with defaults"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
@@ -98,7 +98,7 @@ class TestFeatureFlags:
 
     def test_experimental_features_master_switch(self):
         """Test experimental features require master switch"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         # Master switch off
         flags = FeatureFlags(
@@ -118,14 +118,14 @@ class TestFeatureFlags:
 
     def test_global_feature_flags_instance(self):
         """Test global feature flags singleton"""
-        from feature_flags import feature_flags, get_feature_flags
+        from mcp_server_langgraph.core.feature_flags import feature_flags, get_feature_flags
 
         assert feature_flags is not None
         assert get_feature_flags() is feature_flags
 
     def test_is_enabled_convenience_function(self):
         """Test is_enabled convenience function"""
-        from feature_flags import is_enabled
+        from mcp_server_langgraph.core.feature_flags import is_enabled
 
         # Should use global instance
         assert is_enabled("enable_pydantic_ai_routing") in [True, False]
@@ -133,7 +133,7 @@ class TestFeatureFlags:
 
     def test_cache_configuration(self):
         """Test caching feature flags"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags(enable_response_caching=True, cache_ttl_seconds=600, enable_request_batching=True)
 
@@ -143,7 +143,7 @@ class TestFeatureFlags:
 
     def test_security_flags(self):
         """Test security-related feature flags"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
@@ -154,7 +154,7 @@ class TestFeatureFlags:
 
     def test_observability_flags(self):
         """Test observability feature flags"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags(
             enable_detailed_logging=True, enable_trace_sampling=True, trace_sample_rate=0.25, enable_langsmith=True
@@ -167,7 +167,7 @@ class TestFeatureFlags:
 
     def test_agent_behavior_flags(self):
         """Test agent behavior configuration"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags(max_agent_iterations=25, enable_agent_memory=True, memory_max_messages=500)
 
@@ -177,7 +177,7 @@ class TestFeatureFlags:
 
     def test_openfga_configuration(self):
         """Test OpenFGA feature flags"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         # Default: fail-open (permissive)
         flags1 = FeatureFlags()
@@ -204,7 +204,7 @@ class TestFeatureFlagEdgeCases:
         """Test confidence threshold validation"""
         from pydantic import ValidationError
 
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         # Too high
         with pytest.raises(ValidationError):
@@ -218,7 +218,7 @@ class TestFeatureFlagEdgeCases:
         """Test timeout validation"""
         from pydantic import ValidationError
 
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         # Too low
         with pytest.raises(ValidationError):
@@ -232,7 +232,7 @@ class TestFeatureFlagEdgeCases:
         """Test sample rate validation"""
         from pydantic import ValidationError
 
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         with pytest.raises(ValidationError):
             FeatureFlags(trace_sample_rate=1.5)
@@ -242,7 +242,7 @@ class TestFeatureFlagEdgeCases:
 
     def test_boolean_string_conversion(self):
         """Test that string 'true'/'false' are converted correctly"""
-        from feature_flags import FeatureFlags
+        from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         with patch.dict(
             os.environ,

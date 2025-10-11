@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
 
-from observability import logger, metrics, tracer
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
 class OpenFGAClient:

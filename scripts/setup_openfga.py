@@ -4,8 +4,8 @@ Setup script for OpenFGA authorization model and sample data
 """
 import asyncio
 
-from config import settings
-from openfga_client import OpenFGAClient, initialize_openfga_store, seed_sample_data
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store, seed_sample_data
 
 
 async def setup_openfga():

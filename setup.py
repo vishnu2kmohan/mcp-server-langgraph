@@ -10,14 +10,15 @@ with open("requirements-pinned.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="mcp-server-langgraph",
-    version="1.0.0",
+    version="2.0.0",
     author="MCP Server with LangGraph Contributors",
     author_email="maintainers@example.com",
     description="Production-ready MCP server with LangGraph, OpenFGA, and multi-LLM support",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/vishnu2kmohan/mcp_server_langgraph",
-    packages=find_packages(exclude=["tests", "tests.*", "examples", "examples.*"]),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -52,8 +53,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "mcp-server=mcp_server:main",
-            "mcp-server-streamable=mcp_server_streamable:main",
+            "mcp-server=mcp_server_langgraph.mcp.server_stdio:main",
+            "mcp-server-streamable=mcp_server_langgraph.mcp.server_streamable:main",
         ],
     },
     include_package_data=True,

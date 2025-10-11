@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from litellm import acompletion, completion
 from litellm.utils import ModelResponse
 
-from observability import logger, metrics, tracer
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
 class LLMFactory:

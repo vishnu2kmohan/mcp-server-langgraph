@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-server-langgraph"
-version = "1.0.0"
+version = "2.0.0"
 description = "Production-ready MCP server with LangGraph, OpenFGA, and multi-LLM support"
 readme = "README.md"
 authors = [
@@ -24,6 +24,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 requires-python = ">=3.10,<3.13"
+
+[tool.setuptools]
+packages = [{include = "mcp_server_langgraph", from = "src"}]
 dependencies = [
     "langgraph>=0.2.28",
     "langchain-core>=0.3.15",
@@ -75,8 +78,8 @@ dev = [
 ]
 
 [project.scripts]
-langgraph-mcp = "mcp_server:main"
-langgraph-mcp-http = "mcp_server_streamable:main"
+langgraph-mcp = "mcp_server_langgraph.mcp.server_stdio:main"
+langgraph-mcp-streamable = "mcp_server_langgraph.mcp.server_streamable:main"
 
 [project.urls]
 Homepage = "https://github.com/vishnu2kmohan/langgraph_mcp_agent"

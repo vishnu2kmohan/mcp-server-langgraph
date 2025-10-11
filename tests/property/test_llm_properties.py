@@ -44,7 +44,7 @@ class TestLLMFactoryProperties:
     @settings(max_examples=50, deadline=3000)
     def test_factory_creation_never_crashes(self, provider, temperature, max_tokens):
         """Property: Factory creation should never crash with valid inputs"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         try:
             factory = LLMFactory(
@@ -62,7 +62,7 @@ class TestLLMFactoryProperties:
     @settings(max_examples=30, deadline=5000)
     def test_message_format_preserves_content(self, messages):
         """Property: Message format conversion should preserve content"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model")
 
@@ -91,7 +91,7 @@ class TestLLMFactoryProperties:
     @settings(max_examples=20, deadline=3000)
     def test_parameter_override_consistency(self, messages, temperature1, temperature2, max_tokens1, max_tokens2):
         """Property: Parameter overrides should be consistent"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model", temperature=temperature1, max_tokens=max_tokens1)
 
@@ -115,7 +115,7 @@ class TestLLMFactoryProperties:
     @settings(max_examples=20, deadline=5000)
     def test_fallback_always_tried_on_failure(self, messages):
         """Property: Fallback should always be attempted when primary fails"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         fallback_models = ["fallback-1", "fallback-2"]
         factory = LLMFactory(
@@ -144,7 +144,7 @@ class TestLLMFactoryProperties:
     @settings(max_examples=20, deadline=3000)
     def test_message_type_mapping_is_reversible(self, messages, provider):
         """Property: Message type mapping should be consistent across providers"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider=provider, model_name="test-model")
 
@@ -182,7 +182,7 @@ class TestLLMFactoryEdgeCases:
     @settings(max_examples=20, deadline=2000)
     def test_empty_message_content_handled(self, empty_contents):
         """Property: Empty messages should not crash"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model")
 
@@ -201,7 +201,7 @@ class TestLLMFactoryEdgeCases:
     @settings(max_examples=20, deadline=2000)
     def test_invalid_temperature_outside_range(self, temperature):
         """Property: Factory should handle out-of-range temperatures gracefully"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         # Should create factory (LiteLLM may clamp or reject later)
         factory = LLMFactory(provider="anthropic", model_name="test-model", temperature=temperature)
@@ -215,7 +215,7 @@ class TestLLMFactoryEdgeCases:
         """Property: Environment variables should be set based on provider"""
         import os
 
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         # Clear any existing keys
         env_vars = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "AZURE_API_KEY"]
@@ -247,7 +247,7 @@ class TestLLMFactoryEdgeCases:
     @settings(max_examples=20, deadline=3000)
     def test_message_order_preserved(self, messages):
         """Property: Message order must be preserved through formatting"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model")
 
@@ -270,7 +270,7 @@ class TestLLMFactoryFallbackProperties:
     @settings(max_examples=15, deadline=5000)
     def test_fallback_stops_on_first_success(self, fallback_count, success_index):
         """Property: Fallback should stop trying once one succeeds"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         # Ensure success_index is within fallback_count
         success_index = min(success_index, fallback_count - 1)
@@ -301,7 +301,7 @@ class TestLLMFactoryFallbackProperties:
     @settings(max_examples=10, deadline=5000)
     def test_all_fallbacks_exhausted_raises(self, fallback_count):
         """Property: If all fallbacks fail, should raise exception"""
-        from llm_factory import LLMFactory
+        from mcp_server_langgraph.llm.factory import LLMFactory
 
         fallback_models = [f"fallback-{i}" for i in range(fallback_count)]
 

@@ -4,9 +4,9 @@ Example usage of OpenFGA authorization in the agent
 """
 import asyncio
 
-from auth import AuthMiddleware
-from config import settings
-from openfga_client import OpenFGAClient
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 
 async def demo_authorization():

@@ -1,63 +1,20 @@
 """
-MCP Server with StreamableHTTP transport
-Implements the MCP StreamableHTTP specification (replaces deprecated SSE)
+MCP Server implementation for LangGraph agent with OpenFGA and Infisical
 """
 
 import asyncio
-import json
-from typing import Any, AsyncIterator
+from typing import Any
 
-import uvicorn
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
 from mcp.server import Server
+from mcp.server.stdio import stdio_server
 from mcp.types import Resource, TextContent, Tool
 from pydantic import BaseModel, Field
 
-from agent import AgentState, agent_graph
-from auth import AuthMiddleware
-from config import settings
-from observability import logger, metrics, tracer
-from openfga_client import OpenFGAClient
-
-app = FastAPI(
-    title="MCP Server with LangGraph",
-    description="AI Agent with fine-grained authorization and observability - StreamableHTTP transport",
-    version=settings.service_version,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_tags=[
-        {
-            "name": "mcp",
-            "description": "Model Context Protocol (MCP) endpoints for agent interaction",
-        },
-        {
-            "name": "health",
-            "description": "Health check and system status endpoints",
-        },
-        {
-            "name": "auth",
-            "description": "Authentication and authorization endpoints",
-        },
-    ],
-    responses={
-        401: {"description": "Unauthorized - Invalid or missing authentication token"},
-        403: {"description": "Forbidden - Insufficient permissions"},
-        429: {"description": "Too Many Requests - Rate limit exceeded"},
-        500: {"description": "Internal Server Error"},
-    },
-)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
-)
+from mcp_server_langgraph.core.agent import AgentState, agent_graph
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 
 class ChatInput(BaseModel):
@@ -68,8 +25,8 @@ class ChatInput(BaseModel):
     thread_id: str | None = Field(default=None, description="Optional thread ID for conversation continuity")
 
 
-class MCPAgentStreamableServer:
-    """MCP Server with StreamableHTTP transport"""
+class MCPAgentServer:
+    """MCP Server exposing LangGraph agent with OpenFGA authorization"""
 
     def __init__(self, openfga_client: OpenFGAClient | None = None):
         self.server = Server("langgraph-agent")
@@ -226,7 +183,7 @@ class MCPAgentStreamableServer:
                 "messages": [{"role": "user", "content": message}],
                 "next_action": "",
                 "user_id": user_id,
-                "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,
+                "request_id": span.get_span_context().trace_id,
             }
 
             # Run the agent graph
@@ -282,192 +239,18 @@ class MCPAgentStreamableServer:
 
             return [TextContent(type="text", text=f"Accessible conversations: {', '.join(conversations)}")]
 
-
-# Initialize the MCP server
-mcp_server = MCPAgentStreamableServer()
-
-
-# FastAPI endpoints for MCP StreamableHTTP transport
-@app.get("/")
-async def root():
-    """Root endpoint with server info"""
-    return {
-        "name": "MCP Server with LangGraph",
-        "version": settings.service_version,
-        "transport": "streamable-http",
-        "protocol": "mcp",
-        "endpoints": {"message": "/message", "tools": "/tools", "resources": "/resources", "health": "/health"},
-        "capabilities": {
-            "tools": {"listSupported": True, "callSupported": True},
-            "resources": {"listSupported": True, "readSupported": True},
-            "streaming": True,
-        },
-    }
+    async def run(self):
+        """Run the MCP server"""
+        logger.info("Starting MCP Agent Server")
+        async with stdio_server() as (read_stream, write_stream):
+            await self.server.run(read_stream, write_stream, self.server.create_initialization_options())
 
 
-async def stream_jsonrpc_response(data: dict) -> AsyncIterator[str]:
-    """
-    Stream a JSON-RPC response in chunks
-
-    Yields newline-delimited JSON for streaming responses
-    """
-    # For now, send the complete response
-    # In the future, this could stream token-by-token for LLM responses
-    yield json.dumps(data) + "\n"
-
-
-@app.post("/message")
-async def handle_message(request: Request):
-    """
-    Handle MCP messages via StreamableHTTP POST
-
-    This is the main endpoint for MCP protocol messages.
-    Supports both regular and streaming responses.
-    """
-    try:
-        # Parse JSON-RPC request
-        message = await request.json()
-
-        with tracer.start_as_current_span("mcp.streamable.message") as span:
-            span.set_attribute("mcp.method", message.get("method", "unknown"))
-            span.set_attribute("mcp.id", str(message.get("id", "")))
-
-            logger.info("Received MCP message", extra={"method": message.get("method"), "id": message.get("id")})
-
-            method = message.get("method")
-            message_id = message.get("id")
-
-            # Handle different MCP methods
-            if method == "initialize":
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": message_id,
-                    "result": {
-                        "protocolVersion": "0.1.0",
-                        "serverInfo": {"name": "langgraph-agent", "version": settings.service_version},
-                        "capabilities": {
-                            "tools": {"listChanged": False},
-                            "resources": {"listChanged": False},
-                            "prompts": {},
-                            "logging": {},
-                        },
-                    },
-                }
-                return JSONResponse(response)
-
-            elif method == "tools/list":
-                tools = await mcp_server.server._tool_manager.list_tools()
-                response = {"jsonrpc": "2.0", "id": message_id, "result": {"tools": [tool.model_dump() for tool in tools]}}
-                return JSONResponse(response)
-
-            elif method == "tools/call":
-                params = message.get("params", {})
-                tool_name = params.get("name")
-                arguments = params.get("arguments", {})
-
-                # Check if client supports streaming
-                accept_header = request.headers.get("accept", "")
-                supports_streaming = "text/event-stream" in accept_header or "application/x-ndjson" in accept_header
-
-                result = await mcp_server.server._tool_manager.call_tool(tool_name, arguments)
-
-                response_data = {
-                    "jsonrpc": "2.0",
-                    "id": message_id,
-                    "result": {"content": [item.model_dump() for item in result]},
-                }
-
-                # If streaming is supported, stream the response
-                if supports_streaming:
-                    return StreamingResponse(
-                        stream_jsonrpc_response(response_data),
-                        media_type="application/x-ndjson",
-                        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache"},
-                    )
-                else:
-                    return JSONResponse(response_data)
-
-            elif method == "resources/list":
-                resources = await mcp_server.server._resource_manager.list_resources()
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": message_id,
-                    "result": {"resources": [res.model_dump() for res in resources]},
-                }
-                return JSONResponse(response)
-
-            elif method == "resources/read":
-                params = message.get("params", {})
-                resource_uri = params.get("uri")
-
-                # Handle resource read (implement based on your needs)
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": message_id,
-                    "result": {
-                        "contents": [
-                            {
-                                "uri": resource_uri,
-                                "mimeType": "application/json",
-                                "text": json.dumps({"config": "placeholder"}),
-                            }
-                        ]
-                    },
-                }
-                return JSONResponse(response)
-
-            else:
-                raise HTTPException(status_code=400, detail=f"Unknown method: {method}")
-
-    except PermissionError as e:
-        logger.warning(f"Permission denied: {e}")
-        return JSONResponse(
-            status_code=403,
-            content={
-                "jsonrpc": "2.0",
-                "id": message.get("id") if "message" in locals() else None,
-                "error": {"code": -32001, "message": str(e)},
-            },
-        )
-    except Exception as e:
-        logger.error(f"Error handling message: {e}", exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content={
-                "jsonrpc": "2.0",
-                "id": message.get("id") if "message" in locals() else None,
-                "error": {"code": -32603, "message": str(e)},
-            },
-        )
-
-
-@app.get("/tools")
-async def list_tools():
-    """List available tools (convenience endpoint)"""
-    tools = await mcp_server.server._tool_manager.list_tools()
-    return {"tools": [tool.model_dump() for tool in tools]}
-
-
-@app.get("/resources")
-async def list_resources():
-    """List available resources (convenience endpoint)"""
-    resources = await mcp_server.server._resource_manager.list_resources()
-    return {"resources": [res.model_dump() for res in resources]}
-
-
-# Include health check routes
-from health_check import app as health_app
-
-app.mount("/health", health_app)
+async def main():
+    """Main entry point"""
+    server = MCPAgentServer()
+    await server.run()
 
 
 if __name__ == "__main__":
-    logger.info(f"Starting MCP StreamableHTTP server on port {settings.get_secret('PORT', fallback='8000')}")
-
-    uvicorn.run(
-        app,
-        host="0.0.0.0",  # nosec B104 - Required for containerized deployment
-        port=int(settings.get_secret("PORT", fallback="8000")),
-        log_level=settings.log_level.lower(),
-        access_log=True,
-    )
+    asyncio.run(main())

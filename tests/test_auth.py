@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import jwt
 import pytest
 
-from auth import AuthMiddleware, require_auth, verify_token
+from mcp_server_langgraph.auth.middleware import AuthMiddleware, require_auth, verify_token
 
 
 @pytest.mark.unit

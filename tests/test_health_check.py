@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def test_client():
     """Create a test client for the health check app"""
-    from health_check import app
+    from mcp_server_langgraph.health.checks import app
 
     return TestClient(app)
 
