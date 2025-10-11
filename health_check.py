@@ -147,4 +147,10 @@ async def prometheus_metrics():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=int(settings.get_secret("HEALTH_PORT", fallback="8000")), log_level="info")
+    # Bind to all interfaces for Docker/Kubernetes compatibility
+    uvicorn.run(
+        app,
+        host="0.0.0.0",  # nosec B104 - Required for containerized deployment
+        port=int(settings.get_secret("HEALTH_PORT", fallback="8000")),
+        log_level="info",
+    )
