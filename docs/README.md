@@ -40,11 +40,13 @@ Developer guides and workflows:
 
 Technical reference documentation:
 
-- **[Agents Architecture](reference/agents.md)** - LangGraph agent design and patterns
+- **[AGENTS.md](../AGENTS.md)** - ⚙️ AI assistant guidance (GitHub Copilot Workspace, root level)
 - **[Pydantic AI Integration](reference/pydantic-ai.md)** - Type-safe agent responses
 - **[AI Tools Compatibility](reference/ai-tools-compatibility.md)** - Compatible AI tools and IDEs
 - **[MCP Registry](reference/mcp-registry.md)** - Publishing to MCP registry
 - **[Recommendations](reference/recommendations.md)** - Best practices and recommendations
+
+> **Note**: `AGENTS.md` is located at the repository root (not in `docs/reference/`) as it's an operational instruction file for AI coding assistants like GitHub Copilot Workspace, similar to `CLAUDE.md` and `.cursorrules`.
 
 ## 🎨 Template
 
@@ -83,7 +85,7 @@ Historical documentation (may be outdated):
 - **Deployment**: See [Deployment](#-deployment) section above
 - **Security**: [OpenFGA Integration](integrations/openfga-infisical.md), [Security Review](archive/security-review.md)
 - **Testing**: [Testing Guide](development/testing.md), [Build Verification](development/build-verification.md)
-- **AI/LLM**: [Agents Architecture](reference/agents.md), [Pydantic AI](reference/pydantic-ai.md), [LiteLLM](integrations/litellm.md)
+- **AI/LLM**: [AGENTS.md](../AGENTS.md), [Pydantic AI](reference/pydantic-ai.md), [LiteLLM](integrations/litellm.md)
 - **Observability**: [LangSmith Integration](integrations/langsmith.md), [Dual Observability ADR](adr/0003-dual-observability.md)
 
 ### By Role
@@ -91,7 +93,7 @@ Historical documentation (may be outdated):
 **Developer**:
 - Start: [Development Setup](development/development.md)
 - Test: [Testing Guide](development/testing.md)
-- Learn: [Agents Architecture](reference/agents.md), [ADRs](adr/README.md)
+- Learn: [AGENTS.md](../AGENTS.md), [ADRs](adr/README.md)
 
 **DevOps/SRE**:
 - Deploy: [Production Deployment](deployment/production.md), [Kubernetes](deployment/kubernetes.md)
