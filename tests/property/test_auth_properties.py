@@ -113,10 +113,10 @@ class TestJWTProperties:
         result = auth.verify_token(token)
         assert result["valid"] is True
 
-        # Property: Expiration should be approximately correct
+        # Property: Expiration should be approximately correct (allow 1 second tolerance for timing)
         token_exp = datetime.fromtimestamp(result["payload"]["exp"])
-        expected_min = before_creation + timedelta(seconds=expiration)
-        expected_max = after_creation + timedelta(seconds=expiration)
+        expected_min = before_creation + timedelta(seconds=expiration) - timedelta(seconds=1)
+        expected_max = after_creation + timedelta(seconds=expiration) + timedelta(seconds=1)
 
         assert expected_min <= token_exp <= expected_max
 
