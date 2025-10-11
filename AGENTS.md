@@ -680,16 +680,16 @@ kubectl get all -n langgraph-agent
 ### LangGraph Platform (Cloud)
 ```bash
 # Login to LangGraph Cloud
-langgraph login
+uvx langgraph-cli login
 
 # Deploy agent
-langgraph deploy
+uvx langgraph-cli deploy
 
 # Get deployment URL
-langgraph deployment get <deployment-name>
+uvx langgraph-cli deployment get <deployment-name>
 
 # View logs
-langgraph logs <deployment-name>
+uvx langgraph-cli logs <deployment-name>
 ```
 
 ### Pre-Deployment Checklist

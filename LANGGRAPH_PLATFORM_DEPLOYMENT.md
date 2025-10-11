@@ -80,15 +80,14 @@ LangGraph Platform is LangChain's fully managed hosting solution for LangGraph a
    python --version  # Should be 3.10 or higher
    ```
 
-2. **LangGraph CLI**
+2. **uv** (Python package manager)
    ```bash
-   pip install langgraph-cli
+   # Install uv if not already installed
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   # Or: pip install uv
    ```
 
-3. **LangSmith CLI** (optional but recommended)
-   ```bash
-   pip install langsmith
-   ```
+Note: LangGraph CLI and LangSmith CLI will be run via `uvx` (no installation needed)
 
 ### LangChain Account Setup
 
@@ -102,7 +101,7 @@ LangGraph Platform is LangChain's fully managed hosting solution for LangGraph a
 
 3. **Login via CLI**:
    ```bash
-   langgraph login
+   uvx langgraph-cli login
    # Enter your API key when prompted
    ```
 
@@ -124,10 +123,10 @@ You'll need at least one LLM provider API key:
 cd mcp_server_langgraph
 
 # 2. Login to LangChain (first time only)
-langgraph login
+uvx langgraph-cli login
 
 # 3. Deploy to platform
-langgraph deploy
+uvx langgraph-cli deploy
 ```
 
 That's it! Your agent is now live on LangGraph Platform.
@@ -136,13 +135,13 @@ That's it! Your agent is now live on LangGraph Platform.
 
 ```bash
 # Check deployment status
-langgraph deployment get mcp-server-langgraph
+uvx langgraph-cli deployment get mcp-server-langgraph
 
 # Get deployment URL
-langgraph deployment get mcp-server-langgraph --json | grep url
+uvx langgraph-cli deployment get mcp-server-langgraph --json | grep url
 
 # Test the deployment
-langgraph deployment invoke mcp-server-langgraph \
+uvx langgraph-cli deployment invoke mcp-server-langgraph \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
 ```
 
@@ -218,26 +217,26 @@ langsmith secret list
 
 ```bash
 # Deploy with automatic name
-langgraph deploy
+uvx langgraph-cli deploy
 
 # Deploy with specific name
-langgraph deploy my-agent-prod
+uvx langgraph-cli deploy my-agent-prod
 
 # Deploy with tag (environment)
-langgraph deploy --tag production
+uvx langgraph-cli deploy --tag production
 
 # Deploy specific graph
-langgraph deploy --graph agent
+uvx langgraph-cli deploy --graph agent
 ```
 
 ### Local Testing Before Deployment
 
 ```bash
 # Start local development server
-langgraph dev
+uvx langgraph-cli dev
 
 # Test locally (in another terminal)
-langgraph deployment invoke --local \
+uvx langgraph-cli deployment invoke --local \
   --input '{"messages": [{"role": "user", "content": "Test"}]}'
 
 # Stop with Ctrl+C when done
@@ -261,10 +260,10 @@ ENVIRONMENT=production ./deploy_langgraph_platform.sh
 
 ```bash
 # Redeploy (creates new revision)
-langgraph deploy my-agent-prod
+uvx langgraph-cli deploy my-agent-prod
 
 # Deploy specific revision
-langgraph deploy my-agent-prod --revision 5
+uvx langgraph-cli deploy my-agent-prod --revision 5
 ```
 
 ---
@@ -275,29 +274,29 @@ langgraph deploy my-agent-prod --revision 5
 
 ```bash
 # List all your deployments
-langgraph deployment list
+uvx langgraph-cli deployment list
 
 # Get deployment details
-langgraph deployment get my-agent-prod
+uvx langgraph-cli deployment get my-agent-prod
 
 # Get deployment in JSON format
-langgraph deployment get my-agent-prod --json
+uvx langgraph-cli deployment get my-agent-prod --json
 ```
 
 ### Invoke Deployed Graph
 
 ```bash
 # Simple invocation
-langgraph deployment invoke my-agent-prod \
+uvx langgraph-cli deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
 
 # With configuration
-langgraph deployment invoke my-agent-prod \
+uvx langgraph-cli deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "Analyze this"}]}' \
   --config '{"configurable": {"user_id": "user123"}}'
 
 # Stream responses
-langgraph deployment invoke my-agent-prod \
+uvx langgraph-cli deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "Tell me a story"}]}' \
   --stream
 ```
@@ -306,33 +305,33 @@ langgraph deployment invoke my-agent-prod \
 
 ```bash
 # Stream real-time logs
-langgraph deployment logs my-agent-prod --follow
+uvx langgraph-cli deployment logs my-agent-prod --follow
 
 # View recent logs
-langgraph deployment logs my-agent-prod --tail 100
+uvx langgraph-cli deployment logs my-agent-prod --tail 100
 
 # Filter by log level
-langgraph deployment logs my-agent-prod --level error
+uvx langgraph-cli deployment logs my-agent-prod --level error
 ```
 
 ### Rollback Deployment
 
 ```bash
 # List revisions
-langgraph deployment revisions my-agent-prod
+uvx langgraph-cli deployment revisions my-agent-prod
 
 # Rollback to previous revision
-langgraph deployment rollback my-agent-prod --revision 4
+uvx langgraph-cli deployment rollback my-agent-prod --revision 4
 ```
 
 ### Delete Deployment
 
 ```bash
 # Delete deployment
-langgraph deployment delete my-agent-prod
+uvx langgraph-cli deployment delete my-agent-prod
 
 # Force delete (skip confirmation)
-langgraph deployment delete my-agent-prod --force
+uvx langgraph-cli deployment delete my-agent-prod --force
 ```
 
 ---
@@ -391,13 +390,13 @@ Create separate deployments for each environment:
 
 ```bash
 # Staging
-langgraph deploy my-agent-staging --tag staging
+uvx langgraph-cli deploy my-agent-staging --tag staging
 
 # Production
-langgraph deploy my-agent-prod --tag production
+uvx langgraph-cli deploy my-agent-prod --tag production
 
 # Development
-langgraph deploy my-agent-dev --tag development
+uvx langgraph-cli deploy my-agent-dev --tag development
 ```
 
 ### Environment-Specific Configuration
@@ -425,11 +424,11 @@ LOG_LEVEL=INFO
 ```bash
 # Load staging environment
 export $(cat .env.staging | grep -v '^#' | xargs)
-langgraph deploy my-agent-staging
+uvx langgraph-cli deploy my-agent-staging
 
 # Load production environment
 export $(cat .env.production | grep -v '^#' | xargs)
-langgraph deploy my-agent-prod
+uvx langgraph-cli deploy my-agent-prod
 ```
 
 ---
@@ -462,11 +461,11 @@ langgraph deploy my-agent-prod
 **Solution**:
 ```bash
 # Re-login to LangChain
-langgraph logout
-langgraph login
+uvx langgraph-cli logout
+uvx langgraph-cli login
 
 # Verify authentication
-langgraph whoami
+uvx langgraph-cli whoami
 ```
 
 #### 3. Missing Dependencies
@@ -489,7 +488,7 @@ langsmith secret set ANTHROPIC_API_KEY "your-key"
 
 # Or update langgraph.json env section
 # Then redeploy
-langgraph deploy
+uvx langgraph-cli deploy
 ```
 
 #### 5. Cold Start Latency
@@ -506,18 +505,18 @@ langgraph deploy
 
 ```bash
 # Check deployment health
-langgraph deployment get my-agent-prod --json | grep status
+uvx langgraph-cli deployment get my-agent-prod --json | grep status
 
 # View environment variables
-langgraph deployment get my-agent-prod --json | grep -A 20 env
+uvx langgraph-cli deployment get my-agent-prod --json | grep -A 20 env
 
 # Test with debug output
-langgraph deployment invoke my-agent-prod \
+uvx langgraph-cli deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "test"}]}' \
   --debug
 
 # Export deployment configuration
-langgraph deployment get my-agent-prod --json > deployment-config.json
+uvx langgraph-cli deployment get my-agent-prod --json > deployment-config.json
 ```
 
 ---
@@ -528,10 +527,10 @@ langgraph deployment get my-agent-prod --json > deployment-config.json
 
 ```bash
 # Tag deployments with versions
-langgraph deploy my-agent-prod --tag v1.2.0
+uvx langgraph-cli deploy my-agent-prod --tag v1.2.0
 
 # Include git commit in metadata
-langgraph deploy --tag "$(git rev-parse --short HEAD)"
+uvx langgraph-cli deploy --tag "$(git rev-parse --short HEAD)"
 ```
 
 ### 2. Secrets Management
@@ -550,15 +549,15 @@ langgraph deploy --tag "$(git rev-parse --short HEAD)"
 
 ```bash
 # Always test locally first
-langgraph dev
+uvx langgraph-cli dev
 
 # Run integration tests before deployment
 pytest tests/integration/
 
 # Deploy to staging before production
-langgraph deploy my-agent-staging
+uvx langgraph-cli deploy my-agent-staging
 # Test staging thoroughly
-langgraph deploy my-agent-prod
+uvx langgraph-cli deploy my-agent-prod
 ```
 
 ### 4. Monitoring
@@ -628,15 +627,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install uv
         run: |
-          pip install langgraph-cli langsmith
+          curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Deploy to LangGraph Platform
         env:
           LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
         run: |
-          langgraph deploy my-agent-prod --tag production
+          uvx langgraph-cli deploy my-agent-prod --tag production
 ```
 
 ### GitLab CI Example
@@ -646,8 +645,8 @@ deploy-langgraph:
   stage: deploy
   image: python:3.11
   script:
-    - pip install langgraph-cli
-    - langgraph deploy my-agent-prod --tag production
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - uvx langgraph-cli deploy my-agent-prod --tag production
   only:
     - main
   environment:

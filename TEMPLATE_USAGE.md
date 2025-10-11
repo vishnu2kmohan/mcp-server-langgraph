@@ -7,11 +7,8 @@ This repository serves as a **cookie-cutter template** for building production-r
 ### Option 1: Using Cookiecutter (Recommended)
 
 ```bash
-# Install cookiecutter
-pip install cookiecutter
-
-# Generate your project
-cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+# Generate your project (uvx runs cookiecutter without installing it)
+uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 
 # Follow the interactive prompts
 ```
@@ -431,7 +428,7 @@ Begin with minimal configuration and add features as needed:
 
 ```bash
 # Start with this
-cookiecutter gh:vishnu2kmohan/mcp_server_langgraph \
+uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph \
   --replay-file minimal-config.json
 
 # Add features later by cherry-picking files
@@ -488,11 +485,11 @@ Create a `CUSTOMIZATIONS.md` file:
 
 ```bash
 # Enable debug mode
-cookiecutter --debug gh:vishnu2kmohan/mcp_server_langgraph
+uvx cookiecutter --debug gh:vishnu2kmohan/mcp_server_langgraph
 
 # Or use local template
 git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
-cookiecutter ./mcp_server_langgraph
+uvx cookiecutter ./mcp_server_langgraph
 ```
 
 ### Find-Replace Missed Files

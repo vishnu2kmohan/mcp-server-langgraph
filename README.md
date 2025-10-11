@@ -16,8 +16,7 @@ A **production-ready cookie-cutter template** for building MCP servers with Lang
 
 ```bash
 # Generate your own MCP server project
-uv pip install cookiecutter
-cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 
 # Answer a few questions and get a fully configured project!
 ```
@@ -407,14 +406,11 @@ Example queries:
 Deploy to LangGraph Platform for fully managed, serverless hosting:
 
 ```bash
-# Install CLI
-uv pip install langgraph-cli
-
-# Login
-langgraph login
+# Login (uvx runs langgraph-cli without installing it)
+uvx langgraph-cli login
 
 # Deploy
-langgraph deploy
+uvx langgraph-cli deploy
 ```
 
 **Benefits**:
