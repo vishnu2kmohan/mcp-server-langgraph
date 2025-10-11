@@ -1,6 +1,7 @@
 """
 LangGraph Functional API Agent with full observability and multi-provider LLM support
 Includes OpenTelemetry and LangSmith tracing integration
+Enhanced with Pydantic AI for type-safe routing and responses
 """
 from typing import Annotated, TypedDict, Literal, Optional
 from langgraph.graph import StateGraph, START, END
@@ -8,9 +9,19 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from langchain_core.runnables import RunnableConfig
 import operator
+import asyncio
 
 from llm_factory import create_llm_from_config
 from config import settings
+from observability import logger
+
+# Import Pydantic AI for type-safe responses
+try:
+    from pydantic_ai_agent import create_pydantic_agent, RouterDecision, AgentResponse
+    PYDANTIC_AI_AVAILABLE = True
+except ImportError:
+    PYDANTIC_AI_AVAILABLE = False
+    logger.warning("Pydantic AI not available, using fallback routing")
 
 # Import LangSmith config if available
 try:
@@ -27,6 +38,8 @@ class AgentState(TypedDict):
     next_action: str
     user_id: str | None
     request_id: str | None
+    routing_confidence: float | None  # Confidence from Pydantic AI routing
+    reasoning: str | None  # Reasoning from Pydantic AI
 
 
 def create_agent_graph():
@@ -34,6 +47,18 @@ def create_agent_graph():
 
     # Initialize the model via LiteLLM factory
     model = create_llm_from_config(settings)
+
+    # Initialize Pydantic AI agent if available
+    pydantic_agent = None
+    if PYDANTIC_AI_AVAILABLE:
+        try:
+            pydantic_agent = create_pydantic_agent()
+            logger.info("Pydantic AI agent initialized for type-safe routing")
+        except Exception as e:
+            logger.warning(
+                f"Failed to initialize Pydantic AI agent: {e}",
+                exc_info=True
+            )
 
     # Create runnable config for LangSmith tracing if available
     def get_runnable_config(
@@ -52,16 +77,61 @@ def create_agent_graph():
 
     # Define node functions
     def route_input(state: AgentState) -> AgentState:
-        """Route based on message type"""
+        """Route based on message type with Pydantic AI for type-safe decisions"""
         last_message = state["messages"][-1]
 
         if isinstance(last_message, HumanMessage):
-            # Determine if this needs tools or direct response
-            if any(keyword in last_message.content.lower()
-                   for keyword in ["search", "calculate", "lookup"]):
-                state["next_action"] = "use_tools"
+            # Use Pydantic AI for intelligent routing if available
+            if pydantic_agent:
+                try:
+                    # Run async routing in sync context
+                    decision = asyncio.run(
+                        pydantic_agent.route_message(
+                            last_message.content,
+                            context={
+                                "user_id": state.get("user_id", "unknown"),
+                                "message_count": str(len(state["messages"]))
+                            }
+                        )
+                    )
+
+                    # Update state with type-safe decision
+                    state["next_action"] = decision.action
+                    state["routing_confidence"] = decision.confidence
+                    state["reasoning"] = decision.reasoning
+
+                    logger.info(
+                        "Pydantic AI routing decision",
+                        extra={
+                            "action": decision.action,
+                            "confidence": decision.confidence,
+                            "reasoning": decision.reasoning
+                        }
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Pydantic AI routing failed, using fallback: {e}",
+                        exc_info=True
+                    )
+                    # Fallback to simple routing
+                    state = _fallback_routing(state, last_message)
             else:
-                state["next_action"] = "respond"
+                # Fallback routing if Pydantic AI not available
+                state = _fallback_routing(state, last_message)
+
+        return state
+
+    def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentState:
+        """Fallback routing logic without Pydantic AI"""
+        # Determine if this needs tools or direct response
+        if any(keyword in last_message.content.lower()
+               for keyword in ["search", "calculate", "lookup"]):
+            state["next_action"] = "use_tools"
+        else:
+            state["next_action"] = "respond"
+
+        state["routing_confidence"] = 0.5  # Low confidence for fallback
+        state["reasoning"] = "Fallback keyword-based routing"
 
         return state
 
@@ -82,9 +152,44 @@ def create_agent_graph():
         }
 
     def generate_response(state: AgentState) -> AgentState:
-        """Generate final response using LLM"""
+        """Generate final response using LLM with Pydantic AI validation"""
         messages = state["messages"]
-        response = model.invoke(messages)
+
+        # Use Pydantic AI for structured response if available
+        if pydantic_agent:
+            try:
+                # Generate type-safe response
+                typed_response = asyncio.run(
+                    pydantic_agent.generate_response(
+                        messages,
+                        context={
+                            "user_id": state.get("user_id", "unknown"),
+                            "routing_confidence": str(state.get("routing_confidence", 0.0))
+                        }
+                    )
+                )
+
+                # Convert to AIMessage
+                response = AIMessage(content=typed_response.content)
+
+                logger.info(
+                    "Pydantic AI response generated",
+                    extra={
+                        "confidence": typed_response.confidence,
+                        "requires_clarification": typed_response.requires_clarification,
+                        "sources": typed_response.sources
+                    }
+                )
+            except Exception as e:
+                logger.error(
+                    f"Pydantic AI response generation failed, using fallback: {e}",
+                    exc_info=True
+                )
+                # Fallback to standard LLM
+                response = model.invoke(messages)
+        else:
+            # Standard LLM response
+            response = model.invoke(messages)
 
         return {
             **state,
