@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to GitHub Copilot Workspace (Codex-based agents) when working with code in this repository.
 
 ## Project Overview
 
@@ -100,6 +100,7 @@ make reset                    # Clean + restart infrastructure + reinitialize Op
 - Conditional routing based on message content
 - Checkpointing with MemorySaver
 - Three-node workflow: router → tools → respond
+- **Pydantic AI Integration**: Type-safe routing with confidence scores and reasoning
 
 **LLM Abstraction** (llm_factory.py)
 - LiteLLM-based multi-provider factory
@@ -174,6 +175,8 @@ Permission inheritance:
 - `next_action`: Routing decision ("use_tools", "respond", "end")
 - `user_id`: Current user identifier
 - `request_id`: Request tracking ID
+- `routing_confidence`: Confidence score for routing decision (0.0-1.0)
+- `reasoning`: Explanation for routing decision
 
 **Checkpointing**: Uses LangGraph's MemorySaver with thread_id for conversation persistence.
 
@@ -349,6 +352,91 @@ metrics.tool_calls.add(1, {"tool": "chat"})
 metrics.response_duration.record(duration_ms, {"tool": "chat"})
 ```
 
+### Working with Pydantic AI
+
+**Type-safe routing**:
+```python
+from pydantic_ai_agent import PydanticAIAgentWrapper
+
+agent = PydanticAIAgentWrapper()
+
+# Get routing decision with confidence
+decision = await agent.route_message(
+    message="Search for Python tutorials",
+    context={"user_id": "user:alice"}
+)
+
+# Access type-safe fields
+action = decision.action      # Literal["use_tools", "respond", "clarify"]
+confidence = decision.confidence  # float (0.0-1.0)
+reasoning = decision.reasoning    # str
+tool_name = decision.tool_name    # Optional[str]
+```
+
+**Validated response generation**:
+```python
+# Generate validated response
+response = await agent.generate_response(
+    messages=[...],
+    context={"user_id": "user:alice"}
+)
+
+# Access structured response
+content = response.content              # str
+confidence = response.confidence        # float (0.0-1.0)
+needs_help = response.requires_clarification  # bool
+sources = response.sources              # list[str]
+metadata = response.metadata            # dict[str, str]
+```
+
+**Custom validation**:
+```python
+from llm_validators import LLMValidator
+from pydantic import BaseModel, Field
+
+class MyCustomResponse(BaseModel):
+    summary: str
+    key_points: list[str]
+    confidence: float = Field(ge=0.0, le=1.0)
+
+# Validate LLM output
+validated = LLMValidator.validate_response(
+    llm_output_text,
+    MyCustomResponse,
+    strict=False  # Graceful fallback
+)
+
+if validated.is_valid():
+    data = validated.data
+    print(data.summary)
+else:
+    errors = validated.get_errors()
+    print(f"Validation failed: {errors}")
+```
+
+**Streaming with validation**:
+```python
+from mcp_streaming import stream_validated_response
+import json
+
+# Stream content with type-safe chunks
+async for chunk_json in stream_validated_response(
+    content="Long response content...",
+    chunk_size=100,
+    stream_id="response-123"
+):
+    chunk = json.loads(chunk_json)
+
+    # Access validated chunk fields
+    text = chunk["content"]
+    index = chunk["chunk_index"]
+    is_final = chunk["is_final"]
+    metadata = chunk["metadata"]
+
+    # Process chunk
+    print(f"Chunk {index}: {text}")
+```
+
 ## Code Standards
 
 ### Type Hints
@@ -520,6 +608,10 @@ rate(agent_calls_failed_total[5m])
 **Symptom**: "Set the `GOOGLE_API_KEY` environment variable" in tests
 **Solution**: Tests should use mocks - check `tests/test_pydantic_ai.py` has `mock_pydantic_agent_class` fixture
 
+### Pydantic AI Validation Errors
+**Symptom**: "Response validation failed" warnings in logs
+**Solution**: Check LLM output format or use `strict=False` for graceful degradation
+
 ### Docker Compose Errors
 **Symptom**: Port conflicts or "address already in use"
 **Solution**:
@@ -619,59 +711,204 @@ Before deploying to production:
 
 The project uses **Pydantic AI** (https://ai.pydantic.dev) for type-safe agent responses throughout the codebase.
 
-### Why Pydantic AI?
-- **Type Safety**: Compile-time checking of LLM responses (no more string parsing!)
-- **Confidence Tracking**: Every decision includes a 0.0-1.0 confidence score
-- **Reasoning Transparency**: LLM explains why it made each routing decision
-- **Graceful Fallback**: Automatically falls back to keyword-based routing if Pydantic AI unavailable
-- **Better Debugging**: Structured errors instead of raw strings
-
 ### Key Features
-- **Type-safe routing**: Structured routing decisions with confidence scores and reasoning
-- **Validated responses**: LLM outputs conforming to Pydantic models
-- **Structured streaming**: Type-safe streaming chunks with validation
-- **Predefined validators**: EntityExtraction, IntentClassification, SentimentAnalysis, SummaryExtraction
-- **Generic validation**: Validate any LLM output against custom Pydantic models
 
-### Quick Usage
+✅ **Type-safe routing**: RouterDecision model with Literal types for actions
+✅ **Validated responses**: AgentResponse model ensuring structured outputs
+✅ **Confidence tracking**: All decisions include confidence scores (0.0-1.0)
+✅ **Reasoning explanations**: LLM-generated explanations for routing decisions
+✅ **Structured streaming**: Type-safe StreamChunk and StreamedResponse models
+✅ **Response validators**: Predefined models for common tasks (entities, intent, sentiment, summary)
+✅ **Graceful fallback**: Automatic fallback to keyword-based routing if Pydantic AI unavailable
+
+### Architecture
+
+**Core Models** (pydantic_ai_agent.py):
+```python
+class RouterDecision(BaseModel):
+    """Type-safe routing decision."""
+    action: Literal["use_tools", "respond", "clarify"]
+    reasoning: str
+    confidence: float = Field(ge=0.0, le=1.0)
+    tool_name: Optional[str] = None
+
+class AgentResponse(BaseModel):
+    """Validated agent response."""
+    content: str
+    confidence: float = Field(ge=0.0, le=1.0)
+    requires_clarification: bool = False
+    clarification_question: Optional[str] = None
+    sources: list[str] = Field(default_factory=list)
+    metadata: dict[str, str] = Field(default_factory=dict)
+```
+
+**Validation Utilities** (llm_validators.py):
+```python
+class ValidatedResponse(BaseModel, Generic[T]):
+    """Generic container for validated LLM responses."""
+    data: Optional[T]
+    raw_content: str
+    validation_success: bool
+    validation_errors: Optional[list[str]] = None
+
+# Predefined validators
+class EntityExtraction(BaseModel): ...
+class IntentClassification(BaseModel): ...
+class SentimentAnalysis(BaseModel): ...
+class SummaryExtraction(BaseModel): ...
+```
+
+**Streaming Models** (mcp_streaming.py):
+```python
+class StreamChunk(BaseModel):
+    """Type-safe streaming chunk."""
+    content: str
+    chunk_index: int
+    is_final: bool = False
+    metadata: dict[str, str] = Field(default_factory=dict)
+
+class StreamedResponse(BaseModel):
+    """Complete validated stream."""
+    chunks: list[StreamChunk]
+    total_length: int
+    chunk_count: int
+    is_complete: bool
+```
+
+### Integration Points
+
+1. **Agent Routing** (agent.py:route_input)
+   - Uses PydanticAIAgentWrapper for type-safe routing decisions
+   - Populates `routing_confidence` and `reasoning` in AgentState
+   - Falls back to keyword-based routing if Pydantic AI unavailable
+
+2. **Response Generation** (agent.py:generate_response)
+   - Uses PydanticAIAgentWrapper for validated responses
+   - Ensures structured output with confidence tracking
+   - Integrates with observability (tracing, metrics)
+
+3. **LLM Factory** (llm_validators.py)
+   - Generic validation wrapper for any Pydantic model
+   - Predefined validators for common extraction tasks
+   - Strict/non-strict validation modes
+
+4. **MCP Streaming** (mcp_streaming.py)
+   - Type-safe chunk validation
+   - Stream reconstruction with full validation
+   - Error handling in streaming context
+
+### Usage Examples
+
+**Basic routing**:
 ```python
 from pydantic_ai_agent import create_pydantic_agent
 
 agent = create_pydantic_agent()
-
-# Type-safe routing with confidence
 decision = await agent.route_message("Search for Python tutorials")
-print(decision.action)      # "use_tools" (Literal type, not just string!)
-print(decision.confidence)  # 0.92
-print(decision.reasoning)   # "User explicitly requested search functionality"
 
-# Validated response with sources
-response = await agent.generate_response(messages)
-print(response.content)      # str
-print(response.confidence)   # 0.85
-print(response.sources)      # ["doc1.md", "doc2.md"]
+print(decision.action)      # "use_tools"
+print(decision.confidence)  # 0.92
+print(decision.reasoning)   # "User explicitly requested search"
 ```
 
-### Integration Points
-- **agent.py**: Uses Pydantic AI for routing in `route_input()` and response generation in `generate_response()`
-- **llm_validators.py**: Generic validation framework for any LLM output
-- **mcp_streaming.py**: Type-safe streaming with chunk-by-chunk validation
+**Custom validation**:
+```python
+from llm_validators import LLMValidator
+from pydantic import BaseModel
 
-### Performance Impact
-- Routing: +50-200ms (LLM-based vs keyword matching)
-- Validation: <5ms (Pydantic overhead)
-- Streaming: <1% overhead per chunk
+class CodeReview(BaseModel):
+    issues: list[str]
+    severity: Literal["low", "medium", "high"]
+    suggestions: list[str]
 
-**Worth it?** Yes - the type safety and confidence tracking are invaluable for production systems.
+validated = LLMValidator.validate_response(
+    llm_output,
+    CodeReview,
+    strict=False
+)
 
-**See**: `docs/PYDANTIC_AI_INTEGRATION.md` for complete guide
+if validated.is_valid():
+    review = validated.data
+    for issue in review.issues:
+        print(f"Issue: {issue}")
+```
+
+**Streaming**:
+```python
+from mcp_streaming import stream_validated_response
+
+async for chunk_json in stream_validated_response(
+    content="Long response...",
+    chunk_size=100
+):
+    chunk = json.loads(chunk_json)
+    print(f"Chunk {chunk['chunk_index']}: {chunk['content']}")
+```
+
+### Performance Considerations
+
+- **Routing latency**: +50-200ms for LLM-based routing vs keyword matching
+- **Validation overhead**: <5ms per Pydantic validation
+- **Streaming overhead**: <1% per chunk validation
+- **Optimization**: Use confidence thresholds to decide when to use LLM routing vs fallback
+
+### Testing
+
+All Pydantic AI components have comprehensive unit tests:
+
+```bash
+# Run Pydantic AI tests
+pytest tests/test_pydantic_ai.py -m unit -v
+
+# Test coverage
+pytest tests/test_pydantic_ai.py --cov=pydantic_ai_agent --cov=llm_validators --cov=mcp_streaming
+```
+
+**Test fixtures** (tests/test_pydantic_ai.py):
+```python
+@pytest.fixture
+def mock_pydantic_agent_class():
+    """Mock Pydantic AI Agent to avoid API key requirements."""
+    with patch("pydantic_ai_agent.Agent") as mock:
+        yield mock
+```
+
+### Documentation
+
+- **Complete Integration Guide**: `docs/PYDANTIC_AI_INTEGRATION.md`
+- **Implementation Summary**: `PYDANTIC_AI_README.md`
+- **Developer Guide**: This file (AGENTS.md)
+- **Tests**: `tests/test_pydantic_ai.py`
+
+### Troubleshooting
+
+**Pydantic AI not available**:
+```
+WARNING:root:Pydantic AI not available, using fallback routing
+```
+Solution: `pip install pydantic-ai>=1.0.0`
+
+**Validation failures**:
+```
+WARNING:root:Response validation failed: [errors]
+```
+Solution: Use `strict=False` or update LLM prompt for better structured output
+
+**Import errors**:
+```
+ImportError: cannot import name 'PydanticAIAgentWrapper'
+```
+Solution: Ensure `pydantic_ai_agent.py` exists and Python path is correct
 
 ## Key Files Reference
 
+### Core Agent Files
 - **agent.py**: LangGraph agent with Pydantic AI type-safe routing
 - **pydantic_ai_agent.py**: Pydantic AI wrapper for structured responses
-- **llm_validators.py**: Response validation utilities
-- **mcp_streaming.py**: Type-safe streaming with validation
+- **llm_validators.py**: Response validation utilities with predefined validators
+- **mcp_streaming.py**: Type-safe streaming with chunk validation
+
+### Infrastructure Files
 - **llm_factory.py**: Multi-provider LLM abstraction with fallback
 - **mcp_server_streamable.py**: StreamableHTTP MCP server (production)
 - **mcp_server.py**: stdio MCP server (Claude Desktop)
@@ -681,6 +918,20 @@ print(response.sources)      # ["doc1.md", "doc2.md"]
 - **observability.py**: OpenTelemetry + LangSmith setup
 - **secrets_manager.py**: Infisical wrapper for secure secrets
 - **health_check.py**: Health check endpoints (liveness/readiness)
+
+### Testing Files
+- **tests/test_pydantic_ai.py**: Pydantic AI integration tests (20+ unit tests)
+- **tests/test_agent.py**: Agent behavior tests
+- **tests/test_openfga_client.py**: Authorization tests
+- **tests/test_mcp_streamable.py**: MCP server tests
+- **tests/conftest.py**: Shared test fixtures
+
+### Documentation Files
+- **README.md**: Project overview and quick start
+- **CLAUDE.md**: Guidance for Claude Code (AI assistant)
+- **AGENTS.md**: This file - guidance for Codex-based agents
+- **docs/PYDANTIC_AI_INTEGRATION.md**: Complete Pydantic AI guide
+- **PYDANTIC_AI_README.md**: Pydantic AI implementation summary
 
 ## Environment Variables
 
@@ -741,24 +992,30 @@ INFISICAL_PROJECT_ID=<your-project-id>
 ## Testing Strategy
 
 ### Unit Tests (Fast, No External Dependencies)
-- Mock LLM responses
-- Mock OpenFGA client
-- Mock Infisical client
-- Test pure logic and validation
+- Mock LLM responses with predefined outputs
+- Mock OpenFGA client to avoid infrastructure dependency
+- Mock Infisical client for secrets testing
+- Test pure logic, validation, and error handling
+- Run with: `pytest -m unit -v`
 
 ### Integration Tests (Require Infrastructure)
-- Real OpenFGA instance
-- Real observability stack
-- Test end-to-end flows
-- Verify authorization logic
+- Real OpenFGA instance (docker-compose)
+- Real observability stack (Jaeger, Prometheus)
+- Test end-to-end flows including authorization
+- Verify cross-component interactions
+- Run with: `pytest -m integration -v` (after `make setup-infra`)
 
 ### Benchmark Tests
-- Performance-critical paths
+- Performance-critical paths (routing, authorization)
 - LLM latency tracking
-- Authorization overhead
+- Authorization check overhead
 - End-to-end agent response time
+- Run with: `pytest -m benchmark --benchmark-only --benchmark-autosave`
 
-Run with: `pytest -m benchmark --benchmark-only --benchmark-autosave`
+### Coverage Targets
+- Overall: 80%+
+- Core modules (agent.py, llm_factory.py): 90%+
+- Security modules (auth.py, openfga_client.py): 95%+
 
 ## Development Workflow (Git & GitHub)
 
@@ -844,7 +1101,7 @@ git branch -d feature/my-feature-name
 git commit -m "feat: add Pydantic AI integration for type-safe routing"
 git commit -m "fix: resolve OpenFGA connection timeout in auth middleware"
 git commit -m "test: add unit tests for llm_validators module"
-git commit -m "docs: update CLAUDE.md with Pydantic AI usage examples"
+git commit -m "docs: update AGENTS.md with development workflow examples"
 ```
 
 ### PR Checklist
@@ -893,3 +1150,101 @@ gh pr merge 17 --squash
 # Close PR without merging
 gh pr close 17
 ```
+
+## Code Review Checklist
+
+When reviewing code changes, ensure:
+
+✅ **Type Safety**: All public APIs have type hints
+✅ **Documentation**: Docstrings for all public functions/classes
+✅ **Testing**: Unit tests for new functionality
+✅ **Security**: Authorization checks for all privileged operations
+✅ **Observability**: Tracing spans and metrics for important operations
+✅ **Error Handling**: Specific exceptions with proper logging
+✅ **Validation**: Pydantic models for all user inputs
+✅ **Performance**: Async operations used where appropriate
+✅ **Secrets**: No hardcoded credentials or API keys
+✅ **Standards**: Code formatted with black/isort, passes flake8/mypy
+
+## Best Practices
+
+### DO:
+- Use Pydantic AI for type-safe LLM interactions
+- Add authorization checks before privileged operations
+- Use structured logging with trace context
+- Write unit tests for all new functionality
+- Use async/await for I/O-bound operations
+- Validate all user inputs with Pydantic models
+- Add observability spans for important operations
+- Use environment variables for configuration
+- Follow Google-style docstrings
+- Keep functions focused and single-purpose
+
+### DON'T:
+- Hardcode secrets or API keys
+- Skip authorization checks
+- Use synchronous I/O in async functions
+- Return raw strings when structured data is available
+- Ignore validation errors silently
+- Write tests without proper markers
+- Use bare `except:` clauses
+- Commit code that fails linting
+- Deploy without running integration tests
+- Use print() instead of logger
+
+## Migration Guide (For New Contributors)
+
+### From Basic LangChain to This Project
+
+1. **State Management**: Use TypedDict-based `AgentState` instead of dict
+2. **LLM Calls**: Use `llm_factory.create_llm()` instead of direct ChatModel
+3. **Authorization**: Always check permissions with OpenFGA before operations
+4. **Responses**: Use `AgentResponse` model instead of raw strings
+5. **Routing**: Use Pydantic AI routing instead of manual keyword matching
+6. **Observability**: Add tracing spans and metrics for monitoring
+7. **Configuration**: Use Pydantic Settings instead of os.getenv()
+8. **Testing**: Use pytest markers and fixtures from conftest.py
+
+### Example Migration
+
+**Before** (basic LangChain):
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4")
+response = llm.invoke([{"role": "user", "content": "Hello"}])
+return response.content  # Just a string
+```
+
+**After** (this project):
+```python
+from llm_factory import create_llm
+from pydantic_ai_agent import create_pydantic_agent
+from observability import tracer
+
+# Type-safe LLM with fallback
+llm = create_llm()
+
+# Type-safe routing
+agent = create_pydantic_agent()
+decision = await agent.route_message("Hello", context={"user_id": user_id})
+
+# Validated response with observability
+with tracer.start_as_current_span("agent.respond") as span:
+    response = await agent.generate_response(messages, context)
+    span.set_attribute("confidence", response.confidence)
+    return response  # AgentResponse with metadata
+```
+
+## Additional Resources
+
+- **LangGraph Docs**: https://langchain-ai.github.io/langgraph/
+- **Pydantic AI Docs**: https://ai.pydantic.dev
+- **OpenFGA Docs**: https://openfga.dev/docs
+- **LiteLLM Docs**: https://docs.litellm.ai/
+- **OpenTelemetry Python**: https://opentelemetry.io/docs/languages/python/
+- **MCP Protocol Spec**: https://modelcontextprotocol.io/
+
+---
+
+**Note for AI Agents**: This project uses production-grade patterns with comprehensive type safety, authorization, and observability. When making changes, ensure you maintain these standards and add appropriate tests. The Pydantic AI integration is a core feature - use it for all new LLM interactions.
