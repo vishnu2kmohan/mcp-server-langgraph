@@ -13,7 +13,9 @@ from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 # Hypothesis strategies for auth testing
-usernames = st.text(min_size=1, max_size=50, alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd")))
+# Use known valid usernames for auth tests to avoid assume() filtering
+valid_usernames = st.sampled_from(["alice", "bob", "admin", "charlie", "dave"])
+usernames = valid_usernames  # Alias for compatibility
 
 user_ids = st.builds(lambda name: f"user:{name}", usernames)
 
@@ -40,9 +42,6 @@ class TestJWTProperties:
         """Property: JWT encode/decode should be reversible"""
         from auth import AuthMiddleware
 
-        # Skip invalid usernames
-        assume(username in ["alice", "bob", "admin"])
-
         auth = AuthMiddleware(secret_key="test-secret")
 
         # Create token
@@ -63,7 +62,6 @@ class TestJWTProperties:
         """Property: JWT verification requires the correct secret key"""
         from auth import AuthMiddleware
 
-        assume(username in ["alice", "bob", "admin"])
         assume(secret1 != secret2)
 
         auth1 = AuthMiddleware(secret_key=secret1)
@@ -82,8 +80,6 @@ class TestJWTProperties:
     def test_expired_tokens_rejected(self, username):
         """Property: Expired tokens should always be rejected"""
         from auth import AuthMiddleware
-
-        assume(username in ["alice", "bob", "admin"])
 
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -107,8 +103,6 @@ class TestJWTProperties:
     def test_token_expiration_time_honored(self, username, expiration):
         """Property: Token expiration should match requested time"""
         from auth import AuthMiddleware
-
-        assume(username in ["alice", "bob", "admin"])
 
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -225,8 +219,6 @@ class TestPermissionInheritance:
         """Property: Organization members should have access to org tools"""
         from auth import AuthMiddleware
 
-        assume(org_user not in ["alice", "bob", "admin"])
-
         auth = AuthMiddleware()
 
         # Mock OpenFGA with org relationship
@@ -284,8 +276,6 @@ class TestSecurityInvariants:
         """Property: User cannot inject arbitrary claims into JWT"""
         from auth import AuthMiddleware
 
-        assume(username in ["alice", "bob", "admin"])
-
         auth = AuthMiddleware(secret_key="test-secret")
 
         # Create normal token
@@ -306,8 +296,6 @@ class TestSecurityInvariants:
     def test_tokens_contain_user_id_not_password(self, username):
         """Property: JWT should never contain sensitive data like passwords"""
         from auth import AuthMiddleware
-
-        assume(username in ["alice", "bob", "admin"])
 
         auth = AuthMiddleware(secret_key="test-secret")
 

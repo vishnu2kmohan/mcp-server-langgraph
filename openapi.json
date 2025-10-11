@@ -1,5 +1,181 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-    from fastapi.openapi.utils import get_openapi; from mcp_server_streamable import app; import json; schema = get_openapi(title=app.title, version=app.version, openapi_version=app.openapi_version, description=app.description, routes=app.routes, tags=app.openapi_tags); print(json.dumps(schema, indent=2))
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-ModuleNotFoundError: No module named 'fastapi'
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LangGraph MCP Server API",
+    "version": "1.0.0",
+    "description": "Model Context Protocol server with LangGraph agent, featuring multi-LLM support, OpenFGA authorization, and OpenTelemetry observability"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/health/live": {
+      "get": {
+        "summary": "Liveness check",
+        "description": "Kubernetes liveness probe - checks if server is running",
+        "tags": ["health"],
+        "responses": {
+          "200": {
+            "description": "Server is alive",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness check",
+        "description": "Kubernetes readiness probe - checks if server is ready to handle requests",
+        "tags": ["health"],
+        "responses": {
+          "200": {
+            "description": "Server is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Server is not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/startup": {
+      "get": {
+        "summary": "Startup check",
+        "description": "Kubernetes startup probe - checks if server has started successfully",
+        "tags": ["health"],
+        "responses": {
+          "200": {
+            "description": "Server has started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Prometheus metrics",
+        "description": "OpenTelemetry metrics in Prometheus format",
+        "tags": ["observability"],
+        "responses": {
+          "200": {
+            "description": "Metrics data",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReadinessResponse": {
+        "type": "object",
+        "required": ["status", "checks"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ready", "not_ready"]
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "openfga": {
+                "type": "string",
+                "enum": ["healthy", "unhealthy", "not_configured"]
+              },
+              "infisical": {
+                "type": "string",
+                "enum": ["healthy", "degraded", "not_configured"]
+              },
+              "llm_provider": {
+                "type": "string",
+                "enum": ["configured", "missing"]
+              }
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authentication via Authorization header"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Health check endpoints for Kubernetes probes"
+    },
+    {
+      "name": "observability",
+      "description": "Metrics and monitoring endpoints"
+    }
+  ]
+}

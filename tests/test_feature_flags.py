@@ -21,7 +21,7 @@ class TestFeatureFlags:
         assert flags.enable_pydantic_ai_responses is True
         assert flags.enable_llm_fallback is True
         assert flags.enable_openfga is True
-        assert flags.enable_openfga_strict_mode is False  # Fail-open by default
+        assert flags.openfga_strict_mode is False  # Fail-open by default
         assert flags.enable_experimental_features is False
 
     def test_environment_variable_override(self):
