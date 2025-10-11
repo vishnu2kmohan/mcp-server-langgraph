@@ -1,6 +1,7 @@
 """Pytest configuration and shared fixtures"""
 import asyncio
 import os
+import sys
 from datetime import datetime, timedelta
 from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -16,10 +17,38 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-anthropic-key")
 os.environ.setdefault("OPENFGA_API_URL", "http://localhost:8080")
-os.environ.setdefault("OPENFGA_STORE_ID", "test-store-id")
-os.environ.setdefault("OPENFGA_MODEL_ID", "test-model-id")
+os.environ.setdefault("OPENFGA_STORE_ID", "")  # Disable OpenFGA for tests
+os.environ.setdefault("OPENFGA_MODEL_ID", "")  # Disable OpenFGA for tests
 os.environ.setdefault("LOG_LEVEL", "DEBUG")
 os.environ.setdefault("OTLP_ENDPOINT", "http://localhost:4317")
+
+
+# Mock MCP server initialization at session level to prevent event loop issues
+@pytest.fixture(scope="session", autouse=True)
+def mock_mcp_modules():
+    """Mock MCP server modules to prevent async initialization at import time"""
+    # Create mock MCP SDK Server
+    mock_mcp_sdk_server = MagicMock()
+    mock_tool_manager = MagicMock()
+    mock_resource_manager = MagicMock()
+
+    # Mock the managers
+    type(mock_mcp_sdk_server)._tool_manager = property(lambda self: mock_tool_manager)
+    type(mock_mcp_sdk_server)._resource_manager = property(lambda self: mock_resource_manager)
+
+    # Create mock server instance
+    mock_server_instance = MagicMock()
+    mock_server_instance.server = mock_mcp_sdk_server
+    mock_server_instance.auth = MagicMock()
+
+    # Patch the class before any imports
+    with patch('mcp_server_streamable.MCPAgentStreamableServer', return_value=mock_server_instance):
+        # Return dict with all mocks for test access
+        yield {
+            'server_instance': mock_server_instance,
+            'tool_manager': mock_tool_manager,
+            'resource_manager': mock_resource_manager
+        }
 
 
 @pytest.fixture(scope="session")

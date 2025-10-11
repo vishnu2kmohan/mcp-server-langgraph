@@ -18,7 +18,22 @@
       "Bash(gh pr close:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh pr checks:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git fetch:*)",
+      "Bash(test:*)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1 pip install -r requirements.txt)",
+      "Bash(pytest:*)",
+      "Bash(tee:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh run view:*)",
+      "Bash(pip index versions:*)",
+      "Bash(sort:*)"
     ],
     "deny": [],
     "ask": []
