@@ -115,6 +115,7 @@ secrets.yaml
 # Coverage reports
 coverage.xml
 .coverage.*
+test_results.log
 
 # Database
 *.db
