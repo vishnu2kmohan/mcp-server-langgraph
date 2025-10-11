@@ -56,8 +56,9 @@ class TestFeatureFlags:
 
     def test_numeric_flag_constraints(self):
         """Test numeric flags enforce min/max constraints"""
-        from feature_flags import FeatureFlags
         from pydantic import ValidationError
+
+        from feature_flags import FeatureFlags
 
         # Test confidence threshold must be between 0 and 1
         with pytest.raises(ValidationError):
@@ -201,8 +202,9 @@ class TestFeatureFlagEdgeCases:
 
     def test_invalid_confidence_threshold(self):
         """Test confidence threshold validation"""
-        from feature_flags import FeatureFlags
         from pydantic import ValidationError
+
+        from feature_flags import FeatureFlags
 
         # Too high
         with pytest.raises(ValidationError):
@@ -214,8 +216,9 @@ class TestFeatureFlagEdgeCases:
 
     def test_invalid_timeout(self):
         """Test timeout validation"""
-        from feature_flags import FeatureFlags
         from pydantic import ValidationError
+
+        from feature_flags import FeatureFlags
 
         # Too low
         with pytest.raises(ValidationError):
@@ -227,8 +230,9 @@ class TestFeatureFlagEdgeCases:
 
     def test_invalid_sample_rate(self):
         """Test sample rate validation"""
-        from feature_flags import FeatureFlags
         from pydantic import ValidationError
+
+        from feature_flags import FeatureFlags
 
         with pytest.raises(ValidationError):
             FeatureFlags(trace_sample_rate=1.5)

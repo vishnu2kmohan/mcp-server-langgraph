@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
-from jsonschema import ValidationError, validate
+from jsonschema import Draft7Validator, ValidationError
 
 
 @pytest.fixture
@@ -20,44 +20,58 @@ def mcp_schemas():
     return schemas
 
 
+@pytest.fixture
+def validate_with_schema(mcp_schemas):
+    """Helper to validate instances against schema definitions with proper $ref resolution"""
+    validator = Draft7Validator(mcp_schemas)
+
+    def validate_instance(instance, schema_name):
+        """Validate instance against a schema definition by name"""
+        # Use $ref to reference the definition, allowing proper resolution
+        schema_ref = {"$ref": f"#/definitions/{schema_name}"}
+        validator.validate(instance, schema_ref)
+
+    return validate_instance
+
+
 @pytest.mark.contract
 @pytest.mark.unit
 class TestJSONRPCFormat:
     """Test basic JSON-RPC 2.0 format compliance"""
 
-    def test_request_has_required_fields(self, mcp_schemas):
+    def test_request_has_required_fields(self, validate_with_schema):
         """All MCP requests must follow JSON-RPC 2.0 format"""
         request = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
 
         # Should validate against JSON-RPC request schema
-        validate(instance=request, schema=mcp_schemas["definitions"]["jsonrpc_request"])
+        validate_with_schema(request, "jsonrpc_request")
 
-    def test_response_has_required_fields(self, mcp_schemas):
+    def test_response_has_required_fields(self, validate_with_schema):
         """All MCP responses must follow JSON-RPC 2.0 format"""
         response = {"jsonrpc": "2.0", "id": 1, "result": {"tools": []}}
 
         # Should validate
-        validate(instance=response, schema=mcp_schemas["definitions"]["jsonrpc_response"])
+        validate_with_schema(response, "jsonrpc_response")
 
-    def test_error_response_format(self, mcp_schemas):
+    def test_error_response_format(self, validate_with_schema):
         """Error responses must have code and message"""
         error_response = {"jsonrpc": "2.0", "id": 1, "error": {"code": -32600, "message": "Invalid Request"}}
 
-        validate(instance=error_response, schema=mcp_schemas["definitions"]["jsonrpc_response"])
+        validate_with_schema(error_response, "jsonrpc_response")
 
-    def test_response_cannot_have_both_result_and_error(self, mcp_schemas):
+    def test_response_cannot_have_both_result_and_error(self, validate_with_schema):
         """JSON-RPC responses must have either result or error, not both"""
         invalid_response = {"jsonrpc": "2.0", "id": 1, "result": {}, "error": {"code": -1, "message": "test"}}
 
         with pytest.raises(ValidationError):
-            validate(instance=invalid_response, schema=mcp_schemas["definitions"]["jsonrpc_response"])
+            validate_with_schema(invalid_response, "jsonrpc_response")
 
-    def test_jsonrpc_version_must_be_2_0(self, mcp_schemas):
+    def test_jsonrpc_version_must_be_2_0(self, validate_with_schema):
         """JSON-RPC version must be exactly "2.0" """
         invalid_request = {"jsonrpc": "1.0", "id": 1, "method": "test"}
 
         with pytest.raises(ValidationError):
-            validate(instance=invalid_request, schema=mcp_schemas["definitions"]["jsonrpc_request"])
+            validate_with_schema(invalid_request, "jsonrpc_request")
 
 
 @pytest.mark.contract
@@ -65,7 +79,7 @@ class TestJSONRPCFormat:
 class TestInitializeContract:
     """Test initialize handshake contract"""
 
-    def test_initialize_request_format(self, mcp_schemas):
+    def test_initialize_request_format(self, validate_with_schema, mcp_schemas):
         """Initialize request must include protocolVersion and clientInfo"""
         request = {
             "jsonrpc": "2.0",
@@ -74,16 +88,16 @@ class TestInitializeContract:
             "params": {"protocolVersion": "0.1.0", "clientInfo": {"name": "test-client", "version": "1.0.0"}},
         }
 
-        validate(instance=request, schema=mcp_schemas["definitions"]["initialize_request"])
+        validate_with_schema(request, "initialize_request")
 
-    def test_initialize_request_missing_clientinfo(self, mcp_schemas):
+    def test_initialize_request_missing_clientinfo(self, validate_with_schema, mcp_schemas):
         """Initialize request without clientInfo should fail"""
         invalid_request = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "0.1.0"}}
 
         with pytest.raises(ValidationError):
-            validate(instance=invalid_request, schema=mcp_schemas["definitions"]["initialize_request"])
+            validate_with_schema(invalid_request, "initialize_request")
 
-    def test_initialize_response_format(self, mcp_schemas):
+    def test_initialize_response_format(self, validate_with_schema, mcp_schemas):
         """Initialize response must include serverInfo and capabilities"""
         response = {
             "jsonrpc": "2.0",
@@ -95,9 +109,9 @@ class TestInitializeContract:
             },
         }
 
-        validate(instance=response, schema=mcp_schemas["definitions"]["initialize_response"])
+        validate_with_schema(response, "initialize_response")
 
-    def test_initialize_response_missing_capabilities(self, mcp_schemas):
+    def test_initialize_response_missing_capabilities(self, validate_with_schema, mcp_schemas):
         """Initialize response must include capabilities"""
         invalid_response = {
             "jsonrpc": "2.0",
@@ -106,7 +120,7 @@ class TestInitializeContract:
         }
 
         with pytest.raises(ValidationError):
-            validate(instance=invalid_response, schema=mcp_schemas["definitions"]["initialize_response"])
+            validate_with_schema(invalid_response, "initialize_response")
 
 
 @pytest.mark.contract
@@ -114,13 +128,13 @@ class TestInitializeContract:
 class TestToolsContract:
     """Test tools/list and tools/call contracts"""
 
-    def test_tools_list_request_format(self, mcp_schemas):
+    def test_tools_list_request_format(self, validate_with_schema, mcp_schemas):
         """tools/list request should follow MCP spec"""
         request = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
-        validate(instance=request, schema=mcp_schemas["definitions"]["tools_list_request"])
+        validate_with_schema(request, "tools_list_request")
 
-    def test_tools_list_response_format(self, mcp_schemas):
+    def test_tools_list_response_format(self, validate_with_schema, mcp_schemas):
         """tools/list response must contain array of tools"""
         response = {
             "jsonrpc": "2.0",
@@ -140,16 +154,16 @@ class TestToolsContract:
             },
         }
 
-        validate(instance=response, schema=mcp_schemas["definitions"]["tools_list_response"])
+        validate_with_schema(response, "tools_list_response")
 
-    def test_tool_must_have_name_and_description(self, mcp_schemas):
+    def test_tool_must_have_name_and_description(self, validate_with_schema, mcp_schemas):
         """Each tool must have name and description"""
         invalid_response = {"jsonrpc": "2.0", "id": 2, "result": {"tools": [{"name": "chat"}]}}  # Missing description
 
         with pytest.raises(ValidationError):
-            validate(instance=invalid_response, schema=mcp_schemas["definitions"]["tools_list_response"])
+            validate_with_schema(invalid_response, "tools_list_response")
 
-    def test_tools_call_request_format(self, mcp_schemas):
+    def test_tools_call_request_format(self, validate_with_schema, mcp_schemas):
         """tools/call request must include name and arguments"""
         request = {
             "jsonrpc": "2.0",
@@ -158,9 +172,9 @@ class TestToolsContract:
             "params": {"name": "chat", "arguments": {"message": "Hello", "username": "alice"}},
         }
 
-        validate(instance=request, schema=mcp_schemas["definitions":"tools_call_request"])
+        validate_with_schema(request, "tools_call_request")
 
-    def test_tools_call_response_format(self, mcp_schemas):
+    def test_tools_call_response_format(self, validate_with_schema, mcp_schemas):
         """tools/call response must contain content array"""
         response = {
             "jsonrpc": "2.0",
@@ -168,14 +182,14 @@ class TestToolsContract:
             "result": {"content": [{"type": "text", "text": "Hello! How can I help you?"}], "isError": False},
         }
 
-        validate(instance=response, schema=mcp_schemas["definitions"]["tools_call_response"])
+        validate_with_schema(response, "tools_call_response")
 
-    def test_tools_call_response_must_have_content(self, mcp_schemas):
+    def test_tools_call_response_must_have_content(self, validate_with_schema, mcp_schemas):
         """tools/call response must include content field"""
         invalid_response = {"jsonrpc": "2.0", "id": 3, "result": {"isError": False}}  # Missing content
 
         with pytest.raises(ValidationError):
-            validate(instance=invalid_response, schema=mcp_schemas["definitions"]["tools_call_response"])
+            validate_with_schema(invalid_response, "tools_call_response")
 
 
 @pytest.mark.contract
@@ -183,13 +197,13 @@ class TestToolsContract:
 class TestResourcesContract:
     """Test resources/list contract"""
 
-    def test_resources_list_request_format(self, mcp_schemas):
+    def test_resources_list_request_format(self, validate_with_schema, mcp_schemas):
         """resources/list request should follow MCP spec"""
         request = {"jsonrpc": "2.0", "id": 4, "method": "resources/list", "params": {}}
 
-        validate(instance=request, schema=mcp_schemas["definitions"]["resources_list_request"])
+        validate_with_schema(request, "resources_list_request")
 
-    def test_resources_list_response_format(self, mcp_schemas):
+    def test_resources_list_response_format(self, validate_with_schema, mcp_schemas):
         """resources/list response must contain array of resources"""
         response = {
             "jsonrpc": "2.0",
@@ -206,9 +220,9 @@ class TestResourcesContract:
             },
         }
 
-        validate(instance=response, schema=mcp_schemas["definitions"]["resources_list_response"])
+        validate_with_schema(response, "resources_list_response")
 
-    def test_resource_must_have_uri_and_name(self, mcp_schemas):
+    def test_resource_must_have_uri_and_name(self, validate_with_schema, mcp_schemas):
         """Each resource must have uri and name"""
         invalid_response = {
             "jsonrpc": "2.0",
@@ -217,7 +231,7 @@ class TestResourcesContract:
         }
 
         with pytest.raises(ValidationError):
-            validate(instance=invalid_response, schema=mcp_schemas["definitions"]["resources_list_response"])
+            validate_with_schema(invalid_response, "resources_list_response")
 
 
 @pytest.mark.contract
@@ -226,20 +240,20 @@ class TestMCPServerContractCompliance:
     """Integration tests verifying actual MCP server follows the contract"""
 
     @pytest.mark.asyncio
-    async def test_server_initialize_follows_contract(self, mcp_schemas):
+    async def test_server_initialize_follows_contract(self, validate_with_schema, mcp_schemas):
         """Actual server initialize response should match schema"""
         # This would test against the real server
         # Mock for now since we don't want to start server in tests
         pass
 
     @pytest.mark.asyncio
-    async def test_server_tools_list_follows_contract(self, mcp_schemas):
+    async def test_server_tools_list_follows_contract(self, validate_with_schema, mcp_schemas):
         """Actual server tools/list should match schema"""
         # Would test real server implementation
         pass
 
     @pytest.mark.asyncio
-    async def test_server_tools_call_follows_contract(self, mcp_schemas):
+    async def test_server_tools_call_follows_contract(self, validate_with_schema, mcp_schemas):
         """Actual server tools/call should match schema"""
         # Would test real server implementation
         pass
@@ -250,7 +264,7 @@ class TestMCPServerContractCompliance:
 class TestSchemaCompleteness:
     """Meta-tests ensuring our schemas are comprehensive"""
 
-    def test_all_required_schemas_defined(self, mcp_schemas):
+    def test_all_required_schemas_defined(self, validate_with_schema, mcp_schemas):
         """Verify all key MCP message types have schemas"""
         required_schemas = [
             "initialize_request",
@@ -266,7 +280,7 @@ class TestSchemaCompleteness:
         for schema_name in required_schemas:
             assert schema_name in mcp_schemas["definitions"], f"Missing schema: {schema_name}"
 
-    def test_schemas_are_valid_json_schema(self, mcp_schemas):
+    def test_schemas_are_valid_json_schema(self, validate_with_schema, mcp_schemas):
         """All schemas should be valid JSON Schema Draft 7"""
         # Verify schema structure
         assert "$schema" in mcp_schemas

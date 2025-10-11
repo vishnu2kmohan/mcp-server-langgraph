@@ -13,8 +13,8 @@ from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 # Hypothesis strategies for auth testing
-# Use known valid usernames for auth tests to avoid assume() filtering
-valid_usernames = st.sampled_from(["alice", "bob", "admin", "charlie", "dave"])
+# Use known valid usernames that exist in auth.py users_db
+valid_usernames = st.sampled_from(["alice", "bob", "admin"])
 usernames = valid_usernames  # Alias for compatibility
 
 user_ids = st.builds(lambda name: f"user:{name}", usernames)

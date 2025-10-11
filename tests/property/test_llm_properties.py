@@ -213,9 +213,9 @@ class TestLLMFactoryEdgeCases:
     @settings(max_examples=10, deadline=2000)
     def test_environment_variables_set_consistently(self, provider):
         """Property: Environment variables should be set based on provider"""
-        from llm_factory import LLMFactory
-
         import os
+
+        from llm_factory import LLMFactory
 
         # Clear any existing keys
         env_vars = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "AZURE_API_KEY"]

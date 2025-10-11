@@ -4,8 +4,6 @@ on:
   schedule:
     # Run security scans daily at 2 AM UTC
     - cron: '0 2 * * *'
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
