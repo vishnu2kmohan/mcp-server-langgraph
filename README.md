@@ -2,11 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](PRODUCTION_DEPLOYMENT.md)
-[![Use This Template](https://img.shields.io/badge/use-this%20template-blue.svg?logo=cookiecutter)](TEMPLATE_USAGE.md)
+[![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](docs/deployment/production.md)
+[![Use This Template](https://img.shields.io/badge/use-this%20template-blue.svg?logo=cookiecutter)](docs/template/usage.md)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](Dockerfile)
-[![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](KUBERNETES_DEPLOYMENT.md)
-[![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](SECURITY_AUDIT.md)
+[![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](docs/deployment/kubernetes.md)
+[![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](docs/archive/SECURITY_AUDIT.md)
 [![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
 [![Property Tests](https://img.shields.io/badge/property%20tests-27%2B-blue.svg)](#testing-strategy)
 [![Contract Tests](https://img.shields.io/badge/contract%20tests-20%2B-blue.svg)](#testing-strategy)
@@ -25,7 +25,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 # Answer a few questions and get a fully configured project!
 ```
 
-**See [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md) for detailed instructions.**
+**See [Template Usage Guide](docs/template/usage.md) for detailed instructions.**
 
 ## Features
 
@@ -649,7 +649,7 @@ helm install langgraph-agent ./helm/langgraph-agent \
 kubectl apply -k kustomize/overlays/production
 ```
 
-See **[KUBERNETES_DEPLOYMENT.md](KUBERNETES_DEPLOYMENT.md)** for complete deployment guide.
+See **[Kubernetes Deployment Guide](docs/deployment/kubernetes.md)** for complete deployment guide.
 
 ## API Gateway & Rate Limiting
 
@@ -824,7 +824,7 @@ We welcome contributions from the community! 🎉
 
 1. **Read the guides**:
    - [CONTRIBUTING.md](.github/CONTRIBUTING.md) - Contribution guidelines
-   - [DEVELOPMENT.md](DEVELOPMENT.md) - Developer setup
+   - [Development Guide](docs/development/development.md) - Developer setup
 
 2. **Find something to work on**:
    - [Good First Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/good%20first%20issue)

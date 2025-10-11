@@ -1,307 +1,112 @@
-# MCP Server with LangGraph Documentation
+# Documentation Index
 
-This directory contains the Mintlify-powered documentation for MCP Server with LangGraph.
+Complete documentation for the MCP Server with LangGraph project.
 
-## 🚀 Quick Start
+## 📚 Quick Start
 
-### Local Development
-
-1. **Install Mintlify CLI**:
-   ```bash
-   npm install -g mintlify
-   ```
-
-2. **Start the development server**:
-   ```bash
-   cd docs
-   mintlify dev
-   ```
-
-3. **Open your browser**:
-   ```
-   http://localhost:3000
-   ```
-
-Changes to `.mdx` files will hot-reload automatically!
-
-## 📁 Structure
-
-```
-docs/
-├── getting-started/       # Getting started guides
-│   ├── introduction.mdx
-│   ├── quickstart.mdx
-│   └── installation.mdx
-├── guides/               # How-to guides
-│   ├── multi-llm-setup.mdx
-│   ├── openfga-setup.mdx
-│   └── infisical-setup.mdx
-├── api-reference/        # API documentation
-│   ├── introduction.mdx
-│   └── mcp-endpoints.mdx
-├── deployment/           # Deployment guides
-│   ├── overview.mdx
-│   ├── docker.mdx
-│   └── kubernetes.mdx
-├── security/             # Security documentation
-│   ├── overview.mdx
-│   └── best-practices.mdx
-└── advanced/             # Advanced topics
-    ├── contributing.mdx
-    └── troubleshooting.mdx
-```
-
-## 🎨 Writing Documentation
-
-### MDX Format
-
-Mintlify uses MDX (Markdown + JSX). You can use:
-
-- **Standard Markdown**: Headings, lists, links, code blocks
-- **React Components**: Special Mintlify components
-
-### Special Components
-
-```mdx
-<Card title="Example" icon="rocket" href="/path">
-  Card content
-</Card>
-
-<CardGroup cols={2}>
-  <Card ...>...</Card>
-  <Card ...>...</Card>
-</CardGroup>
-
-<Tabs>
-  <Tab title="Tab 1">Content</Tab>
-  <Tab title="Tab 2">Content</Tab>
-</Tabs>
-
-<Accordion title="Click to expand">
-  Hidden content
-</Accordion>
-
-<Note>Important information</Note>
-<Tip>Helpful tip</Tip>
-<Warning>Warning message</Warning>
-<Check>Success message</Check>
-
-<Steps>
-  <Step title="Step 1">...</Step>
-  <Step title="Step 2">...</Step>
-</Steps>
-```
-
-### Code Blocks
-
-````mdx
-```python
-def hello():
-    print("Hello, world!")
-```
-
-```bash
-npm install package
-```
-
-<CodeGroup>
-```python Python
-print("Hello")
-```
-
-```javascript JavaScript
-console.log("Hello")
-```
-</CodeGroup>
-````
-
-## 🔧 Configuration
-
-The documentation is configured in `mint.json`:
-
-```json
-{
-  "name": "MCP Server with LangGraph",
-  "logo": { ... },
-  "colors": { ... },
-  "navigation": [ ... ],
-  "tabs": [ ... ]
-}
-```
-
-### Key Configuration
-
-- **Navigation**: Edit `navigation` array in `mint.json`
-- **Tabs**: Add new tabs in `tabs` array
-- **Colors**: Customize brand colors
-- **Logos**: Add SVG logos to `/logo` directory
-- **Favicon**: Add `/favicon.svg`
-
-## 📝 Adding New Pages
-
-1. **Create MDX file**:
-   ```bash
-   touch docs/guides/new-guide.mdx
-   ```
-
-2. **Add frontmatter**:
-   ```mdx
-   ---
-   title: New Guide
-   description: 'Description of the guide'
-   ---
-   ```
-
-3. **Add to navigation** in `mint.json`:
-   ```json
-   {
-     "group": "Guides",
-     "pages": [
-       "guides/existing-guide",
-       "guides/new-guide"
-     ]
-   }
-   ```
+- **[Main README](../README.md)** - Project overview and quick start guide
+- **[Development Guide](development/development.md)** - Local development setup
+- **[Testing Guide](development/testing.md)** - Testing strategy and running tests
 
 ## 🚀 Deployment
 
-### Option 1: Mintlify Hosting (Recommended)
+Production-ready deployment guides for various platforms:
 
-1. **Sign up** at [mintlify.com](https://mintlify.com)
+- **[Production Deployment](deployment/production.md)** - General production deployment guide
+- **[Kubernetes Deployment](deployment/kubernetes.md)** - Deploy with Kubernetes + Helm/Kustomize
+- **[Cloud Run Deployment](deployment/cloudrun.md)** - Deploy to Google Cloud Run
+- **[LangGraph Platform](deployment/langgraph-platform.md)** - Deploy to managed LangGraph Cloud
 
-2. **Connect GitHub repository**:
-   - Go to Mintlify dashboard
-   - Click "New Documentation"
-   - Connect GitHub repository
-   - Select `docs/` directory
+## 🔌 Integrations
 
-3. **Auto-deployment**:
-   - Pushes to `main` branch auto-deploy
-   - Preview deployments for PRs
+Integration guides for external services and tools:
 
-4. **Custom domain** (optional):
-   - Add CNAME record: `docs.yourdomain.com`
-   - Configure in Mintlify dashboard
+- **[OpenFGA & Infisical](integrations/openfga-infisical.md)** - Authorization and secrets management
+- **[LangSmith](integrations/langsmith.md)** - LLM observability and tracing
+- **[Kong API Gateway](integrations/kong.md)** - API gateway integration
+- **[LiteLLM](integrations/litellm.md)** - Multi-LLM provider support
+- **[Google Gemini](integrations/gemini.md)** - Gemini API setup
 
-### Option 2: Self-Hosted
+## 🛠️ Development
 
-Build static site:
+Developer guides and workflows:
 
-```bash
-mintlify build
-```
+- **[Development Setup](development/development.md)** - Local environment configuration
+- **[Testing Strategy](development/testing.md)** - Unit, integration, property, and contract tests
+- **[Build Verification](development/build-verification.md)** - Build and CI/CD verification
+- **[GitHub Actions Setup](development/github-actions.md)** - CI/CD pipeline configuration
 
-Deploy to:
-- **Vercel**: `vercel deploy`
-- **Netlify**: `netlify deploy`
-- **GitHub Pages**: Deploy `_site/` directory
-- **S3 + CloudFront**: Upload `_site/` to S3
+## 📖 Reference
 
-## 🎯 Best Practices
+Technical reference documentation:
 
-### Writing Style
+- **[Agents Architecture](reference/agents.md)** - LangGraph agent design and patterns
+- **[Pydantic AI Integration](reference/pydantic-ai.md)** - Type-safe agent responses
+- **[AI Tools Compatibility](reference/ai-tools-compatibility.md)** - Compatible AI tools and IDEs
+- **[MCP Registry](reference/mcp-registry.md)** - Publishing to MCP registry
+- **[Recommendations](reference/recommendations.md)** - Best practices and recommendations
 
-- ✅ Use active voice
-- ✅ Keep sentences short and clear
-- ✅ Include code examples
-- ✅ Add visual aids (diagrams, screenshots)
-- ✅ Use callout components (Note, Tip, Warning)
-- ❌ Don't assume prior knowledge
-- ❌ Don't use jargon without explanation
+## 🎨 Template
 
-### Organization
+Cookiecutter template documentation:
 
-- **Getting Started**: Tutorials and quick starts
-- **Guides**: Task-oriented how-to guides
-- **API Reference**: Technical reference documentation
-- **Deployment**: Infrastructure and deployment guides
-- **Advanced**: Complex topics and deep dives
+- **[Template Usage](template/usage.md)** - How to use this as a template
+- **[Template Evaluation](template/evaluation.md)** - Template features and evaluation
+- **[Cookiecutter Summary](template/cookiecutter-summary.md)** - Cookiecutter configuration
 
-### Code Examples
+## 🏛️ Architecture Decision Records (ADR)
 
-Always provide:
-1. **Multiple languages** (Python, cURL, JavaScript)
-2. **Complete, runnable examples**
-3. **Expected output**
-4. **Error handling**
+Technical decisions and their rationale:
 
-## 🔍 Search
+- **[ADR Index](adr/README.md)** - All architecture decisions
+- **[0001: LLM Multi-Provider](adr/0001-llm-multi-provider.md)** - LiteLLM for provider abstraction
+- **[0002: OpenFGA Authorization](adr/0002-openfga-authorization.md)** - Fine-grained access control
+- **[0003: Dual Observability](adr/0003-dual-observability.md)** - OpenTelemetry + LangSmith
+- **[0004: MCP StreamableHTTP](adr/0004-mcp-streamable-http.md)** - Production transport protocol
+- **[0005: Pydantic AI Integration](adr/0005-pydantic-ai-integration.md)** - Type-safe responses
 
-Mintlify provides built-in search powered by Algolia. It automatically indexes:
-- Page titles
-- Headings
-- Content
-- Code blocks
+## 📦 Archive
 
-No configuration needed!
+Historical documentation (may be outdated):
 
-## 📊 Analytics
+- **[Implementation Complete](archive/IMPLEMENTATION_COMPLETE.md)** - Original implementation summary
+- **[Implementation Summary](archive/IMPLEMENTATION_SUMMARY.md)** - Detailed implementation notes
+- **[Security Review](archive/security-review.md)** - Security audit report
+- **[Mintlify Setup](archive/MINTLIFY_SETUP.md)** - Documentation site setup
+- **[Security Audit](archive/SECURITY_AUDIT.md)** - Historical security audit
 
-Enable analytics in `mint.json`:
+## 🔍 Finding Documentation
 
-```json
-{
-  "analytics": {
-    "ga4": {
-      "measurementId": "G-XXXXXXXXXX"
-    },
-    "posthog": {
-      "apiKey": "phc_xxxx"
-    }
-  }
-}
-```
+### By Topic
 
-## 🐛 Troubleshooting
+- **Getting Started**: [Main README](../README.md), [Development Setup](development/development.md)
+- **Deployment**: See [Deployment](#-deployment) section above
+- **Security**: [OpenFGA Integration](integrations/openfga-infisical.md), [Security Review](archive/security-review.md)
+- **Testing**: [Testing Guide](development/testing.md), [Build Verification](development/build-verification.md)
+- **AI/LLM**: [Agents Architecture](reference/agents.md), [Pydantic AI](reference/pydantic-ai.md), [LiteLLM](integrations/litellm.md)
+- **Observability**: [LangSmith Integration](integrations/langsmith.md), [Dual Observability ADR](adr/0003-dual-observability.md)
 
-### Build fails
+### By Role
 
-```bash
-# Clear cache
-rm -rf .mintlify
+**Developer**:
+- Start: [Development Setup](development/development.md)
+- Test: [Testing Guide](development/testing.md)
+- Learn: [Agents Architecture](reference/agents.md), [ADRs](adr/README.md)
 
-# Reinstall
-npm install -g mintlify@latest
-```
+**DevOps/SRE**:
+- Deploy: [Production Deployment](deployment/production.md), [Kubernetes](deployment/kubernetes.md)
+- Monitor: [LangSmith Integration](integrations/langsmith.md)
+- Secure: [OpenFGA & Infisical](integrations/openfga-infisical.md)
 
-### Hot reload not working
+**Template User**:
+- Start: [Template Usage](template/usage.md)
+- Customize: [Cookiecutter Summary](template/cookiecutter-summary.md)
+- Evaluate: [Template Evaluation](template/evaluation.md)
 
-```bash
-# Restart dev server
-mintlify dev --force
-```
+## 📝 Contributing
 
-### Navigation not updating
+See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for contribution guidelines.
 
-1. Check `mint.json` syntax (must be valid JSON)
-2. Ensure file paths match exactly
-3. Restart dev server
+## 📄 License
 
-## 📚 Resources
-
-- **Mintlify Docs**: https://mintlify.com/docs
-- **MDX Guide**: https://mdxjs.com/
-- **Component Library**: https://mintlify.com/docs/components
-- **Examples**: https://github.com/mintlify/starter
-
-## 🤝 Contributing
-
-To contribute to documentation:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test locally with `mintlify dev`
-5. Submit a pull request
-
-See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for details.
-
-## 📧 Support
-
-- **Mintlify Support**: support@mintlify.com
-- **GitHub Issues**: https://github.com/vishnu2kmohan/mcp_server_langgraph/issues
-- **Discussions**: https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions
-
----
-
-**Happy documenting!** 📖✨
+See [LICENSE](../LICENSE) for license information.
