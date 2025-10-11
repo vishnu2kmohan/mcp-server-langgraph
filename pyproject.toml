@@ -50,15 +50,28 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    # Testing framework
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.3",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.12.0",
+    "pytest-benchmark>=4.0.0",
+    # Property-based testing
+    "hypothesis>=6.100.0",
+    "hypothesis-jsonschema>=0.22.1",
+    # Contract testing
+    "jsonschema>=4.21.0",
+    "schemathesis>=3.27.0",
+    "openapi-spec-validator>=0.7.1",
+    # Mutation testing
+    "mutmut>=2.4.4",
+    # Code quality
     "black>=24.1.1",
     "flake8>=7.0.0",
     "mypy>=1.8.0",
     "isort>=5.13.2",
     "bandit>=1.7.6",
+    # Deployment tools
     "langgraph-cli>=0.1.0",
 ]
 
@@ -108,7 +121,7 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 check_untyped_defs = true
-# Allow some flexibility for third-party libraries
+# Allow some flexibility for third-party libraries (will be phased out)
 disallow_untyped_calls = false
 # Exclude test files from strict checking
 exclude = [
@@ -116,6 +129,22 @@ exclude = [
     "test_.*\\.py$",
     "conftest\\.py$",
 ]
+
+# Gradual strictness rollout - Phase 1: Core modules with full strict typing
+[[tool.mypy.overrides]]
+module = [
+    "config",
+    "feature_flags",
+    "observability",
+]
+disallow_untyped_calls = true
+strict = true
+
+# Phase 2 (Future): Add more modules incrementally
+# [[tool.mypy.overrides]]
+# module = ["auth", "llm_factory", "agent"]
+# disallow_untyped_calls = true
+# strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -134,6 +163,10 @@ markers = [
     "mcp: MCP protocol tests",
     "observability: OpenTelemetry/metrics/logging tests",
     "benchmark: Performance benchmark tests",
+    "property: Property-based tests (hypothesis)",
+    "contract: Contract tests (MCP protocol, OpenAPI)",
+    "regression: Performance regression tests",
+    "mutation: Mutation testing (slow, runs on schedule)",
 ]
 
 [tool.coverage.run]
@@ -157,3 +190,27 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]
+
+[tool.hypothesis]
+# Property-based testing configuration
+max_examples = 100  # Number of test cases to generate
+deadline = 5000  # ms - max time per test case
+verbosity = "normal"  # normal, verbose, debug
+database = ".hypothesis/examples"  # Store failing examples
+derandomize = false  # Set true for deterministic testing
+
+[tool.mutmut]
+# Mutation testing configuration
+paths_to_mutate = [
+    "agent.py",
+    "auth.py",
+    "config.py",
+    "feature_flags.py",
+    "llm_factory.py",
+    "observability.py",
+    "openfga_client.py",
+]
+backup = false
+runner = "pytest -x -m unit"  # Fast unit tests only
+tests_dir = "tests/"
+dict_synonyms = "Struct,NamedStruct"

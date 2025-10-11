@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage lint format security-check clean
+.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-property test-contract test-regression test-mutation validate-openapi lint format security-check clean
 
 help:
 	@echo "LangGraph MCP Agent - Make Commands"
@@ -11,13 +11,21 @@ help:
 	@echo "  make setup-infisical  Initialize Infisical"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test             Run all automated tests (unit + integration)"
-	@echo "  make test-unit        Run unit tests only"
-	@echo "  make test-integration Run integration tests"
-	@echo "  make test-coverage    Run tests with coverage report"
-	@echo "  make benchmark        Run performance benchmarks"
-	@echo "  make test-auth        Test OpenFGA authorization (manual)"
-	@echo "  make test-mcp         Test MCP server (manual)"
+	@echo "  make test                Run all automated tests (unit + integration)"
+	@echo "  make test-unit           Run unit tests only"
+	@echo "  make test-integration    Run integration tests"
+	@echo "  make test-coverage       Run tests with coverage report"
+	@echo "  make test-property       Run property-based tests (Hypothesis)"
+	@echo "  make test-contract       Run contract tests (MCP, OpenAPI)"
+	@echo "  make test-regression     Run performance regression tests"
+	@echo "  make test-mutation       Run mutation tests (slow)"
+	@echo "  make test-all-quality    Run all quality tests (property+contract+regression)"
+	@echo "  make benchmark           Run performance benchmarks"
+	@echo "  make test-auth           Test OpenFGA authorization (manual)"
+	@echo "  make test-mcp            Test MCP server (manual)"
+	@echo ""
+	@echo "Validation:"
+	@echo "  make validate-openapi    Validate OpenAPI schema"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint             Run linters (flake8, mypy)"
@@ -88,6 +96,44 @@ benchmark:
 	@echo "Running performance benchmarks..."
 	pytest -m benchmark -v --benchmark-only --benchmark-autosave
 	@echo "✓ Benchmark results saved"
+
+# New test targets
+test-property:
+	@echo "Running property-based tests (Hypothesis)..."
+	pytest -m property -v
+	@echo "✓ Property tests complete"
+
+test-contract:
+	@echo "Running contract tests (MCP protocol, OpenAPI)..."
+	pytest -m contract -v
+	@echo "✓ Contract tests complete"
+
+test-regression:
+	@echo "Running performance regression tests..."
+	pytest -m regression -v
+	@echo "✓ Regression tests complete"
+
+test-mutation:
+	@echo "Running mutation tests (this will take a while)..."
+	@echo "Testing critical modules for test effectiveness..."
+	mutmut run
+	@echo ""
+	@echo "Generating results..."
+	mutmut results
+	@echo ""
+	@echo "Generating HTML report..."
+	mutmut html
+	@echo "✓ Mutation testing complete"
+	@echo "  View report: open html/index.html"
+
+test-all-quality: test-property test-contract test-regression
+	@echo "✓ All quality tests complete"
+
+# Validation
+validate-openapi:
+	@echo "Validating OpenAPI schema..."
+	python scripts/validate_openapi.py
+	@echo "✓ OpenAPI validation complete"
 
 # Code quality
 lint:

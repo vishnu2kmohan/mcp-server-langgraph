@@ -1,0 +1,272 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Model Context Protocol (MCP) Schemas",
+  "description": "JSON schemas for validating MCP protocol messages",
+
+  "definitions": {
+    "jsonrpc_request": {
+      "type": "object",
+      "required": ["jsonrpc", "id", "method"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "const": "2.0"
+        },
+        "id": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {"type": "null"}
+          ]
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    },
+
+    "jsonrpc_response": {
+      "type": "object",
+      "required": ["jsonrpc", "id"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "const": "2.0"
+        },
+        "id": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {"type": "null"}
+          ]
+        },
+        "result": {
+          "type": "object"
+        },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {"type": "integer"},
+            "message": {"type": "string"},
+            "data": {}
+          }
+        }
+      },
+      "oneOf": [
+        {"required": ["result"]},
+        {"required": ["error"]}
+      ]
+    },
+
+    "initialize_request": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_request"},
+        {
+          "properties": {
+            "method": {"const": "initialize"},
+            "params": {
+              "type": "object",
+              "required": ["protocolVersion", "clientInfo"],
+              "properties": {
+                "protocolVersion": {"type": "string"},
+                "clientInfo": {
+                  "type": "object",
+                  "required": ["name", "version"],
+                  "properties": {
+                    "name": {"type": "string"},
+                    "version": {"type": "string"}
+                  }
+                },
+                "capabilities": {"type": "object"}
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "initialize_response": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_response"},
+        {
+          "properties": {
+            "result": {
+              "type": "object",
+              "required": ["protocolVersion", "serverInfo", "capabilities"],
+              "properties": {
+                "protocolVersion": {"type": "string"},
+                "serverInfo": {
+                  "type": "object",
+                  "required": ["name", "version"],
+                  "properties": {
+                    "name": {"type": "string"},
+                    "version": {"type": "string"}
+                  }
+                },
+                "capabilities": {
+                  "type": "object",
+                  "properties": {
+                    "tools": {"type": "object"},
+                    "resources": {"type": "object"},
+                    "prompts": {"type": "object"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "tools_list_request": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_request"},
+        {
+          "properties": {
+            "method": {"const": "tools/list"}
+          }
+        }
+      ]
+    },
+
+    "tools_list_response": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_response"},
+        {
+          "properties": {
+            "result": {
+              "type": "object",
+              "required": ["tools"],
+              "properties": {
+                "tools": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "description"],
+                    "properties": {
+                      "name": {"type": "string"},
+                      "description": {"type": "string"},
+                      "inputSchema": {
+                        "type": "object",
+                        "required": ["type", "properties"],
+                        "properties": {
+                          "type": {"const": "object"},
+                          "properties": {"type": "object"},
+                          "required": {"type": "array", "items": {"type": "string"}}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "tools_call_request": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_request"},
+        {
+          "properties": {
+            "method": {"const": "tools/call"},
+            "params": {
+              "type": "object",
+              "required": ["name", "arguments"],
+              "properties": {
+                "name": {"type": "string"},
+                "arguments": {"type": "object"}
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "tools_call_response": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_response"},
+        {
+          "properties": {
+            "result": {
+              "type": "object",
+              "required": ["content"],
+              "properties": {
+                "content": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {"type": "string"},
+                      "text": {"type": "string"},
+                      "data": {"type": "string"},
+                      "mimeType": {"type": "string"}
+                    }
+                  }
+                },
+                "isError": {"type": "boolean"}
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "resources_list_request": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_request"},
+        {
+          "properties": {
+            "method": {"const": "resources/list"}
+          }
+        }
+      ]
+    },
+
+    "resources_list_response": {
+      "allOf": [
+        {"$ref": "#/definitions/jsonrpc_response"},
+        {
+          "properties": {
+            "result": {
+              "type": "object",
+              "required": ["resources"],
+              "properties": {
+                "resources": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["uri", "name"],
+                    "properties": {
+                      "uri": {"type": "string", "format": "uri"},
+                      "name": {"type": "string"},
+                      "description": {"type": "string"},
+                      "mimeType": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+
+  "schemas": {
+    "initialize_request": {"$ref": "#/definitions/initialize_request"},
+    "initialize_response": {"$ref": "#/definitions/initialize_response"},
+    "tools_list_request": {"$ref": "#/definitions/tools_list_request"},
+    "tools_list_response": {"$ref": "#/definitions/tools_list_response"},
+    "tools_call_request": {"$ref": "#/definitions/tools_call_request"},
+    "tools_call_response": {"$ref": "#/definitions/tools_call_response"},
+    "resources_list_request": {"$ref": "#/definitions/resources_list_request"},
+    "resources_list_response": {"$ref": "#/definitions/resources_list_response"}
+  }
+}

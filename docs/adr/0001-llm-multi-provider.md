@@ -1,0 +1,153 @@
+# 1. Multi-Provider LLM Support via LiteLLM
+
+Date: 2025-10-11
+
+## Status
+
+Accepted
+
+## Context
+
+The MCP server needs to support multiple LLM providers to offer flexibility, avoid vendor lock-in, and enable fallback mechanisms for high availability. Users may want to:
+
+- Use different providers based on cost, performance, or features
+- Switch providers without code changes
+- Implement automatic fallback when one provider fails
+- Support both cloud and local/open-source models
+
+Direct integration with each provider (Anthropic SDK, OpenAI SDK, Google SDK, etc.) would require:
+- Maintaining separate code paths for each provider
+- Different message formats and APIs
+- Complex fallback logic
+- Difficulty adding new providers
+
+## Decision
+
+We will use **LiteLLM** as the unified interface for all LLM providers.
+
+LiteLLM provides:
+- Single API interface compatible with 100+ LLM providers
+- Automatic message format translation
+- Built-in retry and fallback logic
+- Support for both cloud and local models (Ollama)
+- OpenAI-compatible API format
+
+Implementation in `llm_factory.py`:
+- `LLMFactory` class wraps LiteLLM
+- Provider selection via configuration
+- Automatic fallback to alternative models
+- Consistent interface regardless of provider
+
+## Consequences
+
+### Positive Consequences
+
+- **Flexibility**: Easy to switch providers via configuration
+- **Reliability**: Automatic fallback increases uptime
+- **Simplicity**: Single code path for all providers
+- **Extensibility**: New providers supported automatically
+- **Local Development**: Can use Ollama for offline development
+- **Cost Optimization**: Easy to use cheaper models as fallbacks
+
+### Negative Consequences
+
+- **Abstraction Layer**: Additional dependency between code and LLM APIs
+- **Feature Limitations**: Provider-specific features may not be exposed
+- **Debugging Complexity**: Errors may be obscured by abstraction
+- **Dependency Risk**: Reliant on LiteLLM maintenance
+
+### Neutral Consequences
+
+- **Performance**: Minimal overhead from abstraction layer
+- **Learning Curve**: Developers must learn LiteLLM patterns
+
+## Alternatives Considered
+
+### 1. Direct SDK Integration
+
+**Description**: Use native SDKs (anthropic, openai, google-generativeai) directly
+
+**Pros**:
+- Full access to provider-specific features
+- No abstraction layer
+- Direct control over API calls
+
+**Cons**:
+- Separate code paths for each provider (2-5x code)
+- Complex fallback logic to implement
+- Difficult to add new providers
+- Harder to maintain consistency
+
+**Why Rejected**: Too much duplication and complexity
+
+### 2. LangChain ChatModels
+
+**Description**: Use LangChain's ChatModel abstraction
+
+**Pros**:
+- Already using LangChain for agent
+- Built-in provider support
+- Good integration with LangGraph
+
+**Cons**:
+- Heavier dependency (full LangChain)
+- Less flexible fallback logic
+- Slower to add new provider support
+- More opinionated architecture
+
+**Why Rejected**: LiteLLM is more lightweight and flexible
+
+### 3. Custom Abstraction Layer
+
+**Description**: Build our own provider abstraction
+
+**Pros**:
+- Full control over implementation
+- Exactly what we need
+- No external dependencies for core logic
+
+**Cons**:
+- Significant development effort
+- Maintenance burden
+- Reinventing the wheel
+- Slower to add provider support
+
+**Why Rejected**: Not worth reinventing when good solution exists
+
+## Implementation Details
+
+### Provider Configuration
+
+```python
+# config.py
+llm_provider: str = "google"  # google, anthropic, openai, ollama
+model_name: str = "gemini-2.5-flash-002"
+fallback_models: list[str] = ["gemini-2.5-pro", "claude-3-5-sonnet"]
+```
+
+### Factory Pattern
+
+```python
+# llm_factory.py
+def create_llm_from_config(config) -> LLMFactory:
+    return LLMFactory(
+        provider=config.llm_provider,
+        model_name=config.model_name,
+        enable_fallback=True,
+        fallback_models=config.fallback_models
+    )
+```
+
+### Usage
+
+```python
+llm = create_llm_from_config(settings)
+response = await llm.ainvoke(messages)  # Works with any provider
+```
+
+## References
+
+- [LiteLLM Documentation](https://docs.litellm.ai/)
+- [Supported Providers](https://docs.litellm.ai/docs/providers)
+- [LITELLM_GUIDE.md](../LITELLM_GUIDE.md)
+- Related ADRs: [0005](0005-pydantic-ai-integration.md) (Pydantic AI uses LiteLLM)

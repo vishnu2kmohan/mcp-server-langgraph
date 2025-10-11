@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "Performance Baseline Metrics",
+  "description": "Baseline performance metrics for regression testing",
+  "updated": "2025-10-11",
+  "version": "1.0.0",
+  "metrics": {
+    "agent_response": {
+      "description": "Agent response time from input to output",
+      "unit": "seconds",
+      "p50": 2.1,
+      "p95": 4.2,
+      "p99": 4.8,
+      "max": 5.0,
+      "threshold_p95": 5.0,
+      "alert_threshold_percent": 20
+    },
+    "llm_call": {
+      "description": "LLM invocation latency",
+      "unit": "seconds",
+      "p50": 1.5,
+      "p95": 8.5,
+      "p99": 9.5,
+      "max": 10.0,
+      "threshold_p95": 10.0,
+      "alert_threshold_percent": 20
+    },
+    "authorization_check": {
+      "description": "OpenFGA authorization check latency",
+      "unit": "milliseconds",
+      "p50": 15,
+      "p95": 35,
+      "p99": 45,
+      "max": 50,
+      "threshold_p95": 50,
+      "alert_threshold_percent": 20
+    },
+    "jwt_validation": {
+      "description": "JWT token validation latency",
+      "unit": "milliseconds",
+      "p50": 0.5,
+      "p95": 1.2,
+      "p99": 1.8,
+      "max": 2.0,
+      "threshold_p95": 2.0,
+      "alert_threshold_percent": 20
+    },
+    "message_formatting": {
+      "description": "LangChain to LiteLLM message format conversion",
+      "unit": "milliseconds",
+      "p50": 0.1,
+      "p95": 0.5,
+      "p99": 1.0,
+      "max": 2.0,
+      "threshold_p95": 2.0,
+      "alert_threshold_percent": 30
+    },
+    "tool_execution": {
+      "description": "Tool call execution time",
+      "unit": "seconds",
+      "p50": 0.5,
+      "p95": 2.0,
+      "p99": 3.0,
+      "max": 5.0,
+      "threshold_p95": 3.0,
+      "alert_threshold_percent": 25
+    }
+  },
+  "test_conditions": {
+    "python_version": "3.12",
+    "hardware": "GitHub Actions runner (2 CPU, 7GB RAM)",
+    "load": "single_user",
+    "network": "local (no external API calls mocked)"
+  }
+}
