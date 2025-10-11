@@ -1,10 +1,10 @@
 # 4. MCP StreamableHTTP Transport Protocol
 
-Date: 2025-10-11
+Date: 2025-10-11 (Updated: 2025-10-11 - SSE Removed)
 
 ## Status
 
-Accepted
+Accepted (SSE transport removed as of 2025-10-11)
 
 ## Context
 
@@ -23,13 +23,12 @@ However, the MCP specification evolved to introduce **StreamableHTTP**, which of
 Use cases for different transports:
 - **stdio**: Claude Desktop app, local CLI tools
 - **StreamableHTTP**: Web clients, cloud deployments, production services
-- **SSE (deprecated)**: Legacy clients only
 
 We need to choose which transport(s) to support as our primary production interface.
 
 ## Decision
 
-We will support **three MCP server implementations**:
+We will support **two MCP server implementations**:
 
 1. **mcp_server_streamable.py** (PRIMARY - StreamableHTTP)
    - Modern StreamableHTTP transport
@@ -42,12 +41,9 @@ We will support **three MCP server implementations**:
    - Local development tool
    - No network overhead
 
-3. **mcp_server_http.py** (SSE - DEPRECATED)
-   - Backwards compatibility only
-   - Legacy client support
-   - Will be removed in future version
-
 **Default**: StreamableHTTP for all production deployments
+
+**Note**: The SSE transport (mcp_server_http.py) was removed on 2025-10-11 as it was deprecated and no longer needed.
 
 ## Consequences
 
@@ -64,15 +60,14 @@ We will support **three MCP server implementations**:
 
 ### Negative Consequences
 
-- **Multiple Servers**: Three separate server files to maintain
-- **Confusion**: Users must choose correct server
-- **SSE Deprecation Path**: Need migration plan for SSE users
+- **Multiple Servers**: Two separate server files to maintain
+- **Confusion**: Users must choose correct server (stdio vs StreamableHTTP)
 - **Documentation**: Must explain when to use each transport
 
 ### Neutral Consequences
 
 - **Code Duplication**: Some shared logic across servers (mitigated with imports)
-- **Testing**: Must test all three transports
+- **Testing**: Must test both transports
 
 ## Alternatives Considered
 
@@ -191,17 +186,6 @@ async def main():
         await server.run(streams[0], streams[1])
 ```
 
-### SSE Server (Deprecated)
-
-```python
-# mcp_server_http.py
-@app.get("/sse")
-async def sse_endpoint():
-    # Server-Sent Events
-    # DEPRECATED: Use StreamableHTTP instead
-    ...
-```
-
 ### Docker Configuration
 
 ```dockerfile
@@ -219,10 +203,6 @@ python mcp_server_streamable.py
 # Claude Desktop: stdio
 python mcp_server.py
 # → stdio communication
-
-# Legacy clients: SSE (deprecated)
-python mcp_server_http.py
-# → http://localhost:8000/sse
 ```
 
 ### Client Configuration
@@ -241,24 +221,29 @@ python mcp_server_http.py
 
 ## Migration Path
 
-### Phase 1 (Current)
-- All three transports supported
-- StreamableHTTP recommended
-- SSE marked as deprecated
+### ~~Phase 1~~
+- ~~All three transports supported~~
+- ~~StreamableHTTP recommended~~
+- ~~SSE marked as deprecated~~
 
-### Phase 2 (6 months)
-- SSE warnings in logs
-- Documentation updated
-- Migration guide published
+### ~~Phase 2 (6 months)~~
+- ~~SSE warnings in logs~~
+- ~~Documentation updated~~
+- ~~Migration guide published~~
 
-### Phase 3 (12 months)
-- Remove SSE server
-- Only StreamableHTTP + stdio
+### Phase 3 (COMPLETED 2025-10-11)
+- ✅ Removed SSE server (mcp_server_http.py)
+- ✅ Only StreamableHTTP + stdio remain
+- ✅ Removed sse-starlette dependency
 
 ## References
 
 - [MCP Specification](https://spec.modelcontextprotocol.io/)
 - [MCP Transport Documentation](https://spec.modelcontextprotocol.io/specification/architecture/#transports)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- Related Files: `mcp_server_streamable.py`, `mcp_server.py`, `mcp_server_http.py`
+- Related Files: `mcp_server_streamable.py`, `mcp_server.py`
 - Related ADRs: [0008 - OpenAPI Validation](future ADR for API contracts)
+
+## Changelog
+
+- **2025-10-11**: Removed SSE transport (mcp_server_http.py) and sse-starlette dependency. Updated decision to reflect two transports only (StreamableHTTP + stdio).

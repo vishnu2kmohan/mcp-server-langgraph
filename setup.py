@@ -53,7 +53,7 @@ setup(
     entry_points={
         "console_scripts": [
             "mcp-server=mcp_server:main",
-            "mcp-server-http=mcp_server_streamable:main",
+            "mcp-server-streamable=mcp_server_streamable:main",
         ],
     },
     include_package_data=True,

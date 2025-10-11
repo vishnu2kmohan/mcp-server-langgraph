@@ -159,9 +159,6 @@ run:
 run-streamable:
 	python mcp_server_streamable.py
 
-run-http:
-	python mcp_server_http.py
-
 logs:
 	docker-compose logs -f
 

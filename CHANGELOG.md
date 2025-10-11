@@ -5,16 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+- **HTTP/SSE Transport**: Removed deprecated `mcp_server_http.py` and SSE transport implementation
+- **sse-starlette Dependency**: Removed from all dependency files (pyproject.toml, requirements.txt, requirements-pinned.txt)
+- **Makefile**: Removed `run-http` target
+- **Documentation**: Updated all references to remove HTTP/SSE transport mentions
+
+### Changed
+- **MCP Transports**: Now supporting only two transports: StreamableHTTP (production) and stdio (local/desktop)
+- **setup.py**: Renamed console script entry point from `mcp-server-http` to `mcp-server-streamable`
+- **ADR 0004**: Updated to reflect SSE transport removal completion
+
 ## [1.0.0] - 2025-10-10
 
 ### Added
 - **Multi-LLM Support**: LiteLLM integration supporting 100+ providers (Anthropic, OpenAI, Google, Azure, AWS Bedrock, Ollama)
 - **Open-Source Models**: Support for Llama 3.1, Qwen 2.5, Mistral, DeepSeek via Ollama
 - **LangGraph Agent**: Functional API with stateful conversation, conditional routing, and checkpointing
-- **MCP Server**: Model Context Protocol implementation with three transport modes:
+- **MCP Server**: Model Context Protocol implementation with two transport modes:
   - StreamableHTTP (recommended for production)
   - stdio (for Claude Desktop and local apps)
-  - HTTP/SSE (deprecated, legacy support)
 - **Authentication**: JWT-based authentication with token validation and expiration
 - **Fine-Grained Authorization**: OpenFGA (Zanzibar-style) relationship-based access control
 - **Secrets Management**: Infisical integration for secure secret storage and retrieval
@@ -107,8 +119,7 @@ None (initial release)
 
 ### Deprecations
 
-- HTTP/SSE transport (`mcp_server_http.py`) is deprecated in favor of StreamableHTTP (`mcp_server_streamable.py`)
-- Will be removed in version 2.0.0
+None (HTTP/SSE transport previously deprecated in 1.0.0 was removed in Unreleased)
 
 ---
 

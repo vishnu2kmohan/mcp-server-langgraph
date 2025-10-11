@@ -9,7 +9,7 @@ This is a **production-ready MCP (Model Context Protocol) server** built with La
 - Fine-grained authorization using OpenFGA (Zanzibar-style)
 - Secrets management with Infisical
 - Dual observability: OpenTelemetry (traces/metrics) + LangSmith (LLM-specific)
-- Multiple MCP transports: stdio, HTTP/SSE (deprecated), StreamableHTTP (recommended)
+- Multiple MCP transports: stdio, StreamableHTTP (recommended)
 - Kubernetes-ready with Helm/Kustomize deployment
 
 ## Essential Commands
@@ -43,7 +43,6 @@ make test-unit                # Should pass without infrastructure
 ```bash
 make run-streamable           # StreamableHTTP server (production, port 8000)
 make run                      # stdio server (for Claude Desktop)
-make run-http                 # HTTP/SSE server (deprecated)
 
 # Direct execution
 python mcp_server_streamable.py

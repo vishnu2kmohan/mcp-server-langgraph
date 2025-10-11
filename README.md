@@ -33,7 +33,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - **Multi-LLM Support (LiteLLM)**: 100+ LLM providers - Anthropic, OpenAI, Google, Azure, AWS Bedrock, Ollama
 - **Open-Source Models**: Llama 3.1, Qwen 2.5, Mistral, DeepSeek, and more via Ollama
 - **LangGraph Functional API**: Stateful agent with conditional routing and checkpointing
-- **MCP Server**: Standard protocol for exposing AI agents as tools (stdio, StreamableHTTP, SSE)
+- **MCP Server**: Standard protocol for exposing AI agents as tools (stdio, StreamableHTTP)
 - **Authentication**: JWT-based authentication with token validation
 - **Fine-Grained Authorization**: OpenFGA (Zanzibar-style) relationship-based access control
 - **Secrets Management**: Infisical integration for secure secret storage and retrieval
@@ -677,7 +677,6 @@ See **[KONG_INTEGRATION.md](KONG_INTEGRATION.md)** for complete Kong setup and r
 The agent supports multiple MCP transports:
 - **StreamableHTTP** (Recommended): Modern HTTP streaming for production
 - **stdio**: For Claude Desktop and local applications
-- **HTTP/SSE** (Deprecated): Legacy Server-Sent Events
 
 ```bash
 # StreamableHTTP (recommended for web/production)
@@ -685,9 +684,6 @@ python mcp_server_streamable.py
 
 # stdio (local/desktop)
 python mcp_server.py
-
-# HTTP/SSE (deprecated, legacy only)
-python mcp_server_http.py
 
 # Access StreamableHTTP endpoints
 POST /message         # Main MCP endpoint (streaming or regular)

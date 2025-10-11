@@ -69,6 +69,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Run the StreamableHTTP server by default (can override with CMD)
 # Use mcp_server_streamable.py for modern StreamableHTTP transport
-# Use mcp_server_http.py for legacy SSE transport (deprecated)
 # Use mcp_server.py for stdio transport
 CMD ["python", "mcp_server_streamable.py"]
