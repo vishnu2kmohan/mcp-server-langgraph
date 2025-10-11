@@ -406,6 +406,41 @@ async def test_stream_validated_response():
     assert full_content == content
 
 
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_streaming_validator_validation_error():
+    """Test MCPStreamingValidator with validation error."""
+    from mcp_streaming import MCPStreamingValidator
+
+    validator = MCPStreamingValidator()
+
+    # Invalid chunk data (missing required fields)
+    invalid_chunk = {"content": "test"}  # Missing chunk_index and is_final
+
+    result = await validator.validate_chunk(invalid_chunk, "stream-error")
+
+    # Should return None on validation error
+    assert result is None
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_streaming_validator_finalize_unknown_stream():
+    """Test finalizing an unknown stream."""
+    from mcp_streaming import MCPStreamingValidator
+
+    validator = MCPStreamingValidator()
+
+    # Finalize a stream that was never created
+    response = await validator.finalize_stream("unknown-stream")
+
+    # Should return incomplete response with error
+    assert not response.is_complete
+    assert response.chunk_count == 0
+    assert len(response.chunks) == 0
+    assert response.error_message == "Stream not found"
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_agent_with_pydantic_routing():
@@ -422,3 +457,161 @@ async def test_agent_response_generation():
     # This would require actual LLM calls
     # Skipped in unit tests, run with -m integration
     pytest.skip("Requires live LLM connection")
+
+
+# Tests for LLMValidator.validate_response
+@pytest.mark.unit
+def test_llm_validator_with_json_response():
+    """Test LLMValidator.validate_response with JSON input."""
+    from llm_validators import LLMValidator, EntityExtraction
+    import json
+
+    response_data = {
+        "entities": [{"type": "person", "value": "Alice"}],
+        "confidence": 0.95
+    }
+    json_response = json.dumps(response_data)
+
+    validated = LLMValidator.validate_response(json_response, EntityExtraction, strict=False)
+
+    assert validated.is_valid()
+    assert validated.data.confidence == 0.95
+    assert len(validated.data.entities) == 1
+
+
+@pytest.mark.unit
+def test_llm_validator_with_aimessage():
+    """Test LLMValidator.validate_response with AIMessage."""
+    from llm_validators import LLMValidator, SentimentAnalysis
+    from langchain_core.messages import AIMessage
+    import json
+
+    response_data = {"sentiment": "positive", "score": 0.8, "emotions": ["joy"]}
+    message = AIMessage(content=json.dumps(response_data))
+
+    validated = LLMValidator.validate_response(message, SentimentAnalysis, strict=False)
+
+    assert validated.is_valid()
+    assert validated.data.sentiment == "positive"
+    assert validated.data.score == 0.8
+
+
+@pytest.mark.unit
+def test_llm_validator_validation_error_non_strict():
+    """Test LLMValidator.validate_response with validation error in non-strict mode."""
+    from llm_validators import LLMValidator, EntityExtraction
+
+    # Invalid JSON
+    invalid_response = "not valid json"
+
+    validated = LLMValidator.validate_response(invalid_response, EntityExtraction, strict=False)
+
+    assert not validated.is_valid()
+    assert len(validated.get_errors()) > 0
+
+
+@pytest.mark.unit
+def test_llm_validator_validation_error_strict():
+    """Test LLMValidator.validate_response with validation error in strict mode."""
+    from llm_validators import LLMValidator, EntityExtraction
+
+    invalid_response = "not valid json"
+
+    # In strict mode, it should raise ValueError for non-JSON, non-parseable content
+    with pytest.raises(ValueError):
+        LLMValidator.validate_response(invalid_response, EntityExtraction, strict=True)
+
+
+@pytest.mark.unit
+def test_llm_validator_unexpected_error_non_strict():
+    """Test LLMValidator.validate_response with unexpected error in non-strict mode."""
+    from llm_validators import LLMValidator, EntityExtraction
+
+    # Create a response that will cause an unexpected error during parsing
+    class BrokenModel:
+        def __init__(self, **kwargs):
+            raise RuntimeError("Unexpected error")
+
+    validated = LLMValidator.validate_response("{}", BrokenModel, strict=False)
+
+    assert not validated.is_valid()
+
+
+@pytest.mark.unit
+def test_llm_validator_extract_entities():
+    """Test LLMValidator.extract_entities convenience method."""
+    from llm_validators import LLMValidator
+    import json
+
+    response_data = {
+        "entities": [
+            {"type": "person", "value": "Bob"},
+            {"type": "location", "value": "NYC"}
+        ],
+        "confidence": 0.88
+    }
+    response = json.dumps(response_data)
+
+    result = LLMValidator.extract_entities(response)
+
+    assert result.is_valid()
+    assert len(result.data.entities) == 2
+
+
+@pytest.mark.unit
+def test_llm_validator_classify_intent():
+    """Test LLMValidator.classify_intent convenience method."""
+    from llm_validators import LLMValidator
+    import json
+
+    response_data = {
+        "intent": "search_query",
+        "confidence": 0.92,
+        "sub_intents": ["web_search"],
+        "parameters": {"query": "test"}
+    }
+    response = json.dumps(response_data)
+
+    result = LLMValidator.classify_intent(response)
+
+    assert result.is_valid()
+    assert result.data.intent == "search_query"
+
+
+@pytest.mark.unit
+def test_llm_validator_analyze_sentiment():
+    """Test LLMValidator.analyze_sentiment convenience method."""
+    from llm_validators import LLMValidator
+    import json
+
+    response_data = {
+        "sentiment": "negative",
+        "score": 0.75,
+        "emotions": ["anger", "frustration"]
+    }
+    response = json.dumps(response_data)
+
+    result = LLMValidator.analyze_sentiment(response)
+
+    assert result.is_valid()
+    assert result.data.sentiment == "negative"
+
+
+@pytest.mark.unit
+def test_llm_validator_extract_summary():
+    """Test LLMValidator.extract_summary convenience method."""
+    from llm_validators import LLMValidator
+    import json
+
+    response_data = {
+        "summary": "This is a summary",
+        "key_points": ["Point 1", "Point 2"],
+        "length": 18,
+        "compression_ratio": 0.2
+    }
+    response = json.dumps(response_data)
+
+    result = LLMValidator.extract_summary(response)
+
+    assert result.is_valid()
+    assert result.data.summary == "This is a summary"

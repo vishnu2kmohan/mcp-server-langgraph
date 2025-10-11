@@ -1,5 +1,5 @@
 # Multi-stage build for LangGraph MCP Agent
-FROM python:3.13-slim AS builder
+FROM python:3.12-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Add Rust to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Set PyO3 forward compatibility for Python 3.13
+# Set PyO3 forward compatibility (not strictly needed for Python 3.12, but doesn't hurt)
 ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
 # Copy requirements
@@ -26,7 +26,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Final stage
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
