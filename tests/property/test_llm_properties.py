@@ -277,9 +277,7 @@ class TestLLMFactoryFallbackProperties:
 
         fallback_models = [f"fallback-{i}" for i in range(fallback_count)]
 
-        factory = LLMFactory(
-            provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models
-        )
+        factory = LLMFactory(provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models)
 
         with patch("llm_factory.completion") as mock_completion:
             # Create side effects: fail until success_index, then succeed
@@ -307,9 +305,7 @@ class TestLLMFactoryFallbackProperties:
 
         fallback_models = [f"fallback-{i}" for i in range(fallback_count)]
 
-        factory = LLMFactory(
-            provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models
-        )
+        factory = LLMFactory(provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models)
 
         with patch("llm_factory.completion") as mock_completion:
             # All fail
