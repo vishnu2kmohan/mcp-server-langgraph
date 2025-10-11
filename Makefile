@@ -35,12 +35,11 @@ help:
 	@echo ""
 
 install:
-	pip install -r requirements-pinned.txt
+	uv pip install -r requirements-pinned.txt
 	@echo "✓ Dependencies installed"
 
 install-dev:
-	pip install -r requirements-pinned.txt
-	pip install -r requirements-test.txt
+	uv sync
 	@echo "✓ Development dependencies installed"
 
 setup-infra:
@@ -93,19 +92,19 @@ benchmark:
 # Code quality
 lint:
 	@echo "Running flake8..."
-	flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,tests
+	flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv,tests
 	@echo "Running mypy..."
 	-mypy *.py --ignore-missing-imports
 
 format:
 	@echo "Formatting with black..."
-	black . --exclude venv
+	black . --exclude .venv
 	@echo "Sorting imports with isort..."
-	isort . --skip venv
+	isort . --skip .venv
 
 security-check:
 	@echo "Running bandit security scan..."
-	bandit -r . -x ./tests,./venv -ll
+	bandit -r . -x ./tests,./.venv -ll
 
 # Running servers
 run:
@@ -129,7 +128,7 @@ clean:
 	@echo "✓ Infrastructure stopped and caches removed"
 
 clean-all: clean
-	rm -rf venv .venv
+	rm -rf .venv
 	@echo "✓ Deep clean complete"
 
 reset: clean setup-infra setup-openfga

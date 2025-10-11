@@ -31,6 +31,10 @@ env.bak/
 venv.bak/
 .venv/
 
+# uv
+.uv_cache/
+uv.lock
+
 # PyCharm
 .idea/
 

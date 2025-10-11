@@ -16,13 +16,13 @@ This is a **production-ready MCP (Model Context Protocol) server** built with La
 
 ### Quick Start (First-Time Setup)
 ```bash
-# 1. Create virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# 1. Install dependencies with uv (automatically creates virtual environment)
+uv sync                       # Install all dependencies from pyproject.toml
+# OR: uv pip install -r requirements-pinned.txt && uv pip install -r requirements-test.txt
 
-# 2. Install dependencies
-make install-dev              # Install all dev dependencies
-# OR: pip install -r requirements-pinned.txt && pip install -r requirements-test.txt
+# 2. Activate the virtual environment
+source .venv/bin/activate     # On Windows: .venv\Scripts\activate
+# OR use uv run to execute commands without activating: uv run pytest
 
 # 3. Configure environment
 cp .env.example .env
@@ -75,9 +75,9 @@ make lint                     # Run flake8 + mypy
 make security-check           # Run bandit security scan
 
 # Individual tools
-black . --exclude venv --line-length=127
-isort . --skip venv --profile=black
-flake8 . --exclude=venv
+black . --exclude .venv --line-length=127
+isort . --skip .venv --profile=black
+flake8 . --exclude=.venv
 mypy *.py --ignore-missing-imports
 ```
 
@@ -886,7 +886,7 @@ def mock_pydantic_agent_class():
 ```
 WARNING:root:Pydantic AI not available, using fallback routing
 ```
-Solution: `pip install pydantic-ai>=1.0.0`
+Solution: `uv pip install pydantic-ai>=1.0.0`
 
 **Validation failures**:
 ```
