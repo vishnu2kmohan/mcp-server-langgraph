@@ -602,7 +602,7 @@ rate(agent_calls_failed_total[5m])
 **Solution**:
 1. Ensure virtual environment is activated
 2. `make install-dev` to install all dependencies
-3. Check Python version: Python 3.10-3.12 recommended (3.13 has limited support)
+3. Check Python version: Python 3.10-3.12 required (3.13 not supported due to Infisical dependency)
 
 ### Pydantic AI Test Failures
 **Symptom**: "Set the `GOOGLE_API_KEY` environment variable" in tests
