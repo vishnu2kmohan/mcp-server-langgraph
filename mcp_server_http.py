@@ -420,7 +420,7 @@ async def documentation_redirect():
 
 
 @app.get("/")
-async def root():
+async def root_info():
     """Root endpoint with API information and links"""
     return {
         "service": "MCP Server with LangGraph",

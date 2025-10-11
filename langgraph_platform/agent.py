@@ -50,8 +50,6 @@ def create_graph():
 
     def use_tools(state: AgentState) -> AgentState:
         """Simulate tool usage (extend with real tools)"""
-        messages = state["messages"]
-
         # In real implementation, bind tools to model
         # For now, simulate a tool response
         tool_response = AIMessage(content="Tool execution completed. Processing results...")

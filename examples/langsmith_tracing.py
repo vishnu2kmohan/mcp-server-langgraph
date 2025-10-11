@@ -46,7 +46,7 @@ def example_basic_tracing():
     print(f"\nResponse: {result['messages'][-1].content}")
     print("\n✓ Check LangSmith UI to see the trace!")
     print(f"  Project: {os.getenv('LANGSMITH_PROJECT', 'default')}")
-    print(f"  URL: https://smith.langchain.com/")
+    print("  URL: https://smith.langchain.com/")
 
 
 def example_custom_metadata():
@@ -150,9 +150,7 @@ def example_error_tracking():
 
     try:
         # Intentionally cause an error (empty messages)
-        result = agent_graph.invoke(
-            {"messages": [], "user_id": "test_user", "request_id": "error_test"}  # This will cause an error
-        )
+        agent_graph.invoke({"messages": [], "user_id": "test_user", "request_id": "error_test"})  # This will cause an error
     except Exception as e:
         print(f"\n✗ Error occurred: {type(e).__name__}: {e}")
         print("\n✓ Error is traced in LangSmith!")
@@ -207,7 +205,7 @@ def main():
         print("\nOr add to your .env file")
         return
 
-    print(f"\n✓ LangSmith is enabled")
+    print("\n✓ LangSmith is enabled")
     print(f"  Project: {os.getenv('LANGSMITH_PROJECT', 'default')}")
 
     # Run examples

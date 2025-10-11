@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Post-generation hook to customize the generated project."""
 
-import os
 import shutil
 from pathlib import Path
 
@@ -233,14 +232,14 @@ def print_next_steps():
         print("   Quick start: cd cloudrun && ./deploy.sh --setup")
 
     print("\n📚 Documentation:")
-    print(f"   - README.md - Project overview")
-    print(f"   - DEVELOPMENT.md - Development guide")
+    print("   - README.md - Project overview")
+    print("   - DEVELOPMENT.md - Development guide")
     if "{{ cookiecutter.use_authorization }}" == "yes":
-        print(f"   - SECURITY_AUDIT.md - Security checklist")
+        print("   - SECURITY_AUDIT.md - Security checklist")
 
     print("\n🔗 Helpful Links:")
     print(f"   - GitHub: https://github.com/{{ cookiecutter.github_username }}/{project_slug}")
-    print(f"   - Documentation: README.md")
+    print("   - Documentation: README.md")
 
     print("\n" + "=" * 70)
     print("Happy coding! 🚀")

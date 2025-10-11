@@ -8,7 +8,8 @@ from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
 from typing import Any
 
-from opentelemetry import metrics, trace
+from opentelemetry import metrics as otel_metrics
+from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
@@ -88,8 +89,8 @@ class ObservabilityConfig:
 
         provider = MeterProvider(resource=resource, metric_readers=readers)
 
-        metrics.set_meter_provider(provider)
-        self.meter = metrics.get_meter(__name__)
+        otel_metrics.set_meter_provider(provider)
+        self.meter = otel_metrics.get_meter(__name__)
 
         # Create common metrics
         self._create_metrics()
@@ -217,7 +218,8 @@ config = ObservabilityConfig(enable_langsmith=enable_langsmith_flag)
 tracer = config.get_tracer()
 meter = config.get_meter()
 logger = config.get_logger()
-metrics = config  # For easy access to metric instruments
+# Alias for backward compatibility - provides access to metric instruments via config
+metrics = config
 
 
 # Context propagation utilities

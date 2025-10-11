@@ -10,13 +10,11 @@ Usage:
     python scripts/validate_production.py --strict
 """
 
-import json
-import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 # ANSI color codes
 GREEN = "\033[92m"
@@ -378,17 +376,17 @@ def main():
     print(f"\n{BOLD}{BLUE}{'='*60}{RESET}")
     if result.is_production_ready(strict):
         print(f"{BOLD}{GREEN}✓ PRODUCTION READY{RESET}")
-        print(f"\nThis codebase meets production deployment standards.")
+        print("\nThis codebase meets production deployment standards.")
         if summary["warnings"] > 0:
             print(f"Address {summary['warnings']} warnings before deployment.")
         sys.exit(0)
     else:
         print(f"{BOLD}{RED}✗ NOT PRODUCTION READY{RESET}")
-        print(f"\nPlease address the following before deploying to production:")
+        print("\nPlease address the following before deploying to production:")
         print(f"  - {summary['failed']} critical issues")
         if strict:
             print(f"  - {summary['warnings']} warnings (strict mode)")
-        print(f"\nReview the failures above and re-run this script.")
+        print("\nReview the failures above and re-run this script.")
         sys.exit(1)
 
 

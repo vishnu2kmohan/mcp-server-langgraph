@@ -8,10 +8,8 @@ This example demonstrates:
 4. Handling errors
 """
 
-import json
 import os
 import sys
-from typing import Any, Dict
 
 # For local testing
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -65,8 +63,8 @@ def test_platform_deployment():
     print(f"\nDeployment URL: {deployment_url}")
     print("\n⚠ Platform invocation requires HTTP client")
     print("Use the LangGraph CLI instead:")
-    print(f"\nlanggraph deployment invoke <deployment-name> \\")
-    print(f'  --input \'{{"messages": [{{"role": "user", "content": "test"}}]}}\'')
+    print("\nlanggraph deployment invoke <deployment-name> \\")
+    print('  --input \'{"messages": [{"role": "user", "content": "test"}]}\'')
 
 
 def test_with_cli():
@@ -126,7 +124,7 @@ def test_error_handling():
     for test in test_cases:
         print(f"\nTest: {test['name']}")
         try:
-            result = agent_graph.invoke(test["input"])
+            agent_graph.invoke(test["input"])
             if test["expected_error"]:
                 print("  ✗ Expected error but succeeded")
             else:
