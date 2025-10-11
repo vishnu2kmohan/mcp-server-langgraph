@@ -466,7 +466,7 @@ def test_llm_validator_validation_error_strict():
 @pytest.mark.unit
 def test_llm_validator_unexpected_error_non_strict():
     """Test LLMValidator.validate_response with unexpected error in non-strict mode."""
-    from llm_validators import EntityExtraction, LLMValidator
+    from llm_validators import LLMValidator
 
     # Create a response that will cause an unexpected error during parsing
     class BrokenModel:

@@ -27,7 +27,7 @@ def configure_langsmith() -> bool:
     os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project
     os.environ["LANGCHAIN_ENDPOINT"] = settings.langsmith_endpoint
 
-    print(f"✓ LangSmith tracing configured")
+    print("✓ LangSmith tracing configured")
     print(f"  - Project: {settings.langsmith_project}")
     print(f"  - Endpoint: {settings.langsmith_endpoint}")
     print(f"  - Tracing V2: {settings.langsmith_tracing_v2}")

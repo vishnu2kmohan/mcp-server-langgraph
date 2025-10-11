@@ -1,7 +1,7 @@
 """Unit tests for secrets_manager.py - Infisical Integration"""
 
 import os
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -149,11 +149,11 @@ class TestSecretsManager:
         manager = SecretsManager(client_id="test-id", client_secret="test-secret", project_id="test-project")
 
         # First call
-        value1 = manager.get_secret("API_KEY", use_cache=False)
+        manager.get_secret("API_KEY", use_cache=False)
         assert mock_instance.get_secret.call_count == 1
 
         # Second call - should hit Infisical again
-        value2 = manager.get_secret("API_KEY", use_cache=False)
+        manager.get_secret("API_KEY", use_cache=False)
         assert mock_instance.get_secret.call_count == 2
 
     @patch("secrets_manager.InfisicalClient")

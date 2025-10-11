@@ -170,7 +170,7 @@ class ObservabilityConfig:
 
         self.logger = logging.getLogger(self.service_name)
         print(f"✓ Logging configured: {self.service_name}")
-        print(f"  - Console output: INFO and above")
+        print("  - Console output: INFO and above")
         print(f"  - Main log: logs/{self.service_name}.log (rotating, 10MB, 5 backups)")
         print(f"  - Daily log: logs/{self.service_name}-daily.log (daily, 30 days)")
         print(f"  - Error log: logs/{self.service_name}-error.log (ERROR and above)")
@@ -193,8 +193,8 @@ class ObservabilityConfig:
             from langsmith_config import langsmith_config
 
             if langsmith_config.is_enabled():
-                print(f"✓ LangSmith integration enabled")
-                print(f"  - Dual observability: OpenTelemetry + LangSmith")
+                print("✓ LangSmith integration enabled")
+                print("  - Dual observability: OpenTelemetry + LangSmith")
             else:
                 print("⚠ LangSmith configured but not enabled (check API key)")
 

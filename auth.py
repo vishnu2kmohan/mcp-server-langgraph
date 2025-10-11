@@ -2,7 +2,6 @@
 Authentication and Authorization middleware with OpenFGA integration
 """
 
-import time
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Dict, Optional
@@ -200,7 +199,7 @@ class AuthMiddleware:
         """Verify and decode JWT token"""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
-            logger.info(f"Token verified", extra={"user_id": payload.get("user_id")})
+            logger.info("Token verified", extra={"user_id": payload.get("user_id")})
             return {"valid": True, "payload": payload}
         except jwt.ExpiredSignatureError:
             logger.warning("Token expired")

@@ -2,12 +2,10 @@
 OpenFGA integration for fine-grained relationship-based access control
 """
 
-import asyncio
 from typing import Any, Dict, List, Optional
 
 from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
-from openfga_sdk.models import AuthorizationModel, Metadata, RelationMetadata, TypeDefinition
 
 from observability import logger, metrics, tracer
 
@@ -288,7 +286,7 @@ async def initialize_openfga_store(client: OpenFGAClient) -> str:
             store = await client.client.create_store(body={"name": "langgraph-agent-store"})
             store_id = store.id
 
-            logger.info(f"OpenFGA store created", extra={"store_id": store_id})
+            logger.info("OpenFGA store created", extra={"store_id": store_id})
 
             # Update client configuration
             client.store_id = store_id
@@ -299,7 +297,7 @@ async def initialize_openfga_store(client: OpenFGAClient) -> str:
             model_response = await client.client.write_authorization_model(body=model_def)
             model_id = model_response.authorization_model_id
 
-            logger.info(f"OpenFGA authorization model created", extra={"model_id": model_id})
+            logger.info("OpenFGA authorization model created", extra={"model_id": model_id})
 
             # Update client with model ID
             client.model_id = model_id

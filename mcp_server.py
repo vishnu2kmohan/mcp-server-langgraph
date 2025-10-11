@@ -11,7 +11,7 @@ from mcp.types import Resource, TextContent, Tool
 from pydantic import BaseModel, Field
 
 from agent import AgentState, agent_graph
-from auth import AuthMiddleware, verify_token
+from auth import AuthMiddleware
 from config import settings
 from observability import logger, metrics, tracer
 from openfga_client import OpenFGAClient
@@ -66,7 +66,9 @@ class MCPAgentServer:
                 return [
                     Tool(
                         name="chat",
-                        description="Chat with the AI agent. The agent can help with questions, research, and problem-solving.",
+                        description=(
+                            "Chat with the AI agent. The agent can help with questions, research, and problem-solving."
+                        ),
                         inputSchema=ChatInput.model_json_schema(),
                     ),
                     Tool(

@@ -19,7 +19,7 @@ from observability import logger
 
 # Import Pydantic AI for type-safe responses
 try:
-    from pydantic_ai_agent import AgentResponse, RouterDecision, create_pydantic_agent
+    from pydantic_ai_agent import create_pydantic_agent
 
     PYDANTIC_AI_AVAILABLE = True
 except ImportError:
@@ -123,8 +123,6 @@ def create_agent_graph():
 
     def use_tools(state: AgentState) -> AgentState:
         """Simulate tool usage (extend with real tools)"""
-        messages = state["messages"]
-
         # In real implementation, bind tools to model
         # For now, simulate a tool response
         tool_response = AIMessage(content="Tool execution completed. Processing results...")

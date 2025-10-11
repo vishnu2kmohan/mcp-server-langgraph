@@ -1,0 +1,14 @@
+[flake8]
+max-line-length = 127
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    htmlcov,
+    .pytest_cache,
+    *.egg-info
+# Align with black formatting
+extend-ignore = E203, W503

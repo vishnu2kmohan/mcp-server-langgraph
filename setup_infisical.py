@@ -4,7 +4,6 @@ Setup script for Infisical secrets management
 """
 import os
 
-from observability import logger
 from secrets_manager import SecretsManager
 
 
@@ -35,7 +34,7 @@ def setup_infisical():
         print("\n💡 For now, the app will use environment variables as fallback.")
         return
 
-    print(f"\n1. Connecting to Infisical...")
+    print("\n1. Connecting to Infisical...")
     print(f"   Site: {os.getenv('INFISICAL_SITE_URL', 'https://app.infisical.com')}")
     print(f"   Project: {project_id}")
 
@@ -59,14 +58,14 @@ def setup_infisical():
     for key, value in sample_secrets.items():
         try:
             # Try to create, will fail if exists
-            success = secrets_mgr.create_secret(key=key, value=value, secret_comment=f"Sample secret created by setup script")
+            success = secrets_mgr.create_secret(key=key, value=value, secret_comment="Sample secret created by setup script")
 
             if success:
                 print(f"   ✓ Created: {key}")
             else:
                 print(f"   ℹ️  Skipped: {key} (may already exist)")
 
-        except Exception as e:
+        except Exception:
             # Try to update if creation failed
             try:
                 success = secrets_mgr.update_secret(key=key, value=value)

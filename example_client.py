@@ -24,7 +24,7 @@ async def test_chat():
     alice_token = auth.create_token("alice")
     bob_token = auth.create_token("bob")
 
-    print(f"\n✓ Auth tokens created:")
+    print("\n✓ Auth tokens created:")
     print(f"   Alice: {alice_token[:30]}...")
     print(f"   Bob: {bob_token[:30]}...")
 
@@ -46,7 +46,7 @@ async def test_chat():
             print("\n--- Test 1: Chat without auth (should fail) ---")
             try:
                 response = await session.call_tool("chat", arguments={"message": "What is the capital of France?"})
-                print(f"   ✗ Unexpected success!")
+                print("   ✗ Unexpected success!")
             except Exception as e:
                 print(f"   ✓ Expected error: {e}")
 
@@ -112,7 +112,7 @@ async def test_chat():
                 response = await session.call_tool(
                     "chat", arguments={"message": "Hello", "thread_id": "thread_1", "username": "unknown_user"}
                 )
-                print(f"   ✗ Unexpected success!")
+                print("   ✗ Unexpected success!")
             except Exception as e:
                 print(f"   ✓ Expected error: {e}")
 

@@ -9,7 +9,7 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
 from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
 from pydantic import BaseModel, Field
@@ -88,7 +88,9 @@ class MCPAgentHTTPServer:
                 return [
                     Tool(
                         name="chat",
-                        description="Chat with the AI agent. The agent can help with questions, research, and problem-solving.",
+                        description=(
+                            "Chat with the AI agent. The agent can help with questions, research, and problem-solving."
+                        ),
                         inputSchema=ChatInput.model_json_schema(),
                     ),
                     Tool(

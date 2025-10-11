@@ -5,7 +5,6 @@ Setup script for OpenFGA authorization model and sample data
 import asyncio
 
 from config import settings
-from observability import logger
 from openfga_client import OpenFGAClient, initialize_openfga_store, seed_sample_data
 
 
@@ -27,7 +26,7 @@ async def setup_openfga():
         print(f"   ✓ Model created: {client.model_id}")
 
         # Save to environment
-        print(f"\n3. Update your .env file with:")
+        print("\n3. Update your .env file with:")
         print(f"   OPENFGA_STORE_ID={store_id}")
         print(f"   OPENFGA_MODEL_ID={client.model_id}")
 

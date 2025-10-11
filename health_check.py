@@ -2,7 +2,6 @@
 Health check endpoints for Kubernetes probes
 """
 
-import asyncio
 from datetime import datetime
 from typing import Any, Dict
 
@@ -55,7 +54,7 @@ async def readiness_check():
     # Check OpenFGA connection
     if settings.openfga_store_id and settings.openfga_model_id:
         try:
-            client = OpenFGAClient(
+            OpenFGAClient(
                 api_url=settings.openfga_api_url, store_id=settings.openfga_store_id, model_id=settings.openfga_model_id
             )
             # Simple check - if client initializes, connection is OK
@@ -72,7 +71,7 @@ async def readiness_check():
         secrets_mgr = get_secrets_manager()
         if secrets_mgr.client:
             # Test secret retrieval
-            test_secret = secrets_mgr.get_secret("HEALTH_CHECK_TEST", fallback="ok")
+            secrets_mgr.get_secret("HEALTH_CHECK_TEST", fallback="ok")
             checks["infisical"] = {"status": "healthy", "url": settings.infisical_site_url}
         else:
             checks["infisical"] = {"status": "not_configured", "message": "Using environment variables"}

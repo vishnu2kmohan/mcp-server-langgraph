@@ -8,11 +8,11 @@ import json
 from typing import Any, AsyncIterator
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from mcp.server import Server
-from mcp.types import JSONRPCMessage, Resource, TextContent, Tool
+from mcp.types import Resource, TextContent, Tool
 from pydantic import BaseModel, Field
 
 from agent import AgentState, agent_graph
@@ -109,7 +109,9 @@ class MCPAgentStreamableServer:
                 return [
                     Tool(
                         name="chat",
-                        description="Chat with the AI agent. The agent can help with questions, research, and problem-solving.",
+                        description=(
+                            "Chat with the AI agent. The agent can help with questions, research, and problem-solving."
+                        ),
                         inputSchema=ChatInput.model_json_schema(),
                     ),
                     Tool(

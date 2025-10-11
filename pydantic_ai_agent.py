@@ -5,12 +5,11 @@ This module provides strongly-typed agent responses using Pydantic AI,
 ensuring LLM outputs match expected schemas and improving reliability.
 """
 
-from typing import Annotated, Literal, Optional
+from typing import Literal, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
-from pydantic_ai.models import KnownModelName, Model
 
 from config import settings
 from observability import logger, metrics, tracer

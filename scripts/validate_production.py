@@ -305,8 +305,8 @@ def check_dependencies(result: ValidationResult) -> None:
 
         # Check if versions are actually pinned
         content = Path("requirements-pinned.txt").read_text()
-        lines = [l.strip() for l in content.split("\n") if l.strip() and not l.startswith("#")]
-        unpinned = [l for l in lines if "==" not in l]
+        lines = [line.strip() for line in content.split("\n") if line.strip() and not line.startswith("#")]
+        unpinned = [line for line in lines if "==" not in line]
 
         if unpinned:
             result.add_warning(f"{len(unpinned)} dependencies not pinned with ==")
