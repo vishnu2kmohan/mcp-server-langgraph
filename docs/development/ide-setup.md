@@ -1,0 +1,459 @@
+# IDE Setup Guide
+
+This document provides setup instructions for various IDEs and AI coding assistants when working on the MCP Server with LangGraph project.
+
+## General Notes
+
+**IDE-Specific Configuration Files**: As of v2.0.0, IDE-specific configuration directories (`.ai/`, `.openai/`, `.cursor/`, `.claude/`, `.vscode/`) are gitignored to prevent merge conflicts and keep the repository clean. You'll need to create these directories locally based on your preferences.
+
+---
+
+## Visual Studio Code
+
+### Recommended Extensions
+
+Create `.vscode/extensions.json`:
+```json
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "charliermarsh.ruff",
+    "ms-toolsai.jupyter",
+    "redhat.vscode.yaml",
+    "tamasfe.even-better-toml",
+    "GitHub.copilot",
+    "GitHub.copilot-chat"
+  ]
+}
+```
+
+### Python Settings
+
+Create `.vscode/settings.json`:
+```json
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length=127"],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.rulers": [127]
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".pytest_cache": true,
+    ".mypy_cache": true,
+    "htmlcov": true
+  }
+}
+```
+
+### Debug Configurations
+
+Create `.vscode/launch.json`:
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "MCP Server (stdio)",
+      "type": "python",
+      "request": "launch",
+      "module": "mcp_server_langgraph.mcp.server_stdio",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "MCP Server (StreamableHTTP)",
+      "type": "python",
+      "request": "launch",
+      "module": "mcp_server_langgraph.mcp.server_streamable",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "Pytest: Current File",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-v"],
+      "console": "integratedTerminal"
+    }
+  ]
+}
+```
+
+### Tasks
+
+Create `.vscode/tasks.json`:
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Tests (Unit)",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["-m", "unit", "-v"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run Tests (All)",
+      "type": "shell",
+      "command": "make",
+      "args": ["test"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Format Code",
+      "type": "shell",
+      "command": "make",
+      "args": ["format"]
+    },
+    {
+      "label": "Lint",
+      "type": "shell",
+      "command": "make",
+      "args": ["lint"]
+    }
+  ]
+}
+```
+
+---
+
+## Claude Code / Claude Desktop
+
+### Configuration
+
+Create `.claude/settings.local.json`:
+```json
+{
+  "output_style": "concise",
+  "project_context": {
+    "language": "python",
+    "framework": "langgraph",
+    "testing": "pytest"
+  }
+}
+```
+
+### Guidance Files
+
+The project includes comprehensive AI assistant guidance:
+- **`.github/CLAUDE.md`** - Complete guide for Claude Code
+- **`.github/AGENTS.md`** - Extended guide with more examples
+
+These files are version-controlled and provide:
+- Project architecture overview
+- Development patterns
+- Common commands
+- Testing strategy
+- Security requirements
+
+---
+
+## Cursor
+
+### MCP Configuration
+
+Create `.cursor/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "langgraph-agent": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_stdio"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    }
+  }
+}
+```
+
+### Settings
+
+Cursor will use the VS Code settings above, but you can override:
+
+Create `.cursor/settings.json`:
+```json
+{
+  "cursor.chat.model": "claude-3-5-sonnet-20241022",
+  "cursor.tab.model": "claude-3-5-sonnet-20241022"
+}
+```
+
+---
+
+## GitHub Copilot Workspace
+
+### Instructions
+
+Create `.github/copilot-instructions.md`:
+```markdown
+# GitHub Copilot Instructions
+
+This project uses:
+- Python 3.10-3.12
+- LangGraph for agent orchestration
+- pytest with multiple test markers (unit, integration, property, contract)
+- Black formatter (line-length=127)
+- Type hints required for all public APIs
+
+When generating code:
+1. Follow Google-style docstrings
+2. Use type hints
+3. Add appropriate pytest markers
+4. Check authorization before privileged operations
+5. Add observability (tracing, metrics, logging)
+
+See `.github/AGENTS.md` for complete guidance.
+```
+
+---
+
+## AI Coding Assistants (.ai/)
+
+### General AI Tools Configuration
+
+Create `.ai/README.md`:
+```markdown
+# AI Coding Assistant Configuration
+
+This directory contains configuration for AI coding assistants.
+
+## Setup
+
+See the appropriate section in `docs/development/ide-setup.md`:
+- Claude Code/Desktop
+- GitHub Copilot
+- Cursor
+- Codeium
+- Tabnine
+
+## Guidance Files
+
+The project provides comprehensive AI assistant guidance in version control:
+- `.github/CLAUDE.md` - For Claude-based assistants
+- `.github/AGENTS.md` - For all AI assistants (extended)
+- `.github/copilot-instructions.md` - For GitHub Copilot
+
+These files contain:
+- Architecture overview
+- Development patterns
+- Code standards
+- Testing strategy
+- Common issues & solutions
+```
+
+Create `.ai/prompts.md` with your custom prompts for reuse.
+
+---
+
+## OpenAI Codex
+
+### Configuration
+
+Create `.openai/code-completion-config.json`:
+```json
+{
+  "model": "gpt-4-turbo",
+  "temperature": 0.2,
+  "max_tokens": 2048,
+  "context": {
+    "project_type": "python-langgraph",
+    "framework": "langgraph",
+    "testing": "pytest",
+    "style": "black",
+    "line_length": 127
+  }
+}
+```
+
+Create `.openai/codex-instructions.md` referencing `.github/AGENTS.md` for detailed project guidance.
+
+---
+
+## MCP Server Configuration
+
+All MCP-compatible IDEs can use the MCP server configuration.
+
+### MCP Manifest
+
+The project includes `.mcp/manifest.json` and `.mcp/registry.json` for MCP registry publication. These are version-controlled.
+
+### Client Configuration
+
+For Claude Desktop or other MCP clients, add to your client config:
+
+```json
+{
+  "mcpServers": {
+    "langgraph-agent": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_stdio"
+      ],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/project/src"
+      }
+    }
+  }
+}
+```
+
+---
+
+## PyCharm / IntelliJ IDEA
+
+### Project Interpreter
+
+1. File → Settings → Project → Python Interpreter
+2. Click gear → Add → Existing Environment
+3. Select `.venv/bin/python`
+
+### Code Style
+
+1. File → Settings → Editor → Code Style → Python
+2. Set "Hard wrap at" to 127
+3. Import `pyproject.toml` settings if supported (PyCharm 2023.3+)
+
+### Run Configurations
+
+Create run configurations for:
+- **pytest (unit)**: Target = `tests/`, Additional args = `-m unit -v`
+- **pytest (all)**: Target = `tests/`, Additional args = `-v`
+- **MCP Server**: Script path = `src/mcp_server_langgraph/mcp/server_stdio.py`
+
+### External Tools
+
+Add Make commands as external tools:
+- File → Settings → Tools → External Tools
+- Add: `make test`, `make lint`, `make format`, etc.
+
+---
+
+## General Best Practices
+
+### Virtual Environment
+
+Always activate the virtual environment:
+```bash
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate      # Windows
+```
+
+Or use `uv run` for automatic activation:
+```bash
+uv run pytest -m unit -v
+uv run python -m mcp_server_langgraph.mcp.server_stdio
+```
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+**Never commit `.env`** - it's gitignored for security.
+
+### Pre-commit Hooks
+
+Install pre-commit hooks:
+```bash
+pre-commit install
+```
+
+This ensures:
+- Code is formatted (black, isort)
+- Linting passes (flake8)
+- Security scan (bandit)
+- Tests run before commit (optional)
+
+---
+
+## Troubleshooting
+
+### Import Errors
+
+If imports fail:
+1. Ensure virtual environment is activated
+2. Check PYTHONPATH includes `src/`:
+   ```bash
+   export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+   ```
+3. Reinstall in editable mode:
+   ```bash
+   uv pip install -e .
+   ```
+
+### IDE Not Finding Modules
+
+- **VS Code**: Set `python.defaultInterpreterPath` to `.venv/bin/python`
+- **PyCharm**: Configure project interpreter to `.venv/bin/python`
+- **All IDEs**: Mark `src/` as sources root
+
+### Tests Not Running
+
+1. Ensure pytest is installed: `uv pip install -r requirements-test.txt`
+2. Check test markers are registered: `pytest --markers`
+3. Verify conftest.py is found: `pytest --collect-only`
+
+---
+
+## Contributing
+
+When adding IDE configurations:
+1. **Do NOT commit** user-specific settings to `.vscode/`, `.cursor/`, etc.
+2. **Do commit** recommendations in this file
+3. **Do add** examples for new IDE setup
+4. **Do update** this guide if project structure changes
+
+See `.github/CONTRIBUTING.md` for contribution guidelines.
+
+---
+
+## References
+
+- **Project Documentation**: `docs/README.md`
+- **AI Assistant Guidance**: `.github/CLAUDE.md`, `.github/AGENTS.md`
+- **Development Guide**: `docs/development/development.md`
+- **Testing Guide**: `docs/development/testing.md`
+
+**Last Updated**: 2025-10-12

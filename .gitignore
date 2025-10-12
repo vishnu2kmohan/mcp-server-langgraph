@@ -55,6 +55,8 @@ uv.lock
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
+.coverage.*
 .tox/
 .nox/
 *.cover
@@ -119,10 +121,9 @@ secrets.yaml
 *.swo
 *~
 
-# Coverage reports
-coverage.xml
-.coverage.*
+# Test reports
 test_results.log
+test-results/
 
 # Database
 *.db
@@ -151,11 +152,13 @@ mcp_test_*.json
 .mintlify/
 _site/
 
-# AI Tools (user-specific)
+# AI Tools (user-specific - these are personal IDE configurations)
+.ai/
+.openai/
+.cursor/
+.claude/
 .vscode/.ropeproject/
 .vscode/tags
-.cursor/settings.json
-.cursor/cache/
 
 # IDE workspace files (user-specific)
 *.code-workspace
