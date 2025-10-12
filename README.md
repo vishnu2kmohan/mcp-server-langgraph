@@ -81,41 +81,42 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 ## Architecture
 
 ```
-┌─────────────────┐
-│  MCP Client     │
-│  (Claude Desktop│
-│   or other)     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────────────────┐
-│  MCP Server (src/mcp_server_langgraph/mcp/server_stdio.py)     │
-│  ┌──────────────────────────┐   │
-│  │ Auth Middleware          │   │
-│  │ - JWT Verification       │   │
-│  │ - RBAC Authorization     │   │
-│  └──────────────────────────┘   │
-│  ┌──────────────────────────┐   │
-│  │ LangGraph Agent          │   │
-│  │ - Routing                │   │
-│  │ - Tool Usage             │   │
-│  │ - Response Generation    │   │
-│  └──────────────────────────┘   │
-└────────┬────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────┐
-│  Observability (OTEL)           │
-│  ┌──────────┐  ┌──────────┐    │
-│  │ Traces   │  │ Metrics  │    │
-│  │ (Jaeger) │  │(Prometheus)   │
-│  └──────────┘  └──────────┘    │
-│         └──────┬────────┘       │
-│                ▼                │
-│         ┌──────────┐            │
-│         │ Grafana  │            │
-│         └──────────┘            │
-└─────────────────────────────────┘
+┌──────────────────────┐
+│    MCP Client        │
+│  (Claude Desktop     │
+│   or other)          │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────────────────────┐
+│         MCP Server                   │
+│  (server_stdio.py/streamable.py)    │
+│  ┌────────────────────────────┐     │
+│  │   Auth Middleware          │     │
+│  │   - JWT Verification       │     │
+│  │   - OpenFGA Authorization  │     │
+│  └────────────────────────────┘     │
+│  ┌────────────────────────────┐     │
+│  │   LangGraph Agent          │     │
+│  │   - Pydantic AI Routing    │     │
+│  │   - Tool Usage             │     │
+│  │   - Response Generation    │     │
+│  └────────────────────────────┘     │
+└──────────┬───────────────────────────┘
+           │
+           ▼
+┌──────────────────────────────────────┐
+│    Observability Stack               │
+│  ┌──────────┐    ┌──────────────┐   │
+│  │ Traces   │    │   Metrics    │   │
+│  │ (Jaeger) │    │ (Prometheus) │   │
+│  └─────┬────┘    └──────┬───────┘   │
+│        └────────────────┘            │
+│                ▼                     │
+│        ┌──────────────┐              │
+│        │   Grafana    │              │
+│        └──────────────┘              │
+└──────────────────────────────────────┘
 ```
 
 ## Quick Start

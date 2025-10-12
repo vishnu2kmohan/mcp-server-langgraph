@@ -394,10 +394,10 @@ pytest -m unit -v
 pytest -m integration -v
 
 # Specific test file
-pytest tests/test_src/mcp_server_langgraph/auth/middleware.py -v
+pytest tests/test_auth.py -v
 
 # Specific test function
-pytest tests/test_src/mcp_server_langgraph/auth/middleware.py::test_create_token -v
+pytest tests/test_auth.py::test_create_token -v
 
 # With coverage
 pytest --cov=. --cov-report=html

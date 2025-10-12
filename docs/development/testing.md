@@ -284,7 +284,7 @@ curl http://localhost:8080/healthz  # OpenFGA
 pytest --cov=. --cov-report=term-missing
 
 # Focus on specific file
-pytest --cov=auth --cov-report=term-missing tests/test_src/mcp_server_langgraph/auth/middleware.py
+pytest --cov=auth --cov-report=term-missing tests/test_auth.py
 ```
 
 ### Slow Tests

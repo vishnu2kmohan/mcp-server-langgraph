@@ -56,7 +56,7 @@ make test-unit                # Unit tests only
 make test-integration         # Integration tests (requires infrastructure)
 make test-coverage            # Generate coverage report (htmlcov/index.html)
 pytest -m unit -v             # Verbose unit tests
-pytest tests/test_src/mcp_server_langgraph/core/agent.py::test_specific -v  # Single test
+pytest tests/test_agent.py::test_specific -v  # Single test
 
 # Manual testing
 make test-mcp                 # Test MCP server (runs examples/client_stdio.py)
