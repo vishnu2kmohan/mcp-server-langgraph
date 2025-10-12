@@ -201,7 +201,7 @@ Manually update these critical files:
 4. **`.env.example`**:
    - Review and customize environment variables
 
-5. **`config.py`**:
+5. **`src/mcp_server_langgraph/core/config.py`**:
    - Update SERVICE_NAME constant
 
 6. **`observability.py`**:
@@ -213,25 +213,25 @@ Choose which features to keep:
 
 **If you don't need OpenFGA (authorization)**:
 ```bash
-rm openfga_client.py setup_openfga.py example_openfga_usage.py
+rm openfga_client.py scripts/setup_openfga.py examples/openfga_usage.py
 # Remove OpenFGA references from docker-compose.yaml
 # Remove from requirements.txt
 ```
 
 **If you don't need Infisical (secrets)**:
 ```bash
-rm secrets_manager.py setup_infisical.py
+rm secrets_manager.py scripts/setup_infisical.py
 # Remove from requirements.txt
 ```
 
 **If you only need one MCP transport**:
 ```bash
 # Keep only the one you need:
-rm mcp_server.py  # stdio
+rm src/mcp_server_langgraph/mcp/server_stdio.py  # stdio
 # or
 rm mcp_server_http.py  # HTTP/SSE
 # or
-rm mcp_server_streamable.py  # StreamableHTTP
+rm src/mcp_server_langgraph/mcp/server_streamable.py  # StreamableHTTP
 ```
 
 **If you don't need Kubernetes**:
@@ -287,9 +287,9 @@ testing_level: basic
 ```
 
 **Manual removal**:
-- Delete: `auth.py`, `openfga_client.py`, `secrets_manager.py`
+- Delete: `src/mcp_server_langgraph/auth/middleware.py`, `openfga_client.py`, `secrets_manager.py`
 - Delete: `kubernetes/`, `helm/`, `grafana/`, `monitoring/`
-- Keep: `mcp_server.py`, `agent.py`, `config.py`
+- Keep: `src/mcp_server_langgraph/mcp/server_stdio.py`, `src/mcp_server_langgraph/core/agent.py`, `src/mcp_server_langgraph/core/config.py`
 
 ### Standard Production Server
 
@@ -347,14 +347,14 @@ deployment_target: cloudrun
 After generation, customize these aspects:
 
 ### Core Functionality
-- [ ] Update agent behavior in `agent.py`
+- [ ] Update agent behavior in `src/mcp_server_langgraph/core/agent.py`
 - [ ] Add your custom tools
 - [ ] Modify prompts in `prompt.py`
 - [ ] Configure LLM models in `llm_factory.py`
 
 ### Configuration
 - [ ] Update `.env.example` with your env vars
-- [ ] Customize `config.py` with your settings
+- [ ] Customize `src/mcp_server_langgraph/core/config.py` with your settings
 - [ ] Review `pyproject.toml` dependencies
 
 ### Security
@@ -389,9 +389,9 @@ After generation, customize these aspects:
 |------|----------------|
 | `README.md` | Title, description, badges, quick start |
 | `pyproject.toml` | name, author, description, version |
-| `config.py` | SERVICE_NAME constant |
+| `src/mcp_server_langgraph/core/config.py` | SERVICE_NAME constant |
 | `.env.example` | Project-specific env vars |
-| `agent.py` | Agent tools and behavior |
+| `src/mcp_server_langgraph/core/agent.py` | Agent tools and behavior |
 
 ### Should Customize
 | File | What to Change |
@@ -406,7 +406,7 @@ After generation, customize these aspects:
 | File | What to Change |
 |------|----------------|
 | `mcp_server*.py` | MCP transport specifics |
-| `auth.py` | Authentication logic |
+| `src/mcp_server_langgraph/auth/middleware.py` | Authentication logic |
 | `openfga_client.py` | Authorization model |
 | `llm_factory.py` | LLM provider config |
 | `CONTRIBUTING.md` | Contribution guidelines |
@@ -473,8 +473,8 @@ Create a `CUSTOMIZATIONS.md` file:
 - Redis caching layer
 
 ## Modified Files
-- agent.py - Added Slack tools
-- config.py - Added Redis config
+- src/mcp_server_langgraph/core/agent.py - Added Slack tools
+- src/mcp_server_langgraph/core/config.py - Added Redis config
 ```
 
 ---

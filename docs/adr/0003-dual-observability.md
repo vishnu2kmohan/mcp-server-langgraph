@@ -186,7 +186,7 @@ Users can enable one or both based on their needs:
 ### LangSmith Integration
 
 ```python
-# langsmith_config.py
+# langsmith_src/mcp_server_langgraph/core/config.py
 - Conditional initialization
 - Automatic trace context
 - Token usage tracking
@@ -196,7 +196,7 @@ Users can enable one or both based on their needs:
 ### Configuration
 
 ```python
-# config.py
+# src/mcp_server_langgraph/core/config.py
 observability_backend: str = "both"  # opentelemetry, langsmith, both
 langsmith_api_key: Optional[str] = None
 langsmith_tracing: bool = False
@@ -243,5 +243,5 @@ with tracer.start_as_current_span("agent.chat") as span:
 - [OpenTelemetry Documentation](https://opentelemetry.io/)
 - [LangSmith Documentation](https://docs.smith.langchain.com/)
 - [LANGSMITH_INTEGRATION.md](../LANGSMITH_INTEGRATION.md)
-- Related Files: `observability.py`, `langsmith_config.py`
+- Related Files: `observability.py`, `langsmith_src/mcp_server_langgraph/core/config.py`
 - Related ADRs: [0001](0001-llm-multi-provider.md) (LLM abstraction)

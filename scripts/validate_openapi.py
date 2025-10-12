@@ -12,7 +12,6 @@ from pathlib import Path
 try:
     from fastapi.openapi.utils import get_openapi
     from openapi_spec_validator import validate_spec
-    from openapi_spec_validator.readers import read_from_filename
 except ImportError:
     print("Error: Required packages not installed")
     print("Run: pip install openapi-spec-validator")
@@ -248,7 +247,7 @@ def main():
     # Summary
     print("\n" + "=" * 70)
     print("Summary:")
-    print(f"  Schema valid: ✓")
+    print("  Schema valid: ✓")
     print(f"  Coverage: {coverage_stats['coverage_percent']:.1f}%")
     print(f"  Breaking changes: {len(breaking_changes)}")
 

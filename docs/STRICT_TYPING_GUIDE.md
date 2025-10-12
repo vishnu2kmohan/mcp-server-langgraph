@@ -10,7 +10,7 @@ This project uses **gradual strict typing** with mypy to improve type safety inc
 
 These modules have `strict = true` and `disallow_untyped_calls = true`:
 
-- `config.py` - Configuration management
+- `src/mcp_server_langgraph/core/config.py` - Configuration management
 - `feature_flags.py` - Feature flag system
 - `observability.py` - Observability setup
 
@@ -23,9 +23,9 @@ These modules have `strict = true` and `disallow_untyped_calls = true`:
 
 Modules scheduled for strict typing:
 
-- `auth.py` - Authentication/authorization
+- `src/mcp_server_langgraph/auth/middleware.py` - Authentication/authorization
 - `llm_factory.py` - LLM abstraction
-- `agent.py` - LangGraph agent
+- `src/mcp_server_langgraph/core/agent.py` - LangGraph agent
 
 ### Not Strict (Intentional)
 
@@ -101,13 +101,13 @@ strict = true
 mypy .
 
 # Check specific file
-mypy agent.py
+mypy src/mcp_server_langgraph/core/agent.py
 ```
 
 ### Check Only Strict Modules
 
 ```bash
-mypy config.py feature_flags.py observability.py
+mypy src/mcp_server_langgraph/core/config.py feature_flags.py observability.py
 ```
 
 ### CI Integration

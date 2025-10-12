@@ -10,8 +10,8 @@ from langchain_core.messages import HumanMessage
 # Add parent directory to path
 sys.path.insert(0, "..")
 
-from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.llm.factory import create_llm_from_config
+from mcp_server_langgraph.core.config import settings  # noqa: E402
+from mcp_server_langgraph.llm.factory import create_llm_from_config  # noqa: E402
 
 
 async def test_llm():

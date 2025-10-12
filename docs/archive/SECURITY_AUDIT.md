@@ -285,7 +285,7 @@ kubesec scan kubernetes/base/*.yaml
 
 ```bash
 # Test authentication
-python scripts/security_tests/test_auth.py
+python scripts/security_tests/test_src/mcp_server_langgraph/auth/middleware.py
 
 # Test authorization
 python scripts/security_tests/test_authz.py

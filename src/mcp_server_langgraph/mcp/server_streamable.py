@@ -15,11 +15,11 @@ from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.core.agent import AgentState, agent_graph
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.core.agent import AgentState, agent_graph
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
-from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 app = FastAPI(
     title="MCP Server with LangGraph",
@@ -456,7 +456,7 @@ async def list_resources():
 
 
 # Include health check routes
-from mcp_server_langgraph.health.checks import app as health_app
+from mcp_server_langgraph.health.checks import app as health_app  # noqa: E402
 
 app.mount("/health", health_app)
 

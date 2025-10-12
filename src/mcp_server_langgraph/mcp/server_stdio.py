@@ -10,11 +10,11 @@ from mcp.server.stdio import stdio_server
 from mcp.types import Resource, TextContent, Tool
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.core.agent import AgentState, agent_graph
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.core.agent import AgentState, agent_graph
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
-from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 
 class ChatInput(BaseModel):

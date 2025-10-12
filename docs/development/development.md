@@ -45,13 +45,13 @@ echo "GOOGLE_API_KEY=your-api-key-here" >> .env
 docker-compose up -d
 
 # 8. Setup OpenFGA
-python setup_openfga.py
+python scripts/setup_openfga.py
 
 # 9. Run tests
 pytest -m unit -v
 
 # 10. Test the agent
-python example_client.py
+python examples/client_stdio.py
 ```
 
 **You're ready to develop!** 🚀
@@ -262,7 +262,7 @@ open http://localhost:3000
 
 ```bash
 # Run setup script
-python setup_openfga.py
+python scripts/setup_openfga.py
 
 # This will output:
 # ✓ Created OpenFGA store: 01HXXXXXXXXX
@@ -284,7 +284,7 @@ pytest -m unit -v
 # ===== X passed in Y.YYs =====
 
 # Test the MCP server
-python example_client.py
+python examples/client_stdio.py
 
 # Should see agent responses
 ```
@@ -394,10 +394,10 @@ pytest -m unit -v
 pytest -m integration -v
 
 # Specific test file
-pytest tests/test_auth.py -v
+pytest tests/test_src/mcp_server_langgraph/auth/middleware.py -v
 
 # Specific test function
-pytest tests/test_auth.py::test_create_token -v
+pytest tests/test_src/mcp_server_langgraph/auth/middleware.py::test_create_token -v
 
 # With coverage
 pytest --cov=. --cov-report=html
@@ -443,7 +443,7 @@ async def test_my_integration():
 
 ```bash
 # Run with debug logging
-LOG_LEVEL=DEBUG python mcp_server.py
+LOG_LEVEL=DEBUG python -m mcp_server_langgraph.mcp.server_stdio
 
 # Or set in .env
 echo "LOG_LEVEL=DEBUG" >> .env

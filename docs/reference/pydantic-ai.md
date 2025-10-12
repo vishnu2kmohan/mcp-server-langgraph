@@ -6,7 +6,7 @@ This implementation adds **type-safe agent responses** using Pydantic AI through
 
 ### ✅ Completed Components
 
-#### 1. **Pydantic AI Agent Wrapper** (`pydantic_ai_agent.py`)
+#### 1. **Pydantic AI Agent Wrapper** (`pydantic_ai_src/mcp_server_langgraph/core/agent.py`)
 - Type-safe routing with `RouterDecision` model
 - Structured response generation with `AgentResponse` model
 - Multi-provider support (Google, Anthropic, OpenAI)
@@ -28,7 +28,7 @@ class AgentResponse(BaseModel):
     metadata: dict[str, str]
 ```
 
-#### 2. **Agent Integration** (`agent.py`)
+#### 2. **Agent Integration** (`src/mcp_server_langgraph/core/agent.py`)
 - Enhanced `AgentState` with `routing_confidence` and `reasoning` fields
 - Pydantic AI routing in `route_input()` node
 - Validated response generation in `generate_response()` node
@@ -95,7 +95,7 @@ intent = LLMValidator.classify_intent(response)
 ## Strategic Integration Points (As Planned)
 
 ### ✅ P0 - Agent Tool Responses
-**Status**: Implemented in `agent.py`
+**Status**: Implemented in `src/mcp_server_langgraph/core/agent.py`
 
 - Replaced manual routing with `RouterDecision` model
 - Structured `AgentResponse` with confidence/metadata
@@ -142,10 +142,10 @@ if not validated.is_valid():
 
 ```
 langgraph_mcp_agent/
-├── pydantic_ai_agent.py          # NEW: Pydantic AI wrapper
+├── pydantic_ai_src/mcp_server_langgraph/core/agent.py          # NEW: Pydantic AI wrapper
 ├── llm_validators.py             # NEW: Response validators
 ├── mcp_streaming.py              # NEW: Streaming with validation
-├── agent.py                      # MODIFIED: Added Pydantic AI integration
+├── src/mcp_server_langgraph/core/agent.py                      # MODIFIED: Added Pydantic AI integration
 ├── requirements.txt              # MODIFIED: Added pydantic-ai>=1.0.0
 ├── tests/
 │   └── test_pydantic_ai.py      # NEW: Comprehensive tests
@@ -169,7 +169,7 @@ pip install -r requirements.txt
 ### 2. Basic Usage
 
 ```python
-from pydantic_ai_agent import create_pydantic_agent
+from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
 # Create agent
 agent = create_pydantic_agent()
@@ -190,7 +190,7 @@ print(f"Sources: {response.sources}")
 
 ```python
 from pydantic import BaseModel, Field
-from llm_validators import LLMValidator
+from mcp_server_langgraph.llm.validators import LLMValidator
 
 class MyResponse(BaseModel):
     summary: str
@@ -211,7 +211,7 @@ else:
 ### 4. Streaming
 
 ```python
-from mcp_streaming import stream_validated_response
+from mcp_server_langgraph.mcp.streaming import stream_validated_response
 import json
 
 async for chunk_json in stream_validated_response("Long content..."):
@@ -339,7 +339,7 @@ ImportError: cannot import name 'create_pydantic_agent'
 - **Pydantic AI Docs**: https://ai.pydantic.dev
 - **Integration Guide**: `docs/PYDANTIC_AI_INTEGRATION.md`
 - **Tests**: `tests/test_pydantic_ai.py`
-- **Examples**: `agent.py`, `llm_validators.py`
+- **Examples**: `src/mcp_server_langgraph/core/agent.py`, `llm_validators.py`
 
 ## Summary
 

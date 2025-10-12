@@ -76,15 +76,15 @@ classifiers = [
 ```
 Name                   Stmts   Miss Branch BrPart  Cover
 ------------------------------------------------------------------
-agent.py                  93     26     12      4    70%
-auth.py                  104      1     28      2    98%
-config.py                 95      9     24     11    82%
+src/mcp_server_langgraph/core/agent.py                  93     26     12      4    70%
+src/mcp_server_langgraph/auth/middleware.py                  104      1     28      2    98%
+src/mcp_server_langgraph/core/config.py                 95      9     24     11    82%
 health_check.py           67      0     10      0   100%
 llm_validators.py         88     13      8      1    83%
 mcp_streaming.py          90     13     10      0    83%
 observability.py         117     14      8      3    85%
 openfga_client.py        100      0      2      0   100%
-pydantic_ai_agent.py      94     42     16      2    56%
+pydantic_ai_src/mcp_server_langgraph/core/agent.py      94     42     16      2    56%
 secrets_manager.py       125      7     30      2    92%
 ------------------------------------------------------------------
 TOTAL                    973    125    148     25    85%

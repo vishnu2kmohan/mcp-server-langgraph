@@ -30,13 +30,13 @@ We need to choose which transport(s) to support as our primary production interf
 
 We will support **two MCP server implementations**:
 
-1. **mcp_server_streamable.py** (PRIMARY - StreamableHTTP)
+1. **src/mcp_server_langgraph/mcp/server_streamable.py** (PRIMARY - StreamableHTTP)
    - Modern StreamableHTTP transport
    - Production-recommended
    - Full HTTP features (CORS, auth headers, rate limiting)
    - Port 8000
 
-2. **mcp_server.py** (stdio)
+2. **src/mcp_server_langgraph/mcp/server_stdio.py** (stdio)
    - For Claude Desktop integration
    - Local development tool
    - No network overhead
@@ -162,7 +162,7 @@ We will support **two MCP server implementations**:
 ### StreamableHTTP Server (Primary)
 
 ```python
-# mcp_server_streamable.py
+# src/mcp_server_langgraph/mcp/server_streamable.py
 app = FastAPI(title="MCP Server with LangGraph")
 
 @app.post("/mcp")
@@ -178,7 +178,7 @@ async def health_check():
 ### stdio Server
 
 ```python
-# mcp_server.py
+# src/mcp_server_langgraph/mcp/server_stdio.py
 async def main():
     server = Server("mcp-server-langgraph")
     # stdio transport
@@ -190,18 +190,18 @@ async def main():
 
 ```dockerfile
 # Dockerfile
-CMD ["python", "mcp_server_streamable.py"]  # Default to StreamableHTTP
+CMD ["python", "src/mcp_server_langgraph/mcp/server_streamable.py"]  # Default to StreamableHTTP
 ```
 
 ### Usage Examples
 
 ```bash
 # Production: StreamableHTTP
-python mcp_server_streamable.py
+python -m mcp_server_langgraph.mcp.server_streamable
 # → http://localhost:8000
 
 # Claude Desktop: stdio
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_stdio
 # → stdio communication
 ```
 
@@ -213,7 +213,7 @@ python mcp_server.py
   "mcpServers": {
     "langgraph-agent": {
       "command": "python",
-      "args": ["mcp_server.py"]  // stdio transport
+      "args": ["src/mcp_server_langgraph/mcp/server_stdio.py"]  // stdio transport
     }
   }
 }
@@ -241,7 +241,7 @@ python mcp_server.py
 - [MCP Specification](https://spec.modelcontextprotocol.io/)
 - [MCP Transport Documentation](https://spec.modelcontextprotocol.io/specification/architecture/#transports)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- Related Files: `mcp_server_streamable.py`, `mcp_server.py`
+- Related Files: `src/mcp_server_langgraph/mcp/server_streamable.py`, `src/mcp_server_langgraph/mcp/server_stdio.py`
 - Related ADRs: [0008 - OpenAPI Validation](future ADR for API contracts)
 
 ## Changelog

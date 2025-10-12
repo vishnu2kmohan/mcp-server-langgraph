@@ -215,7 +215,7 @@ Generating project...
 
 $ cd slack_bot
 $ docker-compose up -d
-$ python mcp_server.py
+$ python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 **Estimated Time**: 5 minutes
@@ -237,8 +237,8 @@ langgraph-mcp-cookiecutter/
 ├── {{cookiecutter.project_slug}}/
 │   ├── README.md              # With {{cookiecutter.project_name}}
 │   ├── pyproject.toml         # Templated
-│   ├── agent.py               # Templated
-│   ├── mcp_server.py          # Conditional on transports
+│   ├── src/mcp_server_langgraph/core/agent.py               # Templated
+│   ├── src/mcp_server_langgraph/mcp/server_stdio.py          # Conditional on transports
 │   └── ...
 └── README.md                  # Template usage guide
 ```
@@ -331,7 +331,7 @@ if __name__ == '__main__':
    - `CHANGELOG.md` - project name
 
 2. **Configuration**:
-   - `config.py` - service name
+   - `src/mcp_server_langgraph/core/config.py` - service name
    - `.env.example` - service name
    - `observability.py` - SERVICE_NAME constant
 

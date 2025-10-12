@@ -271,7 +271,7 @@ Update `mint.json`:
 
 Add to your monitoring:
 ```python
-from observability import metrics
+from mcp_server_langgraph.observability.telemetry import metrics
 
 @app.get("/documentation")
 async def documentation_redirect():

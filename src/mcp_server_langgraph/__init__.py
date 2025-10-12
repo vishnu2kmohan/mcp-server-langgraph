@@ -7,19 +7,19 @@ featuring multi-LLM support, fine-grained authorization, and comprehensive obser
 
 __version__ = "2.0.0"
 
-# Core exports
-from mcp_server_langgraph.core.config import settings
-from mcp_server_langgraph.core.agent import agent_graph, AgentState
-
 # Auth exports
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.core.agent import AgentState, agent_graph
+
+# Core exports
+from mcp_server_langgraph.core.config import settings
 
 # LLM exports
 from mcp_server_langgraph.llm.factory import create_llm_from_config
 
 # Observability exports
-from mcp_server_langgraph.observability.telemetry import logger, tracer, metrics
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 __all__ = [
     "__version__",

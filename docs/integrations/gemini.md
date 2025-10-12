@@ -63,10 +63,10 @@ python examples/test_llm.py
 
 ```bash
 # Run StreamableHTTP server
-python mcp_server_streamable.py
+python -m mcp_server_langgraph.mcp.server_streamable
 
 # Or run stdio server
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 ## Gemini 2.5 Models

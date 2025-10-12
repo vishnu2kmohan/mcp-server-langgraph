@@ -71,7 +71,7 @@ LANGSMITH_PROJECT=mcp-server-langgraph
 **Option B: Programmatic Configuration**
 
 ```python
-from config import settings
+from mcp_server_langgraph.core.config import settings
 
 # LangSmith is automatically configured if API key is set
 # Tracing starts immediately when you run your agent
@@ -81,10 +81,10 @@ from config import settings
 
 ```bash
 # Start the agent
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_stdio
 
 # Or run with explicit tracing
-LANGSMITH_TRACING=true python mcp_server.py
+LANGSMITH_TRACING=true python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 ### 5. View Traces
@@ -114,7 +114,7 @@ LANGSMITH_TRACING_V2=true                    # Use v2 tracing (recommended)
 
 ### Programmatic Configuration
 
-The agent is pre-configured to use LangSmith. Configuration is in `config.py`:
+The agent is pre-configured to use LangSmith. Configuration is in `src/mcp_server_langgraph/core/config.py`:
 
 ```python
 class Settings(BaseSettings):
@@ -158,7 +158,7 @@ LANGSMITH_TRACING=true
 When LangSmith is enabled, **all agent invocations are automatically traced**:
 
 ```python
-from agent import agent_graph
+from mcp_server_langgraph.core.agent import agent_graph
 
 # This invocation is automatically traced
 result = agent_graph.invoke({
@@ -181,7 +181,7 @@ result = agent_graph.invoke({
 Add custom metadata to traces:
 
 ```python
-from langsmith_config import langsmith_config
+from mcp_server_langgraph.observability.langsmith import langsmith_config
 
 # Create run configuration
 run_config = langsmith_config.create_run_config(
@@ -271,7 +271,7 @@ Compare model performance on datasets:
 
 ```python
 from langsmith import Client
-from agent import agent_graph
+from mcp_server_langgraph.core.agent import agent_graph
 
 client = Client()
 
@@ -441,7 +441,7 @@ Create separate projects for:
 
 ```bash
 # Set project per environment
-LANGSMITH_PROJECT=my-agent-prod python mcp_server.py
+LANGSMITH_PROJECT=my-agent-prod python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 ### 2. Tagging Strategy

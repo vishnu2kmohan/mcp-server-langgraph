@@ -157,7 +157,7 @@ The `langgraph.json` file configures your deployment:
 {
   "dependencies": ["."],
   "graphs": {
-    "agent": "./langgraph/agent.py:graph"
+    "agent": "./langgraph/src/mcp_server_langgraph/core/agent.py:graph"
   },
   "env": {
     "ANTHROPIC_API_KEY": "",
@@ -449,7 +449,7 @@ uvx langgraph-cli deploy my-agent-prod
 ```json
 {
   "graphs": {
-    "agent": "./langgraph/agent.py:graph"  // Correct path
+    "agent": "./langgraph/src/mcp_server_langgraph/core/agent.py:graph"  // Correct path
   }
 }
 ```

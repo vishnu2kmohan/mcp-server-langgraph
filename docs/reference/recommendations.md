@@ -184,7 +184,7 @@ Create `.github/labeler.yml`:
   - 'docs/**/*'
 
 'security':
-  - 'auth.py'
+  - 'src/mcp_server_langgraph/auth/middleware.py'
   - 'secrets_manager.py'
   - 'openfga_client.py'
 
@@ -226,7 +226,7 @@ from time import time
 @pytest.mark.benchmark
 async def test_jwt_creation_performance():
     """Benchmark JWT token creation"""
-    from auth import AuthMiddleware
+    from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
     auth = AuthMiddleware()
     iterations = 1000
@@ -347,7 +347,7 @@ def setup_logging():
 **Implementation**:
 
 ```python
-# mcp_server_streamable.py - Already has FastAPI
+# src/mcp_server_langgraph/mcp/server_streamable.py - Already has FastAPI
 # Just enhance the OpenAPI schema
 
 app = FastAPI(

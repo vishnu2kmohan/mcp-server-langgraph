@@ -31,12 +31,12 @@ The codebase demonstrates **strong security practices** and is suitable for prod
 
 #### 1. Authentication & Authorization ✅
 
-**JWT Implementation** (`auth.py`)
+**JWT Implementation** (`src/mcp_server_langgraph/auth/middleware.py`)
 - ✅ Uses industry-standard PyJWT library
 - ✅ Token expiration implemented
 - ✅ Proper token validation with algorithm specification
 - ✅ User activity checks before authorization
-- ✅ Production warning for default secrets (config.py:107-111)
+- ✅ Production warning for default secrets (src/mcp_server_langgraph/core/config.py:107-111)
 
 ```python
 # Good: Fails fast in production with default secret
@@ -165,7 +165,7 @@ kong:
 **Current State**: Basic HTTP server without security headers
 **Recommendation**: Add security headers to HTTP responses
 
-**Action**: Update `mcp_server_streamable.py` to add headers:
+**Action**: Update `src/mcp_server_langgraph/mcp/server_streamable.py` to add headers:
 ```python
 @app.middleware("http")
 async def add_security_headers(request, call_next):
@@ -204,7 +204,7 @@ pip-audit --format json
 **Current State**: No explicit CORS configuration
 **Recommendation**: Configure CORS for StreamableHTTP
 
-**Action**: Add to `mcp_server_streamable.py`:
+**Action**: Add to `src/mcp_server_langgraph/mcp/server_streamable.py`:
 ```python
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -219,7 +219,7 @@ app.add_middleware(
 
 ### 6. Test Secrets Separation (Low Priority)
 
-**Current State**: Test secrets in code (`conftest.py:102`, `test_auth.py`)
+**Current State**: Test secrets in code (`conftest.py:102`, `test_src/mcp_server_langgraph/auth/middleware.py`)
 **Recommendation**: Use environment variables for test secrets too
 
 **Action**:

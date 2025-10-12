@@ -7,16 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-10-11
+
+### Changed - BREAKING
+
+**Package Reorganization**: Complete restructure into pythonic src/ layout
+
+- **Import Paths** (BREAKING): All imports changed from flat to hierarchical structure
+  - `from config import settings` → `from mcp_server_langgraph.core.config import settings`
+  - `from auth import AuthMiddleware` → `from mcp_server_langgraph.auth.middleware import AuthMiddleware`
+  - `from llm_factory import create_llm_from_config` → `from mcp_server_langgraph.llm.factory import create_llm_from_config`
+  - `from observability import logger` → `from mcp_server_langgraph.observability.telemetry import logger`
+  - All other modules follow same pattern
+
+- **File Organization**:
+  - Created `src/mcp_server_langgraph/` package with submodules
+  - `core/` - agent.py, config.py, feature_flags.py
+  - `auth/` - middleware.py (auth.py), openfga.py (openfga_client.py)
+  - `llm/` - factory.py, validators.py, pydantic_agent.py
+  - `mcp/` - server_stdio.py, server_streamable.py, streaming.py
+  - `observability/` - telemetry.py (observability.py), langsmith.py
+  - `secrets/` - manager.py (secrets_manager.py)
+  - `health/` - checks.py (health_check.py)
+  - Moved examples to `examples/` directory
+  - Moved setup scripts to `scripts/` directory
+
+- **Console Scripts**: Entry points remain unchanged
+  - `mcp-server` - stdio transport
+  - `mcp-server-streamable` - StreamableHTTP transport
+
+- **Configuration**: Updated pyproject.toml, setup.py, Dockerfile, Makefile for new structure
+
 ### Removed
 - **HTTP/SSE Transport**: Removed deprecated `mcp_server_http.py` and SSE transport implementation
-- **sse-starlette Dependency**: Removed from all dependency files (pyproject.toml, requirements.txt, requirements-pinned.txt)
-- **Makefile**: Removed `run-http` target
-- **Documentation**: Updated all references to remove HTTP/SSE transport mentions
+- **sse-starlette Dependency**: Removed from all dependency files
+- **Flat File Structure**: Removed 20 Python files from root directory
 
-### Changed
-- **MCP Transports**: Now supporting only two transports: StreamableHTTP (production) and stdio (local/desktop)
-- **setup.py**: Renamed console script entry point from `mcp-server-http` to `mcp-server-streamable`
-- **ADR 0004**: Updated to reflect SSE transport removal completion
+### Migration Guide
+
+**For users importing the package**:
+```python
+# Before (v1.x)
+from config import settings
+from auth import AuthMiddleware
+from agent import agent_graph
+
+# After (v2.x)
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
+from mcp_server_langgraph.core.agent import agent_graph
+```
+
+**For CLI users**: No changes required - console scripts work the same
 
 ## [1.0.0] - 2025-10-10
 

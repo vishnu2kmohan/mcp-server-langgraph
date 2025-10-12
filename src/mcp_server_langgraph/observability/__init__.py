@@ -1,15 +1,15 @@
 """Observability: tracing, metrics, and logging."""
 
 from mcp_server_langgraph.observability.telemetry import (
+    config,
     logger,
     metrics,
     tracer,
-    setup_observability,
 )
 
 __all__ = [
     "logger",
     "metrics",
     "tracer",
-    "setup_observability",
+    "config",
 ]

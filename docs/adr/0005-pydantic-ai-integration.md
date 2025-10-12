@@ -64,8 +64,8 @@ Pydantic AI provides:
 - **Provider-agnostic**: Works with any LLM (via LiteLLM)
 
 Implementation:
-- `pydantic_ai_agent.py`: Wrapper around Pydantic AI
-- `agent.py`: Uses Pydantic AI for routing and responses
+- `pydantic_ai_src/mcp_server_langgraph/core/agent.py`: Wrapper around Pydantic AI
+- `src/mcp_server_langgraph/core/agent.py`: Uses Pydantic AI for routing and responses
 - `llm_validators.py`: Generic validation framework
 - `mcp_streaming.py`: Type-safe streaming
 
@@ -209,7 +209,7 @@ class AgentResponse(BaseModel):
 ### Usage in Agent
 
 ```python
-# agent.py
+# src/mcp_server_langgraph/core/agent.py
 decision = await pydantic_agent.route_message(message)
 # decision.action: "use_tools" (typed!)
 # decision.confidence: 0.92
@@ -262,5 +262,5 @@ Benchmarks on routing latency:
 - [Pydantic AI Documentation](https://ai.pydantic.dev/)
 - [PYDANTIC_AI_INTEGRATION.md](../../docs/PYDANTIC_AI_INTEGRATION.md)
 - [PYDANTIC_AI_README.md](../../PYDANTIC_AI_README.md)
-- Related Files: `pydantic_ai_agent.py`, `llm_validators.py`, `agent.py`
+- Related Files: `pydantic_ai_src/mcp_server_langgraph/core/agent.py`, `llm_validators.py`, `src/mcp_server_langgraph/core/agent.py`
 - Related ADRs: [0001](0001-llm-multi-provider.md) (LiteLLM integration)

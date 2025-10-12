@@ -1,18 +1,18 @@
 [run]
+source = src/mcp_server_langgraph
 omit =
     */venv/*
     */tests/*
     */__pycache__/*
     */site-packages/*
-    example_*.py
-    setup_*.py
-    mcp_server.py
-    mcp_server_streamable.py
-    langgraph_platform/*
-    langsmith_config.py
-    llm_factory.py
-    hooks/*
-    scripts/*
+    */examples/*
+    */scripts/*
+    */hooks/*
+    */langgraph_platform/*
+    setup.py
+    # MCP server entry points (tested via integration tests)
+    src/mcp_server_langgraph/mcp/server_stdio.py
+    src/mcp_server_langgraph/mcp/server_streamable.py
 
 [report]
 exclude_lines =

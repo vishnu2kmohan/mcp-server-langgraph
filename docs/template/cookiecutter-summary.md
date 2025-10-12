@@ -163,7 +163,7 @@ Choose features, skip unwanted components.
 
 ### Level 3: Custom Agent (30 min - 2 hours)
 After generation:
-- Modify `agent.py` with your tools
+- Modify `src/mcp_server_langgraph/core/agent.py` with your tools
 - Update prompts
 - Add custom dependencies
 - Configure LLM models

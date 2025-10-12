@@ -38,7 +38,7 @@ The agent supports three MCP transports:
   "mcpServers": {
     "langgraph-agent": {
       "command": "python",
-      "args": ["mcp_server.py"],
+      "args": ["src/mcp_server_langgraph/mcp/server_stdio.py"],
       "env": {
         "ANTHROPIC_API_KEY": "your-key"
       }
@@ -48,7 +48,7 @@ The agent supports three MCP transports:
 ```
 
 **Files:**
-- `mcp_server.py` - stdio transport implementation
+- `src/mcp_server_langgraph/mcp/server_stdio.py` - stdio transport implementation
 
 ### StreamableHTTP Transport (Recommended)
 
@@ -84,7 +84,7 @@ The agent supports three MCP transports:
 - `GET /` - Server info and capabilities
 
 **Files:**
-- `mcp_server_streamable.py` - StreamableHTTP transport implementation
+- `src/mcp_server_langgraph/mcp/server_streamable.py` - StreamableHTTP transport implementation
 
 **Streaming Support:**
 - Set `Accept: application/x-ndjson` or `Accept: text/event-stream` for streaming responses
@@ -135,7 +135,7 @@ Located at `.mcp/manifest.json`, this file contains:
   "transports": {
     "stdio": {
       "command": "python",
-      "args": ["mcp_server.py"]
+      "args": ["src/mcp_server_langgraph/mcp/server_stdio.py"]
     },
     "http": {
       "url": "https://langgraph-agent.example.com",
@@ -248,7 +248,7 @@ curl -X POST https://registry.modelcontextprotocol.io/api/v1/packages \
   "mcpServers": {
     "langgraph-agent": {
       "command": "python",
-      "args": ["/path/to/mcp_server.py"],
+      "args": ["/path/to/src/mcp_server_langgraph/mcp/server_stdio.py"],
       "env": {
         "ANTHROPIC_API_KEY": "sk-ant-...",
         "OPENFGA_API_URL": "http://localhost:8080"
@@ -341,10 +341,10 @@ asyncio.run(main())
 
 ```bash
 # Run server
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_stdio
 
 # Test with example client
-python example_client.py
+python examples/client_stdio.py
 ```
 
 ### Test HTTP/SSE Transport
@@ -376,7 +376,7 @@ curl https://mcp.langgraph-agent.example.com/tools
 npm install -g @modelcontextprotocol/inspector
 
 # Inspect stdio server
-mcp-inspector python mcp_server.py
+mcp-inspector python -m mcp_server_langgraph.mcp.server_stdio
 
 # Inspect HTTP server
 mcp-inspector --transport http --url https://mcp.langgraph-agent.example.com
@@ -494,7 +494,7 @@ rate(mcp_messages_total{status="error"}[5m])
 
 - [x] **Manifest file** - `.mcp/manifest.json` with all required fields
 - [x] **Registry info** - `.mcp/registry.json` with metadata
-- [x] **stdio transport** - Implemented in `mcp_server.py`
+- [x] **stdio transport** - Implemented in `src/mcp_server_langgraph/mcp/server_stdio.py`
 - [x] **HTTP/SSE transport** - Implemented in `mcp_server_http.py`
 - [x] **Tools** - Documented with JSON schemas
 - [x] **Resources** - Documented and accessible

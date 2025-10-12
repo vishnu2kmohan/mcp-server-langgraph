@@ -14,7 +14,7 @@ import sys
 # For local testing
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage  # noqa: E402
 
 
 def test_local_graph():

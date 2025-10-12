@@ -119,7 +119,7 @@ Implementation in `llm_factory.py`:
 ### Provider Configuration
 
 ```python
-# config.py
+# src/mcp_server_langgraph/core/config.py
 llm_provider: str = "google"  # google, anthropic, openai, ollama
 model_name: str = "gemini-2.5-flash-002"
 fallback_models: list[str] = ["gemini-2.5-pro", "claude-3-5-sonnet"]

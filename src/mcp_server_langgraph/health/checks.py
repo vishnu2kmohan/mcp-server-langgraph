@@ -9,9 +9,9 @@ from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger
-from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.secrets.manager import get_secrets_manager
 
 app = FastAPI(title="MCP Server with LangGraph Health")

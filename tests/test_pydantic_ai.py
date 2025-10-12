@@ -168,8 +168,8 @@ def test_agent_response_defaults():
 @pytest.mark.unit
 def test_validated_response():
     """Test ValidatedResponse container."""
-    from mcp_server_langgraph.llm.validators import ValidatedResponse
     from mcp_server_langgraph.llm.pydantic_agent import AgentResponse
+    from mcp_server_langgraph.llm.validators import ValidatedResponse
 
     data = AgentResponse(content="test", confidence=0.9)
 

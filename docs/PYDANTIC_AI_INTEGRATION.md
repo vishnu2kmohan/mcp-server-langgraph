@@ -37,10 +37,10 @@ Agent Graph → Pydantic AI Generator → Validated Response → User
 
 ### 1. Pydantic AI Agent Wrapper
 
-Located in `pydantic_ai_agent.py`, provides type-safe agent functionality:
+Located in `pydantic_ai_src/mcp_server_langgraph/core/agent.py`, provides type-safe agent functionality:
 
 ```python
-from pydantic_ai_agent import create_pydantic_agent
+from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
 # Create agent wrapper
 agent = create_pydantic_agent()
@@ -72,7 +72,7 @@ print(response.requires_clarification)      # False
 #### RouterDecision
 
 ```python
-from pydantic_ai_agent import RouterDecision
+from mcp_server_langgraph.llm.pydantic_agent import RouterDecision
 
 decision = RouterDecision(
     action="use_tools",           # Literal["use_tools", "respond", "clarify"]
@@ -85,7 +85,7 @@ decision = RouterDecision(
 #### AgentResponse
 
 ```python
-from pydantic_ai_agent import AgentResponse
+from mcp_server_langgraph.llm.pydantic_agent import AgentResponse
 
 response = AgentResponse(
     content="Here is your answer...",
@@ -102,7 +102,7 @@ response = AgentResponse(
 Located in `llm_validators.py`, provides validation utilities:
 
 ```python
-from llm_validators import (
+from mcp_server_langgraph.llm.validators import (
     LLMValidator,
     EntityExtraction,
     IntentClassification,
@@ -145,7 +145,7 @@ print(f"Score: {validated.data.score}")
 Located in `mcp_streaming.py`:
 
 ```python
-from mcp_streaming import (
+from mcp_server_langgraph.mcp.streaming import (
     stream_validated_response,
     MCPStreamingValidator,
     StreamChunk
@@ -181,7 +181,7 @@ print(f"Complete: {response.is_complete}")
 
 ## Integration with Agent
 
-The agent in `agent.py` automatically uses Pydantic AI if available:
+The agent in `src/mcp_server_langgraph/core/agent.py` automatically uses Pydantic AI if available:
 
 ### Routing
 
@@ -247,7 +247,7 @@ class CodeReview(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
 
 # Use with validator
-from llm_validators import LLMValidator
+from mcp_server_langgraph.llm.validators import LLMValidator
 
 validated = LLMValidator.validate_response(
     llm_response,
@@ -266,7 +266,7 @@ for issue in review.issues:
 Pydantic AI supports multiple LLM providers:
 
 ```python
-from pydantic_ai_agent import PydanticAIAgentWrapper
+from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
 # Google (Gemini)
 agent = PydanticAIAgentWrapper(
@@ -325,7 +325,7 @@ Example test:
 
 ```python
 import pytest
-from pydantic_ai_agent import RouterDecision
+from mcp_server_langgraph.llm.pydantic_agent import RouterDecision
 
 @pytest.mark.unit
 def test_router_decision_validation():
@@ -422,7 +422,7 @@ else:
 ### 1. Use Type Hints
 
 ```python
-from pydantic_ai_agent import RouterDecision, AgentResponse
+from mcp_server_langgraph.llm.pydantic_agent import RouterDecision, AgentResponse
 
 async def process_message(message: str) -> AgentResponse:
     """Always use type hints for Pydantic models."""
@@ -515,8 +515,8 @@ python -c "import pydantic_ai_agent; print(pydantic_ai_agent.__file__)"
 ## Examples
 
 See full examples in:
-- `agent.py` - Agent integration
+- `src/mcp_server_langgraph/core/agent.py` - Agent integration
 - `tests/test_pydantic_ai.py` - Comprehensive tests
-- `pydantic_ai_agent.py` - Agent wrapper implementation
+- `pydantic_ai_src/mcp_server_langgraph/core/agent.py` - Agent wrapper implementation
 - `llm_validators.py` - Validation utilities
 - `mcp_streaming.py` - Streaming with validation

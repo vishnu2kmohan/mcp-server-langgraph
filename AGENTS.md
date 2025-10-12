@@ -45,8 +45,8 @@ make run-streamable           # StreamableHTTP server (production, port 8000)
 make run                      # stdio server (for Claude Desktop)
 
 # Direct execution
-python mcp_server_streamable.py
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_streamable
+python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 ### Testing
@@ -56,11 +56,11 @@ make test-unit                # Unit tests only
 make test-integration         # Integration tests (requires infrastructure)
 make test-coverage            # Generate coverage report (htmlcov/index.html)
 pytest -m unit -v             # Verbose unit tests
-pytest tests/test_agent.py::test_specific -v  # Single test
+pytest tests/test_src/mcp_server_langgraph/core/agent.py::test_specific -v  # Single test
 
 # Manual testing
-make test-mcp                 # Test MCP server (runs example_client.py)
-make test-auth                # Test OpenFGA (runs example_openfga_usage.py)
+make test-mcp                 # Test MCP server (runs examples/client_stdio.py)
+make test-auth                # Test OpenFGA (runs examples/openfga_usage.py)
 
 # Benchmarks
 make benchmark                # Performance benchmarks
@@ -93,7 +93,7 @@ make reset                    # Clean + restart infrastructure + reinitialize Op
 
 ### Core Components
 
-**Agent Layer** (agent.py)
+**Agent Layer** (src/mcp_server_langgraph/core/agent.py)
 - LangGraph functional API with StateGraph
 - TypedDict-based state management (`AgentState`)
 - Conditional routing based on message content
@@ -107,14 +107,14 @@ make reset                    # Clean + restart infrastructure + reinitialize Op
 - Sync/async invocation support
 - Message format translation (LangChain ↔ LiteLLM)
 
-**MCP Server** (mcp_server_streamable.py, mcp_server.py)
+**MCP Server** (src/mcp_server_langgraph/mcp/server_streamable.py, src/mcp_server_langgraph/mcp/server_stdio.py)
 - Transport layer for MCP protocol
 - Tool registration and invocation
 - Resource management
 - JSON-RPC message handling
 - StreamableHTTP is production standard
 
-**Authentication** (auth.py)
+**Authentication** (src/mcp_server_langgraph/auth/middleware.py)
 - JWT token creation and validation
 - In-memory user database (replace in production)
 - Integration with OpenFGA for authorization
@@ -127,7 +127,7 @@ make reset                    # Clean + restart infrastructure + reinitialize Op
 - Tuple management: `write_tuples()`, `delete_tuples()`
 - Authorization model: user, organization, tool, conversation, role types
 
-**Configuration** (config.py)
+**Configuration** (src/mcp_server_langgraph/core/config.py)
 - Pydantic Settings-based configuration
 - Infisical integration for secret loading
 - Multi-LLM provider support
@@ -236,7 +236,7 @@ async def _handle_my_tool(self, arguments, span, user_id):
         return [TextContent(type="text", text=result)]
 ```
 
-3. **Add OpenFGA tuples** for permissions (in setup_openfga.py or runtime)
+3. **Add OpenFGA tuples** for permissions (in scripts/setup_openfga.py or runtime)
 
 4. **Write tests** with proper markers:
 ```python
@@ -254,7 +254,7 @@ async def test_my_tool_authorization():
 
 ### Adding a New LLM Provider
 
-1. **Add configuration** to config.py:
+1. **Add configuration** to src/mcp_server_langgraph/core/config.py:
 ```python
 # Provider-specific settings
 my_provider_api_key: Optional[str] = None
@@ -272,7 +272,7 @@ provider_kwargs = {
 }
 ```
 
-3. **Add to fallback models** in config.py if desired
+3. **Add to fallback models** in src/mcp_server_langgraph/core/config.py if desired
 
 4. **Test** with actual provider:
 ```python
@@ -321,7 +321,7 @@ tree = await openfga_client.expand_relation(
 
 **Tracing**:
 ```python
-from observability import tracer
+from mcp_server_langgraph.observability.telemetry import tracer
 
 with tracer.start_as_current_span("my_operation") as span:
     span.set_attribute("user.id", user_id)
@@ -331,7 +331,7 @@ with tracer.start_as_current_span("my_operation") as span:
 
 **Logging**:
 ```python
-from observability import logger
+from mcp_server_langgraph.observability.telemetry import logger
 
 logger.info(
     "Operation completed",
@@ -345,7 +345,7 @@ logger.info(
 
 **Metrics**:
 ```python
-from observability import metrics
+from mcp_server_langgraph.observability.telemetry import metrics
 
 metrics.tool_calls.add(1, {"tool": "chat"})
 metrics.response_duration.record(duration_ms, {"tool": "chat"})
@@ -355,7 +355,7 @@ metrics.response_duration.record(duration_ms, {"tool": "chat"})
 
 **Type-safe routing**:
 ```python
-from pydantic_ai_agent import PydanticAIAgentWrapper
+from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
 agent = PydanticAIAgentWrapper()
 
@@ -390,7 +390,7 @@ metadata = response.metadata            # dict[str, str]
 
 **Custom validation**:
 ```python
-from llm_validators import LLMValidator
+from mcp_server_langgraph.llm.validators import LLMValidator
 from pydantic import BaseModel, Field
 
 class MyCustomResponse(BaseModel):
@@ -415,7 +415,7 @@ else:
 
 **Streaming with validation**:
 ```python
-from mcp_streaming import stream_validated_response
+from mcp_server_langgraph.mcp.streaming import stream_validated_response
 import json
 
 # Stream content with type-safe chunks
@@ -722,7 +722,7 @@ The project uses **Pydantic AI** (https://ai.pydantic.dev) for type-safe agent r
 
 ### Architecture
 
-**Core Models** (pydantic_ai_agent.py):
+**Core Models** (pydantic_ai_src/mcp_server_langgraph/core/agent.py):
 ```python
 class RouterDecision(BaseModel):
     """Type-safe routing decision."""
@@ -776,12 +776,12 @@ class StreamedResponse(BaseModel):
 
 ### Integration Points
 
-1. **Agent Routing** (agent.py:route_input)
+1. **Agent Routing** (src/mcp_server_langgraph/core/agent.py:route_input)
    - Uses PydanticAIAgentWrapper for type-safe routing decisions
    - Populates `routing_confidence` and `reasoning` in AgentState
    - Falls back to keyword-based routing if Pydantic AI unavailable
 
-2. **Response Generation** (agent.py:generate_response)
+2. **Response Generation** (src/mcp_server_langgraph/core/agent.py:generate_response)
    - Uses PydanticAIAgentWrapper for validated responses
    - Ensures structured output with confidence tracking
    - Integrates with observability (tracing, metrics)
@@ -800,7 +800,7 @@ class StreamedResponse(BaseModel):
 
 **Basic routing**:
 ```python
-from pydantic_ai_agent import create_pydantic_agent
+from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
 agent = create_pydantic_agent()
 decision = await agent.route_message("Search for Python tutorials")
@@ -812,7 +812,7 @@ print(decision.reasoning)   # "User explicitly requested search"
 
 **Custom validation**:
 ```python
-from llm_validators import LLMValidator
+from mcp_server_langgraph.llm.validators import LLMValidator
 from pydantic import BaseModel
 
 class CodeReview(BaseModel):
@@ -834,7 +834,7 @@ if validated.is_valid():
 
 **Streaming**:
 ```python
-from mcp_streaming import stream_validated_response
+from mcp_server_langgraph.mcp.streaming import stream_validated_response
 
 async for chunk_json in stream_validated_response(
     content="Long response...",
@@ -897,30 +897,30 @@ Solution: Use `strict=False` or update LLM prompt for better structured output
 ```
 ImportError: cannot import name 'PydanticAIAgentWrapper'
 ```
-Solution: Ensure `pydantic_ai_agent.py` exists and Python path is correct
+Solution: Ensure `pydantic_ai_src/mcp_server_langgraph/core/agent.py` exists and Python path is correct
 
 ## Key Files Reference
 
 ### Core Agent Files
-- **agent.py**: LangGraph agent with Pydantic AI type-safe routing
-- **pydantic_ai_agent.py**: Pydantic AI wrapper for structured responses
+- **src/mcp_server_langgraph/core/agent.py**: LangGraph agent with Pydantic AI type-safe routing
+- **pydantic_ai_src/mcp_server_langgraph/core/agent.py**: Pydantic AI wrapper for structured responses
 - **llm_validators.py**: Response validation utilities with predefined validators
 - **mcp_streaming.py**: Type-safe streaming with chunk validation
 
 ### Infrastructure Files
 - **llm_factory.py**: Multi-provider LLM abstraction with fallback
-- **mcp_server_streamable.py**: StreamableHTTP MCP server (production)
-- **mcp_server.py**: stdio MCP server (Claude Desktop)
-- **auth.py**: JWT authentication + OpenFGA integration
+- **src/mcp_server_langgraph/mcp/server_streamable.py**: StreamableHTTP MCP server (production)
+- **src/mcp_server_langgraph/mcp/server_stdio.py**: stdio MCP server (Claude Desktop)
+- **src/mcp_server_langgraph/auth/middleware.py**: JWT authentication + OpenFGA integration
 - **openfga_client.py**: Authorization client and model definitions
-- **config.py**: Pydantic Settings configuration with Infisical
+- **src/mcp_server_langgraph/core/config.py**: Pydantic Settings configuration with Infisical
 - **observability.py**: OpenTelemetry + LangSmith setup
 - **secrets_manager.py**: Infisical wrapper for secure secrets
 - **health_check.py**: Health check endpoints (liveness/readiness)
 
 ### Testing Files
 - **tests/test_pydantic_ai.py**: Pydantic AI integration tests (20+ unit tests)
-- **tests/test_agent.py**: Agent behavior tests
+- **tests/test_src/mcp_server_langgraph/core/agent.py**: Agent behavior tests
 - **tests/test_openfga_client.py**: Authorization tests
 - **tests/test_mcp_streamable.py**: MCP server tests
 - **tests/conftest.py**: Shared test fixtures
@@ -950,8 +950,8 @@ MODEL_NAME=gemini-2.5-flash-002            # Provider-specific model name
 
 ### Required for OpenFGA (Authorization)
 ```bash
-OPENFGA_STORE_ID=<from setup_openfga.py output>    # Run `make setup-openfga` to get
-OPENFGA_MODEL_ID=<from setup_openfga.py output>    # Run `make setup-openfga` to get
+OPENFGA_STORE_ID=<from scripts/setup_openfga.py output>    # Run `make setup-openfga` to get
+OPENFGA_MODEL_ID=<from scripts/setup_openfga.py output>    # Run `make setup-openfga` to get
 ```
 
 ### Required for Production
@@ -1013,8 +1013,8 @@ INFISICAL_PROJECT_ID=<your-project-id>
 
 ### Coverage Targets
 - Overall: 80%+
-- Core modules (agent.py, llm_factory.py): 90%+
-- Security modules (auth.py, openfga_client.py): 95%+
+- Core modules (src/mcp_server_langgraph/core/agent.py, llm_factory.py): 90%+
+- Security modules (src/mcp_server_langgraph/auth/middleware.py, openfga_client.py): 95%+
 
 ## Development Workflow (Git & GitHub)
 
@@ -1217,9 +1217,9 @@ return response.content  # Just a string
 
 **After** (this project):
 ```python
-from llm_factory import create_llm
-from pydantic_ai_agent import create_pydantic_agent
-from observability import tracer
+from mcp_server_langgraph.llm.factory import create_llm
+from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
+from mcp_server_langgraph.observability.telemetry import tracer
 
 # Type-safe LLM with fallback
 llm = create_llm()

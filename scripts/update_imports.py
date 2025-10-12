@@ -4,7 +4,6 @@ Script to update imports after package reorganization.
 Converts old flat imports to new mcp_server_langgraph.* imports.
 """
 
-import re
 import sys
 from pathlib import Path
 

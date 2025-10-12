@@ -2,8 +2,8 @@
 
 from mcp_server_langgraph.health.checks import (
     HealthCheck,
-    get_health_status,
     create_health_app,
+    get_health_status,
 )
 
 __all__ = [

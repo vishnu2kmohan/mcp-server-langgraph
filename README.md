@@ -89,7 +89,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
          │
          ▼
 ┌─────────────────────────────────┐
-│  MCP Server (mcp_server.py)     │
+│  MCP Server (src/mcp_server_langgraph/mcp/server_stdio.py)     │
 │  ┌──────────────────────────┐   │
 │  │ Auth Middleware          │   │
 │  │ - JWT Verification       │   │
@@ -140,7 +140,7 @@ This starts:
 
 **Then setup OpenFGA**:
 ```bash
-python scripts/setup_openfga.py
+python scripts/scripts/setup_openfga.py
 # Add OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
 docker-compose restart agent
 ```
@@ -176,19 +176,19 @@ cp .env.example .env
 
 4. **Setup OpenFGA**:
 ```bash
-python scripts/setup_openfga.py
+python scripts/scripts/setup_openfga.py
 # Save OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
 ```
 
 5. **Run the agent locally**:
 ```bash
-python mcp_server_streamable.py
+python -m mcp_server_langgraph.mcp.server_streamable
 ```
 
 6. **Test**:
 ```bash
 # Test with example client
-python examples/example_client.py
+python examples/examples/client_stdio.py
 
 # Or curl
 curl http://localhost:8000/health
@@ -199,13 +199,13 @@ curl http://localhost:8000/health
 ### Running the MCP Server
 
 ```bash
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 ### Testing with Example Client
 
 ```bash
-python example_client.py
+python examples/client_stdio.py
 ```
 
 ### MCP Client Configuration
@@ -217,7 +217,7 @@ Add to your MCP client config (e.g., Claude Desktop):
   "mcpServers": {
     "langgraph-agent": {
       "command": "python",
-      "args": ["/path/to/mcp_server_langgraph/mcp_server.py"]
+      "args": ["/path/to/mcp_server_langgraph/src/mcp_server_langgraph/mcp/server_stdio.py"]
     }
   }
 }
@@ -228,7 +228,7 @@ Add to your MCP client config (e.g., Claude Desktop):
 ### JWT Authentication
 
 ```python
-from auth import AuthMiddleware
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
 auth = AuthMiddleware(secret_key=settings.jwt_secret_key)
 
@@ -244,7 +244,7 @@ result = await auth.authenticate("alice")
 Uses relationship-based access control (Google Zanzibar model):
 
 ```python
-from openfga_client import OpenFGAClient
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 client = OpenFGAClient(
     api_url=settings.openfga_api_url,
@@ -278,7 +278,7 @@ resources = await client.list_objects(
 - **bob**: Standard user, member of organization:acme
 - **admin**: Admin user with elevated privileges
 
-See `auth.py:30-50` for user definitions.
+See `src/mcp_server_langgraph/auth/middleware.py:30-50` for user definitions.
 
 **⚠️ Production**: Configure real users and authentication before deployment.
 
@@ -381,7 +381,7 @@ make test-unit && make test-all-quality && make test-mutation
 - **Code Coverage**: 87%+ (target: 90%)
 - **Property Tests**: 27+ test classes with thousands of generated cases
 - **Contract Tests**: 20+ protocol compliance tests
-- **Mutation Score**: 80%+ target on critical modules (agent.py, auth.py, config.py)
+- **Mutation Score**: 80%+ target on critical modules (src/mcp_server_langgraph/core/agent.py, src/mcp_server_langgraph/auth/middleware.py, src/mcp_server_langgraph/core/config.py)
 - **Type Coverage**: Strict mypy on 3 modules (config, feature_flags, observability)
 - **Performance**: All p95 latencies within target thresholds
 
@@ -458,7 +458,7 @@ See **[LANGSMITH_INTEGRATION.md](LANGSMITH_INTEGRATION.md)** for complete LangSm
 Every request is traced end-to-end with OpenTelemetry:
 
 ```python
-from observability import tracer
+from mcp_server_langgraph.observability.telemetry import tracer
 
 with tracer.start_as_current_span("my_operation") as span:
     span.set_attribute("custom.attribute", "value")
@@ -485,7 +485,7 @@ View metrics in Prometheus: http://localhost:9090
 Structured logging with trace context:
 
 ```python
-from observability import logger
+from mcp_server_langgraph.observability.telemetry import logger
 
 logger.info("Event occurred", extra={
     "user_id": "user_123",
@@ -501,12 +501,12 @@ The agent uses the functional API with:
 
 - **State Management**: TypedDict-based state with message history
 - **Conditional Routing**: Dynamic routing based on message content
-- **Tool Integration**: Extensible tool system (extend in `agent.py`)
+- **Tool Integration**: Extensible tool system (extend in `src/mcp_server_langgraph/core/agent.py`)
 - **Checkpointing**: Conversation persistence with MemorySaver
 
 ### Extending the Agent
 
-Add tools in `agent.py`:
+Add tools in `src/mcp_server_langgraph/core/agent.py`:
 
 ```python
 def custom_tool(state: AgentState) -> AgentState:
@@ -536,7 +536,7 @@ All settings via environment variables, Infisical, or `.env` file:
 | `INFISICAL_CLIENT_SECRET` | Infisical auth secret | (optional) |
 | `INFISICAL_PROJECT_ID` | Infisical project ID | (optional) |
 
-See `config.py` for all options.
+See `src/mcp_server_langgraph/core/config.py` for all options.
 
 ### Secrets Loading Priority
 
@@ -680,10 +680,10 @@ The agent supports multiple MCP transports:
 
 ```bash
 # StreamableHTTP (recommended for web/production)
-python mcp_server_streamable.py
+python -m mcp_server_langgraph.mcp.server_streamable
 
 # stdio (local/desktop)
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_stdio
 
 # Access StreamableHTTP endpoints
 POST /message         # Main MCP endpoint (streaming or regular)

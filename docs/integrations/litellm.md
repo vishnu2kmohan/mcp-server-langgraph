@@ -409,7 +409,7 @@ python examples/test_llm.py
 vim .env
 
 # Run MCP server
-python mcp_server_streamable.py
+python -m mcp_server_langgraph.mcp.server_streamable
 
 # Test with example client
 python examples/streamable_http_client.py

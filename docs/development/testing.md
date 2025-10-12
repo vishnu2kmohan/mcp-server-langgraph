@@ -21,10 +21,10 @@ make test-coverage
 tests/
 ├── __init__.py
 ├── conftest.py              # Shared fixtures and configuration
-├── test_auth.py             # Authentication/authorization tests
+├── test_src/mcp_server_langgraph/auth/middleware.py             # Authentication/authorization tests
 ├── test_openfga_client.py   # OpenFGA integration tests
 ├── test_secrets_manager.py  # Infisical secrets tests
-├── test_agent.py            # LangGraph agent tests
+├── test_src/mcp_server_langgraph/core/agent.py            # LangGraph agent tests
 └── test_mcp_streamable.py   # MCP StreamableHTTP tests
 ```
 
@@ -41,10 +41,10 @@ pytest -m unit -v
 ```
 
 **Coverage:**
-- ✅ `test_auth.py` - 40+ tests for JWT and OpenFGA authorization
+- ✅ `test_src/mcp_server_langgraph/auth/middleware.py` - 40+ tests for JWT and OpenFGA authorization
 - ✅ `test_openfga_client.py` - 12+ tests for OpenFGA client
 - ✅ `test_secrets_manager.py` - 15+ tests for Infisical integration
-- ✅ `test_agent.py` - 10+ tests for LangGraph agent
+- ✅ `test_src/mcp_server_langgraph/core/agent.py` - 10+ tests for LangGraph agent
 
 ### Integration Tests (Require External Services)
 
@@ -118,11 +118,11 @@ open htmlcov/index.html
 ```
 
 Current coverage:
-- `auth.py`: ~85%
+- `src/mcp_server_langgraph/auth/middleware.py`: ~85%
 - `openfga_client.py`: ~80%
 - `secrets_manager.py`: ~90%
-- `agent.py`: ~75%
-- `mcp_server_streamable.py`: ~70%
+- `src/mcp_server_langgraph/core/agent.py`: ~75%
+- `src/mcp_server_langgraph/mcp/server_streamable.py`: ~70%
 
 ## Writing Tests
 
@@ -130,7 +130,7 @@ Current coverage:
 
 ```python
 import pytest
-from auth import AuthMiddleware
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
 @pytest.mark.unit
 @pytest.mark.auth
@@ -284,7 +284,7 @@ curl http://localhost:8080/healthz  # OpenFGA
 pytest --cov=. --cov-report=term-missing
 
 # Focus on specific file
-pytest --cov=auth --cov-report=term-missing tests/test_auth.py
+pytest --cov=auth --cov-report=term-missing tests/test_src/mcp_server_langgraph/auth/middleware.py
 ```
 
 ### Slow Tests

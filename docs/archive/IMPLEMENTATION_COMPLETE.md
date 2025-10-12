@@ -84,7 +84,7 @@ All 8 recommendations from the initial code quality assessment have been success
 - **Impact**: Prevents performance degradation over time
 
 **Mutation Testing**
-- Created `.mutmut-config.py` with pre/post mutation hooks
+- Created `.mutmut-src/mcp_server_langgraph/core/config.py` with pre/post mutation hooks
 - Created `docs/MUTATION_TESTING.md` (300+ lines comprehensive guide)
 - Configured for 7 critical modules
 - **Target**: 80%+ mutation score
@@ -154,7 +154,7 @@ All 8 recommendations from the initial code quality assessment have been success
 18. `tests/regression/test_performance_regression.py` - 4 metrics (280+ lines)
 
 #### Mutation Testing
-19. `.mutmut-config.py` - Mutation test configuration
+19. `.mutmut-src/mcp_server_langgraph/core/config.py` - Mutation test configuration
 
 #### CI/CD
 20. `.github/workflows/quality-tests.yaml` - Quality test workflow (256 lines)
@@ -225,8 +225,8 @@ All 8 recommendations from the initial code quality assessment have been success
 ## 🚀 Next Steps (Future Improvements)
 
 ### Short Term (Next Sprint)
-1. **Expand Strict Typing**: Apply strict mypy to auth.py, llm_factory.py
-2. **Improve Mutation Score**: Target 80%+ on agent.py, auth.py
+1. **Expand Strict Typing**: Apply strict mypy to src/mcp_server_langgraph/auth/middleware.py, llm_factory.py
+2. **Improve Mutation Score**: Target 80%+ on src/mcp_server_langgraph/core/agent.py, src/mcp_server_langgraph/auth/middleware.py
 3. **Add More Property Tests**: Focus on edge cases in OpenFGA client
 
 ### Medium Term (Next Quarter)
@@ -273,13 +273,13 @@ make test-coverage
 
 ```bash
 # Enable experimental features
-FF_ENABLE_EXPERIMENTAL_FEATURES=true python mcp_server_streamable.py
+FF_ENABLE_EXPERIMENTAL_FEATURES=true python -m mcp_server_langgraph.mcp.server_streamable
 
 # Adjust confidence threshold
-FF_PYDANTIC_AI_CONFIDENCE_THRESHOLD=0.8 python mcp_server_streamable.py
+FF_PYDANTIC_AI_CONFIDENCE_THRESHOLD=0.8 python -m mcp_server_langgraph.mcp.server_streamable
 
 # Disable OpenFGA for development
-FF_ENABLE_OPENFGA=false python mcp_server_streamable.py
+FF_ENABLE_OPENFGA=false python -m mcp_server_langgraph.mcp.server_streamable
 ```
 
 ### Code Quality Checks

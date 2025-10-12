@@ -219,4 +219,4 @@ When OpenFGA unavailable:
 - [OpenFGA Documentation](https://openfga.dev/)
 - [Google Zanzibar Paper](https://research.google/pubs/pub48190/)
 - [README_OPENFGA_INFISICAL.md](../README_OPENFGA_INFISICAL.md)
-- Related Files: `openfga_client.py`, `auth.py`, `setup_openfga.py`
+- Related Files: `openfga_client.py`, `src/mcp_server_langgraph/auth/middleware.py`, `scripts/setup_openfga.py`

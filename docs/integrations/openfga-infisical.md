@@ -57,7 +57,7 @@ Services:
 
 ```bash
 # Initialize OpenFGA with authorization model and sample data
-python setup_openfga.py
+python scripts/setup_openfga.py
 ```
 
 This creates:
@@ -72,7 +72,7 @@ This creates:
 
 ```bash
 # Setup Infisical secrets management
-python setup_infisical.py
+python scripts/setup_infisical.py
 ```
 
 To use Infisical:
@@ -102,8 +102,8 @@ cp .env.example .env
 Required variables:
 ```env
 ANTHROPIC_API_KEY=sk-ant-...
-OPENFGA_STORE_ID=01HZXX...  # From setup_openfga.py
-OPENFGA_MODEL_ID=01HZXX...  # From setup_openfga.py
+OPENFGA_STORE_ID=01HZXX...  # From scripts/setup_openfga.py
+OPENFGA_MODEL_ID=01HZXX...  # From scripts/setup_openfga.py
 ```
 
 ## 🔑 OpenFGA Authorization Model
@@ -171,7 +171,7 @@ Secrets are loaded with this priority:
 ### Usage in Code
 
 ```python
-from secrets_manager import get_secrets_manager
+from mcp_server_langgraph.secrets.manager import get_secrets_manager
 
 secrets_mgr = get_secrets_manager()
 
@@ -195,10 +195,10 @@ secrets_mgr.invalidate_cache()  # Clear all
 
 ### Automatic Loading
 
-Secrets are automatically loaded in `config.py`:
+Secrets are automatically loaded in `src/mcp_server_langgraph/core/config.py`:
 
 ```python
-from config import settings
+from mcp_server_langgraph.core.config import settings
 
 # Secrets loaded from Infisical or environment
 jwt_secret = settings.jwt_secret_key
@@ -210,7 +210,7 @@ anthropic_key = settings.anthropic_api_key
 ### Running the Server
 
 ```bash
-python mcp_server.py
+python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 ### Available Tools
@@ -274,7 +274,7 @@ List all accessible conversations.
 ### Test Authorization Rules
 
 ```bash
-python example_openfga_usage.py
+python examples/openfga_usage.py
 ```
 
 This demonstrates:
@@ -288,7 +288,7 @@ This demonstrates:
 ### Test MCP Server
 
 ```bash
-python example_client.py
+python examples/client_stdio.py
 ```
 
 Tests:
@@ -303,8 +303,8 @@ Tests:
 ### Grant User Access to Tool
 
 ```python
-from openfga_client import OpenFGAClient
-from config import settings
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.core.config import settings
 
 client = OpenFGAClient(
     api_url=settings.openfga_api_url,
@@ -487,14 +487,14 @@ echo $OPENFGA_STORE_ID
 echo $OPENFGA_MODEL_ID
 
 # Re-run setup
-python setup_openfga.py
+python scripts/setup_openfga.py
 ```
 
 ### Infisical Connection Issues
 
 ```bash
 # Test credentials
-python setup_infisical.py
+python scripts/setup_infisical.py
 
 # Check environment variables
 env | grep INFISICAL

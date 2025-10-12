@@ -58,7 +58,9 @@
       "Bash(mkdir:*)",
       "Bash(git mv:*)",
       "Bash(git rm:*)",
-      "Bash(PYTHONPATH=src:. python -m pytest tests/test_feature_flags.py -v --tb=short)"
+      "Bash(PYTHONPATH=src:. python -m pytest tests/test_feature_flags.py -v --tb=short)",
+      "Bash(chmod:*)",
+      "Bash(else echo \"No venv\")"
     ],
     "deny": [],
     "ask": []

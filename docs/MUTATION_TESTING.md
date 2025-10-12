@@ -43,10 +43,10 @@ mutmut html
 
 ```bash
 # Test only one file
-mutmut run --paths-to-mutate=agent.py
+mutmut run --paths-to-mutate=src/mcp_server_langgraph/core/agent.py
 
 # Test multiple files
-mutmut run --paths-to-mutate=agent.py,auth.py,config.py
+mutmut run --paths-to-mutate=src/mcp_server_langgraph/core/agent.py,src/mcp_server_langgraph/auth/middleware.py,src/mcp_server_langgraph/core/config.py
 ```
 
 ### Understanding Results
@@ -69,9 +69,9 @@ See `pyproject.toml` for the list of modules being tested:
 ```toml
 [tool.mutmut]
 paths_to_mutate = [
-    "agent.py",
-    "auth.py",
-    "config.py",
+    "src/mcp_server_langgraph/core/agent.py",
+    "src/mcp_server_langgraph/auth/middleware.py",
+    "src/mcp_server_langgraph/core/config.py",
     "feature_flags.py",
     "llm_factory.py",
     "observability.py",
@@ -157,7 +157,7 @@ Mutation caused infinite loop or very slow execution.
 ### Example: Survived Mutation
 
 ```python
-# Original code (agent.py:42)
+# Original code (src/mcp_server_langgraph/core/agent.py:42)
 def route_input(message):
     if "search" in message.lower():
         return "use_tools"

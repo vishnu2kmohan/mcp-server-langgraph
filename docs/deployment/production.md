@@ -260,7 +260,7 @@ kubectl wait --for=condition=ready pod -l app=openfga -n langgraph-agent --timeo
 
 ```bash
 # Run setup script
-python setup_openfga.py --environment=production
+python scripts/setup_openfga.py --environment=production
 
 # Save output to secrets
 OPENFGA_STORE_ID=<store-id-from-output>
@@ -465,7 +465,7 @@ curl -X POST https://langgraph-agent.yourdomain.com/message \
 python scripts/test_production.py --endpoint https://langgraph-agent.yourdomain.com
 
 # Test OpenFGA authorization
-python example_openfga_usage.py --environment production
+python examples/openfga_usage.py --environment production
 ```
 
 ### 3. Monitoring Verification
