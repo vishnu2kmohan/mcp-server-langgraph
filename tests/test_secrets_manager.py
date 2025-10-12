@@ -11,7 +11,7 @@ import pytest
 class TestSecretsManager:
     """Test SecretsManager class"""
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_init_with_credentials(self, mock_client):
         """Test initialization with provided credentials"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -30,7 +30,7 @@ class TestSecretsManager:
         assert manager.client is not None
         mock_client.assert_called_once()
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_init_without_credentials(self, mock_client):
         """Test initialization without credentials falls back gracefully"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -39,7 +39,7 @@ class TestSecretsManager:
 
         assert manager.client is None
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     @patch.dict(
         os.environ,
         {
@@ -58,7 +58,7 @@ class TestSecretsManager:
         assert manager.client is not None
         mock_client.assert_called_once()
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_init_client_error(self, mock_client):
         """Test initialization handles client creation errors"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -69,7 +69,7 @@ class TestSecretsManager:
 
         assert manager.client is None
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_secret_success(self, mock_client):
         """Test successfully retrieving a secret"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -90,7 +90,7 @@ class TestSecretsManager:
             secret_name="API_KEY", project_id="test-project", environment="dev", path="/"
         )
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_secret_with_path(self, mock_client):
         """Test retrieving secret from specific path"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -110,7 +110,7 @@ class TestSecretsManager:
         call_args = mock_instance.get_secret.call_args
         assert call_args[1]["path"] == "/database"
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_secret_caching(self, mock_client):
         """Test secret caching works"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -134,7 +134,7 @@ class TestSecretsManager:
         assert value2 == "cached-value"
         assert mock_instance.get_secret.call_count == 1  # Not called again
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_secret_no_cache(self, mock_client):
         """Test getting secret without caching"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -156,7 +156,7 @@ class TestSecretsManager:
         manager.get_secret("API_KEY", use_cache=False)
         assert mock_instance.get_secret.call_count == 2
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     @patch.dict(os.environ, {"TEST_SECRET": "env-fallback-value"})
     def test_get_secret_fallback_to_env(self, mock_client):
         """Test fallback to environment variable when client unavailable"""
@@ -168,7 +168,7 @@ class TestSecretsManager:
 
         assert value == "env-fallback-value"
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_secret_fallback_to_default(self, mock_client):
         """Test fallback to default value when not found"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -179,7 +179,7 @@ class TestSecretsManager:
 
         assert value == "default-value"
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_secret_error_uses_fallback(self, mock_client):
         """Test error in retrieval uses fallback"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -194,7 +194,7 @@ class TestSecretsManager:
 
         assert value == "error-fallback"
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     @patch.dict(os.environ, {"API_KEY": "env-value"})
     def test_get_secret_error_tries_env_first(self, mock_client):
         """Test error tries environment variable before fallback"""
@@ -210,7 +210,7 @@ class TestSecretsManager:
 
         assert value == "env-value"
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_create_secret_success(self, mock_client):
         """Test creating a new secret"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -225,7 +225,7 @@ class TestSecretsManager:
 
         mock_instance.create_secret.assert_called_once()
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_update_secret_success(self, mock_client):
         """Test updating an existing secret"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -240,7 +240,7 @@ class TestSecretsManager:
 
         mock_instance.update_secret.assert_called_once()
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_delete_secret_success(self, mock_client):
         """Test deleting a secret"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -255,7 +255,7 @@ class TestSecretsManager:
 
         mock_instance.delete_secret.assert_called_once()
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_all_secrets_success(self, mock_client):
         """Test retrieving all secrets from a path"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -279,7 +279,7 @@ class TestSecretsManager:
         assert secrets == {"KEY1": "value1", "KEY2": "value2"}
         mock_instance.list_secrets.assert_called_once()
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_all_secrets_no_client(self, mock_client):
         """Test get_all_secrets without Infisical client"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -290,7 +290,7 @@ class TestSecretsManager:
 
         assert secrets == {}
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_get_all_secrets_error(self, mock_client):
         """Test get_all_secrets handles errors"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -305,7 +305,7 @@ class TestSecretsManager:
 
         assert secrets == {}
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_create_secret_no_client(self, mock_client):
         """Test create_secret without Infisical client"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -316,7 +316,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_create_secret_error(self, mock_client):
         """Test create_secret handles errors"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -331,7 +331,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_update_secret_no_client(self, mock_client):
         """Test update_secret without Infisical client"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -342,7 +342,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_update_secret_error(self, mock_client):
         """Test update_secret handles errors"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -357,7 +357,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_delete_secret_no_client(self, mock_client):
         """Test delete_secret without Infisical client"""
         from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -368,7 +368,7 @@ class TestSecretsManager:
 
         assert result is False
 
-    @patch("secrets_manager.InfisicalClient")
+    @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_delete_secret_error(self, mock_client):
         """Test delete_secret handles errors"""
         from mcp_server_langgraph.secrets.manager import SecretsManager

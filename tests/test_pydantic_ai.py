@@ -14,7 +14,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 @pytest.fixture
 def mock_settings():
     """Mock settings for testing."""
-    with patch("pydantic_ai_agent.settings") as mock:
+    with patch("mcp_server_langgraph.llm.pydantic_agent.settings") as mock:
         mock.model_name = "gemini-2.5-flash-002"
         mock.llm_provider = "google"
         yield mock
@@ -31,7 +31,7 @@ def mock_agent():
 @pytest.fixture
 def mock_pydantic_agent_class():
     """Mock Pydantic AI Agent class to avoid API key requirements."""
-    with patch("pydantic_ai_agent.Agent") as mock_agent_class:
+    with patch("mcp_server_langgraph.llm.pydantic_agent.Agent") as mock_agent_class:
         yield mock_agent_class
 
 

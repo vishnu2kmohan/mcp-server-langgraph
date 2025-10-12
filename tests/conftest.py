@@ -23,9 +23,14 @@ os.environ.setdefault("OPENFGA_MODEL_ID", "")  # Disable OpenFGA for tests
 os.environ.setdefault("LOG_LEVEL", "DEBUG")
 os.environ.setdefault("OTLP_ENDPOINT", "http://localhost:4317")
 
+# Disable telemetry output during tests for cleaner output
+os.environ.setdefault("ENABLE_TRACING", "false")
+os.environ.setdefault("ENABLE_METRICS", "false")
+os.environ.setdefault("ENABLE_CONSOLE_EXPORT", "false")
+
 
 # Mock MCP server initialization at session level to prevent event loop issues
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def mock_mcp_modules():
     """Mock MCP server modules to prevent async initialization at import time"""
     # Create mock MCP SDK Server
@@ -43,7 +48,7 @@ def mock_mcp_modules():
     mock_server_instance.auth = MagicMock()
 
     # Patch the class before any imports
-    with patch("mcp_server_streamable.MCPAgentStreamableServer", return_value=mock_server_instance):
+    with patch("mcp_server_langgraph.mcp.server_streamable.MCPAgentStreamableServer", return_value=mock_server_instance):
         # Return dict with all mocks for test access
         yield {
             "server_instance": mock_server_instance,

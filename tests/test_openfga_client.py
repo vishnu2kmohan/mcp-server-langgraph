@@ -11,7 +11,7 @@ from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWri
 class TestOpenFGAClient:
     """Test OpenFGAClient class"""
 
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     def test_init(self, mock_sdk_client):
         """Test OpenFGA client initialization"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -24,7 +24,7 @@ class TestOpenFGAClient:
         mock_sdk_client.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_check_permission_allowed(self, mock_sdk_client):
         """Test permission check returns True"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -45,7 +45,7 @@ class TestOpenFGAClient:
         mock_instance.check.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_check_permission_denied(self, mock_sdk_client):
         """Test permission check returns False"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -63,7 +63,7 @@ class TestOpenFGAClient:
         assert result is False
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_check_permission_error(self, mock_sdk_client):
         """Test permission check handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -78,7 +78,7 @@ class TestOpenFGAClient:
             await client.check_permission(user="user:alice", relation="executor", object="tool:chat")
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_write_tuples_success(self, mock_sdk_client):
         """Test writing relationship tuples"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -102,7 +102,7 @@ class TestOpenFGAClient:
         assert len(call_args.writes) == 2
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_write_tuples_error(self, mock_sdk_client):
         """Test write tuples handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -119,7 +119,7 @@ class TestOpenFGAClient:
             await client.write_tuples(tuples)
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_delete_tuples_success(self, mock_sdk_client):
         """Test deleting relationship tuples"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -140,7 +140,7 @@ class TestOpenFGAClient:
         assert len(call_args.deletes) == 1
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_delete_tuples_error(self, mock_sdk_client):
         """Test delete tuples handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -157,7 +157,7 @@ class TestOpenFGAClient:
             await client.delete_tuples(tuples)
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_list_objects_success(self, mock_sdk_client):
         """Test listing accessible objects"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -179,7 +179,7 @@ class TestOpenFGAClient:
         assert "tool:analyze" in result
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_list_objects_empty(self, mock_sdk_client):
         """Test listing objects with no results"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -198,7 +198,7 @@ class TestOpenFGAClient:
         assert result == []
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_list_objects_error(self, mock_sdk_client):
         """Test list objects handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -213,7 +213,7 @@ class TestOpenFGAClient:
             await client.list_objects(user="user:alice", relation="executor", object_type="tool")
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_expand_relation_success(self, mock_sdk_client):
         """Test expanding a relation to see all users with access"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -238,7 +238,7 @@ class TestOpenFGAClient:
         mock_instance.expand.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_expand_relation_empty(self, mock_sdk_client):
         """Test expanding relation with no tree"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -257,7 +257,7 @@ class TestOpenFGAClient:
         assert result == {}
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_expand_relation_error(self, mock_sdk_client):
         """Test expand relation handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -333,7 +333,7 @@ class TestOpenFGAUtilityFunctions:
     """Test utility functions for OpenFGA"""
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_initialize_openfga_store(self, mock_sdk_client):
         """Test initializing OpenFGA store with authorization model"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store
@@ -361,7 +361,7 @@ class TestOpenFGAUtilityFunctions:
         mock_instance.write_authorization_model.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_initialize_openfga_store_error(self, mock_sdk_client):
         """Test initialize store handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store
@@ -376,7 +376,7 @@ class TestOpenFGAUtilityFunctions:
             await initialize_openfga_store(client)
 
     @pytest.mark.asyncio
-    @patch("openfga_client.OpenFgaClient")
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_seed_sample_data(self, mock_sdk_client):
         """Test seeding sample data"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient, seed_sample_data

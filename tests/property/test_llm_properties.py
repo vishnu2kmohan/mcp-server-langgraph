@@ -96,7 +96,7 @@ class TestLLMFactoryProperties:
         factory = LLMFactory(provider="anthropic", model_name="test-model", temperature=temperature1, max_tokens=max_tokens1)
 
         # Mock the completion call
-        with patch("llm_factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
             mock_response = MagicMock()
             mock_response.choices = [MagicMock()]
             mock_response.choices[0].message.content = "test response"
@@ -279,7 +279,7 @@ class TestLLMFactoryFallbackProperties:
 
         factory = LLMFactory(provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models)
 
-        with patch("llm_factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
             # Create side effects: fail until success_index, then succeed
             side_effects = []
             for i in range(success_index + 1):
@@ -307,7 +307,7 @@ class TestLLMFactoryFallbackProperties:
 
         factory = LLMFactory(provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models)
 
-        with patch("llm_factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
             # All fail
             mock_completion.side_effect = Exception("All models failed")
 

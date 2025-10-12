@@ -46,8 +46,8 @@ class TestHealthCheckEndpoints:
         # Verify timestamp is ISO format
         datetime.fromisoformat(data["timestamp"])
 
-    @patch("health_check.settings")
-    @patch("health_check.OpenFGAClient")
+    @patch("mcp_server_langgraph.health.checks.settings")
+    @patch("mcp_server_langgraph.health.checks.OpenFGAClient")
     def test_readiness_check_all_healthy(self, mock_openfga, mock_settings, test_client):
         """Test readiness check when all services are healthy"""
         # Configure settings
@@ -63,7 +63,7 @@ class TestHealthCheckEndpoints:
         mock_openfga.return_value = MagicMock()
 
         # Mock secrets manager
-        with patch("health_check.get_secrets_manager") as mock_get_secrets:
+        with patch("mcp_server_langgraph.health.checks.get_secrets_manager") as mock_get_secrets:
             mock_secrets_mgr = MagicMock()
             mock_secrets_mgr.client = MagicMock()
             mock_secrets_mgr.get_secret.return_value = "ok"
@@ -79,8 +79,8 @@ class TestHealthCheckEndpoints:
             assert data["checks"]["infisical"]["status"] == "healthy"
             assert data["checks"]["secrets"]["status"] == "healthy"
 
-    @patch("health_check.settings")
-    @patch("health_check.OpenFGAClient")
+    @patch("mcp_server_langgraph.health.checks.settings")
+    @patch("mcp_server_langgraph.health.checks.OpenFGAClient")
     def test_readiness_check_openfga_unhealthy(self, mock_openfga, mock_settings, test_client):
         """Test readiness check when OpenFGA is unavailable"""
         mock_settings.openfga_store_id = "test-store"
@@ -94,7 +94,7 @@ class TestHealthCheckEndpoints:
         # Mock OpenFGA failure
         mock_openfga.side_effect = Exception("Connection refused")
 
-        with patch("health_check.get_secrets_manager") as mock_get_secrets:
+        with patch("mcp_server_langgraph.health.checks.get_secrets_manager") as mock_get_secrets:
             mock_secrets_mgr = MagicMock()
             mock_secrets_mgr.client = MagicMock()
             mock_secrets_mgr.get_secret.return_value = "ok"
@@ -109,7 +109,7 @@ class TestHealthCheckEndpoints:
             assert data["checks"]["openfga"]["status"] == "unhealthy"
             assert "error" in data["checks"]["openfga"]
 
-    @patch("health_check.settings")
+    @patch("mcp_server_langgraph.health.checks.settings")
     def test_readiness_check_missing_critical_secrets(self, mock_settings, test_client):
         """Test readiness check when critical secrets are missing"""
         mock_settings.openfga_store_id = None
@@ -119,7 +119,7 @@ class TestHealthCheckEndpoints:
         mock_settings.service_version = "1.0.0"
         mock_settings.infisical_site_url = "https://infisical.com"
 
-        with patch("health_check.get_secrets_manager") as mock_get_secrets:
+        with patch("mcp_server_langgraph.health.checks.get_secrets_manager") as mock_get_secrets:
             mock_secrets_mgr = MagicMock()
             mock_secrets_mgr.client = None
             mock_get_secrets.return_value = mock_secrets_mgr
@@ -134,7 +134,7 @@ class TestHealthCheckEndpoints:
             assert "ANTHROPIC_API_KEY" in data["checks"]["secrets"]["missing"]
             assert "JWT_SECRET_KEY" in data["checks"]["secrets"]["missing"]
 
-    @patch("health_check.settings")
+    @patch("mcp_server_langgraph.health.checks.settings")
     def test_readiness_check_openfga_not_configured(self, mock_settings, test_client):
         """Test readiness check when OpenFGA is not configured"""
         mock_settings.openfga_store_id = None
@@ -144,7 +144,7 @@ class TestHealthCheckEndpoints:
         mock_settings.service_version = "1.0.0"
         mock_settings.infisical_site_url = "https://infisical.com"
 
-        with patch("health_check.get_secrets_manager") as mock_get_secrets:
+        with patch("mcp_server_langgraph.health.checks.get_secrets_manager") as mock_get_secrets:
             mock_secrets_mgr = MagicMock()
             mock_secrets_mgr.client = None
             mock_get_secrets.return_value = mock_secrets_mgr
@@ -156,7 +156,7 @@ class TestHealthCheckEndpoints:
 
             assert data["checks"]["openfga"]["status"] == "not_configured"
 
-    @patch("health_check.settings")
+    @patch("mcp_server_langgraph.health.checks.settings")
     def test_readiness_check_infisical_degraded(self, mock_settings, test_client):
         """Test readiness check when Infisical is degraded"""
         mock_settings.openfga_store_id = None
@@ -166,7 +166,7 @@ class TestHealthCheckEndpoints:
         mock_settings.service_version = "1.0.0"
         mock_settings.infisical_site_url = "https://infisical.com"
 
-        with patch("health_check.get_secrets_manager") as mock_get_secrets:
+        with patch("mcp_server_langgraph.health.checks.get_secrets_manager") as mock_get_secrets:
             mock_get_secrets.side_effect = Exception("Infisical connection failed")
 
             response = test_client.get("/health/ready")
@@ -178,8 +178,8 @@ class TestHealthCheckEndpoints:
             assert data["checks"]["infisical"]["status"] == "degraded"
             assert "Fallback mode active" in data["checks"]["infisical"]["message"]
 
-    @patch("health_check.settings")
-    @patch("health_check.logger")
+    @patch("mcp_server_langgraph.health.checks.settings")
+    @patch("mcp_server_langgraph.health.checks.logger")
     def test_startup_check_success(self, mock_logger, mock_settings, test_client):
         """Test startup probe returns started status"""
         mock_settings.service_name = "mcp-server-langgraph"
@@ -195,8 +195,8 @@ class TestHealthCheckEndpoints:
         assert data["checks"]["config"]["status"] == "loaded"
         assert data["checks"]["logging"]["status"] == "initialized"
 
-    @patch("health_check.settings")
-    @patch("health_check.logger")
+    @patch("mcp_server_langgraph.health.checks.settings")
+    @patch("mcp_server_langgraph.health.checks.logger")
     def test_startup_check_logging_failed(self, mock_logger, mock_settings, test_client):
         """Test startup probe when logging initialization fails"""
         mock_settings.service_name = "mcp-server-langgraph"
@@ -210,7 +210,7 @@ class TestHealthCheckEndpoints:
         assert data["status"] == "starting"
         assert data["checks"]["logging"]["status"] == "failed"
 
-    @patch("health_check.settings")
+    @patch("mcp_server_langgraph.health.checks.settings")
     def test_prometheus_metrics_endpoint(self, mock_settings, test_client):
         """Test Prometheus metrics endpoint"""
         mock_settings.service_version = "1.0.0"

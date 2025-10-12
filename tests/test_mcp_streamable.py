@@ -14,7 +14,7 @@ class TestMCPStreamableHTTP:
 
     def test_server_info_endpoint(self):
         """Test GET / returns server info"""
-        from mcp_server_streamable import app
+        from mcp_server_langgraph.mcp.server_streamable import app
 
         client = TestClient(app)
         response = client.get("/")
@@ -33,7 +33,7 @@ class TestMCPStreamableHTTP:
 
     def test_initialize_method(self):
         """Test MCP initialize method"""
-        from mcp_server_streamable import app
+        from mcp_server_langgraph.mcp.server_streamable import app
 
         client = TestClient(app)
         request = {
@@ -84,7 +84,7 @@ class TestMCPStreamableHTTP:
 
     def test_malformed_request(self):
         """Test malformed JSON-RPC request"""
-        from mcp_server_streamable import app
+        from mcp_server_langgraph.mcp.server_streamable import app
 
         client = TestClient(app)
         request = {"not": "valid", "jsonrpc": "nope"}

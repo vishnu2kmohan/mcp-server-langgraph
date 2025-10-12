@@ -4,7 +4,7 @@ Configuration management with Infisical secrets integration
 
 from typing import Optional
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from mcp_server_langgraph.secrets.manager import get_secrets_manager
 
@@ -101,10 +101,12 @@ class Settings(BaseSettings):
     langgraph_deployment_url: Optional[str] = None
     langgraph_api_url: str = "https://api.langchain.com"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",  # Ignore extra environment variables
+    )
 
     def load_secrets(self):
         """Load secrets from Infisical"""
