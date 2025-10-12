@@ -23,6 +23,13 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# PyPI build artifacts
+dist/
+build/
+*.egg-info/
+*.whl
+*.tar.gz
+
 # Virtual environments
 venv/
 env/
