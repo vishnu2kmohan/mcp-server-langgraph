@@ -399,7 +399,7 @@ config:
 
 ```bash
 # Deploy to production overlay
-kubectl apply -k kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/production
 
 # Verify
 kubectl rollout status deployment/prod-langgraph-agent -n langgraph-agent

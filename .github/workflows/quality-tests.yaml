@@ -70,7 +70,7 @@ jobs:
 
       - name: Generate OpenAPI schema
         run: |
-          python scripts/validate_openapi.py || true
+          python scripts/validation/validate_openapi.py || true
 
       - name: Run contract tests
         run: |

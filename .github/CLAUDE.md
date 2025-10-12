@@ -233,7 +233,7 @@ async def _handle_my_tool(self, arguments, span, user_id):
         return [TextContent(type="text", text=result)]
 ```
 
-3. **Add OpenFGA tuples** for permissions (in scripts/setup_openfga.py or runtime)
+3. **Add OpenFGA tuples** for permissions (in scripts/setup/setup_openfga.py or runtime)
 
 4. **Write tests** with proper markers:
 ```python
@@ -699,8 +699,8 @@ MODEL_NAME=gemini-2.5-flash-002            # Provider-specific model name
 
 ### Required for OpenFGA (Authorization)
 ```bash
-OPENFGA_STORE_ID=<from scripts/setup_openfga.py output>    # Run `make setup-openfga` to get
-OPENFGA_MODEL_ID=<from scripts/setup_openfga.py output>    # Run `make setup-openfga` to get
+OPENFGA_STORE_ID=<from scripts/setup/setup_openfga.py output>    # Run `make setup-openfga` to get
+OPENFGA_MODEL_ID=<from scripts/setup/setup_openfga.py output>    # Run `make setup-openfga` to get
 ```
 
 ### Required for Production

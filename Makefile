@@ -63,13 +63,13 @@ setup-infra:
 
 setup-openfga:
 	@echo "Setting up OpenFGA..."
-	python scripts/setup_openfga.py
+	python scripts/setup/setup_openfga.py
 	@echo ""
 	@echo "⚠️  Remember to update .env with OPENFGA_STORE_ID and OPENFGA_MODEL_ID"
 
 setup-infisical:
 	@echo "Setting up Infisical..."
-	python scripts/setup_infisical.py
+	python scripts/setup/setup_infisical.py
 
 test:
 	pytest -v
@@ -132,7 +132,7 @@ test-all-quality: test-property test-contract test-regression
 # Validation
 validate-openapi:
 	@echo "Validating OpenAPI schema..."
-	python scripts/validate_openapi.py
+	python scripts/validation/validate_openapi.py
 	@echo "✓ OpenAPI validation complete"
 
 # Code quality
@@ -190,7 +190,7 @@ setup-kong:
 	@echo "✓ Kong installed"
 	@echo ""
 	@echo "Apply Kong configurations:"
-	@echo "  kubectl apply -k kubernetes/kong/"
+	@echo "  kubectl apply -k deployments/kubernetes/kong/"
 
 test-rate-limit:
 	@echo "Testing rate limits..."

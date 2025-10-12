@@ -71,18 +71,18 @@ Most flexible method with templating and easy upgrades.
 
 ```bash
 # Install with default values
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace
 
 # Install with custom values
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --values custom-values.yaml
 
 # Install with CLI overrides
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --set image.repository=gcr.io/my-project/langgraph-agent \
@@ -106,19 +106,19 @@ Environment-specific overlays without templating.
 
 ```bash
 # Development
-kubectl apply -k kustomize/overlays/dev
+kubectl apply -k deployments/kustomize/overlays/dev
 
 # Staging
-kubectl apply -k kustomize/overlays/staging
+kubectl apply -k deployments/kustomize/overlays/staging
 
 # Production
-kubectl apply -k kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/production
 
 # Preview changes before applying
-kubectl kustomize kustomize/overlays/production
+kubectl kustomize deployments/kustomize/overlays/production
 
 # Delete
-kubectl delete -k kustomize/overlays/dev
+kubectl delete -k deployments/kustomize/overlays/dev
 ```
 
 ### kubectl
@@ -127,14 +127,14 @@ Direct manifest application (less flexible).
 
 ```bash
 # Apply all base manifests
-kubectl apply -f kubernetes/base/
+kubectl apply -f deployments/kubernetes/base/
 
 # Apply individual resources
-kubectl apply -f kubernetes/base/namespace.yaml
-kubectl apply -f kubernetes/base/configmap.yaml
-kubectl apply -f kubernetes/base/secret.yaml
-kubectl apply -f kubernetes/base/deployment.yaml
-kubectl apply -f kubernetes/base/service.yaml
+kubectl apply -f deployments/kubernetes/base/namespace.yaml
+kubectl apply -f deployments/kubernetes/base/configmap.yaml
+kubectl apply -f deployments/kubernetes/base/secret.yaml
+kubectl apply -f deployments/kubernetes/base/deployment.yaml
+kubectl apply -f deployments/kubernetes/base/service.yaml
 ```
 
 ## Platform-Specific Guides
@@ -181,7 +181,7 @@ kubectl annotate serviceaccount langgraph-agent \
 #### 3. Deploy with Helm
 
 ```bash
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --set image.repository=gcr.io/PROJECT_ID/langgraph-agent \
@@ -277,7 +277,7 @@ eksctl create iamserviceaccount \
 #### 3. Deploy with Helm
 
 ```bash
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --set image.repository=ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/langgraph-agent \
@@ -370,7 +370,7 @@ az identity federated-credential create \
 #### 3. Deploy with Helm
 
 ```bash
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --set image.repository=myregistry.azurecr.io/langgraph-agent \
@@ -399,7 +399,7 @@ Navigate to your Rancher instance and select your cluster.
 # Download from Rancher UI or use Rancher CLI
 
 # Deploy
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace
 ```
@@ -426,7 +426,7 @@ kubectl create namespace langgraph-agent
 #### 3. Deploy with Helm
 
 ```bash
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --set image.repository=harbor.example.com/library/langgraph-agent \
   --set image.tag=v1.0.0
@@ -672,7 +672,7 @@ kubectl exec -it <pod-name> -n langgraph-agent -- /bin/bash
 helm uninstall langgraph-agent --namespace langgraph-agent
 
 # Kustomize
-kubectl delete -k kustomize/overlays/production
+kubectl delete -k deployments/kustomize/overlays/production
 
 # kubectl
 kubectl delete namespace langgraph-agent

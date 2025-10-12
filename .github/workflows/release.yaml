@@ -188,7 +188,7 @@ jobs:
         MCP_REGISTRY_TOKEN: ${{ secrets.MCP_REGISTRY_TOKEN }}
       run: |
         if [ -n "$MCP_REGISTRY_TOKEN" ]; then
-          bash scripts/publish_to_registry.sh
+          bash scripts/deployment/publish_to_registry.sh
         else
           echo "MCP_REGISTRY_TOKEN not set, skipping registry publication"
         fi

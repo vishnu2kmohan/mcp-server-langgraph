@@ -106,7 +106,7 @@ For multi-replica Kong deployments, use Redis for shared state:
 
 ```bash
 # Deploy Redis
-kubectl apply -f kubernetes/kong/redis-deployment.yaml
+kubectl apply -f deployments/kubernetes/kong/redis-deployment.yaml
 ```
 
 ```yaml
@@ -318,26 +318,26 @@ spec:
 
 ```bash
 # Deploy Redis for distributed rate limiting
-kubectl apply -f kubernetes/kong/redis-deployment.yaml
+kubectl apply -f deployments/kubernetes/kong/redis-deployment.yaml
 
 # Deploy Kong plugins
-kubectl apply -f kubernetes/kong/kong-plugins.yaml
+kubectl apply -f deployments/kubernetes/kong/kong-plugins.yaml
 
 # Deploy Kong consumers
-kubectl apply -f kubernetes/kong/kong-consumers.yaml
+kubectl apply -f deployments/kubernetes/kong/kong-consumers.yaml
 
 # Deploy Kong ingress
-kubectl apply -f kubernetes/kong/kong-ingress.yaml
+kubectl apply -f deployments/kubernetes/kong/kong-ingress.yaml
 
 # Or deploy all at once with Kustomize
-kubectl apply -k kubernetes/kong/
+kubectl apply -k deployments/kubernetes/kong/
 ```
 
 ### Deploy with Helm
 
 ```bash
 # Install agent with Kong enabled
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --set kong.enabled=true \
@@ -365,7 +365,7 @@ kong:
 ```
 
 ```bash
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   -f values-kong.yaml
 ```
 

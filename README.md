@@ -27,6 +27,48 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 
 **See [Template Usage Guide](docs/template/usage.md) for detailed instructions.**
 
+---
+
+## 📖 Template vs Project Usage
+
+### Using This as a Template
+
+**For**: Creating your own MCP server with custom tools and logic
+
+**How**:
+1. Generate project: `uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph`
+2. Customize tools in generated `agent.py`
+3. Update authorization model in `scripts/setup/setup_openfga.py`
+4. Deploy your custom server
+
+**What gets customized**:
+- Project name, author, license
+- Which features to include (auth, observability, deployment configs)
+- LLM provider preferences
+- Tool implementations
+
+**See**: [Template Usage Guide](docs/template/usage.md)
+
+### Using This Project Directly
+
+**For**: Learning, testing, or using the reference implementation
+
+**How**:
+1. Clone: `git clone https://github.com/vishnu2kmohan/langgraph_mcp_agent.git`
+2. Install: `uv sync`
+3. Configure: Copy `.env.example` to `.env` and add API keys
+4. Run: `make run-streamable`
+
+**What you get**:
+- Fully working MCP server with example tools (`chat`, `search`)
+- Complete observability stack
+- Production-ready deployment configs
+- Comprehensive test suite
+
+**See**: [Quick Start](#quick-start) below
+
+---
+
 ## Features
 
 ### 🎯 Core Capabilities
@@ -141,7 +183,7 @@ This starts:
 
 **Then setup OpenFGA**:
 ```bash
-python scripts/scripts/setup_openfga.py
+python scripts/setup/setup_openfga.py
 # Add OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
 docker-compose restart agent
 ```
@@ -177,7 +219,7 @@ cp .env.example .env
 
 4. **Setup OpenFGA**:
 ```bash
-python scripts/scripts/setup_openfga.py
+python scripts/setup/setup_openfga.py
 # Save OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
 ```
 
@@ -640,14 +682,14 @@ docker build -t your-registry/langgraph-agent:v1.0.0 .
 docker push your-registry/langgraph-agent:v1.0.0
 
 # Deploy with Helm
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace \
   --set image.repository=your-registry/langgraph-agent \
   --set image.tag=v1.0.0
 
 # Or deploy with Kustomize
-kubectl apply -k kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/production
 ```
 
 See **[Kubernetes Deployment Guide](docs/deployment/kubernetes.md)** for complete deployment guide.
@@ -663,12 +705,12 @@ Kong API Gateway integration provides:
 
 ```bash
 # Deploy with Kong rate limiting
-helm install langgraph-agent ./helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --set kong.enabled=true \
   --set kong.rateLimitTier=premium
 
 # Or apply Kong manifests directly
-kubectl apply -k kubernetes/kong/
+kubectl apply -k deployments/kubernetes/kong/
 ```
 
 See **[KONG_INTEGRATION.md](KONG_INTEGRATION.md)** for complete Kong setup and rate limiting configuration.

@@ -16,7 +16,6 @@ def test_client():
 
 
 @pytest.mark.unit
-@pytest.mark.health
 class TestHealthCheckEndpoints:
     """Test health check endpoints"""
 
@@ -227,7 +226,6 @@ class TestHealthCheckEndpoints:
 
 
 @pytest.mark.integration
-@pytest.mark.health
 class TestHealthCheckIntegration:
     """Integration tests for health checks"""
 
