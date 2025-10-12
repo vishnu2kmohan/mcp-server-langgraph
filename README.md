@@ -754,7 +754,7 @@ make test-coverage    # Coverage report
 4. **Quality Gates**: All tests must pass
 5. **Documentation**: ADRs for architectural decisions
 
-**See**: [CLAUDE.md](CLAUDE.md) for complete development guide
+**See**: [CLAUDE.md](.github/CLAUDE.md) for complete development guide
 
 ### 🔄 Continuous Improvement
 

@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: openapi-schema
-          path: openapi.json
+          path: docs/api/openapi.json
 
   regression-tests:
     name: Performance Regression Tests
