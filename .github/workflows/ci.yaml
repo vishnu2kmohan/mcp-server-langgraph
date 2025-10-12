@@ -116,7 +116,7 @@ jobs:
       run: black --check . --exclude venv
 
     - name: Run isort check
-      run: isort --check . --skip venv
+      run: isort --check . --skip venv --profile black
 
     - name: Run mypy
       run: mypy *.py --ignore-missing-imports || true

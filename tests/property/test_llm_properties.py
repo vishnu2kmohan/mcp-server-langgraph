@@ -125,7 +125,7 @@ class TestLLMFactoryProperties:
             fallback_models=fallback_models,
         )
 
-        with patch("llm_factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
             # Make primary fail, fallback succeed
             mock_completion.side_effect = [
                 Exception("Primary failed"),  # First call fails
