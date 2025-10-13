@@ -695,6 +695,488 @@ helm install grafana grafana/grafana \
 }
 ```
 
+### Production-Ready Dashboards (v2.1.0)
+
+<Note>
+**NEW in v2.1.0** - 7 production-ready Grafana dashboards covering authentication, authorization, LLM performance, and infrastructure metrics.
+</Note>
+
+The repository includes pre-built Grafana dashboards optimized for production monitoring. All dashboards are located in `monitoring/grafana/dashboards/`.
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key">
+    **authentication.json**
+    - Login activity rate (attempts, success, failures)
+    - Login failure rate gauge with thresholds
+    - Response time percentiles (p50, p95, p99)
+    - Active sessions count
+    - Token operations (create, verify, refresh)
+    - JWKS cache performance
+  </Card>
+
+  <Card title="OpenFGA Authorization" icon="shield">
+    **openfga.json**
+    - Authorization check rate (total, allowed, denied)
+    - Denial rate gauge
+    - Total relationship tuples
+    - Check latency percentiles
+    - Tuple write operations
+    - Role sync operations and latency
+  </Card>
+
+  <Card title="LLM Performance" icon="brain">
+    **llm-performance.json**
+    - Agent call rate (successful/failed)
+    - Error rate gauge
+    - Response time percentiles
+    - Tool calls rate
+    - LLM invocations by model
+    - Fallback model usage
+  </Card>
+
+  <Card title="Keycloak SSO" icon="fingerprint">
+    **keycloak.json**
+    - Service status gauge
+    - Response time (p50, p95, p99)
+    - Login request rate
+    - Error rates (login, token refresh)
+    - Active sessions and users
+    - Resource utilization (CPU, memory)
+  </Card>
+
+  <Card title="Redis Sessions" icon="database">
+    **redis-sessions.json**
+    - Service status and memory usage
+    - Active sessions (key count)
+    - Operations rate (commands/sec)
+    - Connection pool utilization
+    - Session evictions
+    - Memory fragmentation ratio
+  </Card>
+
+  <Card title="Security" icon="lock">
+    **security.json**
+    - Auth/AuthZ failures per second
+    - JWT validation errors
+    - Security status gauge
+    - Failures by reason and resource
+    - Failed attempts by user/IP
+    - Top 10 violators table
+  </Card>
+
+  <Card title="Overview" icon="chart-line">
+    **langgraph-agent.json**
+    - Service status uptime gauge
+    - Request rate by tool
+    - Error rate percentage
+    - Response time percentiles
+    - Memory and CPU usage per pod
+    - Request success/failure count
+  </Card>
+</CardGroup>
+
+#### Import Dashboards
+
+<Tabs>
+  <Tab title="Grafana UI">
+    **Manual import via web interface:**
+
+    1. Open Grafana (http://localhost:3000)
+    2. Navigate to **Dashboards** → **Import**
+    3. Click **Upload JSON file**
+    4. Select dashboard file from `monitoring/grafana/dashboards/`
+    5. Select **Prometheus** datasource
+    6. Click **Import**
+
+    Repeat for each dashboard you want to use.
+  </Tab>
+
+  <Tab title="Kubernetes ConfigMap">
+    **Provision all dashboards automatically:**
+
+    ```bash
+    # Create ConfigMap with all v2.1.0 dashboards
+    kubectl create configmap grafana-dashboards \
+      --from-file=monitoring/grafana/dashboards/authentication.json \
+      --from-file=monitoring/grafana/dashboards/openfga.json \
+      --from-file=monitoring/grafana/dashboards/llm-performance.json \
+      --from-file=monitoring/grafana/dashboards/langgraph-agent.json \
+      --from-file=monitoring/grafana/dashboards/security.json \
+      --from-file=monitoring/grafana/dashboards/keycloak.json \
+      --from-file=monitoring/grafana/dashboards/redis-sessions.json \
+      -n monitoring
+
+    # Update Grafana deployment
+    kubectl patch deployment grafana -n monitoring --patch '
+    spec:
+      template:
+        spec:
+          containers:
+          - name: grafana
+            volumeMounts:
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+          volumes:
+          - name: dashboards
+            configMap:
+              name: grafana-dashboards
+    '
+    ```
+  </Tab>
+
+  <Tab title="Helm Values">
+    **Configure in Helm values.yaml:**
+
+    ```yaml
+    grafana:
+      dashboardProviders:
+        dashboardproviders.yaml:
+          apiVersion: 1
+          providers:
+          - name: 'langgraph-agent'
+            orgId: 1
+            folder: 'MCP Server with LangGraph'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/langgraph
+
+      dashboards:
+        langgraph-agent:
+          authentication:
+            file: monitoring/grafana/dashboards/authentication.json
+          openfga:
+            file: monitoring/grafana/dashboards/openfga.json
+          llm-performance:
+            file: monitoring/grafana/dashboards/llm-performance.json
+          overview:
+            file: monitoring/grafana/dashboards/langgraph-agent.json
+          security:
+            file: monitoring/grafana/dashboards/security.json
+          keycloak:
+            file: monitoring/grafana/dashboards/keycloak.json
+          redis-sessions:
+            file: monitoring/grafana/dashboards/redis-sessions.json
+    ```
+  </Tab>
+</Tabs>
+
+#### Dashboard Features
+
+All production dashboards include:
+
+- **Auto-refresh** - 10-second refresh rate for real-time monitoring
+- **Time range presets** - Last 5m, 15m, 1h, 6h, 24h, 7d
+- **Thresholds** - Color-coded gauges (green/yellow/red)
+- **Cross-links** - Navigate between related dashboards
+- **Legend tables** - Current, max, and mean values
+- **Panel descriptions** - Hover tooltips explaining metrics
+
+#### Required Metrics
+
+Ensure these metrics are exposed by the application:
+
+**Authentication (authentication.json)**:
+```promql
+up{job="langgraph-agent"}
+auth_login_attempts_total
+auth_login_success_total
+auth_login_failed_total
+auth_login_duration_bucket
+token_created_total
+token_verified_total
+token_refreshed_total
+session_active_count
+jwks_cache_hits_total
+jwks_cache_misses_total
+```
+
+**OpenFGA (openfga.json)**:
+```promql
+up{job="openfga"}
+authz_checks_total
+authz_successes_total
+authz_failures_total
+authz_check_duration_bucket
+openfga_tuple_count
+openfga_tuples_written_total
+openfga_tuples_deleted_total
+openfga_sync_operations_total
+openfga_sync_duration_bucket
+```
+
+**LLM Performance (llm-performance.json)**:
+```promql
+agent_calls_successful_total
+agent_calls_failed_total
+agent_response_duration_bucket
+agent_tool_calls_total
+# With labels: model, operation, tool
+```
+
+**Keycloak & Redis**:
+```promql
+up{job="keycloak"}
+up{job="redis-session"}
+keycloak_request_duration_bucket
+keycloak_login_attempts_total
+redis_memory_used_bytes
+redis_db_keys
+redis_commands_processed_total
+```
+
+## Service Level Objectives (SLOs)
+
+<Info>
+**NEW in v2.1.0** - Pre-computed SLO metrics via Prometheus recording rules for efficient monitoring and alerting.
+</Info>
+
+### SLO Recording Rules
+
+The `monitoring/prometheus/rules/slo-recording-rules.yaml` file contains 40+ recording rules that pre-compute Service Level Indicators (SLIs) for fast querying in Grafana.
+
+**Load recording rules**:
+```bash
+# Kubernetes with Prometheus Operator
+kubectl apply -f monitoring/prometheus/rules/slo-recording-rules.yaml
+
+# Docker Compose
+# Add to prometheus.yml:
+rule_files:
+  - /etc/prometheus/rules/slo-recording-rules.yaml
+```
+
+### Available SLO Metrics
+
+<Tabs>
+  <Tab title="Availability">
+    **Target: 99.9% uptime**
+
+    ```promql
+    # Overall service availability
+    job:up:avg
+
+    # Component availability
+    job:up:avg:keycloak      # Target: 99.5%
+    job:up:avg:openfga       # Target: 99.5%
+    job:up:avg:redis_session # Target: 99.9%
+    ```
+
+    **Usage in Grafana**:
+    ```promql
+    # Current availability
+    job:up:avg * 100
+
+    # Downtime minutes per month
+    (1 - job:up:avg) * 43200
+    ```
+  </Tab>
+
+  <Tab title="Latency">
+    **Target: p95 < 2s, p99 < 5s**
+
+    ```promql
+    # Agent response time
+    job:agent_response_duration:p95  # Target: 2000ms
+    job:agent_response_duration:p99  # Target: 5000ms
+
+    # Authentication latency
+    job:auth_login_duration:p95      # Target: 500ms
+
+    # Authorization latency
+    job:authz_check_duration:p95     # Target: 100ms
+
+    # Keycloak latency
+    job:keycloak_request_duration:p95 # Target: 1000ms
+    ```
+
+    **Usage in Grafana**:
+    ```promql
+    # P95 latency vs target
+    job:agent_response_duration:p95 / 2000 * 100
+    ```
+  </Tab>
+
+  <Tab title="Error Rate">
+    **Target: < 1% errors (99% success)**
+
+    ```promql
+    # Overall error rate
+    job:agent_calls:error_rate        # Target: 0.01 (1%)
+
+    # Authentication failures
+    job:auth_login:error_rate         # Target: 0.05 (5%)
+
+    # Authorization denials
+    job:authz_checks:denial_rate      # Target: 0.15 (15%)
+
+    # Token verification failures
+    job:token_verification:error_rate # Target: 0.02 (2%)
+
+    # LLM fallback rate
+    job:llm_fallback:rate             # Target: 0.10 (10%)
+    ```
+
+    **Usage in Grafana**:
+    ```promql
+    # Error rate as percentage
+    job:agent_calls:error_rate * 100
+
+    # Success rate
+    (1 - job:agent_calls:error_rate) * 100
+    ```
+  </Tab>
+
+  <Tab title="Saturation">
+    **Target: < 80% CPU, < 90% memory**
+
+    ```promql
+    # Memory saturation
+    job:memory:saturation             # Target: 0.90 (90%)
+
+    # CPU saturation
+    job:cpu:saturation                # Target: 0.80 (80%)
+
+    # Redis memory saturation
+    job:redis_memory:saturation       # Target: 0.90 (90%)
+
+    # Redis connection pool
+    job:redis_pool:saturation         # Target: 0.95 (95%)
+    ```
+
+    **Usage in Grafana**:
+    ```promql
+    # Memory pressure
+    job:memory:saturation * 100
+
+    # Available memory
+    (1 - job:memory:saturation) * 100
+    ```
+  </Tab>
+
+  <Tab title="Error Budget">
+    **Burn rate detection across multiple windows**
+
+    ```promql
+    # Fast burn (1 hour window)
+    job:error_budget:burn_rate_1h
+
+    # Medium burn (6 hour window)
+    job:error_budget:burn_rate_6h
+
+    # Slow burn (3 day window)
+    job:error_budget:burn_rate_3d
+    ```
+
+    **Interpretation**:
+    - Burn rate = 1.0: Consuming error budget at expected rate
+    - Burn rate > 1.0: Consuming faster (alert!)
+    - Burn rate < 1.0: Consuming slower (healthy)
+
+    **Alert on fast burn**:
+    ```yaml
+    - alert: FastErrorBudgetBurn
+      expr: job:error_budget:burn_rate_1h > 14.4
+      for: 5m
+      annotations:
+        summary: "Error budget burning 14.4x faster than sustainable"
+    ```
+  </Tab>
+
+  <Tab title="Compliance">
+    **30-day rolling window SLO compliance**
+
+    ```promql
+    # Availability compliance
+    job:slo_compliance:availability_30d  # Target: 99.9%
+
+    # Latency compliance (% within SLO)
+    job:slo_compliance:latency_p95_30d   # Target: 95%
+
+    # Error rate compliance (success rate)
+    job:slo_compliance:error_rate_30d    # Target: 99%
+    ```
+
+    **Usage in Grafana**:
+    ```promql
+    # Monthly SLO report
+    job:slo_compliance:availability_30d * 100
+    ```
+  </Tab>
+</Tabs>
+
+### SLO Dashboard Example
+
+Create an SLO summary dashboard:
+
+```json
+{
+  "dashboard": {
+    "title": "SLO Compliance - MCP Server",
+    "panels": [
+      {
+        "title": "Availability SLO (99.9% target)",
+        "targets": [{
+          "expr": "job:up:avg * 100"
+        }],
+        "thresholds": [
+          {"color": "red", "value": 0},
+          {"color": "yellow", "value": 99.5},
+          {"color": "green", "value": 99.9}
+        ],
+        "type": "gauge"
+      },
+      {
+        "title": "Error Rate SLO (< 1% target)",
+        "targets": [{
+          "expr": "job:agent_calls:error_rate * 100"
+        }],
+        "thresholds": [
+          {"color": "green", "value": 0},
+          {"color": "yellow", "value": 0.5},
+          {"color": "red", "value": 1.0}
+        ],
+        "type": "gauge"
+      },
+      {
+        "title": "Latency SLO (p95 < 2s)",
+        "targets": [{
+          "expr": "job:agent_response_duration:p95"
+        }],
+        "thresholds": [
+          {"color": "green", "value": 0},
+          {"color": "yellow", "value": 1500},
+          {"color": "red", "value": 2000}
+        ],
+        "type": "gauge",
+        "unit": "ms"
+      },
+      {
+        "title": "Error Budget Burn Rate (1h window)",
+        "targets": [{
+          "expr": "job:error_budget:burn_rate_1h"
+        }],
+        "thresholds": [
+          {"color": "green", "value": 0},
+          {"color": "yellow", "value": 2},
+          {"color": "red", "value": 14.4}
+        ],
+        "type": "graph"
+      }
+    ]
+  }
+}
+```
+
+### Benefits of SLO Recording Rules
+
+1. **Performance** - Pre-computed metrics query 10-100x faster
+2. **Consistency** - Same calculation across all dashboards
+3. **Alerting** - Alert on SLO violations, not raw metrics
+4. **Reporting** - Historical SLO compliance tracking
+5. **Error Budgets** - Multi-window burn rate detection
+
 ## Alerting with Alertmanager
 
 ### Configure Alerts
