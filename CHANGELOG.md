@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Dependency Management
+
+#### Comprehensive Dependency Management Strategy (2025-10-13)
+
+**Documentation & Automation** (`docs/DEPENDENCY_MANAGEMENT.md` - 580 lines, `scripts/dependency-audit.sh` - 320 lines):
+- **4-Phase Update Strategy**: Critical security (48h SLA), major versions (2-4 weeks), minor versions (1-2 weeks), patches (1 month)
+- **Risk Assessment Matrix**: Risk levels for 13 open Dependabot PRs (langgraph, fastapi, cryptography, etc.)
+- **Testing Requirements**: Pre-merge checklists for all updates, comprehensive testing for major versions
+- **Rollback Procedures**: Immediate rollback, temporary pinning, compatibility branches
+- **Monthly Audit Script**: Automated dependency health checks with color-coded output
+  - Outdated packages scan (65 packages identified)
+  - Security vulnerability scan (pip-audit integration)
+  - License compliance check (pip-licenses integration)
+  - Dependency conflict detection (pip check)
+  - Version consistency checks between pyproject.toml and requirements.txt
+  - Dependabot PR summary (GitHub CLI integration)
+  - Automated recommendations and reporting
+
+**Initial Audit Results** (`DEPENDENCY_AUDIT_REPORT_20251013.md` - comprehensive report):
+- **Total Packages**: 305 installed
+- **Outdated**: 65 packages (21.3%)
+- **Security Vulnerabilities**: 1 (pip 25.2 CVE-2025-8869, awaiting 25.3 fix)
+- **Open Dependabot PRs**: 15 PRs requiring review
+- **Version Inconsistencies**: 4 packages with mismatched versions between pyproject.toml and requirements.txt
+
+### Fixed - Security
+
+#### Black ReDoS Vulnerability (CVE-2024-21503)
+
+**Upgrade**: black 24.1.1 → 25.9.0 (2025-10-13)
+- **Vulnerability**: Regular Expression Denial of Service (ReDoS) via `lines_with_leading_tabs_expanded` function
+- **CVSS Score**: MEDIUM severity
+- **Fix**: Upgraded to black 25.9.0 (latest) using `uv pip install --upgrade black`
+- **Impact**: Prevents DoS attacks when running Black on untrusted input
+- **File**: `src/mcp_server_langgraph/` (development dependency)
+
+### Changed - Dependency Files
+
+#### Dependency Audit Script Enhancement
+
+**Script**: `scripts/dependency-audit.sh`
+- Added virtual environment activation support (`.venv/bin/activate`)
+- Updated to use `uv pip install` for tool installation (pip-audit, pip-licenses)
+- Enhanced to use venv-specific binaries (`.venv/bin/pip-audit`, `.venv/bin/pip-licenses`)
+- Color-coded output: RED (errors/security), GREEN (success), YELLOW (warnings), BLUE (headers)
+- Comprehensive audit functions: 9 checks including outdated packages, security scan, license compliance, conflicts, version consistency, dependency tree, Dependabot summary, recommendations
+
+#### Dependabot Configuration Enhancement
+
+**File**: `.github/dependabot.yml`
+- **Intelligent Grouping Strategy**: Group related dependencies for batch updates
+  - `testing-framework`: pytest, respx, faker, hypothesis (minor/patch only)
+  - `opentelemetry`: All OpenTelemetry packages (minor/patch only)
+  - `aws-sdk`: boto3, botocore, aiobotocore (minor/patch only)
+  - `code-quality`: black, isort, flake8, pylint, mypy, bandit (minor/patch only)
+  - `pydantic`: pydantic and pydantic-* packages (minor/patch only)
+  - `github-core-actions`: actions/* packages (minor/patch only)
+  - `cicd-actions`: docker/*, azure/*, codecov/* packages (minor/patch only)
+- **Selective Major Version Blocking**: Only block major updates for stable packages (pydantic)
+- **Allow Major Updates**: langgraph, fastapi, openfga-sdk, etc. will get individual major update PRs
+- **Benefits**: Reduces PR noise, enables batch testing, maintains critical update visibility
+
+#### CI Failure Investigation and Fix
+
+**File**: `CI_FAILURE_INVESTIGATION.md`
+- **Root Cause Identified**: Pre-existing CI workflow issue (package not installed in test jobs)
+- **Impact**: Dependabot PR failures are NOT caused by dependency updates themselves
+- **Evidence**: ModuleNotFoundError for `mcp_server_langgraph` during test collection
+- **Validation**: Security scans passing, updates are safe from security perspective
+- **Recommendation**: Fix CI workflow before validating major version updates
+- **Workaround**: Local testing plan for PATCH/MINOR updates (cryptography, PyJWT)
+
+**Fix Applied**: `.github/workflows/pr-checks.yaml`
+- **Added `pip install -e .`** to test job (lines 57) for Python 3.10/3.11/3.12 matrix
+- **Added `pip install -e .`** to lint job (line 98) for code quality checks
+- **Added `pip install -e .`** to security job (line 131) for security scans
+- **Result**: Package will now be properly installed before running tests, linting, and security scans
+- **Expected Impact**: All Dependabot PRs should now pass CI checks (excluding legitimate test failures)
+- **Verification**: Re-run CI on Dependabot PRs to confirm fix
+
 ## [2.2.0] - 2025-10-13
 
 ### Summary

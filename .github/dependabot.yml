@@ -20,10 +20,60 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    # Group related dependencies for batch updates
+    groups:
+      # Testing framework and tools
+      testing-framework:
+        patterns:
+          - "pytest*"
+          - "respx"
+          - "faker"
+          - "hypothesis*"
+        update-types:
+          - "minor"
+          - "patch"
+      # OpenTelemetry observability stack
+      opentelemetry:
+        patterns:
+          - "opentelemetry-*"
+        update-types:
+          - "minor"
+          - "patch"
+      # AWS SDK components
+      aws-sdk:
+        patterns:
+          - "boto3"
+          - "botocore"
+          - "aiobotocore"
+        update-types:
+          - "minor"
+          - "patch"
+      # Code quality and linting tools
+      code-quality:
+        patterns:
+          - "black"
+          - "isort"
+          - "flake8"
+          - "pylint"
+          - "mypy"
+          - "bandit"
+        update-types:
+          - "minor"
+          - "patch"
+      # Pydantic ecosystem
+      pydantic:
+        patterns:
+          - "pydantic"
+          - "pydantic-*"
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
-      # Ignore major version updates for stability
-      - dependency-name: "*"
+      # Selectively ignore major version updates for stable packages only
+      - dependency-name: "pydantic"
         update-types: ["version-update:semver-major"]
+      # Allow major updates for actively developed packages
+      # (langgraph, fastapi, openfga-sdk, etc. will get major update PRs)
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -40,6 +90,24 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "ci"
+    # Group GitHub Actions by category
+    groups:
+      # Core GitHub Actions
+      github-core-actions:
+        patterns:
+          - "actions/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Third-party CI/CD actions
+      cicd-actions:
+        patterns:
+          - "docker/*"
+          - "azure/*"
+          - "codecov/*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Docker
   - package-ecosystem: "docker"
