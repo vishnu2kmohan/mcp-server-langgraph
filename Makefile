@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-property test-contract test-regression test-mutation validate-openapi lint format security-check clean
+.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-property test-contract test-regression test-mutation validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check clean
 
 help:
 	@echo "LangGraph MCP Agent - Make Commands"
@@ -8,6 +8,7 @@ help:
 	@echo "  make install-dev      Install development + test dependencies"
 	@echo "  make setup-infra      Start Docker infrastructure"
 	@echo "  make setup-openfga    Initialize OpenFGA"
+	@echo "  make setup-keycloak   Initialize Keycloak"
 	@echo "  make setup-infisical  Initialize Infisical"
 	@echo ""
 	@echo "Testing:"
@@ -25,7 +26,22 @@ help:
 	@echo "  make test-mcp            Test MCP server (manual)"
 	@echo ""
 	@echo "Validation:"
-	@echo "  make validate-openapi    Validate OpenAPI schema"
+	@echo "  make validate-openapi         Validate OpenAPI schema"
+	@echo "  make validate-deployments     Validate all deployment configs"
+	@echo "  make validate-docker-compose  Validate Docker Compose"
+	@echo "  make validate-helm            Validate Helm chart"
+	@echo "  make validate-kustomize       Validate Kustomize overlays"
+	@echo "  make validate-all             Run all deployment validations"
+	@echo ""
+	@echo "Deployment:"
+	@echo "  make deploy-dev               Deploy to development (Kustomize)"
+	@echo "  make deploy-staging           Deploy to staging (Kustomize)"
+	@echo "  make deploy-production        Deploy to production (Helm)"
+	@echo "  make deploy-rollback-dev      Rollback development deployment"
+	@echo "  make deploy-rollback-staging  Rollback staging deployment"
+	@echo "  make deploy-rollback-production  Rollback production deployment"
+	@echo "  make test-k8s-deployment      Test Kubernetes deployment (kind)"
+	@echo "  make test-helm-deployment     Test Helm deployment (kind)"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint             Run linters (flake8, mypy)"
@@ -142,6 +158,33 @@ validate-openapi:
 	python scripts/validation/validate_openapi.py
 	@echo "✓ OpenAPI validation complete"
 
+validate-deployments:
+	@echo "Validating all deployment configurations..."
+	python3 scripts/validation/validate_deployments.py
+	@echo "✓ Deployment validation complete"
+
+validate-docker-compose:
+	@echo "Validating Docker Compose configuration..."
+	docker compose -f docker-compose.yml config --quiet
+	@echo "✓ Docker Compose valid"
+
+validate-helm:
+	@echo "Validating Helm chart..."
+	helm lint deployments/helm/langgraph-agent
+	helm template test-release deployments/helm/langgraph-agent --dry-run > /dev/null
+	@echo "✓ Helm chart valid"
+
+validate-kustomize:
+	@echo "Validating Kustomize overlays..."
+	@for env in dev staging production; do \
+		echo "  Validating $$env overlay..."; \
+		kubectl kustomize deployments/kustomize/overlays/$$env > /dev/null; \
+	done
+	@echo "✓ All Kustomize overlays valid"
+
+validate-all: validate-deployments validate-docker-compose validate-helm validate-kustomize
+	@echo "✓ All deployment validations passed"
+
 # Code quality
 lint:
 	@echo "Running flake8..."
@@ -207,3 +250,70 @@ test-rate-limit:
 			http://localhost:8000/; \
 		sleep 0.1; \
 	done
+
+# Deployment targets
+deploy-dev:
+	@echo "Deploying to development environment..."
+	kubectl apply -k deployments/kustomize/overlays/dev
+	@echo "Waiting for rollout..."
+	kubectl rollout status deployment/dev-langgraph-agent -n langgraph-agent-dev --timeout=5m
+	@echo "✓ Development deployment complete"
+	@echo ""
+	@echo "Check status:"
+	@echo "  kubectl get pods -n langgraph-agent-dev"
+	@echo "  kubectl logs -f deployment/dev-langgraph-agent -n langgraph-agent-dev"
+
+deploy-staging:
+	@echo "Deploying to staging environment..."
+	kubectl apply -k deployments/kustomize/overlays/staging
+	@echo "Waiting for rollout..."
+	kubectl rollout status deployment/staging-langgraph-agent -n langgraph-agent-staging --timeout=5m
+	@echo "✓ Staging deployment complete"
+	@echo ""
+	@echo "Check status:"
+	@echo "  kubectl get pods -n langgraph-agent-staging"
+	@echo "  kubectl logs -f deployment/staging-langgraph-agent -n langgraph-agent-staging"
+
+deploy-production:
+	@echo "⚠️  WARNING: Deploying to PRODUCTION environment"
+	@echo "Press Ctrl+C within 10 seconds to cancel..."
+	@sleep 10
+	@echo "Deploying to production with Helm..."
+	helm upgrade --install langgraph-agent deployments/helm/langgraph-agent \
+		--namespace langgraph-agent \
+		--create-namespace \
+		--wait \
+		--timeout 10m
+	@echo "✓ Production deployment complete"
+	@echo ""
+	@echo "Check status:"
+	@echo "  kubectl get pods -n langgraph-agent"
+	@echo "  kubectl logs -f deployment/langgraph-agent -n langgraph-agent"
+
+deploy-rollback-dev:
+	@echo "Rolling back development deployment..."
+	kubectl rollout undo deployment/dev-langgraph-agent -n langgraph-agent-dev
+	kubectl rollout status deployment/dev-langgraph-agent -n langgraph-agent-dev
+	@echo "✓ Development rollback complete"
+
+deploy-rollback-staging:
+	@echo "Rolling back staging deployment..."
+	kubectl rollout undo deployment/staging-langgraph-agent -n langgraph-agent-staging
+	kubectl rollout status deployment/staging-langgraph-agent -n langgraph-agent-staging
+	@echo "✓ Staging rollback complete"
+
+deploy-rollback-production:
+	@echo "⚠️  WARNING: Rolling back PRODUCTION deployment"
+	@echo "Press Ctrl+C within 10 seconds to cancel..."
+	@sleep 10
+	helm rollback langgraph-agent -n langgraph-agent
+	@echo "✓ Production rollback complete"
+
+# Deployment testing
+test-k8s-deployment:
+	@echo "Running Kubernetes deployment tests..."
+	bash scripts/deployment/test_k8s_deployment.sh
+
+test-helm-deployment:
+	@echo "Running Helm deployment tests..."
+	bash scripts/deployment/test_helm_deployment.sh

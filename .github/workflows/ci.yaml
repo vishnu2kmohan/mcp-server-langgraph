@@ -124,10 +124,63 @@ jobs:
     - name: Security scan with bandit
       run: bandit -r . -x ./tests,./venv -ll
 
+  validate-deployments:
+    name: Validate Deployment Configurations
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install PyYAML
+      run: pip install pyyaml
+
+    - name: Run deployment validation script
+      run: python3 scripts/validation/validate_deployments.py
+
+    - name: Validate Docker Compose
+      run: |
+        docker compose -f docker-compose.yml config --quiet
+        echo "✓ Docker Compose configuration valid"
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: '3.13.0'
+
+    - name: Validate Helm chart
+      run: |
+        helm lint deployments/helm/langgraph-agent
+        echo "✓ Helm chart validation passed"
+
+    - name: Test Helm template rendering
+      run: |
+        helm template test-release deployments/helm/langgraph-agent --dry-run > /dev/null
+        echo "✓ Helm template rendering successful"
+
+    - name: Validate Kustomize overlays
+      run: |
+        # Install kubectl for kustomize
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+
+        # Validate each overlay
+        for env in dev staging production; do
+          echo "Validating $env overlay..."
+          kubectl kustomize deployments/kustomize/overlays/$env > /dev/null
+          echo "✓ $env overlay valid"
+        done
+
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [test, lint, validate-deployments]
     permissions:
       contents: read
       packages: write
