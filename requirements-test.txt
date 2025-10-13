@@ -27,7 +27,7 @@ mutmut>=2.4.4  # Test effectiveness via code mutations
 # Test utilities
 # httpx version already specified in requirements.txt
 respx==0.20.2  # Mock httpx
-faker==22.0.0  # Generate test data
+faker==37.11.0  # Generate test data
 
 # Code quality
 black==24.1.1
