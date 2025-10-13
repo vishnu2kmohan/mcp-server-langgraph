@@ -30,6 +30,8 @@ Google Cloud Run is a fully managed serverless platform that automatically scale
 - **Global deployment**: Deploy to multiple regions
 - **High availability**: 99.95% SLA
 
+**NEW v2.1.0**: For production deployments with Keycloak SSO and Redis sessions, Cloud Run requires external managed services (see [Authentication & Sessions](#authentication--sessions-new-v210) section below).
+
 ### Architecture
 
 ```
@@ -324,6 +326,13 @@ The service uses the following environment variables:
 | `OPENFGA_STORE_ID` | OpenFGA store ID | Secret Manager | ⚠️ (if using authz) |
 | `OPENFGA_MODEL_ID` | OpenFGA model ID | Secret Manager | ⚠️ (if using authz) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry endpoint | Env | ⚠️ (if using OTel) |
+| `AUTH_PROVIDER` | Auth provider (inmemory/keycloak) | Env | ✅ (NEW v2.1.0) |
+| `AUTH_MODE` | Auth mode (token/session) | Env | ✅ (NEW v2.1.0) |
+| `KEYCLOAK_SERVER_URL` | Keycloak server URL | Env | ⚠️ (if using Keycloak) |
+| `KEYCLOAK_CLIENT_SECRET` | Keycloak OAuth2 secret | Secret Manager | ⚠️ (if using Keycloak) |
+| `SESSION_BACKEND` | Session backend (memory/redis) | Env | ✅ (NEW v2.1.0) |
+| `REDIS_URL` | Redis connection URL | Env | ⚠️ (if using Redis) |
+| `REDIS_PASSWORD` | Redis password | Secret Manager | ⚠️ (if using Redis) |
 
 ### Update Environment Variables
 
@@ -579,6 +588,132 @@ gcloud run services update mcp-server-langgraph \
 2. Enable HTTP/2 for connection reuse
 3. Use connection pooling for databases
 4. Implement request queuing and timeouts
+
+---
+
+## Authentication & Sessions (NEW v2.1.0)
+
+Cloud Run is stateless and serverless, so Keycloak and Redis must run as external managed services.
+
+### Option 1: Managed Keycloak + Memorystore for Redis (Recommended)
+
+For enterprise production deployments:
+
+```bash
+# 1. Deploy Keycloak on Google Kubernetes Engine (GKE)
+# See: docs/deployment/kubernetes.md for full Keycloak setup
+gcloud container clusters create keycloak-cluster \
+  --region $REGION \
+  --num-nodes 2 \
+  --machine-type n1-standard-2
+
+helm install keycloak bitnami/keycloak \
+  --namespace keycloak \
+  --create-namespace \
+  --set replicaCount=2 \
+  --set postgresql.enabled=true
+
+# 2. Create Memorystore for Redis instance
+gcloud redis instances create langgraph-sessions \
+  --size=1 \
+  --region=$REGION \
+  --redis-version=redis_7_0 \
+  --tier=standard \
+  --replica-count=1
+
+# Get Redis connection details
+REDIS_HOST=$(gcloud redis instances describe langgraph-sessions \
+  --region=$REGION \
+  --format='value(host)')
+REDIS_PORT=$(gcloud redis instances describe langgraph-sessions \
+  --region=$REGION \
+  --format='value(port)')
+REDIS_AUTH=$(gcloud redis instances describe langgraph-sessions \
+  --region=$REGION \
+  --format='value(authString)')
+
+# 3. Create VPC connector (required to access Redis and Keycloak)
+gcloud compute networks vpc-access connectors create mcp-connector \
+  --region $REGION \
+  --network default \
+  --range 10.8.0.0/28
+
+# 4. Store secrets in Secret Manager
+echo -n "$REDIS_AUTH" | gcloud secrets create redis-password \
+  --data-file=- \
+  --replication-policy="automatic"
+
+echo -n "your-keycloak-client-secret" | gcloud secrets create keycloak-client-secret \
+  --data-file=- \
+  --replication-policy="automatic"
+
+# 5. Deploy Cloud Run with Keycloak and Redis
+gcloud run deploy mcp-server-langgraph \
+  --image gcr.io/$GOOGLE_CLOUD_PROJECT/mcp-server-langgraph:latest \
+  --region $REGION \
+  --vpc-connector mcp-connector \
+  --vpc-egress private-ranges-only \
+  --set-env-vars="AUTH_PROVIDER=keycloak,AUTH_MODE=session,SESSION_BACKEND=redis,KEYCLOAK_SERVER_URL=https://keycloak.yourdomain.com,KEYCLOAK_REALM=langgraph-agent,KEYCLOAK_CLIENT_ID=langgraph-client,REDIS_URL=redis://$REDIS_HOST:$REDIS_PORT/0,SESSION_TTL_SECONDS=86400" \
+  --set-secrets="KEYCLOAK_CLIENT_SECRET=keycloak-client-secret:latest,REDIS_PASSWORD=redis-password:latest"
+```
+
+**Costs**:
+- Memorystore Redis (1GB, HA): ~$45/month
+- GKE for Keycloak (2 nodes): ~$70/month
+- VPC connector: ~$10/month
+- **Total**: ~$125/month + Cloud Run costs
+
+### Option 2: Development Mode (Memory-Based)
+
+For development or low-traffic environments:
+
+```bash
+# Deploy with inmemory auth and memory sessions (no external services)
+gcloud run deploy mcp-server-langgraph \
+  --image gcr.io/$GOOGLE_CLOUD_PROJECT/mcp-server-langgraph:latest \
+  --region $REGION \
+  --set-env-vars="AUTH_PROVIDER=inmemory,SESSION_BACKEND=memory"
+```
+
+**Limitations**:
+- Sessions lost on container restart
+- No SSO capabilities
+- Not suitable for production
+
+### Option 3: Hybrid (Token-Based with Keycloak)
+
+Use Keycloak for authentication but avoid Redis sessions:
+
+```bash
+# Deploy with Keycloak auth but token-based (no sessions)
+gcloud run deploy mcp-server-langgraph \
+  --image gcr.io/$GOOGLE_CLOUD_PROJECT/mcp-server-langgraph:latest \
+  --region $REGION \
+  --vpc-connector mcp-connector \
+  --set-env-vars="AUTH_PROVIDER=keycloak,AUTH_MODE=token,KEYCLOAK_SERVER_URL=https://keycloak.yourdomain.com" \
+  --set-secrets="KEYCLOAK_CLIENT_SECRET=keycloak-client-secret:latest"
+```
+
+**Benefits**:
+- Stateless (Cloud Run friendly)
+- No Redis dependency
+- SSO capabilities
+- Lower costs (~$70/month for Keycloak only)
+
+**Trade-offs**:
+- No session persistence
+- No concurrent session limits
+- Shorter token lifetimes (refresh required)
+
+### Recommended Configuration by Use Case
+
+| Use Case | AUTH_PROVIDER | AUTH_MODE | SESSION_BACKEND | Cost | Complexity |
+|----------|---------------|-----------|-----------------|------|------------|
+| **Development** | inmemory | token | memory | Free | Low |
+| **Small Production** | keycloak | token | N/A | ~$70/mo | Medium |
+| **Enterprise Production** | keycloak | session | redis | ~$125/mo | High |
+
+See [Keycloak Integration Guide](../integrations/keycloak.md) for detailed Keycloak setup.
 
 ---
 

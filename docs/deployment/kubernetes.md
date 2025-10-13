@@ -2,6 +2,19 @@
 
 Complete guide for deploying MCP Server with LangGraph to Kubernetes (GKE, EKS, AKS, Rancher, VMware Tanzu).
 
+## What's New in v2.1.0
+
+This release adds enterprise authentication and session management capabilities:
+
+- **🔐 Keycloak SSO**: Production-ready OpenID Connect/OAuth2 authentication provider
+- **💾 Redis Session Store**: Persistent session management with TTL and sliding windows
+- **🔄 Pluggable Authentication**: Switch between inmemory (dev) and Keycloak (production)
+- **📦 Helm Dependencies**: Automatic deployment of Keycloak and Redis via Helm chart
+- **🎯 Environment-Specific Configs**: Dev uses inmemory auth, Production uses Keycloak+Redis
+- **📊 Enhanced Monitoring**: 9 new Prometheus alerts for Keycloak, Redis, and sessions
+
+See the [Keycloak Integration Guide](../integrations/keycloak.md) for detailed setup and configuration.
+
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
@@ -28,6 +41,8 @@ Complete guide for deploying MCP Server with LangGraph to Kubernetes (GKE, EKS, 
 - Helm 3.0+ (for Helm deployments)
 - Container registry access (Docker Hub, GCR, ECR, ACR)
 - Secrets (Anthropic API key, JWT secret, OpenFGA credentials)
+- **NEW v2.1.0**: Keycloak client credentials (if using Keycloak auth)
+- **NEW v2.1.0**: Redis password (if using Redis sessions)
 
 ## Container Image
 
@@ -70,7 +85,7 @@ docker push myregistry.azurecr.io/langgraph-agent:latest
 Most flexible method with templating and easy upgrades.
 
 ```bash
-# Install with default values
+# Install with default values (includes Keycloak and Redis dependencies)
 helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --namespace langgraph-agent \
   --create-namespace
@@ -90,6 +105,17 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
   --set secrets.anthropicApiKey=$ANTHROPIC_API_KEY \
   --set secrets.jwtSecretKey=$JWT_SECRET_KEY
 
+# NEW v2.1.0: Install with Keycloak SSO and Redis sessions
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
+  --namespace langgraph-agent \
+  --create-namespace \
+  --set config.authProvider=keycloak \
+  --set config.sessionBackend=redis \
+  --set secrets.keycloakClientSecret=$KEYCLOAK_CLIENT_SECRET \
+  --set secrets.redisPassword=$REDIS_PASSWORD \
+  --set keycloak.enabled=true \
+  --set redis.enabled=true
+
 # Upgrade existing deployment
 helm upgrade langgraph-agent ./helm/langgraph-agent \
   --namespace langgraph-agent \
@@ -100,18 +126,37 @@ helm upgrade langgraph-agent ./helm/langgraph-agent \
 helm rollback langgraph-agent 1 --namespace langgraph-agent
 ```
 
+**Helm Chart Dependencies (NEW v2.1.0)**:
+
+The Helm chart now includes optional dependencies for Keycloak and Redis:
+
+```yaml
+# Chart.yaml
+dependencies:
+  - name: redis
+    version: 18.4.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: keycloak
+    version: 17.3.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: keycloak.enabled
+```
+
+When `keycloak.enabled=true` or `redis.enabled=true`, Helm automatically deploys and configures these services.
+
 ### Kustomize
 
 Environment-specific overlays without templating.
 
 ```bash
-# Development
+# Development (inmemory auth, memory sessions)
 kubectl apply -k deployments/kustomize/overlays/dev
 
-# Staging
+# Staging (Keycloak auth, Redis sessions)
 kubectl apply -k deployments/kustomize/overlays/staging
 
-# Production
+# Production (Keycloak auth with SSL, Redis sessions with SSL)
 kubectl apply -k deployments/kustomize/overlays/production
 
 # Preview changes before applying
@@ -121,12 +166,36 @@ kubectl kustomize deployments/kustomize/overlays/production
 kubectl delete -k deployments/kustomize/overlays/dev
 ```
 
+**Environment-Specific Configurations (NEW v2.1.0)**:
+
+Each Kustomize overlay configures authentication and session management differently:
+
+- **Dev**: `auth_provider=inmemory`, `session_backend=memory` (no external dependencies)
+- **Staging**: `auth_provider=keycloak`, `session_backend=redis` (full enterprise stack)
+- **Production**: Same as staging, plus SSL verification and longer TTLs
+
+The base Kustomize configuration includes Keycloak and Redis deployments (NEW v2.1.0):
+
+```yaml
+# deployments/kustomize/base/kustomization.yaml
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - keycloak-deployment.yaml  # NEW v2.1.0
+  - keycloak-service.yaml     # NEW v2.1.0
+  - redis-session-deployment.yaml  # NEW v2.1.0
+  - redis-session-service.yaml     # NEW v2.1.0
+```
+
 ### kubectl
 
 Direct manifest application (less flexible).
 
 ```bash
-# Apply all base manifests
+# Apply all base manifests (includes Keycloak and Redis - NEW v2.1.0)
 kubectl apply -f deployments/kubernetes/base/
 
 # Apply individual resources
@@ -135,7 +204,22 @@ kubectl apply -f deployments/kubernetes/base/configmap.yaml
 kubectl apply -f deployments/kubernetes/base/secret.yaml
 kubectl apply -f deployments/kubernetes/base/deployment.yaml
 kubectl apply -f deployments/kubernetes/base/service.yaml
+
+# NEW v2.1.0: Apply Keycloak and Redis resources
+kubectl apply -f deployments/kubernetes/base/keycloak-deployment.yaml
+kubectl apply -f deployments/kubernetes/base/keycloak-service.yaml
+kubectl apply -f deployments/kubernetes/base/redis-session-deployment.yaml
+kubectl apply -f deployments/kubernetes/base/redis-session-service.yaml
 ```
+
+**What's in the Base Manifests (NEW v2.1.0)**:
+
+- **keycloak-deployment.yaml**: High-availability Keycloak with PostgreSQL backend, 2 replicas, health probes
+- **keycloak-service.yaml**: ClusterIP service with session affinity for OAuth flows
+- **redis-session-deployment.yaml**: Redis with AOF persistence, LRU eviction, password protection
+- **redis-session-service.yaml**: ClusterIP service for session storage
+
+See [deployments/kubernetes/base/](../../deployments/kubernetes/base/) for full manifest details.
 
 ## Platform-Specific Guides
 
@@ -467,8 +551,14 @@ kubectl create secret generic langgraph-agent-secrets \
   --from-literal=anthropic-api-key=$ANTHROPIC_API_KEY \
   --from-literal=jwt-secret-key=$JWT_SECRET_KEY \
   --from-literal=openfga-store-id=$OPENFGA_STORE_ID \
-  --from-literal=openfga-model-id=$OPENFGA_MODEL_ID
+  --from-literal=openfga-model-id=$OPENFGA_MODEL_ID \
+  --from-literal=keycloak-client-secret=$KEYCLOAK_CLIENT_SECRET \
+  --from-literal=redis-password=$REDIS_PASSWORD
 ```
+
+**NEW v2.1.0 Secrets**:
+- `keycloak-client-secret`: OAuth2 client secret from Keycloak setup
+- `redis-password`: Password for Redis session store
 
 ### External Secrets Operator (Recommended)
 
@@ -518,6 +608,12 @@ spec:
   - secretKey: jwt-secret-key
     remoteRef:
       key: langgraph/jwt-secret-key
+  - secretKey: keycloak-client-secret
+    remoteRef:
+      key: langgraph/keycloak-client-secret
+  - secretKey: redis-password
+    remoteRef:
+      key: langgraph/redis-password
 EOF
 ```
 
@@ -654,16 +750,85 @@ kubectl exec -it <pod-name> -n langgraph-agent -- /bin/bash
 - Check image pull secrets
 - Verify resource requests/limits
 - Check init container logs
+- **NEW v2.1.0**: Verify Keycloak and Redis are running if using those backends
 
 **Health check failures:**
 - Verify OpenFGA is accessible
 - Check secrets are mounted correctly
 - Review application logs
+- **NEW v2.1.0**: Test Keycloak connectivity from app pod
+- **NEW v2.1.0**: Test Redis connectivity from app pod
 
 **Performance issues:**
 - Check HPA metrics
 - Review resource utilization
 - Check for network policies blocking traffic
+- **NEW v2.1.0**: Monitor Redis memory usage and eviction rate
+
+### Keycloak Troubleshooting (NEW v2.1.0)
+
+```bash
+# Check Keycloak pod status
+kubectl get pods -n langgraph-agent -l app.kubernetes.io/name=keycloak
+
+# Check Keycloak logs
+kubectl logs -n langgraph-agent -l app.kubernetes.io/name=keycloak --tail=100
+
+# Test Keycloak health endpoint
+kubectl run curl-test --rm -it --restart=Never --image=curlimages/curl -- \
+  curl -f http://keycloak.langgraph-agent:8080/health
+
+# Port-forward to access Keycloak admin console
+kubectl port-forward -n langgraph-agent svc/keycloak 8080:8080
+# Then access http://localhost:8080
+
+# Verify realm configuration
+python scripts/setup/setup_keycloak.py --verify --environment=production
+```
+
+**Common Keycloak Issues:**
+- **Client secret mismatch**: Re-run `setup_keycloak.py` and update Kubernetes secret
+- **SSL verification errors**: For testing, set `KEYCLOAK_VERIFY_SSL=false` (not for production!)
+- **Token refresh failures**: Check session configuration and Redis connectivity
+- **Realm not found**: Verify `KEYCLOAK_REALM` ConfigMap value matches deployed realm
+
+See [Keycloak Integration Guide](../integrations/keycloak.md) and [Keycloak Runbooks](../runbooks/) for detailed troubleshooting.
+
+### Redis Session Store Troubleshooting (NEW v2.1.0)
+
+```bash
+# Check Redis pod status
+kubectl get pods -n langgraph-agent -l app=redis-session
+
+# Check Redis logs
+kubectl logs -n langgraph-agent -l app=redis-session --tail=100
+
+# Test Redis connectivity
+kubectl run redis-test --rm -it --restart=Never --image=redis:7-alpine \
+  --namespace=langgraph-agent \
+  -- redis-cli -h redis-session -a "$REDIS_PASSWORD" PING
+
+# Check Redis memory usage
+kubectl exec -n langgraph-agent -it \
+  $(kubectl get pod -n langgraph-agent -l app=redis-session -o jsonpath='{.items[0].metadata.name}') \
+  -- redis-cli -a "$REDIS_PASSWORD" INFO memory
+
+# Check active session count
+kubectl exec -n langgraph-agent -it \
+  $(kubectl get pod -n langgraph-agent -l app=redis-session -o jsonpath='{.items[0].metadata.name}') \
+  -- redis-cli -a "$REDIS_PASSWORD" DBSIZE
+```
+
+**Common Redis Issues:**
+- **Connection refused**: Check service name (`redis-session`) and port (6379) in REDIS_URL
+- **Authentication failed**: Verify `redis-password` secret matches deployed Redis password
+- **Out of memory**: Check maxmemory settings in Redis ConfigMap, increase if needed
+- **High eviction rate**: Increase Redis memory or reduce SESSION_TTL_SECONDS
+
+See [Redis Runbooks](../runbooks/) for detailed troubleshooting:
+- [redis-down.md](../runbooks/redis-down.md) - Service outage recovery
+- [redis-memory.md](../runbooks/redis-memory.md) - Memory management
+- [session-errors.md](../runbooks/session-errors.md) - Session operation failures
 
 ### Delete Everything
 
@@ -684,6 +849,7 @@ See `.github/workflows/ci.yaml` for GitHub Actions or `.gitlab-ci.yml` for GitLa
 
 ## Production Checklist
 
+**Infrastructure**:
 - [ ] Use External Secrets Operator or cloud-native secret management
 - [ ] Configure resource limits and requests
 - [ ] Enable HPA and cluster autoscaling
@@ -698,3 +864,17 @@ See `.github/workflows/ci.yaml` for GitHub Actions or `.gitlab-ci.yml` for GitLa
 - [ ] Configure RBAC appropriately
 - [ ] Use dedicated node pools for AI workloads
 - [ ] Enable pod security policies/standards
+
+**NEW v2.1.0 - Authentication & Sessions**:
+- [ ] Deploy Keycloak with PostgreSQL backend (not H2 in-memory)
+- [ ] Configure Keycloak realm and client (run `scripts/setup/setup_keycloak.py`)
+- [ ] Deploy Redis session store with persistence enabled
+- [ ] Set `KEYCLOAK_VERIFY_SSL=true` in production
+- [ ] Configure strong Redis password
+- [ ] Set appropriate `SESSION_TTL_SECONDS` for your workload
+- [ ] Enable session sliding window for better UX
+- [ ] Configure `SESSION_MAX_CONCURRENT` limit
+- [ ] Set up Prometheus alerts for Keycloak and Redis
+- [ ] Test token refresh flow end-to-end
+- [ ] Verify session persistence across Redis restarts
+- [ ] Configure backup for Redis session data (if critical)

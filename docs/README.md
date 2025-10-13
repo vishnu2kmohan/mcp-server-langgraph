@@ -21,6 +21,7 @@ Production-ready deployment guides for various platforms:
 
 Integration guides for external services and tools:
 
+- **[Keycloak SSO](integrations/keycloak.md)** - 🆕 Enterprise authentication with OpenID Connect (NEW v2.1.0)
 - **[OpenFGA & Infisical](integrations/openfga-infisical.md)** - Authorization and secrets management
 - **[LangSmith](integrations/langsmith.md)** - LLM observability and tracing
 - **[Kong API Gateway](integrations/kong.md)** - API gateway integration
@@ -34,6 +35,7 @@ Developer guides and workflows:
 - **[Development Setup](development/development.md)** - Local environment configuration
 - **[Testing Strategy](development/testing.md)** - Unit, integration, property, and contract tests
 - **[Build Verification](development/build-verification.md)** - Build and CI/CD verification
+- **[CI/CD Pipeline](development/ci-cd.md)** - 🆕 Continuous integration and deployment (NEW v2.1.0)
 - **[GitHub Actions Setup](development/github-actions.md)** - CI/CD pipeline configuration
 
 ## 📖 Reference
@@ -83,6 +85,7 @@ Historical documentation (may be outdated):
 
 - **Getting Started**: [Main README](../README.md), [Development Setup](development/development.md)
 - **Deployment**: See [Deployment](#-deployment) section above
+- **Authentication**: [Keycloak SSO](integrations/keycloak.md) (NEW v2.1.0), [JWT Auth](integrations/openfga-infisical.md)
 - **Security**: [OpenFGA Integration](integrations/openfga-infisical.md), [Security Review](archive/security-review.md)
 - **Testing**: [Testing Guide](development/testing.md), [Build Verification](development/build-verification.md)
 - **AI/LLM**: [AGENTS.md](../.github/AGENTS.md), [Pydantic AI](reference/pydantic-ai.md), [LiteLLM](integrations/litellm.md)
@@ -97,8 +100,10 @@ Historical documentation (may be outdated):
 
 **DevOps/SRE**:
 - Deploy: [Production Deployment](deployment/production.md), [Kubernetes](deployment/kubernetes.md)
+- Auth/SSO: [Keycloak Integration](integrations/keycloak.md) (NEW v2.1.0)
 - Monitor: [LangSmith Integration](integrations/langsmith.md)
 - Secure: [OpenFGA & Infisical](integrations/openfga-infisical.md)
+- CI/CD: [CI/CD Pipeline](development/ci-cd.md) (NEW v2.1.0)
 
 **Template User**:
 - Start: [Template Usage](template/usage.md)

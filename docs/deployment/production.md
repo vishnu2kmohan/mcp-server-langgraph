@@ -34,10 +34,12 @@ python scripts/validate_production.py
 - [ ] **Code Coverage ≥70%**: Run `make test-coverage`
 - [ ] **Environment Configured**: All required secrets and config values set
 - [ ] **OpenFGA Setup**: Store and Model IDs generated and configured
+- [ ] **Keycloak SSO Deployed** (NEW v2.1.0): Realm and client configured (if using Keycloak auth)
+- [ ] **Redis Session Store** (NEW v2.1.0): Deployed and accessible (if using Redis sessions)
 - [ ] **Secrets Manager**: Infisical or equivalent configured and tested
 - [ ] **Docker Image Built**: Multi-arch image pushed to registry
 - [ ] **Kubernetes Cluster Ready**: Cluster accessible and configured
-- [ ] **DNS/Ingress Configured**: Domain names and SSL certificates ready
+- [ ] **DNS/Ingress Configured**: Domain names and SSL certificates ready (including SSO subdomain)
 - [ ] **Monitoring Stack Deployed**: Prometheus, Grafana, Jaeger running
 - [ ] **Backup Strategy**: Database and secret backup procedures in place
 - [ ] **Incident Response Plan**: On-call rotation and runbooks prepared
@@ -48,6 +50,9 @@ python scripts/validate_production.py
 - [ ] **JWT Secret Rotated**: Default secret replaced with strong random value
 - [ ] **API Keys Secured**: All LLM provider keys stored in secrets manager
 - [ ] **OpenFGA Production Instance**: Not using in-memory store
+- [ ] **Keycloak SSL Verified** (NEW v2.1.0): KEYCLOAK_VERIFY_SSL=true in production
+- [ ] **Redis Password Protected** (NEW v2.1.0): Strong password configured for Redis
+- [ ] **Session TTL Configured** (NEW v2.1.0): Appropriate TTL for production workload
 - [ ] **TLS Enabled**: All inter-service communication encrypted
 - [ ] **Network Policies**: Kubernetes network policies applied
 - [ ] **RBAC Configured**: Least-privilege access controls
@@ -106,6 +111,26 @@ OPENFGA_API_URL=https://openfga.production.yourdomain.com
 OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXXX
 OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
 
+# Keycloak SSO (production) - NEW in v2.1.0
+AUTH_PROVIDER=keycloak  # inmemory or keycloak
+KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
+KEYCLOAK_REALM=langgraph-agent
+KEYCLOAK_CLIENT_ID=langgraph-client
+KEYCLOAK_CLIENT_SECRET=projects/PROJECT_ID/secrets/KEYCLOAK_CLIENT_SECRET
+KEYCLOAK_VERIFY_SSL=true
+KEYCLOAK_TIMEOUT=30
+KEYCLOAK_HOSTNAME=langgraph-agent.yourdomain.com
+
+# Session Management (production) - NEW in v2.1.0
+AUTH_MODE=session  # token (JWT) or session
+SESSION_BACKEND=redis  # memory or redis
+REDIS_URL=redis://redis-session.langgraph-agent:6379/0
+REDIS_PASSWORD=projects/PROJECT_ID/secrets/REDIS_PASSWORD
+REDIS_SSL=true
+SESSION_TTL_SECONDS=86400  # 24 hours
+SESSION_SLIDING_WINDOW=true
+SESSION_MAX_CONCURRENT=5
+
 # Infisical (production project)
 INFISICAL_SITE_URL=https://app.infisical.com
 INFISICAL_CLIENT_ID=projects/PROJECT_ID/secrets/INFISICAL_CLIENT_ID
@@ -151,6 +176,10 @@ infisical secrets set ANTHROPIC_API_KEY "YOUR_API_KEY" --env=production
 infisical secrets set OPENFGA_STORE_ID "YOUR_STORE_ID" --env=production
 infisical secrets set OPENFGA_MODEL_ID "YOUR_MODEL_ID" --env=production
 
+# NEW in v2.1.0: Keycloak and Redis secrets
+infisical secrets set KEYCLOAK_CLIENT_SECRET "YOUR_CLIENT_SECRET" --env=production
+infisical secrets set REDIS_PASSWORD "YOUR_REDIS_PASSWORD" --env=production
+
 # 5. Configure Kubernetes secret with Infisical credentials
 kubectl create secret generic infisical-credentials \
   --from-literal=client-id="YOUR_CLIENT_ID" \
@@ -170,6 +199,8 @@ kubectl create secret generic langgraph-agent-secrets \
   --from-literal=google-api-key="YOUR_API_KEY" \
   --from-literal=openfga-store-id="YOUR_STORE_ID" \
   --from-literal=openfga-model-id="YOUR_MODEL_ID" \
+  --from-literal=keycloak-client-secret="YOUR_CLIENT_SECRET" \
+  --from-literal=redis-password="$(openssl rand -base64 32)" \
   -n langgraph-agent
 
 # Verify secret created
@@ -271,7 +302,122 @@ infisical secrets set OPENFGA_STORE_ID "$OPENFGA_STORE_ID" --env=production
 infisical secrets set OPENFGA_MODEL_ID "$OPENFGA_MODEL_ID" --env=production
 ```
 
-### 3. Deploy Observability Stack
+### 3. Deploy Keycloak SSO (NEW in v2.1.0)
+
+**Production Keycloak Deployment with PostgreSQL:**
+
+```bash
+# Deploy Keycloak using Helm (recommended)
+helm upgrade --install keycloak bitnami/keycloak \
+  --namespace langgraph-agent \
+  --set auth.adminUser=admin \
+  --set auth.adminPassword="$(openssl rand -base64 32)" \
+  --set postgresql.enabled=true \
+  --set postgresql.auth.postgresPassword="$(openssl rand -base64 32)" \
+  --set replicaCount=2 \
+  --set service.type=ClusterIP \
+  --set ingress.enabled=true \
+  --set ingress.hostname=sso.yourdomain.com \
+  --set ingress.tls=true
+
+# Wait for Keycloak to be ready
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=keycloak \
+  -n langgraph-agent --timeout=300s
+```
+
+**Configure Keycloak Realm and Client:**
+
+```bash
+# Run setup script
+python scripts/setup/setup_keycloak.py --environment=production
+
+# Output will include:
+# - Realm: langgraph-agent
+# - Client ID: langgraph-client
+# - Client Secret: <generated-secret>
+
+# Store client secret
+KEYCLOAK_CLIENT_SECRET=<client-secret-from-output>
+infisical secrets set KEYCLOAK_CLIENT_SECRET "$KEYCLOAK_CLIENT_SECRET" --env=production
+
+# Or with Kubernetes secrets
+kubectl create secret generic keycloak-secrets \
+  --from-literal=client-secret="$KEYCLOAK_CLIENT_SECRET" \
+  -n langgraph-agent
+```
+
+**Keycloak Configuration Details:**
+
+- **Realm**: `langgraph-agent` (dedicated realm for this app)
+- **Client**: `langgraph-client` (confidential client with OIDC)
+- **Grant Types**: authorization_code, refresh_token
+- **Redirect URIs**: `https://langgraph-agent.yourdomain.com/*`
+- **Web Origins**: `https://langgraph-agent.yourdomain.com`
+
+**See**: [Keycloak Integration Guide](../integrations/keycloak.md) for detailed configuration.
+
+### 4. Deploy Redis Session Store (NEW in v2.1.0)
+
+**Production Redis Deployment:**
+
+```bash
+# Deploy Redis using Helm (recommended)
+helm upgrade --install redis-session bitnami/redis \
+  --namespace langgraph-agent \
+  --set auth.password="$(openssl rand -base64 32)" \
+  --set master.persistence.enabled=true \
+  --set master.persistence.size=10Gi \
+  --set architecture=standalone \
+  --set metrics.enabled=true \
+  --set metrics.serviceMonitor.enabled=true
+
+# Wait for Redis to be ready
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=redis \
+  -n langgraph-agent --timeout=300s
+```
+
+**Redis Configuration for Sessions:**
+
+```yaml
+# redis-session-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-session-config
+  namespace: langgraph-agent
+data:
+  redis.conf: |
+    maxmemory 512mb
+    maxmemory-policy allkeys-lru
+    appendonly yes
+    appendfsync everysec
+```
+
+**Store Redis Password:**
+
+```bash
+# Get Redis password
+REDIS_PASSWORD=$(kubectl get secret redis-session \
+  -n langgraph-agent \
+  -o jsonpath="{.data.redis-password}" | base64 -d)
+
+# Store in secrets manager
+infisical secrets set REDIS_PASSWORD "$REDIS_PASSWORD" --env=production
+```
+
+**Verify Redis Connectivity:**
+
+```bash
+# Test connection
+kubectl run redis-test --rm -it --restart=Never \
+  --image=redis:7-alpine \
+  --namespace=langgraph-agent \
+  -- redis-cli -h redis-session -a "$REDIS_PASSWORD" PING
+
+# Expected output: PONG
+```
+
+### 5. Deploy Observability Stack
 
 ```bash
 # Deploy Prometheus
@@ -577,6 +723,72 @@ See separate [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed debugging gui
 3. **High latency**: Check LLM provider API status and rate limits
 4. **Authentication errors**: Verify JWT secret and token expiration
 5. **Authorization failures**: Check OpenFGA store/model IDs
+6. **Keycloak Connection Errors** (NEW v2.1.0): Verify KEYCLOAK_SERVER_URL and network connectivity
+7. **Redis Session Failures** (NEW v2.1.0): Check Redis password and connection string
+8. **Session Expiration Issues** (NEW v2.1.0): Review SESSION_TTL_SECONDS configuration
+
+### Keycloak Troubleshooting (NEW in v2.1.0)
+
+```bash
+# Check Keycloak pod status
+kubectl get pods -n langgraph-agent -l app.kubernetes.io/name=keycloak
+
+# Check Keycloak logs
+kubectl logs -n langgraph-agent -l app.kubernetes.io/name=keycloak --tail=100
+
+# Test Keycloak connectivity
+kubectl run curl-test --rm -it --restart=Never --image=curlimages/curl -- \
+  curl -f http://keycloak:8080/health
+
+# Verify realm configuration
+python scripts/setup/setup_keycloak.py --verify --environment=production
+```
+
+**Common Keycloak Issues:**
+- Client secret mismatch: Re-run `setup_keycloak.py` and update secrets
+- SSL verification errors: Set `KEYCLOAK_VERIFY_SSL=false` for testing (not production!)
+- Token refresh failures: Check session configuration and Redis connectivity
+- Realm not found: Verify `KEYCLOAK_REALM` matches deployed configuration
+
+See [Keycloak Runbooks](../runbooks/) for detailed troubleshooting:
+- [keycloak-down.md](../runbooks/keycloak-down.md) - Service outage recovery
+- [keycloak-slow.md](../runbooks/keycloak-slow.md) - Performance issues
+- [keycloak-token-refresh.md](../runbooks/keycloak-token-refresh.md) - Token failures
+
+### Redis Session Store Troubleshooting (NEW in v2.1.0)
+
+```bash
+# Check Redis pod status
+kubectl get pods -n langgraph-agent -l app.kubernetes.io/name=redis
+
+# Check Redis logs
+kubectl logs -n langgraph-agent -l app.kubernetes.io/name=redis --tail=100
+
+# Test Redis connectivity
+kubectl run redis-test --rm -it --restart=Never --image=redis:7-alpine -- \
+  redis-cli -h redis-session -a "$REDIS_PASSWORD" PING
+
+# Check Redis memory usage
+kubectl exec -n langgraph-agent -it $(kubectl get pod -n langgraph-agent -l app.kubernetes.io/name=redis -o jsonpath='{.items[0].metadata.name}') -- \
+  redis-cli -a "$REDIS_PASSWORD" INFO memory
+
+# Check session count
+kubectl exec -n langgraph-agent -it $(kubectl get pod -n langgraph-agent -l app.kubernetes.io/name=redis -o jsonpath='{.items[0].metadata.name}') -- \
+  redis-cli -a "$REDIS_PASSWORD" DBSIZE
+```
+
+**Common Redis Issues:**
+- Connection refused: Check service name and port in `REDIS_URL`
+- Authentication failed: Verify `REDIS_PASSWORD` matches deployed Redis
+- Out of memory: Check maxmemory settings and eviction policy
+- High eviction rate: Increase Redis memory or reduce `SESSION_TTL_SECONDS`
+
+See [Redis Runbooks](../runbooks/) for detailed troubleshooting:
+- [redis-down.md](../runbooks/redis-down.md) - Service outage recovery
+- [redis-memory.md](../runbooks/redis-memory.md) - Memory management
+- [redis-pool.md](../runbooks/redis-pool.md) - Connection pool issues
+- [session-errors.md](../runbooks/session-errors.md) - Session operation failures
+- [session-ttl.md](../runbooks/session-ttl.md) - Session expiration problems
 
 ---
 
