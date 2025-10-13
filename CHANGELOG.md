@@ -79,13 +79,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Recommendation**: Fix CI workflow before validating major version updates
 - **Workaround**: Local testing plan for PATCH/MINOR updates (cryptography, PyJWT)
 
-**Fix Applied**: `.github/workflows/pr-checks.yaml`
+**Fix Applied**: `.github/workflows/pr-checks.yaml` (Commit 124d292)
 - **Added `pip install -e .`** to test job (lines 57) for Python 3.10/3.11/3.12 matrix
 - **Added `pip install -e .`** to lint job (line 98) for code quality checks
 - **Added `pip install -e .`** to security job (line 131) for security scans
 - **Result**: Package will now be properly installed before running tests, linting, and security scans
 - **Expected Impact**: All Dependabot PRs should now pass CI checks (excluding legitimate test failures)
 - **Verification**: Re-run CI on Dependabot PRs to confirm fix
+
+**Configuration Fix**: `.github/dependabot.yml` (Commit 0bb3896)
+- **Removed Invalid Team**: 'maintainers' team (does not exist in repository)
+- **Removed Invalid Labels**: 'python', 'github-actions', 'docker' (labels not created)
+- **Kept Valid Label**: 'dependencies' label only
+- **Result**: Fixes Dependabot configuration validation errors
+- **Impact**: Dependabot can now properly process rebase commands and create PRs
 
 ## [2.2.0] - 2025-10-13
 
