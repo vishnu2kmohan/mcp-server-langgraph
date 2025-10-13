@@ -427,9 +427,7 @@ class SLAMonitor:
                 overall_status = SLAStatus.MEETING
 
             # Calculate overall compliance score (average of all measurements)
-            compliance_score = (
-                sum(m.compliance_percentage for m in measurements) / len(measurements) if measurements else 0.0
-            )
+            compliance_score = sum(m.compliance_percentage for m in measurements) / len(measurements) if measurements else 0.0
 
             # Generate summary (only include measured metrics)
             summary = {

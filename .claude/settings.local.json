@@ -76,7 +76,14 @@
       "Bash(if [ -f \"$file\" ])",
       "Bash(then)",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 120 uv run pytest -m unit -v --tb=line -q)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 120 uv run python -m pytest -m unit -v --tb=line -q)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 120 uv run python -m pytest -m unit -v --tb=no -q)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 120 uv run python3 -m pytest -m unit -v --tb=line -q)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 300 uv run python3 -m pytest --tb=no -q --ignore=tests/performance/)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 300 uv run python3 -m pytest --cov=src/mcp_server_langgraph --cov-report=term --cov-report=html -q --ignore=tests/performance/)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 300 uv run python3 -m pytest --cov=src/mcp_server_langgraph --cov-report=term -q --ignore=tests/performance/)"
     ],
     "deny": [],
     "ask": []

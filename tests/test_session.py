@@ -516,7 +516,7 @@ class TestRedisSessionStore:
         mock_redis.hgetall.side_effect = mock_hgetall
 
         # Create new session (should trigger cleanup)
-        session_id = await store.create("user:victor", "victor", ["user"])
+        await store.create("user:victor", "victor", ["user"])
 
         # Should have deleted oldest session
         assert mock_redis.delete.called
@@ -639,7 +639,7 @@ class TestSessionIntegration:
         # Create sessions for different users
         alice_session = await store.create("user:alice", "alice", ["admin"])
         bob_session = await store.create("user:bob", "bob", ["user"])
-        charlie_session = await store.create("user:charlie", "charlie", ["premium"])
+        await store.create("user:charlie", "charlie", ["premium"])
 
         # Verify isolation
         alice_sessions = await store.list_user_sessions("user:alice")

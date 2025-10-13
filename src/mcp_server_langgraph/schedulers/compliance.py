@@ -143,7 +143,6 @@ class ComplianceScheduler:
             self.scheduler.shutdown(wait=False)
 
             # Give the scheduler a moment to update its state
-            import asyncio
             await asyncio.sleep(0.1)
 
             logger.info("Compliance scheduler stopped")
@@ -357,9 +356,7 @@ class ComplianceScheduler:
 
         Generates comprehensive SOC 2 compliance report for the month.
         """
-        with tracer.start_as_current_span("compliance.monthly_report") as span:
-            start_time = datetime.utcnow()
-
+        with tracer.start_as_current_span("compliance.monthly_report"):
             try:
                 logger.info("Starting monthly compliance report generation")
 

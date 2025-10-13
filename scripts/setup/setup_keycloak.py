@@ -16,8 +16,6 @@ from typing import Optional
 
 import httpx
 
-from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig, sync_user_to_openfga
-from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.config import settings
 
 

@@ -7,11 +7,9 @@ Now supports:
 - Fine-grained authorization via OpenFGA
 """
 
-from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Dict, List, Optional
 
-import jwt
 from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -79,7 +77,7 @@ class AuthMiddleware:
 
     def __init__(
         self,
-        secret_key: str = "your-secret-key-change-in-production",
+        secret_key: Optional[str] = None,
         openfga_client: Optional[OpenFGAClient] = None,
         user_provider: Optional[UserProvider] = None,
         session_store: Optional[SessionStore] = None,
@@ -88,7 +86,8 @@ class AuthMiddleware:
         Initialize AuthMiddleware
 
         Args:
-            secret_key: Secret key for JWT tokens (used by InMemoryUserProvider)
+            secret_key: Secret key for JWT tokens (used by InMemoryUserProvider).
+                       Must be provided via environment variable or settings.
             openfga_client: OpenFGA client for authorization
             user_provider: User provider instance (defaults to InMemoryUserProvider for backward compatibility)
             session_store: Session store for session-based authentication (optional)

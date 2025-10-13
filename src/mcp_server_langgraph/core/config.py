@@ -137,9 +137,10 @@ class Settings(BaseSettings):
 
         # Load JWT secret
         if not self.jwt_secret_key:
-            self.jwt_secret_key = secrets_mgr.get_secret("JWT_SECRET_KEY", fallback="change-this-in-production")
+            default_fallback = "INSECURE-DEV-ONLY-KEY-CHANGE-IN-PRODUCTION"
+            self.jwt_secret_key = secrets_mgr.get_secret("JWT_SECRET_KEY", fallback=default_fallback)
             # Warn if using default secret in production
-            if self.jwt_secret_key == "change-this-in-production" and self.environment == "production":
+            if self.jwt_secret_key == default_fallback and self.environment == "production":
                 raise ValueError(
                     "CRITICAL: Default JWT secret detected in production environment! "
                     "Set JWT_SECRET_KEY environment variable or configure Infisical."

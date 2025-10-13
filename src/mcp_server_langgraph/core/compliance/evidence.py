@@ -12,7 +12,6 @@ Evidence Categories:
 - Privacy (P): Data subject rights, consent management
 """
 
-import json
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path

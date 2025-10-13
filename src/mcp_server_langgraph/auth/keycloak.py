@@ -6,7 +6,6 @@ Supports multiple authentication flows, token verification, and role/group mappi
 to OpenFGA for fine-grained authorization.
 """
 
-import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 

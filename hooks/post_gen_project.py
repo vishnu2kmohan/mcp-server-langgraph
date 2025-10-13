@@ -5,155 +5,152 @@ import shutil
 from pathlib import Path
 
 
+def _remove_file(file_path: Path, message: str = None):
+    """Helper to remove a file if it exists."""
+    if file_path.exists():
+        file_path.unlink()
+        if message:
+            print(f"✓ {message}")
+
+
+def _remove_directory(dir_path: Path, message: str = None):
+    """Helper to remove a directory if it exists."""
+    if dir_path.exists():
+        shutil.rmtree(dir_path)
+        if message:
+            print(f"✓ {message}")
+
+
+def _cleanup_mcp_transports(project_root: Path):
+    """Remove unused MCP transport files."""
+    mcp_transports = "{{ cookiecutter.mcp_transports }}"
+    if mcp_transports == "all":
+        return
+
+    if "stdio" not in mcp_transports:
+        _remove_file(project_root / "mcp_server.py", "Removed mcp_server.py (stdio transport not selected)")
+
+    if "http_sse" not in mcp_transports:
+        _remove_file(project_root / "mcp_server_http.py", "Removed mcp_server_http.py (HTTP/SSE transport not selected)")
+
+    if "streamable_http" not in mcp_transports:
+        _remove_file(
+            project_root / "mcp_server_streamable.py", "Removed mcp_server_streamable.py (StreamableHTTP transport not selected)"
+        )
+
+
+def _cleanup_authentication(project_root: Path):
+    """Remove authentication files if disabled."""
+    if "{{ cookiecutter.use_authentication }}" == "no":
+        _remove_file(project_root / "auth.py", "Removed auth.py (authentication disabled)")
+
+
+def _cleanup_authorization(project_root: Path):
+    """Remove authorization files if disabled."""
+    if "{{ cookiecutter.use_authorization }}" == "no" or "{{ cookiecutter.authorization_backend }}" == "none":
+        _remove_file(project_root / "openfga_client.py", "Removed openfga_client.py (authorization disabled)")
+        _remove_file(project_root / "setup_openfga.py", "Removed setup_openfga.py")
+        _remove_file(project_root / "example_openfga_usage.py")
+
+
+def _cleanup_secrets_manager(project_root: Path):
+    """Remove secrets manager files if disabled."""
+    if "{{ cookiecutter.use_secrets_manager }}" == "no" or "{{ cookiecutter.secrets_backend }}" == "env_only":
+        _remove_file(project_root / "secrets_manager.py", "Removed secrets_manager.py (secrets manager disabled)")
+        _remove_file(project_root / "setup_infisical.py", "Removed setup_infisical.py")
+
+
+def _cleanup_kubernetes(project_root: Path):
+    """Remove Kubernetes deployment files based on configuration."""
+    if "{{ cookiecutter.include_kubernetes }}" == "no":
+        _remove_directory(project_root / "kubernetes", "Removed kubernetes/ directory")
+        _remove_directory(project_root / "helm", "Removed helm/ directory")
+        _remove_directory(project_root / "kustomize", "Removed kustomize/ directory")
+        _remove_file(project_root / "KUBERNETES_DEPLOYMENT.md")
+    elif "{{ cookiecutter.kubernetes_flavor }}" != "both":
+        flavor = "{{ cookiecutter.kubernetes_flavor }}"
+        if flavor != "helm":
+            _remove_directory(project_root / "helm", "Removed helm/ directory (not selected)")
+        if flavor != "kustomize":
+            _remove_directory(project_root / "kustomize", "Removed kustomize/ directory (not selected)")
+
+
+def _cleanup_docker(project_root: Path):
+    """Remove Docker files if disabled."""
+    if "{{ cookiecutter.include_docker }}" == "no":
+        _remove_file(project_root / "Dockerfile", "Removed Dockerfile")
+        _remove_file(project_root / "docker-compose.yaml", "Removed docker-compose.yaml")
+        _remove_file(project_root / ".dockerignore")
+
+
+def _cleanup_cloudrun(project_root: Path):
+    """Remove Cloud Run files if disabled."""
+    if "{{ cookiecutter.include_cloudrun }}" == "no":
+        _remove_directory(project_root / "cloudrun", "Removed cloudrun/ directory")
+        _remove_file(project_root / "CLOUDRUN_DEPLOYMENT.md", "Removed CLOUDRUN_DEPLOYMENT.md")
+
+
+def _cleanup_ci_cd(project_root: Path):
+    """Remove CI/CD files based on platform selection."""
+    if "{{ cookiecutter.include_ci_cd }}" == "no":
+        _remove_directory(project_root / ".github" / "workflows", "Removed .github/workflows/")
+        _remove_file(project_root / ".gitlab-ci.yml")
+    elif "{{ cookiecutter.ci_platform }}" == "github_actions":
+        _remove_file(project_root / ".gitlab-ci.yml", "Removed .gitlab-ci.yml")
+    elif "{{ cookiecutter.ci_platform }}" == "gitlab_ci":
+        _remove_directory(project_root / ".github" / "workflows", "Removed .github/workflows/")
+
+
+def _cleanup_pre_commit(project_root: Path):
+    """Remove pre-commit config if disabled."""
+    if "{{ cookiecutter.include_pre_commit }}" == "no":
+        _remove_file(project_root / ".pre-commit-config.yaml", "Removed .pre-commit-config.yaml")
+
+
+def _cleanup_documentation(project_root: Path):
+    """Remove documentation files based on configuration."""
+    if "{{ cookiecutter.include_documentation }}" == "no":
+        _remove_directory(project_root / "docs", "Removed docs/ directory")
+        _remove_file(project_root / "mint.json")
+    elif "{{ cookiecutter.documentation_format }}" != "mintlify":
+        _remove_file(project_root / "mint.json")
+        if (project_root / "docs").exists() and (project_root / "docs" / "getting-started").exists():
+            _remove_directory(project_root / "docs")
+
+
+def _cleanup_examples(project_root: Path):
+    """Remove examples directory if disabled."""
+    if "{{ cookiecutter.include_examples }}" == "no":
+        _remove_directory(project_root / "examples", "Removed examples/ directory")
+
+
+def _cleanup_observability(project_root: Path):
+    """Remove observability files based on level."""
+    observability = "{{ cookiecutter.observability_level }}"
+    if observability == "minimal":
+        _remove_directory(project_root / "grafana", "Removed grafana/ directory")
+        _remove_directory(project_root / "monitoring", "Removed monitoring/ directory")
+        _remove_file(project_root / "otel-collector-config.yaml")
+    elif observability == "basic":
+        _remove_directory(project_root / "grafana", "Removed grafana/ directory (basic observability)")
+
+
 def remove_files_by_condition():
     """Remove files based on cookiecutter configuration."""
     project_root = Path.cwd()
 
-    # MCP Transport cleanup
-    mcp_transports = "{{ cookiecutter.mcp_transports }}"
-    if mcp_transports != "all":
-        if "stdio" not in mcp_transports and (project_root / "mcp_server.py").exists():
-            (project_root / "mcp_server.py").unlink()
-            print("✓ Removed mcp_server.py (stdio transport not selected)")
-
-        if "http_sse" not in mcp_transports and (project_root / "mcp_server_http.py").exists():
-            (project_root / "mcp_server_http.py").unlink()
-            print("✓ Removed mcp_server_http.py (HTTP/SSE transport not selected)")
-
-        if "streamable_http" not in mcp_transports and (project_root / "mcp_server_streamable.py").exists():
-            (project_root / "mcp_server_streamable.py").unlink()
-            print("✓ Removed mcp_server_streamable.py (StreamableHTTP transport not selected)")
-
-    # Authentication cleanup
-    if "{{ cookiecutter.use_authentication }}" == "no":
-        if (project_root / "auth.py").exists():
-            (project_root / "auth.py").unlink()
-            print("✓ Removed auth.py (authentication disabled)")
-
-    # Authorization cleanup
-    if "{{ cookiecutter.use_authorization }}" == "no" or "{{ cookiecutter.authorization_backend }}" == "none":
-        if (project_root / "openfga_client.py").exists():
-            (project_root / "openfga_client.py").unlink()
-            print("✓ Removed openfga_client.py (authorization disabled)")
-        if (project_root / "setup_openfga.py").exists():
-            (project_root / "setup_openfga.py").unlink()
-            print("✓ Removed setup_openfga.py")
-        if (project_root / "example_openfga_usage.py").exists():
-            (project_root / "example_openfga_usage.py").unlink()
-
-    # Secrets manager cleanup
-    if "{{ cookiecutter.use_secrets_manager }}" == "no" or "{{ cookiecutter.secrets_backend }}" == "env_only":
-        if (project_root / "secrets_manager.py").exists():
-            (project_root / "secrets_manager.py").unlink()
-            print("✓ Removed secrets_manager.py (secrets manager disabled)")
-        if (project_root / "setup_infisical.py").exists():
-            (project_root / "setup_infisical.py").unlink()
-            print("✓ Removed setup_infisical.py")
-
-    # Kubernetes cleanup
-    if "{{ cookiecutter.include_kubernetes }}" == "no":
-        if (project_root / "kubernetes").exists():
-            shutil.rmtree(project_root / "kubernetes")
-            print("✓ Removed kubernetes/ directory")
-        if (project_root / "helm").exists():
-            shutil.rmtree(project_root / "helm")
-            print("✓ Removed helm/ directory")
-        if (project_root / "kustomize").exists():
-            shutil.rmtree(project_root / "kustomize")
-            print("✓ Removed kustomize/ directory")
-        if (project_root / "KUBERNETES_DEPLOYMENT.md").exists():
-            (project_root / "KUBERNETES_DEPLOYMENT.md").unlink()
-
-    elif "{{ cookiecutter.kubernetes_flavor }}" != "both":
-        flavor = "{{ cookiecutter.kubernetes_flavor }}"
-        if flavor != "helm" and (project_root / "helm").exists():
-            shutil.rmtree(project_root / "helm")
-            print("✓ Removed helm/ directory (not selected)")
-        if flavor != "kustomize" and (project_root / "kustomize").exists():
-            shutil.rmtree(project_root / "kustomize")
-            print("✓ Removed kustomize/ directory (not selected)")
-
-    # Docker cleanup
-    if "{{ cookiecutter.include_docker }}" == "no":
-        if (project_root / "Dockerfile").exists():
-            (project_root / "Dockerfile").unlink()
-            print("✓ Removed Dockerfile")
-        if (project_root / "docker-compose.yaml").exists():
-            (project_root / "docker-compose.yaml").unlink()
-            print("✓ Removed docker-compose.yaml")
-        if (project_root / ".dockerignore").exists():
-            (project_root / ".dockerignore").unlink()
-
-    # Cloud Run cleanup
-    if "{{ cookiecutter.include_cloudrun }}" == "no":
-        if (project_root / "cloudrun").exists():
-            shutil.rmtree(project_root / "cloudrun")
-            print("✓ Removed cloudrun/ directory")
-        if (project_root / "CLOUDRUN_DEPLOYMENT.md").exists():
-            (project_root / "CLOUDRUN_DEPLOYMENT.md").unlink()
-            print("✓ Removed CLOUDRUN_DEPLOYMENT.md")
-
-    # CI/CD cleanup
-    if "{{ cookiecutter.include_ci_cd }}" == "no":
-        if (project_root / ".github" / "workflows").exists():
-            shutil.rmtree(project_root / ".github" / "workflows")
-            print("✓ Removed .github/workflows/")
-        if (project_root / ".gitlab-ci.yml").exists():
-            (project_root / ".gitlab-ci.yml").unlink()
-
-    elif "{{ cookiecutter.ci_platform }}" == "github_actions":
-        if (project_root / ".gitlab-ci.yml").exists():
-            (project_root / ".gitlab-ci.yml").unlink()
-            print("✓ Removed .gitlab-ci.yml")
-
-    elif "{{ cookiecutter.ci_platform }}" == "gitlab_ci":
-        if (project_root / ".github" / "workflows").exists():
-            shutil.rmtree(project_root / ".github" / "workflows")
-            print("✓ Removed .github/workflows/")
-
-    # Pre-commit cleanup
-    if "{{ cookiecutter.include_pre_commit }}" == "no":
-        if (project_root / ".pre-commit-config.yaml").exists():
-            (project_root / ".pre-commit-config.yaml").unlink()
-            print("✓ Removed .pre-commit-config.yaml")
-
-    # Documentation cleanup
-    if "{{ cookiecutter.include_documentation }}" == "no":
-        if (project_root / "docs").exists():
-            shutil.rmtree(project_root / "docs")
-            print("✓ Removed docs/ directory")
-        if (project_root / "mint.json").exists():
-            (project_root / "mint.json").unlink()
-
-    elif "{{ cookiecutter.documentation_format }}" != "mintlify":
-        if (project_root / "mint.json").exists():
-            (project_root / "mint.json").unlink()
-        if (project_root / "docs").exists() and (project_root / "docs" / "getting-started").exists():
-            # Remove Mintlify-specific docs
-            shutil.rmtree(project_root / "docs")
-
-    # Examples cleanup
-    if "{{ cookiecutter.include_examples }}" == "no":
-        if (project_root / "examples").exists():
-            shutil.rmtree(project_root / "examples")
-            print("✓ Removed examples/ directory")
-
-    # Observability cleanup
-    observability = "{{ cookiecutter.observability_level }}"
-    if observability == "minimal":
-        if (project_root / "grafana").exists():
-            shutil.rmtree(project_root / "grafana")
-            print("✓ Removed grafana/ directory")
-        if (project_root / "monitoring").exists():
-            shutil.rmtree(project_root / "monitoring")
-            print("✓ Removed monitoring/ directory")
-        if (project_root / "otel-collector-config.yaml").exists():
-            (project_root / "otel-collector-config.yaml").unlink()
-
-    elif observability == "basic":
-        if (project_root / "grafana").exists():
-            shutil.rmtree(project_root / "grafana")
-            print("✓ Removed grafana/ directory (basic observability)")
+    _cleanup_mcp_transports(project_root)
+    _cleanup_authentication(project_root)
+    _cleanup_authorization(project_root)
+    _cleanup_secrets_manager(project_root)
+    _cleanup_kubernetes(project_root)
+    _cleanup_docker(project_root)
+    _cleanup_cloudrun(project_root)
+    _cleanup_ci_cd(project_root)
+    _cleanup_pre_commit(project_root)
+    _cleanup_documentation(project_root)
+    _cleanup_examples(project_root)
+    _cleanup_observability(project_root)
 
 
 def create_initial_git():

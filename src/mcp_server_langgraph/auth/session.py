@@ -9,8 +9,8 @@ Provides pluggable session storage backends with support for:
 - Concurrent session limits
 """
 
+import json
 import secrets
-import time
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -581,12 +581,19 @@ class RedisSessionStore(SessionStore):
                 return None
 
             # Convert Redis data to SessionData (Pydantic validates automatically)
+            # Parse metadata safely using json.loads instead of eval
+            metadata_str = data.get("metadata", "{}")
+            try:
+                metadata = json.loads(metadata_str) if metadata_str else {}
+            except (json.JSONDecodeError, TypeError):
+                metadata = {}
+
             session = SessionData(
                 session_id=data.get("session_id"),
                 user_id=data.get("user_id"),
                 username=data.get("username"),
                 roles=data.get("roles", "").split(",") if data.get("roles") else [],
-                metadata=eval(data.get("metadata", "{}")),  # Parse metadata
+                metadata=metadata,
                 created_at=data.get("created_at"),
                 last_accessed=data.get("last_accessed"),
                 expires_at=data.get("expires_at"),

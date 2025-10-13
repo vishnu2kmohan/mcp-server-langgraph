@@ -14,7 +14,7 @@ Note: Only required if processing Protected Health Information (PHI)
 import hashlib
 import hmac
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from pydantic import BaseModel, Field
 
@@ -133,8 +133,8 @@ class HIPAAControls:
             span.set_attribute("approver_id", approver_id)
             span.set_attribute("duration_hours", duration_hours)
 
-            # Validate request
-            request = EmergencyAccessRequest(
+            # Validate request (constructor validates fields)
+            EmergencyAccessRequest(
                 user_id=user_id,
                 reason=reason,
                 approver_id=approver_id,

@@ -5,7 +5,7 @@ Implements automatic logoff after period of inactivity.
 Required for HIPAA compliance when processing PHI.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Callable
 
 from fastapi import Request, Response

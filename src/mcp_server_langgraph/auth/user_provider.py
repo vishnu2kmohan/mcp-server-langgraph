@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 import jwt
 from pydantic import BaseModel, ConfigDict, Field
 
-from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig, KeycloakUser, sync_user_to_openfga
+from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig, sync_user_to_openfga
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 # ============================================================================
@@ -214,13 +214,23 @@ class InMemoryUserProvider(UserProvider):
     Maintains a static dictionary of users. NOT suitable for production.
     """
 
-    def __init__(self, secret_key: str = "your-secret-key-change-in-production"):
+    def __init__(self, secret_key: Optional[str] = None):
         """
         Initialize in-memory user provider
 
         Args:
-            secret_key: Secret key for JWT token signing
+            secret_key: Secret key for JWT token signing.
+                       Required for production use. Should be loaded from environment variables.
         """
+        if not secret_key:
+            # Use a random key for testing/development only
+            import secrets as secrets_module
+            secret_key = secrets_module.token_urlsafe(32)
+            logger.warning(
+                "No secret_key provided to InMemoryUserProvider. Using random key. "
+                "This is only suitable for testing/development. "
+                "In production, always provide a secure secret key via environment variables."
+            )
         self.secret_key = secret_key
 
         # User database (same as original AuthMiddleware)
@@ -383,11 +393,8 @@ class KeycloakUserProvider(UserProvider):
                 # Authenticate with Keycloak
                 tokens = await self.client.authenticate_user(username, password)
 
-                # Get user info from token or userinfo endpoint
-                access_token = tokens["access_token"]
-                userinfo = await self.client.get_userinfo(access_token)
-
                 # Get full user details for role sync
+                access_token = tokens["access_token"]
                 keycloak_user = await self.client.get_user_by_username(username)
 
                 if not keycloak_user:

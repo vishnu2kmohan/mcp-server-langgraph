@@ -16,7 +16,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from mcp_server_langgraph.auth.middleware import AuthMiddleware, require_auth
+from mcp_server_langgraph.auth.middleware import require_auth
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.core.compliance.data_deletion import DataDeletionService
 from mcp_server_langgraph.core.compliance.data_export import DataExportService

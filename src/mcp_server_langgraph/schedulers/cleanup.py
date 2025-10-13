@@ -5,7 +5,6 @@ Scheduled background jobs for data retention policy enforcement.
 Runs daily at configured time (default: 3 AM UTC).
 """
 
-import asyncio
 from datetime import datetime
 from typing import Optional
 

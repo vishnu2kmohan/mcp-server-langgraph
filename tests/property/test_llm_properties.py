@@ -151,8 +151,6 @@ class TestLLMFactoryProperties:
         formatted = factory._format_messages(messages)
 
         # Property: Role mapping is consistent
-        role_mapping = {"user": HumanMessage, "assistant": AIMessage, "system": SystemMessage}
-
         for original, formatted_msg in zip(messages, formatted):
             original_type = type(original).__name__
             expected_role = {

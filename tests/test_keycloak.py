@@ -515,7 +515,7 @@ class TestKeycloakClient:
             "emailVerified": True,
         }
 
-        with patch.object(client, "get_admin_token", return_value="admin-token") as mock_admin:
+        with patch.object(client, "get_admin_token", return_value="admin-token"):
             with patch.object(client, "_get_user_realm_roles", return_value=["user", "premium"]):
                 with patch.object(client, "_get_user_client_roles", return_value={"test-client": ["executor"]}):
                     with patch.object(client, "_get_user_groups", return_value=["/acme"]):

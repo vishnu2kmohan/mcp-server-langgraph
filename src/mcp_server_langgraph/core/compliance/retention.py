@@ -336,9 +336,8 @@ class DataRetentionService:
 
     def _get_next_cleanup_time(self) -> str:
         """Calculate next scheduled cleanup time"""
-        # Parse cron schedule (0 3 * * * = daily at 3 AM)
-        schedule = self.config.get("global", {}).get("cleanup_schedule", "0 3 * * *")
-        # For now, just return tomorrow at 3 AM
+        # Calculate next run at 3 AM (schedule: 0 3 * * *)
+        # Note: Full cron parsing could be added using croniter if needed
         next_run = datetime.utcnow().replace(hour=3, minute=0, second=0, microsecond=0)
         if next_run < datetime.utcnow():
             next_run += timedelta(days=1)
