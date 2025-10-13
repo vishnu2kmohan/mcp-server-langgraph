@@ -461,7 +461,8 @@ from mcp_server_langgraph.health.checks import app as health_app  # noqa: E402
 app.mount("/health", health_app)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point for console script"""
     logger.info(f"Starting MCP StreamableHTTP server on port {settings.get_secret('PORT', fallback='8000')}")
 
     uvicorn.run(
@@ -471,3 +472,7 @@ if __name__ == "__main__":
         log_level=settings.log_level.lower(),
         access_log=True,
     )
+
+
+if __name__ == "__main__":
+    main()

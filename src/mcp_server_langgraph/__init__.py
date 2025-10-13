@@ -5,7 +5,7 @@ A production-ready MCP (Model Context Protocol) server built with LangGraph,
 featuring multi-LLM support, fine-grained authorization, and comprehensive observability.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 # Auth exports
 from mcp_server_langgraph.auth.middleware import AuthMiddleware

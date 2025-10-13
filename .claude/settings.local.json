@@ -114,7 +114,22 @@
       "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false uv run python3 -m pytest tests/test_auth.py -m unit --tb=line -q)",
       "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 90 uv run python3 -m pytest -m unit --tb=no -q)",
       "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 90 uv run python3 -m pytest -m unit --tb=no --no-header)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(kubectl apply:*)",
+      "Bash(for:*)",
+      "Bash(helm lint:*)",
+      "Bash(helm template:*)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 90 uv run python3 -m pytest -m unit --tb=no --no-header -q)",
+      "Bash(while read f)",
+      "Bash(do if ! test -r \"$f\")",
+      "Bash(then echo \"Not readable: $f\")",
+      "Bash(if [ ! -f \"docs/$file.mdx\" ])",
+      "Bash([ ! -f \"docs/$file.md\" ])",
+      "Bash(then)",
+      "Bash(git describe:*)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 120 uv run python3 -m pytest -m unit --tb=line -q --no-header)",
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 120 uv run python3 -m pytest -m unit -v --tb=no)",
+      "Bash(make test-unit:*)"
     ],
     "deny": [],
     "ask": []
