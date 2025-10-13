@@ -13,7 +13,7 @@ mcp==1.1.2
 
 # Authentication
 PyJWT==2.10.1
-cryptography==42.0.2
+cryptography==46.0.2
 
 # OpenTelemetry Core
 opentelemetry-api==1.37.0
