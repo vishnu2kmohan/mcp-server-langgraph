@@ -68,22 +68,74 @@ spec:
           value: {{ .Values.config.environment | quote }}
         - name: LOG_LEVEL
           value: {{ .Values.config.logLevel | quote }}
+
+        # LLM Provider Configuration
+        - name: LLM_PROVIDER
+          value: {{ .Values.config.llmProvider | quote }}
         - name: MODEL_NAME
           value: {{ .Values.config.modelName | quote }}
         - name: MODEL_TEMPERATURE
           value: {{ .Values.config.modelTemperature | quote }}
         - name: MODEL_MAX_TOKENS
           value: {{ .Values.config.modelMaxTokens | quote }}
+        - name: MODEL_TIMEOUT
+          value: {{ .Values.config.modelTimeout | quote }}
+        - name: ENABLE_FALLBACK
+          value: {{ .Values.config.enableFallback | quote }}
+
+        # Agent Configuration
         - name: MAX_ITERATIONS
           value: {{ .Values.config.maxIterations | quote }}
         - name: ENABLE_CHECKPOINTING
           value: {{ .Values.config.enableCheckpointing | quote }}
+
+        # Observability Configuration
         - name: ENABLE_TRACING
           value: {{ .Values.config.enableTracing | quote }}
         - name: ENABLE_METRICS
           value: {{ .Values.config.enableMetrics | quote }}
         - name: ENABLE_CONSOLE_EXPORT
           value: {{ .Values.config.enableConsoleExport | quote }}
+        - name: OBSERVABILITY_BACKEND
+          value: {{ .Values.config.observabilityBackend | quote }}
+        - name: LANGSMITH_TRACING
+          value: {{ .Values.config.langsmithTracing | quote }}
+
+        # Authentication Configuration
+        - name: AUTH_PROVIDER
+          value: {{ .Values.config.authProvider | quote }}
+        - name: AUTH_MODE
+          value: {{ .Values.config.authMode | quote }}
+
+        # Keycloak Configuration
+        - name: KEYCLOAK_SERVER_URL
+          value: {{ .Values.config.keycloakServerUrl | quote }}
+        - name: KEYCLOAK_REALM
+          value: {{ .Values.config.keycloakRealm | quote }}
+        - name: KEYCLOAK_CLIENT_ID
+          value: {{ .Values.config.keycloakClientId | quote }}
+        - name: KEYCLOAK_VERIFY_SSL
+          value: {{ .Values.config.keycloakVerifySsl | quote }}
+        - name: KEYCLOAK_TIMEOUT
+          value: {{ .Values.config.keycloakTimeout | quote }}
+        - name: KEYCLOAK_HOSTNAME
+          value: {{ .Values.config.keycloakHostname | quote }}
+
+        # Session Management Configuration
+        - name: SESSION_BACKEND
+          value: {{ .Values.config.sessionBackend | quote }}
+        - name: REDIS_URL
+          value: {{ .Values.config.redisUrl | quote }}
+        - name: REDIS_SSL
+          value: {{ .Values.config.redisSsl | quote }}
+        - name: SESSION_TTL_SECONDS
+          value: {{ .Values.config.sessionTtlSeconds | quote }}
+        - name: SESSION_SLIDING_WINDOW
+          value: {{ .Values.config.sessionSlidingWindow | quote }}
+        - name: SESSION_MAX_CONCURRENT
+          value: {{ .Values.config.sessionMaxConcurrent | quote }}
+
+        # OpenFGA Configuration
         {{- if .Values.openfga.enabled }}
         - name: OPENFGA_API_URL
           value: "http://{{ .Release.Name }}-openfga:{{ .Values.openfga.service.port }}"
@@ -108,6 +160,47 @@ spec:
             secretKeyRef:
               name: {{ include "langgraph-agent.secretName" . }}
               key: openfga-model-id
+
+        # Keycloak Secrets
+        - name: KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: keycloak-client-secret
+
+        # Redis Session Management Secret
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: redis-password
+              optional: true
+
+        # LangSmith Observability (optional)
+        - name: LANGSMITH_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: langsmith-api-key
+              optional: true
+
+        # Google API Key (optional)
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: google-api-key
+              optional: true
+
+        # OpenAI API Key (optional)
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "langgraph-agent.secretName" . }}
+              key: openai-api-key
+              optional: true
+
+        # Secrets Management (optional)
         - name: INFISICAL_CLIENT_ID
           valueFrom:
             secretKeyRef:

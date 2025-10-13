@@ -643,7 +643,7 @@ jobs:
 ```yaml
 deploy-langgraph:
   stage: deploy
-  image: python:3.11
+  image: python:3.12
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - uvx langgraph-cli deploy my-agent-prod --tag production

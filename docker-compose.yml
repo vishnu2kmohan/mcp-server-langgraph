@@ -74,7 +74,7 @@ services:
 
   # OpenFGA - Fine-grained Authorization
   openfga:
-    image: openfga/openfga:latest
+    image: openfga/openfga:v1.5.0
     command: run
     environment:
       - OPENFGA_DATASTORE_ENGINE=memory
@@ -155,7 +155,7 @@ services:
 
   # OpenTelemetry Collector
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
+    image: otel/opentelemetry-collector-contrib:0.91.0
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./monitoring/otel-collector/otel-collector.yaml:/etc/otel-collector-config.yaml
@@ -170,7 +170,7 @@ services:
 
   # Jaeger for tracing visualization
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.53.0
     ports:
       - "16686:16686" # Jaeger UI
       - "14250:14250" # model.proto
@@ -181,7 +181,7 @@ services:
 
   # Prometheus for metrics
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.48.0
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -195,7 +195,7 @@ services:
 
   # Grafana for visualization
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     ports:
       - "3000:3000"
     environment:

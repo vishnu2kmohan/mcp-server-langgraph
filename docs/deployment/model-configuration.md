@@ -1,0 +1,413 @@
+# Model Configuration Strategy
+
+This document explains the LLM model configuration strategy across different deployment environments.
+
+## Overview
+
+The codebase supports multiple LLM providers through LiteLLM, including:
+- **Google** (Gemini models)
+- **Anthropic** (Claude models)
+- **OpenAI** (GPT models)
+- **Azure OpenAI**
+- **AWS Bedrock**
+- **Ollama** (local models)
+
+Different environments are configured with different default models based on cost, performance, and use case requirements.
+
+---
+
+## Environment-Specific Defaults
+
+### Development (Docker Compose, Local)
+
+**Default Configuration**:
+```bash
+LLM_PROVIDER=google
+MODEL_NAME=gemini-2.5-flash-002
+MODEL_TEMPERATURE=0.7
+MODEL_MAX_TOKENS=8192
+MODEL_TIMEOUT=60
+ENABLE_FALLBACK=true
+```
+
+**Rationale**:
+- **Fast Iterations**: Gemini Flash has low latency (~1-2s response time)
+- **Low Cost**: ~$0.075 per 1M input tokens, ~$0.30 per 1M output tokens
+- **Good Quality**: Sufficient for development and testing
+- **High Quota**: Generous free tier and rate limits
+
+**Use Cases**:
+- Local development
+- Unit/integration testing
+- Rapid prototyping
+- CI/CD pipeline tests
+
+---
+
+### Staging (Kubernetes Staging)
+
+**Default Configuration**:
+```bash
+LLM_PROVIDER=anthropic
+MODEL_NAME=claude-3-5-sonnet-20241022
+MODEL_TEMPERATURE=0.7
+MODEL_MAX_TOKENS=4096
+MODEL_TIMEOUT=60
+ENABLE_FALLBACK=true
+```
+
+**Rationale**:
+- **Production Parity**: Same model as production
+- **Quality Validation**: Test with production-grade model
+- **Cost Awareness**: Monitor costs before production
+- **Behavior Validation**: Ensure responses match production
+
+**Use Cases**:
+- Pre-production testing
+- User acceptance testing (UAT)
+- Performance benchmarking
+- Load testing
+
+---
+
+### Production (Kubernetes Production, Helm)
+
+**Default Configuration**:
+```bash
+LLM_PROVIDER=anthropic
+MODEL_NAME=claude-3-5-sonnet-20241022
+MODEL_TEMPERATURE=0.7
+MODEL_MAX_TOKENS=4096
+MODEL_TIMEOUT=60
+ENABLE_FALLBACK=true
+```
+
+**Rationale**:
+- **Highest Quality**: Claude 3.5 Sonnet offers superior reasoning
+- **Reliability**: Anthropic's enterprise SLA and uptime
+- **Safety**: Strong Constitutional AI safety features
+- **Compliance**: Better content moderation for production
+
+**Cost Considerations**:
+- Input: $3.00 per 1M tokens
+- Output: $15.00 per 1M tokens
+- Typical request: ~1000 input tokens, ~500 output tokens
+- Cost per request: ~$0.0105
+
+**Use Cases**:
+- Customer-facing applications
+- Production workloads
+- High-quality content generation
+- Mission-critical tasks
+
+---
+
+## Overriding Default Configuration
+
+### Method 1: Environment Variables
+
+Override for a specific deployment:
+
+```bash
+# Use OpenAI GPT-4
+export LLM_PROVIDER=openai
+export MODEL_NAME=gpt-4o
+export OPENAI_API_KEY=sk-...
+
+# Use Google Gemini Pro
+export LLM_PROVIDER=google
+export MODEL_NAME=gemini-2.5-pro
+export GOOGLE_API_KEY=...
+```
+
+### Method 2: Helm Values Override
+
+For production Helm deployments:
+
+```bash
+helm upgrade --install langgraph-agent ./deployments/helm/langgraph-agent \
+  --set config.llmProvider=openai \
+  --set config.modelName=gpt-4o \
+  --set secrets.openaiApiKey=$OPENAI_API_KEY
+```
+
+### Method 3: Kustomize Patch
+
+For Kustomize deployments, create a patch file:
+
+```yaml
+# deployments/kustomize/overlays/custom/configmap-patch.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: langgraph-agent-config
+data:
+  llm_provider: "openai"
+  model_name: "gpt-4o"
+  model_temperature: "0.8"
+  model_max_tokens: "8192"
+```
+
+### Method 4: .env File (Local Development)
+
+```bash
+# .env
+LLM_PROVIDER=ollama
+MODEL_NAME=llama3.1:70b
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+---
+
+## Fallback Configuration
+
+### Default Fallback Chain
+
+When `ENABLE_FALLBACK=true`, the system attempts models in this order:
+
+1. **Primary**: Configured `MODEL_NAME`
+2. **Fallback 1**: `gemini-2.5-pro` (Google)
+3. **Fallback 2**: `claude-3-5-sonnet-20241022` (Anthropic)
+4. **Fallback 3**: `gpt-4o` (OpenAI)
+
+### Custom Fallback Chain
+
+Override via environment variable:
+
+```bash
+FALLBACK_MODELS='["claude-3-5-sonnet-20241022","gpt-4o","gemini-2.5-pro"]'
+```
+
+### Disabling Fallback
+
+```bash
+ENABLE_FALLBACK=false
+```
+
+**Warning**: Disabling fallback means service failures if primary model is unavailable.
+
+---
+
+## Cost Comparison
+
+### Input Tokens (per 1M tokens)
+
+| Provider | Model | Cost | Relative |
+|----------|-------|------|----------|
+| Google | gemini-2.5-flash-002 | $0.075 | 1x (baseline) |
+| Google | gemini-2.5-pro | $1.25 | 17x |
+| Anthropic | claude-3-5-sonnet-20241022 | $3.00 | 40x |
+| OpenAI | gpt-4o | $2.50 | 33x |
+
+### Output Tokens (per 1M tokens)
+
+| Provider | Model | Cost | Relative |
+|----------|-------|------|----------|
+| Google | gemini-2.5-flash-002 | $0.30 | 1x (baseline) |
+| Google | gemini-2.5-pro | $5.00 | 17x |
+| Anthropic | claude-3-5-sonnet-20241022 | $15.00 | 50x |
+| OpenAI | gpt-4o | $10.00 | 33x |
+
+### Typical Request Cost (1000 input + 500 output tokens)
+
+| Model | Total Cost | Monthly (100K requests) |
+|-------|-----------|------------------------|
+| gemini-2.5-flash-002 | $0.00023 | $23 |
+| gemini-2.5-pro | $0.00375 | $375 |
+| claude-3-5-sonnet-20241022 | $0.0105 | $1,050 |
+| gpt-4o | $0.0075 | $750 |
+
+**Recommendation**: Use Gemini Flash for development, Claude for production quality.
+
+---
+
+## Performance Characteristics
+
+### Latency (p95, typical request)
+
+| Model | Latency | Use Case |
+|-------|---------|----------|
+| gemini-2.5-flash-002 | ~1.5s | Interactive applications |
+| gemini-2.5-pro | ~3s | Background processing |
+| claude-3-5-sonnet-20241022 | ~4s | Quality-critical tasks |
+| gpt-4o | ~3.5s | Balanced performance |
+
+### Quality (Subjective, 1-10 scale)
+
+| Model | Reasoning | Creativity | Code Gen | Safety |
+|-------|-----------|------------|----------|--------|
+| gemini-2.5-flash-002 | 7 | 7 | 8 | 8 |
+| gemini-2.5-pro | 9 | 8 | 9 | 9 |
+| claude-3-5-sonnet-20241022 | 10 | 9 | 10 | 10 |
+| gpt-4o | 9 | 10 | 9 | 8 |
+
+---
+
+## Model Selection Guidelines
+
+### Choose Gemini Flash When:
+- ✅ Cost is a primary concern
+- ✅ Need fast response times (<2s)
+- ✅ Development/testing environment
+- ✅ High request volume expected
+- ✅ Quality requirements are moderate
+
+### Choose Gemini Pro When:
+- ✅ Need better reasoning than Flash
+- ✅ Can tolerate slightly higher cost
+- ✅ Prefer Google's ecosystem
+- ✅ Need strong multilingual support
+
+### Choose Claude 3.5 Sonnet When:
+- ✅ **Quality is paramount** ⭐
+- ✅ Complex reasoning required
+- ✅ Code generation is primary use case
+- ✅ Safety/content moderation critical
+- ✅ Production customer-facing deployment
+
+### Choose GPT-4o When:
+- ✅ Need creative content generation
+- ✅ Existing OpenAI integration
+- ✅ Require vision capabilities
+- ✅ Balance of cost and quality
+
+### Choose Ollama (Local) When:
+- ✅ Data privacy is critical (on-premise)
+- ✅ No internet connectivity
+- ✅ Zero API costs desired
+- ✅ Can provide GPU infrastructure
+- ✅ Full control over model weights
+
+---
+
+## Monitoring and Optimization
+
+### Metrics to Track
+
+1. **Cost Metrics**:
+   - Total API spend per day/month
+   - Cost per request
+   - Token usage (input/output separately)
+
+2. **Performance Metrics**:
+   - Average response latency
+   - p95/p99 latency
+   - Timeout rate
+   - Fallback usage rate
+
+3. **Quality Metrics**:
+   - User satisfaction scores
+   - Retry/regeneration rate
+   - Error rate per model
+
+### Cost Optimization Strategies
+
+1. **Prompt Optimization**:
+   - Reduce unnecessary context
+   - Use more concise system prompts
+   - Implement prompt caching (if supported)
+
+2. **Smart Routing**:
+   - Simple queries → Gemini Flash
+   - Complex queries → Claude Sonnet
+   - Code generation → Claude Sonnet or GPT-4o
+
+3. **Batching**:
+   - Batch non-urgent requests
+   - Process during off-peak hours
+   - Use asynchronous processing
+
+4. **Caching**:
+   - Cache common responses
+   - Implement semantic deduplication
+   - Use Redis for response cache
+
+---
+
+## Security Considerations
+
+### API Key Management
+
+**❌ Never**:
+- Commit API keys to git
+- Hardcode in source code
+- Share keys across environments
+- Use the same key for dev and prod
+
+**✅ Always**:
+- Use environment variables or secrets manager
+- Rotate keys regularly (quarterly minimum)
+- Use separate keys per environment
+- Monitor for key exposure in logs
+
+### Rate Limiting
+
+Configure rate limits per environment:
+
+```yaml
+# Development
+LLM_RATE_LIMIT_RPM: 60  # 60 requests per minute
+
+# Staging
+LLM_RATE_LIMIT_RPM: 300
+
+# Production
+LLM_RATE_LIMIT_RPM: 1000
+```
+
+---
+
+## Troubleshooting
+
+### Model Returns 401 Unauthorized
+
+**Cause**: Invalid or expired API key
+
+**Solution**:
+```bash
+# Verify API key is set
+echo $ANTHROPIC_API_KEY | head -c 10
+
+# Test with curl
+curl https://api.anthropic.com/v1/messages \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01"
+```
+
+### Fallback Chain Not Working
+
+**Cause**: Missing API keys for fallback models
+
+**Solution**: Ensure ALL fallback models have API keys configured:
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+export OPENAI_API_KEY=sk-...
+export GOOGLE_API_KEY=...
+```
+
+### High Latency / Timeouts
+
+**Cause**: Model is overloaded or timeout too short
+
+**Solutions**:
+1. Increase timeout: `MODEL_TIMEOUT=120`
+2. Switch to faster model: `MODEL_NAME=gemini-2.5-flash-002`
+3. Enable fallback: `ENABLE_FALLBACK=true`
+4. Implement request queuing and retry logic
+
+---
+
+## References
+
+- [LiteLLM Documentation](https://docs.litellm.ai/)
+- [Google Gemini Pricing](https://ai.google.dev/pricing)
+- [Anthropic Claude Pricing](https://www.anthropic.com/pricing)
+- [OpenAI Pricing](https://openai.com/api/pricing/)
+- [Feature Flags Documentation](../adr/0006-feature-flags.md)
+- [Deployment Guide](deployments/README.md)
+
+---
+
+**Last Updated**: 2025-10-13
+**Document Version**: 1.0
+**Maintainer**: Platform Team

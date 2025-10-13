@@ -6,13 +6,50 @@ metadata:
   labels:
     {{- include "langgraph-agent.labels" . | nindent 4 }}
 data:
+  # Service Configuration
   environment: {{ .Values.config.environment | quote }}
   log_level: {{ .Values.config.logLevel | quote }}
+
+  # LLM Provider Configuration
+  llm_provider: {{ .Values.config.llmProvider | quote }}
   model_name: {{ .Values.config.modelName | quote }}
   model_temperature: {{ .Values.config.modelTemperature | quote }}
   model_max_tokens: {{ .Values.config.modelMaxTokens | quote }}
+  model_timeout: {{ .Values.config.modelTimeout | quote }}
+  enable_fallback: {{ .Values.config.enableFallback | quote }}
+
+  # Agent Configuration
   max_iterations: {{ .Values.config.maxIterations | quote }}
   enable_checkpointing: {{ .Values.config.enableCheckpointing | quote }}
+
+  # Observability Configuration
   enable_tracing: {{ .Values.config.enableTracing | quote }}
   enable_metrics: {{ .Values.config.enableMetrics | quote }}
   enable_console_export: {{ .Values.config.enableConsoleExport | quote }}
+  observability_backend: {{ .Values.config.observabilityBackend | quote }}
+  langsmith_tracing: {{ .Values.config.langsmithTracing | quote }}
+
+  # Authentication Configuration
+  auth_provider: {{ .Values.config.authProvider | quote }}
+  auth_mode: {{ .Values.config.authMode | quote }}
+
+  # Keycloak Configuration
+  keycloak_server_url: {{ .Values.config.keycloakServerUrl | quote }}
+  keycloak_realm: {{ .Values.config.keycloakRealm | quote }}
+  keycloak_client_id: {{ .Values.config.keycloakClientId | quote }}
+  keycloak_verify_ssl: {{ .Values.config.keycloakVerifySsl | quote }}
+  keycloak_timeout: {{ .Values.config.keycloakTimeout | quote }}
+  keycloak_hostname: {{ .Values.config.keycloakHostname | quote }}
+
+  # Session Management Configuration
+  session_backend: {{ .Values.config.sessionBackend | quote }}
+  redis_url: {{ .Values.config.redisUrl | quote }}
+  redis_ssl: {{ .Values.config.redisSsl | quote }}
+  session_ttl_seconds: {{ .Values.config.sessionTtlSeconds | quote }}
+  session_sliding_window: {{ .Values.config.sessionSlidingWindow | quote }}
+  session_max_concurrent: {{ .Values.config.sessionMaxConcurrent | quote }}
+
+  # OpenFGA Configuration
+  {{- if .Values.openfga.enabled }}
+  openfga_api_url: "http://{{ .Release.Name }}-openfga:{{ .Values.openfga.service.port }}"
+  {{- end }}

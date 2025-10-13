@@ -70,7 +70,7 @@ pip-audit
 - [ ] **Docker Image Hardening**
   - [ ] Multi-stage build implemented
   - [ ] Non-root user (UID 1000)
-  - [ ] Minimal base image (python:3.11-slim)
+  - [ ] Minimal base image (python:3.12-slim)
   - [ ] No unnecessary packages installed
   - [ ] Layer caching optimized
   - [ ] Image vulnerability scanning enabled

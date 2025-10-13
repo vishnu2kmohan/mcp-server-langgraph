@@ -24,7 +24,7 @@ stages:
 
 test:
   stage: test
-  image: python:3.11-slim
+  image: python:3.12-slim
   script:
     - pip install -r requirements.txt
     - pip install pytest pytest-cov pytest-asyncio
@@ -38,7 +38,7 @@ test:
 
 lint:
   stage: test
-  image: python:3.11-slim
+  image: python:3.12-slim
   script:
     - pip install ruff black mypy
     - ruff check .

@@ -215,7 +215,7 @@ orbs:
 jobs:
   test:
     docker:
-      - image: cimg/python:3.11
+      - image: cimg/python:3.12
     steps:
       - checkout
       - python/install-packages:
@@ -226,7 +226,7 @@ jobs:
 
   deploy-staging:
     docker:
-      - image: cimg/python:3.11
+      - image: cimg/python:3.12
     steps:
       - checkout
       - run:
@@ -244,7 +244,7 @@ jobs:
 
   deploy-production:
     docker:
-      - image: cimg/python:3.11
+      - image: cimg/python:3.12
     steps:
       - checkout
       - run:

@@ -284,7 +284,7 @@ See complete workflow in `.github/workflows/deploy-langgraph-platform.yml`.
 ```yaml .gitlab-ci.yml
 deploy:
   stage: deploy
-  image: python:3.11
+  image: python:3.12
   script:
     - pip install langgraph-cli
     - langgraph deploy my-agent-prod --tag production

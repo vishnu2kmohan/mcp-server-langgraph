@@ -69,7 +69,7 @@ if self.jwt_secret_key == "change-this-in-production" and self.environment == "p
 **Dockerfile Best Practices**
 - ✅ Multi-stage build reduces attack surface
 - ✅ Non-root user (UID 1000) configured
-- ✅ Minimal base image (`python:3.11-slim`)
+- ✅ Minimal base image (`python:3.12-slim`)
 - ✅ No unnecessary packages
 - ✅ Health check implemented
 - ✅ Layer caching optimized
