@@ -10,13 +10,8 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - "maintainers"
-    assignees:
-      - "maintainers"
     labels:
       - "dependencies"
-      - "python"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -83,11 +78,8 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "maintainers"
     labels:
       - "dependencies"
-      - "github-actions"
     commit-message:
       prefix: "ci"
     # Group GitHub Actions by category
@@ -117,10 +109,7 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "maintainers"
     labels:
       - "dependencies"
-      - "docker"
     commit-message:
       prefix: "build"
