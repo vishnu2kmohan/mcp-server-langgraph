@@ -163,7 +163,11 @@
       "Bash(git restore:*)",
       "Bash(if [ -f \"docs/$file.mdx\" ])",
       "Bash(elif [ -f \"docs/$file.md\" ])",
-      "Bash(else)"
+      "Bash(else)",
+      "Bash(do echo \"=== $tag ===\")",
+      "Bash(git for-each-ref:*)",
+      "Bash(git -C /home/codey/Projects/vishnu2kmohan/langgraph_mcp_agent status --short)",
+      "Bash(make:*)"
     ],
     "deny": [],
     "ask": []

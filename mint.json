@@ -37,6 +37,10 @@
     {
       "name": "Guides",
       "url": "guides"
+    },
+    {
+      "name": "Architecture",
+      "url": "architecture"
     }
   ],
   "anchors": [
@@ -51,9 +55,9 @@
       "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions"
     },
     {
-      "name": "Blog",
+      "name": "CHANGELOG",
       "icon": "newspaper",
-      "url": "https://yourdomain.com/blog"
+      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/CHANGELOG.md"
     }
   ],
   "navigation": [
@@ -176,15 +180,61 @@
         "advanced/development-setup",
         "advanced/troubleshooting"
       ]
+    },
+    {
+      "group": "Architecture Decision Records",
+      "pages": [
+        "architecture/overview"
+      ]
+    },
+    {
+      "group": "Core Architecture (ADRs 1-5)",
+      "pages": [
+        "architecture/adr-0001-llm-multi-provider",
+        "architecture/adr-0002-openfga-authorization",
+        "architecture/adr-0003-dual-observability",
+        "architecture/adr-0004-mcp-streamable-http",
+        "architecture/adr-0005-pydantic-ai-integration"
+      ]
+    },
+    {
+      "group": "Authentication & Sessions (ADRs 6-7)",
+      "pages": [
+        "architecture/adr-0006-session-storage-architecture",
+        "architecture/adr-0007-authentication-provider-pattern"
+      ]
+    },
+    {
+      "group": "Infrastructure (ADRs 8-9, 13, 20-21)",
+      "pages": [
+        "architecture/adr-0008-infisical-secrets-management",
+        "architecture/adr-0009-feature-flag-system",
+        "architecture/adr-0013-multi-deployment-target-strategy",
+        "architecture/adr-0020-dual-mcp-transport-protocol",
+        "architecture/adr-0021-cicd-pipeline-strategy"
+      ]
+    },
+    {
+      "group": "Development & Quality (ADRs 10, 14-19)",
+      "pages": [
+        "architecture/adr-0010-langgraph-functional-api",
+        "architecture/adr-0014-pydantic-type-safety",
+        "architecture/adr-0015-memory-checkpointing",
+        "architecture/adr-0016-property-based-testing-strategy",
+        "architecture/adr-0017-error-handling-strategy",
+        "architecture/adr-0018-semantic-versioning-strategy",
+        "architecture/adr-0019-async-first-architecture"
+      ]
+    },
+    {
+      "group": "Compliance (ADRs 11-12)",
+      "pages": [
+        "architecture/adr-0011-cookiecutter-template-strategy",
+        "architecture/adr-0012-compliance-framework-integration"
+      ]
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/vishnu2kmohan/mcp_server_langgraph",
-    "twitter": "https://twitter.com/yourhandle"
-  },
-  "analytics": {
-    "ga4": {
-      "measurementId": "G-XXXXXXXXXX"
-    }
+    "github": "https://github.com/vishnu2kmohan/mcp_server_langgraph"
   }
 }

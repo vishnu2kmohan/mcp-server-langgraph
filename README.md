@@ -129,7 +129,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - **Service Mesh**: Compatible with Istio, Linkerd, and other service meshes
 
 ### 📚 Documentation & Architecture
-- **Architecture Decision Records (ADRs)**: 5+ documented design decisions ([docs/adr/](docs/adr/))
+- **Architecture Decision Records (ADRs)**: 21 documented design decisions ([docs/adr/](docs/adr/))
 - **Comprehensive Guides**: Testing, typing, mutation testing, deployment
 - **API Documentation**: Interactive OpenAPI/Swagger UI
 
@@ -152,11 +152,39 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - **[Keycloak Integration](docs/integrations/keycloak.md)** - Enterprise SSO setup and configuration
 
 ### 📝 Architecture Decision Records (ADRs)
+
+See [docs/adr/README.md](docs/adr/README.md) for complete index of all 21 ADRs.
+
+**Core Architecture**:
 - [0001: Multi-Provider LLM Support (LiteLLM)](docs/adr/0001-llm-multi-provider.md)
 - [0002: Fine-Grained Authorization (OpenFGA)](docs/adr/0002-openfga-authorization.md)
 - [0003: Dual Observability Strategy](docs/adr/0003-dual-observability.md)
 - [0004: MCP Transport Selection (StreamableHTTP)](docs/adr/0004-mcp-streamable-http.md)
 - [0005: Type-Safe Responses (Pydantic AI)](docs/adr/0005-pydantic-ai-integration.md)
+
+**Authentication & Sessions**:
+- [0006: Pluggable Session Storage Architecture](docs/adr/0006-session-storage-architecture.md)
+- [0007: Pluggable Authentication Provider Pattern](docs/adr/0007-authentication-provider-pattern.md)
+
+**Infrastructure & Deployment**:
+- [0008: Infisical for Secrets Management](docs/adr/0008-infisical-secrets-management.md)
+- [0009: Feature Flag System](docs/adr/0009-feature-flag-system.md)
+- [0013: Multi-Deployment Target Strategy](docs/adr/0013-multi-deployment-target-strategy.md)
+- [0020: Dual MCP Transport Protocol](docs/adr/0020-dual-mcp-transport-protocol.md)
+- [0021: CI/CD Pipeline Strategy](docs/adr/0021-cicd-pipeline-strategy.md)
+
+**Development & Quality**:
+- [0010: LangGraph Functional API](docs/adr/0010-langgraph-functional-api.md)
+- [0014: Pydantic Type Safety Strategy](docs/adr/0014-pydantic-type-safety.md)
+- [0015: Memory Checkpointing](docs/adr/0015-memory-checkpointing.md)
+- [0016: Property-Based Testing](docs/adr/0016-property-based-testing-strategy.md)
+- [0017: Error Handling Strategy](docs/adr/0017-error-handling-strategy.md)
+- [0018: Semantic Versioning Strategy](docs/adr/0018-semantic-versioning-strategy.md)
+- [0019: Async-First Architecture](docs/adr/0019-async-first-architecture.md)
+
+**Compliance**:
+- [0011: Cookiecutter Template Strategy](docs/adr/0011-cookiecutter-template-strategy.md)
+- [0012: Built-In Compliance Framework](docs/adr/0012-compliance-framework-integration.md)
 
 ## Architecture
 
