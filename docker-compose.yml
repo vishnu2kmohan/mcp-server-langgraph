@@ -51,13 +51,9 @@ services:
       # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      # Mount code for hot reload during development
-      - ./src:/app/src:ro
-      - ./config.py:/app/config.py:ro
-      - ./agent.py:/app/agent.py:ro
-      - ./llm_factory.py:/app/llm_factory.py:ro
-      - ./observability.py:/app/observability.py:ro
-      - ./langsmith_config.py:/app/langsmith_config.py:ro
+      # Mount source code for hot reload during development
+      - ./src/mcp_server_langgraph:/app/src/mcp_server_langgraph:ro
+      - ./config/role_mappings.yaml:/app/config/role_mappings.yaml:ro
     networks:
       - observability
     depends_on:

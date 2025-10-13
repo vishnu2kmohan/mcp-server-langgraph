@@ -170,14 +170,45 @@ config:
   serviceName: "mcp-server-langgraph"
   environment: "production"
   logLevel: "INFO"
+
+  # LLM Configuration
+  llmProvider: "anthropic"  # google, anthropic, openai, azure, bedrock, ollama
   modelName: "claude-3-5-sonnet-20241022"
   modelTemperature: "0.7"
   modelMaxTokens: "4096"
+  modelTimeout: "60"
+  enableFallback: "true"
+
+  # Agent Configuration
   maxIterations: "10"
   enableCheckpointing: "true"
+
+  # Observability
   enableTracing: "true"
   enableMetrics: "true"
   enableConsoleExport: "false"
+  observabilityBackend: "opentelemetry"  # opentelemetry, langsmith, both
+  langsmithTracing: "false"
+
+  # Authentication
+  authProvider: "keycloak"  # inmemory, keycloak
+  authMode: "token"  # token (JWT), session
+
+  # Keycloak Configuration
+  keycloakServerUrl: "http://keycloak:8080"
+  keycloakRealm: "langgraph-agent"
+  keycloakClientId: "langgraph-client"
+  keycloakVerifySsl: "true"
+  keycloakTimeout: "30"
+  keycloakHostname: "langgraph-agent.example.com"
+
+  # Session Management
+  sessionBackend: "redis"  # memory, redis
+  redisUrl: "redis://redis-session:6379/0"
+  redisSsl: "false"
+  sessionTtlSeconds: "86400"  # 24 hours
+  sessionSlidingWindow: "true"
+  sessionMaxConcurrent: "5"
 
 # Secrets configuration
 secrets:
@@ -186,13 +217,36 @@ secrets:
 
   # Or provide secrets here (NOT recommended for production)
   # Use External Secrets Operator or cloud-native secret management instead
+
+  # LLM Provider API Keys
   anthropicApiKey: ""
+  googleApiKey: ""
+  openaiApiKey: ""
+
+  # Authentication & Authorization
   jwtSecretKey: ""
   openfgaStoreId: ""
   openfgaModelId: ""
+
+  # Keycloak
+  keycloakClientSecret: ""
+  keycloakAdminUsername: "admin"
+  keycloakAdminPassword: ""
+
+  # PostgreSQL
+  postgresUsername: "postgres"
+  postgresPassword: ""
+
+  # Redis
+  redisPassword: ""
+
+  # Secrets Management (optional)
   infisicalClientId: ""
   infisicalClientSecret: ""
   infisicalProjectId: ""
+
+  # LangSmith (optional)
+  langsmithApiKey: ""
 
 # External Secrets Operator integration
 externalSecrets:
@@ -224,14 +278,21 @@ openfga:
     type: ClusterIP
     port: 8080
 
-# PostgreSQL dependency
+# PostgreSQL dependency (shared by OpenFGA and Keycloak)
 postgresql:
   enabled: true
   auth:
-    username: openfga
-    password: openfga
-    database: openfga
+    username: postgres
+    password: postgres
+    # Multiple databases will be created via initdb scripts
+    database: postgres
   primary:
+    initdb:
+      scripts:
+        init-databases.sql: |
+          -- Create separate databases for OpenFGA and Keycloak
+          CREATE DATABASE openfga;
+          CREATE DATABASE keycloak;
     persistence:
       enabled: true
       size: 10Gi
@@ -242,6 +303,53 @@ postgresql:
       limits:
         cpu: 1000m
         memory: 1Gi
+
+# Redis dependency (for session management)
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    password: redis
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+# Keycloak dependency (for SSO/authentication)
+keycloak:
+  enabled: true
+  replicas: 2
+  postgresql:
+    enabled: false  # Use shared PostgreSQL instance above
+  externalDatabase:
+    host: postgresql
+    port: 5432
+    database: keycloak
+    user: postgres
+    existingSecret: ""
+    existingSecretPasswordKey: postgres-password
+  auth:
+    adminUser: admin
+    existingSecret: ""
+    passwordSecretKey: keycloak-admin-password
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
 
 # Service Mesh (Istio/Linkerd)
 serviceMesh:

@@ -35,7 +35,7 @@ spec:
         seccompProfile:
           type: RuntimeDefault
 
-      # Init container to wait for dependencies
+      # Init containers to wait for dependencies
       initContainers:
       - name: wait-for-openfga
         image: busybox:1.36
@@ -47,6 +47,26 @@ spec:
             sleep 2
           done
           echo "OpenFGA is ready!"
+      - name: wait-for-keycloak
+        image: busybox:1.36
+        command: ['sh', '-c']
+        args:
+        - |
+          until nc -z keycloak 8080; do
+            echo "Waiting for Keycloak..."
+            sleep 2
+          done
+          echo "Keycloak is ready!"
+      - name: wait-for-redis
+        image: busybox:1.36
+        command: ['sh', '-c']
+        args:
+        - |
+          until nc -z redis-session 6379; do
+            echo "Waiting for Redis session store..."
+            sleep 2
+          done
+          echo "Redis is ready!"
 
       containers:
       - name: langgraph-agent
@@ -59,6 +79,7 @@ spec:
           protocol: TCP
 
         env:
+        # Service Configuration
         - name: SERVICE_NAME
           value: "mcp-server-langgraph"
         - name: ENVIRONMENT
@@ -66,22 +87,191 @@ spec:
             configMapKeyRef:
               name: langgraph-agent-config
               key: environment
-        - name: OPENFGA_API_URL
-          value: "http://openfga:8080"
-        - name: OTLP_ENDPOINT
-          value: "http://otel-collector:4317"
         - name: LOG_LEVEL
           valueFrom:
             configMapKeyRef:
               name: langgraph-agent-config
               key: log_level
 
-        # Secrets from Kubernetes Secret or External Secrets Operator
+        # LLM Provider Configuration
+        - name: LLM_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: llm_provider
+        - name: MODEL_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: model_name
+        - name: MODEL_TEMPERATURE
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: model_temperature
+        - name: MODEL_MAX_TOKENS
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: model_max_tokens
+        - name: MODEL_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: model_timeout
+        - name: ENABLE_FALLBACK
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: enable_fallback
+
+        # Agent Configuration
+        - name: MAX_ITERATIONS
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: max_iterations
+        - name: ENABLE_CHECKPOINTING
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: enable_checkpointing
+
+        # Observability Configuration
+        - name: ENABLE_TRACING
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: enable_tracing
+        - name: ENABLE_METRICS
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: enable_metrics
+        - name: ENABLE_CONSOLE_EXPORT
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: enable_console_export
+        - name: OBSERVABILITY_BACKEND
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: observability_backend
+        - name: LANGSMITH_TRACING
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: langsmith_tracing
+        - name: OTLP_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: otlp_endpoint
+
+        # Authentication Configuration
+        - name: AUTH_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: auth_provider
+        - name: AUTH_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: auth_mode
+
+        # Keycloak Configuration
+        - name: KEYCLOAK_SERVER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: keycloak_server_url
+        - name: KEYCLOAK_REALM
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: keycloak_realm
+        - name: KEYCLOAK_CLIENT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: keycloak_client_id
+        - name: KEYCLOAK_VERIFY_SSL
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: keycloak_verify_ssl
+        - name: KEYCLOAK_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: keycloak_timeout
+        - name: KEYCLOAK_HOSTNAME
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: keycloak_hostname
+
+        # Session Management Configuration
+        - name: SESSION_BACKEND
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: session_backend
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: redis_url
+        - name: REDIS_SSL
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: redis_ssl
+        - name: SESSION_TTL_SECONDS
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: session_ttl_seconds
+        - name: SESSION_SLIDING_WINDOW
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: session_sliding_window
+        - name: SESSION_MAX_CONCURRENT
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: session_max_concurrent
+
+        # OpenFGA Configuration
+        - name: OPENFGA_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: langgraph-agent-config
+              key: openfga_api_url
+
+        # LLM Provider API Keys (Secrets)
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
               name: langgraph-agent-secrets
               key: anthropic-api-key
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: langgraph-agent-secrets
+              key: google-api-key
+              optional: true
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: langgraph-agent-secrets
+              key: openai-api-key
+              optional: true
+
+        # Authentication & Authorization Secrets
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
@@ -98,7 +288,30 @@ spec:
               name: langgraph-agent-secrets
               key: openfga-model-id
 
-        # Infisical credentials (optional)
+        # Keycloak Secrets
+        - name: KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: langgraph-agent-secrets
+              key: keycloak-client-secret
+
+        # Redis Session Management Secret
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: langgraph-agent-secrets
+              key: redis-password
+              optional: true
+
+        # LangSmith Observability (optional)
+        - name: LANGSMITH_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: langgraph-agent-secrets
+              key: langsmith-api-key
+              optional: true
+
+        # Secrets Management (optional)
         - name: INFISICAL_CLIENT_ID
           valueFrom:
             secretKeyRef:

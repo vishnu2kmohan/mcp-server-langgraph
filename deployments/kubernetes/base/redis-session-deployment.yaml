@@ -1,0 +1,167 @@
+---
+# Redis for Session Management
+# Separate from Kong's Redis instance
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-session-config
+  namespace: langgraph-agent
+  labels:
+    app: redis-session
+    component: session-store
+data:
+  redis.conf: |
+    # Session storage configuration
+    maxmemory 512mb
+    maxmemory-policy allkeys-lru
+
+    # Persistence for sessions (optional but recommended)
+    save 900 1
+    save 300 10
+    save 60 10000
+
+    # AOF for durability
+    appendonly yes
+    appendfsync everysec
+
+    # Performance tuning
+    tcp-backlog 511
+    timeout 300
+    tcp-keepalive 300
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-session
+  namespace: langgraph-agent
+  labels:
+    app: redis-session
+    component: session-store
+spec:
+  replicas: 1  # For HA, consider Redis Sentinel or cluster mode
+  selector:
+    matchLabels:
+      app: redis-session
+  template:
+    metadata:
+      labels:
+        app: redis-session
+        component: session-store
+    spec:
+      serviceAccountName: langgraph-agent
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999  # Redis user
+        fsGroup: 999
+
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: redis
+          containerPort: 6379
+          protocol: TCP
+
+        command:
+          - redis-server
+          - /usr/local/etc/redis/redis.conf
+
+        args:
+          - --requirepass
+          - "$(REDIS_PASSWORD)"
+
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: langgraph-agent-secrets
+              key: redis-password
+              optional: true
+
+        volumeMounts:
+        - name: config
+          mountPath: /usr/local/etc/redis
+        - name: data
+          mountPath: /data
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+
+        # Health check probes
+        startupProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli -a ${REDIS_PASSWORD} ping
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 20
+
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli -a ${REDIS_PASSWORD} ping
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli -a ${REDIS_PASSWORD} ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Redis needs write for data
+          runAsNonRoot: true
+          runAsUser: 999
+          capabilities:
+            drop:
+            - ALL
+
+      volumes:
+      - name: config
+        configMap:
+          name: redis-session-config
+      - name: data
+        emptyDir: {}  # For production, use PersistentVolumeClaim
+        # persistentVolumeClaim:
+        #   claimName: redis-session-data
+
+---
+# Optional: PersistentVolumeClaim for production
+# Uncomment for persistent session storage
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: redis-session-data
+#   namespace: langgraph-agent
+#   labels:
+#     app: redis-session
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 5Gi
+#   storageClassName: standard  # Adjust based on your cluster

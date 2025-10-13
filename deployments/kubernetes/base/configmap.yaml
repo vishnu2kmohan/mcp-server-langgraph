@@ -6,13 +6,53 @@ metadata:
   labels:
     app: langgraph-agent
 data:
+  # Service Configuration
   environment: "production"
   log_level: "INFO"
+
+  # LLM Provider Configuration
+  llm_provider: "anthropic"  # google, anthropic, openai, azure, bedrock, ollama
   model_name: "claude-3-5-sonnet-20241022"
   model_temperature: "0.7"
   model_max_tokens: "4096"
+  model_timeout: "60"
+
+  # Fallback Models
+  enable_fallback: "true"
+
+  # Agent Configuration
   max_iterations: "10"
   enable_checkpointing: "true"
+
+  # Observability
   enable_tracing: "true"
   enable_metrics: "true"
   enable_console_export: "false"
+  observability_backend: "opentelemetry"  # opentelemetry, langsmith, both
+  langsmith_tracing: "false"
+
+  # Authentication Configuration
+  auth_provider: "keycloak"  # inmemory, keycloak
+  auth_mode: "token"  # token (JWT), session
+
+  # Keycloak Settings
+  keycloak_server_url: "http://keycloak:8080"
+  keycloak_realm: "langgraph-agent"
+  keycloak_client_id: "langgraph-client"
+  keycloak_verify_ssl: "true"
+  keycloak_timeout: "30"
+  keycloak_hostname: "langgraph-agent.example.com"
+
+  # Session Management
+  session_backend: "redis"  # memory, redis
+  redis_url: "redis://redis-session:6379/0"
+  redis_ssl: "false"
+  session_ttl_seconds: "86400"  # 24 hours
+  session_sliding_window: "true"
+  session_max_concurrent: "5"
+
+  # OpenFGA Configuration
+  openfga_api_url: "http://openfga:8080"
+
+  # OpenTelemetry Configuration
+  otlp_endpoint: "http://otel-collector:4317"

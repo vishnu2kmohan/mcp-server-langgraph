@@ -133,55 +133,112 @@ kubectl apply -k deployments/kong/
 
 Before deploying to any environment:
 
-- ✅ **Secrets configured** (JWT_SECRET_KEY, API keys)
-- ✅ **OpenFGA store and model IDs** set (run `make setup-openfga`)
-- ✅ **LLM provider API key** valid with sufficient quota
-- ✅ **All tests passing** (`make test`)
+### Secrets & Configuration
+- ✅ **LLM provider API keys** (Anthropic, Google, or OpenAI)
+- ✅ **JWT secret key** (generate: `openssl rand -base64 32`)
+- ✅ **OpenFGA store and model IDs** (run `make setup-openfga`)
+- ✅ **Keycloak configured** (if using AUTH_PROVIDER=keycloak)
+  - Client ID and secret
+  - Realm created
+  - Admin credentials set
+- ✅ **Redis password** (if using SESSION_BACKEND=redis)
+- ✅ **PostgreSQL credentials** (for OpenFGA and Keycloak databases)
+
+### Testing & Quality
+- ✅ **All tests passing** (`make test` - 260+ unit tests)
 - ✅ **Security scan clean** (`make security-check`)
-- ✅ **Health checks working** (`/health/live`, `/health/ready`)
-- ✅ **Resource limits set** in manifests
-- ✅ **Observability configured** (Jaeger, Prometheus, LangSmith)
+- ✅ **Health checks working** (`/health`, `/health/ready`, `/health/startup`)
+
+### Infrastructure
+- ✅ **Resource limits set** in manifests (CPU/memory)
+- ✅ **Persistent volumes configured** (for PostgreSQL, Redis)
+- ✅ **Observability configured** (OpenTelemetry, Prometheus, LangSmith)
 - ✅ **Autoscaling configured** (HPA for Kubernetes)
+- ✅ **Network policies** in place (if using network isolation)
 - ✅ **Monitoring alerts configured**
 
 ## Environment Variables
 
 All deployment methods require the following environment variables:
 
-### Required
-- `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` - At least one LLM provider
-- `JWT_SECRET_KEY` - Generate with `openssl rand -base64 32`
-- `OPENFGA_STORE_ID` - From `scripts/setup/setup_openfga.py`
-- `OPENFGA_MODEL_ID` - From `scripts/setup/setup_openfga.py`
+### Required (Core)
+- **LLM Provider**: `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` (at least one)
+- **Authentication**: `JWT_SECRET_KEY` (generate: `openssl rand -base64 32`)
+- **Authorization**: `OPENFGA_STORE_ID`, `OPENFGA_MODEL_ID` (from `make setup-openfga`)
 
-### Optional
-- `LLM_PROVIDER` - Default: `google`
-- `MODEL_NAME` - Default: `gemini-2.5-flash-002`
-- `LANGSMITH_API_KEY` - For LangSmith tracing
-- `LANGSMITH_TRACING` - Enable LangSmith (default: `false`)
-- `ENABLE_TRACING` - Enable OpenTelemetry (default: `true`)
+### Authentication & Authorization (New)
+- `AUTH_PROVIDER` - Authentication provider: `inmemory` (default), `keycloak`
+- `AUTH_MODE` - Authentication mode: `token` (JWT, default), `session`
+
+**When using Keycloak (AUTH_PROVIDER=keycloak)**:
+- `KEYCLOAK_SERVER_URL` - Keycloak server URL (e.g., `http://keycloak:8080`)
+- `KEYCLOAK_REALM` - Realm name (default: `langgraph-agent`)
+- `KEYCLOAK_CLIENT_ID` - Client ID (default: `langgraph-client`)
+- `KEYCLOAK_CLIENT_SECRET` - Client secret (from Keycloak admin console)
+- `KEYCLOAK_HOSTNAME` - Public hostname for token validation
+- `KEYCLOAK_VERIFY_SSL` - Verify SSL certificates (default: `true`)
+- `KEYCLOAK_TIMEOUT` - Connection timeout in seconds (default: `30`)
+
+### Session Management (New)
+**When using sessions (AUTH_MODE=session)**:
+- `SESSION_BACKEND` - Backend: `memory` (default), `redis`
+- `SESSION_TTL_SECONDS` - Session TTL in seconds (default: `86400` = 24 hours)
+- `SESSION_SLIDING_WINDOW` - Refresh session on each request (default: `true`)
+- `SESSION_MAX_CONCURRENT` - Max concurrent sessions per user (default: `5`)
+
+**When using Redis (SESSION_BACKEND=redis)**:
+- `REDIS_URL` - Redis connection URL (e.g., `redis://redis-session:6379/0`)
+- `REDIS_PASSWORD` - Redis password (if authentication enabled)
+- `REDIS_SSL` - Use SSL for Redis connection (default: `false`)
+
+### LLM Configuration
+- `LLM_PROVIDER` - Provider: `google`, `anthropic`, `openai`, `azure`, `bedrock`, `ollama` (default: `google`)
+- `MODEL_NAME` - Model name (default: `gemini-2.5-flash-002`)
+- `MODEL_TEMPERATURE` - Temperature (default: `0.7`)
+- `MODEL_MAX_TOKENS` - Max tokens (default: `8192`)
+- `MODEL_TIMEOUT` - Timeout in seconds (default: `60`)
+- `ENABLE_FALLBACK` - Enable model fallback (default: `true`)
+
+### Observability
+- `ENABLE_TRACING` - Enable OpenTelemetry tracing (default: `true`)
 - `ENABLE_METRICS` - Enable metrics (default: `true`)
+- `ENABLE_CONSOLE_EXPORT` - Export to console (default: `false`)
+- `OBSERVABILITY_BACKEND` - Backend: `opentelemetry`, `langsmith`, `both` (default: `opentelemetry`)
+- `OTLP_ENDPOINT` - OpenTelemetry collector endpoint (default: `http://localhost:4317`)
+- `LANGSMITH_API_KEY` - LangSmith API key (optional)
+- `LANGSMITH_TRACING` - Enable LangSmith tracing (default: `false`)
+
+### Agent Configuration
+- `MAX_ITERATIONS` - Max agent iterations (default: `10`)
+- `ENABLE_CHECKPOINTING` - Enable checkpointing (default: `true`)
 
 **Security**: Never commit secrets to version control. Use:
-- Kubernetes Secrets
-- Cloud provider secret managers (GCP Secret Manager, AWS Secrets Manager)
-- Infisical for centralized secret management
+- **Kubernetes**: Secrets, External Secrets Operator
+- **Cloud Providers**: GCP Secret Manager, AWS Secrets Manager, Azure Key Vault
+- **Third-party**: Infisical, HashiCorp Vault
 
 ## Monitoring and Observability
 
 All deployments include:
 
-- **Health Checks**: `/health/live` (liveness), `/health/ready` (readiness)
+- **Health Checks**: `/health` (liveness), `/health/ready` (readiness), `/health/startup` (startup)
 - **OpenTelemetry**: Distributed tracing and metrics
-- **Prometheus**: Metrics collection
+- **Prometheus**: Metrics collection and scraping
 - **Jaeger**: Trace visualization
 - **Grafana**: Dashboard visualization
-- **LangSmith** (optional): LLM-specific tracing
+- **LangSmith** (optional): LLM-specific tracing and debugging
+
+**Health Check Endpoints**:
+- `/health` - Overall health status (includes dependencies)
+- `/health/ready` - Readiness probe (includes OpenFGA, Keycloak, Redis checks)
+- `/health/startup` - Startup probe (basic availability check)
+- `/metrics/prometheus` - Prometheus metrics endpoint
 
 **Access**:
 - Jaeger UI: Port 16686
 - Prometheus: Port 9090
 - Grafana: Port 3000 (default credentials: admin/admin)
+- OpenTelemetry Collector: Port 4317 (gRPC), 4318 (HTTP)
 
 ## Troubleshooting
 
@@ -189,37 +246,71 @@ All deployments include:
 
 **Pod CrashLoopBackOff**:
 - Check logs: `kubectl logs -f deployment/langgraph-agent -n langgraph-agent`
-- Verify secrets are set: `kubectl get secrets -n langgraph-agent`
+- Verify all secrets are set: `kubectl get secrets -n langgraph-agent`
 - Check resource limits: `kubectl describe pod <pod-name> -n langgraph-agent`
+- Verify init containers completed: Keycloak, Redis, OpenFGA must be ready
 
 **Health check failures**:
-- Ensure OpenFGA is accessible
-- Verify LLM provider API key is valid
-- Check network policies
+- Ensure OpenFGA is accessible and initialized (store/model IDs set)
+- Verify LLM provider API key is valid and has quota
+- Check Keycloak is running (if AUTH_PROVIDER=keycloak)
+- Verify Redis is accessible (if SESSION_BACKEND=redis)
+- Check network policies allow pod-to-pod communication
+- Review PostgreSQL database connectivity
+
+**Authentication/Authorization issues**:
+- **Keycloak**: Verify realm, client ID/secret match configuration
+- **OpenFGA**: Run `make setup-openfga` to initialize authorization model
+- **JWT tokens**: Ensure JWT_SECRET_KEY is consistent across all pods
+- **Sessions**: Check Redis connectivity and password
 
 **Performance issues**:
-- Increase resource limits (CPU/memory)
-- Configure HPA for autoscaling
+- Increase resource limits (CPU/memory) in deployment manifests
+- Configure HPA for autoscaling (see Scaling section)
 - Check OpenFGA connection pool size
+- Monitor Redis memory usage (sessions can accumulate)
+- Review LLM provider rate limits and quotas
 
 ### Debug Commands
 
 ```bash
-# View logs
+# View application logs
 kubectl logs -f deployment/langgraph-agent -n langgraph-agent
 
-# Describe pod
+# View Keycloak logs
+kubectl logs -f deployment/keycloak -n langgraph-agent
+
+# View Redis logs
+kubectl logs -f deployment/redis-session -n langgraph-agent
+
+# View OpenFGA logs
+kubectl logs -f deployment/openfga -n langgraph-agent
+
+# Describe pod (shows events, resource usage, init container status)
 kubectl describe pod <pod-name> -n langgraph-agent
 
-# Shell into pod
-kubectl exec -it <pod-name> -n langgraph-agent -- /bin/bash
+# Shell into main application pod
+kubectl exec -it <pod-name> -n langgraph-agent -- /bin/sh
 
-# Check secrets
+# Check all secrets
 kubectl get secrets -n langgraph-agent
 kubectl describe secret langgraph-agent-secrets -n langgraph-agent
 
-# View events
+# View recent events
 kubectl get events -n langgraph-agent --sort-by='.lastTimestamp'
+
+# Check all deployments status
+kubectl get deployments -n langgraph-agent
+
+# Check service endpoints
+kubectl get endpoints -n langgraph-agent
+
+# Test service connectivity from within cluster
+kubectl run -it --rm debug --image=busybox --restart=Never -n langgraph-agent -- sh
+# Inside debug pod:
+nc -zv keycloak 8080
+nc -zv redis-session 6379
+nc -zv openfga 8080
 ```
 
 ## Scaling

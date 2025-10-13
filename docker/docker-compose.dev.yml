@@ -7,14 +7,15 @@ services:
   agent:
     # Use local code with hot reload
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
       target: builder  # Use builder stage for dev dependencies
-    command: python -m uvicorn mcp_server_streamable:app --host 0.0.0.0 --port 8000 --reload
+    command: python -m uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      # Mount entire project for hot reload
-      - .:/app
-      - /app/__pycache__
+      # Mount source code for hot reload
+      - ../src:/app/src
+      - ../config:/app/config
+      - /app/src/__pycache__
       - /app/.pytest_cache
     environment:
       # Development-specific settings
