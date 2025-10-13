@@ -23,7 +23,7 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
@@ -94,7 +94,7 @@ jobs:
           - linux/arm64
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -151,7 +151,7 @@ jobs:
     needs: create-release
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Helm
       uses: azure/setup-helm@v4
@@ -203,7 +203,7 @@ jobs:
     if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -231,7 +231,7 @@ jobs:
     if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Update manifest version
       run: |
