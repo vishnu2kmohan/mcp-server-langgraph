@@ -175,6 +175,12 @@ jobs:
         helm lint deployments/helm/langgraph-agent
         echo "✓ Helm chart validation passed"
 
+    - name: Build Helm dependencies
+      run: |
+        cd deployments/helm/langgraph-agent
+        helm dependency build
+        cd -
+
     - name: Test Helm template rendering
       run: |
         helm template test-release deployments/helm/langgraph-agent --dry-run > /dev/null

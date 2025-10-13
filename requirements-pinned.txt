@@ -2,8 +2,9 @@
 # Generated for production deployment stability
 
 # LangGraph and LangChain (pinned)
+# Note: langgraph-prebuilt 0.6.4 requires langchain-core>=0.3.67
 langgraph==0.6.10
-langchain-core==0.3.15
+langchain-core==0.3.79
 
 # LiteLLM for multi-provider LLM support
 litellm==1.52.3
