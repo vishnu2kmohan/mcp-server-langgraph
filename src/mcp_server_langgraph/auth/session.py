@@ -687,3 +687,45 @@ def create_session_store(
 
     else:
         raise ValueError(f"Unknown session backend: {backend}. Supported: 'memory', 'redis'")
+
+
+# Global session store instance
+_session_store: Optional[SessionStore] = None
+
+
+def get_session_store() -> SessionStore:
+    """
+    FastAPI dependency to get the global session store instance
+
+    Returns:
+        SessionStore instance
+
+    Example:
+        @app.get("/api/sessions")
+        async def list_sessions(session_store: SessionStore = Depends(get_session_store)):
+            # Use session_store
+            pass
+    """
+    global _session_store
+
+    if _session_store is None:
+        # Create default in-memory session store
+        _session_store = InMemorySessionStore()
+
+    return _session_store
+
+
+def set_session_store(session_store: SessionStore) -> None:
+    """
+    Set the global session store instance
+
+    Args:
+        session_store: Session store to use globally
+
+    Example:
+        # At application startup
+        redis_store = create_session_store("redis", redis_url="redis://localhost:6379")
+        set_session_store(redis_store)
+    """
+    global _session_store
+    _session_store = session_store
