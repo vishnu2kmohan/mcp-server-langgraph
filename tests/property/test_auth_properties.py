@@ -12,6 +12,27 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
+
+# Helper to run async code in sync tests without closing the event loop
+def run_async(coro):
+    """
+    Run async coroutine using existing event loop.
+
+    Uses the event loop from pytest-asyncio fixture instead of asyncio.run()
+    to avoid closing the loop and breaking subsequent async tests.
+    """
+    import asyncio
+    try:
+        # Try to get existing event loop
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # No event loop exists, create one but don't close it
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    return loop.run_until_complete(coro)
+
+
 # Hypothesis strategies for auth testing
 # Use known valid usernames that exist in auth.py users_db
 valid_usernames = st.sampled_from(["alice", "bob", "admin"])
@@ -47,14 +68,14 @@ class TestJWTProperties:
         # Create token
         token = auth.create_token(username, expires_in=expiration)
 
-        # Verify token
-        result = auth.verify_token(token)
+        # Verify token (async call)
+        result = run_async(auth.verify_token(token))
 
-        # Property: Should be valid
-        assert result["valid"] is True
-        assert result["payload"]["username"] == username
-        assert "exp" in result["payload"]
-        assert "iat" in result["payload"]
+        # Property: Should be valid (Pydantic model)
+        assert result.valid is True
+        assert result.payload["username"] == username
+        assert "exp" in result.payload
+        assert "iat" in result.payload
 
     @given(username=usernames, secret1=st.text(min_size=10, max_size=50), secret2=st.text(min_size=10, max_size=50))
     @settings(max_examples=30, deadline=2000)
@@ -71,9 +92,9 @@ class TestJWTProperties:
         token = auth1.create_token(username)
 
         # Property: Verification with wrong secret should fail
-        result = auth2.verify_token(token)
-        assert result["valid"] is False
-        assert "error" in result
+        result = run_async(auth2.verify_token(token))
+        assert result.valid is False
+        assert result.error is not None
 
     @given(username=usernames)
     @settings(max_examples=20, deadline=2000)
@@ -94,9 +115,9 @@ class TestJWTProperties:
         expired_token = jwt.encode(expired_payload, "test-secret", algorithm="HS256")
 
         # Property: Should be invalid
-        result = auth.verify_token(expired_token)
-        assert result["valid"] is False
-        assert "expired" in result.get("error", "").lower()
+        result = run_async(auth.verify_token(expired_token))
+        assert result.valid is False
+        assert "expired" in (result.error or "").lower()
 
     @given(username=usernames, expiration=st.integers(min_value=60, max_value=3600))
     @settings(max_examples=20, deadline=2000)
@@ -110,11 +131,11 @@ class TestJWTProperties:
         token = auth.create_token(username, expires_in=expiration)
         after_creation = datetime.utcnow()
 
-        result = auth.verify_token(token)
-        assert result["valid"] is True
+        result = run_async(auth.verify_token(token))
+        assert result.valid is True
 
         # Property: Expiration should be approximately correct (allow 1 second tolerance for timing)
-        token_exp = datetime.fromtimestamp(result["payload"]["exp"])
+        token_exp = datetime.utcfromtimestamp(result.payload["exp"])
         expected_min = before_creation + timedelta(seconds=expiration) - timedelta(seconds=1)
         expected_max = after_creation + timedelta(seconds=expiration) + timedelta(seconds=1)
 
@@ -200,8 +221,8 @@ class TestAuthorizationProperties:
 
         # Property: Should not authenticate
         result = await auth.authenticate(username)
-        assert result["authorized"] is False
-        assert result["reason"] == "account_inactive"
+        assert result.authorized is False
+        assert result.reason == "account_inactive"
 
 
 @pytest.mark.property
@@ -282,11 +303,11 @@ class TestSecurityInvariants:
         token = auth.create_token(username)
 
         # Verify token
-        result = auth.verify_token(token)
+        result = run_async(auth.verify_token(token))
 
         # Property: Payload should only contain expected fields
         expected_fields = {"sub", "username", "email", "roles", "exp", "iat"}
-        actual_fields = set(result["payload"].keys())
+        actual_fields = set(result.payload.keys())
 
         # All actual fields should be expected (no injection)
         assert actual_fields.issubset(expected_fields)
@@ -312,8 +333,7 @@ class TestSecurityInvariants:
 
     @given(username=usernames, attempts=st.integers(min_value=1, max_value=10))
     @settings(max_examples=10, deadline=3000)
-    @pytest.mark.asyncio
-    async def test_failed_auth_does_not_leak_info(self, username, attempts):
+    def test_failed_auth_does_not_leak_info(self, username, attempts):
         """Property: Failed authentication should not reveal whether user exists"""
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
@@ -322,14 +342,18 @@ class TestSecurityInvariants:
         # Try to authenticate non-existent user multiple times
         nonexistent_user = f"nonexistent_{username}_{attempts}"
 
-        results = []
-        for _ in range(attempts):
-            result = await auth.authenticate(nonexistent_user)
-            results.append(result)
+        async def run_test():
+            results = []
+            for _ in range(attempts):
+                result = await auth.authenticate(nonexistent_user)
+                results.append(result)
+            return results
+
+        results = run_async(run_test())
 
         # Property: All failures should return same generic error
-        assert all(not r["authorized"] for r in results)
-        assert all(r["reason"] == "user_not_found" for r in results)
+        assert all(not r.authorized for r in results)
+        assert all(r.reason == "user_not_found" for r in results)
 
         # Property: Response should be consistent (no timing attacks)
         # In production, add constant-time comparison
@@ -349,16 +373,18 @@ class TestAuthorizationEdgeCases:
         )
     )
     @settings(max_examples=20, deadline=3000)
-    @pytest.mark.asyncio
-    async def test_malformed_user_ids_handled(self, user_id):
+    def test_malformed_user_ids_handled(self, user_id):
         """Property: Malformed user IDs should not crash the system"""
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
+        async def run_test():
+            return await auth.authorize(user_id, "executor", "tool:test")
+
         try:
             # Should not crash, even with malformed input
-            result = await auth.authorize(user_id, "executor", "tool:test")
+            result = run_async(run_test())
 
             # Property: Should return boolean
             assert isinstance(result, bool)
@@ -369,15 +395,17 @@ class TestAuthorizationEdgeCases:
 
     @given(resource=st.one_of(st.just(""), st.just("::"), st.just("tool:"), st.text(min_size=1000, max_size=2000)))
     @settings(max_examples=20, deadline=3000)
-    @pytest.mark.asyncio
-    async def test_malformed_resources_handled(self, resource):
+    def test_malformed_resources_handled(self, resource):
         """Property: Malformed resource IDs should not crash the system"""
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware()
 
+        async def run_test():
+            return await auth.authorize("user:alice", "executor", resource)
+
         try:
-            result = await auth.authorize("user:alice", "executor", resource)
+            result = run_async(run_test())
             assert isinstance(result, bool)
         except Exception as e:
             assert isinstance(e, (ValueError, PermissionError))
