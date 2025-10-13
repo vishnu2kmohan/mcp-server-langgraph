@@ -136,6 +136,10 @@ test-results/
 *_AUDIT_REPORT_*.md
 dependency-audit-*.txt
 
+# Preserve archived documentation
+!docs/reports/archive/*.md
+!docs/reports/archive/**/*.md
+
 # Database
 *.db
 *.sqlite
