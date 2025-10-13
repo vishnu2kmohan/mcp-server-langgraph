@@ -12,7 +12,7 @@ litellm==1.52.3
 mcp==1.1.2
 
 # Authentication
-PyJWT==2.8.0
+PyJWT==2.10.1
 cryptography==42.0.2
 
 # OpenTelemetry Core
