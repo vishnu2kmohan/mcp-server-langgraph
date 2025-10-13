@@ -3,6 +3,20 @@ kind: ConfigMap
 metadata:
   name: langgraph-agent-config
 data:
+  # Service Configuration
   environment: "development"
   log_level: "DEBUG"
+
+  # Authentication (use inmemory for dev)
+  auth_provider: "inmemory"
+  auth_mode: "token"
+
+  # Session Management (use memory for dev)
+  session_backend: "memory"
+
+  # Observability
   enable_console_export: "true"
+  enable_tracing: "true"
+  enable_metrics: "false"  # Disable metrics in dev to reduce noise
+  observability_backend: "opentelemetry"
+  langsmith_tracing: "false"
