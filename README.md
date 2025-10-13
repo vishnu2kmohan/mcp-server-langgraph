@@ -6,6 +6,12 @@
 [![Use This Template](https://img.shields.io/badge/use-this%20template-blue.svg?logo=cookiecutter)](docs/template/usage.md)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](docs/deployment/kubernetes.md)
+
+[![CI/CD](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/ci.yaml)
+[![PR Checks](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/pr-checks.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/pr-checks.yaml)
+[![Quality Tests](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/quality-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/quality-tests.yaml)
+[![Security Scan](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/security-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/security-scan.yaml)
+
 [![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](docs/archive/SECURITY_AUDIT.md)
 [![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
 [![Property Tests](https://img.shields.io/badge/property%20tests-27%2B-blue.svg)](#testing-strategy)

@@ -6,7 +6,11 @@ on:
     - cron: '0 2 * * *'
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:  # Allow manual triggering
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}  # Cancel only for PRs
 
 jobs:
   trivy-scan:
@@ -42,7 +46,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: '3.12'  # Match tested versions (3.10-3.12)
 
     - name: Install dependencies
       run: |
@@ -51,11 +55,13 @@ jobs:
 
     - name: Run Safety check
       run: |
-        safety check --json --output safety-report.json || true
+        safety check --json --output safety-report.json
+      continue-on-error: true  # Allow failures but report them
 
     - name: Run pip-audit
       run: |
-        pip-audit --format json --output pip-audit-report.json || true
+        pip-audit --format json --output pip-audit-report.json
+      continue-on-error: true  # Allow failures but report them
 
     - name: Upload reports
       uses: actions/upload-artifact@v4
@@ -64,6 +70,7 @@ jobs:
         path: |
           safety-report.json
           pip-audit-report.json
+        retention-days: 30
 
   codeql:
     name: CodeQL Analysis
@@ -112,7 +119,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: '3.12'  # Match tested versions (3.10-3.12)
 
     - name: Install dependencies
       run: |
@@ -132,6 +139,7 @@ jobs:
         path: |
           licenses.json
           licenses.md
+        retention-days: 90
 
   notify-security:
     name: Notify Security Team
@@ -141,7 +149,7 @@ jobs:
     steps:
     - name: Send notification
       uses: 8398a7/action-slack@v3
-      if: ${{ secrets.SLACK_SECURITY_WEBHOOK }}
+      if: secrets.SLACK_SECURITY_WEBHOOK != ''
       with:
         status: 'failure'
         text: '⚠️ Security scan failed! Check GitHub Actions for details.'

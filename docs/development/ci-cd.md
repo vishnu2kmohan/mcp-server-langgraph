@@ -325,12 +325,37 @@ build-and-push:
 - **Automatic tagging**: Branch names, PRs, semantic versions, commit SHAs
 - **Layer caching**: GitHub Actions cache for faster builds
 - **Dependency**: Only runs after all validation jobs pass
+- **SBOM generation**: Automatic Software Bill of Materials creation
 
 **Image Tags**:
 - `main`: Latest stable version
 - `develop`: Development version
 - `v2.1.0`: Semantic version tags
 - `sha-abc1234`: Commit SHA tags
+
+## Software Bill of Materials (SBOM)
+
+Every release automatically generates an SBOM for supply chain security:
+
+**Format:** SPDX JSON
+**Tool:** Anchore SBOM Action
+**Location:** Attached to GitHub release
+
+**Usage:**
+```bash
+# Download SBOM from latest release
+gh release download v2.1.0 --pattern 'sbom-*.spdx.json'
+
+# Analyze with tools
+grype sbom:sbom-linux-amd64.spdx.json
+syft sbom-linux-amd64.spdx.json -o table
+```
+
+**Benefits:**
+- Supply chain transparency
+- Vulnerability tracking
+- License compliance
+- Security audits
 
 ## Testing Strategy
 
@@ -363,6 +388,12 @@ make test-coverage
 
 # Property-based tests
 make test-property
+
+# Benchmark tests
+pytest -m benchmark -v --benchmark-only
+
+# Mutation tests (slow!)
+make test-mutation
 ```
 
 **CI Testing**:
@@ -379,7 +410,51 @@ pytest -m unit --tb=line -q
 - `unit`: Fast, isolated unit tests
 - `integration`: Tests requiring external services
 - `property`: Property-based tests with Hypothesis
+- `contract`: MCP protocol compliance tests
+- `regression`: Performance regression tests
 - `benchmark`: Performance benchmarks
+- `mutation`: Mutation testing (weekly schedule)
+
+### Mutation Testing
+
+**Purpose:** Measure test effectiveness
+
+**Schedule:** Weekly (too slow for every PR)
+
+**Command:**
+```bash
+# Local execution
+make test-mutation
+
+# Or directly
+mutmut run --paths-to-mutate=src/mcp_server_langgraph/
+mutmut results
+mutmut html  # Open html/index.html
+```
+
+**Target Score:** 80%+ mutation kills
+
+### Benchmark Testing
+
+**Purpose:** Track performance regressions
+
+**Execution:** Every PR + weekly
+
+**Thresholds:**
+- Agent response: p95 < 5s
+- LLM call: p95 < 10s
+- Authorization: p95 < 50ms
+
+**Alert:** Automatic PR comment if 20%+ slower
+
+**Baseline Tracking:**
+```bash
+# Run benchmarks
+pytest -m benchmark -v --benchmark-only --benchmark-autosave
+
+# Compare against baseline
+pytest -m benchmark --benchmark-compare
+```
 
 ## Deployment Procedures
 
@@ -623,6 +698,14 @@ kubectl create secret generic langgraph-agent-secrets \
 8. **Keep secrets secure**: Never commit secrets to git
 9. **Document changes**: Update CHANGELOG.md
 10. **Review before merge**: Always have PRs reviewed
+11. **Monitor workflow efficiency**: Review Actions usage monthly
+12. **Update dependencies**: Keep GitHub Actions up to date
+13. **Cache strategically**: Balance cache hits vs maintenance
+14. **Use artifact retention**: Don't store artifacts forever
+15. **Review SBOM regularly**: Check for new vulnerabilities
+16. **Run mutation tests**: Verify test effectiveness monthly
+17. **Track benchmarks**: Monitor performance trends over time
+18. **Leverage concurrency controls**: Prevent duplicate workflow runs
 
 ## References
 

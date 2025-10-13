@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   release:
     types: [ created ]
+  workflow_dispatch:  # Allow manual triggering
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}  # Cancel only for PRs, not for main/develop
 
 permissions:
   contents: read
@@ -72,7 +77,8 @@ jobs:
 
     - name: Run integration tests
       run: |
-        pytest -m integration -v --tb=short || true
+        pytest -m integration -v --tb=short
+      continue-on-error: true  # Allow integration tests to fail without blocking PR (requires external services)
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5
@@ -119,7 +125,8 @@ jobs:
       run: isort --check . --skip venv --profile black
 
     - name: Run mypy
-      run: mypy *.py --ignore-missing-imports || true
+      run: mypy src/ --ignore-missing-imports
+      continue-on-error: true  # Allow mypy failures for now (strict mode rollout in progress)
 
     - name: Security scan with bandit
       run: bandit -r . -x ./tests,./venv -ll
@@ -153,6 +160,16 @@ jobs:
       with:
         version: '3.13.0'
 
+    - name: Cache Helm
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/helm
+          ~/.local/share/helm
+        key: ${{ runner.os }}-helm-${{ hashFiles('deployments/helm/**/Chart.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-helm-
+
     - name: Validate Helm chart
       run: |
         helm lint deployments/helm/langgraph-agent
@@ -163,12 +180,22 @@ jobs:
         helm template test-release deployments/helm/langgraph-agent --dry-run > /dev/null
         echo "✓ Helm template rendering successful"
 
+    - name: Cache kubectl
+      uses: actions/cache@v4
+      with:
+        path: /usr/local/bin/kubectl
+        key: ${{ runner.os }}-kubectl-${{ hashFiles('.github/workflows/ci.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-kubectl-
+
     - name: Validate Kustomize overlays
       run: |
-        # Install kubectl for kustomize
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
+        # Install kubectl for kustomize if not cached
+        if [ ! -f /usr/local/bin/kubectl ]; then
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+        fi
 
         # Validate each overlay
         for env in dev staging production; do
@@ -244,7 +271,7 @@ jobs:
 
     - name: Deploy with Kustomize
       run: |
-        kubectl apply -k kustomize/overlays/dev
+        kubectl apply -k deployments/kustomize/overlays/dev
         kubectl rollout status deployment/dev-langgraph-agent -n langgraph-agent-dev
 
   deploy-staging:
@@ -268,7 +295,7 @@ jobs:
 
     - name: Deploy with Kustomize
       run: |
-        kubectl apply -k kustomize/overlays/staging
+        kubectl apply -k deployments/kustomize/overlays/staging
         kubectl rollout status deployment/staging-langgraph-agent -n langgraph-agent-staging
 
   deploy-production:
@@ -297,7 +324,7 @@ jobs:
 
     - name: Deploy with Helm
       run: |
-        helm upgrade --install langgraph-agent ./helm/langgraph-agent \
+        helm upgrade --install langgraph-agent ./deployments/helm/langgraph-agent \
           --namespace langgraph-agent \
           --create-namespace \
           --set image.tag=${{ github.event.release.tag_name }} \
