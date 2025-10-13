@@ -40,7 +40,7 @@ pydantic-settings==2.11.0
 httpx==0.27.0
 
 # Health checks and API
-fastapi==0.109.0
+fastapi==0.119.0
 uvicorn[standard]==0.37.0
 
 # Additional runtime dependencies
