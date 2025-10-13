@@ -71,7 +71,60 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - Tool usage analysis
 - Operation-level performance tracking
 
-### 4. `langgraph-agent.json` - Overview Dashboard
+### 4. `sla-monitoring.json` - SLA Monitoring Dashboard (NEW in v2.1.0)
+
+**Comprehensive SLA tracking and alerting metrics:**
+
+- **Overall SLA Compliance Score** - Weighted composite score (40% uptime, 30% response time, 30% error rate)
+- **Uptime SLA Gauge** - 99.9% target with color-coded thresholds
+- **Response Time SLA Gauge** - p95 <500ms target
+- **Error Rate SLA Gauge** - <1% target
+- **Uptime Percentage Trend** - Historical uptime tracking
+- **Monthly Downtime Budget** - Remaining budget (43.2 min/month for 99.9% SLA)
+- **Response Time Percentiles** - p50, p95, p99 latency trends
+- **Error Rate Trend** - API error rate over time
+- **Errors by Status Code** - 5xx error breakdown
+- **System Throughput** - Current vs 7-day average
+- **Dependency Health Status** - Postgres, Redis, OpenFGA, Keycloak availability
+- **Dependency Performance** - p95 latency for dependencies
+- **CPU Utilization** - Resource monitoring
+- **Memory Utilization** - Resource monitoring
+- **Uptime Forecast** - 24-hour prediction based on 4-hour trend
+
+**Use Cases:**
+- SLA compliance monitoring
+- Breach detection and alerting
+- Capacity planning
+- Performance troubleshooting
+- Monthly/quarterly SLA reporting
+
+### 5. `soc2-compliance.json` - SOC 2 Compliance Dashboard (NEW in v2.1.0)
+
+**Automated SOC 2 evidence collection and compliance reporting:**
+
+- **Overall Compliance Score** - Weighted score (passed + partial*0.5)
+- **Control Status Distribution** - Pie chart of passed/failed/partial controls
+- **Evidence by Control Category** - Evidence distribution across TSC categories
+- **CC6.1 - Active Sessions** - Access control evidence
+- **CC6.6 - Audit Log Rate** - Logging system status
+- **CC7.2 - Metrics Collection** - System monitoring evidence
+- **A1.2 - System Uptime** - Availability SLA tracking
+- **A1.2 - Last Backup** - Backup verification timestamp
+- **Evidence Collection Rate by Type** - Evidence gathering operations
+- **Compliance Reports Generated** - Daily/weekly/monthly report tracking
+- **Compliance Score Trend** - 30-day historical compliance
+- **Access Review Items** - Weekly access review findings
+- **Inactive User Accounts** - Security audit findings
+- **Compliance Job Executions** - Automated scheduler status
+
+**Use Cases:**
+- SOC 2 Type II audit preparation
+- Continuous compliance monitoring
+- Evidence collection automation
+- Trust Services Criteria validation
+- Quarterly compliance reporting
+
+### 6. `langgraph-agent.json` - Overview Dashboard
 
 **Primary metrics for service health and performance:**
 
@@ -89,7 +142,7 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - Capacity planning
 - SLA validation
 
-### 2. `security.json` - Security Dashboard
+### 7. `security.json` - Security Dashboard
 
 **Security-focused metrics:**
 
@@ -110,7 +163,7 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - Access audit
 - Compliance reporting
 
-### 3. `keycloak.json` - Keycloak SSO Dashboard
+### 8. `keycloak.json` - Keycloak SSO Dashboard
 
 **Keycloak authentication and SSO metrics:**
 
@@ -129,7 +182,7 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - Troubleshooting login issues
 - Session management oversight
 
-### 4. `redis-sessions.json` - Redis Session Store Dashboard
+### 9. `redis-sessions.json` - Redis Session Store Dashboard
 
 **Redis session storage metrics:**
 
@@ -169,6 +222,8 @@ kubectl create configmap grafana-dashboards \
   --from-file=authentication.json \
   --from-file=openfga.json \
   --from-file=llm-performance.json \
+  --from-file=sla-monitoring.json \
+  --from-file=soc2-compliance.json \
   --from-file=langgraph-agent.json \
   --from-file=security.json \
   --from-file=keycloak.json \
@@ -222,6 +277,10 @@ grafana:
         file: dashboards/openfga.json
       llm-performance:
         file: dashboards/llm-performance.json
+      sla-monitoring:
+        file: dashboards/sla-monitoring.json
+      soc2-compliance:
+        file: dashboards/soc2-compliance.json
       langgraph-overview:
         file: dashboards/langgraph-agent.json
       langgraph-security:

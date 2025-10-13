@@ -1,0 +1,132 @@
+# Data Retention Policies
+# Compliance: GDPR Article 5(1)(e) - Storage Limitation, SOC 2 A1.2
+
+# Global Settings
+global:
+  enabled: true
+  timezone: "UTC"
+  cleanup_schedule: "0 3 * * *"  # Daily at 3 AM UTC
+  dry_run: false  # Set to true for testing without actual deletion
+
+# Retention Periods (in days)
+retention_periods:
+  # User Data
+  user_sessions:
+    active: 90  # Active sessions expire via TTL
+    inactive: 90  # Delete sessions not accessed in 90 days
+    description: "User authentication sessions"
+
+  conversations:
+    active: 365  # Keep active conversations for 1 year
+    archived: 90  # Delete archived conversations after 90 days
+    deleted: 7  # Permanently remove soft-deleted conversations after 7 days
+    description: "User conversation history"
+
+  user_preferences:
+    inactive: 730  # Keep preferences for 2 years after last login
+    description: "User settings and preferences"
+
+  # Audit & Compliance
+  audit_logs:
+    standard: 2555  # 7 years (SOC 2, financial compliance)
+    security_events: 2555  # 7 years for security incidents
+    gdpr_requests: 2555  # 7 years for data subject requests
+    description: "Audit trail and compliance records"
+
+  consent_records:
+    active: 2555  # 7 years (legal requirement)
+    withdrawn: 2555  # Keep withdrawal records for compliance
+    description: "GDPR consent management records"
+
+  # Temporary Data
+  export_files:
+    generated: 7  # Delete user data exports after 7 days
+    description: "Temporary export files"
+
+  deletion_records:
+    anonymized: 2555  # 7 years (compliance requirement)
+    description: "Account deletion audit trail"
+
+  # Operational Data
+  metrics:
+    raw: 90  # Keep raw metrics for 90 days
+    aggregated: 730  # Keep aggregated metrics for 2 years
+    description: "System metrics and telemetry"
+
+  error_logs:
+    errors: 90  # Standard errors kept for 90 days
+    critical: 365  # Critical errors kept for 1 year
+    description: "Application error logs"
+
+# Cleanup Actions
+cleanup_actions:
+  sessions:
+    enabled: true
+    delete_inactive: true
+    notify_before_deletion: false
+
+  conversations:
+    enabled: true
+    soft_delete_first: true  # Move to deleted state before permanent deletion
+    notify_before_deletion: true  # Notify user before archival
+
+  audit_logs:
+    enabled: true
+    archive_before_deletion: true  # Archive to cold storage before deletion
+
+  metrics:
+    enabled: true
+    aggregate_before_deletion: true  # Create daily/monthly aggregates
+
+  exports:
+    enabled: true
+    delete_after_download: false  # Keep for retention period even if downloaded
+
+# Exclusions
+exclusions:
+  # Users exempt from automatic cleanup (e.g., system accounts)
+  user_ids:
+    - "user:admin"
+    - "user:system"
+
+  # Data types that should never be auto-deleted
+  protected_types:
+    - "legal_hold"
+    - "regulatory_requirement"
+    - "active_investigation"
+
+# Notifications
+notifications:
+  enabled: true
+  channels:
+    - "email"
+    - "slack"
+
+  events:
+    before_cleanup:
+      enabled: true
+      advance_notice_days: 7
+
+    after_cleanup:
+      enabled: true
+      summary: true
+
+    errors:
+      enabled: true
+      severity: "high"
+
+# Metrics & Monitoring
+monitoring:
+  track_deletion_counts: true
+  track_data_volume: true
+  alert_on_errors: true
+  alert_threshold:
+    failed_deletions: 10  # Alert if more than 10 deletions fail
+
+# Compliance Reporting
+reporting:
+  enabled: true
+  frequency: "monthly"
+  include_metrics: true
+  include_audit_trail: true
+  retention_compliance_score: true

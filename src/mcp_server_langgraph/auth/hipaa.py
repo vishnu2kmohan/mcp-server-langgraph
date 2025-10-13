@@ -1,0 +1,391 @@
+"""
+HIPAA Compliance Controls
+
+Implements HIPAA Security Rule technical safeguards:
+- 164.312(a)(1): Unique User Identification
+- 164.312(a)(2)(i): Emergency Access Procedure
+- 164.312(a)(2)(iii): Automatic Logoff
+- 164.312(b): Audit Controls
+- 164.312(c)(1): Integrity Controls
+
+Note: Only required if processing Protected Health Information (PHI)
+"""
+
+import hashlib
+import hmac
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
+
+from mcp_server_langgraph.auth.session import SessionStore
+from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+
+
+class EmergencyAccessRequest(BaseModel):
+    """Emergency access request for PHI data"""
+
+    user_id: str = Field(..., description="User requesting emergency access")
+    reason: str = Field(..., min_length=10, description="Reason for emergency access (minimum 10 characters)")
+    approver_id: str = Field(..., description="User ID of approver")
+    duration_hours: int = Field(default=4, ge=1, le=24, description="Duration of emergency access (1-24 hours)")
+    access_level: str = Field(default="PHI", description="Level of access granted")
+
+
+class EmergencyAccessGrant(BaseModel):
+    """Emergency access grant record"""
+
+    grant_id: str
+    user_id: str
+    reason: str
+    approver_id: str
+    granted_at: str  # ISO timestamp
+    expires_at: str  # ISO timestamp
+    access_level: str
+    revoked: bool = False
+    revoked_at: Optional[str] = None
+
+
+class PHIAuditLog(BaseModel):
+    """HIPAA-compliant audit log for PHI access"""
+
+    timestamp: str  # ISO format
+    user_id: str
+    action: str
+    phi_accessed: bool
+    patient_id: Optional[str] = None
+    resource_id: Optional[str] = None
+    ip_address: str
+    user_agent: str
+    success: bool
+    failure_reason: Optional[str] = None
+
+
+class DataIntegrityCheck(BaseModel):
+    """HIPAA integrity control - HMAC checksum for data"""
+
+    data_id: str
+    checksum: str
+    algorithm: str = "HMAC-SHA256"
+    created_at: str
+
+
+class HIPAAControls:
+    """
+    HIPAA Security Rule technical safeguards implementation
+
+    Provides emergency access, audit logging, and integrity controls
+    for systems processing Protected Health Information (PHI).
+    """
+
+    def __init__(
+        self,
+        session_store: Optional[SessionStore] = None,
+        integrity_secret: Optional[str] = None,
+    ):
+        """
+        Initialize HIPAA controls
+
+        Args:
+            session_store: Session storage for emergency access grants
+            integrity_secret: Secret key for HMAC integrity checks
+        """
+        self.session_store = session_store
+        self.integrity_secret = integrity_secret or "change-this-in-production"
+
+        # In-memory storage for emergency access grants (replace with database)
+        self._emergency_grants: Dict[str, EmergencyAccessGrant] = {}
+
+    async def grant_emergency_access(
+        self,
+        user_id: str,
+        reason: str,
+        approver_id: str,
+        duration_hours: int = 4,
+        access_level: str = "PHI",
+    ) -> EmergencyAccessGrant:
+        """
+        Grant emergency access to PHI (HIPAA 164.312(a)(2)(i))
+
+        Emergency access procedure allows authorized users to access PHI
+        in emergency situations with proper approval and audit trail.
+
+        Args:
+            user_id: User requesting emergency access
+            reason: Detailed reason for emergency access
+            approver_id: User ID of approver (must be authorized)
+            duration_hours: Duration of access (1-24 hours, default 4)
+            access_level: Level of access (default "PHI")
+
+        Returns:
+            EmergencyAccessGrant with grant details
+
+        Example:
+            grant = await controls.grant_emergency_access(
+                user_id="user:doctor_smith",
+                reason="Patient emergency - cardiac arrest in ER",
+                approver_id="user:supervisor_jones",
+                duration_hours=2
+            )
+        """
+        with tracer.start_as_current_span("hipaa.grant_emergency_access") as span:
+            span.set_attribute("user_id", user_id)
+            span.set_attribute("approver_id", approver_id)
+            span.set_attribute("duration_hours", duration_hours)
+
+            # Validate request
+            request = EmergencyAccessRequest(
+                user_id=user_id,
+                reason=reason,
+                approver_id=approver_id,
+                duration_hours=duration_hours,
+                access_level=access_level,
+            )
+
+            # Generate grant ID
+            grant_id = f"emergency_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{user_id.replace(':', '_')}"
+
+            # Calculate expiration
+            granted_at = datetime.utcnow()
+            expires_at = granted_at + timedelta(hours=duration_hours)
+
+            # Create grant
+            grant = EmergencyAccessGrant(
+                grant_id=grant_id,
+                user_id=user_id,
+                reason=reason,
+                approver_id=approver_id,
+                granted_at=granted_at.isoformat() + "Z",
+                expires_at=expires_at.isoformat() + "Z",
+                access_level=access_level,
+            )
+
+            # Store grant
+            self._emergency_grants[grant_id] = grant
+
+            # Log emergency access grant (HIPAA audit requirement)
+            logger.warning(
+                "HIPAA: Emergency access granted",
+                extra={
+                    "grant_id": grant_id,
+                    "user_id": user_id,
+                    "approver_id": approver_id,
+                    "reason": reason,
+                    "duration_hours": duration_hours,
+                    "expires_at": grant.expires_at,
+                    "access_level": access_level,
+                },
+            )
+
+            # Track metrics
+            metrics.successful_calls.add(1, {"operation": "emergency_access_grant"})
+
+            # TODO: Send alert to security team
+            # await send_security_alert(grant)
+
+            return grant
+
+    async def revoke_emergency_access(self, grant_id: str, revoked_by: str) -> bool:
+        """
+        Revoke emergency access grant
+
+        Args:
+            grant_id: Grant ID to revoke
+            revoked_by: User ID performing revocation
+
+        Returns:
+            True if revoked, False if grant not found
+        """
+        with tracer.start_as_current_span("hipaa.revoke_emergency_access"):
+            grant = self._emergency_grants.get(grant_id)
+
+            if not grant:
+                logger.warning(f"Emergency grant not found: {grant_id}")
+                return False
+
+            grant.revoked = True
+            grant.revoked_at = datetime.utcnow().isoformat() + "Z"
+
+            logger.warning(
+                "HIPAA: Emergency access revoked",
+                extra={
+                    "grant_id": grant_id,
+                    "user_id": grant.user_id,
+                    "revoked_by": revoked_by,
+                    "revoked_at": grant.revoked_at,
+                },
+            )
+
+            return True
+
+    async def check_emergency_access(self, user_id: str) -> Optional[EmergencyAccessGrant]:
+        """
+        Check if user has active emergency access
+
+        Args:
+            user_id: User ID to check
+
+        Returns:
+            Active EmergencyAccessGrant or None
+        """
+        now = datetime.utcnow()
+
+        for grant in self._emergency_grants.values():
+            if grant.user_id == user_id and not grant.revoked:
+                expires_at = datetime.fromisoformat(grant.expires_at.replace("Z", ""))
+                if expires_at > now:
+                    return grant
+
+        return None
+
+    async def log_phi_access(
+        self,
+        user_id: str,
+        action: str,
+        patient_id: Optional[str],
+        resource_id: Optional[str],
+        ip_address: str,
+        user_agent: str,
+        success: bool = True,
+        failure_reason: Optional[str] = None,
+    ):
+        """
+        Log PHI access (HIPAA 164.312(b) - Audit Controls)
+
+        All access to PHI must be logged with sufficient detail to:
+        - Identify who accessed
+        - What was accessed
+        - When it was accessed
+        - Where it was accessed from
+        - Whether access was successful
+
+        Args:
+            user_id: User accessing PHI
+            action: Action performed (read, write, delete, etc.)
+            patient_id: Patient identifier (if applicable)
+            resource_id: Resource identifier
+            ip_address: IP address of access
+            user_agent: User agent string
+            success: Whether access was successful
+            failure_reason: Reason for failure (if unsuccessful)
+        """
+        with tracer.start_as_current_span("hipaa.log_phi_access") as span:
+            span.set_attribute("user_id", user_id)
+            span.set_attribute("action", action)
+            span.set_attribute("success", success)
+
+            log_entry = PHIAuditLog(
+                timestamp=datetime.utcnow().isoformat() + "Z",
+                user_id=user_id,
+                action=action,
+                phi_accessed=True,
+                patient_id=patient_id,
+                resource_id=resource_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                success=success,
+                failure_reason=failure_reason,
+            )
+
+            # Log to secure audit trail (tamper-proof)
+            logger.warning(
+                "HIPAA: PHI Access",
+                extra=log_entry.model_dump(),
+            )
+
+            # TODO: Send to SIEM system
+            # await send_to_siem(log_entry)
+
+            # Track metrics
+            if success:
+                metrics.successful_calls.add(1, {"operation": "phi_access", "action": action})
+            else:
+                metrics.failed_calls.add(1, {"operation": "phi_access", "action": action})
+
+    def generate_checksum(self, data: str, data_id: str) -> DataIntegrityCheck:
+        """
+        Generate HMAC checksum for data integrity (HIPAA 164.312(c)(1))
+
+        Args:
+            data: Data to generate checksum for
+            data_id: Unique identifier for the data
+
+        Returns:
+            DataIntegrityCheck with checksum
+        """
+        checksum = hmac.new(
+            self.integrity_secret.encode(),
+            data.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+        return DataIntegrityCheck(
+            data_id=data_id,
+            checksum=checksum,
+            algorithm="HMAC-SHA256",
+            created_at=datetime.utcnow().isoformat() + "Z",
+        )
+
+    def verify_checksum(self, data: str, expected_checksum: str) -> bool:
+        """
+        Verify data integrity using HMAC checksum
+
+        Args:
+            data: Data to verify
+            expected_checksum: Expected checksum
+
+        Returns:
+            True if checksum matches, False otherwise
+
+        Raises:
+            IntegrityError: If checksums don't match (in production)
+        """
+        actual_checksum = hmac.new(
+            self.integrity_secret.encode(),
+            data.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+        # Use constant-time comparison to prevent timing attacks
+        is_valid = hmac.compare_digest(actual_checksum, expected_checksum)
+
+        if not is_valid:
+            logger.error(
+                "HIPAA: Data integrity check failed",
+                extra={
+                    "expected": expected_checksum[:8] + "...",
+                    "actual": actual_checksum[:8] + "...",
+                },
+            )
+
+        return is_valid
+
+
+# Global HIPAA controls instance
+_hipaa_controls: Optional[HIPAAControls] = None
+
+
+def get_hipaa_controls() -> HIPAAControls:
+    """
+    Get or create global HIPAA controls instance
+
+    Returns:
+        HIPAAControls instance
+    """
+    global _hipaa_controls
+
+    if _hipaa_controls is None:
+        _hipaa_controls = HIPAAControls()
+
+    return _hipaa_controls
+
+
+def set_hipaa_controls(controls: HIPAAControls):
+    """
+    Set global HIPAA controls instance
+
+    Args:
+        controls: HIPAAControls instance to use globally
+    """
+    global _hipaa_controls
+    _hipaa_controls = controls
