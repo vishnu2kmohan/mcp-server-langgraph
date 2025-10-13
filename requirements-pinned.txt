@@ -2,7 +2,7 @@
 # Generated for production deployment stability
 
 # LangGraph and LangChain (pinned)
-langgraph==0.2.28
+langgraph==0.6.10
 langchain-core==0.3.15
 
 # LiteLLM for multi-provider LLM support
