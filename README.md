@@ -7,10 +7,10 @@
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](docs/deployment/kubernetes.md)
 
-[![CI/CD](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/ci.yaml)
-[![PR Checks](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/pr-checks.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/pr-checks.yaml)
-[![Quality Tests](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/quality-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/quality-tests.yaml)
-[![Security Scan](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/security-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/security-scan.yaml)
+[![CI/CD](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml)
+[![PR Checks](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/pr-checks.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/pr-checks.yaml)
+[![Quality Tests](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml)
+[![Security Scan](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml)
 
 [![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](docs/archive/SECURITY_AUDIT.md)
 [![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
@@ -26,7 +26,7 @@ A **production-ready cookie-cutter template** for building MCP servers with Lang
 
 ```bash
 # Generate your own MCP server project
-uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+uvx cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 
 # Answer a few questions and get a fully configured project!
 ```
@@ -42,7 +42,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 **For**: Creating your own MCP server with custom tools and logic
 
 **How**:
-1. Generate project: `uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph`
+1. Generate project: `uvx cookiecutter gh:vishnu2kmohan/mcp-server-langgraph`
 2. Customize tools in generated `agent.py`
 3. Update authorization model in `scripts/setup/setup_openfga.py`
 4. Deploy your custom server
@@ -60,7 +60,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 **For**: Learning, testing, or using the reference implementation
 
 **How**:
-1. Clone: `git clone https://github.com/vishnu2kmohan/langgraph_mcp_agent.git`
+1. Clone: `git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git`
 2. Install: `uv sync`
 3. Configure: Copy `.env.example` to `.env` and add API keys
 4. Run: `make run-streamable`
