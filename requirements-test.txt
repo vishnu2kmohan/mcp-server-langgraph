@@ -7,9 +7,9 @@
 pytest>=8.2.0
 pytest-asyncio==0.26.0
 pytest-cov==4.1.0
-pytest-mock==3.12.0
+pytest-mock==3.15.1
 pytest-timeout==2.4.0
-pytest-xdist==3.5.0  # Parallel test execution
+pytest-xdist==3.8.0  # Parallel test execution
 pytest-benchmark==4.0.0  # Performance benchmarking
 
 # Property-based testing
@@ -26,7 +26,7 @@ mutmut>=2.4.4  # Test effectiveness via code mutations
 
 # Test utilities
 # httpx version already specified in requirements.txt
-respx==0.20.2  # Mock httpx
+respx==0.22.0  # Mock httpx
 faker==37.11.0  # Generate test data
 
 # Code quality
