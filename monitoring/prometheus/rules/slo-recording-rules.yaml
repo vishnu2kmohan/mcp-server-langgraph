@@ -1,0 +1,288 @@
+groups:
+  # SLO Recording Rules for MCP Server with LangGraph
+  # These rules pre-compute SLI (Service Level Indicator) metrics for efficient SLO tracking
+
+  - name: slo_availability
+    interval: 30s
+    rules:
+      # Overall service availability (99.9% target)
+      - record: job:up:avg
+        expr: avg(up{job="langgraph-agent"})
+        labels:
+          slo: "availability"
+          target: "99.9"
+
+      # Keycloak availability (99.5% target)
+      - record: job:up:avg:keycloak
+        expr: avg(up{job="keycloak"})
+        labels:
+          slo: "availability"
+          target: "99.5"
+          component: "keycloak"
+
+      # OpenFGA availability (99.5% target)
+      - record: job:up:avg:openfga
+        expr: avg(up{job="openfga"})
+        labels:
+          slo: "availability"
+          target: "99.5"
+          component: "openfga"
+
+      # Redis session store availability (99.9% target)
+      - record: job:up:avg:redis_session
+        expr: avg(up{job="redis-session"})
+        labels:
+          slo: "availability"
+          target: "99.9"
+          component: "redis"
+
+  - name: slo_latency
+    interval: 30s
+    rules:
+      # Agent response time - 95th percentile (< 2000ms target)
+      - record: job:agent_response_duration:p95
+        expr: histogram_quantile(0.95, sum(rate(agent_response_duration_bucket[5m])) by (le))
+        labels:
+          slo: "latency"
+          quantile: "0.95"
+          target: "2000"
+
+      # Agent response time - 99th percentile (< 5000ms target)
+      - record: job:agent_response_duration:p99
+        expr: histogram_quantile(0.99, sum(rate(agent_response_duration_bucket[5m])) by (le))
+        labels:
+          slo: "latency"
+          quantile: "0.99"
+          target: "5000"
+
+      # Authentication latency - 95th percentile (< 500ms target)
+      - record: job:auth_login_duration:p95
+        expr: histogram_quantile(0.95, sum(rate(auth_login_duration_bucket[5m])) by (le))
+        labels:
+          slo: "latency"
+          quantile: "0.95"
+          target: "500"
+          component: "auth"
+
+      # Authorization check latency - 95th percentile (< 100ms target)
+      - record: job:authz_check_duration:p95
+        expr: histogram_quantile(0.95, sum(rate(authz_check_duration_bucket[5m])) by (le))
+        labels:
+          slo: "latency"
+          quantile: "0.95"
+          target: "100"
+          component: "authz"
+
+      # Keycloak request latency - 95th percentile (< 1000ms target)
+      - record: job:keycloak_request_duration:p95
+        expr: histogram_quantile(0.95, sum(rate(keycloak_request_duration_bucket[5m])) by (le))
+        labels:
+          slo: "latency"
+          quantile: "0.95"
+          target: "1000"
+          component: "keycloak"
+
+  - name: slo_error_rate
+    interval: 30s
+    rules:
+      # Overall error rate (< 1% target = 99% success rate)
+      - record: job:agent_calls:error_rate
+        expr: |
+          rate(agent_calls_failed_total[5m]) /
+          (rate(agent_calls_successful_total[5m]) + rate(agent_calls_failed_total[5m]) + 0.0001)
+        labels:
+          slo: "error_rate"
+          target: "0.01"
+
+      # Authentication failure rate (< 5% target)
+      - record: job:auth_login:error_rate
+        expr: |
+          rate(auth_login_failed_total[5m]) /
+          (rate(auth_login_attempts_total[5m]) + 0.0001)
+        labels:
+          slo: "error_rate"
+          target: "0.05"
+          component: "auth"
+
+      # Authorization denial rate (< 15% target - expected to be higher)
+      - record: job:authz_checks:denial_rate
+        expr: |
+          rate(authz_failures_total[5m]) /
+          (rate(authz_checks_total[5m]) + 0.0001)
+        labels:
+          slo: "error_rate"
+          target: "0.15"
+          component: "authz"
+
+      # Token verification failure rate (< 2% target)
+      - record: job:token_verification:error_rate
+        expr: |
+          rate(token_verification_failed_total[5m]) /
+          (rate(token_verified_total[5m]) + 0.0001)
+        labels:
+          slo: "error_rate"
+          target: "0.02"
+          component: "auth"
+
+      # LLM fallback rate (< 10% target)
+      - record: job:llm_fallback:rate
+        expr: |
+          rate(agent_calls_successful_total{operation="llm.fallback"}[5m]) /
+          (rate(agent_calls_successful_total{operation="llm.invoke"}[5m]) + 0.0001)
+        labels:
+          slo: "error_rate"
+          target: "0.10"
+          component: "llm"
+
+  - name: slo_throughput
+    interval: 30s
+    rules:
+      # Agent request throughput - 5-minute rate
+      - record: job:agent_calls:rate5m
+        expr: sum(rate(agent_calls_successful_total[5m]) + rate(agent_calls_failed_total[5m]))
+        labels:
+          slo: "throughput"
+
+      # Tool call throughput
+      - record: job:tool_calls:rate5m
+        expr: sum(rate(agent_tool_calls_total[5m]))
+        labels:
+          slo: "throughput"
+          component: "tools"
+
+      # Authentication throughput
+      - record: job:auth_login:rate5m
+        expr: sum(rate(auth_login_attempts_total[5m]))
+        labels:
+          slo: "throughput"
+          component: "auth"
+
+      # Authorization check throughput
+      - record: job:authz_checks:rate5m
+        expr: sum(rate(authz_checks_total[5m]))
+        labels:
+          slo: "throughput"
+          component: "authz"
+
+  - name: slo_saturation
+    interval: 30s
+    rules:
+      # Memory saturation (< 90% target)
+      - record: job:memory:saturation
+        expr: |
+          (container_memory_working_set_bytes{pod=~"langgraph-agent.*"} /
+          container_spec_memory_limit_bytes{pod=~"langgraph-agent.*"})
+        labels:
+          slo: "saturation"
+          target: "0.90"
+          resource: "memory"
+
+      # CPU saturation (< 80% target)
+      - record: job:cpu:saturation
+        expr: |
+          (rate(container_cpu_usage_seconds_total{pod=~"langgraph-agent.*"}[5m]) /
+          (container_spec_cpu_quota{pod=~"langgraph-agent.*"} / 100000))
+        labels:
+          slo: "saturation"
+          target: "0.80"
+          resource: "cpu"
+
+      # Redis memory saturation (< 90% target)
+      - record: job:redis_memory:saturation
+        expr: redis_memory_used_bytes / redis_memory_max_bytes
+        labels:
+          slo: "saturation"
+          target: "0.90"
+          resource: "memory"
+          component: "redis"
+
+      # Redis connection pool saturation (< 95% target)
+      - record: job:redis_pool:saturation
+        expr: |
+          redis_client_pool_connections_in_use /
+          redis_client_pool_max_connections
+        labels:
+          slo: "saturation"
+          target: "0.95"
+          resource: "connections"
+          component: "redis"
+
+      # Session concurrent limit saturation
+      - record: job:session_concurrent:saturation
+        expr: |
+          session_active_count /
+          (session_max_concurrent_per_user * count(count by (user_id) (session_active_count)))
+        labels:
+          slo: "saturation"
+          target: "0.80"
+          resource: "sessions"
+
+  - name: slo_burnrate
+    interval: 1m
+    rules:
+      # Error budget burn rate - 1 hour (fast burn detection)
+      - record: job:error_budget:burn_rate_1h
+        expr: |
+          (1 - (rate(agent_calls_successful_total[1h]) /
+          (rate(agent_calls_successful_total[1h]) + rate(agent_calls_failed_total[1h]) + 0.0001))) /
+          (1 - 0.999)
+        labels:
+          slo: "burn_rate"
+          window: "1h"
+          target_slo: "99.9"
+
+      # Error budget burn rate - 6 hours (medium burn detection)
+      - record: job:error_budget:burn_rate_6h
+        expr: |
+          (1 - (rate(agent_calls_successful_total[6h]) /
+          (rate(agent_calls_successful_total[6h]) + rate(agent_calls_failed_total[6h]) + 0.0001))) /
+          (1 - 0.999)
+        labels:
+          slo: "burn_rate"
+          window: "6h"
+          target_slo: "99.9"
+
+      # Error budget burn rate - 3 days (slow burn detection)
+      - record: job:error_budget:burn_rate_3d
+        expr: |
+          (1 - (rate(agent_calls_successful_total[3d]) /
+          (rate(agent_calls_successful_total[3d]) + rate(agent_calls_failed_total[3d]) + 0.0001))) /
+          (1 - 0.999)
+        labels:
+          slo: "burn_rate"
+          window: "3d"
+          target_slo: "99.9"
+
+  - name: slo_compliance
+    interval: 5m
+    rules:
+      # SLO compliance - Availability (rolling 30-day window)
+      - record: job:slo_compliance:availability_30d
+        expr: avg_over_time(job:up:avg[30d])
+        labels:
+          slo: "compliance"
+          metric: "availability"
+          window: "30d"
+          target: "99.9"
+
+      # SLO compliance - Latency p95 (rolling 30-day window)
+      - record: job:slo_compliance:latency_p95_30d
+        expr: |
+          sum(rate(agent_response_duration_bucket{le="2000"}[30d])) /
+          sum(rate(agent_response_duration_count[30d]))
+        labels:
+          slo: "compliance"
+          metric: "latency_p95"
+          window: "30d"
+          target: "95"
+
+      # SLO compliance - Error rate (rolling 30-day window)
+      - record: job:slo_compliance:error_rate_30d
+        expr: |
+          1 - (sum(rate(agent_calls_failed_total[30d])) /
+          (sum(rate(agent_calls_successful_total[30d])) + sum(rate(agent_calls_failed_total[30d])) + 0.0001))
+        labels:
+          slo: "compliance"
+          metric: "success_rate"
+          window: "30d"
+          target: "99"

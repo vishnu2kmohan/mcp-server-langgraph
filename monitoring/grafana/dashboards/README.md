@@ -4,7 +4,74 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 
 ## Dashboards
 
-### 1. `langgraph-agent.json` - Overview Dashboard
+### 1. `authentication.json` - Authentication Dashboard (NEW in v2.1.0)
+
+**Comprehensive authentication and session management metrics:**
+
+- **Service Status** - Authentication service availability gauge
+- **Login Activity Rate** - Login attempts, successes, and failures per second
+- **Login Failure Rate** - Percentage gauge with color-coded thresholds
+- **Response Time Percentiles** - p50, p95, p99 latency for login operations
+- **Active Sessions** - Current active session count
+- **Token Operations** - Token creation, verification, and refresh rates
+- **JWKS Cache Performance** - Cache hit rate percentage
+- **Login Failures by Reason** - Breakdown of failure types
+- **Session Lifecycle Operations** - Create, retrieve, refresh, revoke rates
+- **Auth Provider Operations** - Operations by provider type
+
+**Use Cases:**
+- Authentication performance monitoring
+- Session management oversight
+- Token lifecycle tracking
+- Login failure analysis
+- JWKS cache optimization
+
+### 2. `openfga.json` - OpenFGA Authorization Dashboard (NEW in v2.1.0)
+
+**Fine-grained authorization and relationship-based access control metrics:**
+
+- **OpenFGA Service Status** - Service availability gauge
+- **Authorization Check Rate** - Total checks, allowed, and denied per second
+- **Denial Rate** - Authorization denial percentage
+- **Total Relationship Tuples** - Current tuple count in OpenFGA
+- **Check Latency Percentiles** - p50, p95, p99 for authorization checks
+- **Checks by Relation** - Authorization checks grouped by relation type
+- **Tuple Write Operations** - Tuples written and deleted rates
+- **Sync Operations** - OpenFGA sync status (success/failure)
+- **Role Sync Latency** - Latency percentiles for role synchronization
+- **Synced Tuples by Role** - Tuple distribution across roles
+- **Role Mapping Rules Applied** - Rules applied by type (simple, group, conditional)
+
+**Use Cases:**
+- Authorization performance tracking
+- Access pattern analysis
+- Tuple management monitoring
+- Role sync oversight
+- Policy effectiveness evaluation
+
+### 3. `llm-performance.json` - LLM Performance Dashboard (NEW in v2.1.0)
+
+**LLM and agent performance metrics:**
+
+- **Agent Service Status** - Service availability gauge
+- **Agent Call Rate** - Successful and failed calls per second
+- **Error Rate** - Agent error percentage with thresholds
+- **Response Time Percentiles** - p50, p95, p99 for agent responses
+- **Tool Calls** - 5-minute rate of tool invocations
+- **LLM Invocations by Model** - Success and failure rates per model
+- **Fallback Model Usage** - Automatic fallback activation tracking
+- **Tool Usage Rate** - Tool invocations by tool name
+- **Model Performance Summary** - Table view of model statistics
+- **Average Response Time by Operation** - Latency breakdown by operation type
+
+**Use Cases:**
+- LLM performance monitoring
+- Model comparison and selection
+- Fallback mechanism validation
+- Tool usage analysis
+- Operation-level performance tracking
+
+### 4. `langgraph-agent.json` - Overview Dashboard
 
 **Primary metrics for service health and performance:**
 
@@ -97,8 +164,11 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 ### Option 2: Provision via ConfigMap (Kubernetes)
 
 ```bash
-# Create ConfigMap with dashboards
+# Create ConfigMap with all dashboards (v2.1.0)
 kubectl create configmap grafana-dashboards \
+  --from-file=authentication.json \
+  --from-file=openfga.json \
+  --from-file=llm-performance.json \
   --from-file=langgraph-agent.json \
   --from-file=security.json \
   --from-file=keycloak.json \
@@ -146,6 +216,12 @@ grafana:
 
   dashboards:
     langgraph-agent:
+      authentication:
+        file: dashboards/authentication.json
+      openfga:
+        file: dashboards/openfga.json
+      llm-performance:
+        file: dashboards/llm-performance.json
       langgraph-overview:
         file: dashboards/langgraph-agent.json
       langgraph-security:
