@@ -43,7 +43,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -149,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Check for large files
       run: |
@@ -185,7 +185,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Dependency Review
       uses: actions/dependency-review-action@v4
@@ -197,7 +197,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Validate CODEOWNERS
       uses: mszostok/codeowners-validator@v0.7.4
@@ -214,7 +214,7 @@ jobs:
       pull-requests: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Run labeler
       uses: actions/labeler@v6

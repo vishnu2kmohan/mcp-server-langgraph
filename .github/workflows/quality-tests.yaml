@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -135,7 +135,7 @@ jobs:
     if: github.event_name == 'schedule'  # Only on weekly schedule (too slow for PRs)
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -176,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
