@@ -14,7 +14,7 @@ from enum import Enum
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.middleware import AuthMiddleware, require_auth
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
@@ -35,14 +35,15 @@ class UserProfileUpdate(BaseModel):
     email: Optional[str] = Field(None, description="User's email address")
     preferences: Optional[Dict[str, Any]] = Field(None, description="User preferences")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "name": "Alice Smith",
                 "email": "alice.smith@acme.com",
                 "preferences": {"theme": "dark", "language": "en"},
             }
         }
+    )
 
 
 class ConsentType(str, Enum):
@@ -63,13 +64,14 @@ class ConsentRecord(BaseModel):
     ip_address: Optional[str] = Field(None, description="IP address (auto-captured)")
     user_agent: Optional[str] = Field(None, description="User agent (auto-captured)")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "consent_type": "analytics",
                 "granted": True,
             }
         }
+    )
 
 
 class ConsentResponse(BaseModel):
@@ -78,8 +80,8 @@ class ConsentResponse(BaseModel):
     user_id: str
     consents: Dict[str, dict] = Field(description="Current consent status for all types")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "user_id": "user:alice",
                 "consents": {
@@ -92,6 +94,7 @@ class ConsentResponse(BaseModel):
                 },
             }
         }
+    )
 
 
 # In-memory consent storage (replace with database in production)
@@ -154,7 +157,7 @@ async def get_user_data(
 @require_auth
 async def export_user_data(
     request: Request,
-    format: str = Query("json", regex="^(json|csv)$", description="Export format: json or csv"),
+    format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
 ):
     """

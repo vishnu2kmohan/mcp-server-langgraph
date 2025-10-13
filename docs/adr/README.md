@@ -70,6 +70,22 @@ What becomes easier or more difficult to do because of this change?
 | [0003](0003-dual-observability.md) | Dual Observability: OpenTelemetry + LangSmith | Accepted | 2025-10-11 |
 | [0004](0004-mcp-streamable-http.md) | MCP StreamableHTTP Transport Protocol | Accepted | 2025-10-11 |
 | [0005](0005-pydantic-ai-integration.md) | Type-Safe Agent Responses with Pydantic AI | Accepted | 2025-10-11 |
+| [0006](0006-session-storage-architecture.md) | Pluggable Session Storage Architecture | Accepted | 2025-10-13 |
+| [0007](0007-authentication-provider-pattern.md) | Pluggable Authentication Provider Pattern | Accepted | 2025-10-13 |
+| [0008](0008-infisical-secrets-management.md) | Infisical for Secrets Management | Accepted | 2025-10-13 |
+| [0009](0009-feature-flag-system.md) | Feature Flag System for Gradual Rollouts | Accepted | 2025-10-13 |
+| [0010](0010-langgraph-functional-api.md) | LangGraph Functional API over Object-Oriented | Accepted | 2025-10-13 |
+| [0011](0011-cookiecutter-template-strategy.md) | Cookiecutter Template for Project Generation | Accepted | 2025-10-13 |
+| [0012](0012-compliance-framework-integration.md) | Built-In Compliance Framework (GDPR, SOC 2, HIPAA) | Accepted | 2025-10-13 |
+| [0013](0013-multi-deployment-target-strategy.md) | Multi-Deployment Target Strategy | Accepted | 2025-10-13 |
+| [0014](0014-pydantic-type-safety.md) | Pydantic Type Safety Strategy | Accepted | 2025-10-13 |
+| [0015](0015-memory-checkpointing.md) | Memory Checkpointing for Stateful Agents | Accepted | 2025-10-13 |
+| [0016](0016-property-based-testing-strategy.md) | Property-Based Testing with Hypothesis | Accepted | 2025-10-13 |
+| [0017](0017-error-handling-strategy.md) | Error Handling Strategy | Accepted | 2025-10-13 |
+| [0018](0018-semantic-versioning-strategy.md) | Semantic Versioning Strategy | Accepted | 2025-10-13 |
+| [0019](0019-async-first-architecture.md) | Async-First Architecture | Accepted | 2025-10-13 |
+| [0020](0020-dual-mcp-transport-protocol.md) | Dual MCP Transport Protocol (STDIO + StreamableHTTP) | Accepted | 2025-10-13 |
+| [0021](0021-cicd-pipeline-strategy.md) | CI/CD Pipeline Strategy | Accepted | 2025-10-13 |
 
 ## When to Create an ADR
 

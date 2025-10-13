@@ -1,0 +1,65 @@
+# 12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA)
+
+Date: 2025-10-13
+
+## Status
+
+Accepted
+
+## Context
+
+Enterprise customers require regulatory compliance:
+- **GDPR**: Data subject rights (EU)
+- **SOC 2**: Trust services criteria (US)
+- **HIPAA**: Healthcare data protection (US)
+
+Implementing compliance from scratch requires:
+- Legal expertise
+- Significant development time
+- Ongoing maintenance
+- Audit preparation
+
+## Decision
+
+Integrate **comprehensive compliance framework** with automated evidence collection and reporting.
+
+### Features
+
+**GDPR (5 REST APIs)**:
+- Article 15: Data access
+- Article 16: Data rectification
+- Article 17: Data erasure
+- Article 20: Data portability
+- Article 21: Consent management
+
+**SOC 2 (Automated evidence)**:
+- Daily evidence collection
+- Weekly access reviews
+- Monthly compliance reports
+- 14+ evidence types across 7 controls
+
+**HIPAA (Technical safeguards)**:
+- Emergency access procedures
+- PHI audit logging
+- Data integrity controls
+- Automatic session timeout
+
+## Consequences
+
+### Positive
+
+- **Enterprise Ready**: Compliance out-of-the-box
+- **Audit Prepared**: Automated evidence collection
+- **Market Differentiation**: Competitive advantage
+- **Reduced Risk**: Built-in best practices
+
+### Negative
+
+- **Complexity**: Large codebase addition
+- **Maintenance**: Keep updated with regulations
+- **Not Legal Advice**: Still requires legal review
+
+## References
+
+- Implementation: `src/mcp_server_langgraph/core/compliance/`
+- Documentation: `docs/COMPLIANCE.md`

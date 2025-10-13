@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-server-langgraph"
-version = "2.2.0"
+version = "2.3.0"
 description = "Production-ready MCP server with LangGraph, OpenFGA, and multi-LLM support"
 readme = "README.md"
 authors = [
@@ -165,11 +165,15 @@ module = [
 disallow_untyped_calls = true
 strict = true
 
-# Phase 2 (Future): Add more modules incrementally
-# [[tool.mypy.overrides]]
-# module = ["auth", "llm_factory", "agent"]
-# disallow_untyped_calls = true
-# strict = true
+# Phase 2: Auth, LLM, and Agent modules - Now with strict typing
+[[tool.mypy.overrides]]
+module = [
+    "mcp_server_langgraph.auth.*",
+    "mcp_server_langgraph.llm.*",
+    "mcp_server_langgraph.core.agent",
+]
+disallow_untyped_calls = true
+strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

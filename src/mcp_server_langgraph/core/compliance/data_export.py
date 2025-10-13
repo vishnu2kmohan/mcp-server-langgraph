@@ -7,9 +7,16 @@ import io
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
+from mcp_server_langgraph.core.compliance.storage import (
+    AuditLogStore,
+    ConsentStore,
+    ConversationStore,
+    PreferencesStore,
+    UserProfileStore,
+)
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -33,8 +40,8 @@ class UserDataExport(BaseModel):
     consents: List[Dict[str, Any]] = Field(default_factory=list, description="Consent records")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "export_id": "exp_20250101120000_user123",
                 "export_timestamp": "2025-01-01T12:00:00Z",
@@ -49,6 +56,7 @@ class UserDataExport(BaseModel):
                 "consents": [],
             }
         }
+    )
 
 
 class DataExportService:
@@ -61,15 +69,29 @@ class DataExportService:
     def __init__(
         self,
         session_store: Optional[SessionStore] = None,
-        # Add other data stores as needed (conversation store, etc.)
+        user_profile_store: Optional[UserProfileStore] = None,
+        conversation_store: Optional[ConversationStore] = None,
+        preferences_store: Optional[PreferencesStore] = None,
+        audit_log_store: Optional[AuditLogStore] = None,
+        consent_store: Optional[ConsentStore] = None,
     ):
         """
         Initialize data export service
 
         Args:
             session_store: Session storage backend
+            user_profile_store: User profile storage backend
+            conversation_store: Conversation storage backend
+            preferences_store: Preferences storage backend
+            audit_log_store: Audit log storage backend
+            consent_store: Consent storage backend
         """
         self.session_store = session_store
+        self.user_profile_store = user_profile_store
+        self.conversation_store = conversation_store
+        self.preferences_store = preferences_store
+        self.audit_log_store = audit_log_store
+        self.consent_store = consent_store
 
     async def export_user_data(self, user_id: str, username: str, email: str) -> UserDataExport:
         """
@@ -237,13 +259,28 @@ class DataExportService:
 
     async def _get_user_profile(self, user_id: str) -> Dict[str, Any]:
         """Get user profile data"""
-        # TODO: Integrate with actual user profile storage
-        # For now, return minimal data
-        return {
-            "user_id": user_id,
-            "created_at": datetime.utcnow().isoformat() + "Z",
-            "last_updated": datetime.utcnow().isoformat() + "Z",
-        }
+        if not self.user_profile_store:
+            # Return minimal data if no profile store configured
+            return {
+                "user_id": user_id,
+                "created_at": datetime.utcnow().isoformat() + "Z",
+                "last_updated": datetime.utcnow().isoformat() + "Z",
+            }
+
+        try:
+            profile = await self.user_profile_store.get(user_id)
+            if profile:
+                return profile.model_dump()
+            else:
+                # User exists but no profile data
+                return {
+                    "user_id": user_id,
+                    "created_at": datetime.utcnow().isoformat() + "Z",
+                    "last_updated": datetime.utcnow().isoformat() + "Z",
+                }
+        except Exception as e:
+            logger.error(f"Failed to retrieve user profile: {e}", exc_info=True)
+            return {"user_id": user_id, "error": "Failed to retrieve profile"}
 
     async def _get_user_sessions(self, user_id: str) -> List[Dict[str, Any]]:
         """Get all user sessions"""
@@ -270,24 +307,50 @@ class DataExportService:
 
     async def _get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user conversation history"""
-        # TODO: Integrate with conversation storage
-        # For now, return empty list
-        return []
+        if not self.conversation_store:
+            return []
+
+        try:
+            conversations = await self.conversation_store.list_user_conversations(user_id)
+            return [conv.model_dump() for conv in conversations]
+        except Exception as e:
+            logger.error(f"Failed to retrieve user conversations: {e}", exc_info=True)
+            return []
 
     async def _get_user_preferences(self, user_id: str) -> Dict[str, Any]:
         """Get user preferences"""
-        # TODO: Integrate with preferences storage
-        # For now, return empty dict
-        return {}
+        if not self.preferences_store:
+            return {}
+
+        try:
+            preferences = await self.preferences_store.get(user_id)
+            if preferences:
+                return preferences.preferences
+            return {}
+        except Exception as e:
+            logger.error(f"Failed to retrieve user preferences: {e}", exc_info=True)
+            return {}
 
     async def _get_user_audit_log(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user audit log entries"""
-        # TODO: Integrate with audit log storage
-        # For now, return empty list
-        return []
+        if not self.audit_log_store:
+            return []
+
+        try:
+            logs = await self.audit_log_store.list_user_logs(user_id, limit=1000)
+            return [log.model_dump() for log in logs]
+        except Exception as e:
+            logger.error(f"Failed to retrieve user audit logs: {e}", exc_info=True)
+            return []
 
     async def _get_user_consents(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user consent records"""
-        # TODO: Integrate with consent storage
-        # For now, return empty list
-        return []
+        if not self.consent_store:
+            return []
+
+        try:
+            consents = await self.consent_store.get_user_consents(user_id)
+            return [consent.model_dump() for consent in consents]
+        except Exception as e:
+            logger.error(f"Failed to retrieve user consents: {e}", exc_info=True)
+            return []

@@ -1,0 +1,57 @@
+[flake8]
+# Maximum line length (aligned with black)
+max-line-length = 127
+
+# Exclude patterns
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    htmlcov,
+    .pytest_cache,
+    *.egg-info,
+    .eggs,
+    .tox,
+    .mypy_cache,
+    .hypothesis,
+    node_modules,
+    .mintlify
+
+# Ignore specific rules that conflict with black formatting
+extend-ignore =
+    E203,  # whitespace before ':' (conflicts with black)
+    W503,  # line break before binary operator (conflicts with black)
+    E501,  # line too long (handled by black)
+
+# Enable additional checks
+select =
+    E,     # pycodestyle errors
+    F,     # pyflakes
+    W,     # pycodestyle warnings
+    C90,   # mccabe complexity
+    N,     # pep8-naming
+
+# Maximum complexity for functions
+max-complexity = 15
+
+# Docstring conventions
+docstring-convention = google
+
+# Per-file ignores
+per-file-ignores =
+    __init__.py:F401,F403  # Allow unused imports in __init__ files
+    tests/*:F401,F811,S101  # Allow unused imports, redefinitions, and asserts in tests
+    conftest.py:F401,F811  # Allow unused imports and redefinitions in conftest
+    */migrations/*:E501,F401  # Relax rules for migration files
+
+# Show source code for each error
+show-source = True
+
+# Count errors
+count = True
+
+# Show statistics
+statistics = True

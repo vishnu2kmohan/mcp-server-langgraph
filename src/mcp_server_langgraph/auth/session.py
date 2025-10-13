@@ -205,6 +205,32 @@ class SessionStore(ABC):
         """
         pass
 
+    @abstractmethod
+    async def get_inactive_sessions(self, cutoff_date: datetime) -> List[SessionData]:
+        """
+        Get sessions that haven't been accessed since cutoff date
+
+        Args:
+            cutoff_date: Return sessions with last_accessed before this date
+
+        Returns:
+            List of inactive session data
+        """
+        pass
+
+    @abstractmethod
+    async def delete_inactive_sessions(self, cutoff_date: datetime) -> int:
+        """
+        Delete sessions that haven't been accessed since cutoff date
+
+        Args:
+            cutoff_date: Delete sessions with last_accessed before this date
+
+        Returns:
+            Number of sessions deleted
+        """
+        pass
+
     def _generate_session_id(self) -> str:
         """Generate cryptographically secure session ID"""
         return secrets.token_urlsafe(32)
@@ -401,6 +427,42 @@ class InMemorySessionStore(SessionStore):
                 count += 1
 
         logger.info(f"Deleted {count} sessions for user {user_id}")
+        return count
+
+    async def get_inactive_sessions(self, cutoff_date: datetime) -> List[SessionData]:
+        """Get sessions that haven't been accessed since cutoff date"""
+        inactive_sessions = []
+
+        for session_id, session in list(self.sessions.items()):
+            try:
+                # Check if session is expired first
+                if await self.get(session_id) is None:
+                    continue  # Session was expired and auto-deleted
+
+                # Parse last_accessed timestamp
+                last_accessed = datetime.fromisoformat(session.last_accessed)
+
+                # Add to inactive list if older than cutoff
+                if last_accessed < cutoff_date:
+                    inactive_sessions.append(session)
+
+            except (ValueError, AttributeError) as e:
+                logger.warning(f"Error parsing session {session_id}: {e}")
+                continue
+
+        logger.info(f"Found {len(inactive_sessions)} inactive sessions before {cutoff_date.isoformat()}")
+        return inactive_sessions
+
+    async def delete_inactive_sessions(self, cutoff_date: datetime) -> int:
+        """Delete sessions that haven't been accessed since cutoff date"""
+        inactive_sessions = await self.get_inactive_sessions(cutoff_date)
+        count = 0
+
+        for session in inactive_sessions:
+            if await self.delete(session.session_id):
+                count += 1
+
+        logger.info(f"Deleted {count} inactive sessions before {cutoff_date.isoformat()}")
         return count
 
 
@@ -645,6 +707,53 @@ class RedisSessionStore(SessionStore):
         await self.redis.delete(user_sessions_key)
 
         logger.info(f"Deleted {count} sessions from Redis for user {user_id}")
+        return count
+
+    async def get_inactive_sessions(self, cutoff_date: datetime) -> List[SessionData]:
+        """Get sessions that haven't been accessed since cutoff date"""
+        inactive_sessions = []
+
+        # Scan all session keys
+        cursor = 0
+        while True:
+            cursor, keys = await self.redis.scan(cursor, match="session:*", count=100)
+
+            for key in keys:
+                if isinstance(key, bytes):
+                    key = key.decode('utf-8')
+
+                session_id = key.replace("session:", "")
+                session = await self.get(session_id)
+
+                if session:
+                    try:
+                        # Parse last_accessed timestamp
+                        last_accessed = datetime.fromisoformat(session.last_accessed)
+
+                        # Add to inactive list if older than cutoff
+                        if last_accessed < cutoff_date:
+                            inactive_sessions.append(session)
+
+                    except (ValueError, AttributeError) as e:
+                        logger.warning(f"Error parsing session {session_id}: {e}")
+                        continue
+
+            if cursor == 0:
+                break
+
+        logger.info(f"Found {len(inactive_sessions)} inactive sessions in Redis before {cutoff_date.isoformat()}")
+        return inactive_sessions
+
+    async def delete_inactive_sessions(self, cutoff_date: datetime) -> int:
+        """Delete sessions that haven't been accessed since cutoff date"""
+        inactive_sessions = await self.get_inactive_sessions(cutoff_date)
+        count = 0
+
+        for session in inactive_sessions:
+            if await self.delete(session.session_id):
+                count += 1
+
+        logger.info(f"Deleted {count} inactive sessions from Redis before {cutoff_date.isoformat()}")
         return count
 
 

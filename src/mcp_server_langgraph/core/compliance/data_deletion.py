@@ -9,6 +9,13 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import SessionStore
+from mcp_server_langgraph.core.compliance.storage import (
+    AuditLogStore,
+    ConsentStore,
+    ConversationStore,
+    PreferencesStore,
+    UserProfileStore,
+)
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -47,7 +54,11 @@ class DataDeletionService:
         self,
         session_store: Optional[SessionStore] = None,
         openfga_client: Optional[OpenFGAClient] = None,
-        # Add other data stores as needed
+        user_profile_store: Optional[UserProfileStore] = None,
+        conversation_store: Optional[ConversationStore] = None,
+        preferences_store: Optional[PreferencesStore] = None,
+        audit_log_store: Optional[AuditLogStore] = None,
+        consent_store: Optional[ConsentStore] = None,
     ):
         """
         Initialize data deletion service
@@ -55,9 +66,19 @@ class DataDeletionService:
         Args:
             session_store: Session storage backend
             openfga_client: OpenFGA authorization client
+            user_profile_store: User profile storage backend
+            conversation_store: Conversation storage backend
+            preferences_store: Preferences storage backend
+            audit_log_store: Audit log storage backend
+            consent_store: Consent storage backend
         """
         self.session_store = session_store
         self.openfga_client = openfga_client
+        self.user_profile_store = user_profile_store
+        self.conversation_store = conversation_store
+        self.preferences_store = preferences_store
+        self.audit_log_store = audit_log_store
+        self.consent_store = consent_store
 
     async def delete_user_account(self, user_id: str, username: str, reason: str = "user_request") -> DeletionResult:
         """
@@ -129,7 +150,18 @@ class DataDeletionService:
                 errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
 
-            # 5. Anonymize audit logs (don't delete for compliance)
+            # 5. Delete consent records
+            try:
+                if self.consent_store:
+                    count = await self._delete_user_consents(user_id)
+                    deleted_items["consents"] = count
+                    logger.info(f"Deleted {count} consent records", extra={"user_id": user_id})
+            except Exception as e:
+                error_msg = f"Failed to delete consent records: {str(e)}"
+                errors.append(error_msg)
+                logger.error(error_msg, exc_info=True)
+
+            # 6. Anonymize audit logs (don't delete for compliance)
             try:
                 count = await self._anonymize_user_audit_logs(user_id)
                 anonymized_items["audit_logs"] = count
@@ -139,7 +171,7 @@ class DataDeletionService:
                 errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
 
-            # 6. Delete user profile/account
+            # 7. Delete user profile/account
             try:
                 count = await self._delete_user_profile(user_id)
                 deleted_items["user_profile"] = count
@@ -149,7 +181,7 @@ class DataDeletionService:
                 errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
 
-            # 7. Create final audit record (anonymized)
+            # 8. Create final audit record (anonymized)
             audit_record_id = await self._create_deletion_audit_record(
                 user_id=user_id, username=username, reason=reason, deleted_items=deleted_items, errors=errors
             )
@@ -194,15 +226,27 @@ class DataDeletionService:
 
     async def _delete_user_conversations(self, user_id: str) -> int:
         """Delete all user conversations"""
-        # TODO: Integrate with conversation storage
-        # For now, return 0
-        return 0
+        if not self.conversation_store:
+            return 0
+
+        try:
+            count = await self.conversation_store.delete_user_conversations(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user conversations: {e}", exc_info=True)
+            raise
 
     async def _delete_user_preferences(self, user_id: str) -> int:
         """Delete all user preferences"""
-        # TODO: Integrate with preferences storage
-        # For now, return 0
-        return 0
+        if not self.preferences_store:
+            return 0
+
+        try:
+            deleted = await self.preferences_store.delete(user_id)
+            return 1 if deleted else 0
+        except Exception as e:
+            logger.error(f"Failed to delete user preferences: {e}", exc_info=True)
+            raise
 
     async def _delete_user_authorization_tuples(self, user_id: str) -> int:
         """Delete all OpenFGA authorization tuples for user"""
@@ -229,15 +273,40 @@ class DataDeletionService:
 
         Replace user_id with pseudonymized identifier.
         """
-        # TODO: Integrate with audit log storage
-        # For now, return 0
-        return 0
+        if not self.audit_log_store:
+            return 0
+
+        try:
+            count = await self.audit_log_store.anonymize_user_logs(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to anonymize user audit logs: {e}", exc_info=True)
+            raise
+
+    async def _delete_user_consents(self, user_id: str) -> int:
+        """Delete all user consent records"""
+        if not self.consent_store:
+            return 0
+
+        try:
+            count = await self.consent_store.delete_user_consents(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user consents: {e}", exc_info=True)
+            raise
 
     async def _delete_user_profile(self, user_id: str) -> int:
         """Delete user profile/account"""
-        # TODO: Integrate with user profile storage
-        # For now, return 1 (assuming profile exists)
-        return 1
+        if not self.user_profile_store:
+            # If no profile store, assume profile was deleted elsewhere
+            return 1
+
+        try:
+            deleted = await self.user_profile_store.delete(user_id)
+            return 1 if deleted else 0
+        except Exception as e:
+            logger.error(f"Failed to delete user profile: {e}", exc_info=True)
+            raise
 
     async def _create_deletion_audit_record(
         self,

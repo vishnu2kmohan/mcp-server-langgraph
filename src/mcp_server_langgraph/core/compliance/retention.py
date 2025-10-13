@@ -303,10 +303,16 @@ class DataRetentionService:
         Returns:
             Number of sessions deleted
         """
-        # TODO: Implement actual session cleanup
-        # This requires adding a query method to SessionStore to find sessions by last_accessed
-        # For now, return 0
-        return 0
+        if not self.session_store:
+            return 0
+
+        if self.dry_run:
+            # In dry-run mode, just count inactive sessions without deleting
+            inactive_sessions = await self.session_store.get_inactive_sessions(cutoff_date)
+            return len(inactive_sessions)
+        else:
+            # Actually delete inactive sessions
+            return await self.session_store.delete_inactive_sessions(cutoff_date)
 
     def get_retention_summary(self) -> Dict[str, Any]:
         """

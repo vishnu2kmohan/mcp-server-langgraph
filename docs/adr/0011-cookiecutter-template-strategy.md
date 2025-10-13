@@ -1,0 +1,51 @@
+# 11. Cookiecutter Template for Project Generation
+
+Date: 2025-10-13
+
+## Status
+
+Accepted
+
+## Context
+
+Developers building MCP servers face repeated setup tasks:
+- Project structure creation
+- Dependency configuration
+- Deployment setup
+- Authentication configuration
+
+Manual setup creates:
+- Inconsistent project structures
+- Copy-paste errors
+- Missing best practices
+- Outdated boilerplate
+
+## Decision
+
+Provide **Cookiecutter template** for project generation with customization options.
+
+### Template Features
+
+- 20+ customization options (auth, LLM, deployment, testing)
+- Optional features (Kubernetes, Keycloak, OpenFGA)
+- Pre-configured best practices
+- Environment-specific configs
+
+## Consequences
+
+### Positive
+
+- **Fast Project Setup**: Minutes vs hours
+- **Consistency**: All projects follow best practices
+- **Customization**: Choose only needed features
+- **Maintenance**: Update template, all new projects benefit
+
+### Negative
+
+- **Template Maintenance**: Keep template updated
+- **Learning Curve**: Developers must learn Cookiecutter
+
+## References
+
+- Template: `template/cookiecutter.json`
+- Documentation: `docs/template/usage.md`
