@@ -43,6 +43,47 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 - Access audit
 - Compliance reporting
 
+### 3. `keycloak.json` - Keycloak SSO Dashboard
+
+**Keycloak authentication and SSO metrics:**
+
+- **Service Status** - Keycloak availability gauge
+- **Response Time** - p50, p95, p99 latency for Keycloak requests
+- **Login Request Rate** - Login attempts, successes, and failures
+- **Error Rates** - Login and token refresh error percentages
+- **Active Sessions and Users** - Current active sessions count
+- **CPU Usage** - Keycloak pod CPU utilization
+- **Memory Usage** - Memory consumption vs limits
+
+**Use Cases:**
+- SSO service monitoring
+- Authentication performance tracking
+- Capacity planning for Keycloak
+- Troubleshooting login issues
+- Session management oversight
+
+### 4. `redis-sessions.json` - Redis Session Store Dashboard
+
+**Redis session storage metrics:**
+
+- **Service Status** - Redis session store availability
+- **Memory Usage** - Percentage and absolute memory consumption
+- **Active Sessions** - Current session count (key count)
+- **Operations Rate** - Redis commands per second
+- **Connection Pool** - Pool utilization and available connections
+- **Evictions** - Session eviction rate and total
+- **Session Operations** - Create, get, delete, refresh rates by operation
+- **Error Rate** - Session store operation failures
+- **Memory Fragmentation** - Redis memory fragmentation ratio
+
+**Use Cases:**
+- Session store health monitoring
+- Memory pressure detection
+- Performance troubleshooting
+- Capacity planning
+- Connection pool tuning
+- Eviction policy validation
+
 ## Installation
 
 ### Option 1: Import via Grafana UI
@@ -60,6 +101,8 @@ This directory contains pre-built Grafana dashboards for monitoring the MCP Serv
 kubectl create configmap grafana-dashboards \
   --from-file=langgraph-agent.json \
   --from-file=security.json \
+  --from-file=keycloak.json \
+  --from-file=redis-sessions.json \
   -n monitoring
 
 # Add to Grafana deployment
@@ -107,6 +150,10 @@ grafana:
         file: dashboards/langgraph-agent.json
       langgraph-security:
         file: dashboards/security.json
+      keycloak-sso:
+        file: dashboards/keycloak.json
+      redis-sessions:
+        file: dashboards/redis-sessions.json
 ```
 
 ## Dashboard Configuration
@@ -180,6 +227,31 @@ Ensure these metrics are exported by the application:
 - `auth_failures_total` - Authentication failures
 - `authz_failures_total` - Authorization failures
 - `jwt_validation_errors_total` - JWT validation errors
+
+### Keycloak Metrics
+- `up{job="keycloak"}` - Keycloak service health
+- `keycloak_request_duration_bucket` - Response time histogram
+- `keycloak_login_attempts_total` - Total login attempts
+- `keycloak_login_success_total` - Successful logins
+- `keycloak_login_failed_total` - Failed logins
+- `keycloak_token_refresh_total` - Token refresh attempts
+- `keycloak_token_refresh_failed_total` - Failed token refreshes
+- `keycloak_active_sessions` - Currently active sessions
+- `keycloak_active_users` - Currently active users
+
+### Redis Session Store Metrics
+- `up{job="redis-session"}` - Redis service health
+- `redis_memory_used_bytes` - Current memory usage
+- `redis_memory_max_bytes` - Maximum memory limit
+- `redis_db_keys` - Number of keys (sessions)
+- `redis_commands_processed_total` - Total commands processed
+- `redis_connected_clients` - Active client connections
+- `redis_evicted_keys_total` - Evicted keys counter
+- `redis_mem_fragmentation_ratio` - Memory fragmentation
+- `redis_client_pool_connections_in_use` - Active pool connections
+- `redis_client_pool_max_connections` - Maximum pool size
+- `session_store_operations_total` - Session operations by type
+- `session_store_errors_total` - Session operation errors
 
 ### Resource Metrics (from kube-state-metrics)
 - `container_memory_working_set_bytes`

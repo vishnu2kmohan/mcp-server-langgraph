@@ -76,15 +76,26 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - **Open-Source Models**: Llama 3.1, Qwen 2.5, Mistral, DeepSeek, and more via Ollama
 - **LangGraph Functional API**: Stateful agent with conditional routing and checkpointing
 - **MCP Server**: Standard protocol for exposing AI agents as tools (stdio, StreamableHTTP)
-- **Authentication**: JWT-based authentication with token validation
+- **Enterprise Authentication**: Pluggable auth providers (InMemory, Keycloak SSO)
+  - **JWT Authentication**: Token-based authentication with validation and expiration
+  - **Keycloak Integration**: Production-ready SSO with OIDC/OAuth2 ([docs/integrations/keycloak.md](docs/integrations/keycloak.md))
+  - **Token Refresh**: Automatic refresh token rotation
+  - **JWKS Verification**: Public key verification without shared secrets
+- **Session Management**: Flexible session storage backends
+  - **InMemory**: Fast in-memory sessions for development
+  - **Redis**: Persistent sessions with TTL, sliding windows, concurrent limits
+  - **Advanced Features**: Session lifecycle management, bulk revocation, user tracking
 - **Fine-Grained Authorization**: OpenFGA (Zanzibar-style) relationship-based access control
+  - **Role Mapping**: Declarative role mappings with YAML configuration
+  - **Keycloak Sync**: Automatic role/group synchronization to OpenFGA
+  - **Hierarchies**: Role inheritance and conditional mappings
 - **Secrets Management**: Infisical integration for secure secret storage and retrieval
 - **Feature Flags**: Gradual rollouts with environment-based configuration ([docs/adr/0006-feature-flags.md](docs/adr/))
 - **Dual Observability**: OpenTelemetry + LangSmith for comprehensive monitoring
-  - **OpenTelemetry**: Distributed tracing with Jaeger, metrics with Prometheus
+  - **OpenTelemetry**: Distributed tracing with Jaeger, metrics with Prometheus (30+ auth metrics)
   - **LangSmith**: LLM-specific tracing, prompt engineering, evaluations
 - **Structured Logging**: JSON logging with trace context correlation
-- **Full Observability Stack**: Docker Compose setup with OpenFGA, Jaeger, Prometheus, and Grafana
+- **Full Observability Stack**: Docker Compose setup with OpenFGA, Keycloak, Redis, Jaeger, Prometheus, and Grafana
 - **LangGraph Platform**: Deploy to managed LangGraph Cloud with one command
 - **Automatic Fallback**: Resilient multi-model fallback for high availability
 
@@ -96,6 +107,20 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - **Strict Typing**: Gradual mypy strict mode rollout (3 modules complete)
 - **OpenAPI Validation**: Automated schema generation and breaking change detection
 - **87%+ Code Coverage**: Comprehensive unit and integration tests
+
+### 🚀 Production Deployment
+- **Kubernetes Ready**: Production manifests for GKE, EKS, AKS, Rancher, VMware Tanzu
+- **Helm Charts**: Flexible deployment with customizable values and dependencies
+- **Kustomize**: Environment-specific overlays (dev/staging/production)
+- **Multi-Platform**: Docker Compose, kubectl, Kustomize, Helm deployment options
+- **CI/CD Pipeline**: Automated testing, validation, build, and deployment with GitHub Actions
+- **Deployment Validation**: Comprehensive validation scripts for all deployment configurations
+- **E2E Testing**: Automated deployment tests with kind clusters
+- **High Availability**: Pod anti-affinity, HPA, PDB, rolling updates
+- **Monitoring**: 25+ Prometheus alerts, 4 Grafana dashboards, 9 operational runbooks
+- **Observability**: Full monitoring for Keycloak, Redis, sessions, and application
+- **Secrets**: External secrets operator support, sealed secrets compatible
+- **Service Mesh**: Compatible with Istio, Linkerd, and other service meshes
 
 ### 📚 Documentation & Architecture
 - **Architecture Decision Records (ADRs)**: 5+ documented design decisions ([docs/adr/](docs/adr/))
@@ -112,6 +137,13 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - **[Mutation Testing Guide](docs/MUTATION_TESTING.md)** - Test effectiveness measurement and improvement
 - **[Strict Typing Guide](docs/STRICT_TYPING_GUIDE.md)** - Gradual mypy strict mode rollout
 - **[Architecture Decision Records](docs/adr/)** - Documented architectural choices
+
+### 🚀 Deployment & Operations
+- **[Deployment Quickstart](deployments/QUICKSTART.md)** - Quick deployment guide for all platforms
+- **[Deployment README](deployments/README.md)** - Comprehensive deployment documentation
+- **[CI/CD Guide](docs/development/ci-cd.md)** - Continuous integration and deployment pipeline
+- **[Operational Runbooks](docs/runbooks/)** - 9 runbooks for alert response and troubleshooting
+- **[Keycloak Integration](docs/integrations/keycloak.md)** - Enterprise SSO setup and configuration
 
 ### 📝 Architecture Decision Records (ADRs)
 - [0001: Multi-Provider LLM Support (LiteLLM)](docs/adr/0001-llm-multi-provider.md)
