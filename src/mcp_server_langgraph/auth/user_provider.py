@@ -225,6 +225,7 @@ class InMemoryUserProvider(UserProvider):
         if not secret_key:
             # Use a random key for testing/development only
             import secrets as secrets_module
+
             secret_key = secrets_module.token_urlsafe(32)
             logger.warning(
                 "No secret_key provided to InMemoryUserProvider. Using random key. "
@@ -394,7 +395,6 @@ class KeycloakUserProvider(UserProvider):
                 tokens = await self.client.authenticate_user(username, password)
 
                 # Get full user details for role sync
-                access_token = tokens["access_token"]
                 keycloak_user = await self.client.get_user_by_username(username)
 
                 if not keycloak_user:

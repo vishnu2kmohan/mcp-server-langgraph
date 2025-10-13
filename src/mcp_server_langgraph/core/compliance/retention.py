@@ -137,7 +137,7 @@ class DataRetentionService:
                     metrics.successful_calls.add(1, {"operation": "session_cleanup"})
 
                 logger.info(
-                    f"Session cleanup completed",
+                    "Session cleanup completed",
                     extra={
                         "deleted_count": deleted_count,
                         "retention_days": retention_days,
@@ -184,7 +184,7 @@ class DataRetentionService:
                 result.deleted_count = deleted_count
 
                 logger.info(
-                    f"Conversation cleanup completed",
+                    "Conversation cleanup completed",
                     extra={"deleted_count": deleted_count, "dry_run": self.dry_run},
                 )
 
@@ -228,7 +228,7 @@ class DataRetentionService:
                 result.archived_count = archived_count
 
                 logger.info(
-                    f"Audit log cleanup completed",
+                    "Audit log cleanup completed",
                     extra={"archived_count": archived_count, "dry_run": self.dry_run},
                 )
 

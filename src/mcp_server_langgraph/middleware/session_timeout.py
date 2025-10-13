@@ -49,7 +49,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
         self.session_store = session_store or get_session_store()
 
         logger.info(
-            f"Session timeout middleware initialized",
+            "Session timeout middleware initialized",
             extra={"timeout_seconds": timeout_seconds, "timeout_minutes": timeout_seconds / 60},
         )
 

@@ -80,6 +80,48 @@ class DataDeletionService:
         self.audit_log_store = audit_log_store
         self.consent_store = consent_store
 
+    async def _safe_delete(self, operation_name: str, delete_func, user_id: str, deleted_items: dict, errors: list) -> None:
+        """
+        Safely execute a deletion operation with error handling
+
+        Args:
+            operation_name: Name of the operation (for logging)
+            delete_func: Async function to execute deletion
+            user_id: User identifier
+            deleted_items: Dict to store deletion counts
+            errors: List to append errors to
+        """
+        try:
+            count = await delete_func(user_id)
+            deleted_items[operation_name] = count
+            logger.info(f"Deleted {count} {operation_name}", extra={"user_id": user_id})
+        except Exception as e:
+            error_msg = f"Failed to delete {operation_name}: {str(e)}"
+            errors.append(error_msg)
+            logger.error(error_msg, exc_info=True)
+
+    async def _safe_anonymize(
+        self, operation_name: str, anonymize_func, user_id: str, anonymized_items: dict, errors: list
+    ) -> None:
+        """
+        Safely execute an anonymization operation with error handling
+
+        Args:
+            operation_name: Name of the operation (for logging)
+            anonymize_func: Async function to execute anonymization
+            user_id: User identifier
+            anonymized_items: Dict to store anonymization counts
+            errors: List to append errors to
+        """
+        try:
+            count = await anonymize_func(user_id)
+            anonymized_items[operation_name] = count
+            logger.info(f"Anonymized {count} {operation_name}", extra={"user_id": user_id})
+        except Exception as e:
+            error_msg = f"Failed to anonymize {operation_name}: {str(e)}"
+            errors.append(error_msg)
+            logger.error(error_msg, exc_info=True)
+
     async def delete_user_account(self, user_id: str, username: str, reason: str = "user_request") -> DeletionResult:
         """
         Delete all user data (GDPR Article 17)
@@ -109,66 +151,26 @@ class DataDeletionService:
             errors = []
 
             # 1. Delete sessions
-            try:
-                count = await self._delete_user_sessions(user_id)
-                deleted_items["sessions"] = count
-                logger.info(f"Deleted {count} sessions", extra={"user_id": user_id})
-            except Exception as e:
-                error_msg = f"Failed to delete sessions: {str(e)}"
-                errors.append(error_msg)
-                logger.error(error_msg, exc_info=True)
+            await self._safe_delete("sessions", self._delete_user_sessions, user_id, deleted_items, errors)
 
             # 2. Delete conversations
-            try:
-                count = await self._delete_user_conversations(user_id)
-                deleted_items["conversations"] = count
-                logger.info(f"Deleted {count} conversations", extra={"user_id": user_id})
-            except Exception as e:
-                error_msg = f"Failed to delete conversations: {str(e)}"
-                errors.append(error_msg)
-                logger.error(error_msg, exc_info=True)
+            await self._safe_delete("conversations", self._delete_user_conversations, user_id, deleted_items, errors)
 
             # 3. Delete preferences
-            try:
-                count = await self._delete_user_preferences(user_id)
-                deleted_items["preferences"] = count
-                logger.info(f"Deleted {count} preferences", extra={"user_id": user_id})
-            except Exception as e:
-                error_msg = f"Failed to delete preferences: {str(e)}"
-                errors.append(error_msg)
-                logger.error(error_msg, exc_info=True)
+            await self._safe_delete("preferences", self._delete_user_preferences, user_id, deleted_items, errors)
 
             # 4. Delete OpenFGA tuples
-            try:
-                if self.openfga_client:
-                    count = await self._delete_user_authorization_tuples(user_id)
-                    deleted_items["authorization_tuples"] = count
-                    logger.info(f"Deleted {count} authorization tuples", extra={"user_id": user_id})
-            except Exception as e:
-                error_msg = f"Failed to delete authorization tuples: {str(e)}"
-                errors.append(error_msg)
-                logger.error(error_msg, exc_info=True)
+            if self.openfga_client:
+                await self._safe_delete(
+                    "authorization_tuples", self._delete_user_authorization_tuples, user_id, deleted_items, errors
+                )
 
             # 5. Delete consent records
-            try:
-                if self.consent_store:
-                    count = await self._delete_user_consents(user_id)
-                    deleted_items["consents"] = count
-                    logger.info(f"Deleted {count} consent records", extra={"user_id": user_id})
-            except Exception as e:
-                error_msg = f"Failed to delete consent records: {str(e)}"
-                errors.append(error_msg)
-                logger.error(error_msg, exc_info=True)
+            if self.consent_store:
+                await self._safe_delete("consents", self._delete_user_consents, user_id, deleted_items, errors)
 
             # 6. Anonymize audit logs (don't delete for compliance)
-            try:
-                count = await self._anonymize_user_audit_logs(user_id)
-                anonymized_items["audit_logs"] = count
-                logger.info(f"Anonymized {count} audit log entries", extra={"user_id": user_id})
-            except Exception as e:
-                error_msg = f"Failed to anonymize audit logs: {str(e)}"
-                errors.append(error_msg)
-                logger.error(error_msg, exc_info=True)
+            await self._safe_anonymize("audit_logs", self._anonymize_user_audit_logs, user_id, anonymized_items, errors)
 
             # 7. Delete user profile/account
             try:

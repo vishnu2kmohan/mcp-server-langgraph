@@ -47,6 +47,44 @@ class AgentState(TypedDict):
     reasoning: str | None  # Reasoning from Pydantic AI
 
 
+def _initialize_pydantic_agent():
+    """Initialize Pydantic AI agent if available"""
+    if not PYDANTIC_AI_AVAILABLE:
+        return None
+
+    try:
+        pydantic_agent = create_pydantic_agent()
+        logger.info("Pydantic AI agent initialized for type-safe routing")
+        return pydantic_agent
+    except Exception as e:
+        logger.warning(f"Failed to initialize Pydantic AI agent: {e}", exc_info=True)
+        return None
+
+
+def _get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str] = None) -> Optional[RunnableConfig]:
+    """Get runnable config with LangSmith metadata"""
+    if not LANGSMITH_AVAILABLE or not langsmith_config.is_enabled():
+        return None
+
+    return RunnableConfig(
+        run_name="mcp-server-langgraph", tags=get_run_tags(user_id), metadata=get_run_metadata(user_id, request_id)
+    )
+
+
+def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentState:
+    """Fallback routing logic without Pydantic AI"""
+    # Determine if this needs tools or direct response
+    if any(keyword in last_message.content.lower() for keyword in ["search", "calculate", "lookup"]):
+        state["next_action"] = "use_tools"
+    else:
+        state["next_action"] = "respond"
+
+    state["routing_confidence"] = 0.5  # Low confidence for fallback
+    state["reasoning"] = "Fallback keyword-based routing"
+
+    return state
+
+
 def create_agent_graph():
     """Create the LangGraph agent using functional API with LiteLLM and observability"""
 
@@ -54,23 +92,7 @@ def create_agent_graph():
     model = create_llm_from_config(settings)
 
     # Initialize Pydantic AI agent if available
-    pydantic_agent = None
-    if PYDANTIC_AI_AVAILABLE:
-        try:
-            pydantic_agent = create_pydantic_agent()
-            logger.info("Pydantic AI agent initialized for type-safe routing")
-        except Exception as e:
-            logger.warning(f"Failed to initialize Pydantic AI agent: {e}", exc_info=True)
-
-    # Create runnable config for LangSmith tracing if available
-    def get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str] = None) -> Optional[RunnableConfig]:
-        """Get runnable config with LangSmith metadata"""
-        if not LANGSMITH_AVAILABLE or not langsmith_config.is_enabled():
-            return None
-
-        return RunnableConfig(
-            run_name="mcp-server-langgraph", tags=get_run_tags(user_id), metadata=get_run_metadata(user_id, request_id)
-        )
+    pydantic_agent = _initialize_pydantic_agent()
 
     # Define node functions
     def route_input(state: AgentState) -> AgentState:
@@ -105,19 +127,6 @@ def create_agent_graph():
             else:
                 # Fallback routing if Pydantic AI not available
                 state = _fallback_routing(state, last_message)
-
-        return state
-
-    def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentState:
-        """Fallback routing logic without Pydantic AI"""
-        # Determine if this needs tools or direct response
-        if any(keyword in last_message.content.lower() for keyword in ["search", "calculate", "lookup"]):
-            state["next_action"] = "use_tools"
-        else:
-            state["next_action"] = "respond"
-
-        state["routing_confidence"] = 0.5  # Low confidence for fallback
-        state["reasoning"] = "Fallback keyword-based routing"
 
         return state
 

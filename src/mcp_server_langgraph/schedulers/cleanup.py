@@ -95,7 +95,7 @@ class CleanupScheduler:
             )
 
             logger.info(
-                f"Scheduled data retention cleanup",
+                "Scheduled data retention cleanup",
                 extra={"schedule": schedule, "next_run": self._get_next_run_time()},
             )
 

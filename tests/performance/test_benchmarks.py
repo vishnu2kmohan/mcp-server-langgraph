@@ -1,5 +1,6 @@
 """Performance benchmarks for critical system components."""
 
+import asyncio
 import time
 from datetime import datetime, timedelta
 from typing import Any, Dict
@@ -70,7 +71,7 @@ class TestJWTBenchmarks:
         assert len(result) > 0
 
         # Performance assertion: < 1ms average
-        assert benchmark.stats["mean"] < 0.001, f"JWT encoding took {benchmark.stats['mean']*1000:.2f}ms (target: < 1ms)"
+        assert benchmark.stats["mean"] < 0.001, f"JWT encoding took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 1ms)"
 
     def test_jwt_decoding_performance(self, jwt_config, sample_payload, benchmark):
         """Benchmark JWT token decoding.
@@ -90,7 +91,7 @@ class TestJWTBenchmarks:
         assert result["sub"] == sample_payload["sub"]
 
         # Performance assertion: < 1ms average
-        assert benchmark.stats["mean"] < 0.001, f"JWT decoding took {benchmark.stats['mean']*1000:.2f}ms (target: < 1ms)"
+        assert benchmark.stats["mean"] < 0.001, f"JWT decoding took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 1ms)"
 
     def test_jwt_validation_performance(self, jwt_config, sample_payload, benchmark):
         """Benchmark JWT token validation with expiration check.
@@ -118,7 +119,7 @@ class TestJWTBenchmarks:
         assert result is True
 
         # Performance assertion: < 2ms on average
-        assert benchmark.stats["mean"] < 0.002, f"JWT validation took {benchmark.stats['mean']*1000:.2f}ms (target: < 2ms)"
+        assert benchmark.stats["mean"] < 0.002, f"JWT validation took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 2ms)"
 
 
 # OpenFGA Authorization Benchmarks
@@ -157,7 +158,7 @@ class TestOpenFGABenchmarks:
         assert result["allowed"] is True
 
         # Performance assertion: < 50ms average (with network simulation)
-        assert benchmark.stats["mean"] < 0.050, f"Auth check took {benchmark.stats['mean']*1000:.2f}ms (target: < 50ms)"
+        assert benchmark.stats["mean"] < 0.050, f"Auth check took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
 
     @pytest.mark.asyncio
     async def test_batch_authorization_performance(self, mock_openfga_client, benchmark):
@@ -182,7 +183,7 @@ class TestOpenFGABenchmarks:
         assert all(r["allowed"] for r in results)
 
         # Performance assertion: < 200ms for 10 checks
-        assert benchmark.stats["mean"] < 0.200, f"Batch check took {benchmark.stats['mean']*1000:.2f}ms (target: < 200ms)"
+        assert benchmark.stats["mean"] < 0.200, f"Batch check took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 200ms)"
 
 
 # LLM Request Benchmarks
@@ -231,7 +232,7 @@ class TestLLMBenchmarks:
         # The total time includes 100ms simulated LLM latency
         # We're measuring the overhead, which should be minimal
         overhead = benchmark.stats["mean"] - 0.100
-        assert overhead < 0.010, f"LLM request overhead: {overhead*1000:.2f}ms (target: < 10ms)"
+        assert overhead < 0.010, f"LLM request overhead: {overhead * 1000:.2f}ms (target: < 10ms)"
 
 
 # Agent Execution Benchmarks
@@ -262,7 +263,7 @@ class TestAgentBenchmarks:
         assert "state" in result
 
         # Performance assertion: < 100ms
-        assert benchmark.stats["mean"] < 0.100, f"Agent init took {benchmark.stats['mean']*1000:.2f}ms (target: < 100ms)"
+        assert benchmark.stats["mean"] < 0.100, f"Agent init took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 100ms)"
 
     @pytest.mark.asyncio
     async def test_message_processing_performance(self, benchmark):
@@ -324,7 +325,7 @@ class TestResourceBenchmarks:
         assert len(result) > 0
 
         # Performance assertion: < 50ms
-        assert benchmark.stats["mean"] < 0.050, f"Serialization took {benchmark.stats['mean']*1000:.2f}ms (target: < 50ms)"
+        assert benchmark.stats["mean"] < 0.050, f"Serialization took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
 
     def test_state_deserialization_performance(self, benchmark):
         """Benchmark state deserialization for checkpointing.
@@ -350,11 +351,8 @@ class TestResourceBenchmarks:
         assert len(result["messages"]) == 1000
 
         # Performance assertion: < 50ms
-        assert benchmark.stats["mean"] < 0.050, f"Deserialization took {benchmark.stats['mean']*1000:.2f}ms (target: < 50ms)"
+        assert benchmark.stats["mean"] < 0.050, f"Deserialization took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
 
-
-# Add asyncio import for async benchmarks
-import asyncio
 
 # Benchmark configuration
 pytestmark = pytest.mark.benchmark

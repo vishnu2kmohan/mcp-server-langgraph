@@ -356,7 +356,7 @@ class ComplianceScheduler:
 
         Generates comprehensive SOC 2 compliance report for the month.
         """
-        with tracer.start_as_current_span("compliance.monthly_report"):
+        with tracer.start_as_current_span("compliance.monthly_report") as span:
             try:
                 logger.info("Starting monthly compliance report generation")
 
