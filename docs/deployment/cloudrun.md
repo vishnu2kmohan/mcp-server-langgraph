@@ -123,7 +123,7 @@ You'll need API keys for:
 
 ```bash
 # Clone repository
-git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
 
 # Run setup and deploy
@@ -1119,7 +1119,7 @@ gcloud run services update mcp-server-langgraph \
 
 **Need help?**
 - Cloud Run support: https://cloud.google.com/support
-- Project issues: https://github.com/vishnu2kmohan/mcp_server_langgraph/issues
+- Project issues: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
 
 ---
 

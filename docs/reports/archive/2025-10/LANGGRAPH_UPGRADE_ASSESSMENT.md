@@ -524,7 +524,7 @@ $ ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false \
 ============================= test session starts ==============================
 platform linux -- Python 3.12.11, pytest-8.4.2, pluggy-1.6.0
 cachedir: .pytest_cache
-rootdir: /home/codey/Projects/vishnu2kmohan/langgraph_mcp_agent
+rootdir: /home/codey/Projects/vishnu2kmohan/mcp-server-langgraph
 configfile: pyproject.toml
 plugins: schemathesis-4.2.2, anyio-4.11.0, hypothesis-6.140.3, benchmark-5.1.0,
          subtests-0.14.2, logfire-4.13.1, langsmith-0.4.34, cov-7.0.0,

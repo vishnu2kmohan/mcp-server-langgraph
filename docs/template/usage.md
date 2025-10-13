@@ -8,7 +8,7 @@ This repository serves as a **cookie-cutter template** for building production-r
 
 ```bash
 # Generate your project (uvx runs cookiecutter without installing it)
-uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+uvx cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 
 # Follow the interactive prompts
 ```
@@ -22,7 +22,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 ### Option 3: Direct Clone
 
 ```bash
-git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git my-mcp-server
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git my-mcp-server
 cd my-mcp-server
 # Follow manual customization steps below
 ```
@@ -428,7 +428,7 @@ Begin with minimal configuration and add features as needed:
 
 ```bash
 # Start with this
-uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph \
+uvx cookiecutter gh:vishnu2kmohan/mcp-server-langgraph \
   --replay-file minimal-config.json
 
 # Add features later by cherry-picking files
@@ -450,7 +450,7 @@ Stay updated with template improvements:
 
 ```bash
 # Add template as remote
-git remote add template https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git remote add template https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 git fetch template
 
 # Cherry-pick updates
@@ -485,10 +485,10 @@ Create a `CUSTOMIZATIONS.md` file:
 
 ```bash
 # Enable debug mode
-uvx cookiecutter --debug gh:vishnu2kmohan/mcp_server_langgraph
+uvx cookiecutter --debug gh:vishnu2kmohan/mcp-server-langgraph
 
 # Or use local template
-git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 uvx cookiecutter ./mcp_server_langgraph
 ```
 
@@ -548,6 +548,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-**Questions?** Open an issue: https://github.com/vishnu2kmohan/mcp_server_langgraph/issues
+**Questions?** Open an issue: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
 
 **Last Updated**: 2025-10-10

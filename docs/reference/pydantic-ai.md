@@ -141,7 +141,7 @@ if not validated.is_valid():
 ## File Structure
 
 ```
-langgraph_mcp_agent/
+mcp-server-langgraph/
 ├── pydantic_ai_src/mcp_server_langgraph/core/agent.py          # NEW: Pydantic AI wrapper
 ├── llm_validators.py             # NEW: Response validators
 ├── mcp_streaming.py              # NEW: Streaming with validation

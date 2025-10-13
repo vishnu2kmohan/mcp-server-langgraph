@@ -134,10 +134,10 @@ mutmut html
 ✅ **Status Badges** (README.md)
 Added 4 workflow status badges:
 ```markdown
-[![CI/CD](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/ci.yaml/badge.svg)](...)
-[![PR Checks](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/pr-checks.yaml/badge.svg)](...)
-[![Quality Tests](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/quality-tests.yaml/badge.svg)](...)
-[![Security Scan](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/security-scan.yaml/badge.svg)](...)
+[![CI/CD](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](...)
+[![PR Checks](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/pr-checks.yaml/badge.svg)](...)
+[![Quality Tests](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml/badge.svg)](...)
+[![Security Scan](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml/badge.svg)](...)
 ```
 
 ### Documentation
@@ -292,4 +292,4 @@ All 36 improvements have been successfully implemented across 8 files. The GitHu
 
 **Implemented by**: Claude Code (Sonnet 4.5)
 **Date**: 2025-10-13
-**Repository**: vishnu2kmohan/langgraph_mcp_agent
+**Repository**: vishnu2kmohan/mcp-server-langgraph

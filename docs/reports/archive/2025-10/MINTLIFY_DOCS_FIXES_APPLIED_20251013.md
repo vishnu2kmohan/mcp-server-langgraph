@@ -369,7 +369,7 @@ docker run -it ubuntu:22.04 /bin/bash
 apt update && apt install -y python3 python3-pip python3-venv git docker.io
 
 # 3. Clone repository
-git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
 
 # 4. Follow quickstart.mdx exactly

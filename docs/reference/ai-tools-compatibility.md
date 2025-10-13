@@ -457,8 +457,8 @@ If you improve AI tool configurations:
 
 ### Project-Specific Issues
 
-- **GitHub Issues**: https://github.com/vishnu2kmohan/mcp_server_langgraph/issues
-- **Discussions**: https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions
+- **GitHub Issues**: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
+- **Discussions**: https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions
 
 ## 🔄 Keeping Configurations Updated
 

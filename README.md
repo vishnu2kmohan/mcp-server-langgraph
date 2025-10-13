@@ -938,11 +938,11 @@ We welcome contributions from the community! 🎉
    - [Development Guide](docs/development/development.md) - Developer setup
 
 2. **Find something to work on**:
-   - [Good First Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/good%20first%20issue)
-   - [Help Wanted](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/help%20wanted)
+   - [Good First Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/good%20first%20issue)
+   - [Help Wanted](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/help%20wanted)
 
 3. **Get help**:
-   - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions)
+   - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
    - [Support Guide](.github/SUPPORT.md)
 
 ### Contribution Areas

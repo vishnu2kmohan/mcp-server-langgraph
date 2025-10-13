@@ -793,6 +793,6 @@ except Exception as e:
 ---
 
 **Need Help?**
-- [GitHub Issues](https://github.com/vishnu2kmohan/langgraph_mcp_agent/issues)
+- [GitHub Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
 - [Keycloak Documentation](https://www.keycloak.org/documentation)
 - [OpenFGA Documentation](https://openfga.dev/docs)

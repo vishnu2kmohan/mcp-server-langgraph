@@ -187,7 +187,7 @@ kubectl apply -k deployments/kubernetes/overlays/aks
 
 ```bash
 # Create namespace
-kubectl apply -f - <<EOF
+kubectl apply -f - << 'EOF'
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -331,7 +331,7 @@ See [Redis Sessions Guide](/guides/redis-sessions) for details.
 
 ```bash
 # Deploy OpenFGA with PostgreSQL
-kubectl apply -f - <<EOF
+kubectl apply -f - << 'EOF'
 apiVersion: apps/v1
 kind: Deployment
 metadata:

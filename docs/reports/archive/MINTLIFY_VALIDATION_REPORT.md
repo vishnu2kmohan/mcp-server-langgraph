@@ -291,7 +291,7 @@ The documentation can be deployed to Mintlify hosting immediately:
 
 **Steps**:
 1. Sign up at https://mintlify.com
-2. Connect GitHub repository: `vishnu2kmohan/langgraph_mcp_agent`
+2. Connect GitHub repository: `vishnu2kmohan/mcp-server-langgraph`
 3. Set documentation path: `.` (root directory)
 4. Mintlify auto-detects `mint.json`
 5. Deploy!

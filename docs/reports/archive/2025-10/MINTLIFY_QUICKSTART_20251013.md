@@ -11,7 +11,7 @@
 
 1. Visit https://mintlify.com and sign up
 2. Click "New Documentation"
-3. Connect GitHub: vishnu2kmohan/langgraph_mcp_agent
+3. Connect GitHub: vishnu2kmohan/mcp-server-langgraph
 4. Set doc path: . (root directory)
 5. Deploy!
 

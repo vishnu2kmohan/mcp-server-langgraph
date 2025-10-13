@@ -173,5 +173,5 @@ When creating new runbooks:
 ## Support
 
 For questions or issues with runbooks:
-- Create an issue: https://github.com/vishnu2kmohan/langgraph_mcp_agent/issues
+- Create an issue: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
 - Contact: SRE team via on-call rotation

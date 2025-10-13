@@ -7,13 +7,13 @@
   "author": {
     "name": "Your Organization",
     "email": "team@example.com",
-    "url": "https://github.com/your-org/mcp-server-langgraph"
+    "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph"
   },
   "license": "MIT",
-  "homepage": "https://github.com/your-org/mcp-server-langgraph",
+  "homepage": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/mcp-server-langgraph.git"
+    "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph.git"
   },
   "transports": {
     "stdio": {
@@ -214,7 +214,7 @@
     },
     "docker": {
       "supported": true,
-      "image": "ghcr.io/your-org/langgraph-agent",
+      "image": "ghcr.io/vishnu2kmohan/langgraph-agent",
       "platforms": ["linux/amd64", "linux/arm64"]
     }
   },
@@ -223,9 +223,9 @@
     "interval": 30
   },
   "documentation": {
-    "readme": "https://github.com/your-org/mcp-server-langgraph/blob/main/README.md",
-    "deployment": "https://github.com/your-org/mcp-server-langgraph/blob/main/KUBERNETES_DEPLOYMENT.md",
-    "openfga": "https://github.com/your-org/mcp-server-langgraph/blob/main/README_OPENFGA_INFISICAL.md",
-    "kong": "https://github.com/your-org/mcp-server-langgraph/blob/main/KONG_INTEGRATION.md"
+    "readme": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/README.md",
+    "deployment": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/KUBERNETES_DEPLOYMENT.md",
+    "openfga": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/README_OPENFGA_INFISICAL.md",
+    "kong": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/KONG_INTEGRATION.md"
   }
 }

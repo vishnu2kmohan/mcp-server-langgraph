@@ -146,7 +146,7 @@ kubectl describe pvc <redis-pvc-name> -n langgraph-agent
    ```
 2. Test authentication:
    ```bash
-   kubectl exec -n langgraph-agent -it $(kubectl get pod -n langgraph-agent -l app=redis-session -o jsonpath='{.items[0].metadata.name}') -- redis-cli -a "<password>" PING
+   kubectl exec -n langgraph-agent -it $(kubectl get pod -n langgraph-agent -l app=redis-session -o jsonpath='{.items[0].metadata.name}') -- redis-cli -a "`<password>`" PING
    ```
 3. If password is wrong, update secret and restart both Redis and application
 

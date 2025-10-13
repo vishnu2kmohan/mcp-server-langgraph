@@ -50,7 +50,7 @@ Your docs will hot-reload as you edit `.mdx` files!
 
 2. **Connect GitHub**:
    - Click "New Documentation"
-   - Select your repository: `vishnu2kmohan/mcp_server_langgraph`
+   - Select your repository: `vishnu2kmohan/mcp-server-langgraph`
    - Set documentation path: `./` (root directory)
    - Mintlify will automatically detect `mint.json`
 

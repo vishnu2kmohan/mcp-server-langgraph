@@ -426,7 +426,7 @@ helm rollback langgraph-agent -n langgraph-agent
 - [Validation Script](scripts/validate-deployments.sh) - Automated checks
 
 **Report Issues**:
-- GitHub Issues: https://github.com/vishnu2kmohan/langgraph_mcp_agent/issues
+- GitHub Issues: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
 - Slack: #platform-team
 
 ---

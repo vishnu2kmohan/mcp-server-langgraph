@@ -71,7 +71,7 @@ python scripts/validate_production.py
 
 ```bash
 # Clone repository
-git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
 
 # Create production environment file
@@ -563,7 +563,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/vishnu2kmohan/mcp_server_langgraph
+    repoURL: https://github.com/vishnu2kmohan/mcp-server-langgraph
     targetRevision: v1.0.0
     path: helm/langgraph-agent
     helm:

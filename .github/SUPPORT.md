@@ -32,7 +32,7 @@ Before asking for help, please check our comprehensive documentation:
 
 For questions, ideas, and general discussion:
 
-👉 **[Start a Discussion](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions)**
+👉 **[Start a Discussion](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)**
 
 - **Q&A**: Ask questions and get answers from the community
 - **Ideas**: Share and discuss new feature ideas
@@ -43,7 +43,7 @@ For questions, ideas, and general discussion:
 
 For bug reports and feature requests:
 
-👉 **[Create an Issue](https://github.com/vishnu2kmohan/mcp_server_langgraph/issues/new/choose)**
+👉 **[Create an Issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/new/choose)**
 
 Please use our issue templates:
 - 🐛 **Bug Report** - Report a problem
@@ -99,7 +99,7 @@ When asking for help, please provide:
 🔒 **Do NOT report security vulnerabilities in public issues!**
 
 For security vulnerabilities, please:
-1. Go to [Security Advisories](https://github.com/vishnu2kmohan/mcp_server_langgraph/security/advisories)
+1. Go to [Security Advisories](https://github.com/vishnu2kmohan/mcp-server-langgraph/security/advisories)
 2. Click "Report a vulnerability"
 3. Provide details privately
 
@@ -110,8 +110,8 @@ See [SECURITY.md](SECURITY.md) for our security policy.
 Want to help improve the project?
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md)
-- Check [Good First Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/good%20first%20issue)
-- Review open [Pull Requests](https://github.com/vishnu2kmohan/mcp_server_langgraph/pulls)
+- Check [Good First Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/good%20first%20issue)
+- Review open [Pull Requests](https://github.com/vishnu2kmohan/mcp-server-langgraph/pulls)
 
 ## Professional Support
 

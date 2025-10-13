@@ -593,10 +593,10 @@ Created manually or via secrets operator:
 kubectl create secret generic langgraph-agent-secrets \
   --from-literal=anthropic-api-key="<key>" \
   --from-literal=jwt-secret-key="<secret>" \
-  --from-literal=redis-password="<password>" \
-  --from-literal=postgres-password="<password>" \
+  --from-literal=redis-password="`<password>`" \
+  --from-literal=postgres-password="`<password>`" \
   --from-literal=keycloak-client-secret="<secret>" \
-  --from-literal=keycloak-admin-password="<password>" \
+  --from-literal=keycloak-admin-password="`<password>`" \
   --from-literal=openfga-store-id="<id>" \
   --from-literal=openfga-model-id="<id>" \
   -n langgraph-agent

@@ -677,8 +677,8 @@ async def test_sql_injection_protection(client, malicious_input):
 
 @pytest.mark.security
 @pytest.mark.parametrize("xss_input", [
-    "<script>alert('XSS')</script>",
-    "<img src=x onerror=alert('XSS')>",
+    "`<script>`alert('XSS')`</script>`",
+    "`<img src=x onerror=alert('XSS')>`",
     "javascript:alert('XSS')",
 ])
 async def test_xss_protection(client, token, xss_input):
@@ -690,7 +690,7 @@ async def test_xss_protection(client, token, xss_input):
     )
 
     # Response should not contain unescaped script tags
-    assert "<script>" not in response.text
+    assert "`<script>`" not in response.text
     assert "onerror=" not in response.text
 ```
 

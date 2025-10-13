@@ -46,7 +46,7 @@ Use this checklist before publishing to PyPI to ensure the package is production
 - [x] **.gitignore**: Build artifacts excluded ✅
 
 ### URLs & Links
-- [ ] Verify GitHub repository exists: https://github.com/vishnu2kmohan/mcp_server_langgraph
+- [ ] Verify GitHub repository exists: https://github.com/vishnu2kmohan/mcp-server-langgraph
 - [ ] Verify all README links work (run link checker)
 - [ ] Verify CHANGELOG links point to correct tags
 - [ ] Ensure documentation is accessible
@@ -188,7 +188,7 @@ git push origin main --tags
 - [ ] Tag pushed to GitHub
 
 ### GitHub Release (Optional but Recommended)
-- [ ] Create GitHub release: https://github.com/vishnu2kmohan/mcp_server_langgraph/releases/new
+- [ ] Create GitHub release: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/new
 - [ ] Title: `v2.0.0 - Production-Ready PyPI Release`
 - [ ] Description includes CHANGELOG content
 - [ ] Attach build artifacts (`.tar.gz`, `.whl`)
@@ -284,7 +284,7 @@ rm -rf test-prod-install/
 **Version**: `2.0.0`
 **License**: MIT
 **Python Support**: 3.10, 3.11, 3.12
-**Repository**: https://github.com/vishnu2kmohan/mcp_server_langgraph
+**Repository**: https://github.com/vishnu2kmohan/mcp-server-langgraph
 
 **Key Features**:
 - Multi-LLM support (100+ providers via LiteLLM)

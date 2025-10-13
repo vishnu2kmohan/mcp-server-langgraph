@@ -220,7 +220,7 @@ async def list_sessions(session_store: SessionStore = Depends(get_session_store)
 ## File Structure
 
 ```
-langgraph_mcp_agent/
+mcp-server-langgraph/
 ├── src/mcp_server_langgraph/
 │   ├── api/
 │   │   ├── __init__.py (NEW)
@@ -622,5 +622,5 @@ pytest tests/test_gdpr.py -v -m "gdpr and integration"
 
 **Implemented by**: Claude Code (Sonnet 4.5)
 **Date**: 2025-10-13
-**Repository**: vishnu2kmohan/langgraph_mcp_agent
+**Repository**: vishnu2kmohan/mcp-server-langgraph
 **Branch**: main

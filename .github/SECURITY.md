@@ -17,7 +17,7 @@ Instead, please report them via one of the following methods:
 
 ### Preferred Method: GitHub Security Advisories
 
-1. Go to the [Security tab](https://github.com/vishnu2kmohan/mcp_server_langgraph/security/advisories)
+1. Go to the [Security tab](https://github.com/vishnu2kmohan/mcp-server-langgraph/security/advisories)
 2. Click "Report a vulnerability"
 3. Fill out the form with details
 

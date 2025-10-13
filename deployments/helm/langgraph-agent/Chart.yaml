@@ -4,9 +4,9 @@ description: A Helm chart for MCP Server with LangGraph, OpenFGA, Keycloak, and 
 type: application
 version: 2.2.0
 appVersion: "2.2.0"
-home: https://github.com/your-org/mcp-server-langgraph
+home: https://github.com/vishnu2kmohan/mcp-server-langgraph
 sources:
-  - https://github.com/your-org/mcp-server-langgraph
+  - https://github.com/vishnu2kmohan/mcp-server-langgraph
 maintainers:
   - name: Your Team
     email: team@example.com

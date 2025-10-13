@@ -452,7 +452,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     WHERE NOT blocked_locks.granted;
 
     -- Kill blocking query
-    SELECT pg_terminate_backend(<blocking_pid>);
+    SELECT pg_terminate_backend(`<blocking_pid>`);
     ```
 
     **Fix**:
@@ -884,9 +884,9 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     # Create image pull secret
     kubectl create secret docker-registry regcred \
       --docker-server=https://index.docker.io/v1/ \
-      --docker-username=<username> \
-      --docker-password=<password> \
-      --docker-email=<email>
+      --docker-username=`<username>` \
+      --docker-password=`<password>` \
+      --docker-email=`<email>`
 
     # Use in deployment
     spec:

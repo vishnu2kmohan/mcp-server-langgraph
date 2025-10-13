@@ -4,10 +4,10 @@
     "name": "langgraph-agent",
     "displayName": "LangGraph AI Agent",
     "shortDescription": "Production AI agent with OpenFGA authorization and full observability",
-    "icon": "https://raw.githubusercontent.com/your-org/mcp-server-langgraph/main/.mcp/icon.png",
+    "icon": "https://raw.githubusercontent.com/vishnu2kmohan/mcp-server-langgraph/main/.mcp/icon.png",
     "screenshots": [
-      "https://raw.githubusercontent.com/your-org/mcp-server-langgraph/main/.mcp/screenshots/dashboard.png",
-      "https://raw.githubusercontent.com/your-org/mcp-server-langgraph/main/.mcp/screenshots/tracing.png"
+      "https://raw.githubusercontent.com/vishnu2kmohan/mcp-server-langgraph/main/.mcp/screenshots/dashboard.png",
+      "https://raw.githubusercontent.com/vishnu2kmohan/mcp-server-langgraph/main/.mcp/screenshots/tracing.png"
     ],
     "featured": false,
     "verified": false
@@ -80,7 +80,7 @@
   "support": {
     "email": "support@example.com",
     "slack": "https://example.slack.com",
-    "github": "https://github.com/your-org/mcp-server-langgraph/issues",
+    "github": "https://github.com/vishnu2kmohan/mcp-server-langgraph/issues",
     "documentation": "https://docs.example.com/langgraph-agent"
   },
   "metrics": {

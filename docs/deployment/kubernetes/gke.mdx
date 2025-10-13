@@ -310,7 +310,7 @@ helm install external-secrets \
   --create-namespace
 
 # Create SecretStore
-cat <<EOF | kubectl apply -f -
+cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
@@ -329,7 +329,7 @@ spec:
 EOF
 
 # Create ExternalSecret
-cat <<EOF | kubectl apply -f -
+cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
@@ -368,7 +368,7 @@ docker build -t gcr.io/$PROJECT_ID/langgraph-agent:latest .
 docker push gcr.io/$PROJECT_ID/langgraph-agent:latest
 
 # Use in Kubernetes
-cat <<EOF | kubectl apply -f -
+cat << 'EOF' | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:

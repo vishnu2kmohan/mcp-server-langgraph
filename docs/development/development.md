@@ -19,7 +19,7 @@ Get up and running in 5 minutes:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
 
 # 2. Create virtual environment
@@ -98,7 +98,7 @@ git clone https://github.com/YOUR_USERNAME/mcp_server_langgraph.git
 cd mcp_server_langgraph
 
 # Add upstream remote
-git remote add upstream https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git remote add upstream https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 
 # Verify remotes
 git remote -v
@@ -569,11 +569,11 @@ pytest tests/test_name.py::test_function -v
    - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) (if exists)
 
 2. **Search Issues**
-   - [Existing Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/issues)
-   - [Closed Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/issues?q=is%3Aissue+is%3Aclosed)
+   - [Existing Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
+   - [Closed Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues?q=is%3Aissue+is%3Aclosed)
 
 3. **Ask Community**
-   - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions)
+   - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
    - Create new discussion with "Q&A" category
 
 4. **Create Issue**
@@ -585,8 +585,8 @@ pytest tests/test_name.py::test_function -v
 ## Next Steps
 
 - Read [CONTRIBUTING.md](.github/CONTRIBUTING.md) for contribution guidelines
-- Check [Good First Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/good%20first%20issue)
-- Join [GitHub Discussions](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions)
+- Check [Good First Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/good%20first%20issue)
+- Join [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
 - Review [Code Style Guide](.github/CONTRIBUTING.md#code-style)
 
 **Happy Coding!** 🎉

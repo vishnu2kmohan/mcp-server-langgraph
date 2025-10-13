@@ -614,7 +614,7 @@ This guide provides technical implementation guidance. Always consult with legal
         def validate_query(cls, v):
             """Validate query content"""
             # Check for malicious content
-            if any(keyword in v.lower() for keyword in ['<script>', 'javascript:']):
+            if any(keyword in v.lower() for keyword in ['`<script>`', 'javascript:']):
                 raise ValueError("Invalid query content")
 
             # Log validation

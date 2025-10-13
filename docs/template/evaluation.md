@@ -77,7 +77,7 @@ This codebase is a **world-class example** of an opinionated MCP server with Lan
 SERVICE_NAME = "mcp-server-langgraph"
 app = FastAPI(title="MCP Server with LangGraph")
 namespace: langgraph-agent
-image: ghcr.io/vishnu2kmohan/mcp_server_langgraph
+image: ghcr.io/vishnu2kmohan/mcp-server-langgraph
 ```
 
 **What's Needed**:
@@ -101,9 +101,9 @@ image: ghcr.io/vishnu2kmohan/mcp_server_langgraph
 **What's Needed**:
 ```bash
 # Desired usage:
-cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 # or
-copier copy gh:vishnu2kmohan/mcp_server_langgraph my-new-mcp-server
+copier copy gh:vishnu2kmohan/mcp-server-langgraph my-new-mcp-server
 ```
 
 **Impact**: ⚠️ Critical - No automated way to generate projects
@@ -194,7 +194,7 @@ features:
 
 **With Cookie-Cutter Tools**:
 ```bash
-$ cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+$ cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 
 project_name [My MCP Server]: Slack Bot
 project_slug [slack_bot]: ✓
@@ -401,13 +401,13 @@ if __name__ == '__main__':
 **Option A: Cookiecutter** (Most Popular)
 ```bash
 pip install cookiecutter
-cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 ```
 
 **Option B: Copier** (More Modern)
 ```bash
 pip install copier
-copier copy gh:vishnu2kmohan/mcp_server_langgraph my-project
+copier copy gh:vishnu2kmohan/mcp-server-langgraph my-project
 ```
 
 **Option C: Custom Script**

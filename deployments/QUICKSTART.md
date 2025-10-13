@@ -19,8 +19,8 @@ Before deploying, ensure you have:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/langgraph-mcp-agent.git
-cd langgraph-mcp-agent
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
+cd mcp-server-langgraph
 
 # 2. Copy environment template
 cp .env.example .env
@@ -330,5 +330,5 @@ resources:
 ## Getting Help
 
 - 📖 **Documentation**: `docs/` directory
-- 🐛 **Issues**: [GitHub Issues](https://github.com/your-org/langgraph-mcp-agent/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-org/langgraph-mcp-agent/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)

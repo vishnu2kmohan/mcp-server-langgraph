@@ -241,7 +241,7 @@ asyncio.run(test_chat())
 
 ### Step 1: Clone Repository ✅
 ```bash
-git clone https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
 ```
 **Result**: ✅ Instructions correct

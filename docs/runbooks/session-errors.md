@@ -172,7 +172,7 @@ curl -X POST http://localhost:8000/api/sessions \
    ```
 2. Test authentication:
    ```bash
-   kubectl exec -n langgraph-agent -it $(kubectl get pod -n langgraph-agent -l app=redis-session -o jsonpath='{.items[0].metadata.name}') -- redis-cli -a "<password>" PING
+   kubectl exec -n langgraph-agent -it $(kubectl get pod -n langgraph-agent -l app=redis-session -o jsonpath='{.items[0].metadata.name}') -- redis-cli -a "`<password>`" PING
    ```
 3. Check Redis ACL if enabled:
    ```bash

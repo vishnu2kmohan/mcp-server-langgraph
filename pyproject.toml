@@ -85,11 +85,11 @@ mcp-server-langgraph = "mcp_server_langgraph.mcp.server_stdio:main"
 mcp-server-langgraph-http = "mcp_server_langgraph.mcp.server_streamable:main"
 
 [project.urls]
-Homepage = "https://github.com/vishnu2kmohan/langgraph_mcp_agent"
-Documentation = "https://github.com/vishnu2kmohan/langgraph_mcp_agent/blob/main/README.md"
-Repository = "https://github.com/vishnu2kmohan/langgraph_mcp_agent"
-Issues = "https://github.com/vishnu2kmohan/langgraph_mcp_agent/issues"
-Changelog = "https://github.com/vishnu2kmohan/langgraph_mcp_agent/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/vishnu2kmohan/mcp-server-langgraph"
+Documentation = "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/README.md"
+Repository = "https://github.com/vishnu2kmohan/mcp-server-langgraph"
+Issues = "https://github.com/vishnu2kmohan/mcp-server-langgraph/issues"
+Changelog = "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

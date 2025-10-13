@@ -518,4 +518,4 @@ rate(mcp_messages_total{status="error"}[5m])
 
 For registry-related issues:
 - Registry support: registry-support@modelcontextprotocol.io
-- Agent issues: https://github.com/your-org/mcp-server-langgraph/issues
+- Agent issues: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues

@@ -12,7 +12,7 @@ This guide walks you through deploying your Mintlify documentation and integrati
 
 2. **Create New Documentation**
    - Click "New Documentation"
-   - Select repository: `vishnu2kmohan/mcp_server_langgraph`
+   - Select repository: `vishnu2kmohan/mcp-server-langgraph`
    - Set root directory: `./` (leave as default)
    - Mintlify auto-detects `mint.json`
 
@@ -79,8 +79,8 @@ Your deployed MCP Server now includes these documentation endpoints:
   },
   "external_links": {
     "full_documentation": "https://mcp-server-langgraph.mintlify.app",
-    "github": "https://github.com/vishnu2kmohan/mcp_server_langgraph",
-    "issues": "https://github.com/vishnu2kmohan/mcp_server_langgraph/issues"
+    "github": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
+    "issues": "https://github.com/vishnu2kmohan/mcp-server-langgraph/issues"
   }
 }
 ```
@@ -123,7 +123,7 @@ Update `langgraph.json`:
 {
   "env": {
     "DOCS_URL": "https://mcp-server-langgraph.mintlify.app",
-    "GITHUB_REPO": "https://github.com/vishnu2kmohan/mcp_server_langgraph"
+    "GITHUB_REPO": "https://github.com/vishnu2kmohan/mcp-server-langgraph"
   }
 }
 ```
@@ -134,7 +134,7 @@ Update `docker-compose.yml`:
 ```yaml
 environment:
   - DOCS_URL=https://mcp-server-langgraph.mintlify.app
-  - GITHUB_REPO=https://github.com/vishnu2kmohan/mcp_server_langgraph
+  - GITHUB_REPO=https://github.com/vishnu2kmohan/mcp-server-langgraph
 ```
 
 ### Kubernetes
@@ -147,7 +147,7 @@ metadata:
   name: mcp-server-config
 data:
   DOCS_URL: "https://mcp-server-langgraph.mintlify.app"
-  GITHUB_REPO: "https://github.com/vishnu2kmohan/mcp_server_langgraph"
+  GITHUB_REPO: "https://github.com/vishnu2kmohan/mcp-server-langgraph"
 ```
 
 ## 📊 Embedding Documentation (Advanced)

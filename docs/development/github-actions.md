@@ -131,7 +131,7 @@ Create environment: `production`
 
 **Badge:**
 ```markdown
-[![CI/CD](https://github.com/vishnu2kmohan/mcp_server_langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp_server_langgraph/actions/workflows/ci.yaml)
+[![CI/CD](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml)
 ```
 
 ### 2. Pull Request Checks (`pr-checks.yaml`)
@@ -215,7 +215,7 @@ git push origin v1.0.0
 
 **Badge:**
 ```markdown
-[![Quality Tests](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/quality-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/langgraph_mcp_agent/actions/workflows/quality-tests.yaml)
+[![Quality Tests](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml)
 ```
 
 ### 6. Stale Issue Management (`stale.yaml`)
@@ -323,7 +323,7 @@ act -j test -s ANTHROPIC_API_KEY=your-key
 4. **Add badge** to README:
 
 ```markdown
-[![codecov](https://codecov.io/gh/vishnu2kmohan/mcp_server_langgraph/branch/main/graph/badge.svg)](https://codecov.io/gh/vishnu2kmohan/mcp_server_langgraph)
+[![codecov](https://codecov.io/gh/vishnu2kmohan/mcp-server-langgraph/branch/main/graph/badge.svg)](https://codecov.io/gh/vishnu2kmohan/mcp-server-langgraph)
 ```
 
 ### Codecov Configuration

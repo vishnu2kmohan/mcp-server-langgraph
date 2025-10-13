@@ -240,7 +240,7 @@ curl -X POST http://localhost:8001/services \
   --data url=http://langgraph-agent:8000
 
 # Or using decK (declarative config)
-cat > kong.yaml <<EOF
+cat > kong.yaml << 'EOF'
 _format_version: "3.0"
 
 services:
@@ -270,7 +270,7 @@ curl -X POST http://localhost:8001/services/langgraph-agent/routes \
   --data methods[]=POST
 
 # Using decK
-cat >> kong.yaml <<EOF
+cat >> kong.yaml << 'EOF'
   routes:
   - name: message
     paths:
@@ -352,7 +352,7 @@ curl -X POST http://localhost:8001/plugins \
   --data config.redis.host=redis
 
 # Using decK
-cat >> kong.yaml <<EOF
+cat >> kong.yaml << 'EOF'
 plugins:
 - name: rate-limiting
   config:
@@ -379,7 +379,7 @@ curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
   --data config.max_age=3600
 
 # Using decK
-cat >> kong.yaml <<EOF
+cat >> kong.yaml << 'EOF'
   plugins:
   - name: cors
     config:

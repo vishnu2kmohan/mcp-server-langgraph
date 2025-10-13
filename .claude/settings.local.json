@@ -64,7 +64,19 @@
       "Bash(tree:*)",
       "Bash(awk:*)",
       "Bash(sort:*)",
-      "Bash(pyproject.toml pyproject.toml)"
+      "Bash(pyproject.toml pyproject.toml)",
+      "Bash(git tag:*)",
+      "Bash(gh release create:*)",
+      "Bash(gh release view:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rm:*)",
+      "Bash(find:*)",
+      "Bash(for:*)",
+      "Bash(do)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

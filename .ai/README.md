@@ -274,8 +274,8 @@ open http://localhost:3000
 
 ## Getting Help
 
-- **Issues**: https://github.com/vishnu2kmohan/mcp_server_langgraph/issues
-- **Discussions**: https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions
+- **Issues**: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
+- **Discussions**: https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions
 - **Docs**: See `docs/` directory
 
 ## AI Assistant Best Practices

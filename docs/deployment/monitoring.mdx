@@ -299,7 +299,7 @@ kubectl create namespace observability
 kubectl create -f https://github.com/jaegertracing/jaeger-operator/releases/download/v1.51.0/jaeger-operator.yaml -n observability
 
 # Deploy Jaeger instance
-cat <<EOF | kubectl apply -f -
+cat << 'EOF' | kubectl apply -f -
 apiVersion: jaegertracing.io/v1
 kind: Jaeger
 metadata:

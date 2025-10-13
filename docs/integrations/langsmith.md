@@ -629,7 +629,7 @@ model = ChatAnthropic(model="claude-3-5-sonnet-20241022")
 
 **Need help?**
 - LangSmith support: https://support.langchain.com/
-- Project issues: https://github.com/vishnu2kmohan/mcp_server_langgraph/issues
+- Project issues: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
 
 ---
 

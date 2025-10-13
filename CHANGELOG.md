@@ -414,7 +414,7 @@ ImportError: cannot import name 'get_session_store' from 'mcp_server_langgraph.a
 - 🔒 **GDPR Compliance**: 5 REST API endpoints for data subject rights (access, rectification, erasure, portability, consent)
 - ✅ **SOC 2 Automation**: Automated evidence collection for 7 Trust Services Criteria with daily/weekly/monthly reporting
 - 🏥 **HIPAA Safeguards**: Emergency access, PHI audit logging, data integrity controls, automatic session timeout
-- 📊 **SLA Monitoring**: Automated tracking of 99.9% uptime, <500ms p95, <1% error rate with 20+ Prometheus alerts
+- 📊 **SLA Monitoring**: Automated tracking of 99.9% uptime, `<500ms` p95, `<1%` error rate with 20+ Prometheus alerts
 - 📈 **Grafana Dashboards**: 2 new dashboards (SLA Monitoring, SOC 2 Compliance) with 43 panels total
 - 🗄️ **Data Retention**: Configurable policies with automated cleanup (7-year retention for compliance)
 
@@ -424,7 +424,7 @@ ImportError: cannot import name 'get_session_store' from 'mcp_server_langgraph.a
 
 **SLA Monitoring Dashboard** (`monitoring/grafana/dashboards/sla-monitoring.json` - 450 lines):
 - **Overall SLA Compliance Score**: Weighted gauge (40% uptime, 30% response time, 30% error rate)
-- **SLA Gauges**: Uptime (99.9%), Response Time (p95 <500ms), Error Rate (<1%)
+- **SLA Gauges**: Uptime (99.9%), Response Time (p95 `<500ms`), Error Rate (`<1%`)
 - **Uptime Monitoring**: Percentage trend, monthly downtime budget (43.2 min/month)
 - **Response Time Percentiles**: p50, p95, p99 latency tracking
 - **Error Rate Analysis**: Trend charts, breakdown by status code
@@ -1833,4 +1833,10 @@ None (HTTP/SSE transport previously deprecated in 1.0.0 was removed in Unrelease
 
 ---
 
-[1.0.0]: https://github.com/vishnu2kmohan/mcp_server_langgraph/releases/tag/v1.0.0
+[Unreleased]: https://github.com/vishnu2kmohan/mcp-server-langgraph/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.4.0
+[2.3.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.3.0
+[2.2.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.2.0
+[2.1.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.1.0
+[2.0.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.0.0
+[1.0.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v1.0.0

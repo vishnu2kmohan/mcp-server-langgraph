@@ -147,7 +147,7 @@ include_kubernetes: yes (helm)
 
 ### Level 1: Use As-Is (0 min)
 ```bash
-cookiecutter gh:vishnu2kmohan/mcp_server_langgraph \
+cookiecutter gh:vishnu2kmohan/mcp-server-langgraph \
   --replay-file defaults.json
 ```
 
@@ -155,7 +155,7 @@ Perfect for learning, prototyping, or standard use cases.
 
 ### Level 2: Interactive Selection (5 min)
 ```bash
-cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 # Answer prompts interactively
 ```
 
@@ -307,7 +307,7 @@ After generation:
 - [ ] Decide on features needed
 
 **During Generation**:
-- [ ] Run: `cookiecutter gh:vishnu2kmohan/mcp_server_langgraph`
+- [ ] Run: `cookiecutter gh:vishnu2kmohan/mcp-server-langgraph`
 - [ ] Answer configuration prompts
 - [ ] Review generated project
 
@@ -434,9 +434,9 @@ After generation:
 
 **Have feedback on this template?**
 
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/vishnu2kmohan/mcp_server_langgraph/issues)
-- 💡 **Feature Requests**: [Start a discussion](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions)
-- 🤝 **Contributions**: [Submit a PR](https://github.com/vishnu2kmohan/mcp_server_langgraph/pulls)
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
+- 💡 **Feature Requests**: [Start a discussion](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
+- 🤝 **Contributions**: [Submit a PR](https://github.com/vishnu2kmohan/mcp-server-langgraph/pulls)
 - ⭐ **Star the repo**: Show your support!
 
 ---

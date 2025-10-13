@@ -361,7 +361,7 @@ groups:
 ## Security Contacts
 
 **Report Security Vulnerabilities**:
-- GitHub: https://github.com/vishnu2kmohan/mcp_server_langgraph/security/advisories/new
+- GitHub: https://github.com/vishnu2kmohan/mcp-server-langgraph/security/advisories/new
 - Email: security@yourdomain.com (if configured)
 
 **Security Policy**: See [.github/SECURITY.md](.github/SECURITY.md)

@@ -12,10 +12,10 @@ Generate a new MCP server project based on this template:
 
 ```bash
 # Using uvx (recommended)
-uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+uvx cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 
 # Or using cookiecutter directly
-cookiecutter https://github.com/vishnu2kmohan/mcp_server_langgraph
+cookiecutter https://github.com/vishnu2kmohan/mcp-server-langgraph
 ```
 
 ## Template Variables

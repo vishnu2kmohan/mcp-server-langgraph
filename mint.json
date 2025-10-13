@@ -18,12 +18,12 @@
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions"
+      "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions"
     }
   ],
   "topbarCtaButton": {
     "name": "GitHub",
-    "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph"
+    "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph"
   },
   "tabs": [
     {
@@ -47,17 +47,17 @@
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph"
+      "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph"
     },
     {
       "name": "Community",
       "icon": "discord",
-      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions"
+      "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions"
     },
     {
       "name": "CHANGELOG",
       "icon": "newspaper",
-      "url": "https://github.com/vishnu2kmohan/mcp_server_langgraph/blob/main/CHANGELOG.md"
+      "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHANGELOG.md"
     }
   ],
   "navigation": [
@@ -235,6 +235,6 @@
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/vishnu2kmohan/mcp_server_langgraph"
+    "github": "https://github.com/vishnu2kmohan/mcp-server-langgraph"
   }
 }

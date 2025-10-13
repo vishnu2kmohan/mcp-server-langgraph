@@ -144,7 +144,7 @@ aws eks create-nodegroup \
 
 ```bash
 # Create policy for Secrets Manager access
-cat > secrets-policy.json <<EOF
+cat > secrets-policy.json << 'EOF'
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -376,7 +376,7 @@ helm install external-secrets \
   --create-namespace
 
 # Create SecretStore
-cat <<EOF | kubectl apply -f -
+cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
@@ -394,7 +394,7 @@ spec:
 EOF
 
 # Create ExternalSecret
-cat <<EOF | kubectl apply -f -
+cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:

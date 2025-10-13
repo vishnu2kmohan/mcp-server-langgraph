@@ -22,12 +22,12 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/mcp_server_langgraph.git
-   cd mcp_server_langgraph
+   git clone https://github.com/YOUR_USERNAME/mcp-server-langgraph.git
+   cd mcp-server-langgraph
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/vishnu2kmohan/mcp_server_langgraph.git
+   git remote add upstream https://github.com/vishnu2kmohan/mcp-server-langgraph.git
    ```
 
 ## Development Setup
