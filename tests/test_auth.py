@@ -30,11 +30,11 @@ class TestAuthMiddleware:
         auth = AuthMiddleware()
         result = await auth.authenticate("alice")
 
-        assert result["authorized"] is True
-        assert result["username"] == "alice"
-        assert result["user_id"] == "user:alice"
-        assert result["email"] == "alice@acme.com"
-        assert "premium" in result["roles"]
+        assert result.authorized is True
+        assert result.username == "alice"
+        assert result.user_id == "user:alice"
+        assert result.email == "alice@acme.com"
+        assert "premium" in result.roles
 
     @pytest.mark.asyncio
     async def test_authenticate_user_not_found(self):
@@ -42,8 +42,8 @@ class TestAuthMiddleware:
         auth = AuthMiddleware()
         result = await auth.authenticate("nonexistent")
 
-        assert result["authorized"] is False
-        assert result["reason"] == "user_not_found"
+        assert result.authorized is False
+        assert result.reason == "user_not_found"
 
     @pytest.mark.asyncio
     async def test_authenticate_inactive_user(self):
@@ -53,8 +53,8 @@ class TestAuthMiddleware:
 
         result = await auth.authenticate("alice")
 
-        assert result["authorized"] is False
-        assert result["reason"] == "account_inactive"
+        assert result.authorized is False
+        assert result.reason == "account_inactive"
 
     @pytest.mark.asyncio
     async def test_authorize_with_openfga_success(self):
@@ -200,18 +200,20 @@ class TestAuthMiddleware:
         with pytest.raises(ValueError, match="User not found"):
             auth.create_token("nonexistent")
 
-    def test_verify_token_success(self):
+    @pytest.mark.asyncio
+    async def test_verify_token_success(self):
         """Test successful token verification"""
         auth = AuthMiddleware(secret_key="test-secret")
         token = auth.create_token("alice", expires_in=3600)
 
-        result = auth.verify_token(token)
+        result = await auth.verify_token(token)
 
-        assert result["valid"] is True
-        assert "payload" in result
-        assert result["payload"]["username"] == "alice"
+        assert result.valid is True
+        assert result.payload is not None
+        assert result.payload["username"] == "alice"
 
-    def test_verify_token_expired(self):
+    @pytest.mark.asyncio
+    async def test_verify_token_expired(self):
         """Test verification of expired token"""
         auth = AuthMiddleware(secret_key="test-secret")
 
@@ -224,30 +226,32 @@ class TestAuthMiddleware:
         }
         expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
 
-        result = auth.verify_token(expired_token)
+        result = await auth.verify_token(expired_token)
 
-        assert result["valid"] is False
-        assert result["error"] == "Token expired"
+        assert result.valid is False
+        assert result.error == "Token expired"
 
-    def test_verify_token_invalid(self):
+    @pytest.mark.asyncio
+    async def test_verify_token_invalid(self):
         """Test verification of invalid token"""
         auth = AuthMiddleware(secret_key="test-secret")
 
-        result = auth.verify_token("invalid.token.here")
+        result = await auth.verify_token("invalid.token.here")
 
-        assert result["valid"] is False
-        assert result["error"] == "Invalid token"
+        assert result.valid is False
+        assert result.error == "Invalid token"
 
-    def test_verify_token_wrong_secret(self):
+    @pytest.mark.asyncio
+    async def test_verify_token_wrong_secret(self):
         """Test verification with wrong secret key"""
         auth1 = AuthMiddleware(secret_key="secret-1")
         token = auth1.create_token("alice")
 
         auth2 = AuthMiddleware(secret_key="secret-2")
-        result = auth2.verify_token(token)
+        result = await auth2.verify_token(token)
 
-        assert result["valid"] is False
-        assert result["error"] == "Invalid token"
+        assert result.valid is False
+        assert result.error == "Invalid token"
 
 
 @pytest.mark.unit
@@ -320,27 +324,30 @@ class TestRequireAuthDecorator:
 class TestStandaloneVerifyToken:
     """Test standalone verify_token function"""
 
-    def test_standalone_verify_token_success(self):
+    @pytest.mark.asyncio
+    async def test_standalone_verify_token_success(self):
         """Test standalone token verification succeeds"""
         auth = AuthMiddleware(secret_key="test-secret")
         token = auth.create_token("alice")
 
-        result = verify_token(token, secret_key="test-secret")
+        result = await verify_token(token, secret_key="test-secret")
 
-        assert result["valid"] is True
-        assert result["payload"]["username"] == "alice"
+        assert result.valid is True
+        assert result.payload["username"] == "alice"
 
-    def test_standalone_verify_token_default_secret(self):
+    @pytest.mark.asyncio
+    async def test_standalone_verify_token_default_secret(self):
         """Test standalone verification with default secret"""
         auth = AuthMiddleware()  # Uses default secret
         token = auth.create_token("alice")
 
-        result = verify_token(token)  # Should work with default secret
+        result = await verify_token(token)  # Should work with default secret
 
-        assert result["valid"] is True
+        assert result.valid is True
 
-    def test_standalone_verify_token_invalid(self):
+    @pytest.mark.asyncio
+    async def test_standalone_verify_token_invalid(self):
         """Test standalone verification of invalid token"""
-        result = verify_token("invalid.token", secret_key="test-secret")
+        result = await verify_token("invalid.token", secret_key="test-secret")
 
-        assert result["valid"] is False
+        assert result.valid is False

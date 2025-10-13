@@ -73,6 +73,27 @@ class FeatureFlags(BaseSettings):
         description="Cache authorization check results for N seconds (0=disabled)",
     )
 
+    # Keycloak Features
+    enable_keycloak: bool = Field(
+        default=True,
+        description="Enable Keycloak integration for authentication",
+    )
+
+    enable_token_refresh: bool = Field(
+        default=True,
+        description="Enable automatic token refresh for Keycloak tokens",
+    )
+
+    keycloak_role_sync: bool = Field(
+        default=True,
+        description="Sync Keycloak roles/groups to OpenFGA on authentication",
+    )
+
+    openfga_sync_on_login: bool = Field(
+        default=True,
+        description="Synchronize user roles to OpenFGA on every login",
+    )
+
     # Observability Features
     enable_langsmith: bool = Field(
         default=False,

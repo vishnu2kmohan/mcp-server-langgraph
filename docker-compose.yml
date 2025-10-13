@@ -22,6 +22,15 @@ services:
 
       # Authentication
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-change-in-production}
+      - AUTH_PROVIDER=${AUTH_PROVIDER:-inmemory}
+
+      # Keycloak
+      - KEYCLOAK_SERVER_URL=http://keycloak:8180
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-langgraph-agent}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-langgraph-client}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - KEYCLOAK_ADMIN_USERNAME=admin
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
 
       # OpenFGA
       - OPENFGA_API_URL=http://openfga:8080
@@ -58,6 +67,8 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -84,24 +95,67 @@ services:
       timeout: 30s
       retries: 3
 
-  # Postgres for OpenFGA (production setup)
+  # Postgres for OpenFGA and Keycloak
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=openfga
-      - POSTGRES_PASSWORD=openfga
-      - POSTGRES_DB=openfga
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_MULTIPLE_DATABASES=openfga,keycloak
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./scripts/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
     ports:
       - "5432:5432"
     networks:
       - observability
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U openfga"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # Keycloak - Identity and Access Management
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    command:
+      - start-dev
+      - --http-port=8180
+    environment:
+      # Admin credentials
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+
+      # Database configuration
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+
+      # Hostname configuration
+      - KC_HOSTNAME=localhost
+      - KC_HTTP_PORT=8180
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+
+      # Features
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+    ports:
+      - "8180:8180"  # HTTP
+      - "8543:8443"  # HTTPS (if needed)
+    networks:
+      - observability
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8180/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   # OpenTelemetry Collector
   otel-collector:
@@ -161,10 +215,28 @@ services:
       - prometheus
       - jaeger
 
+  # Redis for session management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis-data:/data
+    networks:
+      - observability
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
 volumes:
   prometheus-data:
   grafana-data:
   postgres-data:
+  redis-data:
 
 networks:
   observability:

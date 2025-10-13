@@ -67,6 +67,13 @@ setup-openfga:
 	@echo ""
 	@echo "⚠️  Remember to update .env with OPENFGA_STORE_ID and OPENFGA_MODEL_ID"
 
+setup-keycloak:
+	@echo "Setting up Keycloak..."
+	@echo "Waiting for Keycloak to start (this may take 60+ seconds)..."
+	python scripts/setup/setup_keycloak.py
+	@echo ""
+	@echo "⚠️  Remember to update .env with KEYCLOAK_CLIENT_SECRET"
+
 setup-infisical:
 	@echo "Setting up Infisical..."
 	python scripts/setup/setup_infisical.py

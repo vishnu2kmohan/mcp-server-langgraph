@@ -1,71 +1,148 @@
 """
 Authentication and Authorization middleware with OpenFGA integration
+
+Now supports:
+- Pluggable user providers (InMemory, Keycloak, custom)
+- Session management (Token-based or Session-based)
+- Fine-grained authorization via OpenFGA
 """
 
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import jwt
+from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.auth.session import SessionData, SessionStore
+from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserProvider, TokenVerification, UserProvider
 from mcp_server_langgraph.observability.telemetry import logger, tracer
+
+
+# ============================================================================
+# Pydantic Models for Middleware Operations
+# ============================================================================
+
+
+class AuthorizationResult(BaseModel):
+    """
+    Type-safe authorization check result
+
+    Returned from authorize() operations.
+    """
+
+    authorized: bool = Field(..., description="Whether access is authorized")
+    user_id: str = Field(..., description="User identifier that was checked")
+    relation: str = Field(..., description="Relation that was checked")
+    resource: str = Field(..., description="Resource that was checked")
+    reason: Optional[str] = Field(None, description="Reason for denial if not authorized")
+    used_fallback: bool = Field(default=False, description="Whether fallback authorization was used")
+
+    model_config = ConfigDict(
+        frozen=False,
+        validate_assignment=True,
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "example": {
+                "authorized": True,
+                "user_id": "user:alice",
+                "relation": "executor",
+                "resource": "tool:chat",
+                "reason": None,
+                "used_fallback": False
+            }
+        }
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for backward compatibility"""
+        return self.model_dump(exclude_none=True)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AuthorizationResult":
+        """Create AuthorizationResult from dictionary"""
+        return cls(**data)
 
 
 class AuthMiddleware:
     """
     Authentication and authorization handler with OpenFGA
 
-    Combines JWT-based authentication with fine-grained relationship-based
-    authorization using OpenFGA.
+    Combines authentication (via pluggable user providers) with fine-grained
+    relationship-based authorization using OpenFGA.
+
+    Supports multiple authentication backends:
+    - InMemoryUserProvider (development/testing)
+    - KeycloakUserProvider (production)
+    - Custom providers
     """
 
     def __init__(
-        self, secret_key: str = "your-secret-key-change-in-production", openfga_client: Optional[OpenFGAClient] = None
+        self,
+        secret_key: str = "your-secret-key-change-in-production",
+        openfga_client: Optional[OpenFGAClient] = None,
+        user_provider: Optional[UserProvider] = None,
+        session_store: Optional[SessionStore] = None,
     ):
+        """
+        Initialize AuthMiddleware
+
+        Args:
+            secret_key: Secret key for JWT tokens (used by InMemoryUserProvider)
+            openfga_client: OpenFGA client for authorization
+            user_provider: User provider instance (defaults to InMemoryUserProvider for backward compatibility)
+            session_store: Session store for session-based authentication (optional)
+        """
         self.secret_key = secret_key
         self.openfga = openfga_client
+        self.session_store = session_store
 
-        # User database (in production, use real database)
-        self.users_db = {
-            "alice": {"user_id": "user:alice", "email": "alice@acme.com", "roles": ["user", "premium"], "active": True},
-            "bob": {"user_id": "user:bob", "email": "bob@acme.com", "roles": ["user"], "active": True},
-            "admin": {"user_id": "user:admin", "email": "admin@acme.com", "roles": ["admin"], "active": True},
-        }
+        # Use provided user provider or default to in-memory for backward compatibility
+        if user_provider is None:
+            logger.info("No user provider specified, defaulting to InMemoryUserProvider")
+            user_provider = InMemoryUserProvider(secret_key=secret_key)
 
-    async def authenticate(self, username: str) -> Dict[str, Any]:
+        self.user_provider = user_provider
+
+        # For backward compatibility: expose users_db if using InMemoryUserProvider
+        if isinstance(user_provider, InMemoryUserProvider):
+            self.users_db = user_provider.users_db
+        else:
+            self.users_db = {}  # Empty dict for non-inmemory providers
+
+        logger.info(
+            "AuthMiddleware initialized",
+            extra={
+                "provider_type": type(user_provider).__name__,
+                "openfga_enabled": openfga_client is not None,
+                "session_enabled": session_store is not None
+            }
+        )
+
+    async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
         """
         Authenticate user by username
 
         Args:
             username: Username to authenticate
+            password: Password (required for some providers like Keycloak)
 
         Returns:
-            Authentication result with user details
+            AuthResponse with authentication result
         """
         with tracer.start_as_current_span("auth.authenticate") as span:
             span.set_attribute("auth.username", username)
 
-            # Check user database
-            if username in self.users_db:
-                user = self.users_db[username]
+            # Delegate to user provider (returns Pydantic AuthResponse)
+            result = await self.user_provider.authenticate(username, password)
 
-                if not user["active"]:
-                    logger.warning("User account inactive", extra={"username": username})
-                    return {"authorized": False, "reason": "account_inactive"}
+            if result.authorized:
+                logger.info("User authenticated", extra={"username": username, "user_id": result.user_id})
+            else:
+                logger.warning("Authentication failed", extra={"username": username, "reason": result.reason})
 
-                logger.info("User authenticated", extra={"username": username, "user_id": user["user_id"]})
-
-                return {
-                    "authorized": True,
-                    "username": username,
-                    "user_id": user["user_id"],
-                    "email": user["email"],
-                    "roles": user["roles"],
-                }
-
-            logger.warning("Authentication failed - user not found", extra={"username": username})
-            return {"authorized": False, "reason": "user_not_found"}
+            return result
 
     async def authorize(self, user_id: str, relation: str, resource: str, context: Optional[Dict[str, Any]] = None) -> bool:
         """
@@ -166,7 +243,9 @@ class AuthMiddleware:
 
     def create_token(self, username: str, expires_in: int = 3600) -> str:
         """
-        Create JWT token for user
+        Create JWT token for user (InMemoryUserProvider only)
+
+        For Keycloak provider, tokens are issued by Keycloak itself.
 
         Args:
             username: Username
@@ -174,39 +253,198 @@ class AuthMiddleware:
 
         Returns:
             JWT token string
+
+        Raises:
+            ValueError: If user not found or provider doesn't support token creation
         """
-        if username not in self.users_db:
-            raise ValueError(f"User not found: {username}")
+        # Check if provider supports token creation
+        if isinstance(self.user_provider, InMemoryUserProvider):
+            return self.user_provider.create_token(username, expires_in)
 
-        user = self.users_db[username]
+        # For other providers, we can't create tokens
+        raise ValueError(f"Token creation not supported for provider type: {type(self.user_provider).__name__}")
 
-        payload = {
-            "sub": user["user_id"],
-            "username": username,
-            "email": user["email"],
-            "roles": user["roles"],
-            "exp": datetime.utcnow() + timedelta(seconds=expires_in),
-            "iat": datetime.utcnow(),
-        }
+    async def verify_token(self, token: str) -> TokenVerification:
+        """
+        Verify and decode JWT token
 
-        token = jwt.encode(payload, self.secret_key, algorithm="HS256")
+        Supports both self-issued tokens (InMemoryUserProvider) and
+        Keycloak-issued tokens (KeycloakUserProvider).
 
-        logger.info("Token created", extra={"username": username, "user_id": user["user_id"], "expires_in": expires_in})
+        Args:
+            token: JWT token to verify
 
-        return token
+        Returns:
+            TokenVerification with validation result
+        """
+        # Delegate to user provider (returns Pydantic TokenVerification)
+        result = await self.user_provider.verify_token(token)
 
-    def verify_token(self, token: str) -> Dict[str, Any]:
-        """Verify and decode JWT token"""
-        try:
-            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
-            logger.info("Token verified", extra={"user_id": payload.get("user_id")})
-            return {"valid": True, "payload": payload}
-        except jwt.ExpiredSignatureError:
-            logger.warning("Token expired")
-            return {"valid": False, "error": "Token expired"}
-        except jwt.InvalidTokenError as e:
-            logger.warning(f"Invalid token: {e}")
-            return {"valid": False, "error": "Invalid token"}
+        if result.valid:
+            logger.info("Token verified", extra={"sub": result.payload.get("sub") if result.payload else None})
+        else:
+            logger.warning("Token verification failed", extra={"error": result.error})
+
+        return result
+
+    # Session Management Methods
+
+    async def create_session(
+        self,
+        user_id: str,
+        username: str,
+        roles: List[str],
+        metadata: Optional[Dict[str, Any]] = None,
+        ttl_seconds: Optional[int] = None
+    ) -> Optional[str]:
+        """
+        Create a new session
+
+        Args:
+            user_id: User identifier
+            username: Username
+            roles: User roles
+            metadata: Additional session metadata
+            ttl_seconds: Session TTL in seconds
+
+        Returns:
+            Session ID or None if session store not configured
+        """
+        if not self.session_store:
+            logger.warning("Session store not configured, cannot create session")
+            return None
+
+        with tracer.start_as_current_span("auth.create_session") as span:
+            span.set_attribute("user.id", user_id)
+
+            session_id = await self.session_store.create(
+                user_id=user_id,
+                username=username,
+                roles=roles,
+                metadata=metadata,
+                ttl_seconds=ttl_seconds
+            )
+
+            logger.info("Session created", extra={"session_id": session_id, "user_id": user_id})
+            return session_id
+
+    async def get_session(self, session_id: str) -> Optional[SessionData]:
+        """
+        Get session data
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            Session data or None
+        """
+        if not self.session_store:
+            return None
+
+        with tracer.start_as_current_span("auth.get_session") as span:
+            span.set_attribute("session.id", session_id)
+
+            session = await self.session_store.get(session_id)
+
+            if session:
+                logger.debug(f"Session retrieved: {session_id}")
+            else:
+                logger.debug(f"Session not found or expired: {session_id}")
+
+            return session
+
+    async def refresh_session(self, session_id: str, ttl_seconds: Optional[int] = None) -> bool:
+        """
+        Refresh session expiration
+
+        Args:
+            session_id: Session identifier
+            ttl_seconds: New TTL in seconds
+
+        Returns:
+            True if refreshed successfully
+        """
+        if not self.session_store:
+            return False
+
+        with tracer.start_as_current_span("auth.refresh_session") as span:
+            span.set_attribute("session.id", session_id)
+
+            refreshed = await self.session_store.refresh(session_id, ttl_seconds)
+
+            if refreshed:
+                logger.info(f"Session refreshed: {session_id}")
+            else:
+                logger.warning(f"Failed to refresh session: {session_id}")
+
+            return refreshed
+
+    async def revoke_session(self, session_id: str) -> bool:
+        """
+        Revoke (delete) a session
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            True if revoked successfully
+        """
+        if not self.session_store:
+            return False
+
+        with tracer.start_as_current_span("auth.revoke_session") as span:
+            span.set_attribute("session.id", session_id)
+
+            revoked = await self.session_store.delete(session_id)
+
+            if revoked:
+                logger.info(f"Session revoked: {session_id}")
+            else:
+                logger.warning(f"Session not found for revocation: {session_id}")
+
+            return revoked
+
+    async def list_user_sessions(self, user_id: str) -> List[SessionData]:
+        """
+        List all active sessions for a user
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            List of session data
+        """
+        if not self.session_store:
+            return []
+
+        with tracer.start_as_current_span("auth.list_user_sessions") as span:
+            span.set_attribute("user.id", user_id)
+
+            sessions = await self.session_store.list_user_sessions(user_id)
+
+            logger.info(f"Listed {len(sessions)} sessions for user {user_id}")
+            return sessions
+
+    async def revoke_user_sessions(self, user_id: str) -> int:
+        """
+        Revoke all sessions for a user
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Number of sessions revoked
+        """
+        if not self.session_store:
+            return 0
+
+        with tracer.start_as_current_span("auth.revoke_user_sessions") as span:
+            span.set_attribute("user.id", user_id)
+
+            count = await self.session_store.delete_user_sessions(user_id)
+
+            logger.info(f"Revoked {count} sessions for user {user_id}")
+            return count
 
 
 def require_auth(
@@ -234,9 +472,9 @@ def require_auth(
             # Authenticate
             if username:
                 auth_result = await auth.authenticate(username)
-                if not auth_result["authorized"]:
+                if not auth_result.authorized:
                     raise PermissionError("Authentication failed")
-                user_id = auth_result["user_id"]
+                user_id = auth_result.user_id
 
             # Authorize if relation and resource specified
             if relation and resource:
@@ -252,7 +490,7 @@ def require_auth(
     return decorator
 
 
-def verify_token(token: str, secret_key: Optional[str] = None) -> Dict[str, Any]:
+async def verify_token(token: str, secret_key: Optional[str] = None) -> TokenVerification:
     """
     Standalone token verification function
 
@@ -261,7 +499,7 @@ def verify_token(token: str, secret_key: Optional[str] = None) -> Dict[str, Any]
         secret_key: Secret key for verification
 
     Returns:
-        Token verification result
+        TokenVerification with validation result
     """
     auth = AuthMiddleware(secret_key=secret_key or "your-secret-key-change-in-production")
-    return auth.verify_token(token)
+    return await auth.verify_token(token)

@@ -6,8 +6,52 @@ from typing import Any, Dict, List, Optional
 
 from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
+from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+
+
+class OpenFGAConfig(BaseModel):
+    """
+    Type-safe OpenFGA configuration
+
+    Configuration for OpenFGA authorization service.
+    """
+
+    api_url: str = Field(
+        default="http://localhost:8080",
+        description="OpenFGA server API URL"
+    )
+    store_id: Optional[str] = Field(
+        default=None,
+        description="Authorization store ID"
+    )
+    model_id: Optional[str] = Field(
+        default=None,
+        description="Authorization model ID"
+    )
+
+    model_config = ConfigDict(
+        frozen=False,
+        validate_assignment=True,
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "example": {
+                "api_url": "http://localhost:8080",
+                "store_id": "01H...",
+                "model_id": "01H..."
+            }
+        }
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for backward compatibility"""
+        return self.model_dump(exclude_none=True)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "OpenFGAConfig":
+        """Create OpenFGAConfig from dictionary"""
+        return cls(**data)
 
 
 class OpenFGAClient:
@@ -18,24 +62,38 @@ class OpenFGAClient:
     based on relationships between users, resources, and roles.
     """
 
-    def __init__(self, api_url: str = "http://localhost:8080", store_id: Optional[str] = None, model_id: Optional[str] = None):
+    def __init__(self, config: Optional[OpenFGAConfig] = None, api_url: Optional[str] = None, store_id: Optional[str] = None, model_id: Optional[str] = None):
         """
         Initialize OpenFGA client
 
         Args:
-            api_url: OpenFGA server URL
-            store_id: Authorization store ID
-            model_id: Authorization model ID
+            config: OpenFGAConfig instance (recommended)
+            api_url: OpenFGA server URL (legacy, use config instead)
+            store_id: Authorization store ID (legacy, use config instead)
+            model_id: Authorization model ID (legacy, use config instead)
         """
-        self.api_url = api_url
-        self.store_id = store_id
-        self.model_id = model_id
+        # Support both new config-based and legacy parameter-based initialization
+        if config is None:
+            config = OpenFGAConfig(
+                api_url=api_url or "http://localhost:8080",
+                store_id=store_id,
+                model_id=model_id
+            )
+
+        self.config = config
+        self.api_url = config.api_url
+        self.store_id = config.store_id
+        self.model_id = config.model_id
 
         # Configure client
-        configuration = ClientConfiguration(api_url=api_url, store_id=store_id, authorization_model_id=model_id)
+        configuration = ClientConfiguration(
+            api_url=config.api_url,
+            store_id=config.store_id,
+            authorization_model_id=config.model_id
+        )
 
         self.client = OpenFgaClient(configuration)
-        logger.info("OpenFGA client initialized", extra={"api_url": api_url})
+        logger.info("OpenFGA client initialized", extra={"api_url": config.api_url})
 
     async def check_permission(self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None) -> bool:
         """

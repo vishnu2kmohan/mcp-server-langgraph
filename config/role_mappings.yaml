@@ -1,0 +1,141 @@
+# Role Mapping Configuration
+#
+# Defines how Keycloak roles, groups, and attributes map to OpenFGA tuples.
+# This file enables flexible, declarative authorization without code changes.
+
+version: "1.0"
+
+# Simple 1:1 role mappings
+# Maps Keycloak roles directly to OpenFGA relations/objects
+simple_mappings:
+  # Admin role grants system-wide admin access
+  - keycloak_role: admin
+    realm: true  # Realm role (vs client role)
+    openfga_relation: admin
+    openfga_object: system:global
+
+  # Premium role for paid users
+  - keycloak_role: premium
+    realm: true
+    openfga_relation: assignee
+    openfga_object: role:premium
+
+  # Standard user role
+  - keycloak_role: user
+    realm: true
+    openfga_relation: assignee
+    openfga_object: role:user
+
+  # Client-specific roles
+  - keycloak_role: executor
+    realm: false  # Client role
+    openfga_relation: executor
+    openfga_object: tool:all
+
+  # Read-only access
+  - keycloak_role: viewer
+    realm: true
+    openfga_relation: viewer
+    openfga_object: resource:all
+
+# Group-based mappings with regex patterns
+# Uses pattern matching to map group hierarchies to organizations/teams
+group_mappings:
+  # Top-level groups → Organizations
+  # Pattern: /acme → organization:acme
+  - pattern: "^/([^/]+)$"
+    openfga_relation: member
+    openfga_object_template: "organization:{group_name}"
+
+  # Nested groups → Teams
+  # Pattern: /acme/engineering → team:engineering
+  - pattern: "^/([^/]+)/([^/]+)$"
+    openfga_relation: member
+    openfga_object_template: "team:{group_name}"
+
+  # Department-specific groups
+  # Pattern: /departments/finance → department:finance
+  - pattern: "^/departments/([^/]+)$"
+    openfga_relation: member
+    openfga_object_template: "department:{group_name}"
+
+# Conditional mappings based on user attributes
+# Maps custom attributes to permissions
+conditional_mappings:
+  # Finance department gets access to financial reports
+  - condition:
+      attribute: department
+      operator: "=="
+      value: finance
+    openfga_tuples:
+      - relation: viewer
+        object: resource:financial-reports
+      - relation: viewer
+        object: resource:audit-logs
+
+  # High security clearance gets classified access
+  - condition:
+      attribute: security_clearance
+      operator: ">="
+      value: 3
+    openfga_tuples:
+      - relation: viewer
+        object: resource:classified
+      - relation: viewer
+        object: resource:sensitive
+
+  # Manager role gets additional permissions
+  - condition:
+      attribute: job_title
+      operator: "in"
+      value: [Manager, Director, VP, CEO]
+    openfga_tuples:
+      - relation: admin
+        object: resource:team-reports
+      - relation: viewer
+        object: resource:hr-data
+
+  # Region-specific access
+  - condition:
+      attribute: region
+      operator: "=="
+      value: EMEA
+    openfga_tuples:
+      - relation: viewer
+        object: resource:emea-data
+
+  - condition:
+      attribute: region
+      operator: "=="
+      value: APAC
+    openfga_tuples:
+      - relation: viewer
+        object: resource:apac-data
+
+# Role hierarchies
+# Define role inheritance (higher roles inherit lower role permissions)
+hierarchies:
+  # Admin inherits all permissions
+  admin:
+    - premium
+    - user
+
+  # Premium inherits user permissions
+  premium:
+    - user
+
+  # Manager inherits contributor permissions
+  manager:
+    - contributor
+    - user
+
+  # Contributor inherits user permissions
+  contributor:
+    - user
+
+# Notes:
+# - Rules are applied in order: simple → group → conditional
+# - Hierarchies are applied after all rules
+# - Duplicate tuples are automatically deduplicated
+# - Pattern matching uses Python regex syntax
+# - Available operators: ==, !=, in, >=, <=

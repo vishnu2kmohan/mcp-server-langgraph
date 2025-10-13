@@ -101,6 +101,29 @@ class Settings(BaseSettings):
     langgraph_deployment_url: Optional[str] = None
     langgraph_api_url: str = "https://api.langchain.com"
 
+    # Authentication Provider
+    auth_provider: str = "inmemory"  # "inmemory", "keycloak"
+    auth_mode: str = "token"  # "token" (JWT), "session"
+
+    # Keycloak Settings
+    keycloak_server_url: str = "http://localhost:8180"
+    keycloak_realm: str = "langgraph-agent"
+    keycloak_client_id: str = "langgraph-client"
+    keycloak_client_secret: Optional[str] = None
+    keycloak_admin_username: str = "admin"
+    keycloak_admin_password: Optional[str] = None
+    keycloak_verify_ssl: bool = True
+    keycloak_timeout: int = 30  # HTTP timeout in seconds
+
+    # Session Management
+    session_backend: str = "memory"  # "memory", "redis"
+    redis_url: str = "redis://localhost:6379/0"
+    redis_password: Optional[str] = None
+    redis_ssl: bool = False
+    session_ttl_seconds: int = 86400  # 24 hours
+    session_sliding_window: bool = True
+    session_max_concurrent: int = 5  # Max concurrent sessions per user
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -155,6 +178,13 @@ class Settings(BaseSettings):
         # Load LangGraph Platform configuration
         if not self.langgraph_api_key:
             self.langgraph_api_key = secrets_mgr.get_secret("LANGGRAPH_API_KEY", fallback=None)
+
+        # Load Keycloak configuration
+        if not self.keycloak_client_secret:
+            self.keycloak_client_secret = secrets_mgr.get_secret("KEYCLOAK_CLIENT_SECRET", fallback=None)
+
+        if not self.keycloak_admin_password:
+            self.keycloak_admin_password = secrets_mgr.get_secret("KEYCLOAK_ADMIN_PASSWORD", fallback=None)
 
     def get_secret(self, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """
