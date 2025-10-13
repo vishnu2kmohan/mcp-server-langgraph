@@ -32,9 +32,7 @@ class AccessReviewItem(BaseModel):
     active_sessions: int
     last_login: Optional[str] = None
     account_status: str = Field(..., description="active, inactive, locked")
-    review_status: str = Field(
-        default="pending", description="approved, revoked, pending"
-    )
+    review_status: str = Field(default="pending", description="approved, revoked, pending")
     review_notes: str = Field(default="", description="Review notes")
 
 
@@ -109,9 +107,7 @@ class ComplianceScheduler:
             # Weekly access reviews (Monday 9 AM UTC)
             self.scheduler.add_job(
                 self._run_weekly_access_review,
-                trigger=CronTrigger(
-                    day_of_week="mon", hour=9, minute=0, timezone="UTC"
-                ),
+                trigger=CronTrigger(day_of_week="mon", hour=9, minute=0, timezone="UTC"),
                 id="weekly_access_review",
                 max_instances=1,
                 replace_existing=True,
@@ -142,7 +138,14 @@ class ComplianceScheduler:
     async def stop(self):
         """Stop the compliance scheduler"""
         if self.scheduler.running:
-            self.scheduler.shutdown(wait=True)
+            # Shutdown the scheduler. Use wait=False since we're in async context
+            # The scheduler.running flag will be set to False immediately
+            self.scheduler.shutdown(wait=False)
+
+            # Give the scheduler a moment to update its state
+            import asyncio
+            await asyncio.sleep(0.1)
+
             logger.info("Compliance scheduler stopped")
 
     async def trigger_daily_check(self) -> Dict[str, Any]:
@@ -187,31 +190,15 @@ class ComplianceScheduler:
                 logger.info("Starting daily compliance check")
 
                 # Collect all evidence
-                evidence_items = (
-                    await self.evidence_collector.collect_all_evidence()
-                )
+                evidence_items = await self.evidence_collector.collect_all_evidence()
 
                 # Calculate pass/fail rates
-                passed = sum(
-                    1
-                    for e in evidence_items
-                    if e.status.value == "success"
-                )
-                failed = sum(
-                    1
-                    for e in evidence_items
-                    if e.status.value == "failure"
-                )
-                partial = sum(
-                    1
-                    for e in evidence_items
-                    if e.status.value == "partial"
-                )
+                passed = sum(1 for e in evidence_items if e.status.value == "success")
+                failed = sum(1 for e in evidence_items if e.status.value == "failure")
+                partial = sum(1 for e in evidence_items if e.status.value == "partial")
                 total = len(evidence_items)
 
-                compliance_score = (
-                    (passed + (partial * 0.5)) / total * 100 if total > 0 else 0
-                )
+                compliance_score = (passed + (partial * 0.5)) / total * 100 if total > 0 else 0
 
                 # Collect all findings
                 findings = []
@@ -236,9 +223,7 @@ class ComplianceScheduler:
                 )
 
                 # Track metrics
-                metrics.successful_calls.add(
-                    1, {"operation": "daily_compliance_check"}
-                )
+                metrics.successful_calls.add(1, {"operation": "daily_compliance_check"})
 
                 # Alert if compliance score is low
                 if compliance_score < 80:
@@ -254,12 +239,8 @@ class ComplianceScheduler:
                 return summary
 
             except Exception as e:
-                logger.error(
-                    f"Daily compliance check failed: {e}", exc_info=True
-                )
-                metrics.failed_calls.add(
-                    1, {"operation": "daily_compliance_check"}
-                )
+                logger.error(f"Daily compliance check failed: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "daily_compliance_check"})
 
                 await self._send_compliance_alert(
                     severity="critical",
@@ -317,12 +298,8 @@ class ComplianceScheduler:
 
                 # Generate recommendations
                 if inactive_users > 0:
-                    recommendations.append(
-                        f"Review {inactive_users} inactive user accounts (no login > 90 days)"
-                    )
-                    actions_required.append(
-                        "Disable or delete inactive user accounts"
-                    )
+                    recommendations.append(f"Review {inactive_users} inactive user accounts (no login > 90 days)")
+                    actions_required.append("Disable or delete inactive user accounts")
 
                 # Create report
                 report = AccessReviewReport(
@@ -339,9 +316,7 @@ class ComplianceScheduler:
                 )
 
                 # Save report
-                report_file = (
-                    self.evidence_collector.evidence_dir / f"{report.review_id}.json"
-                )
+                report_file = self.evidence_collector.evidence_dir / f"{report.review_id}.json"
                 with open(report_file, "w") as f:
                     f.write(report.model_dump_json(indent=2))
 
@@ -357,9 +332,7 @@ class ComplianceScheduler:
                 # Send notification
                 await self._send_access_review_notification(report)
 
-                metrics.successful_calls.add(
-                    1, {"operation": "weekly_access_review"}
-                )
+                metrics.successful_calls.add(1, {"operation": "weekly_access_review"})
 
                 span.set_attribute("total_users", total_users)
                 span.set_attribute("inactive_users", inactive_users)
@@ -391,9 +364,7 @@ class ComplianceScheduler:
                 logger.info("Starting monthly compliance report generation")
 
                 # Generate comprehensive report
-                report = await self.evidence_collector.generate_compliance_report(
-                    report_type="monthly", period_days=30
-                )
+                report = await self.evidence_collector.generate_compliance_report(report_type="monthly", period_days=30)
 
                 summary = {
                     "report_id": report.report_id,
@@ -401,9 +372,7 @@ class ComplianceScheduler:
                     "total_controls": report.total_controls,
                     "passed_controls": report.passed_controls,
                     "failed_controls": report.failed_controls,
-                    "total_findings": report.summary.get("findings_summary", {}).get(
-                        "total_findings", 0
-                    ),
+                    "total_findings": report.summary.get("findings_summary", {}).get("total_findings", 0),
                 }
 
                 logger.info(
@@ -414,9 +383,7 @@ class ComplianceScheduler:
                 # Send report to compliance team
                 await self._send_monthly_report_notification(report)
 
-                metrics.successful_calls.add(
-                    1, {"operation": "monthly_compliance_report"}
-                )
+                metrics.successful_calls.add(1, {"operation": "monthly_compliance_report"})
 
                 span.set_attribute("compliance_score", report.compliance_score)
                 span.set_attribute("total_controls", report.total_controls)
@@ -424,12 +391,8 @@ class ComplianceScheduler:
                 return summary
 
             except Exception as e:
-                logger.error(
-                    f"Monthly compliance report failed: {e}", exc_info=True
-                )
-                metrics.failed_calls.add(
-                    1, {"operation": "monthly_compliance_report"}
-                )
+                logger.error(f"Monthly compliance report failed: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "monthly_compliance_report"})
 
                 await self._send_compliance_alert(
                     severity="critical",
@@ -441,9 +404,7 @@ class ComplianceScheduler:
 
     # --- Notification Helpers ---
 
-    async def _send_compliance_alert(
-        self, severity: str, message: str, details: Dict[str, Any]
-    ):
+    async def _send_compliance_alert(self, severity: str, message: str, details: Dict[str, Any]):
         """
         Send compliance alert
 
@@ -522,9 +483,7 @@ async def start_compliance_scheduler(
     global _compliance_scheduler
 
     if _compliance_scheduler is None:
-        evidence_collector = EvidenceCollector(
-            session_store=session_store, evidence_dir=evidence_dir
-        )
+        evidence_collector = EvidenceCollector(session_store=session_store, evidence_dir=evidence_dir)
 
         _compliance_scheduler = ComplianceScheduler(
             evidence_collector=evidence_collector,

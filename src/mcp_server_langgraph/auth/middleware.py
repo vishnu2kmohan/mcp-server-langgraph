@@ -19,7 +19,6 @@ from mcp_server_langgraph.auth.session import SessionData, SessionStore
 from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserProvider, TokenVerification, UserProvider
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
-
 # ============================================================================
 # Pydantic Models for Middleware Operations
 # ============================================================================
@@ -50,9 +49,9 @@ class AuthorizationResult(BaseModel):
                 "relation": "executor",
                 "resource": "tool:chat",
                 "reason": None,
-                "used_fallback": False
+                "used_fallback": False,
             }
-        }
+        },
     )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -116,8 +115,8 @@ class AuthMiddleware:
             extra={
                 "provider_type": type(user_provider).__name__,
                 "openfga_enabled": openfga_client is not None,
-                "session_enabled": session_store is not None
-            }
+                "session_enabled": session_store is not None,
+            },
         )
 
     async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
@@ -295,7 +294,7 @@ class AuthMiddleware:
         username: str,
         roles: List[str],
         metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None
+        ttl_seconds: Optional[int] = None,
     ) -> Optional[str]:
         """
         Create a new session
@@ -318,11 +317,7 @@ class AuthMiddleware:
             span.set_attribute("user.id", user_id)
 
             session_id = await self.session_store.create(
-                user_id=user_id,
-                username=username,
-                roles=roles,
-                metadata=metadata,
-                ttl_seconds=ttl_seconds
+                user_id=user_id, username=username, roles=roles, metadata=metadata, ttl_seconds=ttl_seconds
             )
 
             logger.info("Session created", extra={"session_id": session_id, "user_id": user_id})

@@ -110,10 +110,9 @@ class DataDeletionService:
 
             # 1. Delete sessions
             try:
-                if self.session_store:
-                    count = await self._delete_user_sessions(user_id)
-                    deleted_items["sessions"] = count
-                    logger.info(f"Deleted {count} sessions", extra={"user_id": user_id})
+                count = await self._delete_user_sessions(user_id)
+                deleted_items["sessions"] = count
+                logger.info(f"Deleted {count} sessions", extra={"user_id": user_id})
             except Exception as e:
                 error_msg = f"Failed to delete sessions: {str(e)}"
                 errors.append(error_msg)

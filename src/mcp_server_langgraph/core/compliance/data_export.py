@@ -288,7 +288,7 @@ class DataExportService:
             return []
 
         try:
-            sessions = await self.session_store.get_user_sessions(user_id)
+            sessions = await self.session_store.list_user_sessions(user_id)
             return [
                 {
                     "session_id": s.session_id,

@@ -147,7 +147,7 @@ graph LR
 
     **Start services**:
     ```bash
-    docker-compose up -d
+    docker compose up -d
 
     # Wait for Kong to be ready
     curl -i http://localhost:8001/
@@ -760,7 +760,7 @@ spec:
     **Check logs**:
     ```bash
     # Docker
-    docker-compose logs kong
+    docker compose logs kong
 
     # Kubernetes
     kubectl logs -l app=kong -n kong
@@ -774,7 +774,7 @@ spec:
     **Fix**:
     ```bash
     # Re-run migrations
-    docker-compose run --rm kong kong migrations bootstrap
+    docker compose run --rm kong kong migrations bootstrap
 
     # Or in Kubernetes
     kubectl exec -it kong-0 -n kong -- kong migrations bootstrap

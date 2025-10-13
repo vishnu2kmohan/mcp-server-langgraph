@@ -26,7 +26,6 @@ from mcp_server_langgraph.auth.session import (
     create_session_store,
 )
 
-
 # ============================================================================
 # InMemorySessionStore Tests
 # ============================================================================
@@ -64,9 +63,7 @@ class TestInMemorySessionStore:
     @pytest.mark.asyncio
     async def test_get_session(self, store):
         """Test retrieving a session"""
-        session_id = await store.create(
-            user_id="user:bob", username="bob", roles=["user"]
-        )
+        session_id = await store.create(user_id="user:bob", username="bob", roles=["user"])
 
         session = await store.get(session_id)
         assert session is not None
@@ -108,9 +105,7 @@ class TestInMemorySessionStore:
     @pytest.mark.asyncio
     async def test_refresh_session(self, store):
         """Test refreshing session expiration"""
-        session_id = await store.create(
-            user_id="user:dave", username="dave", roles=["user"]
-        )
+        session_id = await store.create(user_id="user:dave", username="dave", roles=["user"])
 
         # Get original expiry
         session1 = await store.get(session_id)
@@ -130,9 +125,7 @@ class TestInMemorySessionStore:
     @pytest.mark.asyncio
     async def test_refresh_with_custom_ttl(self, store):
         """Test refreshing with custom TTL"""
-        session_id = await store.create(
-            user_id="user:eve", username="eve", roles=["user"]
-        )
+        session_id = await store.create(user_id="user:eve", username="eve", roles=["user"])
 
         # Refresh with short TTL
         success = await store.refresh(session_id, ttl_seconds=60)
@@ -147,9 +140,7 @@ class TestInMemorySessionStore:
     @pytest.mark.asyncio
     async def test_delete_session(self, store):
         """Test deleting a session"""
-        session_id = await store.create(
-            user_id="user:frank", username="frank", roles=["user"]
-        )
+        session_id = await store.create(user_id="user:frank", username="frank", roles=["user"])
 
         # Verify exists
         assert await store.get(session_id) is not None
@@ -172,9 +163,7 @@ class TestInMemorySessionStore:
         """Test that expired sessions are not returned"""
         store = InMemorySessionStore(default_ttl_seconds=1)  # 1 second TTL
 
-        session_id = await store.create(
-            user_id="user:grace", username="grace", roles=["user"]
-        )
+        session_id = await store.create(user_id="user:grace", username="grace", roles=["user"])
 
         # Should exist immediately
         assert await store.get(session_id) is not None
@@ -263,9 +252,7 @@ class TestInMemorySessionStore:
         """Test sliding window expiration (refreshes on access)"""
         store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=True)
 
-        session_id = await store.create(
-            user_id="user:kate", username="kate", roles=["user"]
-        )
+        session_id = await store.create(user_id="user:kate", username="kate", roles=["user"])
 
         # Get original last_accessed time
         session1 = await store.get(session_id)
@@ -285,9 +272,7 @@ class TestInMemorySessionStore:
         """Test that sliding window can be disabled"""
         store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=False)
 
-        session_id = await store.create(
-            user_id="user:liam", username="liam", roles=["user"]
-        )
+        session_id = await store.create(user_id="user:liam", username="liam", roles=["user"])
 
         # Get original last_accessed
         session1 = await store.get(session_id)
@@ -306,14 +291,10 @@ class TestInMemorySessionStore:
     async def test_custom_ttl_per_session(self, store):
         """Test creating sessions with custom TTL"""
         # Short TTL session
-        session_id1 = await store.create(
-            user_id="user:mike", username="mike", roles=["user"], ttl_seconds=1
-        )
+        session_id1 = await store.create(user_id="user:mike", username="mike", roles=["user"], ttl_seconds=1)
 
         # Long TTL session
-        session_id2 = await store.create(
-            user_id="user:nina", username="nina", roles=["user"], ttl_seconds=3600
-        )
+        session_id2 = await store.create(user_id="user:nina", username="nina", roles=["user"], ttl_seconds=3600)
 
         # Wait for first to expire
         await asyncio.sleep(1.5)
@@ -354,9 +335,7 @@ class TestRedisSessionStore:
     def store(self, mock_redis):
         """Create Redis session store with mocked client"""
         with patch("redis.asyncio.from_url", return_value=mock_redis):
-            store = RedisSessionStore(
-                redis_url="redis://localhost:6379/0", default_ttl_seconds=3600
-            )
+            store = RedisSessionStore(redis_url="redis://localhost:6379/0", default_ttl_seconds=3600)
             return store
 
     @pytest.mark.asyncio
@@ -624,9 +603,7 @@ class TestSessionIntegration:
         store = InMemorySessionStore(default_ttl_seconds=3600)
 
         # Create
-        session_id = await store.create(
-            user_id="user:wendy", username="wendy", roles=["user", "premium"]
-        )
+        session_id = await store.create(user_id="user:wendy", username="wendy", roles=["user", "premium"])
         assert session_id is not None
 
         # Get

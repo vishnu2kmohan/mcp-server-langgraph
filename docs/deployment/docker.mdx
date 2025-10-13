@@ -53,10 +53,15 @@ This script will:
 
   <Step title="Start services">
     ```bash
-    docker-compose up -d
+    docker compose up -d
+    # Note: Use 'docker-compose' (with hyphen) if using v1
     ```
 
     First build takes 2-3 minutes. Subsequent starts are under 30 seconds.
+
+    <Note>
+      **Docker Compose Version**: This guide uses v2 syntax (`docker compose`). If you have the legacy v1 installed, use `docker-compose` (with hyphen) instead.
+    </Note>
   </Step>
 
   <Step title="Verify health">
@@ -132,7 +137,7 @@ This script will:
 Use development mode for hot reload and debugging:
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 **Development features**:
@@ -145,14 +150,14 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 ```bash
 # Start in dev mode
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 # In another terminal, edit code
 vim agent.py
 
 # Save file - server automatically reloads!
 # Check logs to see reload
-docker-compose logs -f agent
+docker compose logs -f agent
 ```
 
 ## Testing
@@ -164,7 +169,7 @@ docker-compose logs -f agent
 pip install pytest pytest-asyncio httpx
 
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Wait for health
 ./scripts/wait-for-health.sh
@@ -173,7 +178,7 @@ docker-compose up -d
 pytest tests/
 
 # Stop services
-docker-compose down
+docker compose down
 ```
 
 ### Test Agent Endpoint
@@ -240,13 +245,13 @@ Override settings with environment variables:
 
 ```bash
 # Use different model
-MODEL_NAME=claude-3-5-sonnet-20241022 docker-compose up
+MODEL_NAME=claude-3-5-sonnet-20241022 docker compose up
 
 # Enable debug logging
-LOG_LEVEL=DEBUG docker-compose up
+LOG_LEVEL=DEBUG docker compose up
 
 # Use OpenAI instead of Google
-LLM_PROVIDER=openai MODEL_NAME=gpt-4o docker-compose up
+LLM_PROVIDER=openai MODEL_NAME=gpt-4o docker compose up
 ```
 
 ## Observability
@@ -313,7 +318,7 @@ Set up authorization model:
 
 ```bash
 # Start services
-docker-compose up -d
+docker compose up -d
 
 # Wait for OpenFGA
 sleep 5
@@ -326,7 +331,7 @@ python scripts/setup_openfga.py
 # OPENFGA_MODEL_ID=...
 
 # Restart agent to use new IDs
-docker-compose restart agent
+docker compose restart agent
 ```
 
 ## Common Commands
@@ -335,78 +340,78 @@ docker-compose restart agent
   <Accordion title="Start services">
     ```bash
     # Production mode
-    docker-compose up -d
+    docker compose up -d
 
     # Development mode with hot reload
-    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
     # Build from scratch
-    docker-compose up -d --build
+    docker compose up -d --build
 
     # Start specific service
-    docker-compose up -d agent
+    docker compose up -d agent
     ```
   </Accordion>
 
   <Accordion title="View logs">
     ```bash
     # All services
-    docker-compose logs -f
+    docker compose logs -f
 
     # Specific service
-    docker-compose logs -f agent
+    docker compose logs -f agent
 
     # Last 100 lines
-    docker-compose logs --tail=100 agent
+    docker compose logs --tail=100 agent
 
     # Since timestamp
-    docker-compose logs --since 2025-10-10T10:00:00
+    docker compose logs --since 2025-10-10T10:00:00
     ```
   </Accordion>
 
   <Accordion title="Stop services">
     ```bash
     # Stop all
-    docker-compose down
+    docker compose down
 
     # Stop and remove volumes (clean slate)
-    docker-compose down -v
+    docker compose down -v
 
     # Stop specific service
-    docker-compose stop agent
+    docker compose stop agent
     ```
   </Accordion>
 
   <Accordion title="Debug service">
     ```bash
     # Execute shell in running container
-    docker-compose exec agent /bin/bash
+    docker compose exec agent /bin/bash
 
     # View environment variables
-    docker-compose exec agent env
+    docker compose exec agent env
 
     # Check Python packages
-    docker-compose exec agent pip list
+    docker compose exec agent pip list
 
     # Run Python script
-    docker-compose exec agent python -c "import sys; print(sys.version)"
+    docker compose exec agent python -c "import sys; print(sys.version)"
     ```
   </Accordion>
 
   <Accordion title="Restart service">
     ```bash
     # Restart agent after code changes (production mode)
-    docker-compose restart agent
+    docker compose restart agent
 
     # Rebuild and restart
-    docker-compose up -d --build agent
+    docker compose up -d --build agent
     ```
   </Accordion>
 
   <Accordion title="Scale services">
     ```bash
     # Run 3 agent replicas (requires load balancer)
-    docker-compose up -d --scale agent=3
+    docker compose up -d --scale agent=3
 
     # Note: Need to configure load balancer for multiple replicas
     ```
@@ -419,7 +424,7 @@ docker-compose restart agent
   <Accordion title="Agent service fails to start">
     **Check logs**:
     ```bash
-    docker-compose logs agent
+    docker compose logs agent
     ```
 
     **Common causes**:
@@ -437,8 +442,8 @@ docker-compose restart agent
     lsof -i :8000
 
     # Restart with fresh build
-    docker-compose down
-    docker-compose up -d --build
+    docker compose down
+    docker compose up -d --build
     ```
   </Accordion>
 
@@ -462,7 +467,7 @@ docker-compose restart agent
     docker network inspect mcp_server_langgraph_observability
 
     # Verify service names resolve
-    docker-compose exec agent ping openfga
+    docker compose exec agent ping openfga
     ```
 
     **Solution**: Ensure all services use `networks: [observability]`
@@ -470,7 +475,7 @@ docker-compose restart agent
 
   <Accordion title="Slow build times">
     **Solutions**:
-    - Use BuildKit: `DOCKER_BUILDKIT=1 docker-compose build`
+    - Use BuildKit: `DOCKER_BUILDKIT=1 docker compose build`
     - Cache dependencies: Mount pip cache
     - Use lighter base images: Already using `python:3.12-slim`
   </Accordion>

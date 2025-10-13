@@ -18,30 +18,15 @@ class OpenFGAConfig(BaseModel):
     Configuration for OpenFGA authorization service.
     """
 
-    api_url: str = Field(
-        default="http://localhost:8080",
-        description="OpenFGA server API URL"
-    )
-    store_id: Optional[str] = Field(
-        default=None,
-        description="Authorization store ID"
-    )
-    model_id: Optional[str] = Field(
-        default=None,
-        description="Authorization model ID"
-    )
+    api_url: str = Field(default="http://localhost:8080", description="OpenFGA server API URL")
+    store_id: Optional[str] = Field(default=None, description="Authorization store ID")
+    model_id: Optional[str] = Field(default=None, description="Authorization model ID")
 
     model_config = ConfigDict(
         frozen=False,
         validate_assignment=True,
         str_strip_whitespace=True,
-        json_schema_extra={
-            "example": {
-                "api_url": "http://localhost:8080",
-                "store_id": "01H...",
-                "model_id": "01H..."
-            }
-        }
+        json_schema_extra={"example": {"api_url": "http://localhost:8080", "store_id": "01H...", "model_id": "01H..."}},
     )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -62,7 +47,13 @@ class OpenFGAClient:
     based on relationships between users, resources, and roles.
     """
 
-    def __init__(self, config: Optional[OpenFGAConfig] = None, api_url: Optional[str] = None, store_id: Optional[str] = None, model_id: Optional[str] = None):
+    def __init__(
+        self,
+        config: Optional[OpenFGAConfig] = None,
+        api_url: Optional[str] = None,
+        store_id: Optional[str] = None,
+        model_id: Optional[str] = None,
+    ):
         """
         Initialize OpenFGA client
 
@@ -74,11 +65,7 @@ class OpenFGAClient:
         """
         # Support both new config-based and legacy parameter-based initialization
         if config is None:
-            config = OpenFGAConfig(
-                api_url=api_url or "http://localhost:8080",
-                store_id=store_id,
-                model_id=model_id
-            )
+            config = OpenFGAConfig(api_url=api_url or "http://localhost:8080", store_id=store_id, model_id=model_id)
 
         self.config = config
         self.api_url = config.api_url
@@ -87,9 +74,7 @@ class OpenFGAClient:
 
         # Configure client
         configuration = ClientConfiguration(
-            api_url=config.api_url,
-            store_id=config.store_id,
-            authorization_model_id=config.model_id
+            api_url=config.api_url, store_id=config.store_id, authorization_model_id=config.model_id
         )
 
         self.client = OpenFgaClient(configuration)

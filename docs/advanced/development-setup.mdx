@@ -38,9 +38,7 @@ This setup is optimized for productivity with hot reload, debugging support, cod
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install core tools
-brew install python@3.12 git docker docker-compose
-
-# Install uv (fast Python package manager)
+brew install python@3.12 git docker docker compose # Install uv (fast Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
@@ -84,7 +82,7 @@ git --version
 
 # Check Docker
 docker --version
-docker-compose --version
+docker compose --version
 
 # Check uv
 uv --version
@@ -429,19 +427,19 @@ repos:
 
 ```bash
 # Start all development services
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Check status
-docker-compose ps
+docker compose ps
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Clean up (including volumes)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Docker Compose for Development
@@ -548,8 +546,7 @@ docker run -p 8000:8000 \
   --env-file .env \
   langgraph-agent:dev
 
-# Or use docker-compose
-docker-compose up
+# Or use docker compose docker compose up
 ```
 
 ## Testing
@@ -564,7 +561,7 @@ pytest -m unit
 pytest -m unit --cov=src --cov-report=html
 
 # Run integration tests (requires services)
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 pytest -m integration
 
 # Run specific test file
@@ -731,9 +728,9 @@ test:  ## Run tests
 	pytest -m unit --cov=src --cov-report=term --cov-report=html
 
 test-integration:  ## Run integration tests
-	docker-compose -f docker-compose.dev.yml up -d
+	docker compose -f docker-compose.dev.yml up -d
 	pytest -m integration
-	docker-compose -f docker-compose.dev.yml down
+	docker compose -f docker-compose.dev.yml down
 
 lint:  ## Run linters
 	black --check src/ tests/
@@ -761,13 +758,13 @@ docker-run:  ## Run Docker container
 	docker run -p 8000:8000 --env-file .env langgraph-agent:dev
 
 services-up:  ## Start development services
-	docker-compose -f docker-compose.dev.yml up -d
+	docker compose -f docker-compose.dev.yml up -d
 
 services-down:  ## Stop development services
-	docker-compose -f docker-compose.dev.yml down
+	docker compose -f docker-compose.dev.yml down
 
 services-logs:  ## View service logs
-	docker-compose -f docker-compose.dev.yml logs -f
+	docker compose -f docker-compose.dev.yml logs -f
 ```
 
 **Usage**:
@@ -829,16 +826,16 @@ make services-up
   <Accordion title="Database Connection Failed" icon="database">
     ```bash
     # Check PostgreSQL is running
-    docker-compose ps postgres
+    docker compose ps postgres
 
     # Check connection
     psql -h localhost -U postgres -d langgraph_dev
 
     # View logs
-    docker-compose logs postgres
+    docker compose logs postgres
 
     # Restart service
-    docker-compose restart postgres
+    docker compose restart postgres
     ```
   </Accordion>
 

@@ -97,7 +97,7 @@ curl -X POST http://localhost:8000/message \
   <Step title="Deploy Keycloak">
     ```bash
     # Docker Compose (development)
-    docker-compose up -d keycloak
+    docker compose up -d keycloak
 
     # Or deploy to Kubernetes
     helm install keycloak bitnami/keycloak \
@@ -358,14 +358,14 @@ curl -X POST http://localhost:8000/message \
     **Solutions**:
     ```bash
     # Check Keycloak status
-    docker-compose ps keycloak  # Docker
+    docker compose ps keycloak  # Docker
     kubectl get pods -l app=keycloak  # Kubernetes
 
     # Test connectivity
     curl http://keycloak:8080/health
 
     # Check logs
-    docker-compose logs keycloak
+    docker compose logs keycloak
     kubectl logs -l app=keycloak
     ```
   </Accordion>

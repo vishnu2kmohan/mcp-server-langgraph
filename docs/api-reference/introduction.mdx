@@ -31,7 +31,7 @@ All API requests require JWT authentication.
 
 <CodeGroup>
 ```python Python
-from auth import AuthMiddleware
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
 auth = AuthMiddleware(secret_key="your-secret-key")
 token = auth.create_token("username", expires_in=3600)

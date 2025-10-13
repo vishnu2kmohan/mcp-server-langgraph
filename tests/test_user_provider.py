@@ -17,8 +17,8 @@ from mcp_server_langgraph.auth.user_provider import (
     create_user_provider,
 )
 
-
 # Fixtures
+
 
 @pytest.fixture
 def keycloak_config():
@@ -51,6 +51,7 @@ def keycloak_user():
 
 
 # InMemoryUserProvider Tests
+
 
 @pytest.mark.unit
 @pytest.mark.auth
@@ -238,6 +239,7 @@ class TestInMemoryUserProvider:
 
 # KeycloakUserProvider Tests
 
+
 @pytest.mark.unit
 @pytest.mark.auth
 class TestKeycloakUserProvider:
@@ -255,11 +257,7 @@ class TestKeycloakUserProvider:
     def test_initialization_with_openfga(self, keycloak_config):
         """Test initialization with OpenFGA client"""
         mock_openfga = AsyncMock()
-        provider = KeycloakUserProvider(
-            config=keycloak_config,
-            openfga_client=mock_openfga,
-            sync_on_login=False
-        )
+        provider = KeycloakUserProvider(config=keycloak_config, openfga_client=mock_openfga, sync_on_login=False)
 
         assert provider.openfga_client == mock_openfga
         assert provider.sync_on_login is False
@@ -310,11 +308,7 @@ class TestKeycloakUserProvider:
         mock_openfga = AsyncMock()
         mock_openfga.write_tuples = AsyncMock()
 
-        provider = KeycloakUserProvider(
-            config=keycloak_config,
-            openfga_client=mock_openfga,
-            sync_on_login=True
-        )
+        provider = KeycloakUserProvider(config=keycloak_config, openfga_client=mock_openfga, sync_on_login=True)
 
         tokens = {"access_token": "token", "expires_in": 300}
         userinfo = {"sub": "user-id-123", "preferred_username": "alice"}
@@ -334,11 +328,7 @@ class TestKeycloakUserProvider:
         mock_openfga = AsyncMock()
         mock_openfga.write_tuples.side_effect = Exception("OpenFGA error")
 
-        provider = KeycloakUserProvider(
-            config=keycloak_config,
-            openfga_client=mock_openfga,
-            sync_on_login=True
-        )
+        provider = KeycloakUserProvider(config=keycloak_config, openfga_client=mock_openfga, sync_on_login=True)
 
         tokens = {"access_token": "token", "expires_in": 300}
         userinfo = {"sub": "user-id-123", "preferred_username": "alice"}
@@ -478,6 +468,7 @@ class TestKeycloakUserProvider:
 
 # Factory Function Tests
 
+
 @pytest.mark.unit
 @pytest.mark.auth
 class TestCreateUserProvider:
@@ -485,10 +476,7 @@ class TestCreateUserProvider:
 
     def test_create_inmemory_provider(self):
         """Test creating InMemoryUserProvider"""
-        provider = create_user_provider(
-            provider_type="inmemory",
-            secret_key="test-secret"
-        )
+        provider = create_user_provider(provider_type="inmemory", secret_key="test-secret")
 
         assert isinstance(provider, InMemoryUserProvider)
         assert provider.secret_key == "test-secret"
@@ -501,10 +489,7 @@ class TestCreateUserProvider:
 
     def test_create_keycloak_provider(self, keycloak_config):
         """Test creating KeycloakUserProvider"""
-        provider = create_user_provider(
-            provider_type="keycloak",
-            keycloak_config=keycloak_config
-        )
+        provider = create_user_provider(provider_type="keycloak", keycloak_config=keycloak_config)
 
         assert isinstance(provider, KeycloakUserProvider)
         assert provider.config == keycloak_config
@@ -513,11 +498,7 @@ class TestCreateUserProvider:
         """Test creating KeycloakUserProvider with OpenFGA client"""
         mock_openfga = AsyncMock()
 
-        provider = create_user_provider(
-            provider_type="keycloak",
-            keycloak_config=keycloak_config,
-            openfga_client=mock_openfga
-        )
+        provider = create_user_provider(provider_type="keycloak", keycloak_config=keycloak_config, openfga_client=mock_openfga)
 
         assert isinstance(provider, KeycloakUserProvider)
         assert provider.openfga_client == mock_openfga
@@ -540,6 +521,7 @@ class TestCreateUserProvider:
 
 
 # UserProvider Interface Tests
+
 
 @pytest.mark.unit
 @pytest.mark.auth

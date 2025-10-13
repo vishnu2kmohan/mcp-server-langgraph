@@ -44,9 +44,7 @@ def evidence_dir(tmp_path):
 @pytest.fixture
 def evidence_collector(mock_session_store, evidence_dir):
     """Evidence collector instance"""
-    return EvidenceCollector(
-        session_store=mock_session_store, evidence_dir=evidence_dir
-    )
+    return EvidenceCollector(session_store=mock_session_store, evidence_dir=evidence_dir)
 
 
 @pytest.fixture
@@ -104,30 +102,21 @@ class TestEvidenceCollector:
         evidence_items = await evidence_collector.collect_availability_evidence()
 
         assert len(evidence_items) == 2  # SLA + Backup
-        assert all(
-            e.evidence_type == EvidenceType.AVAILABILITY for e in evidence_items
-        )
+        assert all(e.evidence_type == EvidenceType.AVAILABILITY for e in evidence_items)
 
     async def test_collect_confidentiality_evidence(self, evidence_collector):
         """Test confidentiality evidence collection"""
         evidence_items = await evidence_collector.collect_confidentiality_evidence()
 
         assert len(evidence_items) == 2  # Encryption + Data Access
-        assert all(
-            e.evidence_type == EvidenceType.CONFIDENTIALITY for e in evidence_items
-        )
+        assert all(e.evidence_type == EvidenceType.CONFIDENTIALITY for e in evidence_items)
 
     async def test_collect_processing_integrity_evidence(self, evidence_collector):
         """Test processing integrity evidence collection"""
-        evidence_items = (
-            await evidence_collector.collect_processing_integrity_evidence()
-        )
+        evidence_items = await evidence_collector.collect_processing_integrity_evidence()
 
         assert len(evidence_items) == 2  # Data Retention + Input Validation
-        assert all(
-            e.evidence_type == EvidenceType.PROCESSING_INTEGRITY
-            for e in evidence_items
-        )
+        assert all(e.evidence_type == EvidenceType.PROCESSING_INTEGRITY for e in evidence_items)
 
     async def test_collect_privacy_evidence(self, evidence_collector):
         """Test privacy evidence collection"""
@@ -267,9 +256,7 @@ class TestComplianceReport:
 
     async def test_generate_daily_report(self, evidence_collector, evidence_dir):
         """Test daily compliance report generation"""
-        report = await evidence_collector.generate_compliance_report(
-            report_type="daily", period_days=1
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
         assert isinstance(report, ComplianceReport)
         assert report.report_type == "daily"
@@ -284,27 +271,21 @@ class TestComplianceReport:
 
     async def test_generate_weekly_report(self, evidence_collector):
         """Test weekly compliance report generation"""
-        report = await evidence_collector.generate_compliance_report(
-            report_type="weekly", period_days=7
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="weekly", period_days=7)
 
         assert report.report_type == "weekly"
         assert report.total_controls > 0
 
     async def test_generate_monthly_report(self, evidence_collector):
         """Test monthly compliance report generation"""
-        report = await evidence_collector.generate_compliance_report(
-            report_type="monthly", period_days=30
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="monthly", period_days=30)
 
         assert report.report_type == "monthly"
         assert report.total_controls > 0
 
     async def test_compliance_score_calculation(self, evidence_collector):
         """Test compliance score calculation"""
-        report = await evidence_collector.generate_compliance_report(
-            report_type="daily", period_days=1
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
         # Score should be between 0-100
         assert 0 <= report.compliance_score <= 100
@@ -319,9 +300,7 @@ class TestComplianceReport:
 
     async def test_report_summary(self, evidence_collector):
         """Test report summary generation"""
-        report = await evidence_collector.generate_compliance_report(
-            report_type="daily", period_days=1
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
         assert "evidence_by_type" in report.summary
         assert "evidence_by_control" in report.summary
@@ -337,9 +316,7 @@ class TestComplianceReport:
 
     async def test_report_persistence(self, evidence_collector, evidence_dir):
         """Test report file persistence"""
-        report = await evidence_collector.generate_compliance_report(
-            report_type="daily", period_days=1
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
         # Verify report file exists
         report_file = evidence_dir / f"{report.report_id}.json"
@@ -459,9 +436,7 @@ class TestAccessReview:
         assert item.active_sessions == 2
         assert item.account_status == "active"
 
-    async def test_access_review_report_persistence(
-        self, compliance_scheduler, evidence_dir
-    ):
+    async def test_access_review_report_persistence(self, compliance_scheduler, evidence_dir):
         """Test access review report file persistence"""
         report = await compliance_scheduler.trigger_weekly_review()
 
@@ -492,18 +467,14 @@ class TestSOC2Integration:
         assert len(evidence_items) > 0
 
         # Generate compliance report
-        report = await evidence_collector.generate_compliance_report(
-            report_type="daily", period_days=1
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
         assert report.total_controls == len(evidence_items)
         assert report.compliance_score > 0
 
     async def test_compliance_score_threshold(self, evidence_collector):
         """Test compliance score meets minimum threshold"""
-        report = await evidence_collector.generate_compliance_report(
-            report_type="daily", period_days=1
-        )
+        report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
         # Compliance score should be >= 80% for production readiness
         assert report.compliance_score >= 80.0
@@ -526,6 +497,4 @@ class TestSOC2Integration:
         collected_controls = {e.control_category for e in evidence_items}
 
         for control in required_controls:
-            assert (
-                control in collected_controls
-            ), f"Missing required control: {control}"
+            assert control in collected_controls, f"Missing required control: {control}"

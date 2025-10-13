@@ -22,6 +22,7 @@ def run_async(coro):
     to avoid closing the loop and breaking subsequent async tests.
     """
     import asyncio
+
     try:
         # Try to get existing event loop
         loop = asyncio.get_event_loop()

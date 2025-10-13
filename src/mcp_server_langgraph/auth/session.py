@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 try:
     import redis.asyncio as redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     redis = None
@@ -57,35 +58,35 @@ class SessionData(BaseModel):
                 "metadata": {"ip": "192.168.1.1"},
                 "created_at": "2025-01-01T00:00:00.000000",
                 "last_accessed": "2025-01-01T00:00:00.000000",
-                "expires_at": "2025-01-02T00:00:00.000000"
+                "expires_at": "2025-01-02T00:00:00.000000",
             }
-        }
+        },
     )
 
-    @field_validator('session_id')
+    @field_validator("session_id")
     @classmethod
     def validate_session_id(cls, v: str) -> str:
         """Validate session ID is properly formatted and secure"""
         if not v or len(v) < 32:
-            raise ValueError('Session ID must be at least 32 characters for security')
+            raise ValueError("Session ID must be at least 32 characters for security")
         return v
 
-    @field_validator('user_id')
+    @field_validator("user_id")
     @classmethod
     def validate_user_id(cls, v: str) -> str:
         """Validate user ID format"""
         if not v:
-            raise ValueError('User ID cannot be empty')
+            raise ValueError("User ID cannot be empty")
         return v
 
-    @field_validator('created_at', 'last_accessed', 'expires_at')
+    @field_validator("created_at", "last_accessed", "expires_at")
     @classmethod
     def validate_timestamp(cls, v: str) -> str:
         """Validate timestamp is in ISO format"""
         try:
             datetime.fromisoformat(v)
         except (ValueError, TypeError):
-            raise ValueError(f'Timestamp must be in ISO format, got: {v}')
+            raise ValueError(f"Timestamp must be in ISO format, got: {v}")
         return v
 
     def to_dict(self) -> Dict[str, Any]:
@@ -108,7 +109,7 @@ class SessionStore(ABC):
         username: str,
         roles: List[str],
         metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None
+        ttl_seconds: Optional[int] = None,
     ) -> str:
         """
         Create a new session
@@ -271,8 +272,8 @@ class InMemorySessionStore(SessionStore):
             extra={
                 "default_ttl": default_ttl_seconds,
                 "sliding_window": sliding_window,
-                "max_concurrent": max_concurrent_sessions
-            }
+                "max_concurrent": max_concurrent_sessions,
+            },
         )
 
     async def create(
@@ -281,7 +282,7 @@ class InMemorySessionStore(SessionStore):
         username: str,
         roles: List[str],
         metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None
+        ttl_seconds: Optional[int] = None,
     ) -> str:
         """Create new session"""
         with tracer.start_as_current_span("session.create") as span:
@@ -293,9 +294,7 @@ class InMemorySessionStore(SessionStore):
                     # Remove oldest session
                     oldest_session_id = self.user_sessions[user_id].pop(0)
                     self.sessions.pop(oldest_session_id, None)
-                    logger.info(
-                        f"Removed oldest session for user {user_id} (max concurrent limit reached)"
-                    )
+                    logger.info(f"Removed oldest session for user {user_id} (max concurrent limit reached)")
 
             # Generate session
             session_id = self._generate_session_id()
@@ -320,14 +319,7 @@ class InMemorySessionStore(SessionStore):
                 self.user_sessions[user_id] = []
             self.user_sessions[user_id].append(session_id)
 
-            logger.info(
-                "Session created",
-                extra={
-                    "session_id": session_id,
-                    "user_id": user_id,
-                    "ttl_seconds": ttl
-                }
-            )
+            logger.info("Session created", extra={"session_id": session_id, "user_id": user_id, "ttl_seconds": ttl})
 
             return session_id
 
@@ -498,9 +490,7 @@ class RedisSessionStore(SessionStore):
             decode_responses: Decode responses to strings
         """
         if not REDIS_AVAILABLE:
-            raise ImportError(
-                "Redis not available. Install with: pip install 'redis[hiredis]>=5.0.0'"
-            )
+            raise ImportError("Redis not available. Install with: pip install 'redis[hiredis]>=5.0.0'")
 
         self.redis_url = redis_url
         self.default_ttl = default_ttl_seconds
@@ -522,8 +512,8 @@ class RedisSessionStore(SessionStore):
                 "redis_url": redis_url,
                 "default_ttl": default_ttl_seconds,
                 "sliding_window": sliding_window,
-                "max_concurrent": max_concurrent_sessions
-            }
+                "max_concurrent": max_concurrent_sessions,
+            },
         )
 
     async def create(
@@ -532,7 +522,7 @@ class RedisSessionStore(SessionStore):
         username: str,
         roles: List[str],
         metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None
+        ttl_seconds: Optional[int] = None,
     ) -> str:
         """Create new session in Redis"""
         with tracer.start_as_current_span("session.create") as span:
@@ -546,7 +536,7 @@ class RedisSessionStore(SessionStore):
                 # Remove oldest session
                 oldest_session_id = session_ids[0]
                 if isinstance(oldest_session_id, bytes):
-                    oldest_session_id = oldest_session_id.decode('utf-8')
+                    oldest_session_id = oldest_session_id.decode("utf-8")
                 await self.delete(oldest_session_id)
                 logger.info(f"Removed oldest session for user {user_id}")
 
@@ -575,10 +565,7 @@ class RedisSessionStore(SessionStore):
             await self.redis.rpush(user_sessions_key, session_id)
             await self.redis.expire(user_sessions_key, ttl + 3600)  # Extra hour
 
-            logger.info(
-                "Session created in Redis",
-                extra={"session_id": session_id, "user_id": user_id, "ttl_seconds": ttl}
-            )
+            logger.info("Session created in Redis", extra={"session_id": session_id, "user_id": user_id, "ttl_seconds": ttl})
 
             return session_id
 
@@ -629,10 +616,7 @@ class RedisSessionStore(SessionStore):
         session.last_accessed = datetime.utcnow().isoformat()
 
         # Persist to Redis
-        await self.redis.hset(session_key, mapping={
-            "metadata": str(session.metadata),
-            "last_accessed": session.last_accessed
-        })
+        await self.redis.hset(session_key, mapping={"metadata": str(session.metadata), "last_accessed": session.last_accessed})
 
         logger.info(f"Session metadata updated in Redis: {session_id}")
         return True
@@ -649,10 +633,7 @@ class RedisSessionStore(SessionStore):
         now = datetime.utcnow()
         new_expires_at = (now + timedelta(seconds=ttl)).isoformat()
 
-        await self.redis.hset(session_key, mapping={
-            "last_accessed": now.isoformat(),
-            "expires_at": new_expires_at
-        })
+        await self.redis.hset(session_key, mapping={"last_accessed": now.isoformat(), "expires_at": new_expires_at})
         await self.redis.expire(session_key, ttl)
 
         logger.info(f"Session refreshed in Redis: {session_id}, TTL: {ttl}s")
@@ -684,7 +665,7 @@ class RedisSessionStore(SessionStore):
         sessions = []
         for session_id in session_ids:
             if isinstance(session_id, bytes):
-                session_id = session_id.decode('utf-8')
+                session_id = session_id.decode("utf-8")
             session = await self.get(session_id)
             if session:
                 sessions.append(session)
@@ -699,7 +680,7 @@ class RedisSessionStore(SessionStore):
         count = 0
         for session_id in session_ids:
             if isinstance(session_id, bytes):
-                session_id = session_id.decode('utf-8')
+                session_id = session_id.decode("utf-8")
             if await self.delete(session_id):
                 count += 1
 
@@ -720,7 +701,7 @@ class RedisSessionStore(SessionStore):
 
             for key in keys:
                 if isinstance(key, bytes):
-                    key = key.decode('utf-8')
+                    key = key.decode("utf-8")
 
                 session_id = key.replace("session:", "")
                 session = await self.get(session_id)
@@ -757,11 +738,7 @@ class RedisSessionStore(SessionStore):
         return count
 
 
-def create_session_store(
-    backend: str = "memory",
-    redis_url: Optional[str] = None,
-    **kwargs
-) -> SessionStore:
+def create_session_store(backend: str = "memory", redis_url: Optional[str] = None, **kwargs) -> SessionStore:
     """
     Factory function to create session store
 
@@ -787,9 +764,7 @@ def create_session_store(
             raise ValueError("redis_url required for Redis backend")
 
         if not REDIS_AVAILABLE:
-            raise ImportError(
-                "Redis not available. Install with: pip install 'redis[hiredis]>=5.0.0'"
-            )
+            raise ImportError("Redis not available. Install with: pip install 'redis[hiredis]>=5.0.0'")
 
         logger.info("Creating RedisSessionStore")
         return RedisSessionStore(redis_url=redis_url, **kwargs)

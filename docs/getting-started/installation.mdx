@@ -207,24 +207,33 @@ Choose the installation method that best fits your use case:
 ### 1. Start Infrastructure Services
 
 ```bash
+# Docker Compose v2 (recommended - plugin-based)
+docker compose up -d
+
+# Docker Compose v1 (legacy - if v2 not available)
 docker-compose up -d
 ```
 
 <Check>
   **Verify services are running:**
   ```bash
-  docker-compose ps
+  docker compose ps
+  # OR: docker-compose ps (v1)
   ```
 
   All services should show "Up" status.
 </Check>
+
+<Note>
+  **Docker Compose Versions**: Modern Docker Desktop includes v2 as a plugin (`docker compose`). Legacy installations use v1 as a separate binary (`docker-compose`). Both work identically - use whichever is available on your system.
+</Note>
 
 ### 2. Setup OpenFGA
 
 Initialize the authorization system:
 
 ```bash
-python setup_openfga.py
+python scripts/setup/setup_openfga.py
 ```
 
 Save the output values:
@@ -280,7 +289,7 @@ JWT_SECRET_KEY=your-secret-key-change-in-production
 ### 5. Test Installation
 
 ```bash
-python example_client.py
+python examples/client_stdio.py
 ```
 
 You should see successful responses from the agent!

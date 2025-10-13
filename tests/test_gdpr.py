@@ -15,7 +15,6 @@ from mcp_server_langgraph.auth.session import InMemorySessionStore, SessionData
 from mcp_server_langgraph.core.compliance.data_deletion import DataDeletionService, DeletionResult
 from mcp_server_langgraph.core.compliance.data_export import DataExportService, UserDataExport
 
-
 # ==================== Test Fixtures ====================
 
 
@@ -70,9 +69,9 @@ class TestDataExportService:
         service = DataExportService(session_store=mock_session_store)
 
         # Mock session data
-        mock_session_store.get_user_sessions.return_value = [
+        mock_session_store.list_user_sessions.return_value = [
             SessionData(
-                session_id="sess_123",
+                session_id="sess_123456789012345678901234567890ab",
                 user_id="user:alice",
                 username="alice",
                 roles=["user"],
@@ -95,15 +94,15 @@ class TestDataExportService:
         assert export.username == "alice"
         assert export.email == "alice@acme.com"
         assert len(export.sessions) == 1
-        assert export.sessions[0]["session_id"] == "sess_123"
-        assert "export_id" in export.export_id
+        assert export.sessions[0]["session_id"] == "sess_123456789012345678901234567890ab"
+        assert export.export_id.startswith("exp_")
         assert export.metadata["gdpr_article"] == "15"
 
     @pytest.mark.asyncio
     async def test_export_user_data_no_sessions(self, mock_session_store):
         """Test export when user has no sessions"""
         service = DataExportService(session_store=mock_session_store)
-        mock_session_store.get_user_sessions.return_value = []
+        mock_session_store.list_user_sessions.return_value = []
 
         export = await service.export_user_data(
             user_id="user:bob",
@@ -118,7 +117,7 @@ class TestDataExportService:
     async def test_export_portable_json_format(self, mock_session_store):
         """Test portable export in JSON format"""
         service = DataExportService(session_store=mock_session_store)
-        mock_session_store.get_user_sessions.return_value = []
+        mock_session_store.list_user_sessions.return_value = []
 
         data_bytes, content_type = await service.export_user_data_portable(
             user_id="user:alice",
@@ -139,7 +138,7 @@ class TestDataExportService:
     async def test_export_portable_csv_format(self, mock_session_store):
         """Test portable export in CSV format"""
         service = DataExportService(session_store=mock_session_store)
-        mock_session_store.get_user_sessions.return_value = []
+        mock_session_store.list_user_sessions.return_value = []
 
         data_bytes, content_type = await service.export_user_data_portable(
             user_id="user:alice",
@@ -174,7 +173,7 @@ class TestDataExportService:
     async def test_export_handles_session_store_error(self, mock_session_store):
         """Test export gracefully handles session store errors"""
         service = DataExportService(session_store=mock_session_store)
-        mock_session_store.get_user_sessions.side_effect = Exception("Database connection error")
+        mock_session_store.list_user_sessions.side_effect = Exception("Database connection error")
 
         # Should not raise, but return empty sessions
         export = await service.export_user_data(
@@ -411,21 +410,16 @@ class TestGDPRIntegration:
         email = "testuser@acme.com"
 
         # 1. Create session
-        session = SessionData(
-            session_id="sess_test",
+        session_id = await session_store.create(
             user_id=user_id,
             username=username,
             roles=["user"],
-            created_at=datetime.utcnow().isoformat() + "Z",
-            last_accessed=datetime.utcnow().isoformat() + "Z",
-            expires_at=datetime.utcnow().isoformat() + "Z",
         )
-        await session_store.create(session)
 
         # 2. Export data
         export = await export_service.export_user_data(user_id, username, email)
         assert len(export.sessions) == 1
-        assert export.sessions[0]["session_id"] == "sess_test"
+        assert export.sessions[0]["session_id"] == session_id
 
         # 3. Delete account
         result = await deletion_service.delete_user_account(user_id, username)
@@ -433,7 +427,7 @@ class TestGDPRIntegration:
         assert result.deleted_items["sessions"] >= 1
 
         # 4. Verify deletion
-        sessions = await session_store.get_user_sessions(user_id)
+        sessions = await session_store.list_user_sessions(user_id)
         assert len(sessions) == 0
 
     @pytest.mark.asyncio
@@ -445,9 +439,7 @@ class TestGDPRIntegration:
         user_id = "user:testuser"
 
         # Export in JSON
-        json_data, json_type = await service.export_user_data_portable(
-            user_id, "testuser", "test@acme.com", "json"
-        )
+        json_data, json_type = await service.export_user_data_portable(user_id, "testuser", "test@acme.com", "json")
         assert json_type == "application/json"
         json_obj = json.loads(json_data.decode())
         assert json_obj["user_id"] == user_id
@@ -474,7 +466,7 @@ class TestGDPREdgeCases:
         # Mock many sessions
         many_sessions = [
             SessionData(
-                session_id=f"sess_{i}",
+                session_id=f"sess_{i:032d}",  # Pad to 32 chars minimum
                 user_id="user:alice",
                 username="alice",
                 roles=["user"],
@@ -484,7 +476,7 @@ class TestGDPREdgeCases:
             )
             for i in range(100)
         ]
-        mock_session_store.get_user_sessions.return_value = many_sessions
+        mock_session_store.list_user_sessions.return_value = many_sessions
 
         export = await service.export_user_data("user:alice", "alice", "alice@acme.com")
         assert len(export.sessions) == 100

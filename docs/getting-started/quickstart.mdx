@@ -48,20 +48,29 @@ Before you begin, ensure you have:
     This starts OpenFGA, Jaeger, Prometheus, and Grafana:
 
     ```bash
+    # Docker Compose v2 (recommended - plugin-based)
+    docker compose up -d
+
+    # Docker Compose v1 (legacy - if v2 not available)
     docker-compose up -d
     ```
 
     Verify services are running:
     ```bash
-    docker-compose ps
+    docker compose ps
+    # OR: docker-compose ps (v1)
     ```
+
+    <Tip>
+      Most modern Docker installations use v2 (`docker compose`). Use v1 syntax (`docker-compose`) only if you see "command not found" errors.
+    </Tip>
   </Step>
 
   <Step title="Setup OpenFGA">
     Initialize the authorization system:
 
     ```bash
-    python setup_openfga.py
+    python scripts/setup/setup_openfga.py
     ```
 
     Save the output `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID` - you'll need them next.
@@ -90,7 +99,7 @@ Before you begin, ensure you have:
     Run the example client:
 
     ```bash
-    python example_client.py
+    python examples/client_stdio.py
     ```
 
     You should see the agent responding to queries! 🎉
@@ -125,19 +134,38 @@ Let's send a message to the agent:
 
 <CodeGroup>
 ```python Python
-from example_client import create_client, send_message
+import asyncio
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
-# Create authenticated client
-client = create_client("alice")
+async def test_agent():
+    """Test the MCP agent with a simple query"""
+    # Configure server
+    server_params = StdioServerParameters(
+        command="python",
+        args=["-m", "mcp_server_langgraph.mcp.server_stdio"]
+    )
 
-# Send a message
-response = send_message(client, "Hello! What can you help me with?")
-print(response)
+    # Connect to agent
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            # Initialize
+            await session.initialize()
+
+            # Send a message using the chat tool
+            response = await session.call_tool(
+                "chat",
+                arguments={"message": "Hello! What can you help me with?"}
+            )
+            print(response)
+
+# Run the test
+asyncio.run(test_agent())
 ```
 
 ```bash cURL
 # First, get a JWT token (in production, use proper auth)
-TOKEN=$(python -c "from auth import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
+TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; from mcp_server_langgraph.core.config import settings; auth = AuthMiddleware(secret_key=settings.jwt_secret_key); print(auth.create_token('alice'))")
 
 # Send a message
 curl -X POST http://localhost:8000/message \
@@ -234,10 +262,12 @@ The agent returns a structured response:
     netstat -ano | findstr :8080  # Windows
 
     # Stop Docker services
-    docker-compose down
+    docker compose down
+    # Or: docker-compose down (v1)
 
     # Restart
-    docker-compose up -d
+    docker compose up -d
+    # Or: docker-compose up -d (v1)
     ```
   </Accordion>
 
@@ -245,11 +275,13 @@ The agent returns a structured response:
     Ensure OpenFGA is running:
 
     ```bash
-    docker-compose ps openfga
-    docker-compose logs openfga
+    docker compose ps openfga
+    docker compose logs openfga
 
     # Restart if needed
-    docker-compose restart openfga
+    docker compose restart openfga
+
+    # Or use v1 syntax: docker-compose ps openfga
     ```
   </Accordion>
 

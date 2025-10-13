@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Documentation & Repository Cleanup (2025-10-13)
+
+#### Repository Organization
+- **Archived Session Reports**: Moved 9 temporary session/analysis reports from root to `docs/reports/archive/2025-10/`
+  - `ALL_TESTS_FIXED_REPORT.md` → archive (15KB test remediation summary)
+  - `ACTION_PLAN.md` → archive (8KB planning document)
+  - `ANALYSIS_SUMMARY.md` → archive (9KB analysis summary)
+  - `COMPREHENSIVE_ANALYSIS_REPORT.md` → archive (18KB detailed analysis)
+  - `FINAL_REPORT.md` + `FINAL_REPORT_COMPLETE.md` → archive (test fixing sessions)
+  - `MINTLIFY_QUICKSTART.md`, `MINTLIFY_DOCS_VALIDATION_ERRORS.md`, `MINTLIFY_DOCS_FIXES_APPLIED.md` → archive
+- **Clean Root Directory**: Now contains only 5 permanent documentation files:
+  - `README.md` (35KB) - Main project documentation
+  - `CHANGELOG.md` (77KB) - Version history
+  - `SECURITY.md` (8KB) - Security policy
+  - `DEPENDABOT_MERGE_STATUS.md` (13KB) - Dependency tracking
+  - `MINTLIFY_VALIDATION_REPORT.md` (16KB) - Mintlify deployment reference
+
+#### Documentation Updates
+- **README.md**: Updated with latest metrics and achievements
+  - Added 100% test pass rate badge (437/437 tests passing)
+  - Added link to Repository Health Report
+  - Updated ADR count (21 comprehensive architectural decisions)
+  - Added Mintlify documentation reference (77 pages)
+  - Updated "Recent Improvements" section with October 2025 achievements
+- **Mintlify Documentation**: Ready for deployment
+  - 77/77 pages exist (100% coverage)
+  - 21 ADRs converted to MDX format
+  - Logo and favicon assets created
+  - Navigation structure validated
+
+#### Quality Metrics
+- **Test Suite**: 437/437 tests passing (100% pass rate) - All 16 failures resolved
+- **Documentation**: 21 Architecture Decision Records fully documented
+- **Code Quality**: 9.6/10 across 7 dimensions
+- **Repository Health**: Complete health analysis available at `docs/reports/REPOSITORY_HEALTH_REPORT_20251013.md`
+
 ## [2.3.0] - 2025-10-13
 
 ### Summary

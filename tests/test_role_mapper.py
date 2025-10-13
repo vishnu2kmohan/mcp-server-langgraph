@@ -10,9 +10,10 @@ Tests cover:
 - Validation
 """
 
-import pytest
 import tempfile
 from pathlib import Path
+
+import pytest
 
 from mcp_server_langgraph.auth.keycloak import KeycloakUser
 from mcp_server_langgraph.auth.role_mapper import (
@@ -21,7 +22,6 @@ from mcp_server_langgraph.auth.role_mapper import (
     RoleMapper,
     SimpleRoleMapping,
 )
-
 
 # ============================================================================
 # SimpleRoleMapping Tests
@@ -67,9 +67,7 @@ class TestSimpleRoleMapping:
         }
         mapping = SimpleRoleMapping(config)
 
-        user = KeycloakUser(
-            id="123", username="bob", realm_roles=["user"], client_roles={}, groups=[]
-        )
+        user = KeycloakUser(id="123", username="bob", realm_roles=["user"], client_roles={}, groups=[])
 
         assert mapping.applies_to(user) is False
         tuples = mapping.generate_tuples(user)
@@ -307,9 +305,7 @@ class TestConditionalMapping:
         }
         mapping = ConditionalMapping(config)
 
-        user = KeycloakUser(
-            id="123", username="liam", realm_roles=[], client_roles={}, groups=[], attributes={}
-        )
+        user = KeycloakUser(id="123", username="liam", realm_roles=[], client_roles={}, groups=[], attributes={})
 
         assert mapping.applies_to(user) is False
 
@@ -456,9 +452,7 @@ group_mappings:
         mapper = RoleMapper(config_dict=config_dict)
 
         # User with admin role should inherit premium and user
-        user = KeycloakUser(
-            id="123", username="paul", realm_roles=["admin"], client_roles={}, groups=[]
-        )
+        user = KeycloakUser(id="123", username="paul", realm_roles=["admin"], client_roles={}, groups=[])
 
         tuples = await mapper.map_user_to_tuples(user)
 
@@ -490,9 +484,7 @@ group_mappings:
 
         mapper = RoleMapper(config_dict=config_dict)
 
-        user = KeycloakUser(
-            id="123", username="quinn", realm_roles=["user"], client_roles={}, groups=[]
-        )
+        user = KeycloakUser(id="123", username="quinn", realm_roles=["user"], client_roles={}, groups=[])
 
         tuples = await mapper.map_user_to_tuples(user)
 
@@ -589,9 +581,7 @@ group_mappings:
         """Test validation detects circular hierarchy"""
         config_dict = {
             "simple_mappings": [],
-            "hierarchies": {
-                "admin": ["admin"]  # Circular - admin inherits from itself
-            },
+            "hierarchies": {"admin": ["admin"]},  # Circular - admin inherits from itself
         }
 
         mapper = RoleMapper(config_dict=config_dict)
@@ -604,9 +594,7 @@ group_mappings:
         """Test validation detects invalid hierarchy type"""
         config_dict = {
             "simple_mappings": [],
-            "hierarchies": {
-                "admin": "user"  # Should be a list, not string
-            },
+            "hierarchies": {"admin": "user"},  # Should be a list, not string
         }
 
         mapper = RoleMapper(config_dict=config_dict)

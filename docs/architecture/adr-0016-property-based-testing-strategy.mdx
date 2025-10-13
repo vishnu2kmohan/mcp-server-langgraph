@@ -1,0 +1,72 @@
+---
+title: "16. Property-Based Testing with Hypothesis"
+description: "Architecture Decision Record: 16. Property-Based Testing with Hypothesis"
+---
+
+# 16. Property-Based Testing with Hypothesis
+
+Date: 2025-10-13
+
+## Status
+
+Accepted
+
+## Context
+
+Traditional unit tests check specific examples:
+```python
+assert calculate_discount(100, 0.1) == 90
+```
+
+Edge cases often missed:
+- Negative numbers
+- Zero values
+- Very large numbers
+- Unicode in strings
+
+## Decision
+
+Use **Hypothesis for property-based testing** to discover edge cases automatically.
+
+### Example
+
+```python
+from hypothesis import given
+from hypothesis.strategies import integers, floats
+
+@given(price=floats(min_value=0), discount=floats(min_value=0, max_value=1))
+def test_discount_properties(price, discount):
+    result = calculate_discount(price, discount)
+    assert result >= 0  # Never negative
+    assert result <= price  # Never more than original
+```
+
+Hypothesis generates 100+ test cases including edge cases.
+
+## Consequences
+
+### Positive
+
+- **Edge Case Discovery**: Finds bugs unit tests miss
+- **Higher Confidence**: Tests properties, not examples
+- **Less Test Code**: One property test replaces many examples
+- **Regression Prevention**: Generated cases saved on failure
+
+### Negative
+
+- **Slower Tests**: 100 cases per test vs 1
+- **Learning Curve**: Property thinking vs example thinking
+- **Flaky Tests**: Random generation can cause intermittent failures
+
+## Usage
+
+27+ property tests covering:
+- LLM factory fallback logic
+- Authentication providers
+- Session management
+- Role mapping
+
+## References
+
+- Tests: `tests/property/`
+- Dependency: `pyproject.toml:66` - `hypothesis>=6.100.0`

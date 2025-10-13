@@ -12,9 +12,10 @@ Validates all deployment configurations (Docker Compose, Kubernetes, Helm) to en
 """
 
 import sys
-import yaml
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
+
+import yaml
 
 
 class DeploymentValidator:
@@ -107,16 +108,12 @@ class DeploymentValidator:
             self._check_secret(secret)
 
         # Validate Keycloak deployment
-        keycloak_deploy = self._load_yaml(
-            "deployments/kubernetes/base/keycloak-deployment.yaml"
-        )
+        keycloak_deploy = self._load_yaml("deployments/kubernetes/base/keycloak-deployment.yaml")
         if keycloak_deploy:
             self._check_keycloak_deployment(keycloak_deploy)
 
         # Validate Redis deployment
-        redis_docs = self._load_yaml_all(
-            "deployments/kubernetes/base/redis-session-deployment.yaml"
-        )
+        redis_docs = self._load_yaml_all("deployments/kubernetes/base/redis-session-deployment.yaml")
         if redis_docs:
             self._check_redis_deployment(redis_docs)
 
@@ -156,9 +153,7 @@ class DeploymentValidator:
         }
         missing_env = required_env - env_vars
         if missing_env:
-            self.warnings.append(
-                f"Main deployment: Missing environment variables: {missing_env}"
-            )
+            self.warnings.append(f"Main deployment: Missing environment variables: {missing_env}")
 
         print(f"  ✓ Main deployment validated")
 
@@ -207,18 +202,12 @@ class DeploymentValidator:
         # Check replicas for HA
         replicas = spec.get("replicas", 1)
         if replicas < 2:
-            self.warnings.append(
-                "Keycloak deployment: Less than 2 replicas (HA recommended)"
-            )
+            self.warnings.append("Keycloak deployment: Less than 2 replicas (HA recommended)")
 
         # Check init containers
-        init_containers = (
-            spec.get("template", {}).get("spec", {}).get("initContainers", [])
-        )
+        init_containers = spec.get("template", {}).get("spec", {}).get("initContainers", [])
         if not init_containers:
-            self.warnings.append(
-                "Keycloak deployment: No init containers for PostgreSQL wait"
-            )
+            self.warnings.append("Keycloak deployment: No init containers for PostgreSQL wait")
 
         print(f"  ✓ Keycloak deployment validated")
 
@@ -266,9 +255,7 @@ class DeploymentValidator:
             # Check volume mounts
             volumes = agent.get("volumes", [])
             if not any("src/mcp_server_langgraph" in str(v) for v in volumes):
-                self.errors.append(
-                    "Docker Compose agent: Source code not mounted correctly"
-                )
+                self.errors.append("Docker Compose agent: Source code not mounted correctly")
             else:
                 print(f"  ✓ Agent service volume mounts correct")
 
@@ -306,9 +293,7 @@ class DeploymentValidator:
             }
             missing_config = required_config - set(config.keys())
             if missing_config:
-                self.warnings.append(
-                    f"Helm values: Missing config keys: {missing_config}"
-                )
+                self.warnings.append(f"Helm values: Missing config keys: {missing_config}")
             else:
                 print(f"  ✓ Helm values validated")
 
@@ -344,13 +329,9 @@ class DeploymentValidator:
         helm_missing = core_keys - helm_keys
 
         if k8s_missing:
-            self.warnings.append(
-                f"K8s ConfigMap missing core keys: {k8s_missing}"
-            )
+            self.warnings.append(f"K8s ConfigMap missing core keys: {k8s_missing}")
         if helm_missing:
-            self.warnings.append(
-                f"Helm values missing core keys (as camelCase): {helm_missing}"
-            )
+            self.warnings.append(f"Helm values missing core keys (as camelCase): {helm_missing}")
 
         if not k8s_missing and not helm_missing:
             print(f"  ✓ Configuration consistency validated")

@@ -220,7 +220,14 @@ async def setup_client(
 
 
 async def create_user(
-    server_url: str, admin_username: str, admin_password: str, realm_name: str, username: str, email: str, password: str, roles: list
+    server_url: str,
+    admin_username: str,
+    admin_password: str,
+    realm_name: str,
+    username: str,
+    email: str,
+    password: str,
+    roles: list,
 ):
     """Create a user in Keycloak"""
     print(f"\nCreating user: {username}")
@@ -369,7 +376,9 @@ async def create_group(
             # Add members
             users_url = f"{server_url}/admin/realms/{realm_name}/users"
             for member_username in members:
-                search_response = await client.get(users_url, headers=headers, params={"username": member_username, "exact": "true"})
+                search_response = await client.get(
+                    users_url, headers=headers, params={"username": member_username, "exact": "true"}
+                )
                 if search_response.json():
                     user_id = search_response.json()[0]["id"]
                     member_url = f"{users_url}/{user_id}/groups/{group_id}"
@@ -424,7 +433,14 @@ async def main():
 
     for user in users:
         await create_user(
-            server_url, admin_username, admin_password, realm_name, user["username"], user["email"], user["password"], user["roles"]
+            server_url,
+            admin_username,
+            admin_password,
+            realm_name,
+            user["username"],
+            user["email"],
+            user["password"],
+            user["roles"],
         )
 
     # Create groups

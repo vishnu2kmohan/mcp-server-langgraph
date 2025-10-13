@@ -64,7 +64,7 @@ graph TB
         ```
 
         ```bash
-        docker-compose up -d openfga postgres
+        docker compose up -d openfga postgres
         ```
       </Tab>
 
@@ -582,14 +582,14 @@ psql -U openfga openfga < openfga-backup.sql
   <Accordion title="Connection refused">
     ```bash
     # Check OpenFGA status
-    docker-compose ps openfga
+    docker compose ps openfga
     kubectl get pods -l app=openfga
 
     # Test connectivity
     curl http://localhost:8080/healthz
 
     # Check logs
-    docker-compose logs openfga
+    docker compose logs openfga
     kubectl logs -l app=openfga
     ```
   </Accordion>

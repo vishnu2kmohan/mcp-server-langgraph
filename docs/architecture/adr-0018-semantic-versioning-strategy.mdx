@@ -1,0 +1,382 @@
+---
+title: "18. Semantic Versioning Strategy"
+description: "Architecture Decision Record: 18. Semantic Versioning Strategy"
+---
+
+# 18. Semantic Versioning Strategy
+
+Date: 2025-10-13
+
+## Status
+
+Accepted
+
+## Context
+
+Software projects need a clear, predictable versioning strategy that:
+- **Communicates breaking changes** to users
+- **Manages expectations** for upgrades
+- **Enables dependency management** for downstream consumers
+- **Supports multiple release channels** (stable, pre-release, nightly)
+- **Integrates with CI/CD** for automated releases
+
+Without a versioning strategy:
+- Users cannot predict upgrade safety (will it break?)
+- Dependency managers struggle with version constraints
+- Changelogs become ambiguous about impact
+- Release automation becomes inconsistent
+
+## Decision
+
+We will adopt **Semantic Versioning 2.0.0** (SemVer) with the following conventions:
+
+### Version Format
+
+```
+MAJOR.MINOR.PATCH[-PRERELEASE][+BUILDMETADATA]
+
+Examples:
+- 2.2.0          # Stable release
+- 3.0.0-beta.1   # Pre-release
+- 2.3.1+build.42 # Build metadata
+```
+
+### Version Incrementation Rules
+
+#### MAJOR version (X.0.0)
+Increment when making **incompatible API changes**:
+- Breaking changes to public APIs
+- Removal of deprecated features
+- Major architectural changes
+- Non-backward-compatible configuration changes
+
+**Examples**:
+- Changing authentication from JWT-only to OAuth2-only
+- Removing `InMemoryUserProvider` class
+- Changing MCP protocol version (v1 → v2)
+
+#### MINOR version (x.Y.0)
+Increment when adding **backward-compatible functionality**:
+- New features
+- New optional configuration parameters
+- New API endpoints
+- Performance improvements
+- Internal refactorings (no API impact)
+
+**Examples**:
+- Adding Keycloak authentication provider
+- Adding Redis session backend
+- New observability features (LangSmith, Prometheus metrics)
+- New deployment targets (Helm, Kustomize)
+
+#### PATCH version (x.y.Z)
+Increment when making **backward-compatible bug fixes**:
+- Bug fixes
+- Security patches
+- Documentation updates
+- Dependency updates (non-breaking)
+- Test improvements
+
+**Examples**:
+- Fixing session expiration bug
+- Patching JWT verification vulnerability
+- Updating Pydantic to fix deprecation warnings
+- Correcting documentation typos
+
+### Pre-release Versions
+
+Format: `X.Y.Z-PRERELEASE.NUMBER`
+
+Supported pre-release identifiers:
+- **alpha**: Early development, unstable API
+- **beta**: Feature complete, testing phase
+- **rc**: Release candidate, final testing
+
+**Examples**:
+```
+3.0.0-alpha.1   # First alpha of v3.0.0
+3.0.0-beta.2    # Second beta
+3.0.0-rc.1      # First release candidate
+```
+
+### Build Metadata
+
+Format: `X.Y.Z+BUILD.INFO`
+
+Used for CI/CD builds:
+```
+2.2.0+build.123        # CI build number
+2.2.0+sha.a5b8c3d      # Git commit SHA
+2.2.0+20251013.1420    # Timestamp build
+```
+
+## Consequences
+
+### Positive Consequences
+
+- **Predictable Upgrades**: Users know PATCH = safe, MINOR = safe, MAJOR = review required
+- **Clear Communication**: Breaking changes are immediately visible
+- **Dependency Management**: Package managers (pip, npm, cargo) work correctly
+- **Automated Releases**: CI/CD can auto-increment versions based on commit messages
+- **Industry Standard**: SemVer is widely adopted (npm, Rust, Go, Python)
+
+### Negative Consequences
+
+- **Strictness**: Requires discipline to follow rules consistently
+- **Breaking Change Caution**: Major versions are disruptive, may delay necessary changes
+- **Tooling Dependency**: Requires automation to avoid human error
+- **Edge Cases**: Some changes are ambiguous (is it MINOR or PATCH?)
+
+### Neutral Consequences
+
+- **Version 0.x.x**: Pre-1.0 versions have relaxed rules (anything can break)
+- **API Surface**: Must clearly define "public API" vs internal implementation
+
+## Implementation Details
+
+### Version Storage
+
+```python
+# src/mcp_server_langgraph/__init__.py
+__version__ = "2.2.0"
+
+# pyproject.toml
+[project]
+version = "2.2.0"
+```
+
+**Single Source of Truth**: `__init__.py` is authoritative, `pyproject.toml` syncs on release
+
+### Changelog Format
+
+We use [Keep a Changelog](https://keepachangelog.com/) format:
+
+```markdown
+## [2.2.0] - 2025-10-13
+
+### Added
+- New feature descriptions (MINOR increment)
+
+### Changed
+- Non-breaking changes (MINOR increment)
+
+### Deprecated
+- Features marked for removal in next MAJOR
+
+### Removed
+- Removed features (MAJOR increment)
+
+### Fixed
+- Bug fixes (PATCH increment)
+
+### Security
+- Security fixes (PATCH or MINOR depending on severity)
+```
+
+### Git Tagging Convention
+
+```bash
+# Stable releases
+git tag -a v2.2.0 -m "Release 2.2.0: Session Management & Role Mapping"
+
+# Pre-releases
+git tag -a v3.0.0-beta.1 -m "Release 3.0.0-beta.1: OpenAPI v3 Support"
+```
+
+**Tag format**: `v{VERSION}` (lowercase 'v' prefix)
+
+### Automated Version Bumping
+
+Using GitHub Actions `.github/workflows/release.yaml`:
+
+```yaml
+# Triggered by push tags matching v*
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Update pyproject.toml
+        run: sed -i "s/version = .*/version = \"$VERSION\"/" pyproject.toml
+
+      - name: Build and publish
+        run: uv build && uv publish
+```
+
+### Dependency Version Constraints
+
+In `pyproject.toml`, we follow these constraints:
+
+```toml
+dependencies = [
+    "langgraph>=0.2.28",              # Allow MINOR/PATCH updates
+    "langchain-core>=0.3.15",         # Allow MINOR/PATCH updates
+    "pydantic>=2.5.3,<3.0.0",        # Allow MINOR/PATCH, block MAJOR
+    "litellm>=1.52.3",                # Allow MINOR/PATCH updates
+]
+```
+
+**Rationale**:
+- `>=X.Y.Z`: Accept MINOR and PATCH updates
+- `<MAJOR+1.0.0`: Block next MAJOR version (breaking changes)
+
+### Breaking Change Migration
+
+When making MAJOR version increments:
+
+1. **Deprecation Period**: Mark features deprecated in MINOR release first
+2. **Migration Guide**: Provide upgrade documentation
+3. **Backward Compatibility**: Maintain for 1-2 MINOR releases
+4. **Changelog**: Clearly list all breaking changes
+
+**Example Migration**:
+```
+v2.8.0: Deprecate InMemoryUserProvider (warning logged)
+v2.9.0: Add migration guide in docs/migrations/v3.md
+v3.0.0: Remove InMemoryUserProvider
+```
+
+## Alternatives Considered
+
+### 1. Calendar Versioning (CalVer)
+
+**Description**: Version format based on release date (e.g., `2025.10.1`)
+
+**Pros**:
+- Easy to understand (date-based)
+- No ambiguity about version age
+- Used by Ubuntu, pip, Twisted
+
+**Cons**:
+- **No semantic meaning** (cannot determine breaking changes)
+- **Poor dependency management** (how to specify constraints?)
+- **No pre-release concept**
+
+**Why Rejected**: Cannot communicate breaking changes to users or dependency managers
+
+### 2. Romantic Versioning
+
+**Description**: Free-form versioning with creative names (e.g., "Starship", "Phoenix")
+
+**Pros**:
+- Marketing-friendly
+- Memorable names
+- Used by macOS (Catalina, Big Sur)
+
+**Cons**:
+- **No ordering** (is "Phoenix" newer than "Starship"?)
+- **No automation** (cannot auto-increment)
+- **Poor dependency management**
+
+**Why Rejected**: Not suitable for library/framework projects with programmatic dependencies
+
+### 3. Simple Integer Versioning
+
+**Description**: Increment single integer on each release (e.g., `1`, `2`, `3`)
+
+**Pros**:
+- Extremely simple
+- No rules to remember
+- Used by some mobile apps
+
+**Cons**:
+- **No semantic meaning**
+- **Cannot express breaking changes**
+- **Poor for libraries** (users cannot specify safety constraints)
+
+**Why Rejected**: Insufficient for production software with API contracts
+
+### 4. Major.Minor Only (No PATCH)
+
+**Description**: Only use MAJOR and MINOR versions (e.g., `2.3`, `2.4`)
+
+**Pros**:
+- Simpler (fewer decisions)
+- Used by some projects
+
+**Cons**:
+- **No distinction** between features and bug fixes
+- **Forces MINOR bump** for security patches (confusing)
+- **Less granular** for dependency constraints
+
+**Why Rejected**: PATCH version is valuable for communicating low-risk updates
+
+## Integration Points
+
+### Deployment Automation
+
+**Kubernetes/Helm**: Version tags trigger Docker image builds
+```yaml
+# deployment.yaml
+image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
+```
+
+**LangGraph Platform**: Deploy specific versions
+```bash
+langgraph deploy --version v2.2.0
+```
+
+### Documentation
+
+**README.md**: Display current version badge
+```markdown
+[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](CHANGELOG.md)
+```
+
+**API Documentation**: Version appears in OpenAPI spec
+```json
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "2.2.0"
+  }
+}
+```
+
+### Health Endpoint
+
+```python
+# src/mcp_server_langgraph/health/checks.py
+from mcp_server_langgraph import __version__
+
+@router.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": __version__  # "2.2.0"
+    }
+```
+
+## Version History
+
+| Version | Release Date | Type | Notable Changes |
+|---------|--------------|------|-----------------|
+| 2.2.0 | 2025-10-13 | MINOR | Session management, advanced role mapping, compliance framework |
+| 2.1.0 | 2025-10-12 | MINOR | Keycloak integration, HIPAA compliance, SLA monitoring |
+| 2.0.0 | 2025-10-11 | MAJOR | OpenFGA authorization, Infisical secrets, multi-deployment support |
+| 1.5.0 | 2025-10-10 | MINOR | Feature flag system, Pydantic AI integration |
+| 1.0.0 | 2025-10-01 | MAJOR | Initial production release |
+
+## Future Enhancements
+
+- **Automated version bumping** from commit messages (Conventional Commits)
+- **Changelog generation** from Git history
+- **Deprecation warnings** in code (logged when deprecated features used)
+- **Version compatibility matrix** for LLM providers, Python versions, deployment platforms
+
+## References
+
+- **Semantic Versioning Specification**: https://semver.org/spec/v2.0.0.html
+- **Keep a Changelog**: https://keepachangelog.com/en/1.0.0/
+- **Conventional Commits**: https://www.conventionalcommits.org/
+- **Version in Code**: `src/mcp_server_langgraph/__init__.py:8`
+- **Changelog**: `CHANGELOG.md`
+- **Release Workflow**: `.github/workflows/release.yaml`
+- **Package Version**: `pyproject.toml:7`

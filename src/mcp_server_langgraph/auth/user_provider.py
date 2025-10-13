@@ -17,7 +17,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig, KeycloakUser, sync_user_to_openfga
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
-
 # ============================================================================
 # Pydantic Models for Type-Safe Authentication Responses
 # ============================================================================
@@ -46,9 +45,9 @@ class UserData(BaseModel):
                 "username": "alice",
                 "email": "alice@acme.com",
                 "roles": ["user", "premium"],
-                "active": True
+                "active": True,
             }
-        }
+        },
     )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -95,9 +94,9 @@ class AuthResponse(BaseModel):
                 "error": None,
                 "access_token": "eyJ...",
                 "refresh_token": "eyJ...",
-                "expires_in": 300
+                "expires_in": 300,
             }
-        }
+        },
     )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -124,13 +123,7 @@ class TokenVerification(BaseModel):
     model_config = ConfigDict(
         frozen=False,
         validate_assignment=True,
-        json_schema_extra={
-            "example": {
-                "valid": True,
-                "payload": {"sub": "user:alice", "exp": 1234567890},
-                "error": None
-            }
-        }
+        json_schema_extra={"example": {"valid": True, "payload": {"sub": "user:alice", "exp": 1234567890}, "error": None}},
     )
 
     def to_dict(self) -> Dict[str, Any]:

@@ -41,16 +41,10 @@ class SLATarget(BaseModel):
 
     metric: SLAMetric
     target_value: float = Field(..., description="Target value (e.g., 99.9 for uptime)")
-    comparison: str = Field(
-        default=">=", description="Comparison operator: >=, <=, ==, >, <"
-    )
+    comparison: str = Field(default=">=", description="Comparison operator: >=, <=, ==, >, <")
     unit: str = Field(..., description="Unit of measurement (%, ms, rps)")
-    warning_threshold: float = Field(
-        ..., description="Threshold for warning alerts (% of target)"
-    )
-    critical_threshold: float = Field(
-        ..., description="Threshold for critical alerts (% of target)"
-    )
+    warning_threshold: float = Field(..., description="Threshold for warning alerts (% of target)")
+    critical_threshold: float = Field(..., description="Threshold for critical alerts (% of target)")
 
 
 class SLAMeasurement(BaseModel):
@@ -61,9 +55,7 @@ class SLAMeasurement(BaseModel):
     target_value: float
     unit: str
     status: SLAStatus
-    compliance_percentage: float = Field(
-        ..., description="Percentage of target achieved"
-    )
+    compliance_percentage: float = Field(..., description="Percentage of target achieved")
     timestamp: str
     period_start: str
     period_end: str
@@ -81,9 +73,7 @@ class SLAReport(BaseModel):
     overall_status: SLAStatus
     breaches: int = Field(default=0, description="Number of SLA breaches")
     warnings: int = Field(default=0, description="Number of warnings")
-    compliance_score: float = Field(
-        ..., ge=0.0, le=100.0, description="Overall SLA compliance score"
-    )
+    compliance_score: float = Field(..., ge=0.0, description="Overall SLA compliance score (can exceed 100%)")
     summary: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -100,9 +90,9 @@ class SLAMonitor:
         Initialize SLA monitor
 
         Args:
-            sla_targets: List of SLA targets to monitor
+            sla_targets: List of SLA targets to monitor (if None, uses defaults; if [], uses no targets)
         """
-        self.sla_targets = sla_targets or self._default_sla_targets()
+        self.sla_targets = sla_targets if sla_targets is not None else self._default_sla_targets()
 
         logger.info(
             "SLA monitor initialized",
@@ -143,9 +133,7 @@ class SLAMonitor:
             ),
         ]
 
-    async def measure_uptime(
-        self, start_time: datetime, end_time: datetime
-    ) -> SLAMeasurement:
+    async def measure_uptime(self, start_time: datetime, end_time: datetime) -> SLAMeasurement:
         """
         Measure uptime SLA
 
@@ -158,9 +146,7 @@ class SLAMonitor:
         """
         with tracer.start_as_current_span("sla.measure_uptime") as span:
             # Get uptime target
-            uptime_target = next(
-                (t for t in self.sla_targets if t.metric == SLAMetric.UPTIME), None
-            )
+            uptime_target = next((t for t in self.sla_targets if t.metric == SLAMetric.UPTIME), None)
 
             if not uptime_target:
                 raise ValueError("No uptime SLA target configured")
@@ -178,15 +164,11 @@ class SLAMonitor:
 
             # Calculate compliance percentage
             compliance_percentage = (
-                (uptime_percentage / uptime_target.target_value * 100)
-                if uptime_target.target_value > 0
-                else 0
+                (uptime_percentage / uptime_target.target_value * 100) if uptime_target.target_value > 0 else 0
             )
 
             # Determine status
-            status = self._determine_status(
-                uptime_percentage, uptime_target, is_higher_better=True
-            )
+            status = self._determine_status(uptime_percentage, uptime_target, is_higher_better=True)
 
             # Breach details
             breach_details = None
@@ -226,9 +208,7 @@ class SLAMonitor:
 
             return measurement
 
-    async def measure_response_time(
-        self, start_time: datetime, end_time: datetime, percentile: int = 95
-    ) -> SLAMeasurement:
+    async def measure_response_time(self, start_time: datetime, end_time: datetime, percentile: int = 95) -> SLAMeasurement:
         """
         Measure response time SLA
 
@@ -257,16 +237,10 @@ class SLAMonitor:
             response_time_ms = 350  # Placeholder p95 response time
 
             # Calculate compliance percentage
-            compliance_percentage = (
-                (rt_target.target_value / response_time_ms * 100)
-                if response_time_ms > 0
-                else 100
-            )
+            compliance_percentage = (rt_target.target_value / response_time_ms * 100) if response_time_ms > 0 else 100
 
             # Determine status
-            status = self._determine_status(
-                response_time_ms, rt_target, is_higher_better=False
-            )
+            status = self._determine_status(response_time_ms, rt_target, is_higher_better=False)
 
             # Breach details
             breach_details = None
@@ -305,9 +279,7 @@ class SLAMonitor:
 
             return measurement
 
-    async def measure_error_rate(
-        self, start_time: datetime, end_time: datetime
-    ) -> SLAMeasurement:
+    async def measure_error_rate(self, start_time: datetime, end_time: datetime) -> SLAMeasurement:
         """
         Measure error rate SLA
 
@@ -320,9 +292,7 @@ class SLAMonitor:
         """
         with tracer.start_as_current_span("sla.measure_error_rate") as span:
             # Get error rate target
-            error_target = next(
-                (t for t in self.sla_targets if t.metric == SLAMetric.ERROR_RATE), None
-            )
+            error_target = next((t for t in self.sla_targets if t.metric == SLAMetric.ERROR_RATE), None)
 
             if not error_target:
                 raise ValueError("No error rate SLA target configured")
@@ -333,15 +303,11 @@ class SLAMonitor:
 
             # Calculate compliance percentage
             compliance_percentage = (
-                (error_target.target_value / error_rate_percentage * 100)
-                if error_rate_percentage > 0
-                else 100
+                (error_target.target_value / error_rate_percentage * 100) if error_rate_percentage > 0 else 100
             )
 
             # Determine status
-            status = self._determine_status(
-                error_rate_percentage, error_target, is_higher_better=False
-            )
+            status = self._determine_status(error_rate_percentage, error_target, is_higher_better=False)
 
             # Breach details
             breach_details = None
@@ -379,9 +345,7 @@ class SLAMonitor:
 
             return measurement
 
-    def _determine_status(
-        self, measured_value: float, target: SLATarget, is_higher_better: bool
-    ) -> SLAStatus:
+    def _determine_status(self, measured_value: float, target: SLATarget, is_higher_better: bool) -> SLAStatus:
         """
         Determine SLA status based on measured value and target
 
@@ -410,9 +374,7 @@ class SLAMonitor:
             else:
                 return SLAStatus.BREACH
 
-    async def generate_sla_report(
-        self, period_days: int = 30
-    ) -> SLAReport:
+    async def generate_sla_report(self, period_days: int = 30) -> SLAReport:
         """
         Generate comprehensive SLA report
 
@@ -430,17 +392,27 @@ class SLAMonitor:
 
             measurements = []
 
-            # Measure uptime
-            uptime = await self.measure_uptime(start_time, end_time)
-            measurements.append(uptime)
+            # Measure only metrics that have configured targets
+            # Check which metrics are configured
+            configured_metrics = {t.metric for t in self.sla_targets}
 
-            # Measure response time
-            response_time = await self.measure_response_time(start_time, end_time)
-            measurements.append(response_time)
+            # Measure uptime if configured
+            uptime = None
+            if SLAMetric.UPTIME in configured_metrics:
+                uptime = await self.measure_uptime(start_time, end_time)
+                measurements.append(uptime)
 
-            # Measure error rate
-            error_rate = await self.measure_error_rate(start_time, end_time)
-            measurements.append(error_rate)
+            # Measure response time if configured
+            response_time = None
+            if SLAMetric.RESPONSE_TIME in configured_metrics:
+                response_time = await self.measure_response_time(start_time, end_time)
+                measurements.append(response_time)
+
+            # Measure error rate if configured
+            error_rate = None
+            if SLAMetric.ERROR_RATE in configured_metrics:
+                error_rate = await self.measure_error_rate(start_time, end_time)
+                measurements.append(error_rate)
 
             # Count breaches and warnings
             breaches = sum(1 for m in measurements if m.status == SLAStatus.BREACH)
@@ -454,21 +426,13 @@ class SLAMonitor:
             else:
                 overall_status = SLAStatus.MEETING
 
-            # Calculate overall compliance score (cap at 100)
-            compliance_score = min(
-                100.0,
-                (
-                    sum(m.compliance_percentage for m in measurements) / len(measurements)
-                    if measurements
-                    else 0
-                ),
+            # Calculate overall compliance score (average of all measurements)
+            compliance_score = (
+                sum(m.compliance_percentage for m in measurements) / len(measurements) if measurements else 0.0
             )
 
-            # Generate summary
+            # Generate summary (only include measured metrics)
             summary = {
-                "uptime_percentage": uptime.measured_value,
-                "response_time_p95_ms": response_time.measured_value,
-                "error_rate_percentage": error_rate.measured_value,
                 "all_slas_met": overall_status == SLAStatus.MEETING,
                 "breaches": [
                     {
@@ -481,6 +445,14 @@ class SLAMonitor:
                     if m.status == SLAStatus.BREACH
                 ],
             }
+
+            # Add measured values to summary
+            if uptime is not None:
+                summary["uptime_percentage"] = uptime.measured_value
+            if response_time is not None:
+                summary["response_time_p95_ms"] = response_time.measured_value
+            if error_rate is not None:
+                summary["error_rate_percentage"] = error_rate.measured_value
 
             report = SLAReport(
                 report_id=f"sla_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
@@ -518,9 +490,7 @@ class SLAMonitor:
 
             return report
 
-    async def _send_sla_alert(
-        self, severity: str, message: str, details: Dict[str, Any]
-    ):
+    async def _send_sla_alert(self, severity: str, message: str, details: Dict[str, Any]):
         """
         Send SLA alert
 

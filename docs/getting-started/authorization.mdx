@@ -50,7 +50,7 @@ The default model supports:
   <Step title="Deploy OpenFGA">
     ```bash
     # Docker Compose (development)
-    docker-compose up -d openfga postgres
+    docker compose up -d openfga postgres
 
     # Kubernetes (production)
     kubectl apply -f deployments/kubernetes/base/openfga-deployment.yaml
@@ -545,14 +545,14 @@ rate(openfga_check_total{allowed="false"}[5m])
   <Accordion title="Connection refused to OpenFGA">
     ```bash
     # Check OpenFGA status
-    docker-compose ps openfga
+    docker compose ps openfga
     kubectl get pods -l app=openfga
 
     # Test connectivity
     curl http://localhost:8080/healthz
 
     # Check logs
-    docker-compose logs openfga
+    docker compose logs openfga
     kubectl logs -l app=openfga
     ```
   </Accordion>
@@ -599,7 +599,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     # OPENFGA_MODEL_ID=...
 
     # Restart service
-    docker-compose restart agent
+    docker compose restart agent
     ```
   </Accordion>
 </AccordionGroup>

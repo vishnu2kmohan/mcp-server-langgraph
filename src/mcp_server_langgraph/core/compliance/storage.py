@@ -22,7 +22,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ============================================================================
 # Data Models
 # ============================================================================
@@ -48,7 +47,7 @@ class UserProfile(BaseModel):
                 "full_name": "Alice Smith",
                 "created_at": "2025-01-01T00:00:00Z",
                 "last_updated": "2025-01-01T00:00:00Z",
-                "metadata": {"department": "Engineering"}
+                "metadata": {"department": "Engineering"},
             }
         }
     )
@@ -76,7 +75,7 @@ class Conversation(BaseModel):
                 "created_at": "2025-01-01T00:00:00Z",
                 "last_message_at": "2025-01-01T00:05:00Z",
                 "archived": False,
-                "metadata": {}
+                "metadata": {},
             }
         }
     )
@@ -93,12 +92,8 @@ class UserPreferences(BaseModel):
         json_schema_extra={
             "example": {
                 "user_id": "user:alice",
-                "preferences": {
-                    "theme": "dark",
-                    "language": "en",
-                    "notifications": {"email": True, "sms": False}
-                },
-                "updated_at": "2025-01-01T00:00:00Z"
+                "preferences": {"theme": "dark", "language": "en", "notifications": {"email": True, "sms": False}},
+                "updated_at": "2025-01-01T00:00:00Z",
             }
         }
     )
@@ -128,7 +123,7 @@ class AuditLogEntry(BaseModel):
                 "timestamp": "2025-01-01T00:00:00Z",
                 "ip_address": "192.168.1.1",
                 "user_agent": "Mozilla/5.0...",
-                "metadata": {"fields_updated": ["email"]}
+                "metadata": {"fields_updated": ["email"]},
             }
         }
     )
@@ -156,7 +151,7 @@ class ConsentRecord(BaseModel):
                 "timestamp": "2025-01-01T00:00:00Z",
                 "ip_address": "192.168.1.1",
                 "user_agent": "Mozilla/5.0...",
-                "metadata": {}
+                "metadata": {},
             }
         }
     )
@@ -264,11 +259,7 @@ class AuditLogStore(ABC):
 
     @abstractmethod
     async def list_user_logs(
-        self,
-        user_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        limit: int = 100
+        self, user_id: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, limit: int = 100
     ) -> List[AuditLogEntry]:
         """List audit logs for a user"""
         pass
@@ -421,9 +412,7 @@ class InMemoryPreferencesStore(PreferencesStore):
 
     async def set(self, user_id: str, preferences: Dict[str, Any]) -> bool:
         self.preferences[user_id] = UserPreferences(
-            user_id=user_id,
-            preferences=preferences,
-            updated_at=datetime.utcnow().isoformat() + "Z"
+            user_id=user_id, preferences=preferences, updated_at=datetime.utcnow().isoformat() + "Z"
         )
         return True
 
@@ -464,11 +453,7 @@ class InMemoryAuditLogStore(AuditLogStore):
         return self.logs.get(log_id)
 
     async def list_user_logs(
-        self,
-        user_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        limit: int = 100
+        self, user_id: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, limit: int = 100
     ) -> List[AuditLogEntry]:
         if user_id not in self.user_logs:
             return []
@@ -478,7 +463,7 @@ class InMemoryAuditLogStore(AuditLogStore):
             log = self.logs.get(log_id)
             if log:
                 # Filter by date if specified
-                log_timestamp = datetime.fromisoformat(log.timestamp.replace('Z', ''))
+                log_timestamp = datetime.fromisoformat(log.timestamp.replace("Z", ""))
 
                 if start_date and log_timestamp < start_date:
                     continue

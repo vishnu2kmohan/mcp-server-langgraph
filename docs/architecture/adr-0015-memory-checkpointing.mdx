@@ -1,0 +1,54 @@
+---
+title: "15. Memory Checkpointing for Stateful Agents"
+description: "Architecture Decision Record: 15. Memory Checkpointing for Stateful Agents"
+---
+
+# 15. Memory Checkpointing for Stateful Agents
+
+Date: 2025-10-13
+
+## Status
+
+Accepted
+
+## Context
+
+Conversational agents need:
+- Multi-turn conversations
+- Context retention
+- State persistence across restarts
+
+Stateless agents lose context every request, degrading UX.
+
+## Decision
+
+Use **LangGraph MemorySaver** for conversation state checkpointing.
+
+```python
+from langgraph.checkpoint.memory import MemorySaver
+
+memory = MemorySaver()
+graph = graph_builder.compile(checkpointer=memory)
+```
+
+## Consequences
+
+### Positive
+
+- **Multi-Turn Conversations**: Context preserved
+- **User Experience**: Natural conversation flow
+- **State Recovery**: Resume after crashes
+
+### Negative
+
+- **Memory Usage**: State grows with conversations
+- **Persistence**: MemorySaver not persistent (future: Redis)
+
+## Future Enhancements
+
+- Redis checkpointer for distributed deployments
+- State compression for long conversations
+
+## References
+
+- Implementation: `src/mcp_server_langgraph/core/agent.py:206-214`

@@ -1,0 +1,74 @@
+---
+title: "10. LangGraph Functional API over Object-Oriented Approach"
+description: "Architecture Decision Record: 10. LangGraph Functional API over Object-Oriented Approach"
+---
+
+# 10. LangGraph Functional API over Object-Oriented Approach
+
+Date: 2025-10-13
+
+## Status
+
+Accepted
+
+## Context
+
+LangGraph offers two approaches for defining agent workflows:
+1. **Functional API**: Define nodes as pure functions, compose with StateGraph
+2. **Object-Oriented**: Define agents as classes with methods
+
+Agent systems require:
+- Clear data flow and state management
+- Conditional routing logic
+- Graph visualization for debugging
+- Testability (unit test individual nodes)
+
+## Decision
+
+Use **LangGraph's Functional API** with StateGraph for agent implementation.
+
+### Architecture
+
+```python
+class AgentState(TypedDict):
+    messages: Annotated[list[BaseMessage], operator.add]
+    next_action: str
+
+def route_input(state: AgentState) -> AgentState:
+    # Pure function - easy to test
+    ...
+
+def generate_response(state: AgentState) -> AgentState:
+    ...
+
+graph = StateGraph(AgentState)
+graph.add_node("route", route_input)
+graph.add_node("respond", generate_response)
+graph.add_edge(START, "route")
+graph.add_conditional_edges("route", should_use_tools)
+```
+
+## Consequences
+
+### Positive Consequences
+
+- **Declarative**: Graph structure visible, easy to visualize
+- **Testable**: Pure functions, easy unit tests
+- **Composable**: Nodes reusable across graphs
+- **Debuggable**: Clear state transitions
+
+### Negative Consequences
+
+- **Verbose**: More boilerplate than class-based
+- **Learning Curve**: Requires understanding StateGraph concepts
+
+## Alternatives Considered
+
+1. **Class-Based Agents**: Less transparent, harder to visualize
+2. **Direct LangChain**: No graph structure, harder to debug
+3. **Custom State Machine**: Reinventing the wheel
+
+## References
+
+- Implementation: `src/mcp_server_langgraph/core/agent.py:50-200`
+- Related ADRs: [ADR-0015](0015-memory-checkpointing.md), [ADR-0005](0005-pydantic-ai-integration.md)

@@ -73,10 +73,10 @@ Redis provides production-grade session storage with:
         ```bash
         # Start Redis
         export REDIS_PASSWORD=$(openssl rand -base64 32)
-        docker-compose up -d redis-session
+        docker compose up -d redis-session
 
         # Test connection
-        docker-compose exec redis-session redis-cli -a $REDIS_PASSWORD ping
+        docker compose exec redis-session redis-cli -a $REDIS_PASSWORD ping
         # Expected: PONG
         ```
       </Tab>
@@ -202,7 +202,7 @@ Redis provides production-grade session storage with:
   <Step title="Verify in Redis">
     ```bash
     # Connect to Redis
-    docker-compose exec redis-session redis-cli -a $REDIS_PASSWORD
+    docker compose exec redis-session redis-cli -a $REDIS_PASSWORD
 
     # List all sessions
     KEYS session:*
@@ -560,14 +560,14 @@ rate(redis_evicted_keys_total[5m])
   <Accordion title="Connection refused">
     ```bash
     # Check Redis status
-    docker-compose ps redis-session
+    docker compose ps redis-session
     kubectl get pods -l app.kubernetes.io/name=redis
 
     # Test connectivity
     redis-cli -h redis-session -p 6379 -a $REDIS_PASSWORD ping
 
     # Check logs
-    docker-compose logs redis-session
+    docker compose logs redis-session
     kubectl logs -l app.kubernetes.io/name=redis
     ```
   </Accordion>

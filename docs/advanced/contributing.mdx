@@ -111,16 +111,16 @@ ENABLE_METRICS=false
 
 ```bash
 # Start all services
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 
 # Check service health
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop services
-docker-compose down
+docker compose down
 ```
 
 ## Code Style
@@ -330,7 +330,7 @@ uv run pytest -m unit --cov=src --cov-report=html
 uv run pytest -m unit -v --tb=short
 
 # Run integration tests (requires services)
-docker-compose up -d
+docker compose up -d
 uv run pytest -m integration
 
 # Run all tests

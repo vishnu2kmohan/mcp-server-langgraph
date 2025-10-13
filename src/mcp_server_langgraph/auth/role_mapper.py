@@ -20,7 +20,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from mcp_server_langgraph.auth.keycloak import KeycloakUser
 from mcp_server_langgraph.observability.telemetry import logger
 
-
 # ============================================================================
 # Pydantic Models for Type-Safe Role Mapping Configuration
 # ============================================================================
@@ -41,13 +40,7 @@ class OpenFGATuple(BaseModel):
         frozen=False,
         validate_assignment=True,
         str_strip_whitespace=True,
-        json_schema_extra={
-            "example": {
-                "user": "user:alice",
-                "relation": "member",
-                "object": "workspace:engineering"
-            }
-        }
+        json_schema_extra={"example": {"user": "user:alice", "relation": "member", "object": "workspace:engineering"}},
     )
 
     def to_dict(self) -> Dict[str, str]:
@@ -70,11 +63,7 @@ class SimpleRoleMappingConfig(BaseModel):
     openfga_relation: str = Field(..., description="OpenFGA relation to assign")
     openfga_object: str = Field(..., description="OpenFGA object to relate to")
 
-    model_config = ConfigDict(
-        frozen=False,
-        validate_assignment=True,
-        str_strip_whitespace=True
-    )
+    model_config = ConfigDict(frozen=False, validate_assignment=True, str_strip_whitespace=True)
 
 
 class GroupMappingConfig(BaseModel):
@@ -86,11 +75,7 @@ class GroupMappingConfig(BaseModel):
     openfga_relation: str = Field(..., description="OpenFGA relation to assign")
     openfga_object_template: str = Field(..., description="Template for object name (e.g., 'workspace:{group_name}')")
 
-    model_config = ConfigDict(
-        frozen=False,
-        validate_assignment=True,
-        str_strip_whitespace=True
-    )
+    model_config = ConfigDict(frozen=False, validate_assignment=True, str_strip_whitespace=True)
 
 
 class ConditionConfig(BaseModel):
@@ -102,7 +87,7 @@ class ConditionConfig(BaseModel):
     operator: str = Field("==", description="Comparison operator (==, !=, in, >=, <=)")
     value: Any = Field(..., description="Value to compare against")
 
-    @field_validator('operator')
+    @field_validator("operator")
     @classmethod
     def validate_operator(cls, v: str) -> str:
         """Validate operator is supported"""
@@ -111,11 +96,7 @@ class ConditionConfig(BaseModel):
             raise ValueError(f"Operator must be one of {supported}, got: {v}")
         return v
 
-    model_config = ConfigDict(
-        frozen=False,
-        validate_assignment=True,
-        str_strip_whitespace=True
-    )
+    model_config = ConfigDict(frozen=False, validate_assignment=True, str_strip_whitespace=True)
 
 
 class ConditionalMappingConfig(BaseModel):
@@ -126,10 +107,7 @@ class ConditionalMappingConfig(BaseModel):
     condition: ConditionConfig = Field(..., description="Condition to evaluate")
     openfga_tuples: List[Dict[str, str]] = Field(..., description="Tuples to create if condition is met")
 
-    model_config = ConfigDict(
-        frozen=False,
-        validate_assignment=True
-    )
+    model_config = ConfigDict(frozen=False, validate_assignment=True)
 
 
 class MappingRule:
@@ -176,11 +154,7 @@ class SimpleRoleMapping(MappingRule):
             return []
 
         # Create Pydantic tuple, then convert to dict for backward compatibility
-        tuple_obj = OpenFGATuple(
-            user=user.user_id,
-            relation=self.openfga_relation,
-            object=self.openfga_object
-        )
+        tuple_obj = OpenFGATuple(user=user.user_id, relation=self.openfga_relation, object=self.openfga_object)
         return [tuple_obj.to_dict()]
 
 
@@ -213,11 +187,7 @@ class GroupMapping(MappingRule):
                 openfga_object = self.openfga_object_template.format(group_name=group_name)
 
                 # Create Pydantic tuple, then convert to dict
-                tuple_obj = OpenFGATuple(
-                    user=user.user_id,
-                    relation=self.openfga_relation,
-                    object=openfga_object
-                )
+                tuple_obj = OpenFGATuple(user=user.user_id, relation=self.openfga_relation, object=openfga_object)
                 tuples.append(tuple_obj.to_dict())
 
         return tuples
@@ -273,11 +243,7 @@ class ConditionalMapping(MappingRule):
         tuples = []
         for tuple_config in self.openfga_tuples:
             # Create Pydantic tuple, then convert to dict
-            tuple_obj = OpenFGATuple(
-                user=user.user_id,
-                relation=tuple_config["relation"],
-                object=tuple_config["object"]
-            )
+            tuple_obj = OpenFGATuple(user=user.user_id, relation=tuple_config["relation"], object=tuple_config["object"])
             tuples.append(tuple_obj.to_dict())
 
         return tuples
@@ -323,7 +289,7 @@ class RoleMapper:
             return
 
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 config = yaml.safe_load(f)
 
             self.load_from_dict(config)
@@ -358,32 +324,17 @@ class RoleMapper:
         """Load default hardcoded mapping for backward compatibility"""
         default_config = {
             "simple_mappings": [
-                {
-                    "keycloak_role": "admin",
-                    "realm": True,
-                    "openfga_relation": "admin",
-                    "openfga_object": "system:global"
-                },
-                {
-                    "keycloak_role": "premium",
-                    "realm": True,
-                    "openfga_relation": "assignee",
-                    "openfga_object": "role:premium"
-                },
-                {
-                    "keycloak_role": "user",
-                    "realm": True,
-                    "openfga_relation": "assignee",
-                    "openfga_object": "role:user"
-                }
+                {"keycloak_role": "admin", "realm": True, "openfga_relation": "admin", "openfga_object": "system:global"},
+                {"keycloak_role": "premium", "realm": True, "openfga_relation": "assignee", "openfga_object": "role:premium"},
+                {"keycloak_role": "user", "realm": True, "openfga_relation": "assignee", "openfga_object": "role:user"},
             ],
             "group_mappings": [
                 {
                     "pattern": "^/(?:.+/)?([^/]+)$",
                     "openfga_relation": "member",
-                    "openfga_object_template": "organization:{group_name}"
+                    "openfga_object_template": "organization:{group_name}",
                 }
-            ]
+            ],
         }
 
         self.load_from_dict(default_config)
@@ -419,8 +370,7 @@ class RoleMapper:
         tuples = self._apply_hierarchies(user, tuples)
 
         logger.info(
-            f"Mapped user to {len(tuples)} OpenFGA tuples",
-            extra={"username": user.username, "tuple_count": len(tuples)}
+            f"Mapped user to {len(tuples)} OpenFGA tuples", extra={"username": user.username, "tuple_count": len(tuples)}
         )
 
         return tuples
@@ -447,11 +397,9 @@ class RoleMapper:
                 for inherited_role in inherited_roles:
                     tuple_key = (user.user_id, "assignee", f"role:{inherited_role}")
                     if tuple_key not in seen_tuples:
-                        expanded_tuples.append({
-                            "user": user.user_id,
-                            "relation": "assignee",
-                            "object": f"role:{inherited_role}"
-                        })
+                        expanded_tuples.append(
+                            {"user": user.user_id, "relation": "assignee", "object": f"role:{inherited_role}"}
+                        )
                         seen_tuples.add(tuple_key)
 
         if len(expanded_tuples) > len(tuples):

@@ -284,7 +284,8 @@ class KeycloakClient:
 
                 except httpx.HTTPStatusError as e:
                     logger.warning(
-                        f"Authentication failed for {username}", extra={"status_code": e.response.status_code, "detail": e.response.text}
+                        f"Authentication failed for {username}",
+                        extra={"status_code": e.response.status_code, "detail": e.response.text},
                     )
                     metrics.auth_failures.add(1, {"reason": "invalid_credentials"})
                     raise
@@ -543,10 +544,7 @@ class KeycloakClient:
 
 
 async def sync_user_to_openfga(
-    keycloak_user: KeycloakUser,
-    openfga_client: Any,
-    role_mapper: Optional[Any] = None,
-    use_legacy_mapping: bool = False
+    keycloak_user: KeycloakUser, openfga_client: Any, role_mapper: Optional[Any] = None, use_legacy_mapping: bool = False
 ) -> None:
     """
     Synchronize Keycloak user roles/groups to OpenFGA tuples
@@ -595,6 +593,7 @@ async def sync_user_to_openfga(
             if role_mapper is None:
                 # Import here to avoid circular dependency
                 from mcp_server_langgraph.auth.role_mapper import RoleMapper
+
                 role_mapper = RoleMapper()  # Uses default config
 
             logger.info("Using RoleMapper for role mapping")

@@ -1,0 +1,113 @@
+---
+title: "9. Feature Flag System for Gradual Rollouts"
+description: "Architecture Decision Record: 9. Feature Flag System for Gradual Rollouts"
+---
+
+# 9. Feature Flag System for Gradual Rollouts
+
+Date: 2025-10-13
+
+## Status
+
+Accepted
+
+## Context
+
+Production systems need safe feature deployment mechanisms:
+- **Gradual Rollouts**: Enable features for subset of users
+- **A/B Testing**: Compare feature variants
+- **Emergency Disable**: Turn off problematic features instantly
+- **Experimental Features**: Beta test without full deployment
+- **Configuration**: Change behavior without code deployment
+
+Hardcoded feature switches create problems:
+- Code changes required to enable/disable features
+- Cannot toggle features per environment
+- No runtime configuration
+- Requires redeployment for feature changes
+
+## Decision
+
+Implement environment-based feature flag system using **Pydantic settings with validation**.
+
+### Architecture
+
+```python
+class FeatureFlags(BaseSettings):
+    # Pydantic AI Features
+    enable_pydantic_ai_routing: bool = True
+    pydantic_ai_confidence_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
+
+    # LLM Features
+    enable_llm_fallback: bool = True
+    llm_timeout_seconds: int = Field(default=60, ge=10, le=300)
+
+    # Authorization
+    enable_openfga: bool = True
+    openfga_strict_mode: bool = False
+
+    # Observability
+    enable_langsmith: bool = False
+    enable_trace_sampling: bool = False
+
+    # Experimental
+    enable_experimental_features: bool = False
+    enable_multi_agent_collaboration: bool = False
+
+    model_config = SettingsConfigDict(
+        env_prefix="FF_",  # FF_ENABLE_PYDANTIC_AI_ROUTING=false
+        env_file=".env",
+    )
+```
+
+### Usage
+
+```python
+from mcp_server_langgraph.core.feature_flags import feature_flags
+
+if feature_flags.enable_pydantic_ai_routing:
+    decision = await pydantic_agent.route_message(message)
+else:
+    decision = keyword_based_routing(message)
+```
+
+## Consequences
+
+### Positive Consequences
+
+- **Safe Rollouts**: Enable features incrementally
+- **Environment-Specific**: Different flags per environment
+- **Runtime Configuration**: No code changes to toggle features
+- **Type Safety**: Pydantic validation prevents invalid values
+- **Documentation**: Flags self-document with descriptions
+
+### Negative Consequences
+
+- **Code Complexity**: if/else checks throughout codebase
+- **Testing Burden**: Must test with flags on/off
+- **Configuration Sprawl**: Many environment variables
+
+## Alternatives Considered
+
+1. **LaunchDarkly**: Third-party service, cost, complexity
+2. **Code-Based Toggles**: No runtime config, requires deployment
+3. **Database Flags**: Requires database, slower
+
+**Why Rejected**: Environment variables simplest for our needs
+
+## Implementation
+
+30+ feature flags across categories:
+- Pydantic AI (3 flags)
+- LLM (3 flags)
+- Authorization (3 flags)
+- Observability (4 flags)
+- Performance (4 flags)
+- Agent Behavior (3 flags)
+- Security (4 flags)
+- Experimental (3 flags)
+
+## References
+
+- Implementation: `src/mcp_server_langgraph/core/feature_flags.py:1-281`
+- Related ADRs: [ADR-0005](0005-pydantic-ai-integration.md)

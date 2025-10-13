@@ -15,8 +15,9 @@ from langgraph.graph import END, START, StateGraph
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import settings
 from llm_factory import create_llm_from_config
+
+from config import settings
 
 
 class AgentState(TypedDict):

@@ -10,8 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import jwt
 import pytest
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from jwt.algorithms import RSAAlgorithm
 
 from mcp_server_langgraph.auth.keycloak import (
@@ -22,8 +22,8 @@ from mcp_server_langgraph.auth.keycloak import (
     sync_user_to_openfga,
 )
 
-
 # Fixtures
+
 
 @pytest.fixture
 def keycloak_config():
@@ -50,12 +50,11 @@ def rsa_keypair():
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     )
 
     public_pem = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
     return private_pem, public_pem
@@ -102,6 +101,7 @@ def keycloak_user():
 
 # KeycloakConfig Tests
 
+
 @pytest.mark.unit
 @pytest.mark.auth
 class TestKeycloakConfig:
@@ -133,6 +133,7 @@ class TestKeycloakConfig:
 
 
 # KeycloakUser Tests
+
 
 @pytest.mark.unit
 @pytest.mark.auth
@@ -169,6 +170,7 @@ class TestKeycloakUser:
 
 
 # TokenValidator Tests
+
 
 @pytest.mark.unit
 @pytest.mark.auth
@@ -355,6 +357,7 @@ class TestTokenValidator:
 
 
 # KeycloakClient Tests
+
 
 @pytest.mark.unit
 @pytest.mark.auth
@@ -550,6 +553,7 @@ class TestKeycloakClient:
 
 
 # Role Synchronization Tests
+
 
 @pytest.mark.unit
 @pytest.mark.auth
