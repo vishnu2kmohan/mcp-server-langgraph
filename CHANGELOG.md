@@ -94,6 +94,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Result**: Fixes Dependabot configuration validation errors
 - **Impact**: Dependabot can now properly process rebase commands and create PRs
 
+### Fixed - Critical Bug
+
+#### Missing Session Store Functions (Commit 2421c46)
+
+**File**: `src/mcp_server_langgraph/auth/session.py`
+**Issue**: Uncommitted code causing all Dependabot PR test failures
+
+**Root Cause**:
+- Functions `get_session_store()` and `set_session_store()` existed locally but were not committed
+- `api/gdpr.py` imports these functions (line 20)
+- All tests importing from `mcp_server_langgraph.api` failed with ImportError
+- Affected 100% of Dependabot PRs (11 PRs)
+
+**Symptoms**:
+```python
+ImportError: cannot import name 'get_session_store' from 'mcp_server_langgraph.auth.session'
+```
+
+**Fix Applied** (42 lines added):
+- Added `get_session_store()` function (lines 696-714)
+  - FastAPI dependency injection pattern
+  - Returns global session store instance
+  - Creates default InMemorySessionStore if not configured
+- Added `set_session_store()` function (lines 718-731)
+  - Configure global session store at application startup
+  - Supports custom session store implementations
+- Added global `_session_store` singleton variable
+
+**Impact**:
+- ✅ GDPR endpoints can now import successfully
+- ✅ Test collection errors resolved
+- ✅ All Dependabot PRs re-triggered for rebase with fix
+- ✅ CI should pass after rebase completes
+
+**Prevention**:
+- Documented in `TEST_FAILURE_ROOT_CAUSE.md`
+- Added pre-commit validation strategies
+- Emphasized git status review before commits
+
 ## [2.2.0] - 2025-10-13
 
 ### Summary
