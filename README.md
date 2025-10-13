@@ -96,7 +96,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
   - **Keycloak Sync**: Automatic role/group synchronization to OpenFGA
   - **Hierarchies**: Role inheritance and conditional mappings
 - **Secrets Management**: Infisical integration for secure secret storage and retrieval
-- **Feature Flags**: Gradual rollouts with environment-based configuration ([docs/adr/0006-feature-flags.md](docs/adr/))
+- **Feature Flags**: Gradual rollouts with environment-based configuration
 - **Dual Observability**: OpenTelemetry + LangSmith for comprehensive monitoring
   - **OpenTelemetry**: Distributed tracing with Jaeger, metrics with Prometheus (30+ auth metrics)
   - **LangSmith**: LLM-specific tracing, prompt engineering, evaluations

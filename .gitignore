@@ -125,6 +125,17 @@ secrets.yaml
 test_results.log
 test-results/
 
+# Session/temporary documentation (should be moved to docs/reports/)
+*_SESSION_*.md
+*_STATUS*.md
+*_SUMMARY_*.md
+*_COMPLETE.md
+*_TRACKER.md
+*_INVESTIGATION.md
+*_ANALYSIS.md
+*_AUDIT_REPORT_*.md
+dependency-audit-*.txt
+
 # Database
 *.db
 *.sqlite

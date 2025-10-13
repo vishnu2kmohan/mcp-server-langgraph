@@ -160,7 +160,10 @@
       "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 120 uv run python3 -m pytest -m unit --tb=no --no-header -q)",
       "Bash(./scripts/validate-deployments.sh:*)",
       "Bash(bash:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(if [ -f \"docs/$file.mdx\" ])",
+      "Bash(elif [ -f \"docs/$file.md\" ])",
+      "Bash(else)"
     ],
     "deny": [],
     "ask": []
