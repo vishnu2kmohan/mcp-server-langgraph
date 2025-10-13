@@ -31,18 +31,19 @@ def app():
 
 
 @pytest.fixture
-async def sample_session():
-    """Create sample session data"""
-    return SessionData(
-        session_id="test-session-123",
-        user_id="user:test",
-        username="testuser",
-        roles=["user"],
-        metadata={},
-        created_at=datetime.utcnow().isoformat() + "Z",
-        last_accessed=datetime.utcnow().isoformat() + "Z",
-        expires_at=(datetime.utcnow() + timedelta(hours=24)).isoformat() + "Z",
-    )
+def sample_session():
+    """Create sample session data factory"""
+    async def _create_session(store):
+        # Create session using the store's create method
+        session_id = await store.create(
+            user_id="user:test",
+            username="testuser",
+            roles=["user"],
+            metadata={},
+        )
+        # Return the created session
+        return await store.get(session_id)
+    return _create_session
 
 
 @pytest.mark.unit
@@ -103,8 +104,8 @@ class TestSessionTimeoutMiddleware:
     @pytest.mark.asyncio
     async def test_active_session_continues(self, app, mock_session_store, sample_session):
         """Test that active session (within timeout) continues"""
-        # Store session with recent activity
-        await mock_session_store.create(sample_session)
+        # Create session
+        session = await sample_session(mock_session_store)
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=900, session_store=mock_session_store)
 
@@ -112,7 +113,7 @@ class TestSessionTimeoutMiddleware:
         mock_request = MagicMock(spec=Request)
         mock_request.url.path = "/api/data"
         mock_request.headers.get.return_value = ""
-        mock_request.cookies.get.return_value = "test-session-123"
+        mock_request.cookies.get.return_value = session.session_id
 
         # Mock call_next
         async def mock_call_next(request):
@@ -125,19 +126,18 @@ class TestSessionTimeoutMiddleware:
     @pytest.mark.asyncio
     async def test_inactive_session_times_out(self, app, mock_session_store):
         """Test that inactive session (beyond timeout) is terminated"""
-        # Create session with old last_accessed time
-        old_session = SessionData(
-            session_id="old-session-456",
+        # Create session and manually set old last_accessed time
+        session_id = await mock_session_store.create(
             user_id="user:inactive",
             username="inactive",
             roles=["user"],
             metadata={},
-            created_at=(datetime.utcnow() - timedelta(hours=2)).isoformat() + "Z",
-            last_accessed=(datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z",  # 20 min ago
-            expires_at=(datetime.utcnow() + timedelta(hours=22)).isoformat() + "Z",
         )
 
-        await mock_session_store.create(old_session)
+        # Manually update the last_accessed to make it old
+        old_session = await mock_session_store.get(session_id)
+        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z"
+        mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(
             app=app, timeout_seconds=600, session_store=mock_session_store  # 10 minute timeout
@@ -147,7 +147,7 @@ class TestSessionTimeoutMiddleware:
         mock_request = MagicMock(spec=Request)
         mock_request.url.path = "/api/data"
         mock_request.headers.get.return_value = ""
-        mock_request.cookies.get.return_value = "old-session-456"
+        mock_request.cookies.get.return_value = session_id
         mock_request.client.host = "192.168.1.100"
 
         # Mock call_next (should not be called)
@@ -160,15 +160,15 @@ class TestSessionTimeoutMiddleware:
         assert response.status_code == 401
 
         # Verify session was deleted
-        deleted_session = await mock_session_store.get("old-session-456")
+        deleted_session = await mock_session_store.get(session_id)
         assert deleted_session is None
 
     @pytest.mark.asyncio
     async def test_sliding_window_updates_last_accessed(self, app, mock_session_store, sample_session):
         """Test that session activity updates last_accessed (sliding window)"""
-        await mock_session_store.create(sample_session)
-
-        original_last_accessed = sample_session.last_accessed
+        # Create session
+        session = await sample_session(mock_session_store)
+        original_last_accessed = session.last_accessed
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=900, session_store=mock_session_store)
 
@@ -176,7 +176,7 @@ class TestSessionTimeoutMiddleware:
         mock_request = MagicMock(spec=Request)
         mock_request.url.path = "/api/data"
         mock_request.headers.get.return_value = ""
-        mock_request.cookies.get.return_value = "test-session-123"
+        mock_request.cookies.get.return_value = session.session_id
 
         async def mock_call_next(request):
             return Response(status_code=200)
@@ -185,32 +185,31 @@ class TestSessionTimeoutMiddleware:
         await middleware.dispatch(mock_request, mock_call_next)
 
         # Check that last_accessed was updated
-        updated_session = await mock_session_store.get("test-session-123")
+        updated_session = await mock_session_store.get(session.session_id)
         assert updated_session.last_accessed != original_last_accessed
 
     @pytest.mark.asyncio
     async def test_timeout_response_format(self, app, mock_session_store):
         """Test timeout response has proper format"""
-        # Create old session
-        old_session = SessionData(
-            session_id="expired-789",
+        # Create session and make it old
+        session_id = await mock_session_store.create(
             user_id="user:test",
             username="test",
             roles=[],
             metadata={},
-            created_at=(datetime.utcnow() - timedelta(hours=1)).isoformat() + "Z",
-            last_accessed=(datetime.utcnow() - timedelta(minutes=30)).isoformat() + "Z",
-            expires_at=(datetime.utcnow() + timedelta(hours=23)).isoformat() + "Z",
         )
 
-        await mock_session_store.create(old_session)
+        # Update last_accessed to make it old
+        old_session = await mock_session_store.get(session_id)
+        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=30)).isoformat() + "Z"
+        mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=300, session_store=mock_session_store)  # 5 minutes
 
         mock_request = MagicMock(spec=Request)
         mock_request.url.path = "/api/test"
         mock_request.headers.get.return_value = ""
-        mock_request.cookies.get.return_value = "expired-789"
+        mock_request.cookies.get.return_value = session_id
         mock_request.client.host = "127.0.0.1"
 
         async def mock_call_next(request):
@@ -376,25 +375,25 @@ class TestSessionTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_request_without_client_info(self, app, mock_session_store):
         """Test handling request without client information"""
-        old_session = SessionData(
-            session_id="test-no-client",
+        # Create session and make it old
+        session_id = await mock_session_store.create(
             user_id="user:test",
             username="test",
             roles=[],
             metadata={},
-            created_at=(datetime.utcnow() - timedelta(hours=1)).isoformat() + "Z",
-            last_accessed=(datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z",
-            expires_at=(datetime.utcnow() + timedelta(hours=23)).isoformat() + "Z",
         )
 
-        await mock_session_store.create(old_session)
+        # Update last_accessed to make it old
+        old_session = await mock_session_store.get(session_id)
+        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z"
+        mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=300, session_store=mock_session_store)
 
         mock_request = MagicMock(spec=Request)
         mock_request.url.path = "/api/test"
         mock_request.headers.get.return_value = ""
-        mock_request.cookies.get.return_value = "test-no-client"
+        mock_request.cookies.get.return_value = session_id
         mock_request.client = None  # No client info
 
         async def mock_call_next(request):
@@ -413,25 +412,25 @@ class TestHIPAACompliance:
     @pytest.mark.asyncio
     async def test_logs_timeout_events(self, app, mock_session_store):
         """Test that timeout events are logged (audit requirement)"""
-        old_session = SessionData(
-            session_id="audit-test",
+        # Create session and make it old
+        session_id = await mock_session_store.create(
             user_id="user:test",
             username="test",
             roles=[],
             metadata={},
-            created_at=(datetime.utcnow() - timedelta(hours=1)).isoformat() + "Z",
-            last_accessed=(datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z",
-            expires_at=(datetime.utcnow() + timedelta(hours=23)).isoformat() + "Z",
         )
 
-        await mock_session_store.create(old_session)
+        # Update last_accessed to make it old
+        old_session = await mock_session_store.get(session_id)
+        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z"
+        mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=300, session_store=mock_session_store)
 
         mock_request = MagicMock(spec=Request)
         mock_request.url.path = "/api/phi/patient/123"
         mock_request.headers.get.return_value = ""
-        mock_request.cookies.get.return_value = "audit-test"
+        mock_request.cookies.get.return_value = session_id
         mock_request.client.host = "192.168.1.50"
 
         async def mock_call_next(request):
