@@ -1,0 +1,643 @@
+---
+title: Observability
+description: 'OpenTelemetry tracing, metrics, and LangSmith integration'
+icon: 'chart-line'
+---
+
+## Overview
+
+Comprehensive observability with **dual backends** - OpenTelemetry for distributed tracing and metrics, plus LangSmith for LLM-specific insights. Track every request from ingress to LLM response with full context correlation.
+
+<Info>
+**Dual observability** provides both infrastructure monitoring (OpenTelemetry) and AI-specific insights (LangSmith) in a unified platform.
+</Info>
+
+## Architecture
+
+```mermaid
+graph TB
+    App[MCP Server] --> OTel[OpenTelemetry SDK]
+    App --> LS[LangSmith SDK]
+
+    OTel --> Exporter[OTLP Exporter]
+    Exporter --> Collector[OTel Collector]
+
+    Collector --> Jaeger[Jaeger]
+    Collector --> Prometheus[Prometheus]
+
+    LS --> LSCloud[LangSmith Cloud]
+
+    Prometheus --> Grafana[Grafana]
+    Jaeger --> Dashboard1[Trace UI]
+    LSCloud --> Dashboard2[LangSmith UI]
+```
+
+## Quick Start
+
+<Steps>
+  <Step title="Deploy Observability Stack">
+    ```bash
+    # Start all observability services
+    docker-compose up -d jaeger prometheus grafana
+
+    # Verify services
+    curl http://localhost:16686  # Jaeger UI
+    curl http://localhost:9090   # Prometheus
+    curl http://localhost:3000   # Grafana
+    ```
+  </Step>
+
+  <Step title="Configure Application">
+    ```bash
+    # .env
+    ENABLE_TRACING=true
+    ENABLE_METRICS=true
+    OTLP_ENDPOINT=http://localhost:4317
+
+    # Optional: LangSmith
+    LANGSMITH_TRACING=true
+    LANGSMITH_API_KEY=your-key-here
+    LANGSMITH_PROJECT=langgraph-agent
+    ```
+  </Step>
+
+  <Step title="Generate Traces">
+    ```bash
+    # Make a request
+    curl -X POST http://localhost:8000/message \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"query": "Hello!"}'
+
+    # Response includes trace_id
+    {
+      "content": "Hello! How can I help you?",
+      "trace_id": "abc123def456..."
+    }
+    ```
+  </Step>
+
+  <Step title="View in Jaeger">
+    1. Open http://localhost:16686
+    2. Select service: `mcp-server-langgraph`
+    3. Click "Find Traces"
+    4. Click on trace to see details
+  </Step>
+</Steps>
+
+## OpenTelemetry Tracing
+
+### Trace Structure
+
+Every request creates a trace with multiple spans:
+
+```
+Trace: POST /message
+├─ Span: http_request
+│  ├─ Span: authenticate_user
+│  │  ├─ Span: redis_get_session
+│  │  └─ Span: keycloak_verify_token
+│  ├─ Span: authorize_user
+│  │  └─ Span: openfga_check
+│  ├─ Span: execute_agent
+│  │  ├─ Span: llm_generate
+│  │  │  └─ Span: litellm_completion
+│  │  └─ Span: tool_execution
+│  └─ Span: refresh_session
+```
+
+### Trace Attributes
+
+Each span includes rich metadata:
+
+<Tabs>
+  <Tab title="HTTP Spans">
+    ```python
+    {
+      "http.method": "POST",
+      "http.url": "/message",
+      "http.status_code": 200,
+      "http.user_agent": "curl/7.68.0",
+      "user.id": "alice",
+      "trace_id": "abc123...",
+      "span_id": "def456..."
+    }
+    ```
+  </Tab>
+
+  <Tab title="LLM Spans">
+    ```python
+    {
+      "llm.provider": "anthropic",
+      "llm.model": "claude-3-5-sonnet-20241022",
+      "llm.temperature": 0.7,
+      "llm.max_tokens": 4096,
+      "llm.prompt_tokens": 125,
+      "llm.completion_tokens": 87,
+      "llm.total_tokens": 212,
+      "llm.latency_ms": 1245
+    }
+    ```
+  </Tab>
+
+  <Tab title="Auth Spans">
+    ```python
+    {
+      "auth.method": "session",
+      "auth.session_id": "xyz789...",
+      "auth.user_id": "alice",
+      "authz.resource": "tool:chat",
+      "authz.relation": "executor",
+      "authz.allowed": true,
+      "authz.latency_ms": 15
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Custom Instrumentation
+
+Add custom spans to your code:
+
+```python
+from mcp_server_langgraph.observability.telemetry import tracer
+
+@tracer.start_as_current_span("custom_operation")
+def my_function():
+    # Your code here
+    with tracer.start_as_current_span("sub_operation") as span:
+        span.set_attribute("custom.attribute", "value")
+        result = do_work()
+        span.set_attribute("result.count", len(result))
+        return result
+```
+
+## Metrics
+
+### Available Metrics
+
+<AccordionGroup>
+  <Accordion title="Request Metrics" defaultOpen>
+    **HTTP request metrics**:
+    - `http_requests_total` - Total requests by method, status
+    - `http_request_duration_seconds` - Request latency histogram
+    - `http_requests_in_progress` - Active requests gauge
+
+    **Query**:
+    ```promql
+    # Request rate
+    rate(http_requests_total[5m])
+
+    # p95 latency
+    histogram_quantile(0.95, http_request_duration_seconds_bucket)
+
+    # Error rate
+    rate(http_requests_total{status=~"5.."}[5m])
+    ```
+  </Accordion>
+
+  <Accordion title="Authentication Metrics">
+    **Auth metrics** (30+ metrics):
+    - `auth_attempts_total` - Auth attempts by result
+    - `auth_session_created_total` - Sessions created
+    - `auth_session_active` - Active sessions gauge
+    - `auth_token_validation_duration_seconds` - Token validation latency
+
+    **Query**:
+    ```promql
+    # Auth success rate
+    rate(auth_attempts_total{result="success"}[5m]) /
+      rate(auth_attempts_total[5m])
+
+    # Active sessions
+    auth_session_active
+
+    # Failed logins
+    increase(auth_attempts_total{result="failure"}[1h])
+    ```
+  </Accordion>
+
+  <Accordion title="Authorization Metrics">
+    **OpenFGA metrics**:
+    - `authz_check_total` - Permission checks by result
+    - `authz_check_duration_seconds` - Authorization latency
+    - `authz_cache_hits_total` - Cache hit rate
+
+    **Query**:
+    ```promql
+    # Authorization success rate
+    rate(authz_check_total{allowed="true"}[5m])
+
+    # Authorization latency p99
+    histogram_quantile(0.99, authz_check_duration_seconds_bucket)
+
+    # Cache hit rate
+    rate(authz_cache_hits_total[5m]) /
+      rate(authz_check_total[5m])
+    ```
+  </Accordion>
+
+  <Accordion title="LLM Metrics">
+    **LLM usage metrics**:
+    - `llm_requests_total` - LLM requests by provider, model
+    - `llm_tokens_total` - Token usage by type (prompt, completion)
+    - `llm_latency_seconds` - LLM response time
+    - `llm_errors_total` - LLM errors by type
+
+    **Query**:
+    ```promql
+    # Token usage per minute
+    rate(llm_tokens_total[1m])
+
+    # Average LLM latency
+    rate(llm_latency_seconds_sum[5m]) /
+      rate(llm_latency_seconds_count[5m])
+
+    # Cost estimation (approximate)
+    rate(llm_tokens_total{type="prompt"}[1h]) * 0.000003 +
+    rate(llm_tokens_total{type="completion"}[1h]) * 0.000015
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Custom Metrics
+
+Create custom metrics:
+
+```python
+from mcp_server_langgraph.observability.telemetry import meter
+
+# Counter
+request_counter = meter.create_counter(
+    "custom_requests_total",
+    description="Total custom requests",
+    unit="1"
+)
+request_counter.add(1, {"type": "custom"})
+
+# Histogram
+latency_histogram = meter.create_histogram(
+    "custom_duration_seconds",
+    description="Custom operation duration",
+    unit="s"
+)
+latency_histogram.record(0.123, {"operation": "custom"})
+
+# Gauge
+active_gauge = meter.create_up_down_counter(
+    "custom_active",
+    description="Active custom operations",
+    unit="1"
+)
+active_gauge.add(1)
+```
+
+## Prometheus Configuration
+
+### Scraping
+
+Add scraping configuration:
+
+```yaml
+# prometheus.yml
+scrape_configs:
+  - job_name: 'langgraph-agent'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['langgraph-agent:8000']
+    metrics_path: '/metrics/prometheus'
+```
+
+### Alerting Rules
+
+```yaml
+# alerts.yml
+groups:
+  - name: langgraph_agent
+    interval: 30s
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        annotations:
+          summary: "High error rate detected"
+
+      # High LLM latency
+      - alert: HighLLMLatency
+        expr: |
+          histogram_quantile(0.95,
+            llm_latency_seconds_bucket) > 5
+        for: 5m
+        annotations:
+          summary: "LLM p95 latency > 5s"
+
+      # Auth failures
+      - alert: AuthFailureSpike
+        expr: |
+          rate(auth_attempts_total{result="failure"}[5m]) > 10
+        for: 1m
+        annotations:
+          summary: "Authentication failure spike"
+```
+
+## Grafana Dashboards
+
+### Import Dashboards
+
+```bash
+# Import pre-built dashboards
+kubectl create configmap grafana-dashboards \
+  --from-file=dashboards/ \
+  --namespace=observability
+
+# Label for auto-discovery
+kubectl label configmap grafana-dashboards \
+  grafana_dashboard=1 \
+  --namespace=observability
+```
+
+### Key Panels
+
+<Tabs>
+  <Tab title="Overview">
+    - Request rate (RED metrics)
+    - Error rate
+    - p50/p95/p99 latency
+    - Active sessions
+    - LLM token usage
+  </Tab>
+
+  <Tab title="Authentication">
+    - Login success/failure rate
+    - Active sessions
+    - Session creation rate
+    - Token validation latency
+    - Top users by requests
+  </Tab>
+
+  <Tab title="Authorization">
+    - Permission check rate
+    - Authorization latency
+    - Denied requests by resource
+    - Cache hit rate
+  </Tab>
+
+  <Tab title="LLM">
+    - Requests by provider/model
+    - Token usage by type
+    - Average latency
+    - Error rate
+    - Estimated costs
+  </Tab>
+</Tabs>
+
+## LangSmith Integration
+
+### Setup
+
+<Steps>
+  <Step title="Create Account">
+    Sign up at https://smith.langchain.com
+  </Step>
+
+  <Step title="Get API Key">
+    Generate API key from settings
+  </Step>
+
+  <Step title="Configure Application">
+    ```bash
+    # .env
+    LANGSMITH_TRACING=true
+    LANGSMITH_API_KEY=ls_api_key_...
+    LANGSMITH_PROJECT=langgraph-agent
+    LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+    ```
+  </Step>
+
+  <Step title="Verify">
+    Make a request and view in LangSmith UI
+  </Step>
+</Steps>
+
+### Features
+
+<AccordionGroup>
+  <Accordion title="Prompt Tracking" icon="message">
+    View full prompts and responses:
+    - Input messages
+    - System prompts
+    - LLM responses
+    - Token counts
+    - Latency breakdown
+  </Accordion>
+
+  <Accordion title="Chain Visualization" icon="diagram-project">
+    See execution flow:
+    - Agent state transitions
+    - Tool invocations
+    - LLM calls
+    - Conditional routing
+  </Accordion>
+
+  <Accordion title="Evaluations" icon="clipboard-check">
+    Test and evaluate:
+    - Accuracy metrics
+    - Cost analysis
+    - Latency benchmarks
+    - A/B testing
+  </Accordion>
+
+  <Accordion title="Debugging" icon="bug">
+    Debug issues:
+    - Error traces
+    - Failed requests
+    - Slow queries
+    - Token usage spikes
+  </Accordion>
+</AccordionGroup>
+
+### Custom Annotations
+
+```python
+from langsmith import trace
+
+@trace(name="custom_step", project="langgraph-agent")
+def custom_function(input_data):
+    # Automatically traced to LangSmith
+    result = process(input_data)
+    return result
+```
+
+## Logging
+
+### Structured Logging
+
+All logs are JSON-formatted with trace context:
+
+```json
+{
+  "timestamp": "2025-10-12T10:30:00.123Z",
+  "level": "INFO",
+  "service": "mcp-server-langgraph",
+  "trace_id": "abc123def456...",
+  "span_id": "789ghi...",
+  "user_id": "alice",
+  "event": "llm_request",
+  "provider": "anthropic",
+  "model": "claude-3-5-sonnet-20241022",
+  "tokens": 212,
+  "latency_ms": 1245,
+  "status": "success"
+}
+```
+
+### Log Aggregation
+
+<Tabs>
+  <Tab title="Loki">
+    ```yaml
+    # promtail-config.yml
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+
+    scrape_configs:
+      - job_name: langgraph-agent
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [langgraph-agent]
+    ```
+  </Tab>
+
+  <Tab title="ELK Stack">
+    ```yaml
+    # filebeat.yml
+    filebeat.inputs:
+      - type: container
+        paths:
+          - '/var/log/containers/*langgraph-agent*.log'
+
+    output.elasticsearch:
+      hosts: ["elasticsearch:9200"]
+    ```
+  </Tab>
+
+  <Tab title="Cloud Logging">
+    ```python
+    # Google Cloud Logging
+    import google.cloud.logging
+    client = google.cloud.logging.Client()
+    client.setup_logging()
+
+    # AWS CloudWatch
+    import watchtower
+    logger.addHandler(watchtower.CloudWatchLogHandler())
+    ```
+  </Tab>
+</Tabs>
+
+## Production Setup
+
+### Kubernetes
+
+```yaml
+# Sidecar for OpenTelemetry Collector
+- name: otel-collector
+  image: otel/opentelemetry-collector:latest
+  args:
+    - --config=/conf/otel-collector-config.yaml
+  volumeMounts:
+    - name: otel-config
+      mountPath: /conf
+```
+
+### Sampling
+
+Configure trace sampling for high-traffic:
+
+```python
+# config.py
+TRACE_SAMPLE_RATE = 0.1  # Sample 10% of traces
+
+# telemetry.py
+from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
+sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
+```
+
+### Data Retention
+
+```yaml
+# Jaeger retention
+--span-storage.type=elasticsearch
+--es.index-prefix=jaeger
+--es.tags-as-fields.all=true
+--es.num-shards=5
+--es.num-replicas=1
+
+# Prometheus retention
+--storage.tsdb.retention.time=30d
+--storage.tsdb.retention.size=50GB
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No traces appearing">
+    ```bash
+    # Check OTLP endpoint
+    curl -v http://localhost:4317
+
+    # Check collector logs
+    docker-compose logs otel-collector
+
+    # Verify app configuration
+    echo $ENABLE_TRACING $OTLP_ENDPOINT
+
+    # Test trace export
+    python scripts/test_tracing.py
+    ```
+  </Accordion>
+
+  <Accordion title="High cardinality metrics">
+    Limit label values:
+    ```python
+    # Bad: user_id in labels (high cardinality)
+    counter.add(1, {"user_id": user_id})
+
+    # Good: user_type in labels
+    counter.add(1, {"user_type": "premium"})
+    ```
+  </Accordion>
+
+  <Accordion title="Slow trace queries">
+    - Add indexes on trace_id, span_id
+    - Reduce retention period
+    - Enable sampling
+    - Archive old traces
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Monitoring Guide" icon="chart-line" href="/deployment/platform/monitoring">
+    Production monitoring setup
+  </Card>
+  <Card title="Alerting" icon="bell" href="/deployment/platform/monitoring#alerting">
+    Configure alerts
+  </Card>
+  <Card title="Health Checks" icon="heart-pulse" href="/api-reference/health-checks">
+    Health check endpoints
+  </Card>
+  <Card title="Production Checklist" icon="clipboard-check" href="/deployment/production-checklist">
+    Observability requirements
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Full Visibility**: Comprehensive observability with OpenTelemetry and LangSmith for complete system insights!
+</Check>

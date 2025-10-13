@@ -1,0 +1,406 @@
+---
+title: Authentication
+description: 'Secure your MCP server with JWT and Keycloak SSO'
+icon: 'key'
+---
+
+## Overview
+
+MCP Server with LangGraph supports **pluggable authentication** with two built-in providers:
+
+<CardGroup cols={2}>
+  <Card title="InMemory Provider" icon="memory">
+    **Development & Testing**
+
+    Pre-defined users for local development. Fast, zero-config.
+  </Card>
+  <Card title="Keycloak SSO" icon="shield-halved">
+    **Production**
+
+    Enterprise OpenID Connect/OAuth2 authentication. NEW in v2.1.0 🆕
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+### InMemory Authentication (Development)
+
+Perfect for local development and testing:
+
+```bash
+# .env configuration
+AUTH_PROVIDER=inmemory
+AUTH_MODE=token  # JWT tokens
+```
+
+**Pre-defined users**:
+- `alice` - Premium user, admin of organization:acme
+- `bob` - Standard user, member of organization:acme
+- `admin` - System administrator
+
+<CodeGroup>
+```python Get Token
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+auth = AuthMiddleware()
+token = auth.create_token("alice", expires_in=3600)
+print(f"Token: {token}")
+```
+
+```bash cURL
+# Get token (development only!)
+TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
+
+# Use token
+curl -X POST http://localhost:8000/message \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Hello!"}'
+```
+</CodeGroup>
+
+<Warning>
+**Never use InMemory provider in production!** It has hard-coded credentials and no real authentication.
+</Warning>
+
+## Keycloak SSO (Production) 🆕
+
+**NEW in v2.1.0**: Enterprise-grade authentication with Keycloak.
+
+### Features
+
+<AccordionGroup>
+  <Accordion title="OpenID Connect / OAuth2" icon="lock">
+    Standards-compliant OIDC/OAuth2 flows with authorization code grant and refresh tokens.
+  </Accordion>
+
+  <Accordion title="Single Sign-On (SSO)" icon="users">
+    Centralized identity management across all applications in your organization.
+  </Accordion>
+
+  <Accordion title="JWKS Verification" icon="certificate">
+    Public key verification without shared secrets. Token validation using Keycloak's JWKS endpoint.
+  </Accordion>
+
+  <Accordion title="Token Refresh" icon="arrows-rotate">
+    Automatic refresh token rotation for long-lived sessions without re-authentication.
+  </Accordion>
+
+  <Accordion title="Role Mapping" icon="sitemap">
+    Flexible role and group mapping from Keycloak to OpenFGA permissions.
+  </Accordion>
+</AccordionGroup>
+
+### Setup
+
+<Steps>
+  <Step title="Deploy Keycloak">
+    ```bash
+    # Docker Compose (development)
+    docker-compose up -d keycloak
+
+    # Or deploy to Kubernetes
+    helm install keycloak bitnami/keycloak \
+      --namespace langgraph-agent \
+      --set replicaCount=2 \
+      --set postgresql.enabled=true
+    ```
+
+    Access Keycloak admin console:
+    - **Docker**: http://localhost:8080/admin (admin/admin)
+    - **Kubernetes**: Port-forward and access
+  </Step>
+
+  <Step title="Initialize Keycloak">
+    Run the setup script to create realm and client:
+
+    ```bash
+    python scripts/setup/setup_keycloak.py
+    ```
+
+    This creates:
+    - **Realm**: `langgraph-agent`
+    - **Client**: `langgraph-client` (confidential, OIDC)
+    - **Redirect URIs**: Configured for your domain
+
+    Save the **client secret** from the output.
+  </Step>
+
+  <Step title="Configure Environment">
+    ```bash
+    # .env or Kubernetes ConfigMap
+    AUTH_PROVIDER=keycloak
+    AUTH_MODE=session  # or token
+
+    KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
+    KEYCLOAK_REALM=langgraph-agent
+    KEYCLOAK_CLIENT_ID=langgraph-client
+    KEYCLOAK_CLIENT_SECRET=your-client-secret-here
+    KEYCLOAK_VERIFY_SSL=true  # Required for production
+    ```
+  </Step>
+
+  <Step title="Test Authentication">
+    ```python
+    from mcp_server_langgraph.auth.keycloak import KeycloakClient
+
+    client = KeycloakClient()
+
+    # Authenticate user
+    result = await client.authenticate("alice", "password")
+    print(f"Access Token: {result['access_token']}")
+    print(f"Refresh Token: {result['refresh_token']}")
+
+    # Verify token
+    user_info = await client.get_user_info(result['access_token'])
+    print(f"User: {user_info}")
+    ```
+  </Step>
+</Steps>
+
+## Authentication Modes
+
+### Token Mode (Stateless)
+
+<Tabs>
+  <Tab title="Overview">
+    **JWT tokens** issued by Keycloak or InMemory provider.
+
+    **Benefits**:
+    - Stateless (no server-side session storage)
+    - Works with Cloud Run and other serverless platforms
+    - Lower infrastructure costs (no Redis required)
+
+    **Trade-offs**:
+    - Shorter token lifetimes (refresh required)
+    - No concurrent session limits
+    - Cannot revoke individual tokens
+  </Tab>
+
+  <Tab title="Configuration">
+    ```bash
+    # Token-based authentication
+    AUTH_MODE=token
+    JWT_SECRET_KEY=your-secret-key-here
+    JWT_EXPIRATION_SECONDS=3600  # 1 hour
+    ```
+
+    With Keycloak:
+    ```bash
+    AUTH_PROVIDER=keycloak
+    AUTH_MODE=token
+    # Tokens validated via Keycloak JWKS
+    ```
+  </Tab>
+
+  <Tab title="Usage">
+    ```python
+    # Get access token
+    token = auth.create_token("alice")
+
+    # Use in requests
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.post(url, headers=headers)
+
+    # Token refresh (Keycloak only)
+    new_tokens = await keycloak.refresh_token(refresh_token)
+    ```
+  </Tab>
+</Tabs>
+
+### Session Mode (Stateful) 🆕
+
+<Tabs>
+  <Tab title="Overview">
+    **Server-side sessions** with Redis or in-memory storage.
+
+    **Benefits**:
+    - Longer session lifetimes (24+ hours)
+    - Sliding expiration windows
+    - Concurrent session limits per user
+    - Instant session revocation
+    - User session tracking
+
+    **Requirements**:
+    - Redis instance (production)
+    - Or in-memory storage (development only)
+  </Tab>
+
+  <Tab title="Configuration">
+    ```bash
+    # Session-based authentication
+    AUTH_MODE=session
+    SESSION_BACKEND=redis  # or memory
+
+    # Redis configuration
+    REDIS_URL=redis://redis-session:6379/0
+    REDIS_PASSWORD=your-redis-password
+    REDIS_SSL=true  # For production
+
+    # Session settings
+    SESSION_TTL_SECONDS=86400  # 24 hours
+    SESSION_SLIDING_WINDOW=true  # Extend on activity
+    SESSION_MAX_CONCURRENT=5  # Per user
+    ```
+  </Tab>
+
+  <Tab title="Usage">
+    ```python
+    # Create session
+    session = await auth.create_session(
+        user_id="alice",
+        metadata={"ip": "192.168.1.1"}
+    )
+    print(f"Session ID: {session.session_id}")
+
+    # Get session
+    session = await auth.get_session(session_id)
+
+    # Refresh session (extends TTL)
+    session = await auth.refresh_session(session_id)
+
+    # Revoke session
+    await auth.revoke_session(session_id)
+
+    # Revoke all user sessions
+    await auth.revoke_user_sessions("alice")
+    ```
+  </Tab>
+</Tabs>
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Production Checklist" icon="clipboard-check">
+    - [ ] Use Keycloak (not InMemory)
+    - [ ] Set `KEYCLOAK_VERIFY_SSL=true`
+    - [ ] Use strong JWT secret (256-bit): `openssl rand -base64 32`
+    - [ ] Enable session mode with Redis for sensitive applications
+    - [ ] Configure appropriate token/session TTLs
+    - [ ] Enable HTTPS/TLS for all endpoints
+    - [ ] Store secrets in secret manager (not .env files)
+    - [ ] Rotate secrets regularly
+    - [ ] Monitor authentication failures
+    - [ ] Set up rate limiting
+  </Accordion>
+
+  <Accordion title="Token Security" icon="shield">
+    **JWT Tokens**:
+    - Use HS256 or RS256 algorithm
+    - Set reasonable expiration (1-4 hours)
+    - Include user ID and permissions
+    - Validate signature on every request
+    - Don't store sensitive data in tokens
+
+    **Refresh Tokens** (Keycloak):
+    - Longer TTL than access tokens
+    - Rotate on refresh
+    - Revoke on logout
+    - Secure storage (HttpOnly cookies)
+  </Accordion>
+
+  <Accordion title="Session Security" icon="database">
+    **Redis Sessions**:
+    - Use password authentication
+    - Enable TLS/SSL in production
+    - Set appropriate TTL (balance UX vs security)
+    - Implement sliding windows carefully
+    - Limit concurrent sessions per user
+    - Clear sessions on password change
+    - Monitor session creation rate
+  </Accordion>
+
+  <Accordion title="Keycloak Hardening" icon="lock">
+    - Deploy with PostgreSQL (not H2)
+    - Enable SSL/TLS
+    - Use strong admin password
+    - Configure proper redirect URIs
+    - Enable brute force protection
+    - Set up backup and recovery
+    - Regular security updates
+    - Monitor admin console access
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Invalid credentials">
+    **Symptom**: `401 Unauthorized`
+
+    **Solutions**:
+    ```bash
+    # Check InMemory users
+    python -c "from mcp_server_langgraph.auth.middleware import InMemoryUserProvider; print(InMemoryUserProvider().users)"
+
+    # Verify Keycloak connectivity
+    curl https://sso.yourdomain.com/realms/langgraph-agent/.well-known/openid-configuration
+
+    # Check environment variables
+    env | grep AUTH
+    env | grep KEYCLOAK
+    ```
+  </Accordion>
+
+  <Accordion title="Token expired">
+    **Symptom**: `401 Unauthorized - Token expired`
+
+    **Solutions**:
+    - Request new token
+    - Use refresh token (Keycloak)
+    - Increase JWT_EXPIRATION_SECONDS
+    - Enable session mode with longer TTL
+  </Accordion>
+
+  <Accordion title="Keycloak connection refused">
+    **Symptom**: `Connection refused` to Keycloak
+
+    **Solutions**:
+    ```bash
+    # Check Keycloak status
+    docker-compose ps keycloak  # Docker
+    kubectl get pods -l app=keycloak  # Kubernetes
+
+    # Test connectivity
+    curl http://keycloak:8080/health
+
+    # Check logs
+    docker-compose logs keycloak
+    kubectl logs -l app=keycloak
+    ```
+  </Accordion>
+
+  <Accordion title="Session not found">
+    **Symptom**: `Session not found` errors
+
+    **Solutions**:
+    - Check Redis connectivity
+    - Verify SESSION_TTL_SECONDS not too short
+    - Check session was created successfully
+    - Verify session ID format
+    - Check Redis memory not full
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authorization" icon="shield" href="/getting-started/authorization">
+    Configure OpenFGA fine-grained permissions
+  </Card>
+  <Card title="Keycloak Guide" icon="key" href="/guides/keycloak-sso">
+    Complete Keycloak integration guide
+  </Card>
+  <Card title="Session Management" icon="database" href="/guides/redis-sessions">
+    Setup Redis session store
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/authentication">
+    Authentication API endpoints
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Production Ready**: With Keycloak SSO and Redis sessions, your authentication is enterprise-grade!
+</Check>

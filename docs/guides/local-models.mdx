@@ -1,0 +1,827 @@
+---
+title: Local Models Setup
+description: 'Run open-source LLMs locally with Ollama, vLLM, and LM Studio'
+icon: 'computer'
+---
+
+## Overview
+
+Run powerful open-source language models locally for development, testing, or air-gapped deployments. This guide covers Ollama, vLLM, LM Studio, and other local model solutions with the MCP Server.
+
+<Info>
+Local models provide privacy, no API costs, and offline capabilities - perfect for development and sensitive data scenarios.
+</Info>
+
+## Why Local Models?
+
+<CardGroup cols={2}>
+  <Card title="Privacy & Security" icon="shield">
+    - No data leaves your infrastructure
+    - GDPR/HIPAA compliance
+    - Air-gapped deployments
+    - Full data control
+  </Card>
+
+  <Card title="Cost Savings" icon="dollar-sign">
+    - No API usage costs
+    - No rate limits
+    - Predictable infrastructure costs
+    - Scale without per-token fees
+  </Card>
+
+  <Card title="Performance" icon="gauge">
+    - Low latency (no network calls)
+    - Customizable hardware
+    - Model fine-tuning
+    - Offline capability
+  </Card>
+
+  <Card title="Flexibility" icon="sliders">
+    - Any open-source model
+    - Custom fine-tuned models
+    - Experiment freely
+    - Version control models
+  </Card>
+</CardGroup>
+
+## Ollama Setup
+
+**Best for**: Easy setup, development, quick testing
+
+<Steps>
+  <Step title="Install Ollama">
+    <Tabs>
+      <Tab title="macOS">
+        ```bash
+        # Download from ollama.com
+        # Or use Homebrew
+        brew install ollama
+
+        # Start Ollama service
+        ollama serve
+        ```
+      </Tab>
+
+      <Tab title="Linux">
+        ```bash
+        # Install
+        curl -fsSL https://ollama.com/install.sh | sh
+
+        # Start service
+        sudo systemctl start ollama
+        sudo systemctl enable ollama
+
+        # Verify
+        ollama --version
+        ```
+      </Tab>
+
+      <Tab title="Docker">
+        ```yaml
+        # docker-compose.yml
+        services:
+          ollama:
+            image: ollama/ollama:latest
+            ports:
+              - "11434:11434"
+            volumes:
+              - ollama-data:/root/.ollama
+            environment:
+              - OLLAMA_HOST=0.0.0.0
+
+        volumes:
+          ollama-data:
+        ```
+
+        ```bash
+        docker-compose up -d ollama
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Pull Models">
+    ```bash
+    # Popular models
+    ollama pull llama3.2:3b      # Meta's Llama 3.2 (3B params, fast)
+    ollama pull mistral:7b       # Mistral 7B (balanced)
+    ollama pull qwen2.5:14b      # Qwen 2.5 (14B params, powerful)
+    ollama pull codellama:13b    # Code-specialized
+
+    # List installed models
+    ollama list
+
+    # Model info
+    ollama show llama3.2:3b
+    ```
+  </Step>
+
+  <Step title="Configure MCP Server">
+    ```bash
+    # .env
+    LLM_PROVIDER=ollama
+    OLLAMA_BASE_URL=http://localhost:11434
+    LLM_MODEL_NAME=llama3.2:3b
+    ```
+  </Step>
+
+  <Step title="Test">
+    ```python
+    from mcp_server_langgraph.llm.factory import LLMFactory
+
+    llm = LLMFactory(
+        provider="ollama",
+        model_name="llama3.2:3b",
+        base_url="http://localhost:11434"
+    )
+
+    response = await llm.ainvoke("What is machine learning?")
+    print(response.content)
+    ```
+  </Step>
+</Steps>
+
+### Ollama Configuration
+
+```python
+from langchain_community.llms import Ollama
+
+llm = Ollama(
+    model="llama3.2:3b",
+    base_url="http://localhost:11434",
+
+    # Generation parameters
+    temperature=0.7,
+    num_predict=2048,  # Max tokens
+    top_k=40,
+    top_p=0.9,
+    repeat_penalty=1.1,
+
+    # Performance
+    num_ctx=4096,  # Context window
+    num_thread=8,  # CPU threads
+    num_gpu=1,     # Use GPU
+)
+```
+
+### Available Models
+
+| Model | Size | Use Case | Memory Required |
+|-------|------|----------|-----------------|
+| llama3.2:3b | 3B | Fast chat, general | 4GB |
+| mistral:7b | 7B | Balanced performance | 8GB |
+| qwen2.5:14b | 14B | Complex reasoning | 16GB |
+| codellama:13b | 13B | Code generation | 16GB |
+| llama3.1:70b | 70B | Maximum intelligence | 64GB |
+
+## vLLM Setup
+
+**Best for**: High throughput, production deployments
+
+<Steps>
+  <Step title="Install vLLM">
+    ```bash
+    # Requires CUDA GPU
+    pip install vllm
+
+    # Or with Docker
+    docker pull vllm/vllm-openai:latest
+    ```
+  </Step>
+
+  <Step title="Start vLLM Server">
+    ```bash
+    # Start server
+    python -m vllm.entrypoints.openai.api_server \
+      --model meta-llama/Llama-3.2-3B-Instruct \
+      --port 8000 \
+      --tensor-parallel-size 2
+
+    # Or with Docker
+    docker run --gpus all \
+      -v ~/.cache/huggingface:/root/.cache/huggingface \
+      -p 8000:8000 \
+      vllm/vllm-openai:latest \
+      --model meta-llama/Llama-3.2-3B-Instruct
+    ```
+  </Step>
+
+  <Step title="Configure MCP Server">
+    ```bash
+    # .env
+    LLM_PROVIDER=openai  # vLLM is OpenAI-compatible
+    OPENAI_API_BASE=http://localhost:8000/v1
+    OPENAI_API_KEY=EMPTY
+    LLM_MODEL_NAME=meta-llama/Llama-3.2-3B-Instruct
+    ```
+  </Step>
+
+  <Step title="Test">
+    ```python
+    from langchain_openai import ChatOpenAI
+
+    llm = ChatOpenAI(
+        base_url="http://localhost:8000/v1",
+        api_key="EMPTY",
+        model="meta-llama/Llama-3.2-3B-Instruct"
+    )
+
+    response = await llm.ainvoke("Explain quantum computing")
+    print(response.content)
+    ```
+  </Step>
+</Steps>
+
+### vLLM Features
+
+```bash
+# Enable speculative decoding (faster inference)
+python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.2-3B-Instruct \
+  --speculative-model meta-llama/Llama-3.2-1B \
+  --num-speculative-tokens 5
+
+# Multi-GPU support
+python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.1-70B-Instruct \
+  --tensor-parallel-size 4  # Use 4 GPUs
+
+# Quantization (reduce memory)
+python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.2-3B-Instruct \
+  --quantization awq  # or gptq, bitsandbytes
+```
+
+## LM Studio
+
+**Best for**: Desktop GUI, beginners, Windows users
+
+<Steps>
+  <Step title="Install LM Studio">
+    1. Download from https://lmstudio.ai
+    2. Install for your platform (Windows/Mac/Linux)
+    3. Launch LM Studio
+  </Step>
+
+  <Step title="Download Models">
+    1. Click "Discover" tab
+    2. Search for models (e.g., "Llama 3.2")
+    3. Click download
+    4. Wait for download to complete
+  </Step>
+
+  <Step title="Start Local Server">
+    1. Click "Local Server" tab
+    2. Select model from dropdown
+    3. Click "Start Server"
+    4. Note the server URL (default: http://localhost:1234)
+  </Step>
+
+  <Step title="Configure MCP Server">
+    ```bash
+    # .env
+    LLM_PROVIDER=openai
+    OPENAI_API_BASE=http://localhost:1234/v1
+    OPENAI_API_KEY=lm-studio
+    LLM_MODEL_NAME=local-model
+    ```
+  </Step>
+</Steps>
+
+## Production Deployment
+
+### Kubernetes with Ollama
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: langgraph-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        ports:
+        - containerPort: 11434
+
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "4000m"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "16Gi"
+            cpu: "8000m"
+            nvidia.com/gpu: "1"
+
+        volumeMounts:
+        - name: models
+          mountPath: /root/.ollama
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: ollama-models
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: langgraph-agent
+spec:
+  selector:
+    app: ollama
+  ports:
+  - port: 11434
+    targetPort: 11434
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-models
+  namespace: langgraph-agent
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+```
+
+### Load Models via Init Container
+
+```yaml
+spec:
+  initContainers:
+  - name: pull-models
+    image: ollama/ollama:latest
+    command:
+    - sh
+    - -c
+    - |
+      ollama serve &
+      sleep 10
+      ollama pull llama3.2:3b
+      ollama pull mistral:7b
+      pkill ollama
+    volumeMounts:
+    - name: models
+      mountPath: /root/.ollama
+```
+
+### MCP Server with Local LLM
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: agent
+        image: langgraph-agent:latest
+        env:
+        - name: LLM_PROVIDER
+          value: "ollama"
+        - name: OLLAMA_BASE_URL
+          value: "http://ollama:11434"
+        - name: LLM_MODEL_NAME
+          value: "llama3.2:3b"
+
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "4000m"
+```
+
+## Model Selection
+
+### By Task Type
+
+```python
+def select_local_model(task_type: str) -> str:
+    """Select optimal local model for task"""
+
+    models = {
+        "chat": "llama3.2:3b",           # Fast conversation
+        "code": "codellama:13b",          # Code generation
+        "reasoning": "qwen2.5:14b",       # Complex analysis
+        "creative": "mistral:7b",         # Creative writing
+        "summarization": "llama3.2:3b",   # Fast summaries
+    }
+
+    return models.get(task_type, "llama3.2:3b")
+
+# Use dynamically
+llm = LLMFactory(
+    provider="ollama",
+    model_name=select_local_model("code")
+)
+```
+
+### By Hardware
+
+```python
+import psutil
+import GPUtil
+
+def select_model_by_hardware():
+    """Select model based on available resources"""
+
+    # Check GPU
+    try:
+        gpus = GPUtil.getGPUs()
+        if gpus and gpus[0].memoryTotal > 16000:  # >16GB VRAM
+            return "qwen2.5:14b"
+        elif gpus and gpus[0].memoryTotal > 8000:  # >8GB VRAM
+            return "mistral:7b"
+    except:
+        pass
+
+    # Check RAM
+    ram_gb = psutil.virtual_memory().total / (1024**3)
+    if ram_gb > 16:
+        return "mistral:7b"
+    elif ram_gb > 8:
+        return "llama3.2:3b"
+    else:
+        return "llama3.2:1b"  # Smallest model
+
+model = select_model_by_hardware()
+```
+
+## Performance Optimization
+
+### GPU Acceleration
+
+```bash
+# Ollama automatically uses GPU if available
+ollama run llama3.2:3b
+
+# Check GPU usage
+nvidia-smi
+
+# Force CPU-only
+CUDA_VISIBLE_DEVICES="" ollama serve
+
+# Use specific GPU
+CUDA_VISIBLE_DEVICES=1 ollama serve
+```
+
+### Quantization
+
+```bash
+# Ollama models are pre-quantized
+# Pull different quantization levels:
+
+ollama pull llama3.2:3b-q4_0    # 4-bit (smallest, fastest)
+ollama pull llama3.2:3b-q5_0    # 5-bit (balanced)
+ollama pull llama3.2:3b-q8_0    # 8-bit (larger, better quality)
+ollama pull llama3.2:3b         # Default (usually q4)
+
+# Trade-off: smaller = faster but lower quality
+```
+
+### Concurrent Requests
+
+```python
+# Ollama handles concurrent requests
+import asyncio
+
+queries = [
+    "What is Python?",
+    "Explain async/await",
+    "What is FastAPI?"
+]
+
+# Process in parallel
+async def process_batch(queries: list):
+    tasks = [llm.ainvoke(q) for q in queries]
+    results = await asyncio.gather(*tasks)
+    return results
+
+results = await process_batch(queries)
+```
+
+### Context Caching
+
+```python
+# Reuse context across requests
+from langchain.memory import ConversationBufferMemory
+
+memory = ConversationBufferMemory()
+
+# First request
+response1 = await llm.ainvoke(
+    "Explain machine learning",
+    memory=memory
+)
+
+# Second request (reuses context)
+response2 = await llm.ainvoke(
+    "Give me an example",
+    memory=memory  # Ollama remembers previous context
+)
+```
+
+## Fine-Tuning
+
+### Create Modelfile
+
+```dockerfile
+# Modelfile
+FROM llama3.2:3b
+
+# Set custom system prompt
+SYSTEM """You are a helpful AI assistant specializing in software engineering.
+Always provide code examples when relevant."""
+
+# Set parameters
+PARAMETER temperature 0.7
+PARAMETER num_ctx 4096
+PARAMETER stop "Human:"
+PARAMETER stop "Assistant:"
+```
+
+### Build Custom Model
+
+```bash
+# Create model
+ollama create my-custom-model -f Modelfile
+
+# Test
+ollama run my-custom-model "Write a Python function"
+
+# Use in MCP Server
+# .env
+LLM_MODEL_NAME=my-custom-model
+```
+
+### Fine-Tune with LoRA
+
+```bash
+# Use libraries like axolotl or unsloth
+pip install unsloth
+
+# Fine-tune script
+python fine_tune.py \
+  --base_model llama3.2:3b \
+  --dataset my-training-data.json \
+  --output_dir ./fine-tuned-model
+
+# Import to Ollama
+ollama create my-fine-tuned -f Modelfile.finetune
+```
+
+## Monitoring
+
+### Resource Usage
+
+```python
+import psutil
+import GPUtil
+
+def monitor_resources():
+    """Monitor CPU, RAM, and GPU usage"""
+
+    # CPU
+    cpu_percent = psutil.cpu_percent(interval=1)
+
+    # RAM
+    ram = psutil.virtual_memory()
+    ram_percent = ram.percent
+
+    # GPU
+    try:
+        gpus = GPUtil.getGPUs()
+        if gpus:
+            gpu_percent = gpus[0].load * 100
+            gpu_memory = gpus[0].memoryUsed
+        else:
+            gpu_percent = 0
+            gpu_memory = 0
+    except:
+        gpu_percent = 0
+        gpu_memory = 0
+
+    return {
+        "cpu_percent": cpu_percent,
+        "ram_percent": ram_percent,
+        "gpu_percent": gpu_percent,
+        "gpu_memory_mb": gpu_memory
+    }
+
+# Log metrics
+metrics = monitor_resources()
+logger.info("Resource usage", **metrics)
+```
+
+### Performance Metrics
+
+```python
+from prometheus_client import Histogram, Counter
+
+# Define metrics
+local_llm_latency = Histogram(
+    'local_llm_latency_seconds',
+    'Local LLM inference latency',
+    ['model']
+)
+
+local_llm_tokens = Counter(
+    'local_llm_tokens_total',
+    'Total tokens processed',
+    ['model', 'type']
+)
+
+# Track
+import time
+
+@local_llm_latency.labels(model="llama3.2:3b").time()
+async def call_local_llm(query: str):
+    response = await llm.ainvoke(query)
+
+    # Estimate tokens (approximate)
+    input_tokens = len(query.split())
+    output_tokens = len(response.content.split())
+
+    local_llm_tokens.labels(model="llama3.2:3b", type="input").inc(input_tokens)
+    local_llm_tokens.labels(model="llama3.2:3b", type="output").inc(output_tokens)
+
+    return response
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Out of memory">
+    **Error**: `CUDA out of memory` or system freeze
+
+    **Solutions**:
+    ```bash
+    # Use smaller model
+    ollama pull llama3.2:1b  # 1B instead of 3B
+
+    # Use quantized model
+    ollama pull llama3.2:3b-q4_0  # 4-bit quantization
+
+    # Reduce context window
+    # In Modelfile:
+    PARAMETER num_ctx 2048  # Smaller context
+
+    # Clear GPU memory
+    docker restart ollama
+    ```
+  </Accordion>
+
+  <Accordion title="Slow inference">
+    **Causes**: CPU-only, large model, no optimization
+
+    **Solutions**:
+    ```bash
+    # Check GPU usage
+    nvidia-smi
+
+    # Use GPU
+    # Ensure CUDA is installed and GPU is detected
+
+    # Use smaller/quantized model
+    ollama pull llama3.2:3b-q4_0
+
+    # Optimize parameters
+    PARAMETER num_thread 8  # More CPU threads
+    ```
+  </Accordion>
+
+  <Accordion title="Model not found">
+    **Error**: `Error: model 'llama3.2:3b' not found`
+
+    **Solutions**:
+    ```bash
+    # Pull model
+    ollama pull llama3.2:3b
+
+    # List installed models
+    ollama list
+
+    # Verify model name (case-sensitive)
+    ollama show llama3.2:3b
+    ```
+  </Accordion>
+
+  <Accordion title="Connection refused">
+    **Error**: `Connection refused to localhost:11434`
+
+    **Solutions**:
+    ```bash
+    # Check Ollama is running
+    ps aux | grep ollama
+
+    # Start Ollama
+    ollama serve
+
+    # Or as service
+    sudo systemctl start ollama
+
+    # Check port
+    netstat -tuln | grep 11434
+
+    # Test connection
+    curl http://localhost:11434
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Hardware Requirements" icon="microchip">
+    **Minimum**:
+    - CPU: 4 cores
+    - RAM: 8GB
+    - Storage: 50GB
+
+    **Recommended**:
+    - CPU: 8+ cores
+    - RAM: 16GB+
+    - GPU: NVIDIA with 8GB+ VRAM
+    - Storage: 100GB+ SSD
+
+    **Production**:
+    - CPU: 16+ cores
+    - RAM: 32GB+
+    - GPU: NVIDIA A100/H100
+    - Storage: 500GB+ NVMe SSD
+  </Accordion>
+
+  <Accordion title="Model Selection" icon="list-check">
+    - **Development**: Small models (1-3B params)
+    - **Testing**: Medium models (7B params)
+    - **Production**: Based on use case (7-70B)
+    - **Air-gapped**: Pre-download all needed models
+  </Accordion>
+
+  <Accordion title="Security" icon="shield">
+    - Run Ollama in isolated environment
+    - Don't expose Ollama port publicly
+    - Use authentication if remote access needed
+    - Validate all inputs
+    - Monitor resource usage
+  </Accordion>
+
+  <Accordion title="Scaling" icon="arrows-up-down">
+    - Horizontal: Multiple Ollama instances
+    - Vertical: Larger GPU, more RAM
+    - Load balancing across instances
+    - Model caching on shared storage
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Multi-LLM Setup" icon="layer-group" href="/guides/multi-llm-setup">
+    Combine local and cloud models
+  </Card>
+  <Card title="Observability" icon="chart-line" href="/guides/observability">
+    Monitor local LLM performance
+  </Card>
+  <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">
+    Deploy Ollama to K8s
+  </Card>
+  <Card title="Production Checklist" icon="clipboard-check" href="/deployment/production-checklist">
+    Production deployment requirements
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Local LLMs Ready**: Run powerful open-source models with complete privacy and control!
+</Check>

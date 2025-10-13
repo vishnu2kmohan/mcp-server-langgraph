@@ -1,0 +1,542 @@
+---
+title: Permission Model
+description: 'Customize OpenFGA authorization models for your use case'
+icon: 'sitemap'
+---
+
+## Overview
+
+Create custom authorization models in OpenFGA to match your application's permission requirements. This guide covers model design, testing, and best practices.
+
+## Authorization Model Language
+
+OpenFGA models are defined in a simple DSL:
+
+```typescript
+model
+  schema 1.1
+
+type user
+
+type organization
+  relations
+    define admin: [user]
+    define member: [user] or admin
+```
+
+### Key Concepts
+
+<CardGroup cols={3}>
+  <Card title="Types" icon="cube">
+    Objects in your system (user, organization, document)
+  </Card>
+  <Card title="Relations" icon="link">
+    Relationships between objects (admin, member, viewer)
+  </Card>
+  <Card title="Conditions" icon="filter">
+    Context-based permissions (time, IP, attributes)
+  </Card>
+</CardGroup>
+
+## Default Model
+
+The MCP Server includes this model:
+
+```typescript
+model
+  schema 1.1
+
+type user
+
+type role
+  relations
+    define assignee: [user]
+
+type organization
+  relations
+    define admin: [user]
+    define member: [user] or admin
+    define viewer: [user] or member
+
+type tool
+  relations
+    define owner: [user]
+    define executor: [user, organization#member]
+    define viewer: [user, organization#member]
+
+type conversation
+  relations
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user] or editor or owner
+
+type document
+  relations
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user] or editor or owner
+```
+
+**Supported Patterns**:
+- Hierarchical roles (admin → member → viewer)
+- Organization-based access (organization#member)
+- Resource ownership
+- Delegated permissions
+
+## Custom Models
+
+### Example: Project Management
+
+```typescript
+model
+  schema 1.1
+
+type user
+
+type team
+  relations
+    define lead: [user]
+    define member: [user] or lead
+
+type project
+  relations
+    define owner: [team#lead]
+    define contributor: [team#member]
+    define viewer: [user] or contributor
+
+type task
+  relations
+    define project: [project]
+    define assignee: [user]
+    define viewer: [user] from project
+```
+
+**Usage**:
+```python
+# Team lead creates project
+await client.write_tuples([
+    {"user": "user:alice", "relation": "lead", "object": "team:engineering"},
+    {"user": "team:engineering#lead", "relation": "owner", "object": "project:webapp"}
+])
+
+# Alice can view project (via team lead)
+allowed = await client.check_permission(
+    user="user:alice",
+    relation="viewer",
+    object="project:webapp"
+)
+# Returns: True
+```
+
+### Example: Multi-Tenant SaaS
+
+```typescript
+model
+  schema 1.1
+
+type user
+
+type tenant
+  relations
+    define admin: [user]
+    define member: [user] or admin
+
+type workspace
+  relations
+    define tenant: [tenant]
+    define admin: [user, tenant#admin]
+    define member: [user, tenant#member] or admin
+
+type resource
+  relations
+    define workspace: [workspace]
+    define owner: [user]
+    define editor: [user, workspace#member]
+    define viewer: [user] or editor
+```
+
+**Isolation**:
+```python
+# Tenant A admin
+await client.write_tuples([
+    {"user": "user:alice", "relation": "admin", "object": "tenant:company_a"},
+    {"user": "tenant:company_a", "relation": "tenant", "object": "workspace:ws1"}
+])
+
+# Alice can access workspace (via tenant admin)
+allowed = await client.check_permission(
+    user="user:alice",
+    relation="admin",
+    object="workspace:ws1"
+)
+# Returns: True
+```
+
+### Example: Content Management
+
+```typescript
+model
+  schema 1.1
+
+type user
+
+type folder
+  relations
+    define parent: [folder]
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user] or editor or owner or viewer from parent
+
+type file
+  relations
+    define parent: [folder]
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user] or editor or owner or viewer from parent
+```
+
+**Inheritance**:
+```python
+# Set folder permissions
+await client.write_tuples([
+    {"user": "user:alice", "relation": "owner", "object": "folder:docs"},
+    {"user": "folder:docs", "relation": "parent", "object": "file:report.pdf"}
+])
+
+# Alice can view file (inherited from folder)
+allowed = await client.check_permission(
+    user="user:alice",
+    relation="viewer",
+    object="file:report.pdf"
+)
+# Returns: True
+```
+
+## Relation Operators
+
+### Direct Assignment
+
+```typescript
+define admin: [user]
+```
+
+Users directly assigned admin relation.
+
+### Union (OR)
+
+```typescript
+define member: [user] or admin
+```
+
+User is member OR admin.
+
+### Intersection (AND)
+
+```typescript
+define can_delete: admin and owner
+```
+
+User must be admin AND owner.
+
+### Exclusion (BUT NOT)
+
+```typescript
+define active_member: member but not suspended
+```
+
+User is member but not suspended.
+
+### Computed Relations
+
+```typescript
+define viewer: [user] or viewer from parent
+```
+
+User is viewer OR inherits from parent.
+
+## Conditional Permissions
+
+Add context-based rules:
+
+```typescript
+model
+  schema 1.1
+
+type user
+
+type document
+  relations
+    define owner: [user]
+    define viewer: [user with time_limited_access]
+
+condition time_limited_access(current_time: timestamp, expiry: timestamp) {
+  current_time < expiry
+}
+```
+
+**Usage**:
+```python
+# Check with context
+allowed = await client.check_permission(
+    user="user:bob",
+    relation="viewer",
+    object="document:report",
+    context={
+        "current_time": "2025-10-12T10:00:00Z",
+        "expiry": "2025-10-13T10:00:00Z"
+    }
+)
+```
+
+## Testing Models
+
+### Model Validation
+
+```bash
+# Use OpenFGA CLI
+fga model validate --file model.fga
+
+# Or via API
+curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
+  -d @model.json
+```
+
+### Test Assertions
+
+```python
+test_cases = [
+    {
+        "user": "user:alice",
+        "relation": "admin",
+        "object": "organization:acme",
+        "expected": True
+    },
+    {
+        "user": "user:bob",
+        "relation": "admin",
+        "object": "organization:acme",
+        "expected": False
+    }
+]
+
+for test in test_cases:
+    result = await client.check_permission(
+        user=test["user"],
+        relation=test["relation"],
+        object=test["object"]
+    )
+    assert result == test["expected"], f"Test failed: {test}"
+```
+
+## Deploying Models
+
+### Via Setup Script
+
+Update `scripts/setup/setup_openfga.py`:
+
+```python
+AUTHORIZATION_MODEL = {
+    "schema_version": "1.1",
+    "type_definitions": [
+        {
+            "type": "user"
+        },
+        {
+            "type": "organization",
+            "relations": {
+                "admin": {"this": {}},
+                "member": {
+                    "union": {
+                        "child": [
+                            {"this": {}},
+                            {"computedUserset": {"relation": "admin"}}
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+}
+
+# Write model
+response = await client.write_authorization_model(AUTHORIZATION_MODEL)
+model_id = response["authorization_model_id"]
+```
+
+### Via API
+
+```bash
+curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_version": "1.1",
+    "type_definitions": [...]
+  }'
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Start Simple" icon="seedling">
+    Begin with basic types and relations. Add complexity as needed.
+
+    **Good**:
+    ```typescript
+    type document
+      relations
+        define owner: [user]
+        define viewer: [user]
+    ```
+
+    **Too Complex**:
+    ```typescript
+    type document
+      relations
+        define owner: [user]
+        define editor: [user, group#member, team#lead]
+        define viewer: [user] or editor or viewer from parent or viewer from workspace
+    ```
+  </Accordion>
+
+  <Accordion title="Use Hierarchies" icon="layer-group">
+    Define role hierarchies to reduce tuple count.
+
+    ```typescript
+    type organization
+      relations
+        define admin: [user]
+        define member: [user] or admin  # Admins are members
+        define viewer: [user] or member # Members are viewers
+    ```
+  </Accordion>
+
+  <Accordion title="Limit Indirection" icon="arrows-turn-right">
+    Too many hops slow down checks.
+
+    **Good** (2 hops):
+    ```typescript
+    define viewer: [user] or viewer from parent
+    ```
+
+    **Bad** (5+ hops):
+    ```typescript
+    define viewer: [user] or viewer from parent from grandparent from workspace from tenant
+    ```
+  </Accordion>
+
+  <Accordion title="Name Consistently" icon="tag">
+    Use consistent naming across your model.
+
+    - **Types**: Singular (user, document, not users)
+    - **Relations**: Lowercase (admin, not Admin)
+    - **IDs**: Prefixed (user:123, not 123)
+  </Accordion>
+
+  <Accordion title="Version Models" icon="code-branch">
+    Track model changes and test migrations.
+
+    ```python
+    # v1 model
+    model_v1 = {...}
+
+    # v2 model (add new type)
+    model_v2 = {...}
+
+    # Test migration
+    # 1. Create v2 model
+    # 2. Verify v1 tuples still work
+    # 3. Add v2 tuples
+    # 4. Switch to v2
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Performance Optimization
+
+### Reduce Tuple Count
+
+Use group/organization relations instead of per-user tuples:
+
+**Bad** (100 tuples for 100 users):
+```python
+for user_id in range(100):
+    await client.write_tuples([{
+        "user": f"user:{user_id}",
+        "relation": "viewer",
+        "object": "document:report"
+    }])
+```
+
+**Good** (1 tuple):
+```python
+await client.write_tuples([{
+    "user": "organization:company#member",
+    "relation": "viewer",
+    "object": "document:report"
+}])
+```
+
+### Add Indexes
+
+For PostgreSQL backend, add indexes on frequently queried fields.
+
+### Enable Caching
+
+```python
+client = OpenFGAClient(
+    cache_ttl=300,  # 5 minutes
+    cache_backend="redis"
+)
+```
+
+## Migration Guide
+
+### Adding New Types
+
+1. Create new model with added type
+2. Write new model to OpenFGA
+3. No data migration needed
+
+### Modifying Relations
+
+1. Create new model
+2. Write new model
+3. Migrate existing tuples if needed
+
+```python
+# Old: "can_read" relation
+old_tuples = await client.read_tuples(relation="can_read")
+
+# New: "viewer" relation
+new_tuples = [{
+    "user": t["user"],
+    "relation": "viewer",  # Changed
+    "object": t["object"]
+} for t in old_tuples]
+
+await client.write_tuples(new_tuples)
+await client.delete_tuples(old_tuples)
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="OpenFGA Setup" icon="shield-check" href="/guides/openfga-setup">
+    Deploy OpenFGA
+  </Card>
+  <Card title="Relationship Tuples" icon="link" href="/guides/relationship-tuples">
+    Manage tuples
+  </Card>
+  <Card title="Authorization Guide" icon="shield" href="/getting-started/authorization">
+    Learn authorization
+  </Card>
+  <Card title="Keycloak Integration" icon="key" href="/guides/keycloak-sso">
+    Sync roles
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Flexible Authorization**: Custom permission models support any access control pattern!
+</Check>

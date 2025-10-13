@@ -1,0 +1,490 @@
+---
+title: Your First Request
+description: 'Send your first message to the MCP agent'
+icon: 'paper-plane'
+---
+
+## Overview
+
+Let's send your first message to the MCP Server with LangGraph! This guide walks you through authentication, making a request, and understanding the response.
+
+<Info>
+**Before you start**: Make sure you've completed the [Quick Start](/getting-started/quickstart) and have the services running.
+</Info>
+
+## Prerequisites
+
+Verify services are running:
+
+```bash
+# Check agent health
+curl http://localhost:8000/health
+
+# Expected response
+{
+  "status": "healthy",
+  "service": "mcp-server-langgraph",
+  "version": "2.1.0"
+}
+```
+
+<Check>
+All services healthy? Let's make your first request!
+</Check>
+
+## Step-by-Step Tutorial
+
+<Steps>
+  <Step title="Get an Authentication Token">
+    <Tabs>
+      <Tab title="Python">
+        ```python
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+        # Create auth instance
+        auth = AuthMiddleware()
+
+        # Get token for user 'alice'
+        token = auth.create_token("alice", expires_in=3600)
+        print(f"Token: {token}")
+        ```
+      </Tab>
+
+      <Tab title="cURL">
+        ```bash
+        # Development: Get token from auth middleware
+        TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
+
+        echo "Token: $TOKEN"
+        ```
+      </Tab>
+
+      <Tab title="JavaScript">
+        ```javascript
+        // In production, get token from your auth endpoint
+        // For development, use a pre-generated token
+        const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...";
+        ```
+      </Tab>
+    </Tabs>
+
+    <Note>
+    In production, obtain tokens through proper authentication flows (Keycloak OAuth2, etc.). See [Authentication Guide](/getting-started/authentication).
+    </Note>
+  </Step>
+
+  <Step title="Send Your First Message">
+    <Tabs>
+      <Tab title="Python">
+        ```python
+        import httpx
+
+        # API endpoint
+        url = "http://localhost:8000/message"
+
+        # Request with auth header
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+
+        # Message payload
+        data = {
+            "query": "Hello! What can you help me with today?"
+        }
+
+        # Send request
+        response = httpx.post(url, headers=headers, json=data)
+        print(response.json())
+        ```
+      </Tab>
+
+      <Tab title="cURL">
+        ```bash
+        curl -X POST http://localhost:8000/message \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "query": "Hello! What can you help me with today?"
+          }'
+        ```
+      </Tab>
+
+      <Tab title="JavaScript">
+        ```javascript
+        const response = await fetch('http://localhost:8000/message', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            query: 'Hello! What can you help me with today?'
+          })
+        });
+
+        const data = await response.json();
+        console.log(data);
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Understanding the Response">
+    The agent returns a structured JSON response:
+
+    ```json
+    {
+      "content": "Hello! I'm an AI assistant powered by LangGraph. I can help you with:\n- Answering questions\n- Information lookup\n- Task automation\n- And more!\n\nWhat would you like to know?",
+      "role": "assistant",
+      "model": "gemini-2.5-flash-002",
+      "usage": {
+        "prompt_tokens": 28,
+        "completion_tokens": 52,
+        "total_tokens": 80
+      },
+      "trace_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "authorized": true
+    }
+    ```
+
+    <ResponseField name="content" type="string">
+      The agent's response text
+    </ResponseField>
+
+    <ResponseField name="role" type="string">
+      Always `"assistant"` for agent responses
+    </ResponseField>
+
+    <ResponseField name="model" type="string">
+      LLM model used (supports fallback to alternative models)
+    </ResponseField>
+
+    <ResponseField name="usage" type="object">
+      Token usage statistics:
+      - `prompt_tokens`: Input tokens
+      - `completion_tokens`: Output tokens
+      - `total_tokens`: Sum of both
+    </ResponseField>
+
+    <ResponseField name="trace_id" type="string">
+      OpenTelemetry trace ID for debugging. View in Jaeger UI.
+    </ResponseField>
+
+    <ResponseField name="authorized" type="boolean">
+      Whether user was authorized (OpenFGA check passed)
+    </ResponseField>
+  </Step>
+
+  <Step title="View Trace in Jaeger">
+    Every request is traced end-to-end:
+
+    1. Open Jaeger UI: [http://localhost:16686](http://localhost:16686)
+    2. Select service: `mcp-server-langgraph`
+    3. Click "Find Traces"
+    4. Click on your trace to see:
+       - Request flow
+       - LLM call with prompt
+       - Authorization check
+       - Response generation
+       - Timing breakdown
+
+    <img src="/images/jaeger-trace-example.png" alt="Jaeger Trace" />
+  </Step>
+</Steps>
+
+## Complete Example
+
+Here's a full working example:
+
+<CodeGroup>
+```python complete_example.py
+import httpx
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+def main():
+    # 1. Get authentication token
+    auth = AuthMiddleware()
+    token = auth.create_token("alice", expires_in=3600)
+
+    # 2. Prepare request
+    url = "http://localhost:8000/message"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # 3. Send message
+    data = {"query": "What is the capital of France?"}
+    response = httpx.post(url, headers=headers, json=data)
+
+    # 4. Handle response
+    if response.status_code == 200:
+        result = response.json()
+        print(f"Agent: {result['content']}")
+        print(f"Model: {result['model']}")
+        print(f"Tokens: {result['usage']['total_tokens']}")
+        print(f"Trace: http://localhost:16686/trace/{result['trace_id']}")
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+
+if __name__ == "__main__":
+    main()
+```
+
+```bash complete_example.sh
+#!/bin/bash
+
+# Get token
+TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
+
+# Send request
+RESPONSE=$(curl -s -X POST http://localhost:8000/message \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What is the capital of France?"
+  }')
+
+# Parse response
+echo "$RESPONSE" | python -m json.tool
+
+# Extract trace ID
+TRACE_ID=$(echo "$RESPONSE" | python -c "import sys, json; print(json.load(sys.stdin)['trace_id'])")
+echo ""
+echo "View trace: http://localhost:16686/trace/$TRACE_ID"
+```
+</CodeGroup>
+
+## Common Use Cases
+
+### Simple Q&A
+
+```python
+# Ask a question
+response = httpx.post(url, headers=headers, json={
+    "query": "Explain quantum computing in simple terms"
+})
+```
+
+### Multi-Turn Conversation
+
+```python
+# Conversation with context
+conversation = [
+    {"role": "user", "content": "I'm learning Python"},
+    {"role": "assistant", "content": "Great! What would you like to know?"},
+    {"role": "user", "content": "How do I read a file?"}
+]
+
+response = httpx.post(url, headers=headers, json={
+    "messages": conversation
+})
+```
+
+### Tool Usage
+
+```python
+# Agent can use tools automatically
+response = httpx.post(url, headers=headers, json={
+    "query": "Search for the latest news about AI"
+})
+# Agent will invoke search tool and return results
+```
+
+### Streaming Responses
+
+```python
+# Get streaming response (SSE)
+async with httpx.AsyncClient() as client:
+    async with client.stream(
+        'POST',
+        'http://localhost:8000/message/stream',
+        headers=headers,
+        json={"query": "Tell me a story"}
+    ) as response:
+        async for chunk in response.aiter_text():
+            print(chunk, end='', flush=True)
+```
+
+## Error Handling
+
+### Authentication Errors
+
+```python
+# 401 Unauthorized
+{
+  "error": "unauthorized",
+  "message": "Invalid or expired token"
+}
+```
+
+**Solution**: Get a new token or check token expiration.
+
+### Authorization Errors
+
+```python
+# 403 Forbidden
+{
+  "error": "forbidden",
+  "message": "User 'bob' is not authorized to execute 'tool:chat'"
+}
+```
+
+**Solution**: Check OpenFGA permissions. See [Authorization Guide](/getting-started/authorization).
+
+### Rate Limiting
+
+```python
+# 429 Too Many Requests
+{
+  "error": "rate_limit_exceeded",
+  "message": "Rate limit exceeded. Try again in 60 seconds.",
+  "retry_after": 60
+}
+```
+
+**Solution**: Implement exponential backoff or reduce request rate.
+
+### Server Errors
+
+```python
+# 500 Internal Server Error
+{
+  "error": "internal_error",
+  "message": "LLM provider error: quota exceeded",
+  "trace_id": "abc123..."
+}
+```
+
+**Solution**: Check trace in Jaeger, verify LLM API keys and quotas.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always Include Authorization" icon="lock">
+    ```python
+    # ✅ Good: Always send auth token
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # ❌ Bad: Missing authentication
+    headers = {}
+    ```
+  </Accordion>
+
+  <Accordion title="Handle Errors Gracefully" icon="triangle-exclamation">
+    ```python
+    try:
+        response = httpx.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPStatusError as e:
+        print(f"HTTP error: {e.response.status_code}")
+        print(f"Details: {e.response.json()}")
+    except httpx.RequestError as e:
+        print(f"Request failed: {e}")
+    ```
+  </Accordion>
+
+  <Accordion title="Set Timeouts" icon="clock">
+    ```python
+    # Prevent hanging requests
+    response = httpx.post(
+        url,
+        headers=headers,
+        json=data,
+        timeout=30.0  # 30 second timeout
+    )
+    ```
+  </Accordion>
+
+  <Accordion title="Track Token Usage" icon="chart-line">
+    ```python
+    # Monitor costs
+    total_tokens = 0
+    for response in responses:
+        total_tokens += response['usage']['total_tokens']
+
+    print(f"Total tokens used: {total_tokens}")
+    ```
+  </Accordion>
+
+  <Accordion title="Use Trace IDs for Debugging" icon="bug">
+    ```python
+    # Log trace IDs for support requests
+    result = response.json()
+    logger.info(
+        "Agent request completed",
+        trace_id=result['trace_id'],
+        user="alice",
+        tokens=result['usage']['total_tokens']
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Testing Your Integration
+
+### Unit Tests
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+
+def test_agent_request():
+    with patch('httpx.post') as mock_post:
+        # Mock response
+        mock_post.return_value.json.return_value = {
+            "content": "Test response",
+            "role": "assistant",
+            "model": "gemini-2.5-flash-002"
+        }
+
+        # Test your code
+        result = send_agent_request("Hello")
+        assert result['content'] == "Test response"
+```
+
+### Integration Tests
+
+```python
+def test_agent_integration():
+    # Get real token
+    token = auth.create_token("alice")
+
+    # Real API call
+    response = httpx.post(
+        "http://localhost:8000/message",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"query": "Test query"}
+    )
+
+    # Verify response
+    assert response.status_code == 200
+    result = response.json()
+    assert "content" in result
+    assert result['authorized'] is True
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/getting-started/authentication">
+    Learn about JWT and Keycloak authentication
+  </Card>
+  <Card title="Authorization" icon="shield" href="/getting-started/authorization">
+    Configure fine-grained permissions
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Explore all API endpoints
+  </Card>
+  <Card title="Multi-LLM Setup" icon="shuffle" href="/guides/multi-llm-setup">
+    Configure multiple LLM providers
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Congratulations!** You've sent your first request to the MCP agent. Ready to build something amazing?
+</Check>

@@ -1,0 +1,807 @@
+---
+title: Contributing Guide
+description: 'Guidelines for contributing to the MCP Server with LangGraph project'
+icon: 'code-pull-request'
+---
+
+## Overview
+
+We welcome contributions to the MCP Server with LangGraph project! This guide will help you get started with contributing code, documentation, bug reports, and feature requests.
+
+<Info>
+By contributing to this project, you agree to abide by our [Code of Conduct](https://github.com/yourusername/langgraph-mcp-agent/blob/main/CODE_OF_CONDUCT.md) and license terms.
+</Info>
+
+## Quick Start
+
+```bash
+# 1. Fork the repository
+gh repo fork vishnu2kmohan/langgraph_mcp_agent
+
+# 2. Clone your fork
+git clone https://github.com/YOUR_USERNAME/langgraph_mcp_agent.git
+cd langgraph_mcp_agent
+
+# 3. Add upstream remote
+git remote add upstream https://github.com/vishnu2kmohan/langgraph_mcp_agent.git
+
+# 4. Create a branch
+git checkout -b feature/my-awesome-feature
+
+# 5. Make your changes
+# ... edit files ...
+
+# 6. Run tests
+uv run pytest -m unit
+
+# 7. Commit and push
+git add .
+git commit -m "feat: add awesome new feature"
+git push origin feature/my-awesome-feature
+
+# 8. Create pull request
+gh pr create --title "feat: add awesome new feature" --body "Description of changes"
+```
+
+## Development Setup
+
+### Prerequisites
+
+```bash
+# Required
+- Python 3.12+
+- Docker & Docker Compose
+- Git
+
+# Recommended
+- uv (Python package manager)
+- Pre-commit
+- direnv (for environment variables)
+```
+
+### Local Environment
+
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create virtual environment
+uv venv
+
+# Activate virtual environment
+source .venv/bin/activate  # Linux/macOS
+# or
+.venv\Scripts\activate  # Windows
+
+# Install dependencies
+uv pip install -r requirements.txt
+uv pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+```
+
+### Environment Variables
+
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env with your values
+vim .env
+```
+
+**Minimal .env for development**:
+```bash
+ENV=development
+DEBUG=true
+LOG_LEVEL=debug
+
+AUTH_PROVIDER=inmemory
+SESSION_PROVIDER=memory
+
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-your-dev-key
+
+ENABLE_TRACING=false
+ENABLE_METRICS=false
+```
+
+### Start Development Services
+
+```bash
+# Start all services
+docker-compose -f docker-compose.dev.yml up -d
+
+# Check service health
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+## Code Style
+
+### Python Style Guide
+
+We follow **PEP 8** with some modifications:
+
+```python
+# Line length: 100 characters (not 79)
+# String quotes: Double quotes preferred
+# Imports: Organized with isort
+
+# Good example
+from typing import Optional, List
+
+from fastapi import FastAPI, Depends
+from pydantic import BaseModel
+
+from src.auth.middleware import get_current_user
+
+
+class UserProfile(BaseModel):
+    """User profile data model."""
+
+    user_id: str
+    email: str
+    name: Optional[str] = None
+
+
+async def get_user_profile(
+    user_id: str,
+    current_user: str = Depends(get_current_user)
+) -> UserProfile:
+    """
+    Get user profile by ID.
+
+    Args:
+        user_id: The user's unique identifier
+        current_user: Currently authenticated user
+
+    Returns:
+        UserProfile object
+
+    Raises:
+        HTTPException: If user not found
+    """
+    # Implementation
+    pass
+```
+
+### Code Formatting
+
+We use automated formatters:
+
+```bash
+# Format code with black
+black src/ tests/
+
+# Sort imports with isort
+isort src/ tests/
+
+# Check types with mypy
+mypy src/
+
+# Lint with flake8
+flake8 src/ tests/
+
+# Or run all at once
+make lint
+```
+
+### Pre-commit Hooks
+
+Pre-commit hooks automatically run formatters and linters:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=100, --ignore=E203,W503]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args: [-r, src/]
+```
+
+Install and run:
+```bash
+pre-commit install
+pre-commit run --all-files
+```
+
+## Testing
+
+### Test Structure
+
+```
+tests/
+├── unit/               # Unit tests
+│   ├── test_auth.py
+│   ├── test_agent.py
+│   └── test_llm.py
+│
+├── integration/        # Integration tests
+│   ├── test_api.py
+│   └── test_database.py
+│
+├── property/          # Property-based tests
+│   └── test_llm_properties.py
+│
+└── conftest.py        # Shared fixtures
+```
+
+### Writing Tests
+
+```python
+# tests/unit/test_auth.py
+import pytest
+from src.auth.middleware import AuthMiddleware
+
+
+@pytest.fixture
+def auth_middleware():
+    """Create auth middleware for testing."""
+    return AuthMiddleware(provider="inmemory")
+
+
+@pytest.mark.unit
+async def test_create_token(auth_middleware):
+    """Test JWT token creation."""
+    token = auth_middleware.create_token("test_user", expires_in=3600)
+
+    assert token is not None
+    assert len(token) > 50  # JWT tokens are long
+
+    # Verify token
+    user_id = await auth_middleware.verify_token(token)
+    assert user_id == "test_user"
+
+
+@pytest.mark.unit
+async def test_expired_token(auth_middleware):
+    """Test that expired tokens are rejected."""
+    # Create token that expires immediately
+    token = auth_middleware.create_token("test_user", expires_in=0)
+
+    # Wait a moment
+    import asyncio
+    await asyncio.sleep(1)
+
+    # Should raise exception
+    with pytest.raises(Exception):
+        await auth_middleware.verify_token(token)
+
+
+@pytest.mark.parametrize("user_id,expected", [
+    ("alice", "alice"),
+    ("bob", "bob"),
+    ("charlie", "charlie"),
+])
+async def test_multiple_users(auth_middleware, user_id, expected):
+    """Test token creation for multiple users."""
+    token = auth_middleware.create_token(user_id)
+    verified = await auth_middleware.verify_token(token)
+    assert verified == expected
+```
+
+### Running Tests
+
+```bash
+# Run all unit tests
+uv run pytest -m unit
+
+# Run specific test file
+uv run pytest tests/unit/test_auth.py
+
+# Run specific test
+uv run pytest tests/unit/test_auth.py::test_create_token
+
+# Run with coverage
+uv run pytest -m unit --cov=src --cov-report=html
+
+# Run with verbose output
+uv run pytest -m unit -v --tb=short
+
+# Run integration tests (requires services)
+docker-compose up -d
+uv run pytest -m integration
+
+# Run all tests
+uv run pytest
+```
+
+### Test Coverage
+
+We aim for **>80% code coverage**:
+
+```bash
+# Generate coverage report
+uv run pytest --cov=src --cov-report=html --cov-report=term
+
+# View HTML report
+open htmlcov/index.html
+
+# Check coverage threshold
+uv run pytest --cov=src --cov-fail-under=80
+```
+
+## Commit Messages
+
+### Conventional Commits
+
+We use the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, missing semicolons, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `build`: Build system changes
+- `ci`: CI/CD changes
+- `chore`: Other changes (dependencies, etc.)
+
+**Examples**:
+
+```bash
+# Feature
+git commit -m "feat(auth): add Keycloak SSO support"
+
+# Bug fix
+git commit -m "fix(llm): handle rate limit errors gracefully"
+
+# Documentation
+git commit -m "docs(readme): update installation instructions"
+
+# Breaking change
+git commit -m "feat(api)!: change authentication endpoint
+
+BREAKING CHANGE: /auth/login now requires client_id parameter"
+
+# Multiple changes
+git commit -m "feat(auth): add MFA support
+
+- Implement TOTP authentication
+- Add QR code generation
+- Update user profile schema
+
+Closes #123"
+```
+
+### Commit Best Practices
+
+<AccordionGroup>
+  <Accordion title="Write Clear Messages" icon="message">
+    - Use present tense ("add feature" not "added feature")
+    - Be specific and descriptive
+    - Explain **why**, not just **what**
+    - Reference issues with `Closes #123`
+  </Accordion>
+
+  <Accordion title="Keep Commits Atomic" icon="atom">
+    - One logical change per commit
+    - Should be revertable independently
+    - Easy to review
+    - Makes bisecting easier
+  </Accordion>
+
+  <Accordion title="Sign Your Commits" icon="signature">
+    ```bash
+    # Setup GPG signing
+    git config --global user.signingkey YOUR_GPG_KEY
+    git config --global commit.gpgsign true
+
+    # Commit with signature
+    git commit -S -m "feat: add awesome feature"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Pull Requests
+
+### PR Process
+
+1. **Create Issue First** (for significant changes)
+   - Discuss the change
+   - Get feedback early
+   - Avoid wasted effort
+
+2. **Fork and Branch**
+   ```bash
+   git checkout -b feature/issue-123-awesome-feature
+   ```
+
+3. **Make Changes**
+   - Follow code style
+   - Add tests
+   - Update documentation
+
+4. **Run Checks**
+   ```bash
+   make lint
+   uv run pytest -m unit
+   ```
+
+5. **Commit**
+   ```bash
+   git add .
+   git commit -m "feat: add awesome feature"
+   ```
+
+6. **Push**
+   ```bash
+   git push origin feature/issue-123-awesome-feature
+   ```
+
+7. **Create PR**
+   ```bash
+   gh pr create \
+     --title "feat: add awesome feature" \
+     --body "Fixes #123
+
+   ## Changes
+   - Added awesome feature
+   - Updated tests
+   - Added documentation
+
+   ## Testing
+   - Unit tests passing
+   - Manually tested with..."
+   ```
+
+### PR Template
+
+```markdown
+## Description
+<!-- Describe your changes -->
+
+Fixes #(issue number)
+
+## Type of Change
+<!-- Mark with [x] -->
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Documentation update
+
+## Changes Made
+<!-- List the changes -->
+-
+-
+-
+
+## Testing
+<!-- Describe the tests you ran -->
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+
+## Checklist
+- [ ] My code follows the style guidelines
+- [ ] I have performed a self-review
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] New and existing unit tests pass locally
+- [ ] Any dependent changes have been merged and published
+```
+
+### PR Review Process
+
+**For Contributors**:
+- Respond to feedback promptly
+- Make requested changes
+- Re-request review when ready
+- Be patient and respectful
+
+**For Reviewers**:
+- Review within 2 business days
+- Be constructive and kind
+- Suggest, don't demand
+- Approve when ready
+
+## Documentation
+
+### Writing Documentation
+
+We use **Mintlify** for documentation:
+
+```bash
+# Install Mintlify CLI
+npm install -g mintlify
+
+# Preview documentation locally
+cd docs
+mintlify dev
+
+# Open http://localhost:3000
+```
+
+### Documentation Style
+
+```markdown
+---
+title: Feature Name
+description: 'Brief description of the feature'
+icon: 'icon-name'
+---
+
+## Overview
+
+Brief introduction to the feature.
+
+<Info>
+Important information for users.
+</Info>
+
+## Quick Start
+
+\`\`\`bash
+# Example command
+npm install awesome-package
+\`\`\`
+
+## Detailed Guide
+
+### Section 1
+
+Detailed explanation with code examples:
+
+\`\`\`python
+from awesome import feature
+
+# Use the feature
+result = feature.do_something()
+\`\`\`
+
+### Section 2
+
+More details...
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Practice 1" icon="check">
+    Explanation of best practice...
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+Common issues and solutions...
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Related Feature" href="/path/to/feature">
+    Description
+  </Card>
+</CardGroup>
+```
+
+## Release Process
+
+### Versioning
+
+We use **Semantic Versioning** (SemVer):
+
+```
+MAJOR.MINOR.PATCH
+
+1.0.0 → 1.0.1 (patch: bug fix)
+1.0.1 → 1.1.0 (minor: new feature, backward compatible)
+1.1.0 → 2.0.0 (major: breaking change)
+```
+
+### Creating a Release
+
+```bash
+# 1. Update version
+vim pyproject.toml  # Update version = "1.2.0"
+
+# 2. Update CHANGELOG.md
+vim CHANGELOG.md
+
+# 3. Commit version bump
+git add pyproject.toml CHANGELOG.md
+git commit -m "chore: bump version to 1.2.0"
+
+# 4. Create tag
+git tag -a v1.2.0 -m "Release v1.2.0"
+
+# 5. Push tag
+git push origin v1.2.0
+
+# 6. GitHub Actions will create the release
+```
+
+### Changelog Format
+
+```markdown
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [1.2.0] - 2024-01-15
+
+### Added
+- Keycloak SSO integration (#123)
+- Redis session store support (#124)
+- OpenFGA authorization (#125)
+
+### Changed
+- Improved error handling in LLM calls (#126)
+- Updated dependencies (#127)
+
+### Fixed
+- Fixed session timeout issue (#128)
+- Resolved memory leak in agent (#129)
+
+### Security
+- Updated vulnerable dependencies (#130)
+
+## [1.1.0] - 2023-12-01
+
+...
+```
+
+## Community
+
+### Communication Channels
+
+- **GitHub Issues**: Bug reports, feature requests
+- **GitHub Discussions**: Questions, ideas, general discussion
+- **Discord**: Real-time chat (coming soon)
+- **Email**: security@yourdomain.com (security issues only)
+
+### Getting Help
+
+1. **Check documentation** first
+2. **Search existing issues**
+3. **Create new issue** if needed
+4. **Be specific** about your problem
+5. **Provide context** (OS, Python version, etc.)
+
+### Reporting Bugs
+
+Use this template:
+
+```markdown
+## Bug Description
+<!-- Clear and concise description -->
+
+## Steps to Reproduce
+1. Go to '...'
+2. Click on '...'
+3. See error
+
+## Expected Behavior
+<!-- What you expected to happen -->
+
+## Actual Behavior
+<!-- What actually happened -->
+
+## Environment
+- OS: [e.g., Ubuntu 22.04]
+- Python: [e.g., 3.12.1]
+- Version: [e.g., 2.0.0]
+
+## Additional Context
+<!-- Screenshots, logs, etc. -->
+```
+
+### Feature Requests
+
+Use this template:
+
+```markdown
+## Problem Statement
+<!-- What problem does this solve? -->
+
+## Proposed Solution
+<!-- How should it work? -->
+
+## Alternatives Considered
+<!-- What other solutions did you consider? -->
+
+## Additional Context
+<!-- Any other relevant information -->
+```
+
+## Code of Conduct
+
+### Our Pledge
+
+We are committed to providing a welcoming and inspiring community for all.
+
+### Standards
+
+**Positive behavior**:
+- Be respectful and inclusive
+- Accept constructive criticism
+- Focus on what's best for the community
+- Show empathy
+
+**Unacceptable behavior**:
+- Harassment or discrimination
+- Trolling or insulting comments
+- Public or private harassment
+- Publishing others' private information
+
+### Enforcement
+
+Violations can be reported to: conduct@yourdomain.com
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+## Recognition
+
+Contributors are recognized in:
+- CONTRIBUTORS.md file
+- Release notes
+- Project README
+
+Thank you for contributing! 🎉
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Development Setup" icon="code" href="/advanced/development-setup">
+    Detailed development environment
+  </Card>
+  <Card title="Testing Guide" icon="vial" href="/advanced/testing">
+    Comprehensive testing strategies
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/guides/architecture">
+    System architecture overview
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/authentication">
+    API documentation
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Ready to Contribute**: Join our community and help build amazing AI applications!
+</Check>

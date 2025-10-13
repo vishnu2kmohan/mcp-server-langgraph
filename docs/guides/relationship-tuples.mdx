@@ -1,0 +1,582 @@
+---
+title: Relationship Tuples
+description: 'Manage OpenFGA relationship tuples programmatically'
+icon: 'link'
+---
+
+## Overview
+
+Relationship tuples are the core data in OpenFGA - they define **who** can do **what** to **which resource**. This guide shows how to create, query, update, and delete tuples effectively.
+
+## Tuple Structure
+
+A tuple has three parts:
+
+```python
+{
+    "user": "user:alice",        # Subject (who)
+    "relation": "executor",       # Relation (what)
+    "object": "tool:chat"        # Object (which resource)
+}
+```
+
+### User Field
+
+The **subject** of the relationship:
+
+```python
+# Direct users
+"user:alice"
+"user:bob"
+
+# Users from organization
+"organization:acme#member"   # All acme members
+"organization:acme#admin"    # All acme admins
+
+# Specific roles
+"role:premium#assignee"      # All premium role holders
+```
+
+### Relation Field
+
+The **type** of relationship:
+
+```python
+# Common relations
+"owner"      # Resource ownership
+"admin"      # Administrative access
+"member"     # Standard membership
+"executor"   # Can execute/use
+"editor"     # Can modify
+"viewer"     # Can view/read
+```
+
+### Object Field
+
+The **resource** being accessed:
+
+```python
+# Tools
+"tool:chat"
+"tool:search"
+
+# Organizations
+"organization:acme"
+"organization:contoso"
+
+# Conversations
+"conversation:thread_123"
+
+# Documents
+"document:report_q4"
+```
+
+## Creating Tuples
+
+### Single Tuple
+
+```python
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+client = OpenFGAClient()
+
+# Grant alice admin access to organization
+await client.write_tuples([{
+    "user": "user:alice",
+    "relation": "admin",
+    "object": "organization:acme"
+}])
+```
+
+### Multiple Tuples (Atomic)
+
+```python
+# Grant multiple permissions at once
+await client.write_tuples([
+    {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
+    {"user": "user:bob", "relation": "member", "object": "organization:acme"},
+    {"user": "user:charlie", "relation": "viewer", "object": "organization:acme"},
+])
+```
+
+### Organization-Wide Access
+
+```python
+# Grant all organization members access to tool
+await client.write_tuples([
+    # First, make alice an admin
+    {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
+
+    # Then grant org members access to tool
+    {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
+])
+
+# Now alice can execute tool:chat (via org membership)
+```
+
+### Resource Ownership
+
+```python
+# Alice owns a conversation
+await client.write_tuples([{
+    "user": "user:alice",
+    "relation": "owner",
+    "object": "conversation:thread_123"
+}])
+
+# Share conversation with bob as viewer
+await client.write_tuples([{
+    "user": "user:bob",
+    "relation": "viewer",
+    "object": "conversation:thread_123"
+}])
+```
+
+## Querying Tuples
+
+### List All Tuples
+
+```python
+# Get all relationship tuples
+all_tuples = await client.read_tuples()
+
+for tuple in all_tuples:
+    print(f"{tuple['user']} → {tuple['relation']} → {tuple['object']}")
+```
+
+### Filter by User
+
+```python
+# Get all tuples for alice
+alice_tuples = await client.read_tuples(user="user:alice")
+
+# What can alice access?
+for tuple in alice_tuples:
+    print(f"Alice can {tuple['relation']} {tuple['object']}")
+```
+
+### Filter by Object
+
+```python
+# Who can access tool:chat?
+chat_tuples = await client.read_tuples(object="tool:chat")
+
+for tuple in chat_tuples:
+    print(f"{tuple['user']} can {tuple['relation']} chat")
+```
+
+### Filter by Relation
+
+```python
+# All admin relationships
+admin_tuples = await client.read_tuples(relation="admin")
+
+for tuple in admin_tuples:
+    print(f"{tuple['user']} is admin of {tuple['object']}")
+```
+
+### List User's Accessible Objects
+
+```python
+# What tools can alice execute?
+tools = await client.list_objects(
+    user="user:alice",
+    relation="executor",
+    object_type="tool"
+)
+print(f"Alice can execute: {tools}")
+# Output: ['tool:chat', 'tool:search']
+```
+
+### List Users with Access
+
+```python
+# Who can execute tool:chat?
+users = await client.list_users(
+    relation="executor",
+    object="tool:chat"
+)
+print(f"Can execute chat: {users}")
+# Output: ['user:alice', 'user:bob', 'organization:acme#member']
+```
+
+## Updating Tuples
+
+### Replace Relation
+
+```python
+# Change bob from viewer to editor
+# 1. Delete old relation
+await client.delete_tuples([{
+    "user": "user:bob",
+    "relation": "viewer",
+    "object": "conversation:thread_123"
+}])
+
+# 2. Add new relation
+await client.write_tuples([{
+    "user": "user:bob",
+    "relation": "editor",
+    "object": "conversation:thread_123"
+}])
+```
+
+### Transfer Ownership
+
+```python
+# Transfer document from alice to bob
+await client.delete_tuples([{
+    "user": "user:alice",
+    "relation": "owner",
+    "object": "document:report"
+}])
+
+await client.write_tuples([{
+    "user": "user:bob",
+    "relation": "owner",
+    "object": "document:report"
+}])
+```
+
+## Deleting Tuples
+
+### Delete Specific Tuple
+
+```python
+# Revoke bob's access to tool
+await client.delete_tuples([{
+    "user": "user:bob",
+    "relation": "executor",
+    "object": "tool:chat"
+}])
+```
+
+### Delete All User Access to Object
+
+```python
+# Remove all bob's permissions for conversation
+tuples = await client.read_tuples(
+    user="user:bob",
+    object="conversation:thread_123"
+)
+await client.delete_tuples(tuples)
+```
+
+### Delete All Object Permissions
+
+```python
+# Delete conversation and all access
+tuples = await client.read_tuples(object="conversation:thread_123")
+await client.delete_tuples(tuples)
+```
+
+### Bulk Delete
+
+```python
+# Remove all viewer permissions
+viewer_tuples = await client.read_tuples(relation="viewer")
+await client.delete_tuples(viewer_tuples)
+```
+
+## Common Patterns
+
+### User Onboarding
+
+```python
+async def onboard_user(user_id: str, organization_id: str, role: str = "member"):
+    """Add new user to organization"""
+    await client.write_tuples([
+        # Add to organization
+        {
+            "user": f"user:{user_id}",
+            "relation": role,
+            "object": f"organization:{organization_id}"
+        }
+    ])
+```
+
+### Resource Sharing
+
+```python
+async def share_resource(resource_type: str, resource_id: str,
+                        user_id: str, permission: str = "viewer"):
+    """Share resource with user"""
+    await client.write_tuples([{
+        "user": f"user:{user_id}",
+        "relation": permission,
+        "object": f"{resource_type}:{resource_id}"
+    }])
+
+# Usage
+await share_resource("document", "report", "bob", "editor")
+```
+
+### Group Access
+
+```python
+async def grant_group_access(group_type: str, group_id: str,
+                            resource_type: str, resource_id: str,
+                            permission: str = "viewer"):
+    """Grant entire group access to resource"""
+    await client.write_tuples([{
+        "user": f"{group_type}:{group_id}#member",
+        "relation": permission,
+        "object": f"{resource_type}:{resource_id}"
+    }])
+
+# Grant all acme members access to chat
+await grant_group_access("organization", "acme", "tool", "chat", "executor")
+```
+
+### Permission Inheritance
+
+```python
+async def create_folder_hierarchy(parent_id: str, child_id: str):
+    """Create parent-child folder relationship"""
+    await client.write_tuples([
+        # Set parent relationship
+        {
+            "user": f"folder:{parent_id}",
+            "relation": "parent",
+            "object": f"folder:{child_id}"
+        }
+    ])
+
+# Permissions automatically inherited via model definition
+```
+
+## Bulk Operations
+
+### Import from CSV
+
+```python
+import csv
+
+async def import_tuples_from_csv(filename: str):
+    """Import tuples from CSV file"""
+    tuples = []
+    with open(filename, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            tuples.append({
+                "user": row['user'],
+                "relation": row['relation'],
+                "object": row['object']
+            })
+
+    # Write in batches
+    batch_size = 100
+    for i in range(0, len(tuples), batch_size):
+        batch = tuples[i:i+batch_size]
+        await client.write_tuples(batch)
+
+# CSV format:
+# user,relation,object
+# user:alice,admin,organization:acme
+# user:bob,member,organization:acme
+```
+
+### Export to JSON
+
+```python
+import json
+
+async def export_tuples_to_json(filename: str):
+    """Export all tuples to JSON"""
+    tuples = await client.read_tuples()
+
+    with open(filename, 'w') as f:
+        json.dump(tuples, f, indent=2)
+```
+
+### Sync from External System
+
+```python
+async def sync_permissions_from_keycloak():
+    """Sync Keycloak roles to OpenFGA"""
+    from mcp_server_langgraph.auth.keycloak import KeycloakClient
+
+    kc = KeycloakClient()
+
+    # Get all users
+    users = await kc.get_all_users()
+
+    tuples = []
+    for user in users:
+        user_id = user['id']
+        roles = user.get('roles', [])
+
+        for role in roles:
+            if role == 'admin':
+                tuples.append({
+                    "user": f"user:{user_id}",
+                    "relation": "admin",
+                    "object": "organization:default"
+                })
+            elif role == 'user':
+                tuples.append({
+                    "user": f"user:{user_id}",
+                    "relation": "member",
+                    "object": "organization:default"
+                })
+
+    await client.write_tuples(tuples)
+```
+
+## Validation
+
+### Check Tuple Exists
+
+```python
+async def tuple_exists(user: str, relation: str, object: str) -> bool:
+    """Check if specific tuple exists"""
+    tuples = await client.read_tuples(
+        user=user,
+        relation=relation,
+        object=object
+    )
+    return len(tuples) > 0
+
+# Usage
+exists = await tuple_exists("user:alice", "admin", "organization:acme")
+```
+
+### Validate Before Write
+
+```python
+async def safe_write_tuple(tuple: dict):
+    """Write tuple with validation"""
+    # Validate user format
+    if not tuple['user'].count(':') >= 1:
+        raise ValueError(f"Invalid user format: {tuple['user']}")
+
+    # Validate object format
+    if ':' not in tuple['object']:
+        raise ValueError(f"Invalid object format: {tuple['object']}")
+
+    # Check if already exists
+    exists = await tuple_exists(
+        tuple['user'],
+        tuple['relation'],
+        tuple['object']
+    )
+
+    if exists:
+        print(f"Tuple already exists, skipping")
+        return
+
+    await client.write_tuples([tuple])
+```
+
+## Debugging
+
+### Trace Permission Path
+
+```python
+async def debug_permission(user: str, relation: str, object: str):
+    """Debug why permission check succeeds or fails"""
+    # Check permission
+    allowed = await client.check_permission(user, relation, object)
+    print(f"Check: {user} can {relation} {object}: {allowed}")
+
+    # List relevant tuples
+    print("\nRelevant tuples:")
+
+    # Direct user tuples
+    user_tuples = await client.read_tuples(user=user, object=object)
+    for t in user_tuples:
+        print(f"  Direct: {t}")
+
+    # Object tuples
+    object_tuples = await client.read_tuples(object=object)
+    for t in object_tuples:
+        print(f"  On object: {t}")
+
+    # User's org memberships
+    if user.startswith("user:"):
+        org_tuples = await client.read_tuples(user=user)
+        for t in org_tuples:
+            if "organization:" in t['object']:
+                print(f"  Organization: {t}")
+
+# Usage
+await debug_permission("user:alice", "executor", "tool:chat")
+```
+
+## Performance Tips
+
+### Batch Operations
+
+```python
+# Bad: Multiple API calls
+for user_id in range(100):
+    await client.write_tuples([{
+        "user": f"user:{user_id}",
+        "relation": "viewer",
+        "object": "document:report"
+    }])
+
+# Good: Single API call
+tuples = [{
+    "user": f"user:{user_id}",
+    "relation": "viewer",
+    "object": "document:report"
+} for user_id in range(100)]
+
+await client.write_tuples(tuples)
+```
+
+### Use Group Relations
+
+```python
+# Bad: 1000 individual tuples
+for user_id in range(1000):
+    await client.write_tuples([{
+        "user": f"user:{user_id}",
+        "relation": "viewer",
+        "object": "document:report"
+    }])
+
+# Good: 1 group tuple
+await client.write_tuples([{
+    "user": "organization:company#member",
+    "relation": "viewer",
+    "object": "document:report"
+}])
+```
+
+### Cache Queries
+
+```python
+# Cache frequently accessed tuples
+from functools import lru_cache
+
+@lru_cache(maxsize=1000)
+async def get_user_organizations(user_id: str):
+    """Get user's organizations (cached)"""
+    tuples = await client.read_tuples(user=f"user:{user_id}")
+    return [t['object'] for t in tuples if t['object'].startswith('organization:')]
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Permission Model" icon="sitemap" href="/guides/permission-model">
+    Define custom models
+  </Card>
+  <Card title="OpenFGA Setup" icon="shield-check" href="/guides/openfga-setup">
+    Deploy OpenFGA
+  </Card>
+  <Card title="Authorization Guide" icon="shield" href="/getting-started/authorization">
+    Learn authorization
+  </Card>
+  <Card title="Keycloak Integration" icon="key" href="/guides/keycloak-sso">
+    Sync Keycloak roles
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Powerful & Flexible**: Relationship tuples provide fine-grained access control at scale!
+</Check>

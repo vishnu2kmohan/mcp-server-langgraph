@@ -1,0 +1,920 @@
+---
+title: Development Setup
+description: 'Complete development environment setup guide'
+icon: 'code'
+---
+
+## Overview
+
+This guide provides step-by-step instructions for setting up a complete development environment for the MCP Server with LangGraph project. Whether you're on macOS, Linux, or Windows, this guide will get you up and running.
+
+<Info>
+This setup is optimized for productivity with hot reload, debugging support, code formatting, and comprehensive testing tools.
+</Info>
+
+## System Requirements
+
+### Minimum Requirements
+
+- **CPU**: 2 cores
+- **RAM**: 8 GB
+- **Disk**: 20 GB free space
+- **OS**: macOS 11+, Ubuntu 20.04+, Windows 10+ with WSL2
+
+### Recommended Requirements
+
+- **CPU**: 4+ cores
+- **RAM**: 16 GB
+- **Disk**: 50 GB SSD
+- **OS**: macOS 12+, Ubuntu 22.04+
+
+## Prerequisites
+
+### Install Core Tools
+
+**macOS**:
+```bash
+# Install Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install core tools
+brew install python@3.12 git docker docker-compose
+
+# Install uv (fast Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Ubuntu/Debian**:
+```bash
+# Update package list
+sudo apt update
+
+# Install Python 3.12
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3.12 python3.12-venv python3.12-dev
+
+# Install Git
+sudo apt install git
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Windows (WSL2)**:
+```powershell
+# Install WSL2
+wsl --install -d Ubuntu-22.04
+
+# Inside WSL2, follow Ubuntu instructions above
+```
+
+### Verify Installation
+
+```bash
+# Check Python version
+python3.12 --version  # Should be 3.12.x
+
+# Check Git
+git --version
+
+# Check Docker
+docker --version
+docker-compose --version
+
+# Check uv
+uv --version
+```
+
+## Clone Repository
+
+```bash
+# Fork the repository (on GitHub)
+# Then clone your fork
+git clone https://github.com/YOUR_USERNAME/langgraph_mcp_agent.git
+cd langgraph_mcp_agent
+
+# Add upstream remote
+git remote add upstream https://github.com/vishnu2kmohan/langgraph_mcp_agent.git
+
+# Verify remotes
+git remote -v
+```
+
+## Python Environment
+
+### Create Virtual Environment
+
+```bash
+# Using uv (recommended - fast!)
+uv venv --python 3.12
+
+# Or using standard venv
+python3.12 -m venv .venv
+```
+
+### Activate Virtual Environment
+
+```bash
+# macOS/Linux
+source .venv/bin/activate
+
+# Windows (Git Bash)
+source .venv/Scripts/activate
+
+# Windows (PowerShell)
+.\.venv\Scripts\Activate.ps1
+```
+
+### Install Dependencies
+
+```bash
+# Install main dependencies
+uv pip install -r requirements.txt
+
+# Install development dependencies
+uv pip install -r requirements-dev.txt
+
+# Verify installation
+python -c "import fastapi, langchain, anthropic; print('All imports successful')"
+```
+
+### Development Dependencies
+
+The `requirements-dev.txt` includes:
+
+```txt
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+hypothesis==6.92.1
+
+# Code quality
+black==23.12.1
+isort==5.13.2
+flake8==7.0.0
+mypy==1.8.0
+bandit==1.7.6
+
+# Pre-commit hooks
+pre-commit==3.6.0
+
+# Load testing
+locust==2.20.0
+
+# Development tools
+ipython==8.19.0
+ipdb==0.13.13
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.5.3
+```
+
+## IDE Setup
+
+### Visual Studio Code
+
+**Install Extensions**:
+```bash
+code --install-extension ms-python.python
+code --install-extension ms-python.vscode-pylance
+code --install-extension ms-python.black-formatter
+code --install-extension ms-python.isort
+code --install-extension ms-python.debugpy
+code --install-extension charliermarsh.ruff
+```
+
+**Workspace Settings** (`.vscode/settings.json`):
+```json
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.formatting.provider": "black",
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.banditEnabled": true,
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.rulers": [100]
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/*.pyc": true
+  }
+}
+```
+
+**Launch Configuration** (`.vscode/launch.json`):
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: FastAPI",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "src.main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Pytest",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "-v",
+        "${file}"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}
+```
+
+### PyCharm
+
+**Configure Interpreter**:
+1. File → Settings → Project → Python Interpreter
+2. Add Interpreter → Existing Environment
+3. Select `.venv/bin/python`
+
+**Enable Tools**:
+1. Settings → Tools → Python Integrated Tools
+2. Default test runner: pytest
+3. Docstring format: Google
+
+**Code Style**:
+1. Settings → Editor → Code Style → Python
+2. Set line length to 100
+3. Enable "Reformat code" on save
+
+## Environment Configuration
+
+### Create .env File
+
+```bash
+# Copy example
+cp .env.example .env
+
+# Edit with your values
+vim .env  # or use your preferred editor
+```
+
+### Development .env
+
+```bash
+# Environment
+ENV=development
+DEBUG=true
+LOG_LEVEL=debug
+
+# Server
+HOST=0.0.0.0
+PORT=8000
+WORKERS=1
+
+# Authentication
+AUTH_PROVIDER=inmemory
+JWT_SECRET=dev-secret-change-in-production
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION=3600
+
+# Session
+SESSION_PROVIDER=memory
+SESSION_SECRET=dev-session-secret
+SESSION_TTL=3600
+
+# Authorization (optional for development)
+OPENFGA_ENABLED=false
+OPENFGA_URL=http://localhost:8080
+
+# LLM Configuration
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-your-dev-key
+LLM_MODEL_NAME=claude-3-5-sonnet-20241022
+LLM_TEMPERATURE=1.0
+LLM_MAX_TOKENS=8192
+
+# Observability (disabled for development)
+ENABLE_TRACING=false
+ENABLE_METRICS=false
+LANGSMITH_ENABLED=false
+
+# Optional: Enable if needed
+# ENABLE_TRACING=true
+# JAEGER_URL=http://localhost:4318
+# LANGSMITH_API_KEY=your-langsmith-key
+# LANGSMITH_PROJECT=langgraph-dev
+```
+
+### Using direnv (Optional but Recommended)
+
+```bash
+# Install direnv
+brew install direnv  # macOS
+sudo apt install direnv  # Ubuntu
+
+# Setup shell hook (add to ~/.bashrc or ~/.zshrc)
+eval "$(direnv hook bash)"  # for bash
+eval "$(direnv hook zsh)"   # for zsh
+
+# Create .envrc
+echo "dotenv" > .envrc
+
+# Allow direnv
+direnv allow
+
+# Now .env loads automatically when you cd into project
+```
+
+## Pre-commit Hooks
+
+### Install Pre-commit
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+
+# Run manually on all files
+pre-commit run --all-files
+```
+
+### Pre-commit Configuration
+
+Already configured in `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=100, --ignore=E203,W503]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args: [-r, src/]
+        exclude: tests/
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+```
+
+## Docker Development
+
+### Start Services
+
+```bash
+# Start all development services
+docker-compose -f docker-compose.dev.yml up -d
+
+# View logs
+docker-compose logs -f
+
+# Check status
+docker-compose ps
+
+# Stop services
+docker-compose down
+
+# Clean up (including volumes)
+docker-compose down -v
+```
+
+### Docker Compose for Development
+
+**docker-compose.dev.yml**:
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: langgraph_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  openfga:
+    image: openfga/openfga:latest
+    command: run
+    environment:
+      OPENFGA_DATASTORE_ENGINE: postgres
+      OPENFGA_DATASTORE_URI: postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable
+    ports:
+      - "8081:8080"
+      - "3000:3000"
+    depends_on:
+      - postgres
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # UI
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+volumes:
+  postgres-data:
+  redis-data:
+```
+
+## Running the Application
+
+### Development Server
+
+```bash
+# Activate virtualenv
+source .venv/bin/activate
+
+# Run with hot reload
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
+# Or use the Makefile
+make dev
+
+# Check it's running
+curl http://localhost:8000/health/live
+```
+
+### Run with Docker
+
+```bash
+# Build image
+docker build -t langgraph-agent:dev .
+
+# Run container
+docker run -p 8000:8000 \
+  --env-file .env \
+  langgraph-agent:dev
+
+# Or use docker-compose
+docker-compose up
+```
+
+## Testing
+
+### Run Tests
+
+```bash
+# Run unit tests
+pytest -m unit
+
+# Run with coverage
+pytest -m unit --cov=src --cov-report=html
+
+# Run integration tests (requires services)
+docker-compose -f docker-compose.dev.yml up -d
+pytest -m integration
+
+# Run specific test file
+pytest tests/unit/test_auth.py
+
+# Run specific test
+pytest tests/unit/test_auth.py::test_create_token
+
+# Run with verbose output
+pytest -v --tb=short
+
+# Watch mode (requires pytest-watch)
+pytest-watch
+```
+
+### Debugging Tests
+
+```bash
+# Run with pdb debugger
+pytest --pdb
+
+# Drop into debugger on failure
+pytest --pdb --maxfail=1
+
+# Use ipdb for better debugging
+pip install ipdb
+pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb
+```
+
+## Code Quality
+
+### Format Code
+
+```bash
+# Format with black
+black src/ tests/
+
+# Sort imports
+isort src/ tests/
+
+# Or use make command
+make format
+```
+
+### Lint Code
+
+```bash
+# Run flake8
+flake8 src/ tests/
+
+# Type check with mypy
+mypy src/
+
+# Security scan
+bandit -r src/
+
+# Or run all checks
+make lint
+```
+
+### Auto-fix Issues
+
+```bash
+# Fix import sorting
+isort --fix src/
+
+# Auto-format
+black src/
+
+# Fix common issues
+autopep8 --in-place --aggressive --aggressive src/
+```
+
+## Database Migrations
+
+### Using Alembic
+
+```bash
+# Install Alembic
+pip install alembic
+
+# Initialize (if not already done)
+alembic init migrations
+
+# Create migration
+alembic revision --autogenerate -m "Add users table"
+
+# Run migrations
+alembic upgrade head
+
+# Rollback
+alembic downgrade -1
+
+# Show current version
+alembic current
+
+# Show migration history
+alembic history
+```
+
+## Debugging
+
+### Debug with VSCode
+
+1. Set breakpoint in code (click left margin)
+2. Press F5 or Run → Start Debugging
+3. Select "Python: FastAPI" configuration
+4. Debug controls appear at top
+
+### Debug with ipdb
+
+```python
+# Add this line where you want to break
+import ipdb; ipdb.set_trace()
+
+# Or use breakpoint() (Python 3.7+)
+breakpoint()
+```
+
+### Remote Debugging
+
+```python
+# Install debugpy
+pip install debugpy
+
+# Add to your code
+import debugpy
+debugpy.listen(("0.0.0.0", 5678))
+debugpy.wait_for_client()
+
+# Connect from VSCode
+# Add to launch.json:
+{
+  "name": "Python: Remote Attach",
+  "type": "python",
+  "request": "attach",
+  "connect": {
+    "host": "localhost",
+    "port": 5678
+  }
+}
+```
+
+## Makefile Commands
+
+### Common Commands
+
+```makefile
+# Makefile
+.PHONY: help install dev test lint format clean
+
+help:  ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+install:  ## Install dependencies
+	uv pip install -r requirements.txt
+	uv pip install -r requirements-dev.txt
+	pre-commit install
+
+dev:  ## Run development server
+	uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
+test:  ## Run tests
+	pytest -m unit --cov=src --cov-report=term --cov-report=html
+
+test-integration:  ## Run integration tests
+	docker-compose -f docker-compose.dev.yml up -d
+	pytest -m integration
+	docker-compose -f docker-compose.dev.yml down
+
+lint:  ## Run linters
+	black --check src/ tests/
+	isort --check src/ tests/
+	flake8 src/ tests/
+	mypy src/
+	bandit -r src/
+
+format:  ## Format code
+	black src/ tests/
+	isort src/ tests/
+
+clean:  ## Clean up
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type d -name .pytest_cache -exec rm -rf {} +
+	find . -type d -name .mypy_cache -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+	rm -rf htmlcov/
+	rm -rf .coverage
+
+docker-build:  ## Build Docker image
+	docker build -t langgraph-agent:dev .
+
+docker-run:  ## Run Docker container
+	docker run -p 8000:8000 --env-file .env langgraph-agent:dev
+
+services-up:  ## Start development services
+	docker-compose -f docker-compose.dev.yml up -d
+
+services-down:  ## Stop development services
+	docker-compose -f docker-compose.dev.yml down
+
+services-logs:  ## View service logs
+	docker-compose -f docker-compose.dev.yml logs -f
+```
+
+**Usage**:
+```bash
+# Show all commands
+make help
+
+# Install dependencies
+make install
+
+# Run dev server
+make dev
+
+# Run tests
+make test
+
+# Format and lint
+make format
+make lint
+
+# Start services
+make services-up
+```
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Port Already in Use" icon="network-wired">
+    ```bash
+    # Find process using port 8000
+    lsof -i :8000
+
+    # Kill process
+    kill -9 PID
+
+    # Or use different port
+    uvicorn src.main:app --reload --port 8001
+    ```
+  </Accordion>
+
+  <Accordion title="Import Errors" icon="triangle-exclamation">
+    ```bash
+    # Ensure virtual environment is activated
+    source .venv/bin/activate
+
+    # Reinstall dependencies
+    uv pip install -r requirements.txt
+
+    # Check Python path
+    python -c "import sys; print('\n'.join(sys.path))"
+
+    # Add src to PYTHONPATH
+    export PYTHONPATH="${PYTHONPATH}:${PWD}/src"
+    ```
+  </Accordion>
+
+  <Accordion title="Database Connection Failed" icon="database">
+    ```bash
+    # Check PostgreSQL is running
+    docker-compose ps postgres
+
+    # Check connection
+    psql -h localhost -U postgres -d langgraph_dev
+
+    # View logs
+    docker-compose logs postgres
+
+    # Restart service
+    docker-compose restart postgres
+    ```
+  </Accordion>
+
+  <Accordion title="Tests Failing" icon="vial">
+    ```bash
+    # Run tests with verbose output
+    pytest -vv --tb=long
+
+    # Run single test to debug
+    pytest tests/unit/test_auth.py::test_create_token -vv
+
+    # Clear pytest cache
+    rm -rf .pytest_cache
+
+    # Reinstall test dependencies
+    pip install -r requirements-dev.txt
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Performance Tips
+
+### Speed Up Development
+
+```bash
+# Use uv instead of pip (10-100x faster)
+uv pip install package-name
+
+# Use pytest-xdist for parallel tests
+pip install pytest-xdist
+pytest -n auto  # Use all CPU cores
+
+# Use pytest-sugar for better output
+pip install pytest-sugar
+
+# Cache Docker layers
+docker build --cache-from langgraph-agent:latest .
+```
+
+### Optimize VSCode
+
+```json
+{
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true
+  },
+  "search.exclude": {
+    "**/.venv": true,
+    "**/__pycache__": true
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contributing" icon="code-pull-request" href="/advanced/contributing">
+    Contribution guidelines
+  </Card>
+  <Card title="Testing" icon="vial" href="/advanced/testing">
+    Testing strategies
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/guides/architecture">
+    System architecture
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/deployment/kubernetes">
+    Deploy to production
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Development Environment Ready**: Start building amazing AI applications!
+</Check>

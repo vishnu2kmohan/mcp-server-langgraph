@@ -1,0 +1,727 @@
+---
+title: Security Audit Checklist
+description: 'Comprehensive security audit checklist for production deployments'
+icon: 'clipboard-check'
+---
+
+## Overview
+
+This checklist covers all critical security areas that should be audited before and during production deployment. Use this as a systematic guide to ensure your MCP Server deployment meets security best practices.
+
+<Warning>
+**Do not deploy to production until all critical items are addressed.** High and critical items must be resolved; medium items should be planned for resolution.
+</Warning>
+
+## Authentication & Authorization
+
+### Keycloak Configuration
+
+<AccordionGroup>
+  <Accordion title="✅ Keycloak Setup" icon="key">
+    **Critical**:
+    - [ ] Admin password changed from default
+    - [ ] Admin console access restricted to internal network
+    - [ ] HTTPS enabled for all Keycloak endpoints
+    - [ ] Session timeout configured (max 24 hours)
+    - [ ] Brute force detection enabled
+    - [ ] Email verification required for new users
+
+    **High**:
+    - [ ] MFA/2FA enabled for admin accounts
+    - [ ] Password policy enforced (min 12 characters, complexity)
+    - [ ] Account lockout after failed attempts
+    - [ ] Security headers configured
+    - [ ] CORS properly configured
+
+    **Verification**:
+    ```bash
+    # Check admin password
+    kubectl exec -it keycloak-0 -n langgraph-agent -- \
+      /opt/keycloak/bin/kcadm.sh get users/admin
+
+    # Verify HTTPS
+    curl -I https://auth.yourdomain.com
+
+    # Check brute force settings
+    kubectl exec -it keycloak-0 -n langgraph-agent -- \
+      /opt/keycloak/bin/kcadm.sh get realms/mcp-agent | grep bruteForce
+    ```
+  </Accordion>
+
+  <Accordion title="✅ JWT Configuration" icon="file-shield">
+    **Critical**:
+    - [ ] JWT secret is cryptographically secure (>= 32 bytes)
+    - [ ] JWT secret rotated from default value
+    - [ ] JWT secret stored in secret management system
+    - [ ] Token expiration set appropriately (< 1 hour)
+    - [ ] Refresh token rotation enabled
+    - [ ] Algorithm set to RS256 or ES256 (not HS256)
+
+    **High**:
+    - [ ] JWK rotation configured
+    - [ ] Token revocation mechanism implemented
+    - [ ] Audience (aud) claim validated
+    - [ ] Issuer (iss) claim validated
+
+    **Verification**:
+    ```bash
+    # Check JWT secret length
+    kubectl get secret langgraph-agent-secrets -n langgraph-agent \
+      -o jsonpath='{.data.JWT_SECRET}' | base64 -d | wc -c
+
+    # Verify token expiration
+    # Decode a JWT token and check 'exp' claim
+    ```
+  </Accordion>
+
+  <Accordion title="✅ OpenFGA Authorization" icon="shield-halved">
+    **Critical**:
+    - [ ] Authorization model defined and tested
+    - [ ] Default deny policy in place
+    - [ ] Admin access properly restricted
+    - [ ] Permission checks on all sensitive operations
+    - [ ] OpenFGA TLS enabled
+
+    **High**:
+    - [ ] Authorization logging enabled
+    - [ ] Regular audit of permission tuples
+    - [ ] Least privilege principle enforced
+    - [ ] Authorization tests in CI/CD
+
+    **Verification**:
+    ```bash
+    # Test authorization
+    curl -X POST http://openfga:8080/stores/xxx/check \
+      -H "Content-Type: application/json" \
+      -d '{
+        "tuple_key": {
+          "user": "user:alice",
+          "relation": "admin",
+          "object": "organization:acme"
+        }
+      }'
+
+    # Check TLS
+    kubectl get svc openfga -n langgraph-agent -o yaml | grep tls
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Secrets Management
+
+### Infrastructure Secrets
+
+<AccordionGroup>
+  <Accordion title="✅ Secret Storage" icon="vault">
+    **Critical**:
+    - [ ] No secrets in code or git repository
+    - [ ] All secrets in Infisical/Vault/Cloud Secret Manager
+    - [ ] .env files in .gitignore
+    - [ ] Container images don't contain secrets
+    - [ ] Kubernetes secrets encrypted at rest
+
+    **High**:
+    - [ ] Secret rotation policy defined (90 days max)
+    - [ ] Automated secret rotation configured
+    - [ ] Secret access auditing enabled
+    - [ ] Secrets have expiration dates
+
+    **Verification**:
+    ```bash
+    # Check for secrets in git
+    git secrets --scan
+
+    # Check for hardcoded secrets
+    grep -r "ANTHROPIC_API_KEY\|sk-ant-" src/
+
+    # Verify Kubernetes encryption
+    kubectl get secret langgraph-agent-secrets -n langgraph-agent \
+      -o yaml | grep -i encrypt
+    ```
+  </Accordion>
+
+  <Accordion title="✅ API Keys" icon="key-skeleton">
+    **Critical**:
+    - [ ] LLM API keys rotated from initial values
+    - [ ] API keys have usage limits configured
+    - [ ] API keys scoped to minimum permissions
+    - [ ] Backup API keys available
+
+    **High**:
+    - [ ] API key usage monitoring enabled
+    - [ ] Alerts on suspicious API usage
+    - [ ] API keys rotated every 90 days
+
+    **Verification**:
+    ```bash
+    # Check API key age
+    kubectl get secret langgraph-agent-secrets -n langgraph-agent \
+      -o json | jq '.metadata.creationTimestamp'
+
+    # Monitor Anthropic usage
+    curl https://api.anthropic.com/v1/usage \
+      -H "x-api-key: $ANTHROPIC_API_KEY"
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Database Credentials" icon="database">
+    **Critical**:
+    - [ ] Database passwords changed from defaults
+    - [ ] Database users have minimum required privileges
+    - [ ] Production database not accessible from internet
+    - [ ] SSL/TLS enforced for database connections
+
+    **High**:
+    - [ ] Database password rotation configured
+    - [ ] Connection pooling with authentication
+    - [ ] Database audit logging enabled
+
+    **Verification**:
+    ```bash
+    # Test database connection
+    PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -c "SELECT version();"
+
+    # Check SSL
+    PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER \
+      -c "SHOW ssl;" | grep on
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Network Security
+
+### Network Configuration
+
+<AccordionGroup>
+  <Accordion title="✅ TLS/SSL" icon="lock">
+    **Critical**:
+    - [ ] HTTPS enabled for all public endpoints
+    - [ ] Valid TLS certificates (not self-signed)
+    - [ ] TLS 1.2+ only (1.0/1.1 disabled)
+    - [ ] Strong cipher suites configured
+    - [ ] HSTS header enabled
+
+    **High**:
+    - [ ] Certificate auto-renewal configured
+    - [ ] Certificate expiry monitoring
+    - [ ] OCSP stapling enabled
+    - [ ] Perfect forward secrecy (PFS) enabled
+
+    **Verification**:
+    ```bash
+    # Check TLS version
+    nmap --script ssl-enum-ciphers -p 443 api.yourdomain.com
+
+    # Test SSL configuration
+    testssl.sh https://api.yourdomain.com
+
+    # Check HSTS
+    curl -I https://api.yourdomain.com | grep Strict-Transport-Security
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Network Policies" icon="network-wired">
+    **Critical**:
+    - [ ] Network policies defined for all namespaces
+    - [ ] Default deny ingress/egress in place
+    - [ ] Least privilege network access
+    - [ ] Pods can't access cluster API by default
+
+    **High**:
+    - [ ] Network policies tested
+    - [ ] Egress filtering configured
+    - [ ] Service mesh for mTLS (optional)
+
+    **Verification**:
+    ```bash
+    # List network policies
+    kubectl get networkpolicies -A
+
+    # Test connectivity
+    kubectl run test --rm -it --image=alpine -- sh
+    # Try to connect to restricted services
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Firewall & Load Balancer" icon="shield">
+    **Critical**:
+    - [ ] Only required ports exposed
+    - [ ] Admin interfaces not publicly accessible
+    - [ ] Rate limiting configured
+    - [ ] DDoS protection enabled
+
+    **High**:
+    - [ ] WAF rules configured
+    - [ ] IP whitelisting for admin access
+    - [ ] Geographic restrictions (if applicable)
+    - [ ] Load balancer health checks configured
+
+    **Verification**:
+    ```bash
+    # Check exposed ports
+    nmap -p- api.yourdomain.com
+
+    # Test rate limiting
+    ab -n 1000 -c 100 https://api.yourdomain.com/
+
+    # Check firewall rules
+    gcloud compute firewall-rules list  # GCP
+    aws ec2 describe-security-groups    # AWS
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Application Security
+
+### Code Security
+
+<AccordionGroup>
+  <Accordion title="✅ Dependencies" icon="cube">
+    **Critical**:
+    - [ ] No critical vulnerabilities in dependencies
+    - [ ] All dependencies from trusted sources
+    - [ ] Lock files committed (requirements.txt, package-lock.json)
+    - [ ] Dependency scanning in CI/CD
+
+    **High**:
+    - [ ] Regular dependency updates
+    - [ ] Automated vulnerability scanning
+    - [ ] SBOM (Software Bill of Materials) generated
+
+    **Verification**:
+    ```bash
+    # Scan Python dependencies
+    pip-audit
+
+    # Scan with safety
+    safety check
+
+    # Check for outdated packages
+    pip list --outdated
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Input Validation" icon="filter">
+    **Critical**:
+    - [ ] All user input validated
+    - [ ] SQL injection protection
+    - [ ] XSS protection
+    - [ ] Command injection prevention
+    - [ ] File upload validation
+
+    **High**:
+    - [ ] Input sanitization
+    - [ ] Output encoding
+    - [ ] CSRF protection
+    - [ ] Rate limiting per endpoint
+
+    **Verification**:
+    ```python
+    # Review input validation
+    grep -r "request.query" src/
+    grep -r "request.body" src/
+
+    # Check for Pydantic models
+    find src/ -name "*.py" -exec grep -l "BaseModel" {} \;
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Logging & Monitoring" icon="file-lines">
+    **Critical**:
+    - [ ] Security events logged
+    - [ ] Sensitive data not logged (passwords, tokens)
+    - [ ] Logs centralized and searchable
+    - [ ] Log retention policy defined
+
+    **High**:
+    - [ ] Structured logging (JSON)
+    - [ ] Log tampering prevention
+    - [ ] Alerting on security events
+    - [ ] SIEM integration
+
+    **Verification**:
+    ```bash
+    # Check for sensitive data in logs
+    kubectl logs deployment/langgraph-agent -n langgraph-agent | \
+      grep -i "password\|secret\|token"
+
+    # Verify structured logging
+    kubectl logs deployment/langgraph-agent -n langgraph-agent | jq .
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Container Security
+
+### Image Security
+
+<AccordionGroup>
+  <Accordion title="✅ Container Images" icon="box">
+    **Critical**:
+    - [ ] Images from trusted registries only
+    - [ ] Image vulnerability scanning enabled
+    - [ ] No critical vulnerabilities in images
+    - [ ] Images signed and verified
+    - [ ] Non-root user in containers
+
+    **High**:
+    - [ ] Minimal base images (distroless, alpine)
+    - [ ] Multi-stage builds
+    - [ ] Image scanning in CI/CD
+    - [ ] Regular image updates
+
+    **Verification**:
+    ```bash
+    # Scan image
+    trivy image langgraph-agent:latest
+
+    # Check for root user
+    docker inspect langgraph-agent:latest | grep -i "user"
+
+    # Verify image signature
+    cosign verify langgraph-agent:latest
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Runtime Security" icon="shield-halved">
+    **Critical**:
+    - [ ] Read-only root filesystem
+    - [ ] Privilege escalation disabled
+    - [ ] Capabilities dropped
+    - [ ] seccomp profile applied
+    - [ ] AppArmor/SELinux enabled
+
+    **High**:
+    - [ ] Pod Security Standards enforced
+    - [ ] Runtime security monitoring (Falco)
+    - [ ] Resource limits defined
+
+    **Verification**:
+    ```bash
+    # Check security context
+    kubectl get pod langgraph-agent-xxx -n langgraph-agent \
+      -o yaml | grep -A 10 securityContext
+
+    # Verify Pod Security Standards
+    kubectl label namespace langgraph-agent \
+      pod-security.kubernetes.io/enforce=restricted
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Data Protection
+
+### Data Security
+
+<AccordionGroup>
+  <Accordion title="✅ Encryption" icon="lock">
+    **Critical**:
+    - [ ] Data encrypted in transit (TLS)
+    - [ ] Data encrypted at rest (database, Redis, volumes)
+    - [ ] Encryption keys managed securely
+    - [ ] Kubernetes secrets encrypted
+
+    **High**:
+    - [ ] Key rotation configured
+    - [ ] HSM or KMS for key management
+    - [ ] Encryption for backups
+
+    **Verification**:
+    ```bash
+    # Check database encryption
+    kubectl exec postgres-0 -n langgraph-agent -- \
+      psql -c "SHOW ssl;" | grep on
+
+    # Check Redis TLS
+    redis-cli -h redis-master --tls ping
+
+    # Verify Kubernetes encryption
+    kubectl get secret -n kube-system encryption-config
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Backup & Recovery" icon="hard-drive">
+    **Critical**:
+    - [ ] Automated backups configured
+    - [ ] Backups encrypted
+    - [ ] Backup restoration tested
+    - [ ] Backup retention policy defined
+    - [ ] Off-site backup storage
+
+    **High**:
+    - [ ] Point-in-time recovery available
+    - [ ] Backup monitoring and alerts
+    - [ ] DR plan documented
+
+    **Verification**:
+    ```bash
+    # List backups
+    velero backup get
+
+    # Test restore (in staging)
+    velero restore create --from-backup backup-name
+
+    # Check backup encryption
+    aws s3api get-object --bucket backups --key latest \
+      --server-side-encryption AES256
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Data Privacy" icon="user-shield">
+    **Critical**:
+    - [ ] PII handling documented
+    - [ ] Data retention policy enforced
+    - [ ] Right to deletion implemented
+    - [ ] Data minimization practiced
+    - [ ] Privacy policy published
+
+    **High**:
+    - [ ] Consent management
+    - [ ] Data portability
+    - [ ] Privacy by design
+    - [ ] GDPR/CCPA compliance (if applicable)
+
+    **Verification**:
+    ```python
+    # Check for PII logging
+    grep -r "email\|phone\|ssn" src/logs/
+
+    # Verify data deletion
+    # Test user deletion endpoint
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Kubernetes Security
+
+### Cluster Security
+
+<AccordionGroup>
+  <Accordion title="✅ RBAC" icon="users-gear">
+    **Critical**:
+    - [ ] RBAC enabled
+    - [ ] Principle of least privilege
+    - [ ] No cluster-admin for apps
+    - [ ] Service accounts for workloads
+    - [ ] No default service account used
+
+    **High**:
+    - [ ] Regular RBAC audit
+    - [ ] Namespaced roles
+    - [ ] RBAC testing
+
+    **Verification**:
+    ```bash
+    # List cluster roles
+    kubectl get clusterrolebindings
+
+    # Check service account permissions
+    kubectl auth can-i --list --as=system:serviceaccount:langgraph-agent:langgraph-agent
+
+    # Audit RBAC
+    kubectl auth reconcile -f rbac.yaml --dry-run
+    ```
+  </Accordion>
+
+  <Accordion title="✅ Pod Security" icon="cube">
+    **Critical**:
+    - [ ] Pod Security Standards enforced
+    - [ ] hostNetwork disabled
+    - [ ] hostPID disabled
+    - [ ] hostIPC disabled
+    - [ ] Privileged pods not allowed
+
+    **High**:
+    - [ ] SecurityContext on all pods
+    - [ ] runAsNonRoot enforced
+    - [ ] allowPrivilegeEscalation: false
+
+    **Verification**:
+    ```bash
+    # Check Pod Security Admission
+    kubectl get ns langgraph-agent -o yaml | grep pod-security
+
+    # Scan for privileged pods
+    kubectl get pods -A -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.securityContext.privileged}{"\n"}{end}'
+    ```
+  </Accordion>
+
+  <Accordion title="✅ API Server" icon="server">
+    **Critical**:
+    - [ ] API server not publicly accessible
+    - [ ] Anonymous auth disabled
+    - [ ] Audit logging enabled
+    - [ ] Admission controllers configured
+    - [ ] API server TLS verified
+
+    **High**:
+    - [ ] API rate limiting
+    - [ ] Webhook timeout configured
+    - [ ] Audit logs reviewed regularly
+
+    **Verification**:
+    ```bash
+    # Check API server access
+    kubectl cluster-info
+
+    # Verify audit log
+    kubectl get pods -n kube-system | grep kube-apiserver
+
+    # Check admission controllers
+    kubectl -n kube-system get pod kube-apiserver-xxx \
+      -o yaml | grep enable-admission-plugins
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Compliance & Governance
+
+### Compliance
+
+<AccordionGroup>
+  <Accordion title="✅ Security Policies" icon="file-shield">
+    **Critical**:
+    - [ ] Security policy documented
+    - [ ] Incident response plan
+    - [ ] Access control policy
+    - [ ] Change management process
+    - [ ] Security training for team
+
+    **High**:
+    - [ ] Security champions assigned
+    - [ ] Regular security reviews
+    - [ ] Penetration testing scheduled
+    - [ ] Bug bounty program (optional)
+
+    **Verification**:
+    - Review policy documents
+    - Check training records
+    - Verify incident response tests
+  </Accordion>
+
+  <Accordion title="✅ Audit & Compliance" icon="clipboard-list">
+    **Critical**:
+    - [ ] Audit logs enabled everywhere
+    - [ ] Compliance requirements identified
+    - [ ] Regular compliance audits
+    - [ ] Audit log retention (1 year min)
+
+    **High**:
+    - [ ] SOC 2 / ISO 27001 certification
+    - [ ] GDPR/CCPA compliance
+    - [ ] Third-party audits
+    - [ ] Compliance automation
+
+    **Verification**:
+    ```bash
+    # Check audit logs
+    kubectl logs -n kube-system kube-apiserver-xxx | grep audit
+
+    # Verify log retention
+    kubectl get cm -n kube-system audit-policy -o yaml
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Pre-Production Checklist
+
+Use this before deploying to production:
+
+```markdown
+## Critical Items (Must Fix)
+- [ ] All authentication endpoints use HTTPS
+- [ ] No default passwords in use
+- [ ] All secrets in secret management system
+- [ ] Database not publicly accessible
+- [ ] TLS 1.2+ enforced
+- [ ] Network policies implemented
+- [ ] No critical vulnerabilities in images
+- [ ] Backup and restore tested
+- [ ] Audit logging enabled
+- [ ] RBAC properly configured
+
+## High Priority (Should Fix)
+- [ ] MFA enabled for admin accounts
+- [ ] Secret rotation configured
+- [ ] API rate limiting enabled
+- [ ] WAF configured
+- [ ] Container images scanned
+- [ ] Pod Security Standards enforced
+- [ ] Monitoring and alerting set up
+- [ ] Incident response plan documented
+
+## Medium Priority (Plan to Fix)
+- [ ] Automated security testing
+- [ ] Regular penetration testing
+- [ ] Security training completed
+- [ ] Compliance certifications
+- [ ] Bug bounty program
+```
+
+## Automated Security Scanning
+
+```bash
+# Run security scan suite
+./scripts/security-audit.sh
+```
+
+**security-audit.sh**:
+```bash
+#!/bin/bash
+set -e
+
+echo "=== Running Security Audit ==="
+
+# 1. Check for secrets in code
+echo "Checking for hardcoded secrets..."
+git secrets --scan || true
+
+# 2. Scan dependencies
+echo "Scanning Python dependencies..."
+pip-audit
+
+# 3. Scan container images
+echo "Scanning container images..."
+trivy image langgraph-agent:latest
+
+# 4. Check Kubernetes configuration
+echo "Checking Kubernetes configs..."
+kubectl kustomize overlays/production | kubesec scan -
+
+# 5. Network policy check
+echo "Verifying network policies..."
+kubectl get networkpolicies -A
+
+# 6. RBAC audit
+echo "Auditing RBAC..."
+kubectl auth can-i --list --as=system:serviceaccount:langgraph-agent:langgraph-agent
+
+# 7. Check for exposed secrets
+echo "Checking for exposed secrets..."
+kubectl get secrets -A -o json | grep -i "password\|token\|key" || true
+
+echo "=== Security Audit Complete ==="
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Compliance Guide" icon="scale-balanced" href="/security/compliance">
+    GDPR, SOC2, HIPAA compliance
+  </Card>
+  <Card title="Best Practices" icon="shield" href="/security/best-practices">
+    Security hardening guide
+  </Card>
+  <Card title="Incident Response" icon="triangle-exclamation" href="/security/incident-response">
+    Security incident handling
+  </Card>
+  <Card title="Penetration Testing" icon="user-secret" href="/security/pen-testing">
+    Security testing guide
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Security Audit Complete**: Systematic security review for production readiness!
+</Check>

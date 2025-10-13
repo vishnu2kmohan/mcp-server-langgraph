@@ -1,0 +1,725 @@
+---
+title: Health Check API
+description: 'Endpoints for service health and readiness monitoring'
+icon: 'heart-pulse'
+---
+
+## Overview
+
+Health check endpoints provide real-time service health status for monitoring, load balancers, and orchestration systems. Designed for Kubernetes, Cloud Run, and other cloud platforms.
+
+## Endpoints
+
+### GET /health
+
+**Primary health check** - Returns overall service health.
+
+Use this endpoint for:
+- Load balancer health checks
+- Monitoring systems
+- General health status
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/health
+```
+
+**Response (Healthy)**:
+
+```json
+{
+  "status": "healthy",
+  "service": "mcp-server-langgraph",
+  "version": "2.1.0",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "checks": {
+    "llm_provider": "healthy",
+    "openfga": "healthy",
+    "keycloak": "healthy",
+    "redis": "healthy"
+  }
+}
+```
+
+**Response (Degraded)**:
+
+```json
+{
+  "status": "degraded",
+  "service": "mcp-server-langgraph",
+  "version": "2.1.0",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "checks": {
+    "llm_provider": "healthy",
+    "openfga": "healthy",
+    "keycloak": "unhealthy",
+    "redis": "healthy"
+  },
+  "warnings": [
+    "Keycloak connection timeout - authentication may be slow"
+  ]
+}
+```
+
+**Response (Unhealthy)**:
+
+```json
+{
+  "status": "unhealthy",
+  "service": "mcp-server-langgraph",
+  "version": "2.1.0",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "checks": {
+    "llm_provider": "unhealthy",
+    "openfga": "healthy",
+    "keycloak": "healthy",
+    "redis": "healthy"
+  },
+  "errors": [
+    "LLM provider API key invalid or quota exceeded"
+  ]
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="OK">
+  Service is healthy (all checks passed)
+</ResponseField>
+
+<ResponseField name="503" type="Service Unavailable">
+  Service is degraded or unhealthy (one or more checks failed)
+</ResponseField>
+
+---
+
+### GET /health/ready
+
+**Readiness probe** - Indicates if service is ready to accept traffic.
+
+Use this endpoint for:
+- Kubernetes readiness probes
+- Load balancer registration
+- Traffic routing decisions
+
+<Info>
+Returns 200 only when **all critical dependencies** are available. Service may be running but not ready.
+</Info>
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/health/ready
+```
+
+**Response (Ready)**:
+
+```json
+{
+  "ready": true,
+  "service": "mcp-server-langgraph",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "dependencies": {
+    "llm_provider": "ready",
+    "openfga": "ready",
+    "keycloak": "ready",
+    "redis": "ready"
+  }
+}
+```
+
+**Response (Not Ready)**:
+
+```json
+{
+  "ready": false,
+  "service": "mcp-server-langgraph",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "dependencies": {
+    "llm_provider": "ready",
+    "openfga": "not_ready",
+    "keycloak": "ready",
+    "redis": "ready"
+  },
+  "blocking": [
+    "OpenFGA authorization service not responding"
+  ]
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="OK">
+  Service is ready to accept traffic
+</ResponseField>
+
+<ResponseField name="503" type="Service Unavailable">
+  Service is not ready (dependencies unavailable)
+</ResponseField>
+
+**Kubernetes Configuration**:
+
+```yaml
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8000
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+---
+
+### GET /health/live
+
+**Liveness probe** - Indicates if service is alive and not deadlocked.
+
+Use this endpoint for:
+- Kubernetes liveness probes
+- Auto-restart decisions
+- Deadlock detection
+
+<Warning>
+Failing liveness checks triggers pod restarts. Only use for detecting unrecoverable failures.
+</Warning>
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/health/live
+```
+
+**Response (Alive)**:
+
+```json
+{
+  "alive": true,
+  "service": "mcp-server-langgraph",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "uptime_seconds": 86400
+}
+```
+
+**Response (Not Alive)**:
+
+```json
+{
+  "alive": false,
+  "service": "mcp-server-langgraph",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "reason": "Event loop blocked for 30+ seconds"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="OK">
+  Service is alive and responsive
+</ResponseField>
+
+<ResponseField name="503" type="Service Unavailable">
+  Service is deadlocked or unresponsive
+</ResponseField>
+
+**Kubernetes Configuration**:
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+---
+
+### GET /health/startup
+
+**Startup probe** - Indicates if service has completed initialization.
+
+Use this endpoint for:
+- Kubernetes startup probes
+- Slow-starting applications
+- Initial dependency checks
+
+<Info>
+Prevents premature liveness/readiness checks during startup. Useful for services with long initialization.
+</Info>
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/health/startup
+```
+
+**Response (Started)**:
+
+```json
+{
+  "started": true,
+  "service": "mcp-server-langgraph",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "startup_duration_seconds": 12.5,
+  "initialization": {
+    "llm_connection": "completed",
+    "openfga_model": "loaded",
+    "keycloak_config": "completed",
+    "redis_connection": "completed"
+  }
+}
+```
+
+**Response (Starting)**:
+
+```json
+{
+  "started": false,
+  "service": "mcp-server-langgraph",
+  "timestamp": "2025-10-12T10:30:00Z",
+  "initialization": {
+    "llm_connection": "in_progress",
+    "openfga_model": "pending",
+    "keycloak_config": "pending",
+    "redis_connection": "pending"
+  },
+  "progress": "30%"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="OK">
+  Service has completed startup
+</ResponseField>
+
+<ResponseField name="503" type="Service Unavailable">
+  Service is still starting up
+</ResponseField>
+
+**Kubernetes Configuration**:
+
+```yaml
+startupProbe:
+  httpGet:
+    path: /health/startup
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30  # Allow up to 150s startup time
+```
+
+---
+
+### GET /health/dependencies
+
+**Detailed dependency status** - Shows health of all external dependencies.
+
+Use this endpoint for:
+- Debugging connectivity issues
+- Monitoring dashboards
+- Operational visibility
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/health/dependencies
+```
+
+**Response**:
+
+```json
+{
+  "timestamp": "2025-10-12T10:30:00Z",
+  "dependencies": {
+    "llm_provider": {
+      "status": "healthy",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022",
+      "response_time_ms": 45,
+      "last_check": "2025-10-12T10:29:55Z"
+    },
+    "openfga": {
+      "status": "healthy",
+      "url": "http://openfga:8080",
+      "store_id": "01HXXXXXXXXX",
+      "response_time_ms": 12,
+      "last_check": "2025-10-12T10:29:58Z"
+    },
+    "keycloak": {
+      "status": "healthy",
+      "url": "https://sso.yourdomain.com",
+      "realm": "langgraph-agent",
+      "response_time_ms": 34,
+      "last_check": "2025-10-12T10:29:57Z"
+    },
+    "redis": {
+      "status": "healthy",
+      "url": "redis://redis-session:6379/0",
+      "connected_clients": 15,
+      "used_memory_mb": 128,
+      "response_time_ms": 3,
+      "last_check": "2025-10-12T10:30:00Z"
+    },
+    "postgresql": {
+      "status": "healthy",
+      "host": "postgres:5432",
+      "database": "keycloak",
+      "active_connections": 12,
+      "response_time_ms": 8,
+      "last_check": "2025-10-12T10:29:59Z"
+    }
+  },
+  "overall_status": "healthy"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="OK">
+  Dependency check completed (may include unhealthy dependencies)
+</ResponseField>
+
+---
+
+## Health Check Responses
+
+### Status Values
+
+<ResponseField name="healthy" type="string">
+  Component is functioning normally
+</ResponseField>
+
+<ResponseField name="degraded" type="string">
+  Component is operational but with reduced performance
+</ResponseField>
+
+<ResponseField name="unhealthy" type="string">
+  Component is not functioning
+</ResponseField>
+
+<ResponseField name="unknown" type="string">
+  Component status cannot be determined
+</ResponseField>
+
+### Component Checks
+
+<Tabs>
+  <Tab title="LLM Provider">
+    **Checks**:
+    - API key validity
+    - Model availability
+    - Response time < 5s
+    - Quota availability
+
+    **Failure Scenarios**:
+    - Invalid API key
+    - Quota exceeded
+    - Connection timeout
+    - Model not found
+  </Tab>
+
+  <Tab title="OpenFGA">
+    **Checks**:
+    - HTTP endpoint reachable
+    - Store ID valid
+    - Model ID valid
+    - Response time < 1s
+
+    **Failure Scenarios**:
+    - Service unreachable
+    - Store not found
+    - Model not found
+    - Authorization errors
+  </Tab>
+
+  <Tab title="Keycloak">
+    **Checks**:
+    - OIDC endpoint reachable
+    - Realm exists
+    - Client configured
+    - Response time < 2s
+
+    **Failure Scenarios**:
+    - Service unreachable
+    - Realm not found
+    - SSL/TLS errors
+    - Authentication failures
+  </Tab>
+
+  <Tab title="Redis">
+    **Checks**:
+    - Connection established
+    - PING successful
+    - Memory available
+    - Response time < 100ms
+
+    **Failure Scenarios**:
+    - Connection refused
+    - Authentication failed
+    - Out of memory
+    - Replication lag
+  </Tab>
+</Tabs>
+
+---
+
+## Monitoring Integration
+
+### Prometheus
+
+Expose health check metrics:
+
+```promql
+# Service health status (1 = healthy, 0 = unhealthy)
+health_status{service="mcp-server-langgraph"} 1
+
+# Dependency health
+dependency_status{dependency="llm_provider"} 1
+dependency_status{dependency="openfga"} 1
+dependency_status{dependency="keycloak"} 1
+dependency_status{dependency="redis"} 1
+
+# Health check response time
+health_check_duration_seconds{endpoint="/health"} 0.015
+```
+
+**Example Alerts**:
+
+```yaml
+# Alert on unhealthy service
+- alert: ServiceUnhealthy
+  expr: health_status == 0
+  for: 2m
+  annotations:
+    summary: "Service {{ $labels.service }} is unhealthy"
+
+# Alert on dependency failure
+- alert: DependencyDown
+  expr: dependency_status == 0
+  for: 1m
+  annotations:
+    summary: "Dependency {{ $labels.dependency }} is down"
+```
+
+### Kubernetes
+
+**Complete Probe Configuration**:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  template:
+    spec:
+      containers:
+      - name: langgraph-agent
+        ports:
+        - containerPort: 8000
+          name: http
+
+        # Startup probe - initial check
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30  # 150s max startup
+
+        # Liveness probe - restart if unhealthy
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3  # Restart after 30s
+
+        # Readiness probe - remove from service if not ready
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: http
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3  # Remove after 15s
+```
+
+### Cloud Run
+
+```yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: langgraph-agent
+spec:
+  template:
+    spec:
+      containers:
+      - image: gcr.io/project/langgraph-agent:latest
+        ports:
+        - containerPort: 8000
+
+        # Health check for Cloud Run
+        livenessProbe:
+          httpGet:
+            path: /health
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+        startupProbe:
+          httpGet:
+            path: /health/startup
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 30
+```
+
+---
+
+## Debugging Health Issues
+
+<AccordionGroup>
+  <Accordion title="Service Shows Unhealthy" icon="triangle-exclamation">
+    ```bash
+    # Check detailed health
+    curl https://api.yourdomain.com/health/dependencies | jq
+
+    # Check specific dependency
+    curl https://api.yourdomain.com/health/dependencies | \
+      jq '.dependencies.openfga'
+
+    # Check application logs
+    kubectl logs -l app=langgraph-agent --tail=100 | grep -i error
+
+    # Check events
+    kubectl get events -n langgraph-agent --sort-by='.lastTimestamp'
+    ```
+  </Accordion>
+
+  <Accordion title="Pods Not Ready" icon="hourglass">
+    ```bash
+    # Check readiness probe status
+    kubectl describe pod <pod-name> -n langgraph-agent | \
+      grep -A 10 "Readiness:"
+
+    # Test readiness manually
+    kubectl exec -it <pod-name> -n langgraph-agent -- \
+      curl http://localhost:8000/health/ready
+
+    # Check dependency connectivity
+    kubectl exec -it <pod-name> -n langgraph-agent -- \
+      nc -zv openfga 8080
+    ```
+  </Accordion>
+
+  <Accordion title="Pods Restarting" icon="rotate">
+    ```bash
+    # Check liveness probe failures
+    kubectl describe pod <pod-name> -n langgraph-agent | \
+      grep -A 10 "Liveness:"
+
+    # Check restart count
+    kubectl get pods -n langgraph-agent -o wide
+
+    # Check last termination reason
+    kubectl get pod <pod-name> -n langgraph-agent \
+      -o jsonpath='{.status.containerStatuses[0].lastState.terminated}'
+    ```
+  </Accordion>
+
+  <Accordion title="Slow Health Checks" icon="clock">
+    ```bash
+    # Time health check
+    time curl https://api.yourdomain.com/health
+
+    # Check dependency response times
+    curl https://api.yourdomain.com/health/dependencies | \
+      jq '.dependencies | to_entries[] | {name: .key, response_time: .value.response_time_ms}'
+
+    # Adjust probe timeouts if needed
+    kubectl patch deployment langgraph-agent -n langgraph-agent \
+      --type json -p='[{
+        "op": "replace",
+        "path": "/spec/template/spec/containers/0/readinessProbe/timeoutSeconds",
+        "value": 5
+      }]'
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Probe Configuration" icon="sliders">
+    **Startup Probe**:
+    - Use for slow-starting services (>30s initialization)
+    - Set `failureThreshold` to allow sufficient startup time
+    - Disable liveness/readiness until startup succeeds
+
+    **Liveness Probe**:
+    - Check only critical functionality
+    - Avoid checking external dependencies (may cause cascade failures)
+    - Set generous timeouts to avoid false positives
+    - Use longer `periodSeconds` (10-30s) to reduce load
+
+    **Readiness Probe**:
+    - Check all critical dependencies
+    - Use short `periodSeconds` (5-10s) for fast traffic routing
+    - Allow temporary failures (set appropriate `failureThreshold`)
+  </Accordion>
+
+  <Accordion title="Monitoring" icon="chart-line">
+    - Monitor health check response times
+    - Alert on sustained unhealthy status
+    - Track dependency availability
+    - Set up dashboards for health metrics
+    - Use different alert severities (critical vs warning)
+  </Accordion>
+
+  <Accordion title="Load Balancers" icon="scale-balanced">
+    - Use `/health/ready` for load balancer health checks
+    - Set appropriate check intervals (5-30s)
+    - Configure healthy/unhealthy thresholds
+    - Enable connection draining on unhealthy instances
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">
+    Configure health probes
+  </Card>
+  <Card title="Monitoring Guide" icon="chart-line" href="/deployment/platform/monitoring">
+    Set up observability
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/advanced/troubleshooting">
+    Debug health issues
+  </Card>
+  <Card title="Production Checklist" icon="clipboard-check" href="/deployment/production-checklist">
+    Health check requirements
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Always Available**: Comprehensive health checks ensure your service is monitored and reliable!
+</Check>

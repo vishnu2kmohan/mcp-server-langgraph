@@ -1,0 +1,686 @@
+---
+title: MCP Resources
+description: 'Resource types and access patterns in the Model Context Protocol'
+icon: 'database'
+---
+
+## Overview
+
+MCP resources represent data sources, knowledge bases, and contextual information that the AI agent can access. Resources provide a standardized way to expose data through URIs with defined schemas.
+
+<Info>
+Resources enable AI agents to access conversation history, documents, databases, APIs, and other data sources in a consistent manner.
+</Info>
+
+## Resource URIs
+
+Resources are identified by URIs following this pattern:
+
+```
+{scheme}://{path}
+```
+
+**Examples**:
+- `conversation://conv_123` - Conversation history
+- `file:///path/to/document.txt` - Local file
+- `http://api.example.com/data` - HTTP endpoint
+- `knowledge://product-docs` - Knowledge base
+
+## Resource Types
+
+### Conversation Resources
+
+Access conversation history and context.
+
+**URI Pattern**: `conversation://{conversation_id}`
+
+**Example**:
+```python
+# Read conversation
+resource = await client.read_resource("conversation://conv_123")
+
+content = json.loads(resource.contents[0].text)
+messages = content["messages"]
+
+for msg in messages:
+    print(f"{msg['role']}: {msg['content']}")
+```
+
+**Response**:
+```json
+{
+  "contents": [
+    {
+      "uri": "conversation://conv_123",
+      "mimeType": "application/json",
+      "text": "{\"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}, {\"role\": \"assistant\", \"content\": \"Hi!\"}], \"created_at\": \"2025-10-12T10:00:00Z\", \"updated_at\": \"2025-10-12T10:05:00Z\"}"
+    }
+  ]
+}
+```
+
+### File Resources
+
+Access local or remote files.
+
+**URI Pattern**: `file://{path}`
+
+**Example**:
+```python
+# Read file
+resource = await client.read_resource("file:///docs/manual.pdf")
+
+print(f"MIME Type: {resource.contents[0].mimeType}")
+print(f"Size: {len(resource.contents[0].text)} bytes")
+```
+
+**Response**:
+```json
+{
+  "contents": [
+    {
+      "uri": "file:///docs/manual.pdf",
+      "mimeType": "application/pdf",
+      "blob": "base64-encoded-pdf-data"
+    }
+  ]
+}
+```
+
+### Knowledge Base Resources
+
+Access curated knowledge bases and documentation.
+
+**URI Pattern**: `knowledge://{knowledge_base_id}`
+
+**Example**:
+```python
+# Search knowledge base
+resource = await client.read_resource(
+    "knowledge://product-docs",
+    params={"query": "installation guide"}
+)
+
+results = json.loads(resource.contents[0].text)
+for doc in results["documents"]:
+    print(f"Title: {doc['title']}")
+    print(f"Content: {doc['content'][:200]}...\n")
+```
+
+**Response**:
+```json
+{
+  "contents": [
+    {
+      "uri": "knowledge://product-docs",
+      "mimeType": "application/json",
+      "text": "{\"documents\": [{\"title\": \"Installation Guide\", \"content\": \"To install...\"}, {\"title\": \"Quick Start\", \"content\": \"Getting started...\"}]}"
+    }
+  ]
+}
+```
+
+### HTTP Resources
+
+Access external HTTP/HTTPS endpoints.
+
+**URI Pattern**: `http[s]://{url}`
+
+**Example**:
+```python
+# Fetch HTTP resource
+resource = await client.read_resource(
+    "https://api.example.com/users/123"
+)
+
+user_data = json.loads(resource.contents[0].text)
+print(f"User: {user_data['name']}")
+```
+
+**Response**:
+```json
+{
+  "contents": [
+    {
+      "uri": "https://api.example.com/users/123",
+      "mimeType": "application/json",
+      "text": "{\"id\": 123, \"name\": \"Alice\", \"email\": \"alice@example.com\"}"
+    }
+  ]
+}
+```
+
+### Database Resources
+
+Access database tables and queries.
+
+**URI Pattern**: `db://{database}/{table}` or `db://{database}/query`
+
+**Example**:
+```python
+# Read table data
+resource = await client.read_resource(
+    "db://analytics/events",
+    params={"limit": 10, "where": "type='click'"}
+)
+
+events = json.loads(resource.contents[0].text)
+print(f"Found {len(events['rows'])} events")
+```
+
+**Response**:
+```json
+{
+  "contents": [
+    {
+      "uri": "db://analytics/events",
+      "mimeType": "application/json",
+      "text": "{\"rows\": [{\"id\": 1, \"type\": \"click\", \"timestamp\": \"2025-10-12T10:00:00Z\"}], \"total\": 1}"
+    }
+  ]
+}
+```
+
+## Resource Operations
+
+### List Resources
+
+Discover available resources:
+
+```python
+# List all resources
+resources = await client.list_resources()
+
+for resource in resources:
+    print(f"URI: {resource.uri}")
+    print(f"Name: {resource.name}")
+    print(f"Description: {resource.description}")
+    print(f"MIME Type: {resource.mimeType}\n")
+```
+
+**Response**:
+```json
+{
+  "resources": [
+    {
+      "uri": "conversation://conv_123",
+      "name": "Conversation History",
+      "description": "Chat conversation with context",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "knowledge://product-docs",
+      "name": "Product Documentation",
+      "description": "Internal product documentation",
+      "mimeType": "text/markdown"
+    }
+  ]
+}
+```
+
+### Read Resource
+
+Access resource content:
+
+```python
+# Read resource
+resource = await client.read_resource("conversation://conv_123")
+
+for content in resource.contents:
+    print(f"URI: {content.uri}")
+    print(f"MIME Type: {content.mimeType}")
+    print(f"Content: {content.text[:200]}...")
+```
+
+**With Parameters**:
+```python
+# Read with parameters
+resource = await client.read_resource(
+    "knowledge://product-docs",
+    params={
+        "query": "authentication",
+        "limit": 5
+    }
+)
+```
+
+### Subscribe to Resources
+
+Get notifications when resources change:
+
+```python
+# Subscribe to resource updates
+await client.subscribe_resource("conversation://conv_123")
+
+# Handle notifications
+async def on_resource_updated(uri: str):
+    print(f"Resource updated: {uri}")
+    # Reload resource
+    updated = await client.read_resource(uri)
+    process_update(updated)
+
+client.on("resource_updated", on_resource_updated)
+```
+
+**Notification Format**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/resources/updated",
+  "params": {
+    "uri": "conversation://conv_123"
+  }
+}
+```
+
+### Unsubscribe from Resources
+
+Stop receiving updates:
+
+```python
+# Unsubscribe
+await client.unsubscribe_resource("conversation://conv_123")
+```
+
+## Resource Templates
+
+Define reusable resource patterns:
+
+```python
+# Define template
+template = {
+    "uriTemplate": "conversation://{conversation_id}",
+    "name": "Conversation",
+    "description": "Access conversation by ID",
+    "mimeType": "application/json"
+}
+
+# Use template
+uri = template["uriTemplate"].format(conversation_id="conv_456")
+resource = await client.read_resource(uri)
+```
+
+## Resource Permissions
+
+Resources respect authorization rules:
+
+```python
+# Check access
+allowed = await openfga_client.check_permission(
+    user=f"user:{user_id}",
+    relation="viewer",
+    object="conversation:conv_123"
+)
+
+if not allowed:
+    raise PermissionError("Cannot access conversation")
+
+# Read if allowed
+resource = await client.read_resource("conversation://conv_123")
+```
+
+**Grant access**:
+```python
+# Grant user view access to conversation
+await openfga_client.write_tuples([{
+    "user": f"user:{user_id}",
+    "relation": "viewer",
+    "object": "conversation:conv_123"
+}])
+```
+
+## Resource Schemas
+
+### Conversation Schema
+
+```typescript
+{
+  "messages": [
+    {
+      "role": "user" | "assistant" | "system",
+      "content": string,
+      "timestamp": string (ISO 8601)
+    }
+  ],
+  "conversation_id": string,
+  "created_at": string (ISO 8601),
+  "updated_at": string (ISO 8601),
+  "metadata": {
+    "user_id": string,
+    "model": string,
+    "total_tokens": number
+  }
+}
+```
+
+### Knowledge Base Schema
+
+```typescript
+{
+  "documents": [
+    {
+      "id": string,
+      "title": string,
+      "content": string,
+      "url": string,
+      "score": number,  // Relevance score
+      "metadata": object
+    }
+  ],
+  "total_results": number,
+  "query": string
+}
+```
+
+### File Schema
+
+```typescript
+{
+  "path": string,
+  "name": string,
+  "size": number,
+  "mimeType": string,
+  "content": string | base64,
+  "created_at": string,
+  "modified_at": string
+}
+```
+
+## MIME Types
+
+Supported MIME types for resources:
+
+| MIME Type | Description | Example |
+|-----------|-------------|---------|
+| `text/plain` | Plain text | Text files, logs |
+| `text/markdown` | Markdown | Documentation |
+| `text/html` | HTML | Web pages |
+| `application/json` | JSON data | API responses, configs |
+| `application/pdf` | PDF documents | Reports, manuals |
+| `image/png` | PNG images | Screenshots, diagrams |
+| `image/jpeg` | JPEG images | Photos |
+| `application/octet-stream` | Binary data | Generic files |
+
+## Custom Resources
+
+Create custom resource providers:
+
+```python
+from mcp_server_langgraph.resources import ResourceProvider
+
+class CustomDatabaseResource(ResourceProvider):
+    """Custom resource for database access"""
+
+    def __init__(self, db_connection):
+        self.db = db_connection
+
+    async def list(self) -> list:
+        """List available tables"""
+        tables = await self.db.fetch("SELECT table_name FROM information_schema.tables")
+        return [
+            {
+                "uri": f"db://mydb/{row['table_name']}",
+                "name": row['table_name'],
+                "description": f"Access {row['table_name']} table",
+                "mimeType": "application/json"
+            }
+            for row in tables
+        ]
+
+    async def read(self, uri: str, params: dict = None) -> dict:
+        """Read table data"""
+        table_name = uri.split("/")[-1]
+        limit = params.get("limit", 100) if params else 100
+
+        rows = await self.db.fetch(
+            f"SELECT * FROM {table_name} LIMIT $1",
+            limit
+        )
+
+        return {
+            "contents": [{
+                "uri": uri,
+                "mimeType": "application/json",
+                "text": json.dumps({"rows": [dict(r) for r in rows]})
+            }]
+        }
+
+# Register custom resource
+from mcp_server_langgraph.resources import register_resource_provider
+
+register_resource_provider("db", CustomDatabaseResource(db_connection))
+```
+
+## Resource Caching
+
+Cache frequently accessed resources:
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=100)
+async def cached_read_resource(uri: str):
+    """Read resource with caching"""
+    return await client.read_resource(uri)
+
+# Use cached version
+resource = await cached_read_resource("conversation://conv_123")
+```
+
+**Redis caching**:
+```python
+async def read_resource_with_cache(uri: str):
+    """Read resource with Redis caching"""
+    # Check cache
+    cached = await redis.get(f"resource:{uri}")
+    if cached:
+        return json.loads(cached)
+
+    # Fetch resource
+    resource = await client.read_resource(uri)
+
+    # Cache for 5 minutes
+    await redis.setex(
+        f"resource:{uri}",
+        300,
+        json.dumps(resource.dict())
+    )
+
+    return resource
+```
+
+## Resource Monitoring
+
+Track resource access:
+
+```python
+from prometheus_client import Counter, Histogram
+
+resource_reads = Counter(
+    'mcp_resource_reads_total',
+    'Total resource reads',
+    ['resource_type', 'status']
+)
+
+resource_read_duration = Histogram(
+    'mcp_resource_read_duration_seconds',
+    'Resource read duration',
+    ['resource_type']
+)
+
+# Track metrics
+import time
+
+async def tracked_read_resource(uri: str):
+    resource_type = uri.split("://")[0]
+    start_time = time.time()
+
+    try:
+        resource = await client.read_resource(uri)
+        resource_reads.labels(
+            resource_type=resource_type,
+            status="success"
+        ).inc()
+        return resource
+    except Exception as e:
+        resource_reads.labels(
+            resource_type=resource_type,
+            status="error"
+        ).inc()
+        raise
+    finally:
+        duration = time.time() - start_time
+        resource_read_duration.labels(
+            resource_type=resource_type
+        ).observe(duration)
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Appropriate URIs" icon="link">
+    Choose descriptive, meaningful URIs:
+
+    ```python
+    # Good
+    "conversation://conv_2025-10-12_user-alice"
+    "knowledge://product-docs/installation"
+
+    # Bad
+    "resource://123"
+    "data://x"
+    ```
+  </Accordion>
+
+  <Accordion title="Implement Pagination" icon="list">
+    For large datasets, use pagination:
+
+    ```python
+    page = 1
+    page_size = 100
+
+    while True:
+        resource = await client.read_resource(
+            "db://analytics/events",
+            params={"page": page, "page_size": page_size}
+        )
+
+        data = json.loads(resource.contents[0].text)
+        process_data(data["rows"])
+
+        if len(data["rows"]) < page_size:
+            break
+
+        page += 1
+    ```
+  </Accordion>
+
+  <Accordion title="Handle Large Files" icon="file">
+    Stream large files instead of loading fully:
+
+    ```python
+    # Stream file content
+    async for chunk in client.stream_resource("file:///large-file.bin"):
+        process_chunk(chunk)
+    ```
+  </Accordion>
+
+  <Accordion title="Validate Content" icon="shield-check">
+    Validate resource content before use:
+
+    ```python
+    resource = await client.read_resource(uri)
+
+    # Validate MIME type
+    expected_type = "application/json"
+    if resource.contents[0].mimeType != expected_type:
+        raise ValueError(f"Expected {expected_type}, got {resource.contents[0].mimeType}")
+
+    # Validate JSON structure
+    data = json.loads(resource.contents[0].text)
+    if "messages" not in data:
+        raise ValueError("Invalid conversation format")
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Resource not found">
+    **Error**: `Resource not found: conversation://conv_999`
+
+    **Solutions**:
+    ```python
+    # List available resources
+    resources = await client.list_resources()
+    available_uris = [r.uri for r in resources]
+    print(f"Available resources: {available_uris}")
+
+    # Check if resource exists before reading
+    if uri in available_uris:
+        resource = await client.read_resource(uri)
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied">
+    **Error**: `User does not have permission to read resource`
+
+    **Solutions**:
+    ```python
+    # Check permission
+    resource_id = uri.split("://")[1]
+    allowed = await openfga_client.check_permission(
+        user=f"user:{user_id}",
+        relation="viewer",
+        object=f"conversation:{resource_id}"
+    )
+
+    if not allowed:
+        # Request access or show error
+        print("Access denied. Contact owner for permission.")
+    ```
+  </Accordion>
+
+  <Accordion title="Invalid URI format">
+    **Error**: `Invalid resource URI format`
+
+    **Solutions**:
+    ```python
+    # Validate URI format
+    import re
+
+    uri_pattern = r"^[a-z]+://[a-zA-Z0-9_\-/]+$"
+
+    if not re.match(uri_pattern, uri):
+        raise ValueError(f"Invalid URI format: {uri}")
+
+    # Parse URI components
+    scheme, path = uri.split("://", 1)
+    print(f"Scheme: {scheme}, Path: {path}")
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="MCP Tools" icon="wrench" href="/api-reference/mcp/tools">
+    Available tools
+  </Card>
+  <Card title="MCP Messages" icon="message" href="/api-reference/mcp/messages">
+    Message protocol
+  </Card>
+  <Card title="MCP Endpoints" icon="server" href="/api-reference/mcp-endpoints">
+    HTTP endpoints
+  </Card>
+  <Card title="Authorization" icon="shield" href="/getting-started/authorization">
+    Resource permissions
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**MCP Resources Ready**: Standardized access to data sources and context!
+</Check>

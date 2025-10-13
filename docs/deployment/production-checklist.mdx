@@ -1,0 +1,704 @@
+---
+title: Production Checklist
+description: 'Pre-deployment verification for production environments'
+icon: 'clipboard-check'
+---
+
+## Overview
+
+Comprehensive checklist to ensure your MCP Server with LangGraph deployment is production-ready. This checklist covers security, performance, reliability, observability, and operational readiness for v2.1.0.
+
+<Warning>
+**Complete all critical items** before going to production. Optional items enhance production quality but are not required for launch.
+</Warning>
+
+## Security
+
+### Authentication & Authorization
+
+<AccordionGroup>
+  <Accordion title="Keycloak SSO" icon="key" defaultOpen={true}>
+    **Critical**:
+    - [ ] Keycloak deployed with PostgreSQL (not H2)
+    - [ ] Strong admin password set (32+ characters)
+    - [ ] Realm `langgraph-agent` created
+    - [ ] Client `langgraph-client` configured (confidential)
+    - [ ] Client secret stored in secrets manager
+    - [ ] SSL/TLS enabled (`KEYCLOAK_VERIFY_SSL=true`)
+    - [ ] Redirect URIs properly configured
+    - [ ] Test user can authenticate successfully
+
+    **Recommended**:
+    - [ ] 2+ Keycloak replicas for HA
+    - [ ] Brute force protection enabled
+    - [ ] Password policies configured
+    - [ ] Multi-factor authentication enabled
+    - [ ] Session timeout configured appropriately
+    - [ ] Admin console access restricted
+
+    **Validation**:
+    ```bash
+    # Test Keycloak health
+    curl https://sso.yourdomain.com/health
+
+    # Test authentication
+    python scripts/setup/test_keycloak.py
+    ```
+  </Accordion>
+
+  <Accordion title="JWT & Sessions" icon="ticket">
+    **Critical**:
+    - [ ] `AUTH_MODE=session` for production (not token)
+    - [ ] `SESSION_BACKEND=redis` (not memory)
+    - [ ] JWT secret is cryptographically random (256-bit)
+    - [ ] Redis password is strong and unique
+    - [ ] Secrets stored in secret manager (not .env files)
+    - [ ] Session TTL appropriate for your use case
+
+    **Recommended**:
+    - [ ] `SESSION_SLIDING_WINDOW=true` for better UX
+    - [ ] `SESSION_MAX_CONCURRENT` set per security policy
+    - [ ] Session metadata includes IP and user agent
+    - [ ] Token expiration ≤ 4 hours for access tokens
+
+    **Validation**:
+    ```bash
+    # Verify secrets are not in Git
+    git grep -i "jwt_secret\|redis_password"  # Should be empty
+
+    # Test session creation
+    python scripts/setup/test_sessions.py
+    ```
+  </Accordion>
+
+  <Accordion title="OpenFGA Authorization" icon="shield">
+    **Critical**:
+    - [ ] OpenFGA deployed with PostgreSQL backend
+    - [ ] Authorization model created and tested
+    - [ ] Store ID and Model ID stored securely
+    - [ ] Default permissions configured
+    - [ ] Admin users have proper access
+    - [ ] `FF_OPENFGA_STRICT_MODE=true` (fail-closed)
+
+    **Recommended**:
+    - [ ] 2+ OpenFGA replicas
+    - [ ] Role mappings from Keycloak configured
+    - [ ] Permission audit logging enabled
+    - [ ] Fallback admin access tested
+    - [ ] Authorization caching configured
+
+    **Validation**:
+    ```bash
+    # Test OpenFGA connection
+    python scripts/setup/test_openfga.py
+
+    # Verify authorization
+    python examples/test_authorization.py
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Network Security
+
+<AccordionGroup>
+  <Accordion title="TLS/SSL" icon="lock">
+    **Critical**:
+    - [ ] HTTPS enforced for all ingress (no HTTP)
+    - [ ] Valid SSL certificates (not self-signed)
+    - [ ] Certificate auto-renewal configured
+    - [ ] All internal services use TLS where applicable
+    - [ ] Redis SSL enabled in production
+
+    **Recommended**:
+    - [ ] TLS 1.2+ only (disable TLS 1.0/1.1)
+    - [ ] Strong cipher suites configured
+    - [ ] HSTS headers enabled
+    - [ ] Certificate monitoring/alerts
+
+    **Validation**:
+    ```bash
+    # Test TLS configuration
+    curl -vI https://api.yourdomain.com 2>&1 | grep -i tls
+
+    # Check certificate expiration
+    echo | openssl s_client -connect api.yourdomain.com:443 2>/dev/null | \
+      openssl x509 -noout -dates
+    ```
+  </Accordion>
+
+  <Accordion title="Network Policies" icon="network-wired">
+    **Critical**:
+    - [ ] Network policies deployed (Kubernetes)
+    - [ ] Only necessary ports exposed
+    - [ ] No public access to databases
+    - [ ] Service-to-service communication restricted
+
+    **Recommended**:
+    - [ ] Egress filtering configured
+    - [ ] Zero-trust network policies
+    - [ ] VPC/subnet isolation
+    - [ ] Firewall rules documented
+
+    **Validation**:
+    ```bash
+    # Check network policies
+    kubectl get networkpolicies -n langgraph-agent
+
+    # Test connectivity
+    kubectl run test --rm -it --image=busybox -- nc -zv openfga 8080
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Secrets Management
+
+<AccordionGroup>
+  <Accordion title="API Keys & Secrets" icon="key">
+    **Critical**:
+    - [ ] All secrets in secret manager (not env files)
+    - [ ] API keys valid and quota sufficient
+    - [ ] Secrets rotated from default values
+    - [ ] Access to secrets restricted (RBAC)
+    - [ ] No secrets in Git history
+
+    **Recommended**:
+    - [ ] Infisical or similar secrets manager
+    - [ ] Secret rotation policy defined
+    - [ ] Secret access auditing enabled
+    - [ ] Encrypted backups of secrets
+
+    **Validation**:
+    ```bash
+    # Scan for secrets in Git
+    git secrets --scan-history
+
+    # Check secret manager
+    kubectl get secrets -n langgraph-agent
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Infrastructure
+
+### Kubernetes Cluster
+
+<AccordionGroup>
+  <Accordion title="Cluster Configuration" icon="dharmachakra">
+    **Critical**:
+    - [ ] Kubernetes 1.25+ running
+    - [ ] Multi-zone/region deployment
+    - [ ] Node auto-scaling configured
+    - [ ] Sufficient resources (8+ vCPU, 16GB+ RAM)
+    - [ ] Persistent volumes for stateful services
+    - [ ] Pod security standards enforced
+
+    **Recommended**:
+    - [ ] 3+ nodes minimum
+    - [ ] Dedicated node pools for workloads
+    - [ ] Node taints and tolerations configured
+    - [ ] Resource quotas set per namespace
+
+    **Validation**:
+    ```bash
+    # Check cluster health
+    kubectl get nodes
+    kubectl top nodes
+
+    # Check resource availability
+    kubectl describe nodes | grep -A 5 "Allocated resources"
+    ```
+  </Accordion>
+
+  <Accordion title="High Availability" icon="shield-check">
+    **Critical**:
+    - [ ] 3+ application replicas
+    - [ ] Pod anti-affinity configured
+    - [ ] PodDisruptionBudget set (minAvailable: 2)
+    - [ ] Horizontal Pod Autoscaler enabled
+    - [ ] Keycloak HA (2+ replicas)
+    - [ ] Redis replication enabled
+    - [ ] Database replication configured
+
+    **Recommended**:
+    - [ ] Cross-zone pod distribution
+    - [ ] Graceful shutdown configured
+    - [ ] Rolling update strategy tuned
+    - [ ] Circuit breakers configured
+
+    **Validation**:
+    ```bash
+    # Check replicas
+    kubectl get deploy -n langgraph-agent
+
+    # Check HPA
+    kubectl get hpa -n langgraph-agent
+
+    # Check PDB
+    kubectl get pdb -n langgraph-agent
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Data Persistence
+
+<AccordionGroup>
+  <Accordion title="Databases" icon="database">
+    **Critical**:
+    - [ ] PostgreSQL for Keycloak (persistent)
+    - [ ] PostgreSQL for OpenFGA (persistent)
+    - [ ] Automated backups configured
+    - [ ] Backup retention policy defined
+    - [ ] Restore procedure tested
+    - [ ] Connection pooling configured
+
+    **Recommended**:
+    - [ ] Database replication enabled
+    - [ ] Point-in-time recovery available
+    - [ ] Monitoring and alerting set up
+    - [ ] Performance tuning completed
+
+    **Validation**:
+    ```bash
+    # Check PVC status
+    kubectl get pvc -n langgraph-agent
+
+    # Test backup
+    ./scripts/backup/test_backup.sh
+
+    # Verify restore procedure
+    ./scripts/backup/test_restore.sh
+    ```
+  </Accordion>
+
+  <Accordion title="Redis Sessions" icon="server">
+    **Critical**:
+    - [ ] Redis persistence enabled (RDB + AOF)
+    - [ ] Redis replication configured (master + replicas)
+    - [ ] Redis password set
+    - [ ] Memory limits configured
+    - [ ] Eviction policy set (allkeys-lru)
+
+    **Recommended**:
+    - [ ] Redis Sentinel for HA
+    - [ ] Automated backups
+    - [ ] Monitoring enabled
+    - [ ] SSL/TLS enabled
+
+    **Validation**:
+    ```bash
+    # Check Redis health
+    kubectl exec -it deploy/redis-session -- redis-cli -a $REDIS_PASSWORD ping
+
+    # Check replication
+    kubectl exec -it deploy/redis-session -- redis-cli -a $REDIS_PASSWORD info replication
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Observability
+
+### Monitoring
+
+<AccordionGroup>
+  <Accordion title="Metrics Collection" icon="chart-line">
+    **Critical**:
+    - [ ] Prometheus or equivalent deployed
+    - [ ] Application metrics exported
+    - [ ] System metrics collected
+    - [ ] Dashboards created for key metrics
+    - [ ] Basic alerts configured
+
+    **Recommended**:
+    - [ ] Grafana dashboards imported
+    - [ ] Metric retention configured
+    - [ ] High cardinality metrics reviewed
+    - [ ] Cost monitoring enabled
+
+    **Key Metrics**:
+    - Request rate, latency, errors (RED)
+    - CPU, memory, disk usage
+    - LLM token usage and costs
+    - Authentication success/failure rate
+    - Session creation/expiration rate
+
+    **Validation**:
+    ```bash
+    # Check metrics endpoint
+    curl http://localhost:8000/metrics/prometheus
+
+    # Query Prometheus
+    curl 'http://prometheus:9090/api/v1/query?query=up{job="langgraph-agent"}'
+    ```
+  </Accordion>
+
+  <Accordion title="Tracing" icon="route">
+    **Critical**:
+    - [ ] OpenTelemetry configured
+    - [ ] Jaeger or equivalent deployed
+    - [ ] End-to-end traces visible
+    - [ ] Sampling rate appropriate
+    - [ ] Trace storage configured
+
+    **Recommended**:
+    - [ ] LangSmith integration enabled
+    - [ ] Trace retention policy set
+    - [ ] Performance anomaly detection
+    - [ ] Distributed context propagation
+
+    **Validation**:
+    ```bash
+    # Test tracing
+    curl http://localhost:8000/health
+    # Check trace in Jaeger UI
+
+    # Verify trace export
+    kubectl logs -l app=otel-collector -n observability
+    ```
+  </Accordion>
+
+  <Accordion title="Logging" icon="file-lines">
+    **Critical**:
+    - [ ] Structured logging enabled (JSON)
+    - [ ] Log aggregation configured
+    - [ ] Log levels appropriate (INFO in prod)
+    - [ ] Sensitive data not logged
+    - [ ] Log retention policy set
+
+    **Recommended**:
+    - [ ] Centralized logging (ELK, Loki, etc.)
+    - [ ] Log-based alerting
+    - [ ] Audit logs for security events
+    - [ ] Log encryption at rest
+
+    **Validation**:
+    ```bash
+    # Check log format
+    kubectl logs -l app=langgraph-agent -n langgraph-agent --tail=10
+
+    # Verify no secrets in logs
+    kubectl logs -l app=langgraph-agent | grep -i "password\|secret\|key"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Alerting
+
+<AccordionGroup>
+  <Accordion title="Critical Alerts" icon="bell">
+    **Critical Alerts** (immediate response):
+    - [ ] Service down (all replicas unhealthy)
+    - [ ] Error rate > 5%
+    - [ ] p95 latency > 5s
+    - [ ] Database connection failures
+    - [ ] Out of memory errors
+    - [ ] Disk space < 10%
+    - [ ] Certificate expiration < 7 days
+    - [ ] Keycloak unavailable
+    - [ ] Redis unavailable
+    - [ ] OpenFGA unavailable
+
+    **Warning Alerts** (investigate within 1 hour):
+    - [ ] Error rate > 1%
+    - [ ] p95 latency > 2s
+    - [ ] CPU usage > 80%
+    - [ ] Memory usage > 80%
+    - [ ] HPA at max replicas
+    - [ ] Authentication failures > threshold
+
+    **Validation**:
+    ```bash
+    # Test alert firing
+    kubectl delete pod -l app=langgraph-agent --all
+
+    # Check alert manager
+    curl http://alertmanager:9093/api/v2/alerts
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Performance
+
+### Resource Configuration
+
+<AccordionGroup>
+  <Accordion title="Resource Limits" icon="gauge">
+    **Critical**:
+    - [ ] CPU requests/limits set for all pods
+    - [ ] Memory requests/limits set for all pods
+    - [ ] Limits based on load testing
+    - [ ] No pods with unbounded resources
+    - [ ] Quality of Service (QoS) class = Guaranteed
+
+    **Recommended**:
+    - [ ] Resource quotas per namespace
+    - [ ] LimitRanges configured
+    - [ ] Resource usage monitored
+
+    **Recommended Values**:
+    ```yaml
+    # Application
+    resources:
+      requests:
+        cpu: 500m-1000m
+        memory: 512Mi-1Gi
+      limits:
+        cpu: 2000m-4000m
+        memory: 2Gi-4Gi
+
+    # Keycloak
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+    ```
+  </Accordion>
+
+  <Accordion title="Auto-Scaling" icon="arrows-up-down">
+    **Critical**:
+    - [ ] HPA configured and tested
+    - [ ] Min replicas ≥ 3
+    - [ ] Max replicas sufficient for peak load
+    - [ ] Scaling metrics appropriate (CPU, memory)
+    - [ ] Scaling behavior tuned
+
+    **Recommended**:
+    - [ ] Custom metrics for scaling
+    - [ ] Cluster autoscaler enabled
+    - [ ] Vertical Pod Autoscaler considered
+    - [ ] Load testing performed
+
+    **Validation**:
+    ```bash
+    # Check HPA status
+    kubectl get hpa -n langgraph-agent
+
+    # Load test
+    k6 run scripts/load-test.js
+
+    # Watch scaling
+    kubectl get hpa -n langgraph-agent --watch
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### LLM Configuration
+
+<AccordionGroup>
+  <Accordion title="Provider Setup" icon="robot">
+    **Critical**:
+    - [ ] Primary LLM provider configured
+    - [ ] API keys valid and quota sufficient
+    - [ ] Model name correct
+    - [ ] Timeouts configured (60s)
+    - [ ] Fallback provider enabled
+
+    **Recommended**:
+    - [ ] Rate limiting configured
+    - [ ] Retry logic with exponential backoff
+    - [ ] Token usage tracking
+    - [ ] Cost monitoring and alerts
+
+    **Validation**:
+    ```bash
+    # Test LLM connection
+    python scripts/setup/test_llm.py
+
+    # Check quota
+    python scripts/setup/check_quota.py
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Operational Readiness
+
+### Documentation
+
+<AccordionGroup>
+  <Accordion title="Runbooks" icon="book">
+    **Critical**:
+    - [ ] Deployment procedure documented
+    - [ ] Rollback procedure documented
+    - [ ] Incident response playbook
+    - [ ] On-call rotation defined
+    - [ ] Escalation path documented
+
+    **Recommended**:
+    - [ ] Architecture diagrams
+    - [ ] Troubleshooting guide
+    - [ ] Disaster recovery plan
+    - [ ] Performance tuning guide
+  </Accordion>
+
+  <Accordion title="Testing" icon="vial">
+    **Critical**:
+    - [ ] Unit tests passing (100% critical paths)
+    - [ ] Integration tests passing
+    - [ ] End-to-end tests passing
+    - [ ] Load testing completed
+    - [ ] Chaos engineering tests run
+
+    **Recommended**:
+    - [ ] Property-based tests
+    - [ ] Security testing (penetration tests)
+    - [ ] Disaster recovery drills
+    - [ ] Regression tests automated
+
+    **Validation**:
+    ```bash
+    # Run test suite
+    ENABLE_TRACING=false ENABLE_METRICS=false \
+      uv run python3 -m pytest -m unit --tb=line -q
+
+    # Load test
+    k6 run --vus 100 --duration 10m scripts/load-test.js
+
+    # Chaos test
+    kubectl delete pod -l app=langgraph-agent --random
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Deployment
+
+<AccordionGroup>
+  <Accordion title="Pre-Deployment" icon="rocket">
+    **Critical** (complete before deployment):
+    - [ ] All secrets generated and stored
+    - [ ] DNS records configured
+    - [ ] SSL certificates issued
+    - [ ] Database migrations tested
+    - [ ] Smoke tests prepared
+    - [ ] Rollback plan ready
+
+    **Deployment Checklist**:
+    - [ ] Deploy to staging first
+    - [ ] Run smoke tests in staging
+    - [ ] Review and approve
+    - [ ] Deploy to production
+    - [ ] Run smoke tests in production
+    - [ ] Monitor for 1 hour
+    - [ ] Declare success or rollback
+  </Accordion>
+
+  <Accordion title="Post-Deployment" icon="check">
+    **Immediate** (within 1 hour):
+    - [ ] Health checks passing
+    - [ ] All pods running
+    - [ ] No error alerts firing
+    - [ ] End-to-end test successful
+    - [ ] Authentication working
+    - [ ] Authorization working
+
+    **Within 24 hours**:
+    - [ ] Monitor error rates
+    - [ ] Monitor latency metrics
+    - [ ] Check resource usage
+    - [ ] Review logs for anomalies
+    - [ ] Verify backups running
+  </Accordion>
+</AccordionGroup>
+
+## Compliance & Governance
+
+<AccordionGroup>
+  <Accordion title="Data Privacy" icon="user-lock">
+    **Critical**:
+    - [ ] PII handling reviewed
+    - [ ] Data retention policy enforced
+    - [ ] GDPR/CCPA compliance verified
+    - [ ] Data deletion procedure tested
+    - [ ] Privacy policy updated
+
+    **Recommended**:
+    - [ ] Data encryption at rest
+    - [ ] Data encryption in transit
+    - [ ] Data residency requirements met
+    - [ ] Privacy impact assessment completed
+  </Accordion>
+
+  <Accordion title="Audit & Compliance" icon="clipboard-list">
+    **Critical**:
+    - [ ] Audit logging enabled
+    - [ ] Access logs retained
+    - [ ] Security events tracked
+    - [ ] Compliance requirements met
+
+    **Recommended**:
+    - [ ] SOC 2 / ISO 27001 compliance
+    - [ ] Regular security audits
+    - [ ] Penetration testing
+    - [ ] Vulnerability scanning
+  </Accordion>
+</AccordionGroup>
+
+## Final Validation
+
+### Pre-Launch Checklist
+
+```bash
+# Run comprehensive validation
+./scripts/validation/pre-launch-check.sh
+
+# Expected output:
+# ✓ Kubernetes cluster healthy
+# ✓ All pods running
+# ✓ Health checks passing
+# ✓ Authentication working
+# ✓ Authorization working
+# ✓ Observability configured
+# ✓ Backups configured
+# ✓ Alerts configured
+# ✓ No secrets in Git
+# ✓ TLS/SSL enabled
+# ✓ Ready for production!
+```
+
+### Smoke Tests
+
+```bash
+# 1. Health check
+curl https://api.yourdomain.com/health
+# Expected: {"status": "healthy"}
+
+# 2. Authentication
+python scripts/smoke-tests/test_auth.py
+# Expected: User authenticated successfully
+
+# 3. Authorization
+python scripts/smoke-tests/test_authz.py
+# Expected: Permission check passed
+
+# 4. End-to-end
+python scripts/smoke-tests/test_e2e.py
+# Expected: Agent response received
+
+# 5. Observability
+python scripts/smoke-tests/test_tracing.py
+# Expected: Trace ID returned
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">
+    Deploy to Kubernetes
+  </Card>
+  <Card title="Helm Deployment" icon="helm" href="/deployment/helm">
+    Deploy with Helm charts
+  </Card>
+  <Card title="Monitoring Setup" icon="chart-line" href="/deployment/platform/monitoring">
+    Configure observability
+  </Card>
+  <Card title="Disaster Recovery" icon="life-ring" href="/deployment/disaster-recovery">
+    Backup and restore
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Production Ready**: Complete this checklist to ensure a successful production deployment!
+</Check>

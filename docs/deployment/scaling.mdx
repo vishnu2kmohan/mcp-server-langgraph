@@ -1,0 +1,670 @@
+---
+title: Auto-Scaling
+description: 'Configure horizontal and vertical scaling for production workloads'
+icon: 'arrow-up-right-dots'
+---
+
+## Overview
+
+Scale your MCP Server horizontally (more replicas) and vertically (more resources) to handle varying loads efficiently. This guide covers Kubernetes HPA, VPA, cluster autoscaling, and performance tuning.
+
+## Horizontal Pod Autoscaling (HPA)
+
+### Basic Configuration
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: langgraph-agent
+  namespace: langgraph-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: langgraph-agent
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+**Deploy**:
+```bash
+kubectl apply -f hpa.yaml
+
+# Check HPA status
+kubectl get hpa -n langgraph-agent
+
+# Watch scaling
+kubectl get hpa -n langgraph-agent --watch
+```
+
+### Advanced HPA
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: langgraph-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: langgraph-agent
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  # CPU-based scaling
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+  # Memory-based scaling
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+  # Custom metrics (requests per second)
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5min before scaling down
+      policies:
+      - type: Percent
+        value: 50  # Scale down by max 50% of current replicas
+        periodSeconds: 60
+      - type: Pods
+        value: 2   # Or max 2 pods per minute
+        periodSeconds: 60
+      selectPolicy: Min  # Use most conservative
+
+    scaleUp:
+      stabilizationWindowSeconds: 0  # Scale up immediately
+      policies:
+      - type: Percent
+        value: 100  # Double current replicas
+        periodSeconds: 30
+      - type: Pods
+        value: 4    # Or add 4 pods
+        periodSeconds: 30
+      selectPolicy: Max  # Use most aggressive
+```
+
+### Custom Metrics
+
+**Install Prometheus Adapter**:
+```bash
+helm install prometheus-adapter prometheus-community/prometheus-adapter \
+  --namespace monitoring \
+  --set prometheus.url=http://prometheus:9090
+```
+
+**Configure custom metrics**:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adapter-config
+data:
+  config.yaml: |
+    rules:
+    - seriesQuery: 'http_requests_total{namespace="langgraph-agent"}'
+      resources:
+        template: <<.Resource>>
+      name:
+        matches: "^(.*)_total"
+        as: "${1}_per_second"
+      metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[2m])'
+```
+
+## Vertical Pod Autoscaling (VPA)
+
+### Install VPA
+
+```bash
+git clone https://github.com/kubernetes/autoscaler.git
+cd autoscaler/vertical-pod-autoscaler
+./hack/vpa-up.sh
+```
+
+### VPA Configuration
+
+```yaml
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: langgraph-agent-vpa
+  namespace: langgraph-agent
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: langgraph-agent
+  updatePolicy:
+    updateMode: "Auto"  # Auto, Recreate, Initial, Off
+  resourcePolicy:
+    containerPolicies:
+    - containerName: langgraph-agent
+      minAllowed:
+        cpu: 500m
+        memory: 512Mi
+      maxAllowed:
+        cpu: 4000m
+        memory: 8Gi
+      controlledResources:
+      - cpu
+      - memory
+```
+
+**Check recommendations**:
+```bash
+kubectl describe vpa langgraph-agent-vpa -n langgraph-agent
+```
+
+## Cluster Autoscaling
+
+### GKE
+
+```bash
+gcloud container clusters update langgraph-cluster \
+  --enable-autoscaling \
+  --min-nodes=3 \
+  --max-nodes=10 \
+  --zone=us-central1-a
+```
+
+### EKS
+
+```yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: langgraph-cluster
+  region: us-east-1
+nodeGroups:
+  - name: workers
+    instanceType: t3.xlarge
+    minSize: 3
+    maxSize: 10
+    desiredCapacity: 3
+    volumeSize: 100
+    ssh:
+      allow: false
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+```
+
+### AKS
+
+```bash
+az aks update \
+  --resource-group langgraph-rg \
+  --name langgraph-cluster \
+  --enable-cluster-autoscaler \
+  --min-count 3 \
+  --max-count 10
+```
+
+## Load Testing
+
+### Generate Load
+
+```bash
+# Install k6
+brew install k6  # macOS
+# or download from https://k6.io
+
+# Load test script
+cat > load-test.js <<'EOF'
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 100 },   // Ramp up to 100 users
+    { duration: '5m', target: 100 },   // Stay at 100 users
+    { duration: '2m', target: 200 },   // Ramp up to 200
+    { duration: '5m', target: 200 },   // Stay at 200
+    { duration: '2m', target: 0 },     // Ramp down
+  ],
+};
+
+export default function () {
+  const url = 'https://api.yourdomain.com/message';
+  const payload = JSON.stringify({
+    query: 'What is the capital of France?'
+  });
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + __ENV.AUTH_TOKEN,
+    },
+  };
+
+  const res = http.post(url, payload, params);
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 2s': (r) => r.timings.duration < 2000,
+  });
+
+  sleep(1);
+}
+EOF
+
+# Run test
+export AUTH_TOKEN="your-token"
+k6 run load-test.js
+```
+
+### Monitor Scaling
+
+```bash
+# Watch pods scaling
+watch kubectl get pods -n langgraph-agent
+
+# Watch HPA
+watch kubectl get hpa -n langgraph-agent
+
+# View metrics
+kubectl top pods -n langgraph-agent
+kubectl top nodes
+```
+
+## Resource Limits
+
+### Right-Sizing
+
+```yaml
+resources:
+  requests:
+    cpu: 1000m      # Guaranteed CPU
+    memory: 1Gi     # Guaranteed memory
+  limits:
+    cpu: 4000m      # Max CPU
+    memory: 4Gi     # Max memory
+```
+
+**Guidelines**:
+- **Requests**: Set to average usage (p50)
+- **Limits**: Set to peak usage (p95-p99)
+- **CPU**: Start with 1 core, adjust based on load
+- **Memory**: 1-2GB for typical workloads
+
+### Quality of Service (QoS)
+
+```yaml
+# Guaranteed QoS (best)
+resources:
+  requests:
+    cpu: 2000m
+    memory: 2Gi
+  limits:
+    cpu: 2000m    # Same as request
+    memory: 2Gi   # Same as request
+
+# Burstable QoS (good)
+resources:
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+  limits:
+    cpu: 4000m    # Higher than request
+    memory: 4Gi
+
+# Best Effort QoS (avoid in production)
+resources: {}  # No requests or limits
+```
+
+## Performance Tuning
+
+### Application-Level
+
+```python
+# config.py
+
+# LLM settings
+MODEL_TIMEOUT = 60  # Seconds
+MODEL_MAX_TOKENS = 4096
+
+# Connection pooling
+DATABASE_POOL_SIZE = 20
+DATABASE_MAX_OVERFLOW = 10
+
+# Caching
+ENABLE_CACHE = True
+CACHE_TTL = 300  # 5 minutes
+
+# Rate limiting
+RATE_LIMIT_PER_MINUTE = 1000
+```
+
+### Kubernetes-Level
+
+```yaml
+# Deployment optimizations
+spec:
+  replicas: 3
+
+  # Rolling update strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Add 1 pod before removing old
+      maxUnavailable: 0  # Keep all pods available
+
+  template:
+    spec:
+      # Pod disruption budget
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: langgraph-agent
+
+      # Readiness gates
+      readinessGates:
+      - conditionType: "example.com/feature-1"
+```
+
+### Database Tuning
+
+**Redis**:
+```conf
+# redis.conf
+maxmemory 2gb
+maxmemory-policy allkeys-lru
+save 900 1
+save 300 10
+save 60 10000
+```
+
+**PostgreSQL**:
+```conf
+# postgresql.conf
+max_connections = 200
+shared_buffers = 256MB
+effective_cache_size = 1GB
+maintenance_work_mem = 64MB
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+default_statistics_target = 100
+random_page_cost = 1.1
+```
+
+## Cost Optimization
+
+### Right-Size Instances
+
+```bash
+# Use VPA recommendations
+kubectl get vpa langgraph-agent-vpa -o yaml
+
+# Adjust based on actual usage
+resources:
+  requests:
+    cpu: 800m     # Reduced from 1000m
+    memory: 1.5Gi # Reduced from 2Gi
+```
+
+### Spot/Preemptible Instances
+
+**GKE**:
+```bash
+gcloud container node-pools create spot-pool \
+  --cluster=langgraph-cluster \
+  --spot \
+  --num-nodes=3 \
+  --enable-autoscaling \
+  --min-nodes=0 \
+  --max-nodes=10
+```
+
+**EKS**:
+```yaml
+nodeGroups:
+  - name: spot-workers
+    instancesDistribution:
+      instanceTypes: ["t3.xlarge", "t3a.xlarge"]
+      onDemandBaseCapacity: 0
+      onDemandPercentageAboveBaseCapacity: 0
+      spotAllocationStrategy: "capacity-optimized"
+    minSize: 0
+    maxSize: 10
+```
+
+### Scheduled Scaling
+
+```yaml
+# Scale down at night
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scale-down-night
+spec:
+  schedule: "0 0 * * *"  # Midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: kubectl
+            image: bitnami/kubectl
+            command:
+            - /bin/sh
+            - -c
+            - kubectl scale deployment langgraph-agent --replicas=1
+          restartPolicy: OnFailure
+
+# Scale up in morning
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scale-up-morning
+spec:
+  schedule: "0 8 * * *"  # 8am
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: kubectl
+            image: bitnami/kubectl
+            command:
+            - /bin/sh
+            - -c
+            - kubectl scale deployment langgraph-agent --replicas=5
+          restartPolicy: OnFailure
+```
+
+## Monitoring Scaling
+
+### Key Metrics
+
+```promql
+# Replica count
+count(kube_pod_info{namespace="langgraph-agent", pod=~"langgraph-agent.*"})
+
+# CPU utilization
+rate(container_cpu_usage_seconds_total{namespace="langgraph-agent"}[5m])
+
+# Memory utilization
+container_memory_working_set_bytes{namespace="langgraph-agent"}
+
+# Request rate
+rate(http_requests_total{namespace="langgraph-agent"}[5m])
+
+# HPA desired replicas
+kube_horizontalpodautoscaler_status_desired_replicas{namespace="langgraph-agent"}
+```
+
+### Alerts
+
+```yaml
+groups:
+- name: scaling
+  rules:
+  - alert: HPAMaxedOut
+    expr: |
+      kube_horizontalpodautoscaler_status_desired_replicas{namespace="langgraph-agent"}
+      >=
+      kube_horizontalpodautoscaler_spec_max_replicas{namespace="langgraph-agent"}
+    for: 5m
+    annotations:
+      summary: "HPA at maximum replicas"
+
+  - alert: HighCPU
+    expr: |
+      avg(rate(container_cpu_usage_seconds_total{namespace="langgraph-agent"}[5m])) > 0.8
+    for: 2m
+    annotations:
+      summary: "High CPU utilization"
+
+  - alert: HighMemory
+    expr: |
+      avg(container_memory_working_set_bytes{namespace="langgraph-agent"})
+      /
+      avg(kube_pod_container_resource_limits{resource="memory"}) > 0.85
+    for: 2m
+    annotations:
+      summary: "High memory utilization"
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Start Conservative" icon="gauge">
+    Begin with conservative scaling settings:
+
+    - **Min replicas**: 3 (for HA)
+    - **Max replicas**: 10 (prevent runaway scaling)
+    - **Target CPU**: 70% (leave headroom)
+    - **Scale-down delay**: 5 minutes (prevent flapping)
+  </Accordion>
+
+  <Accordion title="Test Thoroughly" icon="vial">
+    Load test before production:
+
+    ```bash
+    # Gradual load increase
+    k6 run --vus 10 --duration 5m load-test.js
+    k6 run --vus 50 --duration 10m load-test.js
+    k6 run --vus 100 --duration 15m load-test.js
+    ```
+  </Accordion>
+
+  <Accordion title="Monitor Closely" icon="chart-line">
+    Track scaling behavior:
+
+    - HPA events
+    - Pod creation/deletion
+    - Resource utilization
+    - Request latency
+    - Error rates
+  </Accordion>
+
+  <Accordion title="Set Pod Disruption Budget" icon="shield">
+    Prevent too many pods terminating:
+
+    ```yaml
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: langgraph-agent-pdb
+    spec:
+      minAvailable: 2
+      selector:
+        matchLabels:
+          app: langgraph-agent
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="HPA not scaling">
+    ```bash
+    # Check HPA status
+    kubectl describe hpa langgraph-agent -n langgraph-agent
+
+    # Check metrics server
+    kubectl get apiservice v1beta1.metrics.k8s.io -o yaml
+
+    # View current metrics
+    kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/langgraph-agent/pods
+    ```
+  </Accordion>
+
+  <Accordion title="Pods evicted">
+    **Reason**: Out of resources
+
+    **Fix**:
+    - Increase node resources
+    - Enable cluster autoscaler
+    - Reduce resource requests
+    - Add more nodes
+  </Accordion>
+
+  <Accordion title="Scaling flapping">
+    **Symptom**: Constant scale up/down
+
+    **Fix**:
+    ```yaml
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 600  # Increase delay
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">
+    Deploy to Kubernetes
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/platform/monitoring">
+    Set up monitoring
+  </Card>
+  <Card title="Production Checklist" icon="clipboard-check" href="/deployment/production-checklist">
+    Scaling requirements
+  </Card>
+  <Card title="Disaster Recovery" icon="life-ring" href="/deployment/disaster-recovery">
+    Backup and restore
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Auto-Scaling Ready**: Handle any load with automatic horizontal and vertical scaling!
+</Check>

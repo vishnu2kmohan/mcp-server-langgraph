@@ -1,0 +1,1138 @@
+---
+title: Troubleshooting
+description: 'Common issues, debugging techniques, and solutions'
+icon: 'wrench'
+---
+
+## Overview
+
+Comprehensive troubleshooting guide for the MCP Server with LangGraph. This guide covers common issues, diagnostic techniques, and step-by-step solutions.
+
+<Tip>
+Always check logs first: `kubectl logs -f <pod-name>` or `docker-compose logs -f`
+</Tip>
+
+## Quick Diagnostic Commands
+
+```bash
+# Check overall health
+curl http://localhost:8000/health
+
+# Check pod status
+kubectl get pods -n langgraph-agent
+
+# View recent logs
+kubectl logs --tail=100 -n langgraph-agent deployment/langgraph-agent
+
+# Check resource usage
+kubectl top pods -n langgraph-agent
+kubectl top nodes
+
+# Test database connectivity
+kubectl exec -it postgres-0 -- psql -U postgres -c "SELECT 1"
+
+# Test Redis connectivity
+kubectl exec -it redis-master-0 -- redis-cli ping
+
+# Check OpenFGA
+curl http://localhost:8080/healthz
+
+# Check Keycloak
+curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
+```
+
+## Authentication Issues
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized - Invalid token">
+    **Symptom**:
+    ```json
+    {
+      "detail": "Invalid authentication credentials"
+    }
+    ```
+
+    **Causes**:
+    1. Token expired
+    2. Invalid token format
+    3. Wrong signing key
+    4. Token not in request
+
+    **Solutions**:
+    ```bash
+    # Check token expiration
+    jwt decode <your-token>
+
+    # Verify token format
+    echo $TOKEN | cut -d'.' -f1 | base64 -d  # Header
+    echo $TOKEN | cut -d'.' -f2 | base64 -d  # Payload
+
+    # Get new token
+    curl -X POST http://localhost:8000/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"username":"admin","password":"admin"}'
+
+    # Check JWKS endpoint
+    curl http://localhost:8080/realms/langgraph/protocol/openid-connect/certs
+    ```
+
+    **Code fix**:
+    ```python
+    # Always include Authorization header
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    ```
+  </Accordion>
+
+  <Accordion title="403 Forbidden - Token expired">
+    **Symptom**:
+    ```json
+    {
+      "detail": "Token has expired"
+    }
+    ```
+
+    **Solution**:
+    ```python
+    # Refresh token flow
+    async def refresh_access_token(refresh_token: str) -> str:
+        response = await httpx.post(
+            "http://localhost:8000/auth/refresh",
+            json={"refresh_token": refresh_token}
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            return data["access_token"]
+        else:
+            # Re-login required
+            return await login(username, password)
+
+    # Auto-refresh implementation
+    class TokenRefresher:
+        def __init__(self):
+            self.access_token = None
+            self.refresh_token = None
+            self.expires_at = None
+
+        async def get_valid_token(self):
+            if not self.access_token or datetime.now() >= self.expires_at:
+                await self.refresh()
+            return self.access_token
+
+        async def refresh(self):
+            if self.refresh_token:
+                new_token = await refresh_access_token(self.refresh_token)
+                self.access_token = new_token
+                self.expires_at = datetime.now() + timedelta(hours=1)
+            else:
+                await self.login()
+    ```
+  </Accordion>
+
+  <Accordion title="Keycloak connection failed">
+    **Symptom**:
+    ```
+    ERROR: Failed to fetch JWKS from Keycloak
+    ConnectionRefusedError: [Errno 111] Connection refused
+    ```
+
+    **Debug**:
+    ```bash
+    # Check Keycloak is running
+    kubectl get pods -l app=keycloak
+
+    # Check Keycloak logs
+    kubectl logs -l app=keycloak --tail=50
+
+    # Test Keycloak endpoint
+    curl http://keycloak:8080/health
+
+    # Check network policy
+    kubectl get networkpolicies
+
+    # Test DNS resolution
+    kubectl run -it --rm debug --image=busybox --restart=Never -- nslookup keycloak
+    ```
+
+    **Fix**:
+    ```yaml
+    # Update Keycloak URL in config
+    env:
+    - name: KEYCLOAK_SERVER_URL
+      value: "http://keycloak.langgraph-agent.svc.cluster.local:8080"
+
+    # Or use external URL
+    - name: KEYCLOAK_SERVER_URL
+      value: "https://keycloak.yourdomain.com"
+    ```
+  </Accordion>
+
+  <Accordion title="MFA required but not configured">
+    **Symptom**:
+    ```json
+    {
+      "detail": "Multi-factor authentication required"
+    }
+    ```
+
+    **Solution**:
+    ```bash
+    # Disable MFA for development
+    export MFA_REQUIRED=false
+
+    # Configure MFA in Keycloak
+    # 1. Login to Keycloak admin console
+    # 2. Go to Realm Settings → Authentication
+    # 3. Click "Required Actions"
+    # 4. Enable "Configure OTP"
+    # 5. User must configure OTP on next login
+
+    # Test MFA flow
+    curl -X POST http://localhost:8000/auth/login \
+      -d '{"username":"alice","password":"***","otp":"123456"}'
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Authorization Issues
+
+<AccordionGroup>
+  <Accordion title="Permission denied despite valid role">
+    **Symptom**:
+    ```json
+    {
+      "detail": "Permission denied: user:alice cannot executor tool:chat"
+    }
+    ```
+
+    **Debug**:
+    ```python
+    # Check user's permissions
+    from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+    client = OpenFGAClient()
+
+    # List all user's tuples
+    tuples = await client.read_tuples(user="user:alice")
+    for t in tuples:
+        print(f"{t['user']} → {t['relation']} → {t['object']}")
+
+    # Check specific permission
+    allowed = await client.check_permission(
+        user="user:alice",
+        relation="executor",
+        object="tool:chat"
+    )
+    print(f"Allowed: {allowed}")
+
+    # List what tools user can execute
+    tools = await client.list_objects(
+        user="user:alice",
+        relation="executor",
+        object_type="tool"
+    )
+    print(f"Executable tools: {tools}")
+    ```
+
+    **Fix**:
+    ```python
+    # Grant permission
+    await client.write_tuples([{
+        "user": "user:alice",
+        "relation": "executor",
+        "object": "tool:chat"
+    }])
+
+    # Or grant via organization
+    await client.write_tuples([
+        # Make alice a member
+        {
+            "user": "user:alice",
+            "relation": "member",
+            "object": "organization:default"
+        },
+        # Grant org members access to tool
+        {
+            "user": "organization:default#member",
+            "relation": "executor",
+            "object": "tool:chat"
+        }
+    ])
+    ```
+  </Accordion>
+
+  <Accordion title="OpenFGA connection failed">
+    **Symptom**:
+    ```
+    ERROR: OpenFGA API request failed: Connection refused
+    ```
+
+    **Debug**:
+    ```bash
+    # Check OpenFGA is running
+    kubectl get pods -l app=openfga
+
+    # Check OpenFGA health
+    curl http://localhost:8080/healthz
+
+    # Check store ID
+    echo $OPENFGA_STORE_ID
+
+    # List stores
+    curl http://localhost:8080/stores
+
+    # Check authorization model
+    curl http://localhost:8080/stores/$OPENFGA_STORE_ID/authorization-models
+    ```
+
+    **Fix**:
+    ```bash
+    # Re-run setup script
+    python scripts/setup/setup_openfga.py
+
+    # Update configuration
+    export OPENFGA_API_URL=http://openfga.langgraph-agent.svc.cluster.local:8080
+    export OPENFGA_STORE_ID=<store-id-from-setup>
+    export OPENFGA_MODEL_ID=<model-id-from-setup>
+
+    # Restart application
+    kubectl rollout restart deployment/langgraph-agent
+    ```
+  </Accordion>
+
+  <Accordion title="Keycloak role not synced to OpenFGA">
+    **Symptom**: User has role in Keycloak but no permissions in OpenFGA
+
+    **Debug**:
+    ```python
+    # Check Keycloak roles
+    from mcp_server_langgraph.auth.keycloak import KeycloakClient
+
+    kc = KeycloakClient()
+    user = await kc.get_user_by_username("alice")
+    roles = await kc.get_user_roles(user['id'])
+    print(f"Keycloak roles: {roles}")
+
+    # Check OpenFGA tuples
+    tuples = await openfga_client.read_tuples(user="user:alice")
+    print(f"OpenFGA tuples: {tuples}")
+    ```
+
+    **Fix**:
+    ```python
+    # Manual sync
+    from scripts.sync_keycloak_roles import sync_user_permissions
+
+    await sync_user_permissions("alice")
+
+    # Or sync all users
+    await sync_all_users()
+
+    # Enable automatic sync
+    export KEYCLOAK_SYNC_ENABLED=true
+    export KEYCLOAK_SYNC_INTERVAL=300  # 5 minutes
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Database Issues
+
+<AccordionGroup>
+  <Accordion title="PostgreSQL connection refused">
+    **Symptom**:
+    ```
+    psycopg2.OperationalError: could not connect to server: Connection refused
+    ```
+
+    **Debug**:
+    ```bash
+    # Check PostgreSQL is running
+    kubectl get pods -l app=postgres
+
+    # Check logs
+    kubectl logs postgres-0 --tail=50
+
+    # Test connection
+    kubectl exec -it postgres-0 -- psql -U postgres -c "SELECT 1"
+
+    # Check credentials
+    kubectl get secret postgres-credentials -o yaml
+
+    # Check service
+    kubectl get svc postgres
+    ```
+
+    **Fix**:
+    ```bash
+    # Verify connection string
+    export DATABASE_URL="postgresql://user:password@postgres:5432/dbname"
+
+    # Check network policy allows connection
+    kubectl get networkpolicies
+
+    # Restart PostgreSQL
+    kubectl rollout restart statefulset/postgres
+
+    # Check PostgreSQL config
+    kubectl exec -it postgres-0 -- cat /var/lib/postgresql/data/postgresql.conf | grep listen_addresses
+    # Should be: listen_addresses = '*'
+    ```
+  </Accordion>
+
+  <Accordion title="Redis connection timeout">
+    **Symptom**:
+    ```
+    redis.exceptions.TimeoutError: Timeout reading from socket
+    ```
+
+    **Debug**:
+    ```bash
+    # Check Redis is running
+    kubectl get pods -l app=redis
+
+    # Test Redis
+    kubectl exec -it redis-master-0 -- redis-cli ping
+    # Should return: PONG
+
+    # Check Redis config
+    kubectl exec -it redis-master-0 -- redis-cli CONFIG GET timeout
+    kubectl exec -it redis-master-0 -- redis-cli CONFIG GET tcp-keepalive
+
+    # Check connection from app pod
+    kubectl exec -it langgraph-agent-xxx -- redis-cli -h redis-master ping
+    ```
+
+    **Fix**:
+    ```python
+    # Increase timeout
+    redis_client = Redis(
+        host="redis-master",
+        port=6379,
+        socket_timeout=10,  # Increased
+        socket_connect_timeout=10,
+        retry_on_timeout=True
+    )
+
+    # Connection pooling
+    pool = redis.ConnectionPool(
+        host="redis-master",
+        port=6379,
+        max_connections=50,
+        socket_timeout=10
+    )
+    redis_client = redis.Redis(connection_pool=pool)
+    ```
+  </Accordion>
+
+  <Accordion title="Database deadlock">
+    **Symptom**:
+    ```
+    psycopg2.errors.DeadlockDetected: deadlock detected
+    ```
+
+    **Debug**:
+    ```sql
+    -- Find blocking queries
+    SELECT
+        blocked_locks.pid AS blocked_pid,
+        blocked_activity.usename AS blocked_user,
+        blocking_locks.pid AS blocking_pid,
+        blocking_activity.usename AS blocking_user,
+        blocked_activity.query AS blocked_statement,
+        blocking_activity.query AS blocking_statement
+    FROM pg_catalog.pg_locks blocked_locks
+    JOIN pg_catalog.pg_stat_activity blocked_activity ON blocked_activity.pid = blocked_locks.pid
+    JOIN pg_catalog.pg_locks blocking_locks ON blocking_locks.locktype = blocked_locks.locktype
+    JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
+    WHERE NOT blocked_locks.granted;
+
+    -- Kill blocking query
+    SELECT pg_terminate_backend(<blocking_pid>);
+    ```
+
+    **Fix**:
+    ```python
+    # Use consistent lock ordering
+    async def update_conversation_and_user(conv_id, user_id):
+        # Always acquire locks in same order
+        async with db.transaction():
+            # Lock user first, then conversation
+            await db.execute(
+                "SELECT * FROM users WHERE id = %s FOR UPDATE",
+                (user_id,)
+            )
+            await db.execute(
+                "SELECT * FROM conversations WHERE id = %s FOR UPDATE",
+                (conv_id,)
+            )
+
+            # Perform updates
+            ...
+
+    # Set statement timeout
+    await db.execute("SET statement_timeout = '30s'")
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## LLM Issues
+
+<AccordionGroup>
+  <Accordion title="API rate limit exceeded">
+    **Symptom**:
+    ```json
+    {
+      "error": {
+        "type": "rate_limit_error",
+        "message": "Rate limit exceeded"
+      }
+    }
+    ```
+
+    **Solution**:
+    ```python
+    # Enable automatic fallback
+    from mcp_server_langgraph.llm.factory import LLMFactory
+
+    llm = LLMFactory(
+        provider="anthropic",
+        model_name="claude-3-5-sonnet-20241022",
+        enable_fallback=True,
+        fallback_models=[
+            "gemini-2.0-flash-exp",  # Google fallback
+            "gpt-4o-mini"  # OpenAI fallback
+        ]
+    )
+
+    # Implement exponential backoff
+    from tenacity import retry, stop_after_attempt, wait_exponential
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10)
+    )
+    async def call_llm_with_retry(prompt: str):
+        return await llm.invoke(prompt)
+
+    # Rate limiting
+    from slowapi import Limiter
+
+    limiter = Limiter(key_func=lambda: get_current_user().id)
+
+    @app.post("/message")
+    @limiter.limit("30/minute")  # Limit requests per user
+    async def send_message(request: Request):
+        pass
+    ```
+  </Accordion>
+
+  <Accordion title="LLM timeout">
+    **Symptom**:
+    ```
+    TimeoutError: LLM request timed out after 60 seconds
+    ```
+
+    **Debug**:
+    ```python
+    # Check LLM settings
+    print(f"Timeout: {settings.llm_timeout}")
+    print(f"Max tokens: {settings.llm_max_tokens}")
+
+    # Test LLM directly
+    from anthropic import Anthropic
+
+    client = Anthropic(api_key=settings.anthropic_api_key)
+    response = client.messages.create(
+        model="claude-3-5-sonnet-20241022",
+        max_tokens=100,
+        messages=[{"role": "user", "content": "Hi"}]
+    )
+    print(response.content[0].text)
+    ```
+
+    **Fix**:
+    ```python
+    # Increase timeout
+    export LLM_TIMEOUT=120  # 2 minutes
+
+    # Reduce max tokens
+    export LLM_MAX_TOKENS=4096  # Smaller responses
+
+    # Use streaming
+    async def stream_llm_response(prompt: str):
+        async for chunk in llm.astream(prompt):
+            yield chunk
+            # Process incrementally
+    ```
+  </Accordion>
+
+  <Accordion title="Invalid API key">
+    **Symptom**:
+    ```json
+    {
+      "error": {
+        "type": "authentication_error",
+        "message": "Invalid API key"
+      }
+    }
+    ```
+
+    **Debug**:
+    ```bash
+    # Check API key is set
+    echo $ANTHROPIC_API_KEY | head -c 10
+
+    # Verify in Infisical
+    python -c "
+    from mcp_server_langgraph.core.config import settings
+    print(f'Has API key: {bool(settings.anthropic_api_key)}')
+    print(f'Key prefix: {settings.anthropic_api_key[:10]}')
+    "
+
+    # Test key directly
+    curl https://api.anthropic.com/v1/messages \
+      -H "x-api-key: $ANTHROPIC_API_KEY" \
+      -H "anthropic-version: 2023-06-01" \
+      -H "content-type: application/json" \
+      -d '{"model":"claude-3-5-sonnet-20241022","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
+    ```
+
+    **Fix**:
+    ```bash
+    # Update API key in Infisical
+    # 1. Login to Infisical dashboard
+    # 2. Go to project > Secrets
+    # 3. Update ANTHROPIC_API_KEY
+    # 4. Restart application
+
+    # Or set temporarily
+    export ANTHROPIC_API_KEY=sk-ant-...
+
+    # Restart pod to pick up new secret
+    kubectl rollout restart deployment/langgraph-agent
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Performance Issues
+
+<AccordionGroup>
+  <Accordion title="Slow API responses">
+    **Symptom**: Requests taking > 5 seconds
+
+    **Debug**:
+    ```python
+    # Enable detailed logging
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+
+    # Add timing middleware
+    import time
+    from fastapi import Request
+
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        logger.info(f"{request.method} {request.url.path} took {process_time:.2f}s")
+        return response
+
+    # Profile with cProfile
+    import cProfile
+    import pstats
+
+    profiler = cProfile.Profile()
+    profiler.enable()
+    # Run request
+    profiler.disable()
+    stats = pstats.Stats(profiler)
+    stats.sort_stats('cumulative')
+    stats.print_stats(20)
+    ```
+
+    **Common fixes**:
+    ```python
+    # 1. Add database indexes
+    CREATE INDEX idx_conversations_user_id ON conversations(user_id);
+    CREATE INDEX idx_sessions_user_id ON sessions(user_id);
+
+    # 2. Enable Redis caching
+    from functools import lru_cache
+
+    @lru_cache(maxsize=1000)
+    async def get_user_permissions(user_id: str):
+        return await openfga_client.list_objects(user=f"user:{user_id}")
+
+    # 3. Connection pooling
+    from sqlalchemy import create_engine
+    from sqlalchemy.pool import QueuePool
+
+    engine = create_engine(
+        DATABASE_URL,
+        poolclass=QueuePool,
+        pool_size=20,
+        max_overflow=10
+    )
+
+    # 4. Parallel processing
+    import asyncio
+
+    async def process_request(query: str):
+        # Run in parallel
+        auth_check, user_data, context = await asyncio.gather(
+            check_permissions(),
+            get_user_data(),
+            load_conversation_context()
+        )
+    ```
+  </Accordion>
+
+  <Accordion title="High memory usage">
+    **Symptom**: Pods being OOMKilled
+
+    **Debug**:
+    ```bash
+    # Check memory usage
+    kubectl top pods -n langgraph-agent
+
+    # View OOMKilled events
+    kubectl get events --sort-by='.metadata.creationTimestamp' | grep OOMKilled
+
+    # Check resource limits
+    kubectl describe pod langgraph-agent-xxx | grep -A 5 Limits
+
+    # Profile memory
+    import tracemalloc
+    tracemalloc.start()
+
+    # Run application
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics('lineno')
+
+    for stat in top_stats[:10]:
+        print(stat)
+    ```
+
+    **Fix**:
+    ```yaml
+    # Increase memory limits
+    resources:
+      requests:
+        memory: 2Gi
+      limits:
+        memory: 4Gi
+
+    # Or fix memory leaks
+    ```
+
+    ```python
+    # 1. Clear caches periodically
+    import gc
+
+    async def clear_caches():
+        cache.clear()
+        gc.collect()
+
+    schedule.every(1).hours.do(clear_caches)
+
+    # 2. Limit LLM response sizes
+    llm = LLMFactory(
+        max_tokens=2048  # Smaller limit
+    )
+
+    # 3. Stream large responses
+    async for chunk in llm.astream(prompt):
+        yield chunk
+        # Don't accumulate in memory
+    ```
+  </Accordion>
+
+  <Accordion title="CPU throttling">
+    **Symptom**: Slow performance, high CPU usage
+
+    **Debug**:
+    ```bash
+    # Check CPU usage
+    kubectl top pods -n langgraph-agent
+
+    # Check throttling
+    kubectl describe pod langgraph-agent-xxx | grep -i throttl
+
+    # Profile CPU
+    python -m cProfile -o profile.stats main.py
+
+    # Analyze
+    python -c "
+    import pstats
+    p = pstats.Stats('profile.stats')
+    p.sort_stats('cumulative')
+    p.print_stats(20)
+    "
+    ```
+
+    **Fix**:
+    ```yaml
+    # Increase CPU limits
+    resources:
+      requests:
+        cpu: 2000m
+      limits:
+        cpu: 4000m
+
+    # Or optimize code
+    ```
+
+    ```python
+    # 1. Async I/O instead of sync
+    # Bad
+    result = requests.get(url)
+
+    # Good
+    async with httpx.AsyncClient() as client:
+        result = await client.get(url)
+
+    # 2. Batch processing
+    # Bad
+    for item in items:
+        await process(item)
+
+    # Good
+    await asyncio.gather(*[process(item) for item in items])
+
+    # 3. Reduce validation overhead
+    # Use Pydantic v2 (faster than v1)
+    pip install pydantic==2.x
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Kubernetes Issues
+
+<AccordionGroup>
+  <Accordion title="Pods crashing (CrashLoopBackOff)">
+    **Debug**:
+    ```bash
+    # View pod status
+    kubectl get pods -n langgraph-agent
+
+    # View logs from crashed container
+    kubectl logs <pod-name> --previous
+
+    # Describe pod for events
+    kubectl describe pod <pod-name>
+
+    # Check init containers
+    kubectl logs <pod-name> -c init-migrations
+    ```
+
+    **Common fixes**:
+    ```yaml
+    # 1. Increase startup time
+    startupProbe:
+      httpGet:
+        path: /health/startup
+        port: 8000
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 30  # 150 seconds total
+
+    # 2. Fix dependency order
+    initContainers:
+    - name: wait-for-postgres
+      image: busybox
+      command:
+      - sh
+      - -c
+      - |
+        until nc -z postgres 5432; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+
+    # 3. Add resource limits
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "2000m"
+    ```
+  </Accordion>
+
+  <Accordion title="ImagePullBackOff">
+    **Debug**:
+    ```bash
+    # Check image pull status
+    kubectl describe pod <pod-name> | grep -A 10 Events
+
+    # Check image exists
+    docker pull langgraph-agent:latest
+
+    # Check registry credentials
+    kubectl get secret regcred -o yaml
+    ```
+
+    **Fix**:
+    ```bash
+    # Create image pull secret
+    kubectl create secret docker-registry regcred \
+      --docker-server=https://index.docker.io/v1/ \
+      --docker-username=<username> \
+      --docker-password=<password> \
+      --docker-email=<email>
+
+    # Use in deployment
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: agent
+        image: your-registry/langgraph-agent:latest
+    ```
+  </Accordion>
+
+  <Accordion title="Service not reachable">
+    **Debug**:
+    ```bash
+    # Check service
+    kubectl get svc langgraph-agent
+
+    # Check endpoints
+    kubectl get endpoints langgraph-agent
+
+    # Test from another pod
+    kubectl run -it --rm debug --image=busybox --restart=Never -- \
+      wget -O- http://langgraph-agent:8000/health
+
+    # Check network policies
+    kubectl get networkpolicies
+
+    # Check ingress
+    kubectl get ingress
+    kubectl describe ingress langgraph-agent
+    ```
+
+    **Fix**:
+    ```yaml
+    # Verify selector matches pod labels
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: langgraph-agent
+    spec:
+      selector:
+        app: langgraph-agent  # Must match pod label
+      ports:
+      - port: 80
+        targetPort: 8000
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Observability & Debugging
+
+### Enable Debug Logging
+
+```python
+# config.py
+import logging
+
+# Set log level
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Enable debug logging
+export LOG_LEVEL=DEBUG
+
+# Structured logging
+import structlog
+
+structlog.configure(
+    processors=[
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.JSONRenderer()
+    ]
+)
+
+logger = structlog.get_logger()
+logger.debug("debug_message", user_id="alice", action="login")
+```
+
+### Distributed Tracing
+
+```python
+# Enable OpenTelemetry tracing
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Configure tracer
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer(__name__)
+
+jaeger_exporter = JaegerExporter(
+    agent_host_name="jaeger",
+    agent_port=6831,
+)
+
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(jaeger_exporter)
+)
+
+# Add tracing to requests
+@app.post("/message")
+async def send_message(request: Request):
+    with tracer.start_as_current_span("send_message") as span:
+        span.set_attribute("user_id", user.id)
+        span.set_attribute("query_length", len(request.query))
+
+        result = await process_message(request)
+
+        span.set_attribute("response_length", len(result))
+        return result
+
+# View traces in Jaeger
+# http://localhost:16686
+```
+
+### Health Checks
+
+```python
+# Detailed health check
+from fastapi import status
+
+@app.get("/health/detailed")
+async def health_detailed():
+    checks = {}
+
+    # Database
+    try:
+        await db.execute("SELECT 1")
+        checks["database"] = "healthy"
+    except Exception as e:
+        checks["database"] = f"unhealthy: {str(e)}"
+
+    # Redis
+    try:
+        await redis.ping()
+        checks["redis"] = "healthy"
+    except Exception as e:
+        checks["redis"] = f"unhealthy: {str(e)}"
+
+    # OpenFGA
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"{settings.openfga_api_url}/healthz")
+            checks["openfga"] = "healthy" if r.status_code == 200 else "unhealthy"
+    except Exception as e:
+        checks["openfga"] = f"unhealthy: {str(e)}"
+
+    # Keycloak
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"{settings.keycloak_server_url}/health")
+            checks["keycloak"] = "healthy" if r.status_code == 200 else "unhealthy"
+    except Exception as e:
+        checks["keycloak"] = f"unhealthy: {str(e)}"
+
+    # Overall status
+    all_healthy = all(v == "healthy" for v in checks.values())
+    status_code = status.HTTP_200_OK if all_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
+
+    return JSONResponse(
+        status_code=status_code,
+        content={"status": "healthy" if all_healthy else "unhealthy", "checks": checks}
+    )
+```
+
+## Getting Help
+
+### Collect Debug Information
+
+```bash
+#!/bin/bash
+# collect-debug-info.sh
+
+NAMESPACE="langgraph-agent"
+OUTPUT_DIR="debug-$(date +%Y%m%d-%H%M%S)"
+mkdir -p $OUTPUT_DIR
+
+# Pod status
+kubectl get pods -n $NAMESPACE > $OUTPUT_DIR/pods.txt
+
+# Pod logs
+for pod in $(kubectl get pods -n $NAMESPACE -o name); do
+    kubectl logs -n $NAMESPACE $pod > "$OUTPUT_DIR/$(basename $pod).log" 2>&1
+    kubectl logs -n $NAMESPACE $pod --previous > "$OUTPUT_DIR/$(basename $pod)-previous.log" 2>&1 || true
+done
+
+# Describe pods
+for pod in $(kubectl get pods -n $NAMESPACE -o name); do
+    kubectl describe -n $NAMESPACE $pod > "$OUTPUT_DIR/$(basename $pod)-describe.txt"
+done
+
+# Events
+kubectl get events -n $NAMESPACE --sort-by='.metadata.creationTimestamp' > $OUTPUT_DIR/events.txt
+
+# ConfigMaps and Secrets (names only)
+kubectl get configmaps -n $NAMESPACE -o yaml > $OUTPUT_DIR/configmaps.yaml
+kubectl get secrets -n $NAMESPACE -o yaml | sed 's/data:.*/data: REDACTED/' > $OUTPUT_DIR/secrets.yaml
+
+# Services and Ingress
+kubectl get svc,ingress -n $NAMESPACE -o yaml > $OUTPUT_DIR/network.yaml
+
+# Create archive
+tar -czf $OUTPUT_DIR.tar.gz $OUTPUT_DIR
+
+echo "Debug information collected in $OUTPUT_DIR.tar.gz"
+```
+
+### Community Support
+
+- **GitHub Issues**: https://github.com/your-repo/issues
+- **Discord**: https://discord.gg/your-server
+- **Stack Overflow**: Tag `mcp-server-langgraph`
+
+**Include in support requests**:
+1. Debug information bundle
+2. Kubernetes/Docker version
+3. Python version
+4. Steps to reproduce
+5. Expected vs actual behavior
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/getting-started/architecture">
+    Understand system architecture
+  </Card>
+  <Card title="Observability" icon="chart-line" href="/guides/observability">
+    Set up monitoring
+  </Card>
+  <Card title="Production Checklist" icon="clipboard-check" href="/deployment/production-checklist">
+    Pre-deployment verification
+  </Card>
+  <Card title="Security Best Practices" icon="shield" href="/security/best-practices">
+    Secure your deployment
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Debugging Made Easy**: Systematic troubleshooting gets you back online quickly!
+</Check>

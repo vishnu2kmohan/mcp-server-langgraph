@@ -1,0 +1,850 @@
+---
+title: Helm Deployment
+description: 'Deploy MCP Server using Helm charts for simplified management'
+icon: 'helm'
+---
+
+## Overview
+
+Deploy the MCP Server with LangGraph using Helm for simplified Kubernetes deployment management. The Helm chart includes all dependencies (Keycloak, Redis, OpenFGA, PostgreSQL) with production-ready defaults.
+
+<Info>
+**v2.1.0** Helm chart includes Keycloak SSO, Redis sessions, OpenFGA authorization, and comprehensive observability.
+</Info>
+
+## Quick Start
+
+```bash
+# Add Helm repository (future - when published)
+# helm repo add langgraph https://your-org.github.io/helm-charts
+# helm repo update
+
+# For now, use local chart
+cd deployments/helm
+
+# Install with default values
+helm install langgraph-agent ./langgraph-agent \
+  --namespace langgraph-agent \
+  --create-namespace \
+  --set image.repository=gcr.io/your-project/langgraph-agent \
+  --set image.tag=v2.1.0 \
+  --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}"
+
+# Check deployment status
+helm status langgraph-agent -n langgraph-agent
+
+# Get service URL
+kubectl get ingress -n langgraph-agent
+```
+
+## Prerequisites
+
+<Steps>
+  <Step title="Install Helm">
+    ```bash
+    # Install Helm 3
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    # Verify installation
+    helm version
+    ```
+  </Step>
+
+  <Step title="Kubernetes Cluster">
+    - Kubernetes 1.25+
+    - kubectl configured
+    - 4+ vCPUs, 8GB+ RAM
+    - 100GB+ storage
+  </Step>
+
+  <Step title="Container Image">
+    Build and push your container image:
+
+    ```bash
+    docker build -t gcr.io/your-project/langgraph-agent:v2.1.0 .
+    docker push gcr.io/your-project/langgraph-agent:v2.1.0
+    ```
+  </Step>
+
+  <Step title="Dependencies (Optional)">
+    Add required Helm repositories for dependencies:
+
+    ```bash
+    # Bitnami (Keycloak, Redis, PostgreSQL)
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+
+    # OpenFGA
+    helm repo add openfga https://openfga.github.io/helm-charts
+
+    helm repo update
+    ```
+  </Step>
+</Steps>
+
+## Chart Structure
+
+```
+deployments/helm/langgraph-agent/
+├── Chart.yaml              # Chart metadata
+├── values.yaml             # Default configuration
+├── values-production.yaml  # Production overrides
+├── templates/
+│   ├── deployment.yaml     # Main application
+│   ├── service.yaml        # Kubernetes Service
+│   ├── ingress.yaml        # Ingress configuration
+│   ├── configmap.yaml      # Configuration
+│   ├── secret.yaml         # Secrets
+│   ├── serviceaccount.yaml # Service account
+│   ├── hpa.yaml            # Autoscaling
+│   ├── pdb.yaml            # Pod disruption budget
+│   └── _helpers.tpl        # Template helpers
+└── README.md
+```
+
+## Installation
+
+### Basic Installation
+
+```bash
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
+  --namespace langgraph-agent \
+  --create-namespace \
+  --set image.repository=gcr.io/your-project/langgraph-agent \
+  --set image.tag=v2.1.0 \
+  --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
+  --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
+  --set ingress.enabled=true \
+  --set ingress.hosts[0].host=api.yourdomain.com
+```
+
+### With Custom Values File
+
+<Tabs>
+  <Tab title="Create values-production.yaml">
+    ```yaml
+    # values-production.yaml
+    replicaCount: 5
+
+    image:
+      repository: gcr.io/your-project/langgraph-agent
+      tag: "v2.1.0"
+      pullPolicy: IfNotPresent
+
+    # Ingress
+    ingress:
+      enabled: true
+      className: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      hosts:
+        - host: api.yourdomain.com
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: langgraph-agent-tls
+          hosts:
+            - api.yourdomain.com
+
+    # Autoscaling
+    autoscaling:
+      enabled: true
+      minReplicas: 5
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 70
+
+    # Resources
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+      limits:
+        cpu: 4000m
+        memory: 4Gi
+
+    # Application config
+    config:
+      llmProvider: "anthropic"
+      modelName: "claude-3-5-sonnet-20241022"
+      authProvider: "keycloak"
+      authMode: "session"
+      enableTracing: true
+      enableMetrics: true
+
+    # Keycloak SSO
+    keycloak:
+      enabled: true
+      replicaCount: 2
+      postgresql:
+        enabled: true
+      ingress:
+        enabled: true
+        hostname: sso.yourdomain.com
+
+    # Redis Sessions
+    redis:
+      enabled: true
+      architecture: replication
+      master:
+        persistence:
+          enabled: true
+          size: 20Gi
+      replica:
+        replicaCount: 2
+        persistence:
+          enabled: true
+
+    # OpenFGA
+    openfga:
+      enabled: true
+      replicaCount: 2
+
+    # PostgreSQL (for Keycloak & OpenFGA)
+    postgresql:
+      enabled: true
+      primary:
+        persistence:
+          enabled: true
+          size: 50Gi
+    ```
+  </Tab>
+
+  <Tab title="Install">
+    ```bash
+    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+      --namespace langgraph-agent \
+      --create-namespace \
+      --values values-production.yaml \
+      --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
+      --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
+      --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
+      --set secrets.redisPassword="$(openssl rand -base64 32)"
+    ```
+  </Tab>
+</Tabs>
+
+### Cloud-Specific Installations
+
+<Tabs>
+  <Tab title="Google Cloud (GKE)">
+    ```yaml
+    # values-gke.yaml
+    image:
+      repository: gcr.io/your-project/langgraph-agent
+
+    serviceAccount:
+      create: true
+      annotations:
+        iam.gke.io/gcp-service-account: langgraph-agent@your-project.iam.gserviceaccount.com
+
+    ingress:
+      enabled: true
+      className: "gce"
+      annotations:
+        kubernetes.io/ingress.global-static-ip-name: "langgraph-agent-ip"
+        networking.gke.io/managed-certificates: "langgraph-agent-cert"
+
+    keycloak:
+      ingress:
+        className: "gce"
+
+    postgresql:
+      primary:
+        persistence:
+          storageClass: "standard-rwo"
+
+    redis:
+      master:
+        persistence:
+          storageClass: "standard-rwo"
+    ```
+
+    ```bash
+    # Create static IP
+    gcloud compute addresses create langgraph-agent-ip --global
+
+    # Install chart
+    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+      -n langgraph-agent --create-namespace \
+      -f values-gke.yaml
+    ```
+  </Tab>
+
+  <Tab title="AWS (EKS)">
+    ```yaml
+    # values-eks.yaml
+    image:
+      repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/langgraph-agent
+
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/langgraph-agent-role
+
+    ingress:
+      enabled: true
+      className: "alb"
+      annotations:
+        alb.ingress.kubernetes.io/scheme: internet-facing
+        alb.ingress.kubernetes.io/target-type: ip
+        alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:...
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+
+    postgresql:
+      primary:
+        persistence:
+          storageClass: "gp3"
+
+    redis:
+      master:
+        persistence:
+          storageClass: "gp3"
+    ```
+
+    ```bash
+    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+      -n langgraph-agent --create-namespace \
+      -f values-eks.yaml
+    ```
+  </Tab>
+
+  <Tab title="Azure (AKS)">
+    ```yaml
+    # values-aks.yaml
+    image:
+      repository: yourregistry.azurecr.io/langgraph-agent
+
+    serviceAccount:
+      create: true
+      annotations:
+        azure.workload.identity/client-id: "your-client-id"
+
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+
+    postgresql:
+      primary:
+        persistence:
+          storageClass: "managed-premium"
+
+    redis:
+      master:
+        persistence:
+          storageClass: "managed-premium"
+    ```
+
+    ```bash
+    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+      -n langgraph-agent --create-namespace \
+      -f values-aks.yaml
+    ```
+  </Tab>
+</Tabs>
+
+## Configuration
+
+### Application Configuration
+
+```yaml
+# In values.yaml
+config:
+  # Service
+  environment: "production"
+  logLevel: "INFO"
+
+  # LLM Provider
+  llmProvider: "anthropic"  # google, anthropic, openai, azure
+  modelName: "claude-3-5-sonnet-20241022"
+  modelTemperature: "0.7"
+  modelMaxTokens: "4096"
+  enableFallback: true
+
+  # Agent
+  maxIterations: 10
+  enableCheckpointing: true
+
+  # Authentication
+  authProvider: "keycloak"  # inmemory, keycloak
+  authMode: "session"       # token, session
+
+  # Keycloak
+  keycloakServerUrl: "http://keycloak:8080"
+  keycloakRealm: "langgraph-agent"
+  keycloakClientId: "langgraph-client"
+  keycloakVerifySsl: true
+
+  # Sessions
+  sessionBackend: "redis"
+  redisUrl: "redis://redis-session:6379/0"
+  sessionTtlSeconds: 86400
+  sessionSlidingWindow: true
+  sessionMaxConcurrent: 5
+
+  # OpenFGA
+  openfgaApiUrl: "http://openfga:8080"
+
+  # Observability
+  enableTracing: true
+  enableMetrics: true
+  observabilityBackend: "opentelemetry"
+  otlpEndpoint: "http://otel-collector:4317"
+```
+
+### Secrets Configuration
+
+<Warning>
+**Never commit secrets to Git!** Use `--set` flags, external secret managers, or Kubernetes secrets.
+</Warning>
+
+```yaml
+# In values.yaml (DO NOT commit actual values!)
+secrets:
+  # LLM API Keys
+  anthropicApiKey: ""
+  googleApiKey: ""
+  openaiApiKey: ""
+
+  # Authentication
+  jwtSecretKey: ""
+  keycloakClientSecret: ""
+
+  # Session Store
+  redisPassword: ""
+
+  # OpenFGA
+  openfgaStoreId: ""
+  openfgaModelId: ""
+
+  # Observability (optional)
+  langsmithApiKey: ""
+
+  # Secrets Management (optional)
+  infisicalClientId: ""
+  infisicalClientSecret: ""
+  infisicalProjectId: ""
+```
+
+Set secrets via command line:
+```bash
+helm install langgraph-agent ./deployments/helm/langgraph-agent \
+  --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
+  --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
+  --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
+  --set secrets.keycloakClientSecret="${KEYCLOAK_CLIENT_SECRET}" \
+  --set secrets.redisPassword="$(openssl rand -base64 32)"
+```
+
+### Dependencies Configuration
+
+<Tabs>
+  <Tab title="Keycloak">
+    ```yaml
+    keycloak:
+      enabled: true
+      replicaCount: 2
+
+      auth:
+        adminUser: admin
+        adminPassword: ""  # Set via --set
+
+      postgresql:
+        enabled: true
+        auth:
+          password: ""  # Auto-generated
+
+      ingress:
+        enabled: true
+        hostname: sso.yourdomain.com
+        ingressClassName: nginx
+        tls: true
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 2Gi
+    ```
+  </Tab>
+
+  <Tab title="Redis">
+    ```yaml
+    redis:
+      enabled: true
+      architecture: replication  # standalone, replication
+
+      auth:
+        password: ""  # Set via --set
+
+      master:
+        persistence:
+          enabled: true
+          size: 10Gi
+          storageClass: "standard"
+
+      replica:
+        replicaCount: 2
+        persistence:
+          enabled: true
+          size: 10Gi
+
+      sentinel:
+        enabled: true
+
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    ```
+  </Tab>
+
+  <Tab title="OpenFGA">
+    ```yaml
+    openfga:
+      enabled: true
+      replicaCount: 2
+
+      datastore:
+        engine: postgres
+        # Uses postgresql dependency
+
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+    ```
+  </Tab>
+
+  <Tab title="PostgreSQL">
+    ```yaml
+    postgresql:
+      enabled: true
+
+      auth:
+        postgresPassword: ""  # Auto-generated
+        database: keycloak
+
+      primary:
+        persistence:
+          enabled: true
+          size: 50Gi
+          storageClass: "standard"
+
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    ```
+  </Tab>
+</Tabs>
+
+## Upgrading
+
+### Minor Version Upgrade
+
+```bash
+# Update values if needed
+vim values-production.yaml
+
+# Upgrade release
+helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+  --namespace langgraph-agent \
+  --values values-production.yaml \
+  --set image.tag=v2.1.1
+
+# Check rollout
+kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+```
+
+### Major Version Upgrade
+
+```bash
+# Check for breaking changes
+helm show notes ./deployments/helm/langgraph-agent
+
+# Backup current values
+helm get values langgraph-agent -n langgraph-agent > current-values.yaml
+
+# Perform upgrade
+helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+  --namespace langgraph-agent \
+  --values current-values.yaml \
+  --set image.tag=v3.0.0 \
+  --reuse-values
+
+# Verify
+helm list -n langgraph-agent
+kubectl get pods -n langgraph-agent
+```
+
+### Rollback
+
+```bash
+# List release history
+helm history langgraph-agent -n langgraph-agent
+
+# Rollback to previous version
+helm rollback langgraph-agent -n langgraph-agent
+
+# Or rollback to specific revision
+helm rollback langgraph-agent 3 -n langgraph-agent
+```
+
+## Uninstallation
+
+```bash
+# Uninstall release
+helm uninstall langgraph-agent -n langgraph-agent
+
+# Delete namespace (if desired)
+kubectl delete namespace langgraph-agent
+
+# Note: PVCs are not deleted by default
+# List PVCs
+kubectl get pvc -n langgraph-agent
+
+# Delete PVCs (WARNING: Deletes data!)
+kubectl delete pvc --all -n langgraph-agent
+```
+
+## Customization
+
+### Custom Init Containers
+
+```yaml
+# values.yaml
+initContainers:
+  - name: wait-for-database
+    image: busybox:1.36
+    command: ['sh', '-c']
+    args:
+      - |
+        until nc -z postgresql 5432; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+```
+
+### Custom Sidecars
+
+```yaml
+# values.yaml
+sidecars:
+  - name: cloud-sql-proxy
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+    args:
+      - "--structured-logs"
+      - "--port=5432"
+      - "your-project:us-central1:your-instance"
+    securityContext:
+      runAsNonRoot: true
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+```
+
+### Custom Volumes
+
+```yaml
+# values.yaml
+extraVolumes:
+  - name: model-cache
+    persistentVolumeClaim:
+      claimName: model-cache-pvc
+
+extraVolumeMounts:
+  - name: model-cache
+    mountPath: /app/.cache/models
+```
+
+### Environment Variables
+
+```yaml
+# values.yaml
+extraEnv:
+  - name: CUSTOM_VAR
+    value: "custom-value"
+  - name: SECRET_VAR
+    valueFrom:
+      secretKeyRef:
+        name: external-secret
+        key: secret-key
+```
+
+## Monitoring
+
+### Prometheus Integration
+
+```yaml
+# values.yaml
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    labels:
+      release: prometheus
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8000"
+  prometheus.io/path: "/metrics/prometheus"
+```
+
+### Grafana Dashboards
+
+```bash
+# Import dashboards from configmap
+kubectl create configmap langgraph-dashboards \
+  --from-file=dashboards/ \
+  --namespace=observability
+
+# Label for Grafana sidecar
+kubectl label configmap langgraph-dashboards \
+  grafana_dashboard=1 \
+  --namespace=observability
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Helm install fails">
+    ```bash
+    # Check for syntax errors
+    helm lint ./deployments/helm/langgraph-agent
+
+    # Dry-run to see rendered manifests
+    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+      --dry-run --debug \
+      --namespace langgraph-agent
+
+    # Check dependencies
+    helm dependency update ./deployments/helm/langgraph-agent
+    ```
+  </Accordion>
+
+  <Accordion title="Dependencies not deploying">
+    ```bash
+    # Update dependencies
+    cd deployments/helm/langgraph-agent
+    helm dependency update
+
+    # Check Chart.yaml dependencies
+    cat Chart.yaml
+
+    # Install with dependency conditions
+    helm install langgraph-agent . \
+      --set keycloak.enabled=true \
+      --set redis.enabled=true \
+      --set openfga.enabled=true
+    ```
+  </Accordion>
+
+  <Accordion title="Values not applying">
+    ```bash
+    # Check current values
+    helm get values langgraph-agent -n langgraph-agent
+
+    # Check all values (including defaults)
+    helm get values langgraph-agent -n langgraph-agent --all
+
+    # Verify rendered templates
+    helm template langgraph-agent ./deployments/helm/langgraph-agent \
+      --values values-production.yaml \
+      --debug
+    ```
+  </Accordion>
+
+  <Accordion title="Upgrade fails">
+    ```bash
+    # Check what will change
+    helm diff upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+      --values values-production.yaml
+
+    # Force upgrade
+    helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+      --force \
+      --cleanup-on-fail
+
+    # If stuck, delete and reinstall
+    helm uninstall langgraph-agent -n langgraph-agent
+    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+      --values values-production.yaml
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Version Control" icon="git">
+    - **Commit values files** to Git (without secrets)
+    - **Tag releases** with Helm chart version
+    - **Use semantic versioning** for Chart.yaml
+    - **Document breaking changes** in Chart notes
+  </Accordion>
+
+  <Accordion title="Secret Management" icon="key">
+    - **Never commit secrets** to values files
+    - **Use external secret operators** (External Secrets Operator, Sealed Secrets)
+    - **Rotate secrets regularly**
+    - **Use cloud secret managers** (GCP Secret Manager, AWS Secrets Manager)
+  </Accordion>
+
+  <Accordion title="Testing" icon="vial">
+    - **Test with helm lint** before deployment
+    - **Use --dry-run** to preview changes
+    - **Deploy to staging** first
+    - **Validate with smoke tests** after deployment
+  </Accordion>
+
+  <Accordion title="Production Readiness" icon="shield-check">
+    - **Enable autoscaling** for production
+    - **Set resource limits** appropriately
+    - **Enable PodDisruptionBudget** for HA
+    - **Use persistent volumes** for stateful components
+    - **Enable monitoring** and alerting
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">
+    Manual Kubernetes deployment guide
+  </Card>
+  <Card title="Production Checklist" icon="clipboard-check" href="/deployment/production-checklist">
+    Pre-deployment verification
+  </Card>
+  <Card title="Scaling Guide" icon="arrow-up-right-dots" href="/deployment/scaling">
+    Auto-scaling configuration
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/platform/monitoring">
+    Observability setup
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Simplified Deployment**: Helm charts make Kubernetes deployment easy with one command!
+</Check>

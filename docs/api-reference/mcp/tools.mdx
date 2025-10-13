@@ -1,0 +1,666 @@
+---
+title: MCP Tools
+description: 'Available tools and their usage in the Model Context Protocol'
+icon: 'wrench'
+---
+
+## Overview
+
+MCP tools are executable functions that the server exposes to clients. Each tool has a defined schema, inputs, and outputs, enabling AI agents to perform specific actions.
+
+<Info>
+Tools enable AI agents to interact with external systems, execute code, search data, and perform complex operations beyond text generation.
+</Info>
+
+## Available Tools
+
+### Chat Tool
+
+Send a message to the AI agent and receive an intelligent response.
+
+<ParamField path="name" type="string" default="chat">
+  Tool identifier
+</ParamField>
+
+**Input Schema**:
+```json
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "The message or question to send to the agent",
+      "minLength": 1,
+      "maxLength": 10000
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Optional conversation ID to maintain context across messages",
+      "pattern": "^conv_[a-zA-Z0-9]+$"
+    },
+    "stream": {
+      "type": "boolean",
+      "description": "Enable streaming responses",
+      "default": false
+    }
+  },
+  "required": ["query"]
+}
+```
+
+**Example Usage**:
+```python
+response = await client.call_tool("chat", {
+    "query": "Explain quantum entanglement",
+    "conversation_id": "conv_123",
+    "stream": False
+})
+
+print(response.content[0].text)
+```
+
+**Response**:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Quantum entanglement is a phenomenon where two or more particles become correlated in such a way that the quantum state of each particle cannot be described independently..."
+    }
+  ],
+  "isError": false,
+  "metadata": {
+    "model": "claude-3-5-sonnet-20241022",
+    "conversation_id": "conv_123",
+    "usage": {
+      "prompt_tokens": 20,
+      "completion_tokens": 150,
+      "total_tokens": 170
+    }
+  }
+}
+```
+
+### Search Web Tool
+
+Search the internet for current information.
+
+<ParamField path="name" type="string" default="search_web">
+  Tool identifier
+</ParamField>
+
+**Input Schema**:
+```json
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Search query",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "num_results": {
+      "type": "integer",
+      "description": "Number of results to return",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 5
+    }
+  },
+  "required": ["query"]
+}
+```
+
+**Example Usage**:
+```python
+results = await client.call_tool("search_web", {
+    "query": "latest AI developments 2025",
+    "num_results": 3
+})
+
+for item in results.content:
+    print(f"Title: {item.title}")
+    print(f"URL: {item.url}")
+    print(f"Snippet: {item.snippet}\n")
+```
+
+**Response**:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Search Results:\n\n1. **Latest AI Developments in 2025**\n   URL: https://example.com/ai-2025\n   Snippet: Recent breakthroughs in AI include...\n\n2. **AI Trends Report**\n   URL: https://example.com/trends\n   Snippet: The AI industry has seen..."
+    }
+  ],
+  "isError": false
+}
+```
+
+### Execute Code Tool
+
+Execute code in a sandboxed environment (if enabled).
+
+<ParamField path="name" type="string" default="execute_code">
+  Tool identifier
+</ParamField>
+
+**Input Schema**:
+```json
+{
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Code to execute",
+      "minLength": 1,
+      "maxLength": 50000
+    },
+    "language": {
+      "type": "string",
+      "description": "Programming language",
+      "enum": ["python", "javascript", "bash"],
+      "default": "python"
+    },
+    "timeout": {
+      "type": "integer",
+      "description": "Execution timeout in seconds",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 10
+    }
+  },
+  "required": ["code"]
+}
+```
+
+**Example Usage**:
+```python
+result = await client.call_tool("execute_code", {
+    "code": """
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))
+""",
+    "language": "python",
+    "timeout": 5
+})
+
+print(result.content[0].text)
+# Output: 55
+```
+
+**Response**:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "55\n"
+    }
+  ],
+  "isError": false,
+  "metadata": {
+    "execution_time": 0.023,
+    "language": "python"
+  }
+}
+```
+
+### Database Query Tool
+
+Query databases (if configured and authorized).
+
+<ParamField path="name" type="string" default="query_database">
+  Tool identifier
+</ParamField>
+
+**Input Schema**:
+```json
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "SQL query (SELECT only)",
+      "pattern": "^SELECT.*"
+    },
+    "database": {
+      "type": "string",
+      "description": "Database name",
+      "enum": ["analytics", "users", "products"]
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum rows to return",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100
+    }
+  },
+  "required": ["query", "database"]
+}
+```
+
+**Example Usage**:
+```python
+results = await client.call_tool("query_database", {
+    "query": "SELECT name, email FROM users WHERE active = true",
+    "database": "users",
+    "limit": 10
+})
+```
+
+**Response**:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "| name | email |\n|------|-------|\n| Alice | alice@example.com |\n| Bob | bob@example.com |"
+    }
+  ],
+  "isError": false,
+  "metadata": {
+    "rows_returned": 2,
+    "execution_time_ms": 45
+  }
+}
+```
+
+## Tool Discovery
+
+List all available tools:
+
+```python
+# List tools
+tools = await client.list_tools()
+
+for tool in tools:
+    print(f"Tool: {tool.name}")
+    print(f"  Description: {tool.description}")
+    print(f"  Input Schema: {json.dumps(tool.inputSchema, indent=2)}")
+```
+
+**Response Format**:
+```json
+{
+  "tools": [
+    {
+      "name": "chat",
+      "description": "Chat with the AI agent",
+      "inputSchema": {
+        "type": "object",
+        "properties": {...},
+        "required": ["query"]
+      }
+    }
+  ]
+}
+```
+
+## Tool Execution
+
+### Synchronous Execution
+
+Standard request-response pattern:
+
+```python
+result = await client.call_tool(
+    name="chat",
+    arguments={"query": "Hello!"}
+)
+
+if not result.isError:
+    print(result.content[0].text)
+else:
+    print(f"Error: {result.content[0].text}")
+```
+
+### Asynchronous Execution
+
+For long-running tools:
+
+```python
+# Start execution
+task_id = await client.call_tool_async(
+    name="execute_code",
+    arguments={"code": long_running_code}
+)
+
+# Poll for completion
+while True:
+    status = await client.get_tool_status(task_id)
+    if status.completed:
+        print(status.result)
+        break
+    await asyncio.sleep(1)
+```
+
+### Streaming Execution
+
+For tools that support streaming:
+
+```python
+async for chunk in client.call_tool_stream(
+    name="chat",
+    arguments={"query": "Write a long essay", "stream": True}
+):
+    print(chunk.delta, end="", flush=True)
+```
+
+## Error Handling
+
+Tools may return errors in the response:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Error: Invalid SQL syntax"
+    }
+  ],
+  "isError": true,
+  "metadata": {
+    "error_code": "SYNTAX_ERROR",
+    "error_details": "Unexpected token at position 10"
+  }
+}
+```
+
+**Handle errors**:
+```python
+result = await client.call_tool("query_database", {
+    "query": "INVALID SQL",
+    "database": "users"
+})
+
+if result.isError:
+    error_message = result.content[0].text
+    error_code = result.metadata.get("error_code")
+    print(f"Error ({error_code}): {error_message}")
+else:
+    print(result.content[0].text)
+```
+
+## Custom Tools
+
+Extend the server with custom tools:
+
+### Define Custom Tool
+
+```python
+from langchain_core.tools import tool
+
+@tool
+def calculate_mortgage(
+    principal: float,
+    annual_rate: float,
+    years: int
+) -> str:
+    """Calculate monthly mortgage payment.
+
+    Args:
+        principal: Loan amount in dollars
+        annual_rate: Annual interest rate (e.g., 3.5 for 3.5%)
+        years: Loan term in years
+    """
+    monthly_rate = annual_rate / 100 / 12
+    num_payments = years * 12
+
+    if monthly_rate == 0:
+        monthly_payment = principal / num_payments
+    else:
+        monthly_payment = (
+            principal * monthly_rate * (1 + monthly_rate) ** num_payments
+        ) / ((1 + monthly_rate) ** num_payments - 1)
+
+    return f"Monthly payment: ${monthly_payment:.2f}"
+
+# Register tool
+from mcp_server_langgraph.tools import register_tool
+
+register_tool(calculate_mortgage)
+```
+
+### Use Custom Tool
+
+```python
+result = await client.call_tool("calculate_mortgage", {
+    "principal": 300000,
+    "annual_rate": 3.5,
+    "years": 30
+})
+
+print(result.content[0].text)
+# Output: Monthly payment: $1347.13
+```
+
+## Tool Permissions
+
+Tools respect authorization rules:
+
+```python
+# Check if user can execute tool
+allowed = await openfga_client.check_permission(
+    user=f"user:{user_id}",
+    relation="executor",
+    object="tool:search_web"
+)
+
+if not allowed:
+    raise PermissionError("User cannot execute search_web tool")
+```
+
+**Grant permission**:
+```python
+# Grant user access to tool
+await openfga_client.write_tuples([{
+    "user": f"user:{user_id}",
+    "relation": "executor",
+    "object": "tool:search_web"
+}])
+```
+
+## Tool Composition
+
+Chain multiple tools:
+
+```python
+# 1. Search for information
+search_result = await client.call_tool("search_web", {
+    "query": "Python async best practices"
+})
+
+# 2. Summarize with chat
+summary = await client.call_tool("chat", {
+    "query": f"Summarize this:\n\n{search_result.content[0].text}"
+})
+
+print(summary.content[0].text)
+```
+
+## Tool Monitoring
+
+Track tool usage:
+
+```python
+from prometheus_client import Counter, Histogram
+
+tool_calls = Counter(
+    'mcp_tool_calls_total',
+    'Total tool calls',
+    ['tool_name', 'status']
+)
+
+tool_duration = Histogram(
+    'mcp_tool_duration_seconds',
+    'Tool execution duration',
+    ['tool_name']
+)
+
+# Track metrics
+import time
+
+@tool_duration.labels(tool_name="chat").time()
+async def tracked_call_tool(name: str, arguments: dict):
+    try:
+        result = await client.call_tool(name, arguments)
+        tool_calls.labels(tool_name=name, status="success").inc()
+        return result
+    except Exception as e:
+        tool_calls.labels(tool_name=name, status="error").inc()
+        raise
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Validate Inputs" icon="shield-check">
+    Always validate tool inputs against the schema:
+
+    ```python
+    from jsonschema import validate, ValidationError
+
+    try:
+        validate(
+            instance=arguments,
+            schema=tool.inputSchema
+        )
+    except ValidationError as e:
+        raise ValueError(f"Invalid arguments: {e.message}")
+    ```
+  </Accordion>
+
+  <Accordion title="Handle Timeouts" icon="clock">
+    Set appropriate timeouts for tool execution:
+
+    ```python
+    import asyncio
+
+    try:
+        result = await asyncio.wait_for(
+            client.call_tool(name, arguments),
+            timeout=30.0
+        )
+    except asyncio.TimeoutError:
+        print("Tool execution timed out")
+    ```
+  </Accordion>
+
+  <Accordion title="Implement Retry Logic" icon="rotate">
+    Retry transient failures:
+
+    ```python
+    from tenacity import retry, stop_after_attempt, wait_exponential
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10)
+    )
+    async def call_tool_with_retry(name: str, arguments: dict):
+        return await client.call_tool(name, arguments)
+    ```
+  </Accordion>
+
+  <Accordion title="Log Tool Usage" icon="file-text">
+    Log all tool executions for debugging and auditing:
+
+    ```python
+    logger.info(
+        "Tool called",
+        tool_name=name,
+        user_id=user_id,
+        arguments=mask_sensitive(arguments),
+        timestamp=datetime.utcnow()
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tool not found">
+    **Error**: `Method not found: tool 'xyz' does not exist`
+
+    **Solutions**:
+    ```python
+    # List available tools
+    tools = await client.list_tools()
+    tool_names = [t.name for t in tools]
+    print(f"Available tools: {tool_names}")
+
+    # Verify tool name (case-sensitive)
+    if "search_web" in tool_names:
+        result = await client.call_tool("search_web", {...})
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied">
+    **Error**: `User does not have permission to execute tool`
+
+    **Solutions**:
+    ```python
+    # Check permission
+    allowed = await openfga_client.check_permission(
+        user=f"user:{user_id}",
+        relation="executor",
+        object=f"tool:{tool_name}"
+    )
+
+    # Grant if needed
+    if not allowed:
+        await openfga_client.write_tuples([{
+            "user": f"user:{user_id}",
+            "relation": "executor",
+            "object": f"tool:{tool_name}"
+        }])
+    ```
+  </Accordion>
+
+  <Accordion title="Invalid arguments">
+    **Error**: `Invalid params: required field 'query' missing`
+
+    **Solutions**:
+    ```python
+    # Check required fields
+    required = tool.inputSchema.get("required", [])
+    for field in required:
+        if field not in arguments:
+            raise ValueError(f"Missing required field: {field}")
+
+    # Validate against schema
+    from jsonschema import validate
+    validate(instance=arguments, schema=tool.inputSchema)
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="MCP Messages" icon="message" href="/api-reference/mcp/messages">
+    Message protocol reference
+  </Card>
+  <Card title="MCP Resources" icon="database" href="/api-reference/mcp/resources">
+    Resource types and access
+  </Card>
+  <Card title="MCP Endpoints" icon="server" href="/api-reference/mcp-endpoints">
+    Available endpoints
+  </Card>
+  <Card title="Authorization" icon="shield" href="/getting-started/authorization">
+    Tool permissions
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**MCP Tools Ready**: Powerful, composable tools for AI agent capabilities!
+</Check>

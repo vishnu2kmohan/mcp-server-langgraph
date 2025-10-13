@@ -1,0 +1,910 @@
+---
+title: Kustomize Configuration
+description: 'Manage Kubernetes configurations across environments with Kustomize'
+icon: 'layer-group'
+---
+
+## Overview
+
+Kustomize is a template-free way to customize Kubernetes configurations. It allows you to maintain a base configuration and apply environment-specific overlays without duplicating YAML files.
+
+<Info>
+Kustomize is built into `kubectl` (version 1.14+), making it a native Kubernetes configuration management tool with no external dependencies.
+</Info>
+
+## Why Kustomize?
+
+<CardGroup cols={2}>
+  <Card title="Template-Free" icon="file-code">
+    - No template language to learn
+    - Pure Kubernetes YAML
+    - Easy to validate
+    - Better IDE support
+  </Card>
+
+  <Card title="DRY Principle" icon="copy">
+    - Define once, reuse everywhere
+    - Environment-specific overlays
+    - No duplication
+    - Easy to maintain
+  </Card>
+
+  <Card title="Native Integration" icon="dharmachakra">
+    - Built into kubectl
+    - No additional tools needed
+    - GitOps friendly
+    - ArgoCD/Flux support
+  </Card>
+
+  <Card title="Composability" icon="cubes">
+    - Layer configurations
+    - Patch specific fields
+    - Merge resources
+    - Transform objects
+  </Card>
+</CardGroup>
+
+## Directory Structure
+
+```
+k8s/
+├── base/                      # Base configurations
+│   ├── kustomization.yaml
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── configmap.yaml
+│   └── serviceaccount.yaml
+│
+├── overlays/                  # Environment overlays
+│   ├── development/
+│   │   ├── kustomization.yaml
+│   │   ├── deployment-patch.yaml
+│   │   └── configmap.yaml
+│   │
+│   ├── staging/
+│   │   ├── kustomization.yaml
+│   │   ├── deployment-patch.yaml
+│   │   ├── hpa.yaml
+│   │   └── configmap.yaml
+│   │
+│   └── production/
+│       ├── kustomization.yaml
+│       ├── deployment-patch.yaml
+│       ├── hpa.yaml
+│       ├── pdb.yaml
+│       └── configmap.yaml
+│
+└── components/                # Optional components
+    ├── redis/
+    │   ├── kustomization.yaml
+    │   └── redis.yaml
+    ├── keycloak/
+    │   ├── kustomization.yaml
+    │   └── keycloak.yaml
+    └── openfga/
+        ├── kustomization.yaml
+        └── openfga.yaml
+```
+
+## Base Configuration
+
+### base/kustomization.yaml
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: langgraph-agent
+
+# Common labels applied to all resources
+commonLabels:
+  app: langgraph-agent
+  project: mcp-server
+
+# Common annotations
+commonAnnotations:
+  managed-by: kustomize
+
+# Resources
+resources:
+  - deployment.yaml
+  - service.yaml
+  - serviceaccount.yaml
+  - configmap.yaml
+
+# ConfigMap generator
+configMapGenerator:
+  - name: langgraph-config
+    literals:
+      - LOG_LEVEL=info
+      - AUTH_PROVIDER=inmemory
+      - SESSION_PROVIDER=memory
+
+# Secret generator
+secretGenerator:
+  - name: langgraph-secrets
+    literals:
+      - JWT_SECRET=changeme
+    type: Opaque
+
+# Images to use
+images:
+  - name: langgraph-agent
+    newName: langgraph-agent
+    newTag: latest
+```
+
+### base/deployment.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: langgraph-agent
+  template:
+    metadata:
+      labels:
+        app: langgraph-agent
+    spec:
+      serviceAccountName: langgraph-agent
+      containers:
+      - name: agent
+        image: langgraph-agent:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        envFrom:
+        - configMapRef:
+            name: langgraph-config
+        - secretRef:
+            name: langgraph-secrets
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+```
+
+### base/service.yaml
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: langgraph-agent
+spec:
+  type: ClusterIP
+  selector:
+    app: langgraph-agent
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+```
+
+### base/serviceaccount.yaml
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: langgraph-agent
+```
+
+## Development Overlay
+
+### overlays/development/kustomization.yaml
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace
+namespace: langgraph-dev
+
+# Base
+bases:
+  - ../../base
+
+# Name prefix
+namePrefix: dev-
+
+# Labels
+commonLabels:
+  environment: development
+
+# ConfigMap override
+configMapGenerator:
+  - name: langgraph-config
+    behavior: merge
+    literals:
+      - ENV=development
+      - DEBUG=true
+      - LOG_LEVEL=debug
+      - AUTH_PROVIDER=inmemory
+      - SESSION_PROVIDER=memory
+      - ENABLE_TRACING=false
+      - ENABLE_METRICS=false
+
+# Patches
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+# Images
+images:
+  - name: langgraph-agent
+    newName: langgraph-agent
+    newTag: dev
+```
+
+### overlays/development/deployment-patch.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: agent
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+```
+
+## Staging Overlay
+
+### overlays/staging/kustomization.yaml
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: langgraph-staging
+
+bases:
+  - ../../base
+
+namePrefix: staging-
+
+commonLabels:
+  environment: staging
+
+configMapGenerator:
+  - name: langgraph-config
+    behavior: merge
+    literals:
+      - ENV=staging
+      - DEBUG=false
+      - LOG_LEVEL=info
+      - AUTH_PROVIDER=keycloak
+      - SESSION_PROVIDER=redis
+      - KEYCLOAK_URL=http://keycloak:8080
+      - REDIS_URL=redis://redis-master:6379
+      - OPENFGA_ENABLED=true
+      - OPENFGA_URL=http://openfga:8080
+      - ENABLE_TRACING=true
+      - ENABLE_METRICS=true
+
+resources:
+  - hpa.yaml
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+images:
+  - name: langgraph-agent
+    newName: gcr.io/project-id/langgraph-agent
+    newTag: staging
+```
+
+### overlays/staging/deployment-patch.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: agent
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+```
+
+### overlays/staging/hpa.yaml
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: langgraph-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: langgraph-agent
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+## Production Overlay
+
+### overlays/production/kustomization.yaml
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: langgraph-agent
+
+bases:
+  - ../../base
+
+# No prefix for production
+
+commonLabels:
+  environment: production
+
+commonAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+
+configMapGenerator:
+  - name: langgraph-config
+    behavior: merge
+    literals:
+      - ENV=production
+      - DEBUG=false
+      - LOG_LEVEL=warning
+      - AUTH_PROVIDER=keycloak
+      - SESSION_PROVIDER=redis
+      - KEYCLOAK_URL=http://keycloak:8080
+      - REDIS_URL=redis://redis-master:6379
+      - OPENFGA_ENABLED=true
+      - OPENFGA_URL=http://openfga:8080
+      - ENABLE_TRACING=true
+      - ENABLE_METRICS=true
+      - LANGSMITH_ENABLED=true
+
+resources:
+  - hpa.yaml
+  - pdb.yaml
+  - network-policy.yaml
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+images:
+  - name: langgraph-agent
+    newName: gcr.io/project-id/langgraph-agent
+    newTag: v1.0.0
+
+replicas:
+  - name: langgraph-agent
+    count: 3
+```
+
+### overlays/production/deployment-patch.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - langgraph-agent
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: agent
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+```
+
+### overlays/production/pdb.yaml
+
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: langgraph-agent
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: langgraph-agent
+```
+
+### overlays/production/network-policy.yaml
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: langgraph-agent
+spec:
+  podSelector:
+    matchLabels:
+      app: langgraph-agent
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 8080
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app: openfga
+    ports:
+    - protocol: TCP
+      port: 8080
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+```
+
+## Advanced Techniques
+
+### JSON Patches
+
+```yaml
+# overlays/production/kustomization.yaml
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: langgraph-agent
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: CUSTOM_ENV
+          value: "production-value"
+```
+
+### Strategic Merge Patch
+
+```yaml
+# Add sidecar container
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  template:
+    spec:
+      containers:
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
+        args:
+          - "--structured-logs"
+          - "--port=5432"
+          - "project:region:instance"
+```
+
+### Transformers
+
+```yaml
+# overlays/production/kustomization.yaml
+transformers:
+  - |-
+    apiVersion: builtin
+    kind: PrefixSuffixTransformer
+    metadata:
+      name: prefix-suffix
+    prefix: prod-
+    suffix: -v1
+    fieldSpecs:
+      - path: metadata/name
+```
+
+### Generators
+
+```yaml
+# overlays/production/kustomization.yaml
+generators:
+  - secret-generator.yaml
+```
+
+**secret-generator.yaml**:
+```yaml
+apiVersion: builtin
+kind: SecretGenerator
+metadata:
+  name: db-credentials
+literals:
+  - username=admin
+  - password=changeme
+type: Opaque
+```
+
+## Multi-Environment Workflow
+
+### Build and Preview
+
+```bash
+# Development
+kubectl kustomize overlays/development
+
+# Staging
+kubectl kustomize overlays/staging
+
+# Production
+kubectl kustomize overlays/production
+```
+
+### Deploy
+
+```bash
+# Development
+kubectl apply -k overlays/development
+
+# Staging
+kubectl apply -k overlays/staging
+
+# Production
+kubectl apply -k overlays/production
+```
+
+### Delete
+
+```bash
+# Delete environment
+kubectl delete -k overlays/staging
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: Deploy with Kustomize
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy to production
+        run: |
+          kubectl apply -k k8s/overlays/production
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+```
+
+### GitLab CI
+
+```yaml
+deploy:production:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl apply -k k8s/overlays/production
+    - kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+  only:
+    - main
+```
+
+## GitOps with ArgoCD
+
+### Create Application
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: langgraph-agent-production
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/yourusername/langgraph-mcp-agent
+    targetRevision: main
+    path: k8s/overlays/production
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: langgraph-agent
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+```
+
+### Deploy with ArgoCD
+
+```bash
+# Install ArgoCD
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Create application
+kubectl apply -f argocd-application.yaml
+
+# Sync application
+argocd app sync langgraph-agent-production
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use ConfigMap/Secret Generators" icon="gear">
+    Always use generators instead of static files:
+
+    ```yaml
+    # Good
+    configMapGenerator:
+      - name: app-config
+        literals:
+          - KEY=value
+
+    # Bad - don't commit static ConfigMaps
+    resources:
+      - configmap.yaml  # Contains hardcoded values
+    ```
+  </Accordion>
+
+  <Accordion title="Keep Base Minimal" icon="minimize">
+    Base should contain only common, environment-agnostic configuration:
+
+    - Deployment structure
+    - Service definition
+    - Basic probes
+    - No environment-specific values
+  </Accordion>
+
+  <Accordion title="Use Semantic Versioning" icon="tag">
+    Tag images with semantic versions:
+
+    ```yaml
+    images:
+      - name: langgraph-agent
+        newTag: v1.2.3  # Not 'latest'
+    ```
+  </Accordion>
+
+  <Accordion title="Validate Before Applying" icon="check">
+    Always validate Kustomize output:
+
+    ```bash
+    # Preview changes
+    kubectl kustomize overlays/production
+
+    # Validate
+    kubectl kustomize overlays/production | kubectl apply --dry-run=client -f -
+
+    # Then apply
+    kubectl apply -k overlays/production
+    ```
+  </Accordion>
+
+  <Accordion title="Use Name Suffixes for ConfigMaps" icon="fingerprint">
+    Enable automatic rollouts on config changes:
+
+    ```yaml
+    generatorOptions:
+      disableNameSuffixHash: false  # Default
+    ```
+
+    This adds hash suffix to ConfigMap names, triggering pod restarts.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Kustomize build fails">
+    **Error**: `Error: accumulating resources: accumulation err='accumulating resources from '../../base': ...`
+
+    **Solution**:
+    ```bash
+    # Validate base first
+    kubectl kustomize k8s/base
+
+    # Check file references
+    ls -la k8s/base/
+
+    # Validate overlay
+    kubectl kustomize k8s/overlays/production
+    ```
+  </Accordion>
+
+  <Accordion title="Patch not applying">
+    **Problem**: Strategic merge patch not working
+
+    **Solution**: Use JSON6902 patch instead:
+    ```yaml
+    patchesJson6902:
+      - target:
+          group: apps
+          version: v1
+          kind: Deployment
+          name: langgraph-agent
+        patch: |-
+          - op: replace
+            path: /spec/replicas
+            value: 5
+    ```
+  </Accordion>
+
+  <Accordion title="ConfigMap not updating pods">
+    **Problem**: Pods not restarting on ConfigMap change
+
+    **Solution**: Ensure name suffix hash is enabled:
+    ```yaml
+    generatorOptions:
+      disableNameSuffixHash: false
+    ```
+
+    Or use Reloader:
+    ```bash
+    helm install reloader stakater/reloader
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Testing Kustomize
+
+```bash
+# Validate YAML syntax
+kubectl kustomize overlays/production | kubectl apply --dry-run=client -f -
+
+# Check resource counts
+kubectl kustomize overlays/production | grep "^kind:" | sort | uniq -c
+
+# Diff between environments
+diff <(kubectl kustomize overlays/staging) <(kubectl kustomize overlays/production)
+
+# Test with kubeval
+kubectl kustomize overlays/production | kubeval --strict
+
+# Test with kube-score
+kubectl kustomize overlays/production | kube-score score -
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GitOps with ArgoCD" icon="git-alt" href="/deployment/gitops">
+    Automated deployments
+  </Card>
+  <Card title="Helm Charts" icon="dharmachakra" href="/deployment/helm">
+    Package management
+  </Card>
+  <Card title="CI/CD Pipeline" icon="code-branch" href="/deployment/cicd">
+    Continuous delivery
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/monitoring">
+    Observability setup
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Kustomize Ready**: Template-free Kubernetes configuration management!
+</Check>

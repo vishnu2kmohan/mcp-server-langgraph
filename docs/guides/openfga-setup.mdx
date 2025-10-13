@@ -1,0 +1,690 @@
+---
+title: OpenFGA Setup
+description: 'Deploy and configure OpenFGA for fine-grained authorization'
+icon: 'shield-check'
+---
+
+## Overview
+
+OpenFGA provides Google Zanzibar-style relationship-based authorization for fine-grained access control. This guide covers deployment, configuration, and integration with your MCP Server.
+
+<Info>
+**OpenFGA** is the same authorization model used by Google, Airbnb, GitHub, and other companies handling billions of permission checks per day.
+</Info>
+
+## Architecture
+
+```mermaid
+graph TB
+    App[MCP Server] --> Client[OpenFGA Client SDK]
+    Client --> API[OpenFGA API Server]
+    API --> Store[(Authorization Store)]
+    Store --> PG[(PostgreSQL)]
+
+    subgraph "Authorization Model"
+        Model[Type Definitions]
+        Relations[Relationship Types]
+        Tuples[Relationship Tuples]
+    end
+
+    API --> Model
+    Store --> Relations
+    Store --> Tuples
+```
+
+## Quick Start
+
+<Steps>
+  <Step title="Deploy OpenFGA">
+    <Tabs>
+      <Tab title="Docker Compose">
+        ```yaml
+        # docker-compose.yml
+        openfga:
+          image: openfga/openfga:v1.5.0
+          command: run
+          environment:
+            - OPENFGA_DATASTORE_ENGINE=postgres
+            - OPENFGA_DATASTORE_URI=postgres://openfga:password@postgres:5432/openfga?sslmode=disable
+          ports:
+            - "8080:8080"
+            - "8081:8081"
+            - "3000:3000"
+          depends_on:
+            - postgres
+
+        postgres:
+          image: postgres:15-alpine
+          environment:
+            POSTGRES_USER: openfga
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: openfga
+          volumes:
+            - openfga-data:/var/lib/postgresql/data
+        ```
+
+        ```bash
+        docker-compose up -d openfga postgres
+        ```
+      </Tab>
+
+      <Tab title="Kubernetes">
+        ```bash
+        # Using Helm
+        helm repo add openfga https://openfga.github.io/helm-charts
+        helm install openfga openfga/openfga \
+          --namespace langgraph-agent \
+          --set datastore.engine=postgres \
+          --set datastore.uri="postgres://openfga:password@postgres:5432/openfga" \
+          --set replicaCount=2
+
+        # Wait for deployment
+        kubectl wait --for=condition=available --timeout=300s \
+          deployment/openfga -n langgraph-agent
+        ```
+      </Tab>
+
+      <Tab title="Cloud Services">
+        **Managed OpenFGA**:
+        - Use OpenFGA Cloud (https://openfga.dev)
+        - Or deploy to GKE/EKS/AKS
+
+        **Configuration**:
+        ```bash
+        OPENFGA_API_URL=https://api.openfga.dev
+        OPENFGA_STORE_ID=your-store-id
+        OPENFGA_MODEL_ID=your-model-id
+        OPENFGA_API_TOKEN=your-api-token  # If using cloud
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Verify Installation">
+    ```bash
+    # Check OpenFGA health
+    curl http://localhost:8080/healthz
+
+    # Expected response
+    {"status":"SERVING"}
+
+    # Check version
+    curl http://localhost:8080/
+
+    # Expected: OpenFGA version info
+    ```
+  </Step>
+
+  <Step title="Run Setup Script">
+    ```bash
+    # Initialize store and model
+    python scripts/setup/setup_openfga.py
+    ```
+
+    **Output**:
+    ```
+    ============================================================
+    OpenFGA Setup
+    ============================================================
+
+    1. Connecting to OpenFGA at http://localhost:8080...
+
+    2. Creating authorization store and model...
+       ✓ Store created: 01HXXXXXXXXXXXXXXXXXX
+       ✓ Model created: 01HYYYYYYYYYYYYYYYYYY
+
+    3. Update your .env file with:
+       OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+       OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
+
+    4. Seeding sample relationship data...
+       ✓ Sample data seeded
+
+    5. Verifying authorization checks...
+       ✓ Test 1: user:alice can executor tool:chat: True
+       ✓ Test 2: user:bob can executor tool:chat: True
+       ✓ Test 3: user:alice can owner conversation:thread_1: True
+       ✓ Test 4: user:bob can owner conversation:thread_1: False
+       ✓ Test 5: user:bob can viewer conversation:thread_1: True
+
+    ============================================================
+    ✓ OpenFGA setup completed successfully!
+    ============================================================
+    ```
+  </Step>
+
+  <Step title="Update Configuration">
+    ```bash
+    # .env
+    OPENFGA_API_URL=http://localhost:8080
+    OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+    OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
+    ```
+  </Step>
+
+  <Step title="Test Authorization">
+    ```python
+    from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+    client = OpenFGAClient()
+
+    # Check permission
+    allowed = await client.check_permission(
+        user="user:alice",
+        relation="executor",
+        object="tool:chat"
+    )
+    print(f"Alice can execute chat: {allowed}")
+    # Output: True
+    ```
+  </Step>
+</Steps>
+
+## Authorization Model
+
+### Default Model
+
+The setup script creates this authorization model:
+
+```typescript
+model
+  schema 1.1
+
+type user
+
+type role
+  relations
+    define assignee: [user]
+
+type organization
+  relations
+    define admin: [user]
+    define member: [user] or admin
+    define viewer: [user] or member
+
+type tool
+  relations
+    define owner: [user]
+    define executor: [user, organization#member]
+    define viewer: [user, organization#member]
+
+type conversation
+  relations
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user] or editor or owner
+
+type document
+  relations
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user] or editor or owner
+```
+
+### Type Definitions
+
+<Tabs>
+  <Tab title="User">
+    **user** - Individual users
+
+    ```typescript
+    type user
+    ```
+
+    No relations defined - users are leaf nodes in the authorization graph.
+  </Tab>
+
+  <Tab title="Organization">
+    **organization** - Tenants or teams
+
+    ```typescript
+    type organization
+      relations
+        define admin: [user]
+        define member: [user] or admin
+        define viewer: [user] or member
+    ```
+
+    **Hierarchy**: admin → member → viewer
+
+    Admin users automatically have member and viewer permissions.
+  </Tab>
+
+  <Tab title="Tool">
+    **tool** - Agent tools (chat, search, etc.)
+
+    ```typescript
+    type tool
+      relations
+        define owner: [user]
+        define executor: [user, organization#member]
+        define viewer: [user, organization#member]
+    ```
+
+    **executor**: Can execute the tool
+    **viewer**: Can see tool metadata
+    **organization#member**: All org members can execute
+  </Tab>
+
+  <Tab title="Conversation">
+    **conversation** - Chat conversations
+
+    ```typescript
+    type conversation
+      relations
+        define owner: [user]
+        define editor: [user]
+        define viewer: [user] or editor or owner
+    ```
+
+    **Hierarchy**: owner → editor → viewer
+
+    Owners can edit, editors can view and modify.
+  </Tab>
+</Tabs>
+
+---
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# OpenFGA Connection
+OPENFGA_API_URL=http://localhost:8080  # API endpoint
+OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX # Store ID (from setup)
+OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY # Model ID (from setup)
+
+# Optional: Cloud/Authentication
+OPENFGA_API_TOKEN=your-token           # For OpenFGA Cloud
+OPENFGA_API_SCHEME=https               # http or https
+
+# Optional: Performance
+OPENFGA_MAX_RETRIES=3                  # Retry failed requests
+OPENFGA_TIMEOUT=30                     # Request timeout (seconds)
+```
+
+### Client Configuration
+
+```python
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+# Basic configuration
+client = OpenFGAClient(
+    api_url="http://localhost:8080",
+    store_id="01HXXXXXXXXXXXXXXXXXX",
+    model_id="01HYYYYYYYYYYYYYYYYYY"
+)
+
+# With authentication (cloud)
+client = OpenFGAClient(
+    api_url="https://api.openfga.dev",
+    store_id="your-store-id",
+    model_id="your-model-id",
+    api_token="your-token"
+)
+
+# With caching
+client = OpenFGAClient(
+    cache_ttl=300,  # 5 minutes
+    cache_backend="redis"
+)
+```
+
+---
+
+## Managing Relationship Tuples
+
+### Creating Relationships
+
+```python
+# Grant alice admin access to organization
+await client.write_tuples([{
+    "user": "user:alice",
+    "relation": "admin",
+    "object": "organization:acme"
+}])
+
+# Grant organization members access to tool
+await client.write_tuples([{
+    "user": "organization:acme#member",
+    "relation": "executor",
+    "object": "tool:chat"
+}])
+
+# Multiple tuples at once (atomic)
+await client.write_tuples([
+    {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
+    {"user": "user:bob", "relation": "member", "object": "organization:acme"},
+    {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
+])
+```
+
+### Checking Permissions
+
+```python
+# Check if user can execute tool
+allowed = await client.check_permission(
+    user="user:alice",
+    relation="executor",
+    object="tool:chat"
+)
+
+# Returns: True or False
+if allowed:
+    # Execute tool
+    result = await execute_tool("chat", query)
+else:
+    raise PermissionError("Access denied")
+```
+
+### Listing Permissions
+
+```python
+# What can user access?
+tools = await client.list_objects(
+    user="user:alice",
+    relation="executor",
+    object_type="tool"
+)
+print(f"Alice can execute: {tools}")
+# Output: ['tool:chat', 'tool:search']
+
+# Who can access this object?
+users = await client.list_users(
+    relation="executor",
+    object="tool:chat"
+)
+print(f"Can execute chat: {users}")
+# Output: ['user:alice', 'user:bob']
+```
+
+### Deleting Relationships
+
+```python
+# Revoke specific permission
+await client.delete_tuples([{
+    "user": "user:bob",
+    "relation": "executor",
+    "object": "tool:chat"
+}])
+
+# Revoke all user permissions for an object
+tuples = await client.read_tuples(object="tool:chat")
+user_tuples = [t for t in tuples if t['user'] == 'user:bob']
+await client.delete_tuples(user_tuples)
+```
+
+---
+
+## Production Deployment
+
+### High Availability
+
+Deploy with multiple replicas:
+
+```yaml
+# Kubernetes
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openfga
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: openfga
+  template:
+    spec:
+      containers:
+      - name: openfga
+        image: openfga/openfga:v1.5.0
+        env:
+        - name: OPENFGA_DATASTORE_ENGINE
+          value: postgres
+        - name: OPENFGA_DATASTORE_URI
+          valueFrom:
+            secretKeyRef:
+              name: openfga-secret
+              key: db-uri
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8081
+          name: grpc
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+```
+
+### PostgreSQL Backend
+
+**Always use PostgreSQL in production** (not in-memory):
+
+```bash
+# Connection string
+OPENFGA_DATASTORE_URI=postgres://openfga:password@postgres:5432/openfga?sslmode=require
+
+# With connection pooling
+OPENFGA_DATASTORE_MAX_OPEN_CONNS=25
+OPENFGA_DATASTORE_MAX_IDLE_CONNS=10
+OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME=60s
+```
+
+**PostgreSQL Configuration**:
+```sql
+-- Create database
+CREATE DATABASE openfga;
+
+-- Create user
+CREATE USER openfga WITH PASSWORD 'strong-password';
+GRANT ALL PRIVILEGES ON DATABASE openfga TO openfga;
+
+-- Enable extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+```
+
+### Performance Tuning
+
+```bash
+# Enable caching
+OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
+OPENFGA_CHECK_QUERY_CACHE_LIMIT=10000
+OPENFGA_CHECK_QUERY_CACHE_TTL=10s
+
+# Request limits
+OPENFGA_MAX_TUPLE_SIZE=100
+OPENFGA_MAX_AUTHORIZATION_MODEL_SIZE_IN_BYTES=262144
+
+# Logging
+OPENFGA_LOG_LEVEL=info  # debug, info, warn, error
+OPENFGA_LOG_FORMAT=json
+```
+
+### Monitoring
+
+```yaml
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: openfga
+spec:
+  selector:
+    matchLabels:
+      app: openfga
+  endpoints:
+  - port: http
+    path: /metrics
+```
+
+**Key Metrics**:
+```promql
+# Check rate
+rate(openfga_check_total[5m])
+
+# Check latency p95
+histogram_quantile(0.95, openfga_check_duration_seconds_bucket)
+
+# Error rate
+rate(openfga_check_total{allowed="error"}[5m])
+
+# Tuple count
+openfga_tuple_count
+```
+
+---
+
+## Backup & Recovery
+
+### Backup Tuples
+
+```python
+# Export all relationship tuples
+tuples = await client.read_tuples()
+
+import json
+with open('openfga-backup.json', 'w') as f:
+    json.dump(tuples, f, indent=2)
+```
+
+### Restore Tuples
+
+```python
+# Import tuples
+import json
+with open('openfga-backup.json', 'r') as f:
+    tuples = json.load(f)
+
+await client.write_tuples(tuples)
+```
+
+### Database Backup
+
+```bash
+# Backup PostgreSQL
+pg_dump -U openfga openfga > openfga-backup.sql
+
+# Restore
+psql -U openfga openfga < openfga-backup.sql
+```
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection refused">
+    ```bash
+    # Check OpenFGA status
+    docker-compose ps openfga
+    kubectl get pods -l app=openfga
+
+    # Test connectivity
+    curl http://localhost:8080/healthz
+
+    # Check logs
+    docker-compose logs openfga
+    kubectl logs -l app=openfga
+    ```
+  </Accordion>
+
+  <Accordion title="Store not found">
+    **Error**: `store not found`
+
+    **Solutions**:
+    ```bash
+    # Re-run setup script
+    python scripts/setup/setup_openfga.py
+
+    # Or create store manually
+    curl -X POST http://localhost:8080/stores \
+      -H "Content-Type: application/json" \
+      -d '{"name": "langgraph-agent"}'
+
+    # Update OPENFGA_STORE_ID in .env
+    ```
+  </Accordion>
+
+  <Accordion title="Model not found">
+    **Error**: `authorization model not found`
+
+    **Solutions**:
+    ```bash
+    # Re-run setup to create model
+    python scripts/setup/setup_openfga.py
+
+    # Or create model via API
+    # See: https://openfga.dev/docs/modeling
+    ```
+  </Accordion>
+
+  <Accordion title="Slow authorization checks">
+    **Solutions**:
+    - Enable caching
+    - Add database indexes
+    - Use PostgreSQL (not in-memory)
+    - Simplify authorization model
+    - Monitor query patterns
+
+    ```bash
+    # Enable caching
+    OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
+    OPENFGA_CHECK_QUERY_CACHE_TTL=10s
+    ```
+  </Accordion>
+
+  <Accordion title="Permission check returns false unexpectedly">
+    **Debug**:
+    ```python
+    # List all tuples for user
+    tuples = await client.read_tuples(user="user:alice")
+    for t in tuples:
+        print(f"{t['user']} → {t['relation']} → {t['object']}")
+
+    # Check specific relationship
+    allowed = await client.check_permission(
+        user="user:alice",
+        relation="executor",
+        object="tool:chat"
+    )
+
+    # Verify tuple exists
+    all_tuples = await client.read_tuples()
+    matching = [t for t in all_tuples
+                if t['user'] == 'user:alice'
+                and t['object'] == 'tool:chat']
+    print(f"Matching tuples: {matching}")
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Permission Model" icon="sitemap" href="/guides/permission-model">
+    Customize the authorization model
+  </Card>
+  <Card title="Relationship Tuples" icon="link" href="/guides/relationship-tuples">
+    Manage tuples programmatically
+  </Card>
+  <Card title="Authorization Guide" icon="shield" href="/getting-started/authorization">
+    Learn authorization concepts
+  </Card>
+  <Card title="Keycloak Integration" icon="key" href="/guides/keycloak-sso">
+    Sync Keycloak roles to OpenFGA
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Production Ready**: OpenFGA provides enterprise-grade fine-grained authorization for your MCP server!
+</Check>

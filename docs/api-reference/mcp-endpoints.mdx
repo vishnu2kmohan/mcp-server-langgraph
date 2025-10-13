@@ -1,0 +1,671 @@
+---
+title: MCP Endpoints
+description: 'Model Context Protocol (MCP) HTTP endpoints for server communication'
+icon: 'server'
+---
+
+## Overview
+
+The MCP Server exposes HTTP endpoints that implement the Model Context Protocol for server-to-server communication. These endpoints enable clients to interact with the LLM-powered agent through a standardized protocol.
+
+<Info>
+MCP (Model Context Protocol) is a standard protocol for connecting AI applications with data sources and tools. Learn more at https://modelcontextprotocol.io
+</Info>
+
+## Base URL
+
+```
+http://localhost:8000/mcp
+```
+
+## Endpoints
+
+### Initialize Connection
+
+<ParamField path="POST /mcp/initialize" type="endpoint">
+  Initialize a new MCP session and retrieve server capabilities.
+</ParamField>
+
+**Request**:
+```json
+{
+  "protocolVersion": "2024-11-05",
+  "capabilities": {
+    "roots": {
+      "listChanged": true
+    },
+    "sampling": {}
+  },
+  "clientInfo": {
+    "name": "mcp-client",
+    "version": "1.0.0"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "protocolVersion": "2024-11-05",
+  "capabilities": {
+    "logging": {},
+    "prompts": {
+      "listChanged": true
+    },
+    "resources": {
+      "subscribe": true,
+      "listChanged": true
+    },
+    "tools": {
+      "listChanged": true
+    }
+  },
+  "serverInfo": {
+    "name": "mcp-server-langgraph",
+    "version": "2.0.0"
+  }
+}
+```
+
+**Example**:
+```python
+import httpx
+
+async with httpx.AsyncClient() as client:
+    response = await client.post(
+        "http://localhost:8000/mcp/initialize",
+        json={
+            "protocolVersion": "2024-11-05",
+            "capabilities": {"roots": {"listChanged": True}},
+            "clientInfo": {"name": "my-client", "version": "1.0.0"}
+        },
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    server_info = response.json()
+    print(f"Connected to: {server_info['serverInfo']['name']}")
+```
+
+### List Tools
+
+<ParamField path="POST /mcp/tools/list" type="endpoint">
+  Retrieve all available tools the server can execute.
+</ParamField>
+
+**Request**:
+```json
+{
+  "method": "tools/list"
+}
+```
+
+**Response**:
+```json
+{
+  "tools": [
+    {
+      "name": "chat",
+      "description": "Send a message to the AI agent and receive a response",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The message to send to the agent"
+          },
+          "conversation_id": {
+            "type": "string",
+            "description": "Optional conversation ID to maintain context"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "search_web",
+      "description": "Search the web for current information",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query"
+          }
+        },
+        "required": ["query"]
+      }
+    }
+  ]
+}
+```
+
+**Example**:
+```python
+async def list_available_tools():
+    response = await client.post(
+        "http://localhost:8000/mcp/tools/list",
+        json={"method": "tools/list"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    tools = response.json()["tools"]
+    for tool in tools:
+        print(f"Tool: {tool['name']}")
+        print(f"  Description: {tool['description']}")
+```
+
+### Call Tool
+
+<ParamField path="POST /mcp/tools/call" type="endpoint">
+  Execute a specific tool with provided arguments.
+</ParamField>
+
+**Request**:
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "chat",
+    "arguments": {
+      "query": "What is the capital of France?",
+      "conversation_id": "conv_123"
+    }
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "The capital of France is Paris. Paris is not only the capital but also the largest city in France, known for its art, culture, cuisine, and iconic landmarks like the Eiffel Tower."
+    }
+  ],
+  "isError": false
+}
+```
+
+**Example**:
+```python
+async def call_chat_tool(query: str):
+    response = await client.post(
+        "http://localhost:8000/mcp/tools/call",
+        json={
+            "method": "tools/call",
+            "params": {
+                "name": "chat",
+                "arguments": {"query": query}
+            }
+        },
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    result = response.json()
+    if not result["isError"]:
+        return result["content"][0]["text"]
+    else:
+        raise Exception(f"Tool error: {result['content']}")
+```
+
+### List Resources
+
+<ParamField path="POST /mcp/resources/list" type="endpoint">
+  Retrieve available resources (data sources, knowledge bases, etc.).
+</ParamField>
+
+**Request**:
+```json
+{
+  "method": "resources/list"
+}
+```
+
+**Response**:
+```json
+{
+  "resources": [
+    {
+      "uri": "conversation://conv_123",
+      "name": "Conversation History",
+      "description": "Access to conversation history and context",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "knowledge://product-docs",
+      "name": "Product Documentation",
+      "description": "Internal product documentation knowledge base",
+      "mimeType": "text/markdown"
+    }
+  ]
+}
+```
+
+### Read Resource
+
+<ParamField path="POST /mcp/resources/read" type="endpoint">
+  Read the contents of a specific resource.
+</ParamField>
+
+**Request**:
+```json
+{
+  "method": "resources/read",
+  "params": {
+    "uri": "conversation://conv_123"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "contents": [
+    {
+      "uri": "conversation://conv_123",
+      "mimeType": "application/json",
+      "text": "{\"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}, {\"role\": \"assistant\", \"content\": \"Hi! How can I help you?\"}]}"
+    }
+  ]
+}
+```
+
+### List Prompts
+
+<ParamField path="POST /mcp/prompts/list" type="endpoint">
+  Retrieve available prompt templates.
+</ParamField>
+
+**Request**:
+```json
+{
+  "method": "prompts/list"
+}
+```
+
+**Response**:
+```json
+{
+  "prompts": [
+    {
+      "name": "code_review",
+      "description": "Review code for best practices and potential issues",
+      "arguments": [
+        {
+          "name": "code",
+          "description": "The code to review",
+          "required": true
+        },
+        {
+          "name": "language",
+          "description": "Programming language",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Get Prompt
+
+<ParamField path="POST /mcp/prompts/get" type="endpoint">
+  Retrieve a specific prompt template with arguments filled in.
+</ParamField>
+
+**Request**:
+```json
+{
+  "method": "prompts/get",
+  "params": {
+    "name": "code_review",
+    "arguments": {
+      "code": "def add(a, b): return a + b",
+      "language": "python"
+    }
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "description": "Review code for best practices and potential issues",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "Please review this Python code:\n\ndef add(a, b): return a + b\n\nProvide feedback on:\n- Code quality\n- Best practices\n- Potential issues\n- Suggestions for improvement"
+      }
+    }
+  ]
+}
+```
+
+### Send Message
+
+<ParamField path="POST /mcp/message" type="endpoint">
+  Send a message to the agent (streaming or non-streaming).
+</ParamField>
+
+**Request**:
+```json
+{
+  "query": "Explain quantum computing in simple terms",
+  "conversation_id": "conv_123",
+  "stream": false
+}
+```
+
+**Response (Non-Streaming)**:
+```json
+{
+  "response": "Quantum computing is a type of computing that uses quantum mechanics...",
+  "conversation_id": "conv_123",
+  "model": "claude-3-5-sonnet-20241022",
+  "usage": {
+    "prompt_tokens": 15,
+    "completion_tokens": 150,
+    "total_tokens": 165
+  }
+}
+```
+
+**Response (Streaming)**:
+```
+data: {"type": "content_start"}
+
+data: {"type": "content_delta", "delta": "Quantum"}
+
+data: {"type": "content_delta", "delta": " computing"}
+
+data: {"type": "content_delta", "delta": " is"}
+
+data: {"type": "content_end"}
+
+data: {"type": "message_complete", "conversation_id": "conv_123"}
+```
+
+**Example (Streaming)**:
+```python
+async def stream_message(query: str):
+    async with httpx.AsyncClient() as client:
+        async with client.stream(
+            "POST",
+            "http://localhost:8000/mcp/message",
+            json={"query": query, "stream": True},
+            headers={"Authorization": f"Bearer {token}"}
+        ) as response:
+            async for line in response.aiter_lines():
+                if line.startswith("data: "):
+                    data = json.loads(line[6:])
+                    if data["type"] == "content_delta":
+                        print(data["delta"], end="", flush=True)
+```
+
+### Logging
+
+<ParamField path="POST /mcp/logging/setLevel" type="endpoint">
+  Set the logging level for the server.
+</ParamField>
+
+**Request**:
+```json
+{
+  "method": "logging/setLevel",
+  "params": {
+    "level": "debug"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "success": true
+}
+```
+
+## Authentication
+
+All MCP endpoints require authentication. Include a valid JWT token in the `Authorization` header:
+
+```bash
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
+```
+
+See [Authentication API](/api-reference/authentication) for obtaining tokens.
+
+## Error Responses
+
+MCP endpoints return standard HTTP status codes:
+
+<ResponseField name="400" type="Bad Request">
+  Invalid request format or missing required fields.
+
+  ```json
+  {
+    "error": {
+      "code": "invalid_request",
+      "message": "Missing required field: query"
+    }
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Missing or invalid authentication token.
+
+  ```json
+  {
+    "detail": "Invalid authentication credentials"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  Insufficient permissions to access resource.
+
+  ```json
+  {
+    "error": {
+      "code": "permission_denied",
+      "message": "User does not have permission to execute tool: search_web"
+    }
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="429" type="Rate Limit Exceeded">
+  Too many requests.
+
+  ```json
+  {
+    "error": {
+      "code": "rate_limit_exceeded",
+      "message": "Rate limit exceeded: 100 requests per minute"
+    }
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error during request processing.
+
+  ```json
+  {
+    "error": {
+      "code": "internal_error",
+      "message": "An unexpected error occurred"
+    }
+  }
+  ```
+</ResponseField>
+
+## SDK Examples
+
+### Python
+
+```python
+from mcp_client import MCPClient
+
+# Initialize client
+client = MCPClient(
+    base_url="http://localhost:8000/mcp",
+    auth_token=token
+)
+
+# Initialize connection
+await client.initialize({
+    "protocolVersion": "2024-11-05",
+    "clientInfo": {"name": "my-app", "version": "1.0.0"}
+})
+
+# List tools
+tools = await client.list_tools()
+
+# Call tool
+response = await client.call_tool("chat", {
+    "query": "What is machine learning?"
+})
+
+print(response.content[0].text)
+```
+
+### JavaScript/TypeScript
+
+```typescript
+import { MCPClient } from '@modelcontextprotocol/sdk';
+
+const client = new MCPClient({
+  baseUrl: 'http://localhost:8000/mcp',
+  authToken: token
+});
+
+// Initialize
+await client.initialize({
+  protocolVersion: '2024-11-05',
+  clientInfo: { name: 'my-app', version: '1.0.0' }
+});
+
+// Call tool
+const response = await client.callTool('chat', {
+  query: 'What is machine learning?'
+});
+
+console.log(response.content[0].text);
+```
+
+### cURL
+
+```bash
+# Initialize
+curl -X POST http://localhost:8000/mcp/initialize \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "protocolVersion": "2024-11-05",
+    "clientInfo": {"name": "curl-client", "version": "1.0.0"}
+  }'
+
+# List tools
+curl -X POST http://localhost:8000/mcp/tools/list \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method": "tools/list"}'
+
+# Call tool
+curl -X POST http://localhost:8000/mcp/tools/call \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "tools/call",
+    "params": {
+      "name": "chat",
+      "arguments": {"query": "Hello!"}
+    }
+  }'
+```
+
+## Rate Limiting
+
+MCP endpoints are subject to rate limiting:
+
+- **Default**: 100 requests per minute per user
+- **Tool calls**: 30 requests per minute per user
+- **Streaming**: 10 concurrent streams per user
+
+Rate limit headers are included in responses:
+
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1699999999
+```
+
+## WebSocket Support
+
+For real-time bidirectional communication, use the WebSocket endpoint:
+
+```
+ws://localhost:8000/mcp/ws
+```
+
+**Example**:
+```python
+import websockets
+import json
+
+async with websockets.connect(
+    "ws://localhost:8000/mcp/ws",
+    extra_headers={"Authorization": f"Bearer {token}"}
+) as ws:
+    # Initialize
+    await ws.send(json.dumps({
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "clientInfo": {"name": "ws-client", "version": "1.0.0"}
+        }
+    }))
+
+    response = await ws.recv()
+    print(json.loads(response))
+
+    # Call tool
+    await ws.send(json.dumps({
+        "method": "tools/call",
+        "params": {
+            "name": "chat",
+            "arguments": {"query": "Hello!"}
+        }
+    }))
+
+    response = await ws.recv()
+    print(json.loads(response))
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="MCP Messages" icon="message" href="/api-reference/mcp/messages">
+    Message format and types
+  </Card>
+  <Card title="MCP Tools" icon="wrench" href="/api-reference/mcp/tools">
+    Available tools reference
+  </Card>
+  <Card title="MCP Resources" icon="database" href="/api-reference/mcp/resources">
+    Resource types and access
+  </Card>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Get authentication tokens
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**MCP Protocol Ready**: Standardized endpoints for AI application integration!
+</Check>

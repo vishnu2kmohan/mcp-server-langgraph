@@ -1,0 +1,943 @@
+---
+title: Environment Configuration
+description: 'Environment-based configuration management and best practices'
+icon: 'sliders'
+---
+
+## Overview
+
+Proper environment configuration is critical for maintaining consistency across development, staging, and production environments while keeping sensitive data secure. This guide covers configuration strategies, environment management, and the 12-factor app methodology.
+
+<Info>
+Environment-based configuration enables seamless deployment across multiple environments while maintaining security and flexibility.
+</Info>
+
+## Configuration Strategies
+
+### 12-Factor App Principles
+
+The MCP Server follows the [12-Factor App](https://12factor.net/) methodology for configuration:
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="terminal">
+    - Store config in environment
+    - Never commit secrets to git
+    - Strict separation of config and code
+    - Different values per environment
+  </Card>
+
+  <Card title="Backing Services" icon="database">
+    - Attached resources via URLs
+    - Swap services without code changes
+    - Database URLs, cache URLs, etc.
+    - Service discovery via environment
+  </Card>
+
+  <Card title="Build, Release, Run" icon="rocket">
+    - Separate build and run stages
+    - Config injected at runtime
+    - Immutable releases
+    - Rollback capability
+  </Card>
+
+  <Card title="Port Binding" icon="plug">
+    - Export services via port binding
+    - Completely self-contained
+    - No runtime injection of webserver
+    - Configurable port via environment
+  </Card>
+</CardGroup>
+
+## Environment Types
+
+### Development Environment
+
+**Purpose**: Local development and testing
+
+**Configuration**:
+```bash
+# .env.development
+ENV=development
+DEBUG=true
+LOG_LEVEL=debug
+
+# Authentication
+AUTH_PROVIDER=inmemory
+SESSION_PROVIDER=memory
+
+# LLM
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Disable production features
+ENABLE_TRACING=false
+ENABLE_METRICS=false
+```
+
+**Characteristics**:
+- Fast feedback loops
+- Verbose logging
+- In-memory services
+- Mock external dependencies
+- Hot reload enabled
+
+### Staging Environment
+
+**Purpose**: Pre-production testing and validation
+
+**Configuration**:
+```bash
+# .env.staging
+ENV=staging
+DEBUG=false
+LOG_LEVEL=info
+
+# Authentication
+AUTH_PROVIDER=keycloak
+KEYCLOAK_URL=https://staging-keycloak.example.com
+SESSION_PROVIDER=redis
+REDIS_URL=redis://staging-redis:6379
+
+# Authorization
+OPENFGA_ENABLED=true
+OPENFGA_URL=http://staging-openfga:8080
+
+# LLM
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=${STAGING_ANTHROPIC_KEY}
+
+# Observability
+ENABLE_TRACING=true
+JAEGER_URL=http://staging-jaeger:4318
+ENABLE_METRICS=true
+PROMETHEUS_PORT=9090
+```
+
+**Characteristics**:
+- Production-like configuration
+- Real backing services
+- Monitoring enabled
+- Sanitized production data
+- Load testing environment
+
+### Production Environment
+
+**Purpose**: Live user-facing deployment
+
+**Configuration**:
+```bash
+# .env.production
+ENV=production
+DEBUG=false
+LOG_LEVEL=warning
+
+# Authentication
+AUTH_PROVIDER=keycloak
+KEYCLOAK_URL=https://auth.example.com
+KEYCLOAK_REALM=production
+SESSION_PROVIDER=redis
+REDIS_URL=redis://prod-redis-master:6379
+SESSION_TTL=86400
+
+# Authorization
+OPENFGA_ENABLED=true
+OPENFGA_URL=http://openfga:8080
+OPENFGA_STORE_ID=${OPENFGA_STORE_ID}
+
+# LLM
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=${PROD_ANTHROPIC_KEY}
+LLM_FALLBACK_ENABLED=true
+LLM_FALLBACK_PROVIDERS=openai,google
+
+# Security
+ENABLE_CORS=true
+CORS_ORIGINS=https://app.example.com,https://admin.example.com
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_WINDOW=60
+
+# Observability
+ENABLE_TRACING=true
+OTLP_ENDPOINT=https://telemetry.example.com
+ENABLE_METRICS=true
+LANGSMITH_ENABLED=true
+LANGSMITH_PROJECT=production-agent
+```
+
+**Characteristics**:
+- Maximum security
+- High availability
+- Performance optimized
+- Full observability
+- Strict rate limiting
+
+## Environment Variable Management
+
+### Required Variables
+
+<ParamField path="ENV" type="string" required>
+  Environment name: `development`, `staging`, or `production`
+</ParamField>
+
+<ParamField path="AUTH_PROVIDER" type="string" required>
+  Authentication provider: `inmemory` or `keycloak`
+</ParamField>
+
+<ParamField path="SESSION_PROVIDER" type="string" required>
+  Session storage: `memory` or `redis`
+</ParamField>
+
+<ParamField path="LLM_PROVIDER" type="string" required>
+  LLM provider: `anthropic`, `openai`, `google`, or `ollama`
+</ParamField>
+
+### Optional Variables
+
+<ParamField path="DEBUG" type="boolean" default="false">
+  Enable debug mode (verbose logging, tracebacks)
+</ParamField>
+
+<ParamField path="LOG_LEVEL" type="string" default="info">
+  Logging level: `debug`, `info`, `warning`, `error`, `critical`
+</ParamField>
+
+<ParamField path="PORT" type="integer" default="8000">
+  HTTP server port
+</ParamField>
+
+<ParamField path="WORKERS" type="integer" default="4">
+  Number of worker processes (production)
+</ParamField>
+
+### Provider-Specific Variables
+
+**Keycloak**:
+```bash
+KEYCLOAK_URL=https://auth.example.com
+KEYCLOAK_REALM=mcp-agent
+KEYCLOAK_CLIENT_ID=langgraph-agent
+KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_SECRET}
+```
+
+**Redis**:
+```bash
+REDIS_URL=redis://redis-master:6379
+REDIS_PASSWORD=${REDIS_PASSWORD}
+REDIS_DB=0
+REDIS_MAX_CONNECTIONS=50
+```
+
+**OpenFGA**:
+```bash
+OPENFGA_ENABLED=true
+OPENFGA_URL=http://openfga:8080
+OPENFGA_STORE_ID=${OPENFGA_STORE_ID}
+OPENFGA_MODEL_ID=${OPENFGA_MODEL_ID}
+```
+
+**LLM Providers**:
+```bash
+# Anthropic
+ANTHROPIC_API_KEY=${ANTHROPIC_KEY}
+
+# OpenAI
+OPENAI_API_KEY=${OPENAI_KEY}
+
+# Google
+GOOGLE_API_KEY=${GOOGLE_KEY}
+GOOGLE_CLOUD_PROJECT=${GCP_PROJECT}
+
+# Ollama
+OLLAMA_BASE_URL=http://ollama:11434
+```
+
+## Configuration Files
+
+### .env File Structure
+
+```bash
+# .env
+# DO NOT COMMIT THIS FILE TO GIT
+
+# ===========================
+# Environment
+# ===========================
+ENV=development
+DEBUG=true
+LOG_LEVEL=debug
+
+# ===========================
+# Server
+# ===========================
+HOST=0.0.0.0
+PORT=8000
+WORKERS=1
+
+# ===========================
+# Authentication
+# ===========================
+AUTH_PROVIDER=inmemory
+JWT_SECRET=${JWT_SECRET}
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION=3600
+
+# ===========================
+# Session Management
+# ===========================
+SESSION_PROVIDER=memory
+SESSION_SECRET=${SESSION_SECRET}
+SESSION_TTL=3600
+
+# ===========================
+# Authorization
+# ===========================
+OPENFGA_ENABLED=false
+
+# ===========================
+# LLM Configuration
+# ===========================
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+LLM_MODEL_NAME=claude-3-5-sonnet-20241022
+LLM_TEMPERATURE=1.0
+LLM_MAX_TOKENS=8192
+
+# ===========================
+# Observability
+# ===========================
+ENABLE_TRACING=false
+ENABLE_METRICS=false
+LANGSMITH_ENABLED=false
+```
+
+### .env.example Template
+
+Create a template for new developers:
+
+```bash
+# .env.example
+# Copy to .env and fill in values
+
+# Environment
+ENV=development
+DEBUG=true
+LOG_LEVEL=debug
+
+# Server
+HOST=0.0.0.0
+PORT=8000
+
+# Authentication
+AUTH_PROVIDER=inmemory
+JWT_SECRET=your-secret-here
+
+# LLM (get your API key from https://console.anthropic.com)
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+
+# Optional: Enable observability
+ENABLE_TRACING=false
+LANGSMITH_ENABLED=false
+```
+
+### .gitignore
+
+**CRITICAL**: Never commit secrets to git:
+
+```bash
+# .gitignore
+.env
+.env.*
+!.env.example
+secrets/
+*.key
+*.pem
+```
+
+## Infisical Integration
+
+### Centralized Secret Management
+
+Use Infisical to manage secrets across environments:
+
+```python
+from infisical import InfisicalClient
+import os
+
+# Initialize Infisical
+client = InfisicalClient(
+    client_id=os.getenv("INFISICAL_CLIENT_ID"),
+    client_secret=os.getenv("INFISICAL_CLIENT_SECRET")
+)
+
+# Fetch all secrets for environment
+secrets = client.get_all_secrets(
+    project_id=os.getenv("INFISICAL_PROJECT_ID"),
+    environment=os.getenv("ENV", "development")
+)
+
+# Set environment variables
+for secret in secrets:
+    os.environ[secret.secret_name] = secret.secret_value
+```
+
+### Environment-Specific Secrets
+
+**Development**:
+```bash
+# Infisical: development environment
+ANTHROPIC_API_KEY=sk-ant-dev-...
+REDIS_URL=redis://localhost:6379
+KEYCLOAK_URL=http://localhost:8080
+```
+
+**Production**:
+```bash
+# Infisical: production environment
+ANTHROPIC_API_KEY=sk-ant-prod-...
+REDIS_URL=redis://prod-redis-master:6379
+KEYCLOAK_URL=https://auth.example.com
+REDIS_PASSWORD=<secure-password>
+KEYCLOAK_CLIENT_SECRET=<secure-secret>
+```
+
+## Docker Configuration
+
+### docker-compose.yml
+
+Environment-based configuration with Docker Compose:
+
+```yaml
+version: '3.8'
+
+services:
+  agent:
+    image: langgraph-agent:latest
+    env_file:
+      - .env.${ENV:-development}
+    environment:
+      - ENV=${ENV:-development}
+      - DEBUG=${DEBUG:-true}
+    ports:
+      - "${PORT:-8000}:8000"
+    depends_on:
+      - redis
+      - keycloak
+      - openfga
+    volumes:
+      # Mount config files
+      - ./config:/app/config:ro
+    networks:
+      - agent-network
+
+  redis:
+    image: redis:7-alpine
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - agent-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=${KC_DB:-postgres}
+      - KC_DB_URL=${KC_DB_URL}
+    networks:
+      - agent-network
+
+volumes:
+  redis-data:
+
+networks:
+  agent-network:
+    driver: bridge
+```
+
+### Multi-Stage Dockerfile
+
+Build once, configure at runtime:
+
+```dockerfile
+# Build stage
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Runtime stage
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application
+COPY src/ ./src/
+
+# Environment variables (defaults)
+ENV ENV=production \
+    DEBUG=false \
+    PORT=8000 \
+    WORKERS=4
+
+# Expose port
+EXPOSE $PORT
+
+# Run application
+CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers $WORKERS"]
+```
+
+## Kubernetes Configuration
+
+### ConfigMaps
+
+Store non-sensitive configuration:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: langgraph-agent-config
+  namespace: langgraph-agent
+data:
+  ENV: "production"
+  LOG_LEVEL: "info"
+  AUTH_PROVIDER: "keycloak"
+  SESSION_PROVIDER: "redis"
+  LLM_PROVIDER: "anthropic"
+  ENABLE_TRACING: "true"
+  ENABLE_METRICS: "true"
+
+  # Service URLs
+  KEYCLOAK_URL: "http://keycloak:8080"
+  REDIS_URL: "redis://redis-master:6379"
+  OPENFGA_URL: "http://openfga:8080"
+```
+
+### Secrets
+
+Store sensitive data in Kubernetes Secrets:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: langgraph-agent-secrets
+  namespace: langgraph-agent
+type: Opaque
+stringData:
+  ANTHROPIC_API_KEY: "sk-ant-..."
+  JWT_SECRET: "your-jwt-secret"
+  SESSION_SECRET: "your-session-secret"
+  REDIS_PASSWORD: "redis-password"
+  KEYCLOAK_CLIENT_SECRET: "keycloak-secret"
+```
+
+### External Secrets Operator
+
+Sync from Infisical automatically:
+
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: langgraph-secrets
+  namespace: langgraph-agent
+spec:
+  refreshInterval: 1h
+
+  secretStoreRef:
+    name: infisical
+    kind: SecretStore
+
+  target:
+    name: langgraph-agent-secrets
+    creationPolicy: Owner
+
+  data:
+  - secretKey: ANTHROPIC_API_KEY
+    remoteRef:
+      key: ANTHROPIC_API_KEY
+
+  - secretKey: REDIS_PASSWORD
+    remoteRef:
+      key: REDIS_PASSWORD
+
+  - secretKey: KEYCLOAK_CLIENT_SECRET
+    remoteRef:
+      key: KEYCLOAK_CLIENT_SECRET
+```
+
+### Deployment with Environment Config
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+  namespace: langgraph-agent
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: agent
+        image: langgraph-agent:latest
+
+        # Environment from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: langgraph-agent-config
+        - secretRef:
+            name: langgraph-agent-secrets
+
+        # Override specific values
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+
+        ports:
+        - containerPort: 8000
+          name: http
+```
+
+## Configuration Validation
+
+### Pydantic Settings
+
+Use Pydantic for type-safe configuration:
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal, Optional
+
+class Settings(BaseSettings):
+    """Application settings with validation"""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
+
+    # Environment
+    env: Literal["development", "staging", "production"] = "development"
+    debug: bool = False
+    log_level: Literal["debug", "info", "warning", "error"] = "info"
+
+    # Server
+    host: str = "0.0.0.0"
+    port: int = 8000
+    workers: int = 4
+
+    # Authentication
+    auth_provider: Literal["inmemory", "keycloak"] = "inmemory"
+    jwt_secret: str
+    jwt_algorithm: str = "HS256"
+    jwt_expiration: int = 3600
+
+    # Session
+    session_provider: Literal["memory", "redis"] = "memory"
+    session_secret: str
+    session_ttl: int = 3600
+
+    # LLM
+    llm_provider: Literal["anthropic", "openai", "google", "ollama"]
+    anthropic_api_key: Optional[str] = None
+    openai_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
+
+    # Validation
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._validate_config()
+
+    def _validate_config(self):
+        """Validate configuration consistency"""
+
+        # Production checks
+        if self.env == "production":
+            assert not self.debug, "DEBUG must be false in production"
+            assert self.auth_provider == "keycloak", "Use Keycloak in production"
+            assert self.session_provider == "redis", "Use Redis sessions in production"
+
+        # LLM API key required
+        if self.llm_provider == "anthropic":
+            assert self.anthropic_api_key, "ANTHROPIC_API_KEY required"
+        elif self.llm_provider == "openai":
+            assert self.openai_api_key, "OPENAI_API_KEY required"
+        elif self.llm_provider == "google":
+            assert self.google_api_key, "GOOGLE_API_KEY required"
+
+# Load and validate settings
+settings = Settings()
+```
+
+### Startup Validation
+
+Validate configuration on application startup:
+
+```python
+from fastapi import FastAPI
+from src.config import settings
+import sys
+
+app = FastAPI()
+
+@app.on_event("startup")
+async def validate_startup_config():
+    """Validate configuration before accepting requests"""
+
+    errors = []
+
+    # Check required services
+    if settings.auth_provider == "keycloak":
+        try:
+            # Test Keycloak connection
+            response = await httpx.get(f"{settings.keycloak_url}/health")
+            if response.status_code != 200:
+                errors.append("Keycloak is not healthy")
+        except Exception as e:
+            errors.append(f"Cannot connect to Keycloak: {e}")
+
+    if settings.session_provider == "redis":
+        try:
+            # Test Redis connection
+            redis_client = await aioredis.from_url(settings.redis_url)
+            await redis_client.ping()
+        except Exception as e:
+            errors.append(f"Cannot connect to Redis: {e}")
+
+    # Check LLM API key
+    if settings.llm_provider == "anthropic" and not settings.anthropic_api_key:
+        errors.append("ANTHROPIC_API_KEY is required")
+
+    # Fail fast if errors
+    if errors:
+        for error in errors:
+            print(f"❌ Configuration Error: {error}", file=sys.stderr)
+        sys.exit(1)
+
+    print("✅ Configuration validated successfully")
+```
+
+## Environment-Specific Features
+
+### Feature Flags
+
+Enable features based on environment:
+
+```python
+class FeatureFlags:
+    """Environment-based feature flags"""
+
+    def __init__(self, env: str):
+        self.env = env
+
+    @property
+    def enable_caching(self) -> bool:
+        """Enable LLM response caching"""
+        return self.env in ["staging", "production"]
+
+    @property
+    def enable_rate_limiting(self) -> bool:
+        """Enable API rate limiting"""
+        return self.env == "production"
+
+    @property
+    def enable_tracing(self) -> bool:
+        """Enable distributed tracing"""
+        return self.env in ["staging", "production"]
+
+    @property
+    def enable_load_shedding(self) -> bool:
+        """Enable load shedding under high load"""
+        return self.env == "production"
+
+    @property
+    def verbose_errors(self) -> bool:
+        """Show detailed error messages"""
+        return self.env == "development"
+
+# Usage
+features = FeatureFlags(settings.env)
+
+if features.enable_caching:
+    # Use Redis cache
+    cache = RedisCache(settings.redis_url)
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Never Commit Secrets" icon="shield-xmark">
+    **Always use .gitignore**:
+
+    ```bash
+    # .gitignore
+    .env
+    .env.*
+    !.env.example
+    secrets/
+    *.key
+    *.pem
+    config/secrets.yml
+    ```
+
+    **Use secret scanning**:
+    ```bash
+    # Install git-secrets
+    brew install git-secrets
+
+    # Setup hooks
+    git secrets --install
+    git secrets --register-aws
+    ```
+  </Accordion>
+
+  <Accordion title="Environment Parity" icon="equals">
+    Keep dev, staging, and production as similar as possible:
+
+    **Same backing services**:
+    - Development: Docker Compose
+    - Staging: Kubernetes (minikube/kind)
+    - Production: Kubernetes (GKE/EKS/AKS)
+
+    **Same configuration structure**:
+    - All environments use same .env format
+    - Same ConfigMap structure
+    - Same secret keys
+  </Accordion>
+
+  <Accordion title="Validation First" icon="shield-check">
+    Validate configuration before starting:
+
+    ```python
+    # Fail fast on startup
+    @app.on_event("startup")
+    async def validate_config():
+        assert settings.jwt_secret, "JWT_SECRET required"
+        assert len(settings.jwt_secret) >= 32, "JWT_SECRET too short"
+
+        if settings.env == "production":
+            assert not settings.debug, "DEBUG must be false"
+            assert settings.auth_provider == "keycloak"
+    ```
+  </Accordion>
+
+  <Accordion title="Use Infisical/Vault" icon="vault">
+    Centralize secret management:
+
+    **Benefits**:
+    - Automatic secret rotation
+    - Audit logging
+    - Access control
+    - Version history
+    - Emergency revocation
+
+    **Setup**:
+    ```bash
+    # Install Infisical CLI
+    brew install infisical/get-cli/infisical
+
+    # Login
+    infisical login
+
+    # Inject secrets
+    infisical run -- python main.py
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Environment variables not loaded">
+    **Problem**: Settings show default values instead of .env values
+
+    **Solutions**:
+    ```python
+    # Check .env file location
+    import os
+    print(f"Current directory: {os.getcwd()}")
+
+    # Verify .env is being loaded
+    from dotenv import load_dotenv
+    load_dotenv(verbose=True)
+
+    # Check specific variable
+    print(f"ANTHROPIC_API_KEY: {os.getenv('ANTHROPIC_API_KEY', 'NOT SET')}")
+    ```
+  </Accordion>
+
+  <Accordion title="Configuration validation fails">
+    **Problem**: Application exits on startup
+
+    **Solutions**:
+    ```bash
+    # Check required variables
+    python -c "from src.config import settings; print(settings)"
+
+    # Validate .env format
+    cat .env | grep -v '^#' | grep -v '^$'
+
+    # Test individually
+    export ANTHROPIC_API_KEY=test
+    python -c "from src.config import settings"
+    ```
+  </Accordion>
+
+  <Accordion title="Kubernetes ConfigMap not updating">
+    **Problem**: Pods use old configuration
+
+    **Solutions**:
+    ```bash
+    # Force update
+    kubectl rollout restart deployment/langgraph-agent
+
+    # Check ConfigMap
+    kubectl get configmap langgraph-agent-config -o yaml
+
+    # Watch pod restart
+    kubectl get pods -w
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Infisical Setup" icon="vault" href="/guides/infisical-setup">
+    Centralized secret management
+  </Card>
+  <Card title="Secret Rotation" icon="rotate" href="/guides/secret-rotation">
+    Automated secret rotation
+  </Card>
+  <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">
+    Deploy to Kubernetes
+  </Card>
+  <Card title="Production Checklist" icon="clipboard-check" href="/deployment/production-checklist">
+    Pre-deployment security
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Environment Configuration Ready**: Secure, validated configuration across all environments!
+</Check>

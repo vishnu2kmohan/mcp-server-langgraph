@@ -1,0 +1,675 @@
+---
+title: Authentication API
+description: 'API endpoints for user authentication and session management'
+icon: 'key'
+---
+
+## Overview
+
+The Authentication API provides endpoints for user authentication, token management, and session handling. Supports both JWT token-based and Redis session-based authentication modes.
+
+<Info>
+**v2.1.0** adds Keycloak SSO support and Redis session management for production deployments.
+</Info>
+
+## Base URL
+
+```
+https://api.yourdomain.com
+```
+
+## Authentication Modes
+
+<Tabs>
+  <Tab title="Token Mode">
+    **Stateless JWT authentication**
+
+    - Client receives access token + refresh token
+    - Access token included in `Authorization` header
+    - Refresh token used to get new access tokens
+
+    ```bash
+    Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+    ```
+  </Tab>
+
+  <Tab title="Session Mode">
+    **Stateful session authentication**
+
+    - Server creates session in Redis
+    - Session ID returned in cookie
+    - Cookie sent automatically with requests
+
+    ```bash
+    Cookie: session_id=abc123def456...
+    ```
+  </Tab>
+</Tabs>
+
+## Endpoints
+
+### POST /auth/login
+
+Authenticate user and create session or issue tokens.
+
+<ParamField path="username" type="string" required>
+  User's username or email
+</ParamField>
+
+<ParamField path="password" type="string" required>
+  User's password
+</ParamField>
+
+<ParamField path="grant_type" type="string" default="password">
+  OAuth2 grant type. Options: `password`, `refresh_token`
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.yourdomain.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "password123"
+  }'
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/auth/login",
+    json={
+        "username": "alice",
+        "password": "password123"
+    }
+)
+
+data = response.json()
+print(f"Access Token: {data['access_token']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.yourdomain.com/auth/login', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    username: 'alice',
+    password: 'password123'
+  })
+});
+
+const data = await response.json();
+console.log('Access Token:', data.access_token);
+```
+</CodeGroup>
+
+**Response (Token Mode)**:
+
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh_token": "def50200abc123...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "user": {
+    "id": "alice",
+    "username": "alice",
+    "email": "alice@example.com",
+    "roles": ["user", "admin"]
+  }
+}
+```
+
+**Response (Session Mode)**:
+
+```json
+{
+  "session_id": "abc123def456...",
+  "user": {
+    "id": "alice",
+    "username": "alice",
+    "email": "alice@example.com",
+    "roles": ["user", "admin"]
+  },
+  "expires_at": "2025-10-13T10:30:00Z"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Authentication successful
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid credentials
+  ```json
+  {
+    "error": "unauthorized",
+    "message": "Invalid username or password"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="429" type="Too Many Requests">
+  Rate limit exceeded
+  ```json
+  {
+    "error": "rate_limit_exceeded",
+    "message": "Too many login attempts. Try again in 60 seconds.",
+    "retry_after": 60
+  }
+  ```
+</ResponseField>
+
+---
+
+### POST /auth/refresh
+
+Refresh access token using refresh token.
+
+<ParamField path="refresh_token" type="string" required>
+  Valid refresh token from login response
+</ParamField>
+
+**Request Example**:
+
+```bash
+curl -X POST https://api.yourdomain.com/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "def50200abc123..."
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh_token": "def50200xyz789...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+<Note>
+Refresh tokens are rotated on each refresh for security. The old refresh token is invalidated.
+</Note>
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Token refreshed successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or expired refresh token
+  ```json
+  {
+    "error": "unauthorized",
+    "message": "Invalid or expired refresh token"
+  }
+  ```
+</ResponseField>
+
+---
+
+### POST /auth/logout
+
+Logout user and revoke session/tokens.
+
+**Headers**:
+- `Authorization: Bearer {token}` (token mode)
+- `Cookie: session_id={session_id}` (session mode)
+
+**Request Example**:
+
+<CodeGroup>
+```bash Token Mode
+curl -X POST https://api.yourdomain.com/auth/logout \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```bash Session Mode
+curl -X POST https://api.yourdomain.com/auth/logout \
+  -H "Cookie: session_id=abc123def456..."
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Logout successful
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+---
+
+### GET /auth/me
+
+Get current authenticated user information.
+
+**Headers**:
+- `Authorization: Bearer {token}` (token mode)
+- `Cookie: session_id={session_id}` (session mode)
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/auth/me \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+**Response**:
+
+```json
+{
+  "id": "alice",
+  "username": "alice",
+  "email": "alice@example.com",
+  "email_verified": true,
+  "roles": ["user", "admin"],
+  "groups": ["/admins", "/users/engineering"],
+  "created_at": "2025-01-01T00:00:00Z",
+  "last_login": "2025-10-12T10:00:00Z"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  User information retrieved
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated or session/token expired
+</ResponseField>
+
+---
+
+### GET /auth/sessions
+
+List active sessions for current user (session mode only).
+
+**Headers**:
+- `Authorization: Bearer {token}` or
+- `Cookie: session_id={session_id}`
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/auth/sessions \
+  -H "Cookie: session_id=abc123def456..."
+```
+
+**Response**:
+
+```json
+{
+  "sessions": [
+    {
+      "session_id": "abc123def456...",
+      "created_at": "2025-10-12T10:00:00Z",
+      "expires_at": "2025-10-13T10:00:00Z",
+      "last_accessed": "2025-10-12T14:30:00Z",
+      "ip_address": "192.168.1.100",
+      "user_agent": "Mozilla/5.0...",
+      "is_current": true
+    },
+    {
+      "session_id": "xyz789...",
+      "created_at": "2025-10-11T08:00:00Z",
+      "expires_at": "2025-10-12T08:00:00Z",
+      "last_accessed": "2025-10-11T16:45:00Z",
+      "ip_address": "192.168.1.50",
+      "user_agent": "Mobile Safari...",
+      "is_current": false
+    }
+  ],
+  "total": 2,
+  "max_concurrent": 5
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Sessions retrieved
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+---
+
+### DELETE /auth/sessions/{session_id}
+
+Revoke a specific session (session mode only).
+
+**Path Parameters**:
+- `session_id`: Session ID to revoke
+
+**Request Example**:
+
+```bash
+curl -X DELETE https://api.yourdomain.com/auth/sessions/xyz789... \
+  -H "Cookie: session_id=abc123def456..."
+```
+
+**Response**:
+
+```json
+{
+  "message": "Session revoked successfully"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Session revoked
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  Cannot revoke another user's session
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Session not found
+</ResponseField>
+
+---
+
+### POST /auth/verify
+
+Verify token validity and get user information.
+
+**Headers**:
+- `Authorization: Bearer {token}`
+
+**Request Example**:
+
+```bash
+curl -X POST https://api.yourdomain.com/auth/verify \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+**Response**:
+
+```json
+{
+  "valid": true,
+  "user_id": "alice",
+  "username": "alice",
+  "expires_at": "2025-10-12T11:00:00Z",
+  "issued_at": "2025-10-12T10:00:00Z"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Token is valid
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Token is invalid or expired
+  ```json
+  {
+    "valid": false,
+    "error": "Token expired",
+    "expired_at": "2025-10-12T09:00:00Z"
+  }
+  ```
+</ResponseField>
+
+---
+
+## Keycloak SSO Endpoints
+
+When `AUTH_PROVIDER=keycloak`, additional endpoints are available:
+
+### GET /auth/keycloak/login
+
+Redirect to Keycloak login page (browser flow).
+
+**Query Parameters**:
+- `redirect_uri`: URL to redirect after login (optional)
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/auth/keycloak/login?redirect_uri=https://app.yourdomain.com/dashboard
+```
+
+**Response**:
+
+```
+302 Found
+Location: https://sso.yourdomain.com/realms/langgraph-agent/protocol/openid-connect/auth?client_id=...
+```
+
+---
+
+### GET /auth/keycloak/callback
+
+OAuth2 callback endpoint (handled automatically).
+
+**Query Parameters**:
+- `code`: Authorization code from Keycloak
+- `state`: CSRF protection state
+
+This endpoint exchanges the authorization code for tokens and creates a session.
+
+---
+
+### GET /auth/keycloak/logout
+
+Logout from Keycloak and revoke tokens.
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/auth/keycloak/logout \
+  -H "Cookie: session_id=abc123def456..."
+```
+
+**Response**:
+
+```
+302 Found
+Location: https://sso.yourdomain.com/realms/langgraph-agent/protocol/openid-connect/logout
+```
+
+---
+
+## Error Responses
+
+All authentication endpoints may return the following errors:
+
+### 401 Unauthorized
+
+```json
+{
+  "error": "unauthorized",
+  "message": "Invalid credentials or expired token",
+  "code": "AUTH_INVALID_CREDENTIALS"
+}
+```
+
+### 403 Forbidden
+
+```json
+{
+  "error": "forbidden",
+  "message": "Access denied",
+  "code": "AUTH_ACCESS_DENIED"
+}
+```
+
+### 429 Too Many Requests
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests. Please try again later.",
+  "retry_after": 60,
+  "code": "AUTH_RATE_LIMIT"
+}
+```
+
+### 500 Internal Server Error
+
+```json
+{
+  "error": "internal_error",
+  "message": "Authentication service unavailable",
+  "trace_id": "abc123...",
+  "code": "AUTH_SERVICE_ERROR"
+}
+```
+
+---
+
+## SDK Examples
+
+### Python
+
+```python
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+# Initialize auth
+auth = AuthMiddleware()
+
+# Login (development mode)
+token = auth.create_token("alice", expires_in=3600)
+
+# Make authenticated request
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/message",
+    headers={"Authorization": f"Bearer {token}"},
+    json={"query": "Hello!"}
+)
+```
+
+### JavaScript/TypeScript
+
+```javascript
+class AuthClient {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+    this.token = null;
+  }
+
+  async login(username, password) {
+    const response = await fetch(`${this.baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password})
+    });
+
+    const data = await response.json();
+    this.token = data.access_token;
+    return data;
+  }
+
+  async request(endpoint, options = {}) {
+    return fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${this.token}`
+      }
+    });
+  }
+}
+
+// Usage
+const client = new AuthClient('https://api.yourdomain.com');
+await client.login('alice', 'password123');
+const response = await client.request('/message', {
+  method: 'POST',
+  body: JSON.stringify({query: 'Hello!'})
+});
+```
+
+---
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Token Storage" icon="database">
+    **Browser**: Store access tokens in memory, refresh tokens in HttpOnly cookies
+
+    **Mobile**: Use secure storage (Keychain/Keystore)
+
+    **Server**: Store tokens in environment variables or secret manager
+
+    **Never**: Store tokens in localStorage (vulnerable to XSS)
+  </Accordion>
+
+  <Accordion title="Token Refresh" icon="arrows-rotate">
+    - Refresh tokens before expiration (e.g., when < 5 minutes left)
+    - Implement automatic retry on 401 with token refresh
+    - Handle refresh token rotation
+    - Clear tokens on logout
+  </Accordion>
+
+  <Accordion title="Session Management" icon="clock">
+    - Set appropriate session TTL (balance UX vs security)
+    - Use sliding windows for active users
+    - Limit concurrent sessions per user
+    - Revoke sessions on password change
+    - Monitor for session hijacking
+  </Accordion>
+
+  <Accordion title="Rate Limiting" icon="gauge">
+    - Implement exponential backoff on failures
+    - Respect `Retry-After` header on 429 errors
+    - Monitor authentication failure rates
+    - Alert on suspicious patterns
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Authentication Guide" icon="key" href="/getting-started/authentication">
+    Learn about authentication modes
+  </Card>
+  <Card title="Keycloak SSO" icon="shield" href="/guides/keycloak-sso">
+    Setup Keycloak integration
+  </Card>
+  <Card title="Redis Sessions" icon="database" href="/guides/redis-sessions">
+    Configure session storage
+  </Card>
+  <Card title="Authorization API" icon="shield-halved" href="/api-reference/authorization">
+    Permission checking endpoints
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Secure by Default**: All authentication endpoints use industry-standard security practices!
+</Check>

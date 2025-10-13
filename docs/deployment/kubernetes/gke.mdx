@@ -1,0 +1,810 @@
+---
+title: Google GKE Deployment
+description: 'Deploy MCP Server with LangGraph on Google Kubernetes Engine (GKE)'
+icon: 'google'
+---
+
+## Overview
+
+Google Kubernetes Engine (GKE) is a managed Kubernetes service that provides enterprise-grade features including Autopilot mode, Workload Identity, and tight integration with Google Cloud services.
+
+<Info>
+This guide covers deploying to GKE with production-ready configuration including Workload Identity for secure service authentication, Cloud SQL for PostgreSQL, and Memorystore for Redis.
+</Info>
+
+## Prerequisites
+
+- Google Cloud account with billing enabled
+- `gcloud` CLI installed and configured
+- `kubectl` installed
+- Project with required APIs enabled
+
+## Enable Required APIs
+
+```bash
+# Set project
+export PROJECT_ID=your-project-id
+gcloud config set project $PROJECT_ID
+
+# Enable APIs
+gcloud services enable \
+  container.googleapis.com \
+  compute.googleapis.com \
+  sql-component.googleapis.com \
+  redis.googleapis.com \
+  secretmanager.googleapis.com \
+  cloudkms.googleapis.com \
+  servicenetworking.googleapis.com
+```
+
+## Create GKE Cluster
+
+### Autopilot Cluster (Recommended)
+
+GKE Autopilot manages the cluster infrastructure for you:
+
+```bash
+# Create Autopilot cluster
+gcloud container clusters create-auto langgraph-cluster \
+  --region=us-central1 \
+  --release-channel=regular \
+  --enable-cloud-logging \
+  --enable-cloud-monitoring \
+  --workload-pool=$PROJECT_ID.svc.id.goog
+
+# Get credentials
+gcloud container clusters get-credentials langgraph-cluster \
+  --region=us-central1
+```
+
+### Standard Cluster
+
+For more control over node configuration:
+
+```bash
+# Create standard cluster
+gcloud container clusters create langgraph-cluster \
+  --region=us-central1 \
+  --num-nodes=3 \
+  --machine-type=n2-standard-4 \
+  --disk-size=50 \
+  --disk-type=pd-ssd \
+  --enable-autoscaling \
+  --min-nodes=3 \
+  --max-nodes=10 \
+  --enable-autorepair \
+  --enable-autoupgrade \
+  --release-channel=regular \
+  --workload-pool=$PROJECT_ID.svc.id.goog \
+  --enable-ip-alias \
+  --network=default \
+  --subnetwork=default \
+  --enable-cloud-logging \
+  --enable-cloud-monitoring
+
+# Get credentials
+gcloud container clusters get-credentials langgraph-cluster \
+  --region=us-central1
+```
+
+## Setup Workload Identity
+
+Workload Identity allows pods to authenticate as Google Cloud service accounts:
+
+```bash
+# Create Google Service Account
+gcloud iam service-accounts create langgraph-agent \
+  --display-name="LangGraph Agent Service Account"
+
+# Grant permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:langgraph-agent@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:langgraph-agent@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudsql.client"
+
+# Create Kubernetes service account
+kubectl create namespace langgraph-agent
+
+kubectl create serviceaccount langgraph-agent \
+  --namespace langgraph-agent
+
+# Bind Kubernetes SA to Google SA
+gcloud iam service-accounts add-iam-policy-binding \
+  langgraph-agent@$PROJECT_ID.iam.gserviceaccount.com \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:$PROJECT_ID.svc.id.goog[langgraph-agent/langgraph-agent]"
+
+kubectl annotate serviceaccount langgraph-agent \
+  --namespace langgraph-agent \
+  iam.gke.io/gcp-service-account=langgraph-agent@$PROJECT_ID.iam.gserviceaccount.com
+```
+
+## Cloud SQL for PostgreSQL
+
+### Create Cloud SQL Instance
+
+```bash
+# Create Cloud SQL instance
+gcloud sql instances create langgraph-postgres \
+  --database-version=POSTGRES_15 \
+  --tier=db-custom-2-8192 \
+  --region=us-central1 \
+  --network=default \
+  --enable-google-private-path \
+  --backup-start-time=03:00 \
+  --backup-location=us \
+  --maintenance-window-day=SUN \
+  --maintenance-window-hour=4 \
+  --database-flags=max_connections=200
+
+# Create database
+gcloud sql databases create keycloak \
+  --instance=langgraph-postgres
+
+gcloud sql databases create openfga \
+  --instance=langgraph-postgres
+
+# Create user
+gcloud sql users create keycloak \
+  --instance=langgraph-postgres \
+  --password=$(openssl rand -base64 32)
+```
+
+### Configure Cloud SQL Proxy
+
+**Option 1: Cloud SQL Auth Proxy Sidecar**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: langgraph-agent
+spec:
+  template:
+    spec:
+      serviceAccountName: langgraph-agent
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:23.0
+        env:
+        - name: KC_DB
+          value: postgres
+        - name: KC_DB_URL
+          value: jdbc:postgresql://127.0.0.1:5432/keycloak
+        - name: KC_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: cloudsql-db-credentials
+              key: username
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cloudsql-db-credentials
+              key: password
+
+      # Cloud SQL Proxy sidecar
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+        args:
+        - "--structured-logs"
+        - "--port=5432"
+        - "$PROJECT_ID:us-central1:langgraph-postgres"
+        securityContext:
+          runAsNonRoot: true
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+```
+
+**Option 2: Private IP (Recommended for Production)**
+
+```bash
+# Enable private IP for Cloud SQL
+gcloud sql instances patch langgraph-postgres \
+  --network=projects/$PROJECT_ID/global/networks/default \
+  --enable-google-private-path
+
+# Get private IP
+CLOUDSQL_PRIVATE_IP=$(gcloud sql instances describe langgraph-postgres \
+  --format='get(ipAddresses[0].ipAddress)')
+
+# Use private IP directly
+KC_DB_URL=jdbc:postgresql://$CLOUDSQL_PRIVATE_IP:5432/keycloak
+```
+
+## Memorystore for Redis
+
+### Create Redis Instance
+
+```bash
+# Create Redis instance
+gcloud redis instances create langgraph-redis \
+  --size=5 \
+  --region=us-central1 \
+  --tier=standard \
+  --redis-version=redis_7_0 \
+  --network=default \
+  --connect-mode=private-service-access \
+  --enable-auth
+
+# Get Redis host and auth string
+REDIS_HOST=$(gcloud redis instances describe langgraph-redis \
+  --region=us-central1 \
+  --format='get(host)')
+
+REDIS_AUTH=$(gcloud redis instances get-auth-string langgraph-redis \
+  --region=us-central1)
+
+# Create secret
+kubectl create secret generic redis-credentials \
+  --namespace=langgraph-agent \
+  --from-literal=host=$REDIS_HOST \
+  --from-literal=password=$REDIS_AUTH
+```
+
+### Configure Application
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+spec:
+  template:
+    spec:
+      containers:
+      - name: agent
+        env:
+        - name: REDIS_URL
+          value: redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):6379
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: password
+```
+
+## Secret Manager Integration
+
+### Store Secrets in Secret Manager
+
+```bash
+# Create secrets
+echo -n "sk-ant-your-key" | gcloud secrets create anthropic-api-key \
+  --data-file=- \
+  --replication-policy=automatic
+
+echo -n "your-jwt-secret" | gcloud secrets create jwt-secret \
+  --data-file=- \
+  --replication-policy=automatic
+
+# Grant access to service account
+gcloud secrets add-iam-policy-binding anthropic-api-key \
+  --member="serviceAccount:langgraph-agent@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+```
+
+### Use External Secrets Operator
+
+```bash
+# Install External Secrets Operator
+helm repo add external-secrets https://charts.external-secrets.io
+helm repo update
+
+helm install external-secrets \
+  external-secrets/external-secrets \
+  --namespace external-secrets-system \
+  --create-namespace
+
+# Create SecretStore
+cat <<EOF | kubectl apply -f -
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: gcpsm-secret-store
+  namespace: langgraph-agent
+spec:
+  provider:
+    gcpsm:
+      projectID: "$PROJECT_ID"
+      auth:
+        workloadIdentity:
+          clusterLocation: us-central1
+          clusterName: langgraph-cluster
+          serviceAccountRef:
+            name: langgraph-agent
+EOF
+
+# Create ExternalSecret
+cat <<EOF | kubectl apply -f -
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: langgraph-secrets
+  namespace: langgraph-agent
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: gcpsm-secret-store
+    kind: SecretStore
+  target:
+    name: langgraph-agent-secrets
+    creationPolicy: Owner
+  data:
+  - secretKey: ANTHROPIC_API_KEY
+    remoteRef:
+      key: anthropic-api-key
+  - secretKey: JWT_SECRET
+    remoteRef:
+      key: jwt-secret
+EOF
+```
+
+## Google Container Registry (GCR)
+
+### Build and Push Images
+
+```bash
+# Configure Docker for GCR
+gcloud auth configure-docker
+
+# Build image
+docker build -t gcr.io/$PROJECT_ID/langgraph-agent:latest .
+
+# Push to GCR
+docker push gcr.io/$PROJECT_ID/langgraph-agent:latest
+
+# Use in Kubernetes
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-agent
+  namespace: langgraph-agent
+spec:
+  template:
+    spec:
+      containers:
+      - name: agent
+        image: gcr.io/$PROJECT_ID/langgraph-agent:latest
+        imagePullPolicy: Always
+EOF
+```
+
+### Artifact Registry (Recommended)
+
+```bash
+# Create Artifact Registry repository
+gcloud artifacts repositories create langgraph \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="LangGraph Agent images"
+
+# Configure Docker
+gcloud auth configure-docker us-central1-docker.pkg.dev
+
+# Build and push
+docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest .
+docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
+```
+
+## Load Balancer and Ingress
+
+### Install NGINX Ingress Controller
+
+```bash
+# Install NGINX Ingress
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.service.type=LoadBalancer
+```
+
+### Configure Ingress
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: langgraph-ingress
+  namespace: langgraph-agent
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - api.yourdomain.com
+    secretName: langgraph-tls
+  rules:
+  - host: api.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: langgraph-agent
+            port:
+              number: 8000
+```
+
+### Google Cloud Load Balancer
+
+For GCP-native load balancing:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: langgraph-agent
+  namespace: langgraph-agent
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "langgraph-backend-config"}'
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 34.xxx.xxx.xxx  # Reserve static IP
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+  selector:
+    app: langgraph-agent
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: langgraph-backend-config
+  namespace: langgraph-agent
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    port: 8000
+    type: HTTP
+    requestPath: /health/ready
+  timeoutSec: 30
+  connectionDraining:
+    drainingTimeoutSec: 60
+  cdn:
+    enabled: false
+```
+
+## Monitoring with Cloud Operations
+
+### Enable Google Cloud Monitoring
+
+```bash
+# Install Google Cloud Ops agent
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/operator.yaml
+```
+
+### Configure Pod Monitoring
+
+```yaml
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: langgraph-agent
+  namespace: langgraph-agent
+spec:
+  selector:
+    matchLabels:
+      app: langgraph-agent
+  endpoints:
+  - port: metrics
+    interval: 30s
+```
+
+### Cloud Logging
+
+Configure structured logging to Cloud Logging:
+
+```python
+# Install dependencies
+pip install google-cloud-logging
+
+# Configure logging
+import google.cloud.logging
+from google.cloud.logging.handlers import CloudLoggingHandler
+
+client = google.cloud.logging.Client()
+handler = CloudLoggingHandler(client)
+
+# Use with structlog
+import structlog
+
+structlog.configure(
+    processors=[
+        structlog.processors.JSONRenderer()
+    ],
+    wrapper_class=structlog.stdlib.BoundLogger,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+)
+```
+
+## Auto-Scaling
+
+### Horizontal Pod Autoscaler
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: langgraph-agent
+  namespace: langgraph-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: langgraph-agent
+  minReplicas: 3
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 5
+        periodSeconds: 60
+      selectPolicy: Max
+```
+
+### Cluster Autoscaler
+
+GKE Autopilot handles node scaling automatically. For Standard clusters:
+
+```bash
+# Enable cluster autoscaling
+gcloud container clusters update langgraph-cluster \
+  --enable-autoscaling \
+  --min-nodes=3 \
+  --max-nodes=20 \
+  --region=us-central1
+```
+
+## Complete Deployment
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/langgraph-mcp-agent
+cd langgraph-mcp-agent
+
+# Build and push image
+docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:v1.0.0 .
+docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:v1.0.0
+
+# Create namespace
+kubectl create namespace langgraph-agent
+
+# Deploy with Helm
+helm install langgraph-agent ./helm/langgraph-agent \
+  --namespace langgraph-agent \
+  --set image.repository=us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent \
+  --set image.tag=v1.0.0 \
+  --set workloadIdentity.enabled=true \
+  --set workloadIdentity.serviceAccount=langgraph-agent@$PROJECT_ID.iam.gserviceaccount.com \
+  --set cloudsql.instance=$PROJECT_ID:us-central1:langgraph-postgres \
+  --set redis.host=$REDIS_HOST
+
+# Verify deployment
+kubectl get pods -n langgraph-agent
+kubectl get svc -n langgraph-agent
+kubectl get ingress -n langgraph-agent
+```
+
+## Cost Optimization
+
+<AccordionGroup>
+  <Accordion title="Use Autopilot Mode" icon="wand-magic-sparkles">
+    GKE Autopilot optimizes resource usage:
+
+    - Pay only for pod resources
+    - Automatic resource optimization
+    - No node management overhead
+    - Built-in security best practices
+  </Accordion>
+
+  <Accordion title="Enable Preemptible Nodes" icon="dollar-sign">
+    For non-production workloads:
+
+    ```bash
+    gcloud container node-pools create preemptible-pool \
+      --cluster=langgraph-cluster \
+      --region=us-central1 \
+      --preemptible \
+      --num-nodes=3 \
+      --machine-type=n2-standard-4
+    ```
+
+    Use node affinity to schedule on preemptible nodes:
+    ```yaml
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+            - key: cloud.google.com/gke-preemptible
+              operator: In
+              values:
+              - "true"
+    ```
+  </Accordion>
+
+  <Accordion title="Right-Size Resources" icon="gauge">
+    Use GKE usage metering to analyze resource usage:
+
+    ```bash
+    # Enable usage metering
+    gcloud container clusters update langgraph-cluster \
+      --resource-usage-bigquery-dataset=cluster_usage \
+      --enable-network-egress-metering \
+      --enable-resource-consumption-metering \
+      --region=us-central1
+    ```
+  </Accordion>
+
+  <Accordion title="Use Committed Use Discounts" icon="percent">
+    For production workloads:
+
+    - 1-year commitment: 37% discount
+    - 3-year commitment: 55% discount
+
+    ```bash
+    gcloud compute commitments create \
+      --plan=12-month \
+      --resources=vcpu=100,memory=400GB \
+      --region=us-central1
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Enable Shielded Nodes" icon="shield">
+    ```bash
+    gcloud container clusters update langgraph-cluster \
+      --enable-shielded-nodes \
+      --region=us-central1
+    ```
+  </Accordion>
+
+  <Accordion title="Use Binary Authorization" icon="shield-check">
+    Ensure only trusted images are deployed:
+
+    ```bash
+    # Enable Binary Authorization
+    gcloud container clusters update langgraph-cluster \
+      --enable-binauthz \
+      --region=us-central1
+    ```
+  </Accordion>
+
+  <Accordion title="Network Policies" icon="network-wired">
+    ```yaml
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: allow-agent-egress
+      namespace: langgraph-agent
+    spec:
+      podSelector:
+        matchLabels:
+          app: langgraph-agent
+      policyTypes:
+      - Egress
+      egress:
+      - to:
+        - podSelector:
+            matchLabels:
+              app: keycloak
+        ports:
+        - protocol: TCP
+          port: 8080
+      - to:
+        - podSelector:
+            matchLabels:
+              app: openfga
+        ports:
+        - protocol: TCP
+          port: 8080
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Cloud SQL connection fails">
+    **Check connectivity**:
+    ```bash
+    # Test Cloud SQL Proxy
+    kubectl run -it --rm debug \
+      --image=gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest \
+      --restart=Never \
+      -- $PROJECT_ID:us-central1:langgraph-postgres
+    ```
+  </Accordion>
+
+  <Accordion title="Workload Identity not working">
+    **Verify setup**:
+    ```bash
+    # Check annotation
+    kubectl describe sa langgraph-agent -n langgraph-agent
+
+    # Test from pod
+    kubectl run -it --rm test \
+      --image=google/cloud-sdk:slim \
+      --serviceaccount=langgraph-agent \
+      --namespace=langgraph-agent \
+      -- gcloud auth list
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="EKS Deployment" icon="aws" href="/deployment/kubernetes/eks">
+    Deploy to AWS EKS
+  </Card>
+  <Card title="AKS Deployment" icon="microsoft" href="/deployment/kubernetes/aks">
+    Deploy to Azure AKS
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/deployment/monitoring">
+    Setup monitoring
+  </Card>
+  <Card title="Disaster Recovery" icon="life-ring" href="/deployment/disaster-recovery">
+    Backup and recovery
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**GKE Deployment Ready**: Production-grade deployment on Google Kubernetes Engine!
+</Check>
