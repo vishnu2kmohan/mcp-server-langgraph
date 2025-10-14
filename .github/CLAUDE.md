@@ -127,7 +127,29 @@ Claude Code generates documentation with:
 
 ## Recent Implementations by Claude Code
 
-### Session Management (Phase 2)
+### Mintlify Documentation Integration (2025-10-14)
+
+**Documentation Structure**:
+- Moved `mint.json` to `docs/` directory for clean scanning
+- Fixed all MDX/Markdown parsing errors (HTML entity escaping)
+- 100% documentation coverage across all features
+- Comprehensive navigation structure with 4 main tabs
+
+**Files Updated**:
+- `docs/mint.json` - Main configuration
+- `.mintlifyignore` - Enhanced ignore patterns
+- Multiple `.mdx` files - Fixed `<` character escaping
+
+### LangGraph 0.6.10 Upgrade (2025-10-13)
+
+**Major Version Upgrade**:
+- Upgraded from 0.2.28 → 0.6.10
+- All 15 Dependabot PRs successfully merged
+- 100% test pass rate (11/11 agent tests)
+- Zero breaking changes detected
+- Full API compatibility maintained
+
+### Session Management
 
 **Files Created**:
 - `src/mcp_server_langgraph/auth/session.py` (450 lines)
@@ -147,7 +169,7 @@ Claude Code generates documentation with:
 - 7 new settings in `core/config.py`
 - Redis service in `docker-compose.yml`
 
-### Advanced Role Mapping (Phase 2)
+### Advanced Role Mapping
 
 **Files Created**:
 - `src/mcp_server_langgraph/auth/role_mapper.py` (320 lines)
@@ -170,7 +192,7 @@ Claude Code generates documentation with:
   - 10 RoleMapper tests
   - 1 Enterprise integration test
 
-### Enhanced Observability (Phase 2)
+### Enhanced Observability
 
 **Files Created**:
 - `src/mcp_server_langgraph/auth/metrics.py` (312 lines)
@@ -349,8 +371,9 @@ Summary:
 
 - **Claude Code Documentation**: https://docs.claude.com/claude-code
 - **Project README**: [README.md](README.md)
-- **Testing Guide**: [docs/development/testing.md](docs/development/testing.md)
-- **Development Guide**: [docs/development/development.md](docs/development/development.md)
+- **Mintlify Documentation**: [docs/mint.json](docs/mint.json) - Comprehensive docs with 100% coverage
+- **Testing Guide**: [docs/advanced/testing.mdx](docs/advanced/testing.mdx)
+- **Development Guide**: [docs/advanced/development-setup.mdx](docs/advanced/development-setup.mdx)
 - **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
 
 ## Support
@@ -362,5 +385,6 @@ For issues or questions about Claude Code integration:
 
 ---
 
-**Last Updated**: 2025-10-12
+**Last Updated**: 2025-10-14
 **Claude Code Version**: Sonnet 4.5 (claude-sonnet-4-5-20250929)
+**LangGraph Version**: 0.6.10 (upgraded from 0.2.28 - all 15 Dependabot PRs merged)
