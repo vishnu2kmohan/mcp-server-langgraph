@@ -1,0 +1,401 @@
+# Release Process
+
+This document describes the automated and manual release process for MCP Server LangGraph.
+
+## Overview
+
+The project uses automated GitHub Actions workflows to:
+1. Build and publish Docker images
+2. Package and publish Helm charts
+3. Automatically update deployment configuration versions
+4. Publish to PyPI
+5. Update the MCP Registry
+
+## Automated Version Bumping
+
+### How It Works
+
+When a new GitHub release is published, the `bump-deployment-versions` workflow automatically:
+
+1. **Extracts the version** from the release tag (e.g., `v2.5.0` → `2.5.0`)
+2. **Updates all deployment files**:
+   - `pyproject.toml` - Python package version
+   - `docker-compose.yml` - Version comment
+   - `deployments/kubernetes/base/deployment.yaml` - Container image tag
+   - `deployments/helm/langgraph-agent/Chart.yaml` - Chart version and appVersion
+   - `deployments/helm/langgraph-agent/values.yaml` - Image tag
+   - `deployments/kustomize/base/kustomization.yaml` - Image tag
+3. **Commits the changes** to the main branch
+4. **Adds a comment** to the release with deployment commands
+
+### Triggering a Release
+
+#### Option 1: GitHub UI (Recommended)
+
+1. Go to https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/new
+2. Click "Choose a tag"
+3. Create a new tag following semantic versioning (e.g., `v2.5.0`)
+4. Fill in the release title (e.g., "Release v2.5.0")
+5. Add release notes (GitHub will auto-generate from commits)
+6. Click "Publish release"
+
+The workflow will automatically:
+- Build Docker images for linux/amd64 and linux/arm64
+- Push images to ghcr.io
+- Package and publish Helm chart
+- Update deployment versions
+- Publish to PyPI (for non-prerelease versions)
+
+#### Option 2: Git Tag + Push
+
+```bash
+# Create and push a tag
+git tag v2.5.0
+git push origin v2.5.0
+
+# Then create the release on GitHub UI
+# Or use GitHub CLI
+gh release create v2.5.0 --generate-notes
+```
+
+#### Option 3: GitHub CLI
+
+```bash
+# Create release with auto-generated notes
+gh release create v2.5.0 --generate-notes
+
+# Create release with custom notes
+gh release create v2.5.0 --notes "Release notes here"
+
+# Create pre-release
+gh release create v2.5.0-beta.1 --prerelease --notes "Beta release"
+```
+
+### Version Format
+
+Follow [Semantic Versioning 2.0.0](https://semver.org/):
+
+- **Major version** (X.0.0): Breaking changes
+- **Minor version** (0.X.0): New features, backward compatible
+- **Patch version** (0.0.X): Bug fixes, backward compatible
+
+**Tag format**: `v{major}.{minor}.{patch}[-{prerelease}]`
+
+**Examples**:
+- `v2.5.0` - Standard release
+- `v2.5.1` - Patch release
+- `v3.0.0` - Major release (breaking changes)
+- `v2.5.0-beta.1` - Beta pre-release
+- `v2.5.0-rc.1` - Release candidate
+
+### Pre-release Versions
+
+Pre-release versions (alpha, beta, rc) are handled specially:
+
+- ✅ Docker images are built and pushed
+- ✅ Helm charts are packaged
+- ✅ Deployment versions are updated
+- ❌ Not published to PyPI
+- ❌ Not marked as "latest" release
+- ❌ Not published to MCP Registry
+
+**Creating a pre-release**:
+
+```bash
+# GitHub UI: Check "Set as a pre-release"
+# GitHub CLI:
+gh release create v2.5.0-beta.1 --prerelease --notes "Beta release for testing"
+```
+
+## Manual Version Bumping
+
+If you need to update versions manually (outside of a release):
+
+### Using the Script
+
+```bash
+# Test with dry run first
+DRY_RUN=1 bash scripts/deployment/bump-versions.sh 2.5.0
+
+# Review the proposed changes
+# If everything looks good, apply the changes
+bash scripts/deployment/bump-versions.sh 2.5.0
+
+# Commit and push
+git add -A
+git commit -m "chore: bump deployment versions to 2.5.0"
+git push origin main
+```
+
+### Using GitHub Actions (Manual Trigger)
+
+1. Go to: https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/bump-deployment-versions.yaml
+2. Click "Run workflow"
+3. Enter the version (e.g., `2.5.0` or `v2.5.0`)
+4. Click "Run workflow"
+
+The workflow will:
+- Update all deployment files
+- Commit changes
+- Push to main branch
+
+## Deployment After Release
+
+After a release is published and versions are updated, deploy using:
+
+### Docker Compose
+
+```bash
+# Pull latest images
+docker compose pull
+
+# Restart services
+docker compose up -d
+
+# Verify version
+docker compose exec agent python -c "from mcp_server_langgraph import __version__; print(__version__)"
+```
+
+### Kubernetes (kubectl)
+
+```bash
+# Update deployment image
+kubectl set image deployment/langgraph-agent \
+  langgraph-agent=ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.5.0 \
+  -n langgraph-agent
+
+# Or apply the updated manifests
+kubectl apply -f deployments/kubernetes/base/
+
+# Verify rollout
+kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+```
+
+### Helm
+
+```bash
+# Update from local chart
+helm upgrade --install langgraph-agent \
+  deployments/helm/langgraph-agent \
+  --set image.tag=2.5.0 \
+  --namespace langgraph-agent
+
+# Or from OCI registry (after release publishes)
+helm upgrade --install langgraph-agent \
+  oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts/langgraph-agent \
+  --version 2.5.0 \
+  --namespace langgraph-agent
+```
+
+### Kustomize
+
+```bash
+# Development
+kubectl apply -k deployments/kustomize/overlays/dev
+
+# Staging
+kubectl apply -k deployments/kustomize/overlays/staging
+
+# Production
+kubectl apply -k deployments/kustomize/overlays/production
+```
+
+## Release Checklist
+
+### Before Release
+
+- [ ] All tests passing in CI
+- [ ] CHANGELOG.md updated with release notes
+- [ ] Version bumped in pyproject.toml (manual or via script)
+- [ ] Documentation updated (if needed)
+- [ ] Breaking changes documented (for major versions)
+- [ ] Migration guide prepared (for major versions)
+
+### Creating the Release
+
+- [ ] Create tag with correct version format (e.g., `v2.5.0`)
+- [ ] Publish release on GitHub
+- [ ] Verify release workflows complete successfully
+- [ ] Check Docker images are published to ghcr.io
+- [ ] Verify Helm chart is published
+- [ ] Confirm version bump commit is pushed to main
+
+### After Release
+
+- [ ] Deploy to staging environment
+- [ ] Run smoke tests
+- [ ] Deploy to production (if applicable)
+- [ ] Announce release (Slack, Discord, Twitter, etc.)
+- [ ] Update documentation site (if hosted separately)
+
+## Troubleshooting
+
+### Version Bump Workflow Failed
+
+1. Check workflow logs: https://github.com/vishnu2kmohan/mcp-server-langgraph/actions
+2. Common issues:
+   - Invalid version format → Fix tag and re-run
+   - Permission denied → Check GITHUB_TOKEN permissions
+   - Merge conflict → Manually resolve and push
+
+**Manual fix**:
+```bash
+# Re-run the version bump manually
+bash scripts/deployment/bump-versions.sh 2.5.0
+git add -A
+git commit -m "chore: bump deployment versions to 2.5.0"
+git push origin main
+```
+
+### Docker Image Build Failed
+
+1. Check build logs in GitHub Actions
+2. Common issues:
+   - Dependency installation failure → Update requirements.txt
+   - Platform-specific build error → Check Dockerfile
+   - Registry authentication → Check GITHUB_TOKEN
+
+**Manual build**:
+```bash
+# Build multi-platform image
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.5.0 \
+  --push .
+```
+
+### Helm Chart Publication Failed
+
+1. Check Helm packaging in workflow logs
+2. Common issues:
+   - Chart validation error → Run `helm lint deployments/helm/langgraph-agent`
+   - OCI push failure → Check registry authentication
+
+**Manual publish**:
+```bash
+# Package chart
+helm package deployments/helm/langgraph-agent --version 2.5.0
+
+# Push to OCI registry
+helm push langgraph-agent-2.5.0.tgz \
+  oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts
+```
+
+### Version Mismatch
+
+If deployment versions don't match the release:
+
+```bash
+# Check current versions
+grep "version" pyproject.toml
+grep "Version:" docker-compose.yml
+grep "image:" deployments/kubernetes/base/deployment.yaml
+grep "tag:" deployments/helm/langgraph-agent/values.yaml
+
+# Re-run version bump
+bash scripts/deployment/bump-versions.sh 2.5.0
+
+# Commit and push
+git add -A
+git commit -m "fix: synchronize deployment versions to 2.5.0"
+git push origin main
+```
+
+## Rollback
+
+If you need to rollback a release:
+
+### Rollback Deployment
+
+```bash
+# Kubernetes
+kubectl rollout undo deployment/langgraph-agent -n langgraph-agent
+
+# Helm
+helm rollback langgraph-agent -n langgraph-agent
+
+# Docker Compose
+docker compose pull  # Pull previous version
+docker compose up -d
+```
+
+### Delete Release
+
+```bash
+# Delete release (keeps tag)
+gh release delete v2.5.0
+
+# Delete tag (if needed)
+git tag -d v2.5.0
+git push origin :refs/tags/v2.5.0
+```
+
+### Revert Version Bump
+
+```bash
+# Find the version bump commit
+git log --oneline | grep "bump deployment versions"
+
+# Revert the commit
+git revert <commit-hash>
+git push origin main
+```
+
+## Continuous Deployment
+
+For automated deployments to staging/production:
+
+1. Create environment-specific workflows in `.github/workflows/`
+2. Use deployment environments in GitHub
+3. Add approval gates for production
+4. Integrate with ArgoCD or Flux for GitOps
+
+**Example**: `.github/workflows/deploy-staging.yaml`
+
+```yaml
+name: Deploy to Staging
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v5
+      - name: Deploy to staging
+        run: |
+          kubectl apply -k deployments/kustomize/overlays/staging
+```
+
+## Best Practices
+
+1. **Always test releases in staging first**
+2. **Use pre-release versions for testing** (beta, rc)
+3. **Keep CHANGELOG.md updated** with each release
+4. **Tag commits after merging to main**, not on feature branches
+5. **Use semantic versioning consistently**
+6. **Document breaking changes prominently**
+7. **Automate deployment to staging**, manual to production
+8. **Monitor after release** (Grafana dashboards)
+
+## Security
+
+- Docker images include SBOM (Software Bill of Materials)
+- Images are scanned for vulnerabilities
+- Only tagged releases are published to registries
+- Use signed commits for release tags (recommended)
+
+## Resources
+
+- [Semantic Versioning](https://semver.org/)
+- [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github)
+- [Helm Chart Repository](https://helm.sh/docs/topics/chart_repository/)
+- [Docker Multi-platform Images](https://docs.docker.com/build/building/multi-platform/)
+
+---
+
+**Last Updated**: 2025-10-14
+**Current Version**: 2.4.0

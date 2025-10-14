@@ -1,0 +1,180 @@
+name: Bump Deployment Versions
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to bump to (e.g., 2.4.0 or v2.4.0)'
+        required: true
+        type: string
+
+# Prevent concurrent version bumps
+concurrency:
+  group: version-bump-${{ github.event.release.tag_name || github.event.inputs.version }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-versions:
+    name: Update Deployment Versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Extract version
+        id: extract_version
+        run: |
+          # Get version from release tag or manual input
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+
+          # Remove 'v' prefix if present
+          VERSION="${VERSION#v}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Run version bump script (dry run)
+        env:
+          DRY_RUN: 1
+        run: |
+          bash scripts/deployment/bump-versions.sh ${{ steps.extract_version.outputs.version }}
+
+      - name: Run version bump script
+        run: |
+          bash scripts/deployment/bump-versions.sh ${{ steps.extract_version.outputs.version }}
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No version changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Version changes detected:"
+            git diff --stat
+          fi
+
+      - name: Commit version updates
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git add -A
+          git commit -m "chore: bump deployment versions to ${{ steps.extract_version.outputs.version }}
+
+          Automated version bump triggered by release ${{ steps.extract_version.outputs.tag }}
+
+          Updated files:
+          - pyproject.toml
+          - docker-compose.yml
+          - deployments/kubernetes/base/deployment.yaml
+          - deployments/helm/langgraph-agent/Chart.yaml
+          - deployments/helm/langgraph-agent/values.yaml
+          - deployments/kustomize/base/kustomization.yaml
+
+          This ensures all deployment configurations reference the latest release version.
+
+          Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+      - name: Push changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git push origin main
+
+      - name: Add comment to release
+        if: steps.check_changes.outputs.has_changes == 'true' && github.event_name == 'release'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const release = context.payload.release;
+            const version = '${{ steps.extract_version.outputs.version }}';
+
+            const comment = `## ✅ Deployment Versions Updated
+
+            All deployment configurations have been automatically updated to version \`${version}\`:
+
+            - ✅ \`pyproject.toml\`
+            - ✅ \`docker-compose.yml\`
+            - ✅ \`deployments/kubernetes/base/deployment.yaml\`
+            - ✅ \`deployments/helm/langgraph-agent/Chart.yaml\`
+            - ✅ \`deployments/helm/langgraph-agent/values.yaml\`
+            - ✅ \`deployments/kustomize/base/kustomization.yaml\`
+
+            ### Deployment Commands
+
+            **Docker Compose:**
+            \`\`\`bash
+            docker compose pull
+            docker compose up -d
+            \`\`\`
+
+            **Kubernetes (kubectl):**
+            \`\`\`bash
+            kubectl set image deployment/langgraph-agent langgraph-agent=langgraph-agent:${version} -n langgraph-agent
+            \`\`\`
+
+            **Helm:**
+            \`\`\`bash
+            helm upgrade --install langgraph-agent deployments/helm/langgraph-agent --set image.tag=${version}
+            \`\`\`
+
+            **Kustomize:**
+            \`\`\`bash
+            kubectl apply -k deployments/kustomize/overlays/production
+            \`\`\`
+
+            ---
+            🤖 Automated by [bump-deployment-versions workflow](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: release.id,
+              body: comment
+            });
+
+      - name: Summary
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          echo "## ✅ Deployment Versions Updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All deployment configurations updated to version \`${{ steps.extract_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Updated Files:" >> $GITHUB_STEP_SUMMARY
+          echo "- pyproject.toml" >> $GITHUB_STEP_SUMMARY
+          echo "- docker-compose.yml" >> $GITHUB_STEP_SUMMARY
+          echo "- deployments/kubernetes/base/deployment.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "- deployments/helm/langgraph-agent/Chart.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "- deployments/helm/langgraph-agent/values.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "- deployments/kustomize/base/kustomization.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Commit:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          git log -1 --pretty=format:"%h - %s" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: No changes summary
+        if: steps.check_changes.outputs.has_changes == 'false'
+        run: |
+          echo "## ℹ️ No Version Changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All deployment configurations are already at version \`${{ steps.extract_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY

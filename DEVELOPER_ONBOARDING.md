@@ -325,6 +325,42 @@ make install-dev
 
 See `CONTRIBUTING.md` for detailed guidelines.
 
+## 🚀 Releasing
+
+### Automated Version Bumping
+
+When a new GitHub release is created, deployment versions are automatically updated across all configuration files.
+
+**Process**:
+1. Create a new release on GitHub with a tag (e.g., `v2.5.0`)
+2. GitHub Actions automatically:
+   - Updates `pyproject.toml`
+   - Updates `docker-compose.yml`
+   - Updates Kubernetes deployment manifests
+   - Updates Helm chart version and appVersion
+   - Updates Kustomize image tags
+   - Commits changes to main branch
+   - Adds comment to release with deployment commands
+
+**Manual Version Bump** (if needed):
+```bash
+# Test with dry run first
+DRY_RUN=1 bash scripts/deployment/bump-versions.sh 2.5.0
+
+# Apply version bump
+bash scripts/deployment/bump-versions.sh 2.5.0
+
+# Commit changes
+git commit -am "chore: bump version to 2.5.0"
+git push origin main
+```
+
+**Deployment After Release**:
+- **Docker Compose**: `docker compose pull && docker compose up -d`
+- **Kubernetes**: `kubectl set image deployment/langgraph-agent langgraph-agent=langgraph-agent:2.5.0`
+- **Helm**: `helm upgrade langgraph-agent deployments/helm/langgraph-agent --set image.tag=2.5.0`
+- **Kustomize**: `kubectl apply -k deployments/kustomize/overlays/production`
+
 ## 📞 Getting Help
 
 ### Resources
