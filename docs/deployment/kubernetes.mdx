@@ -9,7 +9,7 @@ icon: 'dharmachakra'
 Deploy the MCP Server with LangGraph on Kubernetes for production-grade reliability, scalability, and high availability. This guide covers deployment with Keycloak SSO, Redis sessions, OpenFGA authorization, and observability.
 
 <Info>
-**v2.1.0** includes production-ready Kubernetes manifests with Keycloak, Redis, and comprehensive security configurations.
+**v2.4.0** includes updated infrastructure (OpenFGA v1.10.2, Keycloak 26.4.0, PostgreSQL 16), production-ready Kubernetes manifests with Keycloak, Redis, and comprehensive security configurations.
 </Info>
 
 ## Architecture
@@ -95,10 +95,10 @@ graph TB
 
     ```bash
     # Build image
-    docker build -t gcr.io/your-project/langgraph-agent:v2.1.0 .
+    docker build -t gcr.io/your-project/langgraph-agent:v2.4.0 .
 
     # Push to registry
-    docker push gcr.io/your-project/langgraph-agent:v2.1.0
+    docker push gcr.io/your-project/langgraph-agent:v2.4.0
     ```
 
     Update `deployments/kubernetes/base/deployment.yaml`:
@@ -108,7 +108,7 @@ graph TB
         spec:
           containers:
           - name: langgraph-agent
-            image: gcr.io/your-project/langgraph-agent:v2.1.0
+            image: gcr.io/your-project/langgraph-agent:v2.4.0
     ```
   </Step>
 
@@ -349,7 +349,7 @@ spec:
     spec:
       containers:
       - name: openfga
-        image: openfga/openfga:v1.5.0
+        image: openfga/openfga:v1.10.2
         args:
         - run
         env:

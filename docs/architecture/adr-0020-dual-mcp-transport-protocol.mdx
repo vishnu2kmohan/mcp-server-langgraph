@@ -465,7 +465,7 @@ spec:
     spec:
       containers:
       - name: mcp
-        image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
+        image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.4.0
         command: ["mcp-server-langgraph-http"]
         ports:
         - containerPort: 8000
@@ -495,7 +495,7 @@ version: '3.8'
 
 services:
   mcp-server:
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.4.0
     command: mcp-server-langgraph-http
     ports:
       - "8000:8000"
@@ -511,7 +511,7 @@ services:
 ```bash
 # Deploy to Google Cloud Run
 gcloud run deploy mcp-server \
-  --image ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0 \
+  --image ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.4.0 \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \

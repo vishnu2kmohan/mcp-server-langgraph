@@ -138,11 +138,11 @@ Used for CI/CD builds:
 
 ```python
 # src/mcp_server_langgraph/__init__.py
-__version__ = "2.2.0"
+__version__ = "2.4.0"
 
 # pyproject.toml
 [project]
-version = "2.2.0"
+version = "2.4.0"
 ```
 
 **Single Source of Truth**: `__init__.py` is authoritative, `pyproject.toml` syncs on release
@@ -320,14 +320,14 @@ image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
 
 **LangGraph Platform**: Deploy specific versions
 ```bash
-langgraph deploy --version v2.2.0
+langgraph deploy --version v2.4.0
 ```
 
 ### Documentation
 
 **README.md**: Display current version badge
 ```markdown
-[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg)](CHANGELOG.md)
 ```
 
 **API Documentation**: Version appears in OpenAPI spec
@@ -335,7 +335,7 @@ langgraph deploy --version v2.2.0
 {
   "openapi": "3.0.0",
   "info": {
-    "version": "2.2.0"
+    "version": "2.4.0"
   }
 }
 ```
@@ -350,7 +350,7 @@ from mcp_server_langgraph import __version__
 async def health_check():
     return {
         "status": "healthy",
-        "version": __version__  # "2.2.0"
+        "version": __version__  # "2.4.0"
     }
 ```
 
