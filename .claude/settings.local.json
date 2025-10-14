@@ -130,7 +130,11 @@
       "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 300 uv run python3 -m pytest --tb=line -q --ignore=tests/performance/)",
       "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 60 uv run python3 -m pytest tests/test_auth.py::TestStandaloneVerifyToken::test_standalone_verify_token_default_secret -xvs)",
       "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 60 uv run python3 -m pytest tests/test_auth.py::TestStandaloneVerifyToken::test_standalone_verify_token_default_secret -xvs --tb=short)",
-      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 60 uv run python3 -m pytest tests/test_auth.py --tb=no -q)"
+      "Bash(ENABLE_TRACING=false ENABLE_METRICS=false ENABLE_CONSOLE_EXPORT=false timeout 60 uv run python3 -m pytest tests/test_auth.py --tb=no -q)",
+      "WebFetch(domain:mintlify.com)",
+      "Bash(npx mintlify dev:*)",
+      "WebSearch",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []

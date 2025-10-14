@@ -1,10 +1,14 @@
 # =============================================================================
 # CRITICAL: Virtual Environments (MUST be ignored - 61+ MD files in .venv)
 # =============================================================================
-.venv
-venv
-env
-ENV
+.venv/
+.venv/**
+venv/
+venv/**
+env/
+env/**
+ENV/
+ENV/**
 
 # Python build artifacts and caches
 __pycache__

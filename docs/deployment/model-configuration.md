@@ -247,7 +247,7 @@ ENABLE_FALLBACK=false
 
 ### Choose Gemini Flash When:
 - ✅ Cost is a primary concern
-- ✅ Need fast response times (<2s)
+- ✅ Need fast response times (&lt;2s)
 - ✅ Development/testing environment
 - ✅ High request volume expected
 - ✅ Quality requirements are moderate

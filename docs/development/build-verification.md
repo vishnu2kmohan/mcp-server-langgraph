@@ -105,7 +105,7 @@ All dependencies from `requirements-pinned.txt` are compatible with Python 3.10-
 - ✅ PyJWT>=2.8.0
 - ✅ opentelemetry-api>=1.22.0
 - ✅ openfga-sdk>=0.5.1
-- ⚠️ infisical-python>=2.1.7 (requires Python <3.13)
+- ⚠️ infisical-python>=2.1.7 (requires Python &lt;3.13)
 - ✅ pydantic>=2.5.3
 - ✅ pydantic-ai>=1.0.0
 
