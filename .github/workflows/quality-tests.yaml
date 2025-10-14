@@ -203,7 +203,8 @@ jobs:
           tool: 'pytest'
           output-file-path: benchmarks.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+          auto-push: false
+          skip-fetch-gh-pages: true
           alert-threshold: '120%'  # Alert if 20% slower
           comment-on-alert: true
           fail-on-alert: false

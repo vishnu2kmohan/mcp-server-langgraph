@@ -94,9 +94,7 @@ class TestRetentionResult:
 
     def test_retention_result_defaults(self):
         """Test retention result default values"""
-        result = RetentionResult(
-            policy_name="test", execution_timestamp="2025-10-13T12:00:00Z"
-        )
+        result = RetentionResult(policy_name="test", execution_timestamp="2025-10-13T12:00:00Z")
 
         assert result.deleted_count == 0
         assert result.archived_count == 0
@@ -191,14 +189,10 @@ class TestSessionCleanup:
 
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", mock_open(read_data=config_yaml)):
-                service = DataRetentionService(
-                    session_store=mock_session_store, config_path="test.yaml"
-                )
+                service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 # Mock the cleanup method
-                with patch.object(
-                    service, "_cleanup_inactive_sessions", return_value=5
-                ):
+                with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
                     result = await service.cleanup_sessions()
 
                     assert result.policy_name == "user_sessions"
@@ -218,26 +212,20 @@ class TestSessionCleanup:
                     dry_run=True,
                 )
 
-                with patch.object(
-                    service, "_cleanup_inactive_sessions", return_value=3
-                ):
+                with patch.object(service, "_cleanup_inactive_sessions", return_value=3):
                     result = await service.cleanup_sessions()
 
                     assert result.dry_run is True
                     assert result.deleted_count == 3
 
     @pytest.mark.asyncio
-    async def test_cleanup_sessions_error_handling(
-        self, mock_session_store, sample_config
-    ):
+    async def test_cleanup_sessions_error_handling(self, mock_session_store, sample_config):
         """Test error handling during session cleanup"""
         config_yaml = yaml.dump(sample_config)
 
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", mock_open(read_data=config_yaml)):
-                service = DataRetentionService(
-                    session_store=mock_session_store, config_path="test.yaml"
-                )
+                service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 # Mock cleanup to raise exception
                 with patch.object(
@@ -266,9 +254,7 @@ class TestConversationCleanup:
                 service = DataRetentionService(config_path="test.yaml")
 
                 # Mock the cleanup method
-                with patch.object(
-                    service, "_cleanup_old_conversations", return_value=10
-                ):
+                with patch.object(service, "_cleanup_old_conversations", return_value=10):
                     result = await service.cleanup_conversations()
 
                     assert result.policy_name == "conversations"
@@ -306,9 +292,7 @@ class TestAuditLogCleanup:
             with patch("builtins.open", mock_open(read_data=config_yaml)):
                 service = DataRetentionService(config_path="test.yaml")
 
-                with patch.object(
-                    service, "_cleanup_old_audit_logs", return_value=100
-                ):
+                with patch.object(service, "_cleanup_old_audit_logs", return_value=100):
                     result = await service.cleanup_audit_logs()
 
                     assert result.policy_name == "audit_logs"
@@ -324,9 +308,7 @@ class TestAuditLogCleanup:
                 service = DataRetentionService(config_path="test.yaml")
 
                 # Verify audit logs have 7 year retention (2555 days)
-                retention_days = service.config["retention_periods"]["audit_logs"][
-                    "standard"
-                ]
+                retention_days = service.config["retention_periods"]["audit_logs"]["standard"]
                 assert retention_days == 2555  # ~7 years for compliance
 
 
@@ -341,18 +323,12 @@ class TestRunAllCleanups:
 
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", mock_open(read_data=config_yaml)):
-                service = DataRetentionService(
-                    session_store=mock_session_store, config_path="test.yaml"
-                )
+                service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 # Mock all cleanup methods
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch.object(
-                        service, "_cleanup_old_conversations", return_value=10
-                    ):
-                        with patch.object(
-                            service, "_cleanup_old_audit_logs", return_value=20
-                        ):
+                    with patch.object(service, "_cleanup_old_conversations", return_value=10):
+                        with patch.object(service, "_cleanup_old_audit_logs", return_value=20):
                             results = await service.run_all_cleanups()
 
                             # Should return results for all policies
@@ -373,9 +349,7 @@ class TestRunAllCleanups:
                 )
 
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch.object(
-                        service, "_cleanup_old_conversations", return_value=10
-                    ):
+                    with patch.object(service, "_cleanup_old_conversations", return_value=10):
                         results = await service.run_all_cleanups()
 
                         # All results should be marked as dry_run
@@ -394,14 +368,10 @@ class TestRetentionMetrics:
 
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", mock_open(read_data=config_yaml)):
-                service = DataRetentionService(
-                    session_store=mock_session_store, config_path="test.yaml"
-                )
+                service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch(
-                        "mcp_server_langgraph.core.compliance.retention.metrics"
-                    ) as mock_metrics:
+                    with patch("mcp_server_langgraph.core.compliance.retention.metrics") as mock_metrics:
                         await service.cleanup_sessions()
 
                         # Verify metrics were recorded
@@ -421,9 +391,7 @@ class TestRetentionMetrics:
                 )
 
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch(
-                        "mcp_server_langgraph.core.compliance.retention.metrics"
-                    ) as mock_metrics:
+                    with patch("mcp_server_langgraph.core.compliance.retention.metrics") as mock_metrics:
                         await service.cleanup_sessions()
 
                         # Metrics should not be recorded in dry-run
@@ -441,14 +409,10 @@ class TestRetentionLogging:
 
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", mock_open(read_data=config_yaml)):
-                service = DataRetentionService(
-                    session_store=mock_session_store, config_path="test.yaml"
-                )
+                service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch(
-                        "mcp_server_langgraph.core.compliance.retention.logger"
-                    ) as mock_logger:
+                    with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
                         await service.cleanup_sessions()
 
                         # Verify logging occurred
@@ -461,18 +425,14 @@ class TestRetentionLogging:
 
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", mock_open(read_data=config_yaml)):
-                service = DataRetentionService(
-                    session_store=mock_session_store, config_path="test.yaml"
-                )
+                service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 with patch.object(
                     service,
                     "_cleanup_inactive_sessions",
                     side_effect=Exception("Test error"),
                 ):
-                    with patch(
-                        "mcp_server_langgraph.core.compliance.retention.logger"
-                    ) as mock_logger:
+                    with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
                         await service.cleanup_sessions()
 
                         # Verify error was logged
@@ -504,11 +464,7 @@ class TestRetentionCompliance:
                 service = DataRetentionService(config_path="test.yaml")
 
                 # Audit logs should have significantly longer retention
-                audit_retention = service.config["retention_periods"]["audit_logs"][
-                    "standard"
-                ]
-                session_retention = service.config["retention_periods"]["user_sessions"][
-                    "inactive"
-                ]
+                audit_retention = service.config["retention_periods"]["audit_logs"]["standard"]
+                session_retention = service.config["retention_periods"]["user_sessions"]["inactive"]
 
                 assert audit_retention > session_retention

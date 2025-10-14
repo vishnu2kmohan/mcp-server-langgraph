@@ -34,6 +34,7 @@ def app():
 @pytest.fixture
 def sample_session():
     """Create sample session data factory"""
+
     async def _create_session(store):
         # Create session using the store's create method
         session_id = await store.create(
@@ -44,6 +45,7 @@ def sample_session():
         )
         # Return the created session
         return await store.get(session_id)
+
     return _create_session
 
 

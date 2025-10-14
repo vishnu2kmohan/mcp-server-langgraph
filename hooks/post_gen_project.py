@@ -35,7 +35,8 @@ def _cleanup_mcp_transports(project_root: Path):
 
     if "streamable_http" not in mcp_transports:
         _remove_file(
-            project_root / "mcp_server_streamable.py", "Removed mcp_server_streamable.py (StreamableHTTP transport not selected)"
+            project_root / "mcp_server_streamable.py",
+            "Removed mcp_server_streamable.py (StreamableHTTP transport not selected)",
         )
 
 

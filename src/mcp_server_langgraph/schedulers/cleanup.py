@@ -178,7 +178,7 @@ class CleanupScheduler:
         """Get next scheduled run time"""
         try:
             job = self.scheduler.get_job("data_retention_cleanup")
-            if job and hasattr(job, 'next_run_time') and job.next_run_time:
+            if job and hasattr(job, "next_run_time") and job.next_run_time:
                 return job.next_run_time.isoformat()
         except Exception:
             pass

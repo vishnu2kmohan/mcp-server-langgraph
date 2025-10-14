@@ -143,9 +143,7 @@ class TestUserPreferences:
 
     def test_user_preferences_defaults(self):
         """Test user preferences with defaults"""
-        prefs = UserPreferences(
-            user_id="user:bob", updated_at="2025-01-01T00:00:00Z"
-        )
+        prefs = UserPreferences(user_id="user:bob", updated_at="2025-01-01T00:00:00Z")
 
         assert prefs.preferences == {}
 

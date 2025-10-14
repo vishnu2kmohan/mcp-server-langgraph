@@ -271,7 +271,6 @@ externalSecrets:
 
 # OpenFGA dependency
 openfga:
-  enabled: true
   postgresql:
     enabled: true
   service:
