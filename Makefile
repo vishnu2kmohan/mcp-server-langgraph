@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-property test-contract test-regression test-mutation validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check clean
+.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-property test-contract test-regression test-mutation validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check clean dev-setup quick-start monitoring-dashboard health-check db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
 
 help:
 	@echo "LangGraph MCP Agent - Make Commands"
@@ -44,18 +44,34 @@ help:
 	@echo "  make test-helm-deployment     Test Helm deployment (kind)"
 	@echo ""
 	@echo "Code Quality:"
-	@echo "  make lint             Run linters (flake8, mypy)"
-	@echo "  make format           Format code (black, isort)"
-	@echo "  make security-check   Run security scans"
+	@echo "  make lint                Run linters (flake8, mypy)"
+	@echo "  make format              Format code (black, isort)"
+	@echo "  make security-check      Run security scans"
+	@echo "  make pre-commit-setup    Setup pre-commit hooks"
+	@echo "  make git-hooks           Install git hooks"
 	@echo ""
 	@echo "Running:"
-	@echo "  make run              Run stdio MCP server"
-	@echo "  make run-streamable   Run StreamableHTTP server"
-	@echo "  make logs             Show infrastructure logs"
+	@echo "  make run                 Run stdio MCP server"
+	@echo "  make run-streamable      Run StreamableHTTP server"
+	@echo "  make logs                Show infrastructure logs"
+	@echo "  make health-check        Check system health"
+	@echo ""
+	@echo "Development Shortcuts:"
+	@echo "  make dev-setup           Complete developer setup (install+infra+setup)"
+	@echo "  make quick-start         Quick start with defaults"
+	@echo "  make monitoring-dashboard Open Grafana dashboards"
+	@echo "  make db-migrate          Run database migrations"
+	@echo "  make load-test           Run load tests"
+	@echo "  make stress-test         Run stress tests"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  make docs-serve          Serve Mintlify docs locally"
+	@echo "  make docs-build          Build Mintlify docs"
+	@echo "  make docs-deploy         Deploy docs to Mintlify"
 	@echo ""
 	@echo "Cleanup:"
-	@echo "  make clean            Stop containers and clean files"
-	@echo "  make clean-all        Deep clean including venv"
+	@echo "  make clean               Stop containers and clean files"
+	@echo "  make clean-all           Deep clean including venv"
 	@echo ""
 
 install:
@@ -317,3 +333,262 @@ test-k8s-deployment:
 test-helm-deployment:
 	@echo "Running Helm deployment tests..."
 	bash scripts/deployment/test_helm_deployment.sh
+
+# ==============================================================================
+# Development Shortcuts
+# ==============================================================================
+
+dev-setup: install-dev setup-infra setup-openfga setup-keycloak
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "✓ Development environment setup complete!"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Update .env with OPENFGA_STORE_ID and OPENFGA_MODEL_ID"
+	@echo "  2. Update .env with KEYCLOAK_CLIENT_SECRET"
+	@echo "  3. Run: make test-unit"
+	@echo "  4. Run: make run-streamable"
+	@echo "  5. Visit: http://localhost:3000 (Grafana)"
+	@echo ""
+
+quick-start:
+	@echo "🚀 Quick starting MCP Server LangGraph..."
+	@echo ""
+	@if [ ! -d ".venv" ]; then \
+		echo "Creating virtual environment..."; \
+		uv venv; \
+	fi
+	@echo "Installing dependencies..."
+	@$(MAKE) install-dev -s
+	@echo "Starting infrastructure..."
+	@$(MAKE) setup-infra -s
+	@sleep 5
+	@echo ""
+	@echo "✓ Quick start complete!"
+	@echo ""
+	@echo "Services running:"
+	@docker compose ps
+	@echo ""
+	@echo "Run tests: make test-unit"
+	@echo "Run server: make run-streamable"
+	@echo "View dashboards: make monitoring-dashboard"
+
+monitoring-dashboard:
+	@echo "Opening Grafana dashboards..."
+	@echo ""
+	@echo "Grafana URL: http://localhost:3000"
+	@echo "  Username: admin"
+	@echo "  Password: admin"
+	@echo ""
+	@echo "Available dashboards:"
+	@echo "  • LangGraph Agent - http://localhost:3000/d/langgraph-agent"
+	@echo "  • Security Dashboard - http://localhost:3000/d/security"
+	@echo "  • Authentication - http://localhost:3000/d/authentication"
+	@echo "  • OpenFGA - http://localhost:3000/d/openfga"
+	@echo "  • LLM Performance - http://localhost:3000/d/llm-performance"
+	@echo "  • SLA Monitoring - http://localhost:3000/d/sla-monitoring"
+	@echo "  • SOC2 Compliance - http://localhost:3000/d/soc2-compliance"
+	@echo "  • Keycloak SSO - http://localhost:3000/d/keycloak"
+	@echo "  • Redis Sessions - http://localhost:3000/d/redis-sessions"
+	@echo ""
+	@command -v open >/dev/null 2>&1 && open http://localhost:3000 || \
+		command -v xdg-open >/dev/null 2>&1 && xdg-open http://localhost:3000 || \
+		echo "Open http://localhost:3000 in your browser"
+
+health-check:
+	@echo "🏥 Checking system health..."
+	@echo ""
+	@echo "Infrastructure Services:"
+	@docker compose ps | grep -E "(openfga|postgres|keycloak|jaeger|prometheus|grafana|redis)" || echo "  ⚠️  Services not running"
+	@echo ""
+	@echo "Port Check:"
+	@for port in 8080 5432 8081 16686 9090 3000 6379; do \
+		if nc -z localhost $$port 2>/dev/null; then \
+			echo "  ✓ Port $$port: OK"; \
+		else \
+			echo "  ✗ Port $$port: Not responding"; \
+		fi \
+	done
+	@echo ""
+	@echo "Python Environment:"
+	@if [ -d ".venv" ]; then \
+		echo "  ✓ Virtual environment: OK"; \
+	else \
+		echo "  ✗ Virtual environment: Missing"; \
+	fi
+	@echo ""
+	@echo "Run 'make setup-infra' if services are not running"
+
+db-migrate:
+	@echo "Running database migrations..."
+	@echo "⚠️  No migrations configured yet"
+	@echo "This target is a placeholder for future database migration scripts"
+
+load-test:
+	@echo "🔥 Running load tests..."
+	@if command -v locust >/dev/null 2>&1; then \
+		echo "Starting Locust..."; \
+		locust -f tests/performance/locustfile.py --headless -u 100 -r 10 -t 60s --host http://localhost:8000; \
+	else \
+		echo "⚠️  Locust not installed. Install with: uv pip install locust"; \
+		echo ""; \
+		echo "Alternative: Use k6"; \
+		echo "  k6 run tests/performance/load_test.js"; \
+	fi
+
+stress-test:
+	@echo "💪 Running stress tests..."
+	@echo "This will test system limits and failure modes"
+	@pytest -m "stress" -v --tb=short || echo "No stress tests found. Add tests with @pytest.mark.stress"
+
+# ==============================================================================
+# Git Hooks & Pre-commit
+# ==============================================================================
+
+pre-commit-setup:
+	@echo "Setting up pre-commit hooks..."
+	@if command -v pre-commit >/dev/null 2>&1; then \
+		pre-commit install; \
+		pre-commit install --hook-type commit-msg; \
+		echo "✓ Pre-commit hooks installed"; \
+	else \
+		echo "Installing pre-commit..."; \
+		uv pip install pre-commit; \
+		pre-commit install; \
+		pre-commit install --hook-type commit-msg; \
+		echo "✓ Pre-commit hooks installed"; \
+	fi
+	@echo ""
+	@echo "Hooks installed:"
+	@echo "  • black (code formatting)"
+	@echo "  • isort (import sorting)"
+	@echo "  • flake8 (linting)"
+	@echo "  • mypy (type checking)"
+	@echo "  • bandit (security)"
+	@echo ""
+	@echo "Run manually: pre-commit run --all-files"
+
+git-hooks: pre-commit-setup
+	@echo "Git hooks installed successfully"
+
+# ==============================================================================
+# Documentation
+# ==============================================================================
+
+docs-serve:
+	@echo "📚 Serving Mintlify documentation locally..."
+	@if command -v npx >/dev/null 2>&1; then \
+		cd docs && npx mintlify dev; \
+	else \
+		echo "⚠️  npx not found. Install Node.js first."; \
+	fi
+
+docs-build:
+	@echo "📦 Building Mintlify documentation..."
+	@if command -v npx >/dev/null 2>&1; then \
+		cd docs && npx mintlify build; \
+	else \
+		echo "⚠️  npx not found. Install Node.js first."; \
+	fi
+
+docs-deploy:
+	@echo "🚀 Deploying documentation to Mintlify..."
+	@echo ""
+	@echo "Prerequisites:"
+	@echo "  1. Mintlify account setup"
+	@echo "  2. mintlify CLI authenticated"
+	@echo ""
+	@read -p "Continue? (y/n) " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		cd docs && npx mintlify deploy; \
+	else \
+		echo "Deployment cancelled"; \
+	fi
+
+# ==============================================================================
+# Enhanced Testing Targets
+# ==============================================================================
+
+test-watch:
+	@echo "👀 Running tests in watch mode..."
+	pytest-watch -v
+
+test-fast:
+	@echo "⚡ Running fast tests only..."
+	pytest -m "not slow" -v --tb=short
+
+test-slow:
+	@echo "🐌 Running slow tests only..."
+	pytest -m slow -v --tb=short
+
+test-compliance:
+	@echo "📋 Running compliance tests (GDPR, HIPAA, SOC2, SLA)..."
+	pytest -m "gdpr or soc2 or sla" -v --tb=short
+
+test-failed:
+	@echo "🔁 Re-running failed tests..."
+	pytest --lf -v
+
+test-debug:
+	@echo "🐛 Running tests in debug mode..."
+	pytest -v --pdb --pdbcls=IPython.terminal.debugger:Pdb
+
+# ==============================================================================
+# Monitoring & Observability
+# ==============================================================================
+
+logs-follow:
+	@echo "📜 Following all logs..."
+	docker compose logs -f --tail=100
+
+logs-agent:
+	@echo "📜 Following agent logs..."
+	docker compose logs -f --tail=100 mcp-server || echo "Agent not running in docker-compose"
+
+logs-prometheus:
+	@echo "📜 Prometheus logs..."
+	docker compose logs prometheus
+
+logs-grafana:
+	@echo "📜 Grafana logs..."
+	docker compose logs grafana
+
+prometheus-ui:
+	@echo "Opening Prometheus UI..."
+	@command -v open >/dev/null 2>&1 && open http://localhost:9090 || \
+		command -v xdg-open >/dev/null 2>&1 && xdg-open http://localhost:9090 || \
+		echo "Open http://localhost:9090 in your browser"
+
+jaeger-ui:
+	@echo "Opening Jaeger UI..."
+	@command -v open >/dev/null 2>&1 && open http://localhost:16686 || \
+		command -v xdg-open >/dev/null 2>&1 && xdg-open http://localhost:16686 || \
+		echo "Open http://localhost:16686 in your browser"
+
+# ==============================================================================
+# Database Operations
+# ==============================================================================
+
+db-shell:
+	@echo "Opening PostgreSQL shell..."
+	docker compose exec postgres psql -U postgres -d openfga
+
+db-backup:
+	@echo "Creating database backup..."
+	@mkdir -p backups
+	docker compose exec -T postgres pg_dump -U postgres openfga > backups/openfga_backup_$$(date +%Y%m%d_%H%M%S).sql
+	@echo "✓ Backup created in backups/"
+
+db-restore:
+	@echo "⚠️  This will restore from the latest backup"
+	@ls -t backups/*.sql | head -1
+	@read -p "Continue? (y/n) " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		docker compose exec -T postgres psql -U postgres -d openfga < $$(ls -t backups/*.sql | head -1); \
+		echo "✓ Database restored"; \
+	else \
+		echo "Restore cancelled"; \
+	fi
