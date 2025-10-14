@@ -1,0 +1,15 @@
+dependencies:
+- name: openfga
+  repository: https://openfga.github.io/helm-charts
+  version: 0.2.12
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.6.2
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 20.6.2
+- name: keycloak
+  repository: https://charts.bitnami.com/bitnami
+  version: 24.2.2
+digest: sha256:a4c49602c6802ee9dffb13f338072970256ad48581484166ecefc92957feb273
+generated: "2025-10-14T02:05:16.434046852-04:00"
