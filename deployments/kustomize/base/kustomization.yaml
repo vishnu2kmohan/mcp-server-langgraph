@@ -13,6 +13,12 @@ resources:
   - ../../kubernetes/base/hpa.yaml
   - ../../kubernetes/base/pdb.yaml
   - ../../kubernetes/base/networkpolicy.yaml
+  # PostgreSQL database (for OpenFGA and Keycloak)
+  - ../../kubernetes/base/postgres-statefulset.yaml
+  - ../../kubernetes/base/postgres-service.yaml
+  # OpenFGA authorization
+  - ../../kubernetes/base/openfga-deployment.yaml
+  - ../../kubernetes/base/openfga-service.yaml
   # Keycloak resources
   - ../../kubernetes/base/keycloak-deployment.yaml
   - ../../kubernetes/base/keycloak-service.yaml

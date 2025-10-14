@@ -77,7 +77,7 @@ services:
 
   # OpenFGA - Fine-grained Authorization
   openfga:
-    image: openfga/openfga:v1.5.0
+    image: openfga/openfga:v1.10.2
     command: run
     environment:
       - OPENFGA_DATASTORE_ENGINE=memory
@@ -96,7 +96,7 @@ services:
 
   # Postgres for OpenFGA and Keycloak
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -116,7 +116,7 @@ services:
 
   # Keycloak - Identity and Access Management
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0
+    image: quay.io/keycloak/keycloak:26.4.0
     command:
       - start-dev
       - --http-port=8180
@@ -158,7 +158,7 @@ services:
 
   # OpenTelemetry Collector
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.91.0
+    image: otel/opentelemetry-collector-contrib:0.137.0
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./monitoring/otel-collector/otel-collector.yaml:/etc/otel-collector-config.yaml
@@ -173,7 +173,7 @@ services:
 
   # Jaeger for tracing visualization
   jaeger:
-    image: jaegertracing/all-in-one:1.53.0
+    image: jaegertracing/all-in-one:1.74.0
     ports:
       - "16686:16686" # Jaeger UI
       - "14250:14250" # model.proto
@@ -184,7 +184,7 @@ services:
 
   # Prometheus for metrics
   prometheus:
-    image: prom/prometheus:v2.48.0
+    image: prom/prometheus:v3.2.1
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -198,7 +198,7 @@ services:
 
   # Grafana for visualization
   grafana:
-    image: grafana/grafana:10.2.3
+    image: grafana/grafana:11.5.1
     ports:
       - "3000:3000"
     environment:

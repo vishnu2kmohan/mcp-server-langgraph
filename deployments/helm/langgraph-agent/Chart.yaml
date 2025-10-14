@@ -21,18 +21,18 @@ keywords:
   - observability
 dependencies:
   - name: openfga
-    version: "0.1.0"
+    version: "0.2.12"
     repository: "https://openfga.github.io/helm-charts"
     condition: openfga.enabled
   - name: postgresql
-    version: "13.2.0"
+    version: "16.6.2"
     repository: "https://charts.bitnami.com/bitnami"
     condition: postgresql.enabled
   - name: redis
-    version: "18.4.0"
+    version: "20.6.2"
     repository: "https://charts.bitnami.com/bitnami"
     condition: redis.enabled
   - name: keycloak
-    version: "17.3.0"
+    version: "24.2.2"
     repository: "https://charts.bitnami.com/bitnami"
     condition: keycloak.enabled

@@ -2,6 +2,17 @@
 
 Complete guide for deploying MCP Server with LangGraph to Kubernetes (GKE, EKS, AKS, Rancher, VMware Tanzu).
 
+> **📦 Version Compatibility**: See [VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md) for detailed version information and upgrade guidance.
+
+## What's New in v2.4.0
+
+**Infrastructure Updates (2025-10-14)**:
+- **🔄 Updated All Images**: OpenFGA (v1.10.2), Keycloak (26.4.0), OTEL Collector (0.137.0), Prometheus (v3.2.1), Grafana (11.5.1)
+- **🗄️ PostgreSQL 16**: Upgraded from 15-alpine to 16-alpine with StatefulSet deployment
+- **📊 Observability Stack Refresh**: Major updates to monitoring and tracing components
+- **🎯 Complete K8s Manifests**: Added missing OpenFGA and PostgreSQL base manifests
+- **📦 Updated Helm Dependencies**: All Bitnami charts updated to latest stable versions
+
 ## What's New in v2.1.0
 
 This release adds enterprise authentication and session management capabilities:
@@ -43,6 +54,16 @@ See the [Keycloak Integration Guide](../integrations/keycloak.md) for detailed s
 - Secrets (Anthropic API key, JWT secret, OpenFGA credentials)
 - **NEW v2.1.0**: Keycloak client credentials (if using Keycloak auth)
 - **NEW v2.1.0**: Redis password (if using Redis sessions)
+- **NEW v2.4.0**: PostgreSQL password (for shared database)
+
+**Container Image Versions** (as of v2.4.0):
+- OpenFGA: v1.10.2
+- Keycloak: 26.4.0
+- PostgreSQL: 16-alpine
+- Redis: 7-alpine
+- BusyBox (init containers): 1.36
+
+See [VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md) for complete version matrix and upgrade guidance.
 
 ## Container Image
 
@@ -174,7 +195,7 @@ Each Kustomize overlay configures authentication and session management differen
 - **Staging**: `auth_provider=keycloak`, `session_backend=redis` (full enterprise stack)
 - **Production**: Same as staging, plus SSL verification and longer TTLs
 
-The base Kustomize configuration includes Keycloak and Redis deployments (NEW v2.1.0):
+The base Kustomize configuration includes all infrastructure components (UPDATED v2.4.0):
 
 ```yaml
 # deployments/kustomize/base/kustomization.yaml
@@ -184,8 +205,12 @@ resources:
   - secret.yaml
   - deployment.yaml
   - service.yaml
-  - keycloak-deployment.yaml  # NEW v2.1.0
-  - keycloak-service.yaml     # NEW v2.1.0
+  - postgres-statefulset.yaml      # NEW v2.4.0
+  - postgres-service.yaml          # NEW v2.4.0
+  - openfga-deployment.yaml        # NEW v2.4.0
+  - openfga-service.yaml           # NEW v2.4.0
+  - keycloak-deployment.yaml       # NEW v2.1.0, updated v2.4.0
+  - keycloak-service.yaml          # NEW v2.1.0
   - redis-session-deployment.yaml  # NEW v2.1.0
   - redis-session-service.yaml     # NEW v2.1.0
 ```
@@ -212,11 +237,15 @@ kubectl apply -f deployments/kubernetes/base/redis-session-deployment.yaml
 kubectl apply -f deployments/kubernetes/base/redis-session-service.yaml
 ```
 
-**What's in the Base Manifests (NEW v2.1.0)**:
+**What's in the Base Manifests (UPDATED v2.4.0)**:
 
-- **keycloak-deployment.yaml**: High-availability Keycloak with PostgreSQL backend, 2 replicas, health probes
+- **postgres-statefulset.yaml**: PostgreSQL 16 StatefulSet with persistent storage, shared by OpenFGA and Keycloak
+- **postgres-service.yaml**: Headless and ClusterIP services for database access
+- **openfga-deployment.yaml**: OpenFGA v1.10.2 with PostgreSQL backend, 2 replicas, HA setup
+- **openfga-service.yaml**: ClusterIP service exposing HTTP, gRPC, and playground
+- **keycloak-deployment.yaml**: Keycloak 26.4.0 with PostgreSQL backend, 2 replicas, health probes
 - **keycloak-service.yaml**: ClusterIP service with session affinity for OAuth flows
-- **redis-session-deployment.yaml**: Redis with AOF persistence, LRU eviction, password protection
+- **redis-session-deployment.yaml**: Redis 7 with AOF persistence, LRU eviction, password protection
 - **redis-session-service.yaml**: ClusterIP service for session storage
 
 See [deployments/kubernetes/base/](../../deployments/kubernetes/base/) for full manifest details.
@@ -552,12 +581,20 @@ kubectl create secret generic langgraph-agent-secrets \
   --from-literal=jwt-secret-key=$JWT_SECRET_KEY \
   --from-literal=openfga-store-id=$OPENFGA_STORE_ID \
   --from-literal=openfga-model-id=$OPENFGA_MODEL_ID \
+  --from-literal=postgres-username=postgres \
+  --from-literal=postgres-password=$POSTGRES_PASSWORD \
   --from-literal=keycloak-client-secret=$KEYCLOAK_CLIENT_SECRET \
+  --from-literal=keycloak-admin-username=admin \
+  --from-literal=keycloak-admin-password=$KEYCLOAK_ADMIN_PASSWORD \
   --from-literal=redis-password=$REDIS_PASSWORD
 ```
 
-**NEW v2.1.0 Secrets**:
+**Required Secrets**:
+- `postgres-username`: PostgreSQL admin username (default: postgres)
+- `postgres-password`: PostgreSQL admin password
 - `keycloak-client-secret`: OAuth2 client secret from Keycloak setup
+- `keycloak-admin-username`: Keycloak admin username
+- `keycloak-admin-password`: Keycloak admin password
 - `redis-password`: Password for Redis session store
 
 ### External Secrets Operator (Recommended)
