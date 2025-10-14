@@ -254,7 +254,7 @@ This starts:
 ```bash
 python scripts/setup/setup_openfga.py
 # Add OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
-docker-compose restart agent
+docker compose restart agent
 ```
 
 **Test the agent**:
@@ -275,7 +275,7 @@ uv sync  # Install all dependencies and create virtual environment
 2. **Start infrastructure** (without agent):
 ```bash
 # Start only supporting services
-docker-compose up -d openfga postgres otel-collector jaeger prometheus grafana
+docker compose up -d openfga postgres otel-collector jaeger prometheus grafana
 ```
 
 3. **Configure environment**:

@@ -48,22 +48,13 @@ Before you begin, ensure you have:
     This starts OpenFGA, Jaeger, Prometheus, and Grafana:
 
     ```bash
-    # Docker Compose v2 (recommended - plugin-based)
     docker compose up -d
-
-    # Docker Compose v1 (legacy - if v2 not available)
-    docker-compose up -d
     ```
 
     Verify services are running:
     ```bash
     docker compose ps
-    # OR: docker-compose ps (v1)
     ```
-
-    <Tip>
-      Most modern Docker installations use v2 (`docker compose`). Use v1 syntax (`docker-compose`) only if you see "command not found" errors.
-    </Tip>
   </Step>
 
   <Step title="Setup OpenFGA">
@@ -263,11 +254,9 @@ The agent returns a structured response:
 
     # Stop Docker services
     docker compose down
-    # Or: docker-compose down (v1)
 
     # Restart
     docker compose up -d
-    # Or: docker-compose up -d (v1)
     ```
   </Accordion>
 
@@ -280,8 +269,6 @@ The agent returns a structured response:
 
     # Restart if needed
     docker compose restart openfga
-
-    # Or use v1 syntax: docker-compose ps openfga
     ```
   </Accordion>
 

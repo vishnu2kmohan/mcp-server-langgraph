@@ -1,7 +1,7 @@
 version: '3.8'
 
 # Development override for docker-compose.yml
-# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Usage: docker compose -f docker-compose.yml -f docker/docker-compose.dev.yml up
 
 services:
   agent:

@@ -67,7 +67,7 @@ install-dev:
 	@echo "✓ Development dependencies installed"
 
 setup-infra:
-	docker-compose up -d
+	docker compose up -d
 	@echo "✓ Infrastructure started"
 	@echo ""
 	@echo "Services:"
@@ -210,10 +210,10 @@ run-streamable:
 	python -m mcp_server_langgraph.mcp.server_streamable
 
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 clean:
-	docker-compose down -v
+	docker compose down -v
 	find . -type f -name '*.pyc' -delete
 	find . -type d -name '__pycache__' -delete
 	find . -type d -name '*.egg-info' -exec rm -rf {} +

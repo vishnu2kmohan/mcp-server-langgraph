@@ -54,7 +54,7 @@ Choose the installation method that best fits your use case:
         Verify installation:
         ```bash
         docker --version
-        docker-compose --version
+        docker compose version
         ```
       </Step>
 
@@ -128,13 +128,13 @@ Choose the installation method that best fits your use case:
       <Step title="Run with Docker Compose">
         ```bash
         # Start all services
-        docker-compose up -d
+        docker compose up -d
 
         # View logs
-        docker-compose logs -f langgraph-agent
+        docker compose logs -f langgraph-agent
 
         # Stop services
-        docker-compose down
+        docker compose down
         ```
       </Step>
     </Steps>
@@ -207,26 +207,17 @@ Choose the installation method that best fits your use case:
 ### 1. Start Infrastructure Services
 
 ```bash
-# Docker Compose v2 (recommended - plugin-based)
 docker compose up -d
-
-# Docker Compose v1 (legacy - if v2 not available)
-docker-compose up -d
 ```
 
 <Check>
   **Verify services are running:**
   ```bash
   docker compose ps
-  # OR: docker-compose ps (v1)
   ```
 
   All services should show "Up" status.
 </Check>
-
-<Note>
-  **Docker Compose Versions**: Modern Docker Desktop includes v2 as a plugin (`docker compose`). Legacy installations use v1 as a separate binary (`docker-compose`). Both work identically - use whichever is available on your system.
-</Note>
 
 ### 2. Setup OpenFGA
 

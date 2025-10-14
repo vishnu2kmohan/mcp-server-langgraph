@@ -30,7 +30,7 @@ fi
 echo -e "${GREEN}✓ Docker installed${NC}"
 
 # Check Docker Compose
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+if ! docker compose version &> /dev/null; then
     echo -e "${RED}❌ Docker Compose is not installed${NC}"
     echo "Please install Docker Compose: https://docs.docker.com/compose/install/"
     exit 1
@@ -105,7 +105,7 @@ echo "Building and starting services..."
 echo "This may take a few minutes on first run..."
 echo ""
 
-docker-compose $COMPOSE_FILES up -d --build
+docker compose $COMPOSE_FILES up -d --build
 
 # Wait for services to be healthy
 echo ""
@@ -121,7 +121,7 @@ for i in {1..60}; do
 
     if [ $i -eq 60 ]; then
         echo -e "${RED}❌ Agent service failed to start${NC}"
-        echo "Check logs with: docker-compose $COMPOSE_FILES logs agent"
+        echo "Check logs with: docker compose $COMPOSE_FILES logs agent"
         exit 1
     fi
 
@@ -151,10 +151,10 @@ echo "    -H 'Content-Type: application/json' \\"
 echo "    -d '{\"messages\": [{\"role\": \"user\", \"content\": \"Hello!\"}]}'"
 echo ""
 echo "View logs:"
-echo "  docker-compose $COMPOSE_FILES logs -f agent"
+echo "  docker compose $COMPOSE_FILES logs -f agent"
 echo ""
 echo "Stop services:"
-echo "  docker-compose $COMPOSE_FILES down"
+echo "  docker compose $COMPOSE_FILES down"
 echo ""
 echo "Next steps:"
 echo "  1. Setup OpenFGA: python scripts/setup_openfga.py"

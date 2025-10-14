@@ -1,5 +1,8 @@
 version: '3.8'
 
+# Docker Compose v2 configuration
+# Run with: docker compose up -d
+
 services:
   # MCP Server with LangGraph - Main Application
   agent:

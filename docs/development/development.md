@@ -42,7 +42,7 @@ cp .env.example .env
 echo "GOOGLE_API_KEY=your-api-key-here" >> .env
 
 # 7. Start infrastructure
-docker-compose up -d
+docker compose up -d
 
 # 8. Setup OpenFGA
 python scripts/setup_openfga.py
@@ -229,10 +229,10 @@ JWT_SECRET_KEY=dev-secret-change-in-production
 
 ```bash
 # Start all services (OpenFGA, Jaeger, Prometheus, Grafana)
-docker-compose up -d
+docker compose up -d
 
 # Verify services are running
-docker-compose ps
+docker compose ps
 
 # Should see:
 # - openfga (port 8080)
@@ -305,7 +305,7 @@ git merge upstream/main
 git checkout -b feat/your-feature
 
 # 3. Start infrastructure
-docker-compose up -d
+docker compose up -d
 
 # 4. Make your changes
 # ... edit code ...
@@ -483,10 +483,10 @@ open http://localhost:16686
 
 ```bash
 # Docker service logs
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose logs -f openfga
+docker compose logs -f openfga
 
 # Application logs (if LOG_FILE set)
 tail -f mcp-server-langgraph.log
@@ -516,23 +516,23 @@ lsof -i :8080  # Mac/Linux
 netstat -ano | findstr :8080  # Windows
 
 # Stop Docker services
-docker-compose down
+docker compose down
 
 # Restart
-docker-compose up -d
+docker compose up -d
 ```
 
 #### "OpenFGA connection refused"
 
 ```bash
 # Check if OpenFGA is running
-docker-compose ps
+docker compose ps
 
 # Check logs
-docker-compose logs openfga
+docker compose logs openfga
 
 # Restart service
-docker-compose restart openfga
+docker compose restart openfga
 ```
 
 #### "API key invalid"

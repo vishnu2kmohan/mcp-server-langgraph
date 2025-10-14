@@ -273,7 +273,7 @@ make install-dev
 make setup-infra
 
 # Check service health
-docker-compose ps
+docker compose ps
 curl http://localhost:8080/healthz  # OpenFGA
 ```
 
