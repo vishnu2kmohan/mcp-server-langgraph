@@ -124,6 +124,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
+        file: docker/Dockerfile
         platforms: ${{ matrix.platform }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -132,7 +133,7 @@ jobs:
         cache-to: type=gha,mode=max
 
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0
+      uses: anchore/sbom-action@v0.17.8
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
@@ -208,7 +209,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: '3.12'
 
     - name: Install build tools
       run: |
@@ -255,14 +256,21 @@ jobs:
     if: always()
     steps:
     - name: Slack Notification
-      uses: 8398a7/action-slack@v3
-      if: ${{ secrets.SLACK_WEBHOOK }}
+      uses: slackapi/slack-github-action@v2.0.0
+      if: ${{ secrets.SLACK_WEBHOOK != '' }}
       with:
-        status: ${{ job.status }}
-        text: |
-          Release ${{ github.ref_name }} has been published!
-          Docker: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-          Helm: oci://ghcr.io/${{ github.repository }}/charts/mcp-server-langgraph
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        webhook-type: incoming-webhook
+        webhook: ${{ secrets.SLACK_WEBHOOK }}
+        payload: |
+          {
+            "text": "🚀 Release ${{ github.ref_name }} Published!",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Release ${{ github.ref_name }} Published!*\n\n*Status:* ${{ job.status }}\n*Docker Image:* `ghcr.io/${{ github.repository }}:${{ github.ref_name }}`\n*Helm Chart:* `oci://ghcr.io/${{ github.repository }}/charts/mcp-server-langgraph`\n\n<${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}|View Release>"
+                }
+              }
+            ]
+          }
