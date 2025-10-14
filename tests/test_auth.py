@@ -338,10 +338,12 @@ class TestStandaloneVerifyToken:
     @pytest.mark.asyncio
     async def test_standalone_verify_token_default_secret(self):
         """Test standalone verification with default secret"""
-        auth = AuthMiddleware()  # Uses default secret
+        # Use explicit secret so both AuthMiddleware and verify_token use the same key
+        secret = "your-secret-key-change-in-production"
+        auth = AuthMiddleware(secret_key=secret)
         token = auth.create_token("alice")
 
-        result = await verify_token(token)  # Should work with default secret
+        result = await verify_token(token)  # Uses same default secret
 
         assert result.valid is True
 

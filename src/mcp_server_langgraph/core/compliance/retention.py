@@ -177,10 +177,8 @@ class DataRetentionService:
                     extra={"retention_days": archived_retention, "dry_run": self.dry_run},
                 )
 
-                # Placeholder: Actual implementation would integrate with conversation store
-                # deleted_count = await self._cleanup_archived_conversations(cutoff_date)
-                deleted_count = 0
-
+                # Call internal cleanup method
+                deleted_count = await self._cleanup_old_conversations(cutoff_date)
                 result.deleted_count = deleted_count
 
                 logger.info(
@@ -221,10 +219,8 @@ class DataRetentionService:
                     extra={"retention_days": retention_days, "dry_run": self.dry_run},
                 )
 
-                # Placeholder: Actual implementation would archive to cold storage
-                # archived_count = await self._archive_audit_logs(cutoff_date)
-                archived_count = 0
-
+                # Call internal cleanup method
+                archived_count = await self._cleanup_old_audit_logs(cutoff_date)
                 result.archived_count = archived_count
 
                 logger.info(
@@ -313,6 +309,52 @@ class DataRetentionService:
         else:
             # Actually delete inactive sessions
             return await self.session_store.delete_inactive_sessions(cutoff_date)
+
+    async def _cleanup_old_conversations(self, cutoff_date: datetime) -> int:
+        """
+        Delete or archive old conversations
+
+        Args:
+            cutoff_date: Delete/archive conversations last updated before this date
+
+        Returns:
+            Number of conversations deleted
+        """
+        # Placeholder implementation: actual implementation would integrate with conversation store
+        # For now, return 0 in dry-run mode or when no conversation store is configured
+        if self.dry_run:
+            # In dry-run, simulate finding some conversations
+            logger.debug(f"DRY RUN: Would delete conversations older than {cutoff_date.isoformat()}")
+            return 0
+
+        # TODO: Integrate with actual conversation storage backend
+        # Example implementation:
+        # if self.conversation_store:
+        #     return await self.conversation_store.delete_old_archived(cutoff_date)
+        return 0
+
+    async def _cleanup_old_audit_logs(self, cutoff_date: datetime) -> int:
+        """
+        Archive old audit logs to cold storage
+
+        Args:
+            cutoff_date: Archive logs older than this date
+
+        Returns:
+            Number of logs archived
+        """
+        # Placeholder implementation: actual implementation would archive to cold storage
+        # For now, return 0 in dry-run mode or when no audit log store is configured
+        if self.dry_run:
+            # In dry-run, simulate finding some logs
+            logger.debug(f"DRY RUN: Would archive audit logs older than {cutoff_date.isoformat()}")
+            return 0
+
+        # TODO: Integrate with actual audit log storage and cold storage backend
+        # Example implementation:
+        # if self.audit_log_store:
+        #     return await self.audit_log_store.archive_old_logs(cutoff_date, cold_storage_path)
+        return 0
 
     def get_retention_summary(self) -> Dict[str, Any]:
         """

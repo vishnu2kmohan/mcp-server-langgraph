@@ -353,7 +353,7 @@ Create `.vscode/settings.json`:
 
 ```json
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "python.linting.enabled": true,
   "python.linting.flake8Enabled": true,
   "python.linting.mypyEnabled": true,
@@ -374,7 +374,7 @@ Create `.vscode/settings.json`:
 
 1. File → Settings → Project → Python Interpreter
 2. Add Interpreter → Virtualenv Environment → Existing
-3. Select `venv/bin/python`
+3. Select `.venv/bin/python`
 4. Enable pytest: Settings → Tools → Python Integrated Tools → Default test runner → pytest
 
 ---

@@ -21,7 +21,8 @@ from mcp_server_langgraph.middleware.session_timeout import (
 @pytest.fixture
 def mock_session_store():
     """Create mock session store"""
-    return InMemorySessionStore()
+    # Disable sliding_window since the middleware handles it
+    return InMemorySessionStore(sliding_window=False)
 
 
 @pytest.fixture
@@ -436,7 +437,7 @@ class TestHIPAACompliance:
         async def mock_call_next(request):
             return Response(status_code=200)
 
-        with patch("mcp_server_langgraph.observability.telemetry.logger") as mock_logger:
+        with patch("mcp_server_langgraph.middleware.session_timeout.logger") as mock_logger:
             await middleware.dispatch(mock_request, mock_call_next)
 
             # Verify warning was logged

@@ -104,7 +104,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
 
             # Update last activity time (sliding window)
             session.last_accessed = now.isoformat() + "Z"
-            await self.session_store.update(session)
+            await self.session_store.update(session.session_id, session.metadata)
 
         except Exception as e:
             logger.error(f"Session timeout check failed: {e}", exc_info=True)

@@ -1,119 +1,209 @@
-# Documentation Index
+# Documentation Directory
 
-Complete documentation for the MCP Server with LangGraph project.
+This directory contains **user-facing documentation** for the MCP Server with LangGraph project, powered by [Mintlify](https://mintlify.com).
 
-## 📚 Quick Start
+## 📚 What's Here
 
-- **[Main README](../README.md)** - Project overview and quick start guide
-- **[Development Guide](development/development.md)** - Local development setup
-- **[Testing Guide](development/testing.md)** - Testing strategy and running tests
+All files in this directory are in `.mdx` (Mintlify) format and represent the published documentation site.
+
+```
+docs/
+├── getting-started/     # Getting started guides
+├── api-reference/       # API documentation
+├── guides/              # How-to guides and tutorials
+├── deployment/          # Deployment and infrastructure guides
+├── architecture/        # Architecture Decision Records (ADRs)
+├── advanced/            # Advanced topics and patterns
+├── development/         # Development and contribution guides
+└── security/            # Security documentation
+```
+
+## 🚀 Quick Start
+
+### Local Development
+
+Run the Mintlify dev server from the **project root**:
+
+```bash
+# From project root
+mintlify dev
+
+# Opens at http://localhost:3000
+```
+
+### Adding New Pages
+
+1. Create a new `.mdx` file in the appropriate subdirectory
+2. Add the page reference to `../mint.json` navigation
+3. Restart `mintlify dev` to see changes
+
+Example:
+```mdx
+---
+title: "My New Page"
+description: "A brief description"
+---
+
+# My New Page
+
+Content goes here...
+```
+
+## 📝 Writing Guidelines
+
+### File Naming
+- Use lowercase with hyphens: `multi-llm-setup.mdx`
+- Be descriptive but concise
+- Match the navigation slug in `mint.json`
+
+### Content Structure
+```mdx
+---
+title: "Page Title"
+description: "Brief description (shows in search)"
+---
+
+# Main Heading (h1)
+
+Brief introduction paragraph.
+
+## Section Heading (h2)
+
+Content...
+
+### Subsection (h3)
+
+Details...
+```
+
+### Code Blocks
+````mdx
+```python
+# Example code
+def hello_world():
+    print("Hello, world!")
+```
+````
+
+### Components
+
+Mintlify provides special components:
+
+```mdx
+<Note>
+  Important information for users
+</Note>
+
+<Warning>
+  Critical warnings
+</Warning>
+
+<Tip>
+  Helpful tips and best practices
+</Tip>
+
+<Check>
+  Success messages
+</Check>
+```
+
+## 🗂️ What's NOT Here
+
+The following content types are **not** in this directory:
+
+- **Project Reports** → `../reports/`
+- **ADR Source Files** → `../adr/`
+- **Runbooks** → `../runbooks/`
+- **Templates** → `../template/`
+- **Reference Materials** → `../reference/`
+- **Source Code** → `../src/`
+- **Tests** → `../tests/`
+
+## 🔧 Configuration
+
+All Mintlify configuration is in `../mint.json`:
+- Navigation structure
+- Theme and branding
+- API endpoints
+- External links
+- Search settings
+
+## 📖 Documentation Categories
+
+### Getting Started
+New users should start here. Includes:
+- Introduction and overview
+- Quickstart guide
+- Installation instructions
+- First API request tutorial
+
+### API Reference
+Complete API documentation:
+- Authentication endpoints
+- MCP protocol endpoints
+- Health checks
+- Error responses
+
+### Guides
+Step-by-step tutorials:
+- Multi-LLM setup
+- Provider configuration (Google, Anthropic, OpenAI)
+- OpenFGA authorization
+- Secrets management with Infisical
+
+### Deployment
+Infrastructure and deployment:
+- LangGraph Platform deployment
+- Google Cloud Run
+- Kubernetes (GKE, EKS, AKS)
+- Docker and Helm
+- Production checklist
+
+### Architecture
+Design decisions and patterns:
+- Architecture Decision Records (ADRs)
+- System architecture overview
+- Design patterns used
+
+### Advanced
+Deep dives and advanced topics:
+- Custom authentication providers
+- Advanced authorization patterns
+- Performance optimization
+- Troubleshooting guide
+
+### Development
+For contributors:
+- Development setup
+- Testing strategy
+- Contributing guidelines
+- Code standards
+
+### Security
+Security-related documentation:
+- Security overview
+- Best practices
+- Audit checklist
+- Compliance information
 
 ## 🚀 Deployment
 
-Production-ready deployment guides for various platforms:
+Deploy documentation to Mintlify cloud:
 
-- **[Production Deployment](deployment/production.md)** - General production deployment guide
-- **[Kubernetes Deployment](deployment/kubernetes.md)** - Deploy with Kubernetes + Helm/Kustomize
-- **[Cloud Run Deployment](deployment/cloudrun.md)** - Deploy to Google Cloud Run
-- **[LangGraph Platform](deployment/langgraph-platform.md)** - Deploy to managed LangGraph Cloud
+```bash
+# From project root
+mintlify deploy
+```
 
-## 🔌 Integrations
+Or use the GitHub Actions workflow (`.github/workflows/mintlify.yml`)
 
-Integration guides for external services and tools:
+## 📚 Learn More
 
-- **[Keycloak SSO](integrations/keycloak.md)** - 🆕 Enterprise authentication with OpenID Connect (NEW v2.1.0)
-- **[OpenFGA & Infisical](integrations/openfga-infisical.md)** - Authorization and secrets management
-- **[LangSmith](integrations/langsmith.md)** - LLM observability and tracing
-- **[Kong API Gateway](integrations/kong.md)** - API gateway integration
-- **[LiteLLM](integrations/litellm.md)** - Multi-LLM provider support
-- **[Google Gemini](integrations/gemini.md)** - Gemini API setup
+- [Mintlify Documentation](https://mintlify.com/docs)
+- [MDX Syntax](https://mdxjs.com/)
+- [Repository Structure](../REPOSITORY_STRUCTURE.md)
+- [Mintlify Usage Guide](./MINTLIFY_USAGE.md)
 
-## 🛠️ Development
+---
 
-Developer guides and workflows:
-
-- **[Development Setup](development/development.md)** - Local environment configuration
-- **[Testing Strategy](development/testing.md)** - Unit, integration, property, and contract tests
-- **[Build Verification](development/build-verification.md)** - Build and CI/CD verification
-- **[CI/CD Pipeline](development/ci-cd.md)** - 🆕 Continuous integration and deployment (NEW v2.1.0)
-- **[GitHub Actions Setup](development/github-actions.md)** - CI/CD pipeline configuration
-
-## 📖 Reference
-
-Technical reference documentation:
-
-- **[AGENTS.md](../.github/AGENTS.md)** - ⚙️ AI assistant guidance (GitHub Copilot Workspace)
-- **[Pydantic AI Integration](reference/pydantic-ai.md)** - Type-safe agent responses
-- **[AI Tools Compatibility](reference/ai-tools-compatibility.md)** - Compatible AI tools and IDEs
-- **[MCP Registry](reference/mcp-registry.md)** - Publishing to MCP registry
-- **[Recommendations](reference/recommendations.md)** - Best practices and recommendations
-
-> **Note**: `AGENTS.md` and `CLAUDE.md` are located in `.github/` as they are operational instruction files for AI coding assistants and development tools.
-
-## 🎨 Template
-
-Cookiecutter template documentation:
-
-- **[Template Usage](template/usage.md)** - How to use this as a template
-- **[Template Evaluation](template/evaluation.md)** - Template features and evaluation
-- **[Cookiecutter Summary](template/cookiecutter-summary.md)** - Cookiecutter configuration
-
-## 🏛️ Architecture Decision Records (ADR)
-
-Technical decisions and their rationale:
-
-- **[ADR Index](adr/README.md)** - All architecture decisions
-- **[0001: LLM Multi-Provider](adr/0001-llm-multi-provider.md)** - LiteLLM for provider abstraction
-- **[0002: OpenFGA Authorization](adr/0002-openfga-authorization.md)** - Fine-grained access control
-- **[0003: Dual Observability](adr/0003-dual-observability.md)** - OpenTelemetry + LangSmith
-- **[0004: MCP StreamableHTTP](adr/0004-mcp-streamable-http.md)** - Production transport protocol
-- **[0005: Pydantic AI Integration](adr/0005-pydantic-ai-integration.md)** - Type-safe responses
-
-## 📦 Archive
-
-Historical documentation (may be outdated):
-
-- **[Implementation Complete](archive/IMPLEMENTATION_COMPLETE.md)** - Original implementation summary
-- **[Implementation Summary](archive/IMPLEMENTATION_SUMMARY.md)** - Detailed implementation notes
-- **[Security Review](archive/security-review.md)** - Security audit report
-- **[Mintlify Setup](archive/MINTLIFY_SETUP.md)** - Documentation site setup
-- **[Security Audit](archive/SECURITY_AUDIT.md)** - Historical security audit
-
-## 🔍 Finding Documentation
-
-### By Topic
-
-- **Getting Started**: [Main README](../README.md), [Development Setup](development/development.md)
-- **Deployment**: See [Deployment](#-deployment) section above
-- **Authentication**: [Keycloak SSO](integrations/keycloak.md) (NEW v2.1.0), [JWT Auth](integrations/openfga-infisical.md)
-- **Security**: [OpenFGA Integration](integrations/openfga-infisical.md), [Security Review](archive/security-review.md)
-- **Testing**: [Testing Guide](development/testing.md), [Build Verification](development/build-verification.md)
-- **AI/LLM**: [AGENTS.md](../.github/AGENTS.md), [Pydantic AI](reference/pydantic-ai.md), [LiteLLM](integrations/litellm.md)
-- **Observability**: [LangSmith Integration](integrations/langsmith.md), [Dual Observability ADR](adr/0003-dual-observability.md)
-
-### By Role
-
-**Developer**:
-- Start: [Development Setup](development/development.md)
-- Test: [Testing Guide](development/testing.md)
-- Learn: [AGENTS.md](../.github/AGENTS.md), [ADRs](adr/README.md)
-
-**DevOps/SRE**:
-- Deploy: [Production Deployment](deployment/production.md), [Kubernetes](deployment/kubernetes.md)
-- Auth/SSO: [Keycloak Integration](integrations/keycloak.md) (NEW v2.1.0)
-- Monitor: [LangSmith Integration](integrations/langsmith.md)
-- Secure: [OpenFGA & Infisical](integrations/openfga-infisical.md)
-- CI/CD: [CI/CD Pipeline](development/ci-cd.md) (NEW v2.1.0)
-
-**Template User**:
-- Start: [Template Usage](template/usage.md)
-- Customize: [Cookiecutter Summary](template/cookiecutter-summary.md)
-- Evaluate: [Template Evaluation](template/evaluation.md)
-
-## 📝 Contributing
-
-See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for contribution guidelines.
-
-## 📄 License
-
-See [LICENSE](../LICENSE) for license information.
+**Note:** This directory is exclusively for Mintlify documentation. All other documentation types should be placed in their respective directories at the project root. See [REPOSITORY_STRUCTURE.md](../REPOSITORY_STRUCTURE.md) for details.

@@ -176,9 +176,12 @@ class CleanupScheduler:
 
     def _get_next_run_time(self) -> str:
         """Get next scheduled run time"""
-        job = self.scheduler.get_job("data_retention_cleanup")
-        if job and job.next_run_time:
-            return job.next_run_time.isoformat()
+        try:
+            job = self.scheduler.get_job("data_retention_cleanup")
+            if job and hasattr(job, 'next_run_time') and job.next_run_time:
+                return job.next_run_time.isoformat()
+        except Exception:
+            pass
         return "Not scheduled"
 
     async def run_now(self):

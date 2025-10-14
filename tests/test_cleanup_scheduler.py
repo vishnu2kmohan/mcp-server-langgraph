@@ -161,6 +161,8 @@ class TestCleanupSchedulerStop:
     @pytest.mark.asyncio
     async def test_stop_shuts_down_scheduler(self, mock_session_store, mock_retention_config):
         """Test that stop shuts down scheduler"""
+        import asyncio
+
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
             mock_service = AsyncMock()
             mock_service.config = mock_retention_config
@@ -173,6 +175,9 @@ class TestCleanupSchedulerStop:
             assert scheduler.scheduler.running is True
 
             await scheduler.stop()
+
+            # Give scheduler a moment to fully shutdown
+            await asyncio.sleep(0.01)
 
             # Verify scheduler is stopped
             assert scheduler.scheduler.running is False
@@ -189,17 +194,17 @@ class TestCleanupExecution:
         mock_results = [
             RetentionResult(
                 policy_name="sessions",
+                execution_timestamp="2025-10-14T00:00:00Z",
                 deleted_count=10,
                 archived_count=5,
                 errors=[],
-                execution_time_ms=100.0,
             ),
             RetentionResult(
                 policy_name="logs",
+                execution_timestamp="2025-10-14T00:00:00Z",
                 deleted_count=20,
                 archived_count=0,
                 errors=[],
-                execution_time_ms=150.0,
             ),
         ]
 
@@ -224,10 +229,10 @@ class TestCleanupExecution:
         mock_results = [
             RetentionResult(
                 policy_name="sessions",
+                execution_timestamp="2025-10-14T00:00:00Z",
                 deleted_count=5,
                 archived_count=0,
                 errors=["Error deleting session X", "Error deleting session Y"],
-                execution_time_ms=100.0,
             ),
         ]
 
@@ -287,10 +292,10 @@ class TestNotifications:
         mock_results = [
             RetentionResult(
                 policy_name="test",
+                execution_timestamp="2025-10-14T00:00:00Z",
                 deleted_count=10,
                 archived_count=5,
                 errors=[],
-                execution_time_ms=100.0,
             ),
         ]
 
@@ -313,10 +318,10 @@ class TestNotifications:
         mock_results = [
             RetentionResult(
                 policy_name="test",
+                execution_timestamp="2025-10-14T00:00:00Z",
                 deleted_count=10,
                 archived_count=0,
                 errors=[],
-                execution_time_ms=100.0,
             ),
         ]
 
@@ -346,10 +351,10 @@ class TestManualExecution:
         mock_results = [
             RetentionResult(
                 policy_name="manual",
+                execution_timestamp="2025-10-14T00:00:00Z",
                 deleted_count=5,
                 archived_count=0,
                 errors=[],
-                execution_time_ms=50.0,
             ),
         ]
 

@@ -1,0 +1,77 @@
+# Python virtual environment (most important!)
+.venv/
+venv/
+env/
+
+# Source code and build artifacts
+src/
+tests/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Non-documentation content (now at root level)
+reports/
+adr/
+runbooks/
+archive/
+template/
+reference/
+integrations/
+api/
+docs-internal/
+
+# Configuration and deployment files
+config/
+deployments/
+docker/
+monitoring/
+examples/
+hooks/
+.github/
+.mcp/
+.ai/
+.claude/
+.cursor/
+.benchmarks/
+.hypothesis/
+
+# Test and coverage outputs
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+logs/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Version control
+.git/
+.gitignore
+
+# Assets that aren't docs
+logo/
+
+# Root-level files (not part of Mintlify docs)
+/*.md
+CHANGELOG.md
+LICENSE
+*.html
+*.txt
+
+# Keep only docs/ directory for Mintlify
+# Everything in docs/ is now Mintlify-specific

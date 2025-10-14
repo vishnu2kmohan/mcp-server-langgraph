@@ -312,7 +312,7 @@ class TestAuditLogCleanup:
                     result = await service.cleanup_audit_logs()
 
                     assert result.policy_name == "audit_logs"
-                    assert result.deleted_count == 100
+                    assert result.archived_count == 100  # Audit logs are archived, not deleted
 
     @pytest.mark.asyncio
     async def test_cleanup_audit_logs_long_retention(self, sample_config):
