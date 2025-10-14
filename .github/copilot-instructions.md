@@ -388,8 +388,17 @@ python scripts/generate_openapi.py
 
 ## Resources
 
-- **Architecture**: See `README.md`
-- **Deployment**: See `KUBERNETES_DEPLOYMENT.md`
-- **Security**: See `SECURITY_AUDIT.md`
-- **Contributing**: See `CONTRIBUTING.md`
-- **Development**: See `DEVELOPMENT.md`
+- **Architecture**: See `README.md` and `docs/architecture/` (ADRs)
+- **Deployment**: See `docs/deployment/` (Kubernetes, Helm, Cloud Run, LangGraph Platform)
+- **Security**: See `SECURITY.md` and `docs/security/`
+- **Contributing**: See `CONTRIBUTING.md` and `docs/advanced/contributing.mdx`
+- **Development**: See `docs/advanced/development-setup.mdx`
+- **Testing**: See `docs/advanced/testing.mdx`
+- **Mintlify Docs**: See `docs/mint.json` (100% coverage)
+
+## Current Project State (2025-10-14)
+
+- **LangGraph Version**: 0.6.10 (upgraded from 0.2.28 - all 15 Dependabot PRs merged)
+- **Documentation**: Mintlify integration complete with docs/ directory structure
+- **Test Coverage**: High coverage across all modules
+- **Production Ready**: Full observability, security, and compliance features

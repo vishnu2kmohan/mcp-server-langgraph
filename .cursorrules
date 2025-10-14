@@ -339,9 +339,19 @@ def test_function_error_case():
 
 ## Resources
 
-- **Architecture**: See README.md and ARCHITECTURE.md
-- **Deployment**: See KUBERNETES_DEPLOYMENT.md and PRODUCTION_DEPLOYMENT.md
-- **Security**: See SECURITY_AUDIT.md and SECURITY_REVIEW.md
-- **Contributing**: See CONTRIBUTING.md and DEVELOPMENT.md
-- **Testing**: See TESTING.md
+- **Architecture**: See README.md and docs/architecture/ (ADRs)
+- **Deployment**: See docs/deployment/ (Kubernetes, Helm, Cloud Run, LangGraph Platform)
+- **Security**: See SECURITY.md and docs/security/
+- **Contributing**: See CONTRIBUTING.md and docs/advanced/contributing.mdx
+- **Testing**: See docs/advanced/testing.mdx
+- **Development**: See docs/advanced/development-setup.mdx
 - **API Docs**: Run server and visit /docs
+- **Mintlify Docs**: See docs/mint.json (100% coverage)
+
+## Current Project State (2025-10-14)
+
+- **LangGraph Version**: 0.6.10 (upgraded from 0.2.28)
+- **All Dependabot PRs**: 15/15 merged (100%)
+- **Documentation**: Mintlify integration complete (docs/ directory)
+- **Test Coverage**: High coverage across all modules
+- **Production Ready**: Full observability, security, and compliance

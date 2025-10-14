@@ -17,8 +17,9 @@ When working with this codebase, please:
 1. **Read these files first**:
    - `README.md` - Project overview
    - `CONTRIBUTING.md` - Contribution guidelines
-   - `DEVELOPMENT.md` - Development setup
+   - `docs/advanced/development-setup.mdx` - Development setup
    - `.cursorrules` - Code style and patterns
+   - `.github/CLAUDE.md` and `.github/AGENTS.md` - AI agent guidance
 
 2. **Understand the architecture**:
    - LangGraph agent with MCP protocol
@@ -266,11 +267,19 @@ open http://localhost:3000
 ## Documentation
 
 - **API Docs**: Start server, visit http://localhost:8000/docs
-- **Architecture**: See `README.md`
-- **Deployment**: See `KUBERNETES_DEPLOYMENT.md`
-- **Security**: See `SECURITY_AUDIT.md`
-- **Testing**: See `TESTING.md`
-- **Contributing**: See `CONTRIBUTING.md`
+- **Architecture**: See `README.md` and `docs/architecture/` (ADRs)
+- **Deployment**: See `docs/deployment/` (Kubernetes, Helm, Cloud Run, LangGraph Platform)
+- **Security**: See `SECURITY.md` and `docs/security/`
+- **Testing**: See `docs/advanced/testing.mdx`
+- **Development**: See `docs/advanced/development-setup.mdx`
+- **Contributing**: See `CONTRIBUTING.md` and `docs/advanced/contributing.mdx`
+- **Mintlify Docs**: See `docs/mint.json` (100% coverage)
+
+## Current Project State (2025-10-14)
+
+- **LangGraph Version**: 0.6.10 (upgraded from 0.2.28 - all 15 Dependabot PRs merged)
+- **Documentation**: Mintlify integration complete with docs/ structure
+- **Production Ready**: Full observability, security, and compliance
 
 ## Getting Help
 

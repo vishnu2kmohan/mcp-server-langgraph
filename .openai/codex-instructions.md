@@ -637,12 +637,20 @@ python scripts/validate_production.py
 ## Resources
 
 - **README.md** - Project overview and quick start
-- **DEVELOPMENT.md** - Development environment setup
+- **docs/advanced/development-setup.mdx** - Development environment setup
 - **CONTRIBUTING.md** - Contribution guidelines
-- **TESTING.md** - Testing strategy and examples
-- **SECURITY_AUDIT.md** - Security checklist
-- **KUBERNETES_DEPLOYMENT.md** - Deployment guide
+- **docs/advanced/testing.mdx** - Testing strategy and examples
+- **SECURITY.md** - Security policy
+- **docs/deployment/** - Deployment guides (Kubernetes, Helm, Cloud Run, LangGraph Platform)
+- **docs/architecture/** - Architecture Decision Records (ADRs)
+- **docs/mint.json** - Mintlify documentation (100% coverage)
 - **API Docs** - http://localhost:8000/docs (when running)
+
+## Current Project State (2025-10-14)
+
+- **LangGraph Version**: 0.6.10 (upgraded from 0.2.28 - all 15 Dependabot PRs merged)
+- **Documentation**: Mintlify integration complete with docs/ structure
+- **Production Ready**: Full observability, security, and compliance
 
 ## Quick Reference
 
