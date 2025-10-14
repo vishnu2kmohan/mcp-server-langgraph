@@ -12,6 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}  # Cancel only for PRs
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   trivy-scan:
     name: Trivy Container Scan

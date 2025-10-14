@@ -68,8 +68,8 @@ class DeploymentValidator:
             "docker-compose.yml",
             "docker/docker-compose.dev.yml",
             # Helm
-            "deployments/helm/langgraph-agent/Chart.yaml",
-            "deployments/helm/langgraph-agent/values.yaml",
+            "deployments/helm/mcp-server-langgraph/Chart.yaml",
+            "deployments/helm/mcp-server-langgraph/values.yaml",
             # Kustomize
             "deployments/kustomize/base/kustomization.yaml",
         ]
@@ -263,8 +263,8 @@ class DeploymentValidator:
         """Validate Helm chart configuration."""
         print("\n⎈  Validating Helm chart...")
 
-        chart = self._load_yaml("deployments/helm/langgraph-agent/Chart.yaml")
-        values = self._load_yaml("deployments/helm/langgraph-agent/values.yaml")
+        chart = self._load_yaml("deployments/helm/mcp-server-langgraph/Chart.yaml")
+        values = self._load_yaml("deployments/helm/mcp-server-langgraph/values.yaml")
 
         if not chart or not values:
             return
@@ -303,7 +303,7 @@ class DeploymentValidator:
 
         # Load configurations
         k8s_configmap = self._load_yaml("deployments/kubernetes/base/configmap.yaml")
-        helm_values = self._load_yaml("deployments/helm/langgraph-agent/values.yaml")
+        helm_values = self._load_yaml("deployments/helm/mcp-server-langgraph/values.yaml")
 
         if not k8s_configmap or not helm_values:
             self.warnings.append("Cannot validate consistency: Missing config files")
