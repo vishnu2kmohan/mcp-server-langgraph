@@ -196,18 +196,20 @@ jobs:
           pytest -m benchmark -v --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
         continue-on-error: true  # Don't fail if no benchmarks exist yet
 
-      - name: Store benchmark results
-        uses: benchmark-action/github-action-benchmark@v1.20.7
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          tool: 'pytest'
-          output-file-path: benchmarks.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: false
-          skip-fetch-gh-pages: true
-          alert-threshold: '120%'  # Alert if 20% slower
-          comment-on-alert: true
-          fail-on-alert: false
+      # Benchmark storage temporarily disabled until gh-pages branch is created
+      # To enable: create gh-pages branch with: git checkout --orphan gh-pages && git push origin gh-pages
+      # - name: Store benchmark results
+      #   uses: benchmark-action/github-action-benchmark@v1.20.7
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      #   with:
+      #     tool: 'pytest'
+      #     output-file-path: benchmarks.json
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     auto-push: false
+      #     skip-fetch-gh-pages: true
+      #     alert-threshold: '120%'  # Alert if 20% slower
+      #     comment-on-alert: true
+      #     fail-on-alert: false
 
       - name: Upload benchmark results
         if: always()

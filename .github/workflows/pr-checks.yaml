@@ -107,7 +107,7 @@ jobs:
       run: black --check . --exclude venv
 
     - name: Run isort
-      run: isort --check . --skip venv
+      run: isort --check . --skip venv --profile black --line-length 127
 
     - name: Run mypy
       run: mypy src/ --ignore-missing-imports
