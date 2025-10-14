@@ -32,4 +32,4 @@ commonLabels:
 
 images:
   - name: langgraph-agent
-    newTag: latest
+    newTag: 2.4.0

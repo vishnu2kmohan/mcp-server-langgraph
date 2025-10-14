@@ -1,0 +1,545 @@
+# Version Pinning Strategy
+
+**Last Updated**: 2025-10-14
+**Current Version**: 2.4.0
+
+This document defines the version pinning strategy for Docker images and deployment configurations to ensure production-grade, reproducible deployments.
+
+## Executive Summary
+
+**Policy**: 🔴 **NEVER use `:latest` tags in production deployments**
+
+**Rationale**:
+- ✅ Reproducible deployments across environments
+- ✅ Easy rollback to any previous version
+- ✅ Clear version history and audit trail
+- ✅ No surprise breaking changes
+- ✅ Compliance with production best practices
+
+---
+
+## Version Pinning Rules
+
+### Production (Mandatory)
+
+All production deployments **MUST** use explicit version tags following semantic versioning:
+
+```yaml
+# ✅ CORRECT
+image: langgraph-agent:2.4.0
+image: langgraph-agent:v2.4.0
+image: gcr.io/project/app:2.4.0
+
+# 🔴 NEVER DO THIS
+image: langgraph-agent:latest
+image: langgraph-agent  # defaults to latest
+```
+
+### Staging (Recommended)
+
+Staging environments **SHOULD** use explicit version tags with environment prefix:
+
+```yaml
+# ✅ PREFERRED
+newTag: staging-2.4.0
+
+# ⚠️ ACCEPTABLE (for pre-release testing)
+newTag: staging-rc1
+newTag: staging-beta
+
+# 🔴 AVOID
+newTag: staging-latest
+```
+
+### Development (Flexible)
+
+Development environments **MAY** use latest tags for rapid iteration:
+
+```yaml
+# ✅ ACCEPTABLE for local dev
+newTag: dev-latest
+newTag: dev-${GIT_SHA}
+
+# ✅ BETTER (traceable)
+newTag: dev-2.4.0-${GIT_SHA}
+```
+
+---
+
+## Current Version Matrix
+
+### Application Version: 2.4.0
+
+| Component | Version Source | Current Value |
+|-----------|----------------|---------------|
+| **Project** | pyproject.toml | 2.4.0 |
+| **Helm Chart** | Chart.yaml | 2.4.0 |
+| **App Version** | Chart.yaml (appVersion) | 2.4.0 |
+
+### Deployment Configurations
+
+| File | Tag | Status | Environment |
+|------|-----|--------|-------------|
+| **Kubernetes** |
+| `deployments/kubernetes/base/deployment.yaml` | 2.4.0 | ✅ Pinned | Base |
+| **Helm** |
+| `deployments/helm/langgraph-agent/values.yaml` | 2.4.0 | ✅ Pinned | Default |
+| `deployments/helm/langgraph-agent/Chart.yaml` | 2.4.0 | ✅ Pinned | Version |
+| **Kustomize** |
+| `deployments/kustomize/base/kustomization.yaml` | 2.4.0 | ✅ Pinned | Base |
+| `deployments/kustomize/overlays/dev/kustomization.yaml` | dev-latest | ⚠️ Latest | Development |
+| `deployments/kustomize/overlays/staging/kustomization.yaml` | staging-2.4.0 | ✅ Pinned | Staging |
+| `deployments/kustomize/overlays/production/kustomization.yaml` | v2.4.0 | ✅ Pinned | Production |
+| **Cloud Run** |
+| `deployments/cloudrun/service.yaml` | 2.4.0 | ✅ Pinned | Template |
+
+---
+
+## Semantic Versioning
+
+We follow [Semantic Versioning 2.0.0](https://semver.org/):
+
+```
+MAJOR.MINOR.PATCH
+
+2.4.0
+│ │ └─ PATCH: Backwards compatible bug fixes
+│ └─── MINOR: Backwards compatible new features
+└───── MAJOR: Breaking changes
+```
+
+### Version Bumping Rules
+
+**PATCH version** (2.4.0 → 2.4.1):
+- Bug fixes
+- Security patches
+- Documentation updates
+- No API changes
+
+**MINOR version** (2.4.0 → 2.5.0):
+- New features (backward compatible)
+- Deprecations (with migration path)
+- Performance improvements
+- Dependency updates (minor)
+
+**MAJOR version** (2.4.0 → 3.0.0):
+- Breaking API changes
+- Removed deprecated features
+- Major architectural changes
+- Incompatible dependency updates
+
+---
+
+## Version Update Process
+
+### 1. Update Source of Truth
+
+```bash
+# Update pyproject.toml
+[project]
+version = "2.5.0"  # New version
+
+# Commit version bump
+git add pyproject.toml
+git commit -m "chore: bump version to 2.5.0"
+```
+
+### 2. Update Deployment Configurations
+
+Run the version sync script:
+
+```bash
+# Automated version sync (recommended)
+./scripts/sync-versions.sh 2.5.0
+
+# Or manual updates:
+# - deployments/helm/langgraph-agent/Chart.yaml (version and appVersion)
+# - deployments/helm/langgraph-agent/values.yaml (image.tag)
+# - deployments/kubernetes/base/deployment.yaml
+# - deployments/kustomize/base/kustomization.yaml
+# - deployments/kustomize/overlays/staging/kustomization.yaml
+# - deployments/kustomize/overlays/production/kustomization.yaml
+# - deployments/cloudrun/service.yaml
+```
+
+### 3. Create Git Tag
+
+```bash
+# Create annotated tag
+git tag -a v2.5.0 -m "Release version 2.5.0"
+
+# Push tag to trigger release workflow
+git push origin v2.5.0
+```
+
+### 4. CI/CD Automatic Tagging
+
+Our CI/CD pipeline automatically creates:
+
+```bash
+# On git tag push (v2.5.0):
+- langgraph-agent:2.5.0
+- langgraph-agent:2.5
+- langgraph-agent:2
+- langgraph-agent:latest  # Convenience tag
+
+# On main branch commit:
+- langgraph-agent:main-${GIT_SHA}
+- langgraph-agent:latest  # Updated
+
+# On feature branch:
+- langgraph-agent:${BRANCH}-${GIT_SHA}
+```
+
+**Note**: The `:latest` tag is created automatically for convenience but **MUST NOT** be used in production deployments.
+
+---
+
+## Image Tag Formats
+
+### Recommended Formats
+
+```yaml
+# Semantic version (production)
+langgraph-agent:2.4.0
+langgraph-agent:v2.4.0
+
+# Git SHA (development/staging)
+langgraph-agent:dev-a1b2c3d
+langgraph-agent:staging-a1b2c3d
+
+# Combined (traceability)
+langgraph-agent:2.4.0-a1b2c3d
+langgraph-agent:v2.4.0-rc1
+
+# Environment-specific
+langgraph-agent:staging-2.4.0
+langgraph-agent:prod-2.4.0
+```
+
+### Anti-Patterns (DO NOT USE)
+
+```yaml
+# ❌ No tag specified (defaults to :latest)
+langgraph-agent
+
+# ❌ Latest tag
+langgraph-agent:latest
+langgraph-agent:stable
+langgraph-agent:production
+
+# ❌ Mutable tags
+langgraph-agent:v2
+langgraph-agent:v2.4
+```
+
+---
+
+## Deployment Environment Strategies
+
+### Development
+
+```yaml
+# kustomize/overlays/dev/kustomization.yaml
+images:
+  - name: langgraph-agent
+    newTag: dev-latest  # Or dev-${GIT_SHA}
+```
+
+**Rationale**: Rapid iteration, auto-deploy on commit
+
+### Staging
+
+```yaml
+# kustomize/overlays/staging/kustomization.yaml
+images:
+  - name: langgraph-agent
+    newTag: staging-2.4.0  # Explicit version
+```
+
+**Rationale**: Testing specific versions before production
+
+### Production
+
+```yaml
+# kustomize/overlays/production/kustomization.yaml
+images:
+  - name: langgraph-agent
+    newTag: v2.4.0  # Production version tag
+```
+
+**Rationale**: Absolute reproducibility, auditable deployments
+
+---
+
+## Image Pull Policy
+
+Always use `IfNotPresent` or `Never` with pinned tags:
+
+```yaml
+# ✅ CORRECT (with pinned tag)
+image: langgraph-agent:2.4.0
+imagePullPolicy: IfNotPresent
+
+# ⚠️ REQUIRED (with latest tag)
+image: langgraph-agent:latest
+imagePullPolicy: Always
+```
+
+**Rationale**:
+- `IfNotPresent`: Reduces registry pulls, faster deployments
+- `Always`: Required for mutable tags (latest) to get updates
+- `Never`: Local development only
+
+---
+
+## Verification Checklist
+
+Before deploying to production:
+
+- [ ] All image tags are explicit versions (no :latest)
+- [ ] Version matches pyproject.toml
+- [ ] Chart.yaml version and appVersion match
+- [ ] All Kustomize overlays updated
+- [ ] Git tag created and pushed
+- [ ] CI/CD built correct version
+- [ ] Staging tested with exact production tag
+- [ ] Rollback plan documented
+
+### Automated Verification
+
+```bash
+# Check for :latest tags in production configs
+./scripts/check-latest-tags.sh
+
+# Expected output:
+# ✅ No :latest tags found in production configurations
+# ✅ All versions consistent: 2.4.0
+```
+
+---
+
+## Rollback Procedures
+
+### Kustomize Rollback
+
+```bash
+# Update overlay to previous version
+cd deployments/kustomize/overlays/production
+vim kustomization.yaml  # Change newTag: v2.4.0 → v2.3.0
+
+# Apply rollback
+kubectl apply -k deployments/kustomize/overlays/production
+
+# Verify rollback
+kubectl rollout status deployment/prod-langgraph-agent
+```
+
+### Helm Rollback
+
+```bash
+# Rollback to previous release
+helm rollback langgraph-agent
+
+# Or rollback to specific revision
+helm rollback langgraph-agent 3
+
+# Or reinstall with previous version
+helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+  --set image.tag=2.3.0 \
+  --reuse-values
+```
+
+### Kubernetes Native Rollback
+
+```bash
+# Rollback deployment to previous revision
+kubectl rollout undo deployment/langgraph-agent
+
+# Rollback to specific revision
+kubectl rollout undo deployment/langgraph-agent --to-revision=5
+
+# Check rollout history
+kubectl rollout history deployment/langgraph-agent
+```
+
+---
+
+## Version Drift Detection
+
+### Manual Check
+
+```bash
+# Check running version in Kubernetes
+kubectl get deployment langgraph-agent -o jsonpath='{.spec.template.spec.containers[0].image}'
+
+# Expected: langgraph-agent:2.4.0
+
+# Check all deployments across namespaces
+kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}' | grep langgraph-agent
+```
+
+### Automated Monitoring
+
+```yaml
+# Prometheus alert for version drift
+- alert: ImageVersionMismatch
+  expr: kube_deployment_spec_replicas{deployment="langgraph-agent"}
+        unless on(deployment) kube_deployment_spec_template_image{image=~".*:2\\.4\\.0"}
+  for: 5m
+  annotations:
+    summary: "Deployment using unexpected image version"
+```
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+# .github/workflows/deploy.yml
+- name: Deploy to Production
+  run: |
+    # Extract version from git tag
+    VERSION=${GITHUB_REF#refs/tags/v}
+
+    # Validate version format
+    if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      echo "Invalid version format: $VERSION"
+      exit 1
+    fi
+
+    # Deploy with explicit version
+    helm upgrade --install langgraph-agent ./helm/langgraph-agent \
+      --namespace production \
+      --set image.tag=$VERSION \
+      --wait
+```
+
+### Pre-commit Hook
+
+```bash
+# .git/hooks/pre-commit
+#!/bin/bash
+# Check for :latest tags in production paths
+
+LATEST_TAGS=$(grep -r ":latest" deployments/ \
+  --include="*.yaml" \
+  --exclude-dir="overlays/dev" \
+  | grep -v "^#" || true)
+
+if [ -n "$LATEST_TAGS" ]; then
+  echo "❌ ERROR: Found :latest tags in production configurations:"
+  echo "$LATEST_TAGS"
+  echo ""
+  echo "Please pin to specific versions."
+  exit 1
+fi
+
+echo "✅ No :latest tags found in production configurations"
+```
+
+---
+
+## Infrastructure Image Versions
+
+External service images (OpenFGA, Keycloak, etc.) are also pinned:
+
+| Service | Image | Version | Updated |
+|---------|-------|---------|---------|
+| OpenFGA | openfga/openfga | v1.10.2 | 2025-10-14 |
+| Keycloak | quay.io/keycloak/keycloak | 26.4.0 | 2025-10-14 |
+| PostgreSQL | postgres | 16-alpine | 2025-10-14 |
+| Redis | redis | 7-alpine | Current |
+| OTEL Collector | otel/opentelemetry-collector-contrib | 0.137.0 | 2025-10-14 |
+| Jaeger | jaegertracing/all-in-one | 1.74.0 | 2025-10-14 |
+| Prometheus | prom/prometheus | v3.2.1 | 2025-10-14 |
+| Grafana | grafana/grafana | 11.5.1 | 2025-10-14 |
+
+See [VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md) for detailed infrastructure version matrix.
+
+---
+
+## Best Practices Summary
+
+### DO ✅
+
+- ✅ Use explicit semantic version tags (2.4.0)
+- ✅ Update all deployment configs when bumping version
+- ✅ Create git tags for releases
+- ✅ Test with production tags in staging
+- ✅ Document version changes in CHANGELOG.md
+- ✅ Use imagePullPolicy: IfNotPresent with pinned tags
+- ✅ Maintain version consistency across all files
+
+### DON'T ❌
+
+- ❌ Use :latest in production
+- ❌ Use mutable tags (stable, production, v2)
+- ❌ Skip version bumps in deployment configs
+- ❌ Deploy without version validation
+- ❌ Omit git tags for releases
+- ❌ Mix version formats (v2.4.0 vs 2.4.0)
+- ❌ Assume :latest is stable
+
+---
+
+## Troubleshooting
+
+### Issue: "Image pull backoff"
+
+```bash
+# Check if version exists in registry
+docker pull langgraph-agent:2.4.0
+
+# If not found, build and push
+docker build -t langgraph-agent:2.4.0 .
+docker tag langgraph-agent:2.4.0 gcr.io/PROJECT/langgraph-agent:2.4.0
+docker push gcr.io/PROJECT/langgraph-agent:2.4.0
+```
+
+### Issue: "Deployment using old version"
+
+```bash
+# Force new deployment
+kubectl rollout restart deployment/langgraph-agent
+
+# Or update deployment
+kubectl set image deployment/langgraph-agent \
+  langgraph-agent=langgraph-agent:2.4.0
+```
+
+### Issue: "Version mismatch across environments"
+
+```bash
+# Audit all deployments
+kubectl get deployments --all-namespaces -o wide | grep langgraph
+
+# Sync all environments to same version
+./scripts/sync-all-envs.sh 2.4.0
+```
+
+---
+
+## Related Documentation
+
+- [VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md) - Infrastructure version matrix
+- [Kubernetes Deployment Guide](kubernetes.md) - Deployment procedures
+- [CHANGELOG.md](../../CHANGELOG.md) - Version history
+- [Semantic Versioning](https://semver.org/) - Version numbering spec
+
+---
+
+## Version History
+
+| Date | Version | Change | Author |
+|------|---------|--------|--------|
+| 2025-10-14 | 2.4.0 | Removed all :latest tags from production configs | Claude Code |
+| 2025-10-13 | 2.2.0 | Initial version pinning policy | Team |
+
+---
+
+**Last Audit**: 2025-10-14
+**Next Review**: 2025-11-14
+**Status**: ✅ All production deployments use pinned versions

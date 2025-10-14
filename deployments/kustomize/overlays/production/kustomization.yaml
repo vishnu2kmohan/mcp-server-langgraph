@@ -22,7 +22,7 @@ replicas:
 
 images:
   - name: langgraph-agent
-    newTag: v1.0.0
+    newTag: v2.4.0
 
 configMapGenerator:
   - name: langgraph-agent-config

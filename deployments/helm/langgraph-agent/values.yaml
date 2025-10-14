@@ -7,7 +7,7 @@ replicaCount: 3
 image:
   repository: langgraph-agent
   pullPolicy: IfNotPresent
-  tag: "latest"
+  tag: "2.4.0"
 
 imagePullSecrets: []
 nameOverride: ""

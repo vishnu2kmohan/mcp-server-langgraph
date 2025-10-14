@@ -21,7 +21,7 @@ replicas:
 
 images:
   - name: langgraph-agent
-    newTag: staging-latest
+    newTag: staging-2.4.0
 
 configMapGenerator:
   - name: langgraph-agent-config
