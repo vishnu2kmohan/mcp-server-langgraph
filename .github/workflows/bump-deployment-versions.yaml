@@ -86,8 +86,8 @@ jobs:
           - pyproject.toml
           - docker-compose.yml
           - deployments/kubernetes/base/deployment.yaml
-          - deployments/helm/langgraph-agent/Chart.yaml
-          - deployments/helm/langgraph-agent/values.yaml
+          - deployments/helm/mcp-server-langgraph/Chart.yaml
+          - deployments/helm/mcp-server-langgraph/values.yaml
           - deployments/kustomize/base/kustomization.yaml
 
           This ensures all deployment configurations reference the latest release version.
@@ -114,8 +114,8 @@ jobs:
             - ✅ \`pyproject.toml\`
             - ✅ \`docker-compose.yml\`
             - ✅ \`deployments/kubernetes/base/deployment.yaml\`
-            - ✅ \`deployments/helm/langgraph-agent/Chart.yaml\`
-            - ✅ \`deployments/helm/langgraph-agent/values.yaml\`
+            - ✅ \`deployments/helm/mcp-server-langgraph/Chart.yaml\`
+            - ✅ \`deployments/helm/mcp-server-langgraph/values.yaml\`
             - ✅ \`deployments/kustomize/base/kustomization.yaml\`
 
             ### Deployment Commands
@@ -128,12 +128,12 @@ jobs:
 
             **Kubernetes (kubectl):**
             \`\`\`bash
-            kubectl set image deployment/langgraph-agent langgraph-agent=langgraph-agent:${version} -n langgraph-agent
+            kubectl set image deployment/mcp-server-langgraph mcp-server-langgraph=mcp-server-langgraph:${version} -n mcp-server-langgraph
             \`\`\`
 
             **Helm:**
             \`\`\`bash
-            helm upgrade --install langgraph-agent deployments/helm/langgraph-agent --set image.tag=${version}
+            helm upgrade --install mcp-server-langgraph deployments/helm/mcp-server-langgraph --set image.tag=${version}
             \`\`\`
 
             **Kustomize:**
@@ -162,8 +162,8 @@ jobs:
           echo "- pyproject.toml" >> $GITHUB_STEP_SUMMARY
           echo "- docker-compose.yml" >> $GITHUB_STEP_SUMMARY
           echo "- deployments/kubernetes/base/deployment.yaml" >> $GITHUB_STEP_SUMMARY
-          echo "- deployments/helm/langgraph-agent/Chart.yaml" >> $GITHUB_STEP_SUMMARY
-          echo "- deployments/helm/langgraph-agent/values.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "- deployments/helm/mcp-server-langgraph/Chart.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "- deployments/helm/mcp-server-langgraph/values.yaml" >> $GITHUB_STEP_SUMMARY
           echo "- deployments/kustomize/base/kustomization.yaml" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Commit:" >> $GITHUB_STEP_SUMMARY

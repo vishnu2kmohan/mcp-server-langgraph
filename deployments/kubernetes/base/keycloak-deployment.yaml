@@ -5,7 +5,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
     app: keycloak
     component: identity
@@ -30,7 +30,7 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
 
       # Init container to wait for PostgreSQL
       initContainers:
@@ -73,13 +73,13 @@ spec:
         - name: KEYCLOAK_ADMIN
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: keycloak-admin-username
               optional: true
         - name: KEYCLOAK_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: keycloak-admin-password
               optional: true
 
@@ -91,13 +91,13 @@ spec:
         - name: KC_DB_USERNAME
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: postgres-username
               optional: true
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: postgres-password
               optional: true
 
@@ -105,7 +105,7 @@ spec:
         - name: KC_HOSTNAME
           valueFrom:
             configMapKeyRef:
-              name: langgraph-agent-config
+              name: mcp-server-langgraph-config
               key: keycloak_hostname
               optional: true
         - name: KC_HTTP_ENABLED

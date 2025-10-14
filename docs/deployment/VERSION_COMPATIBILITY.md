@@ -201,26 +201,26 @@ curl http://localhost:3000/api/health
 kubectl apply -k deployments/kustomize/overlays/staging
 
 # Check all pods
-kubectl get pods -n langgraph-agent
+kubectl get pods -n mcp-server-langgraph
 
 # Check service endpoints
-kubectl get svc -n langgraph-agent
+kubectl get svc -n mcp-server-langgraph
 
 # Test PostgreSQL
-kubectl exec -it postgres-0 -n langgraph-agent -- psql -U postgres -c "SELECT version();"
+kubectl exec -it postgres-0 -n mcp-server-langgraph -- psql -U postgres -c "SELECT version();"
 
 # Test OpenFGA
 kubectl run curl-test --rm -it --restart=Never --image=curlimages/curl -- \
-  curl -f http://openfga.langgraph-agent:8080/healthz
+  curl -f http://openfga.mcp-server-langgraph:8080/healthz
 
 # Test Keycloak
 kubectl run curl-test --rm -it --restart=Never --image=curlimages/curl -- \
-  curl -f http://keycloak.langgraph-agent:8080/health/ready
+  curl -f http://keycloak.mcp-server-langgraph:8080/health/ready
 
 # Check logs
-kubectl logs -n langgraph-agent -l app=langgraph-agent --tail=50
-kubectl logs -n langgraph-agent -l app=openfga --tail=50
-kubectl logs -n langgraph-agent -l app=keycloak --tail=50
+kubectl logs -n mcp-server-langgraph -l app=mcp-server-langgraph --tail=50
+kubectl logs -n mcp-server-langgraph -l app=openfga --tail=50
+kubectl logs -n mcp-server-langgraph -l app=keycloak --tail=50
 ```
 
 ### Integration Tests
@@ -277,15 +277,15 @@ docker compose up -d
 
 ```bash
 # Rollback specific deployment
-kubectl rollout undo deployment/langgraph-agent -n langgraph-agent
-kubectl rollout undo deployment/keycloak -n langgraph-agent
-kubectl rollout undo deployment/openfga -n langgraph-agent
+kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
+kubectl rollout undo deployment/keycloak -n mcp-server-langgraph
+kubectl rollout undo deployment/openfga -n mcp-server-langgraph
 
 # Check rollout status
-kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 # Helm rollback (if using Helm)
-helm rollback langgraph-agent 1 --namespace langgraph-agent
+helm rollback mcp-server-langgraph 1 --namespace mcp-server-langgraph
 ```
 
 ## References

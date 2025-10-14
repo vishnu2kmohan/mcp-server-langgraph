@@ -355,7 +355,7 @@ curl https://api.yourdomain.com/health/dependencies
     "keycloak": {
       "status": "healthy",
       "url": "https://sso.yourdomain.com",
-      "realm": "langgraph-agent",
+      "realm": "mcp-server-langgraph",
       "response_time_ms": 34,
       "last_check": "2025-10-12T10:29:57Z"
     },
@@ -516,12 +516,12 @@ health_check_duration_seconds{endpoint="/health"} 0.015
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     spec:
       containers:
-      - name: langgraph-agent
+      - name: mcp-server-langgraph
         ports:
         - containerPort: 8000
           name: http
@@ -563,12 +563,12 @@ spec:
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     spec:
       containers:
-      - image: gcr.io/project/langgraph-agent:latest
+      - image: gcr.io/project/mcp-server-langgraph:latest
         ports:
         - containerPort: 8000
 
@@ -602,25 +602,25 @@ spec:
       jq '.dependencies.openfga'
 
     # Check application logs
-    kubectl logs -l app=langgraph-agent --tail=100 | grep -i error
+    kubectl logs -l app=mcp-server-langgraph --tail=100 | grep -i error
 
     # Check events
-    kubectl get events -n langgraph-agent --sort-by='.lastTimestamp'
+    kubectl get events -n mcp-server-langgraph --sort-by='.lastTimestamp'
     ```
   </Accordion>
 
   <Accordion title="Pods Not Ready" icon="hourglass">
     ```bash
     # Check readiness probe status
-    kubectl describe pod <pod-name> -n langgraph-agent | \
+    kubectl describe pod <pod-name> -n mcp-server-langgraph | \
       grep -A 10 "Readiness:"
 
     # Test readiness manually
-    kubectl exec -it <pod-name> -n langgraph-agent -- \
+    kubectl exec -it <pod-name> -n mcp-server-langgraph -- \
       curl http://localhost:8000/health/ready
 
     # Check dependency connectivity
-    kubectl exec -it <pod-name> -n langgraph-agent -- \
+    kubectl exec -it <pod-name> -n mcp-server-langgraph -- \
       nc -zv openfga 8080
     ```
   </Accordion>
@@ -628,14 +628,14 @@ spec:
   <Accordion title="Pods Restarting" icon="rotate">
     ```bash
     # Check liveness probe failures
-    kubectl describe pod <pod-name> -n langgraph-agent | \
+    kubectl describe pod <pod-name> -n mcp-server-langgraph | \
       grep -A 10 "Liveness:"
 
     # Check restart count
-    kubectl get pods -n langgraph-agent -o wide
+    kubectl get pods -n mcp-server-langgraph -o wide
 
     # Check last termination reason
-    kubectl get pod <pod-name> -n langgraph-agent \
+    kubectl get pod <pod-name> -n mcp-server-langgraph \
       -o jsonpath='{.status.containerStatuses[0].lastState.terminated}'
     ```
   </Accordion>
@@ -650,7 +650,7 @@ spec:
       jq '.dependencies | to_entries[] | {name: .key, response_time: .value.response_time_ms}'
 
     # Adjust probe timeouts if needed
-    kubectl patch deployment langgraph-agent -n langgraph-agent \
+    kubectl patch deployment mcp-server-langgraph -n mcp-server-langgraph \
       --type json -p='[{
         "op": "replace",
         "path": "/spec/template/spec/containers/0/readinessProbe/timeoutSeconds",

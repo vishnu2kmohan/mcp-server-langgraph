@@ -1,11 +1,11 @@
-# Default values for langgraph-agent
+# Default values for mcp-server-langgraph
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 3
 
 image:
-  repository: langgraph-agent
+  repository: mcp-server-langgraph
   pullPolicy: IfNotPresent
   tag: "2.4.0"
 
@@ -17,9 +17,9 @@ serviceAccount:
   create: true
   annotations:
     # AWS EKS IRSA
-    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/langgraph-agent-role
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/mcp-server-langgraph-role
     # GKE Workload Identity
-    # iam.gke.io/gcp-service-account: langgraph-agent@PROJECT_ID.iam.gserviceaccount.com
+    # iam.gke.io/gcp-service-account: mcp-server-langgraph@PROJECT_ID.iam.gserviceaccount.com
     # Azure AKS Workload Identity
     # azure.workload.identity/client-id: "AZURE_CLIENT_ID"
   name: ""
@@ -66,14 +66,14 @@ ingress:
     # alb.ingress.kubernetes.io/scheme: internet-facing
     # alb.ingress.kubernetes.io/target-type: ip
   hosts:
-    - host: langgraph-agent.example.com
+    - host: mcp-server-langgraph.example.com
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: langgraph-agent-tls
+    - secretName: mcp-server-langgraph-tls
       hosts:
-        - langgraph-agent.example.com
+        - mcp-server-langgraph.example.com
 
 resources:
   limits:
@@ -129,7 +129,7 @@ affinity:
               - key: app.kubernetes.io/name
                 operator: In
                 values:
-                  - langgraph-agent
+                  - mcp-server-langgraph
           topologyKey: kubernetes.io/hostname
 
 # Pod Disruption Budget
@@ -196,11 +196,11 @@ config:
 
   # Keycloak Configuration
   keycloakServerUrl: "http://keycloak:8080"
-  keycloakRealm: "langgraph-agent"
+  keycloakRealm: "mcp-server-langgraph"
   keycloakClientId: "langgraph-client"
   keycloakVerifySsl: "true"
   keycloakTimeout: "30"
-  keycloakHostname: "langgraph-agent.example.com"
+  keycloakHostname: "mcp-server-langgraph.example.com"
 
   # Session Management
   sessionBackend: "redis"  # memory, redis
@@ -258,16 +258,16 @@ externalSecrets:
   data:
     - secretKey: anthropic-api-key
       remoteRef:
-        key: langgraph-agent/anthropic-api-key
+        key: mcp-server-langgraph/anthropic-api-key
     - secretKey: jwt-secret-key
       remoteRef:
-        key: langgraph-agent/jwt-secret-key
+        key: mcp-server-langgraph/jwt-secret-key
     - secretKey: openfga-store-id
       remoteRef:
-        key: langgraph-agent/openfga-store-id
+        key: mcp-server-langgraph/openfga-store-id
     - secretKey: openfga-model-id
       remoteRef:
-        key: langgraph-agent/openfga-model-id
+        key: mcp-server-langgraph/openfga-model-id
 
 # OpenFGA dependency
 openfga:
@@ -372,7 +372,7 @@ kong:
   enabled: false
   # Hosts for Kong ingress
   hosts:
-    - langgraph-agent.example.com
+    - mcp-server-langgraph.example.com
   # Path configuration
   path: /
   pathType: Prefix
@@ -392,7 +392,7 @@ kong:
   # TLS configuration
   tls:
     enabled: true
-    secretName: langgraph-agent-tls
+    secretName: mcp-server-langgraph-tls
   # Kong plugins to apply
   plugins:
     - rate-limit-basic

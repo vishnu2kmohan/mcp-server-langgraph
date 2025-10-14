@@ -95,10 +95,10 @@ graph TB
 
     ```bash
     # Build image
-    docker build -t gcr.io/your-project/langgraph-agent:v2.4.0 .
+    docker build -t gcr.io/your-project/mcp-server-langgraph:v2.4.0 .
 
     # Push to registry
-    docker push gcr.io/your-project/langgraph-agent:v2.4.0
+    docker push gcr.io/your-project/mcp-server-langgraph:v2.4.0
     ```
 
     Update `deployments/kubernetes/base/deployment.yaml`:
@@ -107,8 +107,8 @@ graph TB
       template:
         spec:
           containers:
-          - name: langgraph-agent
-            image: gcr.io/your-project/langgraph-agent:v2.4.0
+          - name: mcp-server-langgraph
+            image: gcr.io/your-project/mcp-server-langgraph:v2.4.0
     ```
   </Step>
 
@@ -136,8 +136,8 @@ graph TB
 kubectl apply -f deployments/kubernetes/base/namespace.yaml
 
 # 2. Create secrets
-kubectl create secret generic langgraph-agent-secrets \
-  --namespace=langgraph-agent \
+kubectl create secret generic mcp-server-langgraph-secrets \
+  --namespace=mcp-server-langgraph \
   --from-literal=anthropic-api-key="${ANTHROPIC_API_KEY}" \
   --from-literal=google-api-key="${GOOGLE_API_KEY}" \
   --from-literal=jwt-secret-key="$(openssl rand -base64 32)" \
@@ -155,19 +155,19 @@ kubectl apply -f deployments/kubernetes/base/redis-session-service.yaml
 
 # 4. Wait for dependencies
 kubectl wait --for=condition=available --timeout=300s \
-  deployment/keycloak -n langgraph-agent
+  deployment/keycloak -n mcp-server-langgraph
 kubectl wait --for=condition=available --timeout=300s \
-  deployment/redis-session -n langgraph-agent
+  deployment/redis-session -n mcp-server-langgraph
 
 # 5. Deploy application
 kubectl apply -f deployments/kubernetes/base/
 
 # 6. Wait for rollout
-kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 # 7. Verify
-kubectl get pods -n langgraph-agent
-kubectl logs -l app=langgraph-agent -n langgraph-agent --tail=50
+kubectl get pods -n mcp-server-langgraph
+kubectl logs -l app=mcp-server-langgraph -n mcp-server-langgraph --tail=50
 ```
 
 ```bash Using Kustomize
@@ -191,9 +191,9 @@ kubectl apply -f - << 'EOF'
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
   labels:
-    name: langgraph-agent
+    name: mcp-server-langgraph
     environment: production
 EOF
 
@@ -214,8 +214,8 @@ kubectl apply -f deployments/kubernetes/base/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: langgraph-agent-config
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-config
+  namespace: mcp-server-langgraph
 data:
   # Service
   environment: "production"
@@ -232,7 +232,7 @@ data:
 
   # Keycloak
   keycloak_server_url: "http://keycloak:8080"
-  keycloak_realm: "langgraph-agent"
+  keycloak_realm: "mcp-server-langgraph"
   keycloak_client_id: "langgraph-client"
 
   # Redis Sessions
@@ -253,8 +253,8 @@ export JWT_SECRET=$(openssl rand -base64 32)
 export REDIS_PASSWORD=$(openssl rand -base64 32)
 
 # Create secret
-kubectl create secret generic langgraph-agent-secrets \
-  --namespace=langgraph-agent \
+kubectl create secret generic mcp-server-langgraph-secrets \
+  --namespace=mcp-server-langgraph \
   --from-literal=anthropic-api-key="${ANTHROPIC_API_KEY}" \
   --from-literal=google-api-key="${GOOGLE_API_KEY}" \
   --from-literal=openai-api-key="${OPENAI_API_KEY}" \
@@ -274,7 +274,7 @@ kubectl create secret generic langgraph-agent-secrets \
 ```bash
 # Deploy Keycloak with PostgreSQL
 helm install keycloak bitnami/keycloak \
-  --namespace langgraph-agent \
+  --namespace mcp-server-langgraph \
   --set auth.adminUser=admin \
   --set auth.adminPassword="$(openssl rand -base64 32)" \
   --set postgresql.enabled=true \
@@ -285,14 +285,14 @@ helm install keycloak bitnami/keycloak \
 
 # Wait for deployment
 kubectl wait --for=condition=available --timeout=300s \
-  deployment/keycloak -n langgraph-agent
+  deployment/keycloak -n mcp-server-langgraph
 
 # Initialize Keycloak
 python scripts/setup/setup_keycloak.py
 
 # Save client secret to Kubernetes secret
-kubectl patch secret langgraph-agent-secrets \
-  -n langgraph-agent \
+kubectl patch secret mcp-server-langgraph-secrets \
+  -n mcp-server-langgraph \
   --patch "{\"data\":{\"keycloak-client-secret\":\"$(echo -n $CLIENT_SECRET | base64)\"}}"
 ```
 
@@ -303,7 +303,7 @@ See [Keycloak SSO Guide](/guides/keycloak-sso) for detailed setup.
 ```bash
 # Deploy Redis with replication
 helm install redis-session bitnami/redis \
-  --namespace langgraph-agent \
+  --namespace mcp-server-langgraph \
   --set auth.password="${REDIS_PASSWORD}" \
   --set master.persistence.enabled=true \
   --set master.persistence.size=10Gi \
@@ -314,13 +314,13 @@ helm install redis-session bitnami/redis \
 # Wait for deployment
 kubectl wait --for=condition=ready pod \
   -l app.kubernetes.io/name=redis \
-  -n langgraph-agent \
+  -n mcp-server-langgraph \
   --timeout=300s
 
 # Test connection
 kubectl run redis-test --rm -i --tty \
   --image redis:7-alpine \
-  --namespace langgraph-agent \
+  --namespace mcp-server-langgraph \
   -- redis-cli -h redis-session -a $REDIS_PASSWORD ping
 # Expected: PONG
 ```
@@ -336,7 +336,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openfga
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   replicas: 2
   selector:
@@ -367,7 +367,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: openfga
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   selector:
     app: openfga
@@ -395,10 +395,10 @@ kubectl apply -f deployments/kubernetes/base/pdb.yaml
 kubectl apply -f deployments/kubernetes/base/ingress-http.yaml
 
 # Wait for rollout
-kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 # Check pods
-kubectl get pods -n langgraph-agent -l app=langgraph-agent
+kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
 ```
 
 ### 7. Configure Ingress
@@ -409,8 +409,8 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
-      name: langgraph-agent
-      namespace: langgraph-agent
+      name: mcp-server-langgraph
+      namespace: mcp-server-langgraph
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -420,7 +420,7 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
       tls:
       - hosts:
         - api.yourdomain.com
-        secretName: langgraph-agent-tls
+        secretName: mcp-server-langgraph-tls
       rules:
       - host: api.yourdomain.com
         http:
@@ -429,7 +429,7 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
             pathType: Prefix
             backend:
               service:
-                name: langgraph-agent
+                name: mcp-server-langgraph
                 port:
                   number: 8000
     ```
@@ -444,12 +444,12 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
-      name: langgraph-agent
-      namespace: langgraph-agent
+      name: mcp-server-langgraph
+      namespace: mcp-server-langgraph
       annotations:
         kubernetes.io/ingress.class: "gce"
-        kubernetes.io/ingress.global-static-ip-name: "langgraph-agent-ip"
-        networking.gke.io/managed-certificates: "langgraph-agent-cert"
+        kubernetes.io/ingress.global-static-ip-name: "mcp-server-langgraph-ip"
+        networking.gke.io/managed-certificates: "mcp-server-langgraph-cert"
     spec:
       rules:
       - host: api.yourdomain.com
@@ -459,15 +459,15 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
             pathType: ImplementationSpecific
             backend:
               service:
-                name: langgraph-agent
+                name: mcp-server-langgraph
                 port:
                   number: 8000
     ---
     apiVersion: networking.gke.io/v1
     kind: ManagedCertificate
     metadata:
-      name: langgraph-agent-cert
-      namespace: langgraph-agent
+      name: mcp-server-langgraph-cert
+      namespace: mcp-server-langgraph
     spec:
       domains:
       - api.yourdomain.com
@@ -479,8 +479,8 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
-      name: langgraph-agent
-      namespace: langgraph-agent
+      name: mcp-server-langgraph
+      namespace: mcp-server-langgraph
       annotations:
         kubernetes.io/ingress.class: alb
         alb.ingress.kubernetes.io/scheme: internet-facing
@@ -496,7 +496,7 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
             pathType: Prefix
             backend:
               service:
-                name: langgraph-agent
+                name: mcp-server-langgraph
                 port:
                   number: 8000
     ```
@@ -512,13 +512,13 @@ kubectl get pods -n langgraph-agent -l app=langgraph-agent
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: langgraph-agent
+    name: mcp-server-langgraph
   minReplicas: 3
   maxReplicas: 10
   metrics:
@@ -556,13 +556,13 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
 ```
 
 ### Pod Anti-Affinity
@@ -580,7 +580,7 @@ affinity:
           - key: app
             operator: In
             values:
-            - langgraph-agent
+            - mcp-server-langgraph
         topologyKey: topology.kubernetes.io/zone
 ```
 
@@ -593,12 +593,12 @@ affinity:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
   policyTypes:
   - Ingress
   - Egress
@@ -645,7 +645,7 @@ spec:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
   labels:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
@@ -743,7 +743,7 @@ readinessProbe:
 
 Check health:
 ```bash
-kubectl exec -it deploy/langgraph-agent -n langgraph-agent -- \
+kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   curl http://localhost:8000/health
 ```
 
@@ -753,25 +753,25 @@ kubectl exec -it deploy/langgraph-agent -n langgraph-agent -- \
   <Accordion title="Pods not starting">
     ```bash
     # Check pod status
-    kubectl get pods -n langgraph-agent
+    kubectl get pods -n mcp-server-langgraph
 
     # Describe pod
-    kubectl describe pod <pod-name> -n langgraph-agent
+    kubectl describe pod <pod-name> -n mcp-server-langgraph
 
     # Check logs
-    kubectl logs <pod-name> -n langgraph-agent
+    kubectl logs <pod-name> -n mcp-server-langgraph
 
     # Check events
-    kubectl get events -n langgraph-agent --sort-by='.lastTimestamp'
+    kubectl get events -n mcp-server-langgraph --sort-by='.lastTimestamp'
     ```
   </Accordion>
 
   <Accordion title="Init containers failing">
     ```bash
     # Check init container logs
-    kubectl logs <pod-name> -n langgraph-agent -c wait-for-keycloak
-    kubectl logs <pod-name> -n langgraph-agent -c wait-for-redis
-    kubectl logs <pod-name> -n langgraph-agent -c wait-for-openfga
+    kubectl logs <pod-name> -n mcp-server-langgraph -c wait-for-keycloak
+    kubectl logs <pod-name> -n mcp-server-langgraph -c wait-for-redis
+    kubectl logs <pod-name> -n mcp-server-langgraph -c wait-for-openfga
 
     # Test connectivity manually
     kubectl run test --rm -it --image=busybox -- sh
@@ -784,24 +784,24 @@ kubectl exec -it deploy/langgraph-agent -n langgraph-agent -- \
   <Accordion title="Health checks failing">
     ```bash
     # Check readiness
-    kubectl get pods -n langgraph-agent -o wide
+    kubectl get pods -n mcp-server-langgraph -o wide
 
     # Test health endpoint
-    kubectl exec -it deploy/langgraph-agent -n langgraph-agent -- \
+    kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
       curl -v http://localhost:8000/health
 
     # Check dependencies
-    kubectl logs deploy/langgraph-agent -n langgraph-agent | grep -i error
+    kubectl logs deploy/mcp-server-langgraph -n mcp-server-langgraph | grep -i error
     ```
   </Accordion>
 
   <Accordion title="High memory usage">
     ```bash
     # Check resource usage
-    kubectl top pods -n langgraph-agent
+    kubectl top pods -n mcp-server-langgraph
 
     # View metrics
-    kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/langgraph-agent/pods
+    kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/mcp-server-langgraph/pods
 
     # Adjust limits in deployment.yaml
     resources:

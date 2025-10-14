@@ -1,12 +1,12 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph

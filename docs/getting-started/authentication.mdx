@@ -101,7 +101,7 @@ curl -X POST http://localhost:8000/message \
 
     # Or deploy to Kubernetes
     helm install keycloak bitnami/keycloak \
-      --namespace langgraph-agent \
+      --namespace mcp-server-langgraph \
       --set replicaCount=2 \
       --set postgresql.enabled=true
     ```
@@ -119,7 +119,7 @@ curl -X POST http://localhost:8000/message \
     ```
 
     This creates:
-    - **Realm**: `langgraph-agent`
+    - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
     - **Redirect URIs**: Configured for your domain
 
@@ -133,7 +133,7 @@ curl -X POST http://localhost:8000/message \
     AUTH_MODE=session  # or token
 
     KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
-    KEYCLOAK_REALM=langgraph-agent
+    KEYCLOAK_REALM=mcp-server-langgraph
     KEYCLOAK_CLIENT_ID=langgraph-client
     KEYCLOAK_CLIENT_SECRET=your-client-secret-here
     KEYCLOAK_VERIFY_SSL=true  # Required for production
@@ -334,7 +334,7 @@ curl -X POST http://localhost:8000/message \
     python -c "from mcp_server_langgraph.auth.middleware import InMemoryUserProvider; print(InMemoryUserProvider().users)"
 
     # Verify Keycloak connectivity
-    curl https://sso.yourdomain.com/realms/langgraph-agent/.well-known/openid-configuration
+    curl https://sso.yourdomain.com/realms/mcp-server-langgraph/.well-known/openid-configuration
 
     # Check environment variables
     env | grep AUTH

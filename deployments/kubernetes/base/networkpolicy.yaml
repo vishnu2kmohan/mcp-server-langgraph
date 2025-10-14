@@ -1,14 +1,14 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
   policyTypes:
   - Ingress
   - Egress

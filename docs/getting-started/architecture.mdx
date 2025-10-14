@@ -243,7 +243,7 @@ sequenceDiagram
     ```python
     provider = KeycloakUserProvider(
         server_url="https://sso.yourdomain.com",
-        realm="langgraph-agent",
+        realm="mcp-server-langgraph",
         client_id="langgraph-client"
     )
     ```
@@ -455,7 +455,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     ```python
     LANGSMITH_TRACING=true
     LANGSMITH_API_KEY=your-key
-    LANGSMITH_PROJECT=langgraph-agent
+    LANGSMITH_PROJECT=mcp-server-langgraph
     ```
   </Tab>
 

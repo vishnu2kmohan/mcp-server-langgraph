@@ -125,7 +125,7 @@ export GOOGLE_API_KEY=...
 For production Helm deployments:
 
 ```bash
-helm upgrade --install langgraph-agent ./deployments/helm/langgraph-agent \
+helm upgrade --install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set config.llmProvider=openai \
   --set config.modelName=gpt-4o \
   --set secrets.openaiApiKey=$OPENAI_API_KEY
@@ -140,7 +140,7 @@ For Kustomize deployments, create a patch file:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: langgraph-agent-config
+  name: mcp-server-langgraph-config
 data:
   llm_provider: "openai"
   model_name: "gpt-4o"

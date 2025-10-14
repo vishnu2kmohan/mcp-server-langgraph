@@ -341,13 +341,13 @@ print(response.model_dump())
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     spec:
       containers:
       - name: agent
-        image: langgraph-agent:latest
+        image: mcp-server-langgraph:latest
         env:
         - name: LLM_PROVIDER
           value: "vertex_ai"
@@ -389,16 +389,16 @@ gcloud container clusters update CLUSTER_NAME \
   --workload-pool=PROJECT_ID.svc.id.goog
 
 # Create Kubernetes service account
-kubectl create serviceaccount langgraph-agent
+kubectl create serviceaccount mcp-server-langgraph
 
 # Bind to GCP service account
 gcloud iam service-accounts add-iam-policy-binding \
   vertex-ai-agent@PROJECT_ID.iam.gserviceaccount.com \
   --role roles/iam.workloadIdentityUser \
-  --member "serviceAccount:PROJECT_ID.svc.id.goog[langgraph-agent/langgraph-agent]"
+  --member "serviceAccount:PROJECT_ID.svc.id.goog[mcp-server-langgraph/mcp-server-langgraph]"
 
 # Annotate K8s service account
-kubectl annotate serviceaccount langgraph-agent \
+kubectl annotate serviceaccount mcp-server-langgraph \
   iam.gke.io/gcp-service-account=vertex-ai-agent@PROJECT_ID.iam.gserviceaccount.com
 
 # Use in deployment
@@ -407,7 +407,7 @@ kind: Deployment
 spec:
   template:
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       containers:
       - name: agent
         env:

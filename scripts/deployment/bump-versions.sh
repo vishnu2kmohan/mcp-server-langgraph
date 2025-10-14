@@ -132,26 +132,26 @@ main() {
     # Update Kubernetes deployment
     update_file \
         "deployments/kubernetes/base/deployment.yaml" \
-        'image: langgraph-agent:[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?' \
-        "image: langgraph-agent:$VERSION" \
+        'image: mcp-server-langgraph:[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?' \
+        "image: mcp-server-langgraph:$VERSION" \
         "Kubernetes deployment image tag"
 
     # Update Helm Chart.yaml (both version and appVersion)
     update_file \
-        "deployments/helm/langgraph-agent/Chart.yaml" \
+        "deployments/helm/mcp-server-langgraph/Chart.yaml" \
         '^version: [0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?' \
         "version: $VERSION" \
         "Helm chart version"
 
     update_file \
-        "deployments/helm/langgraph-agent/Chart.yaml" \
+        "deployments/helm/mcp-server-langgraph/Chart.yaml" \
         '^appVersion: "[^"]+"' \
         "appVersion: \"$VERSION\"" \
         "Helm chart appVersion"
 
     # Update Helm values.yaml
     update_file \
-        "deployments/helm/langgraph-agent/values.yaml" \
+        "deployments/helm/mcp-server-langgraph/values.yaml" \
         'tag: "[^"]+"' \
         "tag: \"$VERSION\"" \
         "Helm values image tag"
@@ -190,8 +190,8 @@ main() {
         log_info "  - pyproject.toml"
         log_info "  - docker-compose.yml"
         log_info "  - deployments/kubernetes/base/deployment.yaml"
-        log_info "  - deployments/helm/langgraph-agent/Chart.yaml"
-        log_info "  - deployments/helm/langgraph-agent/values.yaml"
+        log_info "  - deployments/helm/mcp-server-langgraph/Chart.yaml"
+        log_info "  - deployments/helm/mcp-server-langgraph/values.yaml"
         log_info "  - deployments/kustomize/base/kustomization.yaml"
         echo ""
         log_info "Next steps:"

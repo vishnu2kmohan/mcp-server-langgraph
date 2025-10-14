@@ -190,7 +190,7 @@ Create `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "langgraph-agent": {
+    "mcp-server-langgraph": {
       "command": "python",
       "args": [
         "-m",
@@ -322,7 +322,7 @@ For Claude Desktop or other MCP clients, add to your client config:
 ```json
 {
   "mcpServers": {
-    "langgraph-agent": {
+    "mcp-server-langgraph": {
       "command": "python",
       "args": [
         "-m",

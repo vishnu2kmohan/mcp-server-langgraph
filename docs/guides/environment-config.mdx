@@ -216,7 +216,7 @@ LANGSMITH_PROJECT=production-agent
 ```bash
 KEYCLOAK_URL=https://auth.example.com
 KEYCLOAK_REALM=mcp-agent
-KEYCLOAK_CLIENT_ID=langgraph-agent
+KEYCLOAK_CLIENT_ID=mcp-server-langgraph
 KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_SECRET}
 ```
 
@@ -413,7 +413,7 @@ version: '3.8'
 
 services:
   agent:
-    image: langgraph-agent:latest
+    image: mcp-server-langgraph:latest
     env_file:
       - .env.${ENV:-development}
     environment:
@@ -505,8 +505,8 @@ Store non-sensitive configuration:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: langgraph-agent-config
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-config
+  namespace: mcp-server-langgraph
 data:
   ENV: "production"
   LOG_LEVEL: "info"
@@ -530,8 +530,8 @@ Store sensitive data in Kubernetes Secrets:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: langgraph-agent-secrets
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-secrets
+  namespace: mcp-server-langgraph
 type: Opaque
 stringData:
   ANTHROPIC_API_KEY: "sk-ant-..."
@@ -550,7 +550,7 @@ apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: langgraph-secrets
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   refreshInterval: 1h
 
@@ -559,7 +559,7 @@ spec:
     kind: SecretStore
 
   target:
-    name: langgraph-agent-secrets
+    name: mcp-server-langgraph-secrets
     creationPolicy: Owner
 
   data:
@@ -582,22 +582,22 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   replicas: 3
   template:
     spec:
       containers:
       - name: agent
-        image: langgraph-agent:latest
+        image: mcp-server-langgraph:latest
 
         # Environment from ConfigMap
         envFrom:
         - configMapRef:
-            name: langgraph-agent-config
+            name: mcp-server-langgraph-config
         - secretRef:
-            name: langgraph-agent-secrets
+            name: mcp-server-langgraph-secrets
 
         # Override specific values
         env:
@@ -908,10 +908,10 @@ if features.enable_caching:
     **Solutions**:
     ```bash
     # Force update
-    kubectl rollout restart deployment/langgraph-agent
+    kubectl rollout restart deployment/mcp-server-langgraph
 
     # Check ConfigMap
-    kubectl get configmap langgraph-agent-config -o yaml
+    kubectl get configmap mcp-server-langgraph-config -o yaml
 
     # Watch pod restart
     kubectl get pods -w

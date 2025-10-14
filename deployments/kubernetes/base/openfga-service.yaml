@@ -4,7 +4,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: openfga
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
     app: openfga
 spec:

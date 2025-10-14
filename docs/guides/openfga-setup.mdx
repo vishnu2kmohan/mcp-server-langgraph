@@ -73,14 +73,14 @@ graph TB
         # Using Helm
         helm repo add openfga https://openfga.github.io/helm-charts
         helm install openfga openfga/openfga \
-          --namespace langgraph-agent \
+          --namespace mcp-server-langgraph \
           --set datastore.engine=postgres \
           --set datastore.uri="postgres://openfga:password@postgres:5432/openfga" \
           --set replicaCount=2
 
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
-          deployment/openfga -n langgraph-agent
+          deployment/openfga -n mcp-server-langgraph
         ```
       </Tab>
 
@@ -605,7 +605,7 @@ psql -U openfga openfga < openfga-backup.sql
     # Or create store manually
     curl -X POST http://localhost:8080/stores \
       -H "Content-Type: application/json" \
-      -d '{"name": "langgraph-agent"}'
+      -d '{"name": "mcp-server-langgraph"}'
 
     # Update OPENFGA_STORE_ID in .env
     ```

@@ -19,13 +19,13 @@ Always check logs first: `kubectl logs -f <pod-name>` or `docker compose logs -f
 curl http://localhost:8000/health
 
 # Check pod status
-kubectl get pods -n langgraph-agent
+kubectl get pods -n mcp-server-langgraph
 
 # View recent logs
-kubectl logs --tail=100 -n langgraph-agent deployment/langgraph-agent
+kubectl logs --tail=100 -n mcp-server-langgraph deployment/mcp-server-langgraph
 
 # Check resource usage
-kubectl top pods -n langgraph-agent
+kubectl top pods -n mcp-server-langgraph
 kubectl top nodes
 
 # Test database connectivity
@@ -164,7 +164,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     # Update Keycloak URL in config
     env:
     - name: KEYCLOAK_SERVER_URL
-      value: "http://keycloak.langgraph-agent.svc.cluster.local:8080"
+      value: "http://keycloak.mcp-server-langgraph.svc.cluster.local:8080"
 
     # Or use external URL
     - name: KEYCLOAK_SERVER_URL
@@ -296,12 +296,12 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     python scripts/setup/setup_openfga.py
 
     # Update configuration
-    export OPENFGA_API_URL=http://openfga.langgraph-agent.svc.cluster.local:8080
+    export OPENFGA_API_URL=http://openfga.mcp-server-langgraph.svc.cluster.local:8080
     export OPENFGA_STORE_ID=<store-id-from-setup>
     export OPENFGA_MODEL_ID=<model-id-from-setup>
 
     # Restart application
-    kubectl rollout restart deployment/langgraph-agent
+    kubectl rollout restart deployment/mcp-server-langgraph
     ```
   </Accordion>
 
@@ -404,7 +404,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     kubectl exec -it redis-master-0 -- redis-cli CONFIG GET tcp-keepalive
 
     # Check connection from app pod
-    kubectl exec -it langgraph-agent-xxx -- redis-cli -h redis-master ping
+    kubectl exec -it mcp-server-langgraph-xxx -- redis-cli -h redis-master ping
     ```
 
     **Fix**:
@@ -614,7 +614,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     export ANTHROPIC_API_KEY=sk-ant-...
 
     # Restart pod to pick up new secret
-    kubectl rollout restart deployment/langgraph-agent
+    kubectl rollout restart deployment/mcp-server-langgraph
     ```
   </Accordion>
 </AccordionGroup>
@@ -699,13 +699,13 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     **Debug**:
     ```bash
     # Check memory usage
-    kubectl top pods -n langgraph-agent
+    kubectl top pods -n mcp-server-langgraph
 
     # View OOMKilled events
     kubectl get events --sort-by='.metadata.creationTimestamp' | grep OOMKilled
 
     # Check resource limits
-    kubectl describe pod langgraph-agent-xxx | grep -A 5 Limits
+    kubectl describe pod mcp-server-langgraph-xxx | grep -A 5 Limits
 
     # Profile memory
     import tracemalloc
@@ -759,10 +759,10 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     **Debug**:
     ```bash
     # Check CPU usage
-    kubectl top pods -n langgraph-agent
+    kubectl top pods -n mcp-server-langgraph
 
     # Check throttling
-    kubectl describe pod langgraph-agent-xxx | grep -i throttl
+    kubectl describe pod mcp-server-langgraph-xxx | grep -i throttl
 
     # Profile CPU
     python -m cProfile -o profile.stats main.py
@@ -819,7 +819,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     **Debug**:
     ```bash
     # View pod status
-    kubectl get pods -n langgraph-agent
+    kubectl get pods -n mcp-server-langgraph
 
     # View logs from crashed container
     kubectl logs <pod-name> --previous
@@ -873,7 +873,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     kubectl describe pod <pod-name> | grep -A 10 Events
 
     # Check image exists
-    docker pull langgraph-agent:latest
+    docker pull mcp-server-langgraph:latest
 
     # Check registry credentials
     kubectl get secret regcred -o yaml
@@ -894,7 +894,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
       - name: regcred
       containers:
       - name: agent
-        image: your-registry/langgraph-agent:latest
+        image: your-registry/mcp-server-langgraph:latest
     ```
   </Accordion>
 
@@ -902,21 +902,21 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     **Debug**:
     ```bash
     # Check service
-    kubectl get svc langgraph-agent
+    kubectl get svc mcp-server-langgraph
 
     # Check endpoints
-    kubectl get endpoints langgraph-agent
+    kubectl get endpoints mcp-server-langgraph
 
     # Test from another pod
     kubectl run -it --rm debug --image=busybox --restart=Never -- \
-      wget -O- http://langgraph-agent:8000/health
+      wget -O- http://mcp-server-langgraph:8000/health
 
     # Check network policies
     kubectl get networkpolicies
 
     # Check ingress
     kubectl get ingress
-    kubectl describe ingress langgraph-agent
+    kubectl describe ingress mcp-server-langgraph
     ```
 
     **Fix**:
@@ -925,10 +925,10 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     apiVersion: v1
     kind: Service
     metadata:
-      name: langgraph-agent
+      name: mcp-server-langgraph
     spec:
       selector:
-        app: langgraph-agent  # Must match pod label
+        app: mcp-server-langgraph  # Must match pod label
       ports:
       - port: 80
         targetPort: 8000
@@ -1067,7 +1067,7 @@ async def health_detailed():
 #!/bin/bash
 # collect-debug-info.sh
 
-NAMESPACE="langgraph-agent"
+NAMESPACE="mcp-server-langgraph"
 OUTPUT_DIR="debug-$(date +%Y%m%d-%H%M%S)"
 mkdir -p $OUTPUT_DIR
 

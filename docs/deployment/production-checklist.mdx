@@ -21,7 +21,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     **Critical**:
     - [ ] Keycloak deployed with PostgreSQL (not H2)
     - [ ] Strong admin password set (32+ characters)
-    - [ ] Realm `langgraph-agent` created
+    - [ ] Realm `mcp-server-langgraph` created
     - [ ] Client `langgraph-client` configured (confidential)
     - [ ] Client secret stored in secrets manager
     - [ ] SSL/TLS enabled (`KEYCLOAK_VERIFY_SSL=true`)
@@ -142,7 +142,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     **Validation**:
     ```bash
     # Check network policies
-    kubectl get networkpolicies -n langgraph-agent
+    kubectl get networkpolicies -n mcp-server-langgraph
 
     # Test connectivity
     kubectl run test --rm -it --image=busybox -- nc -zv openfga 8080
@@ -173,7 +173,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     git secrets --scan-history
 
     # Check secret manager
-    kubectl get secrets -n langgraph-agent
+    kubectl get secrets -n mcp-server-langgraph
     ```
   </Accordion>
 </AccordionGroup>
@@ -228,13 +228,13 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     **Validation**:
     ```bash
     # Check replicas
-    kubectl get deploy -n langgraph-agent
+    kubectl get deploy -n mcp-server-langgraph
 
     # Check HPA
-    kubectl get hpa -n langgraph-agent
+    kubectl get hpa -n mcp-server-langgraph
 
     # Check PDB
-    kubectl get pdb -n langgraph-agent
+    kubectl get pdb -n mcp-server-langgraph
     ```
   </Accordion>
 </AccordionGroup>
@@ -260,7 +260,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     **Validation**:
     ```bash
     # Check PVC status
-    kubectl get pvc -n langgraph-agent
+    kubectl get pvc -n mcp-server-langgraph
 
     # Test backup
     ./scripts/backup/test_backup.sh
@@ -327,7 +327,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     curl http://localhost:8000/metrics/prometheus
 
     # Query Prometheus
-    curl 'http://prometheus:9090/api/v1/query?query=up{job="langgraph-agent"}'
+    curl 'http://prometheus:9090/api/v1/query?query=up{job="mcp-server-langgraph"}'
     ```
   </Accordion>
 
@@ -373,10 +373,10 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     **Validation**:
     ```bash
     # Check log format
-    kubectl logs -l app=langgraph-agent -n langgraph-agent --tail=10
+    kubectl logs -l app=mcp-server-langgraph -n mcp-server-langgraph --tail=10
 
     # Verify no secrets in logs
-    kubectl logs -l app=langgraph-agent | grep -i "password\|secret\|key"
+    kubectl logs -l app=mcp-server-langgraph | grep -i "password\|secret\|key"
     ```
   </Accordion>
 </AccordionGroup>
@@ -408,7 +408,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     **Validation**:
     ```bash
     # Test alert firing
-    kubectl delete pod -l app=langgraph-agent --all
+    kubectl delete pod -l app=mcp-server-langgraph --all
 
     # Check alert manager
     curl http://alertmanager:9093/api/v2/alerts
@@ -473,13 +473,13 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     **Validation**:
     ```bash
     # Check HPA status
-    kubectl get hpa -n langgraph-agent
+    kubectl get hpa -n mcp-server-langgraph
 
     # Load test
     k6 run scripts/load-test.js
 
     # Watch scaling
-    kubectl get hpa -n langgraph-agent --watch
+    kubectl get hpa -n mcp-server-langgraph --watch
     ```
   </Accordion>
 </AccordionGroup>
@@ -556,7 +556,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     k6 run --vus 100 --duration 10m scripts/load-test.js
 
     # Chaos test
-    kubectl delete pod -l app=langgraph-agent --random
+    kubectl delete pod -l app=mcp-server-langgraph --random
     ```
   </Accordion>
 </AccordionGroup>

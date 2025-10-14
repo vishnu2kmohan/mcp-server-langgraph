@@ -5,7 +5,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-init-scripts
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
     app: postgres
 data:
@@ -36,7 +36,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
     app: postgres
     component: database
@@ -52,7 +52,7 @@ spec:
         app: postgres
         component: database
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       securityContext:
         runAsNonRoot: true
         runAsUser: 999  # PostgreSQL user
@@ -72,13 +72,13 @@ spec:
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: postgres-username
               optional: true
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: postgres-password
               optional: true
         - name: POSTGRES_MULTIPLE_DATABASES

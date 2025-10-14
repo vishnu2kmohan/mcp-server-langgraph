@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: langgraph-agent
+namespace: mcp-server-langgraph
 
 resources:
   - ../../kubernetes/base/namespace.yaml
@@ -27,9 +27,9 @@ resources:
   - ../../kubernetes/base/redis-session-service.yaml
 
 commonLabels:
-  app: langgraph-agent
+  app: mcp-server-langgraph
   managed-by: kustomize
 
 images:
-  - name: langgraph-agent
+  - name: mcp-server-langgraph
     newTag: 2.4.0

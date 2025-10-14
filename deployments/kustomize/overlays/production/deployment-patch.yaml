@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     metadata:
@@ -10,7 +10,7 @@ spec:
         prometheus.io/port: "8000"
     spec:
       containers:
-      - name: langgraph-agent
+      - name: mcp-server-langgraph
         resources:
           requests:
             cpu: 500m
@@ -26,5 +26,5 @@ spec:
               - key: app
                 operator: In
                 values:
-                - langgraph-agent
+                - mcp-server-langgraph
             topologyKey: kubernetes.io/hostname

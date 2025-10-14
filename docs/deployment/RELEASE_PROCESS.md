@@ -22,8 +22,8 @@ When a new GitHub release is published, the `bump-deployment-versions` workflow 
    - `pyproject.toml` - Python package version
    - `docker-compose.yml` - Version comment
    - `deployments/kubernetes/base/deployment.yaml` - Container image tag
-   - `deployments/helm/langgraph-agent/Chart.yaml` - Chart version and appVersion
-   - `deployments/helm/langgraph-agent/values.yaml` - Image tag
+   - `deployments/helm/mcp-server-langgraph/Chart.yaml` - Chart version and appVersion
+   - `deployments/helm/mcp-server-langgraph/values.yaml` - Image tag
    - `deployments/kustomize/base/kustomization.yaml` - Image tag
 3. **Commits the changes** to the main branch
 4. **Adds a comment** to the release with deployment commands
@@ -160,31 +160,31 @@ docker compose exec agent python -c "from mcp_server_langgraph import __version_
 
 ```bash
 # Update deployment image
-kubectl set image deployment/langgraph-agent \
-  langgraph-agent=ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.5.0 \
-  -n langgraph-agent
+kubectl set image deployment/mcp-server-langgraph \
+  mcp-server-langgraph=ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.5.0 \
+  -n mcp-server-langgraph
 
 # Or apply the updated manifests
 kubectl apply -f deployments/kubernetes/base/
 
 # Verify rollout
-kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 ### Helm
 
 ```bash
 # Update from local chart
-helm upgrade --install langgraph-agent \
-  deployments/helm/langgraph-agent \
+helm upgrade --install mcp-server-langgraph \
+  deployments/helm/mcp-server-langgraph \
   --set image.tag=2.5.0 \
-  --namespace langgraph-agent
+  --namespace mcp-server-langgraph
 
 # Or from OCI registry (after release publishes)
-helm upgrade --install langgraph-agent \
-  oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts/langgraph-agent \
+helm upgrade --install mcp-server-langgraph \
+  oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts/mcp-server-langgraph \
   --version 2.5.0 \
-  --namespace langgraph-agent
+  --namespace mcp-server-langgraph
 ```
 
 ### Kustomize
@@ -268,16 +268,16 @@ docker buildx build \
 
 1. Check Helm packaging in workflow logs
 2. Common issues:
-   - Chart validation error → Run `helm lint deployments/helm/langgraph-agent`
+   - Chart validation error → Run `helm lint deployments/helm/mcp-server-langgraph`
    - OCI push failure → Check registry authentication
 
 **Manual publish**:
 ```bash
 # Package chart
-helm package deployments/helm/langgraph-agent --version 2.5.0
+helm package deployments/helm/mcp-server-langgraph --version 2.5.0
 
 # Push to OCI registry
-helm push langgraph-agent-2.5.0.tgz \
+helm push mcp-server-langgraph-2.5.0.tgz \
   oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts
 ```
 
@@ -290,7 +290,7 @@ If deployment versions don't match the release:
 grep "version" pyproject.toml
 grep "Version:" docker-compose.yml
 grep "image:" deployments/kubernetes/base/deployment.yaml
-grep "tag:" deployments/helm/langgraph-agent/values.yaml
+grep "tag:" deployments/helm/mcp-server-langgraph/values.yaml
 
 # Re-run version bump
 bash scripts/deployment/bump-versions.sh 2.5.0
@@ -309,10 +309,10 @@ If you need to rollback a release:
 
 ```bash
 # Kubernetes
-kubectl rollout undo deployment/langgraph-agent -n langgraph-agent
+kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 # Helm
-helm rollback langgraph-agent -n langgraph-agent
+helm rollback mcp-server-langgraph -n mcp-server-langgraph
 
 # Docker Compose
 docker compose pull  # Pull previous version

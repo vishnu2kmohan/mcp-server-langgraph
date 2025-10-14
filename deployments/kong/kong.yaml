@@ -3,8 +3,8 @@ _format_version: "3.0"
 _transform: true
 
 services:
-  - name: langgraph-agent
-    url: http://langgraph-agent.langgraph-agent.svc.cluster.local:80
+  - name: mcp-server-langgraph
+    url: http://mcp-server-langgraph.mcp-server-langgraph.svc.cluster.local:80
     protocol: http
     connect_timeout: 60000
     read_timeout: 300000
@@ -12,7 +12,7 @@ services:
     retries: 3
 
     routes:
-      - name: langgraph-agent-public
+      - name: mcp-server-langgraph-public
         paths:
           - /
         strip_path: false
@@ -72,7 +72,7 @@ services:
                 headers:
                   - X-Kong-Request-Id:$(uuid)
 
-      - name: langgraph-agent-premium
+      - name: mcp-server-langgraph-premium
         paths:
           - /premium
         strip_path: true
@@ -96,7 +96,7 @@ services:
                 - exp
               key_claim_name: iss
 
-      - name: langgraph-agent-enterprise
+      - name: mcp-server-langgraph-enterprise
         paths:
           - /enterprise
         strip_path: true
@@ -170,7 +170,7 @@ plugins:
       timeout: 10000
 
 upstreams:
-  - name: langgraph-agent-upstream
+  - name: mcp-server-langgraph-upstream
     algorithm: round-robin
     slots: 10000
     healthchecks:
@@ -200,5 +200,5 @@ upstreams:
           http_failures: 5
           timeouts: 2
     targets:
-      - target: langgraph-agent.langgraph-agent.svc.cluster.local:80
+      - target: mcp-server-langgraph.mcp-server-langgraph.svc.cluster.local:80
         weight: 100

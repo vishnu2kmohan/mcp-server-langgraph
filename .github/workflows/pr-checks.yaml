@@ -165,7 +165,7 @@ jobs:
 
     - name: Test Docker image
       run: |
-        docker run --rm mcp-server-langgraph:pr-${{ github.event.pull_request.number }} python -c "import agent; print('✓ Import successful')"
+        docker run --rm mcp-server-langgraph:pr-${{ github.event.pull_request.number }} python -c "import mcp_server_langgraph.core.agent; print('✓ Import successful')"
 
   size-check:
     name: Check File Sizes

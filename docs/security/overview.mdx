@@ -77,11 +77,11 @@ graph TB
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     metadata:
-      name: langgraph-agent
+      name: mcp-server-langgraph
     spec:
       podSelector:
         matchLabels:
-          app: langgraph-agent
+          app: mcp-server-langgraph
       policyTypes:
       - Ingress
       - Egress
@@ -293,7 +293,7 @@ graph TB
   "payload": {
     "sub": "user-123",
     "iss": "https://keycloak.yourdomain.com/realms/langgraph",
-    "aud": "langgraph-agent",
+    "aud": "mcp-server-langgraph",
     "exp": 1728737200,
     "iat": 1728733600,
     "roles": ["user", "chat-executor"],
@@ -440,7 +440,7 @@ user.email = cipher.encrypt("alice@example.com")
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -458,7 +458,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 8000
 ```
@@ -499,7 +499,7 @@ spec:
     name: infisical
     kind: SecretStore
   target:
-    name: langgraph-agent-secrets
+    name: mcp-server-langgraph-secrets
   data:
   - secretKey: ANTHROPIC_API_KEY
     remoteRef:
@@ -823,7 +823,7 @@ trivy image openfga/openfga:latest
 trivy image bitnami/keycloak:latest
 
 # Scan for vulnerabilities
-grype langgraph-agent:latest
+grype mcp-server-langgraph:latest
 ```
 
 ## Incident Response

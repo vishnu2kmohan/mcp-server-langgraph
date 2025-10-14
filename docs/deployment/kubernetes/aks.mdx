@@ -140,19 +140,19 @@ export AKS_OIDC_ISSUER=$(az aks show \
 ```bash
 # Create user-assigned managed identity
 az identity create \
-  --name langgraph-agent-identity \
+  --name mcp-server-langgraph-identity \
   --resource-group langgraph-rg \
   --location eastus
 
 # Get identity details
 export IDENTITY_CLIENT_ID=$(az identity show \
-  --name langgraph-agent-identity \
+  --name mcp-server-langgraph-identity \
   --resource-group langgraph-rg \
   --query 'clientId' \
   --output tsv)
 
 export IDENTITY_OBJECT_ID=$(az identity show \
-  --name langgraph-agent-identity \
+  --name mcp-server-langgraph-identity \
   --resource-group langgraph-rg \
   --query 'principalId' \
   --output tsv)
@@ -163,11 +163,11 @@ export IDENTITY_OBJECT_ID=$(az identity show \
 ```bash
 # Create federated credential
 az identity federated-credential create \
-  --name langgraph-agent-federated-credential \
-  --identity-name langgraph-agent-identity \
+  --name mcp-server-langgraph-federated-credential \
+  --identity-name mcp-server-langgraph-identity \
   --resource-group langgraph-rg \
   --issuer $AKS_OIDC_ISSUER \
-  --subject system:serviceaccount:langgraph-agent:langgraph-agent \
+  --subject system:serviceaccount:mcp-server-langgraph:mcp-server-langgraph \
   --audience api://AzureADTokenExchange
 ```
 
@@ -177,8 +177,8 @@ az identity federated-credential create \
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
   annotations:
     azure.workload.identity/client-id: "${IDENTITY_CLIENT_ID}"
   labels:
@@ -371,7 +371,7 @@ apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
   name: azure-keyvault
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   provider: azure
   parameters:
@@ -396,7 +396,7 @@ spec:
           objectVersion: ""
     tenantId: "${AZURE_TENANT_ID}"
   secretObjects:
-  - secretName: langgraph-agent-secrets
+  - secretName: mcp-server-langgraph-secrets
     type: Opaque
     data:
     - objectName: anthropic-api-key
@@ -414,18 +414,18 @@ EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   template:
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       containers:
       - name: agent
         image: langgraphacr.azurecr.io/langgraph/agent:latest
         envFrom:
         - secretRef:
-            name: langgraph-agent-secrets
+            name: mcp-server-langgraph-secrets
         volumeMounts:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
@@ -472,8 +472,8 @@ az acr build \
   --file Dockerfile .
 
 # Or build locally and push
-docker build -t langgraph-agent:latest .
-docker tag langgraph-agent:latest langgraphacr.azurecr.io/langgraph/agent:latest
+docker build -t mcp-server-langgraph:latest .
+docker tag mcp-server-langgraph:latest langgraphacr.azurecr.io/langgraph/agent:latest
 docker push langgraphacr.azurecr.io/langgraph/agent:latest
 ```
 
@@ -512,7 +512,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: langgraph-ingress
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   annotations:
     kubernetes.io/ingress.class: azure/application-gateway
     appgw.ingress.kubernetes.io/ssl-redirect: "true"
@@ -534,7 +534,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 8000
 ```
@@ -582,23 +582,23 @@ with tracer.start_as_current_span("llm_request") as span:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
     azure.workload.identity/use: "true"
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
   template:
     metadata:
       labels:
-        app: langgraph-agent
+        app: mcp-server-langgraph
         azure.workload.identity/use: "true"
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       containers:
       - name: agent
         image: langgraphacr.azurecr.io/langgraph/agent:latest
@@ -621,7 +621,7 @@ spec:
           value: jdbc:postgresql://langgraph-postgres.postgres.database.azure.com:5432/keycloak?sslmode=require
         envFrom:
         - secretRef:
-            name: langgraph-agent-secrets
+            name: mcp-server-langgraph-secrets
         volumeMounts:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
@@ -656,12 +656,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   type: ClusterIP
   selector:
-    app: langgraph-agent
+    app: mcp-server-langgraph
   ports:
   - name: http
     port: 8000
@@ -674,14 +674,14 @@ spec:
 **Deploy**:
 ```bash
 # Create namespace
-kubectl create namespace langgraph-agent
+kubectl create namespace mcp-server-langgraph
 
 # Apply deployment
 kubectl apply -f deployment.yaml
 
 # Verify
-kubectl get pods -n langgraph-agent
-kubectl logs -f deployment/langgraph-agent -n langgraph-agent
+kubectl get pods -n mcp-server-langgraph
+kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 ## Auto-Scaling
@@ -704,13 +704,13 @@ az aks update \
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: langgraph-agent
+    name: mcp-server-langgraph
   minReplicas: 3
   maxReplicas: 50
   metrics:
@@ -789,11 +789,11 @@ spec:
     kind: NetworkPolicy
     metadata:
       name: allow-agent
-      namespace: langgraph-agent
+      namespace: mcp-server-langgraph
     spec:
       podSelector:
         matchLabels:
-          app: langgraph-agent
+          app: mcp-server-langgraph
       policyTypes:
       - Ingress
       - Egress

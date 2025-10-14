@@ -102,7 +102,7 @@ Implement comprehensive disaster recovery (DR) to protect against data loss, ser
     kind: CronJob
     metadata:
       name: postgres-backup
-      namespace: langgraph-agent
+      namespace: mcp-server-langgraph
     spec:
       schedule: "0 2 * * *"  # Daily at 2 AM
       successfulJobsHistoryLimit: 3
@@ -316,7 +316,7 @@ spec:
   schedule: "0 2 * * *"  # Daily at 2 AM
   template:
     includedNamespaces:
-    - langgraph-agent
+    - mcp-server-langgraph
     excludedResources:
     - events
     - events.events.k8s.io
@@ -328,11 +328,11 @@ spec:
 ```bash
 # Backup entire namespace
 velero backup create langgraph-backup \
-  --include-namespaces langgraph-agent
+  --include-namespaces mcp-server-langgraph
 
 # Backup specific resources
 velero backup create langgraph-deployments \
-  --include-namespaces langgraph-agent \
+  --include-namespaces mcp-server-langgraph \
   --include-resources deployments,services,configmaps,secrets
 
 # Check backup status
@@ -349,7 +349,7 @@ velero backup download langgraph-backup
 #!/bin/bash
 # export-k8s-resources.sh
 
-NAMESPACE="langgraph-agent"
+NAMESPACE="mcp-server-langgraph"
 BACKUP_DIR="/backups/k8s/$(date +%Y%m%d)"
 mkdir -p ${BACKUP_DIR}
 
@@ -406,7 +406,7 @@ os.system(f"aws s3 cp {backup_file}.gpg s3://my-backups/secrets/")
 
 ```bash
 # Export all secrets (base64 encoded)
-kubectl get secrets -n langgraph-agent -o yaml > secrets-backup.yaml
+kubectl get secrets -n mcp-server-langgraph -o yaml > secrets-backup.yaml
 
 # Encrypt with SOPS
 sops --encrypt --kms "arn:aws:kms:us-east-1:123456789:key/abc-123" \
@@ -486,7 +486,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
   <Step title="Verify System">
     ```bash
     # Check all pods running
-    kubectl get pods -n langgraph-agent
+    kubectl get pods -n mcp-server-langgraph
 
     # Test authentication
     curl -X POST http://api.yourdomain.com/auth/login \
@@ -526,7 +526,7 @@ kubectl apply -f /backups/k8s/20251012/deployment.yaml
 velero restore create deployment-restore \
   --from-backup langgraph-backup \
   --include-resources deployments \
-  --selector app=langgraph-agent
+  --selector app=mcp-server-langgraph
 ```
 
 ## Disaster Recovery Testing
@@ -549,7 +549,7 @@ kubectl create namespace langgraph-dr-test
 LATEST_BACKUP=$(velero backup get --output json | jq -r '.items[0].metadata.name')
 velero restore create dr-test-restore \
   --from-backup ${LATEST_BACKUP} \
-  --namespace-mappings langgraph-agent:langgraph-dr-test
+  --namespace-mappings mcp-server-langgraph:langgraph-dr-test
 
 # 3. Wait for restore
 velero restore wait dr-test-restore
@@ -639,7 +639,7 @@ aws route53 change-resource-record-sets \
 
 # 3. Scale up secondary region
 kubectl config use-context us-west-2
-kubectl scale deployment langgraph-agent --replicas=10
+kubectl scale deployment mcp-server-langgraph --replicas=10
 
 # 4. Verify traffic shift
 watch -n 5 'kubectl top pods'
@@ -657,13 +657,13 @@ spec:
   template:
     spec:
       backend:
-        serviceName: langgraph-agent
+        serviceName: mcp-server-langgraph
         servicePort: 80
       rules:
       - http:
           paths:
           - backend:
-              serviceName: langgraph-agent
+              serviceName: mcp-server-langgraph
               servicePort: 80
 ```
 

@@ -51,7 +51,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
     1. Go to https://app.infisical.com
     2. Create account
     3. Create organization
-    4. Create project: "langgraph-agent"
+    4. Create project: "mcp-server-langgraph"
   </Step>
 
   <Step title="Create Service Account">
@@ -219,7 +219,7 @@ apiVersion: secrets.infisical.com/v1alpha1
 kind: InfisicalSecret
 metadata:
   name: langgraph-secrets
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   hostAPI: https://app.infisical.com/api
   resyncInterval: 60
@@ -227,10 +227,10 @@ spec:
     universalAuth:
       credentialsRef:
         secretName: infisical-credentials
-        secretNamespace: langgraph-agent
+        secretNamespace: mcp-server-langgraph
   managedSecretReference:
-    secretName: langgraph-agent-secrets
-    secretNamespace: langgraph-agent
+    secretName: mcp-server-langgraph-secrets
+    secretNamespace: mcp-server-langgraph
 ```
 
 ### Service Account Credentials
@@ -240,7 +240,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: infisical-credentials
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 type: Opaque
 stringData:
   clientId: your-client-id
@@ -253,7 +253,7 @@ stringData:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     spec:
@@ -261,7 +261,7 @@ spec:
       - name: agent
         envFrom:
         - secretRef:
-            name: langgraph-agent-secrets  # Auto-synced from Infisical
+            name: mcp-server-langgraph-secrets  # Auto-synced from Infisical
 ```
 
 ## Secret Organization
@@ -269,7 +269,7 @@ spec:
 ### Folder Structure
 
 ```
-langgraph-agent/
+mcp-server-langgraph/
 ├── production/
 │   ├── api-keys/
 │   │   ├── ANTHROPIC_API_KEY

@@ -352,15 +352,15 @@ print(response.content)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   replicas: 3
   template:
     spec:
       containers:
       - name: agent
-        image: langgraph-agent:latest
+        image: mcp-server-langgraph:latest
         env:
         # Use Anthropic
         - name: LLM_PROVIDER
@@ -372,7 +372,7 @@ spec:
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: ANTHROPIC_API_KEY
 
         # Performance tuning

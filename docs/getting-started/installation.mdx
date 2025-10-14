@@ -131,7 +131,7 @@ Choose the installation method that best fits your use case:
         docker compose up -d
 
         # View logs
-        docker compose logs -f langgraph-agent
+        docker compose logs -f mcp-server-langgraph
 
         # Stop services
         docker compose down
@@ -143,7 +143,7 @@ Choose the installation method that best fits your use case:
 
     ```yaml
     services:
-      langgraph-agent:  # Main application
+      mcp-server-langgraph:  # Main application
         ports:
           - "8000:8000"
 
@@ -181,7 +181,7 @@ Choose the installation method that best fits your use case:
     kubectl apply -k deployments/kubernetes/base/
 
     # Using Helm
-    helm install langgraph-agent ./deployments/helm/langgraph-agent
+    helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph
     ```
   </Tab>
 

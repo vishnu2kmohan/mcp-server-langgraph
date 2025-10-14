@@ -3,10 +3,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
     transport: http-sse
   annotations:
     kubernetes.io/ingress.class: kong
@@ -28,17 +28,17 @@ spec:
   ingressClassName: kong
   tls:
   - hosts:
-    - langgraph-agent.example.com
-    secretName: langgraph-agent-tls
+    - mcp-server-langgraph.example.com
+    secretName: mcp-server-langgraph-tls
   rules:
-  - host: langgraph-agent.example.com
+  - host: mcp-server-langgraph.example.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 80
 
@@ -47,10 +47,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: langgraph-agent-premium
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-premium
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
     tier: premium
   annotations:
     kubernetes.io/ingress.class: kong
@@ -61,17 +61,17 @@ spec:
   ingressClassName: kong
   tls:
   - hosts:
-    - premium.langgraph-agent.example.com
-    secretName: langgraph-agent-premium-tls
+    - premium.mcp-server-langgraph.example.com
+    secretName: mcp-server-langgraph-premium-tls
   rules:
-  - host: premium.langgraph-agent.example.com
+  - host: premium.mcp-server-langgraph.example.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 80
 
@@ -80,10 +80,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: langgraph-agent-enterprise
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-enterprise
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
     tier: enterprise
   annotations:
     kubernetes.io/ingress.class: kong
@@ -94,17 +94,17 @@ spec:
   ingressClassName: kong
   tls:
   - hosts:
-    - enterprise.langgraph-agent.example.com
-    secretName: langgraph-agent-enterprise-tls
+    - enterprise.mcp-server-langgraph.example.com
+    secretName: mcp-server-langgraph-enterprise-tls
   rules:
-  - host: enterprise.langgraph-agent.example.com
+  - host: enterprise.mcp-server-langgraph.example.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 80
 
@@ -113,10 +113,10 @@ spec:
 apiVersion: configuration.konghq.com/v1
 kind: KongIngress
 metadata:
-  name: langgraph-agent-ingress-config
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-ingress-config
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   # Proxy behavior
   proxy:

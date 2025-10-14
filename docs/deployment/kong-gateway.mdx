@@ -133,8 +133,8 @@ graph LR
           kong-migrations:
             condition: service_completed_successfully
 
-      langgraph-agent:
-        image: langgraph-agent:latest
+      mcp-server-langgraph:
+        image: mcp-server-langgraph:latest
         environment:
           - AUTH_PROVIDER=keycloak
           - LLM_PROVIDER=anthropic
@@ -236,16 +236,16 @@ graph LR
 ```bash
 # Add MCP Server as a service
 curl -X POST http://localhost:8001/services \
-  --data name=langgraph-agent \
-  --data url=http://langgraph-agent:8000
+  --data name=mcp-server-langgraph \
+  --data url=http://mcp-server-langgraph:8000
 
 # Or using decK (declarative config)
 cat > kong.yaml << 'EOF'
 _format_version: "3.0"
 
 services:
-- name: langgraph-agent
-  url: http://langgraph-agent:8000
+- name: mcp-server-langgraph
+  url: http://mcp-server-langgraph:8000
   protocol: http
   retries: 3
   connect_timeout: 60000
@@ -260,12 +260,12 @@ deck sync -s kong.yaml
 
 ```bash
 # Create route for /message endpoint
-curl -X POST http://localhost:8001/services/langgraph-agent/routes \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/routes \
   --data paths[]=/message \
   --data methods[]=POST
 
 # Create route for /auth
-curl -X POST http://localhost:8001/services/langgraph-agent/routes \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/routes \
   --data paths[]=/auth \
   --data methods[]=POST
 
@@ -303,7 +303,7 @@ deck sync -s kong.yaml
 
 ```bash
 # Enable JWT plugin
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=jwt \
   --data config.claims_to_verify=exp \
   --data config.key_claim_name=kid \
@@ -369,7 +369,7 @@ EOF
 
 ```bash
 # Enable CORS
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=cors \
   --data config.origins=https://yourdomain.com \
   --data config.methods=GET,POST,PUT,DELETE \
@@ -397,7 +397,7 @@ EOF
 
 ```bash
 # Enable proxy cache
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=proxy-cache \
   --data config.response_code[]=200 \
   --data config.response_code[]=301 \
@@ -416,14 +416,14 @@ curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
 
 ```bash
 # Add/modify request headers
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-transformer \
   --data config.add.headers[]=X-API-Version:2.0 \
   --data config.add.headers[]=X-Gateway:Kong \
   --data config.remove.headers[]=X-Sensitive-Header
 
 # Transform request body
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-transformer-advanced \
   --data config.add.body[]=source:kong-gateway
 ```
@@ -492,7 +492,7 @@ upstreams:
     weight: 100
 
 services:
-- name: langgraph-agent
+- name: mcp-server-langgraph
   host: langgraph-upstream
   protocol: http
 ```
@@ -501,7 +501,7 @@ services:
 
 ```bash
 # Enable circuit breaker
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=circuit-breaker \
   --data config.error_threshold=50 \
   --data config.error_threshold_percentage=0.5 \
@@ -515,7 +515,7 @@ curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
 
 ```bash
 # JSON Schema validation
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-validator \
   --data config.version=draft4 \
   --data config.body_schema='{"type":"object","properties":{"query":{"type":"string","minLength":1,"maxLength":10000}},"required":["query"]}'
@@ -563,9 +563,9 @@ curl -X POST http://localhost:8001/plugins \
 curl http://localhost:8001/metrics
 
 # Example metrics:
-# kong_http_requests_total{service="langgraph-agent",route="message",code="200"} 1234
-# kong_latency_ms{type="request",service="langgraph-agent"} 45.2
-# kong_bandwidth_bytes{type="ingress",service="langgraph-agent"} 1024000
+# kong_http_requests_total{service="mcp-server-langgraph",route="message",code="200"} 1234
+# kong_latency_ms{type="request",service="mcp-server-langgraph"} 45.2
+# kong_bandwidth_bytes{type="ingress",service="mcp-server-langgraph"} 1024000
 ```
 
 **Prometheus config**:
@@ -630,14 +630,14 @@ curl -X POST http://localhost:8001/plugins \
 
 ```bash
 # Whitelist IPs
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=ip-restriction \
   --data config.allow[]=10.0.0.0/8 \
   --data config.allow[]=172.16.0.0/12 \
   --data config.allow[]=192.168.1.100
 
 # Blacklist IPs
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=ip-restriction \
   --data config.deny[]=1.2.3.4
 ```
@@ -657,7 +657,7 @@ curl -X POST http://localhost:8001/plugins \
 
 ```bash
 # Limit request body size
-curl -X POST http://localhost:8001/services/langgraph-agent/plugins \
+curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-size-limiting \
   --data config.allowed_payload_size=10  # MB
 ```
@@ -788,20 +788,20 @@ spec:
     curl http://localhost:8001/upstreams/langgraph-upstream/health
 
     # Check service
-    curl http://localhost:8001/services/langgraph-agent
+    curl http://localhost:8001/services/mcp-server-langgraph
 
     # Test upstream directly
-    curl http://langgraph-agent:8000/health
+    curl http://mcp-server-langgraph:8000/health
     ```
 
     **Fix**:
     ```bash
     # Update service URL
-    curl -X PATCH http://localhost:8001/services/langgraph-agent \
+    curl -X PATCH http://localhost:8001/services/mcp-server-langgraph \
       --data url=http://correct-host:8000
 
     # Check network connectivity
-    kubectl exec -it kong-0 -n kong -- curl http://langgraph-agent:8000/health
+    kubectl exec -it kong-0 -n kong -- curl http://mcp-server-langgraph:8000/health
     ```
   </Accordion>
 

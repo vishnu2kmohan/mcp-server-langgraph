@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openfga
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
     app: openfga
     component: authorization
@@ -29,7 +29,7 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

@@ -5,7 +5,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: redis-session-config
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
     app: redis-session
     component: session-store
@@ -34,7 +34,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-session
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
     app: redis-session
     component: session-store
@@ -49,7 +49,7 @@ spec:
         app: redis-session
         component: session-store
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       securityContext:
         runAsNonRoot: true
         runAsUser: 999  # Redis user
@@ -77,7 +77,7 @@ spec:
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: redis-password
               optional: true
 
@@ -155,7 +155,7 @@ spec:
 # kind: PersistentVolumeClaim
 # metadata:
 #   name: redis-session-data
-#   namespace: langgraph-agent
+#   namespace: mcp-server-langgraph
 #   labels:
 #     app: redis-session
 # spec:

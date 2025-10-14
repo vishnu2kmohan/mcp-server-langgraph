@@ -179,8 +179,8 @@ graph TB
 
   <Step title="Build Container Image">
     ```bash
-    docker build -t your-registry/langgraph-agent:1.0.0 .
-    docker push your-registry/langgraph-agent:1.0.0
+    docker build -t your-registry/mcp-server-langgraph:1.0.0 .
+    docker push your-registry/mcp-server-langgraph:1.0.0
     ```
 
     Or use GitHub Actions for automated builds.
@@ -226,22 +226,22 @@ For production deployment:
 
 ```bash
 # 1. Create namespace
-kubectl create namespace langgraph-agent
+kubectl create namespace mcp-server-langgraph
 
 # 2. Create secrets
-kubectl create secret generic langgraph-agent-secrets \
+kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=jwt-secret-key="$(openssl rand -base64 32)" \
   --from-literal=google-api-key="YOUR_KEY" \
-  -n langgraph-agent
+  -n mcp-server-langgraph
 
 # 3. Deploy with Helm
-helm upgrade --install langgraph-agent ./helm/langgraph-agent \
-  --namespace langgraph-agent \
+helm upgrade --install mcp-server-langgraph ./helm/mcp-server-langgraph \
+  --namespace mcp-server-langgraph \
   --values values-production.yaml \
   --wait
 
 # 4. Verify deployment
-kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 ## Environment Configuration
@@ -324,12 +324,12 @@ Access dashboards:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: langgraph-agent
+    name: mcp-server-langgraph
   minReplicas: 3
   maxReplicas: 10
   metrics:

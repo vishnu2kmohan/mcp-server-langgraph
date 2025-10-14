@@ -4,9 +4,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: rate-limit-basic
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: rate-limiting
   config:
@@ -24,9 +24,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: rate-limit-premium
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: rate-limiting
   config:
@@ -45,9 +45,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: rate-limit-enterprise
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: rate-limiting
   config:
@@ -66,9 +66,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: request-size-limit
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: request-size-limiting
   config:
@@ -82,9 +82,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: response-ratelimit
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: response-ratelimiting
   config:
@@ -99,9 +99,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: jwt-auth
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: jwt
   config:
@@ -120,9 +120,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: api-key-auth
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: key-auth
   config:
@@ -138,9 +138,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: cors
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: cors
   config:
@@ -175,9 +175,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: request-transformer
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: request-transformer
   config:
@@ -195,9 +195,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: prometheus
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: prometheus
   config:
@@ -209,9 +209,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: ip-restriction
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: ip-restriction
   config:
@@ -227,9 +227,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: bot-detection
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: bot-detection
   config:
@@ -246,9 +246,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: request-termination
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
   annotations:
     kubernetes.io/ingress.class: kong
 spec:
@@ -264,9 +264,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: http-log
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: http-log
   config:
@@ -284,9 +284,9 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: rate-limit-advanced
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 spec:
   plugin: rate-limiting-advanced
   config:
@@ -295,7 +295,7 @@ spec:
     window_size:
       - 60
     sync_rate: 10
-    namespace: langgraph-agent-rate-limit
+    namespace: mcp-server-langgraph-rate-limit
     strategy: redis
     redis:
       host: redis

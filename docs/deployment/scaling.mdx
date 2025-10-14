@@ -16,13 +16,13 @@ Scale your MCP Server horizontally (more replicas) and vertically (more resource
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: langgraph-agent
+    name: mcp-server-langgraph
   minReplicas: 3
   maxReplicas: 10
   metrics:
@@ -45,10 +45,10 @@ spec:
 kubectl apply -f hpa.yaml
 
 # Check HPA status
-kubectl get hpa -n langgraph-agent
+kubectl get hpa -n mcp-server-langgraph
 
 # Watch scaling
-kubectl get hpa -n langgraph-agent --watch
+kubectl get hpa -n mcp-server-langgraph --watch
 ```
 
 ### Advanced HPA
@@ -57,12 +57,12 @@ kubectl get hpa -n langgraph-agent --watch
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: langgraph-agent
+    name: mcp-server-langgraph
   minReplicas: 3
   maxReplicas: 20
   metrics:
@@ -133,7 +133,7 @@ metadata:
 data:
   config.yaml: |
     rules:
-    - seriesQuery: 'http_requests_total{namespace="langgraph-agent"}'
+    - seriesQuery: 'http_requests_total{namespace="mcp-server-langgraph"}'
       resources:
         template: <<.Resource>>
       name:
@@ -158,18 +158,18 @@ cd autoscaler/vertical-pod-autoscaler
 apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
-  name: langgraph-agent-vpa
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-vpa
+  namespace: mcp-server-langgraph
 spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: langgraph-agent
+    name: mcp-server-langgraph
   updatePolicy:
     updateMode: "Auto"  # Auto, Recreate, Initial, Off
   resourcePolicy:
     containerPolicies:
-    - containerName: langgraph-agent
+    - containerName: mcp-server-langgraph
       minAllowed:
         cpu: 500m
         memory: 512Mi
@@ -183,7 +183,7 @@ spec:
 
 **Check recommendations**:
 ```bash
-kubectl describe vpa langgraph-agent-vpa -n langgraph-agent
+kubectl describe vpa mcp-server-langgraph-vpa -n mcp-server-langgraph
 ```
 
 ## Cluster Autoscaling
@@ -286,13 +286,13 @@ k6 run load-test.js
 
 ```bash
 # Watch pods scaling
-watch kubectl get pods -n langgraph-agent
+watch kubectl get pods -n mcp-server-langgraph
 
 # Watch HPA
-watch kubectl get hpa -n langgraph-agent
+watch kubectl get hpa -n mcp-server-langgraph
 
 # View metrics
-kubectl top pods -n langgraph-agent
+kubectl top pods -n mcp-server-langgraph
 kubectl top nodes
 ```
 
@@ -387,7 +387,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            app: langgraph-agent
+            app: mcp-server-langgraph
 
       # Readiness gates
       readinessGates:
@@ -425,7 +425,7 @@ random_page_cost = 1.1
 
 ```bash
 # Use VPA recommendations
-kubectl get vpa langgraph-agent-vpa -o yaml
+kubectl get vpa mcp-server-langgraph-vpa -o yaml
 
 # Adjust based on actual usage
 resources:
@@ -480,7 +480,7 @@ spec:
             command:
             - /bin/sh
             - -c
-            - kubectl scale deployment langgraph-agent --replicas=1
+            - kubectl scale deployment mcp-server-langgraph --replicas=1
           restartPolicy: OnFailure
 
 # Scale up in morning
@@ -501,7 +501,7 @@ spec:
             command:
             - /bin/sh
             - -c
-            - kubectl scale deployment langgraph-agent --replicas=5
+            - kubectl scale deployment mcp-server-langgraph --replicas=5
           restartPolicy: OnFailure
 ```
 
@@ -511,19 +511,19 @@ spec:
 
 ```promql
 # Replica count
-count(kube_pod_info{namespace="langgraph-agent", pod=~"langgraph-agent.*"})
+count(kube_pod_info{namespace="mcp-server-langgraph", pod=~"mcp-server-langgraph.*"})
 
 # CPU utilization
-rate(container_cpu_usage_seconds_total{namespace="langgraph-agent"}[5m])
+rate(container_cpu_usage_seconds_total{namespace="mcp-server-langgraph"}[5m])
 
 # Memory utilization
-container_memory_working_set_bytes{namespace="langgraph-agent"}
+container_memory_working_set_bytes{namespace="mcp-server-langgraph"}
 
 # Request rate
-rate(http_requests_total{namespace="langgraph-agent"}[5m])
+rate(http_requests_total{namespace="mcp-server-langgraph"}[5m])
 
 # HPA desired replicas
-kube_horizontalpodautoscaler_status_desired_replicas{namespace="langgraph-agent"}
+kube_horizontalpodautoscaler_status_desired_replicas{namespace="mcp-server-langgraph"}
 ```
 
 ### Alerts
@@ -534,23 +534,23 @@ groups:
   rules:
   - alert: HPAMaxedOut
     expr: |
-      kube_horizontalpodautoscaler_status_desired_replicas{namespace="langgraph-agent"}
+      kube_horizontalpodautoscaler_status_desired_replicas{namespace="mcp-server-langgraph"}
       >=
-      kube_horizontalpodautoscaler_spec_max_replicas{namespace="langgraph-agent"}
+      kube_horizontalpodautoscaler_spec_max_replicas{namespace="mcp-server-langgraph"}
     for: 5m
     annotations:
       summary: "HPA at maximum replicas"
 
   - alert: HighCPU
     expr: |
-      avg(rate(container_cpu_usage_seconds_total{namespace="langgraph-agent"}[5m])) > 0.8
+      avg(rate(container_cpu_usage_seconds_total{namespace="mcp-server-langgraph"}[5m])) > 0.8
     for: 2m
     annotations:
       summary: "High CPU utilization"
 
   - alert: HighMemory
     expr: |
-      avg(container_memory_working_set_bytes{namespace="langgraph-agent"})
+      avg(container_memory_working_set_bytes{namespace="mcp-server-langgraph"})
       /
       avg(kube_pod_container_resource_limits{resource="memory"}) > 0.85
     for: 2m
@@ -598,12 +598,12 @@ groups:
     apiVersion: policy/v1
     kind: PodDisruptionBudget
     metadata:
-      name: langgraph-agent-pdb
+      name: mcp-server-langgraph-pdb
     spec:
       minAvailable: 2
       selector:
         matchLabels:
-          app: langgraph-agent
+          app: mcp-server-langgraph
     ```
   </Accordion>
 </AccordionGroup>
@@ -614,13 +614,13 @@ groups:
   <Accordion title="HPA not scaling">
     ```bash
     # Check HPA status
-    kubectl describe hpa langgraph-agent -n langgraph-agent
+    kubectl describe hpa mcp-server-langgraph -n mcp-server-langgraph
 
     # Check metrics server
     kubectl get apiservice v1beta1.metrics.k8s.io -o yaml
 
     # View current metrics
-    kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/langgraph-agent/pods
+    kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/mcp-server-langgraph/pods
     ```
   </Accordion>
 

@@ -93,9 +93,9 @@ global:
 
 scrape_configs:
   # MCP Server metrics
-  - job_name: 'langgraph-agent'
+  - job_name: 'mcp-server-langgraph'
     static_configs:
-      - targets: ['langgraph-agent:9090']
+      - targets: ['mcp-server-langgraph:9090']
     metrics_path: '/metrics'
 
   # Redis metrics
@@ -765,7 +765,7 @@ The repository includes pre-built Grafana dashboards optimized for production mo
   </Card>
 
   <Card title="Overview" icon="chart-line">
-    **langgraph-agent.json**
+    **mcp-server-langgraph.json**
     - Service status uptime gauge
     - Request rate by tool
     - Error rate percentage
@@ -800,7 +800,7 @@ The repository includes pre-built Grafana dashboards optimized for production mo
       --from-file=monitoring/grafana/dashboards/authentication.json \
       --from-file=monitoring/grafana/dashboards/openfga.json \
       --from-file=monitoring/grafana/dashboards/llm-performance.json \
-      --from-file=monitoring/grafana/dashboards/langgraph-agent.json \
+      --from-file=monitoring/grafana/dashboards/mcp-server-langgraph.json \
       --from-file=monitoring/grafana/dashboards/security.json \
       --from-file=monitoring/grafana/dashboards/keycloak.json \
       --from-file=monitoring/grafana/dashboards/redis-sessions.json \
@@ -833,7 +833,7 @@ The repository includes pre-built Grafana dashboards optimized for production mo
         dashboardproviders.yaml:
           apiVersion: 1
           providers:
-          - name: 'langgraph-agent'
+          - name: 'mcp-server-langgraph'
             orgId: 1
             folder: 'MCP Server with LangGraph'
             type: file
@@ -843,7 +843,7 @@ The repository includes pre-built Grafana dashboards optimized for production mo
               path: /var/lib/grafana/dashboards/langgraph
 
       dashboards:
-        langgraph-agent:
+        mcp-server-langgraph:
           authentication:
             file: monitoring/grafana/dashboards/authentication.json
           openfga:
@@ -851,7 +851,7 @@ The repository includes pre-built Grafana dashboards optimized for production mo
           llm-performance:
             file: monitoring/grafana/dashboards/llm-performance.json
           overview:
-            file: monitoring/grafana/dashboards/langgraph-agent.json
+            file: monitoring/grafana/dashboards/mcp-server-langgraph.json
           security:
             file: monitoring/grafana/dashboards/security.json
           keycloak:
@@ -879,7 +879,7 @@ Ensure these metrics are exposed by the application:
 
 **Authentication (authentication.json)**:
 ```promql
-up{job="langgraph-agent"}
+up{job="mcp-server-langgraph"}
 auth_login_attempts_total
 auth_login_success_total
 auth_login_failed_total

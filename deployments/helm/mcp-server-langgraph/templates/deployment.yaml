@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "langgraph-agent.fullname" . }}
+  name: {{ include "mcp-server-langgraph.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "langgraph-agent.labels" . | nindent 4 }}
+    {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -17,7 +17,7 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      {{- include "langgraph-agent.selectorLabels" . | nindent 6 }}
+      {{- include "mcp-server-langgraph.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -27,13 +27,13 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "langgraph-agent.selectorLabels" . | nindent 8 }}
+        {{- include "mcp-server-langgraph.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "langgraph-agent.serviceAccountName" . }}
+      serviceAccountName: {{ include "mcp-server-langgraph.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
 
@@ -143,36 +143,36 @@ spec:
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: anthropic-api-key
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: jwt-secret-key
         - name: OPENFGA_STORE_ID
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: openfga-store-id
         - name: OPENFGA_MODEL_ID
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: openfga-model-id
 
         # Keycloak Secrets
         - name: KEYCLOAK_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: keycloak-client-secret
 
         # Redis Session Management Secret
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: redis-password
               optional: true
 
@@ -180,7 +180,7 @@ spec:
         - name: LANGSMITH_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: langsmith-api-key
               optional: true
 
@@ -188,7 +188,7 @@ spec:
         - name: GOOGLE_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: google-api-key
               optional: true
 
@@ -196,7 +196,7 @@ spec:
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: openai-api-key
               optional: true
 
@@ -204,19 +204,19 @@ spec:
         - name: INFISICAL_CLIENT_ID
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: infisical-client-id
               optional: true
         - name: INFISICAL_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: infisical-client-secret
               optional: true
         - name: INFISICAL_PROJECT_ID
           valueFrom:
             secretKeyRef:
-              name: {{ include "langgraph-agent.secretName" . }}
+              name: {{ include "mcp-server-langgraph.secretName" . }}
               key: infisical-project-id
               optional: true
         startupProbe:

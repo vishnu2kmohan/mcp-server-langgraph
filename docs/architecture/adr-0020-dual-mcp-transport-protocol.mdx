@@ -93,7 +93,7 @@ Both share the same underlying agent logic, differing only in transport layer.
 
 from mcp import Server, stdio_server
 
-app = Server("langgraph-agent")
+app = Server("mcp-server-langgraph")
 
 @app.list_tools()
 async def list_tools():
@@ -275,7 +275,7 @@ agent_graph = graph.compile()
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "langgraph-agent": {
+    "mcp-server-langgraph": {
       "command": "mcp-server-langgraph",
       "env": {
         "ANTHROPIC_API_KEY": "sk-..."
@@ -440,7 +440,7 @@ eventSource.onmessage = (event) => {
 cat > ~/.config/claude/claude_desktop_config.json <<EOF
 {
   "mcpServers": {
-    "langgraph-agent": {
+    "mcp-server-langgraph": {
       "command": "mcp-server-langgraph"
     }
   }

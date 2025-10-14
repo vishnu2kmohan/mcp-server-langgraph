@@ -170,8 +170,8 @@ aws iam create-policy \
 ```bash
 # Create service account with IAM role
 eksctl create iamserviceaccount \
-  --name langgraph-agent \
-  --namespace langgraph-agent \
+  --name mcp-server-langgraph \
+  --namespace mcp-server-langgraph \
   --cluster langgraph-cluster \
   --region us-east-1 \
   --attach-policy-arn arn:aws:iam::ACCOUNT_ID:policy/LangGraphSecretsAccess \
@@ -179,7 +179,7 @@ eksctl create iamserviceaccount \
   --override-existing-serviceaccounts
 
 # Verify
-kubectl describe sa langgraph-agent -n langgraph-agent
+kubectl describe sa mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 ## RDS for PostgreSQL
@@ -381,7 +381,7 @@ apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
   name: aws-secretsmanager
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   provider:
     aws:
@@ -390,7 +390,7 @@ spec:
       auth:
         jwt:
           serviceAccountRef:
-            name: langgraph-agent
+            name: mcp-server-langgraph
 EOF
 
 # Create ExternalSecret
@@ -399,14 +399,14 @@ apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: langgraph-secrets
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   refreshInterval: 1h
   secretStoreRef:
     name: aws-secretsmanager
     kind: SecretStore
   target:
-    name: langgraph-agent-secrets
+    name: mcp-server-langgraph-secrets
     creationPolicy: Owner
   data:
   - secretKey: ANTHROPIC_API_KEY
@@ -465,7 +465,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: langgraph-ingress
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
@@ -487,7 +487,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 8000
 ```
@@ -510,9 +510,9 @@ aws ecr get-login-password --region us-east-1 | \
   ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
 
 # Build and push
-docker build -t langgraph-agent:latest .
+docker build -t mcp-server-langgraph:latest .
 
-docker tag langgraph-agent:latest \
+docker tag mcp-server-langgraph:latest \
   ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
 
 docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
@@ -524,8 +524,8 @@ docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   template:
     spec:
@@ -627,19 +627,19 @@ cloudwatch.put_metric_data(
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
   template:
     metadata:
       labels:
-        app: langgraph-agent
+        app: mcp-server-langgraph
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       containers:
       - name: agent
         image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
@@ -664,12 +664,12 @@ spec:
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: ANTHROPIC_API_KEY
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: REDIS_PASSWORD
         livenessProbe:
           httpGet:
@@ -695,14 +695,14 @@ spec:
 **Deploy**:
 ```bash
 # Create namespace
-kubectl create namespace langgraph-agent
+kubectl create namespace mcp-server-langgraph
 
 # Deploy
 kubectl apply -f deployment.yaml
 
 # Verify
-kubectl get pods -n langgraph-agent
-kubectl logs -f deployment/langgraph-agent -n langgraph-agent
+kubectl get pods -n mcp-server-langgraph
+kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 ## Auto-Scaling

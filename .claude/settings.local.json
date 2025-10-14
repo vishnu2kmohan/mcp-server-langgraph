@@ -152,7 +152,12 @@
       "Bash(do if [ -f \"$base.mdx\" ])",
       "Bash(then echo \"DUPLICATE: $base.md and $base.mdx\" fi done)",
       "Bash(xargs:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(chmod:*)",
+      "Bash(DRY_RUN=1 bash scripts/deployment/bump-versions.sh 2.5.0)",
+      "Bash(helm template:*)",
+      "Bash(pytest:*)",
+      "Bash(git remote get-url:*)"
     ],
     "deny": [],
     "ask": []

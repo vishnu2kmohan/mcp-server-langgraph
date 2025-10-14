@@ -4,21 +4,22 @@ Tests for Storage Backend Interfaces for Compliance Data
 Covers abstract interfaces and data models for compliance data storage.
 """
 
-import pytest
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+import pytest
 
 from mcp_server_langgraph.core.compliance.storage import (
-    UserProfile,
-    Conversation,
-    UserPreferences,
     AuditLogEntry,
     ConsentRecord,
-    InMemoryUserProfileStore,
-    InMemoryConversationStore,
-    InMemoryPreferencesStore,
+    Conversation,
     InMemoryAuditLogStore,
     InMemoryConsentStore,
+    InMemoryConversationStore,
+    InMemoryPreferencesStore,
+    InMemoryUserProfileStore,
+    UserPreferences,
+    UserProfile,
 )
 
 

@@ -71,7 +71,7 @@ sequenceDiagram
         ```bash
         # Using Helm (recommended)
         helm install keycloak bitnami/keycloak \
-          --namespace langgraph-agent \
+          --namespace mcp-server-langgraph \
           --create-namespace \
           --set auth.adminUser=admin \
           --set auth.adminPassword="$(openssl rand -base64 32)" \
@@ -82,12 +82,12 @@ sequenceDiagram
 
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
-          deployment/keycloak -n langgraph-agent
+          deployment/keycloak -n mcp-server-langgraph
         ```
 
         Access via ingress or port-forward:
         ```bash
-        kubectl port-forward svc/keycloak 8080:80 -n langgraph-agent
+        kubectl port-forward svc/keycloak 8080:80 -n mcp-server-langgraph
         ```
       </Tab>
 
@@ -112,7 +112,7 @@ sequenceDiagram
     ```
 
     This script creates:
-    - **Realm**: `langgraph-agent`
+    - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
     - **Scopes**: `openid`, `profile`, `email`, `roles`
     - **Redirect URIs**: Configured for your domain
@@ -125,12 +125,12 @@ sequenceDiagram
     AUTH_MODE=session  # or token
 
     KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
-    KEYCLOAK_REALM=langgraph-agent
+    KEYCLOAK_REALM=mcp-server-langgraph
     KEYCLOAK_CLIENT_ID=langgraph-client
     KEYCLOAK_CLIENT_SECRET=your-client-secret-here
     KEYCLOAK_VERIFY_SSL=true
     KEYCLOAK_TIMEOUT=30
-    KEYCLOAK_HOSTNAME=langgraph-agent.yourdomain.com
+    KEYCLOAK_HOSTNAME=mcp-server-langgraph.yourdomain.com
     ```
   </Step>
 
@@ -162,7 +162,7 @@ If you prefer to configure Keycloak manually via the admin console:
 1. Open Keycloak admin console
 2. Hover over realm dropdown (top left)
 3. Click "Create Realm"
-4. Name: `langgraph-agent`
+4. Name: `mcp-server-langgraph`
 5. Click "Create"
 
 ### 2. Create Client
@@ -227,7 +227,7 @@ For web applications:
 
 ```typescript
 // 1. Redirect user to Keycloak
-const authUrl = `https://sso.yourdomain.com/realms/langgraph-agent/protocol/openid-connect/auth?
+const authUrl = `https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/auth?
   client_id=langgraph-client&
   redirect_uri=https://yourapp.com/callback&
   response_type=code&
@@ -239,7 +239,7 @@ window.location.href = authUrl;
 // https://yourapp.com/callback?code=abc123&state=xyz
 
 // 3. Exchange code for tokens
-const tokens = await fetch('https://sso.yourdomain.com/realms/langgraph-agent/protocol/openid-connect/token', {
+const tokens = await fetch('https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/token', {
   method: 'POST',
   headers: {'Content-Type': 'application/x-www-form-urlencoded'},
   body: new URLSearchParams({
@@ -463,13 +463,13 @@ postgresql:
 
 ```bash
 # Backup PostgreSQL (Keycloak database)
-kubectl exec -n langgraph-agent \
-  $(kubectl get pod -n langgraph-agent -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n mcp-server-langgraph \
+  $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
   -- pg_dump -U keycloak keycloak > keycloak-backup.sql
 
 # Restore
-kubectl exec -i -n langgraph-agent \
-  $(kubectl get pod -n langgraph-agent -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -i -n mcp-server-langgraph \
+  $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U keycloak keycloak < keycloak-backup.sql
 ```
 

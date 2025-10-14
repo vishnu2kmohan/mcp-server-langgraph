@@ -219,8 +219,8 @@ validate-deployments:
 
     - name: Validate Helm chart
       run: |
-        helm lint deployments/helm/langgraph-agent
-        helm template test-release deployments/helm/langgraph-agent --dry-run > /dev/null
+        helm lint deployments/helm/mcp-server-langgraph
+        helm template test-release deployments/helm/mcp-server-langgraph --dry-run > /dev/null
 
     - name: Install kubectl
       uses: azure/setup-kubectl@v3
@@ -478,7 +478,7 @@ make deploy-dev
 ```
 
 **Configuration**:
-- Namespace: `langgraph-agent-dev`
+- Namespace: `mcp-server-langgraph-dev`
 - Auth: `inmemory` (no Keycloak)
 - Sessions: `memory` (no Redis)
 - Replicas: 1
@@ -495,7 +495,7 @@ make deploy-staging
 ```
 
 **Configuration**:
-- Namespace: `langgraph-agent-staging`
+- Namespace: `mcp-server-langgraph-staging`
 - Auth: `keycloak`
 - Sessions: `redis` (12-hour TTL)
 - Replicas: 2
@@ -513,7 +513,7 @@ make deploy-production
 ```
 
 **Configuration**:
-- Namespace: `langgraph-agent`
+- Namespace: `mcp-server-langgraph`
 - Auth: `keycloak` (SSL verified)
 - Sessions: `redis` (SSL enabled, 24-hour TTL)
 - Replicas: 3+ (HPA enabled)
@@ -550,28 +550,28 @@ make deploy-rollback-production
 **Kubernetes Deployment**:
 ```bash
 # List rollout history
-kubectl rollout history deployment/langgraph-agent -n langgraph-agent
+kubectl rollout history deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 # Rollback to previous version
-kubectl rollout undo deployment/langgraph-agent -n langgraph-agent
+kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 # Rollback to specific revision
-kubectl rollout undo deployment/langgraph-agent -n langgraph-agent --to-revision=3
+kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph --to-revision=3
 
 # Monitor rollback
-kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 **Helm Rollback**:
 ```bash
 # List release history
-helm history langgraph-agent -n langgraph-agent
+helm history mcp-server-langgraph -n mcp-server-langgraph
 
 # Rollback to previous release
-helm rollback langgraph-agent -n langgraph-agent
+helm rollback mcp-server-langgraph -n mcp-server-langgraph
 
 # Rollback to specific revision
-helm rollback langgraph-agent 2 -n langgraph-agent
+helm rollback mcp-server-langgraph 2 -n mcp-server-langgraph
 ```
 
 ## Secrets Management
@@ -590,7 +590,7 @@ Required secrets for CI/CD:
 Created manually or via secrets operator:
 
 ```bash
-kubectl create secret generic langgraph-agent-secrets \
+kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=anthropic-api-key="<key>" \
   --from-literal=jwt-secret-key="<secret>" \
   --from-literal=redis-password="`<password>`" \
@@ -599,7 +599,7 @@ kubectl create secret generic langgraph-agent-secrets \
   --from-literal=keycloak-admin-password="`<password>`" \
   --from-literal=openfga-store-id="<id>" \
   --from-literal=openfga-model-id="<id>" \
-  -n langgraph-agent
+  -n mcp-server-langgraph
 ```
 
 ### Secret Rotation
@@ -607,7 +607,7 @@ kubectl create secret generic langgraph-agent-secrets \
 1. Update secret in Kubernetes
 2. Trigger rolling restart:
    ```bash
-   kubectl rollout restart deployment/langgraph-agent -n langgraph-agent
+   kubectl rollout restart deployment/mcp-server-langgraph -n mcp-server-langgraph
    ```
 
 ## Troubleshooting
@@ -645,7 +645,7 @@ kubectl create secret generic langgraph-agent-secrets \
 3. Validate specific components:
    ```bash
    docker compose config
-   helm lint deployments/helm/langgraph-agent
+   helm lint deployments/helm/mcp-server-langgraph
    kubectl kustomize deployments/kustomize/overlays/dev
    ```
 
@@ -656,21 +656,21 @@ kubectl create secret generic langgraph-agent-secrets \
 **Solution**:
 1. Check pod status:
    ```bash
-   kubectl get pods -n langgraph-agent
-   kubectl describe pod <pod-name> -n langgraph-agent
+   kubectl get pods -n mcp-server-langgraph
+   kubectl describe pod <pod-name> -n mcp-server-langgraph
    ```
 2. Review logs:
    ```bash
-   kubectl logs -n langgraph-agent <pod-name>
+   kubectl logs -n mcp-server-langgraph <pod-name>
    ```
 3. Verify secrets exist:
    ```bash
-   kubectl get secrets -n langgraph-agent
+   kubectl get secrets -n mcp-server-langgraph
    ```
 4. Check resource availability:
    ```bash
    kubectl top nodes
-   kubectl top pods -n langgraph-agent
+   kubectl top pods -n mcp-server-langgraph
    ```
 
 ### Rollback Issues
@@ -680,7 +680,7 @@ kubectl create secret generic langgraph-agent-secrets \
 **Solution**:
 1. Verify rollback completed:
    ```bash
-   kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+   kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
    ```
 2. Check if database migrations need rollback
 3. Verify configuration compatibility

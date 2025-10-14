@@ -94,11 +94,11 @@ k8s/
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: langgraph-agent
+namespace: mcp-server-langgraph
 
 # Common labels applied to all resources
 commonLabels:
-  app: langgraph-agent
+  app: mcp-server-langgraph
   project: mcp-server
 
 # Common annotations
@@ -129,8 +129,8 @@ secretGenerator:
 
 # Images to use
 images:
-  - name: langgraph-agent
-    newName: langgraph-agent
+  - name: mcp-server-langgraph
+    newName: mcp-server-langgraph
     newTag: latest
 ```
 
@@ -140,21 +140,21 @@ images:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
   template:
     metadata:
       labels:
-        app: langgraph-agent
+        app: mcp-server-langgraph
     spec:
-      serviceAccountName: langgraph-agent
+      serviceAccountName: mcp-server-langgraph
       containers:
       - name: agent
-        image: langgraph-agent:latest
+        image: mcp-server-langgraph:latest
         ports:
         - containerPort: 8000
           name: http
@@ -192,11 +192,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   type: ClusterIP
   selector:
-    app: langgraph-agent
+    app: mcp-server-langgraph
   ports:
   - name: http
     port: 8000
@@ -212,7 +212,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 ```
 
 ## Development Overlay
@@ -256,8 +256,8 @@ patchesStrategicMerge:
 
 # Images
 images:
-  - name: langgraph-agent
-    newName: langgraph-agent
+  - name: mcp-server-langgraph
+    newName: mcp-server-langgraph
     newTag: dev
 ```
 
@@ -267,7 +267,7 @@ images:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   replicas: 1
   template:
@@ -324,8 +324,8 @@ patchesStrategicMerge:
   - deployment-patch.yaml
 
 images:
-  - name: langgraph-agent
-    newName: gcr.io/project-id/langgraph-agent
+  - name: mcp-server-langgraph
+    newName: gcr.io/project-id/mcp-server-langgraph
     newTag: staging
 ```
 
@@ -335,7 +335,7 @@ images:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   replicas: 2
   template:
@@ -357,12 +357,12 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: langgraph-agent
+    name: mcp-server-langgraph
   minReplicas: 2
   maxReplicas: 5
   metrics:
@@ -382,7 +382,7 @@ spec:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: langgraph-agent
+namespace: mcp-server-langgraph
 
 bases:
   - ../../base
@@ -422,12 +422,12 @@ patchesStrategicMerge:
   - deployment-patch.yaml
 
 images:
-  - name: langgraph-agent
-    newName: gcr.io/project-id/langgraph-agent
+  - name: mcp-server-langgraph
+    newName: gcr.io/project-id/mcp-server-langgraph
     newTag: v1.0.0
 
 replicas:
-  - name: langgraph-agent
+  - name: mcp-server-langgraph
     count: 3
 ```
 
@@ -437,7 +437,7 @@ replicas:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   strategy:
     type: RollingUpdate
@@ -460,7 +460,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - langgraph-agent
+                  - mcp-server-langgraph
               topologyKey: kubernetes.io/hostname
       containers:
       - name: agent
@@ -479,12 +479,12 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
 ```
 
 ### overlays/production/network-policy.yaml
@@ -493,11 +493,11 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
   policyTypes:
   - Ingress
   - Egress
@@ -551,7 +551,7 @@ patchesJson6902:
       group: apps
       version: v1
       kind: Deployment
-      name: langgraph-agent
+      name: mcp-server-langgraph
     patch: |-
       - op: add
         path: /spec/template/spec/containers/0/env/-
@@ -567,7 +567,7 @@ patchesJson6902:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     spec:
@@ -682,7 +682,7 @@ jobs:
 
       - name: Verify deployment
         run: |
-          kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+          kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 ### GitLab CI
@@ -693,7 +693,7 @@ deploy:production:
   image: bitnami/kubectl:latest
   script:
     - kubectl apply -k k8s/overlays/production
-    - kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+    - kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
   only:
     - main
 ```
@@ -706,7 +706,7 @@ deploy:production:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: langgraph-agent-production
+  name: mcp-server-langgraph-production
   namespace: argocd
 spec:
   project: default
@@ -718,7 +718,7 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: langgraph-agent
+    namespace: mcp-server-langgraph
 
   syncPolicy:
     automated:
@@ -746,7 +746,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 kubectl apply -f argocd-application.yaml
 
 # Sync application
-argocd app sync langgraph-agent-production
+argocd app sync mcp-server-langgraph-production
 ```
 
 ## Best Practices
@@ -782,7 +782,7 @@ argocd app sync langgraph-agent-production
 
     ```yaml
     images:
-      - name: langgraph-agent
+      - name: mcp-server-langgraph
         newTag: v1.2.3  # Not 'latest'
     ```
   </Accordion>
@@ -843,7 +843,7 @@ argocd app sync langgraph-agent-production
           group: apps
           version: v1
           kind: Deployment
-          name: langgraph-agent
+          name: mcp-server-langgraph
         patch: |-
           - op: replace
             path: /spec/replicas

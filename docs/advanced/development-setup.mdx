@@ -539,12 +539,12 @@ curl http://localhost:8000/health/live
 
 ```bash
 # Build image
-docker build -t langgraph-agent:dev .
+docker build -t mcp-server-langgraph:dev .
 
 # Run container
 docker run -p 8000:8000 \
   --env-file .env \
-  langgraph-agent:dev
+  mcp-server-langgraph:dev
 
 # Or use docker compose docker compose up
 ```
@@ -752,10 +752,10 @@ clean:  ## Clean up
 	rm -rf .coverage
 
 docker-build:  ## Build Docker image
-	docker build -t langgraph-agent:dev .
+	docker build -t mcp-server-langgraph:dev .
 
 docker-run:  ## Run Docker container
-	docker run -p 8000:8000 --env-file .env langgraph-agent:dev
+	docker run -p 8000:8000 --env-file .env mcp-server-langgraph:dev
 
 services-up:  ## Start development services
 	docker compose -f docker-compose.dev.yml up -d
@@ -872,7 +872,7 @@ pytest -n auto  # Use all CPU cores
 pip install pytest-sugar
 
 # Cache Docker layers
-docker build --cache-from langgraph-agent:latest .
+docker build --cache-from mcp-server-langgraph:latest .
 ```
 
 ### Optimize VSCode

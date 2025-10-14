@@ -23,18 +23,18 @@ Deploy the MCP Server with LangGraph using Helm for simplified Kubernetes deploy
 cd deployments/helm
 
 # Install with default values
-helm install langgraph-agent ./langgraph-agent \
-  --namespace langgraph-agent \
+helm install mcp-server-langgraph ./mcp-server-langgraph \
+  --namespace mcp-server-langgraph \
   --create-namespace \
-  --set image.repository=gcr.io/your-project/langgraph-agent \
+  --set image.repository=gcr.io/your-project/mcp-server-langgraph \
   --set image.tag=v2.1.0 \
   --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}"
 
 # Check deployment status
-helm status langgraph-agent -n langgraph-agent
+helm status mcp-server-langgraph -n mcp-server-langgraph
 
 # Get service URL
-kubectl get ingress -n langgraph-agent
+kubectl get ingress -n mcp-server-langgraph
 ```
 
 ## Prerequisites
@@ -61,8 +61,8 @@ kubectl get ingress -n langgraph-agent
     Build and push your container image:
 
     ```bash
-    docker build -t gcr.io/your-project/langgraph-agent:v2.1.0 .
-    docker push gcr.io/your-project/langgraph-agent:v2.1.0
+    docker build -t gcr.io/your-project/mcp-server-langgraph:v2.1.0 .
+    docker push gcr.io/your-project/mcp-server-langgraph:v2.1.0
     ```
   </Step>
 
@@ -84,7 +84,7 @@ kubectl get ingress -n langgraph-agent
 ## Chart Structure
 
 ```
-deployments/helm/langgraph-agent/
+deployments/helm/mcp-server-langgraph/
 ├── Chart.yaml              # Chart metadata
 ├── values.yaml             # Default configuration
 ├── values-production.yaml  # Production overrides
@@ -106,10 +106,10 @@ deployments/helm/langgraph-agent/
 ### Basic Installation
 
 ```bash
-helm install langgraph-agent ./deployments/helm/langgraph-agent \
-  --namespace langgraph-agent \
+helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
+  --namespace mcp-server-langgraph \
   --create-namespace \
-  --set image.repository=gcr.io/your-project/langgraph-agent \
+  --set image.repository=gcr.io/your-project/mcp-server-langgraph \
   --set image.tag=v2.1.0 \
   --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
   --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
@@ -126,7 +126,7 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
     replicaCount: 5
 
     image:
-      repository: gcr.io/your-project/langgraph-agent
+      repository: gcr.io/your-project/mcp-server-langgraph
       tag: "v2.1.0"
       pullPolicy: IfNotPresent
 
@@ -143,7 +143,7 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
             - path: /
               pathType: Prefix
       tls:
-        - secretName: langgraph-agent-tls
+        - secretName: mcp-server-langgraph-tls
           hosts:
             - api.yourdomain.com
 
@@ -212,8 +212,8 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
 
   <Tab title="Install">
     ```bash
-    helm install langgraph-agent ./deployments/helm/langgraph-agent \
-      --namespace langgraph-agent \
+    helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
+      --namespace mcp-server-langgraph \
       --create-namespace \
       --values values-production.yaml \
       --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
@@ -231,19 +231,19 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
     ```yaml
     # values-gke.yaml
     image:
-      repository: gcr.io/your-project/langgraph-agent
+      repository: gcr.io/your-project/mcp-server-langgraph
 
     serviceAccount:
       create: true
       annotations:
-        iam.gke.io/gcp-service-account: langgraph-agent@your-project.iam.gserviceaccount.com
+        iam.gke.io/gcp-service-account: mcp-server-langgraph@your-project.iam.gserviceaccount.com
 
     ingress:
       enabled: true
       className: "gce"
       annotations:
-        kubernetes.io/ingress.global-static-ip-name: "langgraph-agent-ip"
-        networking.gke.io/managed-certificates: "langgraph-agent-cert"
+        kubernetes.io/ingress.global-static-ip-name: "mcp-server-langgraph-ip"
+        networking.gke.io/managed-certificates: "mcp-server-langgraph-cert"
 
     keycloak:
       ingress:
@@ -262,11 +262,11 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
 
     ```bash
     # Create static IP
-    gcloud compute addresses create langgraph-agent-ip --global
+    gcloud compute addresses create mcp-server-langgraph-ip --global
 
     # Install chart
-    helm install langgraph-agent ./deployments/helm/langgraph-agent \
-      -n langgraph-agent --create-namespace \
+    helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
+      -n mcp-server-langgraph --create-namespace \
       -f values-gke.yaml
     ```
   </Tab>
@@ -275,12 +275,12 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
     ```yaml
     # values-eks.yaml
     image:
-      repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/langgraph-agent
+      repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/mcp-server-langgraph
 
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/langgraph-agent-role
+        eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/mcp-server-langgraph-role
 
     ingress:
       enabled: true
@@ -303,8 +303,8 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
     ```
 
     ```bash
-    helm install langgraph-agent ./deployments/helm/langgraph-agent \
-      -n langgraph-agent --create-namespace \
+    helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
+      -n mcp-server-langgraph --create-namespace \
       -f values-eks.yaml
     ```
   </Tab>
@@ -313,7 +313,7 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
     ```yaml
     # values-aks.yaml
     image:
-      repository: yourregistry.azurecr.io/langgraph-agent
+      repository: yourregistry.azurecr.io/mcp-server-langgraph
 
     serviceAccount:
       create: true
@@ -338,8 +338,8 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
     ```
 
     ```bash
-    helm install langgraph-agent ./deployments/helm/langgraph-agent \
-      -n langgraph-agent --create-namespace \
+    helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
+      -n mcp-server-langgraph --create-namespace \
       -f values-aks.yaml
     ```
   </Tab>
@@ -373,7 +373,7 @@ config:
 
   # Keycloak
   keycloakServerUrl: "http://keycloak:8080"
-  keycloakRealm: "langgraph-agent"
+  keycloakRealm: "mcp-server-langgraph"
   keycloakClientId: "langgraph-client"
   keycloakVerifySsl: true
 
@@ -430,7 +430,7 @@ secrets:
 
 Set secrets via command line:
 ```bash
-helm install langgraph-agent ./deployments/helm/langgraph-agent \
+helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
   --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
   --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
@@ -565,64 +565,64 @@ helm install langgraph-agent ./deployments/helm/langgraph-agent \
 vim values-production.yaml
 
 # Upgrade release
-helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
-  --namespace langgraph-agent \
+helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
+  --namespace mcp-server-langgraph \
   --values values-production.yaml \
   --set image.tag=v2.1.1
 
 # Check rollout
-kubectl rollout status deployment/langgraph-agent -n langgraph-agent
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 ### Major Version Upgrade
 
 ```bash
 # Check for breaking changes
-helm show notes ./deployments/helm/langgraph-agent
+helm show notes ./deployments/helm/mcp-server-langgraph
 
 # Backup current values
-helm get values langgraph-agent -n langgraph-agent > current-values.yaml
+helm get values mcp-server-langgraph -n mcp-server-langgraph > current-values.yaml
 
 # Perform upgrade
-helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
-  --namespace langgraph-agent \
+helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
+  --namespace mcp-server-langgraph \
   --values current-values.yaml \
   --set image.tag=v3.0.0 \
   --reuse-values
 
 # Verify
-helm list -n langgraph-agent
-kubectl get pods -n langgraph-agent
+helm list -n mcp-server-langgraph
+kubectl get pods -n mcp-server-langgraph
 ```
 
 ### Rollback
 
 ```bash
 # List release history
-helm history langgraph-agent -n langgraph-agent
+helm history mcp-server-langgraph -n mcp-server-langgraph
 
 # Rollback to previous version
-helm rollback langgraph-agent -n langgraph-agent
+helm rollback mcp-server-langgraph -n mcp-server-langgraph
 
 # Or rollback to specific revision
-helm rollback langgraph-agent 3 -n langgraph-agent
+helm rollback mcp-server-langgraph 3 -n mcp-server-langgraph
 ```
 
 ## Uninstallation
 
 ```bash
 # Uninstall release
-helm uninstall langgraph-agent -n langgraph-agent
+helm uninstall mcp-server-langgraph -n mcp-server-langgraph
 
 # Delete namespace (if desired)
-kubectl delete namespace langgraph-agent
+kubectl delete namespace mcp-server-langgraph
 
 # Note: PVCs are not deleted by default
 # List PVCs
-kubectl get pvc -n langgraph-agent
+kubectl get pvc -n mcp-server-langgraph
 
 # Delete PVCs (WARNING: Deletes data!)
-kubectl delete pvc --all -n langgraph-agent
+kubectl delete pvc --all -n mcp-server-langgraph
 ```
 
 ## Customization
@@ -730,29 +730,29 @@ kubectl label configmap langgraph-dashboards \
   <Accordion title="Helm install fails">
     ```bash
     # Check for syntax errors
-    helm lint ./deployments/helm/langgraph-agent
+    helm lint ./deployments/helm/mcp-server-langgraph
 
     # Dry-run to see rendered manifests
-    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+    helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --dry-run --debug \
-      --namespace langgraph-agent
+      --namespace mcp-server-langgraph
 
     # Check dependencies
-    helm dependency update ./deployments/helm/langgraph-agent
+    helm dependency update ./deployments/helm/mcp-server-langgraph
     ```
   </Accordion>
 
   <Accordion title="Dependencies not deploying">
     ```bash
     # Update dependencies
-    cd deployments/helm/langgraph-agent
+    cd deployments/helm/mcp-server-langgraph
     helm dependency update
 
     # Check Chart.yaml dependencies
     cat Chart.yaml
 
     # Install with dependency conditions
-    helm install langgraph-agent . \
+    helm install mcp-server-langgraph . \
       --set keycloak.enabled=true \
       --set redis.enabled=true \
       --set openfga.enabled=true
@@ -762,13 +762,13 @@ kubectl label configmap langgraph-dashboards \
   <Accordion title="Values not applying">
     ```bash
     # Check current values
-    helm get values langgraph-agent -n langgraph-agent
+    helm get values mcp-server-langgraph -n mcp-server-langgraph
 
     # Check all values (including defaults)
-    helm get values langgraph-agent -n langgraph-agent --all
+    helm get values mcp-server-langgraph -n mcp-server-langgraph --all
 
     # Verify rendered templates
-    helm template langgraph-agent ./deployments/helm/langgraph-agent \
+    helm template mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --values values-production.yaml \
       --debug
     ```
@@ -777,17 +777,17 @@ kubectl label configmap langgraph-dashboards \
   <Accordion title="Upgrade fails">
     ```bash
     # Check what will change
-    helm diff upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+    helm diff upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --values values-production.yaml
 
     # Force upgrade
-    helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+    helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --force \
       --cleanup-on-fail
 
     # If stuck, delete and reinstall
-    helm uninstall langgraph-agent -n langgraph-agent
-    helm install langgraph-agent ./deployments/helm/langgraph-agent \
+    helm uninstall mcp-server-langgraph -n mcp-server-langgraph
+    helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --values values-production.yaml
     ```
   </Accordion>

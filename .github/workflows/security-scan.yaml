@@ -149,7 +149,7 @@ jobs:
     steps:
     - name: Send notification
       uses: 8398a7/action-slack@v3
-      if: secrets.SLACK_SECURITY_WEBHOOK != ''
+      if: ${{ secrets.SLACK_SECURITY_WEBHOOK != '' }}
       with:
         status: 'failure'
         text: '⚠️ Security scan failed! Check GitHub Actions for details.'

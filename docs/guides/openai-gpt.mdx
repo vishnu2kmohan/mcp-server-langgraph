@@ -343,15 +343,15 @@ print(data)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
-  namespace: langgraph-agent
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
 spec:
   replicas: 3
   template:
     spec:
       containers:
       - name: agent
-        image: langgraph-agent:latest
+        image: mcp-server-langgraph:latest
         env:
         # Use OpenAI
         - name: LLM_PROVIDER
@@ -363,7 +363,7 @@ spec:
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
-              name: langgraph-agent-secrets
+              name: mcp-server-langgraph-secrets
               key: OPENAI_API_KEY
 
         # Optional: Organization ID

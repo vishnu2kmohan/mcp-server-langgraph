@@ -2,13 +2,13 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "langgraph-agent.fullname" . }}
+  name: {{ include "mcp-server-langgraph.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "langgraph-agent.labels" . | nindent 4 }}
+    {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
 spec:
   minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
-      {{- include "langgraph-agent.selectorLabels" . | nindent 6 }}
+      {{- include "mcp-server-langgraph.selectorLabels" . | nindent 6 }}
 {{- end }}

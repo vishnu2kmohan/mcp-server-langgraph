@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     spec:
       containers:
-      - name: langgraph-agent
+      - name: mcp-server-langgraph
         resources:
           requests:
             cpu: 250m

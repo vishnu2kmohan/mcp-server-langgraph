@@ -193,7 +193,7 @@ jobs:
         run: ./scripts/validation/validate_deployments.sh
 
       - name: Validate Helm charts
-        run: helm lint deployments/helm/langgraph-agent
+        run: helm lint deployments/helm/mcp-server-langgraph
 
       - name: Validate Kustomize overlays
         run: kustomize build deployments/kustomize/overlays/production
@@ -397,7 +397,7 @@ jobs:
 kubectl apply --dry-run=client -f deployments/kubernetes/
 
 # Check Helm chart syntax
-helm lint deployments/helm/langgraph-agent/
+helm lint deployments/helm/mcp-server-langgraph/
 
 # Validate Kustomize builds
 for env in dev staging production; do
@@ -407,7 +407,7 @@ done
 # Test with kind cluster
 kind create cluster --name test-cluster
 kubectl apply -f deployments/kubernetes/
-kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
+kubectl wait --for=condition=ready pod -l app=mcp-server-langgraph --timeout=300s
 ```
 
 ### Docker Build Validation

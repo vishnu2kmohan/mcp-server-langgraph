@@ -36,14 +36,14 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check admin password
-    kubectl exec -it keycloak-0 -n langgraph-agent -- \
+    kubectl exec -it keycloak-0 -n mcp-server-langgraph -- \
       /opt/keycloak/bin/kcadm.sh get users/admin
 
     # Verify HTTPS
     curl -I https://auth.yourdomain.com
 
     # Check brute force settings
-    kubectl exec -it keycloak-0 -n langgraph-agent -- \
+    kubectl exec -it keycloak-0 -n mcp-server-langgraph -- \
       /opt/keycloak/bin/kcadm.sh get realms/mcp-agent | grep bruteForce
     ```
   </Accordion>
@@ -66,7 +66,7 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check JWT secret length
-    kubectl get secret langgraph-agent-secrets -n langgraph-agent \
+    kubectl get secret mcp-server-langgraph-secrets -n mcp-server-langgraph \
       -o jsonpath='{.data.JWT_SECRET}' | base64 -d | wc -c
 
     # Verify token expiration
@@ -102,7 +102,7 @@ This checklist covers all critical security areas that should be audited before 
       }'
 
     # Check TLS
-    kubectl get svc openfga -n langgraph-agent -o yaml | grep tls
+    kubectl get svc openfga -n mcp-server-langgraph -o yaml | grep tls
     ```
   </Accordion>
 </AccordionGroup>
@@ -135,7 +135,7 @@ This checklist covers all critical security areas that should be audited before 
     grep -r "ANTHROPIC_API_KEY\|sk-ant-" src/
 
     # Verify Kubernetes encryption
-    kubectl get secret langgraph-agent-secrets -n langgraph-agent \
+    kubectl get secret mcp-server-langgraph-secrets -n mcp-server-langgraph \
       -o yaml | grep -i encrypt
     ```
   </Accordion>
@@ -155,7 +155,7 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check API key age
-    kubectl get secret langgraph-agent-secrets -n langgraph-agent \
+    kubectl get secret mcp-server-langgraph-secrets -n mcp-server-langgraph \
       -o json | jq '.metadata.creationTimestamp'
 
     # Monitor Anthropic usage
@@ -342,11 +342,11 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check for sensitive data in logs
-    kubectl logs deployment/langgraph-agent -n langgraph-agent | \
+    kubectl logs deployment/mcp-server-langgraph -n mcp-server-langgraph | \
       grep -i "password\|secret\|token"
 
     # Verify structured logging
-    kubectl logs deployment/langgraph-agent -n langgraph-agent | jq .
+    kubectl logs deployment/mcp-server-langgraph -n mcp-server-langgraph | jq .
     ```
   </Accordion>
 </AccordionGroup>
@@ -373,13 +373,13 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Scan image
-    trivy image langgraph-agent:latest
+    trivy image mcp-server-langgraph:latest
 
     # Check for root user
-    docker inspect langgraph-agent:latest | grep -i "user"
+    docker inspect mcp-server-langgraph:latest | grep -i "user"
 
     # Verify image signature
-    cosign verify langgraph-agent:latest
+    cosign verify mcp-server-langgraph:latest
     ```
   </Accordion>
 
@@ -399,11 +399,11 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check security context
-    kubectl get pod langgraph-agent-xxx -n langgraph-agent \
+    kubectl get pod mcp-server-langgraph-xxx -n mcp-server-langgraph \
       -o yaml | grep -A 10 securityContext
 
     # Verify Pod Security Standards
-    kubectl label namespace langgraph-agent \
+    kubectl label namespace mcp-server-langgraph \
       pod-security.kubernetes.io/enforce=restricted
     ```
   </Accordion>
@@ -429,7 +429,7 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check database encryption
-    kubectl exec postgres-0 -n langgraph-agent -- \
+    kubectl exec postgres-0 -n mcp-server-langgraph -- \
       psql -c "SHOW ssl;" | grep on
 
     # Check Redis TLS
@@ -516,7 +516,7 @@ This checklist covers all critical security areas that should be audited before 
     kubectl get clusterrolebindings
 
     # Check service account permissions
-    kubectl auth can-i --list --as=system:serviceaccount:langgraph-agent:langgraph-agent
+    kubectl auth can-i --list --as=system:serviceaccount:mcp-server-langgraph:mcp-server-langgraph
 
     # Audit RBAC
     kubectl auth reconcile -f rbac.yaml --dry-run
@@ -539,7 +539,7 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check Pod Security Admission
-    kubectl get ns langgraph-agent -o yaml | grep pod-security
+    kubectl get ns mcp-server-langgraph -o yaml | grep pod-security
 
     # Scan for privileged pods
     kubectl get pods -A -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.securityContext.privileged}{"\n"}{end}'
@@ -682,7 +682,7 @@ pip-audit
 
 # 3. Scan container images
 echo "Scanning container images..."
-trivy image langgraph-agent:latest
+trivy image mcp-server-langgraph:latest
 
 # 4. Check Kubernetes configuration
 echo "Checking Kubernetes configs..."
@@ -694,7 +694,7 @@ kubectl get networkpolicies -A
 
 # 6. RBAC audit
 echo "Auditing RBAC..."
-kubectl auth can-i --list --as=system:serviceaccount:langgraph-agent:langgraph-agent
+kubectl auth can-i --list --as=system:serviceaccount:mcp-server-langgraph:mcp-server-langgraph
 
 # 7. Check for exposed secrets
 echo "Checking for exposed secrets..."

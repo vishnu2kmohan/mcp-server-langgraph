@@ -3,10 +3,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: langgraph-agent-streamable
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-streamable
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
     transport: streamable-http
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -28,10 +28,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - mcp.langgraph-agent.example.com
-    secretName: langgraph-agent-streamable-tls
+    - mcp.mcp-server-langgraph.example.com
+    secretName: mcp-server-langgraph-streamable-tls
   rules:
-  - host: mcp.langgraph-agent.example.com
+  - host: mcp.mcp-server-langgraph.example.com
     http:
       paths:
       # StreamableHTTP endpoint
@@ -39,7 +39,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 80
       # Other endpoints
@@ -47,7 +47,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 80
 
@@ -56,10 +56,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: langgraph-agent-sse
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-sse
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
     transport: http-sse
     deprecated: "true"
   annotations:
@@ -81,10 +81,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - mcp.langgraph-agent.example.com
-    secretName: langgraph-agent-http-tls
+    - mcp.mcp-server-langgraph.example.com
+    secretName: mcp-server-langgraph-http-tls
   rules:
-  - host: mcp.langgraph-agent.example.com
+  - host: mcp.mcp-server-langgraph.example.com
     http:
       paths:
       # SSE endpoint (use headless service for session affinity)
@@ -92,7 +92,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent-sse
+            name: mcp-server-langgraph-sse
             port:
               number: 8000
       # Regular HTTP endpoints
@@ -100,6 +100,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: langgraph-agent
+            name: mcp-server-langgraph
             port:
               number: 80

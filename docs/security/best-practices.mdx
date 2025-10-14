@@ -114,7 +114,7 @@ Security is an **ongoing process**, not a one-time setup. Regularly review and u
         "access_token_expire": 3600,
         "refresh_token_expire": 604800,
         "issuer": "https://keycloak.yourdomain.com",
-        "audience": "langgraph-agent",
+        "audience": "mcp-server-langgraph",
         "verify_signature": True,
         "verify_exp": True,
         "verify_aud": True,
@@ -321,7 +321,7 @@ async def check_resource_access(
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
-      name: langgraph-agent
+      name: mcp-server-langgraph
       annotations:
         nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.3"
         nginx.ingress.kubernetes.io/ssl-ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
@@ -344,7 +344,7 @@ async def check_resource_access(
     kind: PeerAuthentication
     metadata:
       name: default
-      namespace: langgraph-agent
+      namespace: mcp-server-langgraph
     spec:
       mtls:
         mode: STRICT
@@ -467,7 +467,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-all
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   podSelector: {}
   policyTypes:
@@ -479,12 +479,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: langgraph-agent-policy
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-policy
+  namespace: mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
-      app: langgraph-agent
+      app: mcp-server-langgraph
   policyTypes:
   - Ingress
   - Egress
@@ -662,7 +662,7 @@ CMD ["python", "-m", "uvicorn", "mcp_server_langgraph.main:app", "--host", "0.0.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   template:
     spec:
@@ -676,7 +676,7 @@ spec:
 
       containers:
       - name: agent
-        image: langgraph-agent:latest
+        image: mcp-server-langgraph:latest
 
         # Container security
         securityContext:
@@ -725,12 +725,12 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Build image
-      run: docker build -t langgraph-agent:${{ github.sha }} .
+      run: docker build -t mcp-server-langgraph:${{ github.sha }} .
 
     - name: Run Trivy scan
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: langgraph-agent:${{ github.sha }}
+        image-ref: mcp-server-langgraph:${{ github.sha }}
         format: 'sarif'
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH'
@@ -743,7 +743,7 @@ jobs:
     - name: Fail on critical vulnerabilities
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: langgraph-agent:${{ github.sha }}
+        image-ref: mcp-server-langgraph:${{ github.sha }}
         exit-code: '1'
         severity: 'CRITICAL'
 ```

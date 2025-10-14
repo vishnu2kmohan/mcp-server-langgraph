@@ -26,13 +26,13 @@ All production deployments **MUST** use explicit version tags following semantic
 
 ```yaml
 # ✅ CORRECT
-image: langgraph-agent:2.4.0
-image: langgraph-agent:v2.4.0
+image: mcp-server-langgraph:2.4.0
+image: mcp-server-langgraph:v2.4.0
 image: gcr.io/project/app:2.4.0
 
 # 🔴 NEVER DO THIS
-image: langgraph-agent:latest
-image: langgraph-agent  # defaults to latest
+image: mcp-server-langgraph:latest
+image: mcp-server-langgraph  # defaults to latest
 ```
 
 ### Staging (Recommended)
@@ -83,8 +83,8 @@ newTag: dev-2.4.0-${GIT_SHA}
 | **Kubernetes** |
 | `deployments/kubernetes/base/deployment.yaml` | 2.4.0 | ✅ Pinned | Base |
 | **Helm** |
-| `deployments/helm/langgraph-agent/values.yaml` | 2.4.0 | ✅ Pinned | Default |
-| `deployments/helm/langgraph-agent/Chart.yaml` | 2.4.0 | ✅ Pinned | Version |
+| `deployments/helm/mcp-server-langgraph/values.yaml` | 2.4.0 | ✅ Pinned | Default |
+| `deployments/helm/mcp-server-langgraph/Chart.yaml` | 2.4.0 | ✅ Pinned | Version |
 | **Kustomize** |
 | `deployments/kustomize/base/kustomization.yaml` | 2.4.0 | ✅ Pinned | Base |
 | `deployments/kustomize/overlays/dev/kustomization.yaml` | dev-latest | ⚠️ Latest | Development |
@@ -153,8 +153,8 @@ Run the version sync script:
 ./scripts/sync-versions.sh 2.5.0
 
 # Or manual updates:
-# - deployments/helm/langgraph-agent/Chart.yaml (version and appVersion)
-# - deployments/helm/langgraph-agent/values.yaml (image.tag)
+# - deployments/helm/mcp-server-langgraph/Chart.yaml (version and appVersion)
+# - deployments/helm/mcp-server-langgraph/values.yaml (image.tag)
 # - deployments/kubernetes/base/deployment.yaml
 # - deployments/kustomize/base/kustomization.yaml
 # - deployments/kustomize/overlays/staging/kustomization.yaml
@@ -178,17 +178,17 @@ Our CI/CD pipeline automatically creates:
 
 ```bash
 # On git tag push (v2.5.0):
-- langgraph-agent:2.5.0
-- langgraph-agent:2.5
-- langgraph-agent:2
-- langgraph-agent:latest  # Convenience tag
+- mcp-server-langgraph:2.5.0
+- mcp-server-langgraph:2.5
+- mcp-server-langgraph:2
+- mcp-server-langgraph:latest  # Convenience tag
 
 # On main branch commit:
-- langgraph-agent:main-${GIT_SHA}
-- langgraph-agent:latest  # Updated
+- mcp-server-langgraph:main-${GIT_SHA}
+- mcp-server-langgraph:latest  # Updated
 
 # On feature branch:
-- langgraph-agent:${BRANCH}-${GIT_SHA}
+- mcp-server-langgraph:${BRANCH}-${GIT_SHA}
 ```
 
 **Note**: The `:latest` tag is created automatically for convenience but **MUST NOT** be used in production deployments.
@@ -201,36 +201,36 @@ Our CI/CD pipeline automatically creates:
 
 ```yaml
 # Semantic version (production)
-langgraph-agent:2.4.0
-langgraph-agent:v2.4.0
+mcp-server-langgraph:2.4.0
+mcp-server-langgraph:v2.4.0
 
 # Git SHA (development/staging)
-langgraph-agent:dev-a1b2c3d
-langgraph-agent:staging-a1b2c3d
+mcp-server-langgraph:dev-a1b2c3d
+mcp-server-langgraph:staging-a1b2c3d
 
 # Combined (traceability)
-langgraph-agent:2.4.0-a1b2c3d
-langgraph-agent:v2.4.0-rc1
+mcp-server-langgraph:2.4.0-a1b2c3d
+mcp-server-langgraph:v2.4.0-rc1
 
 # Environment-specific
-langgraph-agent:staging-2.4.0
-langgraph-agent:prod-2.4.0
+mcp-server-langgraph:staging-2.4.0
+mcp-server-langgraph:prod-2.4.0
 ```
 
 ### Anti-Patterns (DO NOT USE)
 
 ```yaml
 # ❌ No tag specified (defaults to :latest)
-langgraph-agent
+mcp-server-langgraph
 
 # ❌ Latest tag
-langgraph-agent:latest
-langgraph-agent:stable
-langgraph-agent:production
+mcp-server-langgraph:latest
+mcp-server-langgraph:stable
+mcp-server-langgraph:production
 
 # ❌ Mutable tags
-langgraph-agent:v2
-langgraph-agent:v2.4
+mcp-server-langgraph:v2
+mcp-server-langgraph:v2.4
 ```
 
 ---
@@ -242,7 +242,7 @@ langgraph-agent:v2.4
 ```yaml
 # kustomize/overlays/dev/kustomization.yaml
 images:
-  - name: langgraph-agent
+  - name: mcp-server-langgraph
     newTag: dev-latest  # Or dev-${GIT_SHA}
 ```
 
@@ -253,7 +253,7 @@ images:
 ```yaml
 # kustomize/overlays/staging/kustomization.yaml
 images:
-  - name: langgraph-agent
+  - name: mcp-server-langgraph
     newTag: staging-2.4.0  # Explicit version
 ```
 
@@ -264,7 +264,7 @@ images:
 ```yaml
 # kustomize/overlays/production/kustomization.yaml
 images:
-  - name: langgraph-agent
+  - name: mcp-server-langgraph
     newTag: v2.4.0  # Production version tag
 ```
 
@@ -278,11 +278,11 @@ Always use `IfNotPresent` or `Never` with pinned tags:
 
 ```yaml
 # ✅ CORRECT (with pinned tag)
-image: langgraph-agent:2.4.0
+image: mcp-server-langgraph:2.4.0
 imagePullPolicy: IfNotPresent
 
 # ⚠️ REQUIRED (with latest tag)
-image: langgraph-agent:latest
+image: mcp-server-langgraph:latest
 imagePullPolicy: Always
 ```
 
@@ -332,20 +332,20 @@ vim kustomization.yaml  # Change newTag: v2.4.0 → v2.3.0
 kubectl apply -k deployments/kustomize/overlays/production
 
 # Verify rollback
-kubectl rollout status deployment/prod-langgraph-agent
+kubectl rollout status deployment/prod-mcp-server-langgraph
 ```
 
 ### Helm Rollback
 
 ```bash
 # Rollback to previous release
-helm rollback langgraph-agent
+helm rollback mcp-server-langgraph
 
 # Or rollback to specific revision
-helm rollback langgraph-agent 3
+helm rollback mcp-server-langgraph 3
 
 # Or reinstall with previous version
-helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set image.tag=2.3.0 \
   --reuse-values
 ```
@@ -354,13 +354,13 @@ helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
 
 ```bash
 # Rollback deployment to previous revision
-kubectl rollout undo deployment/langgraph-agent
+kubectl rollout undo deployment/mcp-server-langgraph
 
 # Rollback to specific revision
-kubectl rollout undo deployment/langgraph-agent --to-revision=5
+kubectl rollout undo deployment/mcp-server-langgraph --to-revision=5
 
 # Check rollout history
-kubectl rollout history deployment/langgraph-agent
+kubectl rollout history deployment/mcp-server-langgraph
 ```
 
 ---
@@ -371,12 +371,12 @@ kubectl rollout history deployment/langgraph-agent
 
 ```bash
 # Check running version in Kubernetes
-kubectl get deployment langgraph-agent -o jsonpath='{.spec.template.spec.containers[0].image}'
+kubectl get deployment mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].image}'
 
-# Expected: langgraph-agent:2.4.0
+# Expected: mcp-server-langgraph:2.4.0
 
 # Check all deployments across namespaces
-kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}' | grep langgraph-agent
+kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}' | grep mcp-server-langgraph
 ```
 
 ### Automated Monitoring
@@ -384,7 +384,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
 ```yaml
 # Prometheus alert for version drift
 - alert: ImageVersionMismatch
-  expr: kube_deployment_spec_replicas{deployment="langgraph-agent"}
+  expr: kube_deployment_spec_replicas{deployment="mcp-server-langgraph"}
         unless on(deployment) kube_deployment_spec_template_image{image=~".*:2\\.4\\.0"}
   for: 5m
   annotations:
@@ -411,7 +411,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
     fi
 
     # Deploy with explicit version
-    helm upgrade --install langgraph-agent ./helm/langgraph-agent \
+    helm upgrade --install mcp-server-langgraph ./helm/mcp-server-langgraph \
       --namespace production \
       --set image.tag=$VERSION \
       --wait
@@ -491,23 +491,23 @@ See [VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md) for detailed infrastruc
 
 ```bash
 # Check if version exists in registry
-docker pull langgraph-agent:2.4.0
+docker pull mcp-server-langgraph:2.4.0
 
 # If not found, build and push
-docker build -t langgraph-agent:2.4.0 .
-docker tag langgraph-agent:2.4.0 gcr.io/PROJECT/langgraph-agent:2.4.0
-docker push gcr.io/PROJECT/langgraph-agent:2.4.0
+docker build -t mcp-server-langgraph:2.4.0 .
+docker tag mcp-server-langgraph:2.4.0 gcr.io/PROJECT/mcp-server-langgraph:2.4.0
+docker push gcr.io/PROJECT/mcp-server-langgraph:2.4.0
 ```
 
 ### Issue: "Deployment using old version"
 
 ```bash
 # Force new deployment
-kubectl rollout restart deployment/langgraph-agent
+kubectl rollout restart deployment/mcp-server-langgraph
 
 # Or update deployment
-kubectl set image deployment/langgraph-agent \
-  langgraph-agent=langgraph-agent:2.4.0
+kubectl set image deployment/mcp-server-langgraph \
+  mcp-server-langgraph=mcp-server-langgraph:2.4.0
 ```
 
 ### Issue: "Version mismatch across environments"

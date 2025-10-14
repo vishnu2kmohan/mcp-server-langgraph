@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: langgraph-agent-config
-  namespace: langgraph-agent
+  name: mcp-server-langgraph-config
+  namespace: mcp-server-langgraph
   labels:
-    app: langgraph-agent
+    app: mcp-server-langgraph
 data:
   # Service Configuration
   environment: "production"
@@ -37,11 +37,11 @@ data:
 
   # Keycloak Settings
   keycloak_server_url: "http://keycloak:8080"
-  keycloak_realm: "langgraph-agent"
+  keycloak_realm: "mcp-server-langgraph"
   keycloak_client_id: "langgraph-client"
   keycloak_verify_ssl: "true"
   keycloak_timeout: "30"
-  keycloak_hostname: "langgraph-agent.example.com"
+  keycloak_hostname: "mcp-server-langgraph.example.com"
 
   # Session Management
   session_backend: "redis"  # memory, redis

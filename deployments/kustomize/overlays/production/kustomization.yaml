@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: langgraph-agent
+namespace: mcp-server-langgraph
 
 namePrefix: prod-
 
@@ -17,15 +17,15 @@ patchesStrategicMerge:
   - hpa-patch.yaml
 
 replicas:
-  - name: langgraph-agent
+  - name: mcp-server-langgraph
     count: 5
 
 images:
-  - name: langgraph-agent
+  - name: mcp-server-langgraph
     newTag: v2.4.0
 
 configMapGenerator:
-  - name: langgraph-agent-config
+  - name: mcp-server-langgraph-config
     behavior: merge
     literals:
       - environment=production

@@ -57,7 +57,7 @@ graph TB
     # Optional: LangSmith
     LANGSMITH_TRACING=true
     LANGSMITH_API_KEY=your-key-here
-    LANGSMITH_PROJECT=langgraph-agent
+    LANGSMITH_PROJECT=mcp-server-langgraph
     ```
   </Step>
 
@@ -301,10 +301,10 @@ Add scraping configuration:
 ```yaml
 # prometheus.yml
 scrape_configs:
-  - job_name: 'langgraph-agent'
+  - job_name: 'mcp-server-langgraph'
     scrape_interval: 15s
     static_configs:
-      - targets: ['langgraph-agent:8000']
+      - targets: ['mcp-server-langgraph:8000']
     metrics_path: '/metrics/prometheus'
 ```
 
@@ -411,7 +411,7 @@ kubectl label configmap grafana-dashboards \
     # .env
     LANGSMITH_TRACING=true
     LANGSMITH_API_KEY=ls_api_key_...
-    LANGSMITH_PROJECT=langgraph-agent
+    LANGSMITH_PROJECT=mcp-server-langgraph
     LANGSMITH_ENDPOINT=https://api.smith.langchain.com
     ```
   </Step>
@@ -463,7 +463,7 @@ kubectl label configmap grafana-dashboards \
 ```python
 from langsmith import trace
 
-@trace(name="custom_step", project="langgraph-agent")
+@trace(name="custom_step", project="mcp-server-langgraph")
 def custom_function(input_data):
     # Automatically traced to LangSmith
     result = process(input_data)
@@ -503,11 +503,11 @@ All logs are JSON-formatted with trace context:
       - url: http://loki:3100/loki/api/v1/push
 
     scrape_configs:
-      - job_name: langgraph-agent
+      - job_name: mcp-server-langgraph
         kubernetes_sd_configs:
           - role: pod
             namespaces:
-              names: [langgraph-agent]
+              names: [mcp-server-langgraph]
     ```
   </Tab>
 
@@ -517,7 +517,7 @@ All logs are JSON-formatted with trace context:
     filebeat.inputs:
       - type: container
         paths:
-          - '/var/log/containers/*langgraph-agent*.log'
+          - '/var/log/containers/*mcp-server-langgraph*.log'
 
     output.elasticsearch:
       hosts: ["elasticsearch:9200"]

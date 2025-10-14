@@ -297,7 +297,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ollama
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   replicas: 1
   selector:
@@ -345,7 +345,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ollama
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   selector:
     app: ollama
@@ -358,7 +358,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: ollama-models
-  namespace: langgraph-agent
+  namespace: mcp-server-langgraph
 spec:
   accessModes:
   - ReadWriteOnce
@@ -395,14 +395,14 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 spec:
   replicas: 3
   template:
     spec:
       containers:
       - name: agent
-        image: langgraph-agent:latest
+        image: mcp-server-langgraph:latest
         env:
         - name: LLM_PROVIDER
           value: "ollama"

@@ -2,11 +2,11 @@
 apiVersion: skaffold/v4beta7
 kind: Config
 metadata:
-  name: langgraph-agent
+  name: mcp-server-langgraph
 
 build:
   artifacts:
-  - image: langgraph-agent
+  - image: mcp-server-langgraph
     docker:
       dockerfile: Dockerfile
     sync:
@@ -17,12 +17,12 @@ build:
 deploy:
   helm:
     releases:
-    - name: langgraph-agent
-      chartPath: helm/langgraph-agent
-      namespace: langgraph-agent
+    - name: mcp-server-langgraph
+      chartPath: helm/mcp-server-langgraph
+      namespace: mcp-server-langgraph
       createNamespace: true
       valuesFiles:
-      - helm/langgraph-agent/values.yaml
+      - helm/mcp-server-langgraph/values.yaml
       setValues:
         image.pullPolicy: IfNotPresent
         replicaCount: 1
@@ -31,13 +31,13 @@ deploy:
         resources.limits.cpu: 500m
         resources.limits.memory: 512Mi
       setValueTemplates:
-        image.repository: langgraph-agent
+        image.repository: mcp-server-langgraph
         image.tag: "{{ .IMAGE_TAG }}"
 
 portForward:
 - resourceType: service
-  resourceName: langgraph-agent
-  namespace: langgraph-agent
+  resourceName: mcp-server-langgraph
+  namespace: mcp-server-langgraph
   port: 80
   localPort: 8000
 
@@ -55,8 +55,8 @@ profiles:
   deploy:
     helm:
       releases:
-      - name: langgraph-agent
-        chartPath: helm/langgraph-agent
-        namespace: langgraph-agent
+      - name: mcp-server-langgraph
+        chartPath: helm/mcp-server-langgraph
+        namespace: mcp-server-langgraph
         setValues:
           autoscaling.enabled: true
