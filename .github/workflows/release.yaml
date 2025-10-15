@@ -27,23 +27,83 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Generate changelog
-      id: changelog
+    - name: Extract CHANGELOG section
+      id: extract_changelog
       run: |
         # Extract version from tag
         VERSION="${{ github.ref_name }}"
-        # Get changes since last tag
-        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-        if [ -n "$PREVIOUS_TAG" ]; then
-          CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+        VERSION_NO_V="${VERSION#v}"
+
+        echo "Extracting CHANGELOG section for version: $VERSION_NO_V"
+
+        # Extract the section for this version from CHANGELOG.md
+        # Get content between "## [VERSION]" and next "---" (escape dots in version)
+        VERSION_ESCAPED=$(echo "$VERSION_NO_V" | sed 's/\./\\./g')
+        sed -n "/^## \[$VERSION_ESCAPED\]/,/^---$/p" CHANGELOG.md | sed '$d' > release_notes.md
+
+        # Check if we got content
+        if [ -s release_notes.md ] && [ $(wc -l < release_notes.md) -gt 5 ]; then
+          echo "✅ Found CHANGELOG content ($(wc -l < release_notes.md) lines)"
+          echo "has_changelog=true" >> $GITHUB_OUTPUT
+
+          # Add deployment info and links
+          cat >> release_notes.md << 'DEPLOYMENT_EOF'
+
+## 🚀 Quick Start
+
+### Pull Latest Version
+```bash
+docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+docker pull ghcr.io/${{ github.repository }}:latest
+```
+
+### Kubernetes Deployment
+```bash
+helm upgrade --install mcp-server-langgraph \
+  oci://ghcr.io/${{ github.repository }}/charts/mcp-server-langgraph \
+  --version ${{ github.ref_name }}
+```
+
+## 📚 Documentation
+
+- [Installation Guide](README.md)
+- [Kubernetes Deployment](docs/deployment/kubernetes.md)
+- [Testing Guide](docs/development/testing.md)
+- [Release Process](docs/deployment/RELEASE_PROCESS.md)
+DEPLOYMENT_EOF
         else
-          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges --max-count=20)
+          echo "⚠️ No CHANGELOG content found, using fallback"
+          echo "has_changelog=false" >> $GITHUB_OUTPUT
+
+          # Fallback: generate from commits
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREVIOUS_TAG" ]; then
+            git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges > changelog.txt
+          else
+            git log --pretty=format:"- %s (%h)" --no-merges --max-count=20 > changelog.txt
+          fi
+
+          # Create basic release notes
+          cat > release_notes.md << 'FALLBACK_EOF'
+## Changes in this Release
+
+FALLBACK_EOF
+          cat changelog.txt >> release_notes.md
+          cat >> release_notes.md << 'FALLBACK_EOF'
+
+## Docker Images
+
+```bash
+docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+docker pull ghcr.io/${{ github.repository }}:latest
+```
+
+## Documentation
+
+- [Installation Guide](README.md)
+- [Kubernetes Deployment](docs/deployment/kubernetes.md)
+FALLBACK_EOF
         fi
-        # Save to file for multiline output
-        echo "$CHANGELOG" > changelog.txt
-        echo "changelog<<EOF" >> $GITHUB_OUTPUT
-        cat changelog.txt >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Create Release
       id: create_release
@@ -52,35 +112,10 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }}
-        body: |
-          ## Changes in this Release
-
-          ${{ steps.changelog.outputs.changelog }}
-
-          ## Docker Images
-
-          ```bash
-          docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-          docker pull ghcr.io/${{ github.repository }}:latest
-          ```
-
-          ## Kubernetes Deployment
-
-          ```bash
-          helm upgrade --install mcp-server-langgraph \
-            oci://ghcr.io/${{ github.repository }}/charts/mcp-server-langgraph \
-            --version ${{ github.ref_name }}
-          ```
-
-          ## Documentation
-
-          - [Installation Guide](README.md)
-          - [Kubernetes Deployment](docs/deployment/kubernetes.md)
-          - [Testing Guide](docs/development/testing.md)
-          - [MCP Registry](docs/reference/mcp-registry.md)
+        bodyFile: release_notes.md
         draft: false
         prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
-        generateReleaseNotes: true  # Use GitHub's automatic release notes
+        generateReleaseNotes: false  # We provide our own from CHANGELOG.md
         makeLatest: ${{ !contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'rc') }}
 
   build-and-push:

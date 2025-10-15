@@ -11,9 +11,26 @@ The project uses automated GitHub Actions workflows to:
 4. Publish to PyPI
 5. Update the MCP Registry
 
-## Automated Version Bumping
+## Automated Release Process
 
 ### How It Works
+
+When a new GitHub release is created, two automated workflows run:
+
+#### 1. Release Notes Generation (`.github/workflows/release.yaml`)
+
+The release workflow automatically:
+
+1. **Extracts CHANGELOG content** from `CHANGELOG.md` for the release version
+2. **Adds deployment instructions** (Docker pull, Helm commands, documentation links)
+3. **Creates the GitHub release** with comprehensive description
+4. **Falls back to commit log** if CHANGELOG section not found (with warning)
+
+**Example**: For release `v2.6.0`, the workflow extracts content between `## [2.6.0]` and the next `---` or `## [` in CHANGELOG.md
+
+**Important**: Always update CHANGELOG.md before creating a release. The release description is automatically generated from it!
+
+#### 2. Version Bump Automation (`bump-deployment-versions` workflow)
 
 When a new GitHub release is published, the `bump-deployment-versions` workflow automatically:
 
@@ -208,7 +225,16 @@ kubectl apply -k deployments/kustomize/overlays/production
 ### Before Release
 
 - [ ] All tests passing in CI
-- [ ] CHANGELOG.md updated with release notes
+- [ ] **CHANGELOG.md updated with comprehensive release notes** ⭐ IMPORTANT
+  - [ ] Add section header: `## [VERSION] - YYYY-MM-DD`
+  - [ ] Include overview section with key improvements
+  - [ ] Document all changes with detailed descriptions
+  - [ ] Add code examples and usage instructions where applicable
+  - [ ] Highlight benefits for users/developers/operations
+  - [ ] Document breaking changes clearly (if any)
+  - [ ] Include file references and statistics
+  - [ ] Add migration guide (for major versions)
+  - [ ] **Note**: Release descriptions are automatically generated from CHANGELOG.md
 - [ ] Version bumped in pyproject.toml (manual or via script)
 - [ ] Documentation updated (if needed)
 - [ ] Breaking changes documented (for major versions)
