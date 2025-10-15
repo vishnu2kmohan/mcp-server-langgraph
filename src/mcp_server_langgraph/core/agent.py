@@ -10,12 +10,22 @@ from typing import Annotated, Literal, Optional, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.llm.factory import create_llm_from_config
 from mcp_server_langgraph.observability.telemetry import logger
+
+# Import Redis checkpointer if available
+try:
+    from langgraph.checkpoint.redis import RedisSaver
+
+    REDIS_CHECKPOINTER_AVAILABLE = True
+except ImportError:
+    REDIS_CHECKPOINTER_AVAILABLE = False
+    logger.warning("Redis checkpointer not available, using fallback to MemorySaver")
 
 # Import Pydantic AI for type-safe responses
 try:
@@ -59,6 +69,60 @@ def _initialize_pydantic_agent():
     except Exception as e:
         logger.warning(f"Failed to initialize Pydantic AI agent: {e}", exc_info=True)
         return None
+
+
+def _create_checkpointer() -> BaseCheckpointSaver:
+    """
+    Create checkpointer backend based on configuration
+
+    Returns:
+        BaseCheckpointSaver: Configured checkpointer (MemorySaver or RedisSaver)
+    """
+    backend = settings.checkpoint_backend.lower()
+
+    if backend == "redis":
+        if not REDIS_CHECKPOINTER_AVAILABLE:
+            logger.warning(
+                "Redis checkpointer not available (langgraph-checkpoint-redis not installed), "
+                "falling back to MemorySaver. Install with: pip install langgraph-checkpoint-redis"
+            )
+            return MemorySaver()
+
+        try:
+            logger.info(
+                "Initializing Redis checkpointer for distributed conversation state",
+                extra={
+                    "redis_url": settings.checkpoint_redis_url,
+                    "ttl_seconds": settings.checkpoint_redis_ttl,
+                },
+            )
+
+            # Create Redis checkpointer with TTL
+            checkpointer = RedisSaver.from_conn_string(
+                conn_string=settings.checkpoint_redis_url,
+                ttl=settings.checkpoint_redis_ttl,
+            )
+
+            logger.info("Redis checkpointer initialized successfully")
+            return checkpointer
+
+        except Exception as e:
+            logger.error(
+                f"Failed to initialize Redis checkpointer: {e}. Falling back to MemorySaver",
+                exc_info=True,
+            )
+            return MemorySaver()
+
+    elif backend == "memory":
+        logger.info("Using in-memory checkpointer (not suitable for multi-replica deployments)")
+        return MemorySaver()
+
+    else:
+        logger.warning(
+            f"Unknown checkpoint backend '{backend}', falling back to MemorySaver. "
+            f"Supported: 'memory', 'redis'"
+        )
+        return MemorySaver()
 
 
 def _get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str] = None) -> Optional[RunnableConfig]:
@@ -202,9 +266,9 @@ def create_agent_graph():
     workflow.add_edge("tools", "respond")
     workflow.add_edge("respond", END)
 
-    # Compile with checkpointing
-    memory = MemorySaver()
-    return workflow.compile(checkpointer=memory)
+    # Compile with checkpointing (uses factory to get Redis or Memory)
+    checkpointer = _create_checkpointer()
+    return workflow.compile(checkpointer=checkpointer)
 
 
 # Create singleton instance

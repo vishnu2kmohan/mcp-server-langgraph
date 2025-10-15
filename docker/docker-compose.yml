@@ -265,12 +265,15 @@ services:
       - prometheus
       - jaeger
 
-  # Redis for session management
+  # Redis for session management and conversation checkpoints
+  # - Database 0: Authentication sessions (SESSION_BACKEND=redis)
+  # - Database 1: Conversation checkpoints (CHECKPOINT_BACKEND=redis)
+  # Both use the same Redis instance for simplicity
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-} --databases 16
     volumes:
       - redis-data:/data
     networks:
@@ -281,6 +284,10 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    environment:
+      # Redis supports 16 databases by default (0-15)
+      # This allows logical separation without running multiple instances
+      - REDIS_DATABASES=16
 
 volumes:
   prometheus-data:

@@ -1,0 +1,447 @@
+---
+title: 'ADR-0022: Distributed Conversation Checkpointing'
+description: 'Enable HPA auto-scaling with Redis-backed conversation state'
+icon: 'database'
+---
+
+# 22. Distributed Conversation Checkpointing for Auto-Scaling
+
+Date: 2025-10-15
+
+## Status
+
+Accepted
+
+## Context
+
+The MCP Server uses LangGraph's checkpointing feature to maintain multi-turn conversation state. Previously, conversations were stored using `MemorySaver` (in-memory), which creates critical problems for production deployments with horizontal pod autoscaling (HPA):
+
+### Problem: Pod-Local Conversation State
+
+**Current Architecture**:
+- `MemorySaver` stores conversation state in pod memory
+- Each Kubernetes pod has isolated conversation history
+- `thread_id` identifies conversations but state is not shared
+
+**Auto-Scaling Failures**:
+1. **Scale-Up**: New pods have NO conversation history
+2. **Scale-Down**: Terminated pods lose ALL conversation state
+3. **Pod Restart**: All conversations on that pod are LOST
+4. **Load Balancing**: Users routed to different pods lose context
+
+### Attempted Solution: Session Affinity
+
+Kubernetes `Service` with `sessionAffinity: ClientIP` was configured:
+```yaml
+apiVersion: v1
+kind: Service
+spec:
+  sessionAffinity: ClientIP  # Route same IP to same pod
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours
+```
+
+**Why This Fails**:
+- ❌ Only works for same source IP (mobile clients change IPs)
+- ❌ Doesn't prevent state loss on pod restarts
+- ❌ Doesn't help during scale-down events
+- ❌ Application-layer `thread_id` not considered
+- ❌ Creates "pet" pods instead of "cattle" (anti-pattern)
+
+### Requirements
+
+Production deployments with HPA (minReplicas: 3, maxReplicas: 10) require:
+1. **Distributed State**: Conversation history accessible from ANY pod
+2. **State Persistence**: Survive pod restarts and scale events
+3. **Session Continuity**: Same `thread_id` works across all replicas
+4. **No Vendor Lock-in**: Pluggable backend (similar to session storage ADR-0006)
+5. **Performance**: Fast checkpoint reads/writes (< 10ms)
+6. **Simplicity**: Reuse existing infrastructure
+
+## Decision
+
+We will implement **distributed conversation checkpointing using Redis** with a pluggable architecture pattern.
+
+### Architecture
+
+```python
+# Factory pattern for checkpointers (similar to session storage)
+def _create_checkpointer() -> BaseCheckpointSaver:
+    backend = settings.checkpoint_backend  # "memory" or "redis"
+
+    if backend == "redis":
+        return RedisSaver.from_conn_string(
+            conn_string=settings.checkpoint_redis_url,
+            ttl=settings.checkpoint_redis_ttl,
+        )
+    else:
+        return MemorySaver()
+
+# Agent graph uses factory
+agent_graph = create_agent_graph().compile(checkpointer=_create_checkpointer())
+```
+
+### Redis Database Separation
+
+Same Redis instance, different databases:
+- **Database 0**: Authentication sessions (`SESSION_BACKEND=redis`)
+- **Database 1**: Conversation checkpoints (`CHECKPOINT_BACKEND=redis`)
+
+```bash
+# Session storage (existing)
+REDIS_URL=redis://localhost:6379/0
+
+# Checkpoint storage (new)
+CHECKPOINT_REDIS_URL=redis://localhost:6379/1
+```
+
+### Configuration
+
+```python
+# .env
+CHECKPOINT_BACKEND=redis  # "memory" (dev) or "redis" (production)
+CHECKPOINT_REDIS_URL=redis://localhost:6379/1
+CHECKPOINT_REDIS_TTL=604800  # 7 days
+```
+
+### Docker Compose
+
+```yaml
+redis:
+  image: redis:7-alpine
+  command: redis-server --appendonly yes --databases 16
+  # db 0: sessions, db 1: checkpoints
+```
+
+## Consequences
+
+### Positive Consequences
+
+✅ **Auto-Scaling Works**: HPA can scale 3-10 replicas without losing conversations
+✅ **State Persistence**: Conversations survive pod restarts and scale events
+✅ **Zero Infrastructure Overhead**: Reuses existing Redis (already used for sessions)
+✅ **Better Performance**: Redis (in-memory) is faster than PostgreSQL
+✅ **Backward Compatible**: Defaults to `memory` backend (existing behavior)
+✅ **Consistent Architecture**: Both sessions AND checkpoints use Redis
+✅ **Simple Operations**: No schema migrations or new databases
+
+### Negative Consequences
+
+⚠️ **Redis Dependency for Production**: Production deployments MUST enable Redis
+⚠️ **Slight Latency**: Redis network calls add ~5-10ms per checkpoint operation
+⚠️ **Memory Usage**: Conversations stored in Redis (mitigated by TTL)
+
+### Neutral Consequences
+
+- **Database Separation**: Uses different Redis databases (0 vs 1) for logical separation
+- **TTL Management**: Automatic cleanup after 7 days (configurable)
+
+## Alternatives Considered
+
+### 1. PostgreSQL Checkpointer
+
+**Description**: Use LangGraph's `PostgresSaver` to store checkpoints in database
+
+**Pros**:
+- Transactional guarantees
+- SQL query capabilities
+- May reuse existing PostgreSQL
+
+**Cons**:
+- ❌ Slower than Redis for high-frequency checkpoint operations
+- ❌ Requires new PostgreSQL instance (or shares with application DB)
+- ❌ Schema migrations needed
+- ❌ More complex connection pooling
+- ❌ Higher database load
+
+**Why Rejected**: Redis already available and much faster for checkpoint use case
+
+### 2. Sticky Sessions by thread_id (Application-Level Routing)
+
+**Description**: Implement custom load balancer to route same `thread_id` to same pod
+
+**Pros**:
+- Keeps conversation state local
+- No external storage needed
+
+**Cons**:
+- ❌ Doesn't solve pod restart problem (state still lost)
+- ❌ Doesn't work during scale-down events
+- ❌ Complicates load balancing significantly
+- ❌ Creates "pet" pods (stateful pods are anti-pattern)
+- ❌ Requires custom ingress/service mesh logic
+
+**Why Rejected**: Does not address core problem (pod restart/scale-down), adds complexity
+
+### 3. Keep MemorySaver + StatefulSet
+
+**Description**: Use Kubernetes StatefulSet instead of Deployment for stable pod identities
+
+**Pros**:
+- Stable network identities
+- Persistent volumes per pod
+
+**Cons**:
+- ❌ Still loses state on pod restart
+- ❌ Doesn't work with HPA (HPA doesn't work well with StatefulSets)
+- ❌ Slower rollouts
+- ❌ Violates "cattle not pets" principle
+- ❌ Not designed for stateless applications
+
+**Why Rejected**: StatefulSets inappropriate for stateless API servers
+
+### 4. Distributed In-Memory Cache (Memcached, Hazelcast)
+
+**Description**: Use distributed cache instead of Redis
+
+**Pros**:
+- In-memory performance
+- Distributed by design
+
+**Cons**:
+- ❌ New infrastructure dependency
+- ❌ More complex than Redis
+- ❌ LangGraph doesn't have native support
+- ❌ Would need custom checkpointer implementation
+
+**Why Rejected**: Redis already available and has native LangGraph support
+
+## Implementation Details
+
+### Checkpointer Factory
+
+```python
+# src/mcp_server_langgraph/core/agent.py
+
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.redis import RedisSaver
+
+def _create_checkpointer() -> BaseCheckpointSaver:
+    """Create checkpointer based on configuration"""
+    backend = settings.checkpoint_backend.lower()
+
+    if backend == "redis":
+        logger.info(
+            "Initializing Redis checkpointer for distributed conversation state",
+            extra={
+                "redis_url": settings.checkpoint_redis_url,
+                "ttl_seconds": settings.checkpoint_redis_ttl,
+            },
+        )
+        return RedisSaver.from_conn_string(
+            conn_string=settings.checkpoint_redis_url,
+            ttl=settings.checkpoint_redis_ttl,
+        )
+
+    logger.info("Using in-memory checkpointer (not suitable for multi-replica deployments)")
+    return MemorySaver()
+
+# Use factory when creating agent
+def create_agent_graph():
+    # ... graph setup ...
+    checkpointer = _create_checkpointer()
+    return workflow.compile(checkpointer=checkpointer)
+```
+
+### Configuration Settings
+
+```python
+# src/mcp_server_langgraph/core/config.py
+
+class Settings(BaseSettings):
+    # Conversation Checkpointing
+    checkpoint_backend: str = "memory"  # "memory", "redis"
+    checkpoint_redis_url: str = "redis://localhost:6379/1"
+    checkpoint_redis_ttl: int = 604800  # 7 days
+```
+
+### Request Flow (Auto-Scaling Scenario)
+
+```
+User Request 1 → Pod A (thread_id: "user-alice-123")
+├─ LangGraph invokes with config: {"configurable": {"thread_id": "user-alice-123"}}
+├─ RedisSaver stores checkpoint in Redis db 1
+└─ Response sent
+
+HPA scales up, adds Pod B and Pod C
+
+User Request 2 → Pod B (same thread_id: "user-alice-123")
+├─ LangGraph invokes with same config
+├─ RedisSaver loads checkpoint from Redis db 1
+├─ Conversation history restored automatically
+└─ Response with full context
+
+Pod A terminates (scale-down)
+└─ Checkpoint remains in Redis (no data loss)
+
+User Request 3 → Pod C (same thread_id)
+└─ Works seamlessly (loads from Redis)
+```
+
+## Performance Characteristics
+
+| Backend | Checkpoint Read | Checkpoint Write | Pod Restart Impact | Scaling Impact |
+|---------|----------------|------------------|-------------------|----------------|
+| **MemorySaver** | < 1ms | < 1ms | ❌ Lost | ❌ Lost |
+| **Redis (local)** | ~2ms | ~2ms | ✅ Preserved | ✅ Preserved |
+| **Redis (network)** | ~5-10ms | ~5-10ms | ✅ Preserved | ✅ Preserved |
+
+**Acceptable Trade-off**: 5-10ms latency vs ability to auto-scale safely
+
+## Testing Strategy
+
+### Unit Tests
+
+```python
+# tests/test_checkpointer.py
+
+def test_create_checkpointer_memory():
+    """Test memory checkpointer creation"""
+    settings.checkpoint_backend = "memory"
+    checkpointer = _create_checkpointer()
+    assert isinstance(checkpointer, MemorySaver)
+
+def test_create_checkpointer_redis():
+    """Test Redis checkpointer creation"""
+    settings.checkpoint_backend = "redis"
+    checkpointer = _create_checkpointer()
+    assert isinstance(checkpointer, RedisSaver)
+```
+
+### Integration Tests
+
+```python
+# tests/test_distributed_checkpointing.py
+
+@pytest.mark.integration
+async def test_conversation_continuity_across_restarts():
+    """Test conversation state persists across simulated pod restarts"""
+    # Simulate Pod A
+    graph_a = create_agent_graph()  # Uses Redis checkpointer
+    result_a = graph_a.invoke(state, config={"configurable": {"thread_id": "test-123"}})
+
+    # Simulate pod restart (new agent graph instance)
+    graph_b = create_agent_graph()
+    result_b = graph_b.invoke(new_state, config={"configurable": {"thread_id": "test-123"}})
+
+    # Conversation history should be preserved
+    assert len(result_b["messages"]) > len(new_state["messages"])
+```
+
+### Load Tests
+
+- Verify performance with Redis checkpointer under load
+- Test HPA scaling behavior with active conversations
+- Chaos test: Kill pods during conversations, verify recovery
+
+## Migration Path
+
+### Development → Production
+
+**Development** (default):
+```bash
+CHECKPOINT_BACKEND=memory  # Fast, no Redis needed
+```
+
+**Production** (required for HPA):
+```bash
+CHECKPOINT_BACKEND=redis
+CHECKPOINT_REDIS_URL=redis://redis-service:6379/1
+```
+
+### Existing Deployments
+
+**No Breaking Changes**:
+- Defaults to `memory` backend (current behavior)
+- Conversations in MemorySaver are NOT migrated (acceptable - they were temporary)
+- Enable Redis backend via environment variable
+
+**Upgrade Steps**:
+1. Deploy new version (still uses `memory` by default)
+2. Set `CHECKPOINT_BACKEND=redis` in deployment manifests
+3. Restart pods (conversations reset once - acceptable)
+4. Future conversations persist across all pod events
+
+## Kubernetes Configuration
+
+### HPA with Redis Checkpointer
+
+```yaml
+# deployments/kubernetes/base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: mcp-server-langgraph
+        env:
+        - name: CHECKPOINT_BACKEND
+          value: "redis"  # Enable for production
+        - name: CHECKPOINT_REDIS_URL
+          value: "redis://redis-service:6379/1"
+```
+
+### HPA Configuration
+
+```yaml
+# deployments/kubernetes/base/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+spec:
+  minReplicas: 3
+  maxReplicas: 10
+  # Works correctly with Redis checkpointer
+  # All replicas share conversation state
+```
+
+## Monitoring
+
+### Metrics
+
+Add OpenTelemetry metrics for checkpointer operations:
+```python
+# Checkpoint operation latency
+checkpoint_read_duration = Histogram("checkpoint.read.duration")
+checkpoint_write_duration = Histogram("checkpoint.write.duration")
+
+# Checkpoint operation count
+checkpoint_reads = Counter("checkpoint.reads")
+checkpoint_writes = Counter("checkpoint.writes")
+checkpoint_errors = Counter("checkpoint.errors")
+```
+
+### Alerts
+
+```yaml
+# Prometheus alerts
+- alert: CheckpointerHighLatency
+  expr: histogram_quantile(0.95, checkpoint_read_duration) > 0.1
+  annotations:
+    summary: "Checkpoint read latency is high (p95 > 100ms)"
+
+- alert: CheckpointerErrors
+  expr: rate(checkpoint_errors[5m]) > 0.01
+  annotations:
+    summary: "Checkpoint operations failing"
+```
+
+## Future Enhancements
+
+- **PostgreSQL Fallback**: Add PostgreSQL checkpointer option for organizations without Redis
+- **Checkpoint Compression**: Compress large conversation histories
+- **Selective Checkpointing**: Only checkpoint after N messages (reduce Redis writes)
+- **Multi-Region**: Replicate checkpoints across regions for disaster recovery
+
+## References
+
+- **Implementation**: `src/mcp_server_langgraph/core/agent.py:74-125`
+- **Configuration**: `src/mcp_server_langgraph/core/config.py:90-93`
+- **Related ADRs**:
+  - [ADR-0006](0006-session-storage-architecture.md) - Pluggable session storage (similar pattern)
+  - [ADR-0015](0015-memory-checkpointing.md) - Original checkpointing decision (superseded)
+  - [ADR-0013](0013-deployment-strategy.md) - Multi-cloud deployment patterns
+- **LangGraph Documentation**: https://langchain-ai.github.io/langgraph/how-tos/persistence/
+- **Redis Checkpointer**: `pip install langgraph-checkpoint-redis>=2.0.0`

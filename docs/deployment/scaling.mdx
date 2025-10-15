@@ -8,6 +8,26 @@ icon: 'arrow-up-right-dots'
 
 Scale your MCP Server horizontally (more replicas) and vertically (more resources) to handle varying loads efficiently. This guide covers Kubernetes HPA, VPA, cluster autoscaling, and performance tuning.
 
+<Note type="warning">
+  **IMPORTANT: Redis Checkpointer Required for HPA**
+
+  For production deployments with horizontal pod autoscaling (HPA), you **MUST** enable the Redis checkpointer:
+
+  ```bash
+  # .env or Kubernetes ConfigMap
+  CHECKPOINT_BACKEND=redis
+  CHECKPOINT_REDIS_URL=redis://redis-service:6379/1
+  ```
+
+  Without Redis, conversation state is stored in pod memory and **will be lost** during:
+  - Pod restarts
+  - Scale-up events (new pods have no history)
+  - Scale-down events (terminated pods lose all state)
+  - Load balancer routing to different pods
+
+  See [ADR-0022: Distributed Conversation Checkpointing](/architecture/adr-0022-distributed-conversation-checkpointing) for details.
+</Note>
+
 ## Horizontal Pod Autoscaling (HPA)
 
 ### Basic Configuration

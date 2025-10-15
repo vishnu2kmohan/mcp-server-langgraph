@@ -87,6 +87,11 @@ class Settings(BaseSettings):
     max_iterations: int = 10
     enable_checkpointing: bool = True
 
+    # Conversation Checkpointing (for distributed state across replicas)
+    checkpoint_backend: str = "memory"  # "memory", "redis"
+    checkpoint_redis_url: str = "redis://localhost:6379/1"  # Use db 1 (sessions use db 0)
+    checkpoint_redis_ttl: int = 604800  # 7 days TTL for conversation checkpoints
+
     # OpenFGA
     openfga_api_url: str = "http://localhost:8080"
     openfga_store_id: Optional[str] = None
@@ -188,6 +193,10 @@ class Settings(BaseSettings):
 
         if not self.keycloak_admin_password:
             self.keycloak_admin_password = secrets_mgr.get_secret("KEYCLOAK_ADMIN_PASSWORD", fallback=None)
+
+        # Load checkpoint configuration
+        # Note: checkpoint_redis_url defaults to redis://localhost:6379/1
+        # Can be overridden via environment variable or Infisical
 
     def get_secret(self, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """
