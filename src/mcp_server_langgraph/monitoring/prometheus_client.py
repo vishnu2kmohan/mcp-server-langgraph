@@ -337,7 +337,7 @@ class PrometheusClient:
         for p in percentiles:
             # Query using histogram_quantile
             quantile = p / 100.0
-            promql = f'histogram_quantile({quantile}, rate({metric}_bucket{label_str}[{timerange}]))'
+            promql = f"histogram_quantile({quantile}, rate({metric}_bucket{label_str}[{timerange}]))"
 
             try:
                 query_results = await self.query(promql)

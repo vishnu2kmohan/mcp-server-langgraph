@@ -31,7 +31,7 @@ class CustomJSONFormatter(jsonlogger.JsonFormatter):
         self,
         fmt: Optional[str] = None,
         datefmt: Optional[str] = None,
-        style: str = '%',
+        style: str = "%",
         service_name: str = "mcp-server-langgraph",
         include_hostname: bool = True,
         indent: Optional[int] = None,
@@ -73,59 +73,60 @@ class CustomJSONFormatter(jsonlogger.JsonFormatter):
         super().add_fields(log_record, record, message_dict)
 
         # Add timestamp in ISO 8601 format with milliseconds
-        if 'timestamp' not in log_record:
+        if "timestamp" not in log_record:
             now = datetime.utcnow()
-            log_record['timestamp'] = now.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+            log_record["timestamp"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
         # Add log level
-        log_record['level'] = record.levelname
+        log_record["level"] = record.levelname
 
         # Add logger name
-        log_record['logger'] = record.name
+        log_record["logger"] = record.name
 
         # Add service name
-        log_record['service'] = self.service_name
+        log_record["service"] = self.service_name
 
         # Add hostname if enabled
         if self.include_hostname:
             import socket
+
             try:
-                log_record['hostname'] = socket.gethostname()
+                log_record["hostname"] = socket.gethostname()
             except Exception:
-                log_record['hostname'] = 'unknown'
+                log_record["hostname"] = "unknown"
 
         # Add OpenTelemetry trace context
         span = trace.get_current_span()
         if span:
             span_context = span.get_span_context()
             if span_context and span_context.is_valid:
-                log_record['trace_id'] = format(span_context.trace_id, '032x')
-                log_record['span_id'] = format(span_context.span_id, '016x')
-                log_record['trace_flags'] = f'{span_context.trace_flags:02x}'
+                log_record["trace_id"] = format(span_context.trace_id, "032x")
+                log_record["span_id"] = format(span_context.span_id, "016x")
+                log_record["trace_flags"] = f"{span_context.trace_flags:02x}"
 
         # Add exception info if present
         if record.exc_info:
-            log_record['exception'] = {
-                'type': record.exc_info[0].__name__ if record.exc_info[0] else None,
-                'message': str(record.exc_info[1]) if record.exc_info[1] else None,
-                'stacktrace': self.formatException(record.exc_info),
+            log_record["exception"] = {
+                "type": record.exc_info[0].__name__ if record.exc_info[0] else None,
+                "message": str(record.exc_info[1]) if record.exc_info[1] else None,
+                "stacktrace": self.formatException(record.exc_info),
             }
 
         # Add process and thread info
-        log_record['process'] = {
-            'pid': record.process,
-            'name': record.processName,
+        log_record["process"] = {
+            "pid": record.process,
+            "name": record.processName,
         }
-        log_record['thread'] = {
-            'id': record.thread,
-            'name': record.threadName,
+        log_record["thread"] = {
+            "id": record.thread,
+            "name": record.threadName,
         }
 
         # Add file location
-        log_record['location'] = {
-            'file': record.pathname,
-            'line': record.lineno,
-            'function': record.funcName,
+        log_record["location"] = {
+            "file": record.pathname,
+            "line": record.lineno,
+            "function": record.funcName,
         }
 
     def format(self, record: logging.LogRecord) -> str:
@@ -139,22 +140,39 @@ class CustomJSONFormatter(jsonlogger.JsonFormatter):
             JSON-formatted log string
         """
         message_dict = {}
-        if hasattr(record, 'message'):
-            message_dict['message'] = record.getMessage()
+        if hasattr(record, "message"):
+            message_dict["message"] = record.getMessage()
 
         # Merge any extra fields passed via extra parameter
-        if hasattr(record, '__dict__'):
+        if hasattr(record, "__dict__"):
             for key, value in record.__dict__.items():
                 # Skip standard logging attributes
                 if key not in [
-                    'name', 'msg', 'args', 'created', 'filename', 'funcName',
-                    'levelname', 'levelno', 'lineno', 'module', 'msecs',
-                    'message', 'pathname', 'process', 'processName',
-                    'relativeCreated', 'thread', 'threadName', 'exc_info',
-                    'exc_text', 'stack_info', 'taskName'
+                    "name",
+                    "msg",
+                    "args",
+                    "created",
+                    "filename",
+                    "funcName",
+                    "levelname",
+                    "levelno",
+                    "lineno",
+                    "module",
+                    "msecs",
+                    "message",
+                    "pathname",
+                    "process",
+                    "processName",
+                    "relativeCreated",
+                    "thread",
+                    "threadName",
+                    "exc_info",
+                    "exc_text",
+                    "stack_info",
+                    "taskName",
                 ]:
                     # Add custom extra fields
-                    if not key.startswith('_'):
+                    if not key.startswith("_"):
                         message_dict[key] = value
 
         log_record = {}

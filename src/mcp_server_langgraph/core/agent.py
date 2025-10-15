@@ -119,8 +119,7 @@ def _create_checkpointer() -> BaseCheckpointSaver:
 
     else:
         logger.warning(
-            f"Unknown checkpoint backend '{backend}', falling back to MemorySaver. "
-            f"Supported: 'memory', 'redis'"
+            f"Unknown checkpoint backend '{backend}', falling back to MemorySaver. " f"Supported: 'memory', 'redis'"
         )
         return MemorySaver()
 

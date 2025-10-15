@@ -387,9 +387,7 @@ class TestPerformance:
         # Verify it's valid JSON
         json.loads(result)
 
-    def test_formatting_with_trace_performance(
-        self, json_formatter, log_record, tracer_provider, benchmark
-    ):
+    def test_formatting_with_trace_performance(self, json_formatter, log_record, tracer_provider, benchmark):
         """Benchmark JSON formatting with active trace"""
         tracer = tracer_provider.get_tracer(__name__)
 

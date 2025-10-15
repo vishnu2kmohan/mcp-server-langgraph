@@ -152,7 +152,9 @@ class ObservabilityConfig:
             )
         else:
             # Text formatter with trace context
-            log_format_str = "%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s"
+            log_format_str = (
+                "%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s"
+            )
             formatter = logging.Formatter(log_format_str)
             console_formatter = formatter
 
@@ -188,10 +190,7 @@ class ObservabilityConfig:
         error_handler.setFormatter(formatter)
 
         # Configure root logger
-        logging.basicConfig(
-            level=logging.INFO,
-            handlers=[console_handler, rotating_handler, daily_handler, error_handler]
-        )
+        logging.basicConfig(level=logging.INFO, handlers=[console_handler, rotating_handler, daily_handler, error_handler])
 
         self.logger = logging.getLogger(self.service_name)
         print(f"✓ Logging configured: {self.service_name}")
