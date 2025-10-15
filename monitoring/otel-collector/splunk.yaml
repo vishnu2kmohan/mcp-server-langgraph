@@ -1,0 +1,204 @@
+# OpenTelemetry Collector Configuration for Splunk
+# Exports logs, metrics, and traces to Splunk Enterprise/Cloud
+#
+# Environment Variables Required:
+# - SPLUNK_HEC_TOKEN: Splunk HEC (HTTP Event Collector) token
+# - SPLUNK_HEC_ENDPOINT: Splunk HEC endpoint (e.g., https://splunk:8088)
+# - SPLUNK_REALM: Splunk Observability Cloud realm (for metrics/traces, optional)
+# - SPLUNK_ACCESS_TOKEN: Splunk Observability Cloud access token (for metrics/traces, optional)
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  filelog:
+    include:
+      - /var/log/mcp-server-langgraph/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+      - type: move
+        from: attributes.message
+        to: body
+      - type: move
+        from: attributes.timestamp
+        to: timestamp
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      - key: service.name
+        action: upsert
+        value: mcp-server-langgraph
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
+      # Splunk-specific attributes
+      - key: com.splunk.source
+        value: otel-collector
+        action: insert
+      - key: com.splunk.sourcetype
+        value: _json
+        action: insert
+      - key: com.splunk.index
+        value: main
+        action: insert
+
+  attributes:
+    actions:
+      - key: log.source
+        value: otel-collector
+        action: insert
+      # Add Splunk fields
+      - key: host
+        from_attribute: hostname
+        action: insert
+
+  filter:
+    logs:
+      exclude:
+        match_type: regexp
+        record_attributes:
+          - key: message
+            value: ".*(password|secret|api_key).*"
+
+  # Resource detection
+  resourcedetection:
+    detectors: [system, env, docker]
+    timeout: 5s
+
+exporters:
+  # Splunk HEC exporter for logs
+  splunk_hec:
+    # HEC endpoint
+    endpoint: ${env:SPLUNK_HEC_ENDPOINT}/services/collector
+    token: ${env:SPLUNK_HEC_TOKEN}
+
+    # Source and sourcetype
+    source: "mcp-server-langgraph"
+    sourcetype: "_json"
+    index: "main"
+
+    # Disable SSL verification (enable for production with valid certs)
+    tls:
+      insecure_skip_verify: false
+      ca_file: /etc/ssl/certs/ca-certificates.crt  # Optional
+
+    # Compression
+    compression: gzip
+
+    # Max content length
+    max_content_length_logs: 2097152  # 2MB
+
+    # Profiling (disabled by default)
+    profiling_data_enabled: false
+
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    # Queue settings
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+    # Timeout
+    timeout: 30s
+
+  # Splunk HEC exporter for metrics (alternative: use Splunk Observability Cloud)
+  splunk_hec/metrics:
+    endpoint: ${env:SPLUNK_HEC_ENDPOINT}/services/collector
+    token: ${env:SPLUNK_HEC_TOKEN}
+    source: "mcp-server-langgraph:metrics"
+    sourcetype: "metric"
+    index: "main"
+
+    tls:
+      insecure_skip_verify: false
+
+    compression: gzip
+
+  # Splunk APM/Observability Cloud exporter (for traces and metrics)
+  # Uncomment if using Splunk Observability Cloud instead of Splunk Enterprise
+  # sapm:
+  #   access_token: ${env:SPLUNK_ACCESS_TOKEN}
+  #   endpoint: https://ingest.${env:SPLUNK_REALM}.signalfx.com/v2/trace
+  #   max_connections: 100
+
+  # SignalFx exporter for metrics (Splunk Observability Cloud)
+  # Uncomment if using Splunk Observability Cloud
+  # signalfx:
+  #   access_token: ${env:SPLUNK_ACCESS_TOKEN}
+  #   realm: ${env:SPLUNK_REALM}
+  #   send_compatible_metrics: true
+  #   sync_host_metadata: true
+
+  # Console exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+service:
+  pipelines:
+    # Traces pipeline
+    # Option 1: Splunk Enterprise (via HEC)
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource]
+      exporters: [splunk_hec, logging]
+
+    # Option 2: Splunk Observability Cloud (via SAPM)
+    # Uncomment to use Splunk APM
+    # traces:
+    #   receivers: [otlp]
+    #   processors: [memory_limiter, resourcedetection, batch, resource]
+    #   exporters: [sapm, logging]
+
+    # Metrics pipeline
+    # Option 1: Splunk Enterprise (via HEC metrics)
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource]
+      exporters: [splunk_hec/metrics, logging]
+
+    # Option 2: Splunk Observability Cloud (via SignalFx)
+    # Uncomment to use Splunk Infrastructure Monitoring
+    # metrics:
+    #   receivers: [otlp]
+    #   processors: [memory_limiter, resourcedetection, batch, resource]
+    #   exporters: [signalfx, logging]
+
+    # Logs pipeline (Splunk Enterprise via HEC)
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes, filter, resourcedetection, batch, resource]
+      exporters: [splunk_hec, logging]
+
+  extensions:
+    - health_check
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133

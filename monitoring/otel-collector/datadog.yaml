@@ -1,0 +1,190 @@
+# OpenTelemetry Collector Configuration for Datadog
+# Exports logs, metrics, and traces to Datadog for unified observability
+#
+# Environment Variables Required:
+# - DATADOG_API_KEY: Datadog API key
+# - DATADOG_SITE: Datadog site (datadoghq.com, datadoghq.eu, us3.datadoghq.com, etc.)
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  filelog:
+    include:
+      - /var/log/mcp-server-langgraph/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+      - type: move
+        from: attributes.message
+        to: body
+      - type: move
+        from: attributes.timestamp
+        to: timestamp
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      - key: service.name
+        action: upsert
+        value: mcp-server-langgraph
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
+      # Datadog-specific tags
+      - key: env
+        action: upsert
+        value: ${env:ENVIRONMENT}
+
+  attributes:
+    actions:
+      - key: log.source
+        value: otel-collector
+        action: insert
+      # Add Datadog service tag
+      - key: service
+        value: mcp-server-langgraph
+        action: insert
+      # Add version tag (optional)
+      - key: version
+        value: "2.4.0"
+        action: insert
+
+  filter:
+    logs:
+      exclude:
+        match_type: regexp
+        record_attributes:
+          - key: message
+            value: ".*(password|secret|api_key).*"
+
+  # Resource detection
+  resourcedetection:
+    detectors: [system, env, docker]
+    timeout: 5s
+
+exporters:
+  # Datadog exporter (unified for logs, metrics, traces)
+  datadog:
+    # API configuration
+    api:
+      key: ${env:DATADOG_API_KEY}
+      site: ${env:DATADOG_SITE}
+
+    # Traces configuration
+    traces:
+      # Use span name as resource name in APM
+      span_name_as_resource_name: true
+
+      # Compute stats by span kind
+      compute_stats_by_span_kind: true
+
+      # Compute top-level by span kind
+      compute_top_level_by_span_kind: true
+
+      # Peer service mapping (optional)
+      # peer_service_mapping:
+      #   old-service: new-service
+
+    # Metrics configuration
+    metrics:
+      # Send metrics endpoint
+      endpoint: https://api.${env:DATADOG_SITE}
+
+      # Instrumentation scope metadata as tags
+      instrumentation_scope_metadata_as_tags: true
+
+      # Resource attributes as tags
+      resource_attributes_as_tags: true
+
+      # Histogram configuration
+      histograms:
+        mode: distributions
+        send_aggregation_metrics: true
+
+    # Logs configuration
+    logs:
+      # Dump payloads for debugging (disable in production)
+      dump_payloads: false
+
+    # Hostname configuration
+    hostname:
+      # Enable hostname resolution
+      enabled: true
+
+    # Only send metrics with valid host tags
+    only_metadata: false
+
+    # Enable host metadata
+    host_metadata:
+      enabled: true
+      hostname_source: config_or_system
+      tags:
+        - "environment:${env:ENVIRONMENT}"
+        - "service:mcp-server-langgraph"
+
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    # Queue settings
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+    # Timeout
+    timeout: 30s
+
+  # Console exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+service:
+  pipelines:
+    # Traces pipeline (Datadog APM)
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource, attributes]
+      exporters: [datadog, logging]
+
+    # Metrics pipeline (Datadog Metrics)
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource, attributes]
+      exporters: [datadog, logging]
+
+    # Logs pipeline (Datadog Logs)
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes, filter, resourcedetection, batch, resource]
+      exporters: [datadog, logging]
+
+  extensions:
+    - health_check
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133

@@ -1,0 +1,213 @@
+# OpenTelemetry Collector Configuration for Elasticsearch/ELK Stack
+# Exports logs, metrics, and traces to Elasticsearch for visualization in Kibana
+#
+# Environment Variables Required:
+# - ELASTICSEARCH_ENDPOINT: Elasticsearch endpoint (e.g., https://elasticsearch:9200)
+# - ELASTICSEARCH_USERNAME: Elasticsearch username (optional if using API key)
+# - ELASTICSEARCH_PASSWORD: Elasticsearch password (optional if using API key)
+# - ELASTICSEARCH_API_KEY: Elasticsearch API key (alternative to username/password)
+# - ELASTICSEARCH_CLOUD_ID: Elastic Cloud ID (if using Elastic Cloud)
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  filelog:
+    include:
+      - /var/log/mcp-server-langgraph/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+      - type: move
+        from: attributes.message
+        to: body
+      - type: move
+        from: attributes.timestamp
+        to: timestamp
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      - key: service.name
+        action: upsert
+        value: mcp-server-langgraph
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
+
+  attributes:
+    actions:
+      - key: log.source
+        value: otel-collector
+        action: insert
+      # Add index metadata for Elasticsearch
+      - key: _index_prefix
+        value: mcp-server-langgraph
+        action: insert
+
+  filter:
+    logs:
+      exclude:
+        match_type: regexp
+        record_attributes:
+          - key: message
+            value: ".*(password|secret|api_key).*"
+
+  # Transform for Elasticsearch compatibility
+  transform:
+    log_statements:
+      - context: log
+        statements:
+          # Ensure @timestamp field for Kibana
+          - set(attributes["@timestamp"], time) where attributes["@timestamp"] == nil
+          # Map severity to Elasticsearch level
+          - set(attributes["log.level"], severity_text) where severity_text != nil
+
+exporters:
+  # Elasticsearch exporter for logs
+  elasticsearch:
+    endpoints:
+      - ${env:ELASTICSEARCH_ENDPOINT}
+
+    # Authentication (choose one method)
+    # Method 1: Username/Password
+    auth:
+      authenticator: basicauth
+
+    # Method 2: API Key (uncomment to use)
+    # headers:
+    #   Authorization: "ApiKey ${env:ELASTICSEARCH_API_KEY}"
+
+    # Index configuration
+    logs_index: "mcp-server-langgraph-logs"
+    logs_dynamic_index:
+      enabled: true
+    index: "mcp-server-langgraph-%{+yyyy.MM.dd}"
+
+    # Document mapping
+    mapping:
+      mode: ecs  # Use Elastic Common Schema
+      dedot: true  # Replace dots in field names with underscores
+
+    # Compression
+    compression: gzip
+
+    # TLS configuration
+    tls:
+      insecure_skip_verify: false
+      ca_file: /etc/ssl/certs/ca-certificates.crt  # Optional: Custom CA
+
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    # Queue settings
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+    # Timeout
+    timeout: 30s
+
+    # Flush settings
+    flush:
+      bytes: 5242880  # 5MB
+      interval: 30s
+
+  # Elasticsearch exporter for traces (using trace index)
+  elasticsearch/traces:
+    endpoints:
+      - ${env:ELASTICSEARCH_ENDPOINT}
+
+    auth:
+      authenticator: basicauth
+
+    traces_index: "mcp-server-langgraph-traces"
+    traces_dynamic_index:
+      enabled: true
+    index: "mcp-server-langgraph-traces-%{+yyyy.MM.dd}"
+
+    mapping:
+      mode: ecs
+      dedot: true
+
+    compression: gzip
+
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+  # Prometheus exporter for metrics (scraped by Elasticsearch/Metricbeat)
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: mcp_server
+    const_labels:
+      environment: ${env:ENVIRONMENT}
+
+  # Console exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+extensions:
+  # BasicAuth extension for Elasticsearch authentication
+  basicauth:
+    client_auth:
+      username: ${env:ELASTICSEARCH_USERNAME}
+      password: ${env:ELASTICSEARCH_PASSWORD}
+
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  pipelines:
+    # Traces pipeline (Elasticsearch with APM index)
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [elasticsearch/traces, logging]
+
+    # Metrics pipeline (Prometheus + optional Metricbeat → Elasticsearch)
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [prometheus, logging]
+
+    # Logs pipeline (Elasticsearch with daily indices)
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes, filter, transform, batch, resource]
+      exporters: [elasticsearch, logging]
+
+  extensions:
+    - basicauth
+    - health_check

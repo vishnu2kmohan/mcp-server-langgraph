@@ -1,0 +1,151 @@
+# OpenTelemetry Collector Configuration for Azure Monitor
+# Exports logs, metrics, and traces to Azure Application Insights
+#
+# Environment Variables Required:
+# - AZURE_MONITOR_CONNECTION_STRING: Application Insights connection string
+#   OR
+# - AZURE_MONITOR_INSTRUMENTATION_KEY: Application Insights instrumentation key
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  filelog:
+    include:
+      - /var/log/mcp-server-langgraph/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+      - type: move
+        from: attributes.message
+        to: body
+      - type: move
+        from: attributes.timestamp
+        to: timestamp
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      - key: service.name
+        action: upsert
+        value: mcp-server-langgraph
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
+      - key: cloud.provider
+        action: insert
+        value: azure
+      - key: cloud.platform
+        action: insert
+        value: azure_aks  # or azure_vm, azure_app_service, azure_container_instances
+
+  attributes:
+    actions:
+      - key: log.source
+        value: otel-collector
+        action: insert
+      # Map OpenTelemetry severity to Azure Monitor severity
+      - key: SeverityLevel
+        from_attribute: level
+        action: insert
+
+  filter:
+    logs:
+      exclude:
+        match_type: regexp
+        record_attributes:
+          - key: message
+            value: ".*(password|secret|api_key).*"
+
+  # Resource detection for Azure
+  resourcedetection:
+    detectors: [azure, system, env]
+    timeout: 5s
+    override: false
+
+exporters:
+  # Azure Monitor exporter
+  azuremonitor:
+    # Use connection string (recommended) or instrumentation key
+    connection_string: ${env:AZURE_MONITOR_CONNECTION_STRING}
+    # instrumentation_key: ${env:AZURE_MONITOR_INSTRUMENTATION_KEY}  # Alternative
+
+    # Maximum batch size
+    maxbatchsize: 100
+    maxbatchinterval: 10s
+
+    # Disable offline storage (use for production if needed)
+    disable_offline_storage: false
+
+    # Span events configuration
+    span_events:
+      enabled: true
+
+    # Disable telemetry (set to false to send usage data to Microsoft)
+    disable_telemetry: true
+
+    # Timeout for HTTP requests
+    timeout: 30s
+
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    # Queue settings
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+  # Console exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+service:
+  pipelines:
+    # Traces pipeline (Application Insights Distributed Tracing)
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource]
+      exporters: [azuremonitor, logging]
+
+    # Metrics pipeline (Application Insights Metrics)
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource]
+      exporters: [azuremonitor, logging]
+
+    # Logs pipeline (Application Insights Logs/Traces)
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes, filter, resourcedetection, batch, resource]
+      exporters: [azuremonitor, logging]
+
+  extensions:
+    - health_check
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
