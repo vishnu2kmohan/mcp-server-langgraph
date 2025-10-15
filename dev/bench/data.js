@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760564861526,
+  "lastUpdate": 1760566202676,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -108,6 +108,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000029229988269691703",
             "extra": "mean: 89.2231558364944 usec\nrounds: 3401"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b8937e7b8d2f8a65b1f93780684a1739ea472943",
+          "message": "fix: resolve Kustomize CI/CD failures and restore project README\n\n## CI/CD Deployment Fixes\n\n**Issue**: Kustomize deployment failures in GitHub Actions CI/CD pipeline\n\n**Root Causes**:\n1. Kustomize security constraint: Cannot reference files outside kustomization directory\n2. Deprecated Kustomize fields in overlay configurations (bases, commonLabels, patchesStrategicMerge)\n3. ConfigMap merge conflicts in dev/staging overlays\n\n## Changes Made\n\n### Kustomize Configuration Updates (4 files)\n\n1. **deployments/kustomize/base/kustomization.yaml**:\n   - Updated resources to reference local files instead of ../../kubernetes/base/\n   - Added explanatory comment about security constraint\n   - Modern labels syntax with pairs\n\n2. **deployments/kustomize/overlays/dev/kustomization.yaml**:\n   - Fixed: bases → resources\n   - Fixed: commonLabels → labels with pairs\n   - Fixed: patchesStrategicMerge → patches with target selectors\n   - Removed problematic configMapGenerator with merge behavior\n   - Image tag: dev-latest, replicas: 1\n\n3. **deployments/kustomize/overlays/staging/kustomization.yaml**:\n   - Same deprecation fixes as dev\n   - Image tag: staging-2.5.0, replicas: 2\n\n4. **deployments/kustomize/overlays/production/kustomization.yaml**:\n   - Same deprecation fixes as dev/staging\n   - Added HPA patch for production scaling\n   - Image tag: v2.5.0, replicas: 5\n\n### Kubernetes Manifests Copied (19 files)\n\nCopied all base manifests from deployments/kubernetes/base/ to deployments/kustomize/base/:\n- Core: namespace.yaml, deployment.yaml, service.yaml, configmap.yaml, secret.yaml\n- RBAC/Scaling: serviceaccount.yaml, hpa.yaml, pdb.yaml, networkpolicy.yaml\n- PostgreSQL: postgres-statefulset.yaml, postgres-service.yaml\n- OpenFGA: openfga-deployment.yaml, openfga-service.yaml\n- Keycloak: keycloak-deployment.yaml, keycloak-service.yaml\n- Redis: redis-session-deployment.yaml, redis-session-service.yaml\n- Observability: otel-collector-deployment.yaml\n- Ingress: ingress-http.yaml\n\n## Repository Structure Fix\n\n**Issue**: Root README.md was accidentally replaced with documentation index during repository reorganization (commit a78880d)\n\n**Fix**:\n- Restored proper project README at repository root with:\n  - Project overview and description\n  - CI/CD status badges (CI Pipeline, PR Checks, Quality Tests, Security Scan)\n  - Quality badges (Code Coverage, Property Tests, Contract Tests)\n  - Complete feature list and quick start guide\n  - Comprehensive documentation links\n- Verified docs/README.md remains as documentation guide for Mintlify\n\n## Validation\n\n✅ All three Kustomize overlays build successfully:\n- kubectl kustomize deployments/kustomize/overlays/dev\n- kubectl kustomize deployments/kustomize/overlays/staging\n- kubectl kustomize deployments/kustomize/overlays/production\n\n✅ No deprecation warnings\n✅ No security constraint violations\n✅ README structure restored correctly\n\n## Files Modified\n- CHANGELOG.md (documented all CI/CD fixes)\n- README.md (restored project README)\n- deployments/kustomize/base/kustomization.yaml\n- deployments/kustomize/overlays/dev/kustomization.yaml\n- deployments/kustomize/overlays/staging/kustomization.yaml\n- deployments/kustomize/overlays/production/kustomization.yaml\n\n## Files Added (19 Kubernetes manifests)\n- deployments/kustomize/base/*.yaml (all base resources)\n\nRelated: GitHub Actions CI/CD pipeline workflows\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-15T18:08:30-04:00",
+          "tree_id": "8f3344f24ba6731f536bcfdb070a5d026a1fa426",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b8937e7b8d2f8a65b1f93780684a1739ea472943"
+        },
+        "date": 1760566202280,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 34699.315664603375,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002973959627461222",
+            "extra": "mean: 28.81901215764021 usec\nrounds: 5840"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 31124.00370237896,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029736469002679924",
+            "extra": "mean: 32.12954250881178 usec\nrounds: 6975"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 30413.574410460114,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004675731419957961",
+            "extra": "mean: 32.88005502096034 usec\nrounds: 15176"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 428562.1565407436,
+            "unit": "iter/sec",
+            "range": "stddev: 4.826695589947132e-7",
+            "extra": "mean: 2.333383815481453 usec\nrounds: 39235"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 429855.6144107261,
+            "unit": "iter/sec",
+            "range": "stddev: 5.043029519019228e-7",
+            "extra": "mean: 2.326362542387319 usec\nrounds: 69556"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 422977.2732590837,
+            "unit": "iter/sec",
+            "range": "stddev: 5.254969912646766e-7",
+            "extra": "mean: 2.3641932160914854 usec\nrounds: 71552"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1944754.026755489,
+            "unit": "iter/sec",
+            "range": "stddev: 1.954226774673131e-7",
+            "extra": "mean: 514.2038459580106 nsec\nrounds: 98922"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 419737.0079488817,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7015384299561134e-7",
+            "extra": "mean: 2.3824441997303856 usec\nrounds: 57661"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2927.9388092764343,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010295750408699967",
+            "extra": "mean: 341.5371922499721 usec\nrounds: 2658"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2897.2383132967025,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005069405836160677",
+            "extra": "mean: 345.1562805208531 usec\nrounds: 1843"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 36308.79121291742,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006578035632097731",
+            "extra": "mean: 27.541539296528114 usec\nrounds: 8016"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 8225.852787012042,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0023033327692230676",
+            "extra": "mean: 121.56794266716264 usec\nrounds: 4064"
           }
         ]
       }
