@@ -3,6 +3,7 @@ Unified observability setup with OpenTelemetry and LangSmith support
 """
 
 import logging
+import os
 import sys
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
@@ -20,6 +21,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
+from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
+
 # Configuration
 SERVICE_NAME = "mcp-server-langgraph"
 OTLP_ENDPOINT = "http://localhost:4317"  # Change to your OTLP collector
@@ -34,11 +37,15 @@ class ObservabilityConfig:
         otlp_endpoint: str = OTLP_ENDPOINT,
         enable_console_export: bool = True,
         enable_langsmith: bool = False,
+        log_format: str = "json",  # "json" or "text"
+        log_json_indent: int | None = None,  # None for compact, 2 for pretty-print
     ):
         self.service_name = service_name
         self.otlp_endpoint = otlp_endpoint
         self.enable_console_export = enable_console_export
         self.enable_langsmith = enable_langsmith
+        self.log_format = log_format
+        self.log_json_indent = log_json_indent
 
         # Setup OpenTelemetry
         self._setup_tracing()
@@ -129,14 +136,30 @@ class ObservabilityConfig:
         logs_dir = Path("logs")
         logs_dir.mkdir(exist_ok=True)
 
-        # Configure log format
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s"
-        formatter = logging.Formatter(log_format)
+        # Choose formatter based on log_format setting
+        if self.log_format == "json":
+            # JSON formatter with trace context
+            formatter = CustomJSONFormatter(
+                service_name=self.service_name,
+                include_hostname=True,
+                indent=self.log_json_indent,
+            )
+            # Console uses pretty-print in development, compact in production
+            console_formatter = CustomJSONFormatter(
+                service_name=self.service_name,
+                include_hostname=False,  # Skip hostname for console
+                indent=2 if os.getenv("ENVIRONMENT", "development") == "development" else None,
+            )
+        else:
+            # Text formatter with trace context
+            log_format_str = "%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s"
+            formatter = logging.Formatter(log_format_str)
+            console_formatter = formatter
 
         # Console handler (stdout)
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
+        console_handler.setFormatter(console_formatter)
 
         # Rotating file handler (size-based rotation)
         # Rotates when file reaches 10MB, keeps 5 backup files
@@ -166,11 +189,13 @@ class ObservabilityConfig:
 
         # Configure root logger
         logging.basicConfig(
-            level=logging.INFO, format=log_format, handlers=[console_handler, rotating_handler, daily_handler, error_handler]
+            level=logging.INFO,
+            handlers=[console_handler, rotating_handler, daily_handler, error_handler]
         )
 
         self.logger = logging.getLogger(self.service_name)
         print(f"✓ Logging configured: {self.service_name}")
+        print(f"  - Format: {self.log_format.upper()}")
         print("  - Console output: INFO and above")
         print(f"  - Main log: logs/{self.service_name}.log (rotating, 10MB, 5 backups)")
         print(f"  - Daily log: logs/{self.service_name}-daily.log (daily, 30 days)")
@@ -211,10 +236,19 @@ try:
     from mcp_server_langgraph.core.config import settings
 
     enable_langsmith_flag = settings.langsmith_tracing and settings.observability_backend in ("langsmith", "both")
+    log_format = getattr(settings, "log_format", os.getenv("LOG_FORMAT", "json"))
+    log_json_indent = getattr(settings, "log_json_indent", None)
 except ImportError:
     enable_langsmith_flag = False
+    log_format = os.getenv("LOG_FORMAT", "json")
+    log_json_indent_str = os.getenv("LOG_JSON_INDENT")
+    log_json_indent = int(log_json_indent_str) if log_json_indent_str else None
 
-config = ObservabilityConfig(enable_langsmith=enable_langsmith_flag)
+config = ObservabilityConfig(
+    enable_langsmith=enable_langsmith_flag,
+    log_format=log_format,
+    log_json_indent=log_json_indent,
+)
 tracer = config.get_tracer()
 meter = config.get_meter()
 logger = config.get_logger()

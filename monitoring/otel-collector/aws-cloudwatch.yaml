@@ -1,0 +1,166 @@
+# OpenTelemetry Collector Configuration for AWS CloudWatch
+# Exports logs, metrics, and traces to AWS CloudWatch, CloudWatch Metrics, and X-Ray
+#
+# Environment Variables Required:
+# - AWS_REGION: AWS region (e.g., us-east-1)
+# - AWS_ACCESS_KEY_ID: AWS access key (or use IAM role)
+# - AWS_SECRET_ACCESS_KEY: AWS secret key (or use IAM role)
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  filelog:
+    include:
+      - /var/log/mcp-server-langgraph/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+      - type: move
+        from: attributes.message
+        to: body
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      - key: service.name
+        action: upsert
+        value: mcp-server-langgraph
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
+      - key: cloud.provider
+        action: insert
+        value: aws
+      - key: cloud.region
+        action: upsert
+        value: ${env:AWS_REGION}
+
+  attributes:
+    actions:
+      - key: log.source
+        value: otel-collector
+        action: insert
+
+  filter:
+    logs:
+      exclude:
+        match_type: regexp
+        record_attributes:
+          - key: message
+            value: ".*(password|secret|api_key).*"
+
+exporters:
+  # AWS CloudWatch Logs
+  awscloudwatchlogs:
+    log_group_name: "/aws/mcp-server-langgraph/${env:ENVIRONMENT}"
+    log_stream_name: "{service.name}/{hostname}"
+    region: ${env:AWS_REGION}
+    endpoint: ""  # Leave empty to use default
+    num_workers: 8
+    queue_settings:
+      queue_size: 10000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+  # AWS CloudWatch Metrics (EMF format)
+  awsemf:
+    namespace: MCPServer/${env:ENVIRONMENT}
+    region: ${env:AWS_REGION}
+    log_group_name: "/aws/mcp-server-langgraph/metrics"
+    log_stream_name: "{service.name}"
+    dimension_rollup_option: "NoDimensionRollup"
+    metric_declarations:
+      - dimensions: [[service.name, deployment.environment]]
+        metric_name_selectors:
+          - "^.*"
+    middleware: agenthealth/logs
+
+  # AWS X-Ray for Distributed Tracing
+  awsxray:
+    region: ${env:AWS_REGION}
+    indexed_attributes:
+      - user_id
+      - trace_id
+      - span_id
+    middleware: agenthealth/traces
+
+  # Console exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+service:
+  pipelines:
+    # Traces pipeline (X-Ray)
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [awsxray, logging]
+
+    # Metrics pipeline (CloudWatch Metrics via EMF)
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [awsemf, logging]
+
+    # Logs pipeline (CloudWatch Logs)
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes, filter, batch, resource]
+      exporters: [awscloudwatchlogs, logging]
+
+  extensions:
+    - health_check
+    - agenthealth/logs
+    - agenthealth/traces
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  # Agent health for AWS services
+  agenthealth/logs:
+    is_on_prem: false
+    is_only_cloud_watch_logs: true
+    stats:
+      operations:
+        - PutLogEvents
+      usage_flags:
+        mode: EC2
+        region_type: ACJ
+
+  agenthealth/traces:
+    is_on_prem: false
+    is_only_xray: true
+    stats:
+      operations:
+        - PutTraceSegments
+      usage_flags:
+        mode: EC2
+        region_type: ACJ

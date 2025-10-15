@@ -52,6 +52,7 @@ dependencies = [
     "redis[hiredis]>=5.0.0",
     "pyyaml>=6.0.1",
     "apscheduler>=3.10.4",
+    "python-json-logger>=2.0.7",
 ]
 
 [project.optional-dependencies]

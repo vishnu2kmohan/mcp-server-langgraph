@@ -1,0 +1,154 @@
+# OpenTelemetry Collector Configuration for GCP Cloud Logging
+# Exports logs, metrics, and traces to Google Cloud Logging, Monitoring, and Trace
+#
+# Environment Variables Required:
+# - GCP_PROJECT_ID: Google Cloud project ID
+# - GOOGLE_APPLICATION_CREDENTIALS: Path to service account JSON (or use Workload Identity)
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  filelog:
+    include:
+      - /var/log/mcp-server-langgraph/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+      - type: move
+        from: attributes.message
+        to: body
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      - key: service.name
+        action: upsert
+        value: mcp-server-langgraph
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
+      - key: cloud.provider
+        action: insert
+        value: gcp
+      - key: cloud.platform
+        action: insert
+        value: gcp_kubernetes_engine  # or gcp_compute_engine, gcp_cloud_run
+
+  attributes:
+    actions:
+      - key: log.source
+        value: otel-collector
+        action: insert
+      # Map severity levels to Cloud Logging format
+      - key: severity
+        from_attribute: level
+        action: insert
+
+  filter:
+    logs:
+      exclude:
+        match_type: regexp
+        record_attributes:
+          - key: message
+            value: ".*(password|secret|api_key).*"
+
+  # Resource detection for GCP
+  resourcedetection:
+    detectors: [gcp, system, env]
+    timeout: 5s
+
+exporters:
+  # Google Cloud exporter (unified for logs, metrics, traces)
+  googlecloud:
+    project: ${env:GCP_PROJECT_ID}
+
+    # Cloud Logging configuration
+    log:
+      default_log_name: mcp-server-langgraph
+      resource_filters:
+        # Map to GCP resource types
+        - prefix: "k8s_"  # Kubernetes resources
+        - prefix: "gce_"  # Compute Engine
+        - prefix: "cloud_run_"  # Cloud Run
+
+    # Cloud Monitoring (metrics) configuration
+    metric:
+      prefix: custom.googleapis.com/mcp-server/
+      # Use cumulative metrics
+      instrumentation_library_labels: true
+      create_service_timeseries: true
+      create_metric_descriptor_with_delay: true
+      service_resource_labels: true
+
+    # Cloud Trace configuration
+    trace:
+      # Automatically creates trace spans
+
+    # Compression and performance
+    compression: gzip
+    use_insecure: false
+    timeout: 12s
+
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    # Queue settings
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+
+  # Console exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+service:
+  pipelines:
+    # Traces pipeline (Cloud Trace)
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource]
+      exporters: [googlecloud, logging]
+
+    # Metrics pipeline (Cloud Monitoring)
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch, resource]
+      exporters: [googlecloud, logging]
+
+    # Logs pipeline (Cloud Logging)
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes, filter, resourcedetection, batch, resource]
+      exporters: [googlecloud, logging]
+
+  extensions:
+    - health_check
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133

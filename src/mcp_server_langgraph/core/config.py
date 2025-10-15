@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     log_file: Optional[str] = None
+    log_format: str = "json"  # "json" or "text"
+    log_json_indent: Optional[int] = None  # None for compact, 2 for pretty-print
 
     # LLM Provider (litellm integration)
     llm_provider: str = "google"  # google, anthropic, openai, ollama, azure, bedrock

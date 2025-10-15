@@ -6,10 +6,27 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+  # File log receiver for collecting from log files
+  filelog:
+    include:
+      - /var/log/mcp-server-langgraph/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+      - type: move
+        from: attributes.message
+        to: body
+      - type: move
+        from: attributes.timestamp
+        to: timestamp
+
 processors:
   batch:
     timeout: 10s
     send_batch_size: 1024
+    send_batch_max_size: 2048
 
   # Add resource attributes
   resource:
@@ -17,11 +34,42 @@ processors:
       - key: service.name
         action: upsert
         value: mcp-server-langgraph
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
 
   # Memory limiter to prevent OOM
   memory_limiter:
     check_interval: 1s
     limit_mib: 512
+    spike_limit_mib: 128
+
+  # Attributes processor for log enrichment
+  attributes:
+    actions:
+      - key: log.source
+        value: otel-collector
+        action: insert
+
+  # Filter sensitive data
+  filter:
+    logs:
+      exclude:
+        match_type: regexp
+        record_attributes:
+          - key: message
+            value: ".*(password|secret|api_key).*"
+
+  # Transform processor for log normalization
+  transform:
+    log_statements:
+      - context: log
+        statements:
+          # Ensure severity is set
+          - set(severity_text, attributes["level"]) where attributes["level"] != nil
+          # Add source location
+          - set(attributes["code.filepath"], attributes["location"]["file"]) where attributes["location"]["file"] != nil
+          - set(attributes["code.lineno"], attributes["location"]["line"]) where attributes["location"]["line"] != nil
 
 exporters:
   # Export to Jaeger for traces
@@ -29,18 +77,24 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+    compression: gzip
 
   # Export to Prometheus for metrics
   prometheus:
     endpoint: "0.0.0.0:8889"
+    namespace: mcp_server
 
   # Console exporter for debugging
   logging:
     loglevel: debug
+    sampling_initial: 5
+    sampling_thereafter: 200
 
-  # File exporter
+  # File exporter with compression
   file:
     path: /tmp/otel-output.json
+    compression: gzip
+    format: json
 
 service:
   pipelines:
@@ -55,8 +109,8 @@ service:
       exporters: [prometheus, logging]
 
     logs:
-      receivers: [otlp]
-      processors: [memory_limiter, batch, resource]
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes, filter, transform, batch, resource]
       exporters: [logging, file]
 
   extensions:
