@@ -1,0 +1,281 @@
+---
+title: 'v2.1.0 - Production Ready'
+description: 'Keycloak SSO, Redis sessions, Kubernetes deployment, and complete Mintlify documentation'
+---
+
+<Note type="success">
+  **Release Date**: 2025-10-12
+  **Breaking Changes**: None (backward compatible with v2.0.0)
+  **Status**: Production Ready
+</Note>
+
+## Overview
+
+Version 2.1.0 is a **Production-Ready Release** with complete documentation, enterprise authentication, and deployment infrastructure. This release represents a major milestone with 100% documentation coverage, comprehensive Keycloak SSO integration, and production-grade deployment configurations.
+
+## Key Features
+
+### 🔑 Keycloak SSO Integration
+
+**Enterprise authentication** with OpenID Connect.
+
+**Components** (`src/mcp_server_langgraph/auth/keycloak.py`):
+- `TokenValidator` - JWT verification using JWKS
+- `KeycloakClient` - Keycloak API integration
+- Automatic role synchronization to OpenFGA
+- Token refresh automation
+
+**Features**:
+- JWKS-based JWT verification (no shared secrets)
+- Automatic token refresh
+- Role/group sync to OpenFGA tuples
+- OIDC-compliant
+
+**Configuration**:
+```env
+AUTH_PROVIDER=keycloak
+KEYCLOAK_SERVER_URL=http://keycloak:8080
+KEYCLOAK_REALM=mcp-server
+KEYCLOAK_CLIENT_ID=mcp-server-client
+```
+
+**Deployment**: Kubernetes manifest included
+
+### 💾 Redis Session Management
+
+**Production-grade session storage** with persistence.
+
+**Backends** (`src/mcp_server_langgraph/auth/session.py`):
+1. **InMemorySessionStore** - Development/testing
+2. **RedisSessionStore** - Production with persistence
+
+**Features**:
+- Sliding expiration windows
+- Concurrent session limits (default: 5)
+- User session tracking
+- Bulk revocation
+- Cryptographic session IDs
+
+**Configuration**:
+```env
+SESSION_BACKEND=redis
+REDIS_URL=redis://redis-session:6379
+SESSION_TTL_SECONDS=86400  # 24 hours
+SESSION_SLIDING_WINDOW=true
+SESSION_MAX_CONCURRENT=5
+```
+
+### 🎨 Advanced Role Mapping
+
+**Flexible, declarative role mapping** system.
+
+**Types** (`src/mcp_server_langgraph/auth/role_mapper.py`):
+1. **SimpleRoleMapping** - 1:1 mappings
+2. **GroupMapping** - Regex pattern matching
+3. **ConditionalMapping** - Attribute-based rules
+
+**Configuration** (`config/role_mappings.yaml`):
+```yaml
+simple_mappings:
+  keycloak_admin: system_admin
+
+group_mappings:
+  - pattern: "^team-(.+)-admin$"
+    template: "team_{1}_administrator"
+
+conditional_mappings:
+  - attribute: department
+    operator: "=="
+    value: "engineering"
+    role: developer
+```
+
+## Mintlify Documentation
+
+### 📖 100% Coverage (43 MDX files, ~33,242 lines)
+
+<AccordionGroup>
+  <Accordion title="Getting Started (5 files)" icon="rocket">
+    - Quick start, authentication, authorization
+    - Architecture, first request
+  </Accordion>
+
+  <Accordion title="Feature Guides (14 files)" icon="book">
+    - Keycloak SSO, Redis sessions
+    - OpenFGA setup, permission model
+    - Multi-LLM setup (Anthropic, Google, OpenAI, local)
+    - Infisical setup, secret rotation
+  </Accordion>
+
+  <Accordion title="Deployment (12 files)" icon="cloud">
+    - Kubernetes (GKE, EKS, AKS)
+    - Helm, Kustomize
+    - Scaling, monitoring, disaster recovery
+    - Production checklist, CI/CD
+  </Accordion>
+
+  <Accordion title="API Reference (6 files)" icon="code">
+    - Authentication endpoints
+    - Health checks
+    - MCP protocol (messages, tools, resources)
+  </Accordion>
+
+  <Accordion title="Security (4 files)" icon="shield">
+    - Overview, best practices
+    - Audit checklist, compliance
+  </Accordion>
+
+  <Accordion title="Advanced (3 files)" icon="graduation-cap">
+    - Testing strategies
+    - Contributing guidelines
+    - Development setup
+  </Accordion>
+</AccordionGroup>
+
+**Assets**: Logo and favicon (SVG)
+**Validation**: All pages exist, navigation verified
+
+## Deployment Infrastructure
+
+### ⚙️ Kubernetes/Helm/Kustomize
+
+**24 files modified/created** (~2,400 lines):
+
+**Kubernetes Manifests**:
+- `deployments/kubernetes/base/keycloak-deployment.yaml` (180 lines)
+  - HA with 2 replicas
+  - PostgreSQL backend
+  - Resource limits: 500m-2000m CPU, 1Gi-2Gi memory
+- `deployments/kubernetes/base/redis-session-deployment.yaml` (150 lines)
+  - AOF persistence
+  - 512MB memory with LRU eviction
+
+**Helm Chart** (`deployments/helm/mcp-server-langgraph/`):
+- Redis dependency (Bitnami 18.4.0)
+- Keycloak dependency (Bitnami 17.3.0)
+- Multi-database PostgreSQL setup
+
+**Kustomize Overlays**:
+- Dev: InMemory auth, memory sessions
+- Staging: Keycloak, Redis (12-hour TTL)
+- Production: Keycloak + SSL, Redis + SSL (24-hour TTL)
+
+**Monitoring**:
+- 9 new Prometheus alerts (Keycloak, Redis, sessions)
+- Updated Grafana dashboards
+
+## Observability
+
+### 📊 30+ Authentication Metrics
+
+**Metrics** (`src/mcp_server_langgraph/auth/metrics.py` - 312 lines):
+- Login attempts, duration, failure rates
+- Token creation/verification/refresh
+- JWKS cache hit/miss ratios
+- Session lifecycle (active, created, expired, revoked)
+- OpenFGA sync performance
+- Role mapping rule application
+- Authorization check metrics
+
+**Helper Functions**:
+- `record_login_attempt()`
+- `record_token_verification()`
+- `record_session_operation()`
+- `record_openfga_sync()`
+
+## CI/CD Enhancements
+
+### 🚀 GitHub Actions
+
+**Workflow Updates** (`.github/workflows/ci.yaml`):
+- Deployment validation job
+- Helm chart linting
+- Kustomize overlay validation
+- Docker Compose verification
+
+**New Makefile Targets** (13 new):
+```bash
+# Deployment
+make deploy-dev
+make deploy-staging
+make deploy-production
+
+# Validation
+make validate-deployments
+make validate-helm
+make validate-kustomize
+
+# Testing
+make test-k8s-deployment  # E2E with kind
+make test-helm-deployment # E2E with kind
+```
+
+## Upgrade Guide
+
+### From v2.0.0
+
+```bash
+# 1. Update code
+git pull origin main
+uv sync
+
+# 2. Set up Keycloak (optional)
+make setup-keycloak
+# Update .env with KEYCLOAK_CLIENT_SECRET
+
+# 3. Configure session backend
+cat >> .env <<EOF
+AUTH_PROVIDER=keycloak  # or inmemory
+SESSION_BACKEND=redis   # or memory
+REDIS_URL=redis://localhost:6379
+EOF
+
+# 4. Deploy infrastructure
+make setup-infra  # Starts Keycloak, Redis, etc.
+
+# 5. Deploy to Kubernetes (optional)
+make deploy-dev  # Dev environment
+# Or
+make deploy-production  # Production with Helm
+```
+
+### Testing
+
+```bash
+# Unit tests
+make test-unit
+
+# Integration tests
+make test-integration
+
+# Deployment tests
+make test-k8s-deployment
+make test-helm-deployment
+
+# Authentication
+pytest tests/test_keycloak.py -v
+pytest tests/test_session.py -v
+pytest tests/test_role_mapper.py -v
+```
+
+## What's Next
+
+### v2.2.0
+- 🔐 GDPR/SOC2/HIPAA compliance
+- 📊 SLA monitoring
+- 📈 Grafana dashboards
+
+<CardGroup cols={2}>
+  <Card title="Keycloak Guide" icon="key" href="/guides/keycloak-sso">
+    Complete SSO setup
+  </Card>
+  <Card title="Redis Sessions" icon="database" href="/guides/redis-sessions">
+    Session management
+  </Card>
+  <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">
+    Production deployment
+  </Card>
+  <Card title="Helm Chart" icon="ship" href="/deployment/helm">
+    Helm-based deployment
+  </Card>
+</CardGroup>

@@ -41,6 +41,10 @@
     {
       "name": "Architecture",
       "url": "architecture"
+    },
+    {
+      "name": "Releases",
+      "url": "releases"
     }
   ],
   "anchors": [
@@ -231,6 +235,17 @@
       "pages": [
         "architecture/adr-0011-cookiecutter-template-strategy",
         "architecture/adr-0012-compliance-framework-integration"
+      ]
+    },
+    {
+      "group": "Version History",
+      "pages": [
+        "releases/overview",
+        "releases/v2-5-0",
+        "releases/v2-4-0",
+        "releases/v2-3-0",
+        "releases/v2-2-0",
+        "releases/v2-1-0"
       ]
     }
   ],

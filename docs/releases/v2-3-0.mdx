@@ -1,0 +1,165 @@
+---
+title: 'v2.3.0'
+description: 'Compliance storage backend, Pydantic V2 migration, and enhanced type safety'
+---
+
+<Note type="info">
+  **Release Date**: 2025-10-13
+  **Breaking Changes**: None (Pydantic V2 backward compatible)
+</Note>
+
+## Overview
+
+Version 2.3.0 completes the compliance storage backend infrastructure, migrates to Pydantic V2, and significantly enhances type safety across the codebase.
+
+## Key Features
+
+### 🗄️ Compliance Storage Backend
+
+Complete pluggable storage architecture with 5 abstract interfaces and in-memory implementations.
+
+**New Interfaces** (`src/mcp_server_langgraph/core/compliance/storage.py` - 735 lines):
+- `UserProfileStore` - CRUD operations for user profiles
+- `ConversationStore` - Manage conversations with archival
+- `PreferencesStore` - User preferences key-value storage
+- `AuditLogStore` - Audit logging with date filtering
+- `ConsentStore` - GDPR consent tracking
+
+**In-Memory Implementations**:
+- For development and testing without external dependencies
+- Production-ready interface for database backends
+
+**Benefits**:
+- Pluggable architecture
+- Type safety with Pydantic models
+- GDPR compliant
+
+### 🔒 Enhanced Type Safety
+
+**Coverage Increase**: 27% → 64%
+
+**Strict mypy typing** enabled for additional modules:
+- `mcp_server_langgraph.auth.*`
+- `mcp_server_langgraph.llm.*`
+- `mcp_server_langgraph.core.agent`
+
+**Settings**: `disallow_untyped_calls = true`, `strict = true`
+
+**Impact**: Catches type errors at development time, prevents runtime bugs
+
+### 📋 Pydantic V2 Migration
+
+**Fixed Deprecations**:
+- Replaced `class Config` with `model_config = ConfigDict(...)`
+- Replaced deprecated `regex` parameter with `pattern` in Query validators
+
+**Files Updated**:
+- `data_export.py`: UserDataExport model
+- `gdpr.py`: UserProfileUpdate, ConsentRecord, ConsentResponse models
+
+**Impact**: Eliminates 5 Pydantic deprecation warnings, future-proofs for Pydantic V3
+
+### 📚 Error Handling Strategy Documentation
+
+Created `docs/adr/0006-error-handling-strategy.md` (600+ lines):
+- 5 error categories (Client 4xx, Server 5xx)
+- Layered propagation pattern (4 layers)
+- Consistent JSON response format
+- Retry strategies (LLM: 3x, OpenFGA: 2x, Redis: 2x)
+- 40+ standardized error codes
+- OpenTelemetry integration
+
+## Files Modified
+
+<AccordionGroup>
+  <Accordion title="Compliance Module (4 files)" icon="database">
+    1. **storage.py** (NEW) - 735 lines
+       - 5 abstract interfaces
+       - 6 Pydantic models
+       - 5 in-memory implementations
+
+    2. **data_export.py** (MODIFIED)
+       - Integrated with UserProfileStore
+       - Integrated with ConversationStore, PreferencesStore
+       - Pydantic V2 migration
+
+    3. **retention.py** (MODIFIED)
+       - Cleanup inactive sessions integration
+
+    4. **session.py** (MODIFIED)
+       - Added get_inactive_sessions()
+       - Added delete_inactive_sessions()
+  </Accordion>
+
+  <Accordion title="Configuration (2 files)" icon="gear">
+    5. **pyproject.toml**
+       - Strict mypy for auth/llm/agent modules
+
+    6. **.flake8** (NEW)
+       - Explicit configuration (47 lines)
+       - Max line length: 127 (aligned with Black)
+       - Google docstring convention
+  </Accordion>
+</AccordionGroup>
+
+## Dependency Management
+
+### New Documentation
+- `docs/DEPENDENCY_MANAGEMENT.md` (580 lines)
+- `scripts/dependency-audit.sh` (320 lines)
+
+**4-Phase Update Strategy**:
+- Critical security: 48h SLA
+- Major versions: 2-4 weeks
+- Minor versions: 1-2 weeks
+- Patches: 1 month
+
+**Monthly Audit Script**:
+- Outdated packages scan
+- Security vulnerability scan (pip-audit)
+- License compliance (pip-licenses)
+- Dependency conflict detection
+
+## Upgrade Guide
+
+### From v2.2.0
+
+```bash
+# 1. Update dependencies
+git pull origin main
+uv sync
+
+# 2. Verify Pydantic V2
+python -c "import pydantic; print(pydantic.__version__)"
+# Expected: 2.x
+
+# 3. Run type checks
+mypy src/
+# Should pass with new strict typing
+
+# 4. Test compliance storage
+pytest tests/test_storage.py -v
+```
+
+### For Custom Extensions
+
+If you've extended Pydantic models:
+```python
+# Before (v1.x)
+class MyModel(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+# After (v2.x)
+from pydantic import ConfigDict
+
+class MyModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+```
+
+## What's Next
+
+### v2.4.0
+- LangGraph 0.6.10 upgrade
+- 100% test pass rate
+- 21 comprehensive ADRs

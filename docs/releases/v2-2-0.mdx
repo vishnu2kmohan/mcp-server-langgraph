@@ -1,0 +1,274 @@
+---
+title: 'v2.2.0 - Compliance & Observability'
+description: 'Enterprise compliance (GDPR/SOC2/HIPAA), SLA monitoring, and observability dashboards'
+---
+
+<Note type="success">
+  **Release Date**: 2025-10-13
+  **Breaking Changes**: None
+  **Major Features**: 🔐 GDPR + 📊 SOC2 + 🏥 HIPAA + 📈 SLA
+</Note>
+
+## Overview
+
+Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive enterprise compliance features including GDPR data subject rights, SOC 2 audit automation, HIPAA technical safeguards, SLA monitoring, and real-time observability dashboards.
+
+## GDPR Compliance
+
+### ✅ Data Subject Rights (Articles 15-21)
+
+**5 REST API Endpoints** (`src/mcp_server_langgraph/api/gdpr.py` - 430 lines):
+
+1. **Article 15: Right to Access**
+   - `GET /api/v1/users/me/data`
+   - Complete user data export
+
+2. **Article 16: Right to Rectification**
+   - `PATCH /api/v1/users/me`
+   - Profile updates with validation
+
+3. **Article 17: Right to Erasure**
+   - `DELETE /api/v1/users/me?confirm=true`
+   - Cascade deletion + audit trail
+
+4. **Article 20: Data Portability**
+   - `GET /api/v1/users/me/export?format=json|csv`
+   - Multi-format export
+
+5. **Article 21: Consent Management**
+   - `POST/GET /api/v1/users/me/consent`
+   - Granular consent tracking
+
+**Features**:
+- Multi-format export (JSON, CSV)
+- Cascade deletion across all stores
+- Audit log anonymization
+- Comprehensive test suite (30+ tests)
+
+## SOC 2 Automation
+
+### ✅ Evidence Collection
+
+**7 Trust Services Criteria** covered:
+
+| Control | What's Collected | Frequency |
+|---------|------------------|-----------|
+| CC6.1 | Active sessions, MFA stats | Daily |
+| CC6.6 | Audit log rate, retention | Daily |
+| CC7.2 | Metrics collection status | Daily |
+| A1.2 | System uptime (99.9%) | Daily |
+| C1.1 | Encryption verification | Weekly |
+| PI1.4 | Data retention compliance | Monthly |
+| P1.1 | GDPR consent records | Monthly |
+
+**Automation** (`src/mcp_server_langgraph/schedulers/compliance.py`):
+- Daily: Evidence collection (6 AM UTC)
+- Weekly: Access reviews (Monday 9 AM UTC)
+- Monthly: Compliance reports (1st, 9 AM UTC)
+
+**Features**:
+- Automated evidence persistence
+- Compliance score calculation
+- 36 comprehensive tests (97% pass rate)
+
+## HIPAA Safeguards
+
+### ✅ Technical Controls
+
+**4 Major Controls** (`src/mcp_server_langgraph/auth/hipaa.py` - 400 lines):
+
+1. **164.312(a)(2)(i) - Emergency Access**
+   ```python
+   grant = await hipaa.grant_emergency_access(
+       user_id="user:doctor",
+       reason="Patient emergency",
+       duration_hours=2
+   )
+   ```
+
+2. **164.312(b) - Audit Controls**
+   - PHI access logging
+   - Tamper-proof audit trail
+
+3. **164.312(c)(1) - Data Integrity**
+   - HMAC-SHA256 checksums
+   - Constant-time comparison
+
+4. **164.312(a)(2)(iii) - Automatic Logoff**
+   - 15-minute default timeout
+   - Session middleware
+
+## SLA Monitoring
+
+### ✅ 99.9% Uptime Tracking
+
+**3 SLA Targets**:
+- Uptime: 99.9% (43.2 min downtime/month)
+- Response Time: p95 < 500ms
+- Error Rate: < 1%
+
+**20+ Prometheus Alerts** (`monitoring/prometheus/alerts/sla.yaml`):
+- Breach detection (critical)
+- At-risk warnings
+- Forecasting (24-hour lookheahead)
+- Composite compliance score
+
+**Metrics**:
+- Real-time uptime percentage
+- Response time percentiles (p50, p95, p99)
+- Error rate by status code
+- Throughput vs capacity
+
+## Grafana Dashboards
+
+### ✅ 2 New Dashboards (900 lines)
+
+**1. SLA Monitoring Dashboard** (23 panels):
+- Overall SLA compliance score
+- Uptime trend + downtime budget
+- Response time percentiles
+- Error rate analysis
+- Dependency health (Postgres, Redis, OpenFGA)
+- Resource utilization (CPU, memory)
+- SLA forecasting
+
+**2. SOC 2 Compliance Dashboard** (20 panels):
+- Compliance score trend
+- Evidence by control category
+- Trust Services Criteria validation
+- Access review items
+- Scheduled job execution status
+- Compliance report history
+
+**Auto-refresh**: 30s (SLA), 1m (SOC2)
+
+## Data Retention
+
+### ✅ Automated Cleanup
+
+**Retention Policy** (`config/retention_policies.yaml`):
+
+| Data Type | Retention | Action |
+|-----------|-----------|--------|
+| User sessions | 90 days | Delete inactive |
+| Conversations | 365 days | Archive |
+| Audit logs | 7 years | Keep (compliance) |
+| Consent records | 7 years | Keep (legal) |
+| Export files | 7 days | Delete temporary |
+| Metrics | 90 days | Aggregate |
+
+**Scheduler** (`src/mcp_server_langgraph/schedulers/cleanup.py`):
+- Daily execution (3 AM UTC)
+- Dry-run support
+- Email/Slack notifications
+
+## Files Added
+
+<AccordionGroup>
+  <Accordion title="GDPR (3 files, ~1,100 lines)" icon="scale-balanced">
+    - `api/gdpr.py` (430 lines) - REST API endpoints
+    - `compliance/data_export.py` (302 lines) - Export service
+    - `compliance/data_deletion.py` (270 lines) - Deletion service
+  </Accordion>
+
+  <Accordion title="SOC2 (2 files, ~1,300 lines)" icon="clipboard-check">
+    - `compliance/evidence.py` (850 lines) - Evidence collector
+    - `schedulers/compliance.py` (450 lines) - Automation
+  </Accordion>
+
+  <Accordion title="HIPAA (2 files, ~620 lines)" icon="hospital">
+    - `auth/hipaa.py` (400 lines) - Controls implementation
+    - `middleware/session_timeout.py` (220 lines) - Auto logoff
+  </Accordion>
+
+  <Accordion title="SLA (2 files, ~900 lines)" icon="gauge">
+    - `monitoring/sla.py` (550 lines) - SLA tracking
+    - `monitoring/prometheus/alerts/sla.yaml` (350 lines) - Alert rules
+  </Accordion>
+
+  <Accordion title="Retention (2 files, ~510 lines)" icon="calendar-xmark">
+    - `compliance/retention.py` (350 lines) - Retention service
+    - `schedulers/cleanup.py` (270 lines) - Cleanup automation
+  </Accordion>
+
+  <Accordion title="Dashboards (2 files, ~900 lines)" icon="chart-line">
+    - `monitoring/grafana/dashboards/sla-monitoring.json` (450 lines)
+    - `monitoring/grafana/dashboards/soc2-compliance.json` (450 lines)
+  </Accordion>
+</AccordionGroup>
+
+## Upgrade Guide
+
+### From v2.1.0
+
+```bash
+# 1. Update code
+git pull origin main
+uv sync
+
+# 2. Configure compliance settings in .env
+cat >> .env <<EOF
+# GDPR
+GDPR_ENABLED=true
+DATA_RETENTION_DAYS=365
+
+# SOC2
+SOC2_ENABLED=true
+EVIDENCE_DIR=./evidence
+
+# HIPAA
+HIPAA_ENABLED=true
+SESSION_TIMEOUT_MINUTES=15
+
+# SLA
+SLA_UPTIME_TARGET=99.9
+SLA_RESPONSE_TIME_P95=500
+SLA_ERROR_RATE_TARGET=1.0
+EOF
+
+# 3. Import Grafana dashboards
+# Navigate to Grafana UI and import:
+# - monitoring/grafana/dashboards/sla-monitoring.json
+# - monitoring/grafana/dashboards/soc2-compliance.json
+
+# 4. Configure Prometheus alerts
+kubectl apply -f monitoring/prometheus/alerts/sla.yaml
+
+# 5. Set up data retention
+cp config/retention_policies.yaml config/retention_policies.local.yaml
+# Edit retention_policies.local.yaml as needed
+
+# 6. Start compliance scheduler
+# Automatically starts with application
+# Or manually: python -m mcp_server_langgraph.schedulers.compliance
+```
+
+### Testing
+
+```bash
+# GDPR endpoints
+pytest tests/test_gdpr.py -v
+
+# SOC2 automation
+pytest tests/test_soc2_evidence.py -v
+
+# HIPAA controls
+pytest tests/test_hipaa.py -v
+
+# SLA monitoring
+pytest tests/test_sla_monitoring.py -v
+
+# Data retention
+pytest tests/test_retention.py -v
+```
+
+## What's Next
+
+### v2.3.0
+- Compliance storage backend
+- Pydantic V2 migration
+- Enhanced type safety (27% → 64%)
+
+<Card title="Compliance Documentation" icon="book" href="/security/compliance">
+  Complete GDPR/SOC2/HIPAA guide
+</Card>
