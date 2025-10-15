@@ -35,7 +35,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY src/ ./src/
 COPY tests/ ./tests/
 COPY pyproject.toml setup.py* ./
-COPY pytest.ini .pytest.ini* ./
+# Note: pytest.ini removed - using pyproject.toml for pytest configuration
 
 # Install package in editable mode for tests
 RUN pip install -e .
