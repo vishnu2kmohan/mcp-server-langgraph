@@ -182,6 +182,12 @@ jobs:
         helm lint deployments/helm/mcp-server-langgraph
         echo "✓ Helm chart validation passed"
 
+    - name: Add Helm repositories
+      run: |
+        helm repo add openfga https://openfga.github.io/helm-charts
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo update
+
     - name: Build Helm dependencies
       run: |
         cd deployments/helm/mcp-server-langgraph
