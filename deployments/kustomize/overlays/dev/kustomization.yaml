@@ -5,15 +5,25 @@ namespace: mcp-server-langgraph-dev
 
 namePrefix: dev-
 
-bases:
+# Fixed: 'bases' is deprecated, use 'resources' instead
+resources:
   - ../../base
 
-commonLabels:
-  environment: development
+# Fixed: 'commonLabels' is deprecated, use 'labels' instead
+labels:
+  - pairs:
+      environment: development
 
-patchesStrategicMerge:
-  - deployment-patch.yaml
-  - configmap-patch.yaml
+# Fixed: 'patchesStrategicMerge' is deprecated, use 'patches' instead
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+  - path: configmap-patch.yaml
+    target:
+      kind: ConfigMap
+      name: mcp-server-langgraph-config
 
 replicas:
   - name: mcp-server-langgraph
@@ -22,11 +32,3 @@ replicas:
 images:
   - name: mcp-server-langgraph
     newTag: dev-latest
-
-configMapGenerator:
-  - name: mcp-server-langgraph-config
-    behavior: merge
-    literals:
-      - environment=development
-      - log_level=DEBUG
-      - enable_console_export=true

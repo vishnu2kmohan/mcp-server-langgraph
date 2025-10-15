@@ -5,16 +5,29 @@ namespace: mcp-server-langgraph
 
 namePrefix: prod-
 
-bases:
+# Fixed: 'bases' is deprecated, use 'resources' instead
+resources:
   - ../../base
 
-commonLabels:
-  environment: production
+# Fixed: 'commonLabels' is deprecated, use 'labels' instead
+labels:
+  - pairs:
+      environment: production
 
-patchesStrategicMerge:
-  - deployment-patch.yaml
-  - configmap-patch.yaml
-  - hpa-patch.yaml
+# Fixed: 'patchesStrategicMerge' is deprecated, use 'patches' instead
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+  - path: configmap-patch.yaml
+    target:
+      kind: ConfigMap
+      name: mcp-server-langgraph-config
+  - path: hpa-patch.yaml
+    target:
+      kind: HorizontalPodAutoscaler
+      name: mcp-server-langgraph
 
 replicas:
   - name: mcp-server-langgraph
@@ -22,12 +35,4 @@ replicas:
 
 images:
   - name: mcp-server-langgraph
-    newTag: v2.4.0
-
-configMapGenerator:
-  - name: mcp-server-langgraph-config
-    behavior: merge
-    literals:
-      - environment=production
-      - log_level=INFO
-      - enable_console_export=false
+    newTag: v2.5.0

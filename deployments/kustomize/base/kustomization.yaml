@@ -3,32 +3,35 @@ kind: Kustomization
 
 namespace: mcp-server-langgraph
 
+# Resources are copied into this directory to avoid Kustomize security constraint
+# which prevents referencing files outside the kustomization directory tree
 resources:
-  - ../../kubernetes/base/namespace.yaml
-  - ../../kubernetes/base/deployment.yaml
-  - ../../kubernetes/base/service.yaml
-  - ../../kubernetes/base/configmap.yaml
-  - ../../kubernetes/base/secret.yaml
-  - ../../kubernetes/base/serviceaccount.yaml
-  - ../../kubernetes/base/hpa.yaml
-  - ../../kubernetes/base/pdb.yaml
-  - ../../kubernetes/base/networkpolicy.yaml
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+  - secret.yaml
+  - serviceaccount.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - networkpolicy.yaml
   # PostgreSQL database (for OpenFGA and Keycloak)
-  - ../../kubernetes/base/postgres-statefulset.yaml
-  - ../../kubernetes/base/postgres-service.yaml
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
   # OpenFGA authorization
-  - ../../kubernetes/base/openfga-deployment.yaml
-  - ../../kubernetes/base/openfga-service.yaml
+  - openfga-deployment.yaml
+  - openfga-service.yaml
   # Keycloak resources
-  - ../../kubernetes/base/keycloak-deployment.yaml
-  - ../../kubernetes/base/keycloak-service.yaml
+  - keycloak-deployment.yaml
+  - keycloak-service.yaml
   # Redis session store resources
-  - ../../kubernetes/base/redis-session-deployment.yaml
-  - ../../kubernetes/base/redis-session-service.yaml
+  - redis-session-deployment.yaml
+  - redis-session-service.yaml
 
-commonLabels:
-  app: mcp-server-langgraph
-  managed-by: kustomize
+labels:
+  - pairs:
+      app: mcp-server-langgraph
+      managed-by: kustomize
 
 images:
   - name: mcp-server-langgraph

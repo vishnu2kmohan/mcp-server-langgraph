@@ -1,0 +1,164 @@
+---
+# PostgreSQL for OpenFGA and Keycloak
+# Production deployment using StatefulSet
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: mcp-server-langgraph
+  labels:
+    app: postgres
+data:
+  init-multiple-databases.sh: |
+    #!/bin/bash
+    set -e
+    set -u
+
+    function create_database() {
+        local database=$1
+        echo "Creating database '$database'"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+            CREATE DATABASE $database;
+            GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;
+    EOSQL
+    }
+
+    if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
+        echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
+        for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
+            create_database $db
+        done
+        echo "Multiple databases created"
+    fi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: mcp-server-langgraph
+  labels:
+    app: postgres
+    component: database
+spec:
+  serviceName: postgres
+  replicas: 1  # Single instance for now; use PostgreSQL HA for production
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+    spec:
+      serviceAccountName: mcp-server-langgraph
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999  # PostgreSQL user
+        fsGroup: 999
+
+      containers:
+      - name: postgres
+        image: postgres:16.8-alpine
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: postgres
+          containerPort: 5432
+          protocol: TCP
+
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: mcp-server-langgraph-secrets
+              key: postgres-username
+              optional: true
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-server-langgraph-secrets
+              key: postgres-password
+              optional: true
+        - name: POSTGRES_MULTIPLE_DATABASES
+          value: "openfga,keycloak"
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+
+        # Health check probes
+        startupProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - pg_isready -U ${POSTGRES_USER}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - pg_isready -U ${POSTGRES_USER}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - pg_isready -U ${POSTGRES_USER}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        # Resource limits
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # PostgreSQL needs write access
+          runAsNonRoot: true
+          runAsUser: 999
+          capabilities:
+            drop:
+            - ALL
+
+      volumes:
+      - name: init-scripts
+        configMap:
+          name: postgres-init-scripts
+          defaultMode: 0755
+
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+      labels:
+        app: postgres
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+      # storageClassName: standard  # Adjust based on your cluster
