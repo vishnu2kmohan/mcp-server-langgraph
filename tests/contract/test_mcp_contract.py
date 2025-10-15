@@ -239,27 +239,29 @@ class TestResourcesContract:
 class TestMCPServerContractCompliance:
     """Integration tests verifying actual MCP server follows the contract"""
 
+    @pytest.mark.skip(reason="Requires running MCP server - implement when server fixture available")
     @pytest.mark.asyncio
     async def test_server_initialize_follows_contract(self):
         """Actual server initialize response should match schema"""
         # This would test against the real server
-        # Skipped for now since it requires a running server
         # TODO: Implement when server fixture is available
-        pytest.skip("Requires running MCP server - implement when server fixture available")
+        pass
 
+    @pytest.mark.skip(reason="Requires running MCP server - implement when server fixture available")
     @pytest.mark.asyncio
     async def test_server_tools_list_follows_contract(self):
         """Actual server tools/list should match schema"""
         # Would test real server implementation
-        # Skipped for now since it requires a running server
-        pytest.skip("Requires running MCP server - implement when server fixture available")
+        # TODO: Implement when server fixture is available
+        pass
 
+    @pytest.mark.skip(reason="Requires running MCP server - implement when server fixture available")
     @pytest.mark.asyncio
     async def test_server_tools_call_follows_contract(self):
         """Actual server tools/call should match schema"""
         # Would test real server implementation
-        # Skipped for now since it requires a running server
-        pytest.skip("Requires running MCP server - implement when server fixture available")
+        # TODO: Implement when server fixture is available
+        pass
 
 
 @pytest.mark.contract
