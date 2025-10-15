@@ -1,21 +1,135 @@
 ---
-title: 'v2.5.0 (Unreleased)'
-description: 'Containerized integration tests and multi-track Infisical installation'
+title: 'v2.5.0'
+description: 'Structured JSON logging, multi-platform log aggregation, containerized tests, and Infisical installation'
 ---
 
-<Note type="warning">
-  **Status**: Unreleased (in development)
-  **Target Date**: Q1 2025
-  **Breaking Changes**: None
+<Note type="success">
+  **Status**: Released (2025-10-15)
+  **Breaking Changes**: None (fully backward compatible)
 </Note>
 
 ## Overview
 
-Version 2.5.0 focuses on **developer experience** and **deployment flexibility** with two major enhancements:
-1. Fully automated, Docker-based integration testing
-2. Multi-track Infisical installation strategy
+Version 2.5.0 delivers **enterprise-grade observability** and **developer experience** improvements with three major enhancements:
+1. 📊 **Structured JSON Logging** with OpenTelemetry trace injection
+2. ☁️ **Multi-Platform Log Aggregation** (AWS, GCP, Azure, Elasticsearch, Datadog, Splunk)
+3. 🐳 **Containerized Integration Testing** with zero-config Docker setup
+4. 🔧 **Multi-Track Infisical Installation** for flexible deployment
 
 ## What's New
+
+### 📊 Structured JSON Logging & Multi-Platform Log Aggregation
+
+**Production-grade structured logging with OpenTelemetry trace injection** - automatically correlate logs with distributed traces across 6 cloud platforms.
+
+<AccordionGroup>
+  <Accordion title="Features" icon="check">
+    - ✅ **Structured JSON Logs** - Machine-readable format with trace context
+    - ✅ **Automatic Trace Injection** - trace_id and span_id in every log
+    - ✅ **6 Platform Integrations** - AWS, GCP, Azure, Elasticsearch, Datadog, Splunk
+    - ✅ **Zero Breaking Changes** - Backward compatible (can still use text format)
+    - ✅ **Production Ready** - gzip compression, filtering, resource limits
+    - ✅ **Easy Platform Switching** - One command to change log destinations
+  </Accordion>
+
+  <Accordion title="New Files Created (15)" icon="file">
+    **Core Logging**:
+    1. **src/mcp_server_langgraph/observability/json_logger.py** (210 lines)
+       - CustomJSONFormatter with OTEL trace injection
+       - ISO 8601 timestamps, exception stack traces
+       - Configurable indentation (compact/pretty-print)
+
+    **OTLP Collector Configurations (7)**:
+    2. **monitoring/otel-collector/aws-cloudwatch.yaml** (168 lines) - CloudWatch + X-Ray
+    3. **monitoring/otel-collector/gcp-cloud-logging.yaml** (152 lines) - Cloud Logging + Trace
+    4. **monitoring/otel-collector/azure-monitor.yaml** (138 lines) - Application Insights
+    5. **monitoring/otel-collector/elasticsearch.yaml** (192 lines) - ELK Stack with ECS
+    6. **monitoring/otel-collector/datadog.yaml** (157 lines) - Unified APM
+    7. **monitoring/otel-collector/splunk.yaml** (179 lines) - Enterprise/Cloud dual mode
+    8. **monitoring/otel-collector/otel-collector.yaml** (enhanced) - Base config with logs pipeline
+
+    **Deployment Automation**:
+    9. **scripts/switch-log-exporter.sh** (105 lines) - Platform switcher CLI
+    10. **deployments/kubernetes/base/otel-collector-deployment.yaml** (305 lines)
+        - ConfigMap, Service, Deployment, ServiceAccount, PDB, HPA
+    11. **deployments/kubernetes/overlays/aws/kustomization.yaml** - AWS EKS overlay
+    12. **deployments/kubernetes/overlays/aws/otel-collector-config.yaml** - AWS config
+
+    **Configuration**:
+    13. **.env.example** (updated +75 lines) - All platform credentials
+    14. **docker/docker-compose.yml** (enhanced) - Multi-platform OTLP support
+    15. **src/mcp_server_langgraph/core/config.py** - LOG_FORMAT, LOG_JSON_INDENT settings
+  </Accordion>
+
+  <Accordion title="Usage Examples" icon="terminal">
+    **Basic Usage** (defaults to JSON):
+    ```python
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    # Logs are automatically JSON formatted with trace context
+    logger.info("User logged in", extra={"user_id": "alice", "ip": "192.168.1.100"})
+    ```
+
+    **Output**:
+    ```json
+    {
+      "timestamp": "2025-10-15T14:23:45.123Z",
+      "level": "INFO",
+      "service": "mcp-server-langgraph",
+      "trace_id": "0af7651916cd43dd8448eb211c80319c",
+      "span_id": "b7ad6b7169203331",
+      "message": "User logged in",
+      "user_id": "alice",
+      "ip_address": "192.168.1.100"
+    }
+    ```
+
+    **Switch to Datadog**:
+    ```bash
+    ./scripts/switch-log-exporter.sh datadog
+    echo "DATADOG_API_KEY=your-key" >> .env
+    echo "DATADOG_SITE=datadoghq.com" >> .env
+    docker compose restart otel-collector
+    ```
+
+    **Opt-out of JSON** (use text format):
+    ```bash
+    export LOG_FORMAT=text
+    ```
+  </Accordion>
+
+  <Accordion title="Platform Support Matrix" icon="cloud">
+    | Platform | Logs | Metrics | Traces | Auth |
+    |----------|------|---------|--------|------|
+    | **AWS** | CloudWatch Logs | EMF Metrics | X-Ray | IAM Role |
+    | **GCP** | Cloud Logging | Cloud Monitoring | Cloud Trace | Workload Identity |
+    | **Azure** | Application Insights | App Insights | App Insights | Connection String |
+    | **Elasticsearch** | Daily indices | Prometheus | Daily indices | BasicAuth/API Key |
+    | **Datadog** | Log Management | Infrastructure | APM | API Key |
+    | **Splunk** | HEC | HEC/SignalFx | HEC/SAPM | HEC Token |
+  </Accordion>
+
+  <Accordion title="Kubernetes Deployment" icon="dharmachakra">
+    **Production-ready OTLP collector** with autoscaling (2-10 replicas):
+
+    ```bash
+    # Deploy to AWS EKS
+    kubectl apply -k deployments/kubernetes/overlays/aws
+
+    # Verify
+    kubectl get pods -n mcp-server-langgraph -l app=otel-collector
+    ```
+
+    **Features**:
+    - HorizontalPodAutoscaler (CPU 70%, Memory 80%)
+    - PodDisruptionBudget (minAvailable=1)
+    - Resource limits: 1 CPU, 512Mi memory
+    - Health checks on :13133
+    - Prometheus scraping annotations
+  </Accordion>
+</AccordionGroup>
+
+---
 
 ### 🐳 Containerized Integration Test Environment
 

@@ -4,9 +4,11 @@ Complete documentation for the MCP Server with LangGraph project.
 
 ## ✨ Latest Updates
 
-**v2.5.0 (Unreleased)**:
+**v2.5.0** (Current):
+- 📊 **Structured JSON Logging** - OpenTelemetry trace injection with production-grade formatters
+- ☁️ **Multi-Cloud Log Aggregation** - 6 platforms supported (AWS, GCP, Azure, Elasticsearch, Datadog, Splunk)
 - 🐳 **Containerized Integration Tests** - One-command Docker-based testing with 100% reliability
-- 🔧 **Infisical Docker Builds** - Multi-track installation with 5 options (no Rust required for local dev)
+- 🔧 **Multi-Track Infisical** - Flexible installation with 5 options (no Rust required for local dev)
 
 **v2.4.0**:
 - ⬆️ **LangGraph 0.6.10** - Major upgrade with full API compatibility

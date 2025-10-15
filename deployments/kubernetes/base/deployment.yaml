@@ -70,7 +70,7 @@ spec:
 
       containers:
       - name: mcp-server-langgraph
-        image: mcp-server-langgraph:2.4.0
+        image: mcp-server-langgraph:2.6.0
         imagePullPolicy: IfNotPresent
 
         ports:
