@@ -197,6 +197,7 @@ jobs:
         continue-on-error: true  # Don't fail if no benchmarks exist yet
 
       - name: Store benchmark results
+        continue-on-error: true  # Don't fail workflow if gh-pages push fails
         uses: benchmark-action/github-action-benchmark@v1.20.3
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
