@@ -73,7 +73,8 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest -m unit -v --cov=. --cov-report=xml --cov-report=term-missing
+        # Matches pyproject.toml configuration and local make test-unit
+        pytest -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3

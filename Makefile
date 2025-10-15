@@ -111,18 +111,38 @@ setup-infisical:
 	python scripts/setup/setup_infisical.py
 
 test:
-	pytest -v
+	@echo "Running all tests with coverage..."
+	pytest
+	@echo "✓ Tests complete. Coverage report above."
+	@echo ""
+	@echo "Tip: Use 'make test-fast' for quick iteration without coverage"
 
 test-unit:
-	pytest -m unit -v
+	@echo "Running unit tests with coverage (matches CI)..."
+	pytest -m unit
+	@echo "✓ Unit tests complete"
+
+test-unit-fast:
+	@echo "Running unit tests without coverage (fast iteration)..."
+	pytest -m unit --no-cov
+	@echo "✓ Fast unit tests complete"
+
+test-ci:
+	@echo "Running tests exactly as CI does..."
+	pytest -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
+	@echo "✓ CI-equivalent tests complete"
+	@echo "  Coverage XML: coverage.xml"
 
 test-integration:
-	@echo "Running integration tests in Docker environment..."
+	@echo "Running integration tests in Docker environment (matches CI)..."
 	./scripts/test-integration.sh
+	@echo "✓ Integration tests complete"
 
 test-integration-local:
-	@echo "Running integration tests locally (requires services running)..."
-	pytest -m integration -v --tb=short
+	@echo "⚠️  Running integration tests locally (requires services running)..."
+	@echo "Note: CI uses Docker. Use 'make test-integration' to match CI exactly."
+	pytest -m integration --no-cov --tb=short
+	@echo "✓ Local integration tests complete"
 
 test-integration-services:
 	@echo "Starting integration test services only..."
@@ -142,8 +162,12 @@ test-integration-cleanup:
 	@echo "✓ Cleanup complete"
 
 test-coverage:
-	pytest --cov=. --cov-report=html --cov-report=term-missing --cov-report=xml
-	@echo "✓ Coverage report generated in htmlcov/index.html"
+	@echo "Generating comprehensive coverage report..."
+	pytest --cov=src/mcp_server_langgraph --cov-report=html --cov-report=term-missing --cov-report=xml
+	@echo "✓ Coverage reports generated:"
+	@echo "  HTML: htmlcov/index.html"
+	@echo "  XML: coverage.xml"
+	@echo "  Terminal: Above"
 
 test-auth:
 	@echo "Testing OpenFGA authorization..."
@@ -535,11 +559,18 @@ docs-deploy:
 
 test-watch:
 	@echo "👀 Running tests in watch mode..."
-	pytest-watch -v
+	pytest-watch --no-cov
 
 test-fast:
-	@echo "⚡ Running fast tests only..."
-	pytest -m "not slow" -v --tb=short
+	@echo "⚡ Running all tests without coverage (fast iteration)..."
+	pytest --no-cov --tb=short
+	@echo "✓ Fast tests complete"
+	@echo ""
+	@echo "Tip: Use 'make test' for full coverage report"
+
+test-fast-unit:
+	@echo "⚡ Running unit tests without coverage..."
+	pytest -m unit --no-cov --tb=short
 
 test-slow:
 	@echo "🐌 Running slow tests only..."

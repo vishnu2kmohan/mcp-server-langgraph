@@ -196,7 +196,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --strict-markers --tb=short"
+# Default options for all test runs (matches CI behavior)
+# Use --no-cov to skip coverage for faster iteration during development
+addopts = "-v --strict-markers --tb=short --cov=src/mcp_server_langgraph --cov-report=term-missing"
 markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "integration: Integration tests (may require external services)",
