@@ -1,0 +1,729 @@
+---
+title: 'Log Query Examples'
+description: 'Platform-specific log query examples for troubleshooting and analysis'
+icon: 'magnifying-glass-chart'
+---
+
+<Note type="success">
+  **Available in:** v2.5.0+
+  [View Log Aggregation Setup →](/deployment/log-aggregation)
+</Note>
+
+## Overview
+
+This guide provides **platform-specific query examples** for common log analysis tasks across all 6 supported platforms.
+
+---
+
+## AWS CloudWatch Insights
+
+### Query Language
+
+CloudWatch Insights uses a SQL-like query language with piped commands.
+
+### Common Queries
+
+#### Find All Errors
+```
+fields @timestamp, level, message, trace_id, user_id
+| filter level = "ERROR"
+| sort @timestamp desc
+| limit 100
+```
+
+#### Errors by User
+```
+fields @timestamp, message, user_id, trace_id
+| filter level = "ERROR"
+| stats count() by user_id
+| sort count desc
+```
+
+#### Trace-Specific Logs
+```
+fields @timestamp, level, message, span_id
+| filter trace_id = "0af7651916cd43dd8448eb211c80319c"
+| sort @timestamp asc
+```
+
+#### Slow Requests (Performance)
+```
+fields @timestamp, message, duration_ms
+| filter message like /request completed/
+| filter duration_ms > 1000
+| sort duration_ms desc
+```
+
+#### Error Rate Over Time
+```
+fields @timestamp, level
+| filter level = "ERROR"
+| stats count() as error_count by bin(5m)
+```
+
+#### Top Error Messages
+```
+fields message
+| filter level = "ERROR"
+| stats count() as occurrence by message
+| sort occurrence desc
+| limit 10
+```
+
+---
+
+## GCP Log Explorer
+
+### Query Language
+
+GCP uses a custom query language with filters and boolean logic.
+
+### Common Queries
+
+#### Find All Errors
+```
+resource.type="k8s_container"
+logName="projects/YOUR_PROJECT/logs/mcp-server-langgraph"
+severity="ERROR"
+```
+
+#### Trace-Specific Logs
+```
+resource.type="k8s_container"
+jsonPayload.trace_id="0af7651916cd43dd8448eb211c80319c"
+```
+
+#### Errors in Last Hour
+```
+resource.type="k8s_container"
+severity="ERROR"
+timestamp>="2025-10-15T13:00:00Z"
+```
+
+#### Search by User ID
+```
+resource.type="k8s_container"
+jsonPayload.user_id="alice"
+```
+
+#### Authentication Failures
+```
+resource.type="k8s_container"
+jsonPayload.message=~"authentication failed"
+severity="WARNING" OR severity="ERROR"
+```
+
+#### High Memory Usage
+```
+resource.type="k8s_container"
+jsonPayload.message=~"memory.*exceeded"
+```
+
+---
+
+## Azure Monitor (KQL)
+
+### Query Language
+
+Azure uses **Kusto Query Language (KQL)**, a powerful query language similar to SQL.
+
+### Common Queries
+
+#### Find All Errors
+```kql
+traces
+| where severityLevel >= 3  // ERROR level
+| project timestamp, message, customDimensions.trace_id, customDimensions.user_id
+| order by timestamp desc
+| take 100
+```
+
+#### Errors by Service
+```kql
+traces
+| where severityLevel >= 3
+| summarize count() by tostring(customDimensions.service)
+| order by count_ desc
+```
+
+#### Trace-Specific Logs
+```kql
+traces
+| where customDimensions.trace_id == "0af7651916cd43dd8448eb211c80319c"
+| project timestamp, severityLevel, message
+| order by timestamp asc
+```
+
+#### Request Duration Analysis
+```kql
+traces
+| where message contains "request completed"
+| extend duration_ms = todouble(customDimensions.duration_ms)
+| summarize avg(duration_ms), percentile(duration_ms, 95), percentile(duration_ms, 99) by bin(timestamp, 5m)
+| render timechart
+```
+
+#### User Activity Timeline
+```kql
+traces
+| where customDimensions.user_id == "alice"
+| project timestamp, message, customDimensions.action
+| order by timestamp desc
+```
+
+#### Error Rate Trend
+```kql
+traces
+| summarize
+    total = count(),
+    errors = countif(severityLevel >= 3)
+    by bin(timestamp, 5m)
+| extend error_rate = (errors * 100.0) / total
+| render timechart
+```
+
+---
+
+## Elasticsearch (Kibana)
+
+### Query Language
+
+Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
+
+### Common Queries
+
+#### Find All Errors (Query DSL)
+```json
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "level": "ERROR" } }
+      ]
+    }
+  },
+  "sort": [
+    { "timestamp": { "order": "desc" } }
+  ],
+  "size": 100
+}
+```
+
+#### Trace-Specific Logs
+```json
+{
+  "query": {
+    "term": {
+      "trace_id.keyword": "0af7651916cd43dd8448eb211c80319c"
+    }
+  },
+  "sort": [
+    { "timestamp": { "order": "asc" } }
+  ]
+}
+```
+
+#### Time Range + Level Filter
+```json
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "timestamp": {
+              "gte": "now-1h",
+              "lte": "now"
+            }
+          }
+        },
+        { "match": { "level": "ERROR" } }
+      ]
+    }
+  }
+}
+```
+
+#### Aggregation: Errors by User
+```json
+{
+  "size": 0,
+  "query": {
+    "match": { "level": "ERROR" }
+  },
+  "aggs": {
+    "errors_by_user": {
+      "terms": {
+        "field": "user_id.keyword",
+        "size": 10
+      }
+    }
+  }
+}
+```
+
+#### Kibana KQL (Discover Tab)
+```
+level: "ERROR" AND timestamp > now-1h
+```
+
+```
+trace_id: "0af7651916cd43dd8448eb211c80319c"
+```
+
+```
+message: "authentication failed" AND user_id: "alice"
+```
+
+---
+
+## Datadog
+
+### Query Language
+
+Datadog uses a custom query syntax with filters and facets.
+
+### Common Queries
+
+#### Find All Errors
+```
+status:error
+```
+
+#### Trace-Specific Logs
+```
+@trace_id:0af7651916cd43dd8448eb211c80319c
+```
+
+#### Errors by Service
+```
+status:error service:mcp-server-langgraph
+```
+
+#### User-Specific Logs
+```
+@user_id:alice
+```
+
+#### Time Range + Error Filter
+```
+status:error @timestamp:[now-1h TO now]
+```
+
+#### Authentication Failures
+```
+@message:"authentication failed" (status:error OR status:warn)
+```
+
+#### High Latency Requests
+```
+@duration_ms:>1000 @message:"request completed"
+```
+
+#### Errors with Stack Traces
+```
+status:error @exception.stacktrace:*
+```
+
+### Datadog Analytics
+
+#### Error Count by User
+```
+status:error | count by @user_id
+```
+
+#### P95 Request Duration
+```
+@message:"request completed" | p95(@duration_ms) by @http.route
+```
+
+#### Error Rate Over Time
+```
+status:error | timeseries count()
+```
+
+---
+
+## Splunk (SPL)
+
+### Query Language
+
+Splunk uses **Search Processing Language (SPL)**.
+
+### Common Queries
+
+#### Find All Errors
+```spl
+index=main source="mcp-server-langgraph" level="ERROR"
+| table _time, message, trace_id, user_id
+| sort -_time
+| head 100
+```
+
+#### Trace-Specific Logs
+```spl
+index=main source="mcp-server-langgraph" trace_id="0af7651916cd43dd8448eb211c80319c"
+| sort _time
+```
+
+#### Errors by User
+```spl
+index=main source="mcp-server-langgraph" level="ERROR"
+| stats count by user_id
+| sort -count
+```
+
+#### Time Range + Level Filter
+```spl
+index=main source="mcp-server-langgraph" earliest=-1h level="ERROR"
+| table _time, message, user_id
+```
+
+#### Error Rate Over Time
+```spl
+index=main source="mcp-server-langgraph"
+| timechart span=5m count(eval(level="ERROR")) as errors, count as total
+| eval error_rate=(errors/total)*100
+```
+
+#### Top Error Messages
+```spl
+index=main source="mcp-server-langgraph" level="ERROR"
+| stats count by message
+| sort -count
+| head 10
+```
+
+#### Request Duration Statistics
+```spl
+index=main source="mcp-server-langgraph" message="request completed"
+| stats avg(duration_ms) as avg_duration, p95(duration_ms) as p95_duration, max(duration_ms) as max_duration by http_route
+| sort -p95_duration
+```
+
+#### User Activity Timeline
+```spl
+index=main source="mcp-server-langgraph" user_id="alice"
+| table _time, message, action
+| sort _time
+```
+
+---
+
+## Common Use Cases
+
+### 1. Distributed Tracing
+
+**Find all logs for a specific request** (across all platforms):
+
+<Tabs>
+  <Tab title="CloudWatch">
+    ```
+    fields @timestamp, level, message, span_id
+    | filter trace_id = "YOUR_TRACE_ID"
+    | sort @timestamp asc
+    ```
+  </Tab>
+  <Tab title="GCP">
+    ```
+    jsonPayload.trace_id="YOUR_TRACE_ID"
+    ```
+  </Tab>
+  <Tab title="Azure">
+    ```kql
+    traces
+    | where customDimensions.trace_id == "YOUR_TRACE_ID"
+    | order by timestamp asc
+    ```
+  </Tab>
+  <Tab title="Elasticsearch">
+    ```
+    trace_id: "YOUR_TRACE_ID"
+    ```
+  </Tab>
+  <Tab title="Datadog">
+    ```
+    @trace_id:YOUR_TRACE_ID
+    ```
+  </Tab>
+  <Tab title="Splunk">
+    ```spl
+    trace_id="YOUR_TRACE_ID" | sort _time
+    ```
+  </Tab>
+</Tabs>
+
+### 2. Error Investigation
+
+**Find errors and group by type**:
+
+<Tabs>
+  <Tab title="CloudWatch">
+    ```
+    fields @timestamp, message
+    | filter level = "ERROR"
+    | stats count() by message
+    | sort count desc
+    ```
+  </Tab>
+  <Tab title="GCP">
+    ```
+    severity="ERROR"
+    ```
+    Then use "Group by" feature in console.
+  </Tab>
+  <Tab title="Azure">
+    ```kql
+    traces
+    | where severityLevel >= 3
+    | summarize count() by message
+    | order by count_ desc
+    ```
+  </Tab>
+  <Tab title="Elasticsearch">
+    ```json
+    {
+      "query": { "match": { "level": "ERROR" } },
+      "aggs": {
+        "by_message": {
+          "terms": { "field": "message.keyword" }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Datadog">
+    ```
+    status:error | count by @message
+    ```
+  </Tab>
+  <Tab title="Splunk">
+    ```spl
+    level="ERROR" | stats count by message | sort -count
+    ```
+  </Tab>
+</Tabs>
+
+### 3. Performance Analysis
+
+**Find slow requests (>1s)**:
+
+<Tabs>
+  <Tab title="CloudWatch">
+    ```
+    fields @timestamp, http_route, duration_ms
+    | filter duration_ms > 1000
+    | sort duration_ms desc
+    ```
+  </Tab>
+  <Tab title="GCP">
+    ```
+    jsonPayload.duration_ms>1000
+    ```
+  </Tab>
+  <Tab title="Azure">
+    ```kql
+    traces
+    | extend duration = todouble(customDimensions.duration_ms)
+    | where duration > 1000
+    | project timestamp, customDimensions.http_route, duration
+    | order by duration desc
+    ```
+  </Tab>
+  <Tab title="Elasticsearch">
+    ```
+    duration_ms:>1000
+    ```
+  </Tab>
+  <Tab title="Datadog">
+    ```
+    @duration_ms:>1000
+    ```
+  </Tab>
+  <Tab title="Splunk">
+    ```spl
+    duration_ms>1000 | sort -duration_ms
+    ```
+  </Tab>
+</Tabs>
+
+### 4. Security Monitoring
+
+**Detect authentication failures**:
+
+<Tabs>
+  <Tab title="CloudWatch">
+    ```
+    fields @timestamp, user_id, ip_address, message
+    | filter message like /authentication failed/
+    | sort @timestamp desc
+    ```
+  </Tab>
+  <Tab title="GCP">
+    ```
+    jsonPayload.message=~"authentication failed"
+    severity>="WARNING"
+    ```
+  </Tab>
+  <Tab title="Azure">
+    ```kql
+    traces
+    | where message contains "authentication failed"
+    | project timestamp, customDimensions.user_id, customDimensions.ip_address
+    ```
+  </Tab>
+  <Tab title="Elasticsearch">
+    ```
+    message: "authentication failed" AND level: ("WARNING" OR "ERROR")
+    ```
+  </Tab>
+  <Tab title="Datadog">
+    ```
+    @message:"authentication failed" (status:warn OR status:error)
+    ```
+  </Tab>
+  <Tab title="Splunk">
+    ```spl
+    message="*authentication failed*" (level="WARNING" OR level="ERROR")
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Advanced Queries
+
+### Multi-Field Correlation
+
+**Find errors for specific user in specific time range**:
+
+#### CloudWatch
+```
+fields @timestamp, level, message, trace_id
+| filter user_id = "alice"
+| filter level = "ERROR"
+| filter @timestamp >= 1697385600000
+| filter @timestamp <= 1697472000000
+| sort @timestamp desc
+```
+
+#### Azure (KQL)
+```kql
+traces
+| where customDimensions.user_id == "alice"
+| where severityLevel >= 3
+| where timestamp between(datetime(2025-10-15T00:00:00) .. datetime(2025-10-16T00:00:00))
+| project timestamp, message, customDimensions.trace_id
+```
+
+#### Datadog
+```
+@user_id:alice status:error @timestamp:[2025-10-15T00:00:00 TO 2025-10-16T00:00:00]
+```
+
+### Statistical Analysis
+
+**Calculate P95, P99 latency**:
+
+#### CloudWatch
+```
+fields duration_ms
+| filter message like /request completed/
+| stats avg(duration_ms) as avg, pct(duration_ms, 95) as p95, pct(duration_ms, 99) as p99
+```
+
+#### Azure (KQL)
+```kql
+traces
+| where message contains "request completed"
+| extend duration = todouble(customDimensions.duration_ms)
+| summarize
+    avg(duration),
+    percentile(duration, 95),
+    percentile(duration, 99)
+```
+
+#### Splunk
+```spl
+message="request completed"
+| stats avg(duration_ms) as avg, p95(duration_ms) as p95, p99(duration_ms) as p99
+```
+
+---
+
+## Best Practices
+
+### 1. Use Structured Fields
+
+Always query on structured fields (not text search on message):
+
+```
+✅ user_id = "alice"
+❌ message like /user alice/
+```
+
+### 2. Limit Time Ranges
+
+Always specify time ranges for better performance:
+
+```
+✅ timestamp:[now-1h TO now]
+❌ No time filter (searches all data)
+```
+
+### 3. Use Trace IDs
+
+For request debugging, always use trace_id:
+
+```
+✅ trace_id = "0af7651916cd43dd..."
+❌ Searching multiple unrelated fields
+```
+
+### 4. Aggregate When Possible
+
+Use aggregations instead of returning all results:
+
+```
+✅ stats count() by user_id
+❌ return 10000 individual log entries
+```
+
+### 5. Index Patterns
+
+Ensure proper index patterns for fast queries:
+- **Elasticsearch**: Use index templates
+- **Splunk**: Configure index-time field extraction
+- **Datadog**: Define facets for frequently queried fields
+
+---
+
+## Troubleshooting Queries
+
+### No Results Found
+
+1. **Check time range** - Logs might be outside selected window
+2. **Verify field names** - Use autocomplete or schema browser
+3. **Check index/source** - Ensure querying correct data source
+4. **Validate syntax** - Platform-specific syntax varies
+
+### Slow Queries
+
+1. **Add time range** - Limit data scanned
+2. **Use indexed fields** - Query on indexed fields only
+3. **Avoid wildcards** - Especially leading wildcards (`*error`)
+4. **Reduce result size** - Use `| head` or `| limit`
+
+### Missing Fields
+
+1. **Check JSON structure** - Use `fields @message` to see all fields
+2. **Verify field mapping** - Fields must be extracted/mapped correctly
+3. **Check log format** - Ensure JSON logging is enabled (`LOG_FORMAT=json`)
+
+---
+
+## Next Steps
+
+- [Log Aggregation Setup](/deployment/log-aggregation) - Platform-specific setup guides
+- [Observability Guide](/guides/observability) - Complete observability setup
+- [Troubleshooting](/advanced/troubleshooting) - Common issues and solutions
