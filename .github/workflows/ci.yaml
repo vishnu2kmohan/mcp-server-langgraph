@@ -293,29 +293,32 @@ jobs:
         kubectl apply -k deployments/kustomize/overlays/dev
         kubectl rollout status deployment/dev-mcp-server-langgraph -n mcp-server-langgraph-dev
 
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main'
-    environment: staging
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v4
-
-    - name: Configure kubectl
-      run: |
-        echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
-        echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
-
-    - name: Deploy with Kustomize
-      run: |
-        kubectl apply -k deployments/kustomize/overlays/staging
-        kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-server-langgraph-staging
+  # deploy-staging:
+  #   name: Deploy to Staging
+  #   runs-on: ubuntu-latest
+  #   needs: build-and-push
+  #   if: github.ref == 'refs/heads/main'
+  #   environment: staging
+  #
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v5
+  #
+  #   - name: Set up kubectl
+  #     uses: azure/setup-kubectl@v4
+  #
+  #   - name: Configure kubectl
+  #     run: |
+  #       echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
+  #       echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+  #
+  #   - name: Deploy with Kustomize
+  #     run: |
+  #       kubectl apply -k deployments/kustomize/overlays/staging
+  #       kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-server-langgraph-staging
+  #
+  # NOTE: Staging deployment disabled - Kubernetes cluster not yet available
+  # TODO: Re-enable when staging K8s cluster is provisioned
 
   deploy-production:
     name: Deploy to Production
