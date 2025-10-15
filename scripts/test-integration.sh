@@ -144,12 +144,13 @@ echo ""
 
 # Build options
 BUILD_ARGS=()
+BUILD_NO_CACHE_ARGS=()
 if [ "$BUILD" = true ] || [ "$NO_CACHE" = true ]; then
     BUILD_ARGS+=(--build)
 fi
 
 if [ "$NO_CACHE" = true ]; then
-    BUILD_ARGS+=(--no-cache)
+    BUILD_NO_CACHE_ARGS+=(--no-cache)
 fi
 
 # Verbose options
@@ -184,6 +185,12 @@ if [ "$SERVICES_ONLY" = true ]; then
     # Don't cleanup in services-only mode
     trap - EXIT INT TERM
     exit 0
+fi
+
+# Build images if needed (especially with --no-cache)
+if [ "$NO_CACHE" = true ]; then
+    log_info "Building images without cache..."
+    docker compose -f "$COMPOSE_FILE" build "${BUILD_NO_CACHE_ARGS[@]}"
 fi
 
 # Start services and run tests
