@@ -47,30 +47,36 @@ jobs:
           echo "has_changelog=true" >> $GITHUB_OUTPUT
 
           # Add deployment info and links
-          cat >> release_notes.md << 'DEPLOYMENT_EOF'
-
-## 🚀 Quick Start
-
-### Pull Latest Version
-```bash
-docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-docker pull ghcr.io/${{ github.repository }}:latest
-```
-
-### Kubernetes Deployment
-```bash
-helm upgrade --install mcp-server-langgraph \
-  oci://ghcr.io/${{ github.repository }}/charts/mcp-server-langgraph \
-  --version ${{ github.ref_name }}
-```
-
-## 📚 Documentation
-
-- [Installation Guide](README.md)
-- [Kubernetes Deployment](docs/deployment/kubernetes.md)
-- [Testing Guide](docs/development/testing.md)
-- [Release Process](docs/deployment/RELEASE_PROCESS.md)
-DEPLOYMENT_EOF
+          {
+            echo ""
+            echo "## 🚀 Quick Start"
+            echo ""
+            echo "### Docker Images"
+            echo ""
+            echo "Pull the latest release:"
+            echo ""
+            echo '```bash'
+            echo "docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
+            echo "docker pull ghcr.io/${{ github.repository }}:latest"
+            echo '```'
+            echo ""
+            echo "### Helm Deployment"
+            echo ""
+            echo "Install with Helm:"
+            echo ""
+            echo '```bash'
+            echo "helm upgrade --install mcp-server-langgraph \\"
+            echo "  oci://ghcr.io/${{ github.repository }}/charts/mcp-server-langgraph \\"
+            echo "  --version ${{ github.ref_name }}"
+            echo '```'
+            echo ""
+            echo "## 📚 Documentation"
+            echo ""
+            echo "- [Installation Guide](README.md)"
+            echo "- [Kubernetes Deployment](docs/deployment/kubernetes.md)"
+            echo "- [Testing Guide](docs/development/testing.md)"
+            echo "- [Release Process](docs/deployment/RELEASE_PROCESS.md)"
+          } >> release_notes.md
         else
           echo "⚠️ No CHANGELOG content found, using fallback"
           echo "has_changelog=false" >> $GITHUB_OUTPUT
@@ -84,25 +90,23 @@ DEPLOYMENT_EOF
           fi
 
           # Create basic release notes
-          cat > release_notes.md << 'FALLBACK_EOF'
-## Changes in this Release
-
-FALLBACK_EOF
-          cat changelog.txt >> release_notes.md
-          cat >> release_notes.md << 'FALLBACK_EOF'
-
-## Docker Images
-
-```bash
-docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-docker pull ghcr.io/${{ github.repository }}:latest
-```
-
-## Documentation
-
-- [Installation Guide](README.md)
-- [Kubernetes Deployment](docs/deployment/kubernetes.md)
-FALLBACK_EOF
+          {
+            echo "## Changes in this Release"
+            echo ""
+            cat changelog.txt
+            echo ""
+            echo "## Docker Images"
+            echo ""
+            echo '```bash'
+            echo "docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
+            echo "docker pull ghcr.io/${{ github.repository }}:latest"
+            echo '```'
+            echo ""
+            echo "## Documentation"
+            echo ""
+            echo "- [Installation Guide](README.md)"
+            echo "- [Kubernetes Deployment](docs/deployment/kubernetes.md)"
+          } > release_notes.md
         fi
 
     - name: Create Release
