@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760566202676,
+  "lastUpdate": 1760566402037,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -216,6 +216,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0023033327692230676",
             "extra": "mean: 121.56794266716264 usec\nrounds: 4064"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "460844adb65d8e912709fadc52752e739b2202ee",
+          "message": "fix: disable staging deployment until Kubernetes cluster is provisioned\n\nTemporarily disable the deploy-staging job in CI/CD workflow as the staging\nKubernetes cluster is not yet available. This prevents deployment failures\nand allows other CI/CD jobs to complete successfully.\n\nChanges:\n- Comment out deploy-staging job in .github/workflows/ci.yaml:296-321\n- Add TODO note to re-enable when staging cluster is ready\n- Dev and production deployments remain unaffected\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-15T18:11:38-04:00",
+          "tree_id": "ab7c96d1737591ecdf13f9ccd978dd1b065f35f6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/460844adb65d8e912709fadc52752e739b2202ee"
+        },
+        "date": 1760566401646,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37548.63148041209,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002941302435490542",
+            "extra": "mean: 26.63212907031426 usec\nrounds: 5098"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33172.24557884542,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000347927964120589",
+            "extra": "mean: 30.145683011514887 usec\nrounds: 5975"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 32316.24299475616,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030282854986112325",
+            "extra": "mean: 30.944191135159688 usec\nrounds: 15026"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 428369.1690123165,
+            "unit": "iter/sec",
+            "range": "stddev: 4.850137848881095e-7",
+            "extra": "mean: 2.3344350442065727 usec\nrounds: 39704"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 434461.146934167,
+            "unit": "iter/sec",
+            "range": "stddev: 4.805741642871036e-7",
+            "extra": "mean: 2.3017017909579103 usec\nrounds: 47128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 427244.31842975214,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5990985903084323e-7",
+            "extra": "mean: 2.3405811543036843 usec\nrounds: 61882"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1370072.4623305022,
+            "unit": "iter/sec",
+            "range": "stddev: 2.667568696092647e-7",
+            "extra": "mean: 729.888401887148 nsec\nrounds: 157431"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 421992.2779438149,
+            "unit": "iter/sec",
+            "range": "stddev: 5.288872110186255e-7",
+            "extra": "mean: 2.36971160911419 usec\nrounds: 51718"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2932.153471612923,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009587154114853886",
+            "extra": "mean: 341.0462684444408 usec\nrounds: 2250"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2839.569127975015,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007008747240690885",
+            "extra": "mean: 352.16610511367656 usec\nrounds: 1760"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 36375.638701624375,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006608057500288797",
+            "extra": "mean: 27.49092622682511 usec\nrounds: 7374"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 8464.70037594269,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002342498185360839",
+            "extra": "mean: 118.13767240268476 usec\nrounds: 4939"
           }
         ]
       }
