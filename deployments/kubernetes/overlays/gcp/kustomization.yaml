@@ -1,0 +1,63 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mcp-server-langgraph
+
+resources:
+  - ../../base
+
+configMapGenerator:
+  - name: otel-collector-config
+    behavior: replace
+    files:
+      - otel-collector-config.yaml
+
+# GCP-specific annotations and labels
+commonAnnotations:
+  platform: gcp
+  cloud-provider: google
+
+commonLabels:
+  cloud.google.com/gke-nodepool: default-pool
+
+# Patches for GCP-specific configuration
+patches:
+  # Add Workload Identity annotation to ServiceAccount
+  - target:
+      kind: ServiceAccount
+      name: otel-collector
+    patch: |-
+      - op: add
+        path: /metadata/annotations/iam.gke.io~1gcp-service-account
+        value: otel-collector@PROJECT_ID.iam.gserviceaccount.com
+
+  # Update Deployment with GCP-specific settings
+  - target:
+      kind: Deployment
+      name: otel-collector
+    patch: |-
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          cloud.google.com/gke-os-distribution: cos
+
+  # Add GCP-specific environment variables
+  - target:
+      kind: Deployment
+      name: otel-collector
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: GOOGLE_CLOUD_PROJECT
+          value: PROJECT_ID
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: GCP_PROJECT_ID
+          value: PROJECT_ID
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: GOOGLE_APPLICATION_CREDENTIALS
+          value: ""

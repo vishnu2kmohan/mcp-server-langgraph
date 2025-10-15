@@ -1,0 +1,175 @@
+# OpenTelemetry Collector Configuration for GCP (Cloud Logging, Monitoring, Trace)
+# This is the Kubernetes ConfigMap version - references the base monitoring/otel-collector/gcp-cloud-logging.yaml
+
+receivers:
+  # OTLP receiver for application telemetry
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Prometheus receiver for collector self-monitoring
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 30s
+          static_configs:
+            - targets: ['localhost:8888']
+
+processors:
+  # Batch processor for efficient data transmission
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  # Memory limiter to prevent OOM
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+    spike_limit_mib: 100
+
+  # Resource detection for GCP
+  resourcedetection/gcp:
+    detectors: [gcp, env, system]
+    timeout: 5s
+    override: false
+
+  # Attributes processor for adding metadata
+  attributes:
+    actions:
+      - key: deployment.environment
+        value: ${ENVIRONMENT}
+        action: insert
+      - key: service.version
+        value: ${SERVICE_VERSION}
+        action: insert
+      - key: cloud.provider
+        value: gcp
+        action: insert
+      - key: cloud.platform
+        value: gcp_kubernetes_engine
+        action: insert
+
+  # Transform processor for log metadata
+  transform:
+    log_statements:
+      - context: log
+        statements:
+          - set(resource.attributes["service.name"], "mcp-server-langgraph")
+          - set(resource.attributes["cloud.provider"], "gcp")
+
+  # Filter processor to drop low-severity logs (optional)
+  filter:
+    logs:
+      log_record:
+        - 'severity_number < SEVERITY_NUMBER_INFO'
+
+exporters:
+  # GCP exporter (unified for logs, metrics, traces)
+  googlecloud:
+    # Project ID from environment variable
+    project: ${GCP_PROJECT_ID}
+
+    # Log configuration
+    log:
+      default_log_name: mcp-server-langgraph
+
+    # Metric configuration
+    metric:
+      prefix: custom.googleapis.com/mcp-server/
+      skip_create_descriptor: false
+      instrumentation_library_labels: true
+      service_resource_labels: true
+
+    # Trace configuration
+    trace:
+      # Use Application Default Credentials or Workload Identity
+
+    # Resource mapping
+    resource_filters:
+      - prefix: service.
+      - prefix: cloud.
+      - prefix: k8s.
+      - prefix: container.
+
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    # Queue settings
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 1000
+
+    # Compression
+    compression: gzip
+
+    # Timeout
+    timeout: 30s
+
+  # Logging exporter for debugging (optional)
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+  # Prometheus exporter for collector metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: otelcol
+    const_labels:
+      platform: gcp
+
+service:
+  # Enable telemetry for the collector itself
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
+
+  # Define pipelines
+  pipelines:
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - resourcedetection/gcp
+        - attributes
+        - transform
+        - filter
+        - batch
+      exporters: [googlecloud, logging]
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, prometheus]
+      processors:
+        - memory_limiter
+        - resourcedetection/gcp
+        - attributes
+        - batch
+      exporters: [googlecloud, prometheus]
+
+    # Traces pipeline
+    traces:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - resourcedetection/gcp
+        - attributes
+        - batch
+      exporters: [googlecloud, logging]
+
+  # Extensions
+  extensions: []
