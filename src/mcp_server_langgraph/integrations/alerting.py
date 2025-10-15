@@ -77,8 +77,9 @@ class Alert:
         """Generate deduplication key if not provided"""
         if self.dedupe_key is None:
             # Generate hash from title, source, and category
+            # MD5 used for non-cryptographic deduplication only
             content = f"{self.title}:{self.source}:{self.category}"
-            self.dedupe_key = hashlib.md5(content.encode()).hexdigest()
+            self.dedupe_key = hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()  # nosec B324
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""

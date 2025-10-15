@@ -35,7 +35,8 @@ async def wait_for_keycloak(server_url: str, max_retries: int = 30, delay: int =
 
     for attempt in range(max_retries):
         try:
-            async with httpx.AsyncClient(verify=False, timeout=5) as client:
+            # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
+            async with httpx.AsyncClient(verify=False, timeout=5) as client:  # nosec
                 response = await client.get(f"{server_url}/health/ready")
                 if response.status_code == 200:
                     print("✓ Keycloak is ready!")
@@ -66,8 +67,8 @@ async def setup_realm(server_url: str, admin_username: str, admin_password: str,
     print(f"\nCreating realm: {realm_name}")
 
     try:
-        # Get admin token
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:
+        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
+        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {
@@ -140,7 +141,8 @@ async def setup_client(
     print(f"\nCreating client: {client_id}")
 
     try:
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:
+        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
+        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {
@@ -231,7 +233,8 @@ async def create_user(
     print(f"\nCreating user: {username}")
 
     try:
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:
+        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
+        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {
@@ -335,7 +338,8 @@ async def create_group(
     print(f"\nCreating group: {group_name}")
 
     try:
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:
+        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
+        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {
