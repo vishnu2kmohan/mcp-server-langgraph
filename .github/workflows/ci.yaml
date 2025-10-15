@@ -75,10 +75,15 @@ jobs:
       run: |
         pytest -m unit -v --cov=. --cov-report=xml --cov-report=term-missing
 
-    - name: Run integration tests
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Run integration tests (containerized)
       run: |
-        pytest -m integration -v --tb=short
-      continue-on-error: true  # Allow integration tests to fail without blocking PR (requires external services)
+        chmod +x scripts/test-integration.sh
+        ./scripts/test-integration.sh
+      # Integration tests now reliable in Docker - no longer allow failures
+      # continue-on-error: true  # REMOVED: Tests now run in isolated Docker environment
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5

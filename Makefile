@@ -117,7 +117,29 @@ test-unit:
 	pytest -m unit -v
 
 test-integration:
+	@echo "Running integration tests in Docker environment..."
+	./scripts/test-integration.sh
+
+test-integration-local:
+	@echo "Running integration tests locally (requires services running)..."
 	pytest -m integration -v --tb=short
+
+test-integration-services:
+	@echo "Starting integration test services only..."
+	./scripts/test-integration.sh --services
+
+test-integration-build:
+	@echo "Rebuilding and running integration tests..."
+	./scripts/test-integration.sh --build
+
+test-integration-debug:
+	@echo "Running integration tests (keep containers for debugging)..."
+	./scripts/test-integration.sh --keep
+
+test-integration-cleanup:
+	@echo "Cleaning up integration test containers..."
+	docker compose -f docker/docker-compose.test.yml down -v --remove-orphans
+	@echo "✓ Cleanup complete"
 
 test-coverage:
 	pytest --cov=. --cov-report=html --cov-report=term-missing --cov-report=xml

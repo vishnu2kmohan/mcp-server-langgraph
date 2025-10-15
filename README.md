@@ -16,13 +16,15 @@ Production-ready deployment guides for various platforms:
 - **[Kubernetes Deployment](deployment/kubernetes.md)** - Deploy with Kubernetes + Helm/Kustomize
 - **[Cloud Run Deployment](deployment/cloudrun.md)** - Deploy to Google Cloud Run
 - **[LangGraph Platform](deployment/langgraph-platform.md)** - Deploy to managed LangGraph Cloud
+- **[Infisical Installation](deployment/infisical-installation.md)** - 🆕 Secrets management setup guide (optional)
 
 ## 🔌 Integrations
 
 Integration guides for external services and tools:
 
-- **[Keycloak SSO](integrations/keycloak.md)** - 🆕 Enterprise authentication with OpenID Connect (NEW v2.1.0)
+- **[Keycloak SSO](integrations/keycloak.md)** - Enterprise authentication with OpenID Connect
 - **[OpenFGA & Infisical](integrations/openfga-infisical.md)** - Authorization and secrets management
+- **[Infisical Setup](deployment/infisical-installation.md)** - 🆕 Optional secrets manager (now with 5 installation options)
 - **[LangSmith](integrations/langsmith.md)** - LLM observability and tracing
 - **[Kong API Gateway](integrations/kong.md)** - API gateway integration
 - **[LiteLLM](integrations/litellm.md)** - Multi-LLM provider support

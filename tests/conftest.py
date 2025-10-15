@@ -95,6 +95,88 @@ def mock_openfga_response():
 
 
 @pytest.fixture
+def integration_test_env():
+    """Check if running in integration test environment (Docker)"""
+    return os.getenv("TESTING") == "true"
+
+
+@pytest.fixture(scope="session")
+async def postgres_connection_real(integration_test_env):
+    """Real PostgreSQL connection for integration tests"""
+    if not integration_test_env:
+        pytest.skip("Integration test environment not available (requires Docker)")
+
+    try:
+        import asyncpg
+    except ImportError:
+        pytest.skip("asyncpg not installed")
+
+    # Connection params from environment (set in docker-compose.test.yml)
+    conn = await asyncpg.connect(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        database=os.getenv("POSTGRES_DB", "testdb"),
+        user=os.getenv("POSTGRES_USER", "postgres"),
+        password=os.getenv("POSTGRES_PASSWORD", "test"),
+    )
+
+    yield conn
+
+    await conn.close()
+
+
+@pytest.fixture(scope="session")
+async def redis_client_real(integration_test_env):
+    """Real Redis client for integration tests"""
+    if not integration_test_env:
+        pytest.skip("Integration test environment not available (requires Docker)")
+
+    try:
+        import redis.asyncio as redis
+    except ImportError:
+        pytest.skip("redis not installed")
+
+    client = redis.Redis(
+        host=os.getenv("REDIS_HOST", "localhost"),
+        port=int(os.getenv("REDIS_PORT", "6379")),
+        decode_responses=True,
+    )
+
+    # Test connection
+    try:
+        await client.ping()
+    except Exception as e:
+        pytest.skip(f"Redis not available: {e}")
+
+    yield client
+
+    # Cleanup test data
+    await client.flushdb()
+    await client.aclose()
+
+
+@pytest.fixture(scope="session")
+async def openfga_client_real(integration_test_env):
+    """Real OpenFGA client for integration tests"""
+    if not integration_test_env:
+        pytest.skip("Integration test environment not available (requires Docker)")
+
+    from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+    # OpenFGA URL from environment
+    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:8080")
+
+    client = OpenFGAClient(api_url=api_url, store_id=None, model_id=None)
+
+    # TODO: Create test store and model if needed
+    # For now, tests should handle store/model creation themselves
+
+    yield client
+
+    # Cleanup happens per-test
+
+
+@pytest.fixture
 def mock_infisical_response():
     """Mock Infisical API responses"""
     return {

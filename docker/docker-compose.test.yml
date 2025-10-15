@@ -1,0 +1,151 @@
+# Docker Compose for Integration Tests
+# =====================================
+# Lightweight, fast-starting services for integration testing
+#
+# USAGE:
+#   # Run all integration tests
+#   docker compose -f docker/docker-compose.test.yml up --abort-on-container-exit
+#
+#   # Or use the helper script
+#   ./scripts/test-integration.sh
+#
+# FEATURES:
+#   - In-memory databases (fast, ephemeral)
+#   - Health checks (tests only run when services ready)
+#   - Isolated network (no conflicts with dev environment)
+#   - Auto-cleanup (no persistent volumes)
+
+version: '3.8'
+
+services:
+  # Test Runner - Executes pytest inside container
+  test-runner:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    container_name: mcp-test-runner
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      openfga-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    environment:
+      # Test mode flag
+      - TESTING=true
+
+      # Service URLs (use service names from docker-compose)
+      - OPENFGA_API_URL=http://openfga-test:8080
+      - POSTGRES_HOST=postgres-test
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=testdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=test
+      - REDIS_HOST=redis-test
+      - REDIS_PORT=6379
+
+      # Disable external dependencies for tests
+      - ENABLE_TRACING=false
+      - ENABLE_METRICS=false
+      - ENABLE_CONSOLE_EXPORT=false
+      - LANGSMITH_TRACING=false
+
+      # Test credentials
+      - JWT_SECRET_KEY=test-secret-key-for-integration-tests
+      - ANTHROPIC_API_KEY=test-key
+
+      # Log level
+      - LOG_LEVEL=INFO
+    networks:
+      - test-network
+    command: pytest -m integration -v --tb=short --maxfail=5
+    # Exit code propagates to docker compose
+    # Non-zero exit code stops other services
+
+  # PostgreSQL - Minimal configuration for tests
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: mcp-postgres-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: testdb
+    # Use tmpfs for speed (data in memory, not disk)
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - test-network
+    # No ports exposed (tests access via Docker network)
+
+  # OpenFGA - In-memory authorization
+  openfga-test:
+    image: openfga/openfga:v1.10.2
+    container_name: mcp-openfga-test
+    command: run --datastore-engine=memory --log-level=error
+    environment:
+      - OPENFGA_LOG_FORMAT=json
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+      start_period: 3s
+    networks:
+      - test-network
+    # No ports exposed (tests access via Docker network)
+
+  # Redis - Session storage for tests
+  redis-test:
+    image: redis:7-alpine
+    container_name: mcp-redis-test
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+      start_period: 2s
+    networks:
+      - test-network
+    # No ports exposed (tests access via Docker network)
+
+  # Keycloak - Optional, for auth integration tests
+  # Commented out by default (slow to start)
+  # keycloak-test:
+  #   image: quay.io/keycloak/keycloak:26.4.2
+  #   container_name: mcp-keycloak-test
+  #   command: start-dev
+  #   environment:
+  #     - KEYCLOAK_ADMIN=admin
+  #     - KEYCLOAK_ADMIN_PASSWORD=admin
+  #     - KC_DB=postgres
+  #     - KC_DB_URL=jdbc:postgresql://postgres-test:5432/testdb
+  #     - KC_DB_USERNAME=postgres
+  #     - KC_DB_PASSWORD=test
+  #     - KC_HEALTH_ENABLED=true
+  #   depends_on:
+  #     postgres-test:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 20
+  #     start_period: 60s
+  #   networks:
+  #     - test-network
+
+networks:
+  test-network:
+    driver: bridge
+    # Network isolation prevents conflicts with dev environment
+
+# No volumes - tests are ephemeral
+# All data deleted when containers stop

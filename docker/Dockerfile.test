@@ -1,0 +1,61 @@
+# Test Runner Dockerfile
+# ======================
+# Optimized image for running integration tests
+#
+# FEATURES:
+#   - Only test dependencies (smaller image)
+#   - No production build tools (unless needed for tests)
+#   - Test environment variables pre-configured
+#   - Fast builds with layer caching
+
+FROM python:3.12-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for testing
+# Note: curl needed for health checks in some tests
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements files
+# Separate layers for better caching
+COPY requirements.txt requirements-test.txt ./
+
+# Install Python dependencies with cache mounts
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt -r requirements-test.txt
+
+# Copy source code
+# This layer changes most frequently, so it's last
+COPY src/ ./src/
+COPY tests/ ./tests/
+COPY pyproject.toml setup.py* ./
+COPY pytest.ini .pytest.ini* ./
+
+# Install package in editable mode for tests
+RUN pip install -e .
+
+# Set test environment variables
+ENV TESTING=true
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Disable observability during tests for cleaner output
+ENV ENABLE_TRACING=false
+ENV ENABLE_METRICS=false
+ENV ENABLE_CONSOLE_EXPORT=false
+
+# Set pytest default options
+ENV PYTEST_ADDOPTS="-v --tb=short --strict-markers"
+
+# Default command runs integration tests
+# Can be overridden in docker-compose or docker run
+CMD ["pytest", "-m", "integration", "-v", "--tb=short"]
+
+# Health check (useful if running as long-lived service)
+HEALTHCHECK NONE
