@@ -219,7 +219,7 @@
       ]
     },
     {
-      "group": "Development & Quality (ADRs 10, 14-19)",
+      "group": "Development & Quality (ADRs 10, 14-19, 22)",
       "pages": [
         "architecture/adr-0010-langgraph-functional-api",
         "architecture/adr-0014-pydantic-type-safety",
@@ -227,7 +227,8 @@
         "architecture/adr-0016-property-based-testing-strategy",
         "architecture/adr-0017-error-handling-strategy",
         "architecture/adr-0018-semantic-versioning-strategy",
-        "architecture/adr-0019-async-first-architecture"
+        "architecture/adr-0019-async-first-architecture",
+        "architecture/adr-0022-distributed-conversation-checkpointing"
       ]
     },
     {

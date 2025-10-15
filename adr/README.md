@@ -86,6 +86,7 @@ What becomes easier or more difficult to do because of this change?
 | [0019](0019-async-first-architecture.md) | Async-First Architecture | Accepted | 2025-10-13 |
 | [0020](0020-dual-mcp-transport-protocol.md) | Dual MCP Transport Protocol (STDIO + StreamableHTTP) | Accepted | 2025-10-13 |
 | [0021](0021-cicd-pipeline-strategy.md) | CI/CD Pipeline Strategy | Accepted | 2025-10-13 |
+| [0022](0022-distributed-conversation-checkpointing.md) | Distributed Conversation Checkpointing with Redis | Accepted | 2025-10-15 |
 
 ## When to Create an ADR
 
