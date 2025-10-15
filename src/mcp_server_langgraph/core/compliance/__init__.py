@@ -2,14 +2,7 @@
 
 from .data_deletion import DataDeletionService
 from .data_export import DataExportService
-from .evidence import (
-    ComplianceReport,
-    ControlCategory,
-    Evidence,
-    EvidenceCollector,
-    EvidenceStatus,
-    EvidenceType,
-)
+from .evidence import ComplianceReport, ControlCategory, Evidence, EvidenceCollector, EvidenceStatus, EvidenceType
 
 __all__ = [
     "DataDeletionService",

@@ -9,14 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from mcp_server_langgraph.monitoring.sla import (
-    SLAMeasurement,
-    SLAMetric,
-    SLAMonitor,
-    SLAReport,
-    SLAStatus,
-    SLATarget,
-)
+from mcp_server_langgraph.monitoring.sla import SLAMeasurement, SLAMetric, SLAMonitor, SLAReport, SLAStatus, SLATarget
 
 
 @pytest.fixture

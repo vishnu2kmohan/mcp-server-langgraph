@@ -12,11 +12,7 @@ import pytest
 import yaml
 
 from mcp_server_langgraph.auth.session import InMemorySessionStore
-from mcp_server_langgraph.core.compliance.retention import (
-    DataRetentionService,
-    RetentionPolicy,
-    RetentionResult,
-)
+from mcp_server_langgraph.core.compliance.retention import DataRetentionService, RetentionPolicy, RetentionResult
 
 
 @pytest.fixture

@@ -19,12 +19,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from mcp_server_langgraph.auth.session import (
-    InMemorySessionStore,
-    RedisSessionStore,
-    SessionData,
-    create_session_store,
-)
+from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore, SessionData, create_session_store
 
 # ============================================================================
 # InMemorySessionStore Tests

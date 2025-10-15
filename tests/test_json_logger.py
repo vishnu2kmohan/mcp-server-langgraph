@@ -15,11 +15,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from mcp_server_langgraph.observability.json_logger import (
-    CustomJSONFormatter,
-    log_with_context,
-    setup_json_logging,
-)
+from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter, log_with_context, setup_json_logging
 
 
 @pytest.fixture
