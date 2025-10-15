@@ -82,9 +82,10 @@ jobs:
     - name: Run integration tests (containerized)
       run: |
         chmod +x scripts/test-integration.sh
-        ./scripts/test-integration.sh
+        ./scripts/test-integration.sh --no-cache
       # Integration tests now reliable in Docker - no longer allow failures
       # continue-on-error: true  # REMOVED: Tests now run in isolated Docker environment
+      # --no-cache: Ensures Docker builds use latest test code (not cached layers)
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5
