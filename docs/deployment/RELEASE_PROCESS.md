@@ -20,6 +20,9 @@ When a new GitHub release is published, the `bump-deployment-versions` workflow 
 1. **Extracts the version** from the release tag (e.g., `v2.5.0` → `2.5.0`)
 2. **Updates all deployment files**:
    - `pyproject.toml` - Python package version
+   - `package.json` - npm package version
+   - `src/mcp_server_langgraph/core/config.py` - service_version
+   - `.mcp/manifest.json` - MCP manifest version
    - `docker-compose.yml` - Version comment
    - `deployments/kubernetes/base/deployment.yaml` - Container image tag
    - `deployments/helm/mcp-server-langgraph/Chart.yaml` - Chart version and appVersion

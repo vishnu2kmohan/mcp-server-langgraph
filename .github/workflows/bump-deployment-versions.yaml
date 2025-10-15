@@ -84,6 +84,9 @@ jobs:
 
           Updated files:
           - pyproject.toml
+          - package.json
+          - src/mcp_server_langgraph/core/config.py
+          - .mcp/manifest.json
           - docker-compose.yml
           - deployments/kubernetes/base/deployment.yaml
           - deployments/helm/mcp-server-langgraph/Chart.yaml
@@ -112,6 +115,9 @@ jobs:
             All deployment configurations have been automatically updated to version \`${version}\`:
 
             - ✅ \`pyproject.toml\`
+            - ✅ \`package.json\`
+            - ✅ \`src/mcp_server_langgraph/core/config.py\`
+            - ✅ \`.mcp/manifest.json\`
             - ✅ \`docker-compose.yml\`
             - ✅ \`deployments/kubernetes/base/deployment.yaml\`
             - ✅ \`deployments/helm/mcp-server-langgraph/Chart.yaml\`
@@ -160,6 +166,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Updated Files:" >> $GITHUB_STEP_SUMMARY
           echo "- pyproject.toml" >> $GITHUB_STEP_SUMMARY
+          echo "- package.json" >> $GITHUB_STEP_SUMMARY
+          echo "- src/mcp_server_langgraph/core/config.py" >> $GITHUB_STEP_SUMMARY
+          echo "- .mcp/manifest.json" >> $GITHUB_STEP_SUMMARY
           echo "- docker-compose.yml" >> $GITHUB_STEP_SUMMARY
           echo "- deployments/kubernetes/base/deployment.yaml" >> $GITHUB_STEP_SUMMARY
           echo "- deployments/helm/mcp-server-langgraph/Chart.yaml" >> $GITHUB_STEP_SUMMARY

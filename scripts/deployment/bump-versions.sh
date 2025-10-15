@@ -180,6 +180,27 @@ main() {
         fi
     fi
 
+    # Update package.json
+    update_file \
+        "package.json" \
+        '"version": "[^"]+"' \
+        "\"version\": \"$VERSION\"" \
+        "package.json version"
+
+    # Update config.py service_version
+    update_file \
+        "src/mcp_server_langgraph/core/config.py" \
+        'service_version: str = "[^"]+"' \
+        "service_version: str = \"$VERSION\"" \
+        "config.py service_version"
+
+    # Update MCP manifest.json
+    update_file \
+        ".mcp/manifest.json" \
+        '"version": "[^"]+"' \
+        "\"version\": \"$VERSION\"" \
+        "MCP manifest version"
+
     echo ""
 
     if [[ "$DRY_RUN" == "1" ]]; then
@@ -188,6 +209,9 @@ main() {
         log_success "Version bump to $VERSION complete!"
         log_info "Modified files:"
         log_info "  - pyproject.toml"
+        log_info "  - package.json"
+        log_info "  - src/mcp_server_langgraph/core/config.py"
+        log_info "  - .mcp/manifest.json"
         log_info "  - docker-compose.yml"
         log_info "  - deployments/kubernetes/base/deployment.yaml"
         log_info "  - deployments/helm/mcp-server-langgraph/Chart.yaml"
