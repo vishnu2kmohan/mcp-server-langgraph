@@ -1,21 +1,34 @@
 name: Bug Report
 description: Report a bug or unexpected behavior
-title: "[Bug]: "
-labels: ["bug", "triage"]
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
 assignees: []
 
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug! Please fill out the form below to help us investigate and fix the issue.
+        Thanks for taking the time to report this bug! Please fill out the form below to help us investigate and fix the issue.
+
+  - type: checkboxes
+    id: pre-submission
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have read the troubleshooting guide
+          required: true
+        - label: I have checked the documentation
+          required: true
 
   - type: textarea
     id: description
     attributes:
       label: Bug Description
-      description: A clear and concise description of what the bug is.
-      placeholder: What happened? What did you expect to happen?
+      description: A clear and concise description of what the bug is
+      placeholder: "Example: The server crashes when processing requests with more than 10 messages"
     validations:
       required: true
 
@@ -23,11 +36,15 @@ body:
     id: reproduction
     attributes:
       label: Steps to Reproduce
-      description: Steps to reproduce the behavior
+      description: Detailed steps to reproduce the behavior
       placeholder: |
-        1. Configure with '...'
-        2. Run command '...'
-        3. See error
+        1. Start the MCP server with 'docker compose up'
+        2. Send a request with 'curl -X POST ...'
+        3. Observe the error in logs
+      value: |
+        1.
+        2.
+        3.
     validations:
       required: true
 
@@ -36,7 +53,7 @@ body:
     attributes:
       label: Expected Behavior
       description: What did you expect to happen?
-      placeholder: Describe the expected behavior
+      placeholder: "Example: The server should handle conversations with 100+ messages"
     validations:
       required: true
 
@@ -45,21 +62,23 @@ body:
     attributes:
       label: Actual Behavior
       description: What actually happened?
-      placeholder: Describe what actually happened
+      placeholder: "Example: Server crashes with OutOfMemoryError"
     validations:
       required: true
 
   - type: dropdown
     id: version
     attributes:
-      label: Version
+      label: MCP Server Version
       description: Which version are you using?
       options:
-        - 2.3.x (latest)
-        - 2.2.x
-        - 2.1.x
-        - 2.0.x
-        - Other (please specify in Additional Context)
+        - "2.5.0 (latest)"
+        - "2.4.0"
+        - "2.3.0"
+        - "2.2.0"
+        - "2.1.0"
+        - "main branch (development)"
+        - "Other (specify below)"
     validations:
       required: true
 
@@ -67,12 +86,10 @@ body:
     id: python-version
     attributes:
       label: Python Version
-      description: Which Python version are you using?
       options:
         - "3.12"
         - "3.11"
         - "3.10"
-        - Other
     validations:
       required: true
 
@@ -80,17 +97,14 @@ body:
     id: deployment
     attributes:
       label: Deployment Environment
-      description: Where are you running this?
       options:
-        - Local (development)
-        - Docker
-        - Kubernetes (GKE)
-        - Kubernetes (EKS)
-        - Kubernetes (AKS)
-        - Kubernetes (other)
-        - Google Cloud Run
-        - AWS Lambda
-        - Other
+        - "Docker Compose (local)"
+        - "Kubernetes (self-managed)"
+        - "Kubernetes (GKE/EKS/AKS)"
+        - "Google Cloud Run"
+        - "LangGraph Platform"
+        - "Local (uv/pip)"
+        - "Other"
     validations:
       required: true
 
@@ -98,61 +112,30 @@ body:
     id: llm-provider
     attributes:
       label: LLM Provider
-      description: Which LLM provider are you using?
       options:
-        - Anthropic (Claude)
-        - OpenAI (GPT)
-        - Google (Gemini)
-        - Azure OpenAI
-        - AWS Bedrock
-        - Ollama (local)
-        - Other
-      multiple: true
-    validations:
-      required: false
+        - "Google Gemini"
+        - "Anthropic Claude"
+        - "OpenAI GPT"
+        - "LiteLLM"
+        - "Local model"
+        - "Other"
+        - "N/A"
 
   - type: textarea
     id: logs
     attributes:
       label: Relevant Logs
-      description: Please paste any relevant log output
-      placeholder: |
-        Paste logs here (remove any sensitive information)
+      description: Copy and paste relevant log output
       render: shell
-    validations:
-      required: false
 
-  - type: textarea
-    id: config
+  - type: dropdown
+    id: severity
     attributes:
-      label: Configuration
-      description: Relevant configuration (sanitize secrets!)
-      placeholder: |
-        Paste relevant configuration here (DO NOT include secrets/tokens)
-      render: yaml
-    validations:
-      required: false
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional Context
-      description: Any other context about the problem
-      placeholder: Add any other context, screenshots, or information here
-    validations:
-      required: false
-
-  - type: checkboxes
-    id: checklist
-    attributes:
-      label: Pre-submission Checklist
-      description: Please confirm the following
+      label: Severity
       options:
-        - label: I have searched existing issues to avoid duplicates
-          required: true
-        - label: I have provided all required information above
-          required: true
-        - label: I have removed any sensitive information (secrets, tokens, PII)
-          required: true
-        - label: I am using a supported version (2.x)
-          required: false
+        - "Critical (production down)"
+        - "High (major feature broken)"
+        - "Medium (feature partially broken)"
+        - "Low (minor inconvenience)"
+    validations:
+      required: true
