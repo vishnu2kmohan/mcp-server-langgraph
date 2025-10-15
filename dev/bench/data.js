@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760567344725,
+  "lastUpdate": 1760567926761,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -648,6 +648,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0021859543782287265",
             "extra": "mean: 115.44406565440948 usec\nrounds: 4874"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f85e91396110efebc1327529cdb0614523cba707",
+          "message": "feat: automate release notes from CHANGELOG.md and enhance documentation\n\nImplements automatic extraction of release notes from CHANGELOG.md when creating\nGitHub releases, ensuring comprehensive descriptions like v2.5.0.\n\nChanges:\n- Enhanced .github/workflows/release.yaml with CHANGELOG extraction (lines 30-134)\n  - Extracts version-specific section from CHANGELOG.md\n  - Adds deployment instructions (Docker, Helm, Kubernetes)\n  - Falls back to commit log if CHANGELOG section not found\n  - Properly escapes version numbers in sed patterns\n- Updated docs/deployment/RELEASE_PROCESS.md (lines 206-237)\n  - Added comprehensive CHANGELOG checklist to \"Before Release\" section\n  - Emphasized importance of updating CHANGELOG.md before releases\n  - Added detailed sub-tasks for creating comprehensive release notes\n  - Noted that release descriptions are auto-generated from CHANGELOG.md\n\nBenefits:\n- ✅ Future releases will automatically have comprehensive descriptions\n- ✅ Consistent release notes format across all releases\n- ✅ Reduced manual effort when creating releases\n- ✅ Fallback mechanism prevents empty release descriptions\n\nContext:\n- Fixed v2.6.0 release (previously had minimal description)\n- Ensures all future releases match quality of v2.5.0\n- Part of release process improvement initiative\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-15T18:37:11-04:00",
+          "tree_id": "0ff7ba932670b114e026c0fd9ee12e35f10591ec",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f85e91396110efebc1327529cdb0614523cba707"
+        },
+        "date": 1760567926431,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37512.83517911035,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034475824999198515",
+            "extra": "mean: 26.657542551112392 usec\nrounds: 5135"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33855.43695020822,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030832830054566467",
+            "extra": "mean: 29.537353231350032 usec\nrounds: 6081"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31794.58195159443,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000045051496814048635",
+            "extra": "mean: 31.451899619955597 usec\nrounds: 15262"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 435734.8268239903,
+            "unit": "iter/sec",
+            "range": "stddev: 4.838488226862867e-7",
+            "extra": "mean: 2.2949737740470715 usec\nrounds: 39846"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 439041.93818029686,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6087734249443047e-7",
+            "extra": "mean: 2.2776867379565466 usec\nrounds: 65450"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 437201.5093419034,
+            "unit": "iter/sec",
+            "range": "stddev: 5.278230090234014e-7",
+            "extra": "mean: 2.2872748118030235 usec\nrounds: 66944"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2008419.38666033,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9060335854815494e-7",
+            "extra": "mean: 497.90397694917436 nsec\nrounds: 98040"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 434880.4281886252,
+            "unit": "iter/sec",
+            "range": "stddev: 4.894723059437234e-7",
+            "extra": "mean: 2.2994826512777893 usec\nrounds: 52367"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2966.9620315162315,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000926908229831717",
+            "extra": "mean: 337.04509507624596 usec\nrounds: 2356"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2830.767160719663,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005534440791975149",
+            "extra": "mean: 353.26112789360286 usec\nrounds: 1728"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 36324.352431205276,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006385325642921244",
+            "extra": "mean: 27.529740602916483 usec\nrounds: 7795"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 8586.972484248095,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0022194189710520403",
+            "extra": "mean: 116.45547972051799 usec\nrounds: 5153"
           }
         ]
       }
