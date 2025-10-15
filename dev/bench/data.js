@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760567926761,
+  "lastUpdate": 1760568526439,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -756,6 +756,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0022194189710520403",
             "extra": "mean: 116.45547972051799 usec\nrounds: 5153"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9064266c489e48735ab1481976b6ffcdd40d5817",
+          "message": "fix: resolve YAML syntax error in release workflow\n\n**Issue**: GitHub Actions workflow validation failing with YAML syntax error\n\n**Root Cause**:\n- Backticks (`) in heredoc were being parsed as YAML tokens\n- Error on line 55: 'found character `` that cannot start any token'\n- Caused workflow to fail immediately (0s duration) on push events\n\n**Changes Made**:\n\n1. **release.yaml** - Replaced heredoc with echo commands\n   - Lines 50-79: Deployment info section (Docker images, Helm)\n   - Lines 93-109: Fallback section (generated from commits)\n   - Used command grouping {...} instead of heredoc <<EOF\n   - Eliminated all backtick characters from YAML\n\n2. **Validation**:\n   - Confirmed YAML is valid with yaml.safe_load()\n   - Workflow triggers correctly on tag pushes only (v*.*.*)\n   - No longer triggers on regular push events\n\n**Impact**:\n- ✅ release.yaml will ONLY trigger on tag pushes (v*.*.*)\n- ✅ security-scan.yaml will ONLY trigger on schedule/PR/manual\n- ✅ Regular pushes to main will not trigger these workflows\n- ✅ Only CI/CD Pipeline and Quality Tests run on push\n\n**Testing**:\n- YAML syntax validation: PASSED\n- Workflow triggers: tags (v*.*.*), workflow_dispatch\n- Expected behavior: No execution on regular push events\n\nRelated workflows: .github/workflows/security-scan.yaml (already valid)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-15T18:47:05-04:00",
+          "tree_id": "83eac83ab406f07ffc90eccf83e44ffbb5691333",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9064266c489e48735ab1481976b6ffcdd40d5817"
+        },
+        "date": 1760568525502,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36855.570671791116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030628807080338778",
+            "extra": "mean: 27.13294033364107 usec\nrounds: 5095"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33173.08503165777,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031218886549429622",
+            "extra": "mean: 30.14492016783121 usec\nrounds: 6664"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31534.182212722466,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000035432575759830008",
+            "extra": "mean: 31.711619894063723 usec\nrounds: 14788"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 433995.4359239842,
+            "unit": "iter/sec",
+            "range": "stddev: 4.745589108048966e-7",
+            "extra": "mean: 2.3041716968082437 usec\nrounds: 30618"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 439271.4336917402,
+            "unit": "iter/sec",
+            "range": "stddev: 4.554974746273551e-7",
+            "extra": "mean: 2.2764967701080976 usec\nrounds: 56042"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 438684.54917186324,
+            "unit": "iter/sec",
+            "range": "stddev: 4.899285926441264e-7",
+            "extra": "mean: 2.279542331472063 usec\nrounds: 56648"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2015041.4380739988,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7078590303749505e-8",
+            "extra": "mean: 496.26770998605974 nsec\nrounds: 100929"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 432391.0393977189,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002092153643101964",
+            "extra": "mean: 2.3127213769112984 usec\nrounds: 50667"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2896.168417169914,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004497306893644697",
+            "extra": "mean: 345.28378739009344 usec\nrounds: 2427"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2844.388107035371,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005662128136153431",
+            "extra": "mean: 351.5694632271097 usec\nrounds: 1822"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 36499.11490715696,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007978019471989327",
+            "extra": "mean: 27.397924649507438 usec\nrounds: 7923"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 7856.073304455398,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002619801458046737",
+            "extra": "mean: 127.29005461709124 usec\nrounds: 4138"
           }
         ]
       }
