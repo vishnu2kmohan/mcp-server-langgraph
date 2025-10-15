@@ -11,8 +11,8 @@ import traceback
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from pythonjsonlogger import jsonlogger
 from opentelemetry import trace
+from pythonjsonlogger import jsonlogger
 
 
 class CustomJSONFormatter(jsonlogger.JsonFormatter):

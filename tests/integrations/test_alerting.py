@@ -8,9 +8,10 @@ Tests comprehensive alerting functionality including:
 - Error handling and retries
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from mcp_server_langgraph.integrations.alerting import (
     Alert,

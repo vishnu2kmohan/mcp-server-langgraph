@@ -65,7 +65,7 @@ class DeploymentValidator:
             "deployments/kubernetes/base/redis-session-deployment.yaml",
             "deployments/kubernetes/base/redis-session-service.yaml",
             # Docker Compose
-            "docker-compose.yml",
+            "docker/docker-compose.yml",
             "docker/docker-compose.dev.yml",
             # Helm
             "deployments/helm/mcp-server-langgraph/Chart.yaml",
@@ -235,7 +235,7 @@ class DeploymentValidator:
         """Validate Docker Compose configuration."""
         print("\n🐳 Validating Docker Compose...")
 
-        compose = self._load_yaml("docker-compose.yml")
+        compose = self._load_yaml("docker/docker-compose.yml")
         if not compose:
             return
 
