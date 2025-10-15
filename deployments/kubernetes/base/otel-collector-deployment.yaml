@@ -1,0 +1,332 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: mcp-server-langgraph
+  labels:
+    app: otel-collector
+    component: observability
+data:
+  # Base collector configuration (can be overridden per environment)
+  otel-collector.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 10s
+        send_batch_size: 1024
+        send_batch_max_size: 2048
+
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+        spike_limit_mib: 128
+
+      resource:
+        attributes:
+          - key: service.name
+            action: upsert
+            value: mcp-server-langgraph
+          - key: deployment.environment
+            action: upsert
+            from_attribute: ENVIRONMENT
+          - key: k8s.cluster.name
+            action: upsert
+            from_attribute: K8S_CLUSTER_NAME
+          - key: k8s.namespace.name
+            action: upsert
+            from_attribute: K8S_NAMESPACE
+
+    exporters:
+      # Default exporters (override in overlay for cloud-specific configs)
+      logging:
+        loglevel: info
+
+      otlp/jaeger:
+        endpoint: jaeger:4317
+        tls:
+          insecure: true
+
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [otlp/jaeger, logging]
+
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [prometheus, logging]
+
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [logging]
+
+      extensions:
+        - health_check
+
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: mcp-server-langgraph
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  type: ClusterIP
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: metrics
+      port: 8888
+      targetPort: 8888
+      protocol: TCP
+    - name: prometheus
+      port: 8889
+      targetPort: 8889
+      protocol: TCP
+    - name: health
+      port: 13133
+      targetPort: 13133
+      protocol: TCP
+  selector:
+    app: otel-collector
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: mcp-server-langgraph
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+        component: observability
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8888"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: otel-collector
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.137.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /otelcol-contrib
+            - --config=/etc/otel-collector/otel-collector.yaml
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: K8S_CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cluster-config
+                  key: cluster.name
+                  optional: true
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # Cloud-specific environment variables (set via overlay)
+            # AWS
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: otel-collector-secrets
+                  key: aws-region
+                  optional: true
+            # GCP
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: otel-collector-secrets
+                  key: gcp-project-id
+                  optional: true
+            # Azure
+            - name: AZURE_MONITOR_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: otel-collector-secrets
+                  key: azure-connection-string
+                  optional: true
+            # Datadog
+            - name: DATADOG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: otel-collector-secrets
+                  key: datadog-api-key
+                  optional: true
+            - name: DATADOG_SITE
+              valueFrom:
+                secretKeyRef:
+                  name: otel-collector-secrets
+                  key: datadog-site
+                  optional: true
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: metrics
+              containerPort: 8888
+              protocol: TCP
+            - name: prometheus
+              containerPort: 8889
+              protocol: TCP
+            - name: health
+              containerPort: 13133
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector
+              readOnly: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+            items:
+              - key: otel-collector.yaml
+                path: otel-collector.yaml
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  namespace: mcp-server-langgraph
+  labels:
+    app: otel-collector
+    component: observability
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: otel-collector
+  namespace: mcp-server-langgraph
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: otel-collector
+  namespace: mcp-server-langgraph
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: otel-collector
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+      selectPolicy: Max

@@ -52,6 +52,8 @@ services:
 
       # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - LOG_JSON_INDENT=${LOG_JSON_INDENT}
     volumes:
       # Mount source code for hot reload during development
       - ./src/mcp_server_langgraph:/app/src/mcp_server_langgraph:ro
@@ -159,8 +161,51 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.137.0
     command: ["--config=/etc/otel-collector-config.yaml"]
+    environment:
+      # Environment for resource detection
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+
+      # Log aggregation platform selection
+      # Options: base (default), aws, gcp, azure, elasticsearch, datadog, splunk
+      - LOG_EXPORTER=${LOG_EXPORTER:-base}
+
+      # AWS CloudWatch
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+      # GCP Cloud Logging
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+
+      # Azure Monitor
+      - AZURE_MONITOR_CONNECTION_STRING=${AZURE_MONITOR_CONNECTION_STRING}
+      - AZURE_MONITOR_INSTRUMENTATION_KEY=${AZURE_MONITOR_INSTRUMENTATION_KEY}
+
+      # Elasticsearch
+      - ELASTICSEARCH_ENDPOINT=${ELASTICSEARCH_ENDPOINT:-https://elasticsearch:9200}
+      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+
+      # Datadog
+      - DATADOG_API_KEY=${DATADOG_API_KEY}
+      - DATADOG_SITE=${DATADOG_SITE:-datadoghq.com}
+
+      # Splunk
+      - SPLUNK_HEC_TOKEN=${SPLUNK_HEC_TOKEN}
+      - SPLUNK_HEC_ENDPOINT=${SPLUNK_HEC_ENDPOINT}
+      - SPLUNK_ACCESS_TOKEN=${SPLUNK_ACCESS_TOKEN}
+      - SPLUNK_REALM=${SPLUNK_REALM}
     volumes:
+      # Mount appropriate config based on LOG_EXPORTER env var
+      # Default: base collector config
       - ./monitoring/otel-collector/otel-collector.yaml:/etc/otel-collector-config.yaml
+      # For specific platforms, override with:
+      # - ./monitoring/otel-collector/${LOG_EXPORTER}.yaml:/etc/otel-collector-config.yaml
+
+      # Mount all configs for easy switching
+      - ./monitoring/otel-collector:/etc/otel-configs:ro
     ports:
       - "4317:4317"   # OTLP gRPC receiver
       - "4318:4318"   # OTLP HTTP receiver
@@ -169,6 +214,11 @@ services:
       - "13133:13133" # health_check extension
     networks:
       - observability
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   # Jaeger for tracing visualization
   jaeger:
