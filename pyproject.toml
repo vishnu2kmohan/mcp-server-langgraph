@@ -39,7 +39,8 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-grpc>=1.22.0",
     "opentelemetry-exporter-otlp-proto-http>=1.22.0",
     "openfga-sdk>=0.5.1",
-    "infisical-python>=2.1.7,<2.3.6",  # Pin to version with x86_64 Linux wheels
+    # infisical-python moved to optional-dependencies[secrets]
+    # Application falls back to environment variables if not installed
     "python-dotenv>=1.0.1",
     "pydantic>=2.5.3",
     "pydantic-settings>=2.1.0",
@@ -78,6 +79,19 @@ dev = [
     "bandit>=1.7.6",
     # Deployment tools
     "langgraph-cli>=0.1.0",
+]
+
+secrets = [
+    # Infisical secrets management (requires Rust toolchain or pre-built wheels)
+    # See: requirements-infisical.txt for installation options
+    # Docker builds: Automatically installed
+    # Local builds: See docs/deployment/infisical-installation.md
+    "infisical-python>=2.1.7,<2.3.6",
+]
+
+all = [
+    # Install all optional dependencies
+    "infisical-python>=2.1.7,<2.3.6",
 ]
 
 [project.scripts]

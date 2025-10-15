@@ -1,0 +1,475 @@
+# Infisical Installation Guide
+
+Complete guide for installing and using Infisical secrets management with MCP Server LangGraph.
+
+## Overview
+
+Infisical is an **optional** dependency for secure secrets management. The application works perfectly without it by falling back to environment variables.
+
+**Key Points**:
+- ✅ Fully optional - app works without Infisical
+- ✅ Graceful fallback to environment variables
+- ✅ Docker builds handle everything automatically
+- ✅ Multiple installation options for local development
+
+---
+
+## Quick Decision Tree
+
+```
+Do you need Infisical?
+├─ No  → Skip installation (use .env or environment variables)
+├─ Yes → What's your deployment method?
+   ├─ Docker/Kubernetes → Nothing to do (automatic)
+   ├─ Local development → Continue reading
+```
+
+---
+
+## Installation Options
+
+### Option 1: Docker Build (RECOMMENDED)
+
+**Who**: Production deployments, Docker users, CI/CD
+
+**Advantages**:
+- Zero configuration required
+- Works on all platforms
+- Automatic Rust toolchain setup
+- Fastest and most reliable
+
+**Usage**:
+```bash
+# Docker Compose (development)
+docker compose up -d
+
+# Docker build (production)
+docker build -t mcp-server-langgraph -f docker/Dockerfile .
+
+# Kubernetes
+kubectl apply -k deployments/kustomize/base
+```
+
+**What happens**: Docker automatically:
+1. Installs Rust toolchain
+2. Compiles infisical-python from source
+3. Caches build artifacts for faster rebuilds
+4. Includes Infisical in final image
+
+---
+
+### Option 2: Local with pip extras (EASY)
+
+**Who**: Local developers, quick setup
+
+**Advantages**:
+- Simple one-line install
+- Uses pre-built wheels when available
+- Managed by pip
+
+**Installation**:
+```bash
+# Install with Infisical support
+pip install -e ".[secrets]"
+
+# Or install all optional dependencies
+pip install -e ".[all]"
+```
+
+**Verification**:
+```bash
+python -c "from infisical_client import InfisicalClient; print('✓ Infisical installed')"
+```
+
+---
+
+### Option 3: Pre-built Wheels (FAST)
+
+**Who**: Developers avoiding Rust toolchain, platform-specific needs
+
+**Advantages**:
+- No Rust toolchain required
+- Fastest installation
+- Predictable version
+
+**Installation**:
+```bash
+# Install specific version with wheels
+pip install infisical-python==2.3.5
+
+# Verify installation
+pip show infisical-python
+```
+
+**Supported platforms** (version 2.3.5):
+- ✅ Linux x86_64 (manylinux)
+- ✅ macOS Intel (x86_64)
+- ✅ macOS Apple Silicon (ARM64)
+- ✅ Windows x86_64
+
+---
+
+### Option 4: Build from Source (FULL CONTROL)
+
+**Who**: Advanced users, contributing to project
+
+**Advantages**:
+- Latest version
+- Platform-independent
+- Full control over build
+
+**Prerequisites**:
+1. Rust toolchain
+2. C compiler (gcc/clang)
+3. Python development headers
+
+**Installation**:
+
+```bash
+# 1. Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+
+# 2. Install build dependencies
+# Linux (Debian/Ubuntu)
+sudo apt-get install -y gcc g++ make python3-dev
+
+# macOS
+xcode-select --install
+
+# 3. Install infisical-python
+pip install -r requirements-infisical.txt
+
+# Build time: 2-5 minutes
+```
+
+**Verification**:
+```bash
+cargo --version  # Should show Rust version
+python -c "from infisical_client import InfisicalClient; print('✓ Built successfully')"
+```
+
+---
+
+### Option 5: Skip Infisical (USE ENVIRONMENT VARIABLES)
+
+**Who**: Simple deployments, development without secrets manager
+
+**Advantages**:
+- No dependencies
+- Fully supported
+- Perfect for development
+
+**Setup**:
+```bash
+# Create .env file
+cat > .env << EOF
+JWT_SECRET_KEY=your-secret-key-here
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=...
+EOF
+
+# Load and run
+export $(cat .env | xargs)
+python -m mcp_server_langgraph.mcp.server_streamable
+```
+
+**How it works**:
+The application checks for Infisical, and if unavailable, uses `os.getenv()`:
+```python
+# Automatic fallback in SecretsManager
+if not self.client:
+    return os.getenv(key, fallback)
+```
+
+---
+
+## Using Pre-built Wheels (Advanced)
+
+### Building Wheels Locally
+
+Use the provided script to build wheels for multiple Python versions:
+
+```bash
+# Build wheels for all supported versions (3.10, 3.11, 3.12)
+./scripts/build-infisical-wheels.sh
+
+# Build for specific version
+PYTHON_VERSIONS="3.12" ./scripts/build-infisical-wheels.sh
+
+# Build to custom directory
+./scripts/build-infisical-wheels.sh ./dist/wheels
+
+# Clean before build
+CLEAN=true ./scripts/build-infisical-wheels.sh
+```
+
+**Output**:
+```
+wheels/
+├── py3.10/
+│   └── infisical_python-2.3.5-cp310-cp310-manylinux_2_34_x86_64.whl
+├── py3.11/
+│   └── infisical_python-2.3.5-cp311-cp311-manylinux_2_34_x86_64.whl
+└── py3.12/
+    └── infisical_python-2.3.5-cp312-cp312-manylinux_2_34_x86_64.whl
+```
+
+### Installing from Local Wheels
+
+```bash
+# Auto-detect Python version
+pip install --no-index --find-links=wheels/py$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")') infisical-python
+
+# Or specify version
+pip install --no-index --find-links=wheels/py3.12 infisical-python
+```
+
+---
+
+## Troubleshooting
+
+### Import Error: `infisical_client not found`
+
+**Symptom**:
+```
+WARNING: Infisical client not available, using fallback mode
+```
+
+**Solution**: This is **normal** if Infisical is not installed. The app uses environment variables automatically.
+
+**To install Infisical**:
+```bash
+pip install -e ".[secrets]"
+```
+
+---
+
+### Build Error: `cargo not found`
+
+**Symptom**:
+```
+error: command 'cargo' not found
+```
+
+**Solution**: Either install Rust or use pre-built wheels:
+
+```bash
+# Option A: Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+
+# Option B: Use pre-built wheels
+pip install infisical-python==2.3.5
+
+# Option C: Use Docker
+docker compose up -d
+```
+
+---
+
+### Platform Error: `no matching distribution`
+
+**Symptom**:
+```
+ERROR: Could not find a version that satisfies the requirement infisical-python==2.3.6
+```
+
+**Cause**: Version 2.3.6 lacks wheels for some platforms (x86_64 Linux).
+
+**Solutions**:
+```bash
+# Option A: Use version with wheels
+pip install infisical-python==2.3.5
+
+# Option B: Build from source (requires Rust)
+pip install 'infisical-python>=2.1.7,<2.3.6'
+
+# Option C: Use Docker
+docker compose up -d
+```
+
+---
+
+### PyO3 Build Error
+
+**Symptom**:
+```
+error: failed to run custom build command for `pyo3-ffi`
+```
+
+**Solutions**:
+```bash
+# Set compatibility flag
+export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
+
+# Ensure Python dev headers installed
+# Linux:
+sudo apt-get install python3-dev
+
+# macOS:
+xcode-select --install
+
+# Then retry
+pip install -r requirements-infisical.txt
+```
+
+---
+
+## Configuration
+
+### Setting up Infisical Service
+
+1. **Sign up** at https://app.infisical.com
+2. **Create a project**
+3. **Generate credentials**:
+   - Go to: Project Settings → Access Control → Machine Identities
+   - Create new Machine Identity
+   - Generate Universal Auth credentials
+
+4. **Configure environment**:
+```bash
+# Add to .env
+INFISICAL_SITE_URL=https://app.infisical.com
+INFISICAL_CLIENT_ID=your-client-id
+INFISICAL_CLIENT_SECRET=your-client-secret
+INFISICAL_PROJECT_ID=your-project-id
+```
+
+5. **Test connection**:
+```bash
+python scripts/setup/setup_infisical.py
+```
+
+---
+
+## Production Recommendations
+
+### Docker (Recommended)
+
+```dockerfile
+# Use multi-stage build from docker/Dockerfile
+# Infisical automatically built with Rust
+docker build -t mcp-server-langgraph -f docker/Dockerfile .
+```
+
+### Kubernetes
+
+```yaml
+# Use Helm chart with Infisical enabled
+helm install mcp-server deployments/helm/mcp-server-langgraph \
+  --set secrets.infisicalClientId=<client-id> \
+  --set secrets.infisicalClientSecret=<client-secret> \
+  --set secrets.infisicalProjectId=<project-id>
+```
+
+### Cloud Run / App Engine
+
+```bash
+# Build with Cloud Build (uses Dockerfile)
+gcloud builds submit --tag gcr.io/PROJECT_ID/mcp-server-langgraph
+
+# Deploy with Infisical credentials
+gcloud run deploy mcp-server \
+  --image gcr.io/PROJECT_ID/mcp-server-langgraph \
+  --set-env-vars INFISICAL_CLIENT_ID=<id>,INFISICAL_CLIENT_SECRET=<secret>
+```
+
+---
+
+## Performance Considerations
+
+### Build Times
+
+| Method | First Build | Cached Build | Disk Space |
+|--------|-------------|--------------|------------|
+| Docker (BuildKit) | ~5 min | ~30 sec | ~2 GB |
+| Local (Rust) | ~3 min | ~1 min | ~500 MB |
+| Pre-built wheels | ~5 sec | ~5 sec | ~5 MB |
+
+### Recommendations
+
+- **CI/CD**: Use Docker with BuildKit caching
+- **Local dev**: Use pre-built wheels (2.3.5)
+- **Production**: Use Docker or Kubernetes
+
+---
+
+## Security Best Practices
+
+### Never commit secrets
+```bash
+# ❌ NEVER do this
+git add .env
+git commit -m "Add secrets"
+
+# ✅ Use .gitignore
+echo ".env" >> .gitignore
+echo "*.key" >> .gitignore
+echo "*.pem" >> .gitignore
+```
+
+### Use Infisical in production
+```bash
+# ✅ Centralized secrets management
+# ✅ Audit logs
+# ✅ Role-based access control
+# ✅ Secret rotation
+```
+
+### Rotate secrets regularly
+```bash
+# Update secrets in Infisical
+# Application automatically fetches new values
+# No code deployment needed
+```
+
+---
+
+## FAQ
+
+**Q: Is Infisical required?**
+A: No. The application works perfectly with environment variables.
+
+**Q: Which installation method should I use?**
+A: Docker for production, pre-built wheels (2.3.5) for local dev.
+
+**Q: Can I switch between methods?**
+A: Yes. Install/uninstall Infisical anytime. App adapts automatically.
+
+**Q: What if build fails?**
+A: Use Docker (automatic) or pre-built wheels (2.3.5).
+
+**Q: How do I know if Infisical is working?**
+A: Check logs for "Infisical secrets manager initialized" or use health check endpoint.
+
+**Q: Can I mix Infisical and environment variables?**
+A: Yes. Infisical takes precedence; missing secrets fall back to environment.
+
+---
+
+## Related Documentation
+
+- [Production Deployment Guide](production.md)
+- [Docker Deployment](../docker/README.md)
+- [Kubernetes Deployment](kubernetes.md)
+- [Environment Configuration](../../.env.example)
+- [Security Best Practices](../../.github/SECURITY.md)
+
+---
+
+## Getting Help
+
+**Issues**:
+- GitHub Issues: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
+- Check logs: `docker logs <container-id>`
+
+**Infisical Support**:
+- Documentation: https://infisical.com/docs
+- Community: https://infisical.com/slack
+
+---
+
+**Last Updated**: 2025-10-14
+**Version**: 2.5.0 (Infisical now optional)

@@ -1,0 +1,89 @@
+# syntax=docker/dockerfile:1.4
+# Infisical Python Wheel Builder
+# ================================
+# Builds pre-compiled wheels for infisical-python across multiple Python versions
+#
+# USAGE:
+# ------
+# Build wheels for all supported Python versions:
+#   ./scripts/build-infisical-wheels.sh
+#
+# Build for specific Python version:
+#   docker build --build-arg PYTHON_VERSION=3.11 \
+#                --output type=local,dest=./wheels \
+#                -f docker/Dockerfile.infisical-builder .
+#
+# Use in CI/CD:
+#   docker build --target wheels-export \
+#                --output type=tar,dest=infisical-wheels.tar \
+#                -f docker/Dockerfile.infisical-builder .
+#
+# OUTPUTS:
+# --------
+# - /wheels/*.whl - Pre-built infisical-python wheels
+# - Compatible with: Linux x86_64, ARM64
+
+ARG PYTHON_VERSION=3.12
+
+FROM python:${PYTHON_VERSION}-slim AS builder
+
+# Set working directory
+WORKDIR /build
+
+# Install build dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    make \
+    curl \
+    ca-certificates
+
+# Install Rust toolchain
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    --default-toolchain stable \
+    --profile minimal
+
+# Add Rust to PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Set PyO3 compatibility flags
+ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+
+# Copy Infisical requirements
+COPY requirements-infisical.txt .
+
+# Build wheels with caching
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    --mount=type=cache,target=/root/.cache/cargo-build \
+    mkdir -p /wheels && \
+    pip wheel --no-cache-dir --wheel-dir=/wheels -r requirements-infisical.txt
+
+# Export stage for extracting wheels
+FROM scratch AS wheels-export
+COPY --from=builder /wheels /
+
+# Test stage - verify wheels are installable
+FROM python:${PYTHON_VERSION}-slim AS test
+
+COPY --from=builder /wheels /wheels
+
+RUN pip install --no-cache-dir --no-index --find-links=/wheels infisical-python && \
+    python -c "from infisical_client import InfisicalClient; print('✓ Infisical wheel installed successfully')"
+
+# Final stage - metadata
+FROM alpine:latest AS metadata
+
+ARG PYTHON_VERSION
+RUN echo "Built infisical-python wheels for Python ${PYTHON_VERSION}" > /build-info.txt && \
+    echo "Build date: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /build-info.txt
+
+COPY --from=builder /wheels /wheels
+
+CMD ["sh", "-c", "ls -lh /wheels && cat /build-info.txt"]

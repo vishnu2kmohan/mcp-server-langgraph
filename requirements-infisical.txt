@@ -1,0 +1,51 @@
+# Infisical Secrets Management (Optional Dependency)
+# ===================================================
+#
+# This file contains the Infisical Python SDK dependency for secure secrets management.
+#
+# INSTALLATION OPTIONS:
+# ---------------------
+#
+# Option 1: Docker Build (RECOMMENDED - Zero Configuration)
+#   → Automatically built with Rust toolchain in docker/Dockerfile
+#   → No manual installation needed
+#   → Works on all platforms
+#   → Usage: docker compose up -d
+#
+# Option 2: Local Development with Pre-built Wheels
+#   → Install version with available wheels (fastest)
+#   → pip install infisical-python==2.3.5
+#   → Compatible with x86_64 Linux, macOS, Windows
+#
+# Option 3: Local Development with Rust Toolchain
+#   → Install Rust first:
+#     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+#   → Then install: pip install -r requirements-infisical.txt
+#   → Build from source (slower, but latest version)
+#
+# Option 4: Skip Infisical (Use Environment Variables)
+#   → Application gracefully falls back to os.getenv()
+#   → Set secrets in .env file or environment
+#   → No Infisical dependency needed
+#
+# WHY RUST IS REQUIRED:
+# ---------------------
+# infisical-python uses PyO3 (Python-Rust bindings) for performance and security.
+# Some versions lack pre-built wheels for certain platforms, requiring compilation.
+#
+# PRODUCTION DEPLOYMENT:
+# ----------------------
+# Use Docker or Kubernetes deployments which handle Rust build automatically.
+# See: docs/deployment/production.md
+#
+# TROUBLESHOOTING:
+# ----------------
+# - Build errors: Ensure Rust toolchain installed and PATH configured
+# - Platform incompatibility: Use Docker or pin to version 2.3.5
+# - Import errors: Infisical is optional; app falls back to environment variables
+#
+# For detailed instructions: docs/deployment/infisical-installation.md
+
+# Infisical Python SDK
+# Pinned range: Avoid 2.3.6 (missing x86_64 wheels)
+infisical-python>=2.1.7,<2.3.6

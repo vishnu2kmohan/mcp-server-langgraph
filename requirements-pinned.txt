@@ -30,9 +30,55 @@ opentelemetry-exporter-otlp-proto-http==1.37.0
 # Fine-grained Authorization
 openfga-sdk==0.9.7
 
-# Secrets Management
-# infisical-python==2.3.5  # Commented out - requires Rust toolchain to build
-# Install manually if needed: pip install infisical-python>=2.1.0
+# Secrets Management - Infisical (OPTIONAL)
+# ==========================================
+# Infisical is now an OPTIONAL dependency. The application works without it.
+#
+# INSTALLATION OPTIONS:
+# ---------------------
+#
+# Option 1: Docker Build (RECOMMENDED - Zero Configuration Required)
+#   → Infisical automatically built with Rust toolchain in docker/Dockerfile
+#   → No manual installation needed
+#   → Works on all platforms
+#   → Usage: docker compose up -d
+#
+# Option 2: pip install with extras (for local development with wheels)
+#   → pip install -e ".[secrets]"  # Install with Infisical
+#   → Uses infisical-python==2.3.5 (has pre-built wheels for most platforms)
+#   → Fastest local installation
+#
+# Option 3: Manual install with pre-built wheels (alternative)
+#   → pip install infisical-python==2.3.5
+#   → Compatible with: x86_64 Linux, macOS (Intel/ARM), Windows
+#
+# Option 4: Build from source with Rust toolchain
+#   → Install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+#   → source $HOME/.cargo/env
+#   → pip install -r requirements-infisical.txt
+#   → Build time: ~2-5 minutes
+#
+# Option 5: Skip Infisical entirely (use environment variables)
+#   → Application falls back to os.getenv() for all secrets
+#   → Set secrets in .env file or environment
+#   → No Infisical dependency needed
+#   → Fully supported configuration
+#
+# TROUBLESHOOTING:
+# ----------------
+# - Error: "infisical_client not found"
+#   → Normal if Infisical not installed; app uses fallback mode
+#
+# - Error: "no matching distribution for platform"
+#   → Version 2.3.6 lacks x86_64 wheels; use 2.3.5 or Docker
+#
+# - Error: "cargo not found" or "rustc not found"
+#   → Install Rust toolchain OR use Docker OR use pre-built wheels (2.3.5)
+#
+# For detailed guide: docs/deployment/infisical-installation.md
+# For requirements file: requirements-infisical.txt
+#
+# infisical-python==2.3.5  # Uncomment for local installation with wheels
 
 # Utilities
 python-dotenv==1.0.1

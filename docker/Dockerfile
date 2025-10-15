@@ -1,29 +1,48 @@
-# Multi-stage build for LangGraph MCP Agent
+# syntax=docker/dockerfile:1.4
+# Multi-stage build for LangGraph MCP Agent with BuildKit caching
 FROM python:3.12-slim AS builder
 
 # Set working directory
 WORKDIR /app
 
 # Install build dependencies including Rust for infisical-python
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Use BuildKit cache mounts for faster repeated builds
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     make \
-    curl \
-    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-    && rm -rf /var/lib/apt/lists/*
+    curl
+
+# Install Rust toolchain with cache mount
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # Add Rust to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Set PyO3 forward compatibility (not strictly needed for Python 3.12, but doesn't hurt)
+# Set PyO3 forward compatibility for infisical-python
 ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
 # Copy requirements
-COPY requirements.txt .
+COPY requirements.txt requirements-infisical.txt ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --user -r requirements.txt
+# Build wheels first (enables better caching)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    mkdir -p /wheels && \
+    pip wheel --no-cache-dir --wheel-dir=/wheels \
+        -r requirements.txt \
+        -r requirements-infisical.txt
+
+# Install Python dependencies from pre-built wheels
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --user --no-cache-dir --no-index --find-links=/wheels \
+        -r requirements.txt \
+        -r requirements-infisical.txt
 
 # Final stage
 FROM python:3.12-slim
