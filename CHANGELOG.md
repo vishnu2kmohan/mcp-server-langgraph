@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed - CI/CD Deployment (2025-10-15)
+---
+
+## [2.6.0] - 2025-10-15
+
+### Fixed - CI/CD Deployment
 
 **Issue**: Kustomize deployment failures in GitHub Actions CI/CD pipeline
 
@@ -74,12 +78,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking Changes**: NONE - All existing functionality preserved
 - **Deployment Risk**: LOW - Only structural changes, no configuration changes
 
+### Fixed - Testing and CI/CD
+
+- **pytest-asyncio 0.26 compatibility**: Resolved GDPR test failures due to asyncio mode changes
+- **Integration test caching**: Added `--no-cache` flag to prevent stale Docker layers in CI
+- **Benchmark tests**: Fixed `contents:write` permission for gh-pages deployment
+- **Security warnings**: Resolved pytest-asyncio fixture errors and security scan warnings
+- **Test consistency**: Ensured local and CI/CD test environments match
+
+### Changed - Documentation
+
+- **Documentation updates**: Reflected v2.5.0 state across all documentation
+- **Deployment validation**: Disabled staging deployment until Kubernetes cluster is provisioned
+- **Version synchronization**: Aligned all deployment configurations to version 2.5.0
+
+### Improved - Development Experience
+
+- **isort upgrade**: Upgraded to 7.0.0 for latest features and consistency
+- **Code formatting**: Resolved isort formatting inconsistencies
+- **Deployment validation**: Enhanced validation scripts for all deployment configurations
+
 #### File References
 - Kustomize Base: `deployments/kustomize/base/kustomization.yaml:1-39`
 - Dev Overlay: `deployments/kustomize/overlays/dev/kustomization.yaml:1-35`
 - Staging Overlay: `deployments/kustomize/overlays/staging/kustomization.yaml:1-35`
 - Production Overlay: `deployments/kustomize/overlays/production/kustomization.yaml:1-39`
 - Documentation: `README.md:3-8` (CI badges)
+- CI Workflow: `.github/workflows/ci.yaml`
 
 ---
 
@@ -2528,7 +2553,9 @@ None (HTTP/SSE transport previously deprecated in 1.0.0 was removed in Unrelease
 
 ---
 
-[Unreleased]: https://github.com/vishnu2kmohan/mcp-server-langgraph/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/vishnu2kmohan/mcp-server-langgraph/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.6.0
+[2.5.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.5.0
 [2.4.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.4.0
 [2.3.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.3.0
 [2.2.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.2.0

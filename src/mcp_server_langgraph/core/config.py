@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     # Service
     service_name: str = "mcp-server-langgraph"
-    service_version: str = "2.5.0"
+    service_version: str = "2.6.0"
     environment: str = "development"
 
     # Authentication
