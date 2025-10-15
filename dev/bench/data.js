@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760566976269,
+  "lastUpdate": 1760567344725,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -540,6 +540,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0027705355298139195",
             "extra": "mean: 129.18173088305232 usec\nrounds: 4054"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a3232361947701d6c013bd9ca28893770dc50827",
+          "message": "feat: enhance version bump automation to include all version files\n\n- Update bump-versions.sh to include:\n  - package.json (npm package version)\n  - src/mcp_server_langgraph/core/config.py (service_version)\n  - .mcp/manifest.json (MCP manifest version)\n\n- Update bump-deployment-versions.yaml workflow:\n  - Include new files in commit message\n  - Include new files in release comment\n  - Include new files in workflow summary\n\n- Update RELEASE_PROCESS.md documentation:\n  - List all 9 files updated by automation\n\nNow all version-related files are automatically updated when a release is triggered,\nensuring complete version consistency across the entire project.\n\nFiles updated by automation (9 total):\n1. pyproject.toml\n2. package.json\n3. src/mcp_server_langgraph/core/config.py\n4. .mcp/manifest.json\n5. docker-compose.yml\n6. deployments/kubernetes/base/deployment.yaml\n7. deployments/helm/mcp-server-langgraph/Chart.yaml\n8. deployments/helm/mcp-server-langgraph/values.yaml\n9. deployments/kustomize/base/kustomization.yaml\n\nTested with: DRY_RUN=1 bash scripts/deployment/bump-versions.sh 2.7.0\n✅ All 9 files show correct version updates\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-15T18:27:27-04:00",
+          "tree_id": "e31d77e9b3641763629afc1879de69a9b374be79",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a3232361947701d6c013bd9ca28893770dc50827"
+        },
+        "date": 1760567344245,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36744.744729140744,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027549769120313415",
+            "extra": "mean: 27.214776082168317 usec\nrounds: 6422"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33228.77616630423,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028230074960245364",
+            "extra": "mean: 30.094397548533667 usec\nrounds: 6935"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 30927.21465074824,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000035433445077081507",
+            "extra": "mean: 32.33398194091192 usec\nrounds: 15394"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 436650.6632239841,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6587734627534007e-7",
+            "extra": "mean: 2.2901602682028686 usec\nrounds: 41468"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 441367.984465275,
+            "unit": "iter/sec",
+            "range": "stddev: 4.951265782001973e-7",
+            "extra": "mean: 2.2656831378730775 usec\nrounds: 67714"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 438157.69970846793,
+            "unit": "iter/sec",
+            "range": "stddev: 4.656378692144625e-7",
+            "extra": "mean: 2.2822832981489514 usec\nrounds: 71603"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1999449.6907182464,
+            "unit": "iter/sec",
+            "range": "stddev: 8.577120982933352e-8",
+            "extra": "mean: 500.1376151858955 nsec\nrounds: 96909"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 412412.6077288209,
+            "unit": "iter/sec",
+            "range": "stddev: 7.757434876304276e-7",
+            "extra": "mean: 2.4247561332012997 usec\nrounds: 58167"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2940.571021006104,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008035116167085134",
+            "extra": "mean: 340.07000438229653 usec\nrounds: 2510"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2897.0026569431075,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004947526350439048",
+            "extra": "mean: 345.18435721946884 usec\nrounds: 1856"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 37158.03753456902,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006645375548683509",
+            "extra": "mean: 26.912077880046166 usec\nrounds: 8359"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 8662.203590382684,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0021859543782287265",
+            "extra": "mean: 115.44406565440948 usec\nrounds: 4874"
           }
         ]
       }
