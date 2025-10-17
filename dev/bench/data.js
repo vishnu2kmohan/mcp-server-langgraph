@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760730563569,
+  "lastUpdate": 1760732265965,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -1944,6 +1944,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016788804275313706",
             "extra": "mean: 81.00719633372441 usec\nrounds: 5455"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "e356db4a07d03bdc47ce3adbadd1ee98b9ec609d",
+          "message": "fix: synchronize release metadata and resolve critical implementation gaps\n\nThis commit addresses 6 critical synchronization and implementation issues\nidentified in the ultrathink analysis:\n\n1. Version Synchronization (HIGH):\n   - Unified version to 2.7.0 across all modules\n   - pyproject.toml is now single source of truth\n   - __init__.py reads version dynamically via tomllib\n   - config.py imports from __init__.py\n   - telemetry.py uses settings.service_version\n   - Added test_version_sync.py with 4 validation tests\n\n2. Refactor Observability Bootstrap (HIGH):\n   - Added OBSERVABILITY_VERBOSE env var to gate print statements\n   - Library embedders can suppress output with OBSERVABILITY_VERBOSE=false\n   - Maintained idempotent initialization guard\n   - Fixed hard-coded \"1.0.0\" version in telemetry\n\n3. Fix LiteLLM Fallback kwargs (MEDIUM):\n   - Forward self.kwargs to sync completion() fallback (factory.py:251)\n   - Forward self.kwargs to async acompletion() fallback (factory.py:284)\n   - Azure/Bedrock/Ollama fallbacks now work correctly\n   - Added test_llm_fallback_kwargs.py with 4 provider-specific tests\n\n4. Clarify user_id Semantics (MEDIUM):\n   - Added normalize_user_id() function to handle both formats\n   - Accepts \"alice\" and \"user:alice\" interchangeably\n   - Updated ChatInput.user_id description to clarify formats\n   - Added test_user_id_normalization.py with 8 tests\n\n5. Implement Conversation Retrieval (HIGH):\n   - Wired _handle_get_conversation to LangGraph checkpointer\n   - Retrieves actual conversation history via agent_graph.aget_state()\n   - Formats messages with role labels and truncation\n   - Handles edge cases: disabled checkpointing, empty threads\n   - Added test_conversation_retrieval.py with 6 tests\n\n6. Reconcile Coverage Reporting (MEDIUM):\n   - Regenerated coverage.xml: 79.85% actual coverage\n   - Updated README.md badges from 86% to 80%\n   - Coverage now matches reality (5440 lines, 4344 covered)\n   - Changed badge color from brightgreen to green\n\nTest Results:\n- 22 new tests added across 4 new test files\n- All 548 unit tests passing\n- Coverage verified at 80%\n- No breaking changes\n\nFiles Modified: 9 (7 source + README.md + coverage.xml)\nNew Test Files: 4\nLines Changed: +197 additions, -29 deletions\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-17T16:14:53-04:00",
+          "tree_id": "c7740a376e21f8f0f74ba9d769d0bb6f021b2408",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/e356db4a07d03bdc47ce3adbadd1ee98b9ec609d"
+        },
+        "date": 1760732265007,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37657.504320272514,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033031107866052005",
+            "extra": "mean: 26.55513205270113 usec\nrounds: 5725"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33261.36355126901,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002683657827124241",
+            "extra": "mean: 30.064912956998946 usec\nrounds: 7031"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31630.704276330624,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002750438075465364",
+            "extra": "mean: 31.614850913967913 usec\nrounds: 15756"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 438302.931304466,
+            "unit": "iter/sec",
+            "range": "stddev: 4.573739158197646e-7",
+            "extra": "mean: 2.2815270639961853 usec\nrounds: 41993"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 441257.9454298981,
+            "unit": "iter/sec",
+            "range": "stddev: 4.867367288350792e-7",
+            "extra": "mean: 2.2662481443268843 usec\nrounds: 74767"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 442673.14178439364,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3744369427360804e-7",
+            "extra": "mean: 2.2590031009540117 usec\nrounds: 77072"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1920256.263339844,
+            "unit": "iter/sec",
+            "range": "stddev: 6.576069873339203e-8",
+            "extra": "mean: 520.7638267304646 nsec\nrounds: 94697"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 435351.525413514,
+            "unit": "iter/sec",
+            "range": "stddev: 4.986088696107519e-7",
+            "extra": "mean: 2.29699436346332 usec\nrounds: 50386"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2958.559142246515,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010535967815953479",
+            "extra": "mean: 338.00236936979826 usec\nrounds: 2664"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3020.815663459124,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000047008707904260704",
+            "extra": "mean: 331.0364191024168 usec\nrounds: 1916"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39967.93902991213,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024283359612765465",
+            "extra": "mean: 25.02005418021672 usec\nrounds: 8564"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12515.888373937289,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001712061549971725",
+            "extra": "mean: 79.89844349222307 usec\nrounds: 5017"
           }
         ]
       }
