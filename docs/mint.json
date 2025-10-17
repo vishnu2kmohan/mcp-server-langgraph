@@ -246,7 +246,8 @@
         "architecture/adr-0022-distributed-conversation-checkpointing",
         "architecture/adr-0023-anthropic-tool-design-best-practices",
         "architecture/adr-0024-agentic-loop-implementation",
-        "architecture/adr-0025-anthropic-best-practices-enhancements"
+        "architecture/adr-0025-anthropic-best-practices-enhancements",
+        "architecture/adr-0026-lazy-observability-initialization"
       ]
     },
     {

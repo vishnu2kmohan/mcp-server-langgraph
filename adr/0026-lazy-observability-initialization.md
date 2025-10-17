@@ -1,0 +1,329 @@
+# ADR-0026: Lazy Observability Initialization
+
+## Status
+
+**Accepted** - 2025-01-17
+
+## Context
+
+Prior to v2.8.0, the observability system (OpenTelemetry tracing, metrics, and logging) was initialized automatically at module import time in `src/mcp_server_langgraph/observability/telemetry.py:264-285`.
+
+This approach caused several operational and ergonomic issues:
+
+### 1. Circular Import Dependency
+
+**Problem**: The import chain created a circular dependency:
+```
+config.py (line 9)
+  → imports secrets/manager.py
+      → imports observability/telemetry.py (line 17)
+          → imports config.py to read settings (line 269)
+              → CIRCULAR DEPENDENCY
+```
+
+**Impact**:
+- Module initialization order was non-deterministic
+- `settings.langsmith_tracing` and `settings.log_format` were often unavailable during telemetry init
+- Silently fell back to default values, ignoring user configuration
+
+### 2. Filesystem Operations at Import Time
+
+**Problem**: Importing the module triggered:
+- Creation of `logs/` directory (line 166)
+- Creation of 4 log file handlers (lines 197-219)
+- Writes to log files even when just importing for inspection
+
+**Impact**:
+- **Broke read-only containers**: Serverless environments, read-only root filesystems failed
+- **Broke library usage**: Packages importing mcp-server-langgraph as a dependency couldn't control initialization
+- **Noise in non-production environments**: CI, tests, development all created unnecessary log files
+
+### 3. Configuration Race Condition
+
+**Problem**: Telemetry initialized before configuration was fully loaded:
+```python
+# Line 268-278 (v2.7.0)
+try:
+    from mcp_server_langgraph.core.config import settings
+    enable_langsmith_flag = settings.langsmith_tracing  # Often False due to timing
+except ImportError:
+    enable_langsmith_flag = False
+```
+
+**Impact**:
+- Users couldn't reliably configure `langsmith_tracing` or `log_format`
+- Environment variables weren't consistently honored
+- Debugging configuration issues was difficult
+
+### 4. Inflexible for Embedding
+
+**Problem**: No way to customize observability for library consumers
+
+**Impact**:
+- Other packages couldn't reuse mcp-server-langgraph without accepting our telemetry configuration
+- Testing frameworks couldn't easily mock observability
+- Multi-tenant applications couldn't isolate telemetry per tenant
+
+## Decision
+
+We will **refactor observability to use lazy initialization** with an explicit `init_observability()` function that entry points must call after loading configuration.
+
+### Design Principles
+
+1. **Explicit Over Implicit**: Entry points must explicitly initialize observability
+2. **Fail-Fast**: Accessing observability before initialization raises `RuntimeError`
+3. **Configuration Respect**: Settings are read at initialization time, not import time
+4. **Backward Compatible (Runtime)**: Existing code using logger/tracer continues to work after init
+5. **Opt-In File Logging**: File-based rotation is opt-in to support containerized deployments
+
+### Architecture
+
+#### Module-Level Lazy Proxies
+
+```python
+# observability/telemetry.py
+_observability_config: ObservabilityConfig | None = None
+
+def init_observability(settings, enable_file_logging=False) -> ObservabilityConfig:
+    global _observability_config
+    if _observability_config is None:
+        _observability_config = ObservabilityConfig(...)
+    return _observability_config
+
+# Lazy proxy objects that delegate to _observability_config
+logger = type('LazyLogger', (), {
+    '__getattr__': lambda self, name: getattr(get_logger(), name)
+})()
+
+tracer = type('LazyTracer', (), {
+    '__getattr__': lambda self, name: getattr(get_tracer(), name)
+})()
+```
+
+**Benefits**:
+- Import statements remain unchanged: `from ... import logger`
+- Type checkers see correct types
+- Runtime error if accessed before init (fail-fast)
+
+#### Secrets Manager Decoupling
+
+```python
+# secrets/manager.py
+def _get_logger():
+    """Get logger, preferring observability if initialized, else stdlib."""
+    try:
+        from mcp_server_langgraph.observability.telemetry import is_initialized, get_logger
+        if is_initialized():
+            return get_logger()
+    except (ImportError, RuntimeError):
+        pass
+    return logging.getLogger(__name__)  # stdlib fallback
+```
+
+**Benefits**:
+- Breaks circular dependency
+- Works during early initialization
+- Gracefully degrades to stdlib logging
+
+#### File Logging Opt-In
+
+```python
+def _setup_logging(self, enable_file_logging: bool = False):
+    handlers = [console_handler]  # Always include console
+
+    if enable_file_logging:  # Opt-in only
+        handlers.extend([rotating_handler, daily_handler, error_handler])
+
+    logging.basicConfig(handlers=handlers)
+```
+
+**Benefits**:
+- Works in read-only filesystems by default
+- Users opt-in via `enable_file_logging=True`
+- Reduces startup noise in development/CI
+
+## Consequences
+
+### Positive
+
+✅ **No Circular Import**: Config → secrets → telemetry chain is broken
+✅ **Configuration Honored**: Settings are read at init time, not import time
+✅ **Container-Friendly**: No filesystem writes unless explicitly requested
+✅ **Library-Reusable**: Can be imported without side effects
+✅ **Testable**: Easy to mock/customize observability per test
+✅ **Explicit Dependencies**: Clear when observability is needed
+
+### Negative
+
+⚠️ **Breaking Change**: Entry points must add `init_observability()` call
+⚠️ **Migration Required**: All existing entry points need updating
+⚠️ **Runtime Errors**: Forgetting to initialize causes runtime failures (but fail-fast is good!)
+⚠️ **Documentation Burden**: Need clear migration guide and examples
+
+### Neutral
+
+ℹ️ **Test Fixtures Updated**: `conftest.py` adds `pytest_configure()` hook
+ℹ️ **File Logging Default**: Changed from always-on to opt-in
+ℹ️ **Import Statements Unchanged**: Lazy proxies preserve existing import syntax
+
+## Implementation
+
+### Files Modified
+
+| File | Changes | Purpose |
+|------|---------|---------|
+| `src/mcp_server_langgraph/observability/telemetry.py` | +168, -21 | Add lazy init, remove module-level init |
+| `src/mcp_server_langgraph/secrets/manager.py` | +50, -3 | Break circular import, add lazy logging |
+| `src/mcp_server_langgraph/mcp/server_stdio.py` | +10 | Add init_observability() call |
+| `src/mcp_server_langgraph/core/config.py` | +1 | Add enable_file_logging setting |
+| `tests/conftest.py` | +13 | Add pytest_configure() hook |
+
+### API Surface
+
+```python
+# New public API
+from mcp_server_langgraph.observability.telemetry import (
+    init_observability,      # Initialize system
+    is_initialized,          # Check if initialized
+    get_config,             # Get config instance
+    get_logger,             # Get logger instance
+    get_tracer,             # Get tracer instance
+    get_meter,              # Get meter instance
+)
+
+# Existing API (unchanged at import time, works after init)
+from mcp_server_langgraph.observability.telemetry import (
+    logger,    # Lazy proxy
+    tracer,    # Lazy proxy
+    meter,     # Lazy proxy
+    config,    # Lazy proxy
+    metrics,   # Lazy proxy (alias for config)
+)
+```
+
+### Usage Pattern
+
+```python
+# main.py
+async def main():
+    # STEP 1: Initialize observability first
+    from mcp_server_langgraph.observability.telemetry import init_observability
+    from mcp_server_langgraph.core.config import settings
+
+    init_observability(settings=settings, enable_file_logging=True)
+
+    # STEP 2: Now safe to use observability features
+    from mcp_server_langgraph.observability.telemetry import logger, tracer
+
+    logger.info("Application starting")
+    with tracer.start_as_current_span("main"):
+        # ... application code
+```
+
+## Alternatives Considered
+
+### Alternative 1: Keep Auto-Initialization, Fix Circular Import
+
+**Approach**: Break circular import by moving config access into function calls
+
+**Pros**:
+- No breaking changes
+- Existing code continues to work
+
+**Cons**:
+- Doesn't solve filesystem operations problem
+- Doesn't solve configuration race condition
+- Doesn't make library embeddable
+- Band-aid solution that doesn't address root cause
+
+**Rejected**: Doesn't solve enough problems
+
+### Alternative 2: Dependency Injection
+
+**Approach**: Pass observability instances as parameters throughout codebase
+
+**Pros**:
+- Maximum flexibility
+- Testability
+- No globals
+
+**Cons**:
+- Massive refactor (1000s of lines)
+- Breaking change to ALL modules
+- Complex for users
+- Overkill for current needs
+
+**Rejected**: Too invasive for the benefits
+
+### Alternative 3: Singleton with Lazy Evaluation
+
+**Approach**: Use singleton pattern with lazy evaluation on first access
+
+**Pros**:
+- No explicit initialization needed
+- More implicit than current solution
+
+**Cons**:
+- Same circular import issues
+- Same filesystem operations at first use
+- Less explicit (harder to debug)
+- Doesn't solve configuration race condition
+
+**Rejected**: Doesn't address root causes
+
+## References
+
+- **Issue**: ultrathink analysis issue #1 (Decouple observability bootstrapping from import time)
+- **Related ADRs**:
+  - ADR-0023: Anthropic Tool Design Best Practices
+  - ADR-0024: Agentic Loop Implementation
+- **Migration Guide**: [MIGRATION.md](../../MIGRATION.md)
+- **Breaking Changes**: [BREAKING_CHANGES.md](../../BREAKING_CHANGES.md)
+- **Anthropic Best Practices**: https://docs.anthropic.com/en/docs/build-with-claude/tool-use
+
+## Validation
+
+### Success Criteria
+
+✅ Package can be imported without filesystem writes
+✅ Settings.log_format and langsmith_tracing are honored
+✅ No circular import errors
+✅ Works in read-only containers
+✅ All tests pass (42/42 new tests + existing suite)
+✅ CI build hygiene check passes (no .pyc files committed)
+
+### Test Coverage
+
+- `tests/unit/test_observability_lazy_init.py` (13 tests)
+  - Import without filesystem ops
+  - Lazy accessors raise before init
+  - Init with defaults
+  - Init with settings
+  - Idempotent initialization
+  - File logging opt-in
+  - Settings values honored
+  - Secrets manager works before init
+  - Context propagation requires init
+  - Multiple entry points can init
+
+### Rollback Plan
+
+If critical issues discovered:
+1. Revert to v2.7.0: `pip install mcp-server-langgraph==2.7.0`
+2. Remove `init_observability()` calls from entry points
+3. File logging will be auto-enabled again
+
+## Notes
+
+- **Timeline**: Implemented 2025-01-17
+- **Breaking Change Version**: v2.8.0
+- **Backward Compatibility**: Runtime API is backward compatible after calling `init_observability()`
+- **Migration Effort**: Low (~5 lines per entry point)
+- **Monitoring**: No special monitoring needed - standard logging/tracing works
+
+---
+
+**Decision Makers**: @vishnu2kmohan
+**Implementation**: @claude-sonnet-4-5
+**Review**: Pending
+**Date**: 2025-01-17
