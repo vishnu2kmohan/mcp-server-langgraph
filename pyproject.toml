@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-server-langgraph"
-version = "2.6.0"
+version = "2.7.0"
 description = "Production-ready MCP server with LangGraph, OpenFGA, and multi-LLM support"
 readme = "README.md"
 authors = [

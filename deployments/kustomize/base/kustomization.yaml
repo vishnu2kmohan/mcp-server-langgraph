@@ -38,4 +38,4 @@ labels:
 
 images:
   - name: mcp-server-langgraph
-    newTag: 2.6.0
+    newTag: 2.7.0
