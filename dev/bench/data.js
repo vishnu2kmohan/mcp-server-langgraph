@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760724071537,
+  "lastUpdate": 1760724386087,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -1080,6 +1080,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000026913303855235452",
             "extra": "mean: 88.99170197007315 usec\nrounds: 4060"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b49ea329946c331ca6b80a9855f0f088f8461a1a",
+          "message": "docs: prepare CHANGELOG for v2.7.0 release",
+          "timestamp": "2025-10-17T14:04:06-04:00",
+          "tree_id": "f4e93c750e1d5d726dc5b5b9eb243e618f0ec179",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b49ea329946c331ca6b80a9855f0f088f8461a1a"
+        },
+        "date": 1760724385582,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36215.718180784286,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028095515470592125",
+            "extra": "mean: 27.612320015528244 usec\nrounds: 5131"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32338.053292683737,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003400770973473444",
+            "extra": "mean: 30.92332092316278 usec\nrounds: 6500"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 30963.29551485116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003244559525451254",
+            "extra": "mean: 32.29630384531784 usec\nrounds: 14537"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 429198.86618665577,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5894986453559857e-7",
+            "extra": "mean: 2.329922277951933 usec\nrounds: 36682"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 435727.574279354,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7085238215204757e-7",
+            "extra": "mean: 2.2950119731437497 usec\nrounds: 64227"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 432787.3799017309,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6867123173964044e-7",
+            "extra": "mean: 2.3106034196908904 usec\nrounds: 62696"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2005008.383653474,
+            "unit": "iter/sec",
+            "range": "stddev: 4.912266047037735e-8",
+            "extra": "mean: 498.75103174273323 nsec\nrounds: 98232"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 432526.83605535066,
+            "unit": "iter/sec",
+            "range": "stddev: 4.698467061223991e-7",
+            "extra": "mean: 2.311995272062216 usec\nrounds: 51608"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2998.877233546222,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001320332623365973",
+            "extra": "mean: 333.45813186806697 usec\nrounds: 2639"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2803.518754186059,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000052652855763415795",
+            "extra": "mean: 356.694599779957 usec\nrounds: 1819"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40497.617180903835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024364011650620447",
+            "extra": "mean: 24.692810827189557 usec\nrounds: 8257"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12633.425675760564,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002131348857360456",
+            "extra": "mean: 79.15509424483929 usec\nrounds: 5369"
           }
         ]
       }
