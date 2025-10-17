@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "langgraph-agent": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_stdio"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    "langgraph-agent-streamable": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_streamable"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "HOST": "0.0.0.0",
+        "PORT": "8000"
+      }
+    }
+  }
+}

@@ -1,0 +1,385 @@
+# 23. Anthropic Tool Design Best Practices
+
+Date: 2025-10-17
+
+## Status
+
+Accepted
+
+## Context
+
+Our MCP server exposes tools for AI agents to interact with the LangGraph agent system. To ensure optimal agent performance and user experience, we need to align our tool design with industry best practices for writing tools for AI agents, specifically those published by Anthropic.
+
+The original tool implementation had several areas for improvement:
+- Generic tool names without namespacing (`chat`, `get_conversation`, `list_conversations`)
+- List-all approach for conversations (not search-focused)
+- No response format control
+- Unlimited response sizes (potential context overflow)
+- Minimal usage guidance in tool descriptions
+
+## Decision
+
+We will adopt **Anthropic's best practices for writing tools for agents** as outlined in their engineering blog post. This includes:
+
+### 1. Tool Namespacing
+
+**Implementation**: Prefix tools with their domain for clarity and scalability.
+
+**Before**:
+- `chat`
+- `get_conversation`
+- `list_conversations`
+
+**After**:
+- `agent_chat` - Agent interaction namespace
+- `conversation_get` - Conversation management namespace
+- `conversation_search` - Conversation discovery namespace
+
+**Benefits**:
+- Clear categorization as more tools are added
+- Prevents naming conflicts
+- Helps agents understand tool relationships
+- Backward compatibility maintained with old names
+
+### 2. Search-Focused Tools (Not List-All)
+
+**Anthropic Guidance**: "Implement search-focused tools (like `search_contacts`) rather than list-all tools (`list_contacts`)"
+
+**Implementation**: Replace `list_conversations` with `conversation_search`:
+
+```python
+class SearchConversationsInput(BaseModel):
+    query: str = Field(description="Search query to filter conversations")
+    limit: int = Field(default=10, ge=1, le=50)
+```
+
+**Benefits**:
+- Prevents context overflow with large conversation lists
+- Forces agents to be specific in requests
+- More token-efficient (agents have limited context)
+- Better UX for users with many conversations
+- Truncation guidance when results exceed limit
+
+### 3. Response Format Control
+
+**Anthropic Guidance**: "Expose a `response_format` enum parameter allowing agents to request 'concise' or 'detailed' responses"
+
+**Implementation**:
+
+```python
+class ChatInput(BaseModel):
+    response_format: Literal["concise", "detailed"] = Field(
+        default="concise",
+        description=(
+            "Response verbosity level. "
+            "'concise' returns ~500 tokens (faster, less context). "
+            "'detailed' returns ~2000 tokens (comprehensive, more context)."
+        )
+    )
+```
+
+**Benefits**:
+- Balances token efficiency with information needs
+- Agents can optimize for speed vs comprehensiveness
+- Reduces unnecessary context consumption
+- Clear expectations on response size
+
+### 4. Token Limits and Response Optimization
+
+**Anthropic Guidance**: "Restrict responses to ~25,000 tokens. Implement pagination, filtering, and truncation with sensible defaults."
+
+**Implementation**: Created `ResponseOptimizer` utility with:
+- Token counting using tiktoken
+- Automatic truncation with helpful messages
+- Format-aware limits (concise: 500, detailed: 2000)
+- High-signal information extraction
+
+```python
+formatted_response = format_response(
+    response_text,
+    format_type=response_format_type
+)
+```
+
+**Benefits**:
+- Prevents context overflow
+- Predictable response sizes
+- Helpful truncation messages guide agents
+- Compatible with all major LLM tokenizers
+
+### 5. Enhanced Tool Descriptions
+
+**Anthropic Guidance**: Provide clear usage guidance including when NOT to use tools, token limits, and expected response times.
+
+**Before**:
+```python
+description="Chat with the AI agent. The agent can help with questions, research, and problem-solving."
+```
+
+**After**:
+```python
+description=(
+    "Chat with the AI agent for questions, research, and problem-solving. "
+    "Returns responses optimized for agent consumption. "
+    "Response format: 'concise' (~500 tokens, 2-5 sec) or 'detailed' (~2000 tokens, 5-10 sec). "
+    "For specialized tasks like code execution or web search, use dedicated tools instead. "
+    "Rate limit: 60 requests/minute per user."
+)
+```
+
+**Benefits**:
+- Clear expectations on performance
+- Guidance on tool selection
+- Token and rate limit transparency
+- Helps agents make better decisions
+
+### 6. Unambiguous Parameter Names
+
+**Anthropic Guidance**: "Replace generic names like `user` with specific ones like `user_id`"
+
+**Implementation**: Already well-implemented with specific names like:
+- `message` (not `query` or `input`)
+- `thread_id` (not `id` or `conversation`)
+- `username` (not `user`)
+- `limit` (not `max` or `count`)
+
+### 7. Actionable Error Messages
+
+**Anthropic Guidance**: "Replace opaque error codes with specific, actionable guidance"
+
+**Implementation**:
+
+**Before**:
+```python
+raise PermissionError(f"Not authorized to edit conversation {thread_id}")
+```
+
+**After**:
+```python
+raise PermissionError(
+    f"Not authorized to edit conversation '{thread_id}'. "
+    f"Request access from conversation owner or use a different thread_id."
+)
+```
+
+**Benefits**:
+- Clear next steps for agents
+- Reduces retry failures
+- Better debugging
+- Improved user experience
+
+## Technical Implementation
+
+### File Structure
+
+```
+src/mcp_server_langgraph/
+├── utils/
+│   ├── __init__.py
+│   └── response_optimizer.py      # New: Token counting and response formatting
+├── mcp/
+│   ├── server_stdio.py             # Updated: All tool improvements
+│   └── server_streamable.py        # Updated: All tool improvements
+```
+
+### Key Components
+
+#### ResponseOptimizer Class
+
+```python
+class ResponseOptimizer:
+    """Utility for optimizing tool responses for agent consumption."""
+
+    def count_tokens(self, text: str) -> int
+    def truncate_response(self, content: str, max_tokens: int) -> tuple[str, bool]
+    def format_response(self, content: str, format_type: Literal["concise", "detailed"]) -> str
+    def extract_high_signal(self, data: dict) -> dict
+```
+
+#### Updated Tool Schemas
+
+```python
+# Agent interaction
+Tool(name="agent_chat", inputSchema=ChatInput.model_json_schema())
+
+# Conversation retrieval
+Tool(name="conversation_get", inputSchema={...})
+
+# Conversation search
+Tool(name="conversation_search", inputSchema=SearchConversationsInput.model_json_schema())
+```
+
+### Backward Compatibility
+
+All old tool names are supported via routing:
+
+```python
+if name == "agent_chat" or name == "chat":  # Support old name
+    return await self._handle_chat(arguments, span, user_id)
+```
+
+## Consequences
+
+### Positive
+
+1. **Better Agent Performance**
+   - Search-focused tools reduce context waste
+   - Format control allows optimization
+   - Clear descriptions improve tool selection
+
+2. **Scalability**
+   - Namespacing prevents conflicts as tools grow
+   - Token limits prevent runaway responses
+   - Search approach works with large datasets
+
+3. **Improved UX**
+   - Actionable error messages
+   - Clear expectations (response times, token counts)
+   - Helpful truncation guidance
+
+4. **Industry Alignment**
+   - Follows Anthropic's published best practices
+   - Positions codebase as reference implementation
+   - Easier onboarding for developers familiar with guidelines
+
+5. **Observability**
+   - Format type tracked in metrics
+   - Token counts logged
+   - Search patterns monitored
+
+### Negative
+
+1. **Breaking Changes (Mitigated)**
+   - Tool names changed (backward compatibility added)
+   - New required parameters (defaults provided)
+   - Migration path: old names work, deprecation warnings logged
+
+2. **Increased Complexity**
+   - More code for response optimization
+   - Additional parameters to document
+   - Token counting overhead (minimal: ~1-5ms)
+
+3. **Development Overhead**
+   - Developers must understand format control
+   - Tool descriptions require more thought
+   - Testing complexity increases
+
+### Mitigation Strategies
+
+1. **Backward Compatibility**
+   - Support old tool names indefinitely
+   - Default values for new parameters
+   - Gradual deprecation warnings
+
+2. **Documentation**
+   - Update tool documentation with examples
+   - Create migration guide
+   - Document performance characteristics
+
+3. **Testing**
+   - Add tests for response optimization
+   - Validate token counting accuracy
+   - Test backward compatibility
+
+4. **Monitoring**
+   - Track tool usage by name (old vs new)
+   - Monitor truncation frequency
+   - Alert on token limit breaches
+
+## Metrics
+
+Track the following to measure success:
+
+### Performance Metrics
+- `tool_response_tokens_total{tool, format}` - Response sizes
+- `tool_truncation_rate{tool}` - Truncation frequency
+- `tool_call_duration_seconds{tool, format}` - Performance impact
+
+### Usage Metrics
+- `tool_calls_total{tool_name, version}` - Adoption of new names
+- `tool_format_usage{format}` - Concise vs detailed preference
+- `search_result_count{has_query}` - Search vs browse patterns
+
+### Quality Metrics
+- `tool_error_rate{tool, error_type}` - Error patterns
+- `tool_retry_rate{tool}` - Clarity of error messages
+- `agent_satisfaction_score` - Overall agent success rate
+
+## Migration Guide
+
+### For Tool Developers
+
+1. **Add Response Format Control**:
+   ```python
+   response_format: Literal["concise", "detailed"] = Field(default="concise")
+   ```
+
+2. **Apply Response Formatting**:
+   ```python
+   from mcp_server_langgraph.utils.response_optimizer import format_response
+   formatted = format_response(text, format_type=response_format_type)
+   ```
+
+3. **Use Search-Focused Patterns**:
+   - Add `query` and `limit` parameters
+   - Filter before returning
+   - Provide helpful truncation messages
+
+4. **Enhance Descriptions**:
+   - Include token limits
+   - Document response times
+   - Specify when NOT to use
+   - Provide usage examples
+
+### For Tool Users (Agents)
+
+Old code continues to work:
+```python
+# Still works (backward compatible)
+result = await client.call_tool("chat", {"message": "Hello"})
+```
+
+New features available:
+```python
+# Recommended: Use new names and features
+result = await client.call_tool("agent_chat", {
+    "message": "Explain quantum computing",
+    "response_format": "concise"  # New parameter
+})
+
+# Search instead of list
+conversations = await client.call_tool("conversation_search", {
+    "query": "project updates",
+    "limit": 10
+})
+```
+
+## Related ADRs
+
+- [0004: MCP StreamableHTTP Transport](0004-mcp-streamable-http.md)
+- [0017: Error Handling Strategy](0017-error-handling-strategy.md)
+- [0003: Dual Observability Strategy](0003-dual-observability.md)
+
+## References
+
+- [Anthropic: Writing Tools for Agents](https://www.anthropic.com/engineering/writing-tools-for-agents)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/)
+- [tiktoken Documentation](https://github.com/openai/tiktoken)
+- [Pydantic Field Validation](https://docs.pydantic.dev/latest/concepts/fields/)
+
+## Implementation Checklist
+
+- [x] Create ResponseOptimizer utility module
+- [x] Update ChatInput with response_format parameter
+- [x] Create SearchConversationsInput schema
+- [x] Rename tools with namespacing (with backward compat)
+- [x] Enhance tool descriptions
+- [x] Implement conversation_search handler
+- [x] Update agent_chat to use format_response
+- [x] Apply changes to both server_stdio and server_streamable
+- [ ] Update tool documentation (docs/api-reference/mcp/tools.mdx)
+- [ ] Add tests for ResponseOptimizer
+- [ ] Add integration tests for new tool parameters
+- [ ] Update examples to use new tool names
+- [ ] Add metrics dashboards for new tracking
+- [ ] Create migration guide for existing integrations

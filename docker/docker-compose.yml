@@ -1,4 +1,4 @@
-# Version: 2.5.0
+# Version: 2.6.0
 # Docker Compose v2 configuration
 # Run with: docker compose up -d
 
@@ -54,6 +54,38 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=${LOG_FORMAT:-json}
       - LOG_JSON_INDENT=${LOG_JSON_INDENT}
+
+      # Agentic Loop Configuration (Anthropic Best Practices)
+      - ENABLE_CONTEXT_COMPACTION=${ENABLE_CONTEXT_COMPACTION:-true}
+      - COMPACTION_THRESHOLD=${COMPACTION_THRESHOLD:-8000}
+      - TARGET_AFTER_COMPACTION=${TARGET_AFTER_COMPACTION:-4000}
+      - RECENT_MESSAGE_COUNT=${RECENT_MESSAGE_COUNT:-5}
+      - ENABLE_VERIFICATION=${ENABLE_VERIFICATION:-true}
+      - VERIFICATION_QUALITY_THRESHOLD=${VERIFICATION_QUALITY_THRESHOLD:-0.7}
+      - MAX_REFINEMENT_ATTEMPTS=${MAX_REFINEMENT_ATTEMPTS:-3}
+      - VERIFICATION_MODE=${VERIFICATION_MODE:-standard}
+
+      # Qdrant - Vector Database for Just-in-Time Context Loading
+      - QDRANT_URL=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME:-mcp_context}
+      - ENABLE_DYNAMIC_CONTEXT_LOADING=${ENABLE_DYNAMIC_CONTEXT_LOADING:-false}
+      - DYNAMIC_CONTEXT_MAX_TOKENS=${DYNAMIC_CONTEXT_MAX_TOKENS:-2000}
+      - DYNAMIC_CONTEXT_TOP_K=${DYNAMIC_CONTEXT_TOP_K:-3}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      - CONTEXT_CACHE_SIZE=${CONTEXT_CACHE_SIZE:-100}
+
+      # Parallel Tool Execution
+      - ENABLE_PARALLEL_EXECUTION=${ENABLE_PARALLEL_EXECUTION:-false}
+      - MAX_PARALLEL_TOOLS=${MAX_PARALLEL_TOOLS:-5}
+
+      # Enhanced Note-Taking
+      - ENABLE_LLM_EXTRACTION=${ENABLE_LLM_EXTRACTION:-false}
+
+      # Conversation Checkpointing
+      - CHECKPOINT_BACKEND=${CHECKPOINT_BACKEND:-redis}
+      - CHECKPOINT_REDIS_URL=${CHECKPOINT_REDIS_URL:-redis://redis:6379/1}
+      - CHECKPOINT_REDIS_TTL=${CHECKPOINT_REDIS_TTL:-604800}
     volumes:
       # Mount source code for hot reload during development
       - ./src/mcp_server_langgraph:/app/src/mcp_server_langgraph:ro
@@ -68,6 +100,8 @@ services:
       postgres:
         condition: service_healthy
       keycloak:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -289,11 +323,35 @@ services:
       # This allows logical separation without running multiple instances
       - REDIS_DATABASES=16
 
+  # Qdrant - Vector Database for Semantic Search
+  # Used for Just-in-Time context loading with semantic search
+  qdrant:
+    image: qdrant/qdrant:v1.14.0
+    ports:
+      - "6333:6333"  # HTTP API
+      - "6334:6334"  # gRPC API
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__LOG_LEVEL=${QDRANT_LOG_LEVEL:-INFO}
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - observability
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6333/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
 volumes:
   prometheus-data:
   grafana-data:
   postgres-data:
   redis-data:
+  qdrant-data:
 
 networks:
   observability:

@@ -155,7 +155,7 @@ class DeploymentValidator:
         if missing_env:
             self.warnings.append(f"Main deployment: Missing environment variables: {missing_env}")
 
-        print(f"  ✓ Main deployment validated")
+        print("  ✓ Main deployment validated")
 
     def _check_configmap(self, configmap: Dict[str, Any]):
         """Check ConfigMap configuration."""
@@ -209,7 +209,7 @@ class DeploymentValidator:
         if not init_containers:
             self.warnings.append("Keycloak deployment: No init containers for PostgreSQL wait")
 
-        print(f"  ✓ Keycloak deployment validated")
+        print("  ✓ Keycloak deployment validated")
 
     def _check_redis_deployment(self, docs: List[Dict[str, Any]]):
         """Check Redis deployment configuration."""
@@ -229,7 +229,7 @@ class DeploymentValidator:
             if "REDIS_PASSWORD" not in env_vars:
                 self.warnings.append("Redis: No password configured")
 
-        print(f"  ✓ Redis deployment validated")
+        print("  ✓ Redis deployment validated")
 
     def validate_docker_compose(self):
         """Validate Docker Compose configuration."""
@@ -257,7 +257,7 @@ class DeploymentValidator:
             if not any("src/mcp_server_langgraph" in str(v) for v in volumes):
                 self.errors.append("Docker Compose agent: Source code not mounted correctly")
             else:
-                print(f"  ✓ Agent service volume mounts correct")
+                print("  ✓ Agent service volume mounts correct")
 
     def validate_helm_chart(self):
         """Validate Helm chart configuration."""
@@ -295,7 +295,7 @@ class DeploymentValidator:
             if missing_config:
                 self.warnings.append(f"Helm values: Missing config keys: {missing_config}")
             else:
-                print(f"  ✓ Helm values validated")
+                print("  ✓ Helm values validated")
 
     def validate_config_consistency(self):
         """Validate configuration consistency across platforms."""
@@ -334,7 +334,7 @@ class DeploymentValidator:
             self.warnings.append(f"Helm values missing core keys (as camelCase): {helm_missing}")
 
         if not k8s_missing and not helm_missing:
-            print(f"  ✓ Configuration consistency validated")
+            print("  ✓ Configuration consistency validated")
 
     def _camel_to_snake(self, name: str) -> str:
         """Convert camelCase to snake_case."""

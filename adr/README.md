@@ -87,6 +87,9 @@ What becomes easier or more difficult to do because of this change?
 | [0020](0020-dual-mcp-transport-protocol.md) | Dual MCP Transport Protocol (STDIO + StreamableHTTP) | Accepted | 2025-10-13 |
 | [0021](0021-cicd-pipeline-strategy.md) | CI/CD Pipeline Strategy | Accepted | 2025-10-13 |
 | [0022](0022-distributed-conversation-checkpointing.md) | Distributed Conversation Checkpointing with Redis | Accepted | 2025-10-15 |
+| [0023](0023-anthropic-tool-design-best-practices.md) | Anthropic Tool Design Best Practices | Accepted | 2025-10-17 |
+| [0024](0024-agentic-loop-implementation.md) | Agentic Loop Implementation (Gather-Action-Verify-Repeat) | Accepted | 2025-10-17 |
+| [0025](0025-anthropic-best-practices-enhancements.md) | Anthropic Best Practices - Advanced Enhancements | Accepted | 2025-10-17 |
 
 ## When to Create an ADR
 

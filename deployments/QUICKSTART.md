@@ -160,6 +160,50 @@ python3 scripts/setup/setup_openfga.py
 # 4. Update your secrets or environment variables with these IDs
 ```
 
+### Configure Qdrant for Dynamic Context Loading (Optional)
+
+**New in v2.6.0**: Qdrant vector database for Just-in-Time context loading
+
+If using `ENABLE_DYNAMIC_CONTEXT_LOADING=true`:
+
+```bash
+# Qdrant is included in deployments but disabled by default
+# To enable dynamic context loading with semantic search:
+
+# 1. For Docker Compose - already included and running
+curl http://localhost:6333/  # Check Qdrant health
+
+# 2. For Kubernetes - ensure Qdrant is deployed
+kubectl get pods -n langgraph-agent | grep qdrant
+
+# 3. Enable dynamic context loading in your environment
+# Docker Compose: Set in .env
+ENABLE_DYNAMIC_CONTEXT_LOADING=true
+QDRANT_URL=qdrant
+QDRANT_PORT=6333
+
+# Kubernetes: Update configmap
+kubectl patch configmap langgraph-agent-config \
+  --type merge \
+  -p '{"data":{"enable_dynamic_context_loading":"true"}}' \
+  -n langgraph-agent
+
+# 4. Restart to apply changes
+# Docker: docker compose restart agent
+# Kubernetes: kubectl rollout restart deployment/langgraph-agent -n langgraph-agent
+
+# 5. Verify Qdrant integration
+curl http://localhost:8000/health/ready  # Should show qdrant in dependencies
+```
+
+**Qdrant Features**:
+- **Semantic Search**: Dynamic context loading with 60% token reduction
+- **Persistent Storage**: 10Gi PVC in Kubernetes (configurable)
+- **Configurable**: Adjust DYNAMIC_CONTEXT_MAX_TOKENS, DYNAMIC_CONTEXT_TOP_K
+- **Optional**: Leave disabled for standard operation
+
+**See**: [Anthropic Best Practices Enhancement Plan](../docs/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN.md)
+
 ### Configure Keycloak (Optional)
 
 If using `AUTH_PROVIDER=keycloak`:

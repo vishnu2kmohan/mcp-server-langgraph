@@ -9,7 +9,7 @@
 **Essential Project Files:**
 - `README.md` - Main project README
 - `CHANGELOG.md` - Version history
-- `SECURITY.md` - Security policy  
+- `SECURITY.md` - Security policy
 - `LICENSE` - Project license
 - `CONTRIBUTING.md` - Contribution guidelines
 - `CODE_OF_CONDUCT.md` - Code of conduct
@@ -146,7 +146,7 @@ Is the file documentation?
 - Move misplaced files to correct locations
 - Update .mintlifyignore if needed
 
-### Quarterly  
+### Quarterly
 - Archive old reports to reports/archive/
 - Review docs-internal/ for outdated content
 - Update REPOSITORY_STRUCTURE.md
@@ -187,7 +187,7 @@ mv index.html docs-internal/
 ./notes.txt
 ./scratch.txt
 
-# Fix  
+# Fix
 mv *.txt docs-internal/
 # or delete if temporary
 ```

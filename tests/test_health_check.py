@@ -1,6 +1,7 @@
 """Unit tests for health_check.py - Health Check Endpoints"""
 
 from datetime import datetime
+from typing import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -8,18 +9,18 @@ from fastapi.testclient import TestClient
 
 
 @pytest.fixture
-def test_client():
+def test_client() -> Generator[TestClient, None, None]:
     """Create a test client for the health check app"""
     from mcp_server_langgraph.health.checks import app
 
-    return TestClient(app)
+    yield TestClient(app)
 
 
 @pytest.mark.unit
 class TestHealthCheckEndpoints:
     """Test health check endpoints"""
 
-    def test_health_check_success(self, test_client):
+    def test_health_check_success(self, test_client: TestClient) -> None:
         """Test basic health check returns healthy status"""
         response = test_client.get("/health")
 
@@ -31,7 +32,7 @@ class TestHealthCheckEndpoints:
         assert data["version"]
         assert data["checks"]["application"] == "running"
 
-    def test_health_check_response_format(self, test_client):
+    def test_health_check_response_format(self, test_client: TestClient) -> None:
         """Test health check response has correct format"""
         response = test_client.get("/health")
         data = response.json()
@@ -47,7 +48,9 @@ class TestHealthCheckEndpoints:
 
     @patch("mcp_server_langgraph.health.checks.settings")
     @patch("mcp_server_langgraph.health.checks.OpenFGAClient")
-    def test_readiness_check_all_healthy(self, mock_openfga, mock_settings, test_client):
+    def test_readiness_check_all_healthy(
+        self, mock_openfga: MagicMock, mock_settings: MagicMock, test_client: TestClient
+    ) -> None:
         """Test readiness check when all services are healthy"""
         # Configure settings
         mock_settings.openfga_store_id = "test-store"
@@ -80,7 +83,9 @@ class TestHealthCheckEndpoints:
 
     @patch("mcp_server_langgraph.health.checks.settings")
     @patch("mcp_server_langgraph.health.checks.OpenFGAClient")
-    def test_readiness_check_openfga_unhealthy(self, mock_openfga, mock_settings, test_client):
+    def test_readiness_check_openfga_unhealthy(
+        self, mock_openfga: MagicMock, mock_settings: MagicMock, test_client: TestClient
+    ) -> None:
         """Test readiness check when OpenFGA is unavailable"""
         mock_settings.openfga_store_id = "test-store"
         mock_settings.openfga_model_id = "test-model"
@@ -109,7 +114,7 @@ class TestHealthCheckEndpoints:
             assert "error" in data["checks"]["openfga"]
 
     @patch("mcp_server_langgraph.health.checks.settings")
-    def test_readiness_check_missing_critical_secrets(self, mock_settings, test_client):
+    def test_readiness_check_missing_critical_secrets(self, mock_settings: MagicMock, test_client: TestClient) -> None:
         """Test readiness check when critical secrets are missing"""
         mock_settings.openfga_store_id = None
         mock_settings.openfga_model_id = None
@@ -134,7 +139,7 @@ class TestHealthCheckEndpoints:
             assert "JWT_SECRET_KEY" in data["checks"]["secrets"]["missing"]
 
     @patch("mcp_server_langgraph.health.checks.settings")
-    def test_readiness_check_openfga_not_configured(self, mock_settings, test_client):
+    def test_readiness_check_openfga_not_configured(self, mock_settings: MagicMock, test_client: TestClient) -> None:
         """Test readiness check when OpenFGA is not configured"""
         mock_settings.openfga_store_id = None
         mock_settings.openfga_model_id = None
@@ -156,7 +161,7 @@ class TestHealthCheckEndpoints:
             assert data["checks"]["openfga"]["status"] == "not_configured"
 
     @patch("mcp_server_langgraph.health.checks.settings")
-    def test_readiness_check_infisical_degraded(self, mock_settings, test_client):
+    def test_readiness_check_infisical_degraded(self, mock_settings: MagicMock, test_client: TestClient) -> None:
         """Test readiness check when Infisical is degraded"""
         mock_settings.openfga_store_id = None
         mock_settings.openfga_model_id = None
@@ -179,7 +184,7 @@ class TestHealthCheckEndpoints:
 
     @patch("mcp_server_langgraph.health.checks.settings")
     @patch("mcp_server_langgraph.health.checks.logger")
-    def test_startup_check_success(self, mock_logger, mock_settings, test_client):
+    def test_startup_check_success(self, mock_logger: MagicMock, mock_settings: MagicMock, test_client: TestClient) -> None:
         """Test startup probe returns started status"""
         mock_settings.service_name = "mcp-server-langgraph"
         mock_settings.service_version = "1.0.0"
@@ -196,7 +201,9 @@ class TestHealthCheckEndpoints:
 
     @patch("mcp_server_langgraph.health.checks.settings")
     @patch("mcp_server_langgraph.health.checks.logger")
-    def test_startup_check_logging_failed(self, mock_logger, mock_settings, test_client):
+    def test_startup_check_logging_failed(
+        self, mock_logger: MagicMock, mock_settings: MagicMock, test_client: TestClient
+    ) -> None:
         """Test startup probe when logging initialization fails"""
         mock_settings.service_name = "mcp-server-langgraph"
         mock_logger.info.side_effect = Exception("Logger initialization failed")
@@ -210,7 +217,7 @@ class TestHealthCheckEndpoints:
         assert data["checks"]["logging"]["status"] == "failed"
 
     @patch("mcp_server_langgraph.health.checks.settings")
-    def test_prometheus_metrics_endpoint(self, mock_settings, test_client):
+    def test_prometheus_metrics_endpoint(self, mock_settings: MagicMock, test_client: TestClient) -> None:
         """Test Prometheus metrics endpoint"""
         mock_settings.service_version = "1.0.0"
         mock_settings.service_name = "mcp-server-langgraph"
@@ -230,7 +237,7 @@ class TestHealthCheckIntegration:
     """Integration tests for health checks"""
 
     @pytest.mark.skip(reason="Requires full infrastructure stack")
-    def test_full_health_check_with_infrastructure(self, test_client):
+    def test_full_health_check_with_infrastructure(self, test_client: TestClient) -> None:
         """Test health checks with real infrastructure components"""
         # This test would run with actual OpenFGA, Infisical, etc.
         response = test_client.get("/health/ready")

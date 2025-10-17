@@ -219,7 +219,7 @@
       ]
     },
     {
-      "group": "Development & Quality (ADRs 10, 14-19, 22)",
+      "group": "Development & Quality (ADRs 10, 14-19, 22-25)",
       "pages": [
         "architecture/adr-0010-langgraph-functional-api",
         "architecture/adr-0014-pydantic-type-safety",
@@ -228,7 +228,10 @@
         "architecture/adr-0017-error-handling-strategy",
         "architecture/adr-0018-semantic-versioning-strategy",
         "architecture/adr-0019-async-first-architecture",
-        "architecture/adr-0022-distributed-conversation-checkpointing"
+        "architecture/adr-0022-distributed-conversation-checkpointing",
+        "architecture/adr-0023-anthropic-tool-design-best-practices",
+        "architecture/adr-0024-agentic-loop-implementation",
+        "architecture/adr-0025-anthropic-best-practices-enhancements"
       ]
     },
     {
@@ -242,6 +245,7 @@
       "group": "Version History",
       "pages": [
         "releases/overview",
+        "releases/v2-6-0",
         "releases/v2-5-0",
         "releases/v2-4-0",
         "releases/v2-3-0",

@@ -3,16 +3,29 @@ Pydantic AI Agent - Type-safe agent implementation with structured outputs
 
 This module provides strongly-typed agent responses using Pydantic AI,
 ensuring LLM outputs match expected schemas and improving reliability.
+
+Note: pydantic-ai is an optional dependency. If not installed, this module will raise
+ImportError when used. The agent.py module handles this gracefully with PYDANTIC_AI_AVAILABLE flag.
 """
 
 from typing import Literal, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent
+
+# Conditional import - pydantic-ai is optional for type-safe responses
+# If not available, agent.py will fall back to standard routing
+try:
+    from pydantic_ai import Agent
+
+    PYDANTIC_AI_AVAILABLE = True
+except ImportError:
+    PYDANTIC_AI_AVAILABLE = False
+    Agent = None  # type: ignore
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+from mcp_server_langgraph.prompts import RESPONSE_SYSTEM_PROMPT, ROUTER_SYSTEM_PROMPT
 
 
 # Structured Response Models
@@ -68,26 +81,17 @@ class PydanticAIAgentWrapper:
         # Map provider to Pydantic AI model format
         self.pydantic_model_name = self._get_pydantic_model_name()
 
-        # Create specialized agents for different tasks
+        # Create specialized agents for different tasks with XML-structured prompts
         self.router_agent = Agent(
             self.pydantic_model_name,
             result_type=RouterDecision,
-            system_prompt="""You are a routing assistant for an AI agent.
-Your job is to analyze user messages and decide the best action:
-- 'use_tools': If the user needs external tools (search, calculate, lookup)
-- 'respond': If you can answer directly without tools
-- 'clarify': If the request is unclear or needs more information
-
-Always provide clear reasoning and a confidence score.""",
+            system_prompt=ROUTER_SYSTEM_PROMPT,
         )
 
         self.response_agent = Agent(
             self.pydantic_model_name,
             result_type=AgentResponse,
-            system_prompt="""You are a helpful AI assistant.
-Provide clear, accurate, and helpful responses to user questions.
-If you're uncertain, indicate that in your confidence score.
-If you need clarification, set requires_clarification=True and ask a specific question.""",
+            system_prompt=RESPONSE_SYSTEM_PROMPT,
         )
 
         logger.info(
@@ -245,5 +249,15 @@ def create_pydantic_agent(model_name: Optional[str] = None, provider: Optional[s
 
     Returns:
         Configured PydanticAIAgentWrapper instance
+
+    Raises:
+        ImportError: If pydantic-ai is not installed
     """
+    if not PYDANTIC_AI_AVAILABLE:
+        raise ImportError(
+            "pydantic-ai is not installed. "
+            "Install with: pip install pydantic-ai\n"
+            "The agent will fall back to standard routing without Pydantic AI."
+        )
+
     return PydanticAIAgentWrapper(model_name=model_name, provider=provider)

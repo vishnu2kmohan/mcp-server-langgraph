@@ -14,49 +14,80 @@ Tools enable AI agents to interact with external systems, execute code, search d
 
 ## Available Tools
 
-### Chat Tool
+### Agent Chat Tool
 
-Send a message to the AI agent and receive an intelligent response.
+Send a message to the AI agent and receive an intelligent response optimized for agent consumption.
 
-<ParamField path="name" type="string" default="chat">
-  Tool identifier
+<ParamField path="name" type="string" default="agent_chat">
+  Tool identifier (namespaced for clarity)
 </ParamField>
+
+<Note>
+**Backward Compatibility**: The old tool name `chat` is still supported for backward compatibility.
+</Note>
 
 **Input Schema**:
 ```json
 {
   "type": "object",
   "properties": {
-    "query": {
+    "message": {
       "type": "string",
       "description": "The message or question to send to the agent",
       "minLength": 1,
       "maxLength": 10000
     },
-    "conversation_id": {
+    "username": {
       "type": "string",
-      "description": "Optional conversation ID to maintain context across messages",
+      "description": "Username for authentication"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Optional conversation ID to maintain context (e.g., 'conv_123')",
       "pattern": "^conv_[a-zA-Z0-9]+$"
     },
-    "stream": {
-      "type": "boolean",
-      "description": "Enable streaming responses",
-      "default": false
+    "response_format": {
+      "type": "string",
+      "enum": ["concise", "detailed"],
+      "default": "concise",
+      "description": "Response verbosity level. 'concise' returns ~500 tokens (2-5 sec), 'detailed' returns ~2000 tokens (5-10 sec)"
     }
   },
-  "required": ["query"]
+  "required": ["message", "username"]
 }
 ```
 
+<Info>
+**Response Format Control**: New in v2.6.0. Agents can optimize for speed vs comprehensiveness:
+- **`concise`** (default): ~500 tokens, 2-5 seconds - ideal for quick answers
+- **`detailed`**: ~2000 tokens, 5-10 seconds - comprehensive explanations
+
+Follows Anthropic's best practice: "Expose a response_format enum parameter for token efficiency"
+</Info>
+
 **Example Usage**:
 ```python
-response = await client.call_tool("chat", {
-    "query": "Explain quantum entanglement",
-    "conversation_id": "conv_123",
-    "stream": False
+# Basic usage with default concise format
+response = await client.call_tool("agent_chat", {
+    "message": "Explain quantum entanglement",
+    "username": "alice",
+    "thread_id": "conv_123"
 })
 
 print(response.content[0].text)
+
+# Request detailed response for comprehensive answer
+detailed_response = await client.call_tool("agent_chat", {
+    "message": "Explain quantum computing in detail",
+    "username": "alice",
+    "response_format": "detailed"  # Get comprehensive response
+})
+
+# Backward compatible - old tool name still works
+legacy_response = await client.call_tool("chat", {
+    "message": "Hello",
+    "username": "alice"
+})
 ```
 
 **Response**:
@@ -81,13 +112,17 @@ print(response.content[0].text)
 }
 ```
 
-### Search Web Tool
+### Conversation Search Tool
 
-Search the internet for current information.
+Search conversations using keywords and filters. **Replaces** the old `list_conversations` tool following Anthropic's guidance: "Implement search-focused tools rather than list-all tools."
 
-<ParamField path="name" type="string" default="search_web">
-  Tool identifier
+<ParamField path="name" type="string" default="conversation_search">
+  Tool identifier (namespaced for clarity)
 </ParamField>
+
+<Warning>
+**Breaking Change (v2.6.0)**: The `list_conversations` tool has been replaced with `conversation_search` to prevent context overflow. Backward-compatible routing still supports the old name.
+</Warning>
 
 **Input Schema**:
 ```json
@@ -96,33 +131,59 @@ Search the internet for current information.
   "properties": {
     "query": {
       "type": "string",
-      "description": "Search query",
+      "description": "Search query to filter conversations",
       "minLength": 1,
       "maxLength": 500
     },
-    "num_results": {
+    "username": {
+      "type": "string",
+      "description": "Username for authentication"
+    },
+    "limit": {
       "type": "integer",
-      "description": "Number of results to return",
+      "description": "Maximum number of conversations to return (1-50)",
       "minimum": 1,
-      "maximum": 10,
-      "default": 5
+      "maximum": 50,
+      "default": 10
     }
   },
-  "required": ["query"]
+  "required": ["query", "username"]
 }
 ```
 
+<Info>
+**Why Search-Focused?** Following Anthropic's best practices:
+- **Prevents context overflow**: Listing all conversations can consume thousands of tokens
+- **Forces specificity**: Agents must be explicit about what they're looking for
+- **More efficient**: Returns only relevant results, not everything
+- **Scalable**: Works with users who have hundreds of conversations
+
+**Benefits over list-all**:
+- Up to 50x reduction in response tokens for users with many conversations
+- Helpful truncation messages when results exceed limit
+- Sorted by relevance to query
+</Info>
+
 **Example Usage**:
 ```python
-results = await client.call_tool("search_web", {
-    "query": "latest AI developments 2025",
-    "num_results": 3
+# Search for specific conversations
+results = await client.call_tool("conversation_search", {
+    "query": "project alpha",
+    "username": "alice",
+    "limit": 10
 })
 
-for item in results.content:
-    print(f"Title: {item.title}")
-    print(f"URL: {item.url}")
-    print(f"Snippet: {item.snippet}\n")
+print(results.content[0].text)
+# Output: Found 2 conversation(s) matching 'project alpha':
+#         1. conversation:project_alpha_planning
+#         2. conversation:project_alpha_review
+
+# Empty query returns recent conversations
+recent = await client.call_tool("conversation_search", {
+    "query": "",
+    "username": "alice",
+    "limit": 5
+})
 ```
 
 **Response**:
@@ -131,7 +192,80 @@ for item in results.content:
   "content": [
     {
       "type": "text",
-      "text": "Search Results:\n\n1. **Latest AI Developments in 2025**\n   URL: https://example.com/ai-2025\n   Snippet: Recent breakthroughs in AI include...\n\n2. **AI Trends Report**\n   URL: https://example.com/trends\n   Snippet: The AI industry has seen..."
+      "text": "Found 2 conversation(s) matching 'project alpha':\n1. conversation:project_alpha_planning\n2. conversation:project_alpha_review"
+    }
+  ],
+  "isError": false
+}
+```
+
+**Truncation Guidance**:
+When results exceed the limit:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Found 15 conversation(s) matching 'meeting':\n1. conversation:weekly_meeting\n...\n10. conversation:team_sync\n\n[Showing 10 of 15 results. Use a more specific query to narrow results.]"
+    }
+  ]
+}
+```
+
+### Conversation Get Tool
+
+Retrieve a specific conversation thread by ID.
+
+<ParamField path="name" type="string" default="conversation_get">
+  Tool identifier (namespaced for clarity)
+</ParamField>
+
+<Note>
+**Best Practice**: Use `conversation_search` first to find conversation IDs, then use `conversation_get` to retrieve specific conversations.
+</Note>
+
+**Input Schema**:
+```json
+{
+  "type": "object",
+  "properties": {
+    "thread_id": {
+      "type": "string",
+      "description": "Conversation thread identifier (e.g., 'conv_abc123')"
+    },
+    "username": {
+      "type": "string",
+      "description": "Username for authentication"
+    }
+  },
+  "required": ["thread_id", "username"]
+}
+```
+
+**Example Usage**:
+```python
+# First, search for conversations
+search_results = await client.call_tool("conversation_search", {
+    "query": "project updates",
+    "username": "alice"
+})
+
+# Then, get a specific conversation
+conversation = await client.call_tool("conversation_get", {
+    "thread_id": "conv_abc123",
+    "username": "alice"
+})
+
+print(conversation.content[0].text)
+```
+
+**Response**:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Conversation history for thread conv_abc123"
     }
   ],
   "isError": false

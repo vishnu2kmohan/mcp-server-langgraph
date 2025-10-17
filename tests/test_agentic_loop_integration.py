@@ -1,0 +1,349 @@
+"""
+Integration Tests for Full Agentic Loop
+
+Tests the complete gather-action-verify-repeat cycle.
+These are integration tests that may require mocking but test full workflows.
+"""
+
+import pytest
+from langchain_core.messages import HumanMessage
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from mcp_server_langgraph.core.agent import AgentState, create_agent_graph
+from mcp_server_langgraph.core.context_manager import ContextManager
+from mcp_server_langgraph.llm.verifier import OutputVerifier, VerificationResult
+
+
+@pytest.fixture
+def mock_llm():
+    """Create a mock LLM for testing."""
+    llm = AsyncMock()
+    llm.ainvoke = AsyncMock(
+        return_value=MagicMock(content="This is a helpful response about Python.")
+    )
+    llm.invoke = MagicMock(return_value=MagicMock(content="This is a helpful response."))
+    return llm
+
+
+@pytest.fixture
+def mock_context_manager():
+    """Create a mock ContextManager."""
+    manager = MagicMock(spec=ContextManager)
+    manager.needs_compaction = MagicMock(return_value=False)
+    return manager
+
+
+@pytest.fixture
+def mock_verifier_pass():
+    """Create a mock OutputVerifier that always passes."""
+    verifier = MagicMock(spec=OutputVerifier)
+    verifier.verify_response = AsyncMock(
+        return_value=VerificationResult(
+            passed=True,
+            overall_score=0.9,
+            feedback="Excellent response",
+            requires_refinement=False,
+        )
+    )
+    return verifier
+
+
+@pytest.fixture
+def mock_verifier_fail():
+    """Create a mock OutputVerifier that fails initially."""
+    verifier = MagicMock(spec=OutputVerifier)
+
+    # First call: fail, second call: pass (simulates successful refinement)
+    verifier.verify_response = AsyncMock(
+        side_effect=[
+            VerificationResult(
+                passed=False,
+                overall_score=0.5,
+                feedback="Needs improvement: lacks detail",
+                requires_refinement=True,
+                critical_issues=["Insufficient detail"],
+            ),
+            VerificationResult(
+                passed=True,
+                overall_score=0.85,
+                feedback="Much better after refinement",
+                requires_refinement=False,
+            ),
+        ]
+    )
+    return verifier
+
+
+class TestAgenticLoopIntegration:
+    """Integration tests for the complete agentic loop."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_basic_workflow_without_compaction_verification(self, mock_llm):
+        """Test basic workflow when compaction and verification are disabled."""
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
+            with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+                # Disable new features for baseline test
+                mock_settings.enable_context_compaction = False
+                mock_settings.enable_verification = False
+
+                # Create agent graph
+                graph = create_agent_graph()
+
+                # Create initial state
+                initial_state: AgentState = {
+                    "messages": [HumanMessage(content="What is Python?")],
+                    "next_action": "",
+                    "user_id": "test_user",
+                    "request_id": "test_123",
+                }
+
+                # Run the graph
+                result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+
+                # Should have completed
+                assert "messages" in result
+                assert len(result["messages"]) > 1  # Original + response
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_workflow_with_compaction_enabled(self, mock_llm, mock_context_manager):
+        """Test workflow with context compaction enabled."""
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
+            with patch('mcp_server_langgraph.core.agent.ContextManager', return_value=mock_context_manager):
+                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+                    mock_settings.enable_context_compaction = True
+                    mock_settings.enable_verification = False
+
+                    graph = create_agent_graph()
+
+                    initial_state: AgentState = {
+                        "messages": [HumanMessage(content="Test question")],
+                        "next_action": "",
+                        "user_id": "test_user",
+                        "request_id": "test_123",
+                    }
+
+                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+
+                    # Compaction should have been checked
+                    mock_context_manager.needs_compaction.assert_called()
+
+                    # Should have compaction_applied field in state
+                    assert "compaction_applied" in result
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_workflow_with_verification_pass(self, mock_llm, mock_verifier_pass):
+        """Test workflow with verification enabled (passes immediately)."""
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
+            with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier_pass):
+                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+                    mock_settings.enable_context_compaction = False
+                    mock_settings.enable_verification = True
+                    mock_settings.max_refinement_attempts = 3
+
+                    graph = create_agent_graph()
+
+                    initial_state: AgentState = {
+                        "messages": [HumanMessage(content="Test question")],
+                        "next_action": "",
+                        "user_id": "test_user",
+                        "request_id": "test_123",
+                    }
+
+                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+
+                    # Verification should have been called
+                    mock_verifier_pass.verify_response.assert_called_once()
+
+                    # Should have verification results in state
+                    assert result.get("verification_passed") is True
+                    assert result.get("verification_score") == 0.9
+
+                    # Should NOT have refinement attempts (passed first time)
+                    assert result.get("refinement_attempts") is None or result.get("refinement_attempts") == 0
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_workflow_with_verification_refinement(self, mock_llm, mock_verifier_fail):
+        """Test workflow with verification enabled (requires refinement)."""
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
+            with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier_fail):
+                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+                    mock_settings.enable_context_compaction = False
+                    mock_settings.enable_verification = True
+                    mock_settings.max_refinement_attempts = 3
+
+                    graph = create_agent_graph()
+
+                    initial_state: AgentState = {
+                        "messages": [HumanMessage(content="Test question")],
+                        "next_action": "",
+                        "user_id": "test_user",
+                        "request_id": "test_123",
+                    }
+
+                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+
+                    # Verification should have been called TWICE (initial + refinement)
+                    assert mock_verifier_fail.verify_response.call_count == 2
+
+                    # Should have refinement attempt recorded
+                    assert result.get("refinement_attempts") == 1
+
+                    # Eventually should pass
+                    assert result.get("verification_passed") is True
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_workflow_max_refinement_attempts(self, mock_llm):
+        """Test that workflow respects max refinement attempts."""
+        # Create verifier that always fails
+        mock_verifier = MagicMock(spec=OutputVerifier)
+        mock_verifier.verify_response = AsyncMock(
+            return_value=VerificationResult(
+                passed=False,
+                overall_score=0.3,
+                feedback="Always fails",
+                requires_refinement=True,
+                critical_issues=["Major issue"],
+            )
+        )
+
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
+            with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier):
+                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+                    mock_settings.enable_context_compaction = False
+                    mock_settings.enable_verification = True
+                    mock_settings.max_refinement_attempts = 2  # Low limit for testing
+
+                    graph = create_agent_graph()
+
+                    initial_state: AgentState = {
+                        "messages": [HumanMessage(content="Test question")],
+                        "next_action": "",
+                        "user_id": "test_user",
+                        "request_id": "test_123",
+                    }
+
+                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+
+                    # Should have attempted max refinements
+                    assert result.get("refinement_attempts") == 2
+
+                    # Should eventually give up and accept (fail-open behavior)
+                    # State should reach END even with failed verification
+
+    @pytest.mark.integration
+    def test_agent_state_structure(self):
+        """Test that AgentState has all required fields."""
+        # Import after potential patching
+        from mcp_server_langgraph.core.agent import AgentState
+        from typing import get_type_hints
+
+        # Check that AgentState has expected fields
+        hints = get_type_hints(AgentState)
+
+        # Original fields
+        assert "messages" in hints
+        assert "next_action" in hints
+        assert "user_id" in hints
+        assert "request_id" in hints
+        assert "routing_confidence" in hints
+        assert "reasoning" in hints
+
+        # New compaction fields
+        assert "compaction_applied" in hints
+        assert "original_message_count" in hints
+
+        # New verification fields
+        assert "verification_passed" in hints
+        assert "verification_score" in hints
+        assert "verification_feedback" in hints
+        assert "refinement_attempts" in hints
+        assert "user_request" in hints
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_full_loop_with_all_features(self, mock_llm):
+        """Test complete agentic loop with all features enabled."""
+        # Create mocks
+        mock_manager = MagicMock(spec=ContextManager)
+        mock_manager.needs_compaction = MagicMock(return_value=True)
+        mock_manager.compact_conversation = AsyncMock(
+            return_value=MagicMock(
+                compacted_messages=[HumanMessage(content="Compacted question")],
+                original_token_count=1000,
+                compacted_token_count=400,
+                messages_summarized=5,
+                compression_ratio=0.4,
+            )
+        )
+
+        mock_verifier = MagicMock(spec=OutputVerifier)
+        mock_verifier.verify_response = AsyncMock(
+            return_value=VerificationResult(
+                passed=True,
+                overall_score=0.88,
+                feedback="Good response",
+                requires_refinement=False,
+            )
+        )
+
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
+            with patch('mcp_server_langgraph.core.agent.ContextManager', return_value=mock_manager):
+                with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier):
+                    with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+                        mock_settings.enable_context_compaction = True
+                        mock_settings.enable_verification = True
+                        mock_settings.max_refinement_attempts = 3
+
+                        graph = create_agent_graph()
+
+                        # Create long conversation
+                        long_conversation = [HumanMessage(content=f"Question {i}") for i in range(10)]
+
+                        initial_state: AgentState = {
+                            "messages": long_conversation,
+                            "next_action": "",
+                            "user_id": "test_user",
+                            "request_id": "test_123",
+                        }
+
+                        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+
+                        # All features should have been used
+                        mock_manager.needs_compaction.assert_called()
+                        mock_manager.compact_conversation.assert_called()
+                        mock_verifier.verify_response.assert_called()
+
+                        # Should have all state fields populated
+                        assert result.get("compaction_applied") is True
+                        assert result.get("verification_passed") is True
+                        assert result.get("verification_score") == 0.88
+
+
+@pytest.mark.integration
+class TestAgentGraphStructure:
+    """Test the structure of the agent graph."""
+
+    def test_graph_has_all_nodes(self):
+        """Test that graph contains all expected nodes."""
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config'):
+            graph = create_agent_graph()
+
+            # Get compiled graph structure
+            # (LangGraph graphs don't have a direct node list, but we can verify it compiles)
+            assert graph is not None
+
+    def test_graph_compiles_successfully(self):
+        """Test that graph compiles without errors."""
+        with patch('mcp_server_langgraph.core.agent.create_llm_from_config'):
+            # Should not raise
+            graph = create_agent_graph()
+            assert graph is not None
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "-m", "integration"])

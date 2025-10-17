@@ -55,14 +55,14 @@ async def demo_keycloak_authentication():
     print("Authenticating user 'alice'...")
     try:
         tokens = await keycloak_client.authenticate_user("alice", "alice123")
-        print(f"✓ Authentication successful!")
+        print("✓ Authentication successful!")
         print(f"  Access token (first 50 chars): {tokens['access_token'][:50]}...")
         print(f"  Token expires in: {tokens.get('expires_in')} seconds")
 
         # Verify token
         print("\nVerifying access token...")
         payload = await keycloak_client.verify_token(tokens["access_token"])
-        print(f"✓ Token verified!")
+        print("✓ Token verified!")
         print(f"  Subject: {payload.get('sub')}")
         print(f"  Username: {payload.get('preferred_username')}")
         print(f"  Email: {payload.get('email')}")
@@ -70,14 +70,14 @@ async def demo_keycloak_authentication():
         # Get user info
         print("\nGetting user info...")
         userinfo = await keycloak_client.get_userinfo(tokens["access_token"])
-        print(f"✓ User info retrieved!")
+        print("✓ User info retrieved!")
         print(f"  Email verified: {userinfo.get('email_verified')}")
 
         # Refresh token
         if "refresh_token" in tokens:
             print("\nRefreshing access token...")
             new_tokens = await keycloak_client.refresh_token(tokens["refresh_token"])
-            print(f"✓ Token refreshed!")
+            print("✓ Token refreshed!")
             print(f"  New access token (first 50 chars): {new_tokens['access_token'][:50]}...")
 
     except Exception as e:
@@ -102,7 +102,7 @@ async def demo_keycloak_authentication():
     auth_result = await user_provider.authenticate("alice", "alice123")
 
     if auth_result.get("authorized"):
-        print(f"✓ User authenticated!")
+        print("✓ User authenticated!")
         print(f"  Username: {auth_result['username']}")
         print(f"  User ID: {auth_result['user_id']}")
         print(f"  Email: {auth_result['email']}")
@@ -114,7 +114,7 @@ async def demo_keycloak_authentication():
     print("\nGetting user details...")
     user_details = await user_provider.get_user_by_username("alice")
     if user_details:
-        print(f"✓ User found!")
+        print("✓ User found!")
         print(f"  First name: {user_details.get('first_name')}")
         print(f"  Last name: {user_details.get('last_name')}")
         print(f"  Groups: {user_details.get('groups')}")
@@ -137,7 +137,7 @@ async def demo_keycloak_authentication():
         keycloak_user = await keycloak_client.get_user_by_username("alice")
 
         if keycloak_user:
-            print(f"✓ User retrieved!")
+            print("✓ User retrieved!")
             print(f"  User ID: {keycloak_user.user_id}")
             print(f"  Realm roles: {keycloak_user.realm_roles}")
             print(f"  Client roles: {keycloak_user.client_roles}")
@@ -146,7 +146,7 @@ async def demo_keycloak_authentication():
             # Sync to OpenFGA
             print("\nSyncing roles to OpenFGA...")
             await sync_user_to_openfga(keycloak_user, openfga_client)
-            print(f"✓ Roles synchronized to OpenFGA!")
+            print("✓ Roles synchronized to OpenFGA!")
 
             # Verify permissions
             print("\nVerifying permissions via OpenFGA...")
@@ -182,7 +182,7 @@ async def demo_keycloak_authentication():
     result = await auth.authenticate("bob", "bob123")
 
     if result.get("authorized"):
-        print(f"✓ Authentication successful!")
+        print("✓ Authentication successful!")
         print(f"  User ID: {result['user_id']}")
 
         # Authorize (if OpenFGA available)

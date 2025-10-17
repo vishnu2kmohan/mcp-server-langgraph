@@ -2,8 +2,8 @@ apiVersion: v2
 name: mcp-server-langgraph
 description: A Helm chart for MCP Server with LangGraph, OpenFGA, Keycloak, and Redis
 type: application
-version: 2.5.0
-appVersion: "2.5.0"
+version: 2.6.0
+appVersion: "2.6.0"
 home: https://github.com/vishnu2kmohan/mcp-server-langgraph
 sources:
   - https://github.com/vishnu2kmohan/mcp-server-langgraph

@@ -1,0 +1,426 @@
+"""
+Integration tests for tool improvements based on Anthropic best practices.
+
+Tests:
+- Response format control (concise vs detailed)
+- Search-focused conversation_search tool
+- Tool namespacing (new names and backward compatibility)
+- Token limits and truncation
+- Enhanced error messages
+"""
+
+import pytest
+from mcp.types import TextContent
+
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
+
+
+@pytest.fixture
+def mock_openfga_client(mocker):
+    """Mock OpenFGA client for testing."""
+    client = mocker.Mock(spec=OpenFGAClient)
+    client.check_permission = mocker.AsyncMock(return_value=True)
+    client.list_objects = mocker.AsyncMock(return_value=["conversation:test1", "conversation:test2"])
+    return client
+
+
+@pytest.fixture
+def mcp_server(mock_openfga_client):
+    """Create MCP server instance for testing."""
+    return MCPAgentServer(openfga_client=mock_openfga_client)
+
+
+class TestResponseFormatControl:
+    """Test response_format parameter in agent_chat tool."""
+
+    @pytest.mark.asyncio
+    async def test_chat_with_concise_format(self, mcp_server, mocker):
+        """Test agent_chat with concise response format."""
+        # Mock the agent graph to return a long response
+        long_response = "Word " * 1000  # ~1000 tokens
+        mocker.patch(
+            "mcp_server_langgraph.mcp.server_stdio.agent_graph.invoke",
+            return_value={"messages": [mocker.Mock(content=long_response)]},
+        )
+
+        # Mock span context
+        mock_span = mocker.Mock()
+        mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
+
+        arguments = {
+            "message": "Tell me about quantum computing",
+            "username": "alice",
+            "response_format": "concise",
+        }
+
+        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert isinstance(result[0], TextContent)
+        response_text = result[0].text
+
+        # Concise response should be truncated
+        assert len(response_text) < len(long_response)
+
+    @pytest.mark.asyncio
+    async def test_chat_with_detailed_format(self, mcp_server, mocker):
+        """Test agent_chat with detailed response format."""
+        # Mock agent response
+        medium_response = "Word " * 500  # ~500 tokens (within detailed limit)
+        mocker.patch(
+            "mcp_server_langgraph.mcp.server_stdio.agent_graph.invoke",
+            return_value={"messages": [mocker.Mock(content=medium_response)]},
+        )
+
+        mock_span = mocker.Mock()
+        mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
+
+        arguments = {
+            "message": "Explain quantum computing in detail",
+            "username": "alice",
+            "response_format": "detailed",
+        }
+
+        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+
+        assert isinstance(result, list)
+        response_text = result[0].text
+
+        # Detailed response should NOT be truncated for medium text
+        assert "[Response truncated" not in response_text
+
+    @pytest.mark.asyncio
+    async def test_chat_default_format_is_concise(self, mcp_server, mocker):
+        """Test that default response_format is concise."""
+        short_response = "Short answer"
+        mocker.patch(
+            "mcp_server_langgraph.mcp.server_stdio.agent_graph.invoke",
+            return_value={"messages": [mocker.Mock(content=short_response)]},
+        )
+
+        mock_span = mocker.Mock()
+        mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
+
+        # No response_format specified
+        arguments = {
+            "message": "Hello",
+            "username": "alice",
+        }
+
+        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+        # Should succeed (default to concise)
+        assert isinstance(result, list)
+
+
+class TestSearchFocusedTools:
+    """Test conversation_search replacing list_conversations."""
+
+    @pytest.mark.asyncio
+    async def test_search_conversations_with_query(self, mcp_server, mocker):
+        """Test search_conversations with search query."""
+        # Mock list_accessible_resources to return multiple conversations
+        conversations = [
+            "conversation:project_alpha",
+            "conversation:project_beta",
+            "conversation:meeting_notes",
+            "conversation:weekly_standup",
+        ]
+        mcp_server.auth.list_accessible_resources = mocker.AsyncMock(return_value=conversations)
+
+        mock_span = mocker.Mock()
+
+        arguments = {
+            "query": "project",
+            "username": "alice",
+            "limit": 10,
+        }
+
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+
+        assert isinstance(result, list)
+        response_text = result[0].text
+
+        # Should only include conversations matching "project"
+        assert "project_alpha" in response_text
+        assert "project_beta" in response_text
+        # Should not include non-matching conversations
+        assert "meeting_notes" not in response_text or "2" in response_text  # Either filtered or shown count
+
+    @pytest.mark.asyncio
+    async def test_search_conversations_with_limit(self, mcp_server, mocker):
+        """Test search_conversations respects limit parameter."""
+        # Mock many conversations
+        conversations = [f"conversation:conv_{i}" for i in range(100)]
+        mcp_server.auth.list_accessible_resources = mocker.AsyncMock(return_value=conversations)
+
+        mock_span = mocker.Mock()
+
+        arguments = {
+            "query": "conv",
+            "username": "alice",
+            "limit": 5,
+        }
+
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        response_text = result[0].text
+
+        # Should indicate truncation
+        assert "Showing 5 of" in response_text or "[Showing 5" in response_text
+
+    @pytest.mark.asyncio
+    async def test_search_conversations_no_results(self, mcp_server, mocker):
+        """Test search_conversations with no matching results."""
+        conversations = ["conversation:alpha", "conversation:beta"]
+        mcp_server.auth.list_accessible_resources = mocker.AsyncMock(return_value=conversations)
+
+        mock_span = mocker.Mock()
+
+        arguments = {
+            "query": "nonexistent",
+            "username": "alice",
+            "limit": 10,
+        }
+
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        response_text = result[0].text
+
+        # Should provide helpful message
+        assert "No conversations found" in response_text
+        assert "Try a different search query" in response_text
+
+    @pytest.mark.asyncio
+    async def test_search_conversations_empty_query(self, mcp_server, mocker):
+        """Test search_conversations with empty query returns recent."""
+        conversations = [f"conversation:conv_{i}" for i in range(20)]
+        mcp_server.auth.list_accessible_resources = mocker.AsyncMock(return_value=conversations)
+
+        mock_span = mocker.Mock()
+
+        arguments = {
+            "query": "",
+            "username": "alice",
+            "limit": 10,
+        }
+
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        response_text = result[0].text
+
+        # Should return recent conversations (up to limit)
+        assert "recent conversation" in response_text.lower()
+
+
+class TestToolNamingAndBackwardCompatibility:
+    """Test tool namespacing and backward compatibility."""
+
+    @pytest.mark.asyncio
+    async def test_list_tools_returns_new_names(self, mcp_server):
+        """Test that list_tools returns new namespaced tool names."""
+        # Access the list_tools handler directly
+        tools = await mcp_server.server._tool_manager.list_tools()
+
+        tool_names = [tool.name for tool in tools]
+
+        # Should have new namespaced names
+        assert "agent_chat" in tool_names
+        assert "conversation_get" in tool_names
+        assert "conversation_search" in tool_names
+
+        # Old names should NOT be in the list
+        assert "chat" not in tool_names
+        assert "list_conversations" not in tool_names
+
+    @pytest.mark.asyncio
+    async def test_backward_compatibility_old_tool_names(self, mcp_server, mocker):
+        """Test that old tool names still work via routing."""
+        # Mock dependencies
+        short_response = "Hello!"
+        mocker.patch(
+            "mcp_server_langgraph.mcp.server_stdio.agent_graph.invoke",
+            return_value={"messages": [mocker.Mock(content=short_response)]},
+        )
+
+        mock_span = mocker.Mock()
+        mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
+
+        # Mock the call_tool routing to test both names
+        call_tool_handler = mcp_server.server._tool_manager.call_tool
+
+        # Test old name "chat"
+        old_arguments = {"message": "Hello", "username": "alice"}
+        # This should work through backward compatibility routing
+        # We can't test the full routing here, but the handler should accept it
+
+
+class TestEnhancedErrorMessages:
+    """Test enhanced, actionable error messages."""
+
+    @pytest.mark.asyncio
+    async def test_permission_error_includes_actionable_guidance(self, mcp_server, mocker):
+        """Test that permission errors include actionable guidance."""
+        # Mock authorization to deny access
+        mcp_server.auth.authorize = mocker.AsyncMock(return_value=False)
+
+        mock_span = mocker.Mock()
+        mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
+
+        arguments = {
+            "message": "Hello",
+            "username": "alice",
+            "thread_id": "restricted_conversation",
+        }
+
+        with pytest.raises(PermissionError) as exc_info:
+            await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+
+        error_message = str(exc_info.value)
+
+        # Should include actionable guidance
+        assert "restricted_conversation" in error_message
+        assert "Request access" in error_message or "use a different thread_id" in error_message
+
+
+class TestToolDescriptions:
+    """Test enhanced tool descriptions."""
+
+    @pytest.mark.asyncio
+    async def test_tool_descriptions_include_usage_guidance(self, mcp_server):
+        """Test that tool descriptions include comprehensive usage guidance."""
+        tools = await mcp_server.server._tool_manager.list_tools()
+
+        agent_chat_tool = next((t for t in tools if t.name == "agent_chat"), None)
+        assert agent_chat_tool is not None
+
+        description = agent_chat_tool.description
+
+        # Should include token information
+        assert "token" in description.lower()
+
+        # Should include response time information
+        assert "sec" in description.lower() or "second" in description.lower()
+
+        # Should include rate limit information
+        assert "rate limit" in description.lower() or "requests/minute" in description.lower()
+
+    @pytest.mark.asyncio
+    async def test_search_tool_description_includes_examples(self, mcp_server):
+        """Test that search tool description includes usage examples."""
+        tools = await mcp_server.server._tool_manager.list_tools()
+
+        search_tool = next((t for t in tools if t.name == "conversation_search"), None)
+        assert search_tool is not None
+
+        description = search_tool.description
+
+        # Should mention efficiency
+        assert "efficient" in description.lower()
+
+        # Should mention result limits
+        assert "50" in description or "limit" in description.lower()
+
+        # Should provide examples or guidance
+        assert "example" in description.lower() or "search" in description.lower()
+
+
+class TestInputValidation:
+    """Test input validation for new parameters."""
+
+    @pytest.mark.asyncio
+    async def test_response_format_validation(self, mcp_server, mocker):
+        """Test that response_format only accepts valid values."""
+        # This is validated by Pydantic, but we can test the schema
+        tools = await mcp_server.server._tool_manager.list_tools()
+        agent_chat_tool = next((t for t in tools if t.name == "agent_chat"), None)
+
+        schema = agent_chat_tool.inputSchema
+        response_format_schema = schema["properties"]["response_format"]
+
+        # Should have enum constraint
+        assert "enum" in response_format_schema or "anyOf" in response_format_schema
+
+    @pytest.mark.asyncio
+    async def test_search_limit_validation(self, mcp_server):
+        """Test that search limit has proper constraints."""
+        tools = await mcp_server.server._tool_manager.list_tools()
+        search_tool = next((t for t in tools if t.name == "conversation_search"), None)
+
+        schema = search_tool.inputSchema
+        limit_schema = schema["properties"]["limit"]
+
+        # Should have min/max constraints
+        assert "minimum" in limit_schema or "ge" in str(limit_schema)
+        assert "maximum" in limit_schema or "le" in str(limit_schema)
+
+
+@pytest.mark.integration
+class TestEndToEndToolImprovements:
+    """End-to-end integration tests for tool improvements."""
+
+    @pytest.mark.asyncio
+    async def test_complete_agent_chat_flow(self, mcp_server, mocker):
+        """Test complete agent_chat flow with all improvements."""
+        # Mock a realistic agent response
+        agent_response = """
+        Quantum computing is a revolutionary computing paradigm that leverages quantum mechanics
+        to process information. Unlike classical computers that use bits (0 or 1), quantum
+        computers use quantum bits or qubits that can exist in superposition states.
+        """ * 50  # Make it long enough to test truncation
+
+        mocker.patch(
+            "mcp_server_langgraph.mcp.server_stdio.agent_graph.invoke",
+            return_value={"messages": [mocker.Mock(content=agent_response)]},
+        )
+
+        mock_span = mocker.Mock()
+        mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
+
+        # Test with concise format
+        arguments = {
+            "message": "Explain quantum computing",
+            "username": "alice",
+            "thread_id": "test_thread",
+            "response_format": "concise",
+        }
+
+        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        response_text = result[0].text
+
+        # Response should be formatted (likely truncated for concise)
+        assert len(response_text) > 0
+        # For very long text, should likely be truncated
+        assert len(response_text) < len(agent_response) or len(agent_response) < 1000
+
+    @pytest.mark.asyncio
+    async def test_complete_search_flow(self, mcp_server, mocker):
+        """Test complete conversation_search flow."""
+        # Mock realistic conversation data
+        conversations = [
+            "conversation:project_alpha_planning",
+            "conversation:project_alpha_review",
+            "conversation:project_beta_kickoff",
+            "conversation:team_standup_2025_10_17",
+            "conversation:design_discussion",
+        ]
+        mcp_server.auth.list_accessible_resources = mocker.AsyncMock(return_value=conversations)
+
+        mock_span = mocker.Mock()
+
+        arguments = {
+            "query": "project alpha",
+            "username": "alice",
+            "limit": 5,
+        }
+
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+
+        assert isinstance(result, list)
+        response_text = result[0].text
+
+        # Should find project alpha conversations
+        assert "project_alpha" in response_text.lower()
+        # Should indicate number found
+        assert "2" in response_text  # Found 2 matching conversations

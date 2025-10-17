@@ -27,6 +27,9 @@ resources:
   # Redis session store resources
   - redis-session-deployment.yaml
   - redis-session-service.yaml
+  # Qdrant vector database (for dynamic context loading)
+  - qdrant-deployment.yaml
+  - qdrant-service.yaml
 
 labels:
   - pairs:
@@ -35,4 +38,4 @@ labels:
 
 images:
   - name: mcp-server-langgraph
-    newTag: 2.5.0
+    newTag: 2.6.0

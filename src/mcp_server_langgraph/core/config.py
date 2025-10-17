@@ -87,6 +87,44 @@ class Settings(BaseSettings):
     max_iterations: int = 10
     enable_checkpointing: bool = True
 
+    # Agentic Loop Configuration (Anthropic Best Practices)
+    # Context Management
+    enable_context_compaction: bool = True  # Enable conversation compaction
+    compaction_threshold: int = 8000  # Token count that triggers compaction
+    target_after_compaction: int = 4000  # Target token count after compaction
+    recent_message_count: int = 5  # Number of recent messages to keep uncompacted
+
+    # Work Verification
+    enable_verification: bool = True  # Enable LLM-as-judge verification
+    verification_quality_threshold: float = 0.7  # Minimum score to pass (0.0-1.0)
+    max_refinement_attempts: int = 3  # Maximum refinement iterations
+    verification_mode: str = "standard"  # "standard", "strict", "lenient"
+
+    # Dynamic Context Loading (Just-in-Time) - Anthropic Best Practice
+    enable_dynamic_context_loading: bool = False  # Enable semantic search-based context loading
+    qdrant_url: str = "localhost"  # Qdrant server URL
+    qdrant_port: int = 6333  # Qdrant server port
+    qdrant_collection_name: str = "mcp_context"  # Collection name for context storage
+    dynamic_context_max_tokens: int = 2000  # Max tokens to load from dynamic context
+    dynamic_context_top_k: int = 3  # Number of top results from semantic search
+    embedding_model: str = "all-MiniLM-L6-v2"  # SentenceTransformer model for embeddings
+    context_cache_size: int = 100  # LRU cache size for loaded contexts
+
+    # Parallel Tool Execution - Anthropic Best Practice
+    enable_parallel_execution: bool = False  # Enable parallel tool execution
+    max_parallel_tools: int = 5  # Maximum concurrent tool executions
+
+    # Enhanced Note-Taking - Anthropic Best Practice
+    enable_llm_extraction: bool = False  # Use LLM for structured note extraction
+    extraction_categories: list[str] = [
+        "decisions",
+        "requirements",
+        "facts",
+        "action_items",
+        "issues",
+        "preferences",
+    ]  # Categories for information extraction
+
     # Conversation Checkpointing (for distributed state across replicas)
     checkpoint_backend: str = "memory"  # "memory", "redis"
     checkpoint_redis_url: str = "redis://localhost:6379/1"  # Use db 1 (sessions use db 0)

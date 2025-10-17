@@ -1,0 +1,691 @@
+# VMware VM Resource Estimation for MCP Server LangGraph
+
+**Version:** 2.6.0
+**Date:** 2025-10-16
+**Target Platform:** VMware vSphere / ESXi
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Component Resource Requirements](#component-resource-requirements)
+3. [Deployment Scenarios](#deployment-scenarios)
+4. [VM Sizing Recommendations](#vm-sizing-recommendations)
+5. [Storage Requirements](#storage-requirements)
+6. [Network Requirements](#network-requirements)
+7. [VMware-Specific Optimizations](#vmware-specific-optimizations)
+8. [Monitoring and Operations](#monitoring-and-operations)
+9. [Scaling Considerations](#scaling-considerations)
+10. [Cost Optimization](#cost-optimization)
+
+---
+
+## Executive Summary
+
+This document provides detailed resource estimates for deploying the MCP Server LangGraph application stack on VMware infrastructure. The application is a production-ready MCP server with LangGraph, featuring comprehensive authentication (JWT/Keycloak), fine-grained authorization (OpenFGA), secrets management (Infisical), and OpenTelemetry-based observability.
+
+### Quick Reference
+
+| Deployment Scenario | VMs | Total vCPUs | Total RAM | Total Storage |
+|---------------------|-----|-------------|-----------|---------------|
+| Development/Testing | 2-3 | 12-16 | 16-24 GB | 100-150 GB |
+| Production (Standard) | 4-6 | 32-48 | 48-72 GB | 250-400 GB |
+| Production (High Availability) | 6-10 | 64-96 | 96-144 GB | 500-800 GB |
+
+---
+
+## Component Resource Requirements
+
+Based on the Kubernetes manifests and Docker configurations, here are the resource requirements for each component:
+
+### 1. MCP Server LangGraph (Main Application)
+
+**Purpose:** AI agent server with LangGraph, multi-LLM support, and MCP protocol
+
+**Container Resources (per pod):**
+- **Requests:** 500m CPU, 512 Mi RAM
+- **Limits:** 2000m CPU, 2 Gi RAM
+- **Replicas:** 3 (default), 3-10 (autoscaling)
+
+**Total Resources (3 replicas):**
+- **CPU:** 1.5 cores (requests) to 6 cores (limits)
+- **RAM:** 1.5 GB (requests) to 6 GB (limits)
+
+**Key Features:**
+- Python 3.12-based FastAPI application
+- Multi-LLM support (Anthropic, OpenAI, Google, Azure, AWS Bedrock, Ollama)
+- Stateful agent with checkpointing
+- Health checks with startup/liveness/readiness probes
+
+### 2. PostgreSQL (Shared Database)
+
+**Purpose:** Database for OpenFGA and Keycloak
+
+**Container Resources:**
+- **Requests:** 250m CPU, 512 Mi RAM
+- **Limits:** 2000m CPU, 2 Gi RAM
+- **Replicas:** 1 (StatefulSet)
+
+**Storage:**
+- **Persistent Volume:** 10 Gi (default)
+- **Recommended:** 20-50 Gi for production
+
+**Total Resources:**
+- **CPU:** 0.25 to 2 cores
+- **RAM:** 512 MB to 2 GB
+- **Storage:** 10-50 GB persistent
+
+### 3. OpenFGA (Authorization)
+
+**Purpose:** Fine-grained authorization (Zanzibar-style)
+
+**Container Resources (per pod):**
+- **Requests:** 250m CPU, 256 Mi RAM
+- **Limits:** 1000m CPU, 1 Gi RAM
+- **Replicas:** 2 (HA deployment)
+
+**Total Resources (2 replicas):**
+- **CPU:** 0.5 to 2 cores
+- **RAM:** 512 MB to 2 GB
+
+### 4. Keycloak (Identity Management)
+
+**Purpose:** SSO, user management, OAuth2/OIDC
+
+**Container Resources (per pod):**
+- **Requests:** 500m CPU, 1 Gi RAM
+- **Limits:** 2000m CPU, 2 Gi RAM
+- **Replicas:** 2 (HA deployment)
+
+**Total Resources (2 replicas):**
+- **CPU:** 1 to 4 cores
+- **RAM:** 2 GB to 4 GB
+
+**Notes:**
+- Keycloak is Java-based and benefits from higher RAM allocation
+- Startup time: 60-120 seconds
+
+### 5. Redis (Session Management + Checkpoints)
+
+**Purpose:** Session storage and conversation checkpoints
+
+**Container Resources:**
+- **Requests:** 100m CPU, 256 Mi RAM
+- **Limits:** 500m CPU, 1 Gi RAM
+- **Replicas:** 1 (can scale to Redis Sentinel/Cluster for HA)
+
+**Storage:**
+- **Persistent Volume:** 5 Gi (default)
+- **Configuration:** AOF + RDB persistence
+
+**Total Resources:**
+- **CPU:** 0.1 to 0.5 cores
+- **RAM:** 256 MB to 1 GB
+- **Storage:** 5-10 GB persistent
+
+### 6. OpenTelemetry Collector
+
+**Purpose:** Observability data collection and export
+
+**Container Resources (per pod):**
+- **Requests:** 200m CPU, 256 Mi RAM
+- **Limits:** 1000m CPU, 512 Mi RAM
+- **Replicas:** 2 (default), 2-10 (autoscaling)
+
+**Total Resources (2 replicas):**
+- **CPU:** 0.4 to 2 cores
+- **RAM:** 512 MB to 1 GB
+
+### 7. Monitoring Stack (Optional but Recommended)
+
+#### Prometheus
+- **CPU:** 500m to 2 cores
+- **RAM:** 2 GB to 4 GB
+- **Storage:** 50-100 GB (time-series data)
+
+#### Grafana
+- **CPU:** 200m to 1 core
+- **RAM:** 512 MB to 1 GB
+- **Storage:** 5-10 GB
+
+#### Jaeger
+- **CPU:** 500m to 2 cores
+- **RAM:** 1 GB to 2 GB
+- **Storage:** 20-50 GB (trace data)
+
+---
+
+## Deployment Scenarios
+
+### Scenario 1: Development/Testing
+
+**Use Case:** Local development, testing, CI/CD pipelines
+
+**Components:**
+- 1x MCP Server LangGraph (single replica)
+- 1x PostgreSQL
+- 1x OpenFGA (single replica)
+- 1x Redis
+- Optional: Lightweight monitoring (Prometheus + Grafana)
+
+**VM Configuration:**
+
+#### Option A: Consolidated (2 VMs)
+1. **Application VM** (all services except DB)
+   - **vCPUs:** 6-8
+   - **RAM:** 8-12 GB
+   - **Storage:** 50 GB
+
+2. **Database VM** (PostgreSQL + Redis)
+   - **vCPUs:** 4
+   - **RAM:** 6-8 GB
+   - **Storage:** 50-100 GB
+
+#### Option B: Minimal (1 VM)
+- **vCPUs:** 8-12
+- **RAM:** 16-20 GB
+- **Storage:** 100 GB
+
+**Notes:**
+- No Keycloak (use in-memory auth)
+- No autoscaling
+- Minimal monitoring
+- Suitable for developers and staging environments
+
+### Scenario 2: Production (Standard)
+
+**Use Case:** Production deployment with moderate traffic (< 1000 req/min)
+
+**Components:**
+- 3x MCP Server LangGraph
+- 1x PostgreSQL (with backups)
+- 2x OpenFGA
+- 2x Keycloak
+- 1x Redis (with persistence)
+- 2x OpenTelemetry Collector
+- Full monitoring stack
+
+**VM Configuration (4-6 VMs):**
+
+1. **Control Plane VM** (Kubernetes control plane, if using K8s)
+   - **vCPUs:** 4
+   - **RAM:** 8 GB
+   - **Storage:** 100 GB
+
+2. **Application VM 1** (Node 1)
+   - **vCPUs:** 8
+   - **RAM:** 16 GB
+   - **Storage:** 100 GB
+   - **Workload:** 1x MCP Server, 1x OpenFGA, 1x Keycloak, 1x OTel Collector
+
+3. **Application VM 2** (Node 2)
+   - **vCPUs:** 8
+   - **RAM:** 16 GB
+   - **Storage:** 100 GB
+   - **Workload:** 1x MCP Server, 1x OpenFGA, 1x Keycloak, 1x OTel Collector
+
+4. **Application VM 3** (Node 3)
+   - **vCPUs:** 8
+   - **RAM:** 16 GB
+   - **Storage:** 100 GB
+   - **Workload:** 1x MCP Server
+
+5. **Database VM**
+   - **vCPUs:** 4-8
+   - **RAM:** 8-16 GB
+   - **Storage:** 200 GB (100 GB OS + data, 100 GB backups)
+
+6. **Monitoring VM** (Optional)
+   - **vCPUs:** 4
+   - **RAM:** 8 GB
+   - **Storage:** 150 GB
+   - **Workload:** Prometheus, Grafana, Jaeger
+
+**Total Resources:**
+- **vCPUs:** 32-48
+- **RAM:** 48-72 GB
+- **Storage:** 250-400 GB (excluding long-term backup storage)
+
+**High Availability Features:**
+- Pod anti-affinity across VMs
+- 2 replicas of critical services (OpenFGA, Keycloak)
+- Pod Disruption Budgets (minimum 2 available for MCP Server)
+- PostgreSQL with daily backups
+
+### Scenario 3: Production (High Availability)
+
+**Use Case:** Production with high traffic (> 1000 req/min), mission-critical
+
+**Components:**
+- 3-10x MCP Server LangGraph (autoscaling)
+- 3x PostgreSQL (HA cluster with replication)
+- 2-3x OpenFGA
+- 2-3x Keycloak
+- 3x Redis (Sentinel/Cluster mode)
+- 2-10x OpenTelemetry Collector (autoscaling)
+- Full monitoring stack with high availability
+
+**VM Configuration (6-10 VMs):**
+
+1. **Control Plane VMs** (3 VMs for HA Kubernetes control plane)
+   - Each: **vCPUs:** 4, **RAM:** 8 GB, **Storage:** 100 GB
+
+2. **Application VMs** (3-5 VMs for worker nodes)
+   - Each: **vCPUs:** 12-16, **RAM:** 24-32 GB, **Storage:** 100 GB
+
+3. **Database VMs** (3 VMs for PostgreSQL HA with replication)
+   - Primary: **vCPUs:** 8, **RAM:** 16 GB, **Storage:** 200 GB
+   - Replica 1: **vCPUs:** 8, **RAM:** 16 GB, **Storage:** 200 GB
+   - Replica 2: **vCPUs:** 8, **RAM:** 16 GB, **Storage:** 200 GB
+
+4. **Monitoring VMs** (2 VMs for redundant monitoring)
+   - Each: **vCPUs:** 4-6, **RAM:** 8-12 GB, **Storage:** 150-200 GB
+
+**Total Resources:**
+- **vCPUs:** 64-96
+- **RAM:** 96-144 GB
+- **Storage:** 500-800 GB (excluding long-term storage)
+
+**Enterprise Features:**
+- Multi-master PostgreSQL with synchronous replication
+- Redis Sentinel for automatic failover
+- Geographic distribution across availability zones/clusters
+- Autoscaling based on CPU (70%) and Memory (80%) utilization
+- Service mesh (Istio/Linkerd) optional
+- External secrets management (HashiCorp Vault, AWS Secrets Manager)
+
+---
+
+## Storage Requirements
+
+### Persistent Volume Breakdown
+
+| Component | Type | Size (Dev) | Size (Prod Standard) | Size (Prod HA) | IOPS Requirements |
+|-----------|------|------------|---------------------|----------------|-------------------|
+| PostgreSQL Data | RWO | 10 GB | 20-50 GB | 100-200 GB | 1000-3000 |
+| PostgreSQL Backups | RWO | N/A | 50-100 GB | 200-500 GB | 500-1000 |
+| Redis Data | RWO | 5 GB | 5-10 GB | 10-20 GB | 500-1000 |
+| Prometheus TSDB | RWO | 20 GB | 50-100 GB | 100-200 GB | 500-1000 |
+| Jaeger Traces | RWO | 10 GB | 20-50 GB | 50-100 GB | 500-1000 |
+| Grafana Data | RWO | 5 GB | 5-10 GB | 10 GB | 100-500 |
+| Application Logs | RWX | Optional | 10-20 GB | 20-50 GB | 500 |
+
+### VMware Storage Recommendations
+
+1. **Storage Classes:**
+   - **High Performance (SSD/NVMe):** PostgreSQL, Redis
+   - **Standard Performance (SAS/SATA):** Application containers, logs
+   - **Archive (SATA):** Backups, long-term trace storage
+
+2. **Storage Protocols:**
+   - **VMFS Datastores:** Best for RWO (ReadWriteOnce) volumes
+   - **NFS/vSAN:** Required for RWX (ReadWriteMany) if using shared logs
+   - **vSphere CSI Driver:** Recommended for dynamic provisioning
+
+3. **Backup Strategy:**
+   - **PostgreSQL:** Daily full backup + WAL archiving
+   - **Redis:** RDB snapshots + AOF logs
+   - **Application State:** Container images in registry
+   - **Retention:** 7 days (daily), 4 weeks (weekly), 12 months (monthly)
+
+---
+
+## Network Requirements
+
+### Bandwidth Estimates
+
+| Traffic Type | Dev | Prod Standard | Prod HA |
+|--------------|-----|---------------|---------|
+| External API Traffic | 10-50 Mbps | 100-500 Mbps | 500 Mbps - 2 Gbps |
+| LLM API Calls | 10-100 Mbps | 100-500 Mbps | 500 Mbps - 1 Gbps |
+| Internal Service Mesh | 50-100 Mbps | 200-500 Mbps | 500 Mbps - 2 Gbps |
+| Observability Data | 10-50 Mbps | 50-200 Mbps | 200-500 Mbps |
+| Database Replication | N/A | 10-50 Mbps | 50-200 Mbps |
+
+### Network Configuration
+
+1. **VM Network Adapters:**
+   - **Type:** VMXNET3 (paravirtualized, best performance)
+   - **NICs per VM:**
+     - Application VMs: 1 NIC (1-10 Gbps)
+     - Database VMs: 2 NICs (dedicated replication network)
+     - Control Plane: 1 NIC (1-10 Gbps)
+
+2. **Network Segmentation:**
+   - **Public Network:** External API traffic (load balancer)
+   - **Private Network:** Inter-service communication (overlay network)
+   - **Management Network:** SSH, monitoring, backups
+   - **Storage Network:** iSCSI, NFS (if using network storage)
+
+3. **Firewall Rules:**
+   - **Inbound:** 443/TCP (HTTPS), 80/TCP (HTTP redirect)
+   - **Inter-VM:**
+     - 8000/TCP (MCP Server)
+     - 5432/TCP (PostgreSQL)
+     - 6379/TCP (Redis)
+     - 8080/TCP (OpenFGA, Keycloak)
+     - 4317/TCP, 4318/TCP (OTLP)
+   - **Outbound:**
+     - 443/TCP (LLM APIs, secrets management)
+     - 53/UDP (DNS)
+
+4. **Load Balancing:**
+   - **External LB:** VMware NSX-T, HAProxy, or cloud load balancer
+   - **Internal LB:** Kubernetes Service (ClusterIP with kube-proxy)
+   - **Session Affinity:** Not required (stateless with Redis sessions)
+
+---
+
+## VMware-Specific Optimizations
+
+### 1. VM Configuration Best Practices
+
+#### CPU Configuration
+- **vCPU Allocation:** 1:2 to 1:4 overcommitment ratio
+- **CPU Reservation:** Reserve 50% for production VMs
+- **CPU Shares:** High priority for database and application VMs
+- **NUMA Optimization:** Enable vNUMA for VMs with >8 vCPUs
+- **CPU Hot-Add:** Enable for application VMs (not recommended for DB)
+
+#### Memory Configuration
+- **Memory Reservation:** 100% for database VMs, 50% for application VMs
+- **Memory Shares:** High priority for database and Keycloak VMs
+- **Balloon Driver:** Enabled (VMware Tools required)
+- **Memory Hot-Add:** Enable for application VMs
+- **Large Memory Pages:** Enable for database VMs
+
+#### Storage Configuration
+- **Disk Type:** Thick Provisioned Eager Zeroed for production
+- **SCSI Controller:** VMware Paravirtual (PVSCSI) for database VMs
+- **Multi-Writer:** Disable (not needed for this workload)
+- **Disk Shares:** High for database VMs, Normal for applications
+
+### 2. VMware vSphere Features
+
+#### High Availability (HA)
+- **VM Restart Priority:**
+  - High: PostgreSQL, Redis
+  - Medium: MCP Server, Keycloak, OpenFGA
+  - Low: Monitoring stack
+- **Host Isolation Response:** Leave Powered On
+- **Datastore Heartbeats:** Enable for network isolation detection
+
+#### Distributed Resource Scheduler (DRS)
+- **Automation Level:** Fully Automated
+- **VM-VM Anti-Affinity Rules:**
+  - Keep PostgreSQL replicas on different hosts
+  - Keep MCP Server replicas on different hosts
+- **VM-Host Affinity Rules:** Pin database VMs to high-performance hosts
+
+#### Storage DRS
+- **SDRS Mode:** Fully Automated
+- **I/O Metric:** Enable SDRS for load balancing
+- **Affinity Rules:** Keep DB and logs on separate datastores
+
+### 3. Resource Pools
+
+Create resource pools for workload isolation:
+
+```
+Cluster Root
+├── Production
+│   ├── Applications (50% CPU, 60% Memory)
+│   │   ├── MCP-Server (shares: high)
+│   │   ├── Keycloak (shares: high)
+│   │   └── OpenFGA (shares: normal)
+│   ├── Databases (30% CPU, 30% Memory)
+│   │   ├── PostgreSQL (shares: high, reservation: 100%)
+│   │   └── Redis (shares: normal)
+│   └── Observability (20% CPU, 10% Memory)
+│       ├── Prometheus (shares: normal)
+│       ├── Grafana (shares: low)
+│       └── Jaeger (shares: normal)
+└── Development (expandable reservation)
+```
+
+### 4. Monitoring and Alerts
+
+#### vSphere Metrics to Monitor
+- **CPU Ready Time:** < 5% (indicates CPU contention)
+- **CPU Co-Stop:** < 3% (indicates vCPU scheduling issues)
+- **Memory Ballooning:** < 1% (indicates memory pressure)
+- **Storage Latency:** < 20ms for DB, < 50ms for apps
+- **Network Dropped Packets:** 0 (indicates network saturation)
+
+#### Integration with Application Monitoring
+- Use VMware vRealize Operations for VM-level metrics
+- Correlate with Prometheus/Grafana for application metrics
+- Set up alerts for resource exhaustion before it impacts apps
+
+---
+
+## Monitoring and Operations
+
+### Resource Utilization Monitoring
+
+#### Key Metrics (Prometheus)
+
+```yaml
+# CPU Utilization (target: 50-70%)
+avg(rate(container_cpu_usage_seconds_total[5m])) by (pod)
+
+# Memory Utilization (target: 60-80%)
+avg(container_memory_working_set_bytes) by (pod)
+
+# Disk I/O (IOPS)
+rate(node_disk_reads_completed_total[5m])
+rate(node_disk_writes_completed_total[5m])
+
+# Network Traffic
+rate(container_network_receive_bytes_total[5m])
+rate(container_network_transmit_bytes_total[5m])
+```
+
+#### Grafana Dashboards
+- **Infrastructure Dashboard:** VM resources, storage, network
+- **Application Dashboard:** MCP Server, LLM calls, agent performance
+- **Database Dashboard:** PostgreSQL queries, connections, replication lag
+- **Observability Dashboard:** OpenTelemetry pipeline health
+
+### Capacity Planning Alerts
+
+```yaml
+# CPU pressure
+alert: HighCPUUsage
+expr: avg(rate(container_cpu_usage_seconds_total[5m])) > 0.8
+for: 10m
+
+# Memory pressure
+alert: HighMemoryUsage
+expr: (container_memory_working_set_bytes / container_spec_memory_limit_bytes) > 0.85
+for: 5m
+
+# Storage space
+alert: LowDiskSpace
+expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.15
+for: 5m
+
+# Database connections
+alert: HighDatabaseConnections
+expr: pg_stat_database_numbackends > 80
+for: 5m
+```
+
+---
+
+## Scaling Considerations
+
+### Horizontal Pod Autoscaling (HPA)
+
+Based on the Kubernetes configurations:
+
+#### MCP Server LangGraph
+```yaml
+minReplicas: 3
+maxReplicas: 10
+targetCPUUtilization: 70%
+targetMemoryUtilization: 80%
+```
+
+**Scaling Triggers:**
+- CPU > 70% for 30 seconds → scale up (max 4 pods or 100% increase)
+- CPU < 40% for 5 minutes → scale down (max 2 pods or 50% decrease)
+
+**VM Capacity Planning:**
+- Reserve capacity for 2x current load (6-8 pods)
+- Add 1 VM for every 3-4 additional pods
+
+#### OpenTelemetry Collector
+```yaml
+minReplicas: 2
+maxReplicas: 10
+targetCPUUtilization: 70%
+targetMemoryUtilization: 80%
+```
+
+**Scaling Triggers:**
+- Scales with observability data volume
+- 1 collector can handle ~1000 req/sec trace data
+
+### Vertical Scaling
+
+#### When to Scale Up VM Resources
+1. **Consistent CPU > 80%** across all pods for 1+ hour
+2. **Memory pressure** causing OOM kills or pod evictions
+3. **Disk I/O wait** > 10% during normal operations
+4. **Network saturation** on VM NICs
+
+#### Recommended Scaling Steps
+
+| Metric | Current | Step 1 | Step 2 | Step 3 |
+|--------|---------|--------|--------|--------|
+| vCPUs | 8 | 12 | 16 | 24 |
+| RAM | 16 GB | 24 GB | 32 GB | 48 GB |
+| Storage | 100 GB | 200 GB | 400 GB | 800 GB |
+
+**Downtime:**
+- CPU/Memory: Requires VM reboot (plan maintenance window)
+- Storage: Can be expanded online (no downtime)
+
+### Load Testing Recommendations
+
+Before deploying to production, conduct load testing:
+
+```bash
+# Example: Simulate 1000 concurrent users
+hey -n 100000 -c 1000 -q 10 \
+  -H "Authorization: Bearer $TOKEN" \
+  https://mcp-server.example.com/health
+
+# Stress test with wrk
+wrk -t12 -c400 -d30s --latency \
+  -H "Authorization: Bearer $TOKEN" \
+  https://mcp-server.example.com/agent
+```
+
+**Expected Performance (Production Standard):**
+- **Throughput:** 500-1000 req/sec
+- **Latency (p95):** < 5s for agent responses
+- **Latency (p99):** < 10s
+- **Concurrent Users:** 1000-5000
+
+---
+
+## Cost Optimization
+
+### Resource Right-Sizing
+
+#### Development Environment
+- **Reduce replicas:** 1 instance of all services
+- **Disable monitoring:** Use lightweight Prometheus only
+- **Use in-memory auth:** Skip Keycloak
+- **Smaller VMs:** 4 vCPU, 8 GB RAM per VM
+
+**Savings:** 60-70% reduction vs. production
+
+#### Production Environment
+- **Auto-shutdown:** Dev/test environments during off-hours
+- **Spot Instances:** For non-critical monitoring workloads (if using cloud)
+- **Tiered Storage:** Move old logs/traces to cheaper storage after 30 days
+
+### VMware License Optimization
+
+| Feature | Required License | Alternative |
+|---------|-----------------|-------------|
+| vSphere HA | Standard+ | Manual failover |
+| DRS | Standard+ | Manual load balancing |
+| Storage DRS | Enterprise+ | Manual storage management |
+| vRealize Operations | Additional license | Open-source monitoring |
+
+**Recommendation:** vSphere Standard is sufficient for Dev/Test; Enterprise Plus recommended for Production HA.
+
+### Multi-Tenancy
+
+If running multiple environments (dev, staging, prod):
+
+- **Option 1:** Separate clusters (better isolation, higher cost)
+- **Option 2:** Resource pools on same cluster (lower cost, shared resources)
+- **Option 3:** Namespaces in Kubernetes on same VMs (lowest cost, minimal isolation)
+
+**Recommended:** Option 2 for most use cases (balance of cost and isolation)
+
+---
+
+## Summary and Recommendations
+
+### Recommended Starting Configuration
+
+For a typical production deployment:
+
+**Infrastructure:**
+- **VMware Cluster:** 4-6 ESXi hosts (for DRS and HA)
+- **Total VMs:** 6 (1 control plane, 3 workers, 1 database, 1 monitoring)
+- **Total Resources:** 40 vCPUs, 64 GB RAM, 400 GB storage
+
+**Growth Plan:**
+- Start with **Production (Standard)** scenario
+- Monitor for 30 days
+- Scale based on actual utilization patterns
+- Plan for 2x capacity headroom for traffic spikes
+
+### Key Takeaways
+
+1. **Start Small:** Development scenario can run on 2 VMs (16 vCPUs, 24 GB RAM)
+2. **Plan for HA:** Production needs minimum 3 VMs for application redundancy
+3. **Database is Critical:** Allocate best storage and CPU to PostgreSQL
+4. **Monitor First:** Use Prometheus/Grafana to identify actual bottlenecks
+5. **Autoscaling Works:** HPA can handle 3x traffic spikes without manual intervention
+6. **Storage Grows:** Plan for 50-100 GB/month growth in observability data
+
+### Next Steps
+
+1. **Provision Infrastructure:**
+   - Set up VMware resource pools
+   - Create VM templates (Kubernetes node OS)
+   - Configure storage classes (SSD, SATA, backup)
+
+2. **Deploy Kubernetes:**
+   - Install Kubernetes 1.28+ (kubeadm, Rancher, or Tanzu)
+   - Configure vSphere CSI driver
+   - Set up network overlay (Calico, Cilium)
+
+3. **Deploy Application:**
+   - Use Helm charts: `helm install langgraph-agent ./deployments/helm/mcp-server-langgraph`
+   - Or Kustomize: `kubectl apply -k deployments/kubernetes/overlays/production`
+
+4. **Validate and Monitor:**
+   - Run load tests
+   - Tune resource requests/limits based on actual usage
+   - Set up alerting and runbooks
+
+### Support
+
+For deployment assistance:
+- **Documentation:** [Kubernetes Deployment Guide](./kubernetes.md)
+- **Issues:** https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
+- **Discussions:** https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions
+
+---
+
+**Document Version:** 1.0
+**Last Updated:** 2025-10-16
+**Maintained By:** MCP Server LangGraph Contributors

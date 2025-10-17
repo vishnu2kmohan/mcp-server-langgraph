@@ -367,6 +367,221 @@ Summary:
 7. ✅ **Test-driven**: Run tests early and often
 8. ✅ **Context**: Provide examples and existing patterns
 
+## Makefile Commands Reference
+
+This project includes 40+ custom Makefile commands for common development tasks. Claude Code can use these commands directly via the Bash tool.
+
+### Testing Commands
+
+```bash
+make test                 # Run all automated tests (unit + integration)
+make test-unit            # Run unit tests only (fast, no external deps)
+make test-integration     # Run integration tests (requires infrastructure)
+make test-coverage        # Generate comprehensive coverage report
+make test-property        # Run property-based tests (Hypothesis)
+make test-contract        # Run contract tests (MCP protocol compliance)
+make test-regression      # Run performance regression tests
+make test-mutation        # Run mutation tests (test effectiveness)
+make test-all-quality     # Run all quality tests
+```
+
+### Infrastructure & Setup
+
+```bash
+make install              # Install production dependencies
+make install-dev          # Install development + test dependencies
+make setup-infra          # Start Docker infrastructure (all services)
+make setup-openfga        # Initialize OpenFGA (authorization)
+make setup-keycloak       # Initialize Keycloak (SSO)
+make dev-setup            # Complete developer setup (install+infra+setup)
+make quick-start          # Quick start with defaults
+```
+
+### Validation Commands
+
+```bash
+make validate-openapi         # Validate OpenAPI schema
+make validate-deployments     # Validate all deployment configs
+make validate-docker-compose  # Validate Docker Compose
+make validate-helm            # Validate Helm chart
+make validate-kustomize       # Validate Kustomize overlays
+make validate-all             # Run all deployment validations
+```
+
+### Deployment Commands
+
+```bash
+make deploy-dev               # Deploy to development (Kustomize)
+make deploy-staging           # Deploy to staging (Kustomize)
+make deploy-production        # Deploy to production (Helm)
+make deploy-rollback-dev      # Rollback development deployment
+make deploy-rollback-staging  # Rollback staging deployment
+make deploy-rollback-production  # Rollback production deployment
+```
+
+### Code Quality Commands
+
+```bash
+make lint                 # Run linters (flake8, mypy)
+make format               # Format code (black, isort)
+make security-check       # Run security scans (bandit)
+make pre-commit-setup     # Setup pre-commit hooks
+```
+
+### Running & Monitoring
+
+```bash
+make run                  # Run stdio MCP server
+make run-streamable       # Run StreamableHTTP server
+make health-check         # Check system health
+make monitoring-dashboard # Open Grafana dashboards
+make logs                 # Show infrastructure logs
+make logs-follow          # Follow all logs in real-time
+```
+
+### Documentation
+
+```bash
+make docs-serve           # Serve Mintlify docs locally
+make docs-build           # Build Mintlify docs
+make docs-deploy          # Deploy docs to Mintlify
+```
+
+### Usage Examples
+
+When working on tasks, Claude Code should use these commands directly:
+
+```bash
+# Example: Testing workflow
+"Run the unit tests to verify the changes"
+→ make test-unit
+
+# Example: Validation workflow
+"Validate all deployment configurations"
+→ make validate-all
+
+# Example: Setup workflow
+"Set up the complete development environment"
+→ make dev-setup
+```
+
+**Tip**: Run `make help` to see all available commands with descriptions.
+
+## Custom Slash Commands
+
+This project includes custom slash commands in `.claude/commands/` for common workflows:
+
+### Available Commands
+
+- **`/test-all`** - Run complete test suite (unit, integration, property, contract, regression)
+- **`/deploy-dev`** - Execute development deployment workflow
+- **`/validate`** - Run all validations (OpenAPI, deployments, Helm, Kustomize)
+- **`/debug-auth`** - Debug authentication and authorization issues
+- **`/setup-env`** - Complete environment setup from scratch
+- **`/fix-issue <number>`** - Automated issue debugging workflow
+
+### Using Slash Commands
+
+```bash
+# Run all tests and generate coverage report
+/test-all
+
+# Deploy to development environment
+/deploy-dev
+
+# Debug authentication problems
+/debug-auth
+
+# Fix GitHub issue #42
+/fix-issue 42
+```
+
+Each command includes:
+- Comprehensive step-by-step instructions
+- Common troubleshooting scenarios
+- Expected outputs and verification steps
+- Integration with Makefile commands
+
+## Planning Strategies with Extended Thinking
+
+Claude Code supports extended thinking modes for complex problems. Use these keywords to request different levels of planning depth:
+
+### Thinking Modes
+
+1. **`"think"`** - Basic planning (default)
+   - Quick analysis
+   - Simple task breakdown
+   - Good for straightforward tasks
+
+2. **`"think hard"`** - Enhanced planning
+   - Deeper analysis
+   - More detailed considerations
+   - Better for moderately complex tasks
+
+3. **`"think harder"`** - Advanced planning
+   - Comprehensive analysis
+   - Multiple approaches considered
+   - Edge case identification
+   - Good for complex features
+
+4. **`"ultrathink"`** - Maximum planning depth
+   - Exhaustive analysis
+   - Architecture considerations
+   - Security and performance implications
+   - Multiple solution comparisons
+   - Best for critical or complex architectural changes
+
+### When to Use Each Mode
+
+**Use `"think"`** for:
+- Bug fixes with clear root cause
+- Adding simple tests
+- Documentation updates
+- Minor refactoring
+
+**Use `"think hard"`** for:
+- New feature implementation
+- Significant refactoring
+- Integration with external systems
+- Performance optimization
+
+**Use `"think harder"`** for:
+- Complex multi-component features
+- Architectural changes
+- Security-critical implementations
+- Database schema changes
+
+**Use `"ultrathink"`** for:
+- Major architectural decisions
+- Breaking changes requiring migration
+- Complex distributed system features
+- Critical security or compliance features
+
+### Example Usage
+
+```bash
+# Simple bug fix
+"Fix the session expiration bug in auth/middleware.py"
+
+# Complex feature
+"think hard: Implement distributed caching with Redis cluster support"
+
+# Architectural change
+"ultrathink: Design and implement a plugin system for custom authentication providers"
+```
+
+### Planning Output
+
+When using extended thinking, Claude Code will:
+1. Analyze the problem from multiple angles
+2. Consider edge cases and failure modes
+3. Evaluate trade-offs between approaches
+4. Provide a detailed implementation plan
+5. Identify potential risks and mitigations
+6. Suggest testing strategies
+
+**Best Practice**: For tasks requiring significant code changes or architectural decisions, always use at least `"think hard"` to ensure thorough planning before implementation.
+
 ## Resources
 
 - **Claude Code Documentation**: https://docs.claude.com/claude-code

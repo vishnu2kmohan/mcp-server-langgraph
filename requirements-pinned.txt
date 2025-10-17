@@ -82,7 +82,7 @@ openfga-sdk==0.9.7
 
 # Utilities
 python-dotenv==1.0.1
-pydantic==2.12.0
+pydantic==2.12.2
 pydantic-settings==2.11.0
 httpx==0.27.0
 

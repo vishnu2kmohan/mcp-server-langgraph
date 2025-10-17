@@ -171,7 +171,9 @@ _site/
 .ai/
 .openai/
 .cursor/
-.claude/
+# Claude Code - ignore settings but track commands
+.claude/*
+!.claude/commands/
 .vscode/.ropeproject/
 .vscode/tags
 

@@ -5,9 +5,23 @@ Infisical integration for secure secrets management
 import os
 from typing import Any, Dict, Optional
 
-from infisical_client import AuthenticationOptions, ClientSettings, InfisicalClient, UniversalAuthMethod
+# Conditional import - infisical-python is an optional dependency
+try:
+    from infisical_client import AuthenticationOptions, ClientSettings, InfisicalClient, UniversalAuthMethod
+
+    INFISICAL_AVAILABLE = True
+except ImportError:
+    INFISICAL_AVAILABLE = False
+    logger_import = None  # Will be set after logger import
 
 from mcp_server_langgraph.observability.telemetry import logger, tracer
+
+# Log warning if infisical not available (after logger is imported)
+if not INFISICAL_AVAILABLE:
+    logger.warning(
+        "infisical-python not installed - secrets will fall back to environment variables. "
+        "Install with: pip install 'mcp-server-langgraph[secrets]'"
+    )
 
 
 class SecretsManager:
@@ -43,6 +57,12 @@ class SecretsManager:
         # Use environment variables if not provided
         client_id = client_id or os.getenv("INFISICAL_CLIENT_ID")
         client_secret = client_secret or os.getenv("INFISICAL_CLIENT_SECRET")
+
+        # Check if infisical-python is available
+        if not INFISICAL_AVAILABLE:
+            logger.warning("infisical-python not installed, using fallback mode (environment variables)")
+            self.client = None
+            return
 
         if not client_id or not client_secret:
             logger.warning("Infisical credentials not provided, using fallback mode")

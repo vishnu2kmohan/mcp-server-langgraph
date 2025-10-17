@@ -5,6 +5,8 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: ^deployments/helm/mcp-server-langgraph/templates/
       - id: check-added-large-files
         args: ['--maxkb=500']
       - id: check-merge-conflict
@@ -30,7 +32,7 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: [--max-line-length=127, --extend-ignore=E203,W503]
+        args: ["--max-line-length=127", "--extend-ignore=E203,W503"]
         additional_dependencies: [flake8-docstrings]
 
   - repo: https://github.com/pycqa/bandit
@@ -45,8 +47,8 @@ repos:
       - id: gitleaks
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.11.0
     hooks:
       - id: mypy
         args: [--ignore-missing-imports, --warn-unused-configs]
-        additional_dependencies: [types-all]
+        exclude: ^deployments/langgraph-platform/
