@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760568809747,
+  "lastUpdate": 1760724071537,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -972,6 +972,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0022413111449958723",
             "extra": "mean: 117.50586880420538 usec\nrounds: 5084"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "90d5159ca79c02a6d5d5976ab85d0089443a5b39",
+          "message": "feat: update model configuration to gemini-2.5-flash and Claude 4.5 fallbacks\n\n- Replace gemini-2.5-flash-002 with gemini-2.5-flash for all model references\n- Update fallback models to use Claude 4.5 family (claude-haiku-4-5-20251001, claude-sonnet-4-5-20250929)\n- Add dedicated model configuration for summarization and verification tasks\n- Enhance embedding configuration with provider support (Google/local)\n- Add HIPAA compliance and data security settings\n- Implement fail-closed security pattern for secrets management\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-17T13:53:32-04:00",
+          "tree_id": "12de44b72eb7f90ab18b7081a941684861509be7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/90d5159ca79c02a6d5d5976ab85d0089443a5b39"
+        },
+        "date": 1760724071104,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36334.84534967014,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034136928863930612",
+            "extra": "mean: 27.521790456969107 usec\nrounds: 5030"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33520.625667627886,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003434878499070777",
+            "extra": "mean: 29.83237872453369 usec\nrounds: 6411"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 29996.690033140276,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007994415370928042",
+            "extra": "mean: 33.33701148010671 usec\nrounds: 14373"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 427607.18513496907,
+            "unit": "iter/sec",
+            "range": "stddev: 6.220672900804138e-7",
+            "extra": "mean: 2.3385949412528277 usec\nrounds: 33963"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 426114.6302382814,
+            "unit": "iter/sec",
+            "range": "stddev: 6.394273723999407e-7",
+            "extra": "mean: 2.3467863552133954 usec\nrounds: 50158"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 426412.9267355214,
+            "unit": "iter/sec",
+            "range": "stddev: 5.395280287602627e-7",
+            "extra": "mean: 2.3451446644820892 usec\nrounds: 49003"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1988743.4889205943,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7749426172559415e-8",
+            "extra": "mean: 502.830056048484 nsec\nrounds: 95979"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 428565.279025681,
+            "unit": "iter/sec",
+            "range": "stddev: 8.9925181585058e-7",
+            "extra": "mean: 2.333366814673936 usec\nrounds: 46105"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2996.450584979329,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011405230117700526",
+            "extra": "mean: 333.72817993823134 usec\nrounds: 2562"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3006.133482819691,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003979856786703138",
+            "extra": "mean: 332.65322571838055 usec\nrounds: 1843"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 35070.063881218506,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010171283798112382",
+            "extra": "mean: 28.514347832013563 usec\nrounds: 7449"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11237.002752641903,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026913303855235452",
+            "extra": "mean: 88.99170197007315 usec\nrounds: 4060"
           }
         ]
       }
