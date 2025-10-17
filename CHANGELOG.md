@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2025-10-17
+
 ### Added - Agentic Loop Implementation (ADR-0024)
 
 **Feature**: Full gather-action-verify-repeat agentic loop following Anthropic's best practices
@@ -2720,7 +2722,8 @@ None (HTTP/SSE transport previously deprecated in 1.0.0 was removed in Unrelease
 
 ---
 
-[Unreleased]: https://github.com/vishnu2kmohan/mcp-server-langgraph/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/vishnu2kmohan/mcp-server-langgraph/compare/v2.7.0...HEAD
+[2.7.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.7.0
 [2.6.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.6.0
 [2.5.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.5.0
 [2.4.0]: https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.4.0
