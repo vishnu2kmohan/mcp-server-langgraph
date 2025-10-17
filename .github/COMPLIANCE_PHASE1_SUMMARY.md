@@ -232,7 +232,7 @@ mcp-server-langgraph/
 ├── tests/
 │   └── test_gdpr.py (NEW - 550 lines)
 ├── pyproject.toml (MODIFIED - added gdpr marker)
-└── CHANGELOG.md (UPDATED - comprehensive changelog entry)
+└── ../CHANGELOG.md (UPDATED - comprehensive changelog entry)
 ```
 
 ---

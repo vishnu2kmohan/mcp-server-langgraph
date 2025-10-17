@@ -154,10 +154,10 @@ Invoke incident response for:
 ## Additional Resources
 
 - [Main Documentation](../README.md)
-- [Deployment Guide](../../deployments/README.md)
+- [Deployment Guide](../deployments/README.md)
 - [Keycloak Integration](../integrations/keycloak.md)
-- [Monitoring Configuration](../../monitoring/prometheus/alerts/langgraph-agent.yaml)
-- [Prometheus Alerts](../../monitoring/prometheus/alerts/langgraph-agent.yaml)
+- [Monitoring Configuration](../monitoring/prometheus/alerts/langgraph-agent.yaml)
+- [Prometheus Alerts](../monitoring/prometheus/alerts/langgraph-agent.yaml)
 
 ## Contributing
 

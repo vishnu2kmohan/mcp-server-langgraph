@@ -10,7 +10,7 @@ Implements Service Level Agreement monitoring for:
 SOC 2 A1.2 - System Availability Monitoring
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -188,9 +188,9 @@ class SLAMonitor:
                 unit=uptime_target.unit,
                 status=status,
                 compliance_percentage=compliance_percentage,
-                timestamp=datetime.utcnow().isoformat() + "Z",
-                period_start=start_time.isoformat() + "Z",
-                period_end=end_time.isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                period_start=start_time.isoformat().replace("+00:00", "Z"),
+                period_end=end_time.isoformat().replace("+00:00", "Z"),
                 breach_details=breach_details,
             )
 
@@ -259,9 +259,9 @@ class SLAMonitor:
                 unit=rt_target.unit,
                 status=status,
                 compliance_percentage=compliance_percentage,
-                timestamp=datetime.utcnow().isoformat() + "Z",
-                period_start=start_time.isoformat() + "Z",
-                period_end=end_time.isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                period_start=start_time.isoformat().replace("+00:00", "Z"),
+                period_end=end_time.isoformat().replace("+00:00", "Z"),
                 breach_details=breach_details,
             )
 
@@ -325,9 +325,9 @@ class SLAMonitor:
                 unit=error_target.unit,
                 status=status,
                 compliance_percentage=compliance_percentage,
-                timestamp=datetime.utcnow().isoformat() + "Z",
-                period_start=start_time.isoformat() + "Z",
-                period_end=end_time.isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                period_start=start_time.isoformat().replace("+00:00", "Z"),
+                period_end=end_time.isoformat().replace("+00:00", "Z"),
                 breach_details=breach_details,
             )
 
@@ -387,7 +387,7 @@ class SLAMonitor:
         with tracer.start_as_current_span("sla.generate_report") as span:
             span.set_attribute("period_days", period_days)
 
-            end_time = datetime.utcnow()
+            end_time = datetime.now(timezone.utc)
             start_time = end_time - timedelta(days=period_days)
 
             measurements = []
@@ -453,10 +453,10 @@ class SLAMonitor:
                 summary["error_rate_percentage"] = error_rate.measured_value
 
             report = SLAReport(
-                report_id=f"sla_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
-                generated_at=datetime.utcnow().isoformat() + "Z",
-                period_start=start_time.isoformat() + "Z",
-                period_end=end_time.isoformat() + "Z",
+                report_id=f"sla_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+                generated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                period_start=start_time.isoformat().replace("+00:00", "Z"),
+                period_end=end_time.isoformat().replace("+00:00", "Z"),
                 measurements=measurements,
                 overall_status=overall_status,
                 breaches=breaches,

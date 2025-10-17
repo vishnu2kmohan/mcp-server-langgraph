@@ -261,6 +261,6 @@ Benchmarks on routing latency:
 
 - [Pydantic AI Documentation](https://ai.pydantic.dev/)
 - [PYDANTIC_AI_INTEGRATION.md](../../docs/PYDANTIC_AI_INTEGRATION.md)
-- [PYDANTIC_AI_README.md](../../PYDANTIC_AI_README.md)
+- [reference/pydantic-ai.md](../../reference/pydantic-ai.md)
 - Related Files: `pydantic_ai_src/mcp_server_langgraph/core/agent.py`, `llm_validators.py`, `src/mcp_server_langgraph/core/agent.py`
 - Related ADRs: [0001](0001-llm-multi-provider.md) (LiteLLM integration)

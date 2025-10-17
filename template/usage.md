@@ -376,7 +376,7 @@ After generation, customize these aspects:
 
 ### Documentation
 - [ ] Customize README with your project details
-- [ ] Update CONTRIBUTING.md
+- [ ] Update ../.github/CONTRIBUTING.md
 - [ ] Add your specific deployment docs
 - [ ] Update Mintlify docs if using
 
@@ -409,7 +409,7 @@ After generation, customize these aspects:
 | `src/mcp_server_langgraph/auth/middleware.py` | Authentication logic |
 | `openfga_client.py` | Authorization model |
 | `llm_factory.py` | LLM provider config |
-| `CONTRIBUTING.md` | Contribution guidelines |
+| `../.github/CONTRIBUTING.md` | Contribution guidelines |
 
 ### Can Keep As-Is
 - `observability.py` (if using standard OpenTelemetry)
@@ -534,7 +534,7 @@ Found a way to improve this template? Please contribute!
 3. Test with `cookiecutter`
 4. Submit a pull request
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [../.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) for guidelines.
 
 ---
 
@@ -543,8 +543,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 - [MCP Protocol Specification](https://spec.modelcontextprotocol.io/)
 - [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
 - [Cookiecutter Documentation](https://cookiecutter.readthedocs.io/)
-- [Production Deployment Guide](PRODUCTION_DEPLOYMENT.md)
-- [Security Best Practices](SECURITY_AUDIT.md)
+- [Production Deployment Guide](../docs/deployment/production-checklist.mdx)
+- [Security Best Practices](../archive/SECURITY_AUDIT.md)
 
 ---
 

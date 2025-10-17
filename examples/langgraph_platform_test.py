@@ -8,6 +8,7 @@ This example demonstrates:
 4. Handling errors
 """
 
+import asyncio
 import os
 import sys
 
@@ -17,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from langchain_core.messages import HumanMessage  # noqa: E402
 
 
-def test_local_graph():
+async def test_local_graph():
     """Test the graph locally before deploying"""
     print("=" * 60)
     print("Testing Graph Locally")
@@ -35,7 +36,7 @@ def test_local_graph():
     print(f"\nInput: {test_inputs['messages'][0].content}")
     print("\nInvoking graph...")
 
-    result = agent_graph.invoke(test_inputs)
+    result = await agent_graph.ainvoke(test_inputs)
 
     print(f"\nResponse: {result['messages'][-1].content}")
     print("\n✓ Local graph works!")
@@ -100,7 +101,7 @@ def test_with_cli():
         print(f"  {example['command']}")
 
 
-def test_error_handling():
+async def test_error_handling():
     """Test error handling"""
     print("\n" + "=" * 60)
     print("Testing Error Handling")
@@ -124,7 +125,7 @@ def test_error_handling():
     for test in test_cases:
         print(f"\nTest: {test['name']}")
         try:
-            agent_graph.invoke(test["input"])
+            await agent_graph.ainvoke(test["input"])
             if test["expected_error"]:
                 print("  ✗ Expected error but succeeded")
             else:
@@ -171,17 +172,17 @@ def show_deployment_checklist():
     print("  langgraph deploy my-agent-prod --tag production")
 
 
-def main():
+async def main():
     """Run all tests"""
     print("\n" + "=" * 60)
     print("  LangGraph Platform Testing")
     print("=" * 60)
 
     # Run tests
-    test_local_graph()
+    await test_local_graph()
     test_platform_deployment()
     test_with_cli()
-    test_error_handling()
+    await test_error_handling()
     show_deployment_checklist()
 
     print("\n" + "=" * 60)
@@ -197,4 +198,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

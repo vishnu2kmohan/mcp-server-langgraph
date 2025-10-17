@@ -284,13 +284,13 @@ class LLMFactory:
 
 def create_llm_from_config(config) -> LLMFactory:
     """
-    Create LLM instance from configuration
+    Create primary LLM instance from configuration
 
     Args:
         config: Settings object with LLM configuration
 
     Returns:
-        Configured LLMFactory instance
+        Configured LLMFactory instance for primary chat operations
     """
     # Determine API key based on provider
     api_key_map = {
@@ -334,6 +334,112 @@ def create_llm_from_config(config) -> LLMFactory:
         api_key=api_key,
         temperature=config.model_temperature,
         max_tokens=config.model_max_tokens,
+        timeout=config.model_timeout,
+        enable_fallback=config.enable_fallback,
+        fallback_models=config.fallback_models,
+        **provider_kwargs,
+    )
+
+
+def create_summarization_model(config) -> LLMFactory:
+    """
+    Create dedicated LLM instance for summarization (cost-optimized).
+
+    Uses lighter/cheaper model for context compaction to reduce costs.
+    Falls back to primary model if dedicated model not configured.
+
+    Args:
+        config: Settings object with LLM configuration
+
+    Returns:
+        Configured LLMFactory instance for summarization
+    """
+    # If dedicated summarization model not enabled, use primary model
+    if not getattr(config, "use_dedicated_summarization_model", False):
+        return create_llm_from_config(config)
+
+    # Determine provider and API key
+    provider = config.summarization_model_provider or config.llm_provider
+
+    api_key_map = {
+        "anthropic": config.anthropic_api_key,
+        "openai": config.openai_api_key,
+        "google": config.google_api_key,
+        "gemini": config.google_api_key,
+        "azure": config.azure_api_key,
+        "bedrock": config.aws_access_key_id,
+    }
+
+    api_key = api_key_map.get(provider)
+
+    # Provider-specific kwargs
+    provider_kwargs = {}
+    if provider == "azure":
+        provider_kwargs.update({"api_base": config.azure_api_base, "api_version": config.azure_api_version})
+    elif provider == "bedrock":
+        provider_kwargs.update({"aws_secret_access_key": config.aws_secret_access_key, "aws_region_name": config.aws_region})
+    elif provider == "ollama":
+        provider_kwargs.update({"api_base": config.ollama_base_url})
+
+    return LLMFactory(
+        provider=provider,
+        model_name=config.summarization_model_name or config.model_name,
+        api_key=api_key,
+        temperature=config.summarization_model_temperature,
+        max_tokens=config.summarization_model_max_tokens,
+        timeout=config.model_timeout,
+        enable_fallback=config.enable_fallback,
+        fallback_models=config.fallback_models,
+        **provider_kwargs,
+    )
+
+
+def create_verification_model(config) -> LLMFactory:
+    """
+    Create dedicated LLM instance for verification (LLM-as-judge).
+
+    Uses potentially different model for output verification to balance
+    cost and quality. Falls back to primary model if not configured.
+
+    Args:
+        config: Settings object with LLM configuration
+
+    Returns:
+        Configured LLMFactory instance for verification
+    """
+    # If dedicated verification model not enabled, use primary model
+    if not getattr(config, "use_dedicated_verification_model", False):
+        return create_llm_from_config(config)
+
+    # Determine provider and API key
+    provider = config.verification_model_provider or config.llm_provider
+
+    api_key_map = {
+        "anthropic": config.anthropic_api_key,
+        "openai": config.openai_api_key,
+        "google": config.google_api_key,
+        "gemini": config.google_api_key,
+        "azure": config.azure_api_key,
+        "bedrock": config.aws_access_key_id,
+    }
+
+    api_key = api_key_map.get(provider)
+
+    # Provider-specific kwargs
+    provider_kwargs = {}
+    if provider == "azure":
+        provider_kwargs.update({"api_base": config.azure_api_base, "api_version": config.azure_api_version})
+    elif provider == "bedrock":
+        provider_kwargs.update({"aws_secret_access_key": config.aws_secret_access_key, "aws_region_name": config.aws_region})
+    elif provider == "ollama":
+        provider_kwargs.update({"api_base": config.ollama_base_url})
+
+    return LLMFactory(
+        provider=provider,
+        model_name=config.verification_model_name or config.model_name,
+        api_key=api_key,
+        temperature=config.verification_model_temperature,
+        max_tokens=config.verification_model_max_tokens,
         timeout=config.model_timeout,
         enable_fallback=config.enable_fallback,
         fallback_models=config.fallback_models,

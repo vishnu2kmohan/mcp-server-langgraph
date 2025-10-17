@@ -17,7 +17,7 @@ Implementations can be backed by:
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -323,7 +323,7 @@ class InMemoryUserProfileStore(UserProfileStore):
             if hasattr(profile, key):
                 setattr(profile, key, value)
 
-        profile.last_updated = datetime.utcnow().isoformat() + "Z"
+        profile.last_updated = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         return True
 
     async def delete(self, user_id: str) -> bool:
@@ -412,7 +412,7 @@ class InMemoryPreferencesStore(PreferencesStore):
 
     async def set(self, user_id: str, preferences: Dict[str, Any]) -> bool:
         self.preferences[user_id] = UserPreferences(
-            user_id=user_id, preferences=preferences, updated_at=datetime.utcnow().isoformat() + "Z"
+            user_id=user_id, preferences=preferences, updated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         )
         return True
 
@@ -423,7 +423,7 @@ class InMemoryPreferencesStore(PreferencesStore):
 
         prefs = self.preferences[user_id]
         prefs.preferences.update(updates)
-        prefs.updated_at = datetime.utcnow().isoformat() + "Z"
+        prefs.updated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         return True
 
     async def delete(self, user_id: str) -> bool:

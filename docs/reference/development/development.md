@@ -564,8 +564,8 @@ pytest tests/test_name.py::test_function -v
 ### Getting Help
 
 1. **Check Documentation**
-   - [README.md](README.md)
-   - [TESTING.md](TESTING.md)
+   - [../README.md](../README.md)
+   - [../../TESTING.md](../../TESTING.md)
    - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) (if exists)
 
 2. **Search Issues**
@@ -584,9 +584,9 @@ pytest tests/test_name.py::test_function -v
 
 ## Next Steps
 
-- Read [CONTRIBUTING.md](.github/CONTRIBUTING.md) for contribution guidelines
+- Read [CONTRIBUTING.md](../../.github/CONTRIBUTING.md) for contribution guidelines
 - Check [Good First Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/good%20first%20issue)
 - Join [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
-- Review [Code Style Guide](.github/CONTRIBUTING.md#code-style)
+- Review [Code Style Guide](../../.github/CONTRIBUTING.md#code-style)
 
 **Happy Coding!** 🎉

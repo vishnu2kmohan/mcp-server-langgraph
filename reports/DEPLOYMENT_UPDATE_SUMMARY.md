@@ -104,7 +104,7 @@ Now includes complete infrastructure stack:
 ### 5. Documentation
 
 **New Documentation**:
-- `docs/deployment/VERSION_COMPATIBILITY.md` (7,600+ lines)
+- `../docs/deployment/VERSION_COMPATIBILITY.md` (7,600+ lines)
   - Complete version matrix
   - Upgrade guidance and breaking changes
   - Testing checklists
@@ -113,7 +113,7 @@ Now includes complete infrastructure stack:
   - Known issues and workarounds
 
 **Updated Documentation**:
-- `docs/deployment/kubernetes.md`
+- `../docs/deployment/kubernetes.md`
   - Added v2.4.0 changelog
   - Updated prerequisites with version info
   - Updated manifest descriptions
@@ -314,16 +314,16 @@ kubectl apply -k deployments/kustomize/overlays/production
 - ✅ `deployments/kubernetes/base/postgres-service.yaml` (38 lines)
 - ✅ `deployments/kubernetes/base/openfga-deployment.yaml` (154 lines)
 - ✅ `deployments/kubernetes/base/openfga-service.yaml` (22 lines)
-- ✅ `docs/deployment/VERSION_COMPATIBILITY.md` (520 lines)
+- ✅ `../docs/deployment/VERSION_COMPATIBILITY.md` (520 lines)
 - ✅ `DEPLOYMENT_UPDATE_SUMMARY.md` (this file)
 
 ### Documentation Updates
-- ✅ `docs/deployment/kubernetes.md` - Added v2.4.0 changelog and version info
+- ✅ `../docs/deployment/kubernetes.md` - Added v2.4.0 changelog and version info
 
 ## References
 
-- [VERSION_COMPATIBILITY.md](docs/deployment/VERSION_COMPATIBILITY.md) - Detailed version matrix
-- [Kubernetes Deployment Guide](docs/deployment/kubernetes.md) - Updated deployment guide
+- [VERSION_COMPATIBILITY.md](../docs/deployment/VERSION_COMPATIBILITY.md) - Detailed version matrix
+- [Kubernetes Deployment Guide](../docs/deployment/kubernetes.md) - Updated deployment guide
 - [OpenFGA Releases](https://github.com/openfga/openfga/releases)
 - [Keycloak Releases](https://github.com/keycloak/keycloak/releases)
 - [OpenTelemetry Collector Releases](https://github.com/open-telemetry/opentelemetry-collector-contrib/releases)

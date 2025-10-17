@@ -77,9 +77,7 @@ class TestResponseOptimizer:
         optimizer = ResponseOptimizer()
         text = "Hello world! " * 1000
         custom_msg = "\n\n[Custom truncation message]"
-        truncated, was_truncated = optimizer.truncate_response(
-            text, max_tokens=100, truncation_message=custom_msg
-        )
+        truncated, was_truncated = optimizer.truncate_response(text, max_tokens=100, truncation_message=custom_msg)
         assert was_truncated is True
         assert custom_msg in truncated
 

@@ -377,6 +377,8 @@ python scripts/verify_security.py --environment production
 - Security Lead: security-lead@yourdomain.com
 - On-call: Use PagerDuty/incident management system
 
+**Responsible Disclosure**: See [SECURITY.md](../SECURITY.md)
+
 ---
 
 ## Additional Resources

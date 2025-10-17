@@ -16,7 +16,7 @@ from typing import Any, Literal, Optional
 from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.llm.factory import create_llm_from_config
+from mcp_server_langgraph.llm.factory import create_verification_model
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -36,9 +36,7 @@ class VerificationResult(BaseModel):
 
     passed: bool = Field(description="Whether verification passed")
     overall_score: float = Field(ge=0.0, le=1.0, description="Overall quality score (0-1)")
-    criterion_scores: dict[str, float] = Field(
-        default_factory=dict, description="Scores for individual criteria (0-1)"
-    )
+    criterion_scores: dict[str, float] = Field(default_factory=dict, description="Scores for individual criteria (0-1)")
     feedback: str = Field(description="Actionable feedback for improvement")
     requires_refinement: bool = Field(default=False, description="Whether output should be refined")
     critical_issues: list[str] = Field(default_factory=list, description="Critical issues that must be fixed")
@@ -72,13 +70,13 @@ class OutputVerifier:
         self.criteria = criteria or list(VerificationCriterion)
         self.quality_threshold = quality_threshold
 
-        # Initialize LLM for verification (separate from generation LLM)
+        # Initialize dedicated LLM for verification (LLM-as-judge)
         if settings is None:
             from mcp_server_langgraph.core.config import settings as global_settings
 
             settings = global_settings
 
-        self.llm = create_llm_from_config(settings)
+        self.llm = create_verification_model(settings)
 
         logger.info(
             "OutputVerifier initialized",
@@ -115,9 +113,7 @@ class OutputVerifier:
             threshold = self._get_threshold_for_mode(verification_mode)
 
             # Build verification prompt using XML structure
-            verification_prompt = self._build_verification_prompt(
-                response, user_request, conversation_context
-            )
+            verification_prompt = self._build_verification_prompt(response, user_request, conversation_context)
 
             try:
                 # Get LLM judgment
@@ -174,9 +170,7 @@ class OutputVerifier:
         # Format conversation context if provided
         context_section = ""
         if conversation_context:
-            context_text = "\n".join(
-                [f"{self._get_role(msg)}: {msg.content[:200]}..." for msg in conversation_context[-3:]]
-            )
+            context_text = "\n".join([f"{self._get_role(msg)}: {msg.content[:200]}..." for msg in conversation_context[-3:]])
             context_section = f"""<conversation_context>
 {context_text}
 </conversation_context>
@@ -193,9 +187,7 @@ class OutputVerifier:
             VerificationCriterion.SOURCES: "Are sources cited when making factual claims?",
         }
 
-        criteria_text = "\n".join(
-            [f"- {criterion.value}: {criteria_descriptions[criterion]}" for criterion in self.criteria]
-        )
+        criteria_text = "\n".join([f"- {criterion.value}: {criteria_descriptions[criterion]}" for criterion in self.criteria])
 
         prompt = f"""<task>
 Evaluate the quality of an AI assistant's response to a user request.
@@ -355,9 +347,7 @@ FEEDBACK:
         else:
             return "Message"
 
-    async def verify_with_rules(
-        self, response: str, rules: dict[str, Any]
-    ) -> VerificationResult:
+    async def verify_with_rules(self, response: str, rules: dict[str, Any]) -> VerificationResult:
         """
         Verify response against explicit rules (rules-based validation).
 
@@ -412,14 +402,12 @@ FEEDBACK:
             criterion_scores["completeness"] = 0.6
 
         # Calculate overall score
-        overall_score = 1.0 if not issues else (sum(criterion_scores.values()) / len(criterion_scores) if criterion_scores else 0.5)
+        overall_score = (
+            1.0 if not issues else (sum(criterion_scores.values()) / len(criterion_scores) if criterion_scores else 0.5)
+        )
         passed = len(issues) == 0
 
-        feedback = (
-            "All rule checks passed."
-            if passed
-            else f"Failed {len(issues)} rule check(s). " + "; ".join(issues)
-        )
+        feedback = "All rule checks passed." if passed else f"Failed {len(issues)} rule check(s). " + "; ".join(issues)
 
         logger.info(
             "Rules-based verification completed",

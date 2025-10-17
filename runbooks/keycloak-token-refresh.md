@@ -287,4 +287,4 @@ If failures persist after 1 hour:
 - [Keycloak Token Documentation](https://www.keycloak.org/docs/latest/server_admin/#_timeouts)
 - [OAuth 2.0 Refresh Token Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-6)
 - [Integration Guide](../integrations/keycloak.md)
-- [Session Management](../../src/mcp_server_langgraph/auth/session.py)
+- [Session Management](../src/mcp_server_langgraph/auth/session.py)

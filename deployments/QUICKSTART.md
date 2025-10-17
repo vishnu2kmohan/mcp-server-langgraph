@@ -202,7 +202,7 @@ curl http://localhost:8000/health/ready  # Should show qdrant in dependencies
 - **Configurable**: Adjust DYNAMIC_CONTEXT_MAX_TOKENS, DYNAMIC_CONTEXT_TOP_K
 - **Optional**: Leave disabled for standard operation
 
-**See**: [Anthropic Best Practices Enhancement Plan](../docs/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN.md)
+**See**: [Anthropic Best Practices Enhancement Plan](../reports/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN_20251017.md)
 
 ### Configure Keycloak (Optional)
 
@@ -366,10 +366,10 @@ resources:
 ## Next Steps
 
 - 📚 Read the [complete deployment guide](README.md)
-- 🔐 Set up [authentication with Keycloak](../docs/authentication.md)
-- 📊 Configure [observability and monitoring](../docs/observability.md)
-- 🔒 Review [security best practices](../docs/security.md)
-- 🚀 Explore [production deployment guide](../docs/deployment/production.md)
+- 🔐 Set up [authentication with Keycloak](../docs/getting-started/authentication.mdx)
+- 📊 Configure [observability and monitoring](../docs/guides/observability.mdx)
+- 🔒 Review [security best practices](../docs/security/overview.mdx)
+- 🚀 Explore [production deployment guide](../docs/deployment/production-checklist.mdx)
 
 ## Getting Help
 

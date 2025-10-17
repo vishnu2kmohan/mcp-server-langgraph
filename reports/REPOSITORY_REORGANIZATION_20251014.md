@@ -48,7 +48,7 @@ Successfully reorganized the repository to establish a clean separation between 
 ```
 /
 ├── reports/         # Project reports and metrics
-├── adr/             # Architecture Decision Records (source markdown)
+├── ../adr/             # Architecture Decision Records (source markdown)
 └── runbooks/        # Operational runbooks and procedures
 ```
 
@@ -106,7 +106,7 @@ env/
 
 # Non-documentation content (now at root level)
 reports/
-adr/
+../adr/
 runbooks/
 archive/
 template/
@@ -162,7 +162,7 @@ mkdir -p reports adr runbooks
 
 # Move directories
 mv docs/reports/* reports/
-mv docs/adr/* adr/
+mv docs/../adr/* ../adr/
 mv docs/runbooks/* runbooks/
 mv docs/{archive,template,reference,integrations,api} ./
 
@@ -194,7 +194,7 @@ rmdir docs/{reports,adr,runbooks}
 
 1. **Mintlify Performance**
    - ✅ No longer scans `.venv/` (thousands of Python packages)
-   - ✅ No longer scans `reports/`, `adr/`, `runbooks/`
+   - ✅ No longer scans `reports/`, `../adr/`, `runbooks/`
    - ✅ Faster dev server startup
    - ✅ Reduced memory usage
 
@@ -225,7 +225,7 @@ rmdir docs/{reports,adr,runbooks}
 **Before:**
 ```
 docs/
-├── adr/              ❌ Internal
+├── ../adr/              ❌ Internal
 ├── archive/          ❌ Internal
 ├── api/              ❌ Duplicate
 ├── integrations/     ❌ Internal
@@ -310,8 +310,8 @@ mintlify dev
 - Standard markdown format
 - Archive after 90 days to `reports/archive/`
 
-**Architecture Decisions** → `adr/`
-- Source markdown in `adr/`
+**Architecture Decisions** → `../adr/`
+- Source markdown in `../adr/`
 - Convert to `.mdx` for `docs/architecture/`
 - ADR source remains immutable
 
@@ -404,7 +404,7 @@ This reorganization addresses:
 
 ### Directories Created
 - `reports/` (moved from `docs/reports/`)
-- `adr/` (moved from `docs/adr/`)
+- `../adr/` (moved from `docs/../adr/`)
 - `runbooks/` (moved from `docs/runbooks/`)
 
 ### Directories Moved

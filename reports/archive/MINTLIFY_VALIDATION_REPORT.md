@@ -68,7 +68,7 @@ The documentation includes:
 **Action**: Converted 21 ADR files from `.md` to `.mdx` format
 
 **Process**:
-- Read original ADR files from `docs/adr/*.md`
+- Read original ADR files from `docs/../adr/*.md`
 - Extracted title, date, and status metadata
 - Added proper MDX frontmatter (title, description)
 - Preserved original Markdown content
@@ -277,7 +277,7 @@ sudo emerge nodejs
 
 ### 3. Original ADR Files Retained ℹ️
 
-**Status**: Original `docs/adr/*.md` files still exist
+**Status**: Original `docs/../adr/*.md` files still exist
 
 **Recommendation**: Keep them for reference, or remove after confirming MDX versions are correct
 

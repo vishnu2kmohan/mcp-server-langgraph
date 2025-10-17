@@ -6,7 +6,7 @@ and compliance reporting.
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -422,7 +422,7 @@ class TestAccessReview:
             username="alice",
             roles=["admin", "user"],
             active_sessions=2,
-            last_login=datetime.utcnow().isoformat() + "Z",
+            last_login=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             account_status="active",
             review_status="approved",
         )

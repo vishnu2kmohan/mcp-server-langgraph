@@ -171,6 +171,7 @@ _site/
 .ai/
 .openai/
 .cursor/
+.mcp.json
 # Claude Code - ignore settings but track commands
 .claude/*
 !.claude/commands/

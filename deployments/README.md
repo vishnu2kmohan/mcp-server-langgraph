@@ -359,7 +359,7 @@ kubectl apply -f https://github.com/kubernetes/autoscaler/releases/download/vert
 
 - **Project Documentation**: `../docs/README.md`
 - **Development Guide**: `../docs/development/development.md`
-- **Production Guide**: `../docs/deployment/production.md`
+- **Production Guide**: `../docs/deployment/production-checklist.mdx`
 - **Docker Deployment**: `../docs/deployment/docker.mdx`
 - **Architecture Overview**: `../README.md#architecture`
 

@@ -186,15 +186,15 @@ This project supports compliance with:
 - **ISO 27001**: Information Security Management
 
 See compliance documentation:
-- [GDPR Compliance](docs/compliance/gdpr.md)
-- [HIPAA Compliance](docs/compliance/hipaa.md)
-- [SOC 2 Controls](docs/compliance/soc2.md)
+- [Compliance Overview](docs/security/compliance.mdx) - Comprehensive compliance guide (GDPR, HIPAA, SOC 2)
+- [Compliance Framework](docs-internal/COMPLIANCE.md) - Internal compliance documentation
+- [ADR-0012: Compliance Framework Integration](docs/architecture/adr-0012-compliance-framework-integration.mdx)
 
 ## Security Audits
 
 | Date | Scope | Auditor | Report |
 |------|-------|---------|--------|
-| 2025-10-12 | Full codebase | Internal | [SECURITY_AUDIT.md](docs/archive/SECURITY_AUDIT.md) |
+| 2025-10-12 | Full codebase | Internal | [SECURITY_AUDIT.md](archive/SECURITY_AUDIT.md) |
 
 ## Security Updates
 

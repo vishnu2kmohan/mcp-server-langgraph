@@ -577,7 +577,7 @@ circuit_breaker:
    - Enforcement process
    - Communication channels
 
-3. **docs/reports/MCP_SERVER_IMPROVEMENT_PLAN_20251015.md** (this file)
+3. **reports/MCP_SERVER_IMPROVEMENT_PLAN_20251015.md** (this file)
    - Comprehensive improvement plan
    - Phase-by-phase breakdown
    - Implementation details

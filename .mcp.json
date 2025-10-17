@@ -7,8 +7,9 @@
         "mcp_server_langgraph.mcp.server_stdio"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/src"
-      }
+        "PYTHONPATH": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/src"
+      },
+      "envFile": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.env"
     },
     "langgraph-agent-streamable": {
       "command": "python",
@@ -17,10 +18,11 @@
         "mcp_server_langgraph.mcp.server_streamable"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/src",
+        "PYTHONPATH": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/src",
         "HOST": "0.0.0.0",
         "PORT": "8000"
-      }
+      },
+      "envFile": "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.env"
     }
   }
 }

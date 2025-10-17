@@ -33,9 +33,9 @@ assignees: ''
 
 <!-- Have you checked the documentation? Link to relevant docs -->
 
-- [ ] I've checked [README.md](../../README.md)
+- [ ] I've checked [../README.md](../../../README.md)
 - [ ] I've checked [TESTING.md](../../TESTING.md)
-- [ ] I've checked [PRODUCTION_DEPLOYMENT.md](../../PRODUCTION_DEPLOYMENT.md)
+- [ ] I've checked [Production Checklist](../../docs/deployment/production-checklist.mdx)
 - [ ] I've searched existing issues and discussions
 
 ## Additional Information

@@ -365,7 +365,7 @@ If errors persist after 30 minutes:
 
 ## References
 
-- [Session Management Implementation](../../src/mcp_server_langgraph/auth/session.py)
+- [Session Management Implementation](../src/mcp_server_langgraph/auth/session.py)
 - [Redis Documentation](https://redis.io/documentation)
 - [Error Handling Best Practices](https://docs.python.org/3/tutorial/errors.html)
-- [Deployment Configuration](../../deployments/kubernetes/base/deployment.yaml)
+- [Deployment Configuration](../deployments/kubernetes/base/deployment.yaml)

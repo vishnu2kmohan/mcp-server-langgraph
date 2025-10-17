@@ -361,11 +361,14 @@ class TestEndToEndToolImprovements:
     async def test_complete_agent_chat_flow(self, mcp_server, mocker):
         """Test complete agent_chat flow with all improvements."""
         # Mock a realistic agent response
-        agent_response = """
+        agent_response = (
+            """
         Quantum computing is a revolutionary computing paradigm that leverages quantum mechanics
         to process information. Unlike classical computers that use bits (0 or 1), quantum
         computers use quantum bits or qubits that can exist in superposition states.
-        """ * 50  # Make it long enough to test truncation
+        """
+            * 50
+        )  # Make it long enough to test truncation
 
         mocker.patch(
             "mcp_server_langgraph.mcp.server_stdio.agent_graph.invoke",

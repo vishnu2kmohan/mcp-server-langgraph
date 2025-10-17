@@ -199,9 +199,9 @@ mintlify dev
 ## Related Documentation
 
 - [Mintlify Usage Guide](docs/MINTLIFY_USAGE.md)
-- [Contributing Guide](CONTRIBUTING.md)
+- [Contributing Guide](.github/CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
-- [Compliance Framework](COMPLIANCE.md)
+- [Compliance Framework](docs-internal/COMPLIANCE.md)
 
 ---
 

@@ -387,7 +387,7 @@ Set in `docker-compose.test.yml`:
 ## Related Documentation
 
 - [Testing Guide](../../tests/README.md) - Overview of all test types
-- [Docker Deployment](../deployment/docker.md) - Docker best practices
+- [Docker Deployment](../deployment/docker.mdx) - Docker best practices
 - [CI/CD Pipeline](ci-cd.md) - GitHub Actions workflows
 
 ---

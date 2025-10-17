@@ -146,7 +146,7 @@ Conducted comprehensive audit of all deployment configurations to ensure product
 
 ### Documentation Created (1 file)
 
-8. **docs/deployment/VERSION_PINNING.md** (NEW - 520 lines)
+8. **../docs/deployment/VERSION_PINNING.md** (NEW - 520 lines)
    - Comprehensive version pinning strategy
    - Semantic versioning guidelines
    - Version update procedures
@@ -372,9 +372,9 @@ kubectl apply -k deployments/kustomize/overlays/production
 
 ## Documentation References
 
-- **[VERSION_PINNING.md](docs/deployment/VERSION_PINNING.md)** - Complete version pinning strategy
-- **[VERSION_COMPATIBILITY.md](docs/deployment/VERSION_COMPATIBILITY.md)** - Infrastructure version matrix
-- **[Kubernetes Deployment Guide](docs/deployment/kubernetes.md)** - Deployment procedures
+- **[VERSION_PINNING.md](../docs/deployment/VERSION_PINNING.md)** - Complete version pinning strategy
+- **[VERSION_COMPATIBILITY.md](../docs/deployment/VERSION_COMPATIBILITY.md)** - Infrastructure version matrix
+- **[Kubernetes Deployment Guide](../docs/deployment/kubernetes.md)** - Deployment procedures
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history
 
 ---

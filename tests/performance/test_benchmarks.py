@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 from unittest.mock import Mock, patch
 

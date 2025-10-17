@@ -525,7 +525,7 @@ kubectl get deployments --all-namespaces -o wide | grep langgraph
 ## Related Documentation
 
 - [VERSION_COMPATIBILITY.md](VERSION_COMPATIBILITY.md) - Infrastructure version matrix
-- [Kubernetes Deployment Guide](kubernetes.md) - Deployment procedures
+- [Kubernetes Deployment Guide](kubernetes.mdx) - Deployment procedures
 - [CHANGELOG.md](../../CHANGELOG.md) - Version history
 - [Semantic Versioning](https://semver.org/) - Version numbering spec
 

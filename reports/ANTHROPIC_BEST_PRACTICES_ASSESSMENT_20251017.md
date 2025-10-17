@@ -323,7 +323,7 @@ response_text = (
 
 ### ✅ Task 1: Comprehensive Enhancement Plan
 
-**File**: `docs/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN.md`
+**File**: `reports/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN_20251017.md`
 
 **What was delivered**:
 - 40-page comprehensive guide with full code examples
@@ -366,7 +366,7 @@ response_text = (
 
 ### ✅ Task 2: Framework Transparency Documentation
 
-**File**: `docs/AGENTIC_LOOP_GUIDE.md` (enhanced)
+**File**: `../docs-internal/AGENTIC_LOOP_GUIDE.md` (enhanced)
 
 **What was delivered**:
 - Added 300+ lines of technical deep-dive content
@@ -434,7 +434,7 @@ if "username" in arguments and "user_id" not in arguments:
 
 ## Remaining Enhancements (Ready for Implementation)
 
-All code is **production-ready** and documented in `docs/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN.md`.
+All code is **production-ready** and documented in `reports/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN_20251017.md`.
 
 ### Enhancement 1: Just-in-Time Context Loading with Qdrant
 
@@ -529,7 +529,7 @@ All code is **production-ready** and documented in `docs/ANTHROPIC_BEST_PRACTICE
 **Impact**: Historical record
 
 **Next Steps**:
-1. Create `adr/0025-anthropic-best-practices-enhancements.md`
+1. Create `../adr/0025-anthropic-best-practices-enhancements.md`
 2. Document all 5 enhancements
 3. Link to implementation guide
 
@@ -575,11 +575,11 @@ All code is **production-ready** and documented in `docs/ANTHROPIC_BEST_PRACTICE
 ### 📁 Files Created/Modified
 
 **Created**:
-1. `docs/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN.md` (40 pages, 1800+ lines)
+1. `reports/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN_20251017.md` (40 pages, 1800+ lines)
 2. `ANTHROPIC_BEST_PRACTICES_ASSESSMENT.md` (this file)
 
 **Enhanced**:
-3. `docs/AGENTIC_LOOP_GUIDE.md` (+300 lines of technical content)
+3. `../docs-internal/AGENTIC_LOOP_GUIDE.md` (+300 lines of technical content)
 
 **Modified**:
 4. `src/mcp_server_langgraph/mcp/server_streamable.py` (parameter standardization)
@@ -671,10 +671,10 @@ The roadmap to achieve 9.8/10 is **clear and achievable**:
 
 ### Documentation Index
 
-- **Enhancement Plan**: `docs/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN.md`
-- **Agentic Loop Guide**: `docs/AGENTIC_LOOP_GUIDE.md`
+- **Enhancement Plan**: `reports/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN_20251017.md`
+- **Agentic Loop Guide**: `../docs-internal/AGENTIC_LOOP_GUIDE.md`
 - **Assessment Report**: `ANTHROPIC_BEST_PRACTICES_ASSESSMENT.md` (this file)
-- **ADR Index**: `adr/README.md` (24 ADRs)
+- **ADR Index**: `../adr/README.md` (24 ADRs)
 
 ### Key Implementation Files
 

@@ -680,7 +680,7 @@ For a typical production deployment:
 ### Support
 
 For deployment assistance:
-- **Documentation:** [Kubernetes Deployment Guide](./kubernetes.md)
+- **Documentation:** [Kubernetes Deployment Guide](./kubernetes.mdx)
 - **Issues:** https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
 - **Discussions:** https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions
 

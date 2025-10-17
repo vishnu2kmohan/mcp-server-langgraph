@@ -122,7 +122,7 @@ docs/SLA_OPERATIONS_RUNBOOK.md
        Fix: Escape as `<port>`
 
 
-docs/adr/0007-authentication-provider-pattern.md
+docs/../adr/0007-authentication-provider-pattern.md
 ----------------------------------------------------------------------------------------------------
   🟡 Line   64 [placeholder_tag          ] Placeholder tag <secret> should be escaped or use backticks: `<secret>`
        Fix: Escape as `<secret>`
@@ -160,43 +160,43 @@ docs/architecture/adr-0007-authentication-provider-pattern.mdx
        Fix: Escape as `<secret>`
 
 
-docs/deployment/kong-gateway.mdx
+../docs/deployment/kong-gateway.mdx
 ----------------------------------------------------------------------------------------------------
   🟠 Line  243 [unclosed_html_tag        ] Tag <EOF> opened 4 times but closed 0 times
        Fix: Remove <<EOF or escape heredoc syntax
 
 
-docs/deployment/kubernetes.md
+../docs/deployment/kubernetes.md
 ----------------------------------------------------------------------------------------------------
   🟠 Line  331 [unclosed_html_tag        ] Tag <EOF> opened 2 times but closed 0 times
        Fix: Remove <<EOF or escape heredoc syntax
 
 
-docs/deployment/kubernetes.mdx
+../docs/deployment/kubernetes.mdx
 ----------------------------------------------------------------------------------------------------
   🟠 Line  190 [unclosed_html_tag        ] Tag <EOF> opened 2 times but closed 0 times
        Fix: Remove <<EOF or escape heredoc syntax
 
 
-docs/deployment/kubernetes/aks.mdx
+../docs/deployment/kubernetes/aks.mdx
 ----------------------------------------------------------------------------------------------------
   🟠 Line  369 [unclosed_html_tag        ] Tag <EOF> opened 1 times but closed 0 times
        Fix: Remove <<EOF or escape heredoc syntax
 
 
-docs/deployment/kubernetes/eks.mdx
+../docs/deployment/kubernetes/eks.mdx
 ----------------------------------------------------------------------------------------------------
   🟠 Line  147 [unclosed_html_tag        ] Tag <EOF> opened 1 times but closed 0 times
        Fix: Remove <<EOF or escape heredoc syntax
 
 
-docs/deployment/kubernetes/gke.mdx
+../docs/deployment/kubernetes/gke.mdx
 ----------------------------------------------------------------------------------------------------
   🟠 Line  313 [unclosed_html_tag        ] Tag <EOF> opened 1 times but closed 0 times
        Fix: Remove <<EOF or escape heredoc syntax
 
 
-docs/deployment/monitoring.mdx
+../docs/deployment/monitoring.mdx
 ----------------------------------------------------------------------------------------------------
   🟠 Line  302 [unclosed_html_tag        ] Tag <EOF> opened 1 times but closed 0 times
        Fix: Remove <<EOF or escape heredoc syntax

@@ -393,8 +393,8 @@ After generation:
 ### Project Documentation
 - [README.md](README.md) - Project overview
 - [DEVELOPMENT.md](DEVELOPMENT.md) - Development guide
-- [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) - Deployment guide
-- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) - Security checklist
+- [../docs/deployment/production-checklist.mdx](../docs/deployment/production-checklist.mdx) - Deployment guide
+- [../archive/SECURITY_AUDIT.md](../archive/SECURITY_AUDIT.md) - Security checklist
 
 ### External Resources
 - [Cookiecutter Docs](https://cookiecutter.readthedocs.io/)

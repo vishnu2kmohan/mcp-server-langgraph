@@ -364,7 +364,7 @@ groups:
 - GitHub: https://github.com/vishnu2kmohan/mcp-server-langgraph/security/advisories/new
 - Email: security@yourdomain.com (if configured)
 
-**Security Policy**: See [.github/SECURITY.md](.github/SECURITY.md)
+**Security Policy**: See [SECURITY.md](../SECURITY.md)
 
 ---
 

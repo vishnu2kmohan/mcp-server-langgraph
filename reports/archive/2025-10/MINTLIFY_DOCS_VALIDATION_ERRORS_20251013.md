@@ -456,7 +456,7 @@ python example_client.py
    - Check for similar issues
    - Severity: MEDIUM
 
-4. ℹ️ `docs/deployment/docker.mdx`
+4. ℹ️ `../docs/deployment/docker.mdx`
    - Check docker-compose syntax
    - Severity: LOW
 

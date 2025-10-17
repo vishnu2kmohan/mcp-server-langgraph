@@ -47,12 +47,12 @@ class TestAgentGraph:
         assert hasattr(graph, "stream")
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_route_input_to_respond(self, mock_create_llm):
+    async def test_route_input_to_respond(self, mock_create_llm):
         """Test routing to direct response"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Hello! I can help you.")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Hello! I can help you."))
         mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
@@ -64,7 +64,7 @@ class TestAgentGraph:
             "request_id": "req-123",
         }
 
-        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-1"}})
+        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test-1"}})
 
         assert result is not None
         assert "messages" in result
@@ -72,12 +72,12 @@ class TestAgentGraph:
         assert result["next_action"] == "end"
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_route_input_to_tools(self, mock_create_llm):
+    async def test_route_input_to_tools(self, mock_create_llm):
         """Test routing to tools when keywords detected"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Search completed.")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Search completed."))
         mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
@@ -89,19 +89,19 @@ class TestAgentGraph:
             "request_id": "req-456",
         }
 
-        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-2"}})
+        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test-2"}})
 
         assert result is not None
         # Should go through tools node
         assert len(result["messages"]) > 2
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_route_with_calculate_keyword(self, mock_create_llm):
+    async def test_route_with_calculate_keyword(self, mock_create_llm):
         """Test routing detects calculate keyword"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Calculation result")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Calculation result"))
         mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
@@ -113,18 +113,18 @@ class TestAgentGraph:
             "request_id": "req-789",
         }
 
-        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-3"}})
+        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test-3"}})
 
         assert result is not None
         assert result["next_action"] == "end"
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_agent_with_conversation_history(self, mock_create_llm):
+    async def test_agent_with_conversation_history(self, mock_create_llm):
         """Test agent handles conversation history"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Follow-up response")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Follow-up response"))
         mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
@@ -140,18 +140,18 @@ class TestAgentGraph:
             "request_id": "req-999",
         }
 
-        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-4"}})
+        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test-4"}})
 
         assert result is not None
         assert len(result["messages"]) > 3
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_checkpointing_works(self, mock_create_llm):
+    async def test_checkpointing_works(self, mock_create_llm):
         """Test conversation checkpointing"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Response")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
         mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
@@ -165,7 +165,7 @@ class TestAgentGraph:
             "user_id": "user:alice",
             "request_id": "req-1",
         }
-        result1 = graph.invoke(state1, config={"configurable": {"thread_id": thread_id}})
+        result1 = await graph.ainvoke(state1, config={"configurable": {"thread_id": thread_id}})
 
         # Second message - should maintain history
         state2 = {
@@ -174,7 +174,7 @@ class TestAgentGraph:
             "user_id": "user:alice",
             "request_id": "req-2",
         }
-        result2 = graph.invoke(state2, config={"configurable": {"thread_id": thread_id}})
+        result2 = await graph.ainvoke(state2, config={"configurable": {"thread_id": thread_id}})
 
         # Second result should have more messages due to checkpointing
         assert len(result2["messages"]) > len(result1["messages"])
@@ -203,12 +203,12 @@ class TestAgentGraph:
 
     @patch("mcp_server_langgraph.core.agent.LANGSMITH_AVAILABLE", False)
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_agent_without_langsmith(self, mock_create_llm):
+    async def test_agent_without_langsmith(self, mock_create_llm):
         """Test agent works when LangSmith is not available"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Response without LangSmith")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response without LangSmith"))
         mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
@@ -220,18 +220,18 @@ class TestAgentGraph:
             "request_id": "req-test",
         }
 
-        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-no-langsmith"}})
+        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test-no-langsmith"}})
 
         assert result is not None
         assert len(result["messages"]) > 0
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_agent_with_langsmith_enabled(self, mock_create_llm):
+    async def test_agent_with_langsmith_enabled(self, mock_create_llm):
         """Test agent with LangSmith configuration"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Response")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
         mock_create_llm.return_value = mock_model
 
         # This test verifies the agent works regardless of LangSmith availability
@@ -244,18 +244,18 @@ class TestAgentGraph:
             "request_id": "req-test",
         }
 
-        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test-langsmith"}})
+        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test-langsmith"}})
 
         assert result is not None
         assert len(result["messages"]) > 0
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
-    def test_routing_with_tool_keywords(self, mock_create_llm):
+    async def test_routing_with_tool_keywords(self, mock_create_llm):
         """Test routing detects tool keywords"""
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
-        mock_model.invoke.return_value = AIMessage(content="Search result")
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Search result"))
         mock_create_llm.return_value = mock_model
 
         graph = create_agent_graph()
@@ -268,7 +268,7 @@ class TestAgentGraph:
             "request_id": "req-test",
         }
 
-        result = graph.invoke(state_search, config={"configurable": {"thread_id": "test-routing"}})
+        result = await graph.ainvoke(state_search, config={"configurable": {"thread_id": "test-routing"}})
 
         assert result is not None
 
@@ -278,7 +278,7 @@ class TestAgentIntegration:
     """Integration tests for agent (may require API keys)"""
 
     @pytest.mark.skip(reason="Requires ANTHROPIC_API_KEY")
-    def test_real_llm_invocation(self):
+    async def test_real_llm_invocation(self):
         """Test with real Anthropic API"""
         import os
 
@@ -296,7 +296,7 @@ class TestAgentIntegration:
             "request_id": "integration-test",
         }
 
-        result = graph.invoke(state, config={"configurable": {"thread_id": "integration"}})
+        result = await graph.ainvoke(state, config={"configurable": {"thread_id": "integration"}})
 
         assert result is not None
         assert len(result["messages"]) > 1

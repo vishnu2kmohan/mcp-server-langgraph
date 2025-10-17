@@ -5,7 +5,7 @@ Implements automatic logoff after period of inactivity.
 Required for HIPAA compliance when processing PHI.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable
 
 from fastapi import Request, Response
@@ -84,8 +84,8 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
                 return await call_next(request)
 
             # Parse last accessed time
-            last_accessed = datetime.fromisoformat(session.last_accessed.replace("Z", ""))
-            now = datetime.utcnow()
+            last_accessed = datetime.fromisoformat(session.last_accessed.replace("Z", "+00:00"))
+            now = datetime.now(timezone.utc)
             inactive_seconds = (now - last_accessed).total_seconds()
 
             if inactive_seconds > self.timeout_seconds:
@@ -103,7 +103,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
                 )
 
             # Update last activity time (sliding window)
-            session.last_accessed = now.isoformat() + "Z"
+            session.last_accessed = now.isoformat().replace("+00:00", "Z")
             await self.session_store.update(session.session_id, session.metadata)
 
         except Exception as e:

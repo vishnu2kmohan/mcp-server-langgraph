@@ -109,6 +109,7 @@ class TestEnhancedNoteExtraction:
     @pytest.mark.asyncio
     async def test_extract_key_information_llm_empty_categories(self, context_manager):
         """Test extraction when some categories are empty"""
+
         # Mock LLM to return response with "None" for some categories
         async def mock_ainvoke_empty(prompt):
             response = MagicMock()
@@ -387,9 +388,7 @@ preferences:
             await context_manager.extract_key_information_llm(messages)
 
             # Verify success metric was recorded
-            mock_metrics.successful_calls.add.assert_called_once_with(
-                1, {"operation": "extract_key_info_llm"}
-            )
+            mock_metrics.successful_calls.add.assert_called_once_with(1, {"operation": "extract_key_info_llm"})
 
     @pytest.mark.asyncio
     async def test_extraction_error_metrics_logged(self, context_manager):
@@ -403,9 +402,7 @@ preferences:
             result = await context_manager.extract_key_information_llm(messages)
 
             # Verify failure metric was recorded
-            mock_metrics.failed_calls.add.assert_called_once_with(
-                1, {"operation": "extract_key_info_llm"}
-            )
+            mock_metrics.failed_calls.add.assert_called_once_with(1, {"operation": "extract_key_info_llm"})
 
             # But still returns valid result (fallback)
             assert "decisions" in result

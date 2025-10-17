@@ -8,10 +8,14 @@ Implements Anthropic's Just-in-Time context loading strategy:
 """
 
 import asyncio
+import base64
 import time
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
-from typing import Any
+from typing import Any, Optional, Union
 
+from cryptography.fernet import Fernet
+from langchain_core.embeddings import Embeddings
 from langchain_core.messages import BaseMessage, SystemMessage
 from pydantic import BaseModel, Field
 from qdrant_client import QdrantClient
@@ -23,11 +27,94 @@ from qdrant_client.models import (
     PointStruct,
     VectorParams,
 )
-from sentence_transformers import SentenceTransformer
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import count_tokens
+
+
+def _create_embeddings(
+    provider: str,
+    model_name: str,
+    google_api_key: Optional[str] = None,
+    task_type: Optional[str] = None,
+) -> Embeddings:
+    """
+    Create embeddings instance based on provider.
+
+    Args:
+        provider: "google" for Gemini API or "local" for sentence-transformers
+        model_name: Model name (e.g., "models/text-embedding-004" or "all-MiniLM-L6-v2")
+        google_api_key: Google API key (required for "google" provider)
+        task_type: Task type for Google embeddings optimization
+
+    Returns:
+        Embeddings instance
+
+    Raises:
+        ValueError: If provider is unsupported or required API key is missing
+    """
+    if provider == "google":
+        try:
+            from langchain_google_genai import GoogleGenerativeAIEmbeddings
+        except ImportError:
+            raise ImportError(
+                "langchain-google-genai is required for Google embeddings. " "Install with: pip install langchain-google-genai"
+            )
+
+        if not google_api_key:
+            raise ValueError("GOOGLE_API_KEY is required for Google embeddings. " "Set via environment variable or Infisical.")
+
+        # Create Google embeddings with task type optimization
+        embeddings = GoogleGenerativeAIEmbeddings(
+            model=model_name,
+            google_api_key=google_api_key,
+            task_type=task_type or "RETRIEVAL_DOCUMENT",
+        )
+
+        logger.info(
+            "Initialized Google Gemini embeddings",
+            extra={"model": model_name, "task_type": task_type},
+        )
+
+        return embeddings
+
+    elif provider == "local":
+        try:
+            from sentence_transformers import SentenceTransformer
+
+            class SentenceTransformerEmbeddings(Embeddings):
+                """Wrapper to make SentenceTransformer compatible with LangChain Embeddings interface."""
+
+                def __init__(self, model_name: str):
+                    self.model = SentenceTransformer(model_name)
+
+                def embed_documents(self, texts: list[str]) -> list[list[float]]:
+                    """Embed multiple documents."""
+                    embeddings = self.model.encode(texts)
+                    return embeddings.tolist()
+
+                def embed_query(self, text: str) -> list[float]:
+                    """Embed a single query."""
+                    embedding = self.model.encode(text)
+                    return embedding.tolist()
+
+            embeddings = SentenceTransformerEmbeddings(model_name)
+
+            logger.info(
+                "Initialized local sentence-transformers embeddings",
+                extra={"model": model_name},
+            )
+
+            return embeddings
+
+        except ImportError:
+            raise ImportError(
+                "sentence-transformers is required for local embeddings. " "Install with: pip install sentence-transformers"
+            )
+
+    else:
+        raise ValueError(f"Unsupported embedding provider: {provider}. " f"Supported providers: 'google', 'local'")
 
 
 class ContextReference(BaseModel):
@@ -66,30 +153,73 @@ class DynamicContextLoader:
         qdrant_port: int | None = None,
         collection_name: str | None = None,
         embedding_model: str | None = None,
+        embedding_provider: str | None = None,
+        embedding_dimensions: int | None = None,
         cache_size: int | None = None,
     ):
         """
-        Initialize dynamic context loader.
+        Initialize dynamic context loader with encryption and retention support.
 
         Args:
             qdrant_url: Qdrant server URL (defaults to settings.qdrant_url)
             qdrant_port: Qdrant server port (defaults to settings.qdrant_port)
             collection_name: Name of Qdrant collection (defaults to settings.qdrant_collection_name)
-            embedding_model: SentenceTransformer model name (defaults to settings.embedding_model)
+            embedding_model: Model name (defaults to settings.embedding_model_name)
+            embedding_provider: "google" or "local" (defaults to settings.embedding_provider)
+            embedding_dimensions: Embedding dimensions (defaults to settings.embedding_dimensions)
             cache_size: LRU cache size for loaded contexts (defaults to settings.context_cache_size)
+
+        Note:
+            For regulated workloads (HIPAA, GDPR, etc.):
+            - Set enable_context_encryption=True in settings
+            - Configure retention period with context_retention_days
+            - For multi-tenant isolation, use enable_multi_tenant_isolation=True
+
+            Migration from sentence-transformers:
+            - Existing collections with different dimensions need recreation
+            - Google embeddings (768) vs sentence-transformers (384)
         """
         self.qdrant_url = qdrant_url or settings.qdrant_url
         self.qdrant_port = qdrant_port or settings.qdrant_port
         self.collection_name = collection_name or settings.qdrant_collection_name
-        self.embedding_model_name = embedding_model or settings.embedding_model
+
+        # Embedding configuration
+        self.embedding_provider = embedding_provider or settings.embedding_provider
+        # Support both new and legacy config parameter names
+        self.embedding_model_name = embedding_model or settings.embedding_model_name
+        self.embedding_dim = embedding_dimensions or settings.embedding_dimensions
+
         cache_size = cache_size or settings.context_cache_size
+
+        # Security & Compliance configuration
+        self.enable_encryption = settings.enable_context_encryption
+        self.retention_days = settings.context_retention_days
+        self.enable_auto_deletion = settings.enable_auto_deletion
+
+        # Initialize encryption if enabled
+        self.cipher: Optional[Fernet] = None
+        if self.enable_encryption:
+            if not settings.context_encryption_key:
+                raise ValueError(
+                    "CRITICAL: Context encryption enabled but no encryption key configured. "
+                    "Set CONTEXT_ENCRYPTION_KEY environment variable or configure via Infisical."
+                )
+            # Fernet requires base64-encoded 32-byte key
+            try:
+                self.cipher = Fernet(settings.context_encryption_key.encode())
+            except Exception as e:
+                raise ValueError(f"Invalid encryption key format: {e}. Generate with: Fernet.generate_key()")
 
         # Initialize Qdrant client
         self.client = QdrantClient(host=self.qdrant_url, port=self.qdrant_port)
 
-        # Initialize embedding model
-        self.embedder = SentenceTransformer(self.embedding_model_name)
-        self.embedding_dim = self.embedder.get_sentence_embedding_dimension()
+        # Initialize embeddings
+        self.embedder = _create_embeddings(
+            provider=self.embedding_provider,
+            model_name=self.embedding_model_name,
+            google_api_key=settings.google_api_key,
+            task_type=settings.embedding_task_type,
+        )
 
         # Create collection if it doesn't exist
         self._ensure_collection_exists()
@@ -102,10 +232,56 @@ class DynamicContextLoader:
             extra={
                 "qdrant_url": self.qdrant_url,
                 "collection": self.collection_name,
+                "embedding_provider": self.embedding_provider,
                 "embedding_model": self.embedding_model_name,
                 "embedding_dim": self.embedding_dim,
+                "encryption_enabled": self.enable_encryption,
+                "retention_days": self.retention_days,
+                "auto_deletion_enabled": self.enable_auto_deletion,
             },
         )
+
+    def _encrypt_content(self, content: str) -> str:
+        """
+        Encrypt content for storage (encryption-at-rest).
+
+        Args:
+            content: Plain text content
+
+        Returns:
+            Base64-encoded encrypted content
+        """
+        if not self.cipher:
+            return content
+
+        encrypted_bytes = self.cipher.encrypt(content.encode())
+        return base64.b64encode(encrypted_bytes).decode()
+
+    def _decrypt_content(self, encrypted_content: str) -> str:
+        """
+        Decrypt content from storage.
+
+        Args:
+            encrypted_content: Base64-encoded encrypted content
+
+        Returns:
+            Decrypted plain text
+        """
+        if not self.cipher:
+            return encrypted_content
+
+        try:
+            encrypted_bytes = base64.b64decode(encrypted_content.encode())
+            decrypted_bytes = self.cipher.decrypt(encrypted_bytes)
+            return decrypted_bytes.decode()
+        except Exception as e:
+            logger.error(f"Decryption failed: {e}", exc_info=True)
+            raise ValueError(f"Failed to decrypt content: {e}")
+
+    def _calculate_expiry_timestamp(self) -> float:
+        """Calculate expiry timestamp based on retention policy."""
+        expiry_date = datetime.now(timezone.utc) + timedelta(days=self.retention_days)
+        return expiry_date.timestamp()
 
     def _ensure_collection_exists(self):
         """Create Qdrant collection if it doesn't exist."""
@@ -148,20 +324,30 @@ class DynamicContextLoader:
             span.set_attribute("ref_type", ref_type)
 
             try:
-                # Generate embedding
-                embedding = await asyncio.to_thread(self.embedder.encode, content)
+                # Generate embedding using LangChain Embeddings interface
+                embedding = await asyncio.to_thread(self.embedder.embed_query, content)
 
-                # Create point
+                # Encrypt content if encryption is enabled
+                stored_content = self._encrypt_content(content) if self.enable_encryption else content
+
+                # Calculate expiry timestamp for retention
+                created_at = datetime.now(timezone.utc).timestamp()
+                expires_at = self._calculate_expiry_timestamp()
+
+                # Create point with encryption and retention support
                 point = PointStruct(
                     id=ref_id,
-                    vector=embedding.tolist(),
+                    vector=embedding,  # Already a list from embed_query
                     payload={
                         "ref_id": ref_id,
                         "ref_type": ref_type,
                         "summary": summary,
-                        "content": content,  # Store full content for retrieval
+                        "content": stored_content,  # Encrypted if encryption enabled
                         "token_count": count_tokens(content),
                         "metadata": metadata or {},
+                        "created_at": created_at,  # For retention tracking
+                        "expires_at": expires_at,  # For auto-deletion
+                        "encrypted": self.enable_encryption,  # Flag for decryption
                     },
                 )
 
@@ -202,8 +388,8 @@ class DynamicContextLoader:
             span.set_attribute("top_k", top_k)
 
             try:
-                # Generate query embedding
-                query_embedding = await asyncio.to_thread(self.embedder.encode, query)
+                # Generate query embedding using LangChain Embeddings interface
+                query_embedding = await asyncio.to_thread(self.embedder.embed_query, query)
 
                 # Build filter
                 search_filter = None
@@ -214,7 +400,7 @@ class DynamicContextLoader:
                 results = await asyncio.to_thread(
                     self.client.search,
                     collection_name=self.collection_name,
-                    query_vector=query_embedding.tolist(),
+                    query_vector=query_embedding,  # Already a list from embed_query
                     limit=top_k,
                     query_filter=search_filter,
                     score_threshold=min_score,
@@ -356,9 +542,14 @@ class DynamicContextLoader:
                 metadata=payload.get("metadata", {}),
             )
 
+            # Decrypt content if it was encrypted
+            stored_content = payload["content"]
+            is_encrypted = payload.get("encrypted", False)
+            content = self._decrypt_content(stored_content) if is_encrypted else stored_content
+
             loaded = LoadedContext(
                 reference=reference,
-                content=payload["content"],
+                content=content,  # Decrypted content
                 token_count=payload["token_count"],
                 loaded_at=time.time(),
             )
@@ -372,9 +563,7 @@ class DynamicContextLoader:
             metrics.failed_calls.add(1, {"operation": "load_context", "error": type(e).__name__})
             raise
 
-    async def load_batch(
-        self, references: list[ContextReference], max_tokens: int = 4000
-    ) -> list[LoadedContext]:
+    async def load_batch(self, references: list[ContextReference], max_tokens: int = 4000) -> list[LoadedContext]:
         """
         Load multiple contexts up to token limit.
 

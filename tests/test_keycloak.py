@@ -4,7 +4,7 @@ Tests KeycloakClient, TokenValidator, and role synchronization.
 Uses mocking to avoid requiring live Keycloak instance.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -264,8 +264,8 @@ class TestTokenValidator:
             "preferred_username": "alice",
             "email": "alice@acme.com",
             "aud": "test-client",
-            "exp": datetime.utcnow() + timedelta(hours=1),
-            "iat": datetime.utcnow(),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iat": datetime.now(timezone.utc),
         }
 
         private_key = serialization.load_pem_private_key(private_pem, password=None)
@@ -296,8 +296,8 @@ class TestTokenValidator:
         payload = {
             "sub": "user-id-123",
             "aud": "test-client",
-            "exp": datetime.utcnow() - timedelta(hours=1),  # Expired
-            "iat": datetime.utcnow() - timedelta(hours=2),
+            "exp": datetime.now(timezone.utc) - timedelta(hours=1),  # Expired
+            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
         }
 
         private_key = serialization.load_pem_private_key(private_pem, password=None)
@@ -335,7 +335,7 @@ class TestTokenValidator:
         payload = {
             "sub": "user-id-123",
             "aud": "test-client",
-            "exp": datetime.utcnow() + timedelta(hours=1),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
         }
 
         private_key = serialization.load_pem_private_key(private_pem, password=None)

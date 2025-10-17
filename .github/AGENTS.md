@@ -682,12 +682,12 @@ async def tool_node(state: AgentState):
 - **LangGraph Documentation**: https://langchain-ai.github.io/langgraph/
 - **Pydantic AI Documentation**: https://ai.pydantic.dev/
 - **LiteLLM Documentation**: https://docs.litellm.ai/
-- **Mintlify Documentation**: [docs/mint.json](docs/mint.json) - Comprehensive documentation with 100% coverage
+- **Mintlify Documentation**: [../docs/mint.json](../docs/mint.json) - Comprehensive documentation with 100% coverage
 - **Project Guides**:
-  - [Pydantic AI Integration](docs/architecture/adr-0005-pydantic-ai-integration.mdx)
-  - [Multi-LLM Setup Guide](docs/guides/multi-llm-setup.mdx)
-  - [Testing Guide](docs/advanced/testing.mdx)
-  - [Development Setup](docs/advanced/development-setup.mdx)
+  - [Pydantic AI Integration](../docs/architecture/adr-0005-pydantic-ai-integration.mdx)
+  - [Multi-LLM Setup Guide](../docs/guides/multi-llm-setup.mdx)
+  - [Testing Guide](../docs/advanced/testing.mdx)
+  - [Development Setup](../docs/advanced/development-setup.mdx)
 
 ---
 

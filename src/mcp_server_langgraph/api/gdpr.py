@@ -9,7 +9,7 @@ Implements data subject rights under GDPR:
 - Article 21: Right to Object (Consent Management)
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, Optional
 
@@ -198,7 +198,7 @@ async def export_user_data(
         )
 
         # Return as downloadable file
-        filename = f"user_data_{username}_{datetime.utcnow().strftime('%Y%m%d')}.{format}"
+        filename = f"user_data_{username}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.{format}"
         headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
 
         return Response(content=data_bytes, media_type=content_type, headers=headers)
@@ -249,7 +249,7 @@ async def update_user_profile(
             "user_id": user_id,
             "username": username,
             **update_data,
-            "updated_at": datetime.utcnow().isoformat() + "Z",
+            "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
 
         logger.info("User profile updated successfully", extra={"user_id": user_id})
@@ -369,7 +369,7 @@ async def update_consent(
         user_id = request.state.user.get("user_id")
 
         # Capture metadata
-        consent.timestamp = datetime.utcnow().isoformat() + "Z"
+        consent.timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         consent.ip_address = request.client.host if request.client else "unknown"
         consent.user_agent = request.headers.get("user-agent", "unknown")
 

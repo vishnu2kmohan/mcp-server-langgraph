@@ -3,7 +3,7 @@
 Tests InMemoryUserProvider, KeycloakUserProvider, and the factory function.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import jwt
@@ -177,8 +177,8 @@ class TestInMemoryUserProvider:
         token = provider.create_token("alice", expires_in=7200)
 
         payload = jwt.decode(token, "test-secret", algorithms=["HS256"])
-        exp = datetime.utcfromtimestamp(payload["exp"])
-        iat = datetime.utcfromtimestamp(payload["iat"])
+        exp = datetime.fromtimestamp(payload["exp"], timezone.utc)
+        iat = datetime.fromtimestamp(payload["iat"], timezone.utc)
 
         time_diff = (exp - iat).total_seconds()
         assert 7190 <= time_diff <= 7210  # Allow small time drift
@@ -204,8 +204,8 @@ class TestInMemoryUserProvider:
         payload = {
             "sub": "user:alice",
             "username": "alice",
-            "exp": datetime.utcnow() - timedelta(hours=1),
-            "iat": datetime.utcnow() - timedelta(hours=2),
+            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
+            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
         }
         expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
 

@@ -7,24 +7,24 @@ Looking for help with MCP Server with LangGraph? You're in the right place!
 Before asking for help, please check our comprehensive documentation:
 
 ### Getting Started
-- [README.md](../README.md) - Project overview and quick start
-- [DEVELOPMENT.md](../DEVELOPMENT.md) - Developer setup guide
+- [../README.md](../../README.md) - Project overview and quick start
+- [Developer Onboarding](../DEVELOPER_ONBOARDING.md) - Developer setup guide
 - [.env.example](../.env.example) - Configuration reference
 
 ### Deployment & Operations
-- [PRODUCTION_DEPLOYMENT.md](../PRODUCTION_DEPLOYMENT.md) - Production deployment guide
-- [KUBERNETES_DEPLOYMENT.md](../KUBERNETES_DEPLOYMENT.md) - Kubernetes setup
-- [KONG_INTEGRATION.md](../KONG_INTEGRATION.md) - API Gateway configuration
+- [Production Checklist](../docs/deployment/production-checklist.mdx) - Production deployment guide
+- [Kubernetes Deployment](../docs/deployment/kubernetes.mdx) - Kubernetes setup
+- [Kong Gateway](../integrations/kong.md) - API Gateway configuration
 
 ### Features & Guides
-- [LITELLM_GUIDE.md](../LITELLM_GUIDE.md) - Multi-LLM provider setup
-- [GEMINI_SETUP.md](../GEMINI_SETUP.md) - Google Gemini configuration
-- [README_OPENFGA_INFISICAL.md](../README_OPENFGA_INFISICAL.md) - Auth & secrets
-- [MCP_REGISTRY.md](../MCP_REGISTRY.md) - MCP registry integration
+- [LiteLLM Setup](../integrations/litellm.md) - Multi-LLM provider setup
+- [Google Gemini](../integrations/gemini.md) - Google Gemini configuration
+- [OpenFGA & Infisical](../integrations/openfga-infisical.md) - Auth & secrets
+- [MCP Registry](../reference/mcp-registry.md) - MCP registry integration
 
 ### Testing & Security
-- [TESTING.md](../TESTING.md) - Testing guide
-- [SECURITY_AUDIT.md](../SECURITY_AUDIT.md) - Security checklist
+- [Testing Guide](../TESTING.md) - Testing strategy and guide
+- [Security Audit](../archive/SECURITY_AUDIT.md) - Security checklist
 
 ## Getting Help
 
@@ -123,7 +123,7 @@ For commercial support, training, or consulting:
 ## Additional Resources
 
 - **License**: [MIT License](../LICENSE)
-- **Changelog**: [CHANGELOG.md](../CHANGELOG.md)
+- **Changelog**: [../CHANGELOG.md](../../CHANGELOG.md)
 - **Code of Conduct**: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) _(if you add one)_
 
 ---

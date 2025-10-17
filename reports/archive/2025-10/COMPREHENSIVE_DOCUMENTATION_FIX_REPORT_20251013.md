@@ -159,7 +159,7 @@ asyncio.run(test_agent())
 **Files Updated**:
 1. `docs/getting-started/quickstart.mdx` (1 replacement)
 2. `docs/getting-started/installation.mdx` (1 replacement)
-3. `docs/deployment/docker.mdx` (34 replacements + note added)
+3. `../docs/deployment/docker.mdx` (34 replacements + note added)
 4. `docs/advanced/development-setup.mdx` (18 replacements)
 5. `docs/advanced/contributing.mdx` (5 replacements)
 6. `docs/getting-started/architecture.mdx` (1 replacement)
@@ -172,8 +172,8 @@ asyncio.run(test_agent())
 13. `docs/guides/redis-sessions.mdx` (5 replacements)
 14. `docs/guides/local-models.mdx` (1 replacement)
 15. `docs/guides/observability.mdx` (2 replacements)
-16. `docs/deployment/kong-gateway.mdx` (3 replacements)
-17. `docs/deployment/overview.mdx` (1 replacement)
+16. `../docs/deployment/kong-gateway.mdx` (3 replacements)
+17. `../docs/deployment/overview.mdx` (1 replacement)
 18. `docs/advanced/troubleshooting.mdx` (1 replacement)
 
 **Compatibility Note Added** (docker.mdx):
@@ -211,18 +211,18 @@ asyncio.run(test_agent())
    - **Total**: 1 fix
 
 ### Deployment Documentation (4 files)
-4. **docs/deployment/docker.mdx**
+4. **../docs/deployment/docker.mdx**
    - ✅ docker-compose → docker compose (34 replacements)
    - ✅ Added v1/v2 compatibility note
    - **Total**: 35 changes
 
-5. **docs/deployment/kong-gateway.mdx**
+5. **../docs/deployment/kong-gateway.mdx**
    - ✅ docker-compose → docker compose (3 replacements)
 
-6. **docs/deployment/overview.mdx**
+6. **../docs/deployment/overview.mdx**
    - ✅ docker-compose → docker compose (1 replacement)
 
-7. **docs/deployment/production.mdx**
+7. **../docs/deployment/production.mdx**
    - ℹ️ No changes needed
 
 ### Advanced Documentation (3 files)

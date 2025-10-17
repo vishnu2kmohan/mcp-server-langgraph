@@ -13,10 +13,10 @@ This document summarizes all fixes applied to resolve deployment configuration i
 
 **Files Modified**:
 - `.gitlab-ci.yml` (lines 27, 41)
-- `docs/deployment/platform/ci-cd.mdx` (3 locations)
-- `docs/deployment/langgraph-platform.mdx` (1 location)
-- `docs/deployment/docker.mdx` (1 location)
-- `docs/deployment/langgraph-platform.md` (1 location)
+- `../docs/deployment/platform/ci-cd.mdx` (3 locations)
+- `../docs/deployment/langgraph-platform.mdx` (1 location)
+- `../docs/deployment/docker.mdx` (1 location)
+- `../docs/deployment/langgraph-platform.md` (1 location)
 - `docs/archive/SECURITY_AUDIT.md` (1 location)
 - `docs/archive/security-review.md` (1 location)
 
@@ -183,7 +183,7 @@ openfga_api_url: "http://{{ .Release.Name }}-openfga:{{ .Values.openfga.service.
 
 ### ✅ Fix #6: Model Configuration Strategy Documentation
 
-**File Created**: `docs/deployment/model-configuration.md`
+**File Created**: `../docs/deployment/model-configuration.md`
 
 **Contents**:
 - Environment-specific model defaults (dev vs production)
@@ -337,7 +337,7 @@ helm rollback langgraph-agent -n langgraph-agent
 ### Not Fixed (By Design)
 1. **Model Configuration Mismatch**: Dev uses Gemini, Production uses Claude
    - **Status**: DOCUMENTED (not a bug, intentional cost optimization)
-   - **Reference**: `docs/deployment/model-configuration.md`
+   - **Reference**: `../docs/deployment/model-configuration.md`
 
 2. **PostgreSQL Version Differences**: Docker Compose uses Alpine, Helm uses Bitnami
    - **Status**: ACCEPTABLE (different use cases)
@@ -360,13 +360,13 @@ helm rollback langgraph-agent -n langgraph-agent
 | `deployments/helm/langgraph-agent/templates/configmap.yaml` | ~40 | Modified |
 | `package.json` | 1 | Modified |
 | `.env.example` | 1 | Modified |
-| `docs/deployment/platform/ci-cd.mdx` | 3 | Modified |
-| `docs/deployment/langgraph-platform.mdx` | 1 | Modified |
-| `docs/deployment/docker.mdx` | 1 | Modified |
-| `docs/deployment/langgraph-platform.md` | 1 | Modified |
+| `../docs/deployment/platform/ci-cd.mdx` | 3 | Modified |
+| `../docs/deployment/langgraph-platform.mdx` | 1 | Modified |
+| `../docs/deployment/docker.mdx` | 1 | Modified |
+| `../docs/deployment/langgraph-platform.md` | 1 | Modified |
 | `docs/archive/SECURITY_AUDIT.md` | 1 | Modified |
 | `docs/archive/security-review.md` | 1 | Modified |
-| `docs/deployment/model-configuration.md` | 684 | **NEW** |
+| `../docs/deployment/model-configuration.md` | 684 | **NEW** |
 | `scripts/validate-deployments.sh` | 357 | **NEW** |
 | `DEPLOYMENT_ALIGNMENT_ANALYSIS.md` | 1,139 | **NEW** |
 
@@ -422,7 +422,7 @@ helm rollback langgraph-agent -n langgraph-agent
 
 **Questions?** Refer to:
 - [Deployment Alignment Analysis](DEPLOYMENT_ALIGNMENT_ANALYSIS.md) - Full analysis report
-- [Model Configuration Guide](docs/deployment/model-configuration.md) - LLM strategy
+- [Model Configuration Guide](../docs/deployment/model-configuration.md) - LLM strategy
 - [Validation Script](scripts/validate-deployments.sh) - Automated checks
 
 **Report Issues**:

@@ -74,7 +74,7 @@ Claude Code works best with incremental phases:
 - Edge case coverage
 
 **Phase 3**: Documentation
-- Update CHANGELOG.md
+- Update ../CHANGELOG.md
 - Add inline documentation
 - Create usage examples
 
@@ -122,7 +122,7 @@ Claude Code generates documentation with:
 
 - **Docstrings**: Comprehensive for all public APIs
 - **Type hints**: Full type annotation throughout
-- **CHANGELOG.md**: Detailed with file references and line numbers
+- **../CHANGELOG.md**: Detailed with file references and line numbers
 - **README updates**: Keep main README synchronized
 
 ## Recent Implementations by Claude Code
@@ -136,7 +136,7 @@ Claude Code generates documentation with:
 - Comprehensive navigation structure with 4 main tabs
 
 **Files Updated**:
-- `docs/mint.json` - Main configuration
+- `../docs/mint.json` - Main configuration
 - `.mintlifyignore` - Enhanced ignore patterns
 - Multiple `.mdx` files - Fixed `<` character escaping
 
@@ -214,7 +214,7 @@ claude
 2. Profile photo upload to S3
 3. Email verification workflow
 4. Comprehensive tests
-5. Update CHANGELOG.md"
+5. Update ../CHANGELOG.md"
 ```
 
 ### Reviewing Claude Code's Work
@@ -298,7 +298,7 @@ Claude Code generates production-quality code, but review:
 
 ### 5. Maintain Documentation
 After each Claude Code session:
-- Update CHANGELOG.md (Claude Code does this automatically)
+- Update ../CHANGELOG.md (Claude Code does this automatically)
 - Review generated documentation
 - Verify README is current
 
@@ -322,14 +322,14 @@ User: "Implement automatic JWT token rotation with the following:
 3. Update session with new tokens
 4. Add metrics for rotation events
 5. Comprehensive tests
-6. Update CHANGELOG.md"
+6. Update ../CHANGELOG.md"
 
 Claude Code Response:
 ✅ Created src/mcp_server_langgraph/auth/token_rotation.py (250 lines)
 ✅ Updated src/mcp_server_langgraph/auth/middleware.py (+80 lines)
 ✅ Added rotation metrics to src/mcp_server_langgraph/auth/metrics.py (+15 lines)
 ✅ Created tests/test_token_rotation.py (350 lines, 18 tests)
-✅ Updated CHANGELOG.md with implementation details
+✅ Updated ../CHANGELOG.md with implementation details
 ✅ All 18 tests passing
 
 Summary:
@@ -361,7 +361,7 @@ Summary:
 1. ✅ **Clear requirements**: Provide detailed, specific requirements
 2. ✅ **Incremental development**: Break large tasks into phases
 3. ✅ **Comprehensive tests**: Always request full test coverage
-4. ✅ **Documentation**: Update CHANGELOG.md and docstrings
+4. ✅ **Documentation**: Update ../CHANGELOG.md and docstrings
 5. ✅ **Review**: Review generated code before deployment
 6. ✅ **Iterate**: Use Claude Code for refinements and fixes
 7. ✅ **Test-driven**: Run tests early and often
@@ -585,11 +585,11 @@ When using extended thinking, Claude Code will:
 ## Resources
 
 - **Claude Code Documentation**: https://docs.claude.com/claude-code
-- **Project README**: [README.md](README.md)
-- **Mintlify Documentation**: [docs/mint.json](docs/mint.json) - Comprehensive docs with 100% coverage
-- **Testing Guide**: [docs/advanced/testing.mdx](docs/advanced/testing.mdx)
-- **Development Guide**: [docs/advanced/development-setup.mdx](docs/advanced/development-setup.mdx)
-- **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
+- **Project README**: [../README.md](../README.md)
+- **Mintlify Documentation**: [../docs/mint.json](../docs/mint.json) - Comprehensive docs with 100% coverage
+- **Testing Guide**: [../docs/advanced/testing.mdx](../docs/advanced/testing.mdx)
+- **Development Guide**: [../docs/advanced/development-setup.mdx](../docs/advanced/development-setup.mdx)
+- **CHANGELOG**: [../CHANGELOG.md](../CHANGELOG.md)
 
 ## Support
 

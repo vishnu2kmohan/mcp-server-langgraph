@@ -36,7 +36,7 @@ This codebase is a **world-class example** of an opinionated MCP server with Lan
 ### 3. **Documentation** (9/10)
 - ✅ Extensive README with architecture diagrams
 - ✅ Development guide (DEVELOPMENT.md)
-- ✅ Security audit checklist (SECURITY_AUDIT.md)
+- ✅ Security audit checklist (../archive/SECURITY_AUDIT.md)
 - ✅ Production deployment guide
 - ✅ API documentation (OpenAPI/Swagger)
 - ✅ AI assistant instructions for 6+ tools

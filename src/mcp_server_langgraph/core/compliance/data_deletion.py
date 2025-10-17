@@ -2,7 +2,7 @@
 GDPR Data Deletion Service - Article 17 (Right to Erasure)
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -188,7 +188,7 @@ class DataDeletionService:
             )
 
             success = len(errors) == 0
-            deletion_timestamp = datetime.utcnow().isoformat() + "Z"
+            deletion_timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
             result = DeletionResult(
                 success=success,
@@ -324,7 +324,7 @@ class DataDeletionService:
         """
         # TODO: Integrate with audit log storage
         # For now, create a simple record
-        audit_record_id = f"deletion_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        audit_record_id = f"deletion_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
 
         logger.warning(
             "User account deletion audit record",
@@ -337,7 +337,7 @@ class DataDeletionService:
                 "reason": reason,
                 "deleted_items": deleted_items,
                 "errors_count": len(errors),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             },
         )
 

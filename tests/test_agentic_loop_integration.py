@@ -5,9 +5,10 @@ Tests the complete gather-action-verify-repeat cycle.
 These are integration tests that may require mocking but test full workflows.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from langchain_core.messages import HumanMessage
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from mcp_server_langgraph.core.agent import AgentState, create_agent_graph
 from mcp_server_langgraph.core.context_manager import ContextManager
@@ -18,9 +19,7 @@ from mcp_server_langgraph.llm.verifier import OutputVerifier, VerificationResult
 def mock_llm():
     """Create a mock LLM for testing."""
     llm = AsyncMock()
-    llm.ainvoke = AsyncMock(
-        return_value=MagicMock(content="This is a helpful response about Python.")
-    )
+    llm.ainvoke = AsyncMock(return_value=MagicMock(content="This is a helpful response about Python."))
     llm.invoke = MagicMock(return_value=MagicMock(content="This is a helpful response."))
     return llm
 
@@ -81,8 +80,8 @@ class TestAgenticLoopIntegration:
     @pytest.mark.asyncio
     async def test_basic_workflow_without_compaction_verification(self, mock_llm):
         """Test basic workflow when compaction and verification are disabled."""
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
-            with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
                 # Disable new features for baseline test
                 mock_settings.enable_context_compaction = False
                 mock_settings.enable_verification = False
@@ -99,7 +98,7 @@ class TestAgenticLoopIntegration:
                 }
 
                 # Run the graph
-                result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
                 # Should have completed
                 assert "messages" in result
@@ -109,9 +108,9 @@ class TestAgenticLoopIntegration:
     @pytest.mark.asyncio
     async def test_workflow_with_compaction_enabled(self, mock_llm, mock_context_manager):
         """Test workflow with context compaction enabled."""
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
-            with patch('mcp_server_langgraph.core.agent.ContextManager', return_value=mock_context_manager):
-                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_context_manager):
+                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
                     mock_settings.enable_context_compaction = True
                     mock_settings.enable_verification = False
 
@@ -124,7 +123,7 @@ class TestAgenticLoopIntegration:
                         "request_id": "test_123",
                     }
 
-                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
                     # Compaction should have been checked
                     mock_context_manager.needs_compaction.assert_called()
@@ -136,9 +135,9 @@ class TestAgenticLoopIntegration:
     @pytest.mark.asyncio
     async def test_workflow_with_verification_pass(self, mock_llm, mock_verifier_pass):
         """Test workflow with verification enabled (passes immediately)."""
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
-            with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier_pass):
-                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_pass):
+                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
                     mock_settings.enable_context_compaction = False
                     mock_settings.enable_verification = True
                     mock_settings.max_refinement_attempts = 3
@@ -152,7 +151,7 @@ class TestAgenticLoopIntegration:
                         "request_id": "test_123",
                     }
 
-                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
                     # Verification should have been called
                     mock_verifier_pass.verify_response.assert_called_once()
@@ -168,9 +167,9 @@ class TestAgenticLoopIntegration:
     @pytest.mark.asyncio
     async def test_workflow_with_verification_refinement(self, mock_llm, mock_verifier_fail):
         """Test workflow with verification enabled (requires refinement)."""
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
-            with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier_fail):
-                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_fail):
+                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
                     mock_settings.enable_context_compaction = False
                     mock_settings.enable_verification = True
                     mock_settings.max_refinement_attempts = 3
@@ -184,7 +183,7 @@ class TestAgenticLoopIntegration:
                         "request_id": "test_123",
                     }
 
-                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
                     # Verification should have been called TWICE (initial + refinement)
                     assert mock_verifier_fail.verify_response.call_count == 2
@@ -211,9 +210,9 @@ class TestAgenticLoopIntegration:
             )
         )
 
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
-            with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier):
-                with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
+                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
                     mock_settings.enable_context_compaction = False
                     mock_settings.enable_verification = True
                     mock_settings.max_refinement_attempts = 2  # Low limit for testing
@@ -227,7 +226,7 @@ class TestAgenticLoopIntegration:
                         "request_id": "test_123",
                     }
 
-                    result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
                     # Should have attempted max refinements
                     assert result.get("refinement_attempts") == 2
@@ -239,8 +238,9 @@ class TestAgenticLoopIntegration:
     def test_agent_state_structure(self):
         """Test that AgentState has all required fields."""
         # Import after potential patching
-        from mcp_server_langgraph.core.agent import AgentState
         from typing import get_type_hints
+
+        from mcp_server_langgraph.core.agent import AgentState
 
         # Check that AgentState has expected fields
         hints = get_type_hints(AgentState)
@@ -291,10 +291,10 @@ class TestAgenticLoopIntegration:
             )
         )
 
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config', return_value=mock_llm):
-            with patch('mcp_server_langgraph.core.agent.ContextManager', return_value=mock_manager):
-                with patch('mcp_server_langgraph.core.agent.OutputVerifier', return_value=mock_verifier):
-                    with patch('mcp_server_langgraph.core.agent.settings') as mock_settings:
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_manager):
+                with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
+                    with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
                         mock_settings.enable_context_compaction = True
                         mock_settings.enable_verification = True
                         mock_settings.max_refinement_attempts = 3
@@ -311,7 +311,7 @@ class TestAgenticLoopIntegration:
                             "request_id": "test_123",
                         }
 
-                        result = graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
                         # All features should have been used
                         mock_manager.needs_compaction.assert_called()
@@ -330,7 +330,7 @@ class TestAgentGraphStructure:
 
     def test_graph_has_all_nodes(self):
         """Test that graph contains all expected nodes."""
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config'):
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config"):
             graph = create_agent_graph()
 
             # Get compiled graph structure
@@ -339,7 +339,7 @@ class TestAgentGraphStructure:
 
     def test_graph_compiles_successfully(self):
         """Test that graph compiles without errors."""
-        with patch('mcp_server_langgraph.core.agent.create_llm_from_config'):
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config"):
             # Should not raise
             graph = create_agent_graph()
             assert graph is not None

@@ -149,5 +149,5 @@ response = await llm.ainvoke(messages)  # Works with any provider
 
 - [LiteLLM Documentation](https://docs.litellm.ai/)
 - [Supported Providers](https://docs.litellm.ai/docs/providers)
-- [LITELLM_GUIDE.md](../LITELLM_GUIDE.md)
+- [integrations/litellm.md](../integrations/litellm.md)
 - Related ADRs: [0005](0005-pydantic-ai-integration.md) (Pydantic AI uses LiteLLM)

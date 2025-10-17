@@ -2,7 +2,7 @@
 Health check endpoints for Kubernetes probes
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from fastapi import FastAPI, status
@@ -35,7 +35,7 @@ async def health_check():
     """
     return HealthResponse(
         status="healthy",
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         version=settings.service_version,
         checks={"application": "running"},
     )
@@ -99,7 +99,10 @@ async def readiness_check():
     return JSONResponse(
         status_code=http_status,
         content=HealthResponse(
-            status=response_status, timestamp=datetime.utcnow().isoformat(), version=settings.service_version, checks=checks
+            status=response_status,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            version=settings.service_version,
+            checks=checks,
         ).model_dump(),
     )
 
@@ -125,7 +128,7 @@ async def startup_check():
         checks["logging"] = {"status": "failed", "error": str(e)}
         return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"status": "starting", "checks": checks})
 
-    return {"status": "started", "timestamp": datetime.utcnow().isoformat(), "checks": checks}
+    return {"status": "started", "timestamp": datetime.now(timezone.utc).isoformat(), "checks": checks}
 
 
 @app.get("/metrics/prometheus")

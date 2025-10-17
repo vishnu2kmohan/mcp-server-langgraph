@@ -186,11 +186,11 @@ These files are version-controlled and provide:
 
 ### MCP Configuration
 
-Create `.cursor/mcp.json`:
+Create `.cursor/mcp.json` (Cursor supports `${workspaceFolder}` variables):
 ```json
 {
   "mcpServers": {
-    "mcp-server-langgraph": {
+    "langgraph-agent": {
       "command": "python",
       "args": [
         "-m",
@@ -198,11 +198,27 @@ Create `.cursor/mcp.json`:
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}/src"
-      }
+      },
+      "envFile": "${workspaceFolder}/.env"
+    },
+    "langgraph-agent-streamable": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_streamable"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "HOST": "0.0.0.0",
+        "PORT": "8000"
+      },
+      "envFile": "${workspaceFolder}/.env"
     }
   }
 }
 ```
+
+**Note**: The `.cursor/` directory is gitignored, so you need to create this configuration locally.
 
 ### Settings
 
@@ -249,7 +265,7 @@ See `.github/AGENTS.md` for complete guidance.
 
 ### General AI Tools Configuration
 
-Create `.ai/README.md`:
+Create `.../../README.md`:
 ```markdown
 # AI Coding Assistant Configuration
 
@@ -317,12 +333,29 @@ The project includes `.mcp/manifest.json` and `.mcp/registry.json` for MCP regis
 
 ### Client Configuration
 
+#### Quick Setup
+
+The project includes `.mcp.json.example` as a template. To set it up:
+
+```bash
+# Copy the example file
+cp .mcp.json.example .mcp.json
+
+# Edit with your absolute paths
+# Replace /absolute/path/to/mcp-server-langgraph with your actual project path
+nano .mcp.json  # or use your preferred editor
+```
+
+**Note**: `.mcp.json` is gitignored (user-specific configuration). Each developer needs to create their own based on where they cloned the repository.
+
+#### Manual Configuration
+
 For Claude Desktop or other MCP clients, add to your client config:
 
 ```json
 {
   "mcpServers": {
-    "mcp-server-langgraph": {
+    "langgraph-agent": {
       "command": "python",
       "args": [
         "-m",
@@ -330,11 +363,29 @@ For Claude Desktop or other MCP clients, add to your client config:
       ],
       "env": {
         "PYTHONPATH": "/absolute/path/to/project/src"
-      }
+      },
+      "envFile": "/absolute/path/to/project/.env"
+    },
+    "langgraph-agent-streamable": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_streamable"
+      ],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/project/src",
+        "HOST": "0.0.0.0",
+        "PORT": "8000"
+      },
+      "envFile": "/absolute/path/to/project/.env"
     }
   }
 }
 ```
+
+**Important**: Replace `/absolute/path/to/project` with your actual project directory. For example:
+- Linux/macOS: `/home/username/projects/mcp-server-langgraph`
+- Windows: `C:/Users/username/projects/mcp-server-langgraph`
 
 ---
 
@@ -445,13 +496,13 @@ When adding IDE configurations:
 3. **Do add** examples for new IDE setup
 4. **Do update** this guide if project structure changes
 
-See `.github/CONTRIBUTING.md` for contribution guidelines.
+See `../../.github/CONTRIBUTING.md` for contribution guidelines.
 
 ---
 
 ## References
 
-- **Project Documentation**: `docs/README.md`
+- **Project Documentation**: `do../../README.md`
 - **AI Assistant Guidance**: `.github/CLAUDE.md`, `.github/AGENTS.md`
 - **Development Guide**: `docs/development/development.md`
 - **Testing Guide**: `docs/development/testing.md`

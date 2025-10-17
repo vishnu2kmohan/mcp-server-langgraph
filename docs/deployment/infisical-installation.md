@@ -451,9 +451,9 @@ A: Yes. Infisical takes precedence; missing secrets fall back to environment.
 
 ## Related Documentation
 
-- [Production Deployment Guide](production.md)
+- [Production Deployment Guide](production-checklist.mdx)
 - [Docker Deployment](../docker/README.md)
-- [Kubernetes Deployment](kubernetes.md)
+- [Kubernetes Deployment](kubernetes.mdx)
 - [Environment Configuration](../../.env.example)
 - [Security Best Practices](../../.github/SECURITY.md)
 

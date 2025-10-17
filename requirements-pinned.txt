@@ -7,7 +7,7 @@ langgraph==0.6.10
 langchain-core==0.3.79
 
 # LiteLLM for multi-provider LLM support
-litellm==1.52.3
+litellm==1.78.0
 
 # MCP Server
 mcp==1.1.2

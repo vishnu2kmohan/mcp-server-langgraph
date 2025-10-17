@@ -8,7 +8,7 @@ Enables switching between different user management systems:
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import jwt
@@ -335,8 +335,8 @@ class InMemoryUserProvider(UserProvider):
             "username": username,
             "email": user["email"],
             "roles": user["roles"],
-            "exp": datetime.utcnow() + timedelta(seconds=expires_in),
-            "iat": datetime.utcnow(),
+            "exp": datetime.now(timezone.utc) + timedelta(seconds=expires_in),
+            "iat": datetime.now(timezone.utc),
         }
 
         token = jwt.encode(payload, self.secret_key, algorithm="HS256")

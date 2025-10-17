@@ -218,5 +218,5 @@ If issue persists after 30 minutes:
 ## References
 
 - [Keycloak Documentation](https://www.keycloak.org/documentation)
-- [Deployment Configuration](../../deployments/kubernetes/base/keycloak-deployment.yaml)
+- [Deployment Configuration](../deployments/kubernetes/base/keycloak-deployment.yaml)
 - [Integration Guide](../integrations/keycloak.md)

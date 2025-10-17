@@ -6,7 +6,7 @@ Supports multiple authentication flows, token verification, and role/group mappi
 to OpenFGA for fine-grained authorization.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -108,7 +108,7 @@ class TokenValidator:
         with tracer.start_as_current_span("keycloak.get_jwks"):
             # Check cache
             if not force_refresh and self._jwks_cache and self._jwks_cache_time:
-                if datetime.utcnow() - self._jwks_cache_time < self._cache_ttl:
+                if datetime.now(timezone.utc) - self._jwks_cache_time < self._cache_ttl:
                     logger.debug("Using cached JWKS")
                     return self._jwks_cache
 
@@ -121,7 +121,7 @@ class TokenValidator:
 
                     # Cache the result
                     self._jwks_cache = jwks
-                    self._jwks_cache_time = datetime.utcnow()
+                    self._jwks_cache_time = datetime.now(timezone.utc)
 
                     logger.info("JWKS fetched and cached", extra={"keys_count": len(jwks.get("keys", []))})
                     return jwks
@@ -385,7 +385,7 @@ class KeycloakClient:
         """
         # Check if we have a valid cached token
         if self._admin_token and self._admin_token_expiry:
-            if datetime.utcnow() < self._admin_token_expiry - timedelta(minutes=1):
+            if datetime.now(timezone.utc) < self._admin_token_expiry - timedelta(minutes=1):
                 return self._admin_token
 
         # Get new admin token
@@ -408,7 +408,7 @@ class KeycloakClient:
                     tokens = response.json()
                     self._admin_token = tokens["access_token"]
                     expires_in = tokens.get("expires_in", 300)  # Default 5 min
-                    self._admin_token_expiry = datetime.utcnow() + timedelta(seconds=expires_in)
+                    self._admin_token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
                     logger.info("Admin token obtained")
                     return self._admin_token

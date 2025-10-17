@@ -41,10 +41,10 @@ All Anthropic best practices enhancements have been fully implemented:
 - ✅ ADR-0023: Anthropic Tool Design Best Practices
 - ✅ ADR-0024: Agentic Loop Implementation
 - ✅ ADR-0025: Anthropic Best Practices - Advanced Enhancements
-- ✅ Updated adr/README.md with new entries
+- ✅ Updated ../adr/README.md with new entries
 
 #### **Guides & Examples**
-- ✅ `examples/README.md` - Comprehensive examples guide (350+ lines)
+- ✅ `../examples/README.md` - Comprehensive examples guide (350+ lines)
 - ✅ `examples/dynamic_context_usage.py` - JIT context loading demos (280 lines)
 - ✅ `examples/parallel_execution_demo.py` - Parallel execution demos (370 lines)
 - ✅ `examples/llm_extraction_demo.py` - Note-taking demos (400 lines)
@@ -93,7 +93,7 @@ Four comprehensive test files created (~1,840 lines total):
 - .env.example - Documented all new variables
 - pyproject.toml - Added new dependencies
 - README.md - Updated with new features
-- adr/README.md - Added new ADRs
+- ../adr/README.md - Added new ADRs
 
 ### Total Lines of Code
 - Core implementation: ~1,200 lines
@@ -233,10 +233,10 @@ ENABLE_LLM_EXTRACTION=false  # Set true to enable
 
 ## 📚 References
 
-- [ADR-0023: Tool Design Best Practices](adr/0023-anthropic-tool-design-best-practices.md)
-- [ADR-0024: Agentic Loop Implementation](adr/0024-agentic-loop-implementation.md)
-- [ADR-0025: Advanced Enhancements](adr/0025-anthropic-best-practices-enhancements.md)
-- [Examples README](examples/README.md)
+- [ADR-0023: Tool Design Best Practices](../adr/0023-anthropic-tool-design-best-practices.md)
+- [ADR-0024: Agentic Loop Implementation](../adr/0024-agentic-loop-implementation.md)
+- [ADR-0025: Advanced Enhancements](../adr/0025-anthropic-best-practices-enhancements.md)
+- [Examples README](../examples/README.md)
 - [Main README](README.md)
 
 ## 🎉 Success Criteria

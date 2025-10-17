@@ -32,12 +32,12 @@
 **Impact**: Latest architecture decision not visible in published docs
 
 **Details**:
-- Source file EXISTS: `/adr/0025-anthropic-best-practices-enhancements.md` (414 lines)
+- Source file EXISTS: `/../adr/0025-anthropic-best-practices-enhancements.md` (414 lines)
 - Mintlify file MISSING: `/docs/architecture/adr-0025-anthropic-best-practices-enhancements.mdx`
-- Referenced in: `adr/README.md` (line 92), `README.md` (line 103, 186), `examples/README.md` (line 388)
+- Referenced in: `../adr/README.md` (line 92), `README.md` (line 103, 186), `../examples/README.md` (line 388)
 
 **Fix Required**:
-1. Convert `/adr/0025-anthropic-best-practices-enhancements.md` to MDX format
+1. Convert `/../adr/0025-anthropic-best-practices-enhancements.md` to MDX format
 2. Place in `/docs/architecture/adr-0025-anthropic-best-practices-enhancements.mdx`
 3. Update `docs/mint.json` navigation (see Issue #3 below)
 
@@ -160,11 +160,11 @@ And:
 **Status**: A comprehensive audit from earlier today (DOCUMENTATION_AUDIT_REPORT_20251017.md) identified **26+ broken links** in README.md
 
 **Most Critical Broken Links**:
-- Line 5: `docs/deployment/production.md` → should be `docs/deployment/production-checklist.mdx`
+- Line 5: `../docs/deployment/production.md` → should be `../docs/deployment/production-checklist.mdx`
 - Line 141: `docs/DEPLOYMENT.md` → should be `docs-internal/DEPLOYMENT.md`
 - Line 144: `docs/MUTATION_TESTING.md` → should be `docs-internal/MUTATION_TESTING.md`
 - Line 151: `docs/development/ci-cd.md` → should be `docs/reference/development/ci-cd.md`
-- Lines 156-161: Multiple ADR links point to `docs/adr/*.md` → should be `adr/*.md`
+- Lines 156-161: Multiple ADR links point to `docs/../adr/*.md` → should be `../adr/*.md`
 
 **Fix Required**: See detailed link fix table in `/DOCUMENTATION_AUDIT_REPORT_20251017.md` lines 278-303
 
@@ -177,8 +177,8 @@ And:
 **Impact**: Documentation states outdated ADR count
 
 **Current State**:
-- Actual ADRs: 25 (0001-0025 in `/adr/` directory)
-- adr/README.md: Lists 25 ADRs (correct)
+- Actual ADRs: 25 (0001-0025 in `/../adr/` directory)
+- ../adr/README.md: Lists 25 ADRs (correct)
 - README.md: Multiple references need updating
 - docs/mint.json: References 24 ADRs (missing ADR-0025)
 
@@ -193,8 +193,8 @@ And:
 **Impact**: Important guide referenced but not easily discoverable
 
 **Details**:
-- File EXISTS: `/docs/AGENTIC_LOOP_GUIDE.md` (23K)
-- Referenced in: `examples/README.md`, `adr/0025-anthropic-best-practices-enhancements.md`
+- File EXISTS: `/../docs-internal/AGENTIC_LOOP_GUIDE.md` (23K)
+- Referenced in: `../examples/README.md`, `../adr/0025-anthropic-best-practices-enhancements.md`
 - NOT in: README.md main documentation links, docs/README.md index
 
 **Fix Required**:
@@ -211,8 +211,8 @@ And:
 **Impact**: 40-page comprehensive guide not linked from main docs
 
 **Details**:
-- File EXISTS: `/docs/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN.md` (57K, 40+ pages)
-- Referenced in: `adr/0025-anthropic-best-practices-enhancements.md`, `examples/README.md`
+- File EXISTS: `/reports/ANTHROPIC_BEST_PRACTICES_ENHANCEMENT_PLAN_20251017.md` (57K, 40+ pages)
+- Referenced in: `../adr/0025-anthropic-best-practices-enhancements.md`, `../examples/README.md`
 - NOT in: README.md, docs/README.md index
 
 **Fix Required**:
@@ -248,7 +248,7 @@ And:
 ```
 /docs/                   # Mintlify user-facing docs (.mdx)
 /docs-internal/          # Internal development docs (.md)
-/adr/                    # Source ADRs (.md)
+/../adr/                    # Source ADRs (.md)
 /integrations/           # Integration guides (.md, root level)
 /reference/              # Reference materials (.md, root level)
 /reports/                # Historical reports
@@ -275,7 +275,7 @@ And:
 **Status**: ✅ EXCELLENT
 
 **Details**:
-- `/examples/README.md` - 428 lines, comprehensive guide
+- `/../examples/README.md` - 428 lines, comprehensive guide
 - Documents all Anthropic best practices examples
 - Clear sections, troubleshooting, configuration
 - Links to all relevant ADRs and documentation
@@ -340,7 +340,7 @@ See `/DOCUMENTATION_AUDIT_REPORT_20251017.md` for complete details on:
 - docs/architecture/adr-0024-agentic-loop-implementation.mdx
 - docs/getting-started/architecture.mdx (10 diagrams!)
 - docs/security/overview.mdx
-- docs/deployment/kubernetes.mdx
+- ../docs/deployment/kubernetes.mdx
 - docs/guides/*.mdx (multiple)
 
 **Priority**: ✅ No action needed - Diagrams are current
@@ -401,7 +401,7 @@ See previous audit report for details on:
 
 1. **Create ADR-0025.mdx**:
    ```bash
-   cp adr/0025-anthropic-best-practices-enhancements.md \
+   cp ../adr/0025-anthropic-best-practices-enhancements.md \
       docs/architecture/adr-0025-anthropic-best-practices-enhancements.mdx
    # Edit: Convert markdown headers to MDX format
    # Edit: Ensure frontmatter is correct
@@ -439,7 +439,7 @@ See previous audit report for details on:
 6. **Update ADR Count References**:
    - Search and replace "21+ ADRs" with "25 ADRs"
    - Search and replace "24 ADRs" with "25 ADRs"
-   - Verify adr/README.md is correct (already lists 25)
+   - Verify ../adr/README.md is correct (already lists 25)
 
 7. **Add Guide Links to README**:
    - Add link to AGENTIC_LOOP_GUIDE.md in main docs section
@@ -451,7 +451,7 @@ See previous audit report for details on:
 8. **Verify and Fix Remaining Links**: Complete all 26 link fixes from previous audit
 9. **Consolidate Duplicate Docs**: Resolve MUTATION_TESTING.md duplication
 10. **Update CHANGELOG**: Add ADR-0023, ADR-0024, ADR-0025 entries
-11. **Verify Example Files**: Confirm all .py files referenced in examples/README.md exist
+11. **Verify Example Files**: Confirm all .py files referenced in ../examples/README.md exist
 12. **Documentation Structure Policy**: Update REPOSITORY_STRUCTURE.md with clear structure policy
 
 ### 💡 Phase 4: Future Improvements (Optional - 2-3 hours)
@@ -524,7 +524,7 @@ jobs:
 echo "Checking ADR synchronization..."
 
 # Count ADRs in source
-adr_count=$(ls -1 adr/*.md | grep -E '[0-9]{4}' | wc -l)
+adr_count=$(ls -1 ../adr/*.md | grep -E '[0-9]{4}' | wc -l)
 
 # Count ADRs in Mintlify
 mintlify_count=$(ls -1 docs/architecture/adr-*.mdx | wc -l)
@@ -532,7 +532,7 @@ mintlify_count=$(ls -1 docs/architecture/adr-*.mdx | wc -l)
 # Count ADRs in mint.json
 mint_json_count=$(grep -c '"architecture/adr-' docs/mint.json)
 
-echo "ADRs in /adr/: $adr_count"
+echo "ADRs in /../adr/: $adr_count"
 echo "ADRs in /docs/architecture/: $mintlify_count"
 echo "ADRs in mint.json: $mint_json_count"
 

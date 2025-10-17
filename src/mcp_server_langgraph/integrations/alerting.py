@@ -27,7 +27,7 @@ import hashlib
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -486,7 +486,7 @@ class AlertingService:
         self.alert_history.append(alert)
 
         # Update dedupe cache
-        self.dedupe_cache[alert.dedupe_key] = datetime.utcnow()
+        self.dedupe_cache[alert.dedupe_key] = datetime.now(timezone.utc)
 
         # Send to all providers concurrently
         results = {}
@@ -518,7 +518,7 @@ class AlertingService:
         last_sent = self.dedupe_cache[alert.dedupe_key]
         window = timedelta(seconds=self.config.deduplication_window)
 
-        return datetime.utcnow() - last_sent < window
+        return datetime.now(timezone.utc) - last_sent < window
 
     def get_alert_history(self, limit: int = 100) -> List[Alert]:
         """Get recent alert history"""

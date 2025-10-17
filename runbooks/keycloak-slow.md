@@ -265,5 +265,5 @@ If latency remains above 2s after 1 hour:
 ## References
 
 - [Keycloak Performance Tuning](https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing)
-- [Deployment Configuration](../../deployments/kubernetes/base/keycloak-deployment.yaml)
+- [Deployment Configuration](../deployments/kubernetes/base/keycloak-deployment.yaml)
 - [Integration Guide](../integrations/keycloak.md)

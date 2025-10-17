@@ -242,7 +242,7 @@ with tracer.start_as_current_span("agent.chat") as span:
 
 - [OpenTelemetry Documentation](https://opentelemetry.io/)
 - [LangSmith Documentation](https://docs.smith.langchain.com/)
-- [LangSmith Tracing Guide](../getting-started/langsmith-tracing.mdx)
-- [Observability Overview](../getting-started/observability.mdx)
+- [LangSmith Tracing Guide](../docs/getting-started/langsmith-tracing.mdx)
+- [Observability Overview](../docs/guides/observability.mdx)
 - Related Files: `observability.py`, `langsmith_src/mcp_server_langgraph/core/config.py`
 - Related ADRs: [0001](0001-llm-multi-provider.md) (LLM abstraction)

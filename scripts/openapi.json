@@ -1,0 +1,140 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MCP Server with LangGraph",
+    "description": "AI Agent with fine-grained authorization and observability - StreamableHTTP transport",
+    "version": "2.6.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "Root endpoint with server info",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions"
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/message": {
+      "post": {
+        "summary": "Handle Message",
+        "description": "Handle MCP messages via StreamableHTTP POST\n\nThis is the main endpoint for MCP protocol messages.\nSupports both regular and streaming responses.",
+        "operationId": "handle_message_message_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions"
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/tools": {
+      "get": {
+        "summary": "List Tools",
+        "description": "List available tools (convenience endpoint)",
+        "operationId": "list_tools_tools_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions"
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/resources": {
+      "get": {
+        "summary": "List Resources",
+        "description": "List available resources (convenience endpoint)",
+        "operationId": "list_resources_resources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions"
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "mcp",
+      "description": "Model Context Protocol (MCP) endpoints for agent interaction"
+    },
+    {
+      "name": "health",
+      "description": "Health check and system status endpoints"
+    },
+    {
+      "name": "auth",
+      "description": "Authentication and authorization endpoints"
+    }
+  ]
+}

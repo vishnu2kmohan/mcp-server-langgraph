@@ -5,13 +5,14 @@ Tests both unit functionality and integration behavior.
 Uses mocking to avoid actual LLM calls for fast execution.
 """
 
-import pytest
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
 from mcp_server_langgraph.core.context_manager import (
-    ContextManager,
     CompactionResult,
+    ContextManager,
     compact_if_needed,
 )
 
@@ -35,9 +36,7 @@ def context_manager():
     # Mock the LLM to avoid actual API calls
     manager.llm = AsyncMock()
     manager.llm.ainvoke = AsyncMock(
-        return_value=MagicMock(
-            content="Summary: User asked about Python, assistant explained basics."
-        )
+        return_value=MagicMock(content="Summary: User asked about Python, assistant explained basics.")
     )
 
     return manager
@@ -215,7 +214,7 @@ class TestConvenienceFunctions:
     async def test_compact_if_needed_no_compaction(self, short_conversation):
         """Test compact_if_needed doesn't compact short conversations."""
         # Mock ContextManager
-        with patch('mcp_server_langgraph.core.context_manager.ContextManager') as MockContextManager:
+        with patch("mcp_server_langgraph.core.context_manager.ContextManager") as MockContextManager:
             mock_manager = MagicMock()
             mock_manager.needs_compaction.return_value = False
             MockContextManager.return_value = mock_manager
@@ -230,7 +229,7 @@ class TestConvenienceFunctions:
     async def test_compact_if_needed_with_compaction(self, long_conversation):
         """Test compact_if_needed compacts long conversations."""
         # Mock ContextManager
-        with patch('mcp_server_langgraph.core.context_manager.ContextManager') as MockContextManager:
+        with patch("mcp_server_langgraph.core.context_manager.ContextManager") as MockContextManager:
             mock_manager = MagicMock()
             mock_manager.needs_compaction.return_value = True
 

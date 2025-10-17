@@ -5,9 +5,10 @@ Tests both LLM-based and rules-based verification.
 Uses mocking to avoid actual LLM calls for fast execution.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
-from unittest.mock import AsyncMock, MagicMock
 
 from mcp_server_langgraph.llm.verifier import (
     OutputVerifier,
@@ -417,7 +418,7 @@ class TestConvenienceFunctions:
         """Test verify_output convenience function."""
         from unittest.mock import patch
 
-        with patch('mcp_server_langgraph.llm.verifier.OutputVerifier') as MockVerifier:
+        with patch("mcp_server_langgraph.llm.verifier.OutputVerifier") as MockVerifier:
             mock_verifier = MagicMock()
             mock_result = VerificationResult(
                 passed=True,

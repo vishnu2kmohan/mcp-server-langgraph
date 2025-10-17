@@ -225,9 +225,7 @@ class ParallelToolExecutor:
 
 
 # Example usage function
-async def execute_multi_tool_request(
-    user_request: str, tool_calls: list[dict[str, Any]]
-) -> list[ToolResult]:
+async def execute_multi_tool_request(user_request: str, tool_calls: list[dict[str, Any]]) -> list[ToolResult]:
     """
     Execute multiple tool calls efficiently with parallelization.
 

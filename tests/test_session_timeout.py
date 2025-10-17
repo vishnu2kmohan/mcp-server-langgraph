@@ -4,7 +4,7 @@ Tests for session timeout middleware (HIPAA 164.312(a)(2)(iii))
 Tests automatic logoff after period of inactivity.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -136,7 +136,7 @@ class TestSessionTimeoutMiddleware:
 
         # Manually update the last_accessed to make it old
         old_session = await mock_session_store.get(session_id)
-        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z"
+        old_session.last_accessed = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat().replace("+00:00", "Z")
         mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(
@@ -201,7 +201,7 @@ class TestSessionTimeoutMiddleware:
 
         # Update last_accessed to make it old
         old_session = await mock_session_store.get(session_id)
-        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=30)).isoformat() + "Z"
+        old_session.last_accessed = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat().replace("+00:00", "Z")
         mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=300, session_store=mock_session_store)  # 5 minutes
@@ -385,7 +385,7 @@ class TestSessionTimeoutEdgeCases:
 
         # Update last_accessed to make it old
         old_session = await mock_session_store.get(session_id)
-        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z"
+        old_session.last_accessed = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat().replace("+00:00", "Z")
         mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=300, session_store=mock_session_store)
@@ -422,7 +422,7 @@ class TestHIPAACompliance:
 
         # Update last_accessed to make it old
         old_session = await mock_session_store.get(session_id)
-        old_session.last_accessed = (datetime.utcnow() - timedelta(minutes=20)).isoformat() + "Z"
+        old_session.last_accessed = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat().replace("+00:00", "Z")
         mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(app=app, timeout_seconds=300, session_store=mock_session_store)

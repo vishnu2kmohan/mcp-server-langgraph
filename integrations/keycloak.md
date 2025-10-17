@@ -780,15 +780,15 @@ except Exception as e:
 1. **Complete Setup**: Run `make setup-keycloak` and configure `.env`
 2. **Test Integration**: Run `python examples/keycloak_usage.py`
 3. **Customize Roles**: Modify role mapping in `sync_user_to_openfga()`
-4. **Production Deploy**: Follow [Production Deployment Guide](../deployment/production.md)
+4. **Production Deploy**: Follow [Production Deployment Guide](../docs/deployment/production-checklist.mdx)
 5. **Monitor & Alert**: Set up Grafana dashboards and alerts
 
 ## Related Documentation
 
 - [OpenFGA & Infisical Integration](./openfga-infisical.md)
-- [Production Deployment Guide](../deployment/production.md)
-- [Testing Guide](../development/testing.md)
-- [Feature Flags](../../src/mcp_server_langgraph/core/feature_flags.py)
+- [Production Deployment Guide](../docs/deployment/production-checklist.mdx)
+- [Testing Guide](../docs/advanced/testing.mdx)
+- [Feature Flags](../src/mcp_server_langgraph/core/feature_flags.py)
 
 ---
 

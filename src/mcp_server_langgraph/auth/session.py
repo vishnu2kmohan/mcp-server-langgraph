@@ -12,7 +12,7 @@ Provides pluggable session storage backends with support for:
 import json
 import secrets
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -299,7 +299,7 @@ class InMemorySessionStore(SessionStore):
             # Generate session
             session_id = self._generate_session_id()
             ttl = ttl_seconds or self.default_ttl
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
 
             session_data = SessionData(
                 session_id=session_id,
@@ -335,14 +335,14 @@ class InMemorySessionStore(SessionStore):
 
             # Check expiration
             expires_at = datetime.fromisoformat(session.expires_at)
-            if datetime.utcnow() > expires_at:
+            if datetime.now(timezone.utc) > expires_at:
                 # Session expired
                 await self.delete(session_id)
                 return None
 
             # Update last accessed time (sliding window)
             if self.sliding_window:
-                session.last_accessed = datetime.utcnow().isoformat()
+                session.last_accessed = datetime.now(timezone.utc).isoformat()
 
             return session
 
@@ -353,7 +353,7 @@ class InMemorySessionStore(SessionStore):
 
         session = self.sessions[session_id]
         session.metadata.update(metadata)
-        session.last_accessed = datetime.utcnow().isoformat()
+        session.last_accessed = datetime.now(timezone.utc).isoformat()
 
         logger.info(f"Session metadata updated: {session_id}")
         return True
@@ -365,7 +365,7 @@ class InMemorySessionStore(SessionStore):
 
         session = self.sessions[session_id]
         ttl = ttl_seconds or self.default_ttl
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         session.last_accessed = now.isoformat()
         session.expires_at = (now + timedelta(seconds=ttl)).isoformat()
@@ -543,7 +543,7 @@ class RedisSessionStore(SessionStore):
             # Generate session
             session_id = self._generate_session_id()
             ttl = ttl_seconds or self.default_ttl
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
 
             session_data = {
                 "session_id": session_id,
@@ -601,7 +601,7 @@ class RedisSessionStore(SessionStore):
 
             # Update last accessed (sliding window)
             if self.sliding_window:
-                await self.redis.hset(session_key, "last_accessed", datetime.utcnow().isoformat())
+                await self.redis.hset(session_key, "last_accessed", datetime.now(timezone.utc).isoformat())
 
             return session
 
@@ -620,7 +620,7 @@ class RedisSessionStore(SessionStore):
 
         # Update metadata on Pydantic model
         session.metadata.update(metadata)
-        session.last_accessed = datetime.utcnow().isoformat()
+        session.last_accessed = datetime.now(timezone.utc).isoformat()
 
         # Persist to Redis
         await self.redis.hset(session_key, mapping={"metadata": str(session.metadata), "last_accessed": session.last_accessed})
@@ -637,7 +637,7 @@ class RedisSessionStore(SessionStore):
             return False
 
         ttl = ttl_seconds or self.default_ttl
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         new_expires_at = (now + timedelta(seconds=ttl)).isoformat()
 
         await self.redis.hset(session_key, mapping={"last_accessed": now.isoformat(), "expires_at": new_expires_at})

@@ -31,4 +31,4 @@ These are maintained for internal reference but are not included in the public d
 - **Operational docs** (`.md` in `docs/deployment/`): VERSION_COMPATIBILITY.md, VERSION_PINNING.md, model-configuration.md
 - **Status docs** (`.md` at root level): CHANGELOG.md, SECURITY.md, VERSION_PINNING_REMEDIATION.md
 
-See `docs/README.md` for complete documentation organization strategy.
+See `do../../README.md` for complete documentation organization strategy.

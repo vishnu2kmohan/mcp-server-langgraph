@@ -13,7 +13,7 @@ Note: Only required if processing Protected Health Information (PHI)
 
 import hashlib
 import hmac
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 
 from pydantic import BaseModel, Field
@@ -88,10 +88,34 @@ class HIPAAControls:
 
         Args:
             session_store: Session storage for emergency access grants
-            integrity_secret: Secret key for HMAC integrity checks
+            integrity_secret: Secret key for HMAC integrity checks (REQUIRED for production)
+                            If not provided, will attempt to load from environment/settings
+
+        Raises:
+            ValueError: If integrity_secret is not provided and not in environment (fail-closed security pattern)
         """
         self.session_store = session_store
-        self.integrity_secret = integrity_secret or "change-this-in-production"
+
+        # If not provided, try to load from environment/settings
+        if not integrity_secret:
+            import os
+
+            from mcp_server_langgraph.secrets.manager import get_secrets_manager
+
+            secrets_mgr = get_secrets_manager()
+            integrity_secret = secrets_mgr.get_secret("HIPAA_INTEGRITY_SECRET", fallback=os.getenv("HIPAA_INTEGRITY_SECRET"))
+
+        # Validate integrity secret is configured (fail-closed security pattern)
+        # HIPAA 164.312(c)(1) requires integrity controls for PHI
+        if not integrity_secret:
+            raise ValueError(
+                "CRITICAL: HIPAA integrity secret not configured. "
+                "Set HIPAA_INTEGRITY_SECRET environment variable or configure via Infisical. "
+                "HIPAA controls cannot be initialized without a secure secret key for data integrity. "
+                "(HIPAA 164.312(c)(1) - Integrity Controls)"
+            )
+
+        self.integrity_secret = integrity_secret
 
         # In-memory storage for emergency access grants (replace with database)
         self._emergency_grants: Dict[str, EmergencyAccessGrant] = {}
@@ -143,10 +167,10 @@ class HIPAAControls:
             )
 
             # Generate grant ID
-            grant_id = f"emergency_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{user_id.replace(':', '_')}"
+            grant_id = f"emergency_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{user_id.replace(':', '_')}"
 
             # Calculate expiration
-            granted_at = datetime.utcnow()
+            granted_at = datetime.now(timezone.utc)
             expires_at = granted_at + timedelta(hours=duration_hours)
 
             # Create grant
@@ -155,8 +179,8 @@ class HIPAAControls:
                 user_id=user_id,
                 reason=reason,
                 approver_id=approver_id,
-                granted_at=granted_at.isoformat() + "Z",
-                expires_at=expires_at.isoformat() + "Z",
+                granted_at=granted_at.isoformat().replace("+00:00", "Z"),
+                expires_at=expires_at.isoformat().replace("+00:00", "Z"),
                 access_level=access_level,
             )
 
@@ -204,7 +228,7 @@ class HIPAAControls:
                 return False
 
             grant.revoked = True
-            grant.revoked_at = datetime.utcnow().isoformat() + "Z"
+            grant.revoked_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
             logger.warning(
                 "HIPAA: Emergency access revoked",
@@ -228,11 +252,11 @@ class HIPAAControls:
         Returns:
             Active EmergencyAccessGrant or None
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         for grant in self._emergency_grants.values():
             if grant.user_id == user_id and not grant.revoked:
-                expires_at = datetime.fromisoformat(grant.expires_at.replace("Z", ""))
+                expires_at = datetime.fromisoformat(grant.expires_at.replace("Z", "+00:00"))
                 if expires_at > now:
                     return grant
 
@@ -275,7 +299,7 @@ class HIPAAControls:
             span.set_attribute("success", success)
 
             log_entry = PHIAuditLog(
-                timestamp=datetime.utcnow().isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 user_id=user_id,
                 action=action,
                 phi_accessed=True,
@@ -323,7 +347,7 @@ class HIPAAControls:
             data_id=data_id,
             checksum=checksum,
             algorithm="HMAC-SHA256",
-            created_at=datetime.utcnow().isoformat() + "Z",
+            created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         )
 
     def verify_checksum(self, data: str, expected_checksum: str) -> bool:
@@ -367,15 +391,24 @@ _hipaa_controls: Optional[HIPAAControls] = None
 
 def get_hipaa_controls() -> HIPAAControls:
     """
-    Get or create global HIPAA controls instance
+    Get or create global HIPAA controls instance.
+
+    Retrieves HIPAA integrity secret from settings.
+    Will raise ValueError if secret is not configured (fail-closed pattern).
 
     Returns:
         HIPAAControls instance
+
+    Raises:
+        ValueError: If HIPAA integrity secret is not configured
     """
     global _hipaa_controls
 
     if _hipaa_controls is None:
-        _hipaa_controls = HIPAAControls()
+        # Import here to avoid circular dependency
+        from mcp_server_langgraph.core.config import settings
+
+        _hipaa_controls = HIPAAControls(integrity_secret=settings.hipaa_integrity_secret)
 
     return _hipaa_controls
 

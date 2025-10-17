@@ -385,7 +385,7 @@ This is typically a low-priority issue unless users are actively complaining. If
 
 ## References
 
-- [Session Management Implementation](../../src/mcp_server_langgraph/auth/session.py)
+- [Session Management Implementation](../src/mcp_server_langgraph/auth/session.py)
 - [Redis TTL Documentation](https://redis.io/commands/ttl)
 - [Redis Eviction Policies](https://redis.io/docs/manual/eviction/)
-- [Configuration Guide](../../deployments/README.md)
+- [Configuration Guide](../deployments/README.md)

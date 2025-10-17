@@ -8,6 +8,7 @@ This example demonstrates:
 4. Analyzing traces programmatically
 """
 
+import asyncio
 import os
 
 # Import agent
@@ -32,14 +33,14 @@ except ImportError:
     Client = None
 
 
-def example_basic_tracing():
+async def example_basic_tracing():
     """Example 1: Basic automatic tracing"""
     print("=" * 60)
     print("Example 1: Basic Automatic Tracing")
     print("=" * 60)
 
     # Simple invocation - automatically traced if LANGSMITH_TRACING=true
-    result = agent_graph.invoke(
+    result = await agent_graph.ainvoke(
         {"messages": [HumanMessage(content="What is LangGraph?")], "user_id": "user123", "request_id": "req456"}
     )
 
@@ -49,7 +50,7 @@ def example_basic_tracing():
     print("  URL: https://smith.langchain.com/")
 
 
-def example_custom_metadata():
+async def example_custom_metadata():
     """Example 2: Adding custom metadata and tags"""
     print("\n" + "=" * 60)
     print("Example 2: Custom Metadata and Tags")
@@ -72,7 +73,7 @@ def example_custom_metadata():
     )
 
     # Invoke with configuration
-    result = agent_graph.invoke(
+    result = await agent_graph.ainvoke(
         {
             "messages": [HumanMessage(content="Analyze this quarter's performance")],
             "user_id": "alice@company.com",
@@ -87,7 +88,7 @@ def example_custom_metadata():
     print("  Check metadata for business context")
 
 
-def example_collect_feedback():
+async def example_collect_feedback():
     """Example 3: Collecting user feedback"""
     print("\n" + "=" * 60)
     print("Example 3: Collecting User Feedback")
@@ -98,7 +99,7 @@ def example_collect_feedback():
         return
 
     # First, make a request
-    result = agent_graph.invoke(
+    result = await agent_graph.ainvoke(
         {
             "messages": [HumanMessage(content="Explain deployment options")],
             "user_id": "bob@company.com",
@@ -189,7 +190,7 @@ def example_analyze_traces():
         print("  Ensure LANGSMITH_API_KEY is set")
 
 
-def main():
+async def main():
     """Run all examples"""
     print("\n" + "=" * 60)
     print("  LangSmith Tracing Examples")
@@ -209,9 +210,9 @@ def main():
     print(f"  Project: {os.getenv('LANGSMITH_PROJECT', 'default')}")
 
     # Run examples
-    example_basic_tracing()
-    example_custom_metadata()
-    example_collect_feedback()
+    await example_basic_tracing()
+    await example_custom_metadata()
+    await example_collect_feedback()
     example_error_tracking()
     example_analyze_traces()
 
@@ -227,4 +228,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

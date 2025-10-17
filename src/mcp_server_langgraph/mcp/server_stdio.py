@@ -87,10 +87,16 @@ class MCPAgentServer:
         # Initialize OpenFGA client
         self.openfga = openfga_client or self._create_openfga_client()
 
+        # Validate JWT secret is configured (fail-closed security pattern)
+        if not settings.jwt_secret_key:
+            raise ValueError(
+                "CRITICAL: JWT secret key not configured. "
+                "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
+                "The service cannot start without a secure secret key."
+            )
+
         # Initialize auth with OpenFGA
-        self.auth = AuthMiddleware(
-            secret_key=settings.jwt_secret_key or "change-this-in-production", openfga_client=self.openfga
-        )
+        self.auth = AuthMiddleware(secret_key=settings.jwt_secret_key, openfga_client=self.openfga)
 
         self._setup_handlers()
 
@@ -297,7 +303,7 @@ class MCPAgentServer:
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await asyncio.to_thread(agent_graph.invoke, initial_state, config)
+                result = await agent_graph.ainvoke(initial_state, config)
 
                 # Extract response
                 response_message = result["messages"][-1]

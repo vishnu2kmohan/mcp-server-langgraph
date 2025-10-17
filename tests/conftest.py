@@ -3,7 +3,7 @@
 import asyncio
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -16,6 +16,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 
 # Set test environment variables before importing modules
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-testing-only")
+os.environ.setdefault("HIPAA_INTEGRITY_SECRET", "test-hipaa-secret-key-for-testing-only")
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-anthropic-key")
 os.environ.setdefault("OPENFGA_API_URL", "http://localhost:8080")
 os.environ.setdefault("OPENFGA_STORE_ID", "")  # Disable OpenFGA for tests
@@ -188,8 +189,8 @@ def mock_jwt_token():
 
     payload = {
         "sub": "alice",
-        "exp": datetime.utcnow() + timedelta(hours=1),
-        "iat": datetime.utcnow(),
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        "iat": datetime.now(timezone.utc),
     }
     return jwt.encode(payload, "test-secret-key", algorithm="HS256")
 

@@ -436,6 +436,6 @@ checkpoint_errors = Counter("checkpoint.errors")
 - **Related ADRs**:
   - [ADR-0006](0006-session-storage-architecture.md) - Pluggable session storage (similar pattern)
   - [ADR-0015](0015-memory-checkpointing.md) - Original checkpointing decision (superseded)
-  - [ADR-0013](0013-deployment-strategy.md) - Multi-cloud deployment patterns
+  - [ADR-0013](0013-multi-deployment-target-strategy.md) - Multi-cloud deployment patterns
 - **LangGraph Documentation**: https://langchain-ai.github.io/langgraph/how-tos/persistence/
 - **Redis Checkpointer**: `pip install langgraph-checkpoint-redis>=2.0.0`

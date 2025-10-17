@@ -116,7 +116,8 @@
       "pages": [
         "guides/openfga-setup",
         "guides/permission-model",
-        "guides/relationship-tuples"
+        "guides/relationship-tuples",
+        "guides/keycloak-sso"
       ]
     },
     {
@@ -125,6 +126,19 @@
         "guides/infisical-setup",
         "guides/secret-rotation",
         "guides/environment-config"
+      ]
+    },
+    {
+      "group": "Sessions & Storage",
+      "pages": [
+        "guides/redis-sessions"
+      ]
+    },
+    {
+      "group": "Observability",
+      "pages": [
+        "guides/observability",
+        "guides/log-queries"
       ]
     },
     {
@@ -163,6 +177,7 @@
       "pages": [
         "deployment/kong-gateway",
         "deployment/monitoring",
+        "deployment/log-aggregation",
         "deployment/scaling",
         "deployment/disaster-recovery"
       ]

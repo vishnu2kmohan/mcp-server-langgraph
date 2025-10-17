@@ -271,7 +271,7 @@ def create_agent_graph():
 
         return state
 
-    def compact_context(state: AgentState) -> AgentState:
+    async def compact_context(state: AgentState) -> AgentState:
         """
         Compact conversation context when approaching token limits.
 
@@ -285,7 +285,7 @@ def create_agent_graph():
         if context_manager.needs_compaction(messages):
             try:
                 logger.info("Applying context compaction")
-                result = asyncio.run(context_manager.compact_conversation(messages))
+                result = await context_manager.compact_conversation(messages)
 
                 state["messages"] = result.compacted_messages
                 state["compaction_applied"] = True
@@ -308,7 +308,7 @@ def create_agent_graph():
 
         return state
 
-    def route_input(state: AgentState) -> AgentState:
+    async def route_input(state: AgentState) -> AgentState:
         """
         Route based on message type with Pydantic AI for type-safe decisions.
 
@@ -324,12 +324,10 @@ def create_agent_graph():
             # Use Pydantic AI for intelligent routing if available
             if pydantic_agent:
                 try:
-                    # Run async routing in sync context
-                    decision = asyncio.run(
-                        pydantic_agent.route_message(
-                            last_message.content,
-                            context={"user_id": state.get("user_id", "unknown"), "message_count": str(len(state["messages"]))},
-                        )
+                    # Route message asynchronously
+                    decision = await pydantic_agent.route_message(
+                        last_message.content,
+                        context={"user_id": state.get("user_id", "unknown"), "message_count": str(len(state["messages"]))},
                     )
 
                     # Update state with type-safe decision
@@ -351,7 +349,7 @@ def create_agent_graph():
 
         return state
 
-    def use_tools(state: AgentState) -> AgentState:
+    async def use_tools(state: AgentState) -> AgentState:
         """Simulate tool usage (extend with real tools)"""
         # In real implementation, bind tools to model
         # For now, simulate a tool response
@@ -359,7 +357,7 @@ def create_agent_graph():
 
         return {**state, "messages": [tool_response], "next_action": "respond"}
 
-    def generate_response(state: AgentState) -> AgentState:
+    async def generate_response(state: AgentState) -> AgentState:
         """Generate final response using LLM with Pydantic AI validation"""
         messages = state["messages"]
 
@@ -378,15 +376,13 @@ def create_agent_graph():
         if pydantic_agent:
             try:
                 # Generate type-safe response
-                typed_response = asyncio.run(
-                    pydantic_agent.generate_response(
-                        messages,
-                        context={
-                            "user_id": state.get("user_id", "unknown"),
-                            "routing_confidence": str(state.get("routing_confidence", 0.0)),
-                            "refinement_attempt": str(refinement_attempts),
-                        },
-                    )
+                typed_response = await pydantic_agent.generate_response(
+                    messages,
+                    context={
+                        "user_id": state.get("user_id", "unknown"),
+                        "routing_confidence": str(state.get("routing_confidence", 0.0)),
+                        "refinement_attempt": str(refinement_attempts),
+                    },
                 )
 
                 # Convert to AIMessage
@@ -403,15 +399,15 @@ def create_agent_graph():
                 )
             except Exception as e:
                 logger.error(f"Pydantic AI response generation failed, using fallback: {e}", exc_info=True)
-                # Fallback to standard LLM
-                response = model.invoke(messages)
+                # Fallback to standard LLM (use async invoke)
+                response = await model.ainvoke(messages)
         else:
-            # Standard LLM response
-            response = model.invoke(messages)
+            # Standard LLM response (use async invoke)
+            response = await model.ainvoke(messages)
 
         return {**state, "messages": [response], "next_action": "verify" if enable_verification else "end"}
 
-    def verify_response(state: AgentState) -> AgentState:
+    async def verify_response(state: AgentState) -> AgentState:
         """
         Verify response quality using LLM-as-judge pattern.
 
@@ -433,10 +429,8 @@ def create_agent_graph():
 
         try:
             logger.info("Verifying response quality")
-            verification_result = asyncio.run(
-                output_verifier.verify_response(
-                    response=response_text, user_request=user_request, conversation_context=conversation_context
-                )
+            verification_result = await output_verifier.verify_response(
+                response=response_text, user_request=user_request, conversation_context=conversation_context
             )
 
             state["verification_passed"] = verification_result.passed
@@ -477,7 +471,7 @@ def create_agent_graph():
 
         return state
 
-    def refine_response(state: AgentState) -> AgentState:
+    async def refine_response(state: AgentState) -> AgentState:
         """
         Refine response based on verification feedback.
 

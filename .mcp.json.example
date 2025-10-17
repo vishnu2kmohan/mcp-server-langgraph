@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "langgraph-agent": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_stdio"
+      ],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/mcp-server-langgraph/src"
+      },
+      "envFile": "/absolute/path/to/mcp-server-langgraph/.env"
+    },
+    "langgraph-agent-streamable": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_langgraph.mcp.server_streamable"
+      ],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/mcp-server-langgraph/src",
+        "HOST": "0.0.0.0",
+        "PORT": "8000"
+      },
+      "envFile": "/absolute/path/to/mcp-server-langgraph/.env"
+    }
+  },
+  "_comments": {
+    "setup": "Copy this file to .mcp.json and replace paths with your actual project directory",
+    "example": "If cloned to ~/projects/mcp-server-langgraph, use:",
+    "PYTHONPATH": "~/projects/mcp-server-langgraph/src (expand ~ to full path)",
+    "envFile": "~/projects/mcp-server-langgraph/.env (expand ~ to full path)",
+    "note": "For IDE-specific configs (VS Code, Cursor), see .cursor/mcp.json or docs/reference/development/ide-setup.md"
+  }
+}

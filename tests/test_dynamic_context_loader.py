@@ -59,14 +59,13 @@ def mock_qdrant_client():
 
 @pytest.fixture
 def mock_embedder():
-    """Mock SentenceTransformer for testing"""
-    with patch("mcp_server_langgraph.core.dynamic_context_loader.SentenceTransformer") as mock:
+    """Mock embeddings for testing (LangChain Embeddings interface)"""
+    with patch("mcp_server_langgraph.core.dynamic_context_loader._create_embeddings") as mock:
         embedder = MagicMock()
-        # Create mock embedding with tolist() method (mimics numpy array)
-        mock_embedding = MagicMock()
-        mock_embedding.tolist.return_value = [0.1] * 384
-        embedder.encode.return_value = mock_embedding
-        embedder.get_sentence_embedding_dimension.return_value = 384
+        # Mock LangChain Embeddings interface
+        # embed_query returns a list directly (not numpy array)
+        embedder.embed_query.return_value = [0.1] * 768  # Google default: 768 dims
+        embedder.embed_documents.return_value = [[0.1] * 768]  # List of lists
         mock.return_value = embedder
         yield embedder
 
@@ -74,13 +73,30 @@ def mock_embedder():
 @pytest.fixture
 def context_loader(mock_qdrant_client, mock_embedder):
     """Create DynamicContextLoader instance for testing"""
-    return DynamicContextLoader(
-        qdrant_url="localhost",
-        qdrant_port=6333,
-        collection_name="test_collection",
-        embedding_model="all-MiniLM-L6-v2",
-        cache_size=10,
-    )
+    with patch("mcp_server_langgraph.core.config.settings") as mock_settings:
+        # Mock settings for test
+        mock_settings.qdrant_url = "localhost"
+        mock_settings.qdrant_port = 6333
+        mock_settings.qdrant_collection_name = "test_collection"
+        mock_settings.embedding_provider = "google"
+        mock_settings.embedding_model_name = "models/text-embedding-004"
+        mock_settings.embedding_dimensions = 768
+        mock_settings.embedding_task_type = "RETRIEVAL_DOCUMENT"
+        mock_settings.context_cache_size = 10
+        mock_settings.enable_context_encryption = False
+        mock_settings.context_retention_days = 90
+        mock_settings.enable_auto_deletion = True
+        mock_settings.google_api_key = "test-api-key"
+
+        return DynamicContextLoader(
+            qdrant_url="localhost",
+            qdrant_port=6333,
+            collection_name="test_collection",
+            embedding_model="models/text-embedding-004",
+            embedding_provider="google",
+            embedding_dimensions=768,
+            cache_size=10,
+        )
 
 
 class TestDynamicContextLoader:
@@ -92,7 +108,9 @@ class TestDynamicContextLoader:
         assert context_loader.qdrant_url == "localhost"
         assert context_loader.qdrant_port == 6333
         assert context_loader.collection_name == "test_collection"
-        assert context_loader.embedding_model_name == "all-MiniLM-L6-v2"
+        assert context_loader.embedding_model_name == "models/text-embedding-004"
+        assert context_loader.embedding_provider == "google"
+        assert context_loader.embedding_dim == 768
 
         # Verify collection creation was attempted
         mock_qdrant_client.get_collections.assert_called_once()
@@ -112,8 +130,8 @@ class TestDynamicContextLoader:
         assert results[0].relevance_score == 0.95
         assert results[1].ref_id == "doc_2"
 
-        # Verify embedder was called
-        mock_embedder.encode.assert_called_once_with("test query")
+        # Verify embedder was called with LangChain interface
+        mock_embedder.embed_query.assert_called_once_with("test query")
 
         # Verify Qdrant search was called
         mock_qdrant_client.search.assert_called_once()
@@ -145,8 +163,8 @@ class TestDynamicContextLoader:
             metadata={"author": "test_user"},
         )
 
-        # Verify embedder was called
-        assert mock_embedder.encode.called
+        # Verify embedder was called with LangChain interface
+        assert mock_embedder.embed_query.called
 
         # Verify Qdrant upsert was called
         mock_qdrant_client.upsert.assert_called_once()
@@ -196,6 +214,7 @@ class TestDynamicContextLoader:
 
         # Mock loading to return content with known token counts
         with patch.object(context_loader, "load_context") as mock_load:
+
             async def mock_load_impl(ref):
                 return LoadedContext(
                     reference=ref,

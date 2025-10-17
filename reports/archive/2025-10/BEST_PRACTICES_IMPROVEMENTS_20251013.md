@@ -228,7 +228,7 @@ strict = true
 
 **Solution**: Created comprehensive ADR documenting error handling strategy
 
-**File Created**: `docs/adr/0006-error-handling-strategy.md` (600+ lines)
+**File Created**: `docs/../adr/0006-error-handling-strategy.md` (600+ lines)
 
 **Contents**:
 
@@ -485,7 +485,7 @@ The codebase is **already exceptional** (9.6/10 quality score) and follows best 
 2. `src/mcp_server_langgraph/api/gdpr.py`
 3. `.flake8` (created)
 4. `pyproject.toml`
-5. `docs/adr/0006-error-handling-strategy.md` (created)
+5. `docs/../adr/0006-error-handling-strategy.md` (created)
 6. `CHANGELOG.md`
 7. `docs/reports/BEST_PRACTICES_IMPROVEMENTS_20251013.md` (this file)
 

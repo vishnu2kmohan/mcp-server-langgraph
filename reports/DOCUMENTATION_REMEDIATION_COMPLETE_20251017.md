@@ -135,10 +135,10 @@ All files moved from root → `/reports/` with `_20251017` suffix
 ### ✅ What's Verified
 
 1. **ADR Synchronization**:
-   - Source ADRs in `/adr/`: 25 files (0001-0025)
+   - Source ADRs in `/../adr/`: 25 files (0001-0025)
    - Mintlify ADRs in `/docs/architecture/`: 25 files (adr-0001.mdx through adr-0025.mdx)
    - mint.json navigation: 25 ADRs referenced
-   - adr/README.md index: 25 ADRs listed
+   - ../adr/README.md index: 25 ADRs listed
    - **Status**: 100% synchronized ✅
 
 2. **Release Notes**:
@@ -235,11 +235,11 @@ Create `scripts/validate-docs.sh`:
 #!/bin/bash
 # Validate ADR synchronization
 
-adr_source=$(ls -1 adr/*.md | grep -E '[0-9]{4}' | wc -l)
+adr_source=$(ls -1 ../adr/*.md | grep -E '[0-9]{4}' | wc -l)
 adr_mintlify=$(ls -1 docs/architecture/adr-*.mdx | wc -l)
 adr_navigation=$(grep -c '"architecture/adr-' docs/mint.json)
 
-echo "ADRs in /adr/: $adr_source"
+echo "ADRs in /../adr/: $adr_source"
 echo "ADRs in /docs/architecture/: $adr_mintlify"
 echo "ADRs in mint.json: $adr_navigation"
 
@@ -264,7 +264,7 @@ on:
       - '**.md'
       - '**.mdx'
       - 'docs/mint.json'
-      - 'adr/**'
+      - '../adr/**'
 
 jobs:
   validate-docs:
@@ -337,7 +337,7 @@ jobs:
 ├── REPOSITORY_STRUCTURE.md      # Project organization
 ├── DOCUMENTATION_COMPREHENSIVE_AUDIT_20251017.md  # Full audit
 ├── DOCUMENTATION_REMEDIATION_COMPLETE.md          # This file
-├── adr/                         # 25 Architecture Decision Records
+├── ../adr/                         # 25 Architecture Decision Records
 ├── docs/                        # Mintlify user-facing docs
 │   ├── architecture/            # 25 ADR MDX files
 │   ├── releases/                # 6 release note files
@@ -414,9 +414,9 @@ jobs:
 4. **DOCUMENTATION_REMEDIATION_COMPLETE.md** - This completion report
 
 ### Key Existing Documents
-- `adr/README.md` - Index of all 25 ADRs
+- `../adr/README.md` - Index of all 25 ADRs
 - `docs/README.md` - Documentation index
-- `examples/README.md` - Example usage guide
+- `../examples/README.md` - Example usage guide
 - `DOCUMENTATION_AUDIT_REPORT_20251017.md` - Previous audit (moved to reports/)
 
 ---

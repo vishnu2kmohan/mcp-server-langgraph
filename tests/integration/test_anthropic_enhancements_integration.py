@@ -205,36 +205,36 @@ class TestParallelExecutionIntegration:
         invocations = [
             # Level 0: Parallel data fetching
             ToolInvocation(
-                invocation_id="inv_user",
                 tool_name="fetch_user",
-                parameters={"user_id": "123"},
+                arguments={"user_id": "123"},
+                invocation_id="inv_user",
                 dependencies=[],
             ),
             ToolInvocation(
-                invocation_id="inv_orders",
                 tool_name="fetch_orders",
-                parameters={"user_id": "123"},
+                arguments={"user_id": "123"},
+                invocation_id="inv_orders",
                 dependencies=[],
             ),
             # Level 1: Process fetched data
             ToolInvocation(
-                invocation_id="inv_calc",
                 tool_name="calculate_total",
-                parameters={"orders": "$inv_orders.result"},
+                arguments={"orders": "$inv_orders.result"},
+                invocation_id="inv_calc",
                 dependencies=["inv_orders"],
             ),
             # Level 2: Apply business logic
             ToolInvocation(
-                invocation_id="inv_discount",
                 tool_name="apply_discount",
-                parameters={"total": "$inv_calc.result", "user": "$inv_user.result"},
+                arguments={"total": "$inv_calc.result", "user": "$inv_user.result"},
+                invocation_id="inv_discount",
                 dependencies=["inv_calc", "inv_user"],
             ),
             # Level 3: Final action
             ToolInvocation(
-                invocation_id="inv_email",
                 tool_name="send_email",
-                parameters={"amount": "$inv_discount.result"},
+                arguments={"amount": "$inv_discount.result"},
+                invocation_id="inv_email",
                 dependencies=["inv_discount"],
             ),
         ]
@@ -260,7 +260,7 @@ class TestContextManagerIntegration:
     @pytest.mark.asyncio
     async def test_compaction_then_extraction(self):
         """Test compaction followed by extraction"""
-        with patch("mcp_server_langgraph.core.context_manager.create_llm_from_config") as mock_llm_factory:
+        with patch("mcp_server_langgraph.llm.factory.create_summarization_model") as mock_llm_factory:
             # Mock LLM
             mock_llm = AsyncMock()
 
@@ -464,7 +464,7 @@ class TestEndToEndWorkflow:
                 assert mock_embedder.encode.called
 
         # Mock LLM for context manager
-        with patch("mcp_server_langgraph.core.context_manager.create_llm_from_config") as mock_llm_factory:
+        with patch("mcp_server_langgraph.llm.factory.create_summarization_model") as mock_llm_factory:
             mock_llm = AsyncMock()
 
             async def mock_ainvoke(prompt):
@@ -526,9 +526,9 @@ PREFERENCES:
             )
 
         invocations = [
-            ToolInvocation("inv1", "tool1", {}, []),
-            ToolInvocation("inv2", "tool2", {}, []),
-            ToolInvocation("inv3", "tool3", {}, ["inv1", "inv2"]),
+            ToolInvocation(tool_name="tool1", arguments={}, invocation_id="inv1", dependencies=[]),
+            ToolInvocation(tool_name="tool2", arguments={}, invocation_id="inv2", dependencies=[]),
+            ToolInvocation(tool_name="tool3", arguments={}, invocation_id="inv3", dependencies=["inv1", "inv2"]),
         ]
 
         results = await executor.execute_parallel(invocations, mock_tool)

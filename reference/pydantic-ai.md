@@ -152,7 +152,7 @@ mcp-server-langgraph/
 ├── docs/
 │   └── PYDANTIC_AI_INTEGRATION.md  # NEW: Integration guide
 ├── CLAUDE.md                     # MODIFIED: Added Pydantic AI section
-└── PYDANTIC_AI_README.md        # NEW: This file
+└── reference/pydantic-ai.md        # NEW: This file
 ```
 
 ## How to Use

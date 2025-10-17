@@ -432,7 +432,9 @@ async def example_5_real_world_workflow():
     print("-" * 70)
 
     print("\n📊 Performance benefits of parallelism:")
-    print(f"   • Level 0 tools ran concurrently (saved ~{max(profile_result.execution_time_ms, orders_result.execution_time_ms) - min(profile_result.execution_time_ms, orders_result.execution_time_ms):.0f}ms)")
+    print(
+        f"   • Level 0 tools ran concurrently (saved ~{max(profile_result.execution_time_ms, orders_result.execution_time_ms) - min(profile_result.execution_time_ms, orders_result.execution_time_ms):.0f}ms)"
+    )
     print("   • Dependencies respected (correct execution order)")
     print("   • Clean error handling (graceful degradation)")
 

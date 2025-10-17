@@ -30,7 +30,7 @@ dependencies = [
     "langgraph-checkpoint-redis>=0.1.0",  # Redis checkpointer for distributed conversation state (latest: 0.1.2)
     "langchain-core>=0.3.15",
     "langsmith>=0.1.0",
-    "litellm>=1.52.3",
+    "litellm>=1.78.0",
     "mcp>=1.1.2",
     "PyJWT>=2.8.0",
     "cryptography>=42.0.2",
@@ -56,7 +56,7 @@ dependencies = [
     "python-json-logger>=2.0.7",
     # Anthropic Best Practices Enhancements (ADR-0025)
     "qdrant-client>=1.7.0",  # Vector database for Just-in-Time context loading
-    "sentence-transformers>=2.2.0",  # Embeddings for semantic search
+    "langchain-google-genai>=0.2.0",  # Google Gemini embeddings (API-based, no model hosting)
 ]
 
 [project.optional-dependencies]
@@ -94,9 +94,15 @@ secrets = [
     "infisical-python>=2.1.7,<2.3.6",
 ]
 
+embeddings = [
+    # Self-hosted embeddings (backwards compatibility)
+    "sentence-transformers>=2.2.0",
+]
+
 all = [
     # Install all optional dependencies
     "infisical-python>=2.1.7,<2.3.6",
+    "sentence-transformers>=2.2.0",
 ]
 
 [project.scripts]

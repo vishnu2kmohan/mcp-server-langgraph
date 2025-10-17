@@ -229,7 +229,7 @@ async def search_documents(query: str, user_id: str) -> str:
 2. **Pin in `requirements-pinned.txt`**
 3. **Add to `pyproject.toml`** if needed
 4. **Test thoroughly**
-5. **Update CHANGELOG.md**
+5. **Update ../CHANGELOG.md**
 
 ## Performance Targets
 
@@ -388,13 +388,13 @@ python scripts/generate_openapi.py
 
 ## Resources
 
-- **Architecture**: See `README.md` and `docs/architecture/` (ADRs)
+- **Architecture**: See `../README.md` and `../docs/architecture/` (ADRs)
 - **Deployment**: See `docs/deployment/` (Kubernetes, Helm, Cloud Run, LangGraph Platform)
 - **Security**: See `SECURITY.md` and `docs/security/`
-- **Contributing**: See `CONTRIBUTING.md` and `docs/advanced/contributing.mdx`
-- **Development**: See `docs/advanced/development-setup.mdx`
-- **Testing**: See `docs/advanced/testing.mdx`
-- **Mintlify Docs**: See `docs/mint.json` (100% coverage)
+- **Contributing**: See `CONTRIBUTING.md` and `../docs/advanced/contributing.mdx`
+- **Development**: See `../docs/advanced/development-setup.mdx`
+- **Testing**: See `../docs/advanced/testing.mdx`
+- **Mintlify Docs**: See `../docs/mint.json` (100% coverage)
 
 ## Current Project State (2025-10-14)
 

@@ -4,7 +4,7 @@ Tests for SLA Monitoring
 Comprehensive test suite for SLA tracking, measurements, and alerting.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -93,7 +93,7 @@ class TestUptimeMeasurement:
 
     async def test_measure_uptime_meeting_sla(self, sla_monitor):
         """Test uptime measurement meeting SLA"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=1)
 
         measurement = await sla_monitor.measure_uptime(start_time, end_time)
@@ -105,7 +105,7 @@ class TestUptimeMeasurement:
 
     async def test_measure_uptime_structure(self, sla_monitor):
         """Test uptime measurement structure"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         measurement = await sla_monitor.measure_uptime(start_time, end_time)
@@ -120,7 +120,7 @@ class TestUptimeMeasurement:
 
     async def test_uptime_compliance_percentage(self, sla_monitor):
         """Test uptime compliance percentage calculation"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=7)
 
         measurement = await sla_monitor.measure_uptime(start_time, end_time)
@@ -141,7 +141,7 @@ class TestResponseTimeMeasurement:
 
     async def test_measure_response_time_meeting_sla(self, sla_monitor):
         """Test response time measurement meeting SLA"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=1)
 
         measurement = await sla_monitor.measure_response_time(start_time, end_time)
@@ -153,7 +153,7 @@ class TestResponseTimeMeasurement:
 
     async def test_measure_response_time_p95(self, sla_monitor):
         """Test p95 response time measurement"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         measurement = await sla_monitor.measure_response_time(start_time, end_time, percentile=95)
@@ -164,7 +164,7 @@ class TestResponseTimeMeasurement:
 
     async def test_measure_response_time_different_percentiles(self, sla_monitor):
         """Test different percentile measurements"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         p95 = await sla_monitor.measure_response_time(start_time, end_time, percentile=95)
@@ -186,7 +186,7 @@ class TestErrorRateMeasurement:
 
     async def test_measure_error_rate_meeting_sla(self, sla_monitor):
         """Test error rate measurement meeting SLA"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=1)
 
         measurement = await sla_monitor.measure_error_rate(start_time, end_time)
@@ -198,7 +198,7 @@ class TestErrorRateMeasurement:
 
     async def test_error_rate_structure(self, sla_monitor):
         """Test error rate measurement structure"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         measurement = await sla_monitor.measure_error_rate(start_time, end_time)
@@ -402,7 +402,7 @@ class TestBreachDetection:
         )
 
         monitor = SLAMonitor(sla_targets=[low_target])
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         measurement = await monitor.measure_uptime(start_time, end_time)
@@ -414,7 +414,7 @@ class TestBreachDetection:
 
     async def test_no_breach_details_when_meeting(self, sla_monitor):
         """Test no breach details when meeting SLA"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         measurement = await sla_monitor.measure_uptime(start_time, end_time)
@@ -502,7 +502,7 @@ class TestSLAEdgeCases:
 
     async def test_zero_period(self, sla_monitor):
         """Test measurement with zero time period"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         measurement = await sla_monitor.measure_uptime(now, now)
 
@@ -513,7 +513,7 @@ class TestSLAEdgeCases:
         """Test measurement when target not configured"""
         monitor = SLAMonitor(sla_targets=[])
 
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         with pytest.raises(ValueError):

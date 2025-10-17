@@ -7,8 +7,9 @@ Implements Anthropic's best practices for writing tools for agents:
 - High-signal information filtering
 """
 
-import tiktoken
 from typing import Any, Literal
+
+import tiktoken
 
 from mcp_server_langgraph.observability.telemetry import logger
 
@@ -56,10 +57,7 @@ class ResponseOptimizer:
         return len(self.encoding.encode(text))
 
     def truncate_response(
-        self,
-        content: str,
-        max_tokens: int = MAX_RESPONSE_TOKENS,
-        truncation_message: str | None = None
+        self, content: str, max_tokens: int = MAX_RESPONSE_TOKENS, truncation_message: str | None = None
     ) -> tuple[str, bool]:
         """
         Truncate response to fit within token limit.
@@ -90,7 +88,7 @@ class ResponseOptimizer:
         if available_tokens <= 0:
             logger.warning(
                 "Truncation message too long for max_tokens",
-                extra={"max_tokens": max_tokens, "message_tokens": message_tokens}
+                extra={"max_tokens": max_tokens, "message_tokens": message_tokens},
             )
             available_tokens = max(100, max_tokens - 50)
 
@@ -103,17 +101,14 @@ class ResponseOptimizer:
             extra={
                 "original_tokens": len(tokens),
                 "truncated_tokens": len(truncated_tokens),
-                "truncation_ratio": len(truncated_tokens) / len(tokens)
-            }
+                "truncation_ratio": len(truncated_tokens) / len(tokens),
+            },
         )
 
         return truncated_text + truncation_message, True
 
     def format_response(
-        self,
-        content: str,
-        format_type: Literal["concise", "detailed"] = "concise",
-        max_tokens: int | None = None
+        self, content: str, format_type: Literal["concise", "detailed"] = "concise", max_tokens: int | None = None
     ) -> str:
         """
         Format response according to specified format type.
@@ -128,29 +123,22 @@ class ResponseOptimizer:
         """
         # Determine token limit based on format
         if max_tokens is None:
-            max_tokens = (
-                DEFAULT_CONCISE_TOKENS if format_type == "concise"
-                else DEFAULT_DETAILED_TOKENS
-            )
+            max_tokens = DEFAULT_CONCISE_TOKENS if format_type == "concise" else DEFAULT_DETAILED_TOKENS
 
         # Truncate if necessary
         formatted_content, was_truncated = self.truncate_response(
             content,
             max_tokens=max_tokens,
             truncation_message=(
-                f"\n\n[Response truncated to {format_type} format. "
-                f"Request 'detailed' format for more information.]"
-                if format_type == "concise" else None
-            )
+                f"\n\n[Response truncated to {format_type} format. " f"Request 'detailed' format for more information.]"
+                if format_type == "concise"
+                else None
+            ),
         )
 
         return formatted_content
 
-    def extract_high_signal(
-        self,
-        data: dict[str, Any],
-        exclude_fields: list[str] | None = None
-    ) -> dict[str, Any]:
+    def extract_high_signal(self, data: dict[str, Any], exclude_fields: list[str] | None = None) -> dict[str, Any]:
         """
         Extract high-signal information from data, removing low-value technical fields.
 
@@ -166,19 +154,22 @@ class ResponseOptimizer:
         """
         # Default low-signal fields to exclude
         low_signal_fields = {
-            "uuid", "guid", "mime_type", "content_type",
-            "created_at_timestamp", "updated_at_timestamp",
-            "internal_id", "trace_id", "span_id"
+            "uuid",
+            "guid",
+            "mime_type",
+            "content_type",
+            "created_at_timestamp",
+            "updated_at_timestamp",
+            "internal_id",
+            "trace_id",
+            "span_id",
         }
 
         if exclude_fields:
             low_signal_fields.update(exclude_fields)
 
         # Filter out low-signal fields
-        filtered = {
-            key: value for key, value in data.items()
-            if key not in low_signal_fields
-        }
+        filtered = {key: value for key, value in data.items() if key not in low_signal_fields}
 
         return filtered
 
@@ -193,26 +184,19 @@ def count_tokens(text: str) -> int:
 
 
 def truncate_response(
-    content: str,
-    max_tokens: int = MAX_RESPONSE_TOKENS,
-    truncation_message: str | None = None
+    content: str, max_tokens: int = MAX_RESPONSE_TOKENS, truncation_message: str | None = None
 ) -> tuple[str, bool]:
     """Truncate response using global optimizer."""
     return _optimizer.truncate_response(content, max_tokens, truncation_message)
 
 
 def format_response(
-    content: str,
-    format_type: Literal["concise", "detailed"] = "concise",
-    max_tokens: int | None = None
+    content: str, format_type: Literal["concise", "detailed"] = "concise", max_tokens: int | None = None
 ) -> str:
     """Format response using global optimizer."""
     return _optimizer.format_response(content, format_type, max_tokens)
 
 
-def extract_high_signal(
-    data: dict[str, Any],
-    exclude_fields: list[str] | None = None
-) -> dict[str, Any]:
+def extract_high_signal(data: dict[str, Any], exclude_fields: list[str] | None = None) -> dict[str, Any]:
     """Extract high-signal information using global optimizer."""
     return _optimizer.extract_high_signal(data, exclude_fields)

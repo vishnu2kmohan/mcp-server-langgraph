@@ -128,7 +128,20 @@ class ObservabilityConfig:
         )
 
     def _setup_logging(self):
-        """Configure structured logging with OpenTelemetry and log rotation"""
+        """
+        Configure structured logging with OpenTelemetry and log rotation.
+
+        Implements idempotent initialization to prevent duplicate handlers
+        when re-imported or embedded in larger services.
+        """
+        # Check if logging is already configured (idempotent guard)
+        root_logger = logging.getLogger()
+        if root_logger.handlers:
+            # Logging already configured - skip to avoid duplicate handlers
+            self.logger = logging.getLogger(self.service_name)
+            print(f"✓ Logging already configured, reusing existing setup")
+            return
+
         # Instrument logging to include trace context
         LoggingInstrumentor().instrument(set_logging_format=True)
 

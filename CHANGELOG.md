@@ -128,7 +128,7 @@ VERIFICATION_MODE=standard
 - `src/mcp_server_langgraph/utils/__init__.py` - Utils module
 - `tests/test_response_optimizer.py` - 85+ tests for optimizer
 - `tests/integration/test_tool_improvements.py` - Integration tests
-- `TOOL_IMPROVEMENTS_SUMMARY.md` - User-facing summary
+- `reports/TOOL_IMPROVEMENTS_SUMMARY_20251017.md` - User-facing summary
 
 #### Benefits
 
@@ -140,7 +140,7 @@ VERIFICATION_MODE=standard
 
 **Score Improvement**: 7.5/10 → 9.5/10 on Anthropic's best practices
 
-**See**: [ADR-0023](adr/0023-anthropic-tool-design-best-practices.md), [Summary](TOOL_IMPROVEMENTS_SUMMARY.md)
+**See**: [ADR-0023](adr/0023-anthropic-tool-design-best-practices.md), [Summary](reports/TOOL_IMPROVEMENTS_SUMMARY_20251017.md)
 
 ---
 
@@ -163,7 +163,7 @@ VERIFICATION_MODE=standard
 
 - `docs/architecture/adr-0023-anthropic-tool-design-best-practices.mdx`
 - `docs/architecture/adr-0024-agentic-loop-implementation.mdx`
-- `DOCUMENTATION_AUDIT_REPORT_20251017.md` - Comprehensive audit results
+- `reports/DOCUMENTATION_AUDIT_REPORT_20251017.md` - Comprehensive audit results
 
 #### Documentation Health
 
@@ -172,7 +172,7 @@ VERIFICATION_MODE=standard
 - **Broken Links Fixed**: 26
 - **Mintlify ADRs**: 22 → 24 (complete)
 
-**See**: [Documentation Audit Report](DOCUMENTATION_AUDIT_REPORT_20251017.md)
+**See**: [Documentation Audit Report](reports/DOCUMENTATION_AUDIT_REPORT_20251017.md)
 
 ---
 
@@ -2672,10 +2672,10 @@ from mcp_server_langgraph.core.agent import agent_graph
 - KONG_INTEGRATION.md for API gateway setup
 - MCP_REGISTRY.md for MCP registry publication
 - TESTING.md for comprehensive testing guide
-- LITELLM_GUIDE.md for multi-LLM configuration
+- integrations/litellm.md for multi-LLM configuration
 - GEMINI_SETUP.md for Google Gemini integration
 - GITHUB_ACTIONS_SETUP.md for CI/CD configuration
-- README_OPENFGA_INFISICAL.md for auth and secrets setup
+- integrations/openfga-infisical.md for auth and secrets setup
 
 ### Infrastructure
 - Docker Compose for local development
@@ -2704,7 +2704,7 @@ This is the first production-ready release of MCP Server with LangGraph. The cod
 
 This is the initial release. For deployment:
 
-1. Review [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) for pre-deployment checklist
+1. Review the [Production Checklist](docs/deployment/production-checklist.mdx) for pre-deployment requirements
 2. Configure secrets using Infisical or environment variables
 3. Run pre-deployment validation: `python scripts/validate_production.py`
 4. Deploy using Helm or Kustomize based on your platform

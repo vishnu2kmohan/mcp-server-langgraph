@@ -1,0 +1,306 @@
+# Environment Variables Reference
+
+This document lists all environment variables used by the MCP Server LangGraph application.
+
+## Required Environment Variables
+
+### Core Application
+
+- **`JWT_SECRET_KEY`** (REQUIRED)
+  - Purpose: Secret key for JWT token signing and validation
+  - Type: String (minimum 32 characters recommended)
+  - Example: `export JWT_SECRET_KEY="your-secure-secret-key-here"`
+  - Used by: Authentication, Authorization, OpenAPI validation
+  - Security: ⚠️ **CRITICAL** - Must be kept secret and never committed to version control
+
+### LLM API Keys
+
+At least one LLM provider API key is required for the agent to function:
+
+- **`ANTHROPIC_API_KEY`**
+  - Purpose: API key for Claude models
+  - Provider: Anthropic
+  - Example: `export ANTHROPIC_API_KEY="sk-ant-..."`
+
+- **`OPENAI_API_KEY`**
+  - Purpose: API key for GPT models
+  - Provider: OpenAI
+  - Example: `export OPENAI_API_KEY="sk-..."`
+
+- **`GOOGLE_API_KEY`**
+  - Purpose: API key for Gemini models
+  - Provider: Google
+  - Example: `export GOOGLE_API_KEY="AIza..."`
+
+### Authentication & Authorization
+
+- **`KEYCLOAK_CLIENT_SECRET`**
+  - Purpose: OAuth client secret for Keycloak SSO integration
+  - Type: String
+  - Default: None (SSO disabled if not set)
+  - Example: `export KEYCLOAK_CLIENT_SECRET="your-keycloak-secret"`
+
+- **`OPENFGA_STORE_ID`**
+  - Purpose: OpenFGA store ID for fine-grained authorization
+  - Type: UUID string
+  - Example: `export OPENFGA_STORE_ID="01H..."`
+  - Setup: Run `make setup-openfga` to generate
+
+- **`OPENFGA_MODEL_ID`**
+  - Purpose: OpenFGA model ID for authorization rules
+  - Type: UUID string
+  - Example: `export OPENFGA_MODEL_ID="01H..."`
+  - Setup: Run `make setup-openfga` to generate
+
+### HIPAA Compliance (Optional)
+
+- **`HIPAA_INTEGRITY_SECRET`**
+  - Purpose: HMAC secret for data integrity checksums (HIPAA 164.312(c)(1))
+  - Type: String (minimum 32 characters)
+  - Required: Only if processing Protected Health Information (PHI)
+  - Example: `export HIPAA_INTEGRITY_SECRET="your-secure-hipaa-secret"`
+
+## Optional Environment Variables
+
+### Observability & Monitoring
+
+- **`LANGSMITH_API_KEY`**
+  - Purpose: LangSmith tracing and observability
+  - Default: Disabled if not set
+  - Example: `export LANGSMITH_API_KEY="ls__..."`
+
+- **`LANGSMITH_PROJECT`**
+  - Purpose: LangSmith project name
+  - Default: "mcp-server-langgraph"
+  - Example: `export LANGSMITH_PROJECT="my-project"`
+
+- **`OTEL_EXPORTER_OTLP_ENDPOINT`**
+  - Purpose: OpenTelemetry collector endpoint
+  - Default: "http://localhost:4317"
+  - Example: `export OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4317"`
+
+- **`LOG_JSON_INDENT`**
+  - Purpose: JSON log indentation for readability
+  - Type: Integer
+  - Default: None (compact JSON)
+  - Example: `export LOG_JSON_INDENT=2`
+
+### Cloud Provider Integration
+
+#### AWS
+
+- **`AWS_REGION`**
+  - Purpose: AWS region for services
+  - Example: `export AWS_REGION="us-east-1"`
+
+- **`AWS_ACCESS_KEY_ID`** & **`AWS_SECRET_ACCESS_KEY`**
+  - Purpose: AWS credentials
+  - Example: `export AWS_ACCESS_KEY_ID="AKIA..."`
+
+#### Google Cloud Platform
+
+- **`GCP_PROJECT_ID`**
+  - Purpose: GCP project identifier
+  - Example: `export GCP_PROJECT_ID="my-project"`
+
+- **`GOOGLE_APPLICATION_CREDENTIALS`**
+  - Purpose: Path to GCP service account key file
+  - Example: `export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"`
+
+#### Azure
+
+- **`AZURE_MONITOR_CONNECTION_STRING`**
+  - Purpose: Azure Monitor connection string
+  - Example: `export AZURE_MONITOR_CONNECTION_STRING="InstrumentationKey=..."`
+
+- **`AZURE_MONITOR_INSTRUMENTATION_KEY`**
+  - Purpose: Azure Monitor instrumentation key
+  - Example: `export AZURE_MONITOR_INSTRUMENTATION_KEY="..."`
+
+### External Services
+
+#### Elasticsearch
+
+- **`ELASTICSEARCH_USERNAME`** & **`ELASTICSEARCH_PASSWORD`**
+  - Purpose: Elasticsearch authentication
+  - Example: `export ELASTICSEARCH_USERNAME="elastic"`
+
+- **`ELASTICSEARCH_API_KEY`**
+  - Purpose: Elasticsearch API key authentication
+  - Example: `export ELASTICSEARCH_API_KEY="..."`
+
+#### Datadog
+
+- **`DATADOG_API_KEY`**
+  - Purpose: Datadog monitoring integration
+  - Example: `export DATADOG_API_KEY="..."`
+
+#### Splunk
+
+- **`SPLUNK_HEC_TOKEN`** & **`SPLUNK_HEC_ENDPOINT`**
+  - Purpose: Splunk HTTP Event Collector
+  - Example: `export SPLUNK_HEC_ENDPOINT="https://splunk:8088"`
+
+- **`SPLUNK_ACCESS_TOKEN`** & **`SPLUNK_REALM`**
+  - Purpose: Splunk Observability Cloud
+  - Example: `export SPLUNK_REALM="us0"`
+
+### Secrets Management
+
+- **`INFISICAL_TOKEN`**
+  - Purpose: Infisical secrets management authentication
+  - Default: Falls back to environment variables if not set
+  - Example: `export INFISICAL_TOKEN="st.xxx.yyy.zzz"`
+  - Note: Application works without Infisical (uses .env fallback)
+
+## Environment Configuration Files
+
+### Development (.env)
+
+Create a `.env` file in the project root for local development:
+
+```bash
+# Core (Required)
+JWT_SECRET_KEY=development-secret-key-change-in-production
+
+# LLM Provider (at least one required)
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+# OPENAI_API_KEY=sk-your-key-here
+# GOOGLE_API_KEY=your-key-here
+
+# Authentication (Optional)
+# KEYCLOAK_CLIENT_SECRET=keycloak-secret
+# OPENFGA_STORE_ID=01H...
+# OPENFGA_MODEL_ID=01H...
+
+# Observability (Optional)
+# LANGSMITH_API_KEY=ls__your-key
+LOG_JSON_INDENT=2
+```
+
+### Production
+
+**⚠️ Security Warning**: Never commit `.env` files to version control!
+
+Use one of these approaches for production:
+1. **Environment variables** - Set directly in deployment environment
+2. **Infisical** - Centralized secrets management (recommended)
+3. **Kubernetes Secrets** - For Kubernetes deployments
+4. **Cloud provider secrets** - AWS Secrets Manager, GCP Secret Manager, Azure Key Vault
+
+## OpenAPI Schema Validation
+
+To run OpenAPI schema validation locally, you must set:
+
+```bash
+export JWT_SECRET_KEY="your-secret-key"
+```
+
+Then run:
+
+```bash
+make validate-openapi
+```
+
+Or:
+
+```bash
+python scripts/validation/validate_openapi.py
+```
+
+The validation will fail with the following error if `JWT_SECRET_KEY` is not set:
+
+```
+CRITICAL: JWT secret key not configured. Set JWT_SECRET_KEY environment variable
+or configure via Infisical. The service cannot start without a secure secret key.
+```
+
+## CI/CD Configuration
+
+GitHub Actions workflows automatically inject required secrets from repository secrets:
+
+- `.github/workflows/ci.yaml` - Main CI pipeline
+- `.github/workflows/pr-checks.yaml` - Pull request checks
+- `.github/workflows/quality-tests.yaml` - Quality test suite
+
+Required repository secrets:
+- `JWT_SECRET_KEY`
+- `ANTHROPIC_API_KEY` (for production deployment)
+- `KUBECONFIG_PROD` (for Kubernetes deployment)
+
+## Quick Setup
+
+### Minimal Setup (Development)
+
+```bash
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Set required variables
+export JWT_SECRET_KEY="development-secret-$(openssl rand -hex 16)"
+export ANTHROPIC_API_KEY="your-anthropic-key"
+
+# 3. Verify configuration
+make test-unit
+```
+
+### Full Setup (with Infrastructure)
+
+```bash
+# 1. Set core variables
+export JWT_SECRET_KEY="$(openssl rand -hex 32)"
+export ANTHROPIC_API_KEY="your-anthropic-key"
+
+# 2. Start infrastructure
+make dev-setup
+
+# 3. Get OpenFGA IDs from setup output
+export OPENFGA_STORE_ID="from-setup-output"
+export OPENFGA_MODEL_ID="from-setup-output"
+
+# 4. Run tests
+make test
+```
+
+## Troubleshooting
+
+### "JWT_SECRET_KEY not configured" error
+
+**Solution**: Set the JWT secret key:
+```bash
+export JWT_SECRET_KEY="$(openssl rand -hex 32)"
+```
+
+### "HIPAA_INTEGRITY_SECRET not configured" error
+
+**Solution**: Either:
+1. Set the secret: `export HIPAA_INTEGRITY_SECRET="$(openssl rand -hex 32)"`
+2. Skip HIPAA tests: `pytest -m "not hipaa"`
+
+### "No LLM API key found" error
+
+**Solution**: Set at least one LLM provider API key:
+```bash
+export ANTHROPIC_API_KEY="your-key"
+# or
+export OPENAI_API_KEY="your-key"
+# or
+export GOOGLE_API_KEY="your-key"
+```
+
+## Security Best Practices
+
+1. ✅ **Never commit secrets to version control**
+2. ✅ **Use different secrets for dev/staging/prod**
+3. ✅ **Rotate secrets regularly (every 90 days)**
+4. ✅ **Use strong random values** (minimum 32 characters)
+5. ✅ **Restrict secret access** (principle of least privilege)
+6. ✅ **Monitor secret usage** (audit logs)
+7. ✅ **Use secrets management tools** (Infisical, Vault, cloud providers)
+
+## References
+
+- [Infisical Documentation](https://infisical.com/docs)
+- [OpenFGA Setup Guide](../../docs/deployment/openfga-setup.md)
+- [Keycloak Integration](../../docs/deployment/keycloak-setup.md)
+- [Environment Setup Guide](../../docs/reference/development/ide-setup.md)

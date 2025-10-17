@@ -364,8 +364,8 @@ Check issues labeled `enhancement` for requested features.
 - **Documentation**: Check our comprehensive guides first
   - [README.md](../README.md) - Getting started
   - [TESTING.md](../TESTING.md) - Testing guide
-  - [PRODUCTION_DEPLOYMENT.md](../PRODUCTION_DEPLOYMENT.md) - Deployment
-  - [SECURITY_AUDIT.md](../SECURITY_AUDIT.md) - Security
+  - [Production Checklist](../docs/deployment/production-checklist.mdx) - Deployment
+  - [Security Audit](../archive/SECURITY_AUDIT.md) - Security
 
 ### Response Time
 
@@ -376,6 +376,13 @@ Check issues labeled `enhancement` for requested features.
 ### Community Support
 
 We welcome community members helping each other! If you know the answer to someone's question, please share your knowledge.
+
+### Additional Resources
+
+For more information:
+- **Testing Guide**: [TESTING.md](../TESTING.md)
+- **Production Checklist**: [docs/deployment/production-checklist.mdx](../docs/deployment/production-checklist.mdx)
+- **Security Policy**: [SECURITY.md](../SECURITY.md)
 
 ## License
 

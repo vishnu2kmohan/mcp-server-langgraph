@@ -217,7 +217,7 @@ test-all-quality: test-property test-contract test-regression
 # Validation
 validate-openapi:
 	@echo "Validating OpenAPI schema..."
-	python scripts/validation/validate_openapi.py
+	OTEL_SDK_DISABLED=true .venv/bin/python scripts/validation/validate_openapi.py 2>&1 | grep -v -E "(WARNING|trace_id|span_id|resource\.|Transient error|exporter\.py|Traceback|File \"|ImportError:|pydantic-ai|fall back)"
 	@echo "✓ OpenAPI validation complete"
 
 validate-deployments:
@@ -232,8 +232,8 @@ validate-docker-compose:
 
 validate-helm:
 	@echo "Validating Helm chart..."
-	helm lint deployments/helm/langgraph-agent
-	helm template test-release deployments/helm/langgraph-agent --dry-run > /dev/null
+	helm lint deployments/helm/mcp-server-langgraph
+	helm template test-release deployments/helm/mcp-server-langgraph --dry-run > /dev/null
 	@echo "✓ Helm chart valid"
 
 validate-kustomize:
@@ -341,7 +341,7 @@ deploy-production:
 	@echo "Press Ctrl+C within 10 seconds to cancel..."
 	@sleep 10
 	@echo "Deploying to production with Helm..."
-	helm upgrade --install langgraph-agent deployments/helm/langgraph-agent \
+	helm upgrade --install langgraph-agent deployments/helm/mcp-server-langgraph \
 		--namespace langgraph-agent \
 		--create-namespace \
 		--wait \

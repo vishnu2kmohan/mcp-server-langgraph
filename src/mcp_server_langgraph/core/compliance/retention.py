@@ -5,7 +5,7 @@ Implements automated data retention policies with configurable cleanup schedules
 Ensures compliance with GDPR data minimization and SOC 2 storage requirements.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -109,7 +109,7 @@ class DataRetentionService:
 
             result = RetentionResult(
                 policy_name="user_sessions",
-                execution_timestamp=datetime.utcnow().isoformat() + "Z",
+                execution_timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 dry_run=self.dry_run,
             )
 
@@ -119,7 +119,7 @@ class DataRetentionService:
                 return result
 
             try:
-                cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+                cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
                 logger.info(
                     f"Cleaning up sessions inactive since {cutoff_date.isoformat()}",
                     extra={"retention_days": retention_days, "dry_run": self.dry_run},
@@ -166,12 +166,12 @@ class DataRetentionService:
 
             result = RetentionResult(
                 policy_name="conversations",
-                execution_timestamp=datetime.utcnow().isoformat() + "Z",
+                execution_timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 dry_run=self.dry_run,
             )
 
             try:
-                cutoff_date = datetime.utcnow() - timedelta(days=archived_retention)
+                cutoff_date = datetime.now(timezone.utc) - timedelta(days=archived_retention)
                 logger.info(
                     f"Cleaning up archived conversations older than {cutoff_date.isoformat()}",
                     extra={"retention_days": archived_retention, "dry_run": self.dry_run},
@@ -208,12 +208,12 @@ class DataRetentionService:
 
             result = RetentionResult(
                 policy_name="audit_logs",
-                execution_timestamp=datetime.utcnow().isoformat() + "Z",
+                execution_timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 dry_run=self.dry_run,
             )
 
             try:
-                cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+                cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
                 logger.info(
                     f"Archiving audit logs older than {cutoff_date.isoformat()}",
                     extra={"retention_days": retention_days, "dry_run": self.dry_run},
@@ -380,7 +380,7 @@ class DataRetentionService:
         """Calculate next scheduled cleanup time"""
         # Calculate next run at 3 AM (schedule: 0 3 * * *)
         # Note: Full cron parsing could be added using croniter if needed
-        next_run = datetime.utcnow().replace(hour=3, minute=0, second=0, microsecond=0)
-        if next_run < datetime.utcnow():
+        next_run = datetime.now(timezone.utc).replace(hour=3, minute=0, second=0, microsecond=0)
+        if next_run < datetime.now(timezone.utc):
             next_run += timedelta(days=1)
-        return next_run.isoformat() + "Z"
+        return next_run.isoformat().replace("+00:00", "Z")

@@ -15,7 +15,7 @@ from typing import Optional
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.llm.factory import create_llm_from_config
+from mcp_server_langgraph.llm.factory import create_summarization_model
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import count_tokens
 
@@ -62,13 +62,13 @@ class ContextManager:
         self.target_after_compaction = target_after_compaction
         self.recent_message_count = recent_message_count
 
-        # Initialize LLM for summarization
+        # Initialize dedicated summarization LLM (lighter/cheaper model)
         if settings is None:
             from mcp_server_langgraph.core.config import settings as global_settings
 
             settings = global_settings
 
-        self.llm = create_llm_from_config(settings)
+        self.llm = create_summarization_model(settings)
         logger.info(
             "ContextManager initialized",
             extra={
@@ -108,9 +108,7 @@ class ContextManager:
 
             return False
 
-    async def compact_conversation(
-        self, messages: list[BaseMessage], preserve_system: bool = True
-    ) -> CompactionResult:
+    async def compact_conversation(self, messages: list[BaseMessage], preserve_system: bool = True) -> CompactionResult:
         """
         Compact conversation by summarizing older messages.
 
@@ -207,9 +205,7 @@ class ContextManager:
         """
         with tracer.start_as_current_span("context.summarize"):
             # Format conversation for summarization
-            conversation_text = "\n\n".join(
-                [f"{self._get_role_label(msg)}: {msg.content}" for msg in messages]
-            )
+            conversation_text = "\n\n".join([f"{self._get_role_label(msg)}: {msg.content}" for msg in messages])
 
             # Summarization prompt using XML structure (Anthropic best practice)
             summarization_prompt = f"""<task>
@@ -254,6 +250,18 @@ Focus on high-signal information that maintains conversation context.
                 # Fallback: Simple concatenation with truncation
                 fallback_summary = f"Previous conversation ({len(messages)} messages): " + conversation_text[:500] + "..."
                 return fallback_summary
+
+    def count_tokens(self, text: str) -> int:
+        """
+        Count tokens in text using tiktoken.
+
+        Args:
+            text: Text to count tokens for
+
+        Returns:
+            Number of tokens
+        """
+        return count_tokens(text)
 
     def _message_to_text(self, message: BaseMessage) -> str:
         """Convert message to text for token counting."""
@@ -324,9 +332,7 @@ Focus on high-signal information that maintains conversation context.
         """
         with tracer.start_as_current_span("context.extract_key_info_llm"):
             # Format conversation
-            conversation_text = "\n\n".join(
-                [f"{self._get_role_label(msg)}: {msg.content}" for msg in messages]
-            )
+            conversation_text = "\n\n".join([f"{self._get_role_label(msg)}: {msg.content}" for msg in messages])
 
             # Extraction prompt with XML structure (Anthropic best practice)
             extraction_prompt = f"""<task>

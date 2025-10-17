@@ -388,9 +388,7 @@ async def demo_multi_turn_conversation():
     print("Turn 1:")
     print('   User: "What is the best way to implement authentication in microservices?"')
 
-    turn1_messages = [
-        HumanMessage(content="What is the best way to implement authentication in microservices?")
-    ]
+    turn1_messages = [HumanMessage(content="What is the best way to implement authentication in microservices?")]
 
     # Extract notes
     turn1_notes = {

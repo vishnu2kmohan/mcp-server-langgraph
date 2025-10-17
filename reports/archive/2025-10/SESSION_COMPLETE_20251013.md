@@ -65,7 +65,7 @@
 - **Impact**: 27% → 64% type coverage (+137%)
 
 #### 4. Error Handling Documentation ✅
-**File**: `docs/adr/0006-error-handling-strategy.md` (600+ lines)
+**File**: `docs/../adr/0006-error-handling-strategy.md` (600+ lines)
 - 40+ error codes categorized
 - Retry strategies documented
 - Fallback mechanisms defined
@@ -231,7 +231,7 @@ async def delete_inactive_sessions(cutoff_date: datetime) -> int
    - 6 Pydantic data models
    - 5 in-memory implementations
 
-2. **`docs/adr/0006-error-handling-strategy.md`** (600+ lines)
+2. **`docs/../adr/0006-error-handling-strategy.md`** (600+ lines)
    - Comprehensive error handling guide
    - 40+ error codes documented
    - Retry and fallback strategies

@@ -320,7 +320,7 @@ export MODEL_NAME=ollama/llama3.1:8b
 
 - **Google AI Forum**: https://discuss.ai.google.dev
 - **GitHub Issues**: Report issues with the agent
-- **Documentation**: See LITELLM_GUIDE.md for all providers
+- **Documentation**: See integrations/litellm.md for all providers
 
 ---
 

@@ -46,7 +46,7 @@ Successfully implemented comprehensive compliance framework covering:
 
 5. **Module files**: `api/__init__.py`, `compliance/__init__.py`
 
-6. **Modified**: `session.py`, `pyproject.toml`, `CHANGELOG.md`
+6. **Modified**: `session.py`, `pyproject.toml`, `../CHANGELOG.md`
 
 ### GDPR Coverage
 
@@ -199,13 +199,13 @@ Successfully implemented comprehensive compliance framework covering:
 **Documentation** (3 files):
 - `.github/COMPLIANCE_PHASE1_SUMMARY.md`
 - `.github/COMPLIANCE_IMPLEMENTATION_COMPLETE.md`
-- `CHANGELOG.md` (updated with comprehensive entries)
+- `../CHANGELOG.md` (updated with comprehensive entries)
 
 ### Modified Files (3 total)
 
 - `src/mcp_server_langgraph/auth/session.py` - Added FastAPI dependencies
 - `pyproject.toml` - Added `gdpr` pytest marker
-- `CHANGELOG.md` - Comprehensive changelog entries
+- `../CHANGELOG.md` - Comprehensive changelog entries
 
 ---
 

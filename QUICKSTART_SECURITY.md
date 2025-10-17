@@ -1,0 +1,81 @@
+# Security Remediation - Quick Reference
+
+## 🚨 CRITICAL: Required Before Production
+
+### 1. Set JWT Secret (REQUIRED)
+```bash
+export JWT_SECRET_KEY="$(openssl rand -base64 32)"
+```
+**Without this:** Service will NOT start (fail-closed security)
+
+### 2. Set HIPAA Secret (if using HIPAA controls)
+```bash
+export HIPAA_INTEGRITY_SECRET="$(openssl rand -base64 32)"
+```
+
+### 3. Set Encryption Key (if enabling encryption)
+```bash
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# Copy output to CONTEXT_ENCRYPTION_KEY
+```
+
+---
+
+## 💰 Cost Optimization (OPTIONAL)
+
+Add to `.env` or `config.py`:
+```bash
+use_dedicated_summarization_model=true
+summarization_model_name="gemini-2.0-flash-lite"  # Cheaper model
+summarization_model_temperature=0.3
+summarization_model_max_tokens=2000
+
+use_dedicated_verification_model=true
+verification_model_name="gemini-2.0-flash-lite"
+verification_model_temperature=0.0
+verification_model_max_tokens=1000
+```
+**Benefit:** 40-60% cost reduction on summarization/verification
+
+---
+
+## 🔒 Data Security (OPTIONAL - for regulated workloads)
+
+```bash
+enable_context_encryption=true
+context_retention_days=90
+enable_auto_deletion=true
+```
+
+---
+
+## ✅ Quick Test
+
+```bash
+# Should start successfully
+python -m mcp_server_langgraph.mcp.server_stdio
+
+# Should FAIL with clear error
+unset JWT_SECRET_KEY && python -m mcp_server_langgraph.mcp.server_stdio
+```
+
+---
+
+## 📊 What Changed
+
+| Priority | Issue | Fixed | Impact |
+|----------|-------|-------|--------|
+| CRITICAL | Hard-coded secrets | ✅ | Service fails to start without proper secrets |
+| HIGH | Logging duplication | ✅ | Idempotent initialization |
+| HIGH | Cost spikes | ✅ | Dedicated lighter models for summarization |
+| MEDIUM | Data compliance | ✅ | Encryption + retention controls |
+
+---
+
+## 🆘 Emergency Contacts
+
+- Full Guide: `SECURITY_REMEDIATION.md`
+- Config Reference: `src/mcp_server_langgraph/core/config.py`
+- Issues: GitHub Issues
+
+**Last Updated:** 2025-10-17

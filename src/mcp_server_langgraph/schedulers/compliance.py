@@ -10,7 +10,7 @@ Uses APScheduler for cron-based job scheduling.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -183,7 +183,7 @@ class ComplianceScheduler:
         Collects evidence for all SOC 2 controls and generates summary.
         """
         with tracer.start_as_current_span("compliance.daily_check") as span:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
 
             try:
                 logger.info("Starting daily compliance check")
@@ -257,7 +257,7 @@ class ComplianceScheduler:
         access review report for security team.
         """
         with tracer.start_as_current_span("compliance.weekly_access_review") as span:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             end_time = start_time
             start_of_period = start_time - timedelta(days=7)
 
@@ -289,7 +289,7 @@ class ComplianceScheduler:
                 #         username="alice",
                 #         roles=["admin", "user"],
                 #         active_sessions=2,
-                #         last_login=start_time.isoformat() + "Z",
+                #         last_login=start_time.isoformat().replace("+00:00", "Z"),
                 #         account_status="active",
                 #         review_status="pending",
                 #     )
@@ -303,9 +303,9 @@ class ComplianceScheduler:
                 # Create report
                 report = AccessReviewReport(
                     review_id=f"access_review_{start_time.strftime('%Y%m%d')}",
-                    generated_at=start_time.isoformat() + "Z",
-                    period_start=start_of_period.isoformat() + "Z",
-                    period_end=end_time.isoformat() + "Z",
+                    generated_at=start_time.isoformat().replace("+00:00", "Z"),
+                    period_start=start_of_period.isoformat().replace("+00:00", "Z"),
+                    period_end=end_time.isoformat().replace("+00:00", "Z"),
                     total_users=total_users,
                     active_users=active_users,
                     inactive_users=inactive_users,

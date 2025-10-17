@@ -1473,7 +1473,7 @@ PREFERENCES:
 
 ### Implementation
 
-**File**: `docs/AGENTIC_LOOP_GUIDE.md` (create)
+**File**: `docs-internal/AGENTIC_LOOP_GUIDE.md` (create)
 
 ```markdown
 # Agentic Loop Implementation Guide

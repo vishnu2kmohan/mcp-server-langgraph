@@ -32,8 +32,8 @@ Successfully reorganized documentation to eliminate conflicts, update outdated v
 
 #### Issue 1: kubernetes.md vs kubernetes.mdx
 **Problem**:
-- `docs/deployment/kubernetes.md` (1,800+ lines, v2.4.0 content) - comprehensive but not in Mintlify
-- `docs/deployment/kubernetes.mdx` (830 lines, v2.1.0 references) - in Mintlify but outdated
+- `../docs/deployment/kubernetes.md` (1,800+ lines, v2.4.0 content) - comprehensive but not in Mintlify
+- `../docs/deployment/kubernetes.mdx` (830 lines, v2.1.0 references) - in Mintlify but outdated
 
 **Solution**:
 - ✅ Updated kubernetes.mdx with v2.4.0 version references
@@ -42,10 +42,10 @@ Successfully reorganized documentation to eliminate conflicts, update outdated v
 - ✅ Deleted kubernetes.md
 
 **Files Modified**:
-- `docs/deployment/kubernetes.mdx` (3 edits: lines 12, 98, 352)
+- `../docs/deployment/kubernetes.mdx` (3 edits: lines 12, 98, 352)
 
 **Files Deleted**:
-- `docs/deployment/kubernetes.md`
+- `../docs/deployment/kubernetes.md`
 
 #### Issue 2: langgraph-platform.md vs langgraph-platform.mdx
 **Problem**:
@@ -56,7 +56,7 @@ Successfully reorganized documentation to eliminate conflicts, update outdated v
 - ✅ Deleted langgraph-platform.md (redundant)
 
 **Files Deleted**:
-- `docs/deployment/langgraph-platform.md`
+- `../docs/deployment/langgraph-platform.md`
 
 ### 🔴 Critical: Outdated Version References (3 ADR files) ✅ FIXED
 
@@ -93,8 +93,8 @@ All ADRs updated from v2.2.0 → v2.4.0 to match current project version (pyproj
 
 **Category 1: Redundant Files** (deleted - have .mdx equivalents)
 
-1. ❌ `docs/deployment/cloudrun.md` → `cloud-run.mdx` exists ✅ DELETED
-2. ❌ `docs/deployment/production.md` → `production-checklist.mdx` exists ✅ DELETED
+1. ❌ `../docs/deployment/cloudrun.md` → `cloud-run.mdx` exists ✅ DELETED
+2. ❌ `../docs/deployment/production.md` → `production-checklist.mdx` exists ✅ DELETED
 3. ❌ `docs/development/testing.md` → `advanced/testing.mdx` exists ✅ DELETED
 
 **Category 2: Reference Documentation** (moved to docs/reference/)
@@ -107,9 +107,9 @@ All ADRs updated from v2.2.0 → v2.4.0 to match current project version (pyproj
 
 **Category 3: Operational Documentation** (kept in place)
 
-9. ✅ `docs/deployment/VERSION_COMPATIBILITY.md` - KEEP (520 lines, infrastructure version matrix)
-10. ✅ `docs/deployment/VERSION_PINNING.md` - KEEP (546 lines, version pinning policy)
-11. ✅ `docs/deployment/model-configuration.md` - KEEP (model configuration reference)
+9. ✅ `../docs/deployment/VERSION_COMPATIBILITY.md` - KEEP (520 lines, infrastructure version matrix)
+10. ✅ `../docs/deployment/VERSION_PINNING.md` - KEEP (546 lines, version pinning policy)
+11. ✅ `../docs/deployment/model-configuration.md` - KEEP (model configuration reference)
 
 **New File Created**:
 - `docs/reference/README.md` - Explains reference documentation organization
@@ -188,7 +188,7 @@ Issues: 0 duplicates, 0 outdated versions, 0 orphaned files
 
 ### Modified (7 files)
 
-1. **docs/deployment/kubernetes.mdx**
+1. **../docs/deployment/kubernetes.mdx**
    - Updated v2.1.0 → v2.4.0 in Info box (line 12)
    - Updated image tag v2.1.0 → v2.4.0 (line 98)
    - Updated OpenFGA v1.5.0 → v1.10.2 (line 352)
@@ -207,10 +207,10 @@ Issues: 0 duplicates, 0 outdated versions, 0 orphaned files
 
 ### Deleted (5 files)
 
-6. **docs/deployment/kubernetes.md** - Redundant (kubernetes.mdx exists)
-7. **docs/deployment/langgraph-platform.md** - Redundant (langgraph-platform.mdx exists)
-8. **docs/deployment/cloudrun.md** - Redundant (cloud-run.mdx exists)
-9. **docs/deployment/production.md** - Redundant (production-checklist.mdx exists)
+6. **../docs/deployment/kubernetes.md** - Redundant (kubernetes.mdx exists)
+7. **../docs/deployment/langgraph-platform.md** - Redundant (langgraph-platform.mdx exists)
+8. **../docs/deployment/cloudrun.md** - Redundant (cloud-run.mdx exists)
+9. **../docs/deployment/production.md** - Redundant (production-checklist.mdx exists)
 10. **docs/development/testing.md** - Redundant (advanced/testing.mdx exists)
 
 ### Moved (5 files)
@@ -307,7 +307,7 @@ done
 
 ### Operational Documentation (.md)
 
-**Location**: `docs/deployment/`
+**Location**: `../docs/deployment/`
 **Purpose**: Operational reference for version management and configuration
 **Format**: Standard Markdown
 
@@ -444,7 +444,7 @@ done
 
 - **[docs/README.md](docs/README.md)** - Mintlify documentation organization
 - **[docs/reference/README.md](docs/reference/README.md)** - Reference documentation policy
-- **[docs/deployment/VERSION_PINNING.md](docs/deployment/VERSION_PINNING.md)** - Version pinning strategy
+- **[../docs/deployment/VERSION_PINNING.md](../docs/deployment/VERSION_PINNING.md)** - Version pinning strategy
 - **[VERSION_PINNING_REMEDIATION.md](VERSION_PINNING_REMEDIATION.md)** - Version pinning audit
 - **[DEPLOYMENT_UPDATE_SUMMARY.md](DEPLOYMENT_UPDATE_SUMMARY.md)** - Infrastructure updates
 

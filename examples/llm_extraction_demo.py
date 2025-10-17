@@ -190,7 +190,9 @@ async def example_3_compaction_with_extraction():
         compaction_result = await manager.compact_conversation(messages)
 
         print(f"\n   Original: {compaction_result.original_token_count} tokens, {len(messages)} messages")
-        print(f"   Compacted: {compaction_result.compacted_token_count} tokens, {len(compaction_result.compacted_messages)} messages")
+        print(
+            f"   Compacted: {compaction_result.compacted_token_count} tokens, {len(compaction_result.compacted_messages)} messages"
+        )
         print(f"   Compression ratio: {compaction_result.compression_ratio:.2%}")
         print(f"   Messages summarized: {compaction_result.messages_summarized}")
 
@@ -347,12 +349,20 @@ async def example_5_progressive_note_taking():
     print("=" * 70)
 
     all_notes = {
-        "decisions": notes_session1.get("decisions", []) + notes_session2.get("decisions", []) + notes_session3.get("decisions", []),
-        "requirements": notes_session1.get("requirements", []) + notes_session2.get("requirements", []) + notes_session3.get("requirements", []),
+        "decisions": notes_session1.get("decisions", [])
+        + notes_session2.get("decisions", [])
+        + notes_session3.get("decisions", []),
+        "requirements": notes_session1.get("requirements", [])
+        + notes_session2.get("requirements", [])
+        + notes_session3.get("requirements", []),
         "facts": notes_session1.get("facts", []) + notes_session2.get("facts", []) + notes_session3.get("facts", []),
-        "action_items": notes_session1.get("action_items", []) + notes_session2.get("action_items", []) + notes_session3.get("action_items", []),
+        "action_items": notes_session1.get("action_items", [])
+        + notes_session2.get("action_items", [])
+        + notes_session3.get("action_items", []),
         "issues": notes_session1.get("issues", []) + notes_session2.get("issues", []) + notes_session3.get("issues", []),
-        "preferences": notes_session1.get("preferences", []) + notes_session2.get("preferences", []) + notes_session3.get("preferences", []),
+        "preferences": notes_session1.get("preferences", [])
+        + notes_session2.get("preferences", [])
+        + notes_session3.get("preferences", []),
     }
 
     for category, items in all_notes.items():

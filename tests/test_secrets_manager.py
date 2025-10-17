@@ -5,6 +5,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# Check if infisical-python is available
+try:
+    from infisical_client import InfisicalClient  # noqa: F401
+
+    INFISICAL_AVAILABLE = True
+except ImportError:
+    INFISICAL_AVAILABLE = False
+
+# Skip all tests in this module if infisical-python is not installed
+pytestmark = pytest.mark.skipif(not INFISICAL_AVAILABLE, reason="infisical-python not installed (optional dependency)")
+
 
 @pytest.mark.unit
 @pytest.mark.infisical

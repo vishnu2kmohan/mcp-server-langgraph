@@ -131,7 +131,7 @@ mutmut html
 
 ### Visibility
 
-✅ **Status Badges** (README.md)
+✅ **Status Badges** (../README.md)
 Added 4 workflow status badges:
 ```markdown
 [![CI/CD](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](...)
@@ -185,7 +185,7 @@ Added 4 workflow status badges:
    - Phase 2: 3 changes (SBOM generation)
 
 ### Documentation
-6. ✅ **README.md** - Status badges added
+6. ✅ **../README.md** - Status badges added
 7. ✅ **docs/development/github-actions.md** - Comprehensive updates
 8. ✅ **docs/development/ci-cd.md** - Comprehensive updates
 

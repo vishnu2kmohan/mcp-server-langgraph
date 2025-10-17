@@ -5,6 +5,7 @@ OpenAPI Schema Validation Script
 Generates OpenAPI schema from FastAPI app and validates compliance.
 """
 
+import importlib
 import json
 import sys
 from pathlib import Path
@@ -18,7 +19,7 @@ except ImportError:
     sys.exit(1)
 
 
-def generate_openapi_schema(app_module: str = "mcp_server_streamable") -> dict:
+def generate_openapi_schema(app_module: str = "mcp_server_langgraph.mcp.server_streamable") -> dict:
     """
     Generate OpenAPI schema from FastAPI application
 
@@ -30,7 +31,7 @@ def generate_openapi_schema(app_module: str = "mcp_server_streamable") -> dict:
     """
     try:
         # Import the FastAPI app
-        module = __import__(app_module)
+        module = importlib.import_module(app_module)
         app = getattr(module, "app")
 
         # Generate OpenAPI schema
@@ -199,7 +200,7 @@ def main():
     # Generate schema
     print("\n1. Generating OpenAPI schema...")
     try:
-        schema = generate_openapi_schema("mcp_server_streamable")
+        schema = generate_openapi_schema("mcp_server_langgraph.mcp.server_streamable")
     except Exception as e:
         print(f"Failed to generate schema: {e}")
         return 1

@@ -143,7 +143,7 @@ ENABLE_LLM_EXTRACTION=true
 | `examples/full_workflow_demo.py` | 290 | Complete agentic loop demonstration |
 
 **Documentation:**
-- ✅ `examples/README.md` - Comprehensive guide (350 lines)
+- ✅ `../examples/README.md` - Comprehensive guide (350 lines)
 - ✅ Updated main `README.md` with features section
 - ✅ 3 Architecture Decision Records (40+ pages)
   - ADR-0023: Tool Design Best Practices
@@ -225,8 +225,8 @@ MAX_REFINEMENT_ATTEMPTS=3
 8. `examples/parallel_execution_demo.py` (370 lines)
 9. `examples/llm_extraction_demo.py` (400 lines)
 10. `examples/full_workflow_demo.py` (290 lines)
-11. `examples/README.md` (350 lines)
-12. `adr/0025-anthropic-best-practices-enhancements.md` (414 lines)
+11. `../examples/README.md` (350 lines)
+12. `../adr/0025-anthropic-best-practices-enhancements.md` (414 lines)
 
 **Total New Code:** ~4,614 lines
 
@@ -240,7 +240,7 @@ MAX_REFINEMENT_ATTEMPTS=3
 7. `.env.example` - Documented new variables
 8. `pyproject.toml` - Added dependencies
 9. `README.md` - Updated features section
-10. `adr/README.md` - Added ADR-0025
+10. `../adr/README.md` - Added ADR-0025
 
 ---
 
@@ -328,11 +328,11 @@ await loader.index_context(
 ## 🎓 Learning Resources
 
 ### Documentation
-- **[ADR-0023](adr/0023-anthropic-tool-design-best-practices.md)** - Tool design patterns
-- **[ADR-0024](adr/0024-agentic-loop-implementation.md)** - Agentic loop deep-dive
-- **[ADR-0025](adr/0025-anthropic-best-practices-enhancements.md)** - Enhancement details
-- **[Examples README](examples/README.md)** - Complete examples guide
-- **[Agentic Loop Guide](docs/AGENTIC_LOOP_GUIDE.md)** - Technical deep-dive
+- **[ADR-0023](../adr/0023-anthropic-tool-design-best-practices.md)** - Tool design patterns
+- **[ADR-0024](../adr/0024-agentic-loop-implementation.md)** - Agentic loop deep-dive
+- **[ADR-0025](../adr/0025-anthropic-best-practices-enhancements.md)** - Enhancement details
+- **[Examples README](../examples/README.md)** - Complete examples guide
+- **[Agentic Loop Guide](../docs-internal/AGENTIC_LOOP_GUIDE.md)** - Technical deep-dive
 
 ### Anthropic Articles
 1. [Effective Context Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
@@ -466,9 +466,9 @@ key_info = await manager.extract_key_information_llm(messages)
 ## 📖 Documentation Delivered
 
 ### Architecture Decision Records (3 ADRs)
-1. **[ADR-0023](adr/0023-anthropic-tool-design-best-practices.md)** - Tool design patterns (35 pages)
-2. **[ADR-0024](adr/0024-agentic-loop-implementation.md)** - Agentic loop implementation (28 pages)
-3. **[ADR-0025](adr/0025-anthropic-best-practices-enhancements.md)** - Advanced enhancements (40 pages)
+1. **[ADR-0023](../adr/0023-anthropic-tool-design-best-practices.md)** - Tool design patterns (35 pages)
+2. **[ADR-0024](../adr/0024-agentic-loop-implementation.md)** - Agentic loop implementation (28 pages)
+3. **[ADR-0025](../adr/0025-anthropic-best-practices-enhancements.md)** - Advanced enhancements (40 pages)
 
 ### Examples & Tutorials (4 working demonstrations)
 1. **Dynamic Context Loading** - 4 comprehensive demos
@@ -477,7 +477,7 @@ key_info = await manager.extract_key_information_llm(messages)
 4. **Complete Workflow** - Full agentic loop demonstration
 
 ### Guides
-- **[Examples README](examples/README.md)** - Complete guide with troubleshooting
+- **[Examples README](../examples/README.md)** - Complete guide with troubleshooting
 - **[Main README](README.md)** - Updated with new features
 - **[Test Report](TEST_REPORT.md)** - Comprehensive test documentation
 

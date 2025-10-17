@@ -14,7 +14,7 @@ Tests cover:
 
 import asyncio
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -129,7 +129,7 @@ class TestInMemorySessionStore:
         session = await store.get(session_id)
         # Should expire in ~60 seconds
         expires_at = datetime.fromisoformat(session.expires_at)
-        time_until_expiry = (expires_at - datetime.utcnow()).total_seconds()
+        time_until_expiry = (expires_at - datetime.now(timezone.utc)).total_seconds()
         assert 55 < time_until_expiry < 65  # Allow some tolerance
 
     @pytest.mark.asyncio
@@ -361,9 +361,9 @@ class TestRedisSessionStore:
             "username": "paul",
             "roles": "user",  # Comma-separated roles
             "metadata": "{}",
-            "created_at": datetime.utcnow().isoformat(),
-            "expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat(),
-            "last_accessed": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "last_accessed": datetime.now(timezone.utc).isoformat(),
         }
 
         session = await store.get(session_id)
@@ -392,9 +392,9 @@ class TestRedisSessionStore:
             "username": "quinn",
             "roles": "user",
             "metadata": "{'ip': '10.0.0.1'}",
-            "created_at": datetime.utcnow().isoformat(),
-            "expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat(),
-            "last_accessed": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "last_accessed": datetime.now(timezone.utc).isoformat(),
         }
 
         success = await store.update(session_id, metadata={"ip": "10.0.0.2"})
@@ -450,9 +450,9 @@ class TestRedisSessionStore:
                     "username": "tina",
                     "roles": "user",
                     "metadata": "{}",
-                    "created_at": datetime.utcnow().isoformat(),
-                    "expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat(),
-                    "last_accessed": datetime.utcnow().isoformat(),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+                    "last_accessed": datetime.now(timezone.utc).isoformat(),
                 }
             elif session2 in key:
                 return {
@@ -461,9 +461,9 @@ class TestRedisSessionStore:
                     "username": "tina",
                     "roles": "admin",
                     "metadata": "{}",
-                    "created_at": datetime.utcnow().isoformat(),
-                    "expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat(),
-                    "last_accessed": datetime.utcnow().isoformat(),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+                    "last_accessed": datetime.now(timezone.utc).isoformat(),
                 }
             return {}
 
@@ -503,9 +503,9 @@ class TestRedisSessionStore:
                 b"username": b"victor",
                 b"roles": b'["user"]',
                 b"metadata": b"{}",
-                b"created_at": datetime.utcnow().isoformat().encode(),
-                b"expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat().encode(),
-                b"last_accessed": datetime.utcnow().isoformat().encode(),
+                b"created_at": datetime.now(timezone.utc).isoformat().encode(),
+                b"expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat().encode(),
+                b"last_accessed": datetime.now(timezone.utc).isoformat().encode(),
             }
 
         mock_redis.hgetall.side_effect = mock_hgetall
