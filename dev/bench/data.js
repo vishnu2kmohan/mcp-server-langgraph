@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760726830857,
+  "lastUpdate": 1760730563569,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -1836,6 +1836,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001694513242891286",
             "extra": "mean: 79.14450904556132 usec\nrounds: 5196"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "2016745c13cea6dbe18291590ed656b66521b901",
+          "message": "fix: resolve 65 test failures, expand mypy strict mode, fix critical message handling bugs\n\nCritical Production Fixes:\n- Fixed dict/message structure mismatch in server_stdio.py (CRITICAL)\n  * Changed dict messages to proper HumanMessage objects (server_stdio.py:297)\n  * Prevents AttributeError in factory._format_messages\n  * Fixes all MCP server integration tests\n\n- Enhanced message handling in factory.py (HIGH)\n  * Added support for dict messages with robust fallback (factory.py:103-120)\n  * Handles BaseMessage, dict, and other types gracefully\n  * Prevents AttributeError: 'dict' object has no attribute 'content'\n\n- Fixed MagicMock serialization in checkpointing (HIGH)\n  * Made checkpointing conditional on enable_checkpointing flag (agent.py:550-558)\n  * Allows testing with mocks without serialization errors\n  * Fixes all 7 agentic loop integration tests\n\n- Fixed verifier critical issues parsing (MEDIUM)\n  * Filter \"None\"/\"N/A\" strings from critical_issues (verifier.py:302-309)\n  * Respect parsed OVERALL score before recalculating (verifier.py:315-322)\n  * Fixed floating point precision with rounding (verifier.py:342)\n  * Fixes 5 verifier tests\n\n- Enhanced JSON logger robustness (MEDIUM)\n  * Always call getMessage() for log records (json_logger.py:144)\n  * Handle both tuple and boolean exc_info (json_logger.py:112-128)\n  * Fixes 20 json_logger tests\n\n- Fixed compression ratio validation (LOW)\n  * Clamp compression_ratio to max 1.0 (context_manager.py:166)\n  * Prevents Pydantic validation errors when summary > original\n\nTest Fixes Summary:\n\nOriginal 14 Failed Tests (100% fixed):\n- test_verifier.py: 5/5 fixed\n- test_agentic_loop_integration.py: 7/7 fixed\n- test_context_manager.py: 2/2 fixed\n- test_parallel_executor.py: 1/1 fixed\n\nAdditional 51 Tests Fixed (364% beyond original scope):\n- test_context_manager_llm.py: 15/15 fixed (factory patch path)\n- test_json_logger.py: 20/20 fixed (message + exception handling)\n- test_distributed_checkpointing.py: 2/2 fixed (async + mocking)\n- test_tool_improvements.py: 9/16 fixed, 7 skipped (MCP SDK private API)\n- test_anthropic_enhancements.py: 2/7 fixed, 5 skipped (require infrastructure)\n\nEnhancements:\n\nMypy Strict Mode Expansion (Phase 3):\n- Added 5 new modules to strict typing (pyproject.toml:204-214)\n- Total strict modules: 13 (was 8, +62% increase)\n- New modules: context_manager, parallel_executor, response_optimizer,\n  health.checks, monitoring.sla\n\nImproved Test Architecture:\n- Created test_settings fixture with real Settings objects\n- Converted sync invoke() to async ainvoke() in distributed tests\n- Added proper AsyncMock for integration tests\n- Added skip markers with clear reasons for infrastructure-dependent tests\n\nTest Results:\n- 702 tests passing (530 unit + 57 quality + 104 fixed + 11 integration)\n- 19 tests appropriately skipped (require Qdrant/Redis/MCP SDK v2)\n- Zero test failures\n- Zero critical security issues\n\nQuality Improvements:\n- Quality score: 9.9/10 (was 9.6, +0.3)\n- Code coverage: 86%+ maintained\n- All lint checks passing (flake8, black, isort, bandit)\n- All deployment validations passing\n- 100% CI/CD pipeline compatibility\n\nFiles Modified (15 total):\nSource (6): verifier.py, context_manager.py, agent.py, json_logger.py,\n  factory.py, server_stdio.py\nTests (8): agentic_loop_integration, context_manager, parallel_executor,\n  context_manager_llm, json_logger, distributed_checkpointing,\n  tool_improvements, anthropic_enhancements\nConfig (1): pyproject.toml\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-17T15:46:37-04:00",
+          "tree_id": "9b3456c579b7374189a570b2a39c545d69f8573e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/2016745c13cea6dbe18291590ed656b66521b901"
+        },
+        "date": 1760730562506,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36104.681843433034,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033626903377240683",
+            "extra": "mean: 27.69723894359387 usec\nrounds: 4997"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33228.57664672592,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032387384235960827",
+            "extra": "mean: 30.094578249066586 usec\nrounds: 6556"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31400.533751850813,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003189914818393172",
+            "extra": "mean: 31.846592414724732 usec\nrounds: 14976"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 430987.4948674922,
+            "unit": "iter/sec",
+            "range": "stddev: 5.440208808221624e-7",
+            "extra": "mean: 2.320252935198159 usec\nrounds: 38243"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 415681.3070372924,
+            "unit": "iter/sec",
+            "range": "stddev: 7.636435875158817e-7",
+            "extra": "mean: 2.4056891254681467 usec\nrounds: 65364"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 435398.4585324478,
+            "unit": "iter/sec",
+            "range": "stddev: 4.796318840580669e-7",
+            "extra": "mean: 2.2967467624267566 usec\nrounds: 62854"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2013273.5474038247,
+            "unit": "iter/sec",
+            "range": "stddev: 5.457698303460775e-8",
+            "extra": "mean: 496.7034913310858 nsec\nrounds: 98630"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 435099.3983532667,
+            "unit": "iter/sec",
+            "range": "stddev: 4.61246725809091e-7",
+            "extra": "mean: 2.298325402849852 usec\nrounds: 47916"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2995.7583024997703,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008247904196459245",
+            "extra": "mean: 333.80530036938006 usec\nrounds: 2437"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3021.8194835638183,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004696086907003465",
+            "extra": "mean: 330.926451907259 usec\nrounds: 1861"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39437.70435416088,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034464296518885785",
+            "extra": "mean: 25.356445472072586 usec\nrounds: 8216"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12344.582274892118,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016788804275313706",
+            "extra": "mean: 81.00719633372441 usec\nrounds: 5455"
           }
         ]
       }
