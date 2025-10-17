@@ -496,11 +496,19 @@ def create_agent_graph():
 
     def should_continue(state: AgentState) -> Literal["use_tools", "respond", "end"]:
         """Conditional edge function for routing"""
-        return state["next_action"]
+        next_action = state.get("next_action", "respond")
+        # Default to "respond" if next_action is empty or not set
+        if not next_action or next_action not in ["use_tools", "respond", "end"]:
+            return "respond"
+        return next_action
 
     def should_verify(state: AgentState) -> Literal["verify", "refine", "end"]:
         """Conditional edge function for verification loop"""
-        return state["next_action"]
+        next_action = state.get("next_action", "end")
+        # Default to "end" if next_action is empty or invalid
+        if not next_action or next_action not in ["verify", "refine", "end"]:
+            return "end"
+        return next_action
 
     # Build the graph with full agentic loop
     workflow = StateGraph(AgentState)
