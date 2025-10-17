@@ -525,6 +525,13 @@ class MCPAgentServer:
 
 async def main():
     """Main entry point"""
+    # Initialize observability system before creating server
+    from mcp_server_langgraph.core.config import settings
+    from mcp_server_langgraph.observability.telemetry import init_observability
+
+    # Initialize with settings and enable file logging if configured
+    init_observability(settings=settings, enable_file_logging=getattr(settings, "enable_file_logging", False))
+
     server = MCPAgentServer()
     await server.run()
 

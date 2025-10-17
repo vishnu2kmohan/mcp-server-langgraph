@@ -149,11 +149,17 @@ class TestAuthMiddleware:
 
     @pytest.mark.asyncio
     async def test_list_accessible_resources_no_openfga(self):
-        """Test listing resources without OpenFGA returns empty list"""
+        """Test listing resources without OpenFGA returns mock resources in development mode"""
         auth = AuthMiddleware()  # No OpenFGA
         resources = await auth.list_accessible_resources(user_id="user:alice", relation="executor", resource_type="tool")
 
-        assert resources == []
+        # In development mode (default in tests), returns mock resources for better developer experience
+        # This allows the MCP server to function without requiring OpenFGA infrastructure
+        assert isinstance(resources, list)
+        assert len(resources) == 3
+        assert "tool:agent_chat" in resources
+        assert "tool:conversation_get" in resources
+        assert "tool:conversation_search" in resources
 
     @pytest.mark.asyncio
     async def test_list_accessible_resources_error(self):

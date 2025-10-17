@@ -2,6 +2,7 @@
 Infisical integration for secure secrets management
 """
 
+import logging
 import os
 from typing import Any, Dict, Optional
 
@@ -12,13 +13,45 @@ try:
     INFISICAL_AVAILABLE = True
 except ImportError:
     INFISICAL_AVAILABLE = False
-    logger_import = None  # Will be set after logger import
 
-from mcp_server_langgraph.observability.telemetry import logger, tracer
+# Use standard library logging until observability is initialized
+# This breaks the circular import: config -> secrets.manager -> telemetry -> config
+_stdlib_logger = logging.getLogger(__name__)
 
-# Log warning if infisical not available (after logger is imported)
+
+def _get_logger():
+    """
+    Get logger instance, preferring observability logger if initialized.
+
+    This allows secrets manager to work before observability initialization.
+    """
+    try:
+        from mcp_server_langgraph.observability.telemetry import get_logger, is_initialized
+
+        if is_initialized():
+            return get_logger()
+    except (ImportError, RuntimeError):
+        pass
+    return _stdlib_logger
+
+
+def _get_tracer():
+    """
+    Get tracer instance if observability is initialized, otherwise return None.
+    """
+    try:
+        from mcp_server_langgraph.observability.telemetry import get_tracer, is_initialized
+
+        if is_initialized():
+            return get_tracer()
+    except (ImportError, RuntimeError):
+        pass
+    return None
+
+
+# Log warning if infisical not available
 if not INFISICAL_AVAILABLE:
-    logger.warning(
+    _stdlib_logger.warning(
         "infisical-python not installed - secrets will fall back to environment variables. "
         "Install with: pip install 'mcp-server-langgraph[secrets]'"
     )
@@ -60,12 +93,12 @@ class SecretsManager:
 
         # Check if infisical-python is available
         if not INFISICAL_AVAILABLE:
-            logger.warning("infisical-python not installed, using fallback mode (environment variables)")
+            _get_logger().warning("infisical-python not installed, using fallback mode (environment variables)")
             self.client = None
             return
 
         if not client_id or not client_secret:
-            logger.warning("Infisical credentials not provided, using fallback mode")
+            _get_logger().warning("Infisical credentials not provided, using fallback mode")
             self.client = None
             return
 
@@ -80,9 +113,11 @@ class SecretsManager:
                 )
             )
 
-            logger.info("Infisical secrets manager initialized", extra={"site_url": site_url, "environment": environment})
+            _get_logger().info(
+                "Infisical secrets manager initialized", extra={"site_url": site_url, "environment": environment}
+            )
         except Exception as e:
-            logger.error(f"Failed to initialize Infisical client: {e}", exc_info=True)
+            _get_logger().error(f"Failed to initialize Infisical client: {e}", exc_info=True)
             self.client = None
 
     def get_secret(self, key: str, path: str = "/", use_cache: bool = True, fallback: Optional[str] = None) -> Optional[str]:
@@ -98,54 +133,66 @@ class SecretsManager:
         Returns:
             Secret value or fallback
         """
-        with tracer.start_as_current_span("secrets.get_secret") as span:
+        tracer = _get_tracer()
+        # Use tracing if available, otherwise proceed without it
+        if tracer:
+            with tracer.start_as_current_span("secrets.get_secret") as span:
+                return self._get_secret_impl(key, path, use_cache, fallback, span)
+        else:
+            return self._get_secret_impl(key, path, use_cache, fallback, None)
+
+    def _get_secret_impl(self, key: str, path: str, use_cache: bool, fallback: Optional[str], span) -> Optional[str]:
+        """Implementation of get_secret with optional tracing span."""
+        if span:
             span.set_attribute("secret.key", key)
             span.set_attribute("secret.path", path)
 
-            cache_key = f"{path}:{key}"
+        cache_key = f"{path}:{key}"
 
-            # Check cache first
-            if use_cache and cache_key in self._cache:
-                logger.debug("Secret retrieved from cache", extra={"key": key})
-                return self._cache[cache_key]
+        # Check cache first
+        if use_cache and cache_key in self._cache:
+            _get_logger().debug("Secret retrieved from cache", extra={"key": key})
+            return self._cache[cache_key]
 
-            # Fallback if client not initialized
-            if not self.client:
-                logger.warning(f"Infisical client not available, using fallback for {key}")
-                # Try environment variable first
-                env_value = os.getenv(key)
-                if env_value:
-                    return env_value
-                return fallback
+        # Fallback if client not initialized
+        if not self.client:
+            _get_logger().warning(f"Infisical client not available, using fallback for {key}")
+            # Try environment variable first
+            env_value = os.getenv(key)
+            if env_value:
+                return env_value
+            return fallback
 
-            try:
-                secret = self.client.get_secret(
-                    secret_name=key, project_id=self.project_id, environment=self.environment, path=path
-                )
+        try:
+            secret = self.client.get_secret(
+                secret_name=key, project_id=self.project_id, environment=self.environment, path=path
+            )
 
-                value = secret.secret_value
+            value = secret.secret_value
 
-                # Cache the value
-                if use_cache:
-                    self._cache[cache_key] = value
+            # Cache the value
+            if use_cache:
+                self._cache[cache_key] = value
 
-                logger.info("Secret retrieved from Infisical", extra={"key": key, "path": path})
+            _get_logger().info("Secret retrieved from Infisical", extra={"key": key, "path": path})
 
+            if span:
                 span.set_attribute("secret.found", True)
-                return value
+            return value
 
-            except Exception as e:
-                logger.error(f"Failed to retrieve secret '{key}': {e}", extra={"key": key, "path": path}, exc_info=True)
+        except Exception as e:
+            _get_logger().error(f"Failed to retrieve secret '{key}': {e}", extra={"key": key, "path": path}, exc_info=True)
+            if span:
                 span.record_exception(e)
                 span.set_attribute("secret.found", False)
 
-                # Try environment variable fallback
-                env_value = os.getenv(key)
-                if env_value:
-                    logger.info(f"Using environment variable fallback for {key}")
-                    return env_value
+            # Try environment variable fallback
+            env_value = os.getenv(key)
+            if env_value:
+                _get_logger().info(f"Using environment variable fallback for {key}")
+                return env_value
 
-                return fallback
+            return fallback
 
     def get_all_secrets(self, path: str = "/", use_cache: bool = True) -> Dict[str, str]:
         """
@@ -158,29 +205,37 @@ class SecretsManager:
         Returns:
             Dictionary of all secrets
         """
-        with tracer.start_as_current_span("secrets.get_all_secrets"):
-            if not self.client:
-                logger.warning("Infisical client not available")
-                return {}
+        tracer = _get_tracer()
+        if tracer:
+            with tracer.start_as_current_span("secrets.get_all_secrets"):
+                return self._get_all_secrets_impl(path, use_cache)
+        else:
+            return self._get_all_secrets_impl(path, use_cache)
 
-            try:
-                secrets = self.client.list_secrets(project_id=self.project_id, environment=self.environment, path=path)
+    def _get_all_secrets_impl(self, path: str, use_cache: bool) -> Dict[str, str]:
+        """Implementation of get_all_secrets."""
+        if not self.client:
+            _get_logger().warning("Infisical client not available")
+            return {}
 
-                result = {secret.secret_key: secret.secret_value for secret in secrets}
+        try:
+            secrets = self.client.list_secrets(project_id=self.project_id, environment=self.environment, path=path)
 
-                # Cache all secrets
-                if use_cache:
-                    for key, value in result.items():
-                        cache_key = f"{path}:{key}"
-                        self._cache[cache_key] = value
+            result = {secret.secret_key: secret.secret_value for secret in secrets}
 
-                logger.info("Retrieved all secrets from path", extra={"path": path, "count": len(result)})
+            # Cache all secrets
+            if use_cache:
+                for key, value in result.items():
+                    cache_key = f"{path}:{key}"
+                    self._cache[cache_key] = value
 
-                return result
+            _get_logger().info("Retrieved all secrets from path", extra={"path": path, "count": len(result)})
 
-            except Exception as e:
-                logger.error(f"Failed to retrieve secrets from path '{path}': {e}", exc_info=True)
-                return {}
+            return result
+
+        except Exception as e:
+            _get_logger().error(f"Failed to retrieve secrets from path '{path}': {e}", exc_info=True)
+            return {}
 
     def create_secret(self, key: str, value: str, path: str = "/", secret_comment: Optional[str] = None) -> bool:
         """
@@ -195,32 +250,31 @@ class SecretsManager:
         Returns:
             True if successful
         """
-        with tracer.start_as_current_span("secrets.create_secret"):
-            if not self.client:
-                logger.error("Infisical client not available")
-                return False
+        if not self.client:
+            _get_logger().error("Infisical client not available")
+            return False
 
-            try:
-                self.client.create_secret(
-                    secret_name=key,
-                    secret_value=value,
-                    project_id=self.project_id,
-                    environment=self.environment,
-                    path=path,
-                    secret_comment=secret_comment,
-                )
+        try:
+            self.client.create_secret(
+                secret_name=key,
+                secret_value=value,
+                project_id=self.project_id,
+                environment=self.environment,
+                path=path,
+                secret_comment=secret_comment,
+            )
 
-                # Update cache
-                cache_key = f"{path}:{key}"
-                self._cache[cache_key] = value
+            # Update cache
+            cache_key = f"{path}:{key}"
+            self._cache[cache_key] = value
 
-                logger.info("Secret created in Infisical", extra={"key": key, "path": path})
+            _get_logger().info("Secret created in Infisical", extra={"key": key, "path": path})
 
-                return True
+            return True
 
-            except Exception as e:
-                logger.error(f"Failed to create secret '{key}': {e}", exc_info=True)
-                return False
+        except Exception as e:
+            _get_logger().error(f"Failed to create secret '{key}': {e}", exc_info=True)
+            return False
 
     def update_secret(self, key: str, value: str, path: str = "/") -> bool:
         """
@@ -234,27 +288,26 @@ class SecretsManager:
         Returns:
             True if successful
         """
-        with tracer.start_as_current_span("secrets.update_secret"):
-            if not self.client:
-                logger.error("Infisical client not available")
-                return False
+        if not self.client:
+            _get_logger().error("Infisical client not available")
+            return False
 
-            try:
-                self.client.update_secret(
-                    secret_name=key, secret_value=value, project_id=self.project_id, environment=self.environment, path=path
-                )
+        try:
+            self.client.update_secret(
+                secret_name=key, secret_value=value, project_id=self.project_id, environment=self.environment, path=path
+            )
 
-                # Update cache
-                cache_key = f"{path}:{key}"
-                self._cache[cache_key] = value
+            # Update cache
+            cache_key = f"{path}:{key}"
+            self._cache[cache_key] = value
 
-                logger.info("Secret updated in Infisical", extra={"key": key, "path": path})
+            _get_logger().info("Secret updated in Infisical", extra={"key": key, "path": path})
 
-                return True
+            return True
 
-            except Exception as e:
-                logger.error(f"Failed to update secret '{key}': {e}", exc_info=True)
-                return False
+        except Exception as e:
+            _get_logger().error(f"Failed to update secret '{key}': {e}", exc_info=True)
+            return False
 
     def delete_secret(self, key: str, path: str = "/") -> bool:
         """
@@ -267,25 +320,24 @@ class SecretsManager:
         Returns:
             True if successful
         """
-        with tracer.start_as_current_span("secrets.delete_secret"):
-            if not self.client:
-                logger.error("Infisical client not available")
-                return False
+        if not self.client:
+            _get_logger().error("Infisical client not available")
+            return False
 
-            try:
-                self.client.delete_secret(secret_name=key, project_id=self.project_id, environment=self.environment, path=path)
+        try:
+            self.client.delete_secret(secret_name=key, project_id=self.project_id, environment=self.environment, path=path)
 
-                # Remove from cache
-                cache_key = f"{path}:{key}"
-                self._cache.pop(cache_key, None)
+            # Remove from cache
+            cache_key = f"{path}:{key}"
+            self._cache.pop(cache_key, None)
 
-                logger.info("Secret deleted from Infisical", extra={"key": key, "path": path})
+            _get_logger().info("Secret deleted from Infisical", extra={"key": key, "path": path})
 
-                return True
+            return True
 
-            except Exception as e:
-                logger.error(f"Failed to delete secret '{key}': {e}", exc_info=True)
-                return False
+        except Exception as e:
+            _get_logger().error(f"Failed to delete secret '{key}': {e}", exc_info=True)
+            return False
 
     def invalidate_cache(self, key: Optional[str] = None):
         """
@@ -299,10 +351,10 @@ class SecretsManager:
             keys_to_remove = [k for k in self._cache.keys() if k.endswith(f":{key}")]
             for k in keys_to_remove:
                 self._cache.pop(k, None)
-            logger.info(f"Cache invalidated for secret: {key}")
+            _get_logger().info(f"Cache invalidated for secret: {key}")
         else:
             self._cache.clear()
-            logger.info("All secret cache invalidated")
+            _get_logger().info("All secret cache invalidated")
 
 
 # Singleton instance

@@ -30,6 +30,23 @@ os.environ.setdefault("ENABLE_METRICS", "false")
 os.environ.setdefault("ENABLE_CONSOLE_EXPORT", "false")
 
 
+# Initialize observability for tests (required after lazy init refactor)
+def pytest_configure(config):
+    """Initialize observability system for tests."""
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    # Only initialize if not already done
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",  # Text format for easier test debugging
+            enable_file_logging=False,  # No file logging in tests
+            langsmith_tracing=False,  # Disable LangSmith in tests
+            observability_backend="opentelemetry",  # OpenTelemetry only
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+
 # Mock MCP server initialization at session level to prevent event loop issues
 @pytest.fixture(scope="session")
 def mock_mcp_modules():

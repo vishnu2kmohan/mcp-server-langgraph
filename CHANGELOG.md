@@ -995,7 +995,7 @@ pip install infisical-python==2.3.5
 - **ADR 0008-0009, 0013, 0020-0021**: Infrastructure (Secrets, Feature Flags, Deployment, MCP Transport, CI/CD)
 - **ADR 0010, 0014-0019**: Development & Quality (LangGraph API, Type Safety, Checkpointing, Testing, Error Handling, Versioning, Async)
 - **ADR 0011-0012**: Compliance (Cookiecutter Template, Compliance Framework)
-- **Documentation**: All ADRs indexed in `docs/adr/README.md` and `docs/architecture/overview.mdx`
+- **Documentation**: All ADRs indexed in `adr/README.md` and `docs/architecture/overview.mdx`
 
 ### Added - Security & Community (2025-10-13)
 

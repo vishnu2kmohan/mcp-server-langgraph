@@ -1,0 +1,55 @@
+name: Build Hygiene
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  check-artifacts:
+    name: Check for committed build artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for __pycache__ directories
+        run: |
+          if git ls-files | grep -E '/__pycache__/'; then
+            echo "ERROR: __pycache__ directories are committed to git"
+            echo "These directories should be gitignored and not tracked"
+            echo ""
+            echo "To fix:"
+            echo "  git rm -r --cached **/__pycache__"
+            echo "  git commit -m 'Remove __pycache__ directories from git'"
+            exit 1
+          fi
+          echo "✓ No __pycache__ directories found"
+
+      - name: Check for .pyc files
+        run: |
+          if git ls-files | grep -E '\.pyc$'; then
+            echo "ERROR: .pyc files are committed to git"
+            echo "These files should be gitignored and not tracked"
+            echo ""
+            echo "To fix:"
+            echo "  git rm --cached **/*.pyc"
+            echo "  git commit -m 'Remove .pyc files from git'"
+            exit 1
+          fi
+          echo "✓ No .pyc files found"
+
+      - name: Check for .pyo files
+        run: |
+          if git ls-files | grep -E '\.pyo$'; then
+            echo "ERROR: .pyo files are committed to git"
+            exit 1
+          fi
+          echo "✓ No .pyo files found"
+
+      - name: Summary
+        run: |
+          echo "✅ Build hygiene check passed"
+          echo "No build artifacts found in repository"

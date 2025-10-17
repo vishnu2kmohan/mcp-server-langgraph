@@ -58,29 +58,107 @@ class LLMFactory:
         self.fallback_models = fallback_models or []
         self.kwargs = kwargs
 
-        # Set up environment variables for LiteLLM
-        self._setup_environment()
+        # Note: _setup_environment is now called by factory functions with config
+        # This allows multi-provider credential setup for fallbacks
 
         logger.info(
-            "LLM Factory initialized", extra={"provider": provider, "model": model_name, "fallback_enabled": enable_fallback}
+            "LLM Factory initialized",
+            extra={
+                "provider": provider,
+                "model": model_name,
+                "fallback_enabled": enable_fallback,
+                "fallback_count": len(fallback_models) if fallback_models else 0,
+            },
         )
 
-    def _setup_environment(self):
-        """Set up environment variables for LiteLLM"""
-        if self.api_key:
-            # Map provider to environment variable
-            env_var_map = {
-                "anthropic": "ANTHROPIC_API_KEY",
-                "openai": "OPENAI_API_KEY",
-                "google": "GOOGLE_API_KEY",
-                "gemini": "GOOGLE_API_KEY",
-                "azure": "AZURE_API_KEY",
-                "bedrock": "AWS_ACCESS_KEY_ID",
-            }
+    def _get_provider_from_model(self, model_name: str) -> str:
+        """
+        Extract provider from model name.
 
-            env_var = env_var_map.get(self.provider)
-            if env_var:
-                os.environ[env_var] = self.api_key
+        Args:
+            model_name: Model identifier (e.g., "gpt-4o", "claude-sonnet-4", "gemini-pro")
+
+        Returns:
+            Provider name (e.g., "openai", "anthropic", "google")
+        """
+        model_lower = model_name.lower()
+
+        # Anthropic models
+        if any(x in model_lower for x in ["claude", "anthropic"]):
+            return "anthropic"
+
+        # OpenAI models
+        if any(x in model_lower for x in ["gpt-", "o1-", "davinci", "curie", "babbage"]):
+            return "openai"
+
+        # Google models
+        if any(x in model_lower for x in ["gemini", "palm", "text-bison", "chat-bison"]):
+            return "google"
+
+        # Azure (prefixed models)
+        if model_lower.startswith("azure/"):
+            return "azure"
+
+        # Bedrock (prefixed models)
+        if model_lower.startswith("bedrock/"):
+            return "bedrock"
+
+        # Ollama (local models)
+        if model_lower.startswith("ollama/"):
+            return "ollama"
+
+        # Default to current provider
+        return self.provider
+
+    def _setup_environment(self, config=None):
+        """
+        Set up environment variables for LiteLLM.
+
+        Configures credentials for primary provider AND all fallback providers
+        to enable seamless multi-provider fallback.
+
+        Args:
+            config: Settings object with API keys for all providers (optional)
+        """
+        # Collect all providers needed (primary + fallbacks)
+        providers_needed = {self.provider}
+
+        # Add providers for each fallback model
+        for fallback_model in self.fallback_models:
+            provider = self._get_provider_from_model(fallback_model)
+            providers_needed.add(provider)
+
+        # Map provider to environment variable and config attribute
+        provider_config_map = {
+            "anthropic": ("ANTHROPIC_API_KEY", "anthropic_api_key"),
+            "openai": ("OPENAI_API_KEY", "openai_api_key"),
+            "google": ("GOOGLE_API_KEY", "google_api_key"),
+            "gemini": ("GOOGLE_API_KEY", "google_api_key"),
+            "azure": ("AZURE_API_KEY", "azure_api_key"),
+            "bedrock": ("AWS_ACCESS_KEY_ID", "aws_access_key_id"),
+        }
+
+        # Set up credentials for each needed provider
+        for provider in providers_needed:
+            if provider not in provider_config_map:
+                continue  # Skip unknown providers (e.g., ollama doesn't need API key)
+
+            env_var, config_attr = provider_config_map[provider]
+
+            # Get API key from config or use primary if this is the main provider
+            if config and hasattr(config, config_attr):
+                api_key = getattr(config, config_attr)
+            elif provider == self.provider:
+                api_key = self.api_key
+            else:
+                api_key = None
+
+            # Set environment variable if we have a key
+            if api_key and env_var:
+                os.environ[env_var] = api_key
+                logger.debug(
+                    f"Configured credentials for provider: {provider}", extra={"provider": provider, "env_var": env_var}
+                )
 
     def _format_messages(self, messages: list[BaseMessage]) -> list[Dict[str, str]]:
         """
@@ -345,7 +423,7 @@ def create_llm_from_config(config) -> LLMFactory:
             }
         )
 
-    return LLMFactory(
+    factory = LLMFactory(
         provider=config.llm_provider,
         model_name=config.model_name,
         api_key=api_key,
@@ -356,6 +434,11 @@ def create_llm_from_config(config) -> LLMFactory:
         fallback_models=config.fallback_models,
         **provider_kwargs,
     )
+
+    # Set up credentials for primary + all fallback providers
+    factory._setup_environment(config=config)
+
+    return factory
 
 
 def create_summarization_model(config) -> LLMFactory:
@@ -398,7 +481,7 @@ def create_summarization_model(config) -> LLMFactory:
     elif provider == "ollama":
         provider_kwargs.update({"api_base": config.ollama_base_url})
 
-    return LLMFactory(
+    factory = LLMFactory(
         provider=provider,
         model_name=config.summarization_model_name or config.model_name,
         api_key=api_key,
@@ -409,6 +492,11 @@ def create_summarization_model(config) -> LLMFactory:
         fallback_models=config.fallback_models,
         **provider_kwargs,
     )
+
+    # Set up credentials for all providers
+    factory._setup_environment(config=config)
+
+    return factory
 
 
 def create_verification_model(config) -> LLMFactory:
@@ -451,7 +539,7 @@ def create_verification_model(config) -> LLMFactory:
     elif provider == "ollama":
         provider_kwargs.update({"api_base": config.ollama_base_url})
 
-    return LLMFactory(
+    factory = LLMFactory(
         provider=provider,
         model_name=config.verification_model_name or config.model_name,
         api_key=api_key,
@@ -462,3 +550,8 @@ def create_verification_model(config) -> LLMFactory:
         fallback_models=config.fallback_models,
         **provider_kwargs,
     )
+
+    # Set up credentials for all providers
+    factory._setup_environment(config=config)
+
+    return factory

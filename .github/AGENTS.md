@@ -363,7 +363,7 @@ async def list_tools():
 async def call_tool(name: str, arguments: dict):
     """Execute tool"""
     if name == "search_documents":
-        return await search_documents(**arguments)
+        return await search_documents(**arguments)  # **arguments expands dict to kwargs
 ```
 
 ### Custom Tools

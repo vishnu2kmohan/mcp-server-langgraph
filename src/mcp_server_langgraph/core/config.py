@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     log_file: Optional[str] = None
     log_format: str = "json"  # "json" or "text"
     log_json_indent: Optional[int] = None  # None for compact, 2 for pretty-print
+    enable_file_logging: bool = False  # Opt-in file-based log rotation (for persistent storage)
 
     # LLM Provider (litellm integration)
     llm_provider: str = "google"  # google, anthropic, openai, ollama, azure, bedrock
@@ -190,6 +191,9 @@ class Settings(BaseSettings):
     auth_provider: str = "inmemory"  # "inmemory", "keycloak"
     auth_mode: str = "token"  # "token" (JWT), "session"
 
+    # Mock Data (Development)
+    enable_mock_authorization: bool = True  # Enable mock resources when OpenFGA is not configured (dev mode)
+
     # Keycloak Settings
     keycloak_server_url: str = "http://localhost:8180"
     keycloak_realm: str = "langgraph-agent"
@@ -215,6 +219,50 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",  # Ignore extra environment variables
     )
+
+    def _validate_fallback_credentials(self):
+        """
+        Validate that fallback models have corresponding API keys configured.
+
+        Logs warnings for missing credentials but doesn't block startup.
+        This helps users catch configuration errors early.
+        """
+        if not self.enable_fallback or not self.fallback_models:
+            return
+
+        # Map model patterns to required credentials
+        provider_patterns = {
+            "anthropic": (["claude", "anthropic"], "anthropic_api_key"),
+            "openai": (["gpt-", "o1-", "davinci"], "openai_api_key"),
+            "google": (["gemini", "palm", "bison"], "google_api_key"),
+            "azure": (["azure/"], "azure_api_key"),
+            "bedrock": (["bedrock/"], "aws_access_key_id"),
+        }
+
+        missing_creds = []
+
+        for model in self.fallback_models:
+            model_lower = model.lower()
+
+            # Determine which provider this model belongs to
+            for provider, (patterns, cred_attr) in provider_patterns.items():
+                if any(pattern in model_lower for pattern in patterns):
+                    # Check if the credential is configured
+                    if not getattr(self, cred_attr, None):
+                        missing_creds.append((model, provider, cred_attr))
+                    break
+
+        # Log warnings for missing credentials
+        if missing_creds:
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                "Fallback models configured without required credentials. "
+                "These fallbacks will fail at runtime if the primary provider fails."
+            )
+            for model, provider, cred in missing_creds:
+                logger.warning(f"  - Model '{model}' (provider: {provider}) requires '{cred.upper()}' environment variable")
 
     def load_secrets(self):
         """
@@ -308,3 +356,6 @@ try:
 except Exception as e:
     print(f"Warning: Failed to load secrets from Infisical: {e}")
     print("Using environment variables and defaults")
+
+# Validate fallback model credentials
+settings._validate_fallback_credentials()

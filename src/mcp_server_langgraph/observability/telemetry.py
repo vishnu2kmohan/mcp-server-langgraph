@@ -42,6 +42,7 @@ class ObservabilityConfig:
         enable_langsmith: bool = False,
         log_format: str = "json",  # "json" or "text"
         log_json_indent: int | None = None,  # None for compact, 2 for pretty-print
+        enable_file_logging: bool = False,  # NEW: opt-in file logging
     ):
         self.service_name = service_name
         self.otlp_endpoint = otlp_endpoint
@@ -49,11 +50,12 @@ class ObservabilityConfig:
         self.enable_langsmith = enable_langsmith
         self.log_format = log_format
         self.log_json_indent = log_json_indent
+        self.enable_file_logging = enable_file_logging
 
         # Setup OpenTelemetry
         self._setup_tracing()
         self._setup_metrics()
-        self._setup_logging()
+        self._setup_logging(enable_file_logging=enable_file_logging)
 
         # Setup LangSmith if enabled
         if self.enable_langsmith:
@@ -64,9 +66,11 @@ class ObservabilityConfig:
         # Get version from settings
         try:
             from mcp_server_langgraph.core.config import settings
+
             service_version = settings.service_version
         except Exception:
             from mcp_server_langgraph import __version__
+
             service_version = __version__
 
         resource = Resource.create(
@@ -140,12 +144,17 @@ class ObservabilityConfig:
             name="agent.response.duration", description="Response time distribution", unit="ms"
         )
 
-    def _setup_logging(self):
+    def _setup_logging(self, enable_file_logging: bool = False):
         """
-        Configure structured logging with OpenTelemetry and log rotation.
+        Configure structured logging with OpenTelemetry and optional log rotation.
 
         Implements idempotent initialization to prevent duplicate handlers
         when re-imported or embedded in larger services.
+
+        Args:
+            enable_file_logging: Enable file-based log rotation (opt-in). Default: False.
+                                Set to True for production deployments with persistent storage.
+                                Leave False for serverless, containers, or read-only environments.
         """
         # Check if logging is already configured (idempotent guard)
         root_logger = logging.getLogger()
@@ -158,10 +167,6 @@ class ObservabilityConfig:
 
         # Instrument logging to include trace context
         LoggingInstrumentor().instrument(set_logging_format=True)
-
-        # Create logs directory if it doesn't exist
-        logs_dir = Path("logs")
-        logs_dir.mkdir(exist_ok=True)
 
         # Choose formatter based on log_format setting
         if self.log_format == "json":
@@ -185,48 +190,69 @@ class ObservabilityConfig:
             formatter = logging.Formatter(log_format_str)
             console_formatter = formatter
 
-        # Console handler (stdout)
+        # Console handler (stdout) - always enabled
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(console_formatter)
 
-        # Rotating file handler (size-based rotation)
-        # Rotates when file reaches 10MB, keeps 5 backup files
-        rotating_handler = RotatingFileHandler(
-            filename=logs_dir / f"{self.service_name}.log", maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"  # 10MB
-        )
-        rotating_handler.setLevel(logging.INFO)
-        rotating_handler.setFormatter(formatter)
+        handlers = [console_handler]
 
-        # Time-based rotating handler (daily rotation)
-        # Rotates daily at midnight, keeps 30 days of logs
-        daily_handler = TimedRotatingFileHandler(
-            filename=logs_dir / f"{self.service_name}-daily.log", when="midnight", interval=1, backupCount=30, encoding="utf-8"
-        )
-        daily_handler.setLevel(logging.INFO)
-        daily_handler.setFormatter(formatter)
+        # File handlers - opt-in only
+        if enable_file_logging:
+            # Create logs directory if it doesn't exist
+            logs_dir = Path("logs")
+            logs_dir.mkdir(exist_ok=True)
 
-        # Error log handler (only ERROR and CRITICAL)
-        error_handler = RotatingFileHandler(
-            filename=logs_dir / f"{self.service_name}-error.log",
-            maxBytes=10 * 1024 * 1024,  # 10MB
-            backupCount=5,
-            encoding="utf-8",
-        )
-        error_handler.setLevel(logging.ERROR)
-        error_handler.setFormatter(formatter)
+            # Rotating file handler (size-based rotation)
+            # Rotates when file reaches 10MB, keeps 5 backup files
+            rotating_handler = RotatingFileHandler(
+                filename=logs_dir / f"{self.service_name}.log",
+                maxBytes=10 * 1024 * 1024,  # 10MB
+                backupCount=5,
+                encoding="utf-8",
+            )
+            rotating_handler.setLevel(logging.INFO)
+            rotating_handler.setFormatter(formatter)
+            handlers.append(rotating_handler)
+
+            # Time-based rotating handler (daily rotation)
+            # Rotates daily at midnight, keeps 30 days of logs
+            daily_handler = TimedRotatingFileHandler(
+                filename=logs_dir / f"{self.service_name}-daily.log",
+                when="midnight",
+                interval=1,
+                backupCount=30,
+                encoding="utf-8",
+            )
+            daily_handler.setLevel(logging.INFO)
+            daily_handler.setFormatter(formatter)
+            handlers.append(daily_handler)
+
+            # Error log handler (only ERROR and CRITICAL)
+            error_handler = RotatingFileHandler(
+                filename=logs_dir / f"{self.service_name}-error.log",
+                maxBytes=10 * 1024 * 1024,  # 10MB
+                backupCount=5,
+                encoding="utf-8",
+            )
+            error_handler.setLevel(logging.ERROR)
+            error_handler.setFormatter(formatter)
+            handlers.append(error_handler)
 
         # Configure root logger
-        logging.basicConfig(level=logging.INFO, handlers=[console_handler, rotating_handler, daily_handler, error_handler])
+        logging.basicConfig(level=logging.INFO, handlers=handlers)
 
         self.logger = logging.getLogger(self.service_name)
         if OBSERVABILITY_VERBOSE:
             print(f"✓ Logging configured: {self.service_name}")
             print(f"  - Format: {self.log_format.upper()}")
             print("  - Console output: INFO and above")
-            print(f"  - Main log: logs/{self.service_name}.log (rotating, 10MB, 5 backups)")
-            print(f"  - Daily log: logs/{self.service_name}-daily.log (daily, 30 days)")
-            print(f"  - Error log: logs/{self.service_name}-error.log (ERROR and above)")
+            if enable_file_logging:
+                print(f"  - Main log: logs/{self.service_name}.log (rotating, 10MB, 5 backups)")
+                print(f"  - Daily log: logs/{self.service_name}-daily.log (daily, 30 days)")
+                print(f"  - Error log: logs/{self.service_name}-error.log (ERROR and above)")
+            else:
+                print("  - File logging: disabled (console only)")
 
     def get_tracer(self):
         """Get tracer instance"""
@@ -261,41 +287,140 @@ class ObservabilityConfig:
                 print(f"⚠ LangSmith setup failed: {e}")
 
 
-# Initialize global observability with LangSmith support
-# Check if LangSmith should be enabled from environment or config
-try:
-    from mcp_server_langgraph.core.config import settings
+# ============================================================================
+# Lazy Initialization System
+# ============================================================================
 
-    enable_langsmith_flag = settings.langsmith_tracing and settings.observability_backend in ("langsmith", "both")
-    log_format = getattr(settings, "log_format", os.getenv("LOG_FORMAT", "json"))
-    log_json_indent = getattr(settings, "log_json_indent", None)
-except ImportError:
-    enable_langsmith_flag = False
-    log_format = os.getenv("LOG_FORMAT", "json")
-    log_json_indent_str = os.getenv("LOG_JSON_INDENT")
-    log_json_indent = int(log_json_indent_str) if log_json_indent_str else None
+_observability_config: ObservabilityConfig | None = None
+_propagator: TraceContextTextMapPropagator | None = None
 
-config = ObservabilityConfig(
-    enable_langsmith=enable_langsmith_flag,
-    log_format=log_format,
-    log_json_indent=log_json_indent,
-)
-tracer = config.get_tracer()
-meter = config.get_meter()
-logger = config.get_logger()
-# Alias for backward compatibility - provides access to metric instruments via config
-metrics = config
+
+def is_initialized() -> bool:
+    """Check if observability has been initialized."""
+    return _observability_config is not None
+
+
+def init_observability(
+    settings=None,
+    service_name: str = SERVICE_NAME,
+    otlp_endpoint: str = OTLP_ENDPOINT,
+    enable_console_export: bool = True,
+    enable_langsmith: bool = False,
+    log_format: str = "json",
+    log_json_indent: int | None = None,
+    enable_file_logging: bool = False,
+) -> ObservabilityConfig:
+    """
+    Initialize observability system (tracing, metrics, logging).
+
+    MUST be called explicitly by entry points after configuration is loaded.
+    This prevents circular imports and filesystem operations during module import.
+
+    Args:
+        settings: Settings object (optional, will use params if not provided)
+        service_name: Service identifier
+        otlp_endpoint: OpenTelemetry collector endpoint
+        enable_console_export: Export to console for development
+        enable_langsmith: Enable LangSmith integration
+        log_format: "json" or "text"
+        log_json_indent: JSON indent for pretty-printing (None for compact)
+        enable_file_logging: Enable file-based log rotation (opt-in)
+
+    Returns:
+        Initialized ObservabilityConfig instance
+
+    Example:
+        >>> from mcp_server_langgraph.core.config import settings
+        >>> from mcp_server_langgraph.observability.telemetry import init_observability
+        >>> config = init_observability(settings, enable_file_logging=True)
+    """
+    global _observability_config, _propagator
+
+    if _observability_config is not None:
+        # Already initialized - return existing config
+        return _observability_config
+
+    # Extract settings if provided
+    if settings is not None:
+        enable_langsmith = settings.langsmith_tracing and settings.observability_backend in ("langsmith", "both")
+        log_format = getattr(settings, "log_format", "json")
+        log_json_indent = getattr(settings, "log_json_indent", None)
+        otlp_endpoint = getattr(settings, "otlp_endpoint", OTLP_ENDPOINT)
+        enable_console_export = getattr(settings, "enable_console_export", True)
+        # enable_file_logging can be overridden via settings
+        enable_file_logging = getattr(settings, "enable_file_logging", enable_file_logging)
+
+    _observability_config = ObservabilityConfig(
+        service_name=service_name,
+        otlp_endpoint=otlp_endpoint,
+        enable_console_export=enable_console_export,
+        enable_langsmith=enable_langsmith,
+        log_format=log_format,
+        log_json_indent=log_json_indent,
+        enable_file_logging=enable_file_logging,
+    )
+
+    _propagator = TraceContextTextMapPropagator()
+
+    return _observability_config
+
+
+def get_config() -> ObservabilityConfig:
+    """
+    Get observability config (lazy accessor).
+
+    Raises RuntimeError if not initialized.
+    """
+    if _observability_config is None:
+        raise RuntimeError(
+            "Observability not initialized. Call init_observability(settings) "
+            "in your entry point before using observability features."
+        )
+    return _observability_config
+
+
+# Note: config is available via get_config() function or via the lazy 'config' proxy below
+
+
+def get_tracer():
+    """Get tracer instance (lazy accessor)."""
+    return get_config().get_tracer()
+
+
+def get_meter():
+    """Get meter instance (lazy accessor)."""
+    return get_config().get_meter()
+
+
+def get_logger():
+    """Get logger instance (lazy accessor)."""
+    return get_config().get_logger()
+
+
+# Module-level exports with lazy initialization
+# These will raise RuntimeError if accessed before init_observability()
+tracer = type("LazyTracer", (), {"__getattr__": lambda self, name: getattr(get_tracer(), name)})()
+
+meter = type("LazyMeter", (), {"__getattr__": lambda self, name: getattr(get_meter(), name)})()
+
+logger = type("LazyLogger", (), {"__getattr__": lambda self, name: getattr(get_logger(), name)})()
+
+# Alias for backward compatibility - provides access to both config and metric instruments
+config = type("LazyConfig", (), {"__getattr__": lambda self, name: getattr(get_config(), name)})()
+
+metrics = config  # metrics is an alias for config
 
 
 # Context propagation utilities
-propagator = TraceContextTextMapPropagator()
-
-
 def inject_context(carrier: dict[str, str]) -> None:
     """Inject trace context into carrier (e.g., HTTP headers)"""
-    propagator.inject(carrier)
+    if _propagator is None:
+        raise RuntimeError("Observability not initialized. Call init_observability() first.")
+    _propagator.inject(carrier)
 
 
 def extract_context(carrier: dict[str, str]) -> Any:
     """Extract trace context from carrier"""
-    return propagator.extract(carrier)
+    if _propagator is None:
+        raise RuntimeError("Observability not initialized. Call init_observability() first.")
+    return _propagator.extract(carrier)

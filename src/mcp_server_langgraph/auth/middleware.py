@@ -246,6 +246,43 @@ class AuthMiddleware:
 
             return False
 
+    def _get_mock_resources(self, user_id: str, relation: str, resource_type: str) -> list[str]:
+        """
+        Get mock resources for development/testing when OpenFGA is not available.
+
+        Provides sample data to enable development and testing without authorization infrastructure.
+
+        Args:
+            user_id: User identifier
+            relation: Relation to check (e.g., "executor", "viewer")
+            resource_type: Type of resources (e.g., "tool", "conversation")
+
+        Returns:
+            List of mock resource identifiers
+        """
+        # Mock data for different resource types
+        mock_data = {
+            "tool": [
+                "tool:agent_chat",
+                "tool:conversation_get",
+                "tool:conversation_search",
+            ],
+            "conversation": [
+                "conversation:demo_thread_1",
+                "conversation:demo_thread_2",
+                "conversation:demo_thread_3",
+                "conversation:sample_conversation",
+            ],
+            "user": [
+                "user:alice",
+                "user:bob",
+                "user:charlie",
+            ],
+        }
+
+        # Return mock data for the requested type
+        return mock_data.get(resource_type, [])
+
     async def list_accessible_resources(self, user_id: str, relation: str, resource_type: str) -> list[str]:
         """
         List all resources user has access to
@@ -259,6 +296,19 @@ class AuthMiddleware:
             List of accessible resource identifiers
         """
         if not self.openfga:
+            # In development mode, return mock data for better developer experience
+            try:
+                from mcp_server_langgraph.core.config import settings
+
+                if settings.environment == "development" and getattr(settings, "enable_mock_authorization", True):
+                    logger.info(
+                        "OpenFGA not available, using mock resources (development mode)",
+                        extra={"user_id": user_id, "relation": relation, "resource_type": resource_type},
+                    )
+                    return self._get_mock_resources(user_id, relation, resource_type)
+            except Exception:
+                pass  # If settings not available, fall through to empty list
+
             logger.warning("OpenFGA not available for resource listing")
             return []
 

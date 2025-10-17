@@ -403,8 +403,8 @@ export GOOGLE_API_KEY=...
 - [Google Gemini Pricing](https://ai.google.dev/pricing)
 - [Anthropic Claude Pricing](https://www.anthropic.com/pricing)
 - [OpenAI Pricing](https://openai.com/api/pricing/)
-- [Feature Flags Documentation](../adr/0006-feature-flags.md)
-- [Deployment Guide](deployments/README.md)
+- [Feature Flags Documentation](../../adr/0009-feature-flag-system.md)
+- [Deployment Guide](../../deployments/README.md)
 
 ---
 

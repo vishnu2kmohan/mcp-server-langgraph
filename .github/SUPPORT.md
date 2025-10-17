@@ -7,7 +7,7 @@ Looking for help with MCP Server with LangGraph? You're in the right place!
 Before asking for help, please check our comprehensive documentation:
 
 ### Getting Started
-- [../README.md](../../README.md) - Project overview and quick start
+- [README.md](../README.md) - Project overview and quick start
 - [Developer Onboarding](../DEVELOPER_ONBOARDING.md) - Developer setup guide
 - [.env.example](../.env.example) - Configuration reference
 
@@ -103,7 +103,7 @@ For security vulnerabilities, please:
 2. Click "Report a vulnerability"
 3. Provide details privately
 
-See [SECURITY.md](SECURITY.md) for our security policy.
+See [SECURITY.md](../SECURITY.md) for our security policy.
 
 ## Contributing
 
@@ -123,8 +123,8 @@ For commercial support, training, or consulting:
 ## Additional Resources
 
 - **License**: [MIT License](../LICENSE)
-- **Changelog**: [../CHANGELOG.md](../../CHANGELOG.md)
-- **Code of Conduct**: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) _(if you add one)_
+- **Changelog**: [CHANGELOG.md](../CHANGELOG.md)
+- **Code of Conduct**: [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)
 
 ---
 

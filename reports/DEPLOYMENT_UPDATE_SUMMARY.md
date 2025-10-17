@@ -323,7 +323,7 @@ kubectl apply -k deployments/kustomize/overlays/production
 ## References
 
 - [VERSION_COMPATIBILITY.md](../docs/deployment/VERSION_COMPATIBILITY.md) - Detailed version matrix
-- [Kubernetes Deployment Guide](../docs/deployment/kubernetes.md) - Updated deployment guide
+- [Kubernetes Deployment Guide](../docs/deployment/kubernetes.mdx) - Updated deployment guide
 - [OpenFGA Releases](https://github.com/openfga/openfga/releases)
 - [Keycloak Releases](https://github.com/keycloak/keycloak/releases)
 - [OpenTelemetry Collector Releases](https://github.com/open-telemetry/opentelemetry-collector-contrib/releases)

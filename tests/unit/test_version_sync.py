@@ -37,8 +37,7 @@ def test_version_matches_pyproject():
     from mcp_server_langgraph import __version__
 
     assert __version__ == expected_version, (
-        f"Version mismatch: __init__.py has {__version__}, "
-        f"but pyproject.toml has {expected_version}"
+        f"Version mismatch: __init__.py has {__version__}, " f"but pyproject.toml has {expected_version}"
     )
 
 
@@ -56,11 +55,11 @@ def test_config_version_matches():
 def test_telemetry_version_matches():
     """Test that telemetry resource uses correct version."""
     from mcp_server_langgraph import __version__
-    from mcp_server_langgraph.observability.telemetry import config
 
     # The telemetry config should use settings.service_version
     # which should match __version__
     from mcp_server_langgraph.core.config import settings
+    from mcp_server_langgraph.observability.telemetry import config
 
     assert settings.service_version == __version__, (
         f"Telemetry will use incorrect version: settings.service_version is {settings.service_version}, "

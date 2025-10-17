@@ -32,7 +32,7 @@ try:
     DYNAMIC_CONTEXT_AVAILABLE = True
 except ImportError:
     DYNAMIC_CONTEXT_AVAILABLE = False
-    logger.warning("Dynamic context loader not available")
+    # Logger warning deferred to runtime to avoid initialization issues
 
 # Import Redis checkpointer if available
 try:
@@ -41,7 +41,7 @@ try:
     REDIS_CHECKPOINTER_AVAILABLE = True
 except ImportError:
     REDIS_CHECKPOINTER_AVAILABLE = False
-    logger.warning("Redis checkpointer not available, using fallback to MemorySaver")
+    # Logger warning deferred to runtime when checkpointer is actually created
 
 # Import Pydantic AI for type-safe responses
 try:
@@ -50,7 +50,7 @@ try:
     PYDANTIC_AI_AVAILABLE = True
 except ImportError:
     PYDANTIC_AI_AVAILABLE = False
-    logger.warning("Pydantic AI not available, using fallback routing")
+    # Logger warning deferred to runtime to avoid initialization issues
 
 # Import LangSmith config if available
 try:
@@ -558,5 +558,33 @@ def create_agent_graph():
         return workflow.compile()
 
 
-# Create singleton instance
-agent_graph = create_agent_graph()
+# IMPORTANT: Do NOT create agent_graph at module level
+# The lazy initialization pattern in telemetry.py requires observability to be initialized first
+# Entry points (mcp/server_stdio.py, mcp/server_streamable.py) must call init_observability()
+# before accessing agent_graph
+#
+# Legacy module-level export for backward compatibility (will be None until explicitly created)
+_agent_graph_cache = None
+
+
+def get_agent_graph():
+    """
+    Get or create the agent graph singleton.
+
+    This function provides lazy initialization that respects observability initialization.
+    Call this instead of accessing agent_graph directly.
+
+    Returns:
+        Compiled LangGraph StateGraph
+
+    Raises:
+        RuntimeError: If observability is not initialized
+    """
+    global _agent_graph_cache
+    if _agent_graph_cache is None:
+        _agent_graph_cache = create_agent_graph()
+    return _agent_graph_cache
+
+
+# Backward compatibility: agent_graph will be None until get_agent_graph() is called
+agent_graph = None  # type: ignore[assignment]
