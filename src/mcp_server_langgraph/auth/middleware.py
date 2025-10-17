@@ -18,6 +18,41 @@ from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserPr
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 # ============================================================================
+# Helper Functions
+# ============================================================================
+
+
+def normalize_user_id(user_id: str) -> str:
+    """
+    Normalize user_id to handle multiple formats.
+
+    Accepts:
+    - Plain usernames: "alice" → "alice"
+    - Prefixed IDs: "user:alice" → "alice"
+    - Other prefixes: "uid:123" → "123"
+
+    This allows clients to use either format:
+    - OpenFGA format (user:alice)
+    - Simple username format (alice)
+
+    Args:
+        user_id: User identifier in any supported format
+
+    Returns:
+        Normalized username (without prefix)
+    """
+    if not user_id:
+        return user_id
+
+    # If contains colon, extract the part after the colon
+    if ":" in user_id:
+        return user_id.split(":", 1)[1]
+
+    # Otherwise, return as-is
+    return user_id
+
+
+# ============================================================================
 # Pydantic Models for Middleware Operations
 # ============================================================================
 
@@ -123,17 +158,19 @@ class AuthMiddleware:
         Authenticate user by username
 
         Args:
-            username: Username to authenticate
+            username: Username to authenticate (accepts both "alice" and "user:alice" formats)
             password: Password (required for some providers like Keycloak)
 
         Returns:
             AuthResponse with authentication result
         """
         with tracer.start_as_current_span("auth.authenticate") as span:
-            span.set_attribute("auth.username", username)
+            # Normalize username to handle both "alice" and "user:alice" formats
+            normalized_username = normalize_user_id(username)
+            span.set_attribute("auth.username", normalized_username)
 
             # Delegate to user provider (returns Pydantic AuthResponse)
-            result = await self.user_provider.authenticate(username, password)
+            result = await self.user_provider.authenticate(normalized_username, password)
 
             if result.authorized:
                 logger.info("User authenticated", extra={"username": username, "user_id": result.user_id})

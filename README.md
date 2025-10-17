@@ -14,7 +14,7 @@
 
 [![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](archive/SECURITY_AUDIT.md)
 [![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
-[![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](docs/advanced/testing.mdx)
+[![Code Coverage](https://img.shields.io/badge/coverage-80%25-green.svg)](docs/advanced/testing.mdx)
 [![Property Tests](https://img.shields.io/badge/property%20tests-27%2B-blue.svg)](#testing-strategy)
 [![Contract Tests](https://img.shields.io/badge/contract%20tests-20%2B-blue.svg)](#testing-strategy)
 [![Mutation Testing](https://img.shields.io/badge/mutation%20testing-enabled-yellow.svg)](docs-internal/MUTATION_TESTING.md)
@@ -137,7 +137,7 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
 - **Mutation Testing**: Test effectiveness verification with mutmut (80%+ target)
 - **Strict Typing**: Gradual mypy strict mode rollout (3 modules complete)
 - **OpenAPI Validation**: Automated schema generation and breaking change detection
-- **86%+ Code Coverage**: Comprehensive unit and integration tests
+- **80% Code Coverage**: Comprehensive unit and integration tests
 
 ### 🚀 Production Deployment
 - **Kubernetes Ready**: Production manifests for GKE, EKS, AKS, Rancher, VMware Tanzu
@@ -482,7 +482,7 @@ This project uses a comprehensive, multi-layered testing approach to ensure prod
 make test-unit
 # OR: pytest -m unit -v
 ```
-- **86%+ code coverage** with comprehensive assertions
+- **80% code coverage** with comprehensive assertions
 - Mock all external dependencies (LLM, OpenFGA, Infisical)
 - Test pure logic, validation, and error handling
 
@@ -567,7 +567,7 @@ make test-unit && make test-all-quality && make test-mutation
 
 ### 📊 Quality Metrics
 
-- **Code Coverage**: 86%+ (target: 90%)
+- **Code Coverage**: 80% (target: 90%)
 - **Property Tests**: 27+ test classes with thousands of generated cases
 - **Contract Tests**: 20+ protocol compliance tests
 - **Mutation Score**: 80%+ target on critical modules (src/mcp_server_langgraph/core/agent.py, src/mcp_server_langgraph/auth/middleware.py, src/mcp_server_langgraph/core/config.py)

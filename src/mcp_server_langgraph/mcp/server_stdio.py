@@ -37,7 +37,13 @@ class ChatInput(BaseModel):
     """
 
     message: str = Field(description="The user message to send to the agent", min_length=1, max_length=10000)
-    user_id: str = Field(description="User identifier for authentication and authorization")
+    user_id: str = Field(
+        description=(
+            "User identifier for authentication and authorization. "
+            "Accepts both plain usernames ('alice') and OpenFGA-prefixed IDs ('user:alice'). "
+            "The system will normalize both formats automatically."
+        )
+    )
     thread_id: str | None = Field(
         default=None, description="Optional thread ID for conversation continuity (e.g., 'conv_123')"
     )
@@ -337,7 +343,7 @@ class MCPAgentServer:
                 raise
 
     async def _handle_get_conversation(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
-        """Retrieve conversation history"""
+        """Retrieve conversation history from checkpointer"""
         with tracer.start_as_current_span("agent.get_conversation"):
             thread_id = arguments["thread_id"]
 
@@ -350,9 +356,84 @@ class MCPAgentServer:
                 logger.warning("User cannot view conversation", extra={"user_id": user_id, "thread_id": thread_id})
                 raise PermissionError(f"Not authorized to view conversation {thread_id}")
 
-            # In production, retrieve from checkpoint storage
-            # For now, return placeholder
-            return [TextContent(type="text", text=f"Conversation history for thread {thread_id}")]
+            # Retrieve conversation state from checkpointer
+            try:
+                # Get the checkpointer from agent_graph
+                if not hasattr(agent_graph, "checkpointer") or agent_graph.checkpointer is None:
+                    logger.warning("Checkpointing not enabled, cannot retrieve conversation history")
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Conversation history not available for thread {thread_id}. "
+                            "Checkpointing is disabled. Enable it by setting ENABLE_CHECKPOINTING=true.",
+                        )
+                    ]
+
+                # Get state from checkpointer
+                config = {"configurable": {"thread_id": thread_id}}
+                state_snapshot = await agent_graph.aget_state(config)
+
+                if not state_snapshot or not state_snapshot.values:
+                    logger.info("No conversation history found", extra={"thread_id": thread_id})
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"No conversation history found for thread {thread_id}. "
+                            "This thread may not exist or has no messages yet.",
+                        )
+                    ]
+
+                # Extract messages from state
+                messages = state_snapshot.values.get("messages", [])
+
+                if not messages:
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Thread {thread_id} exists but has no messages yet.",
+                        )
+                    ]
+
+                # Format messages for display
+                formatted_messages = []
+                for i, msg in enumerate(messages, 1):
+                    role = "unknown"
+                    content = str(msg)
+
+                    if hasattr(msg, "type"):
+                        role = msg.type
+                    elif hasattr(msg, "__class__"):
+                        role = msg.__class__.__name__.replace("Message", "").lower()
+
+                    if hasattr(msg, "content"):
+                        content = msg.content
+
+                    formatted_messages.append(f"{i}. [{role}] {content[:200]}{'...' if len(content) > 200 else ''}")
+
+                # Build response
+                response_text = (
+                    f"Conversation history for thread {thread_id}\n"
+                    f"Total messages: {len(messages)}\n"
+                    f"User: {user_id}\n\n"
+                    f"Messages:\n" + "\n".join(formatted_messages)
+                )
+
+                logger.info(
+                    "Retrieved conversation history",
+                    extra={"thread_id": thread_id, "message_count": len(messages), "user_id": user_id},
+                )
+
+                return [TextContent(type="text", text=response_text)]
+
+            except Exception as e:
+                logger.error(f"Failed to retrieve conversation: {e}", extra={"thread_id": thread_id}, exc_info=True)
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"Error retrieving conversation {thread_id}: {str(e)}. "
+                        "This may indicate a checkpointer issue or the conversation may not exist.",
+                    )
+                ]
 
     async def _handle_search_conversations(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
         """

@@ -8,13 +8,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from mcp_server_langgraph.secrets.manager import get_secrets_manager
 
+# Import version from package __init__.py (single source of truth)
+try:
+    from mcp_server_langgraph import __version__
+except ImportError:
+    __version__ = "2.7.0"  # Fallback
+
 
 class Settings(BaseSettings):
     """Application settings with Infisical secrets support"""
 
     # Service
     service_name: str = "mcp-server-langgraph"
-    service_version: str = "2.6.0"
+    service_version: str = __version__  # Read from package version
     environment: str = "development"
 
     # Authentication

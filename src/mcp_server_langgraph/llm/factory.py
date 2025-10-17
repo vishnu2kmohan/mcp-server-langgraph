@@ -248,6 +248,7 @@ class LLMFactory:
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                     timeout=self.timeout,
+                    **self.kwargs,  # Forward provider-specific kwargs
                 )
 
                 content = response.choices[0].message.content
@@ -280,6 +281,7 @@ class LLMFactory:
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                     timeout=self.timeout,
+                    **self.kwargs,  # Forward provider-specific kwargs
                 )
 
                 content = response.choices[0].message.content

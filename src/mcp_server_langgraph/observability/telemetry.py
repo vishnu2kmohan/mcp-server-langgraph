@@ -27,6 +27,9 @@ from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 SERVICE_NAME = "mcp-server-langgraph"
 OTLP_ENDPOINT = "http://localhost:4317"  # Change to your OTLP collector
 
+# Control verbose logging (set to False when embedded as library)
+OBSERVABILITY_VERBOSE = os.getenv("OBSERVABILITY_VERBOSE", "true").lower() in ("true", "1", "yes")
+
 
 class ObservabilityConfig:
     """Centralized observability configuration with OpenTelemetry and LangSmith support"""
@@ -58,8 +61,16 @@ class ObservabilityConfig:
 
     def _setup_tracing(self):
         """Configure distributed tracing"""
+        # Get version from settings
+        try:
+            from mcp_server_langgraph.core.config import settings
+            service_version = settings.service_version
+        except Exception:
+            from mcp_server_langgraph import __version__
+            service_version = __version__
+
         resource = Resource.create(
-            {"service.name": self.service_name, "service.version": "1.0.0", "deployment.environment": "production"}
+            {"service.name": self.service_name, "service.version": service_version, "deployment.environment": "production"}
         )
 
         provider = TracerProvider(resource=resource)
@@ -76,7 +87,8 @@ class ObservabilityConfig:
         trace.set_tracer_provider(provider)
 
         self.tracer = trace.get_tracer(__name__)
-        print(f"✓ Tracing configured: {self.service_name}")
+        if OBSERVABILITY_VERBOSE:
+            print(f"✓ Tracing configured: {self.service_name}")
 
     def _setup_metrics(self):
         """Configure metrics collection"""
@@ -101,7 +113,8 @@ class ObservabilityConfig:
 
         # Create common metrics
         self._create_metrics()
-        print(f"✓ Metrics configured: {self.service_name}")
+        if OBSERVABILITY_VERBOSE:
+            print(f"✓ Metrics configured: {self.service_name}")
 
     def _create_metrics(self):
         """Create standard metrics for the service"""
@@ -139,7 +152,8 @@ class ObservabilityConfig:
         if root_logger.handlers:
             # Logging already configured - skip to avoid duplicate handlers
             self.logger = logging.getLogger(self.service_name)
-            print(f"✓ Logging already configured, reusing existing setup")
+            if OBSERVABILITY_VERBOSE:
+                print(f"✓ Logging already configured, reusing existing setup")
             return
 
         # Instrument logging to include trace context
@@ -206,12 +220,13 @@ class ObservabilityConfig:
         logging.basicConfig(level=logging.INFO, handlers=[console_handler, rotating_handler, daily_handler, error_handler])
 
         self.logger = logging.getLogger(self.service_name)
-        print(f"✓ Logging configured: {self.service_name}")
-        print(f"  - Format: {self.log_format.upper()}")
-        print("  - Console output: INFO and above")
-        print(f"  - Main log: logs/{self.service_name}.log (rotating, 10MB, 5 backups)")
-        print(f"  - Daily log: logs/{self.service_name}-daily.log (daily, 30 days)")
-        print(f"  - Error log: logs/{self.service_name}-error.log (ERROR and above)")
+        if OBSERVABILITY_VERBOSE:
+            print(f"✓ Logging configured: {self.service_name}")
+            print(f"  - Format: {self.log_format.upper()}")
+            print("  - Console output: INFO and above")
+            print(f"  - Main log: logs/{self.service_name}.log (rotating, 10MB, 5 backups)")
+            print(f"  - Daily log: logs/{self.service_name}-daily.log (daily, 30 days)")
+            print(f"  - Error log: logs/{self.service_name}-error.log (ERROR and above)")
 
     def get_tracer(self):
         """Get tracer instance"""
@@ -231,15 +246,19 @@ class ObservabilityConfig:
             from mcp_server_langgraph.observability.langsmith import langsmith_config
 
             if langsmith_config.is_enabled():
-                print("✓ LangSmith integration enabled")
-                print("  - Dual observability: OpenTelemetry + LangSmith")
+                if OBSERVABILITY_VERBOSE:
+                    print("✓ LangSmith integration enabled")
+                    print("  - Dual observability: OpenTelemetry + LangSmith")
             else:
-                print("⚠ LangSmith configured but not enabled (check API key)")
+                if OBSERVABILITY_VERBOSE:
+                    print("⚠ LangSmith configured but not enabled (check API key)")
 
         except ImportError:
-            print("⚠ LangSmith not available (install langsmith package)")
+            if OBSERVABILITY_VERBOSE:
+                print("⚠ LangSmith not available (install langsmith package)")
         except Exception as e:
-            print(f"⚠ LangSmith setup failed: {e}")
+            if OBSERVABILITY_VERBOSE:
+                print(f"⚠ LangSmith setup failed: {e}")
 
 
 # Initialize global observability with LangSmith support
