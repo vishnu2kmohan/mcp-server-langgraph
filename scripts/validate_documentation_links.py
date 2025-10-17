@@ -6,13 +6,13 @@ This script validates all internal links in markdown and mdx files,
 categorizes broken links, and generates a detailed report.
 """
 
-import re
-import os
 import glob
 import json
-from pathlib import Path
+import os
+import re
 from collections import defaultdict
-from typing import Dict, List, Tuple, Set
+from pathlib import Path
+from typing import Dict, List, Set, Tuple
 
 
 class DocumentationLinkValidator:
