@@ -4,8 +4,10 @@ Integration tests for distributed conversation checkpointing with Redis
 Tests the RedisSaver checkpointer for multi-replica deployments with HPA auto-scaling.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -78,85 +80,103 @@ class TestCheckpointerFactory:
 class TestMemoryCheckpointer:
     """Tests for in-memory checkpointer (development/testing)"""
 
-    def test_conversation_state_preserved_same_instance(self):
+    @pytest.mark.asyncio
+    async def test_conversation_state_preserved_same_instance(self):
         """Test conversation state is preserved within same graph instance"""
+        # Mock LLM to avoid actual API calls
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
+
         # Force memory backend
         original_backend = settings.checkpoint_backend
+        original_checkpointing = settings.enable_checkpointing
         settings.checkpoint_backend = "memory"
+        settings.enable_checkpointing = True
 
         try:
-            # Create agent graph with memory checkpointer
-            graph = create_agent_graph()
+            # Create agent graph with memory checkpointer and mocked LLM
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                graph = create_agent_graph()
 
-            # First message
-            initial_state: AgentState = {
-                "messages": [HumanMessage(content="Hello")],
-                "next_action": "",
-                "user_id": "test-user",
-                "request_id": "req-1",
-                "routing_confidence": None,
-                "reasoning": None,
-            }
+                # First message
+                initial_state: AgentState = {
+                    "messages": [HumanMessage(content="Hello")],
+                    "next_action": "",
+                    "user_id": "test-user",
+                    "request_id": "req-1",
+                    "routing_confidence": None,
+                    "reasoning": None,
+                }
 
-            config = {"configurable": {"thread_id": "test-thread-123"}}
-            result1 = graph.invoke(initial_state, config)
+                config = {"configurable": {"thread_id": "test-thread-123"}}
+                result1 = await graph.ainvoke(initial_state, config)
 
-            # Second message (same thread)
-            followup_state: AgentState = {
-                "messages": [HumanMessage(content="How are you?")],
-                "next_action": "",
-                "user_id": "test-user",
-                "request_id": "req-2",
-                "routing_confidence": None,
-                "reasoning": None,
-            }
+                # Second message (same thread)
+                followup_state: AgentState = {
+                    "messages": [HumanMessage(content="How are you?")],
+                    "next_action": "",
+                    "user_id": "test-user",
+                    "request_id": "req-2",
+                    "routing_confidence": None,
+                    "reasoning": None,
+                }
 
-            result2 = graph.invoke(followup_state, config)
+                result2 = await graph.ainvoke(followup_state, config)
 
-            # Conversation history should accumulate
-            # result2 should have more messages than just the followup
-            assert len(result2["messages"]) >= len(followup_state["messages"])
+                # Conversation history should accumulate
+                # result2 should have more messages than just the followup
+                assert len(result2["messages"]) >= len(followup_state["messages"])
 
         finally:
             settings.checkpoint_backend = original_backend
+            settings.enable_checkpointing = original_checkpointing
 
-    def test_conversation_state_isolated_by_thread_id(self):
+    @pytest.mark.asyncio
+    async def test_conversation_state_isolated_by_thread_id(self):
         """Test different thread_ids have isolated conversation state"""
+        # Mock LLM to avoid actual API calls
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
+
         original_backend = settings.checkpoint_backend
+        original_checkpointing = settings.enable_checkpointing
         settings.checkpoint_backend = "memory"
+        settings.enable_checkpointing = True
 
         try:
-            graph = create_agent_graph()
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                graph = create_agent_graph()
 
-            # Thread 1
-            state1: AgentState = {
-                "messages": [HumanMessage(content="Thread 1 message")],
-                "next_action": "",
-                "user_id": "user-1",
-                "request_id": "req-1",
-                "routing_confidence": None,
-                "reasoning": None,
-            }
+                # Thread 1
+                state1: AgentState = {
+                    "messages": [HumanMessage(content="Thread 1 message")],
+                    "next_action": "",
+                    "user_id": "user-1",
+                    "request_id": "req-1",
+                    "routing_confidence": None,
+                    "reasoning": None,
+                }
 
-            result1 = graph.invoke(state1, config={"configurable": {"thread_id": "thread-1"}})
+                result1 = await graph.ainvoke(state1, config={"configurable": {"thread_id": "thread-1"}})
 
-            # Thread 2 (different thread_id)
-            state2: AgentState = {
-                "messages": [HumanMessage(content="Thread 2 message")],
-                "next_action": "",
-                "user_id": "user-2",
-                "request_id": "req-2",
-                "routing_confidence": None,
-                "reasoning": None,
-            }
+                # Thread 2 (different thread_id)
+                state2: AgentState = {
+                    "messages": [HumanMessage(content="Thread 2 message")],
+                    "next_action": "",
+                    "user_id": "user-2",
+                    "request_id": "req-2",
+                    "routing_confidence": None,
+                    "reasoning": None,
+                }
 
-            result2 = graph.invoke(state2, config={"configurable": {"thread_id": "thread-2"}})
+                result2 = await graph.ainvoke(state2, config={"configurable": {"thread_id": "thread-2"}})
 
-            # Results should be independent
-            assert result1 != result2
+                # Results should be independent
+                assert result1 != result2
 
         finally:
             settings.checkpoint_backend = original_backend
+            settings.enable_checkpointing = original_checkpointing
 
 
 @pytest.mark.integration
@@ -164,18 +184,21 @@ class TestMemoryCheckpointer:
 class TestRedisCheckpointer:
     """Integration tests for Redis checkpointer (requires Redis)"""
 
-    def test_conversation_state_persists_across_instances(self):
+    @pytest.mark.asyncio
+    async def test_conversation_state_persists_across_instances(self):
         """
         Test conversation state persists across different graph instances
         (Simulates pod restart or scaling scenario)
         """
         original_backend = settings.checkpoint_backend
         original_url = settings.checkpoint_redis_url
+        original_checkpointing = settings.enable_checkpointing
 
         try:
             # Enable Redis checkpointer
             settings.checkpoint_backend = "redis"
             settings.checkpoint_redis_url = "redis://localhost:6379/1"
+            settings.enable_checkpointing = True
 
             # Simulate Pod A
             graph_a = create_agent_graph()
@@ -192,7 +215,7 @@ class TestRedisCheckpointer:
             config = {"configurable": {"thread_id": "persistent-thread-123"}}
 
             try:
-                result_a = graph_a.invoke(initial_state, config)
+                result_a = await graph_a.ainvoke(initial_state, config)
                 initial_message_count = len(result_a["messages"])
             except Exception as e:
                 pytest.skip(f"Redis not available: {e}")
@@ -209,7 +232,7 @@ class TestRedisCheckpointer:
                 "reasoning": None,
             }
 
-            result_b = graph_b.invoke(followup_state, config)
+            result_b = await graph_b.ainvoke(followup_state, config)
 
             # Pod B should have access to conversation history from Pod A
             assert len(result_b["messages"]) >= initial_message_count
@@ -220,15 +243,19 @@ class TestRedisCheckpointer:
         finally:
             settings.checkpoint_backend = original_backend
             settings.checkpoint_redis_url = original_url
+            settings.enable_checkpointing = original_checkpointing
 
-    def test_different_thread_ids_isolated_in_redis(self):
+    @pytest.mark.asyncio
+    async def test_different_thread_ids_isolated_in_redis(self):
         """Test different thread_ids remain isolated even with Redis backend"""
         original_backend = settings.checkpoint_backend
         original_url = settings.checkpoint_redis_url
+        original_checkpointing = settings.enable_checkpointing
 
         try:
             settings.checkpoint_backend = "redis"
             settings.checkpoint_redis_url = "redis://localhost:6379/1"
+            settings.enable_checkpointing = True
 
             graph = create_agent_graph()
 
@@ -243,7 +270,7 @@ class TestRedisCheckpointer:
             }
 
             try:
-                result1 = graph.invoke(state1, config={"configurable": {"thread_id": "redis-thread-1"}})
+                result1 = await graph.ainvoke(state1, config={"configurable": {"thread_id": "redis-thread-1"}})
             except Exception as e:
                 pytest.skip(f"Redis not available: {e}")
 
@@ -257,7 +284,7 @@ class TestRedisCheckpointer:
                 "reasoning": None,
             }
 
-            result2 = graph.invoke(state2, config={"configurable": {"thread_id": "redis-thread-2"}})
+            result2 = await graph.ainvoke(state2, config={"configurable": {"thread_id": "redis-thread-2"}})
 
             # Threads should be isolated
             result1_contents = [msg.content for msg in result1["messages"] if hasattr(msg, "content")]
@@ -271,6 +298,7 @@ class TestRedisCheckpointer:
         finally:
             settings.checkpoint_backend = original_backend
             settings.checkpoint_redis_url = original_url
+            settings.enable_checkpointing = original_checkpointing
 
 
 @pytest.mark.integration

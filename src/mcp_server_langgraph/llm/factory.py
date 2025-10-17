@@ -87,7 +87,7 @@ class LLMFactory:
         Convert LangChain messages to LiteLLM format
 
         Args:
-            messages: List of LangChain BaseMessage objects
+            messages: List of LangChain BaseMessage objects or dicts
 
         Returns:
             List of dictionaries in LiteLLM format
@@ -100,9 +100,24 @@ class LLMFactory:
                 formatted.append({"role": "assistant", "content": msg.content})
             elif isinstance(msg, SystemMessage):
                 formatted.append({"role": "system", "content": msg.content})
+            elif isinstance(msg, dict):
+                # Handle dict messages (already in correct format or need conversion)
+                if "role" in msg and "content" in msg:
+                    # Already formatted dict
+                    formatted.append(msg)
+                elif "content" in msg:
+                    # Dict with content but no role
+                    formatted.append({"role": "user", "content": str(msg["content"])})
+                else:
+                    # Malformed dict, convert to string
+                    formatted.append({"role": "user", "content": str(msg)})
             else:
-                # Default to user message
-                formatted.append({"role": "user", "content": str(msg.content)})
+                # Fallback for other types - check if it has content attribute
+                if hasattr(msg, "content"):
+                    formatted.append({"role": "user", "content": str(msg.content)})
+                else:
+                    # Last resort: convert entire object to string
+                    formatted.append({"role": "user", "content": str(msg)})
 
         return formatted
 

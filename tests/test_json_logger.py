@@ -59,6 +59,7 @@ def log_record():
         msg="Test message",
         args=(),
         exc_info=None,
+        func="test_function",  # Set function name
     )
     record.process = 1234
     record.processName = "TestProcess"
@@ -163,9 +164,13 @@ class TestCustomJSONFormatter:
 
     def test_exception_handling(self, json_formatter):
         """Test exception stack trace capture"""
+        import sys
+
         try:
             raise ValueError("Test error")
         except ValueError:
+            # Capture the actual exception info tuple
+            exc_info = sys.exc_info()
             record = logging.LogRecord(
                 name="test_logger",
                 level=logging.ERROR,
@@ -173,7 +178,7 @@ class TestCustomJSONFormatter:
                 lineno=42,
                 msg="An error occurred",
                 args=(),
-                exc_info=True,  # Capture exception
+                exc_info=exc_info,  # Pass the actual exception tuple
             )
 
         formatted = json_formatter.format(record)

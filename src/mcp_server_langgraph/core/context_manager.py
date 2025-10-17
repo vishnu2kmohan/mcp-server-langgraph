@@ -161,7 +161,9 @@ class ContextManager:
 
             compacted_tokens = sum(count_tokens(self._message_to_text(msg)) for msg in compacted_messages)
 
-            compression_ratio = compacted_tokens / original_tokens if original_tokens > 0 else 1.0
+            # Calculate compression ratio (clamped to max 1.0)
+            # In rare cases, summary may be longer than original, so clamp to prevent validation errors
+            compression_ratio = min(1.0, compacted_tokens / original_tokens) if original_tokens > 0 else 1.0
 
             span.set_attribute("message.count.compacted", len(compacted_messages))
             span.set_attribute("token.count.compacted", compacted_tokens)

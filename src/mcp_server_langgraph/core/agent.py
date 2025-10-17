@@ -547,9 +547,15 @@ def create_agent_graph():
     workflow.add_edge("respond", "verify")  # Always verify responses
     workflow.add_edge("refine", "respond")  # Refine loops back to respond
 
-    # Compile with checkpointing (uses factory to get Redis or Memory)
-    checkpointer = _create_checkpointer()
-    return workflow.compile(checkpointer=checkpointer)
+    # Compile with optional checkpointing (respects enable_checkpointing setting)
+    enable_checkpointing = getattr(settings, "enable_checkpointing", True)
+    if enable_checkpointing:
+        checkpointer = _create_checkpointer()
+        return workflow.compile(checkpointer=checkpointer)
+    else:
+        # Compile without checkpointing (useful for testing with mocks)
+        logger.info("Checkpointing disabled - graph will not persist conversation state")
+        return workflow.compile()
 
 
 # Create singleton instance

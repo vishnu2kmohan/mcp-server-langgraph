@@ -462,7 +462,9 @@ class TestParallelExecutorIntegration:
         assert all(r.error is None for r in results)
 
         # Verify execution order constraints
-        def get_end_time(tool_name):
+        def get_end_time(invocation_id):
+            # Convert invocation_id to tool_name (e.g., "A" -> "tool_a")
+            tool_name = f"tool_{invocation_id.lower()}"
             for i, (event, name) in enumerate(execution_log):
                 if event == "end" and name == tool_name:
                     return i

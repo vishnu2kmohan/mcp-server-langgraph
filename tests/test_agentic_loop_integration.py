@@ -5,14 +5,36 @@ Tests the complete gather-action-verify-repeat cycle.
 These are integration tests that may require mocking but test full workflows.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.core.agent import AgentState, create_agent_graph
+from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.context_manager import ContextManager
 from mcp_server_langgraph.llm.verifier import OutputVerifier, VerificationResult
+
+
+@pytest.fixture
+def test_settings():
+    """Create real Settings object for testing (serializable)."""
+    return Settings(
+        service_name="test-service",
+        otlp_endpoint="http://localhost:4317",
+        jwt_secret_key="test-secret",
+        anthropic_api_key="test-key",
+        model_name="claude-3-5-sonnet-20241022",
+        log_level="DEBUG",
+        openfga_api_url="http://localhost:8080",
+        openfga_store_id="test-store",
+        openfga_model_id="test-model",
+        enable_context_compaction=False,
+        enable_verification=False,
+        enable_dynamic_context_loading=False,
+        enable_checkpointing=False,  # Disable checkpointing to avoid mock serialization
+        checkpoint_backend="memory",
+    )
 
 
 @pytest.fixture
@@ -78,14 +100,13 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_basic_workflow_without_compaction_verification(self, mock_llm):
+    async def test_basic_workflow_without_compaction_verification(self, mock_llm, test_settings):
         """Test basic workflow when compaction and verification are disabled."""
-        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
-                # Disable new features for baseline test
-                mock_settings.enable_context_compaction = False
-                mock_settings.enable_verification = False
+        test_settings.enable_context_compaction = False
+        test_settings.enable_verification = False
 
+        with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+            with patch("mcp_server_langgraph.core.agent.settings", test_settings):
                 # Create agent graph
                 graph = create_agent_graph()
 
@@ -106,14 +127,14 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_workflow_with_compaction_enabled(self, mock_llm, mock_context_manager):
+    async def test_workflow_with_compaction_enabled(self, mock_llm, mock_context_manager, test_settings):
         """Test workflow with context compaction enabled."""
+        test_settings.enable_context_compaction = True
+        test_settings.enable_verification = False
+
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_context_manager):
-                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
-                    mock_settings.enable_context_compaction = True
-                    mock_settings.enable_verification = False
-
+                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
                     graph = create_agent_graph()
 
                     initial_state: AgentState = {
@@ -128,20 +149,20 @@ class TestAgenticLoopIntegration:
                     # Compaction should have been checked
                     mock_context_manager.needs_compaction.assert_called()
 
-                    # Should have compaction_applied field in state
+                    # Should have compaction_applied field in result
                     assert "compaction_applied" in result
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_workflow_with_verification_pass(self, mock_llm, mock_verifier_pass):
+    async def test_workflow_with_verification_pass(self, mock_llm, mock_verifier_pass, test_settings):
         """Test workflow with verification enabled (passes immediately)."""
+        test_settings.enable_context_compaction = False
+        test_settings.enable_verification = True
+        test_settings.max_refinement_attempts = 3
+
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_pass):
-                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
-                    mock_settings.enable_context_compaction = False
-                    mock_settings.enable_verification = True
-                    mock_settings.max_refinement_attempts = 3
-
+                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
                     graph = create_agent_graph()
 
                     initial_state: AgentState = {
@@ -165,15 +186,15 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_workflow_with_verification_refinement(self, mock_llm, mock_verifier_fail):
+    async def test_workflow_with_verification_refinement(self, mock_llm, mock_verifier_fail, test_settings):
         """Test workflow with verification enabled (requires refinement)."""
+        test_settings.enable_context_compaction = False
+        test_settings.enable_verification = True
+        test_settings.max_refinement_attempts = 3
+
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_fail):
-                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
-                    mock_settings.enable_context_compaction = False
-                    mock_settings.enable_verification = True
-                    mock_settings.max_refinement_attempts = 3
-
+                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
                     graph = create_agent_graph()
 
                     initial_state: AgentState = {
@@ -196,8 +217,12 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_workflow_max_refinement_attempts(self, mock_llm):
+    async def test_workflow_max_refinement_attempts(self, mock_llm, test_settings):
         """Test that workflow respects max refinement attempts."""
+        test_settings.enable_context_compaction = False
+        test_settings.enable_verification = True
+        test_settings.max_refinement_attempts = 2  # Low limit for testing
+
         # Create verifier that always fails
         mock_verifier = MagicMock(spec=OutputVerifier)
         mock_verifier.verify_response = AsyncMock(
@@ -212,11 +237,7 @@ class TestAgenticLoopIntegration:
 
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
-                with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
-                    mock_settings.enable_context_compaction = False
-                    mock_settings.enable_verification = True
-                    mock_settings.max_refinement_attempts = 2  # Low limit for testing
-
+                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
                     graph = create_agent_graph()
 
                     initial_state: AgentState = {
@@ -266,8 +287,12 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_full_loop_with_all_features(self, mock_llm):
+    async def test_full_loop_with_all_features(self, mock_llm, test_settings):
         """Test complete agentic loop with all features enabled."""
+        test_settings.enable_context_compaction = True
+        test_settings.enable_verification = True
+        test_settings.max_refinement_attempts = 3
+
         # Create mocks
         mock_manager = MagicMock(spec=ContextManager)
         mock_manager.needs_compaction = MagicMock(return_value=True)
@@ -294,11 +319,7 @@ class TestAgenticLoopIntegration:
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_manager):
                 with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
-                    with patch("mcp_server_langgraph.core.agent.settings") as mock_settings:
-                        mock_settings.enable_context_compaction = True
-                        mock_settings.enable_verification = True
-                        mock_settings.max_refinement_attempts = 3
-
+                    with patch("mcp_server_langgraph.core.agent.settings", test_settings):
                         graph = create_agent_graph()
 
                         # Create long conversation

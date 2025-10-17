@@ -12,6 +12,7 @@ Implements Anthropic's best practices for writing tools for agents:
 import asyncio
 from typing import Any, Literal
 
+from langchain_core.messages import HumanMessage
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Resource, TextContent, Tool
@@ -291,9 +292,9 @@ class MCPAgentServer:
                 },
             )
 
-            # Create initial state
+            # Create initial state with proper LangChain message objects
             initial_state: AgentState = {
-                "messages": [{"role": "user", "content": message}],
+                "messages": [HumanMessage(content=message)],  # Use HumanMessage, not dict
                 "next_action": "",
                 "user_id": user_id,
                 "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,

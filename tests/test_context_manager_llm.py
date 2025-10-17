@@ -52,13 +52,14 @@ PREFERENCES:
 @pytest.fixture
 def context_manager(mock_llm):
     """Create ContextManager instance with mocked LLM"""
-    with patch("mcp_server_langgraph.core.context_manager.create_llm_from_config", return_value=mock_llm):
+    # Patch the factory function that ContextManager actually uses
+    with patch("mcp_server_langgraph.llm.factory.create_summarization_model", return_value=mock_llm):
         manager = ContextManager(
             compaction_threshold=8000,
             target_after_compaction=4000,
             recent_message_count=5,
         )
-        # Replace LLM with our mock
+        # LLM should already be set by __init__, but ensure our mock is used
         manager.llm = mock_llm
         return manager
 

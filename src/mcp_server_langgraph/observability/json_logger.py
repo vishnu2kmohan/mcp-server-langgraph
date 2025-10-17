@@ -106,11 +106,26 @@ class CustomJSONFormatter(jsonlogger.JsonFormatter):
 
         # Add exception info if present
         if record.exc_info:
-            log_record["exception"] = {
-                "type": record.exc_info[0].__name__ if record.exc_info[0] else None,
-                "message": str(record.exc_info[1]) if record.exc_info[1] else None,
-                "stacktrace": self.formatException(record.exc_info),
-            }
+            # exc_info can be True (capture current exception) or a tuple (type, value, traceback)
+            # When logging.LogRecord is created with exc_info=True, it should auto-capture
+            # But in tests, it might just be True. Handle both cases.
+            if isinstance(record.exc_info, tuple) and len(record.exc_info) == 3:
+                log_record["exception"] = {
+                    "type": record.exc_info[0].__name__ if record.exc_info[0] else None,
+                    "message": str(record.exc_info[1]) if record.exc_info[1] else None,
+                    "stacktrace": self.formatException(record.exc_info),
+                }
+            elif record.exc_info is True:
+                # exc_info=True but tuple not auto-captured, try to get current exception
+                import sys
+
+                exc_info = sys.exc_info()
+                if exc_info[0] is not None:
+                    log_record["exception"] = {
+                        "type": exc_info[0].__name__,
+                        "message": str(exc_info[1]),
+                        "stacktrace": self.formatException(exc_info),
+                    }
 
         # Add process and thread info
         log_record["process"] = {
@@ -140,8 +155,8 @@ class CustomJSONFormatter(jsonlogger.JsonFormatter):
             JSON-formatted log string
         """
         message_dict = {}
-        if hasattr(record, "message"):
-            message_dict["message"] = record.getMessage()
+        # Always get the formatted message (combines msg + args)
+        message_dict["message"] = record.getMessage()
 
         # Merge any extra fields passed via extra parameter
         if hasattr(record, "__dict__"):

@@ -201,6 +201,18 @@ module = [
 disallow_untyped_calls = true
 strict = true
 
+# Phase 3: Additional core modules with comprehensive test coverage
+[[tool.mypy.overrides]]
+module = [
+    "mcp_server_langgraph.core.context_manager",
+    "mcp_server_langgraph.core.parallel_executor",
+    "mcp_server_langgraph.utils.response_optimizer",
+    "mcp_server_langgraph.health.checks",
+    "mcp_server_langgraph.monitoring.sla",
+]
+disallow_untyped_calls = true
+strict = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]

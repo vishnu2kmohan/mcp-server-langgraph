@@ -261,7 +261,7 @@ FEEDBACK:
         """
         # Extract scores using simple parsing (can be enhanced with regex)
         criterion_scores = {}
-        overall_score = 0.5  # Default
+        overall_score = None  # Will be set from OVERALL or calculated
         critical_issues = []
         suggestions = []
         requires_refinement = False
@@ -299,19 +299,27 @@ FEEDBACK:
                 except (ValueError, IndexError):
                     pass
             elif current_section == "critical" and line.startswith("-"):
-                critical_issues.append(line[1:].strip())
+                issue = line[1:].strip()
+                # Filter out "None" or empty issues
+                if issue and issue.lower() not in ["none", "n/a", "na"]:
+                    critical_issues.append(issue)
             elif current_section == "suggestions" and line.startswith("-"):
-                suggestions.append(line[1:].strip())
+                suggestion = line[1:].strip()
+                if suggestion and suggestion.lower() not in ["none", "n/a", "na"]:
+                    suggestions.append(suggestion)
             elif current_section == "feedback" and line:
                 feedback += line + " "
 
         feedback = feedback.strip() or "No specific feedback provided."
 
-        # Calculate overall score from criteria if not provided
-        if not criterion_scores:
-            logger.warning("Failed to parse criterion scores from judgment")
-        else:
-            overall_score = sum(criterion_scores.values()) / len(criterion_scores)
+        # Calculate overall score from criteria if not explicitly provided in OVERALL
+        if overall_score is None:
+            if criterion_scores:
+                overall_score = sum(criterion_scores.values()) / len(criterion_scores)
+                logger.info("Calculated overall score from criterion scores")
+            else:
+                overall_score = 0.5  # Default fallback
+                logger.warning("Failed to parse both overall score and criterion scores, using default")
 
         passed = overall_score >= threshold and len(critical_issues) == 0
 
@@ -332,7 +340,9 @@ FEEDBACK:
             "standard": self.quality_threshold,
             "lenient": self.quality_threshold - 0.1,
         }
-        return max(0.0, min(1.0, thresholds.get(mode, self.quality_threshold)))
+        # Round to avoid floating point precision issues in tests
+        threshold = thresholds.get(mode, self.quality_threshold)
+        return round(max(0.0, min(1.0, threshold)), 2)
 
     def _get_role(self, message: BaseMessage) -> str:
         """Get role label for message."""

@@ -57,9 +57,11 @@ def short_conversation():
 def long_conversation():
     """Create a long conversation (above threshold)."""
     messages = []
-    for i in range(15):
-        messages.append(HumanMessage(content=f"Question {i}: " + "x" * 100))
-        messages.append(AIMessage(content=f"Answer {i}: " + "y" * 100))
+    # Increase size to ensure > 1000 tokens (threshold in test)
+    # Each message ~50 tokens, need 20+ messages or longer content
+    for i in range(20):
+        messages.append(HumanMessage(content=f"Question {i}: " + "x" * 150))
+        messages.append(AIMessage(content=f"Answer {i}: " + "y" * 150))
     return messages
 
 
@@ -129,14 +131,21 @@ class TestContextManager:
         assert any("helpful assistant" in msg.content for msg in system_messages)
 
     @pytest.mark.asyncio
-    async def test_compact_conversation_no_older_messages(self, context_manager, short_conversation):
+    async def test_compact_conversation_no_older_messages(self, context_manager):
         """Test compaction with no older messages to summarize."""
-        result = await context_manager.compact_conversation(short_conversation)
+        # Create conversation with exactly recent_message_count messages (no older messages)
+        # context_manager.recent_message_count = 2
+        very_short_conversation = [
+            HumanMessage(content="Hello"),
+            AIMessage(content="Hi! How can I help?"),
+        ]
+
+        result = await context_manager.compact_conversation(very_short_conversation)
 
         # Should return unchanged if nothing to compact
         assert result.messages_summarized == 0
         assert result.compression_ratio == 1.0
-        assert len(result.compacted_messages) == len(short_conversation)
+        assert len(result.compacted_messages) == len(very_short_conversation)
 
     @pytest.mark.asyncio
     async def test_summarization_calls_llm(self, context_manager, long_conversation):
