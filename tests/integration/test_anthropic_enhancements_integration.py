@@ -264,14 +264,12 @@ class TestContextManagerIntegration:
             # Mock LLM
             mock_llm = AsyncMock()
 
-            async def mock_summarize(prompt):
-                response = MagicMock()
-                response.content = "Summary of conversation: User requested feature X, discussed implementation."
-                return response
+            # Create mock responses (not async functions)
+            mock_summarize_response = MagicMock()
+            mock_summarize_response.content = "Summary of conversation: User requested feature X, discussed implementation."
 
-            async def mock_extract(prompt):
-                response = MagicMock()
-                response.content = """DECISIONS:
+            mock_extract_response = MagicMock()
+            mock_extract_response.content = """DECISIONS:
 - Implement feature X
 
 REQUIREMENTS:
@@ -289,10 +287,9 @@ ISSUES:
 PREFERENCES:
 - Use Python for backend
 """
-                return response
 
-            # Set up mock to handle both calls
-            mock_llm.ainvoke = AsyncMock(side_effect=[mock_summarize(""), mock_extract("")])
+            # Set up mock to return responses in order
+            mock_llm.ainvoke = AsyncMock(side_effect=[mock_summarize_response, mock_extract_response])
             mock_llm_factory.return_value = mock_llm
 
             manager = ContextManager(
