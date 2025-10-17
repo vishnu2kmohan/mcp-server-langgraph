@@ -1,0 +1,661 @@
+# System Architecture Diagram
+
+This file contains Mermaid diagrams for the MCP Server LangGraph system architecture.
+
+## High-Level System Architecture
+
+```mermaid
+graph TD
+    %% MCP Clients
+    Client[MCP Client<br/>Claude Desktop, Custom Apps]
+
+    %% MCP Server Layer
+    subgraph MCP_Server["MCP Server"]
+        STDIO[STDIO Transport<br/>server_stdio.py]
+        HTTP[StreamableHTTP Transport<br/>server_streamable.py]
+    end
+
+    %% Authentication & Authorization
+    subgraph Auth["Authentication & Authorization"]
+        AuthMW[Auth Middleware<br/>JWT Verification]
+        OpenFGA[OpenFGA Client<br/>Fine-Grained AuthZ]
+        Keycloak[Keycloak Integration<br/>SSO/OIDC]
+        Sessions[Session Store<br/>InMemory/Redis]
+    end
+
+    %% Agent Layer
+    subgraph Agent["LangGraph Agent"]
+        Context[Context Manager<br/>Compaction & Loading]
+        Router[Pydantic AI Router<br/>Intelligent Routing]
+        Tools[Tool Executor<br/>Parallel Execution]
+        Verifier[Output Verifier<br/>LLM-as-Judge]
+        Memory[Checkpointer<br/>MemorySaver/PostgreSQL]
+    end
+
+    %% LLM Layer
+    subgraph LLM["LLM Provider Layer"]
+        Factory[LLM Factory<br/>LiteLLM]
+        Primary[Primary Model<br/>Claude/GPT/Gemini]
+        Fallback[Fallback Models<br/>Multi-Provider Chain]
+    end
+
+    %% Supporting Services
+    subgraph Services["Supporting Services"]
+        Secrets[Secrets Manager<br/>Infisical]
+        Qdrant[Vector Database<br/>Qdrant]
+        Redis[Session Store<br/>Redis]
+        Postgres[Checkpoint Store<br/>PostgreSQL]
+    end
+
+    %% Observability
+    subgraph Observability["Observability Stack"]
+        OTEL[OpenTelemetry<br/>Traces & Metrics]
+        Jaeger[Jaeger<br/>Trace Visualization]
+        Prometheus[Prometheus<br/>Metrics Storage]
+        Grafana[Grafana<br/>Dashboards]
+        LangSmith[LangSmith<br/>LLM Tracing]
+    end
+
+    %% Connections
+    Client -->|MCP Protocol| STDIO
+    Client -->|HTTP/SSE| HTTP
+    STDIO --> AuthMW
+    HTTP --> AuthMW
+
+    AuthMW --> OpenFGA
+    AuthMW --> Keycloak
+    AuthMW --> Sessions
+
+    AuthMW --> Context
+    Context --> Router
+    Router --> Tools
+    Tools --> Verifier
+    Context --> Memory
+
+    Router --> Factory
+    Tools --> Factory
+    Verifier --> Factory
+    Factory --> Primary
+    Factory -.->|on failure| Fallback
+
+    AuthMW --> Secrets
+    Context --> Qdrant
+    Sessions --> Redis
+    Memory --> Postgres
+
+    MCP_Server --> OTEL
+    Auth --> OTEL
+    Agent --> OTEL
+    LLM --> OTEL
+
+    OTEL --> Jaeger
+    OTEL --> Prometheus
+    OTEL --> LangSmith
+    Prometheus --> Grafana
+
+    %% Styling
+    classDef client fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef server fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef auth fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef agent fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef llm fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef services fill:#e0f2f1,stroke:#004d40,stroke-width:2px
+    classDef obs fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+
+    class Client client
+    class STDIO,HTTP server
+    class AuthMW,OpenFGA,Keycloak,Sessions auth
+    class Context,Router,Tools,Verifier,Memory agent
+    class Factory,Primary,Fallback llm
+    class Secrets,Qdrant,Redis,Postgres services
+    class OTEL,Jaeger,Prometheus,Grafana,LangSmith obs
+```
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant Client as MCP Client
+    participant Server as MCP Server
+    participant Auth as Auth Middleware
+    participant Keycloak as Keycloak SSO
+    participant OpenFGA as OpenFGA
+    participant Agent as LangGraph Agent
+
+    Client->>Server: Request (with JWT token)
+    Server->>Auth: Authenticate
+
+    alt JWT Token Present
+        Auth->>Auth: Verify JWT signature
+        Auth->>Keycloak: Validate with JWKS
+        Keycloak-->>Auth: Token valid
+        Auth->>Auth: Create session
+    else No Token
+        Auth-->>Client: 401 Unauthorized
+    end
+
+    Auth->>OpenFGA: Check permission<br/>(user, relation, object)
+    OpenFGA-->>Auth: Allow/Deny
+
+    alt Authorized
+        Auth->>Agent: Forward request
+        Agent-->>Auth: Response
+        Auth-->>Server: Response
+        Server-->>Client: Response
+    else Unauthorized
+        Auth-->>Client: 403 Forbidden
+    end
+
+    Note over Auth,OpenFGA: Fine-grained access control<br/>per tool, conversation, resource
+```
+
+## Agentic Loop Workflow
+
+```mermaid
+flowchart TD
+    Start([User Request]) --> LoadContext[Load Context<br/>Just-in-Time Semantic Search]
+
+    LoadContext --> Compact{Context<br/>> 8K tokens?}
+    Compact -->|Yes| CompactCtx[Compact Context<br/>Summarize older messages]
+    Compact -->|No| Route[Route Message<br/>Pydantic AI Router]
+    CompactCtx --> Route
+
+    Route --> Decision{Routing<br/>Decision}
+    Decision -->|use_tools| ExecuteTools[Execute Tools<br/>Parallel if Independent]
+    Decision -->|respond| GenerateResp[Generate Response<br/>LLM Call]
+    Decision -->|end| End([Return Response])
+
+    ExecuteTools --> GenerateResp
+    GenerateResp --> Verify[Verify Output<br/>LLM-as-Judge]
+
+    Verify --> Quality{Quality<br/>Score ≥ 0.7?}
+    Quality -->|Yes| ExtractNotes[Extract Notes<br/>6-Category LLM Extraction]
+    Quality -->|No| Refine{Attempts<br/>< 3?}
+
+    Refine -->|Yes| RefineResp[Refine Response<br/>With Feedback]
+    Refine -->|No| ExtractNotes
+    RefineResp --> Verify
+
+    ExtractNotes --> SaveState[Save to Checkpoint<br/>Memory/PostgreSQL]
+    SaveState --> End
+
+    style LoadContext fill:#e3f2fd
+    style Compact fill:#fff3e0
+    style Route fill:#f3e5f5
+    style ExecuteTools fill:#e8f5e9
+    style GenerateResp fill:#e8f5e9
+    style Verify fill:#fce4ec
+    style ExtractNotes fill:#e0f2f1
+    style Quality fill:#ffebee
+    style Refine fill:#fff9c4
+```
+
+## Deployment Architecture (Kubernetes)
+
+```mermaid
+graph TB
+    subgraph Internet
+        Users[Users/Clients]
+    end
+
+    subgraph Kubernetes_Cluster["Kubernetes Cluster"]
+        subgraph Ingress_Layer["Ingress Layer"]
+            Ingress[Nginx Ingress<br/>TLS Termination]
+            Kong[Kong Gateway<br/>Rate Limiting]
+        end
+
+        subgraph Application_Layer["Application Layer"]
+            AgentPod1[Agent Pod 1<br/>mcp-server-langgraph]
+            AgentPod2[Agent Pod 2<br/>mcp-server-langgraph]
+            AgentPod3[Agent Pod 3<br/>mcp-server-langgraph]
+            HPA[Horizontal Pod Autoscaler<br/>2-10 replicas]
+        end
+
+        subgraph Auth_Layer["Authentication Layer"]
+            KeycloakPod1[Keycloak Pod 1<br/>SSO/OIDC]
+            KeycloakPod2[Keycloak Pod 2<br/>SSO/OIDC]
+            OpenFGAPod1[OpenFGA Pod 1<br/>Authorization]
+            OpenFGAPod2[OpenFGA Pod 2<br/>Authorization]
+        end
+
+        subgraph Data_Layer["Data Layer"]
+            PostgresDB[(PostgreSQL StatefulSet<br/>OpenFGA + Keycloak + Checkpoints)]
+            RedisPod[Redis<br/>Sessions]
+            QdrantPod[Qdrant<br/>Vector Search]
+        end
+
+        subgraph Observability_Layer["Observability Layer"]
+            OTELCol[OTEL Collector<br/>Traces & Metrics]
+            JaegerPod[Jaeger<br/>Distributed Tracing]
+            PrometheusPod[Prometheus<br/>Metrics & Alerts]
+            GrafanaPod[Grafana<br/>Visualization]
+        end
+    end
+
+    subgraph External_Services["External Services"]
+        Anthropic[Anthropic API<br/>Claude Models]
+        OpenAI[OpenAI API<br/>GPT Models]
+        Google[Google API<br/>Gemini Models]
+        Infisical[Infisical<br/>Secrets Management]
+    end
+
+    %% Connections
+    Users -->|HTTPS| Ingress
+    Ingress --> Kong
+    Kong --> AgentPod1
+    Kong --> AgentPod2
+    Kong --> AgentPod3
+    HPA -.->|scales| AgentPod1
+
+    AgentPod1 --> KeycloakPod1
+    AgentPod2 --> KeycloakPod1
+    AgentPod3 --> KeycloakPod2
+
+    KeycloakPod1 --> PostgresDB
+    KeycloakPod2 --> PostgresDB
+
+    AgentPod1 --> OpenFGAPod1
+    AgentPod2 --> OpenFGAPod2
+    AgentPod3 --> OpenFGAPod1
+
+    OpenFGAPod1 --> PostgresDB
+    OpenFGAPod2 --> PostgresDB
+
+    AgentPod1 --> RedisPod
+    AgentPod2 --> RedisPod
+    AgentPod3 --> RedisPod
+
+    AgentPod1 --> QdrantPod
+    AgentPod2 --> QdrantPod
+    AgentPod3 --> QdrantPod
+
+    AgentPod1 --> PostgresDB
+    AgentPod2 --> PostgresDB
+    AgentPod3 --> PostgresDB
+
+    AgentPod1 --> Anthropic
+    AgentPod1 --> OpenAI
+    AgentPod1 --> Google
+    AgentPod1 --> Infisical
+
+    AgentPod1 --> OTELCol
+    AgentPod2 --> OTELCol
+    AgentPod3 --> OTELCol
+    KeycloakPod1 --> OTELCol
+    OpenFGAPod1 --> OTELCol
+
+    OTELCol --> JaegerPod
+    OTELCol --> PrometheusPod
+    PrometheusPod --> GrafanaPod
+
+    style PostgresDB fill:#4db6ac,stroke:#004d40,stroke-width:3px
+    style RedisPod fill:#ef5350,stroke:#b71c1c,stroke-width:2px
+    style QdrantPod fill:#ab47bc,stroke:#4a148c,stroke-width:2px
+```
+
+## Data Flow - MCP Tool Execution
+
+```mermaid
+sequenceDiagram
+    participant Client as MCP Client
+    participant MCP as MCP Server
+    participant Auth as Auth Middleware
+    participant Context as Context Loader
+    participant Router as Pydantic Router
+    participant Tools as Tool Executor
+    participant LLM as LLM (via LiteLLM)
+    participant Verify as Output Verifier
+    participant Memory as Checkpoint
+
+    Client->>MCP: call_tool("agent_chat", {message})
+    MCP->>Auth: Authenticate & Authorize
+    Auth->>Auth: Check JWT & OpenFGA permissions
+    Auth-->>MCP: ✓ Authorized
+
+    MCP->>Context: Load relevant context
+    Context->>Context: Semantic search in Qdrant
+    Context-->>MCP: Context documents (top 3)
+
+    MCP->>Router: Route message with context
+    Router->>LLM: Determine action (structured output)
+    LLM-->>Router: {action: "use_tools", confidence: 0.92}
+    Router-->>MCP: Routing decision
+
+    alt Action: use_tools
+        MCP->>Tools: Execute tools (parallel if applicable)
+        Tools->>LLM: Tool execution requests
+        LLM-->>Tools: Tool results
+        Tools-->>MCP: Aggregated results
+    end
+
+    MCP->>LLM: Generate final response
+    LLM-->>MCP: Response text
+
+    MCP->>Verify: Verify response quality
+    Verify->>LLM: LLM-as-judge evaluation
+    LLM-->>Verify: {quality_score: 0.94, passed: true}
+
+    alt Quality check failed & attempts < 3
+        Verify->>LLM: Refine response with feedback
+        LLM-->>Verify: Refined response
+    end
+
+    Verify-->>MCP: ✓ Verified response
+
+    MCP->>Memory: Save conversation state
+    Memory-->>MCP: ✓ Saved
+
+    MCP-->>Client: Response with metadata
+
+    Note over Context,Verify: Full Agentic Loop<br/>Gather-Action-Verify-Repeat
+```
+
+## Parallel Tool Execution
+
+```mermaid
+graph LR
+    Request[Tool Execution Request] --> Analyzer[Dependency Analyzer]
+    Analyzer --> Graph[Build Dependency Graph]
+    Graph --> Topo[Topological Sort]
+
+    Topo --> Layer1[Layer 1: Independent Tools]
+    Topo --> Layer2[Layer 2: Dependent Tools]
+    Topo --> Layer3[Layer 3: Final Tools]
+
+    subgraph Parallel_Execution["Parallel Execution"]
+        Layer1 --> Tool1A[Tool A]
+        Layer1 --> Tool1B[Tool B]
+        Layer1 --> Tool1C[Tool C]
+    end
+
+    Tool1A --> Sync1[Sync Point]
+    Tool1B --> Sync1
+    Tool1C --> Sync1
+
+    subgraph Sequential_Execution["Sequential Layer 2"]
+        Sync1 --> Layer2
+        Layer2 --> Tool2A[Tool D<br/>depends on A,B]
+        Tool2A --> Tool2B[Tool E<br/>depends on D]
+    end
+
+    Tool2B --> Sync2[Sync Point]
+
+    subgraph Final_Layer["Final Layer"]
+        Sync2 --> Layer3
+        Layer3 --> Tool3[Tool F<br/>depends on E]
+    end
+
+    Tool3 --> Results[Aggregated Results]
+
+    style Tool1A fill:#a5d6a7,stroke:#2e7d32
+    style Tool1B fill:#a5d6a7,stroke:#2e7d32
+    style Tool1C fill:#a5d6a7,stroke:#2e7d32
+    style Tool2A fill:#ffcc80,stroke:#e65100
+    style Tool2B fill:#ffcc80,stroke:#e65100
+    style Tool3 fill:#ef9a9a,stroke:#c62828
+```
+
+## Context Loading Strategy
+
+```mermaid
+flowchart TD
+    UserQuery[User Query] --> CheckCache{Context<br/>Cached?}
+
+    CheckCache -->|Yes| LoadCache[Load from LRU Cache<br/>< 1ms]
+    CheckCache -->|No| Embed[Embed Query<br/>SentenceTransformer]
+
+    Embed --> Search[Semantic Search<br/>Qdrant Vector DB]
+    Search --> TopK[Retrieve Top-K<br/>Default: 3 documents]
+
+    TopK --> TokenCheck{Total tokens<br/>< budget?}
+
+    TokenCheck -->|Yes| LoadAll[Load All Contexts]
+    TokenCheck -->|No| Progressive[Progressive Loading<br/>Highest relevance first]
+
+    Progressive --> TokenFit{Tokens<br/>fit budget?}
+    TokenFit -->|Yes| LoadContext[Load Context]
+    TokenFit -->|No| StopLoading[Stop Loading]
+
+    LoadAll --> CacheResults[Cache Results<br/>LRU Cache]
+    LoadContext --> CacheResults
+    LoadCache --> InjectMsg[Inject into Messages]
+    CacheResults --> InjectMsg
+    StopLoading --> InjectMsg
+
+    InjectMsg --> AgentInvoke[Agent Invoke<br/>with Context]
+
+    style CheckCache fill:#e1f5ff
+    style Search fill:#f3e5f5
+    style Progressive fill:#fff3e0
+    style CacheResults fill:#e8f5e9
+
+    %% Annotations
+    Note1[60% Token Reduction<br/>vs Loading All Contexts]
+    Note2[Sub-50ms Retrieval<br/>with Cache Hit]
+
+    Search -.-> Note1
+    LoadCache -.-> Note2
+```
+
+## Session Management Architecture
+
+```mermaid
+graph TD
+    subgraph Client_Layer["Client Layer"]
+        User[User/Application]
+    end
+
+    subgraph Auth_Middleware["Auth Middleware"]
+        CreateSession[create_session]
+        GetSession[get_session]
+        RefreshSession[refresh_session]
+        RevokeSession[revoke_session]
+    end
+
+    subgraph Session_Store["Session Store (Abstract)"]
+        InMemory[InMemorySessionStore<br/>Development]
+        Redis[RedisSessionStore<br/>Production]
+    end
+
+    subgraph Storage_Backend["Storage Backend"]
+        MemDict[Python Dict<br/>Process Memory]
+        RedisDB[(Redis Database<br/>Persistent Storage)]
+    end
+
+    subgraph Features["Session Features"]
+        Sliding[Sliding Window<br/>Auto-Extend TTL]
+        ConcurrentLimit[Concurrent Session Limit<br/>Max 5 per user]
+        BulkRevoke[Bulk Revocation<br/>Revoke all user sessions]
+        Tracking[User Session Tracking<br/>List all sessions]
+    end
+
+    User --> CreateSession
+    User --> GetSession
+    User --> RefreshSession
+    User --> RevokeSession
+
+    CreateSession --> InMemory
+    CreateSession --> Redis
+    GetSession --> InMemory
+    GetSession --> Redis
+    RefreshSession --> InMemory
+    RefreshSession --> Redis
+    RevokeSession --> InMemory
+    RevokeSession --> Redis
+
+    InMemory --> MemDict
+    Redis --> RedisDB
+
+    InMemory --> Sliding
+    InMemory --> ConcurrentLimit
+    Redis --> Sliding
+    Redis --> ConcurrentLimit
+    Redis --> BulkRevoke
+    Redis --> Tracking
+
+    style InMemory fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px
+    style Redis fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+    style Sliding fill:#e1f5ff
+    style ConcurrentLimit fill:#fff3e0
+    style BulkRevoke fill:#f3e5f5
+    style Tracking fill:#e8f5e9
+```
+
+## LLM Provider Fallback Chain
+
+```mermaid
+flowchart LR
+    Request[LLM Request] --> Primary{Primary Model<br/>Available?}
+
+    Primary -->|Success| Response[Return Response]
+    Primary -->|Failure| Log1[Log Failure]
+
+    Log1 --> Fallback1{Fallback 1<br/>Available?}
+    Fallback1 -->|Success| Response
+    Fallback1 -->|Failure| Log2[Log Failure]
+
+    Log2 --> Fallback2{Fallback 2<br/>Available?}
+    Fallback2 -->|Success| Response
+    Fallback2 -->|Failure| Log3[Log Failure]
+
+    Log3 --> Fallback3{Fallback 3<br/>Available?}
+    Fallback3 -->|Success| Response
+    Fallback3 -->|Failure| Error[All Models Failed<br/>Return Error]
+
+    Response --> Metrics[Record Metrics<br/>Provider, Latency, Tokens]
+    Error --> Metrics
+
+    Metrics --> Alert{Multiple<br/>Failures?}
+    Alert -->|Yes| Notify[Alert Ops Team<br/>Provider Outage]
+    Alert -->|No| End([End])
+    Notify --> End
+
+    style Primary fill:#e3f2fd,stroke:#01579b,stroke-width:2px
+    style Fallback1 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Fallback2 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Fallback3 fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Error fill:#ffcdd2,stroke:#b71c1c,stroke-width:3px
+    style Response fill:#c5e1a5,stroke:#33691e,stroke-width:2px
+```
+
+## Observability Data Flow
+
+```mermaid
+graph TB
+    subgraph Application["Application Components"]
+        Agent[LangGraph Agent]
+        Auth[Auth Middleware]
+        Tools[Tool Executor]
+        LLM[LLM Factory]
+    end
+
+    subgraph Instrumentation["OpenTelemetry Instrumentation"]
+        TracerProvider[Tracer Provider]
+        MeterProvider[Meter Provider]
+        LoggerProvider[Logger Provider]
+    end
+
+    subgraph Collection["OTEL Collector"]
+        Receiver[OTLP Receiver<br/>gRPC :4317, HTTP :4318]
+        Processor[Processors<br/>Batch, Filter, Transform]
+        Exporter[Exporters<br/>Multiple Backends]
+    end
+
+    subgraph Backends["Observability Backends"]
+        Jaeger[(Jaeger<br/>Traces)]
+        Prometheus[(Prometheus<br/>Metrics)]
+        LangSmith[(LangSmith<br/>LLM Traces)]
+        CloudWatch[(CloudWatch<br/>Logs & Metrics)]
+    end
+
+    subgraph Visualization["Visualization"]
+        Grafana[Grafana Dashboards<br/>4 dashboards, 100+ panels]
+        JaegerUI[Jaeger UI<br/>Trace Explorer]
+        LangSmithUI[LangSmith UI<br/>LLM Debugging]
+    end
+
+    %% Data Flow
+    Agent --> TracerProvider
+    Agent --> MeterProvider
+    Agent --> LoggerProvider
+    Auth --> TracerProvider
+    Auth --> MeterProvider
+    Tools --> TracerProvider
+    Tools --> MeterProvider
+    LLM --> TracerProvider
+    LLM --> MeterProvider
+    LLM --> LangSmith
+
+    TracerProvider --> Receiver
+    MeterProvider --> Receiver
+    LoggerProvider --> Receiver
+
+    Receiver --> Processor
+    Processor --> Exporter
+
+    Exporter --> Jaeger
+    Exporter --> Prometheus
+    Exporter --> CloudWatch
+
+    Jaeger --> JaegerUI
+    Prometheus --> Grafana
+    LangSmith --> LangSmithUI
+
+    style Agent fill:#e3f2fd
+    style Auth fill:#f3e5f5
+    style Tools fill:#e8f5e9
+    style LLM fill:#fce4ec
+    style Grafana fill:#fff9c4,stroke-width:3px
+    style JaegerUI fill:#fff9c4,stroke-width:3px
+    style LangSmithUI fill:#fff9c4,stroke-width:3px
+```
+
+---
+
+## Usage
+
+### In Mintlify Documentation
+
+To use these diagrams in Mintlify `.mdx` files:
+
+```mdx
+## System Architecture
+
+```mermaid
+graph TD
+    ... (copy from above)
+```
+```
+
+### Viewing Locally
+
+1. **VS Code**: Install "Markdown Preview Mermaid Support" extension
+2. **GitHub**: Mermaid renders automatically in markdown preview
+3. **Mermaid Live Editor**: https://mermaid.live/
+
+### Exporting to Images
+
+```bash
+# Install mermaid-cli
+npm install -g @mermaid-js/mermaid-cli
+
+# Export to PNG
+mmdc -i docs/diagrams/system-architecture.md -o docs/diagrams/system-architecture.png
+
+# Export to SVG
+mmdc -i docs/diagrams/system-architecture.md -o docs/diagrams/system-architecture.svg
+```
+
+---
+
+## Diagram Maintenance
+
+**Last Updated**: 2025-10-17
+**Update Frequency**: After major architectural changes
+**Maintainer**: Platform Team
+
+**When to Update**:
+- New components added to the system
+- Component relationships change
+- New deployment patterns introduced
+- Observability stack changes

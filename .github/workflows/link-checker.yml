@@ -1,0 +1,244 @@
+name: Documentation Link Checker
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '**.mdx'
+      - 'docs/**'
+      - 'adr/**'
+      - '.github/**'
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '**.mdx'
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  check-links:
+    name: Check Internal Documentation Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check for broken internal links
+        id: link-check
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import re
+          import os
+          from pathlib import Path
+          from collections import defaultdict
+
+          def find_broken_links(root_dir, exclude_patterns=None):
+              """Find broken internal links in markdown files"""
+              if exclude_patterns is None:
+                  exclude_patterns = ['archive/', 'reports/archive/', 'node_modules/', '.venv/', 'venv/']
+
+              broken_links = []
+              root_path = Path(root_dir)
+
+              # Find all markdown files
+              md_files = list(root_path.rglob("*.md")) + list(root_path.rglob("*.mdx"))
+
+              for md_file in md_files:
+                  # Skip excluded directories
+                  if any(exclude in str(md_file) for exclude in exclude_patterns):
+                      continue
+
+                  try:
+                      with open(md_file, 'r', encoding='utf-8') as f:
+                          content = f.read()
+
+                      # Find markdown links [text](path)
+                      links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', content)
+
+                      for link_text, link_path in links:
+                          # Skip external links and anchors
+                          if link_path.startswith(('http://', 'https://', 'mailto:', '#')):
+                              continue
+
+                          # Skip invalid markdown (like **arguments)
+                          if link_path.startswith('**'):
+                              continue
+
+                          # Remove anchors
+                          link_path_no_anchor = link_path.split('#')[0]
+                          if not link_path_no_anchor:
+                              continue
+
+                          # Resolve relative path
+                          if link_path_no_anchor.startswith('/'):
+                              target = root_path / link_path_no_anchor.lstrip('/')
+                          else:
+                              target = (md_file.parent / link_path_no_anchor).resolve()
+
+                          # Check if target exists
+                          if not target.exists():
+                              broken_links.append({
+                                  'file': str(md_file.relative_to(root_path)),
+                                  'link_text': link_text,
+                                  'link_path': link_path,
+                                  'line': None  # Could add line number if needed
+                              })
+                  except Exception as e:
+                      print(f"⚠️ Error processing {md_file}: {e}")
+
+              return broken_links
+
+          # Run the check
+          print("🔍 Checking for broken internal links...")
+          print("Excluding: archive/, reports/archive/ (historical docs)")
+          print()
+
+          broken = find_broken_links('.')
+
+          if broken:
+              print(f"❌ Found {len(broken)} broken internal links in active documentation:")
+              print()
+
+              # Group by file
+              by_file = defaultdict(list)
+              for link in broken:
+                  by_file[link['file']].append(link)
+
+              for file, links in sorted(by_file.items())[:15]:  # Show first 15 files
+                  print(f"📄 {file}:")
+                  for link in links[:3]:  # Show first 3 links per file
+                      print(f"   ❌ [{link['link_text']}]({link['link_path']})")
+                  if len(links) > 3:
+                      print(f"   ... and {len(links) - 3} more")
+                  print()
+
+              if len(by_file) > 15:
+                  print(f"... and {len(by_file) - 15} more files with broken links")
+
+              print()
+              print(f"💡 Total: {len(broken)} broken links across {len(by_file)} files")
+              print()
+              print("Please fix these broken links before merging.")
+              exit(1)
+          else:
+              print("✅ No broken internal links found in active documentation!")
+              print()
+              print("All internal links are valid. Great job! 🎉")
+              exit(0)
+          PYTHON_SCRIPT
+        continue-on-error: false
+
+      - name: Comment on PR (if failed)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Documentation Link Check Failed
+
+              Broken internal links were detected in the documentation.
+
+              Please review the workflow logs for details and fix the broken links.
+
+              **Common fixes:**
+              - Update relative paths (../ vs ../../)
+              - Change file extensions (.md vs .mdx)
+              - Update paths for moved/renamed files
+
+              **To test locally:**
+              \`\`\`bash
+              python scripts/check-links.py
+              \`\`\`
+              `
+            })
+
+      - name: Create issue (if scheduled check failed)
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📚 Broken Documentation Links Detected',
+              body: `## Weekly Documentation Link Check Failed
+
+              The automated link checker found broken internal links in the documentation.
+
+              **Action Required:**
+              1. Review the workflow run logs
+              2. Fix the broken links
+              3. Update any moved/renamed files
+
+              **Run Logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+              **To fix locally:**
+              \`\`\`bash
+              python scripts/check-links.py --fix
+              \`\`\`
+              `,
+              labels: ['documentation', 'automated']
+            })
+
+  check-external-links:
+    name: Check External Links (Optional)
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Don't fail CI for external link issues
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: |
+            --verbose
+            --no-progress
+            --exclude-path ./archive
+            --exclude-path ./reports/archive
+            --exclude-path ./node_modules
+            --exclude-path ./.venv
+            --accept 200,204,429
+            --timeout 10
+            --max-retries 3
+            '**/*.md'
+            '**/*.mdx'
+          fail: false  # Don't fail CI for external links
+
+      - name: Report external link issues
+        if: steps.lychee.outputs.exit_code != 0
+        run: |
+          echo "⚠️ Some external links may be broken or timing out"
+          echo "This does not fail the CI as external sites may be temporarily unavailable"
+          echo "Review the logs above for details"
+
+  validate-markdown:
+    name: Validate Markdown Syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Lint markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v18
+        with:
+          globs: |
+            **/*.md
+            **/*.mdx
+          config: .markdownlint.json
+        continue-on-error: true  # Don't fail CI for style issues
