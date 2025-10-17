@@ -10,7 +10,6 @@ Implements Anthropic's gather-action-verify-repeat agentic loop:
 4. Repeat: Iterative refinement based on feedback
 """
 
-import asyncio
 import operator
 from typing import Annotated, Literal, Optional, TypedDict
 
