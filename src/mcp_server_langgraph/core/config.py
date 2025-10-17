@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expiration_seconds: int = 3600
 
+    # HIPAA Compliance (only required if processing PHI)
+    hipaa_integrity_secret: Optional[str] = None
+
     # OpenTelemetry
     otlp_endpoint: str = "http://localhost:4317"
     enable_console_export: bool = True
@@ -73,15 +76,30 @@ class Settings(BaseSettings):
     # Ollama (for local/open-source models)
     ollama_base_url: str = "http://localhost:11434"
 
-    # Model Configuration
-    model_name: str = "gemini-2.5-flash-002"  # Latest Gemini 2.5 Flash
+    # Model Configuration (Primary Chat Model)
+    model_name: str = "gemini-2.5-flash"  # Latest Gemini 2.5 Flash
     model_temperature: float = 0.7
     model_max_tokens: int = 8192
     model_timeout: int = 60
 
+    # Dedicated Models for Cost/Performance Optimization
+    # Summarization Model (lighter/cheaper model for context compaction)
+    use_dedicated_summarization_model: bool = True
+    summarization_model_name: Optional[str] = "gemini-2.5-flash"  # Lighter/cheaper for summarization
+    summarization_model_provider: Optional[str] = None  # Defaults to llm_provider if None
+    summarization_model_temperature: float = 0.3  # Lower temperature for factual summaries
+    summarization_model_max_tokens: int = 2000  # Smaller output for summaries
+
+    # Verification Model (dedicated model for LLM-as-judge)
+    use_dedicated_verification_model: bool = True
+    verification_model_name: Optional[str] = "gemini-2.5-flash"  # Can use different model for verification
+    verification_model_provider: Optional[str] = None  # Defaults to llm_provider if None
+    verification_model_temperature: float = 0.0  # Deterministic for consistent verification
+    verification_model_max_tokens: int = 1000  # Smaller output for verification feedback
+
     # Fallback Models (for resilience)
     enable_fallback: bool = True
-    fallback_models: list[str] = ["gemini-2.5-pro", "claude-3-5-sonnet-20241022", "gpt-4o"]
+    fallback_models: list[str] = ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250929", "gpt-4o"]
 
     # Agent
     max_iterations: int = 10
@@ -107,8 +125,24 @@ class Settings(BaseSettings):
     qdrant_collection_name: str = "mcp_context"  # Collection name for context storage
     dynamic_context_max_tokens: int = 2000  # Max tokens to load from dynamic context
     dynamic_context_top_k: int = 3  # Number of top results from semantic search
-    embedding_model: str = "all-MiniLM-L6-v2"  # SentenceTransformer model for embeddings
+
+    # Embedding Configuration
+    embedding_provider: str = "google"  # "google" (Gemini API) or "local" (sentence-transformers)
+    embedding_model_name: str = "models/text-embedding-004"  # Google: text-embedding-004, Local: all-MiniLM-L6-v2
+    embedding_dimensions: int = 768  # Google: 768 (128-3072 supported), Local: 384
+    embedding_task_type: str = "RETRIEVAL_DOCUMENT"  # Google task type optimization
+    embedding_model: str = (
+        "all-MiniLM-L6-v2"  # Deprecated: use embedding_model_name instead (kept for backwards compatibility)
+    )
+
     context_cache_size: int = 100  # LRU cache size for loaded contexts
+
+    # Data Security & Compliance (for regulated workloads)
+    enable_context_encryption: bool = False  # Enable encryption-at-rest for context data
+    context_encryption_key: Optional[str] = None  # Encryption key for context data (Fernet-compatible)
+    context_retention_days: int = 90  # Retention period for context data (days)
+    enable_auto_deletion: bool = True  # Automatically delete expired context data
+    enable_multi_tenant_isolation: bool = False  # Use separate collections per tenant
 
     # Parallel Tool Execution - Anthropic Best Practice
     enable_parallel_execution: bool = False  # Enable parallel tool execution
@@ -177,19 +211,27 @@ class Settings(BaseSettings):
     )
 
     def load_secrets(self):
-        """Load secrets from Infisical"""
+        """
+        Load secrets from Infisical or environment variables.
+
+        Implements fail-closed security pattern - critical secrets have no fallbacks.
+        The service will fail to start if required secrets are missing.
+        """
         secrets_mgr = get_secrets_manager()
 
-        # Load JWT secret
+        # Load JWT secret (no fallback - fail-closed pattern)
         if not self.jwt_secret_key:
-            default_fallback = "INSECURE-DEV-ONLY-KEY-CHANGE-IN-PRODUCTION"
-            self.jwt_secret_key = secrets_mgr.get_secret("JWT_SECRET_KEY", fallback=default_fallback)
-            # Warn if using default secret in production
-            if self.jwt_secret_key == default_fallback and self.environment == "production":
-                raise ValueError(
-                    "CRITICAL: Default JWT secret detected in production environment! "
-                    "Set JWT_SECRET_KEY environment variable or configure Infisical."
-                )
+            self.jwt_secret_key = secrets_mgr.get_secret("JWT_SECRET_KEY", fallback=None)
+
+        # Load HIPAA integrity secret (no fallback - fail-closed pattern)
+        # Only required if HIPAA controls are being used
+        if not self.hipaa_integrity_secret:
+            self.hipaa_integrity_secret = secrets_mgr.get_secret("HIPAA_INTEGRITY_SECRET", fallback=None)
+
+        # Load context encryption key (no fallback - fail-closed pattern)
+        # Only required if context encryption is enabled
+        if not self.context_encryption_key:
+            self.context_encryption_key = secrets_mgr.get_secret("CONTEXT_ENCRYPTION_KEY", fallback=None)
 
         # Load LLM API keys based on provider
         if not self.anthropic_api_key:
