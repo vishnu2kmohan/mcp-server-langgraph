@@ -20,11 +20,15 @@ from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter, 
 
 @pytest.fixture
 def tracer_provider():
-    """Create a tracer provider for testing"""
-    provider = TracerProvider()
-    exporter = InMemorySpanExporter()
-    provider.add_span_processor(SimpleSpanProcessor(exporter))
-    trace.set_tracer_provider(provider)
+    """Get the current tracer provider for testing"""
+    # Get the current provider instead of overriding it
+    provider = trace.get_tracer_provider()
+    # If it's a NoOpTracerProvider, create a real one
+    if isinstance(provider, trace.NoOpTracerProvider):
+        provider = TracerProvider()
+        exporter = InMemorySpanExporter()
+        provider.add_span_processor(SimpleSpanProcessor(exporter))
+        trace.set_tracer_provider(provider)
     return provider
 
 

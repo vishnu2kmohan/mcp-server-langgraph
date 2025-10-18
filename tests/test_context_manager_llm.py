@@ -276,7 +276,9 @@ PREFERENCES:
 
         # Get the prompt that was passed
         call_args = mock_llm.ainvoke.call_args
-        prompt = call_args[0][0]
+        prompt_messages = call_args[0][0]
+        # Extract the content from the HumanMessage
+        prompt = prompt_messages[0].content if isinstance(prompt_messages, list) else prompt_messages.content
 
         # Verify XML structure
         assert "<task>" in prompt

@@ -18,6 +18,9 @@ from mcp.types import TextContent
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
+# Test authentication token (valid JWT format for testing)
+TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImV4cCI6OTk5OTk5OTk5OX0.test"
+
 
 @pytest.fixture
 def mock_openfga_client(mocker):
@@ -42,10 +45,13 @@ class TestResponseFormatControl:
         """Test agent_chat with concise response format."""
         # Mock the agent graph to return a long response
         long_response = "Word " * 1000  # ~1000 tokens
-        # Patch ainvoke (async) not invoke (sync)
+        # Create a mock graph with ainvoke method
+        mock_graph = mocker.Mock()
+        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=long_response)]})
+        # Patch get_agent_graph to return our mock
         mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.agent_graph.ainvoke",
-            return_value={"messages": [AIMessage(content=long_response)]},
+            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
+            return_value=mock_graph,
         )
 
         # Mock span context
@@ -54,7 +60,8 @@ class TestResponseFormatControl:
 
         arguments = {
             "message": "Tell me about quantum computing",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "response_format": "concise",
         }
 
@@ -73,9 +80,11 @@ class TestResponseFormatControl:
         """Test agent_chat with detailed response format."""
         # Mock agent response
         medium_response = "Word " * 500  # ~500 tokens (within detailed limit)
+        mock_graph = mocker.Mock()
+        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=medium_response)]})
         mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.agent_graph.ainvoke",
-            return_value={"messages": [AIMessage(content=medium_response)]},
+            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
+            return_value=mock_graph,
         )
 
         mock_span = mocker.Mock()
@@ -83,7 +92,8 @@ class TestResponseFormatControl:
 
         arguments = {
             "message": "Explain quantum computing in detail",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "response_format": "detailed",
         }
 
@@ -99,9 +109,11 @@ class TestResponseFormatControl:
     async def test_chat_default_format_is_concise(self, mcp_server, mocker):
         """Test that default response_format is concise."""
         short_response = "Short answer"
+        mock_graph = mocker.Mock()
+        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=short_response)]})
         mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.agent_graph.ainvoke",
-            return_value={"messages": [AIMessage(content=short_response)]},
+            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
+            return_value=mock_graph,
         )
 
         mock_span = mocker.Mock()
@@ -110,7 +122,8 @@ class TestResponseFormatControl:
         # No response_format specified
         arguments = {
             "message": "Hello",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
         }
 
         result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
@@ -137,7 +150,8 @@ class TestSearchFocusedTools:
 
         arguments = {
             "query": "project",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "limit": 10,
         }
 
@@ -163,7 +177,8 @@ class TestSearchFocusedTools:
 
         arguments = {
             "query": "conv",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "limit": 5,
         }
 
@@ -183,7 +198,8 @@ class TestSearchFocusedTools:
 
         arguments = {
             "query": "nonexistent",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "limit": 10,
         }
 
@@ -204,7 +220,8 @@ class TestSearchFocusedTools:
 
         arguments = {
             "query": "",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "limit": 10,
         }
 
@@ -242,9 +259,11 @@ class TestToolNamingAndBackwardCompatibility:
         """Test that old tool names still work via routing."""
         # Mock dependencies
         short_response = "Hello!"
+        mock_graph = mocker.Mock()
+        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=short_response)]})
         mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.agent_graph.ainvoke",
-            return_value={"messages": [AIMessage(content=short_response)]},
+            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
+            return_value=mock_graph,
         )
 
         mock_span = mocker.Mock()
@@ -273,7 +292,8 @@ class TestEnhancedErrorMessages:
 
         arguments = {
             "message": "Hello",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "thread_id": "restricted_conversation",
         }
 
@@ -380,9 +400,11 @@ class TestEndToEndToolImprovements:
             * 50
         )  # Make it long enough to test truncation
 
+        mock_graph = mocker.Mock()
+        mock_graph.ainvoke = mocker.AsyncMock(return_value={"messages": [AIMessage(content=agent_response)]})
         mocker.patch(
-            "mcp_server_langgraph.mcp.server_stdio.agent_graph.ainvoke",
-            return_value={"messages": [AIMessage(content=agent_response)]},
+            "mcp_server_langgraph.mcp.server_stdio.get_agent_graph",
+            return_value=mock_graph,
         )
 
         mock_span = mocker.Mock()
@@ -391,7 +413,8 @@ class TestEndToEndToolImprovements:
         # Test with concise format
         arguments = {
             "message": "Explain quantum computing",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "thread_id": "test_thread",
             "response_format": "concise",
         }
@@ -426,7 +449,8 @@ class TestEndToEndToolImprovements:
 
         arguments = {
             "query": "project alpha",
-            "username": "alice",
+            "user_id": "user:alice",
+            "token": TEST_TOKEN,
             "limit": 5,
         }
 
