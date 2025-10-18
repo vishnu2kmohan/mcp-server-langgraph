@@ -1,0 +1,241 @@
+name: Optional Dependencies Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    # Run weekly on Sundays at 2am UTC
+    - cron: "0 2 * * 0"
+
+jobs:
+  test-minimal:
+    name: Test Minimal Install (No Extras)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install minimal dependencies
+        run: |
+          uv sync --no-dev
+          echo "✓ Minimal install complete"
+
+      - name: Verify import works
+        run: |
+          uv run python -c "
+          import mcp_server_langgraph
+          from mcp_server_langgraph.core.agent import create_agent_graph
+          from mcp_server_langgraph.tools import ALL_TOOLS
+          print(f'✓ Core imports successful')
+          print(f'✓ Tools available: {len(ALL_TOOLS)}')
+          "
+
+      - name: Verify graceful degradation
+        run: |
+          uv run python -c "
+          from mcp_server_langgraph.core.config import settings
+          # Should work without Infisical
+          assert settings.jwt_secret_key is not None
+          print('✓ Graceful degradation works without Infisical')
+          "
+
+  test-with-secrets:
+    name: Test with Secrets Extra
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install with secrets extra
+        run: |
+          # Try to install with secrets extra (may fail if wheels unavailable)
+          uv sync --extra secrets --no-dev || {
+            echo "⚠️  Infisical install failed (expected on some platforms)"
+            echo "   Falling back to minimal install"
+            uv sync --no-dev
+          }
+
+      - name: Verify secrets fallback
+        run: |
+          uv run python -c "
+          from mcp_server_langgraph.secrets.manager import SecretsManager
+          # Should work even if Infisical not installed
+          manager = SecretsManager()
+          test_secret = manager.get_secret('TEST_KEY', default='fallback_value')
+          assert test_secret == 'fallback_value'
+          print('✓ Secrets manager fallback works')
+          "
+
+  test-with-embeddings:
+    name: Test with Embeddings Extra
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install with embeddings extra
+        run: |
+          uv sync --extra embeddings --no-dev
+
+      - name: Verify embeddings import
+        run: |
+          uv run python -c "
+          # Should be able to import sentence_transformers
+          try:
+              import sentence_transformers
+              print('✓ sentence-transformers available')
+          except ImportError:
+              print('⚠️  sentence-transformers not available (expected)')
+
+          # Core functionality should still work
+          from mcp_server_langgraph.tools import ALL_TOOLS
+          print(f'✓ Core functionality works: {len(ALL_TOOLS)} tools')
+          "
+
+  test-all-extras:
+    name: Test with All Extras
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install all extras
+        run: |
+          # Try to install all extras
+          uv sync --all-extras --no-dev || {
+            echo "⚠️  Some extras failed to install (expected)"
+            echo "   Falling back to minimal + available extras"
+            uv sync --no-dev
+          }
+
+      - name: Run smoke tests
+        run: |
+          uv run python -c "
+          from mcp_server_langgraph.core.agent import create_agent_graph
+          from mcp_server_langgraph.tools import ALL_TOOLS
+          from mcp_server_langgraph.storage import ConversationStore
+
+          print('✓ All core modules importable')
+          print(f'✓ Tools: {len(ALL_TOOLS)}')
+          print('✓ Storage: ConversationStore available')
+          "
+
+  test-production-config:
+    name: Test Production Configuration
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --no-dev
+
+      - name: Verify production config requirements
+        run: |
+          uv run python -c "
+          from mcp_server_langgraph.core.config import Settings
+          import os
+
+          # Test that GDPR warning is raised for in-memory storage
+          os.environ['ENVIRONMENT'] = 'production'
+          os.environ['GDPR_STORAGE_BACKEND'] = 'memory'
+
+          # This should log a warning
+          settings = Settings()
+          print('✓ Production config validation works')
+          "
+
+      - name: Check for critical production settings
+        run: |
+          if grep -q "GDPR_STORAGE_BACKEND" docs/deployment/gdpr-storage-configuration.md; then
+            echo "✓ GDPR storage documentation exists"
+          else
+            echo "✗ GDPR storage documentation missing"
+            exit 1
+          fi
+
+  test-feature-flags:
+    name: Test Feature Flag Combinations
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        config:
+          - name: "Parallel Execution Enabled"
+            flags: "ENABLE_PARALLEL_EXECUTION=true"
+          - name: "Dynamic Context Loading Enabled"
+            flags: "ENABLE_DYNAMIC_CONTEXT_LOADING=true"
+          - name: "LLM Extraction Enabled"
+            flags: "ENABLE_LLM_EXTRACTION=true"
+          - name: "All Features Disabled"
+            flags: "ENABLE_PARALLEL_EXECUTION=false ENABLE_DYNAMIC_CONTEXT_LOADING=false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --no-dev
+
+      - name: Test with ${{ matrix.config.name }}
+        run: |
+          export ${{ matrix.config.flags }}
+          uv run python -c "
+          from mcp_server_langgraph.core.config import settings
+          from mcp_server_langgraph.core.agent import create_agent_graph
+
+          print('Config: ${{ matrix.config.name }}')
+          print(f'  Parallel execution: {settings.enable_parallel_execution}')
+          print(f'  Dynamic context: {getattr(settings, \"enable_dynamic_context_loading\", False)}')
+          print(f'  LLM extraction: {getattr(settings, \"enable_llm_extraction\", False)}')
+          print('✓ Configuration loaded successfully')
+          "

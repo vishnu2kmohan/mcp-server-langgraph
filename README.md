@@ -130,6 +130,36 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
 - **LangGraph Platform**: Deploy to managed LangGraph Cloud with one command
 - **Automatic Fallback**: Resilient multi-model fallback for high availability
 
+### 📦 Optional Dependencies
+
+The project supports optional feature sets that can be installed on demand:
+
+- **Secrets Management** (`[secrets]`): Infisical integration for centralized secrets
+  - Install: `pip install -e ".[secrets]"` or `uv sync --extra secrets`
+  - Fallback: Environment variables (`.env` file)
+  - Production: Recommended for secure secret rotation
+  - See: [Infisical Installation Guide](docs/deployment/infisical-installation.md)
+
+- **Self-Hosted Embeddings** (`[embeddings]`): sentence-transformers for local embedding generation
+  - Install: `pip install -e ".[embeddings]"` or `uv sync --extra embeddings`
+  - Fallback: Google Gemini API (langchain-google-genai, installed by default)
+  - Production: Use API-based embeddings (lower latency, no GPU required)
+  - Note: Self-hosted embeddings require significant resources
+
+- **GDPR Storage Backend**: PostgreSQL or Redis for compliance data persistence
+  - **CRITICAL**: In-memory storage is NOT production-ready
+  - Required for: GDPR compliance endpoints (`/api/v1/users/me/*`)
+  - Config: Set `GDPR_STORAGE_BACKEND=postgres` or `redis` in production
+  - See: [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.md)
+
+- **All Features** (`[all]`): Install all optional dependencies
+  - Install: `pip install -e ".[all]"` or `uv sync --all-extras`
+  - Use for: Development, testing, full feature evaluation
+
+**Development vs Production**:
+- Development: All features work with fallbacks (in-memory, env vars, API-based)
+- Production: Use persistent backends (Redis, PostgreSQL) and proper secret management
+
 ### 🧪 Quality & Testing
 - **Property-Based Testing**: 27+ Hypothesis tests discovering edge cases automatically
 - **Contract Testing**: 20+ JSON Schema tests ensuring MCP protocol compliance
