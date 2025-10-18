@@ -19,6 +19,7 @@ from typing import Dict, Optional
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
+from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -204,8 +205,33 @@ class HIPAAControls:
             # Track metrics
             metrics.successful_calls.add(1, {"operation": "emergency_access_grant"})
 
-            # TODO: Send alert to security team
-            # await send_security_alert(grant)
+            # Send alert to security team
+            try:
+                alerting_service = AlertingService()
+                await alerting_service.initialize()
+
+                alert = Alert(
+                    title="HIPAA: Emergency Access Granted",
+                    message=f"Emergency PHI access granted to {user_id} by {approver_id}",
+                    severity=AlertSeverity.CRITICAL,
+                    source="hipaa_emergency_access",
+                    tags=["hipaa", "emergency-access", "phi", "security"],
+                    metadata={
+                        "grant_id": grant.grant_id,
+                        "user_id": user_id,
+                        "approver_id": approver_id,
+                        "reason": reason,
+                        "duration_hours": duration_hours,
+                        "expires_at": grant.expires_at,
+                        "access_level": access_level,
+                    },
+                )
+
+                await alerting_service.send_alert(alert)
+                logger.info("Emergency access alert sent", extra={"alert_id": alert.alert_id})
+
+            except Exception as e:
+                logger.error(f"Failed to send emergency access alert: {e}", exc_info=True)
 
             return grant
 
@@ -317,8 +343,28 @@ class HIPAAControls:
                 extra=log_entry.model_dump(),
             )
 
-            # TODO: Send to SIEM system
-            # await send_to_siem(log_entry)
+            # Send to SIEM system via alerting service
+            try:
+                alerting_service = AlertingService()
+                await alerting_service.initialize()
+
+                # Determine severity based on success
+                alert_severity = AlertSeverity.INFO if success else AlertSeverity.WARNING
+
+                alert = Alert(
+                    title=f"HIPAA: PHI Access {action.upper()}",
+                    message=f"PHI access {action} by {user_id}: {resource_type}/{resource_id}",
+                    severity=alert_severity,
+                    source="hipaa_audit",
+                    tags=["hipaa", "phi-access", "audit", "siem"],
+                    metadata=log_entry.model_dump(),
+                )
+
+                await alerting_service.send_alert(alert)
+                logger.debug("PHI access logged to SIEM", extra={"log_entry_id": log_entry.log_entry_id})
+
+            except Exception as e:
+                logger.error(f"Failed to send PHI access to SIEM: {e}", exc_info=True)
 
             # Track metrics
             if success:

@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
 from mcp_server_langgraph.monitoring.prometheus_client import get_prometheus_client
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
@@ -523,8 +524,28 @@ class SLAMonitor:
             extra={"severity": severity, "details": details},
         )
 
-        # TODO: Send to alerting system (PagerDuty, Slack, email)
-        # await send_alert(severity=severity, message=message, details=details)
+        # Send to alerting system (PagerDuty, Slack, email)
+        try:
+            alerting_service = AlertingService()
+            await alerting_service.initialize()
+
+            # Map severity string to AlertSeverity enum
+            alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING
+
+            alert = Alert(
+                title=f"SLA {severity.upper()}: {message}",
+                message=message,
+                severity=alert_severity,
+                source="sla_monitor",
+                tags=["sla", "monitoring", severity],
+                metadata=details,
+            )
+
+            await alerting_service.send_alert(alert)
+            logger.info("SLA alert sent successfully", extra={"alert_id": alert.alert_id})
+
+        except Exception as e:
+            logger.error(f"Failed to send SLA alert: {e}", exc_info=True)
 
 
 # Global SLA monitor instance

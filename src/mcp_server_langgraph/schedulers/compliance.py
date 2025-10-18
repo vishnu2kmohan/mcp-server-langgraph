@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.core.compliance.evidence import EvidenceCollector
+from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -415,8 +416,27 @@ class ComplianceScheduler:
             extra={"severity": severity, "details": details},
         )
 
-        # TODO: Send to alerting system (PagerDuty, Slack, email)
-        # await send_alert(severity=severity, message=message, details=details)
+        # Send to alerting system (PagerDuty, Slack, email)
+        try:
+            alerting_service = AlertingService()
+            await alerting_service.initialize()
+
+            alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING
+
+            alert = Alert(
+                title=f"Compliance {severity.upper()}: {message}",
+                message=message,
+                severity=alert_severity,
+                source="compliance_scheduler",
+                tags=["compliance", "soc2", severity],
+                metadata=details,
+            )
+
+            await alerting_service.send_alert(alert)
+            logger.info("Compliance alert sent successfully", extra={"alert_id": alert.alert_id})
+
+        except Exception as e:
+            logger.error(f"Failed to send compliance alert: {e}", exc_info=True)
 
     async def _send_access_review_notification(self, report: AccessReviewReport):
         """
@@ -430,12 +450,30 @@ class ComplianceScheduler:
             extra={"review_id": report.review_id},
         )
 
-        # TODO: Send notification to security team
-        # await send_notification(
-        #     channel="compliance",
-        #     message="Weekly access review ready",
-        #     attachment=report,
-        # )
+        # Send notification to security team
+        try:
+            alerting_service = AlertingService()
+            await alerting_service.initialize()
+
+            alert = Alert(
+                title="Weekly Access Review Ready",
+                message=f"Access review {report.review_id} has been generated",
+                severity=AlertSeverity.INFO,
+                source="compliance_scheduler",
+                tags=["compliance", "access-review", "security"],
+                metadata={
+                    "review_id": report.review_id,
+                    "total_users": report.total_users,
+                    "inactive_users": report.inactive_users,
+                    "excessive_access": report.excessive_access,
+                },
+            )
+
+            await alerting_service.send_alert(alert)
+            logger.info("Access review notification sent", extra={"alert_id": alert.alert_id})
+
+        except Exception as e:
+            logger.error(f"Failed to send access review notification: {e}", exc_info=True)
 
     async def _send_monthly_report_notification(self, report: Any):
         """
@@ -449,12 +487,30 @@ class ComplianceScheduler:
             extra={"report_id": report.report_id},
         )
 
-        # TODO: Send notification to compliance team
-        # await send_notification(
-        #     channel="compliance",
-        #     message="Monthly SOC 2 compliance report ready",
-        #     attachment=report,
-        # )
+        # Send notification to compliance team
+        try:
+            alerting_service = AlertingService()
+            await alerting_service.initialize()
+
+            alert = Alert(
+                title="Monthly SOC 2 Compliance Report Ready",
+                message=f"Compliance report {report.report_id} has been generated",
+                severity=AlertSeverity.INFO,
+                source="compliance_scheduler",
+                tags=["compliance", "soc2", "monthly-report"],
+                metadata={
+                    "report_id": report.report_id,
+                    "generated_at": report.generated_at,
+                    "period_start": report.period_start,
+                    "period_end": report.period_end,
+                },
+            )
+
+            await alerting_service.send_alert(alert)
+            logger.info("Monthly report notification sent", extra={"alert_id": alert.alert_id})
+
+        except Exception as e:
+            logger.error(f"Failed to send monthly report notification: {e}", exc_info=True)
 
 
 # Global scheduler instance

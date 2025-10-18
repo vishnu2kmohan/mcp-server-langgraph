@@ -13,6 +13,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.core.compliance.retention import DataRetentionService
+from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
 from mcp_server_langgraph.observability.telemetry import logger
 
 
@@ -164,15 +165,47 @@ class CleanupScheduler:
         Args:
             results: List of RetentionResults
         """
-        # TODO: Implement notification sending (email, Slack, etc.)
-        # For now, just log
+        total_deleted = sum(r.deleted_count for r in results)
+
         logger.info(
             "Cleanup notification",
             extra={
                 "results_count": len(results),
-                "total_deleted": sum(r.deleted_count for r in results),
+                "total_deleted": total_deleted,
             },
         )
+
+        # Send notification to operations team
+        try:
+            alerting_service = AlertingService()
+            await alerting_service.initialize()
+
+            # Determine severity based on deleted count
+            if total_deleted > 1000:
+                severity = AlertSeverity.WARNING
+                title = "Large Data Cleanup Executed"
+            else:
+                severity = AlertSeverity.INFO
+                title = "Data Cleanup Completed"
+
+            alert = Alert(
+                title=title,
+                message=f"Data retention cleanup processed {len(results)} data types, deleted {total_deleted} records",
+                severity=severity,
+                source="cleanup_scheduler",
+                tags=["cleanup", "retention", "data-governance"],
+                metadata={
+                    "results_count": len(results),
+                    "total_deleted": total_deleted,
+                    "data_types": [r.data_type for r in results],
+                },
+            )
+
+            await alerting_service.send_alert(alert)
+            logger.info("Cleanup notification sent", extra={"alert_id": alert.alert_id})
+
+        except Exception as e:
+            logger.error(f"Failed to send cleanup notification: {e}", exc_info=True)
 
     def _get_next_run_time(self) -> str:
         """Get next scheduled run time"""
