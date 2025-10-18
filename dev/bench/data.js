@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760822986045,
+  "lastUpdate": 1760823387173,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3724,6 +3724,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00016203429166470687",
             "extra": "mean: 87.65630802888838 usec\nrounds: 3201"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "dacebb262f01aba7f6094ae96234831524e4a062",
+          "message": "test: update SLA and search tool tests for Prometheus integration\n\nFix unit tests to mock Prometheus client and adapt to real implementations.\n\n**SLA Tests** (tests/test_sla_monitoring.py):\n- Added @patch for get_prometheus_client to all uptime tests\n- Added @patch for response time tests\n- Mock query_downtime and query_percentiles\n- Tests now pass with Prometheus integration\n\n**Search Tool Tests** (tests/unit/test_search_tools.py):\n- Added @patch for settings in all tests\n- Mock configuration state (APIs not configured)\n- Updated assertions for real implementation\n- Changed sync tests to async for web_search\n- Tests now pass with API integration\n\nAll tests now properly mock external dependencies.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T17:33:33-04:00",
+          "tree_id": "77962122561505381a8393b220b2718e7c06da99",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/dacebb262f01aba7f6094ae96234831524e4a062"
+        },
+        "date": 1760823386638,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36274.25040312371,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005297591732799664",
+            "extra": "mean: 27.567764706004407 usec\nrounds: 4998"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33369.380254550466,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031515125357959137",
+            "extra": "mean: 29.96759281628053 usec\nrounds: 5624"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31512.779991092906,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034036644987018327",
+            "extra": "mean: 31.73315715981422 usec\nrounds: 15042"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.69475245611972,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019135221676422568",
+            "extra": "mean: 5.299564439305468 msec\nrounds: 173"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.39420573162791,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013687564080549252",
+            "extra": "mean: 51.56179190000074 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.946398094794603,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000540774962657541",
+            "extra": "mean: 100.53890769999896 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1982273.7287645827,
+            "unit": "iter/sec",
+            "range": "stddev: 7.731388604028859e-8",
+            "extra": "mean: 504.4711966309681 nsec\nrounds: 93897"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3945.2043265107523,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017473008982301323",
+            "extra": "mean: 253.47229629660973 usec\nrounds: 1917"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3013.5464319485636,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008467548391694494",
+            "extra": "mean: 331.834940188195 usec\nrounds: 2558"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2962.6699545723104,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000025942187436388367",
+            "extra": "mean: 337.53337878783714 usec\nrounds: 1518"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40096.540857450695,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004138417539103926",
+            "extra": "mean: 24.939807240608417 usec\nrounds: 6215"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11400.49453271199,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016280622890448772",
+            "extra": "mean: 87.71549314204324 usec\nrounds: 3281"
           }
         ]
       }
