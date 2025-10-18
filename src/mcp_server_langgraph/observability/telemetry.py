@@ -27,8 +27,9 @@ from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 SERVICE_NAME = "mcp-server-langgraph"
 OTLP_ENDPOINT = "http://localhost:4317"  # Change to your OTLP collector
 
-# Control verbose logging (set to False when embedded as library)
-OBSERVABILITY_VERBOSE = os.getenv("OBSERVABILITY_VERBOSE", "true").lower() in ("true", "1", "yes")
+# Control verbose logging (defaults to False to reduce noise)
+# Set OBSERVABILITY_VERBOSE=true to enable detailed initialization logs
+OBSERVABILITY_VERBOSE = os.getenv("OBSERVABILITY_VERBOSE", "false").lower() in ("true", "1", "yes")
 
 
 class ObservabilityConfig:
@@ -73,8 +74,16 @@ class ObservabilityConfig:
 
             service_version = __version__
 
+        # Get actual environment from settings instead of hardcoding "production"
+        try:
+            from mcp_server_langgraph.core.config import settings as config_settings
+
+            environment = config_settings.environment
+        except Exception:
+            environment = "unknown"
+
         resource = Resource.create(
-            {"service.name": self.service_name, "service.version": service_version, "deployment.environment": "production"}
+            {"service.name": self.service_name, "service.version": service_version, "deployment.environment": environment}
         )
 
         provider = TracerProvider(resource=resource)

@@ -110,6 +110,59 @@ class LLMFactory:
         # Default to current provider
         return self.provider
 
+    def _get_provider_kwargs(self, model_name: str) -> dict:
+        """
+        Get provider-specific kwargs for a given model.
+
+        BUGFIX: Filters out provider-specific parameters that don't apply to the target provider.
+        For example, Azure-specific params (azure_endpoint, azure_deployment) are removed
+        when calling Anthropic or OpenAI fallback models.
+
+        Args:
+            model_name: Model identifier to get kwargs for
+
+        Returns:
+            dict: Filtered kwargs appropriate for the model's provider
+        """
+        provider = self._get_provider_from_model(model_name)
+
+        # Define provider-specific parameter prefixes
+        provider_specific_prefixes = {
+            "azure": ["azure_", "api_version"],
+            "bedrock": ["aws_", "bedrock_"],
+            "vertex": ["vertex_", "gcp_"],
+        }
+
+        # If this is the same provider as the primary model, return all kwargs
+        if provider == self.provider:
+            return self.kwargs
+
+        # Filter out parameters specific to other providers
+        filtered_kwargs = {}
+        for key, value in self.kwargs.items():
+            # Check if this parameter belongs to a different provider
+            is_provider_specific = False
+            for other_provider, prefixes in provider_specific_prefixes.items():
+                if other_provider != provider and any(key.startswith(prefix) for prefix in prefixes):
+                    is_provider_specific = True
+                    break
+
+            # Include parameter if it's not specific to another provider
+            if not is_provider_specific:
+                filtered_kwargs[key] = value
+
+        logger.debug(
+            "Filtered kwargs for fallback model",
+            extra={
+                "model": model_name,
+                "provider": provider,
+                "original_kwargs": list(self.kwargs.keys()),
+                "filtered_kwargs": list(filtered_kwargs.keys()),
+            },
+        )
+
+        return filtered_kwargs
+
     def _setup_environment(self, config=None):
         """
         Set up environment variables for LiteLLM.
@@ -320,13 +373,15 @@ class LLMFactory:
 
             try:
                 formatted_messages = self._format_messages(messages)
+                # BUGFIX: Use provider-specific kwargs to avoid cross-provider parameter errors
+                provider_kwargs = self._get_provider_kwargs(fallback_model)
                 response = completion(
                     model=fallback_model,
                     messages=formatted_messages,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                     timeout=self.timeout,
-                    **self.kwargs,  # Forward provider-specific kwargs
+                    **provider_kwargs,  # Forward provider-specific kwargs only
                 )
 
                 content = response.choices[0].message.content
@@ -353,13 +408,15 @@ class LLMFactory:
 
             try:
                 formatted_messages = self._format_messages(messages)
+                # BUGFIX: Use provider-specific kwargs to avoid cross-provider parameter errors
+                provider_kwargs = self._get_provider_kwargs(fallback_model)
                 response = await acompletion(
                     model=fallback_model,
                     messages=formatted_messages,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                     timeout=self.timeout,
-                    **self.kwargs,  # Forward provider-specific kwargs
+                    **provider_kwargs,  # Forward provider-specific kwargs only
                 )
 
                 content = response.choices[0].message.content

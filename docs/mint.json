@@ -117,7 +117,8 @@
         "guides/openfga-setup",
         "guides/permission-model",
         "guides/relationship-tuples",
-        "guides/keycloak-sso"
+        "guides/keycloak-sso",
+        "guides/authentication-migration-v2-8"
       ]
     },
     {
@@ -261,6 +262,7 @@
       "group": "Version History",
       "pages": [
         "releases/overview",
+        "releases/v2-7-0",
         "releases/v2-6-0",
         "releases/v2-5-0",
         "releases/v2-4-0",

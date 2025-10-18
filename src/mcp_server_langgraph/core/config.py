@@ -2,7 +2,7 @@
 Configuration management with Infisical secrets integration
 """
 
-from typing import Optional
+from typing import List, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -23,10 +23,16 @@ class Settings(BaseSettings):
     service_version: str = __version__  # Read from package version
     environment: str = "development"
 
+    # CORS Configuration
+    # SECURITY: Empty list by default (no CORS) in production
+    # Override with CORS_ALLOWED_ORIGINS="http://localhost:3000,http://localhost:8000"
+    cors_allowed_origins: List[str] = []  # Empty = no CORS/restrictive by default
+
     # Authentication
     jwt_secret_key: Optional[str] = None
     jwt_algorithm: str = "HS256"
     jwt_expiration_seconds: int = 3600
+    use_password_hashing: bool = False  # Enable bcrypt password hashing for InMemoryUserProvider
 
     # HIPAA Compliance (only required if processing PHI)
     hipaa_integrity_secret: Optional[str] = None
@@ -105,8 +111,14 @@ class Settings(BaseSettings):
     verification_model_max_tokens: int = 1000  # Smaller output for verification feedback
 
     # Fallback Models (for resilience)
+    # Using latest production Claude 4.5 models as of October 2025
+    # Verified against https://docs.claude.com/en/docs/about-claude/models
     enable_fallback: bool = True
-    fallback_models: list[str] = ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250929", "gpt-4o"]
+    fallback_models: list[str] = [
+        "claude-haiku-4-5-20251001",  # Claude Haiku 4.5 (fast, cost-effective)
+        "claude-sonnet-4-5-20250929",  # Claude Sonnet 4.5 (balanced performance)
+        "gpt-4o",  # OpenAI GPT-4o (cross-provider resilience)
+    ]
 
     # Agent
     max_iterations: int = 10
@@ -192,7 +204,9 @@ class Settings(BaseSettings):
     auth_mode: str = "token"  # "token" (JWT), "session"
 
     # Mock Data (Development)
-    enable_mock_authorization: bool = True  # Enable mock resources when OpenFGA is not configured (dev mode)
+    # SECURITY: Mock authorization disabled by default in production
+    # Override with ENABLE_MOCK_AUTHORIZATION=true if needed for staging/testing
+    enable_mock_authorization: Optional[bool] = None  # None = auto-determine based on environment
 
     # Keycloak Settings
     keycloak_server_url: str = "http://localhost:8180"
@@ -219,6 +233,77 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",  # Ignore extra environment variables
     )
+
+    def get_mock_authorization_enabled(self) -> bool:
+        """
+        Get the effective value of enable_mock_authorization based on environment.
+
+        SECURITY: Mock authorization is disabled by default in production.
+        In development, it's enabled by default for better developer experience.
+
+        Returns:
+            bool: True if mock authorization should be enabled, False otherwise
+        """
+        if self.enable_mock_authorization is not None:
+            # Explicit override from environment variable
+            return self.enable_mock_authorization
+
+        # Auto-determine based on environment
+        # Enable in development, disable in production/staging
+        return self.environment == "development"
+
+    def get_cors_origins(self) -> List[str]:
+        """
+        Get the effective CORS allowed origins based on environment and configuration.
+
+        SECURITY: Returns empty list (no CORS) by default in production for security.
+        In development, defaults to localhost URLs if not explicitly configured.
+
+        Returns:
+            List[str]: List of allowed CORS origins
+        """
+        if self.cors_allowed_origins:
+            # Explicit configuration from environment variable
+            return self.cors_allowed_origins
+
+        # Auto-determine based on environment
+        if self.environment == "development":
+            # Development: Allow common localhost URLs
+            return ["http://localhost:3000", "http://localhost:8000", "http://localhost:5173"]
+        else:
+            # Production/staging: No CORS by default (fail-closed)
+            return []
+
+    def validate_cors_config(self):
+        """
+        Validate CORS configuration for security issues.
+
+        SECURITY: Prevents wildcard CORS with credentials in production.
+        This configuration is rejected by browsers and is a security risk.
+
+        Raises:
+            ValueError: If insecure CORS configuration detected in production
+        """
+        origins = self.get_cors_origins()
+
+        # Check for wildcard CORS in production
+        if self.environment == "production" and "*" in origins:
+            raise ValueError(
+                "CRITICAL: Wildcard CORS (allow_origins=['*']) is not allowed in production. "
+                "This is a security risk and browsers will reject it when allow_credentials=True. "
+                "Set CORS_ALLOWED_ORIGINS to specific domains or set ENVIRONMENT=development for local testing."
+            )
+
+        # Warn about wildcard in non-production environments
+        if self.environment != "production" and "*" in origins:
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                "SECURITY WARNING: Wildcard CORS detected in %s environment. "
+                "This should only be used for local development, never in production.",
+                self.environment,
+            )
 
     def _validate_fallback_credentials(self):
         """
@@ -269,7 +354,7 @@ class Settings(BaseSettings):
         Load secrets from Infisical or environment variables.
 
         Implements fail-closed security pattern - critical secrets have no fallbacks.
-        The service will fail to start if required secrets are missing.
+        Secrets are now loaded conditionally based on feature flags to reduce noise.
         """
         secrets_mgr = get_secrets_manager()
 
@@ -277,60 +362,84 @@ class Settings(BaseSettings):
         if not self.jwt_secret_key:
             self.jwt_secret_key = secrets_mgr.get_secret("JWT_SECRET_KEY", fallback=None)
 
-        # Load HIPAA integrity secret (no fallback - fail-closed pattern)
-        # Only required if HIPAA controls are being used
-        if not self.hipaa_integrity_secret:
+        # Load HIPAA integrity secret ONLY if HIPAA controls are being used
+        # Check for enable_hipaa flag or hipaa_integrity_secret env var
+        if not self.hipaa_integrity_secret and hasattr(self, "enable_hipaa") and self.enable_hipaa:
             self.hipaa_integrity_secret = secrets_mgr.get_secret("HIPAA_INTEGRITY_SECRET", fallback=None)
 
-        # Load context encryption key (no fallback - fail-closed pattern)
-        # Only required if context encryption is enabled
-        if not self.context_encryption_key:
+        # Load context encryption key ONLY if context encryption is enabled
+        if not self.context_encryption_key and self.enable_context_encryption:
             self.context_encryption_key = secrets_mgr.get_secret("CONTEXT_ENCRYPTION_KEY", fallback=None)
 
-        # Load LLM API keys based on provider
-        if not self.anthropic_api_key:
+        # Load LLM API keys based on ACTIVE provider and fallbacks
+        # Primary provider
+        if self.llm_provider == "anthropic" and not self.anthropic_api_key:
             self.anthropic_api_key = secrets_mgr.get_secret("ANTHROPIC_API_KEY", fallback=None)
-
-        if not self.openai_api_key:
+        elif self.llm_provider == "openai" and not self.openai_api_key:
             self.openai_api_key = secrets_mgr.get_secret("OPENAI_API_KEY", fallback=None)
-
-        if not self.google_api_key:
+        elif self.llm_provider == "google" and not self.google_api_key:
             self.google_api_key = secrets_mgr.get_secret("GOOGLE_API_KEY", fallback=None)
-
-        if not self.azure_api_key:
+        elif self.llm_provider == "azure" and not self.azure_api_key:
             self.azure_api_key = secrets_mgr.get_secret("AZURE_API_KEY", fallback=None)
-
-        if not self.aws_access_key_id:
+        elif self.llm_provider == "bedrock" and not self.aws_access_key_id:
             self.aws_access_key_id = secrets_mgr.get_secret("AWS_ACCESS_KEY_ID", fallback=None)
-
-        if not self.aws_secret_access_key:
             self.aws_secret_access_key = secrets_mgr.get_secret("AWS_SECRET_ACCESS_KEY", fallback=None)
 
-        # Load OpenFGA configuration
-        if not self.openfga_store_id:
-            self.openfga_store_id = secrets_mgr.get_secret("OPENFGA_STORE_ID", fallback=None)
+        # Load fallback providers if fallback enabled
+        if self.enable_fallback and self.fallback_models:
+            # Check which providers are needed for fallbacks
+            fallback_providers = set()
+            for model in self.fallback_models:
+                model_lower = model.lower()
+                if "claude" in model_lower or "anthropic" in model_lower:
+                    fallback_providers.add("anthropic")
+                elif "gpt-" in model_lower or "o1-" in model_lower:
+                    fallback_providers.add("openai")
+                elif "gemini" in model_lower or "palm" in model_lower:
+                    fallback_providers.add("google")
+                elif "azure/" in model_lower:
+                    fallback_providers.add("azure")
+                elif "bedrock/" in model_lower:
+                    fallback_providers.add("bedrock")
 
-        if not self.openfga_model_id:
-            self.openfga_model_id = secrets_mgr.get_secret("OPENFGA_MODEL_ID", fallback=None)
+            # Load secrets for fallback providers only
+            if "anthropic" in fallback_providers and not self.anthropic_api_key:
+                self.anthropic_api_key = secrets_mgr.get_secret("ANTHROPIC_API_KEY", fallback=None)
+            if "openai" in fallback_providers and not self.openai_api_key:
+                self.openai_api_key = secrets_mgr.get_secret("OPENAI_API_KEY", fallback=None)
+            if "google" in fallback_providers and not self.google_api_key:
+                self.google_api_key = secrets_mgr.get_secret("GOOGLE_API_KEY", fallback=None)
+            if "azure" in fallback_providers and not self.azure_api_key:
+                self.azure_api_key = secrets_mgr.get_secret("AZURE_API_KEY", fallback=None)
+            if "bedrock" in fallback_providers:
+                if not self.aws_access_key_id:
+                    self.aws_access_key_id = secrets_mgr.get_secret("AWS_ACCESS_KEY_ID", fallback=None)
+                if not self.aws_secret_access_key:
+                    self.aws_secret_access_key = secrets_mgr.get_secret("AWS_SECRET_ACCESS_KEY", fallback=None)
 
-        # Load LangSmith configuration
-        if not self.langsmith_api_key:
+        # Load OpenFGA configuration (if any OpenFGA settings are configured)
+        if (self.openfga_api_url and self.openfga_api_url != "http://localhost:8080"):
+            if not self.openfga_store_id:
+                self.openfga_store_id = secrets_mgr.get_secret("OPENFGA_STORE_ID", fallback=None)
+            if not self.openfga_model_id:
+                self.openfga_model_id = secrets_mgr.get_secret("OPENFGA_MODEL_ID", fallback=None)
+
+        # Load LangSmith configuration ONLY if enabled
+        if self.langsmith_tracing and not self.langsmith_api_key:
             self.langsmith_api_key = secrets_mgr.get_secret("LANGSMITH_API_KEY", fallback=None)
 
-        # Load LangGraph Platform configuration
-        if not self.langgraph_api_key:
+        # Load LangGraph Platform configuration (if deployment URL configured)
+        if self.langgraph_deployment_url and not self.langgraph_api_key:
             self.langgraph_api_key = secrets_mgr.get_secret("LANGGRAPH_API_KEY", fallback=None)
 
-        # Load Keycloak configuration
-        if not self.keycloak_client_secret:
-            self.keycloak_client_secret = secrets_mgr.get_secret("KEYCLOAK_CLIENT_SECRET", fallback=None)
+        # Load Keycloak configuration ONLY if using Keycloak auth provider
+        if self.auth_provider == "keycloak":
+            if not self.keycloak_client_secret:
+                self.keycloak_client_secret = secrets_mgr.get_secret("KEYCLOAK_CLIENT_SECRET", fallback=None)
+            if not self.keycloak_admin_password:
+                self.keycloak_admin_password = secrets_mgr.get_secret("KEYCLOAK_ADMIN_PASSWORD", fallback=None)
 
-        if not self.keycloak_admin_password:
-            self.keycloak_admin_password = secrets_mgr.get_secret("KEYCLOAK_ADMIN_PASSWORD", fallback=None)
-
-        # Load checkpoint configuration
-        # Note: checkpoint_redis_url defaults to redis://localhost:6379/1
-        # Can be overridden via environment variable or Infisical
+        # Checkpoint configuration loaded on-demand (redis backend specific)
 
     def get_secret(self, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """

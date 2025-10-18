@@ -33,6 +33,7 @@ def test_import_without_filesystem_ops():
 
             # Reset observability state to simulate fresh import
             import mcp_server_langgraph.observability.telemetry as telemetry
+
             telemetry._observability_config = None
             telemetry._propagator = None
 

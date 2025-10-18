@@ -17,6 +17,16 @@ from pydantic import BaseModel, ConfigDict, Field
 from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig, sync_user_to_openfga
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
+# Try to import bcrypt for password hashing
+try:
+    import bcrypt
+
+    BCRYPT_AVAILABLE = True
+except ImportError:
+    BCRYPT_AVAILABLE = False
+    # Note: logger warning deferred to InMemoryUserProvider.__init__
+    # to avoid import-time observability dependency
+
 # ============================================================================
 # Pydantic Models for Type-Safe Authentication Responses
 # ============================================================================
@@ -211,16 +221,23 @@ class InMemoryUserProvider(UserProvider):
     """
     In-memory user provider for development and testing
 
-    Maintains a static dictionary of users. NOT suitable for production.
+    Features:
+    - Optional bcrypt password hashing (install bcrypt package)
+    - JWT token generation
+    - User lookup and authentication
+
+    NOT suitable for large-scale production (use KeycloakUserProvider instead).
     """
 
-    def __init__(self, secret_key: Optional[str] = None):
+    def __init__(self, secret_key: Optional[str] = None, use_password_hashing: bool = False):
         """
         Initialize in-memory user provider
 
         Args:
             secret_key: Secret key for JWT token signing.
                        Required for production use. Should be loaded from environment variables.
+            use_password_hashing: Enable bcrypt password hashing (requires bcrypt package).
+                                 If True and bcrypt not available, falls back to plaintext.
         """
         if not secret_key:
             # Use a random key for testing/development only
@@ -234,40 +251,166 @@ class InMemoryUserProvider(UserProvider):
             )
         self.secret_key = secret_key
 
-        # User database (same as original AuthMiddleware)
-        self.users_db = {
-            "alice": {"user_id": "user:alice", "email": "alice@acme.com", "roles": ["user", "premium"], "active": True},
-            "bob": {"user_id": "user:bob", "email": "bob@acme.com", "roles": ["user"], "active": True},
-            "admin": {"user_id": "user:admin", "email": "admin@acme.com", "roles": ["admin"], "active": True},
+        # Check bcrypt availability if hashing requested
+        if use_password_hashing and not BCRYPT_AVAILABLE:
+            logger.error(
+                "Password hashing requested but bcrypt not available. "
+                "Install bcrypt: pip install bcrypt. "
+                "Falling back to PLAINTEXT passwords (INSECURE)."
+            )
+            self.use_password_hashing = False
+        else:
+            self.use_password_hashing = use_password_hashing and BCRYPT_AVAILABLE
+
+        # Initialize users with hashed or plaintext passwords
+        self._init_users()
+
+        if self.use_password_hashing:
+            logger.info(
+                "InMemoryUserProvider initialized with BCRYPT password hashing (secure)",
+                extra={"user_count": len(self.users_db)},
+            )
+        else:
+            logger.warning(
+                "InMemoryUserProvider initialized with PLAINTEXT PASSWORDS (INSECURE). "
+                "This is only suitable for development/testing. "
+                "Use password hashing (use_password_hashing=True) or KeycloakUserProvider for production.",
+                extra={"user_count": len(self.users_db)},
+            )
+
+    def _hash_password(self, password: str) -> str:
+        """
+        Hash password using bcrypt
+
+        Args:
+            password: Plaintext password
+
+        Returns:
+            Bcrypt password hash
+        """
+        if not BCRYPT_AVAILABLE:
+            return password  # Fallback to plaintext
+
+        salt = bcrypt.gensalt()
+        password_bytes = password.encode("utf-8")
+        hashed = bcrypt.hashpw(password_bytes, salt)
+        return hashed.decode("utf-8")
+
+    def _verify_password(self, password: str, password_hash: str) -> bool:
+        """
+        Verify password against hash
+
+        Args:
+            password: Plaintext password to verify
+            password_hash: Stored password hash (or plaintext if hashing disabled)
+
+        Returns:
+            True if password matches, False otherwise
+        """
+        if not self.use_password_hashing:
+            # Plaintext comparison (insecure, dev/test only)
+            return password == password_hash
+
+        # Bcrypt comparison (secure)
+        password_bytes = password.encode("utf-8")
+        hash_bytes = password_hash.encode("utf-8")
+        return bcrypt.checkpw(password_bytes, hash_bytes)
+
+    def _init_users(self):
+        """Initialize user database with default users"""
+        # Default plaintext passwords for development
+        default_users = {
+            "alice": ("alice123", ["user", "premium"]),
+            "bob": ("bob123", ["user"]),
+            "admin": ("admin123", ["admin"]),
         }
 
-        logger.info("Initialized InMemoryUserProvider", extra={"user_count": len(self.users_db)})
+        self.users_db = {}
+
+        for username, (password, roles) in default_users.items():
+            # Hash password if hashing enabled
+            stored_password = self._hash_password(password) if self.use_password_hashing else password
+
+            self.users_db[username] = {
+                "user_id": f"user:{username}",
+                "email": f"{username}@acme.com",
+                "password": stored_password,
+                "roles": roles,
+                "active": True,
+            }
+
+    def add_user(self, username: str, password: str, email: str, roles: list[str]) -> None:
+        """
+        Add a new user (helper for testing/development)
+
+        Args:
+            username: Username
+            password: Plaintext password (will be hashed if hashing enabled)
+            email: Email address
+            roles: List of role names
+        """
+        stored_password = self._hash_password(password) if self.use_password_hashing else password
+
+        self.users_db[username] = {
+            "user_id": f"user:{username}",
+            "email": email,
+            "password": stored_password,
+            "roles": roles,
+            "active": True,
+        }
+
+        logger.info(f"Added user: {username}", extra={"user_id": f"user:{username}", "roles": roles})
 
     async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
-        """Authenticate user by username lookup"""
+        """
+        Authenticate user by username and password
+
+        SECURITY: This method now requires a password for authentication.
+        Plaintext comparison is used for development/testing only.
+        Use KeycloakUserProvider or implement password hashing for production.
+
+        Args:
+            username: Username to authenticate
+            password: Password (REQUIRED for InMemoryUserProvider)
+
+        Returns:
+            AuthResponse with authentication result
+        """
         with tracer.start_as_current_span("inmemory.authenticate") as span:
             span.set_attribute("auth.username", username)
 
+            # SECURITY: Require password
+            if not password:
+                logger.warning("Authentication failed - password required", extra={"username": username})
+                return AuthResponse(authorized=False, reason="password_required")
+
             # Check user database
-            if username in self.users_db:
-                user = self.users_db[username]
+            if username not in self.users_db:
+                logger.warning("Authentication failed - user not found", extra={"username": username})
+                # Use same error message as invalid password to prevent username enumeration
+                return AuthResponse(authorized=False, reason="invalid_credentials")
 
-                if not user["active"]:
-                    logger.warning("User account inactive", extra={"username": username})
-                    return AuthResponse(authorized=False, reason="account_inactive")
+            user = self.users_db[username]
 
-                logger.info("User authenticated", extra={"username": username, "user_id": user["user_id"]})
+            # Check if account is active
+            if not user["active"]:
+                logger.warning("User account inactive", extra={"username": username})
+                return AuthResponse(authorized=False, reason="account_inactive")
 
-                return AuthResponse(
-                    authorized=True,
-                    username=username,
-                    user_id=user["user_id"],
-                    email=user["email"],
-                    roles=user["roles"],
-                )
+            # SECURITY: Validate password using bcrypt (if enabled) or plaintext comparison
+            if not self._verify_password(password, user["password"]):
+                logger.warning("Authentication failed - invalid password", extra={"username": username})
+                return AuthResponse(authorized=False, reason="invalid_credentials")
 
-            logger.warning("Authentication failed - user not found", extra={"username": username})
-            return AuthResponse(authorized=False, reason="user_not_found")
+            logger.info("User authenticated", extra={"username": username, "user_id": user["user_id"]})
+
+            return AuthResponse(
+                authorized=True,
+                username=username,
+                user_id=user["user_id"],
+                email=user["email"],
+                roles=user["roles"],
+            )
 
     async def get_user_by_id(self, user_id: str) -> Optional[UserData]:
         """Get user by ID"""
@@ -495,7 +638,13 @@ def create_user_provider(
     openfga_client: Optional[Any] = None,
 ) -> UserProvider:
     """
-    Factory function to create user provider based on configuration
+    Factory function to create user provider based on explicit parameters (test use)
+
+    This factory is designed for test code where you want explicit control
+    over provider configuration without requiring a Settings object.
+
+    For production code, use `mcp_server_langgraph.auth.factory.create_user_provider()`
+    which reads from application settings.
 
     Args:
         provider_type: Type of provider ("inmemory", "keycloak")
@@ -508,6 +657,9 @@ def create_user_provider(
 
     Raises:
         ValueError: If provider type is unknown or required config is missing
+
+    See Also:
+        mcp_server_langgraph.auth.factory.create_user_provider: Recommended for production use
     """
     provider_type = provider_type.lower()
 

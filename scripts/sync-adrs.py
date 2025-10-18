@@ -22,6 +22,7 @@ from typing import Dict, List, Tuple
 
 class Colors:
     """ANSI color codes"""
+
     GREEN = "\033[92m"
     YELLOW = "\033[93m"
     RED = "\033[91m"
@@ -41,11 +42,11 @@ def extract_title_and_date(content: str) -> Tuple[str, str]:
         Tuple of (title, date)
     """
     # Extract title (first # heading)
-    title_match = re.search(r'^# (.+)$', content, re.MULTILINE)
+    title_match = re.search(r"^# (.+)$", content, re.MULTILINE)
     title = title_match.group(1) if title_match else "Unknown ADR"
 
     # Extract date
-    date_match = re.search(r'^Date: (.+)$', content, re.MULTILINE)
+    date_match = re.search(r"^Date: (.+)$", content, re.MULTILINE)
     date = date_match.group(1) if date_match else "Unknown"
 
     return title, date
@@ -108,7 +109,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     dest_file = Path(f"docs/architecture/adr-{source_file.name.replace('.md', '.mdx')}")
 
     # Read source
-    with open(source_file, 'r', encoding='utf-8') as f:
+    with open(source_file, "r", encoding="utf-8") as f:
         source_content = f.read()
 
     # Convert to MDX
@@ -117,12 +118,12 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     # Check if update needed
     needs_update = True
     if dest_file.exists():
-        with open(dest_file, 'r', encoding='utf-8') as f:
+        with open(dest_file, "r", encoding="utf-8") as f:
             existing_content = f.read()
 
         # Extract body (skip frontmatter) for comparison
         source_body = source_content
-        existing_body = re.sub(r'^---\n.*?\n---\n\n', '', existing_content, flags=re.DOTALL)
+        existing_body = re.sub(r"^---\n.*?\n---\n\n", "", existing_content, flags=re.DOTALL)
 
         if source_body.strip() == existing_body.strip():
             needs_update = False
@@ -132,7 +133,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
             print(f"{Colors.YELLOW}⚠ Would update: {dest_file.name}{Colors.RESET}")
         else:
             dest_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(dest_file, 'w', encoding='utf-8') as f:
+            with open(dest_file, "w", encoding="utf-8") as f:
                 f.write(mdx_content)
             print(f"{Colors.GREEN}✓ Synced: {source_file.name} → {dest_file.name}{Colors.RESET}")
         return True
@@ -165,7 +166,7 @@ def sync_all_adrs(dry_run: bool = False) -> Dict[str, int]:
 
     for adr_file in adr_files:
         # Extract ADR number (e.g., "0001" from "0001-llm-multi-provider.md")
-        match = re.match(r'(\d{4})-', adr_file.name)
+        match = re.match(r"(\d{4})-", adr_file.name)
         if not match:
             continue
 
@@ -199,7 +200,7 @@ def check_sync_status() -> bool:
     adr_files = [f for f in adr_files if f.name != "README.md"]
 
     for adr_file in adr_files:
-        match = re.match(r'(\d{4})-', adr_file.name)
+        match = re.match(r"(\d{4})-", adr_file.name)
         if not match:
             continue
 
@@ -213,14 +214,14 @@ def check_sync_status() -> bool:
             continue
 
         # Read both files
-        with open(source_file, 'r', encoding='utf-8') as f:
+        with open(source_file, "r", encoding="utf-8") as f:
             source_content = f.read()
 
-        with open(dest_file, 'r', encoding='utf-8') as f:
+        with open(dest_file, "r", encoding="utf-8") as f:
             dest_content = f.read()
 
         # Extract body for comparison
-        dest_body = re.sub(r'^---\n.*?\n---\n\n', '', dest_content, flags=re.DOTALL)
+        dest_body = re.sub(r"^---\n.*?\n---\n\n", "", dest_content, flags=re.DOTALL)
 
         if source_content.strip() != dest_body.strip():
             out_of_sync.append((adr_number, "different"))
@@ -248,29 +249,18 @@ Examples:
   %(prog)s --check            Check sync status
   %(prog)s --adr 0001         Sync specific ADR
   %(prog)s --dry-run          Preview changes
-        """
+        """,
     )
-    parser.add_argument(
-        "--adr",
-        metavar="NUMBER",
-        help="Sync specific ADR by number (e.g., 0001)"
-    )
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="Check sync status without making changes"
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Preview changes without writing files"
-    )
+    parser.add_argument("--adr", metavar="NUMBER", help="Sync specific ADR by number (e.g., 0001)")
+    parser.add_argument("--check", action="store_true", help="Check sync status without making changes")
+    parser.add_argument("--dry-run", action="store_true", help="Preview changes without writing files")
 
     args = parser.parse_args()
 
     # Change to repo root
     repo_root = Path(__file__).parent.parent
     import os
+
     os.chdir(repo_root)
 
     print(f"\n{Colors.BOLD}{Colors.BLUE}ADR Sync Tool{Colors.RESET}")
@@ -302,7 +292,7 @@ Examples:
         else:
             print(f"\n{Colors.GREEN}{Colors.BOLD}✓ Sync complete!{Colors.RESET}")
 
-        sys.exit(0 if stats['failed'] == 0 else 1)
+        sys.exit(0 if stats["failed"] == 0 else 1)
 
 
 if __name__ == "__main__":

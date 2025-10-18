@@ -8,22 +8,23 @@ Checks for broken internal links in markdown files and optionally suggests fixes
 import os
 import re
 import sys
-from pathlib import Path
 from collections import defaultdict
-from typing import List, Dict, Tuple
+from pathlib import Path
+from typing import Dict, List, Tuple
 
 
 class Colors:
     """ANSI color codes for terminal output"""
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    WHITE = '\033[97m'
-    BOLD = '\033[1m'
-    RESET = '\033[0m'
+
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+    RESET = "\033[0m"
 
 
 def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List[Dict]:
@@ -39,14 +40,14 @@ def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List
     """
     if exclude_patterns is None:
         exclude_patterns = [
-            'archive/',
-            'reports/',  # Skip all reports (reference documents with external links)
-            'node_modules/',
-            '.venv/',
-            'venv/',
-            '__pycache__/',
-            '.git/',
-            'docs/'  # Skip Mintlify docs (have internal navigation links)
+            "archive/",
+            "reports/",  # Skip all reports (reference documents with external links)
+            "node_modules/",
+            ".venv/",
+            "venv/",
+            "__pycache__/",
+            ".git/",
+            "docs/",  # Skip Mintlify docs (have internal navigation links)
         ]
 
     broken_links = []
@@ -64,27 +65,27 @@ def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List
         total_files += 1
 
         try:
-            with open(md_file, 'r', encoding='utf-8') as f:
+            with open(md_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Find markdown links [text](path)
-            links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', content)
+            links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)
 
             for link_text, link_path in links:
                 # Skip external links
-                if link_path.startswith(('http://', 'https://', 'mailto:', '#')):
+                if link_path.startswith(("http://", "https://", "mailto:", "#")):
                     continue
 
                 # Skip Mintlify internal navigation links (start with /)
-                if link_path.startswith('/') and not link_path.startswith('//'):
+                if link_path.startswith("/") and not link_path.startswith("//"):
                     continue
 
                 # Skip invalid markdown (like **arguments)
-                if link_path.startswith('**'):
+                if link_path.startswith("**"):
                     continue
 
                 # Remove anchors
-                link_path_no_anchor = link_path.split('#')[0]
+                link_path_no_anchor = link_path.split("#")[0]
                 if not link_path_no_anchor:
                     continue
 
@@ -93,12 +94,16 @@ def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List
 
                 # Check if target exists
                 if not target.exists():
-                    broken_links.append({
-                        'file': str(md_file.relative_to(root_path)),
-                        'link_text': link_text,
-                        'link_path': link_path,
-                        'resolved_path': str(target.relative_to(root_path)) if target.is_relative_to(root_path) else str(target)
-                    })
+                    broken_links.append(
+                        {
+                            "file": str(md_file.relative_to(root_path)),
+                            "link_text": link_text,
+                            "link_path": link_path,
+                            "resolved_path": (
+                                str(target.relative_to(root_path)) if target.is_relative_to(root_path) else str(target)
+                            ),
+                        }
+                    )
         except Exception as e:
             print(f"{Colors.YELLOW}⚠️  Error processing {md_file}: {e}{Colors.RESET}")
 
@@ -107,29 +112,23 @@ def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List
 
 def categorize_links(broken_links: List[Dict]) -> Dict[str, List[Dict]]:
     """Categorize broken links by file location"""
-    categories = {
-        'active_docs': [],
-        'github': [],
-        'adr': [],
-        'reports': [],
-        'other': []
-    }
+    categories = {"active_docs": [], "github": [], "adr": [], "reports": [], "other": []}
 
     for link in broken_links:
-        file_path = link['file']
+        file_path = link["file"]
 
-        if 'archive' in file_path:
+        if "archive" in file_path:
             continue  # Skip archived docs
-        elif file_path.startswith('docs/'):
-            categories['active_docs'].append(link)
-        elif file_path.startswith('.github/'):
-            categories['github'].append(link)
-        elif file_path.startswith('adr/'):
-            categories['adr'].append(link)
-        elif file_path.startswith('reports/'):
-            categories['reports'].append(link)
+        elif file_path.startswith("docs/"):
+            categories["active_docs"].append(link)
+        elif file_path.startswith(".github/"):
+            categories["github"].append(link)
+        elif file_path.startswith("adr/"):
+            categories["adr"].append(link)
+        elif file_path.startswith("reports/"):
+            categories["reports"].append(link)
         else:
-            categories['other'].append(link)
+            categories["other"].append(link)
 
     return categories
 
@@ -153,11 +152,11 @@ def print_summary(broken_links: List[Dict], total_files: int):
     print(f"{Colors.YELLOW}Broken links by category:{Colors.RESET}\n")
 
     priority_map = {
-        'github': ('🔴 HIGH', Colors.RED),
-        'active_docs': ('🔴 HIGH', Colors.RED),
-        'adr': ('🔴 HIGH', Colors.RED),
-        'reports': ('🟡 MEDIUM', Colors.YELLOW),
-        'other': ('🟢 LOW', Colors.GREEN)
+        "github": ("🔴 HIGH", Colors.RED),
+        "active_docs": ("🔴 HIGH", Colors.RED),
+        "adr": ("🔴 HIGH", Colors.RED),
+        "reports": ("🟡 MEDIUM", Colors.YELLOW),
+        "other": ("🟢 LOW", Colors.GREEN),
     }
 
     for category, (priority, color) in priority_map.items():
@@ -168,14 +167,14 @@ def print_summary(broken_links: List[Dict], total_files: int):
     print()
 
     # Show details for high-priority categories
-    for category in ['github', 'active_docs', 'adr']:
+    for category in ["github", "active_docs", "adr"]:
         links = categories[category]
         if links:
             print(f"\n{Colors.BOLD}{category.upper()} ({len(links)} broken links):{Colors.RESET}")
 
             by_file = defaultdict(list)
             for link in links:
-                by_file[link['file']].append(link)
+                by_file[link["file"]].append(link)
 
             for file, file_links in sorted(by_file.items())[:5]:
                 print(f"\n  {Colors.CYAN}📄 {file}{Colors.RESET}")
@@ -196,15 +195,17 @@ def main():
     print(f"📂 Scanning directory: {Colors.CYAN}{root_dir}{Colors.RESET}")
     print(f"📝 Excluding: {Colors.YELLOW}archive/, reports/archive/{Colors.RESET} (historical docs)\n")
 
-    broken, total = find_broken_links('.')
+    broken, total = find_broken_links(".")
     print_summary(broken, total)
 
     # Check for high-priority broken links only
     categories = categorize_links(broken)
-    high_priority_count = len(categories['github']) + len(categories['active_docs']) + len(categories['adr'])
+    high_priority_count = len(categories["github"]) + len(categories["active_docs"]) + len(categories["adr"])
 
     if high_priority_count > 0:
-        print(f"\n{Colors.RED}{Colors.BOLD}❌ Link check failed! Found {high_priority_count} high-priority broken links{Colors.RESET}")
+        print(
+            f"\n{Colors.RED}{Colors.BOLD}❌ Link check failed! Found {high_priority_count} high-priority broken links{Colors.RESET}"
+        )
         print(f"\n{Colors.YELLOW}💡 Quick fixes:{Colors.RESET}")
         print(f"  • Review file paths and update broken links")
         print(f"  • Check for moved/renamed files")

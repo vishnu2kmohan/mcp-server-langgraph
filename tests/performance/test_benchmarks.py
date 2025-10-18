@@ -152,8 +152,8 @@ class TestOpenFGABenchmarks:
         async def check_authorization():
             return await mock_openfga_client.check(user="user:test-user", relation="viewer", object="document:test-doc")
 
-        # Run benchmark
-        result = await benchmark(check_authorization)
+        # Run benchmark (use asyncio.run wrapper for async functions)
+        result = benchmark(asyncio.run, check_authorization())
 
         assert result["allowed"] is True
 
@@ -176,8 +176,8 @@ class TestOpenFGABenchmarks:
                 results.append(result)
             return results
 
-        # Run benchmark
-        results = await benchmark(batch_check)
+        # Run benchmark (use asyncio.run wrapper for async functions)
+        results = benchmark(asyncio.run, batch_check())
 
         assert len(results) == 10
         assert all(r["allowed"] for r in results)
@@ -224,8 +224,8 @@ class TestLLMBenchmarks:
                 # Simulate post-processing
                 return response["choices"][0]["message"]["content"]
 
-        # Run benchmark
-        result = await benchmark(make_request)
+        # Run benchmark (use asyncio.run wrapper for async functions)
+        result = benchmark(asyncio.run, make_request())
 
         assert result == "Test response"
 
@@ -288,8 +288,8 @@ class TestAgentBenchmarks:
 
             return processed
 
-        # Run benchmark
-        results = await benchmark(process_messages)
+        # Run benchmark (use asyncio.run wrapper for async functions)
+        results = benchmark(asyncio.run, process_messages())
 
         assert len(results) == 100
 

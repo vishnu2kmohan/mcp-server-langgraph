@@ -238,7 +238,8 @@ Focus on high-signal information that maintains conversation context.
 </output_format>"""
 
             try:
-                response = await self.llm.ainvoke(summarization_prompt)
+                # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
+                response = await self.llm.ainvoke([HumanMessage(content=summarization_prompt)])
                 summary = response.content if hasattr(response, "content") else str(response)
 
                 logger.info("Messages summarized", extra={"message_count": len(messages), "summary_length": len(summary)})
@@ -383,7 +384,8 @@ PREFERENCES:
 </output_format>"""
 
             try:
-                response = await self.llm.ainvoke(extraction_prompt)
+                # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
+                response = await self.llm.ainvoke([HumanMessage(content=extraction_prompt)])
                 extraction_text = response.content if hasattr(response, "content") else str(response)
 
                 # Parse response

@@ -349,12 +349,75 @@ def create_agent_graph():
         return state
 
     async def use_tools(state: AgentState) -> AgentState:
-        """Simulate tool usage (extend with real tools)"""
-        # In real implementation, bind tools to model
-        # For now, simulate a tool response
-        tool_response = AIMessage(content="Tool execution completed. Processing results...")
+        """
+        Execute tools based on LangChain tool calls.
 
-        return {**state, "messages": [tool_response], "next_action": "respond"}
+        Supports both serial and parallel execution based on settings.
+        Currently uses stub responses until tools are bound to the model.
+
+        Implementation status:
+        - ✅ Message state preservation (appends instead of replacing)
+        - ✅ Tool call extraction from AIMessage.tool_calls
+        - ⚠️  Actual tool execution pending (returns stub responses)
+        - ⚠️  Parallel execution infrastructure available but not wired
+
+        TODO: Complete tool integration:
+        1. Bind tools to the model using model.bind_tools(tools)
+        2. Wire parallel executor for independent tool calls
+        3. Add real tool implementations (search, calculator, etc.)
+        4. Add integration tests
+
+        For implementation reference, see:
+        - LangChain tool binding: https://python.langchain.com/docs/how_to/tool_calling/
+        - Parallel execution: docs/adr/ADR-0023-anthropic-tool-design-best-practices.md
+        """
+        from langchain_core.messages import ToolMessage
+
+        messages = state["messages"]
+        last_message = messages[-1]
+
+        # Check if the last message contains tool calls
+        tool_calls = getattr(last_message, "tool_calls", None) if hasattr(last_message, "tool_calls") else None
+
+        if not tool_calls or len(tool_calls) == 0:
+            # No tool calls found - this shouldn't happen if routed to use_tools
+            # Return a message indicating no tools were called
+            logger.warning(
+                "use_tools node reached but no tool calls found in last message",
+                extra={"message_type": type(last_message).__name__},
+            )
+            tool_response = AIMessage(
+                content="No tool calls found. Proceeding with direct response.",
+            )
+            return {**state, "messages": state["messages"] + [tool_response], "next_action": "respond"}
+
+        logger.info(
+            "Executing tools",
+            extra={
+                "tool_count": len(tool_calls),
+                "tools": [tc.get("name", "unknown") for tc in tool_calls],
+            },
+        )
+
+        # TODO: Replace with real tool execution
+        # For now, return stub responses for each tool call
+        tool_messages = []
+        for tool_call in tool_calls:
+            tool_name = tool_call.get("name", "unknown")
+            tool_call_id = tool_call.get("id", str(len(tool_messages)))
+
+            # Stub response
+            result_content = f"[STUB] Tool '{tool_name}' executed successfully. Real tool execution pending."
+
+            tool_message = ToolMessage(
+                content=result_content,
+                tool_call_id=tool_call_id,
+                name=tool_name,
+            )
+            tool_messages.append(tool_message)
+
+        # Append all tool messages to state (preserves conversation history)
+        return {**state, "messages": state["messages"] + tool_messages, "next_action": "respond"}
 
     async def generate_response(state: AgentState) -> AgentState:
         """Generate final response using LLM with Pydantic AI validation"""

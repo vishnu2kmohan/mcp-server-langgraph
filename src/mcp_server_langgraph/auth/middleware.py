@@ -17,6 +17,15 @@ from mcp_server_langgraph.auth.session import SessionData, SessionStore
 from mcp_server_langgraph.auth.user_provider import AuthResponse, InMemoryUserProvider, TokenVerification, UserProvider
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
+# FastAPI imports for dependency injection (optional, only if using FastAPI endpoints)
+try:
+    from fastapi import HTTPException, Request, status
+    from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+    FASTAPI_AVAILABLE = True
+except ImportError:
+    FASTAPI_AVAILABLE = False
+
 # ============================================================================
 # Helper Functions
 # ============================================================================
@@ -627,3 +636,182 @@ async def verify_token(token: str, secret_key: Optional[str] = None) -> TokenVer
     """
     auth = AuthMiddleware(secret_key=secret_key or "your-secret-key-change-in-production")
     return await auth.verify_token(token)
+
+
+# ============================================================================
+# FastAPI Dependency Injection Support
+# ============================================================================
+
+if FASTAPI_AVAILABLE:
+    # Global auth middleware instance (set by application)
+    _global_auth_middleware: Optional[AuthMiddleware] = None
+
+    def set_global_auth_middleware(auth: AuthMiddleware) -> None:
+        """
+        Set global auth middleware instance for FastAPI dependencies.
+
+        This should be called during application startup.
+
+        Args:
+            auth: AuthMiddleware instance configured with user provider, OpenFGA, etc.
+        """
+        global _global_auth_middleware
+        _global_auth_middleware = auth
+
+    def get_auth_middleware() -> AuthMiddleware:
+        """
+        Get global auth middleware instance.
+
+        Returns:
+            AuthMiddleware instance
+
+        Raises:
+            RuntimeError: If auth middleware not initialized
+        """
+        if _global_auth_middleware is None:
+            raise RuntimeError("Auth middleware not initialized. Call set_global_auth_middleware() during app startup.")
+        return _global_auth_middleware
+
+    # HTTP Bearer security scheme for JWT tokens
+    bearer_scheme = HTTPBearer(auto_error=False)
+
+    async def get_current_user(
+        request: Request,
+        credentials: Optional[HTTPAuthorizationCredentials] = None,
+    ) -> Dict[str, Any]:
+        """
+        FastAPI dependency for extracting authenticated user from request.
+
+        Supports multiple authentication methods:
+        1. JWT token in Authorization header (Bearer token)
+        2. User already set in request.state.user (by middleware)
+
+        Args:
+            request: FastAPI request object
+            credentials: Optional Bearer token credentials
+
+        Returns:
+            User dict with user_id, username, roles, etc.
+
+        Raises:
+            HTTPException: If authentication fails (401)
+        """
+        # Check if user already set by middleware
+        if hasattr(request.state, "user") and request.state.user:
+            return request.state.user
+
+        # Try to authenticate with Bearer token
+        if credentials and credentials.credentials:
+            auth = get_auth_middleware()
+            verification = await auth.verify_token(credentials.credentials)
+
+            if verification.valid and verification.payload:
+                user_data = {
+                    "user_id": verification.payload.get("sub", "unknown"),
+                    "username": verification.payload.get("sub", "unknown").replace("user:", ""),
+                    "roles": verification.payload.get("roles", []),
+                    "email": verification.payload.get("email"),
+                }
+                # Cache in request state for subsequent calls
+                request.state.user = user_data
+                return user_data
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Invalid token: {verification.error}",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+        # No authentication provided
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    async def get_current_user_with_auth(
+        user: Dict[str, Any],
+        relation: Optional[str] = None,
+        resource: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        FastAPI dependency for authenticated + authorized user.
+
+        Use this when you need both authentication and authorization.
+
+        Example:
+            @app.get("/protected")
+            async def protected_endpoint(
+                user: Dict[str, Any] = Depends(
+                    lambda: get_current_user_with_auth(relation="viewer", resource="tool:chat")
+                )
+            ):
+                return {"user": user}
+
+        Args:
+            user: User dict from get_current_user dependency
+            relation: Required relation (e.g., "executor", "viewer")
+            resource: Resource to check access to (e.g., "tool:chat")
+
+        Returns:
+            User dict if authorized
+
+        Raises:
+            HTTPException: If authorization fails (403)
+        """
+        if relation and resource:
+            auth = get_auth_middleware()
+            user_id = user.get("user_id", "")
+
+            authorized = await auth.authorize(user_id=user_id, relation=relation, resource=resource)
+
+            if not authorized:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Not authorized: {user_id} cannot {relation} {resource}",
+                )
+
+        return user
+
+    def require_auth_dependency(relation: Optional[str] = None, resource: Optional[str] = None):
+        """
+        Create a FastAPI dependency for authentication + authorization.
+
+        This replaces the @require_auth decorator for FastAPI routes.
+
+        Example:
+            from fastapi import Depends
+
+            @app.get("/tools")
+            async def list_tools(user: Dict = Depends(require_auth_dependency(relation="executor", resource="tool:*"))):
+                return {"tools": [...]}
+
+        Args:
+            relation: Required relation (e.g., "executor")
+            resource: Resource to check access to
+
+        Returns:
+            FastAPI dependency function
+        """
+
+        async def dependency(
+            request: Request,
+            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,
+        ) -> Dict[str, Any]:
+            # Get authenticated user
+            user = await get_current_user(request, credentials)
+
+            # Check authorization if required
+            if relation and resource:
+                auth = get_auth_middleware()
+                authorized = await auth.authorize(user_id=user["user_id"], relation=relation, resource=resource)
+
+                if not authorized:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Not authorized: {user['user_id']} cannot {relation} {resource}",
+                    )
+
+            return user
+
+        return dependency

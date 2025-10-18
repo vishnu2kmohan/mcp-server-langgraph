@@ -13,7 +13,7 @@ References:
 from enum import Enum
 from typing import Any, Literal, Optional
 
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.llm.factory import create_verification_model
@@ -117,7 +117,8 @@ class OutputVerifier:
 
             try:
                 # Get LLM judgment
-                llm_response = await self.llm.ainvoke(verification_prompt)
+                # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
+                llm_response = await self.llm.ainvoke([HumanMessage(content=verification_prompt)])
                 judgment = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
 
                 # Parse judgment into structured result

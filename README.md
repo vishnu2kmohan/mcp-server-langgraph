@@ -414,19 +414,65 @@ Add to your MCP client config (e.g., Claude Desktop):
 
 ## Authentication & Authorization
 
-### JWT Authentication
+### Token-Based Authentication (v2.8.0+)
+
+All tool calls now require JWT token authentication for security:
 
 ```python
-from mcp_server_langgraph.auth.middleware import AuthMiddleware
+import httpx
 
-auth = AuthMiddleware(secret_key=settings.jwt_secret_key)
+# 1. Login to get JWT token
+async with httpx.AsyncClient() as client:
+    response = await client.post(
+        "http://localhost:8000/auth/login",
+        json={"username": "alice", "password": "alice123"}
+    )
+    data = response.json()
+    token = data["access_token"]
+    print(f"Token expires in {data['expires_in']}s")
 
-# Create token
-token = auth.create_token("alice", expires_in=3600)
-
-# Authenticate user
-result = await auth.authenticate("alice")
+# 2. Use token in all tool calls
+response = await client.post(
+    "http://localhost:8000/message",
+    json={
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {
+            "name": "agent_chat",
+            "arguments": {
+                "message": "Hello!",
+                "token": token,  # ✅ Required
+                "user_id": "user:alice"
+            }
+        }
+    }
+)
 ```
+
+**See**: [Authentication Migration Guide](docs/guides/authentication-migration-v2-8.mdx) for complete details
+
+### Configurable Authentication Providers
+
+The system supports multiple authentication backends via the auth factory:
+
+```python
+# Development: In-memory user provider (with password validation)
+# Set in .env:
+AUTH_PROVIDER=inmemory
+
+# Production: Keycloak SSO with OIDC/OAuth2
+# Set in .env:
+AUTH_PROVIDER=keycloak
+KEYCLOAK_SERVER_URL=https://auth.example.com
+KEYCLOAK_REALM=production
+KEYCLOAK_CLIENT_ID=mcp-server
+KEYCLOAK_CLIENT_SECRET=<secret>
+```
+
+**Provider Features**:
+- **InMemoryUserProvider**: Fast, password-protected, for development/testing
+- **KeycloakUserProvider**: Enterprise SSO, OIDC, automatic role sync to OpenFGA
+- **Custom Providers**: Extend `UserProvider` interface for custom auth systems
 
 ### OpenFGA Fine-Grained Authorization
 
@@ -445,12 +491,12 @@ client = OpenFGAClient(
 allowed = await client.check_permission(
     user="user:alice",
     relation="executor",
-    object="tool:chat"
+    object="tool:agent_chat"
 )
 
 # Grant permission
 await client.write_tuples([
-    {"user": "user:alice", "relation": "executor", "object": "tool:chat"}
+    {"user": "user:alice", "relation": "executor", "object": "tool:agent_chat"}
 ])
 
 # List accessible resources
@@ -463,13 +509,22 @@ resources = await client.list_objects(
 
 ### Default Users (Development Only)
 
-- **alice**: Premium user, member and admin of organization:acme
-- **bob**: Standard user, member of organization:acme
-- **admin**: Admin user with elevated privileges
+| Username | Password | Roles | Description |
+|----------|----------|-------|-------------|
+| `alice` | `alice123` | `user`, `premium` | Premium user, member and admin of organization:acme |
+| `bob` | `bob123` | `user` | Standard user, member of organization:acme |
+| `admin` | `admin123` | `admin` | Admin user with elevated privileges |
 
-See `src/mcp_server_langgraph/auth/middleware.py:30-50` for user definitions.
+⚠️ **Security Warning**: Default users use **plaintext passwords** for development only.
 
-**⚠️ Production**: Configure real users and authentication before deployment.
+**For Production**:
+- Use `AUTH_PROVIDER=keycloak` with proper SSO
+- Or implement password hashing in `InMemoryUserProvider`
+- Never use default credentials in production
+
+**See**:
+- [Keycloak Integration Guide](integrations/keycloak.md)
+- [Authentication Migration Guide](docs/guides/authentication-migration-v2-8.mdx)
 
 ## Testing Strategy
 

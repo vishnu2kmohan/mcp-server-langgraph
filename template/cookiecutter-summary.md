@@ -12,7 +12,7 @@ This codebase now serves as a **production-grade cookie-cutter template** for bu
 
 ### 1. **Cookiecutter Integration** ✅
 
-**File**: `cookiecutter.json`
+**Note**: Cookiecutter configuration would be in `cookiecutter.json` (to be implemented)
 - 30+ configuration options
 - Feature toggles for all major components
 - Smart defaults for common scenarios
@@ -43,7 +43,7 @@ This codebase now serves as a **production-grade cookie-cutter template** for bu
 
 ### 3. **Comprehensive Documentation** ✅
 
-**TEMPLATE_USAGE.md** (3,500+ lines)
+**template/usage.md** (3,500+ lines)
 - Automated generation instructions
 - Interactive configuration guide
 - Manual customization steps
@@ -51,14 +51,14 @@ This codebase now serves as a **production-grade cookie-cutter template** for bu
 - File-by-file customization guide
 - Troubleshooting section
 
-**TEMPLATE_EVALUATION.md** (2,800+ lines)
+**template/evaluation.md** (2,800+ lines)
 - Detailed effectiveness analysis
 - Scoring breakdown (9.5/10 overall)
 - Gap analysis and solutions
 - Implementation recommendations
 - Before/after comparison
 
-**Updated README.md**
+**Updated ../README.md**
 - Prominent "Use This Template" badge
 - Quick start with cookiecutter
 - Clear template positioning
@@ -386,13 +386,13 @@ After generation:
 ## 📚 Resources
 
 ### Template Documentation
-- [TEMPLATE_USAGE.md](TEMPLATE_USAGE.md) - How to use this template
-- [TEMPLATE_EVALUATION.md](TEMPLATE_EVALUATION.md) - Detailed analysis
-- [cookiecutter.json](cookiecutter.json) - Configuration options
+- [usage.md](usage.md) - How to use this template
+- [evaluation.md](evaluation.md) - Detailed analysis
+- cookiecutter.json - Configuration options (to be implemented)
 
 ### Project Documentation
-- [README.md](README.md) - Project overview
-- [DEVELOPMENT.md](DEVELOPMENT.md) - Development guide
+- [../README.md](../README.md) - Project overview
+- [../docs/advanced/development-setup.mdx](../docs/advanced/development-setup.mdx) - Development guide
 - [../docs/deployment/production-checklist.mdx](../docs/deployment/production-checklist.mdx) - Deployment guide
 - [../archive/SECURITY_AUDIT.md](../archive/SECURITY_AUDIT.md) - Security checklist
 

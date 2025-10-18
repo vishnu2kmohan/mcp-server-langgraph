@@ -3,7 +3,7 @@
   "info": {
     "title": "MCP Server with LangGraph",
     "description": "AI Agent with fine-grained authorization and observability - StreamableHTTP transport",
-    "version": "2.6.0"
+    "version": "2.7.0"
   },
   "paths": {
     "/": {
@@ -31,6 +31,114 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "description": "Authenticate user and return JWT token\n\nThis endpoint accepts username and password, validates credentials,\nand returns a JWT token that can be used for subsequent tool calls.\n\nThe token should be included in the 'token' field of all tool call requests.\n\nExample:\n    POST /auth/login\n    {\n        \"username\": \"alice\",\n        \"password\": \"alice123\"\n    }\n\n    Response:\n    {\n        \"access_token\": \"eyJ...\",\n        \"token_type\": \"bearer\",\n        \"expires_in\": 3600,\n        \"user_id\": \"user:alice\",\n        \"username\": \"alice\",\n        \"roles\": [\"user\", \"premium\"]\n    }",
+        "operationId": "login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions"
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh Token",
+        "description": "Refresh authentication token\n\nSupports two refresh methods:\n1. Keycloak: Uses refresh_token to get new access token\n2. InMemory: Validates current token and issues new one\n\nExample (Keycloak):\n    POST /auth/refresh\n    {\n        \"refresh_token\": \"eyJ...\"\n    }\n\nExample (InMemory):\n    POST /auth/refresh\n    {\n        \"current_token\": \"eyJ...\"\n    }\n\nResponse:\n    {\n        \"access_token\": \"eyJ...\",\n        \"token_type\": \"bearer\",\n        \"expires_in\": 3600,\n        \"refresh_token\": \"eyJ...\"  // Keycloak only\n    }",
+        "operationId": "refresh_token_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing authentication token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions"
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -120,6 +228,178 @@
             "description": "Internal Server Error"
           }
         }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Username",
+            "description": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Password",
+            "description": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "description": "Login request with username and password"
+      },
+      "LoginResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "JWT access token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "Token type (always 'bearer')",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Token expiration in seconds"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "User identifier"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "description": "Username"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles",
+            "description": "User roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in",
+          "user_id",
+          "username",
+          "roles"
+        ],
+        "title": "LoginResponse",
+        "description": "Login response with JWT token"
+      },
+      "RefreshTokenRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "Refresh token (Keycloak only)"
+          },
+          "current_token": {
+            "type": "string",
+            "title": "Current Token",
+            "description": "Current access token (for InMemory provider)"
+          }
+        },
+        "type": "object",
+        "title": "RefreshTokenRequest",
+        "description": "Token refresh request"
+      },
+      "RefreshTokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "New JWT access token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "Token type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Token expiration in seconds"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "New refresh token (Keycloak only)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "RefreshTokenResponse",
+        "description": "Token refresh response"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     }
   },

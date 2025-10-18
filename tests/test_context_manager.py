@@ -156,9 +156,15 @@ class TestContextManager:
         context_manager.llm.ainvoke.assert_called_once()
 
         # Check that prompt contains conversation text
+        # BUGFIX: After string-to-message fix, ainvoke receives a list of messages
         call_args = context_manager.llm.ainvoke.call_args
-        prompt = call_args[0][0]
-        assert "summarize" in prompt.lower() or "summary" in prompt.lower()
+        messages = call_args[0][0]  # First positional arg is the messages list
+        assert isinstance(messages, list), "Should receive list of messages"
+        assert len(messages) > 0, "Should have at least one message"
+
+        # Extract prompt content from HumanMessage
+        prompt_content = messages[0].content
+        assert "summarize" in prompt_content.lower() or "summary" in prompt_content.lower()
 
     @pytest.mark.asyncio
     async def test_summarization_fallback_on_error(self, context_manager, long_conversation):

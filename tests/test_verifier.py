@@ -151,9 +151,15 @@ class TestOutputVerifier:
         output_verifier.llm.ainvoke.assert_called_once()
 
         # Check that context was included in prompt
+        # BUGFIX: After string-to-message fix, ainvoke receives a list of messages
         call_args = output_verifier.llm.ainvoke.call_args
-        prompt = call_args[0][0]
-        assert "conversation_context" in prompt or "context" in prompt.lower()
+        messages = call_args[0][0]  # First positional arg is the messages list
+        assert isinstance(messages, list), "Should receive list of messages"
+        assert len(messages) > 0, "Should have at least one message"
+
+        # Extract prompt content from HumanMessage
+        prompt_content = messages[0].content
+        assert "conversation_context" in prompt_content or "context" in prompt_content.lower()
 
     @pytest.mark.asyncio
     async def test_verify_response_strict_mode(self, output_verifier, good_llm_judgment):

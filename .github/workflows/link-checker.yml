@@ -70,6 +70,10 @@ jobs:
                           if link_path.startswith(('http://', 'https://', 'mailto:', '#')):
                               continue
 
+                          # Skip Mintlify internal navigation links (start with /)
+                          if link_path.startswith('/') and not link_path.startswith('//'):
+                              continue
+
                           # Skip invalid markdown (like **arguments)
                           if link_path.startswith('**'):
                               continue

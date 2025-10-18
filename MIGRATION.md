@@ -467,7 +467,7 @@ After rollback:
 
 - **Issues**: https://github.com/your-org/mcp-server-langgraph/issues
 - **Documentation**: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md)
-- **ADR**: [docs/adr/ADR-0026-lazy-observability-initialization.md](./docs/adr/ADR-0026-lazy-observability-initialization.md)
+- **ADR**: [adr/0026-lazy-observability-initialization.md](./adr/0026-lazy-observability-initialization.md)
 
 ---
 

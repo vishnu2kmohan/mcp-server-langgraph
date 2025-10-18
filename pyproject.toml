@@ -54,6 +54,7 @@ dependencies = [
     "pyyaml>=6.0.3",
     "apscheduler>=3.11.0",
     "python-json-logger>=4.0.0",
+    "tiktoken>=0.5.0",  # Token counting for response optimization
     # Anthropic Best Practices Enhancements (ADR-0025)
     "qdrant-client>=1.15.1",  # Vector database for Just-in-Time context loading
     "langchain-google-genai>=3.0.0",  # Google Gemini embeddings (API-based, no model hosting)
