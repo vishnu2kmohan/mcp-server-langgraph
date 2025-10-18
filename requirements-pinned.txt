@@ -17,15 +17,19 @@ PyJWT==2.10.1
 cryptography==46.0.3
 
 # OpenTelemetry Core
-opentelemetry-api==1.38.0
-opentelemetry-sdk==1.38.0
+# NOTE: All OpenTelemetry packages pinned to 1.37.0 due to logfire dependency conflict (via pydantic-ai)
+# logfire requires opentelemetry-exporter-otlp-proto-http<1.38.0
+# OpenTelemetry exporters require SDK version match (~=)
+opentelemetry-api==1.37.0
+opentelemetry-sdk==1.37.0
 
 # OpenTelemetry Instrumentation
+# Must match SDK version (0.58b0 for SDK 1.37.0)
 opentelemetry-instrumentation-logging==0.58b0
 
 # OpenTelemetry Exporters
-opentelemetry-exporter-otlp-proto-grpc==1.38.0
-opentelemetry-exporter-otlp-proto-http==1.38.0
+opentelemetry-exporter-otlp-proto-grpc==1.37.0
+opentelemetry-exporter-otlp-proto-http==1.37.0
 
 # Fine-grained Authorization
 openfga-sdk==0.9.7

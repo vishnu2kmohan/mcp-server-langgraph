@@ -22,15 +22,19 @@ python-keycloak>=5.8.1
 authlib>=1.6.5
 
 # OpenTelemetry Core
-opentelemetry-api>=1.38.0
-opentelemetry-sdk>=1.38.0
+# NOTE: All OpenTelemetry packages pinned to <1.38.0 due to logfire dependency conflict (via pydantic-ai)
+# logfire requires opentelemetry-exporter-otlp-proto-http<1.38.0
+# OpenTelemetry exporters require SDK version match (~=)
+opentelemetry-api>=1.35.0,<1.38.0
+opentelemetry-sdk>=1.35.0,<1.38.0
 
 # OpenTelemetry Instrumentation
-opentelemetry-instrumentation-logging>=0.59b0
+# Must match SDK version (0.58b0 for SDK 1.37.0)
+opentelemetry-instrumentation-logging>=0.58b0,<0.59b0
 
 # OpenTelemetry Exporters
-opentelemetry-exporter-otlp-proto-grpc>=1.38.0
-opentelemetry-exporter-otlp-proto-http>=1.38.0
+opentelemetry-exporter-otlp-proto-grpc>=1.35.0,<1.38.0
+opentelemetry-exporter-otlp-proto-http>=1.35.0,<1.38.0
 
 # Fine-grained Authorization
 openfga-sdk>=0.5.0
