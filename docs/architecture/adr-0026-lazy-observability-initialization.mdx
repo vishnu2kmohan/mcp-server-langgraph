@@ -1,13 +1,13 @@
 ---
 title: "ADR-0026: Lazy Observability Initialization"
-description: "Decouple observability bootstrapping from import time for container compatibility and library reusability"
+description: "Architecture Decision Record: ADR-0026: Lazy Observability Initialization"
 ---
 
 # ADR-0026: Lazy Observability Initialization
 
 ## Status
 
-**Accepted** - 2025-10-17
+**Accepted** - 2025-01-17
 
 ## Context
 
@@ -280,10 +280,10 @@ async def main():
 
 - **Issue**: ultrathink analysis issue #1 (Decouple observability bootstrapping from import time)
 - **Related ADRs**:
-  - [ADR-0023: Anthropic Tool Design Best Practices](adr-0023-anthropic-tool-design-best-practices)
-  - [ADR-0024: Agentic Loop Implementation](adr-0024-agentic-loop-implementation)
-- **Migration Guide**: [MIGRATION.md](/MIGRATION.md)
-- **Breaking Changes**: [BREAKING_CHANGES.md](/BREAKING_CHANGES.md)
+  - ADR-0023: Anthropic Tool Design Best Practices
+  - ADR-0024: Agentic Loop Implementation
+- **Migration Guide**: [MIGRATION.md](../MIGRATION.md)
+- **Breaking Changes**: [BREAKING_CHANGES.md](../BREAKING_CHANGES.md)
 - **Anthropic Best Practices**: https://docs.anthropic.com/en/docs/build-with-claude/tool-use
 
 ## Validation
@@ -320,7 +320,7 @@ If critical issues discovered:
 
 ## Notes
 
-- **Timeline**: Implemented 2025-10-17
+- **Timeline**: Implemented 2025-01-17
 - **Breaking Change Version**: v2.8.0
 - **Backward Compatibility**: Runtime API is backward compatible after calling `init_observability()`
 - **Migration Effort**: Low (~5 lines per entry point)
@@ -331,4 +331,4 @@ If critical issues discovered:
 **Decision Makers**: @vishnu2kmohan
 **Implementation**: @claude-sonnet-4-5
 **Review**: Pending
-**Date**: 2025-10-17
+**Date**: 2025-01-17

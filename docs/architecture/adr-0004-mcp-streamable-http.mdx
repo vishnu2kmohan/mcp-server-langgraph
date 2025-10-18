@@ -216,7 +216,7 @@ python -m mcp_server_langgraph.mcp.server_stdio
 // Claude Desktop config (.claude_desktop_config.json)
 {
   "mcpServers": {
-    "mcp-server-langgraph": {
+    "langgraph-agent": {
       "command": "python",
       "args": ["src/mcp_server_langgraph/mcp/server_stdio.py"]  // stdio transport
     }
@@ -247,7 +247,7 @@ python -m mcp_server_langgraph.mcp.server_stdio
 - [MCP Transport Documentation](https://spec.modelcontextprotocol.io/specification/architecture/#transports)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - Related Files: `src/mcp_server_langgraph/mcp/server_streamable.py`, `src/mcp_server_langgraph/mcp/server_stdio.py`
-- Related ADRs: 0008 - OpenAPI Validation (future ADR for API contracts)
+- Related ADRs: OpenAPI validation (planned for future ADR)
 
 ## Changelog
 

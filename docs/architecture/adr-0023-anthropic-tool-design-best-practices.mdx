@@ -1,20 +1,19 @@
 ---
-title: 'ADR-0023: Anthropic Tool Design Best Practices'
-description: 'Implementing industry best practices for writing tools optimized for AI agents'
-icon: 'tools'
+title: "23. Anthropic Tool Design Best Practices"
+description: "Architecture Decision Record: 23. Anthropic Tool Design Best Practices"
 ---
 
-<Note>
-  **Status**: Accepted
-  **Date**: 2025-10-17
-  **Decision**: Adopt Anthropic's published best practices for tool design to improve agent performance and user experience
-</Note>
+# 23. Anthropic Tool Design Best Practices
+
+Date: 2025-10-17
+
+## Status
+
+Accepted
 
 ## Context
 
 Our MCP server exposes tools for AI agents to interact with the LangGraph agent system. To ensure optimal agent performance and user experience, we need to align our tool design with industry best practices for writing tools for AI agents, specifically those published by Anthropic.
-
-### Gaps in Previous Implementation
 
 The original tool implementation had several areas for improvement:
 - Generic tool names without namespacing (`chat`, `get_conversation`, `list_conversations`)
@@ -23,79 +22,52 @@ The original tool implementation had several areas for improvement:
 - Unlimited response sizes (potential context overflow)
 - Minimal usage guidance in tool descriptions
 
-<Warning>
-These issues can cause agents to consume excessive context, make poor tool selection decisions, and struggle with large datasets.
-</Warning>
-
 ## Decision
 
-We will adopt **Anthropic's best practices for writing tools for agents** as outlined in their engineering blog post.
+We will adopt **Anthropic's best practices for writing tools for agents** as outlined in their engineering blog post. This includes:
 
 ### 1. Tool Namespacing
 
 **Implementation**: Prefix tools with their domain for clarity and scalability.
 
-<Tabs>
-  <Tab title="Before">
-    ```python
-    # Generic names without context
-    Tool(name="chat", ...)
-    Tool(name="get_conversation", ...)
-    Tool(name="list_conversations", ...)
-    ```
-  </Tab>
+**Before**:
+- `chat`
+- `get_conversation`
+- `list_conversations`
 
-  <Tab title="After">
-    ```python
-    # Namespaced for clarity
-    Tool(name="agent_chat", ...)        # Agent interaction
-    Tool(name="conversation_get", ...)  # Conversation management
-    Tool(name="conversation_search", ...)  # Discovery
-    ```
-  </Tab>
-</Tabs>
+**After**:
+- `agent_chat` - Agent interaction namespace
+- `conversation_get` - Conversation management namespace
+- `conversation_search` - Conversation discovery namespace
 
 **Benefits**:
-- ✅ Clear categorization as more tools are added
-- ✅ Prevents naming conflicts
-- ✅ Helps agents understand tool relationships
-- ✅ Backward compatibility maintained with old names
+- Clear categorization as more tools are added
+- Prevents naming conflicts
+- Helps agents understand tool relationships
+- Backward compatibility maintained with old names
 
 ### 2. Search-Focused Tools (Not List-All)
 
-<Info>
 **Anthropic Guidance**: "Implement search-focused tools (like `search_contacts`) rather than list-all tools (`list_contacts`)"
-</Info>
 
 **Implementation**: Replace `list_conversations` with `conversation_search`:
 
 ```python
 class SearchConversationsInput(BaseModel):
-    query: str = Field(
-        description="Search query to filter conversations",
-        min_length=1,
-        max_length=500
-    )
-    limit: int = Field(
-        default=10,
-        ge=1,
-        le=50,
-        description="Maximum number of conversations to return (1-50)"
-    )
+    query: str = Field(description="Search query to filter conversations")
+    limit: int = Field(default=10, ge=1, le=50)
 ```
 
-**Why This Matters**:
-- **Prevents context overflow**: Listing all conversations can consume thousands of tokens
-- **Forces specificity**: Agents must be explicit about what they're looking for
-- **More efficient**: Returns only relevant results
-- **Scalable**: Works with users who have hundreds of conversations
-- **Helpful truncation**: Guides agents to refine queries when needed
+**Benefits**:
+- Prevents context overflow with large conversation lists
+- Forces agents to be specific in requests
+- More token-efficient (agents have limited context)
+- Better UX for users with many conversations
+- Truncation guidance when results exceed limit
 
 ### 3. Response Format Control
 
-<Info>
 **Anthropic Guidance**: "Expose a `response_format` enum parameter allowing agents to request 'concise' or 'detailed' responses"
-</Info>
 
 **Implementation**:
 
@@ -111,26 +83,6 @@ class ChatInput(BaseModel):
     )
 ```
 
-<AccordionGroup>
-  <Accordion title="Concise Mode" icon="bolt">
-    **~500 tokens, 2-5 seconds**
-
-    - Optimized for speed
-    - Minimal context usage
-    - Quick answers
-    - Ideal for follow-up questions
-  </Accordion>
-
-  <Accordion title="Detailed Mode" icon="book">
-    **~2000 tokens, 5-10 seconds**
-
-    - Comprehensive explanations
-    - More context and examples
-    - Better for complex topics
-    - Ideal for learning/research
-  </Accordion>
-</AccordionGroup>
-
 **Benefits**:
 - Balances token efficiency with information needs
 - Agents can optimize for speed vs comprehensiveness
@@ -139,71 +91,58 @@ class ChatInput(BaseModel):
 
 ### 4. Token Limits and Response Optimization
 
-<Info>
 **Anthropic Guidance**: "Restrict responses to ~25,000 tokens. Implement pagination, filtering, and truncation with sensible defaults."
-</Info>
 
 **Implementation**: Created `ResponseOptimizer` utility with:
-
-```python
-from mcp_server_langgraph.utils.response_optimizer import format_response
-
-# Automatic token counting and truncation
-formatted_response = format_response(
-    response_text,
-    format_type=response_format_type  # "concise" or "detailed"
-)
-```
-
-**Features**:
 - Token counting using tiktoken
 - Automatic truncation with helpful messages
 - Format-aware limits (concise: 500, detailed: 2000)
 - High-signal information extraction
 
-**Example Truncation Message**:
+```python
+formatted_response = format_response(
+    response_text,
+    format_type=response_format_type
+)
 ```
-[Response truncated to concise format. Request 'detailed' format for more information.]
-```
+
+**Benefits**:
+- Prevents context overflow
+- Predictable response sizes
+- Helpful truncation messages guide agents
+- Compatible with all major LLM tokenizers
 
 ### 5. Enhanced Tool Descriptions
 
 **Anthropic Guidance**: Provide clear usage guidance including when NOT to use tools, token limits, and expected response times.
 
-<Tabs>
-  <Tab title="Before">
-    ```python
-    description="Chat with the AI agent. The agent can help with questions, research, and problem-solving."
-    ```
+**Before**:
+```python
+description="Chat with the AI agent. The agent can help with questions, research, and problem-solving."
+```
 
-    ❌ No performance info
-    ❌ No token limits
-    ❌ No guidance on when NOT to use
-  </Tab>
+**After**:
+```python
+description=(
+    "Chat with the AI agent for questions, research, and problem-solving. "
+    "Returns responses optimized for agent consumption. "
+    "Response format: 'concise' (~500 tokens, 2-5 sec) or 'detailed' (~2000 tokens, 5-10 sec). "
+    "For specialized tasks like code execution or web search, use dedicated tools instead. "
+    "Rate limit: 60 requests/minute per user."
+)
+```
 
-  <Tab title="After">
-    ```python
-    description=(
-        "Chat with the AI agent for questions, research, and problem-solving. "
-        "Returns responses optimized for agent consumption. "
-        "Response format: 'concise' (~500 tokens, 2-5 sec) or 'detailed' (~2000 tokens, 5-10 sec). "
-        "For specialized tasks like code execution or web search, use dedicated tools instead. "
-        "Rate limit: 60 requests/minute per user."
-    )
-    ```
-
-    ✅ Clear performance expectations
-    ✅ Token limits documented
-    ✅ Guidance on alternatives
-    ✅ Rate limits transparent
-  </Tab>
-</Tabs>
+**Benefits**:
+- Clear expectations on performance
+- Guidance on tool selection
+- Token and rate limit transparency
+- Helps agents make better decisions
 
 ### 6. Unambiguous Parameter Names
 
 **Anthropic Guidance**: "Replace generic names like `user` with specific ones like `user_id`"
 
-✅ **Already Well-Implemented**:
+**Implementation**: Already well-implemented with specific names like:
 - `message` (not `query` or `input`)
 - `thread_id` (not `id` or `conversation`)
 - `username` (not `user`)
@@ -213,26 +152,26 @@ formatted_response = format_response(
 
 **Anthropic Guidance**: "Replace opaque error codes with specific, actionable guidance"
 
-<Tabs>
-  <Tab title="Before">
-    ```python
-    raise PermissionError(f"Not authorized to edit conversation {thread_id}")
-    ```
+**Implementation**:
 
-    ❌ No guidance on what to do next
-  </Tab>
+**Before**:
+```python
+raise PermissionError(f"Not authorized to edit conversation {thread_id}")
+```
 
-  <Tab title="After">
-    ```python
-    raise PermissionError(
-        f"Not authorized to edit conversation '{thread_id}'. "
-        f"Request access from conversation owner or use a different thread_id."
-    )
-    ```
+**After**:
+```python
+raise PermissionError(
+    f"Not authorized to edit conversation '{thread_id}'. "
+    f"Request access from conversation owner or use a different thread_id."
+)
+```
 
-    ✅ Clear next steps for recovery
-  </Tab>
-</Tabs>
+**Benefits**:
+- Clear next steps for agents
+- Reduces retry failures
+- Better debugging
+- Improved user experience
 
 ## Technical Implementation
 
@@ -248,7 +187,9 @@ src/mcp_server_langgraph/
 │   └── server_streamable.py        # Updated: All tool improvements
 ```
 
-### ResponseOptimizer Class
+### Key Components
+
+#### ResponseOptimizer Class
 
 ```python
 class ResponseOptimizer:
@@ -260,7 +201,7 @@ class ResponseOptimizer:
     def extract_high_signal(self, data: dict) -> dict
 ```
 
-### Updated Tool Schemas
+#### Updated Tool Schemas
 
 ```python
 # Agent interaction
@@ -269,7 +210,7 @@ Tool(name="agent_chat", inputSchema=ChatInput.model_json_schema())
 # Conversation retrieval
 Tool(name="conversation_get", inputSchema={...})
 
-# Conversation search (replaces list)
+# Conversation search
 Tool(name="conversation_search", inputSchema=SearchConversationsInput.model_json_schema())
 ```
 
@@ -278,8 +219,7 @@ Tool(name="conversation_search", inputSchema=SearchConversationsInput.model_json
 All old tool names are supported via routing:
 
 ```python
-# Both names work!
-if name == "agent_chat" or name == "chat":
+if name == "agent_chat" or name == "chat":  # Support old name
     return await self._handle_chat(arguments, span, user_id)
 ```
 
@@ -287,49 +227,37 @@ if name == "agent_chat" or name == "chat":
 
 ### Positive
 
-<AccordionGroup>
-  <Accordion title="Better Agent Performance" icon="rocket">
-    - Search-focused tools reduce context waste
-    - Format control allows optimization
-    - Clear descriptions improve tool selection
-    - Measured improvement: 30% reduction in failed tool calls
-  </Accordion>
+1. **Better Agent Performance**
+   - Search-focused tools reduce context waste
+   - Format control allows optimization
+   - Clear descriptions improve tool selection
 
-  <Accordion title="Scalability" icon="chart-line">
-    - Namespacing prevents conflicts as tools grow
-    - Token limits prevent runaway responses
-    - Search approach works with large datasets
-    - Supports users with 1000+ conversations
-  </Accordion>
+2. **Scalability**
+   - Namespacing prevents conflicts as tools grow
+   - Token limits prevent runaway responses
+   - Search approach works with large datasets
 
-  <Accordion title="Improved UX" icon="user">
-    - Actionable error messages
-    - Clear expectations (response times, token counts)
-    - Helpful truncation guidance
-    - Predictable behavior
-  </Accordion>
+3. **Improved UX**
+   - Actionable error messages
+   - Clear expectations (response times, token counts)
+   - Helpful truncation guidance
 
-  <Accordion title="Industry Alignment" icon="shield-check">
-    - Follows Anthropic's published best practices
-    - Positions codebase as reference implementation
-    - Easier onboarding for developers familiar with guidelines
-    - Future-proof design patterns
-  </Accordion>
+4. **Industry Alignment**
+   - Follows Anthropic's published best practices
+   - Positions codebase as reference implementation
+   - Easier onboarding for developers familiar with guidelines
 
-  <Accordion title="Observability" icon="chart-bar">
-    - Format type tracked in metrics
-    - Token counts logged
-    - Search patterns monitored
-    - Performance regression detection
-  </Accordion>
-</AccordionGroup>
+5. **Observability**
+   - Format type tracked in metrics
+   - Token counts logged
+   - Search patterns monitored
 
 ### Negative
 
 1. **Breaking Changes (Mitigated)**
-   - Tool names changed → Backward compatibility added
-   - New required parameters → Defaults provided
-   - Migration path: Old names work, deprecation warnings logged
+   - Tool names changed (backward compatibility added)
+   - New required parameters (defaults provided)
+   - Migration path: old names work, deprecation warnings logged
 
 2. **Increased Complexity**
    - More code for response optimization
@@ -343,25 +271,25 @@ if name == "agent_chat" or name == "chat":
 
 ### Mitigation Strategies
 
-**Backward Compatibility**:
-- Support old tool names indefinitely
-- Default values for new parameters
-- Gradual deprecation warnings
+1. **Backward Compatibility**
+   - Support old tool names indefinitely
+   - Default values for new parameters
+   - Gradual deprecation warnings
 
-**Documentation**:
-- Update tool documentation with examples
-- Create migration guide
-- Document performance characteristics
+2. **Documentation**
+   - Update tool documentation with examples
+   - Create migration guide
+   - Document performance characteristics
 
-**Testing**:
-- Add tests for response optimization
-- Validate token counting accuracy
-- Test backward compatibility
+3. **Testing**
+   - Add tests for response optimization
+   - Validate token counting accuracy
+   - Test backward compatibility
 
-**Monitoring**:
-- Track tool usage by name (old vs new)
-- Monitor truncation frequency
-- Alert on token limit breaches
+4. **Monitoring**
+   - Track tool usage by name (old vs new)
+   - Monitor truncation frequency
+   - Alert on token limit breaches
 
 ## Metrics
 
@@ -386,33 +314,27 @@ Track the following to measure success:
 
 ### For Tool Developers
 
-<Steps>
-  <Step title="Add Response Format Control">
-    ```python
-    response_format: Literal["concise", "detailed"] = Field(default="concise")
-    ```
-  </Step>
+1. **Add Response Format Control**:
+   ```python
+   response_format: Literal["concise", "detailed"] = Field(default="concise")
+   ```
 
-  <Step title="Apply Response Formatting">
-    ```python
-    from mcp_server_langgraph.utils.response_optimizer import format_response
-    formatted = format_response(text, format_type=response_format_type)
-    ```
-  </Step>
+2. **Apply Response Formatting**:
+   ```python
+   from mcp_server_langgraph.utils.response_optimizer import format_response
+   formatted = format_response(text, format_type=response_format_type)
+   ```
 
-  <Step title="Use Search-Focused Patterns">
-    - Add `query` and `limit` parameters
-    - Filter before returning
-    - Provide helpful truncation messages
-  </Step>
+3. **Use Search-Focused Patterns**:
+   - Add `query` and `limit` parameters
+   - Filter before returning
+   - Provide helpful truncation messages
 
-  <Step title="Enhance Descriptions">
-    - Include token limits
-    - Document response times
-    - Specify when NOT to use
-    - Provide usage examples
-  </Step>
-</Steps>
+4. **Enhance Descriptions**:
+   - Include token limits
+   - Document response times
+   - Specify when NOT to use
+   - Provide usage examples
 
 ### For Tool Users (Agents)
 
@@ -439,9 +361,9 @@ conversations = await client.call_tool("conversation_search", {
 
 ## Related ADRs
 
-- [ADR-0004: MCP StreamableHTTP Transport](/architecture/adr-0004-mcp-streamable-http)
-- [ADR-0017: Error Handling Strategy](/architecture/adr-0017-error-handling-strategy)
-- [ADR-0003: Dual Observability Strategy](/architecture/adr-0003-dual-observability)
+- [0004: MCP StreamableHTTP Transport](0004-mcp-streamable-http.md)
+- [0017: Error Handling Strategy](0017-error-handling-strategy.md)
+- [0003: Dual Observability Strategy](0003-dual-observability.md)
 
 ## References
 
@@ -450,34 +372,19 @@ conversations = await client.call_tool("conversation_search", {
 - [tiktoken Documentation](https://github.com/openai/tiktoken)
 - [Pydantic Field Validation](https://docs.pydantic.dev/latest/concepts/fields/)
 
-## Implementation Status
+## Implementation Checklist
 
-<Steps>
-  <Step title="Core Implementation">
-    ✅ ResponseOptimizer utility module
-    ✅ ChatInput with response_format parameter
-    ✅ SearchConversationsInput schema
-    ✅ Tool namespacing with backward compat
-    ✅ Enhanced tool descriptions
-  </Step>
-
-  <Step title="Integration">
-    ✅ conversation_search handler
-    ✅ agent_chat using format_response
-    ✅ Applied to both server_stdio and server_streamable
-    ✅ Tool documentation updated
-  </Step>
-
-  <Step title="Testing">
-    ✅ ResponseOptimizer tests
-    ✅ Integration tests for new parameters
-    ⏳ Metrics dashboards (pending)
-    ⏳ Migration guide for existing integrations (pending)
-  </Step>
-</Steps>
-
----
-
-<Check>
-**Implementation Complete**: Tools now follow Anthropic's best practices for optimal agent performance!
-</Check>
+- [x] Create ResponseOptimizer utility module
+- [x] Update ChatInput with response_format parameter
+- [x] Create SearchConversationsInput schema
+- [x] Rename tools with namespacing (with backward compat)
+- [x] Enhance tool descriptions
+- [x] Implement conversation_search handler
+- [x] Update agent_chat to use format_response
+- [x] Apply changes to both server_stdio and server_streamable
+- [ ] Update tool documentation (docs/api-reference/mcp/tools.mdx)
+- [ ] Add tests for ResponseOptimizer
+- [ ] Add integration tests for new tool parameters
+- [ ] Update examples to use new tool names
+- [ ] Add metrics dashboards for new tracking
+- [ ] Create migration guide for existing integrations

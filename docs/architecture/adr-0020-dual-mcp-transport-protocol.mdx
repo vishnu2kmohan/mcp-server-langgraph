@@ -93,7 +93,7 @@ Both share the same underlying agent logic, differing only in transport layer.
 
 from mcp import Server, stdio_server
 
-app = Server("mcp-server-langgraph")
+app = Server("langgraph-agent")
 
 @app.list_tools()
 async def list_tools():
@@ -275,7 +275,7 @@ agent_graph = graph.compile()
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "mcp-server-langgraph": {
+    "langgraph-agent": {
       "command": "mcp-server-langgraph",
       "env": {
         "ANTHROPIC_API_KEY": "sk-..."
@@ -440,7 +440,7 @@ eventSource.onmessage = (event) => {
 cat > ~/.config/claude/claude_desktop_config.json <<EOF
 {
   "mcpServers": {
-    "mcp-server-langgraph": {
+    "langgraph-agent": {
       "command": "mcp-server-langgraph"
     }
   }
@@ -465,7 +465,7 @@ spec:
     spec:
       containers:
       - name: mcp
-        image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.4.0
+        image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
         command: ["mcp-server-langgraph-http"]
         ports:
         - containerPort: 8000
@@ -495,7 +495,7 @@ version: '3.8'
 
 services:
   mcp-server:
-    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.4.0
+    image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
     command: mcp-server-langgraph-http
     ports:
       - "8000:8000"
@@ -511,7 +511,7 @@ services:
 ```bash
 # Deploy to Google Cloud Run
 gcloud run deploy mcp-server \
-  --image ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.4.0 \
+  --image ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0 \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \

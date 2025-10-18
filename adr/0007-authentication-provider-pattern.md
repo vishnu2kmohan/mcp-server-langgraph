@@ -259,8 +259,9 @@ async def sync_user_to_openfga(user_info: KeycloakUser, config) -> None:
 ## References
 
 - Implementation: `src/mcp_server_langgraph/auth/user_provider.py:1-400`
+- Factory Pattern: `src/mcp_server_langgraph/auth/factory.py:1-188` (recommended for production)
 - Keycloak Client: `src/mcp_server_langgraph/auth/keycloak.py:1-650`
-- Tests: `tests/test_user_provider.py`, `tests/test_keycloak.py`
+- Tests: `tests/test_user_provider.py`, `tests/test_keycloak.py`, `tests/test_auth_factory.py`
 - AuthMiddleware: `src/mcp_server_langgraph/auth/middleware.py`
 - Related ADRs:
   - [ADR-0006](0006-session-storage-architecture.md) - Session storage (used with auth)
