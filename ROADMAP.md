@@ -21,7 +21,9 @@ Build the **most production-ready, enterprise-grade MCP server** with LangGraph,
 - ✅ **Complete Documentation**: 95 MDX files, 22 ADRs
 
 ### Known Limitations
-- 🟡 30 TODOs in production code (alerting, Prometheus queries, storage backends)
+- ✅ TODOs in production code: 9 resolved, 19 integration placeholders (non-blocking)
+  - See: [TODO Analysis Report](reports/TODO_ANALYSIS_V2.7.0.md)
+  - Deferred to v2.8.0: Storage backends, Prometheus queries, SIEM integration
 - ✅ CI/CD pipeline (fixed: action versions standardized, benchmark updated to v1.20.7)
 - 🟡 No rate limiting or circuit breaker patterns
 - 🟡 Limited performance optimization (no caching, connection pooling)
