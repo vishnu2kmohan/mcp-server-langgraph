@@ -15,21 +15,21 @@ mcp==1.18.0
 # Authentication
 PyJWT==2.10.1
 cryptography==46.0.3
+bcrypt==4.3.0  # Password hashing for InMemoryUserProvider
 
 # OpenTelemetry Core
-# NOTE: All OpenTelemetry packages pinned to 1.37.0 due to logfire dependency conflict (via pydantic-ai)
-# logfire requires opentelemetry-exporter-otlp-proto-http<1.38.0
+# Pinned to 1.38.0 (matches pyproject.toml requirements)
 # OpenTelemetry exporters require SDK version match (~=)
-opentelemetry-api==1.37.0
-opentelemetry-sdk==1.37.0
+opentelemetry-api==1.38.0
+opentelemetry-sdk==1.38.0
 
 # OpenTelemetry Instrumentation
-# Must match SDK version (0.58b0 for SDK 1.37.0)
-opentelemetry-instrumentation-logging==0.58b0
+# Must match SDK version (0.59b0 for SDK 1.38.0)
+opentelemetry-instrumentation-logging==0.59b0
 
 # OpenTelemetry Exporters
-opentelemetry-exporter-otlp-proto-grpc==1.37.0
-opentelemetry-exporter-otlp-proto-http==1.37.0
+opentelemetry-exporter-otlp-proto-grpc==1.38.0
+opentelemetry-exporter-otlp-proto-http==1.38.0
 
 # Fine-grained Authorization
 openfga-sdk==0.9.7

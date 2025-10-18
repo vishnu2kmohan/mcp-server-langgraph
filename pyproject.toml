@@ -34,6 +34,7 @@ dependencies = [
     "mcp>=1.18.0",
     "PyJWT>=2.8.0",
     "cryptography>=46.0.3",
+    "bcrypt>=4.0.0",  # Password hashing for InMemoryUserProvider (production security)
     "opentelemetry-api>=1.38.0",
     "opentelemetry-sdk>=1.38.0",
     "opentelemetry-instrumentation-logging>=0.59b0",
