@@ -418,7 +418,7 @@ class Settings(BaseSettings):
                     self.aws_secret_access_key = secrets_mgr.get_secret("AWS_SECRET_ACCESS_KEY", fallback=None)
 
         # Load OpenFGA configuration (if any OpenFGA settings are configured)
-        if (self.openfga_api_url and self.openfga_api_url != "http://localhost:8080"):
+        if self.openfga_api_url and self.openfga_api_url != "http://localhost:8080":
             if not self.openfga_store_id:
                 self.openfga_store_id = secrets_mgr.get_secret("OPENFGA_STORE_ID", fallback=None)
             if not self.openfga_model_id:

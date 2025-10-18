@@ -95,5 +95,5 @@ fastapi==0.119.0
 uvicorn[standard]==0.37.0
 
 # Additional runtime dependencies
-python-multipart==0.0.6  # For FastAPI file uploads
+python-multipart==0.0.20  # For FastAPI file uploads (FastAPI 0.119.0 requires >=0.0.17, MCP 1.18.0 requires >=0.0.9)
 email-validator==2.1.0.post1  # For pydantic email validation

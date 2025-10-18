@@ -180,7 +180,6 @@ async def get_user_data(
 
 
 @router.get("/me/export")
-
 async def export_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
@@ -218,7 +217,6 @@ async def export_user_data(
                 "user_id": user_id,
                 "format": format,
                 "size_bytes": len(data_bytes),
-                
                 "gdpr_article": "20",
             },
         )
@@ -231,7 +229,6 @@ async def export_user_data(
 
 
 @router.patch("/me")
-
 async def update_user_profile(
     profile_update: UserProfileUpdate,
     user: Dict[str, Any] = Depends(get_current_user),
@@ -264,7 +261,6 @@ async def update_user_profile(
             extra={
                 "user_id": user_id,
                 "fields_updated": list(update_data.keys()),
-                
                 "gdpr_article": "16",
             },
         )
@@ -284,7 +280,6 @@ async def update_user_profile(
 
 
 @router.delete("/me")
-
 async def delete_user_account(
     user: Dict[str, Any] = Depends(get_current_user),
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
@@ -330,7 +325,6 @@ async def delete_user_account(
             extra={
                 "user_id": user_id,
                 "username": username,
-                
                 "gdpr_article": "17",
             },
         )
@@ -375,7 +369,6 @@ async def delete_user_account(
 
 
 @router.post("/me/consent")
-
 async def update_consent(
     consent: ConsentRecord,
     user: Dict[str, Any] = Depends(get_current_user),
@@ -426,7 +419,6 @@ async def update_consent(
 
 
 @router.get("/me/consent")
-
 async def get_consent_status(user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get current consent status (GDPR Article 21 - Right to Object)

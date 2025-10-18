@@ -8,7 +8,7 @@ Tests all GDPR endpoints through FastAPI test client to ensure:
 """
 
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -44,9 +44,10 @@ def test_app(mock_get_current_user):
     os.environ["GDPR_STORAGE_BACKEND"] = "memory"
 
     # Import after setting env vars
+    from fastapi import FastAPI
+
     from mcp_server_langgraph.api.gdpr import router
     from mcp_server_langgraph.auth.middleware import get_current_user
-    from fastapi import FastAPI
 
     app = FastAPI()
     app.include_router(router)
@@ -97,8 +98,9 @@ class TestGDPREndpoints:
     def test_get_user_data_unauthorized(self, test_app):
         """Test GET /api/v1/users/me/data without auth fails."""
         # Create client without dependency override
-        from mcp_server_langgraph.auth.middleware import get_current_user
         from fastapi import FastAPI
+
+        from mcp_server_langgraph.auth.middleware import get_current_user
 
         app = FastAPI()
         from mcp_server_langgraph.api.gdpr import router
