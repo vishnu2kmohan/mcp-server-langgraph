@@ -404,12 +404,30 @@ class AlertingService:
 
     def _load_config_from_settings(self) -> AlertingConfig:
         """Load configuration from application settings"""
-        # TODO: Add alerting configuration to settings
-        return AlertingConfig(
-            enabled=getattr(settings, "alerting_enabled", True),
-            providers=getattr(settings, "alerting_providers", {}),
-            routing_rules=getattr(settings, "alerting_routing_rules", []),
-        )
+        # Load provider configurations from settings
+        providers = {}
+
+        if settings.pagerduty_integration_key:
+            providers["pagerduty"] = {"integration_key": settings.pagerduty_integration_key}
+
+        if settings.slack_webhook_url:
+            providers["slack"] = {"webhook_url": settings.slack_webhook_url}
+
+        if settings.opsgenie_api_key:
+            providers["opsgenie"] = {"api_key": settings.opsgenie_api_key}
+
+        if settings.email_smtp_host and settings.email_from_address:
+            providers["email"] = {
+                "smtp_host": settings.email_smtp_host,
+                "smtp_port": settings.email_smtp_port,
+                "from_address": settings.email_from_address,
+                "to_addresses": settings.email_to_addresses.split(",") if settings.email_to_addresses else [],
+            }
+
+        # Enabled if at least one provider is configured
+        enabled = len(providers) > 0
+
+        return AlertingConfig(enabled=enabled, providers=providers, routing_rules=[])
 
     async def initialize(self) -> None:
         """Initialize alerting providers"""

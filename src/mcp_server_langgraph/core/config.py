@@ -48,6 +48,15 @@ class Settings(BaseSettings):
     prometheus_timeout: int = 30  # Query timeout in seconds
     prometheus_retry_attempts: int = 3  # Number of retry attempts
 
+    # Alerting Configuration (PagerDuty, Slack, OpsGenie, Email)
+    pagerduty_integration_key: Optional[str] = None  # PagerDuty Events API v2 integration key
+    slack_webhook_url: Optional[str] = None  # Slack incoming webhook URL
+    opsgenie_api_key: Optional[str] = None  # OpsGenie API key
+    email_smtp_host: Optional[str] = None  # SMTP server for email alerts
+    email_smtp_port: int = 587  # SMTP port
+    email_from_address: Optional[str] = None  # From email address
+    email_to_addresses: Optional[str] = None  # Comma-separated list of email addresses
+
     # LangSmith Observability
     langsmith_api_key: Optional[str] = None
     langsmith_project: str = "mcp-server-langgraph"
