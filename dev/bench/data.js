@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760796733047,
+  "lastUpdate": 1760797487814,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -2348,6 +2348,86 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00015865800455313236",
             "extra": "mean: 86.71462002401786 usec\nrounds: 3366"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d2133d7e03dc66f39b46f751af7da9e0a6678902",
+          "message": "fix: resolve GDPR integration test failures\n\n**Issue**: 5 GDPR integration tests failing due to improper mocking\n- test_get_user_data_success: MagicMock can't be serialized by FastAPI\n- test_export_user_data_csv: Content-type assertion too strict\n- Other tests: Endpoints work correctly, tests needed proper mocking\n\n**Root Cause**:\n- Tests were using MagicMock() to mock DataExportService return values\n- FastAPI requires actual Pydantic models for JSON serialization\n- MagicMock.model_dump() doesn't work the same as Pydantic models\n\n**Changes**:\n- Updated test_get_user_data_success to return actual UserDataExport model\n- Fixed test_export_user_data_csv to accept \"text/csv\" with optional charset\n- Updated CHANGELOG with comprehensive test fix documentation\n\n**Impact**:\n- ✅ All 5 failing GDPR tests now pass\n- ✅ No changes to production code (GDPR endpoints work correctly)\n- ✅ Test coverage maintained\n- ✅ CI/CD Pipeline expected to pass\n\n**Files Modified**:\n- tests/integration/test_gdpr_endpoints.py (test mocking fixes)\n- CHANGELOG.md (documented fixes)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T10:21:56-04:00",
+          "tree_id": "74a75160f894814d371058c082a02efeb73f46e2",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d2133d7e03dc66f39b46f751af7da9e0a6678902"
+        },
+        "date": 1760797487284,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37801.67662336207,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031173805442344144",
+            "extra": "mean: 26.45385309131985 usec\nrounds: 4901"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32718.412987328946,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032315991436105575",
+            "extra": "mean: 30.563829620564906 usec\nrounds: 6644"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 30704.899454003527,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031446841525512027",
+            "extra": "mean: 32.568092316928684 usec\nrounds: 14981"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1965914.2716838853,
+            "unit": "iter/sec",
+            "range": "stddev: 4.54440446555854e-8",
+            "extra": "mean: 508.66917973155535 nsec\nrounds: 95786"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3003.6903364992368,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003557315442624004",
+            "extra": "mean: 332.9237997168135 usec\nrounds: 2831"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3015.6944542896936,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012079836241894515",
+            "extra": "mean: 331.5985804123968 usec\nrounds: 1940"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 41156.653222878835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003152067603685726",
+            "extra": "mean: 24.297408114907252 usec\nrounds: 7591"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12056.744494878258,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009137962967428036",
+            "extra": "mean: 82.94112896103944 usec\nrounds: 3629"
           }
         ]
       }
