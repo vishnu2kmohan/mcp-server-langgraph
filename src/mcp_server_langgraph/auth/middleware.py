@@ -240,9 +240,40 @@ class AuthMiddleware:
             if relation == "executor" and resource.startswith("tool:"):
                 return "premium" in user["roles"] or "user" in user["roles"]
 
-            if relation == "viewer" and resource.startswith("conversation:"):
-                # Users can view their own conversations
-                return True
+            if relation in ("viewer", "editor") and resource.startswith("conversation:"):
+                # SECURITY: Scope conversation access by ownership in fallback mode
+                # Extract thread_id from resource (format: "conversation:thread_id")
+                thread_id = resource.split(":", 1)[1] if ":" in resource else ""
+
+                # Allow access only if:
+                # 1. Thread is the default/unnamed thread
+                # 2. Thread explicitly belongs to this user (prefixed with username)
+                # 3. User is accessing their own user-scoped conversations
+                if thread_id == "default" or thread_id == "":
+                    return True
+
+                # Check if conversation belongs to this user
+                # Format: "conversation:username_thread" or "conversation:user:username_thread"
+                if thread_id.startswith(f"{username}_"):
+                    return True
+
+                # Also support user:username prefix in thread_id
+                user_id_normalized = user_id.split(":")[-1] if ":" in user_id else user_id
+                if thread_id.startswith(f"{user_id_normalized}_"):
+                    return True
+
+                # Deny access to conversations not owned by this user
+                logger.warning(
+                    "Fallback authorization denied conversation access",
+                    extra={
+                        "user_id": user_id,
+                        "username": username,
+                        "thread_id": thread_id,
+                        "relation": relation,
+                        "reason": "conversation_not_owned_by_user",
+                    },
+                )
+                return False
 
             return False
 
@@ -251,15 +282,19 @@ class AuthMiddleware:
         Get mock resources for development/testing when OpenFGA is not available.
 
         Provides sample data to enable development and testing without authorization infrastructure.
+        Resources are scoped per user to maintain proper RBAC semantics.
 
         Args:
-            user_id: User identifier
+            user_id: User identifier (used to scope conversation resources)
             relation: Relation to check (e.g., "executor", "viewer")
             resource_type: Type of resources (e.g., "tool", "conversation")
 
         Returns:
-            List of mock resource identifiers
+            List of mock resource identifiers scoped to the user
         """
+        # Extract username from user_id (handle both "user:alice" and "alice" formats)
+        username = user_id.split(":")[-1] if ":" in user_id else user_id
+
         # Mock data for different resource types
         mock_data = {
             "tool": [
@@ -268,10 +303,11 @@ class AuthMiddleware:
                 "tool:conversation_search",
             ],
             "conversation": [
-                "conversation:demo_thread_1",
-                "conversation:demo_thread_2",
-                "conversation:demo_thread_3",
-                "conversation:sample_conversation",
+                # User-scoped conversations to maintain RBAC semantics
+                f"conversation:{username}_demo_thread_1",
+                f"conversation:{username}_demo_thread_2",
+                f"conversation:{username}_demo_thread_3",
+                f"conversation:{username}_sample_conversation",
             ],
             "user": [
                 "user:alice",
@@ -297,19 +333,25 @@ class AuthMiddleware:
         """
         if not self.openfga:
             # In development mode, return mock data for better developer experience
+            # SECURITY: Mock data only enabled when explicitly configured (defaults to dev-only)
             try:
                 from mcp_server_langgraph.core.config import settings
 
-                if settings.environment == "development" and getattr(settings, "enable_mock_authorization", True):
+                if settings.get_mock_authorization_enabled():
                     logger.info(
-                        "OpenFGA not available, using mock resources (development mode)",
-                        extra={"user_id": user_id, "relation": relation, "resource_type": resource_type},
+                        "OpenFGA not available, using mock resources",
+                        extra={
+                            "user_id": user_id,
+                            "relation": relation,
+                            "resource_type": resource_type,
+                            "environment": settings.environment,
+                        },
                     )
                     return self._get_mock_resources(user_id, relation, resource_type)
             except Exception:
                 pass  # If settings not available, fall through to empty list
 
-            logger.warning("OpenFGA not available for resource listing")
+            logger.warning("OpenFGA not available for resource listing, no mock data enabled")
             return []
 
         try:
@@ -545,6 +587,7 @@ def require_auth(
         async def wrapper(*args, **kwargs):
             auth = AuthMiddleware(openfga_client=openfga_client)
             username = kwargs.get("username")
+            password = kwargs.get("password")
             user_id = kwargs.get("user_id")
 
             if not username and not user_id:
@@ -552,7 +595,7 @@ def require_auth(
 
             # Authenticate
             if username:
-                auth_result = await auth.authenticate(username)
+                auth_result = await auth.authenticate(username, password)
                 if not auth_result.authorized:
                     raise PermissionError("Authentication failed")
                 user_id = auth_result.user_id

@@ -58,13 +58,13 @@ async def test_authenticate_accepts_both_formats():
     auth = AuthMiddleware(secret_key="test-secret")
 
     # Test with plain username
-    result1 = await auth.authenticate("alice")
+    result1 = await auth.authenticate("alice", "alice123")
     assert result1.authorized is True
     # InMemoryUserProvider returns user_id with "user:" prefix for OpenFGA compatibility
     assert result1.user_id == "user:alice"
 
     # Test with prefixed format - normalization strips prefix, then provider adds it back
-    result2 = await auth.authenticate("user:alice")
+    result2 = await auth.authenticate("user:alice", "alice123")
     assert result2.authorized is True
     assert result2.user_id == "user:alice"
 

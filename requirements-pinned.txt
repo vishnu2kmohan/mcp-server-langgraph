@@ -81,7 +81,7 @@ openfga-sdk==0.9.7
 # infisical-python==2.3.5  # Uncomment for local installation with wheels
 
 # Utilities
-python-dotenv==1.0.1
+python-dotenv==1.1.1
 pydantic==2.12.3
 pydantic-settings==2.11.0
 httpx==0.28.1

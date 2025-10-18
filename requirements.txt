@@ -1,9 +1,10 @@
 # LangGraph and LangChain
 langgraph>=1.0.0
+langgraph-checkpoint-redis>=0.1.2  # Redis checkpointer for distributed conversation state
 langchain-core>=1.0.0
 
 # LangSmith for observability
-langsmith>=0.1.0
+langsmith>=0.4.37
 
 # LangGraph CLI for platform deployment
 langgraph-cli>=0.1.0
@@ -17,15 +18,15 @@ mcp>=1.18.0
 # Authentication
 PyJWT>=2.8.0
 cryptography>=46.0.3
-python-keycloak>=3.9.0
-authlib>=1.3.0
+python-keycloak>=5.8.1
+authlib>=1.6.5
 
 # OpenTelemetry Core
 opentelemetry-api>=1.38.0
 opentelemetry-sdk>=1.38.0
 
 # OpenTelemetry Instrumentation
-opentelemetry-instrumentation-logging>=0.42b0
+opentelemetry-instrumentation-logging>=0.59b0
 
 # OpenTelemetry Exporters
 opentelemetry-exporter-otlp-proto-grpc>=1.38.0
@@ -38,16 +39,26 @@ openfga-sdk>=0.5.0
 infisical-python>=2.1.0
 
 # Utilities
-python-dotenv>=1.0.0
+python-dotenv>=1.1.1
 pydantic>=2.12.3
 pydantic-ai>=1.0.0
 httpx>=0.28.1
+pyyaml>=6.0.3
 
 # Health checks and API
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
-pydantic-settings>=2.0.0
+pydantic-settings>=2.11.0
+
+# Session management and caching
+redis[hiredis]>=6.4.0  # Redis for sessions and conversation checkpoints
+
+# Scheduling and background tasks
+apscheduler>=3.11.0
+
+# Logging
+python-json-logger>=4.0.0
 
 # Embeddings (Anthropic Best Practices - Just-in-Time Context Loading)
 qdrant-client>=1.15.1
-langchain-google-genai>=0.2.0
+langchain-google-genai>=3.0.0
