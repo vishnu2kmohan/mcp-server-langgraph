@@ -134,10 +134,13 @@ def _create_checkpointer() -> BaseCheckpointSaver:
 
             # Create Redis checkpointer with TTL
             # Note: RedisSaver.from_conn_string expects redis_url (not conn_string)
-            # and ttl as optional parameter (changed in langgraph-checkpoint-redis 0.1.2+)
-            checkpointer = RedisSaver.from_conn_string(
+            # and returns a context manager in langgraph-checkpoint-redis 0.1.2+
+            checkpointer_ctx = RedisSaver.from_conn_string(
                 redis_url=settings.checkpoint_redis_url,
             )
+
+            # Enter the context manager to get the actual RedisSaver instance
+            checkpointer = checkpointer_ctx.__enter__()
 
             logger.info("Redis checkpointer initialized successfully")
             return checkpointer
