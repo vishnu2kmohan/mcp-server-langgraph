@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     jwt_secret_key: Optional[str] = None
     jwt_algorithm: str = "HS256"
     jwt_expiration_seconds: int = 3600
-    use_password_hashing: bool = False  # Enable bcrypt password hashing for InMemoryUserProvider
+    use_password_hashing: bool = True  # Enable bcrypt password hashing for InMemoryUserProvider (default: secure)
 
     # HIPAA Compliance (only required if processing PHI)
     hipaa_integrity_secret: Optional[str] = None

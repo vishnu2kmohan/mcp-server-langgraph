@@ -253,14 +253,18 @@ class InMemoryUserProvider(UserProvider):
 
         # Check bcrypt availability if hashing requested
         if use_password_hashing and not BCRYPT_AVAILABLE:
-            logger.error(
-                "Password hashing requested but bcrypt not available. "
-                "Install bcrypt: pip install bcrypt. "
-                "Falling back to PLAINTEXT passwords (INSECURE)."
+            # SECURITY: Fail-closed pattern - refuse to start with insecure config
+            raise RuntimeError(
+                "CRITICAL SECURITY ERROR: Password hashing requested (use_password_hashing=True) "
+                "but bcrypt library is not available. "
+                "This would result in INSECURE plaintext passwords. "
+                "\n\nTo fix:\n"
+                "1. Install bcrypt: pip install bcrypt\n"
+                "2. Or disable password hashing: USE_PASSWORD_HASHING=false (NOT recommended for production)\n"
+                "\nRefusing to start with insecure configuration."
             )
-            self.use_password_hashing = False
-        else:
-            self.use_password_hashing = use_password_hashing and BCRYPT_AVAILABLE
+
+        self.use_password_hashing = use_password_hashing and BCRYPT_AVAILABLE
 
         # Initialize users with hashed or plaintext passwords
         self._init_users()
