@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760823387173,
+  "lastUpdate": 1760823727690,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3832,6 +3832,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00016280622890448772",
             "extra": "mean: 87.71549314204324 usec\nrounds: 3281"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a4e2ca238ec355d9634799f09741b16dc49064be",
+          "message": "fix(alerting): correct Alert instantiation parameters across all modules\n\nFix Alert model parameter names to match dataclass definition:\n- 'message' → 'description'\n- 'tags' → removed (not in Alert model)\n- Added 'category' field (required)\n\nFixed in:\n- src/mcp_server_langgraph/monitoring/sla.py\n- src/mcp_server_langgraph/schedulers/compliance.py (3 instances)\n- src/mcp_server_langgraph/schedulers/cleanup.py\n- src/mcp_server_langgraph/auth/hipaa.py (2 instances)\n\nAll Alert instantiations now use correct parameters:\n- title, description, severity, category, source, metadata\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T17:38:18-04:00",
+          "tree_id": "f531e535fbb749cf10619c63f71202900a50b730",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a4e2ca238ec355d9634799f09741b16dc49064be"
+        },
+        "date": 1760823726762,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37175.63074741368,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027733742946361723",
+            "extra": "mean: 26.899341850966987 usec\nrounds: 5166"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32779.78514683048,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003034924874190019",
+            "extra": "mean: 30.506606297774695 usec\nrounds: 6637"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 30689.04144670272,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005608621600787342",
+            "extra": "mean: 32.584921289792895 usec\nrounds: 15195"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.63785759282646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027142256696371203",
+            "extra": "mean: 5.301162835290959 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.346307256530686,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008264459155476439",
+            "extra": "mean: 51.689450949996285 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.946416703720365,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042789956510992",
+            "extra": "mean: 100.53871959999015 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1976352.052001112,
+            "unit": "iter/sec",
+            "range": "stddev: 6.555262017571123e-8",
+            "extra": "mean: 505.98272660352796 nsec\nrounds: 97381"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3979.327359022298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015239341628224524",
+            "extra": "mean: 251.29875222070078 usec\nrounds: 2139"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3027.1351562004297,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008563466404413708",
+            "extra": "mean: 330.34534251029953 usec\nrounds: 2797"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3008.9453365246736,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000245686282204417",
+            "extra": "mean: 332.34236191043544 usec\nrounds: 1633"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40673.43750190272,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026725799755030058",
+            "extra": "mean: 24.586070453308 usec\nrounds: 7764"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11555.625323012433,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001684918118314723",
+            "extra": "mean: 86.53793905973669 usec\nrounds: 3085"
           }
         ]
       }
