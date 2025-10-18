@@ -19,7 +19,7 @@ from typing import Dict, Optional
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
-from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
+from mcp_server_langgraph.integrations.alerting import Alert, AlertCategory, AlertSeverity, AlertingService
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -212,10 +212,10 @@ class HIPAAControls:
 
                 alert = Alert(
                     title="HIPAA: Emergency Access Granted",
-                    message=f"Emergency PHI access granted to {user_id} by {approver_id}",
+                    description=f"Emergency PHI access granted to {user_id} by {approver_id}",
                     severity=AlertSeverity.CRITICAL,
+                    category=AlertCategory.SECURITY,
                     source="hipaa_emergency_access",
-                    tags=["hipaa", "emergency-access", "phi", "security"],
                     metadata={
                         "grant_id": grant.grant_id,
                         "user_id": user_id,
@@ -353,10 +353,10 @@ class HIPAAControls:
 
                 alert = Alert(
                     title=f"HIPAA: PHI Access {action.upper()}",
-                    message=f"PHI access {action} by {user_id}: {resource_type}/{resource_id}",
+                    description=f"PHI access {action} by {user_id}: {resource_type}/{resource_id}",
                     severity=alert_severity,
+                    category=AlertCategory.SECURITY,
                     source="hipaa_audit",
-                    tags=["hipaa", "phi-access", "audit", "siem"],
                     metadata=log_entry.model_dump(),
                 )
 

@@ -532,12 +532,14 @@ class SLAMonitor:
             # Map severity string to AlertSeverity enum
             alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING
 
+            from mcp_server_langgraph.integrations.alerting import AlertCategory
+
             alert = Alert(
                 title=f"SLA {severity.upper()}: {message}",
-                message=message,
+                description=message,
                 severity=alert_severity,
+                category=AlertCategory.SLA,
                 source="sla_monitor",
-                tags=["sla", "monitoring", severity],
                 metadata=details,
             )
 

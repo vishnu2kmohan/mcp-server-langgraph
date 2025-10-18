@@ -13,7 +13,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.core.compliance.retention import DataRetentionService
-from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
+from mcp_server_langgraph.integrations.alerting import Alert, AlertCategory, AlertSeverity, AlertingService
 from mcp_server_langgraph.observability.telemetry import logger
 
 
@@ -190,10 +190,10 @@ class CleanupScheduler:
 
             alert = Alert(
                 title=title,
-                message=f"Data retention cleanup processed {len(results)} data types, deleted {total_deleted} records",
+                description=f"Data retention cleanup processed {len(results)} data types, deleted {total_deleted} records",
                 severity=severity,
+                category=AlertCategory.INFRASTRUCTURE,
                 source="cleanup_scheduler",
-                tags=["cleanup", "retention", "data-governance"],
                 metadata={
                     "results_count": len(results),
                     "total_deleted": total_deleted,

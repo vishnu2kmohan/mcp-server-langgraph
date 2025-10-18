@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.core.compliance.evidence import EvidenceCollector
-from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
+from mcp_server_langgraph.integrations.alerting import Alert, AlertCategory, AlertSeverity, AlertingService
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -431,10 +431,10 @@ class ComplianceScheduler:
 
             alert = Alert(
                 title=f"Compliance {severity.upper()}: {message}",
-                message=message,
+                description=message,
                 severity=alert_severity,
+                category=AlertCategory.COMPLIANCE,
                 source="compliance_scheduler",
-                tags=["compliance", "soc2", severity],
                 metadata=details,
             )
 
@@ -463,10 +463,10 @@ class ComplianceScheduler:
 
             alert = Alert(
                 title="Weekly Access Review Ready",
-                message=f"Access review {report.review_id} has been generated",
+                description=f"Access review {report.review_id} has been generated",
                 severity=AlertSeverity.INFO,
+                category=AlertCategory.COMPLIANCE,
                 source="compliance_scheduler",
-                tags=["compliance", "access-review", "security"],
                 metadata={
                     "review_id": report.review_id,
                     "total_users": report.total_users,
@@ -500,10 +500,10 @@ class ComplianceScheduler:
 
             alert = Alert(
                 title="Monthly SOC 2 Compliance Report Ready",
-                message=f"Compliance report {report.report_id} has been generated",
+                description=f"Compliance report {report.report_id} has been generated",
                 severity=AlertSeverity.INFO,
+                category=AlertCategory.COMPLIANCE,
                 source="compliance_scheduler",
-                tags=["compliance", "soc2", "monthly-report"],
                 metadata={
                     "report_id": report.report_id,
                     "generated_at": report.generated_at,
