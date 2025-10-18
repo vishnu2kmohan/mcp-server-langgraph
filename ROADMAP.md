@@ -6,7 +6,7 @@ Build the **most production-ready, enterprise-grade MCP server** with LangGraph,
 
 ---
 
-## Current Status (v2.5.0) ✅
+## Current Status (v2.7.0) ✅
 
 **Released**: October 2025
 
@@ -393,9 +393,10 @@ We actively seek community input on roadmap priorities. Vote and discuss at:
 
 | Version | Release Date | Theme | Key Features |
 |---------|-------------|-------|--------------|
-| **v2.5.0** | Oct 2025 | Distributed State | Redis checkpointing, Multi-cloud logs |
-| **v2.6.0** | Nov 2025 | CI/CD & TODOs | Pipeline fixes, Production completeness |
-| **v2.7.0** | Dec 2025 | Performance | Resilience, Caching, Optimization |
+| **v2.5.0** | Oct 2025 | Distributed State | Redis checkpointing, Multi-cloud logs (Completed) |
+| **v2.6.0** | Oct 2025 | CI/CD & TODOs | Pipeline fixes, Production completeness (Completed) |
+| **v2.7.0** | Oct 2025 | Performance & Security | Resilience, Caching, Optimization, Security hardening (Current) |
+| **v2.8.0** | Nov 2025 | Advanced Features | Additional optimizations and feature enhancements |
 | **v3.0.0** | Jan 2026 | DevEx | Dev containers, Testing, Onboarding |
 | **v3.1.0** | Mar 2026 | Documentation | API explorer, Tutorials, Diagrams |
 | **v3.2.0** | Apr 2026 | Observability | Anomaly detection, Cost tracking |

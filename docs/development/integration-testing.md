@@ -388,7 +388,7 @@ Set in `docker-compose.test.yml`:
 
 - [Testing Guide](../../tests/README.md) - Overview of all test types
 - [Docker Deployment](../deployment/docker.mdx) - Docker best practices
-- [CI/CD Pipeline](ci-cd.md) - GitHub Actions workflows
+- [CI/CD Pipeline](../reference/development/ci-cd.md) - GitHub Actions workflows
 
 ---
 

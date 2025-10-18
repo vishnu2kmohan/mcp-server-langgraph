@@ -713,5 +713,5 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 - [Docker Build Documentation](https://docs.docker.com/engine/reference/commandline/build/)
 - [Helm Documentation](https://helm.sh/docs/)
 - [Kustomize Documentation](https://kubectl.docs.kubernetes.io/references/kustomize/)
-- [Deployment Quickstart](../../deployments/QUICKSTART.md)
-- [Deployment README](../../deploymen../../README.md)
+- [Deployment Quickstart](../../../deployments/QUICKSTART.md)
+- [Deployment README](../../../deployments/README.md)

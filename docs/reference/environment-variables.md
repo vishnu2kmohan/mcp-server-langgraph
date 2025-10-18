@@ -301,6 +301,6 @@ export GOOGLE_API_KEY="your-key"
 ## References
 
 - [Infisical Documentation](https://infisical.com/docs)
-- [OpenFGA Setup Guide](../../docs/deployment/openfga-setup.md)
-- [Keycloak Integration](../../docs/deployment/keycloak-setup.md)
+- [OpenFGA Setup Guide](../guides/openfga-setup.mdx)
+- [Keycloak Integration](../guides/keycloak-sso.mdx)
 - [Environment Setup Guide](../../docs/reference/development/ide-setup.md)
