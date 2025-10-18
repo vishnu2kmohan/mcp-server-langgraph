@@ -19,6 +19,7 @@ from mcp_server_langgraph.utils.response_optimizer import (
 )
 
 
+@pytest.mark.unit
 class TestResponseOptimizer:
     """Test ResponseOptimizer class."""
 

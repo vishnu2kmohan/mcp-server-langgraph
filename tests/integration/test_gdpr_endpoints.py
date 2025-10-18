@@ -72,19 +72,25 @@ class TestGDPREndpoints:
     def test_get_user_data_success(self, client, mock_auth_user):
         """Test GET /api/v1/users/me/data returns user data."""
         with patch("mcp_server_langgraph.api.gdpr.DataExportService") as mock_export:
-            # Mock the export service
+            # Import UserDataExport to create actual Pydantic model
+            from mcp_server_langgraph.core.compliance.data_export import UserDataExport
+
+            # Mock the export service to return actual UserDataExport object
             mock_instance = mock_export.return_value
             mock_instance.export_user_data = AsyncMock(
-                return_value=MagicMock(
+                return_value=UserDataExport(
                     export_id="test-export-123",
+                    export_timestamp="2025-10-18T00:00:00Z",
                     user_id=mock_auth_user["user_id"],
                     username=mock_auth_user["username"],
-                    model_dump=lambda: {
-                        "export_id": "test-export-123",
-                        "user_id": mock_auth_user["user_id"],
-                        "username": mock_auth_user["username"],
-                        "data": {},
-                    },
+                    email=mock_auth_user.get("email", "alice@example.com"),
+                    profile={},
+                    sessions=[],
+                    conversations=[],
+                    preferences={},
+                    audit_log=[],
+                    consents=[],
+                    metadata={},
                 )
             )
 
@@ -135,7 +141,8 @@ class TestGDPREndpoints:
             response = client.get("/api/v1/users/me/export?format=csv")
 
             assert response.status_code == 200
-            assert response.headers["content-type"] == "text/csv"
+            # FastAPI may add charset to content-type
+            assert "text/csv" in response.headers["content-type"]
 
     def test_export_user_data_invalid_format(self, client):
         """Test export with invalid format returns 422."""
