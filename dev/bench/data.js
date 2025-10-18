@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760820936034,
+  "lastUpdate": 1760821139118,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3508,6 +3508,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00017319439732254622",
             "extra": "mean: 89.24715584790421 usec\nrounds: 3189"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "58359fad0153d02aba9f3f3fcf4eeb5c58e9b3ac",
+          "message": "feat(compliance): integrate real data sources for SOC2 evidence collection\n\n**CRITICAL Implementation - Resolves 7 Production TODOs**\n\nIntegrated compliance evidence collection with real data sources (sessions,\nusers, OpenFGA, Prometheus) to replace mock data. Added proper documentation\nfor external system integrations. Part of Technical Debt Sprint Phase 2.\n\n## Issues Resolved\n\n### 1. Session Count Query (CRITICAL)\n**File**: `src/mcp_server_langgraph/core/compliance/evidence.py`\n**Resolved TODO**: Line 257\n\n**Implementation**:\n- ✅ Query SessionStore for active sessions\n- ✅ Support multiple store implementations (InMemory, Redis)\n- ✅ Graceful fallback if query fails\n- ✅ Used in CC6.1 access control evidence\n\n**Query Logic**:\n```python\nif hasattr(self.session_store, \"get_all_sessions\"):\n    all_sessions = await self.session_store.get_all_sessions()\nelif hasattr(self.session_store, \"sessions\"):\n    all_sessions = list(self.session_store.sessions.values())\nsession_count = len(all_sessions)\n```\n\n---\n\n### 2. MFA Statistics Query (CRITICAL)\n**File**: `src/mcp_server_langgraph/core/compliance/evidence.py`\n**Resolved TODO**: Line 261\n\n**Implementation**:\n- ✅ Query UserProvider for all users\n- ✅ Count users with MFA enabled\n- ✅ Support users without mfa_enabled attribute\n- ✅ Used in CC6.1 access control evidence\n\n**Query Logic**:\n```python\nusers = await self.user_provider.list_users()\nmfa_enabled_count = sum(1 for u in users if getattr(u, \"mfa_enabled\", False))\n```\n\n---\n\n### 3. RBAC Role Count Query (CRITICAL)\n**File**: `src/mcp_server_langgraph/core/compliance/evidence.py`\n**Resolved TODO**: Line 264\n\n**Implementation**:\n- ✅ Query OpenFGA for RBAC configuration\n- ✅ Check if authorization models configured\n- ✅ Indicates RBAC implementation status\n- ✅ Used in CC6.1 access control evidence\n\n**Query Logic**:\n```python\nif self.openfga_client:\n    rbac_roles_configured = True  # OpenFGA configured = RBAC enabled\n    # Future: Count actual roles/relations\n```\n\n---\n\n### 4. Prometheus Uptime Query (CRITICAL)\n**File**: `src/mcp_server_langgraph/core/compliance/evidence.py`\n**Resolved TODO**: Line 457 (now 419)\n\n**Implementation**:\n- ✅ Query Prometheus for 30-day uptime\n- ✅ Use PrometheusClient.query_uptime()\n- ✅ Graceful fallback to 99.95% if query fails\n- ✅ Used in A1.2 SLA monitoring evidence\n\n**Query**:\n```python\nprometheus = await get_prometheus_client()\nuptime_percentage = await prometheus.query_uptime(timerange=\"30d\")\n```\n\n---\n\n### 5. Incident Tracking Integration (HIGH)\n**File**: `src/mcp_server_langgraph/core/compliance/evidence.py`\n**Resolved TODO**: Line 470 (now 426)\n\n**Implementation**:\n- ✅ Documented external system requirement\n- ✅ Added configuration notes (INCIDENT_TRACKING_URL)\n- ✅ Provided integration guidance\n- ✅ Used in A1.2 SLA evidence\n\n**Integration Notes**:\n```python\n# Requires external incident tracking (PagerDuty, Jira, ServiceNow)\n# Configure: INCIDENT_TRACKING_URL, INCIDENT_TRACKING_API_KEY\n# For production, integrate with your incident management platform\n```\n\n---\n\n### 6. Backup System Query (HIGH)\n**File**: `src/mcp_server_langgraph/core/compliance/evidence.py`\n**Resolved TODO**: Line 508 (now 457)\n\n**Implementation**:\n- ✅ Documented external backup system requirement\n- ✅ Added configuration notes (BACKUP_SYSTEM_URL)\n- ✅ Provided integration guidance\n- ✅ Used in backup verification evidence\n\n**Integration Notes**:\n```python\n# Requires external backup system (Velero, Kasten, cloud native)\n# Configure: BACKUP_SYSTEM_URL, BACKUP_SYSTEM_API_KEY\n# For production, integrate with your backup management platform\n```\n\n---\n\n### 7. Anomaly Detection (HIGH)\n**File**: `src/mcp_server_langgraph/core/compliance/evidence.py`\n**Resolved TODO**: Line 565 (now 507)\n\n**Implementation**:\n- ✅ Documented ML/external service requirement\n- ✅ Provided integration recommendations\n- ✅ Added configuration notes\n- ✅ Used in data access logging evidence\n\n**Integration Notes**:\n```python\n# Requires ML model or external service\n# Recommended: Datadog/New Relic anomaly detection\n# Or implement custom ML using historical metrics\n# Configure: ML-based anomaly detection for production\n```\n\n---\n\n## Architecture Changes\n\n### EvidenceCollector Constructor\n**Enhanced with dependency injection**:\n```python\ndef __init__(\n    self,\n    session_store: Optional[SessionStore] = None,\n    user_provider: Optional[UserProvider] = None,  # NEW\n    openfga_client: Optional[OpenFGAClient] = None,  # NEW\n    evidence_dir: Optional[Path] = None,\n):\n```\n\n**Benefits**:\n- Testable with mock dependencies\n- Flexible configuration\n- Gradual implementation support\n- Backward compatible (all optional)\n\n### Data Integration Flow\n```\nEvidenceCollector\n    ├── SessionStore ──► Active session count\n    ├── UserProvider ──► MFA statistics\n    ├── OpenFGAClient ──► RBAC configuration\n    └── PrometheusClient ──► Uptime metrics\n```\n\n## Error Handling\n\nAll queries include try/except blocks:\n- **On Success**: Real data from source system\n- **On Failure**: Log warning, use safe default (0 or False)\n- **Missing Dependency**: Graceful degradation\n\nExample:\n```python\ntry:\n    users = await self.user_provider.list_users()\n    mfa_count = sum(1 for u in users if getattr(u, \"mfa_enabled\", False))\nexcept Exception as e:\n    logger.warning(f\"Failed to query MFA stats: {e}\")\n    mfa_count = 0  # Safe default\n```\n\n## External System Integration\n\n### Required for Production\n1. **Incident Tracking** (PagerDuty, Jira, ServiceNow)\n   - Configuration: INCIDENT_TRACKING_URL, INCIDENT_TRACKING_API_KEY\n   - Purpose: Downtime incident count for SLA evidence\n\n2. **Backup System** (Velero, Kasten, cloud native)\n   - Configuration: BACKUP_SYSTEM_URL, BACKUP_SYSTEM_API_KEY\n   - Purpose: Last backup timestamp verification\n\n3. **Anomaly Detection** (Datadog, New Relic, custom ML)\n   - Purpose: Detect abnormal access patterns\n   - Recommended: ML-based analysis of audit logs\n\n### Optional Enhancements\n- Real-time RBAC role counting from OpenFGA\n- MFA enforcement policy integration\n- Session pattern analysis\n\n## Impact\n\n**Before**:\n- ❌ Evidence endpoints returned hardcoded mock data\n- ❌ No integration with actual data sources\n- ❌ Inaccurate compliance metrics\n- ❌ 7 TODO items in production code\n\n**After**:\n- ✅ Real data from session store, user provider, OpenFGA, Prometheus\n- ✅ Accurate compliance metrics\n- ✅ Production-ready evidence collection\n- ✅ 7 TODOs resolved (4 implemented, 3 documented)\n\n## Technical Debt Progress\n\n**Completed** (17/27 items = 63%):\n1-4. ✅ Prometheus integration (4 items)\n5-10. ✅ Alerting system (6 items)\n11-17. ✅ Compliance evidence (7 items)\n\n**Remaining CRITICAL** (1 item):\n- User session analysis integration (schedulers/compliance.py)\n\n**Remaining HIGH** (7 items):\n- Storage backends (3 items)\n- Search tools (2 items)\n- GDPR integration (2 items)\n\n**Remaining OTHER** (3 items):\n- Prompt versioning\n- User provider query\n- Session analysis\n\n**Progress**: 63% complete (17/27 items)\n\n## Testing\n\n**Manual Verification**:\n```python\nfrom mcp_server_langgraph.core.compliance.evidence import EvidenceCollector\nfrom mcp_server_langgraph.auth.session import session_factory\nfrom mcp_server_langgraph.auth.user_provider import user_provider_factory\nfrom mcp_server_langgraph.auth.openfga import OpenFGAClient\n\n# Initialize with real dependencies\ncollector = EvidenceCollector(\n    session_store=session_factory(),\n    user_provider=user_provider_factory(),\n    openfga_client=OpenFGAClient(...)\n)\n\n# Collect evidence\nevidence = await collector.collect_security_evidence()\nprint(f\"Active sessions: {evidence[0].data['active_sessions']}\")\nprint(f\"MFA enabled users: {evidence[0].data['mfa_enabled_users']}\")\nprint(f\"RBAC configured: {evidence[0].data['rbac_roles_configured']}\")\n```\n\n## Related\n\n- Part of Technical Debt Sprint - Phase 2\n- Resolves: 7 compliance evidence TODOs\n- Dependencies: SessionStore, UserProvider, OpenFGAClient, PrometheusClient\n- References: ADR-0012 (Compliance Framework)\n\n## Next Steps\n\n1. Implement storage backend integrations (3 items)\n2. Implement search tools (2 items)\n3. Complete GDPR integration (2 items)\n4. User session analysis (2 items)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T16:55:47-04:00",
+          "tree_id": "8174ae59b2a22f7728f2cf74f8643422ba52a07f",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/58359fad0153d02aba9f3f3fcf4eeb5c58e9b3ac"
+        },
+        "date": 1760821138185,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37244.53158372149,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029267814615112094",
+            "extra": "mean: 26.849579185929972 usec\nrounds: 5064"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32697.17388253649,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003343067051898933",
+            "extra": "mean: 30.583682968823748 usec\nrounds: 6318"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31045.43348225239,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000035245681792764398",
+            "extra": "mean: 32.210856407325274 usec\nrounds: 15140"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.85966262923145,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018441363892402795",
+            "extra": "mean: 5.294936918124206 msec\nrounds: 171"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.313728920557384,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011640068342158751",
+            "extra": "mean: 51.776640550008324 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934946052727073,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000828467956432437",
+            "extra": "mean: 100.65479919999234 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1994343.8420858614,
+            "unit": "iter/sec",
+            "range": "stddev: 6.9227321044174e-8",
+            "extra": "mean: 501.4180498354343 nsec\nrounds: 96433"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3919.772574834044,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017058404476075993",
+            "extra": "mean: 255.1168418342072 usec\nrounds: 1960"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3057.9685196626865,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001308618124647018",
+            "extra": "mean: 327.0144848025795 usec\nrounds: 2698"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2999.738674425286,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026879117848658083",
+            "extra": "mean: 333.3623720378203 usec\nrounds: 1688"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40587.54453424372,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003122853316380706",
+            "extra": "mean: 24.638100468391222 usec\nrounds: 7694"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11635.998294873276,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001558903894654142",
+            "extra": "mean: 85.94019822438369 usec\nrounds: 3491"
           }
         ]
       }
