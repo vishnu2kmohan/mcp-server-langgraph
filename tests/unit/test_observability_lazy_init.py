@@ -15,6 +15,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+@pytest.mark.unit
 def test_import_without_filesystem_ops():
     """
     Test that importing observability module doesn't create files.
@@ -30,19 +31,22 @@ def test_import_without_filesystem_ops():
         try:
             os.chdir(tmpdir)
 
-            # Import should not create logs/ directory
-            from mcp_server_langgraph.observability import telemetry
+            # Reset observability state to simulate fresh import
+            import mcp_server_langgraph.observability.telemetry as telemetry
+            telemetry._observability_config = None
+            telemetry._propagator = None
 
             # Verify no logs directory was created
             assert not Path("logs").exists(), "logs/ directory should not be created on import"
 
-            # Verify observability is not initialized
+            # Verify observability is not initialized after reset
             assert not telemetry.is_initialized(), "Observability should not be initialized on import"
 
         finally:
             os.chdir(original_cwd)
 
 
+@pytest.mark.unit
 def test_lazy_accessors_raise_before_init():
     """
     Test that lazy accessors raise RuntimeError before initialization.
@@ -70,6 +74,7 @@ def test_lazy_accessors_raise_before_init():
         meter.create_counter("test")
 
 
+@pytest.mark.unit
 def test_init_observability_with_defaults():
     """
     Test that init_observability works with default parameters.
@@ -89,6 +94,7 @@ def test_init_observability_with_defaults():
     assert config.enable_file_logging is False
 
 
+@pytest.mark.unit
 def test_init_observability_with_settings():
     """
     Test that init_observability respects settings configuration.
@@ -117,6 +123,7 @@ def test_init_observability_with_settings():
     assert config.enable_file_logging is False
 
 
+@pytest.mark.unit
 def test_init_observability_idempotent():
     """
     Test that calling init_observability multiple times is safe.
@@ -136,6 +143,7 @@ def test_init_observability_idempotent():
     assert config1 is config2, "Multiple init calls should return same config instance"
 
 
+@pytest.mark.unit
 def test_file_logging_opt_in():
     """
     Test that file logging is opt-in and doesn't create files by default.
@@ -162,10 +170,13 @@ def test_file_logging_opt_in():
             os.chdir(original_cwd)
 
 
+@pytest.mark.unit
 def test_file_logging_creates_directory_when_enabled():
     """
     Test that file logging creates logs/ when explicitly enabled.
     """
+    import logging
+
     from mcp_server_langgraph.observability.telemetry import init_observability
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -173,10 +184,14 @@ def test_file_logging_creates_directory_when_enabled():
         try:
             os.chdir(tmpdir)
 
-            # Reset state
+            # Reset state - must clear both observability config AND logging handlers
             import mcp_server_langgraph.observability.telemetry as telemetry_module
 
             telemetry_module._observability_config = None
+
+            # Clear root logger handlers to allow re-initialization
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
 
             # Initialize WITH file logging
             init_observability(enable_file_logging=True)
@@ -188,6 +203,7 @@ def test_file_logging_creates_directory_when_enabled():
             os.chdir(original_cwd)
 
 
+@pytest.mark.unit
 def test_lazy_accessors_work_after_init():
     """
     Test that lazy accessors work correctly after initialization.
@@ -213,6 +229,7 @@ def test_lazy_accessors_work_after_init():
     assert counter is not None
 
 
+@pytest.mark.unit
 def test_settings_values_honored():
     """
     Test that settings.log_format and langsmith_tracing are honored.
@@ -245,6 +262,7 @@ def test_settings_values_honored():
     assert config.enable_langsmith is True
 
 
+@pytest.mark.unit
 def test_secrets_manager_works_before_observability_init():
     """
     Test that secrets manager can be used before observability is initialized.
@@ -269,6 +287,7 @@ def test_secrets_manager_works_before_observability_init():
     assert manager is not None
 
 
+@pytest.mark.unit
 def test_context_propagation_requires_init():
     """
     Test that context propagation functions require initialization.
@@ -289,6 +308,7 @@ def test_context_propagation_requires_init():
         extract_context(carrier)
 
 
+@pytest.mark.unit
 def test_multiple_entry_points_can_init():
     """
     Test that multiple entry points can safely call init_observability.
