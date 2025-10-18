@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760804270990,
+  "lastUpdate": 1760805665636,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -2644,6 +2644,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00016016017560511735",
             "extra": "mean: 85.86964131374914 usec\nrounds: 3379"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1e911cfc988c598ae3233481a757d26d91439c48",
+          "message": "fix(ci): resolve critical test and workflow failures\n\n**Critical Fixes for CI/CD Pipeline**:\n\n1. **Fixed RedisSaver API Incompatibility** (agent.py:136-140)\n   - **Issue**: langgraph-checkpoint-redis 0.1.2+ changed API\n   - **Before**: `RedisSaver.from_conn_string(conn_string=..., ttl=...)`\n   - **After**: `RedisSaver.from_conn_string(redis_url=...)`\n   - **Impact**: Redis checkpointer now initializes correctly\n   - **Tests**: Fixes distributed checkpointing test failures\n\n2. **Fixed Undefined Variable Error** (agent.py:413,478)\n   - **Issue**: F821 flake8 error - undefined name 'tools'\n   - **Root Cause**: Variable 'tools' passed to function but never defined\n   - **Fix**: Removed unused 'tools_list' parameter from function signature\n   - **Impact**: CI lint job now passes (flake8 clean)\n   - **Validation**: `flake8 . --select=E9,F63,F7,F82` returns 0 errors\n\n3. **Fixed Optional Dependencies Workflow Tests** (optional-deps-test.yaml:44-52,76-85)\n   - **Issue 1**: SecretsManager.get_secret() got unexpected kwarg 'default'\n   - **Fix**: Changed 'default' → 'fallback' (correct parameter name)\n   - **Issue 2**: jwt_secret_key is None without env var\n   - **Fix**: Added JWT_SECRET_KEY environment variable to test\n   - **Impact**: Optional dependencies tests now pass\n\n**Test Results After Fixes**:\n```\n✅ Unit Tests: 727/743 passed (98% pass rate)\n✅ Coverage: 67-68%\n✅ flake8: 0 critical errors\n✅ All fixes validated locally\n```\n\n**CI Workflows Fixed**:\n- ✅ CI/CD Pipeline (flake8 error resolved)\n- ✅ Optional Dependencies Tests (API and env issues resolved)\n- ✅ Security Scan (should pass after flake8 fix)\n- ✅ Release Workflow (should pass after flake8 fix)\n\n**Files Modified**:\n- src/mcp_server_langgraph/core/agent.py:136-140 (RedisSaver API)\n- src/mcp_server_langgraph/core/agent.py:413 (removed undefined variable)\n- src/mcp_server_langgraph/core/agent.py:478 (removed unused parameter)\n- .github/workflows/optional-deps-test.yaml:44-52 (env var added)\n- .github/workflows/optional-deps-test.yaml:82 (parameter name fixed)\n\n**Related Issues**:\n- ROADMAP.md: CI/CD pipeline failures\n- langgraph-checkpoint-redis: API breaking change in 0.1.2\n\n**Breaking Changes**: None (API fixes maintain backward compatibility)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T12:38:08-04:00",
+          "tree_id": "a06b193f7136d6a9def860527f58add53da962ff",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1e911cfc988c598ae3233481a757d26d91439c48"
+        },
+        "date": 1760805664647,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36534.919536619826,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002869824516567557",
+            "extra": "mean: 27.37107437714968 usec\nrounds: 5015"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32917.88518006858,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031754447244720575",
+            "extra": "mean: 30.378622275694948 usec\nrounds: 6833"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31074.36191406387,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003223459852718237",
+            "extra": "mean: 32.180869964940854 usec\nrounds: 14996"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.70788091823167,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001601183252957907",
+            "extra": "mean: 5.2991957470674285 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.394551744580482,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008928431947624924",
+            "extra": "mean: 51.560872000015934 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.947918062945888,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023325073802222415",
+            "extra": "mean: 100.52354610004386 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1863797.4201177817,
+            "unit": "iter/sec",
+            "range": "stddev: 7.363373769150632e-8",
+            "extra": "mean: 536.538997857828 nsec\nrounds: 93809"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3973.157122279116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014257903032372882",
+            "extra": "mean: 251.68901435903234 usec\nrounds: 2159"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3014.9716772955735,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001390344904066635",
+            "extra": "mean: 331.6780743018452 usec\nrounds: 2261"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3006.9349867076985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002593934970019056",
+            "extra": "mean: 332.5645564072879 usec\nrounds: 1693"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40171.92889578319,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029017685517705157",
+            "extra": "mean: 24.893004331314774 usec\nrounds: 7849"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11551.87263436217,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001569394776780476",
+            "extra": "mean: 86.5660513798778 usec\nrounds: 3406"
           }
         ]
       }
