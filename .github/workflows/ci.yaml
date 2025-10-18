@@ -71,6 +71,11 @@ jobs:
         pip install -r requirements-pinned.txt
         pip install -r requirements-test.txt
 
+    - name: Validate dependency consistency
+      run: |
+        pip check
+        echo "✓ All dependencies are consistent (no conflicts detected)"
+
     - name: Run unit tests
       run: |
         # Matches pyproject.toml configuration and local make test-unit
@@ -121,6 +126,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e .
         pip install -r requirements-test.txt
+
+    - name: Validate dependency consistency
+      run: |
+        pip check
+        echo "✓ All dependencies are consistent (no conflicts detected)"
 
     - name: Run flake8
       run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,tests
