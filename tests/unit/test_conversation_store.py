@@ -84,7 +84,9 @@ class TestConversationStore:
     @pytest.mark.asyncio
     async def test_search_conversations_by_query(self, store):
         """Test searching conversations by query"""
-        await store.record_conversation(thread_id="project_alpha", user_id="user:alice", message_count=5, title="Alpha Project")
+        await store.record_conversation(
+            thread_id="project_alpha", user_id="user:alice", message_count=5, title="Alpha Project"
+        )
         await store.record_conversation(thread_id="project_beta", user_id="user:alice", message_count=3, title="Beta Release")
         await store.record_conversation(thread_id="other", user_id="user:alice", message_count=2, title="Something Else")
 
@@ -147,7 +149,9 @@ class TestConversationStore:
     @pytest.mark.asyncio
     async def test_search_by_tags(self, store):
         """Test searching conversations by tags"""
-        await store.record_conversation(thread_id="tagged", user_id="user:alice", message_count=5, tags=["important", "project"])
+        await store.record_conversation(
+            thread_id="tagged", user_id="user:alice", message_count=5, tags=["important", "project"]
+        )
         await store.record_conversation(thread_id="untagged", user_id="user:alice", message_count=3)
 
         results = await store.search_conversations("user:alice", query="important", limit=10)

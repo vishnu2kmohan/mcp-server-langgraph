@@ -75,6 +75,7 @@ class TestParallelToolExecution:
     @pytest.mark.asyncio
     async def test_serial_execution_baseline(self):
         """Test serial execution timing as baseline"""
+
         # Execute 3 tools serially, each taking 0.1s
         async def slow_tool(delay: float):
             await asyncio.sleep(delay)
@@ -164,8 +165,7 @@ class TestParallelToolExecution:
 
         # Create 5 tool invocations
         invocations = [
-            ToolInvocation(tool_name=f"tool{i}", arguments={"id": i}, invocation_id=str(i), dependencies=[])
-            for i in range(5)
+            ToolInvocation(tool_name=f"tool{i}", arguments={"id": i}, invocation_id=str(i), dependencies=[]) for i in range(5)
         ]
 
         concurrent_count = 0

@@ -64,6 +64,20 @@ def client(test_app):
     return TestClient(test_app)
 
 
+@pytest.fixture(autouse=True)
+def clear_consent_storage():
+    """Clear in-memory consent storage between tests to ensure test isolation."""
+    from mcp_server_langgraph.api import gdpr
+
+    # Clear before test
+    gdpr._consent_storage.clear()
+
+    yield
+
+    # Clear after test
+    gdpr._consent_storage.clear()
+
+
 @pytest.mark.integration
 @pytest.mark.gdpr
 class TestGDPREndpoints:
@@ -154,7 +168,7 @@ class TestGDPREndpoints:
         """Test PATCH /api/v1/users/me updates profile."""
         update_data = {"name": "Alice Updated", "email": "alice.updated@example.com"}
 
-        response = client.patch("/api/v1/users/me", json=update_data)
+        response = client.patch("/api/v1/users/me", json={"profile_update": update_data})
 
         assert response.status_code == 200
         data = response.json()
@@ -165,7 +179,7 @@ class TestGDPREndpoints:
 
     def test_update_user_profile_empty_data(self, client):
         """Test PATCH /api/v1/users/me with no data returns 400."""
-        response = client.patch("/api/v1/users/me", json={})
+        response = client.patch("/api/v1/users/me", json={"profile_update": {}})
 
         assert response.status_code == 400
         assert "No fields provided" in response.json()["detail"]
@@ -228,7 +242,7 @@ class TestGDPREndpoints:
         """Test POST /api/v1/users/me/consent."""
         consent_data = {"consent_type": "analytics", "granted": True}
 
-        response = client.post("/api/v1/users/me/consent", json=consent_data)
+        response = client.post("/api/v1/users/me/consent", json={"consent": consent_data})
 
         assert response.status_code == 200
         data = response.json()
@@ -240,10 +254,10 @@ class TestGDPREndpoints:
     def test_update_consent_revoke(self, client, mock_auth_user):
         """Test POST /api/v1/users/me/consent to revoke consent."""
         # First grant
-        client.post("/api/v1/users/me/consent", json={"consent_type": "marketing", "granted": True})
+        client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "marketing", "granted": True}})
 
         # Then revoke
-        response = client.post("/api/v1/users/me/consent", json={"consent_type": "marketing", "granted": False})
+        response = client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "marketing", "granted": False}})
 
         assert response.status_code == 200
         data = response.json()
@@ -251,15 +265,15 @@ class TestGDPREndpoints:
 
     def test_update_consent_invalid_type(self, client):
         """Test POST /api/v1/users/me/consent with invalid type."""
-        response = client.post("/api/v1/users/me/consent", json={"consent_type": "invalid", "granted": True})
+        response = client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "invalid", "granted": True}})
 
         assert response.status_code == 422  # Validation error
 
     def test_get_consent_status_success(self, client, mock_auth_user):
         """Test GET /api/v1/users/me/consent."""
         # First set some consents
-        client.post("/api/v1/users/me/consent", json={"consent_type": "analytics", "granted": True})
-        client.post("/api/v1/users/me/consent", json={"consent_type": "marketing", "granted": False})
+        client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "analytics", "granted": True}})
+        client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "marketing", "granted": False}})
 
         response = client.get("/api/v1/users/me/consent")
 
