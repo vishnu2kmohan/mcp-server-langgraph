@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760765078452,
+  "lastUpdate": 1760765703737,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -2160,6 +2160,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019751308857209147",
             "extra": "mean: 81.59239123186103 usec\nrounds: 3581"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "dab9a4e9080b02d7b3930e3dd96ba72f82f8eb27",
+          "message": "fix: resolve critical release blockers for v2.7.0\n\nCritical Fixes:\n1. Add missing 'import os' to scripts/check-links.py (line 8)\n   - Fixes NameError on line 193\n   - Resolves link-checker.yml workflow failure\n\n2. Fix broken internal links in documentation\n   - adr/0026: Correct paths to MIGRATION.md and BREAKING_CHANGES.md\n   - docs/architecture/adr-0004: Remove broken link to future ADR\n\nImpact:\n- Link checker now passes validation ✅\n- All CI/CD blockers resolved\n- Ready for v2.7.0 release\n\nValidation:\n- Local: python3 scripts/check-links.py → All checks passed\n- Build artifacts: Not committed (properly gitignored)\n- All 3 critical blockers resolved\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T01:32:10-04:00",
+          "tree_id": "7f2cce37380a1d18cc3ab9919704b75a076c12ec",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/dab9a4e9080b02d7b3930e3dd96ba72f82f8eb27"
+        },
+        "date": 1760765702858,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36981.756560540525,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003145675809739516",
+            "extra": "mean: 27.04035970716973 usec\nrounds: 5599"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 30979.540970865834,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008072636286041308",
+            "extra": "mean: 32.279367888001715 usec\nrounds: 6714"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31211.980513687187,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000303173781096916",
+            "extra": "mean: 32.03897937721307 usec\nrounds: 14838"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 435828.0960659832,
+            "unit": "iter/sec",
+            "range": "stddev: 4.523313199959979e-7",
+            "extra": "mean: 2.294482638972873 usec\nrounds: 24768"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 437358.7927941886,
+            "unit": "iter/sec",
+            "range": "stddev: 5.164466131853194e-7",
+            "extra": "mean: 2.286452259508083 usec\nrounds: 43663"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 438808.7244928789,
+            "unit": "iter/sec",
+            "range": "stddev: 4.760510547785744e-7",
+            "extra": "mean: 2.2788972602030118 usec\nrounds: 48034"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1989683.8881001975,
+            "unit": "iter/sec",
+            "range": "stddev: 5.3896013118492044e-8",
+            "extra": "mean: 502.5923997177392 nsec\nrounds: 98049"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 439862.8159141797,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7111706538073283e-7",
+            "extra": "mean: 2.273436089208111 usec\nrounds: 37967"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3019.488729132017,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009375880164365046",
+            "extra": "mean: 331.1818952500148 usec\nrounds: 2463"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2986.2724716392117,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042381146723845035",
+            "extra": "mean: 334.8656257917029 usec\nrounds: 1737"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40141.21200403376,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027615093544735918",
+            "extra": "mean: 24.91205297686355 usec\nrounds: 7928"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12223.19942896142,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017672814231787215",
+            "extra": "mean: 81.81164070927443 usec\nrounds: 3159"
           }
         ]
       }
