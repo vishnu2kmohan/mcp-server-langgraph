@@ -142,8 +142,7 @@ class TestOpenFGABenchmarks:
         client.check = mock_check
         return client
 
-    @pytest.mark.asyncio
-    async def test_authorization_check_performance(self, mock_openfga_client, benchmark):
+    def test_authorization_check_performance(self, mock_openfga_client, benchmark):
         """Benchmark OpenFGA authorization check.
 
         Requirement: Authorization check should take < 50ms on average (including network).
@@ -152,16 +151,18 @@ class TestOpenFGABenchmarks:
         async def check_authorization():
             return await mock_openfga_client.check(user="user:test-user", relation="viewer", object="document:test-doc")
 
-        # Run benchmark (use asyncio.run wrapper for async functions)
-        result = benchmark(asyncio.run, check_authorization())
+        # Run benchmark with asyncio wrapper
+        def run_async_check():
+            return asyncio.run(check_authorization())
+
+        result = benchmark(run_async_check)
 
         assert result["allowed"] is True
 
         # Performance assertion: < 50ms average (with network simulation)
-        assert benchmark.stats["mean"] < 0.050, f"Auth check took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
+        assert benchmark.stats["mean"] < 0.050, f"Auth check took {benchmark.stats["mean"] * 1000:.2f}ms (target: < 50ms)"
 
-    @pytest.mark.asyncio
-    async def test_batch_authorization_performance(self, mock_openfga_client, benchmark):
+    def test_batch_authorization_performance(self, mock_openfga_client, benchmark):
         """Benchmark batch authorization checks.
 
         Requirement: 10 batch checks should take < 200ms on average.
@@ -176,8 +177,11 @@ class TestOpenFGABenchmarks:
                 results.append(result)
             return results
 
-        # Run benchmark (use asyncio.run wrapper for async functions)
-        results = benchmark(asyncio.run, batch_check())
+        # Run benchmark with asyncio wrapper
+        def run_async_batch():
+            return asyncio.run(batch_check())
+
+        results = benchmark(run_async_batch)
 
         assert len(results) == 10
         assert all(r["allowed"] for r in results)
@@ -207,8 +211,7 @@ class TestLLMBenchmarks:
         client.acompletion = mock_completion
         return client
 
-    @pytest.mark.asyncio
-    async def test_llm_request_performance(self, mock_llm_client, benchmark):
+    def test_llm_request_performance(self, mock_llm_client, benchmark):
         """Benchmark single LLM request.
 
         Requirement: LLM request handling overhead should be < 10ms (excluding actual LLM call).
@@ -224,8 +227,11 @@ class TestLLMBenchmarks:
                 # Simulate post-processing
                 return response["choices"][0]["message"]["content"]
 
-        # Run benchmark (use asyncio.run wrapper for async functions)
-        result = benchmark(asyncio.run, make_request())
+        # Run benchmark with asyncio wrapper
+        def run_async_request():
+            return asyncio.run(make_request())
+
+        result = benchmark(run_async_request)
 
         assert result == "Test response"
 
@@ -240,8 +246,7 @@ class TestLLMBenchmarks:
 class TestAgentBenchmarks:
     """Benchmark agent execution performance."""
 
-    @pytest.mark.asyncio
-    async def test_agent_initialization_performance(self, benchmark):
+    def test_agent_initialization_performance(self, benchmark):
         """Benchmark agent initialization time.
 
         Requirement: Agent initialization should take < 100ms.
@@ -265,8 +270,7 @@ class TestAgentBenchmarks:
         # Performance assertion: < 100ms
         assert benchmark.stats["mean"] < 0.100, f"Agent init took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 100ms)"
 
-    @pytest.mark.asyncio
-    async def test_message_processing_performance(self, benchmark):
+    def test_message_processing_performance(self, benchmark):
         """Benchmark message processing throughput.
 
         Requirement: Process 100 messages in < 1 second.
@@ -288,8 +292,11 @@ class TestAgentBenchmarks:
 
             return processed
 
-        # Run benchmark (use asyncio.run wrapper for async functions)
-        results = benchmark(asyncio.run, process_messages())
+        # Run benchmark with asyncio wrapper
+        def run_async_processing():
+            return asyncio.run(process_messages())
+
+        results = benchmark(run_async_processing)
 
         assert len(results) == 100
 
