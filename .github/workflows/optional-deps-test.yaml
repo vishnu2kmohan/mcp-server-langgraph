@@ -41,11 +41,13 @@ jobs:
           "
 
       - name: Verify graceful degradation
+        env:
+          JWT_SECRET_KEY: "test-secret-key-for-ci"
         run: |
           uv run python -c "
           from mcp_server_langgraph.core.config import settings
-          # Should work without Infisical
-          assert settings.jwt_secret_key is not None
+          # Should work with environment variable fallback
+          assert settings.jwt_secret_key == 'test-secret-key-for-ci'
           print('✓ Graceful degradation works without Infisical')
           "
 
@@ -79,7 +81,7 @@ jobs:
           from mcp_server_langgraph.secrets.manager import SecretsManager
           # Should work even if Infisical not installed
           manager = SecretsManager()
-          test_secret = manager.get_secret('TEST_KEY', default='fallback_value')
+          test_secret = manager.get_secret('TEST_KEY', fallback='fallback_value')
           assert test_secret == 'fallback_value'
           print('✓ Secrets manager fallback works')
           "

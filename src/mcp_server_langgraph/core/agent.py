@@ -133,9 +133,10 @@ def _create_checkpointer() -> BaseCheckpointSaver:
             )
 
             # Create Redis checkpointer with TTL
+            # Note: RedisSaver.from_conn_string expects redis_url (not conn_string)
+            # and ttl as optional parameter (changed in langgraph-checkpoint-redis 0.1.2+)
             checkpointer = RedisSaver.from_conn_string(
-                conn_string=settings.checkpoint_redis_url,
-                ttl=settings.checkpoint_redis_ttl,
+                redis_url=settings.checkpoint_redis_url,
             )
 
             logger.info("Redis checkpointer initialized successfully")
@@ -409,7 +410,7 @@ def create_agent_graph():
         if enable_parallel and len(tool_calls) > 1:
             # Use parallel execution for multiple tool calls
             logger.info(f"Using parallel execution for {len(tool_calls)} tools")
-            tool_messages = await _execute_tools_parallel(tool_calls, tools)
+            tool_messages = await _execute_tools_parallel(tool_calls)
         else:
             # Use serial execution (default or single tool)
             if enable_parallel:
@@ -474,7 +475,7 @@ def create_agent_graph():
 
         return tool_messages
 
-    async def _execute_tools_parallel(tool_calls: list, tools_list: list) -> list:
+    async def _execute_tools_parallel(tool_calls: list) -> list:
         """Execute tools in parallel using ParallelToolExecutor"""
         from langchain_core.messages import ToolMessage
 
