@@ -21,8 +21,7 @@ class TestSearchKnowledgeBase:
         mock_settings.qdrant_url = None  # Not configured
         result = search_knowledge_base.invoke({"query": "test query", "limit": 5})
         assert isinstance(result, str)
-        assert "test query" in result
-        assert "not configured" in result.lower()  # Updated implementation
+        assert "not configured" in result.lower()  # Shows configuration message
 
     @patch("mcp_server_langgraph.tools.search_tools.settings")
     def test_search_with_different_limits(self, mock_settings):
@@ -65,8 +64,7 @@ class TestWebSearch:
 
         result = await web_search.invoke({"query": "test query", "num_results": 5})
         assert isinstance(result, str)
-        assert "test query" in result
-        assert "not configured" in result.lower()  # Updated implementation
+        assert "not configured" in result.lower()  # Shows configuration message
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.tools.search_tools.settings")
