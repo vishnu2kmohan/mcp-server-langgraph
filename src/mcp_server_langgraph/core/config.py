@@ -57,6 +57,11 @@ class Settings(BaseSettings):
     email_from_address: Optional[str] = None  # From email address
     email_to_addresses: Optional[str] = None  # Comma-separated list of email addresses
 
+    # Web Search API Configuration (for search_tools.py)
+    tavily_api_key: Optional[str] = None  # Tavily API key (recommended for AI)
+    serper_api_key: Optional[str] = None  # Serper API key (Google search)
+    brave_api_key: Optional[str] = None  # Brave Search API key (privacy-focused)
+
     # LangSmith Observability
     langsmith_api_key: Optional[str] = None
     langsmith_project: str = "mcp-server-langgraph"
