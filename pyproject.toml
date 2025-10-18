@@ -59,6 +59,8 @@ dependencies = [
     # Anthropic Best Practices Enhancements (ADR-0025)
     "qdrant-client>=1.15.1",  # Vector database for Just-in-Time context loading
     "langchain-google-genai>=3.0.0",  # Google Gemini embeddings (API-based, no model hosting)
+    # Monitoring
+    "prometheus-api-client>=0.5.5",  # For querying Prometheus metrics in SLA monitoring
 ]
 
 [project.optional-dependencies]

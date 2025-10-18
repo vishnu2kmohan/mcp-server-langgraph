@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     enable_tracing: bool = True
     enable_metrics: bool = True
 
+    # Prometheus (for SLA monitoring and compliance metrics)
+    prometheus_url: str = "http://prometheus:9090"
+    prometheus_timeout: int = 30  # Query timeout in seconds
+    prometheus_retry_attempts: int = 3  # Number of retry attempts
+
     # LangSmith Observability
     langsmith_api_key: Optional[str] = None
     langsmith_project: str = "mcp-server-langgraph"

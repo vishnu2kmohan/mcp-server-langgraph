@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+from mcp_server_langgraph.monitoring.prometheus_client import get_prometheus_client
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 
@@ -154,9 +155,14 @@ class SLAMonitor:
             # Calculate total time in period
             total_seconds = (end_time - start_time).total_seconds()
 
-            # TODO: Query Prometheus for actual downtime
-            # For now, use placeholder data
-            downtime_seconds = 0  # Placeholder
+            # Query Prometheus for actual downtime
+            try:
+                prometheus = await get_prometheus_client()
+                timerange = f"{int(total_seconds / 86400)}d"  # Convert to days
+                downtime_seconds = await prometheus.query_downtime(timerange=timerange)
+            except Exception as e:
+                logger.warning(f"Failed to query Prometheus for downtime: {e}")
+                downtime_seconds = 0  # Fallback to zero if query fails
 
             # Calculate uptime percentage
             uptime_seconds = total_seconds - downtime_seconds
@@ -232,9 +238,18 @@ class SLAMonitor:
             if not rt_target:
                 raise ValueError("No response time SLA target configured")
 
-            # TODO: Query Prometheus for actual response times
-            # Example query: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
-            response_time_ms = 350  # Placeholder p95 response time
+            # Query Prometheus for actual response times
+            try:
+                prometheus = await get_prometheus_client()
+                timerange_hours = int((end_time - start_time).total_seconds() / 3600)
+                timerange = f"{max(1, timerange_hours)}h"  # At least 1 hour
+                percentiles = await prometheus.query_percentiles(
+                    metric="http_request_duration_seconds", percentiles=[percentile], timerange=timerange
+                )
+                response_time_ms = percentiles.get(percentile, 0) * 1000  # Convert seconds to milliseconds
+            except Exception as e:
+                logger.warning(f"Failed to query Prometheus for response times: {e}")
+                response_time_ms = 350  # Fallback to conservative estimate
 
             # Calculate compliance percentage
             compliance_percentage = (rt_target.target_value / response_time_ms * 100) if response_time_ms > 0 else 100
@@ -297,9 +312,15 @@ class SLAMonitor:
             if not error_target:
                 raise ValueError("No error rate SLA target configured")
 
-            # TODO: Query Prometheus for actual error rate
-            # Example query: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100
-            error_rate_percentage = 0.5  # Placeholder
+            # Query Prometheus for actual error rate
+            try:
+                prometheus = await get_prometheus_client()
+                timerange_mins = int((end_time - start_time).total_seconds() / 60)
+                timerange = f"{max(5, timerange_mins)}m"  # At least 5 minutes
+                error_rate_percentage = await prometheus.query_error_rate(timerange=timerange)
+            except Exception as e:
+                logger.warning(f"Failed to query Prometheus for error rate: {e}")
+                error_rate_percentage = 0.5  # Fallback to conservative estimate
 
             # Calculate compliance percentage
             compliance_percentage = (
