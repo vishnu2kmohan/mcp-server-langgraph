@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760803905363,
+  "lastUpdate": 1760804270990,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -2536,6 +2536,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00015431353055062784",
             "extra": "mean: 85.63817202505562 usec\nrounds: 3639"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ec04680930144de73574928468a4befaea480e2a",
+          "message": "docs(release): add comprehensive v2.7.0 release readiness analysis\n\n**Release Documentation**:\n\nCreated two comprehensive analysis reports to support v2.7.0 release decision:\n\n1. **TODO Analysis Report** (reports/TODO_ANALYSIS_V2.7.0.md - 435 lines)\n   - Analyzed all 30 production TODOs\n   - Categorized into 3 groups:\n     • 9 Already Resolved (30%) - implemented in alerting.py, prometheus_client.py\n     • 19 Integration Placeholders (63%) - deferred to v2.8.0\n     • 2 Future Enhancements (7%) - deferred to v3.0.0+\n   - **VERDICT**: 0 blockers for v2.7.0 release\n   - Detailed resolution strategy for v2.8.0/v2.9.0\n\n2. **Release Readiness Assessment** (reports/RELEASE_READINESS_V2.7.0.md - 450 lines)\n   - Complete release checklist validation\n   - Test results: 727/743 passed (98% pass rate, 68% coverage)\n   - Commit history summary (8 commits)\n   - Risk assessment: LOW 🟢\n   - Deployment readiness verification\n   - Post-release monitoring plan\n   - **VERDICT**: ✅ APPROVED FOR v2.7.0 RELEASE (95% confidence)\n\n3. **ROADMAP Updated** (ROADMAP.md:24-26)\n   - Known Limitations: TODO status updated\n   - Changed from \"🟡 24 TODOs\" to \"✅ TODOs: 9 resolved, 19 non-blocking\"\n   - Added link to TODO Analysis Report\n   - Accurate categorization of deferred work\n\n**Key Findings**:\n\n✅ **Release Blockers**: NONE\n✅ **Code Quality**: 98% unit test pass rate\n✅ **CI/CD**: All workflows validated and fixed\n✅ **TODOs**: All categorized, 0 critical items\n✅ **Documentation**: Complete and up to date\n✅ **Security**: Secure by default, 0 vulnerabilities\n\n**Recommendations**:\n1. ✅ APPROVE for v2.7.0 release\n2. Create release tag: v2.7.0\n3. Deploy to staging for smoke tests\n4. Monitor closely post-release\n\n**Impact**:\n- Provides clear, data-driven release decision\n- Documents all analysis for future reference\n- Tracks deferred work for v2.8.0 planning\n- Reduces release risk with comprehensive validation\n\n**Files**:\n- reports/TODO_ANALYSIS_V2.7.0.md (new, 435 lines)\n- reports/RELEASE_READINESS_V2.7.0.md (new, 450 lines)\n- ROADMAP.md:24-26 (updated Known Limitations)\n\n**Related**: v2.7.0 release preparation",
+          "timestamp": "2025-10-18T12:15:06-04:00",
+          "tree_id": "7245fb02bcc21e9bb6ab8f5c361ccd41cdd377a6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ec04680930144de73574928468a4befaea480e2a"
+        },
+        "date": 1760804270505,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37326.38231869532,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002795289857330709",
+            "extra": "mean: 26.7907023901199 usec\nrounds: 5020"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32940.02204277718,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030992568584695215",
+            "extra": "mean: 30.35820676444483 usec\nrounds: 6534"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 30958.77177846892,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003357521687635949",
+            "extra": "mean: 32.30102302364191 usec\nrounds: 14724"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.81142803848397,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000649645443947477",
+            "extra": "mean: 5.296289585798682 msec\nrounds: 169"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.312697127417326,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011279514637949798",
+            "extra": "mean: 51.779406749994905 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936435519040232,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007754681739939847",
+            "extra": "mean: 100.63971110000125 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2005375.2823144197,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5072579224484805e-8",
+            "extra": "mean: 498.65978144793525 nsec\nrounds: 100021"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3931.0831349974787,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001698386833651482",
+            "extra": "mean: 254.3828165569033 usec\nrounds: 2126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3020.8056585736786,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009997969743691877",
+            "extra": "mean: 331.03751549252786 usec\nrounds: 2582"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3028.5073108505944,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027678341462297113",
+            "extra": "mean: 330.195669799832 usec\nrounds: 1596"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40469.73812724912,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027427616740311318",
+            "extra": "mean: 24.709821369629253 usec\nrounds: 7843"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11645.559300128154,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016016017560511735",
+            "extra": "mean: 85.86964131374914 usec\nrounds: 3379"
           }
         ]
       }
