@@ -393,6 +393,25 @@ class MCPAgentServer:
                     },
                 )
 
+                # Record conversation metadata in store for search functionality
+                try:
+                    from mcp_server_langgraph.storage.conversation_store import get_conversation_store
+
+                    store = get_conversation_store()
+                    # Count messages in result
+                    message_count = len(result.get("messages", []))
+                    # Extract title from first few words of user message
+                    title = message[:50] + "..." if len(message) > 50 else message
+
+                    await store.record_conversation(
+                        thread_id=thread_id, user_id=user_id, message_count=message_count, title=title
+                    )
+
+                    logger.debug(f"Recorded conversation metadata for {thread_id}")
+                except Exception as e:
+                    # Non-critical - don't fail the request
+                    logger.debug(f"Failed to record conversation metadata: {e}")
+
                 return [TextContent(type="text", text=formatted_response)]
 
             except Exception as e:
@@ -523,18 +542,40 @@ class MCPAgentServer:
             span.set_attribute("search.query", query)
             span.set_attribute("search.limit", limit)
 
-            # Get all conversations user can view
-            all_conversations = await self.auth.list_accessible_resources(
-                user_id=user_id, relation="viewer", resource_type="conversation"
-            )
+            # Try to get conversations from OpenFGA first, fall back to conversation store
+            try:
+                # Get all conversations user can view from OpenFGA
+                all_conversations = await self.auth.list_accessible_resources(
+                    user_id=user_id, relation="viewer", resource_type="conversation"
+                )
 
-            # Filter conversations based on query (simple implementation)
-            # In production, this would use a proper search index
-            if query:
-                filtered_conversations = [conv for conv in all_conversations if query.lower() in conv.lower()]
-            else:
-                # No query: return most recent (up to limit)
-                filtered_conversations = all_conversations
+                # If we got mock data or empty list, try conversation store
+                if not all_conversations or (all_conversations and "conversation:project_" in str(all_conversations[0])):
+                    raise Exception("OpenFGA returned mock data, using conversation store")
+
+                # Filter conversations based on query
+                if query:
+                    filtered_conversations = [conv for conv in all_conversations if query.lower() in conv.lower()]
+                else:
+                    filtered_conversations = all_conversations
+
+            except Exception:
+                # Fall back to conversation store
+                logger.info("Using conversation store for search (OpenFGA unavailable or returning mock data)")
+
+                try:
+                    from mcp_server_langgraph.storage.conversation_store import get_conversation_store
+
+                    store = get_conversation_store()
+                    metadata_list = await store.search_conversations(user_id=user_id, query=query, limit=limit)
+
+                    # Convert metadata to conversation IDs
+                    filtered_conversations = [f"conversation:{m.thread_id}" for m in metadata_list]
+
+                except Exception as e:
+                    logger.warning(f"Conversation store also unavailable: {e}")
+                    # Ultimate fallback: empty list
+                    filtered_conversations = []
 
             # Apply limit to prevent context overflow
             # Follows Anthropic guidance: "Restrict responses to ~25,000 tokens"
