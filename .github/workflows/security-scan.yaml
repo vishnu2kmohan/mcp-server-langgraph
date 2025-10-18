@@ -6,6 +6,8 @@ on:
     - cron: '0 2 * * *'
   pull_request:
     branches: [ main ]
+  release:
+    types: [ published ]
   workflow_dispatch:  # Allow manual triggering
 
 concurrency:
@@ -20,7 +22,6 @@ jobs:
   trivy-scan:
     name: Trivy Container Scan
     runs-on: ubuntu-latest
-    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -44,7 +45,6 @@ jobs:
   dependency-check:
     name: Dependency Check
     runs-on: ubuntu-latest
-    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -81,7 +81,6 @@ jobs:
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
-    if: github.event_name != 'push'
     permissions:
       actions: read
       contents: read
@@ -102,7 +101,6 @@ jobs:
   secrets-scan:
     name: Secrets Scan
     runs-on: ubuntu-latest
-    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -120,7 +118,6 @@ jobs:
   license-check:
     name: License Compliance
     runs-on: ubuntu-latest
-    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
