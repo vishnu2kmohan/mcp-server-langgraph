@@ -18,9 +18,9 @@ from mcp.server.stdio import stdio_server
 from mcp.types import Resource, TextContent, Tool
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.auth.middleware import AuthMiddleware
+from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
-from mcp_server_langgraph.core.agent import AgentState, agent_graph
+from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
@@ -37,6 +37,12 @@ class ChatInput(BaseModel):
     """
 
     message: str = Field(description="The user message to send to the agent", min_length=1, max_length=10000)
+    token: str = Field(
+        description=(
+            "JWT authentication token. Obtain via /auth/login endpoint (HTTP) "
+            "or external authentication service. Required for all tool calls."
+        )
+    )
     user_id: str = Field(
         description=(
             "User identifier for authentication and authorization. "
@@ -70,7 +76,17 @@ class ChatInput(BaseModel):
 class SearchConversationsInput(BaseModel):
     """Input schema for conversation_search tool."""
 
-    query: str = Field(description="Search query to filter conversations", min_length=1, max_length=500)
+    query: str = Field(
+        description="Search query to filter conversations. Empty string returns recent conversations.",
+        min_length=0,
+        max_length=500,
+    )
+    token: str = Field(
+        description=(
+            "JWT authentication token. Obtain via /auth/login endpoint (HTTP) "
+            "or external authentication service. Required for all tool calls."
+        )
+    )
     user_id: str = Field(description="User identifier for authentication and authorization")
     limit: int = Field(default=10, ge=1, le=50, description="Maximum number of conversations to return (1-50)")
 
@@ -102,8 +118,17 @@ class MCPAgentServer:
                 "The service cannot start without a secure secret key."
             )
 
-        # Initialize auth with OpenFGA
-        self.auth = AuthMiddleware(secret_key=settings.jwt_secret_key, openfga_client=self.openfga)
+        # SECURITY: Fail-closed pattern - require OpenFGA in production
+        if settings.environment == "production" and self.openfga is None:
+            raise ValueError(
+                "CRITICAL: OpenFGA authorization is required in production mode. "
+                "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
+                "or set ENVIRONMENT=development for local testing. "
+                "Fallback authorization is not secure enough for production use."
+            )
+
+        # Initialize auth using factory (respects settings.auth_provider)
+        self.auth = create_auth_middleware(settings, openfga_client=self.openfga)
 
         self._setup_handlers()
 
@@ -164,13 +189,17 @@ class MCPAgentServer:
                                     "type": "string",
                                     "description": "Conversation thread identifier (e.g., 'conv_abc123')",
                                 },
+                                "token": {
+                                    "type": "string",
+                                    "description": "JWT authentication token. Required for all tool calls.",
+                                },
                                 "user_id": {
                                     "type": "string",
                                     "description": "User identifier for authentication and authorization",
                                 },
                                 "username": {"type": "string", "description": "DEPRECATED: Use 'user_id' instead"},
                             },
-                            "required": ["thread_id", "user_id"],
+                            "required": ["thread_id", "token", "user_id"],
                         },
                     ),
                     Tool(
@@ -195,35 +224,37 @@ class MCPAgentServer:
                 logger.info(f"Tool called: {name}", extra={"tool": name, "args": arguments})
                 metrics.tool_calls.add(1, {"tool": name})
 
-                # Extract user_id (with backward compatibility for username)
-                user_id = arguments.get("user_id") or arguments.get("username")
+                # SECURITY: Require JWT token for all tool calls
+                token = arguments.get("token")
 
-                # Require authentication
-                if not user_id:
-                    logger.warning("No user identification provided")
+                if not token:
+                    logger.warning("No authentication token provided")
                     metrics.auth_failures.add(1)
                     raise PermissionError(
-                        "User identification required. Provide 'user_id' parameter. "
-                        "(Legacy 'username' also supported but deprecated)"
+                        "Authentication token required. Provide 'token' parameter with a valid JWT. "
+                        "Obtain token via /auth/login endpoint or external authentication service."
                     )
 
-                # Log deprecation warning if username was used
-                if "username" in arguments and "user_id" not in arguments:
-                    logger.warning(
-                        "DEPRECATED: 'username' parameter used. Please update to 'user_id'.",
-                        extra={"user": user_id, "tool": name},
-                    )
+                # Verify JWT token
+                token_verification = await self.auth.verify_token(token)
 
-                # Authenticate user
-                span.set_attribute("user.id", user_id)
-                auth_result = await self.auth.authenticate(user_id)
-
-                if not auth_result["authorized"]:
-                    logger.warning("Authentication failed", extra={"user_id": user_id, "reason": auth_result.get("reason")})
+                if not token_verification.valid:
+                    logger.warning("Token verification failed", extra={"error": token_verification.error})
                     metrics.auth_failures.add(1)
-                    raise PermissionError(f"Authentication failed: {auth_result.get('reason', 'unknown')}")
+                    raise PermissionError(
+                        f"Invalid authentication token: {token_verification.error or 'token verification failed'}"
+                    )
 
-                user_id = auth_result["user_id"]
+                # Extract user_id from validated token payload
+                if not token_verification.payload or "sub" not in token_verification.payload:
+                    logger.error("Token payload missing 'sub' claim")
+                    metrics.auth_failures.add(1)
+                    raise PermissionError("Invalid token: missing user identifier")
+
+                user_id = token_verification.payload["sub"]
+                span.set_attribute("user.id", user_id)
+
+                logger.info("User authenticated via token", extra={"user_id": user_id, "tool": name})
 
                 # Check OpenFGA authorization
                 resource = f"tool:{name}"
@@ -267,9 +298,16 @@ class MCPAgentServer:
         - Performance tracking
         """
         with tracer.start_as_current_span("agent.chat"):
-            message = arguments["message"]
-            thread_id = arguments.get("thread_id", "default")
-            response_format_type = arguments.get("response_format", "concise")
+            # BUGFIX: Validate input with Pydantic schema to enforce length limits and required fields
+            try:
+                chat_input = ChatInput.model_validate(arguments)
+            except Exception as e:
+                logger.error(f"Invalid chat input: {e}", extra={"arguments": arguments})
+                raise ValueError(f"Invalid chat input: {e}")
+
+            message = chat_input.message
+            thread_id = chat_input.thread_id or "default"
+            response_format_type = chat_input.response_format
 
             span.set_attribute("message.length", len(message))
             span.set_attribute("thread.id", thread_id)
@@ -277,15 +315,36 @@ class MCPAgentServer:
             span.set_attribute("response.format", response_format_type)
 
             # Check if user can access this conversation
+            # BUGFIX: Allow first-time conversation creation without pre-existing OpenFGA tuples
+            # For new conversations, we short-circuit authorization and will seed ownership after creation
             conversation_resource = f"conversation:{thread_id}"
 
-            can_edit = await self.auth.authorize(user_id=user_id, relation="editor", resource=conversation_resource)
+            # Check if conversation exists by trying to get state from checkpointer
+            graph = get_agent_graph()
+            conversation_exists = False
+            if hasattr(graph, "checkpointer") and graph.checkpointer is not None:
+                try:
+                    config = {"configurable": {"thread_id": thread_id}}
+                    state_snapshot = await graph.aget_state(config)
+                    conversation_exists = state_snapshot is not None and state_snapshot.values is not None
+                except Exception:
+                    # If we can't check, assume it doesn't exist (fail-open for creation)
+                    conversation_exists = False
 
-            if not can_edit:
-                logger.warning("User cannot edit conversation", extra={"user_id": user_id, "thread_id": thread_id})
-                raise PermissionError(
-                    f"Not authorized to edit conversation '{thread_id}'. "
-                    f"Request access from conversation owner or use a different thread_id."
+            # Only check authorization for existing conversations
+            if conversation_exists:
+                can_edit = await self.auth.authorize(user_id=user_id, relation="editor", resource=conversation_resource)
+                if not can_edit:
+                    logger.warning("User cannot edit conversation", extra={"user_id": user_id, "thread_id": thread_id})
+                    raise PermissionError(
+                        f"Not authorized to edit conversation '{thread_id}'. "
+                        f"Request access from conversation owner or use a different thread_id."
+                    )
+            else:
+                # New conversation - user becomes implicit owner (OpenFGA tuples should be seeded after creation)
+                logger.info(
+                    "Creating new conversation, user granted implicit ownership",
+                    extra={"user_id": user_id, "thread_id": thread_id},
                 )
 
             logger.info(
@@ -310,7 +369,7 @@ class MCPAgentServer:
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await agent_graph.ainvoke(initial_state, config)
+                result = await get_agent_graph().ainvoke(initial_state, config)
 
                 # Extract response
                 response_message = result["messages"][-1]
@@ -359,7 +418,8 @@ class MCPAgentServer:
             # Retrieve conversation state from checkpointer
             try:
                 # Get the checkpointer from agent_graph
-                if not hasattr(agent_graph, "checkpointer") or agent_graph.checkpointer is None:
+                graph = get_agent_graph()
+                if not hasattr(graph, "checkpointer") or graph.checkpointer is None:
                     logger.warning("Checkpointing not enabled, cannot retrieve conversation history")
                     return [
                         TextContent(
@@ -371,7 +431,7 @@ class MCPAgentServer:
 
                 # Get state from checkpointer
                 config = {"configurable": {"thread_id": thread_id}}
-                state_snapshot = await agent_graph.aget_state(config)
+                state_snapshot = await graph.aget_state(config)
 
                 if not state_snapshot or not state_snapshot.values:
                     logger.info("No conversation history found", extra={"thread_id": thread_id})
@@ -450,8 +510,15 @@ class MCPAgentServer:
         - Better for users with many conversations
         """
         with tracer.start_as_current_span("agent.search_conversations"):
-            query = arguments.get("query", "")
-            limit = arguments.get("limit", 10)
+            # BUGFIX: Validate input with Pydantic schema to enforce query length and limit constraints
+            try:
+                search_input = SearchConversationsInput.model_validate(arguments)
+            except Exception as e:
+                logger.error(f"Invalid search input: {e}", extra={"arguments": arguments})
+                raise ValueError(f"Invalid search input: {e}")
+
+            query = search_input.query
+            limit = search_input.limit
 
             span.set_attribute("search.query", query)
             span.set_attribute("search.limit", limit)

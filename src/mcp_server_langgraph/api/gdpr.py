@@ -16,7 +16,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from mcp_server_langgraph.auth.middleware import require_auth
+from mcp_server_langgraph.auth.middleware import get_current_user, require_auth
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.core.compliance.data_deletion import DataDeletionService
 from mcp_server_langgraph.core.compliance.data_export import DataExportService
@@ -98,16 +98,43 @@ class ConsentResponse(BaseModel):
 
 
 # In-memory consent storage (replace with database in production)
+# WARNING: This is not production-ready - data will be lost on server restart
 _consent_storage: Dict[str, Dict[str, dict]] = {}
 
+
+# PRODUCTION READINESS WARNING AND GUARD
+import os
+import warnings
+
+# Check if running in production and guard against using in-memory storage
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+GDPR_STORAGE_BACKEND = os.getenv("GDPR_STORAGE_BACKEND", "memory")  # "memory", "postgres", "redis"
+
+if ENVIRONMENT == "production" and GDPR_STORAGE_BACKEND == "memory":
+    raise RuntimeError(
+        "CRITICAL: GDPR endpoints cannot use in-memory storage in production. "
+        "Set GDPR_STORAGE_BACKEND=postgres or GDPR_STORAGE_BACKEND=redis, "
+        "or set ENVIRONMENT=development for testing. "
+        "Data subject rights (GDPR compliance) require persistent storage."
+    )
+
+# Warn in non-production environments
+if GDPR_STORAGE_BACKEND == "memory":
+    warnings.warn(
+        "GDPR endpoints use in-memory storage which is NOT production-ready. "
+        "Profile and consent data will be lost on server restart. "
+        "For production use, set GDPR_STORAGE_BACKEND=postgres or GDPR_STORAGE_BACKEND=redis. "
+        "See docs/compliance/gdpr-storage-requirements.md for details.",
+        category=RuntimeWarning,
+        stacklevel=2,
+    )
 
 # ==================== Endpoints ====================
 
 
 @router.get("/me/data")
-@require_auth
 async def get_user_data(
-    request: Request,
+    user: Dict[str, Any] = Depends(get_current_user),
     session_store: SessionStore = Depends(get_session_store),
 ):
     """
@@ -128,10 +155,10 @@ async def get_user_data(
     - Consents
     """
     with tracer.start_as_current_span("gdpr.get_user_data"):
-        # Get authenticated user from request state
-        user_id = request.state.user.get("user_id")
-        username = request.state.user.get("username")
-        email = request.state.user.get("email", f"{username}@example.com")
+        # Get authenticated user
+        user_id = user.get("user_id")
+        username = user.get("username")
+        email = user.get("email", f"{username}@example.com")
 
         # Create export service
         export_service = DataExportService(session_store=session_store)
@@ -145,7 +172,6 @@ async def get_user_data(
             extra={
                 "user_id": user_id,
                 "export_id": export.export_id,
-                "ip_address": request.client.host if request.client else "unknown",
                 "gdpr_article": "15",
             },
         )
@@ -154,9 +180,9 @@ async def get_user_data(
 
 
 @router.get("/me/export")
-@require_auth
+
 async def export_user_data(
-    request: Request,
+    user: Dict[str, Any] = Depends(get_current_user),
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
 ):
@@ -173,9 +199,9 @@ async def export_user_data(
     """
     with tracer.start_as_current_span("gdpr.export_user_data"):
         # Get authenticated user
-        user_id = request.state.user.get("user_id")
-        username = request.state.user.get("username")
-        email = request.state.user.get("email", f"{username}@example.com")
+        user_id = user.get("user_id")
+        username = user.get("username")
+        email = user.get("email", f"{username}@example.com")
 
         # Create export service
         export_service = DataExportService(session_store=session_store)
@@ -192,7 +218,7 @@ async def export_user_data(
                 "user_id": user_id,
                 "format": format,
                 "size_bytes": len(data_bytes),
-                "ip_address": request.client.host if request.client else "unknown",
+                
                 "gdpr_article": "20",
             },
         )
@@ -205,10 +231,10 @@ async def export_user_data(
 
 
 @router.patch("/me")
-@require_auth
+
 async def update_user_profile(
-    request: Request,
     profile_update: UserProfileUpdate,
+    user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Update user profile (GDPR Article 16 - Right to Rectification)
@@ -223,8 +249,8 @@ async def update_user_profile(
     """
     with tracer.start_as_current_span("gdpr.update_user_profile"):
         # Get authenticated user
-        user_id = request.state.user.get("user_id")
-        username = request.state.user.get("username")
+        user_id = user.get("user_id")
+        username = user.get("username")
 
         # Get fields to update (exclude unset fields)
         update_data = profile_update.model_dump(exclude_unset=True)
@@ -238,7 +264,7 @@ async def update_user_profile(
             extra={
                 "user_id": user_id,
                 "fields_updated": list(update_data.keys()),
-                "ip_address": request.client.host if request.client else "unknown",
+                
                 "gdpr_article": "16",
             },
         )
@@ -258,9 +284,9 @@ async def update_user_profile(
 
 
 @router.delete("/me")
-@require_auth
+
 async def delete_user_account(
-    request: Request,
+    user: Dict[str, Any] = Depends(get_current_user),
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
     session_store: SessionStore = Depends(get_session_store),
 ):
@@ -295,8 +321,8 @@ async def delete_user_account(
             )
 
         # Get authenticated user
-        user_id = request.state.user.get("user_id")
-        username = request.state.user.get("username")
+        user_id = user.get("user_id")
+        username = user.get("username")
 
         # Log deletion request (before deletion)
         logger.warning(
@@ -304,7 +330,7 @@ async def delete_user_account(
             extra={
                 "user_id": user_id,
                 "username": username,
-                "ip_address": request.client.host if request.client else "unknown",
+                
                 "gdpr_article": "17",
             },
         )
@@ -349,10 +375,10 @@ async def delete_user_account(
 
 
 @router.post("/me/consent")
-@require_auth
+
 async def update_consent(
-    request: Request,
     consent: ConsentRecord,
+    user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Update user consent preferences (GDPR Article 21 - Right to Object)
@@ -366,12 +392,12 @@ async def update_consent(
     """
     with tracer.start_as_current_span("gdpr.update_consent"):
         # Get authenticated user
-        user_id = request.state.user.get("user_id")
+        user_id = user.get("user_id")
 
         # Capture metadata
         consent.timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        consent.ip_address = request.client.host if request.client else "unknown"
-        consent.user_agent = request.headers.get("user-agent", "unknown")
+        consent.ip_address = None  # Could capture from X-Forwarded-For if needed
+        consent.user_agent = None  # Could capture from headers if needed
 
         # Store consent (in-memory for now)
         if user_id not in _consent_storage:
@@ -400,8 +426,8 @@ async def update_consent(
 
 
 @router.get("/me/consent")
-@require_auth
-async def get_consent_status(request: Request):
+
+async def get_consent_status(user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get current consent status (GDPR Article 21 - Right to Object)
 
@@ -411,7 +437,7 @@ async def get_consent_status(request: Request):
     """
     with tracer.start_as_current_span("gdpr.get_consent_status"):
         # Get authenticated user
-        user_id = request.state.user.get("user_id")
+        user_id = user.get("user_id")
 
         # Get consent status
         consents = _consent_storage.get(user_id, {})
