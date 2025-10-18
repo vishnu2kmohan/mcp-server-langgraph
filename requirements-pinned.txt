@@ -2,25 +2,29 @@
 # Generated for production deployment stability
 
 # LangGraph and LangChain (pinned)
-# Note: langgraph-prebuilt 0.6.4 requires langchain-core>=0.3.67
-langgraph==0.6.10
-langchain-core==0.3.79
+# Note: langgraph 1.0.0 is production/stable
+langgraph==1.0.0
+langchain-core==1.0.0
 
 # LiteLLM for multi-provider LLM support
-litellm==1.78.0
+litellm==1.78.3
 
 # MCP Server
-mcp==1.1.2
+mcp==1.18.0
 
 # Authentication
 PyJWT==2.10.1
-cryptography==46.0.2
+cryptography==46.0.3
 
 # OpenTelemetry Core
+# NOTE: All OpenTelemetry packages pinned to 1.37.0 due to logfire dependency conflict (via pydantic-ai)
+# logfire requires opentelemetry-exporter-otlp-proto-http<1.38.0
+# OpenTelemetry exporters require SDK version match (~=)
 opentelemetry-api==1.37.0
 opentelemetry-sdk==1.37.0
 
 # OpenTelemetry Instrumentation
+# Must match SDK version (0.58b0 for SDK 1.37.0)
 opentelemetry-instrumentation-logging==0.58b0
 
 # OpenTelemetry Exporters
@@ -81,10 +85,10 @@ openfga-sdk==0.9.7
 # infisical-python==2.3.5  # Uncomment for local installation with wheels
 
 # Utilities
-python-dotenv==1.0.1
-pydantic==2.12.2
+python-dotenv==1.1.1
+pydantic==2.12.3
 pydantic-settings==2.11.0
-httpx==0.27.0
+httpx==0.28.1
 
 # Health checks and API
 fastapi==0.119.0

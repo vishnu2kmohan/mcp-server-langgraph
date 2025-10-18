@@ -49,9 +49,11 @@ async def test_conversation_retrieval_success(mock_auth, mock_openfga):
         "user_id": "alice",
     }
 
-    with patch("mcp_server_langgraph.mcp.server_stdio.agent_graph") as mock_graph:
+    with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
+        mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()  # Checkpointing enabled
         mock_graph.aget_state = AsyncMock(return_value=mock_state)
+        mock_get_graph.return_value = mock_graph
 
         # Create mock span
         mock_span = MagicMock()
@@ -74,8 +76,10 @@ async def test_conversation_retrieval_no_checkpointer(mock_auth, mock_openfga):
     server = MCPAgentServer(openfga_client=mock_openfga)
     server.auth = mock_auth
 
-    with patch("mcp_server_langgraph.mcp.server_stdio.agent_graph") as mock_graph:
+    with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
+        mock_graph = MagicMock()
         mock_graph.checkpointer = None  # Checkpointing disabled
+        mock_get_graph.return_value = mock_graph
 
         mock_span = MagicMock()
 
@@ -98,9 +102,11 @@ async def test_conversation_retrieval_not_found(mock_auth, mock_openfga):
     mock_state = MagicMock()
     mock_state.values = None
 
-    with patch("mcp_server_langgraph.mcp.server_stdio.agent_graph") as mock_graph:
+    with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
+        mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         mock_graph.aget_state = AsyncMock(return_value=mock_state)
+        mock_get_graph.return_value = mock_graph
 
         mock_span = MagicMock()
 
@@ -122,9 +128,11 @@ async def test_conversation_retrieval_empty_messages(mock_auth, mock_openfga):
     mock_state = MagicMock()
     mock_state.values = {"messages": [], "next_action": "end"}
 
-    with patch("mcp_server_langgraph.mcp.server_stdio.agent_graph") as mock_graph:
+    with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
+        mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         mock_graph.aget_state = AsyncMock(return_value=mock_state)
+        mock_get_graph.return_value = mock_graph
 
         mock_span = MagicMock()
 
@@ -160,9 +168,11 @@ async def test_conversation_retrieval_error_handling(mock_auth, mock_openfga):
     server = MCPAgentServer(openfga_client=mock_openfga)
     server.auth = mock_auth
 
-    with patch("mcp_server_langgraph.mcp.server_stdio.agent_graph") as mock_graph:
+    with patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph") as mock_get_graph:
+        mock_graph = MagicMock()
         mock_graph.checkpointer = MagicMock()
         mock_graph.aget_state = AsyncMock(side_effect=Exception("Database error"))
+        mock_get_graph.return_value = mock_graph
 
         mock_span = MagicMock()
 

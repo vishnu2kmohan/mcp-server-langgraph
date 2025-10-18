@@ -26,58 +26,58 @@ classifiers = [
 requires-python = ">=3.10,<3.13"
 keywords = ["mcp", "model-context-protocol", "langgraph", "llm", "agent", "anthropic", "openai", "openfga", "authorization", "observability", "opentelemetry", "langchain", "litellm", "multi-llm", "ai-agent"]
 dependencies = [
-    "langgraph>=0.2.28",
-    "langgraph-checkpoint-redis>=0.1.0",  # Redis checkpointer for distributed conversation state (latest: 0.1.2)
-    "langchain-core>=0.3.15",
-    "langsmith>=0.1.0",
-    "litellm>=1.78.0",
-    "mcp>=1.1.2",
+    "langgraph>=1.0.0",
+    "langgraph-checkpoint-redis>=0.1.2",  # Redis checkpointer for distributed conversation state
+    "langchain-core>=1.0.0",
+    "langsmith>=0.4.37",
+    "litellm>=1.78.3",
+    "mcp>=1.18.0",
     "PyJWT>=2.8.0",
-    "cryptography>=42.0.2",
-    "opentelemetry-api>=1.22.0",
-    "opentelemetry-sdk>=1.22.0",
-    "opentelemetry-instrumentation-logging>=0.43b0",
-    "opentelemetry-exporter-otlp-proto-grpc>=1.22.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.22.0",
+    "cryptography>=46.0.3",
+    "opentelemetry-api>=1.38.0",
+    "opentelemetry-sdk>=1.38.0",
+    "opentelemetry-instrumentation-logging>=0.59b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
     "openfga-sdk>=0.5.1",
     # infisical-python moved to optional-dependencies[secrets]
     # Application falls back to environment variables if not installed
-    "python-dotenv>=1.0.1",
-    "pydantic>=2.5.3",
-    "pydantic-settings>=2.1.0",
-    "httpx>=0.26.0",
+    "python-dotenv>=1.1.1",
+    "pydantic>=2.12.3",
+    "pydantic-settings>=2.11.0",
+    "httpx>=0.28.1",
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
-    "python-keycloak>=3.9.0",
-    "authlib>=1.3.0",
-    "redis[hiredis]>=5.0.0",  # Also used for conversation checkpoints (db 1)
-    "pyyaml>=6.0.1",
-    "apscheduler>=3.10.4",
-    "python-json-logger>=2.0.7",
+    "python-keycloak>=5.8.1",
+    "authlib>=1.6.5",
+    "redis[hiredis]>=6.4.0",  # Also used for conversation checkpoints (db 1)
+    "pyyaml>=6.0.3",
+    "apscheduler>=3.11.0",
+    "python-json-logger>=4.0.0",
     # Anthropic Best Practices Enhancements (ADR-0025)
-    "qdrant-client>=1.7.0",  # Vector database for Just-in-Time context loading
-    "langchain-google-genai>=0.2.0",  # Google Gemini embeddings (API-based, no model hosting)
+    "qdrant-client>=1.15.1",  # Vector database for Just-in-Time context loading
+    "langchain-google-genai>=3.0.0",  # Google Gemini embeddings (API-based, no model hosting)
 ]
 
 [project.optional-dependencies]
 dev = [
     # Testing framework
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.3",
-    "pytest-cov>=4.1.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=7.0.0",
     "pytest-mock>=3.12.0",
     "pytest-benchmark>=4.0.0",
     # Property-based testing
-    "hypothesis>=6.100.0",
+    "hypothesis>=6.142.1",
     "hypothesis-jsonschema>=0.22.1",
     # Contract testing
     "jsonschema>=4.21.0",
-    "schemathesis>=3.27.0",
+    "schemathesis>=4.3.4",
     "openapi-spec-validator>=0.7.1",
     # Mutation testing
-    "mutmut>=2.4.4",
+    "mutmut>=3.3.1",
     # Code quality
-    "black>=24.1.1",
+    "black>=25.9.0",
     "flake8>=7.0.0",
     "mypy>=1.8.0",
     "isort>=7.0.0",
@@ -91,12 +91,12 @@ secrets = [
     # See: requirements-infisical.txt for installation options
     # Docker builds: Automatically installed
     # Local builds: See docs/deployment/infisical-installation.md
-    "infisical-python>=2.1.7,<2.3.6",
+    "infisical-python>=2.1.7,<=2.3.6",
 ]
 
 embeddings = [
     # Self-hosted embeddings (backwards compatibility)
-    "sentence-transformers>=2.2.0",
+    "sentence-transformers>=5.1.1",
 ]
 
 all = [
@@ -154,7 +154,7 @@ exclude = [
     "*.egg-info",
 ]
 # Align with black formatting
-extend-ignore = ["E203", "W503"]
+extend-ignore = ["E203", "W503", "E501"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -195,6 +195,7 @@ strict = true
 [[tool.mypy.overrides]]
 module = [
     "mcp_server_langgraph.auth.*",
+    "mcp_server_langgraph.auth.factory",
     "mcp_server_langgraph.llm.*",
     "mcp_server_langgraph.core.agent",
 ]

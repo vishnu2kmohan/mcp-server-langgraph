@@ -23,6 +23,7 @@ else:
         pytest.skip("tomli not available", allow_module_level=True)
 
 
+@pytest.mark.unit
 def test_version_matches_pyproject():
     """Test that __version__ in __init__.py matches pyproject.toml."""
     # Read version from pyproject.toml
@@ -41,6 +42,7 @@ def test_version_matches_pyproject():
     )
 
 
+@pytest.mark.unit
 def test_config_version_matches():
     """Test that config.service_version matches package version."""
     from mcp_server_langgraph import __version__
@@ -52,6 +54,7 @@ def test_config_version_matches():
     )
 
 
+@pytest.mark.unit
 def test_telemetry_version_matches():
     """Test that telemetry resource uses correct version."""
     from mcp_server_langgraph import __version__
@@ -67,6 +70,7 @@ def test_telemetry_version_matches():
     )
 
 
+@pytest.mark.unit
 def test_version_format():
     """Test that version follows semantic versioning format."""
     from mcp_server_langgraph import __version__

@@ -26,9 +26,9 @@ class TestAuthMiddleware:
 
     @pytest.mark.asyncio
     async def test_authenticate_success(self):
-        """Test successful user authentication"""
+        """Test successful user authentication with password"""
         auth = AuthMiddleware()
-        result = await auth.authenticate("alice")
+        result = await auth.authenticate("alice", "alice123")
 
         assert result.authorized is True
         assert result.username == "alice"
@@ -37,13 +37,31 @@ class TestAuthMiddleware:
         assert "premium" in result.roles
 
     @pytest.mark.asyncio
+    async def test_authenticate_missing_password(self):
+        """Test authentication without password fails"""
+        auth = AuthMiddleware()
+        result = await auth.authenticate("alice")
+
+        assert result.authorized is False
+        assert result.reason == "password_required"
+
+    @pytest.mark.asyncio
+    async def test_authenticate_invalid_password(self):
+        """Test authentication with wrong password fails"""
+        auth = AuthMiddleware()
+        result = await auth.authenticate("alice", "wrongpassword")
+
+        assert result.authorized is False
+        assert result.reason == "invalid_credentials"
+
+    @pytest.mark.asyncio
     async def test_authenticate_user_not_found(self):
         """Test authentication with non-existent user"""
         auth = AuthMiddleware()
-        result = await auth.authenticate("nonexistent")
+        result = await auth.authenticate("nonexistent", "anypassword")
 
         assert result.authorized is False
-        assert result.reason == "user_not_found"
+        assert result.reason == "invalid_credentials"  # Same error as invalid password (security)
 
     @pytest.mark.asyncio
     async def test_authenticate_inactive_user(self):
@@ -51,7 +69,7 @@ class TestAuthMiddleware:
         auth = AuthMiddleware()
         auth.users_db["alice"]["active"] = False
 
-        result = await auth.authenticate("alice")
+        result = await auth.authenticate("alice", "alice123")
 
         assert result.authorized is False
         assert result.reason == "account_inactive"
@@ -119,11 +137,54 @@ class TestAuthMiddleware:
 
     @pytest.mark.asyncio
     async def test_authorize_fallback_viewer_access(self):
-        """Test fallback authorization for viewer relation"""
+        """Test fallback authorization for viewer relation on default conversation"""
         auth = AuthMiddleware()
-        result = await auth.authorize(user_id="user:alice", relation="viewer", resource="conversation:123")
+        # Users can view the default conversation
+        result = await auth.authorize(user_id="user:alice", relation="viewer", resource="conversation:default")
 
         assert result is True
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_editor_access_default(self):
+        """Test fallback authorization for editor relation on default conversation"""
+        auth = AuthMiddleware()
+        # Users should be able to edit the default conversation
+        result = await auth.authorize(user_id="user:alice", relation="editor", resource="conversation:default")
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_editor_access_owned(self):
+        """Test fallback authorization allows access to user-owned conversations"""
+        auth = AuthMiddleware()
+        # Alice should be able to access conversation:alice_thread1
+        result = await auth.authorize(user_id="user:alice", relation="editor", resource="conversation:alice_thread1")
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_editor_access_denied_other_user(self):
+        """
+        Test fallback authorization DENIES access to conversations owned by other users.
+
+        SECURITY: This is a critical regression test. The old fallback logic granted
+        access to ANY conversation:* resource. This test ensures users can only access
+        their own conversations.
+        """
+        auth = AuthMiddleware()
+        # Alice should NOT be able to access conversation:bob_thread1
+        result = await auth.authorize(user_id="user:alice", relation="editor", resource="conversation:bob_thread1")
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_viewer_access_denied_other_user(self):
+        """Test fallback authorization DENIES viewer access to other users' conversations"""
+        auth = AuthMiddleware()
+        # Bob should NOT be able to view conversation:alice_private
+        result = await auth.authorize(user_id="user:bob", relation="viewer", resource="conversation:alice_private")
+
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_authorize_fallback_unknown_user(self):
@@ -270,10 +331,10 @@ class TestRequireAuthDecorator:
         """Test decorator allows authorized request"""
 
         @require_auth()
-        async def protected_function(username: str = None, user_id: str = None):
+        async def protected_function(username: str = None, password: str = None, user_id: str = None):
             return f"Success for {user_id}"
 
-        result = await protected_function(username="alice")
+        result = await protected_function(username="alice", password="alice123")
         assert "user:alice" in result
 
     @pytest.mark.asyncio
@@ -305,10 +366,10 @@ class TestRequireAuthDecorator:
         mock_openfga.check_permission.return_value = True
 
         @require_auth(relation="executor", resource="tool:chat", openfga_client=mock_openfga)
-        async def protected_function(username: str = None, user_id: str = None):
+        async def protected_function(username: str = None, password: str = None, user_id: str = None):
             return f"Success for {user_id}"
 
-        result = await protected_function(username="alice")
+        result = await protected_function(username="alice", password="alice123")
         assert "user:alice" in result
 
     @pytest.mark.asyncio
@@ -318,11 +379,11 @@ class TestRequireAuthDecorator:
         mock_openfga.check_permission.return_value = False
 
         @require_auth(relation="admin", resource="organization:acme", openfga_client=mock_openfga)
-        async def protected_function(username: str = None, user_id: str = None):
+        async def protected_function(username: str = None, password: str = None, user_id: str = None):
             return "Success"
 
         with pytest.raises(PermissionError, match="Not authorized"):
-            await protected_function(username="bob")
+            await protected_function(username="bob", password="bob123")
 
 
 @pytest.mark.unit

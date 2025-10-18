@@ -214,14 +214,17 @@ class TestAuthorizationProperties:
             auth.users_db[username] = {
                 "user_id": f"user:{username}",
                 "email": f"{username}@test.com",
+                "password": "test123",  # Add password for authentication
                 "roles": ["user"],
                 "active": False,  # Inactive
             }
         else:
             auth.users_db[username]["active"] = False
+            if "password" not in auth.users_db[username]:
+                auth.users_db[username]["password"] = "test123"
 
         # Property: Should not authenticate
-        result = await auth.authenticate(username)
+        result = await auth.authenticate(username, "test123")
         assert result.authorized is False
         assert result.reason == "account_inactive"
 
@@ -346,7 +349,7 @@ class TestSecurityInvariants:
         async def run_test():
             results = []
             for _ in range(attempts):
-                result = await auth.authenticate(nonexistent_user)
+                result = await auth.authenticate(nonexistent_user, "wrong_password")
                 results.append(result)
             return results
 
@@ -354,7 +357,8 @@ class TestSecurityInvariants:
 
         # Property: All failures should return same generic error
         assert all(not r.authorized for r in results)
-        assert all(r.reason == "user_not_found" for r in results)
+        # Changed from "user_not_found" to "invalid_credentials" to prevent username enumeration
+        assert all(r.reason == "invalid_credentials" for r in results)
 
         # Property: Response should be consistent (no timing attacks)
         # In production, add constant-time comparison

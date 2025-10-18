@@ -72,7 +72,7 @@ class TestInMemoryUserProvider:
     async def test_authenticate_success(self):
         """Test successful authentication"""
         provider = InMemoryUserProvider()
-        result = await provider.authenticate("alice")
+        result = await provider.authenticate("alice", "alice123")
 
         assert result.authorized is True
         assert result.username == "alice"
@@ -84,10 +84,10 @@ class TestInMemoryUserProvider:
     async def test_authenticate_user_not_found(self):
         """Test authentication with non-existent user"""
         provider = InMemoryUserProvider()
-        result = await provider.authenticate("nonexistent")
+        result = await provider.authenticate("nonexistent", "password")
 
         assert result.authorized is False
-        assert result.reason == "user_not_found"
+        assert result.reason == "invalid_credentials"  # Changed from user_not_found for security
 
     @pytest.mark.asyncio
     async def test_authenticate_inactive_user(self):
@@ -95,7 +95,7 @@ class TestInMemoryUserProvider:
         provider = InMemoryUserProvider()
         provider.users_db["alice"]["active"] = False
 
-        result = await provider.authenticate("alice")
+        result = await provider.authenticate("alice", "alice123")
 
         assert result.authorized is False
         assert result.reason == "account_inactive"
@@ -546,7 +546,7 @@ class TestUserProviderInterface:
         assert callable(provider.list_users)
 
         # Test they work
-        result = await provider.authenticate("alice")
+        result = await provider.authenticate("alice", "alice123")
         assert result.authorized is True
 
         user = await provider.get_user_by_username("alice")

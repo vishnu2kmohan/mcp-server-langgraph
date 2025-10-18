@@ -4,25 +4,25 @@
 -r requirements.txt
 
 # Testing framework
-pytest>=8.2.0
-pytest-asyncio==0.26.0
-pytest-cov==4.1.0
+pytest>=8.4.2
+pytest-asyncio==1.1.0
+pytest-cov==7.0.0
 pytest-mock==3.15.1
 pytest-timeout==2.4.0
 pytest-xdist==3.8.0  # Parallel test execution
 pytest-benchmark==4.0.0  # Performance benchmarking
 
 # Property-based testing
-hypothesis>=6.100.0  # Generative test case creation
+hypothesis>=6.142.1  # Generative test case creation
 hypothesis-jsonschema>=0.22.1  # JSON Schema-based strategies
 
 # Contract testing
 jsonschema>=4.21.0  # JSON Schema validation
-schemathesis>=3.27.0  # API contract testing
+schemathesis>=4.3.4  # API contract testing
 openapi-spec-validator>=0.7.1  # OpenAPI validation
 
 # Mutation testing
-mutmut>=2.4.4  # Test effectiveness via code mutations
+mutmut>=3.3.1  # Test effectiveness via code mutations
 
 # Test utilities
 # httpx version already specified in requirements.txt
@@ -34,7 +34,7 @@ faker==37.11.0  # Generate test data
 # - Formatters (black, isort): Flexible (>=) for latest features and security patches
 # - Static analyzers (flake8, mypy): Pinned (==) for consistent CI/CD results
 # - Linters (pylint): Flexible with minimum version
-black>=24.1.1  # Auto-formatter - use latest for best formatting
+black>=25.9.0  # Auto-formatter - use latest for best formatting
 flake8==7.3.0  # Linter - pinned for consistent error detection
 mypy==1.18.2  # Type checker - pinned for consistent type checking
 isort>=7.0.0  # Import sorter - use latest for best sorting (matches pyproject.toml)

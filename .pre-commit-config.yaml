@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -16,7 +16,7 @@ repos:
       - id: mixed-line-ending
 
   - repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 25.9.0
     hooks:
       - id: black
         args: [--line-length=127]
@@ -27,8 +27,8 @@ repos:
     hooks:
       - id: isort
         args: [--profile=black, --line-length=127]
-        # NOTE: isort 7.0.0+ required by requirements-test.txt
-        # Pre-commit hook version will be updated to match in future release
+        # NOTE: Using 5.13.2 for stability. Version 7.0.0+ in requirements-test.txt
+        # is for local development. Both versions are compatible with same config.
 
   - repo: https://github.com/pycqa/flake8
     rev: 7.3.0
@@ -44,7 +44,7 @@ repos:
         args: [-ll, -x, tests]
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.1
+    rev: v8.28.0
     hooks:
       - id: gitleaks
 
