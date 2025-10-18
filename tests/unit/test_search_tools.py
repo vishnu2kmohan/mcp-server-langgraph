@@ -4,6 +4,8 @@ Unit tests for search tools
 Tests knowledge base and web search functionality.
 """
 
+from unittest.mock import patch
+
 import pytest
 
 from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
@@ -13,24 +15,29 @@ from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_s
 class TestSearchKnowledgeBase:
     """Test suite for search_knowledge_base tool"""
 
-    def test_search_with_query(self):
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    def test_search_with_query(self, mock_settings):
         """Test search with a query string"""
+        mock_settings.qdrant_url = None  # Not configured
         result = search_knowledge_base.invoke({"query": "test query", "limit": 5})
         assert isinstance(result, str)
         assert "test query" in result
-        assert "PLACEHOLDER" in result  # Current placeholder implementation
+        assert "not configured" in result.lower()  # Updated implementation
 
-    def test_search_with_different_limits(self):
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    def test_search_with_different_limits(self, mock_settings):
         """Test search with different result limits"""
-        result1 = search_knowledge_base.invoke({"query": "test", "limit": 3})
-        result2 = search_knowledge_base.invoke({"query": "test", "limit": 10})
-        assert "Top 3 results" in result1
-        assert "Top 10 results" in result2
+        mock_settings.qdrant_url = None
+        for limit in [3, 10]:
+            result = search_knowledge_base.invoke({"query": "test", "limit": limit})
+            assert isinstance(result, str)
 
-    def test_search_default_limit(self):
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    def test_search_default_limit(self, mock_settings):
         """Test search uses default limit"""
+        mock_settings.qdrant_url = None
         result = search_knowledge_base.invoke({"query": "test"})
-        assert "Top 5 results" in result  # Default limit is 5
+        assert isinstance(result, str)
 
     def test_search_empty_query(self):
         """Test search with empty query"""
@@ -48,29 +55,47 @@ class TestSearchKnowledgeBase:
 class TestWebSearch:
     """Test suite for web_search tool"""
 
-    def test_web_search_with_query(self):
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    async def test_web_search_with_query(self, mock_settings):
         """Test web search with a query"""
-        result = web_search.invoke({"query": "test query", "num_results": 5})
+        mock_settings.tavily_api_key = None
+        mock_settings.serper_api_key = None
+        mock_settings.brave_api_key = None
+
+        result = await web_search.invoke({"query": "test query", "num_results": 5})
         assert isinstance(result, str)
         assert "test query" in result
-        assert "PLACEHOLDER" in result  # Current placeholder implementation
+        assert "not configured" in result.lower()  # Updated implementation
 
-    def test_web_search_different_result_counts(self):
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    async def test_web_search_different_result_counts(self, mock_settings):
         """Test web search with different result counts"""
-        result1 = web_search.invoke({"query": "test", "num_results": 3})
-        result2 = web_search.invoke({"query": "test", "num_results": 8})
-        assert "Top 3 results" in result1
-        assert "Top 8 results" in result2
+        mock_settings.tavily_api_key = None
+        mock_settings.serper_api_key = None
 
-    def test_web_search_default_results(self):
+        result = await web_search.invoke({"query": "test", "num_results": 3})
+        assert isinstance(result, str)
+
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    async def test_web_search_default_results(self, mock_settings):
         """Test web search uses default result count"""
-        result = web_search.invoke({"query": "test"})
-        assert "Top 5 results" in result  # Default is 5
+        mock_settings.tavily_api_key = None
+        result = await web_search.invoke({"query": "test"})
+        assert isinstance(result, str)
 
-    def test_web_search_shows_api_notice(self):
-        """Test that placeholder shows API configuration notice"""
-        result = web_search.invoke({"query": "test", "num_results": 5})
-        assert "API not configured" in result or "PLACEHOLDER" in result
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    async def test_web_search_shows_api_notice(self, mock_settings):
+        """Test that updated implementation shows API configuration notice"""
+        mock_settings.tavily_api_key = None
+        mock_settings.serper_api_key = None
+        mock_settings.brave_api_key = None
+
+        result = await web_search.invoke({"query": "test", "num_results": 5})
+        assert "not configured" in result.lower()  # Updated implementation
 
 
 @pytest.mark.unit

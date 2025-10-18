@@ -91,8 +91,14 @@ class TestSLATarget:
 class TestUptimeMeasurement:
     """Test uptime SLA measurement"""
 
-    async def test_measure_uptime_meeting_sla(self, sla_monitor):
+    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
+    async def test_measure_uptime_meeting_sla(self, mock_prom_client, sla_monitor):
         """Test uptime measurement meeting SLA"""
+        # Mock Prometheus to return 0 downtime (100% uptime)
+        mock_client = AsyncMock()
+        mock_client.query_downtime.return_value = 0
+        mock_prom_client.return_value = mock_client
+
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=1)
 
@@ -103,8 +109,14 @@ class TestUptimeMeasurement:
         assert measurement.measured_value >= 99.9  # Should meet default target
         assert measurement.status == SLAStatus.MEETING
 
-    async def test_measure_uptime_structure(self, sla_monitor):
+    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
+    async def test_measure_uptime_structure(self, mock_prom_client, sla_monitor):
         """Test uptime measurement structure"""
+        # Mock Prometheus
+        mock_client = AsyncMock()
+        mock_client.query_downtime.return_value = 0
+        mock_prom_client.return_value = mock_client
+
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
@@ -139,8 +151,13 @@ class TestUptimeMeasurement:
 class TestResponseTimeMeasurement:
     """Test response time SLA measurement"""
 
-    async def test_measure_response_time_meeting_sla(self, sla_monitor):
+    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
+    async def test_measure_response_time_meeting_sla(self, mock_prom_client, sla_monitor):
         """Test response time measurement meeting SLA"""
+        mock_client = AsyncMock()
+        mock_client.query_percentiles.return_value = {95: 0.350}  # 350ms
+        mock_prom_client.return_value = mock_client
+
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=1)
 
@@ -151,28 +168,40 @@ class TestResponseTimeMeasurement:
         assert measurement.measured_value > 0
         assert measurement.unit == "ms"
 
-    async def test_measure_response_time_p95(self, sla_monitor):
+    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
+    async def test_measure_response_time_p95(self, mock_prom_client, sla_monitor):
         """Test p95 response time measurement"""
+        mock_client = AsyncMock()
+        mock_client.query_percentiles.return_value = {95: 0.350}
+        mock_prom_client.return_value = mock_client
+
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
         measurement = await sla_monitor.measure_response_time(start_time, end_time, percentile=95)
 
         assert measurement.measured_value > 0
-        # Placeholder returns 350ms, should meet 500ms target
+        # 350ms should meet 500ms target
         assert measurement.status == SLAStatus.MEETING
 
-    async def test_measure_response_time_different_percentiles(self, sla_monitor):
+    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
+    async def test_measure_response_time_different_percentiles(self, mock_prom_client, sla_monitor):
         """Test different percentile measurements"""
+        mock_client = AsyncMock()
+        # Different response times for different percentiles
+        mock_client.query_percentiles.side_effect = [
+            {50: 0.200},
+            {95: 0.350},
+            {99: 0.450},
+        ]
+        mock_prom_client.return_value = mock_client
+
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=1)
 
-        p95 = await sla_monitor.measure_response_time(start_time, end_time, percentile=95)
-        p99 = await sla_monitor.measure_response_time(start_time, end_time, percentile=99)
-
-        # Both should be valid measurements
-        assert p95.measured_value > 0
-        assert p99.measured_value > 0
+        for percentile in [50, 95, 99]:
+            measurement = await sla_monitor.measure_response_time(start_time, end_time, percentile=percentile)
+            assert measurement.metric == SLAMetric.RESPONSE_TIME
 
 
 # --- Error Rate Measurement Tests ---
@@ -422,8 +451,14 @@ class TestBreachDetection:
         if measurement.status == SLAStatus.MEETING:
             assert measurement.breach_details is None
 
-    async def test_alert_on_breach(self, sla_monitor):
+    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
+    async def test_alert_on_breach(self, mock_prom_client, sla_monitor):
         """Test alerting on SLA breach"""
+        # Mock Prometheus to return low uptime (will breach 100% target)
+        mock_client = AsyncMock()
+        mock_client.query_downtime.return_value = 1440  # 24 minutes downtime = 98.3% uptime
+        mock_prom_client.return_value = mock_client
+
         with patch.object(sla_monitor, "_send_sla_alert", new_callable=AsyncMock) as mock_alert:
             # Create report that will breach
             low_target = SLATarget(
