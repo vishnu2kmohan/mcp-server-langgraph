@@ -359,19 +359,22 @@ def create_agent_graph():
         - ✅ Tool call extraction from AIMessage.tool_calls
         - ✅ Real tool execution with error handling
         - ✅ Support for both sync and async tools
-        - ⚠️  Parallel execution infrastructure available (wired in Phase 2)
+        - ✅ Parallel execution wired with enable_parallel_execution flag
 
         Features:
-        - Executes tools serially in order (default)
+        - Serial execution (default): Tools executed one at a time
+        - Parallel execution (if enabled): Independent tools run concurrently
+        - Automatic dependency detection and topological sorting
         - Graceful error handling with informative error messages
         - Comprehensive logging and telemetry
-        - Tool result validation
 
         For implementation reference, see:
         - LangChain tool binding: https://python.langchain.com/docs/how_to/tool_calling/
         - Parallel execution: docs/adr/ADR-0023-anthropic-tool-design-best-practices.md
         """
         from langchain_core.messages import ToolMessage
+
+        from mcp_server_langgraph.tools import get_tool_by_name
 
         messages = state["messages"]
         last_message = messages[-1]
@@ -396,10 +399,30 @@ def create_agent_graph():
             extra={
                 "tool_count": len(tool_calls),
                 "tools": [tc.get("name", "unknown") for tc in tool_calls],
+                "parallel_enabled": settings.enable_parallel_execution,
             },
         )
 
-        # Execute tools and collect results
+        # Check if parallel execution is enabled
+        enable_parallel = getattr(settings, "enable_parallel_execution", False)
+
+        if enable_parallel and len(tool_calls) > 1:
+            # Use parallel execution for multiple tool calls
+            logger.info(f"Using parallel execution for {len(tool_calls)} tools")
+            tool_messages = await _execute_tools_parallel(tool_calls, tools)
+        else:
+            # Use serial execution (default or single tool)
+            if enable_parallel:
+                logger.info("Parallel execution enabled but only 1 tool call - using serial execution")
+            tool_messages = await _execute_tools_serial(tool_calls)
+
+        # Append all tool messages to state (preserves conversation history)
+        return {**state, "messages": state["messages"] + tool_messages, "next_action": "respond"}
+
+    async def _execute_tools_serial(tool_calls: list) -> list:
+        """Execute tools serially (one at a time)"""
+        from langchain_core.messages import ToolMessage
+
         from mcp_server_langgraph.tools import get_tool_by_name
 
         tool_messages = []
@@ -413,8 +436,10 @@ def create_agent_graph():
                 tool = get_tool_by_name(tool_name)
 
                 if tool is None:
-                    result_content = f"Error: Tool '{tool_name}' not found. Available tools: {[t.name for t in tools]}"
-                    logger.error(f"Tool '{tool_name}' not found", extra={"available_tools": [t.name for t in tools]})
+                    from mcp_server_langgraph.tools import ALL_TOOLS
+
+                    result_content = f"Error: Tool '{tool_name}' not found. Available tools: {[t.name for t in ALL_TOOLS]}"
+                    logger.error(f"Tool '{tool_name}' not found", extra={"available_tools": [t.name for t in ALL_TOOLS]})
                 else:
                     # Execute the tool (tools can be sync or async)
                     logger.info(f"Invoking tool '{tool_name}'", extra={"args": tool_args})
@@ -447,8 +472,69 @@ def create_agent_graph():
             )
             tool_messages.append(tool_message)
 
-        # Append all tool messages to state (preserves conversation history)
-        return {**state, "messages": state["messages"] + tool_messages, "next_action": "respond"}
+        return tool_messages
+
+    async def _execute_tools_parallel(tool_calls: list, tools_list: list) -> list:
+        """Execute tools in parallel using ParallelToolExecutor"""
+        from langchain_core.messages import ToolMessage
+
+        from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
+        from mcp_server_langgraph.tools import get_tool_by_name
+
+        # Create parallel executor
+        max_parallelism = getattr(settings, "max_parallel_tools", 5)
+        executor = ParallelToolExecutor(max_parallelism=max_parallelism)
+
+        # Convert tool_calls to ToolInvocation objects
+        invocations = []
+        for tool_call in tool_calls:
+            tool_name = tool_call.get("name", "unknown")
+            tool_args = tool_call.get("args", {})
+            tool_call_id = tool_call.get("id", f"call_{len(invocations)}")
+
+            invocation = ToolInvocation(
+                tool_name=tool_name, arguments=tool_args, invocation_id=tool_call_id, dependencies=[]
+            )
+            invocations.append(invocation)
+
+        # Define tool executor function for parallel executor
+        async def execute_single_tool(tool_name: str, arguments: dict):
+            """Execute a single tool"""
+            tool = get_tool_by_name(tool_name)
+            if tool is None:
+                raise ValueError(f"Tool '{tool_name}' not found")
+
+            if hasattr(tool, "ainvoke"):
+                return await tool.ainvoke(arguments)
+            else:
+                return tool.invoke(arguments)
+
+        # Execute tools in parallel
+        try:
+            results = await executor.execute_parallel(invocations, execute_single_tool)
+
+            # Convert results to ToolMessage objects
+            tool_messages = []
+            for result in results:
+                # Find the original tool_call to get the correct ID
+                original_call = next((tc for tc in tool_calls if tc.get("id") == result.invocation_id), None)
+                tool_call_id = original_call.get("id") if original_call else result.invocation_id
+
+                if result.error:
+                    content = f"Error executing tool '{result.tool_name}': {str(result.error)}"
+                else:
+                    content = str(result.result)
+
+                tool_message = ToolMessage(content=content, tool_call_id=tool_call_id, name=result.tool_name)
+                tool_messages.append(tool_message)
+
+            return tool_messages
+
+        except Exception as e:
+            logger.error(f"Parallel tool execution failed: {e}", exc_info=True)
+            # Fall back to serial execution on failure
+            logger.warning("Falling back to serial execution due to parallel execution failure")
+            return await _execute_tools_serial(tool_calls)
 
     async def generate_response(state: AgentState) -> AgentState:
         """Generate final response using LLM with Pydantic AI validation"""
