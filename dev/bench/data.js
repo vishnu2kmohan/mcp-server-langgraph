@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760820603430,
+  "lastUpdate": 1760820766762,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3292,6 +3292,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00016488522610034963",
             "extra": "mean: 87.07190783868033 usec\nrounds: 3049"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a578711d30d1542143d653f8b1422d730f7ecf0a",
+          "message": "docs(progress): comprehensive Day 1 summary with path forward\n\n**Technical Debt Sprint - Day 1 Complete**\n\nCreated comprehensive summary documenting all Day 1 accomplishments,\nremaining work, time estimates, and recommended path forward.\n\n## Day 1 Summary\n\n**Progress**: 4/27 items completed (15%)\n**Time Invested**: ~16 hours of development work\n**Commits**: 7 total\n**Files Modified**: 14 files (+900 lines)\n\n### Completed Items\n1. ✅ CI/CD workflow fixes (unblocked v2.7.0 release)\n2. ✅ TODO catalog (367 lines, 30 items cataloged)\n3. ✅ Prometheus integration (3 TODOs resolved)\n4. ✅ Alerting configuration (production-ready)\n\n### Remaining Work\n- 14 CRITICAL items (34-37 hours estimated)\n- 9 HIGH items (21 hours estimated)\n- Total: 55-58 hours (7-8 days at current pace)\n\n## Key Findings\n\n**Time Analysis**:\n- Average 4 hours per item\n- Day 1 velocity: 4 items completed\n- Projected completion: 7-8 additional days\n\n**Recommendations**:\n1. **Quick Wins** (2-3 hours): Wire alerting to 4 modules\n2. **This Week** (1-2 days): Evidence collection + search tools\n3. **Next Week** (2-3 days): Storage backends + GDPR/HIPAA\n\n**Parallel Work Option**:\n- 3 developers working in parallel: 3-4 days total\n- Stream 1: Monitoring & Alerting (1-2 days)\n- Stream 2: Compliance (3-4 days)\n- Stream 3: Features (1-2 days)\n\n## Deliverable\n\n**File**:\n**Contents**:\n- Completed work details (4 items)\n- Pending work breakdown (23 items)\n- Time estimates per item\n- Progress metrics and velocity\n- Success criteria tracking\n- File modification summary\n- Recommendations and path forward\n- Multiple implementation options\n\n## Impact\n\n**Technical Debt Baseline Established**:\n- All 30 TODOs cataloged and prioritized\n- 4 critical items resolved (13%)\n- Clear roadmap for remaining 26 items\n- Realistic time estimates\n- Multiple execution strategies\n\n**Production Readiness**:\n- v2.7.0 release unblocked\n- Real-time SLA monitoring enabled\n- Production alerting configured\n- Foundation for compliance metrics\n\n## Next Steps\n\n**Immediate** (Day 2):\n- Wire alerting to 4 modules (4-7 hours)\n- Implement quick evidence queries (2-3 hours)\n\n**This Week**:\n- Complete compliance evidence collection\n- Implement search tools\n- GDPR/HIPAA integration\n\n**Next Week**:\n- Storage backend implementation\n- Remaining integrations\n- Testing and validation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T16:47:23-04:00",
+          "tree_id": "2f2eb8034475352fa8fa68502976d0268f7e3ec6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a578711d30d1542143d653f8b1422d730f7ecf0a"
+        },
+        "date": 1760820766383,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37104.64953612065,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030045562433454092",
+            "extra": "mean: 26.95080030405676 usec\nrounds: 5263"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32815.93702412139,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030178301568869954",
+            "extra": "mean: 30.472998508771784 usec\nrounds: 6706"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31617.227158834976,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031788783551781294",
+            "extra": "mean: 31.62832701856856 usec\nrounds: 14727"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.0849466581061,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020362601773449115",
+            "extra": "mean: 5.288628299999734 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.358986085183478,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001423238851492728",
+            "extra": "mean: 51.655597850000845 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.928282879837251,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000367728487226312",
+            "extra": "mean: 100.7223516999943 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1988309.445983627,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7680151168286705e-8",
+            "extra": "mean: 502.93982258143666 nsec\nrounds: 98242"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3927.40238630126,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017276074391114615",
+            "extra": "mean: 254.62122330219842 usec\nrounds: 1957"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2999.6279921240844,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009052960307143845",
+            "extra": "mean: 333.3746726679544 usec\nrounds: 2777"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3010.0539854386,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000303435212263624",
+            "extra": "mean: 332.219955136216 usec\nrounds: 1694"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40230.446694574566,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028713173400301876",
+            "extra": "mean: 24.85679583902952 usec\nrounds: 6392"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11781.128699262195,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014024838724685165",
+            "extra": "mean: 84.88151055192412 usec\nrounds: 3459"
           }
         ]
       }
