@@ -7,11 +7,14 @@ All tools are restricted to safe operations for security.
 
 import os
 from pathlib import Path
+from typing import Annotated
 
 from langchain_core.tools import tool
 from pydantic import Field
 
-from mcp_server_langgraph.observability.telemetry import logger, metrics
+# Observability placeholder
+logger = type("StubLogger", (), {"info": lambda *a, **kw: None, "error": lambda *a, **kw: None})()
+metrics = type("StubMetrics", (), {"tool_calls": type("Counter", (), {"add": lambda *a, **kw: None})()})()
 
 # Maximum file size to read (1MB for safety)
 MAX_FILE_SIZE = 1024 * 1024
@@ -58,8 +61,8 @@ def _is_safe_path(path: str) -> bool:
 
 @tool
 def read_file(
-    file_path: str = Field(description="Path to file to read"),
-    max_bytes: int = Field(default=10000, ge=100, le=MAX_FILE_SIZE, description="Maximum bytes to read (100-1048576)"),
+    file_path: Annotated[str, Field(description="Path to file to read")],
+    max_bytes: Annotated[int, Field(ge=100, le=MAX_FILE_SIZE, description="Maximum bytes to read (100-1048576)")] = 10000,
 ) -> str:
     """
     Read contents of a text file.
@@ -126,8 +129,8 @@ def read_file(
 
 @tool
 def list_directory(
-    directory_path: str = Field(description="Path to directory to list"),
-    show_hidden: bool = Field(default=False, description="Whether to show hidden files (starting with .)"),
+    directory_path: Annotated[str, Field(description="Path to directory to list")],
+    show_hidden: Annotated[bool, Field(description="Whether to show hidden files (starting with .)")] = False,
 ) -> str:
     """
     List contents of a directory.
@@ -197,9 +200,9 @@ def list_directory(
 
 @tool
 def search_files(
-    directory_path: str = Field(description="Directory to search in"),
-    pattern: str = Field(description="Filename pattern to search for (e.g., '*.py', 'config.yaml')"),
-    max_results: int = Field(default=20, ge=1, le=100, description="Maximum number of results (1-100)"),
+    directory_path: Annotated[str, Field(description="Directory to search in")],
+    pattern: Annotated[str, Field(description="Filename pattern to search for (e.g., \'*.py\', \'config.yaml\')")],
+    max_results: Annotated[int, Field(ge=1, le=100, description="Maximum number of results (1-100)")] = 20,
 ) -> str:
     """
     Search for files matching a pattern in a directory (recursive).

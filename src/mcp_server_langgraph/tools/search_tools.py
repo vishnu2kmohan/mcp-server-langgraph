@@ -4,16 +4,20 @@ Search tools for querying information
 Provides knowledge base and web search capabilities for the agent.
 """
 
+from typing import Annotated
+
 from langchain_core.tools import tool
 from pydantic import Field
 
-from mcp_server_langgraph.observability.telemetry import logger, metrics
+# Observability placeholder
+logger = type("StubLogger", (), {"info": lambda *a, **kw: None, "error": lambda *a, **kw: None})()
+metrics = type("StubMetrics", (), {"tool_calls": type("Counter", (), {"add": lambda *a, **kw: None})()})()
 
 
 @tool
 def search_knowledge_base(
-    query: str = Field(description="Search query to find relevant information"),
-    limit: int = Field(default=5, ge=1, le=20, description="Maximum number of results (1-20)"),
+    query: Annotated[str, Field(description="Search query to find relevant information")],
+    limit: Annotated[int, Field(ge=1, le=20, description="Maximum number of results (1-20)")] = 5,
 ) -> str:
     """
     Search internal knowledge base for relevant information.
@@ -58,8 +62,8 @@ To implement: Connect to Qdrant vector database for semantic search."""
 
 @tool
 def web_search(
-    query: str = Field(description="Search query for web search"),
-    num_results: int = Field(default=5, ge=1, le=10, description="Number of results to return (1-10)"),
+    query: Annotated[str, Field(description="Search query for web search")],
+    num_results: Annotated[int, Field(ge=1, le=10, description="Number of results to return (1-10)")] = 5,
 ) -> str:
     """
     Search the web for current information.

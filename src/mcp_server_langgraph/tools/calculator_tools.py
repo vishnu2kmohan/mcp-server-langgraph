@@ -11,7 +11,27 @@ from typing import Any
 from langchain_core.tools import tool
 from pydantic import Field
 
-from mcp_server_langgraph.observability.telemetry import logger, metrics
+def _safe_log(level: str, message: str, **kwargs) -> None:
+    """Safely log message, handling cases where observability isn't initialized"""
+    try:
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        getattr(logger, level)(message, **kwargs)
+    except (ImportError, RuntimeError):
+        # Observability not available - silently skip
+        pass
+
+
+def _safe_metric(metric_name: str, value: float, attributes: dict) -> None:
+    """Safely record metric, handling cases where observability isn't initialized"""
+    try:
+        from mcp_server_langgraph.observability.telemetry import metrics
+
+        getattr(metrics, metric_name).add(value, attributes)
+    except (ImportError, RuntimeError):
+        # Observability not available - silently skip
+        pass
+
 
 # Safe operators for calculator evaluation
 SAFE_OPERATORS = {
@@ -79,17 +99,17 @@ def calculator(expression: str = Field(description="Mathematical expression to e
     - "(8 / 2) ** 2" → 16.0
     """
     try:
-        logger.info("Calculator tool invoked", extra={"expression": expression})
-        metrics.tool_calls.add(1, {"tool": "calculator"})
+        _safe_log("info", "Calculator tool invoked", extra={"expression": expression})
+        _safe_metric("tool_calls", 1, {"tool": "calculator"})
 
         result = _safe_eval(expression)
 
-        logger.info("Calculator result", extra={"expression": expression, "result": result})
+        _safe_log("info", "Calculator result", extra={"expression": expression, "result": result})
         return f"{result}"
 
     except Exception as e:
         error_msg = f"Error evaluating expression '{expression}': {e}"
-        logger.error(error_msg, exc_info=True)
+        _safe_log("error", error_msg, exc_info=True)
         return f"Error: {e}"
 
 
@@ -97,14 +117,14 @@ def calculator(expression: str = Field(description="Mathematical expression to e
 def add(a: float = Field(description="First number"), b: float = Field(description="Second number")) -> str:
     """Add two numbers together."""
     try:
-        logger.info("Add tool invoked", extra={"a": a, "b": b})
-        metrics.tool_calls.add(1, {"tool": "add"})
+        _safe_log("info", "Add tool invoked", extra={"a": a, "b": b})
+        _safe_metric("tool_calls", 1, {"tool": "add"})
 
         result = a + b
         return f"{result}"
 
     except Exception as e:
-        logger.error(f"Error in add tool: {e}", exc_info=True)
+        _safe_log("error", f"Error in add tool: {e}", exc_info=True)
         return f"Error: {e}"
 
 
@@ -112,14 +132,14 @@ def add(a: float = Field(description="First number"), b: float = Field(descripti
 def subtract(a: float = Field(description="First number"), b: float = Field(description="Second number")) -> str:
     """Subtract second number from first number."""
     try:
-        logger.info("Subtract tool invoked", extra={"a": a, "b": b})
-        metrics.tool_calls.add(1, {"tool": "subtract"})
+        _safe_log("info", "Subtract tool invoked", extra={"a": a, "b": b})
+        _safe_metric("tool_calls", 1, {"tool": "subtract"})
 
         result = a - b
         return f"{result}"
 
     except Exception as e:
-        logger.error(f"Error in subtract tool: {e}", exc_info=True)
+        _safe_log("error", f"Error in subtract tool: {e}", exc_info=True)
         return f"Error: {e}"
 
 
@@ -127,14 +147,14 @@ def subtract(a: float = Field(description="First number"), b: float = Field(desc
 def multiply(a: float = Field(description="First number"), b: float = Field(description="Second number")) -> str:
     """Multiply two numbers together."""
     try:
-        logger.info("Multiply tool invoked", extra={"a": a, "b": b})
-        metrics.tool_calls.add(1, {"tool": "multiply"})
+        _safe_log("info", "Multiply tool invoked", extra={"a": a, "b": b})
+        _safe_metric("tool_calls", 1, {"tool": "multiply"})
 
         result = a * b
         return f"{result}"
 
     except Exception as e:
-        logger.error(f"Error in multiply tool: {e}", exc_info=True)
+        _safe_log("error", f"Error in multiply tool: {e}", exc_info=True)
         return f"Error: {e}"
 
 
@@ -142,8 +162,8 @@ def multiply(a: float = Field(description="First number"), b: float = Field(desc
 def divide(a: float = Field(description="Numerator"), b: float = Field(description="Denominator (cannot be zero)")) -> str:
     """Divide first number by second number."""
     try:
-        logger.info("Divide tool invoked", extra={"a": a, "b": b})
-        metrics.tool_calls.add(1, {"tool": "divide"})
+        _safe_log("info", "Divide tool invoked", extra={"a": a, "b": b})
+        _safe_metric("tool_calls", 1, {"tool": "divide"})
 
         if b == 0:
             return "Error: Division by zero"
@@ -152,5 +172,5 @@ def divide(a: float = Field(description="Numerator"), b: float = Field(descripti
         return f"{result}"
 
     except Exception as e:
-        logger.error(f"Error in divide tool: {e}", exc_info=True)
+        _safe_log("error", f"Error in divide tool: {e}", exc_info=True)
         return f"Error: {e}"

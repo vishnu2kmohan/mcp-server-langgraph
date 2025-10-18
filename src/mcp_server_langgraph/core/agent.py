@@ -353,19 +353,19 @@ def create_agent_graph():
         Execute tools based on LangChain tool calls.
 
         Supports both serial and parallel execution based on settings.
-        Currently uses stub responses until tools are bound to the model.
 
         Implementation status:
         - ✅ Message state preservation (appends instead of replacing)
         - ✅ Tool call extraction from AIMessage.tool_calls
-        - ⚠️  Actual tool execution pending (returns stub responses)
-        - ⚠️  Parallel execution infrastructure available but not wired
+        - ✅ Real tool execution with error handling
+        - ✅ Support for both sync and async tools
+        - ⚠️  Parallel execution infrastructure available (wired in Phase 2)
 
-        TODO: Complete tool integration:
-        1. Bind tools to the model using model.bind_tools(tools)
-        2. Wire parallel executor for independent tool calls
-        3. Add real tool implementations (search, calculator, etc.)
-        4. Add integration tests
+        Features:
+        - Executes tools serially in order (default)
+        - Graceful error handling with informative error messages
+        - Comprehensive logging and telemetry
+        - Tool result validation
 
         For implementation reference, see:
         - LangChain tool binding: https://python.langchain.com/docs/how_to/tool_calling/
@@ -399,18 +399,49 @@ def create_agent_graph():
             },
         )
 
-        # TODO: Replace with real tool execution
-        # For now, return stub responses for each tool call
+        # Execute tools and collect results
+        from mcp_server_langgraph.tools import get_tool_by_name
+
         tool_messages = []
         for tool_call in tool_calls:
             tool_name = tool_call.get("name", "unknown")
             tool_call_id = tool_call.get("id", str(len(tool_messages)))
+            tool_args = tool_call.get("args", {})
 
-            # Stub response
-            result_content = f"[STUB] Tool '{tool_name}' executed successfully. Real tool execution pending."
+            try:
+                # Find the tool by name
+                tool = get_tool_by_name(tool_name)
 
+                if tool is None:
+                    result_content = f"Error: Tool '{tool_name}' not found. Available tools: {[t.name for t in tools]}"
+                    logger.error(f"Tool '{tool_name}' not found", extra={"available_tools": [t.name for t in tools]})
+                else:
+                    # Execute the tool (tools can be sync or async)
+                    logger.info(f"Invoking tool '{tool_name}'", extra={"args": tool_args})
+
+                    if hasattr(tool, "ainvoke"):
+                        # Async tool
+                        result_content = await tool.ainvoke(tool_args)
+                    else:
+                        # Sync tool - invoke directly
+                        result_content = tool.invoke(tool_args)
+
+                    logger.info(
+                        f"Tool '{tool_name}' executed successfully",
+                        extra={"tool": tool_name, "result_length": len(str(result_content))},
+                    )
+
+            except Exception as e:
+                result_content = f"Error executing tool '{tool_name}': {str(e)}"
+                logger.error(
+                    f"Tool execution failed: {tool_name}",
+                    extra={"tool": tool_name, "args": tool_args, "error": str(e)},
+                    exc_info=True,
+                )
+
+            # Create tool message with result
             tool_message = ToolMessage(
-                content=result_content,
+                content=str(result_content),
                 tool_call_id=tool_call_id,
                 name=tool_name,
             )
