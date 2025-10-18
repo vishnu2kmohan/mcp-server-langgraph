@@ -201,7 +201,7 @@ def list_directory(
 @tool
 def search_files(
     directory_path: Annotated[str, Field(description="Directory to search in")],
-    pattern: Annotated[str, Field(description="Filename pattern to search for (e.g., \'*.py\', \'config.yaml\')")],
+    pattern: Annotated[str, Field(description="Filename pattern to search for (e.g., '*.py', 'config.yaml')")],
     max_results: Annotated[int, Field(ge=1, le=100, description="Maximum number of results (1-100)")] = 20,
 ) -> str:
     """

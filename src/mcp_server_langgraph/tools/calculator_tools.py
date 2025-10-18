@@ -11,6 +11,7 @@ from typing import Any
 from langchain_core.tools import tool
 from pydantic import Field
 
+
 def _safe_log(level: str, message: str, **kwargs) -> None:
     """Safely log message, handling cases where observability isn't initialized"""
     try:

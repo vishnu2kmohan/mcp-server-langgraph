@@ -492,9 +492,7 @@ def create_agent_graph():
             tool_args = tool_call.get("args", {})
             tool_call_id = tool_call.get("id", f"call_{len(invocations)}")
 
-            invocation = ToolInvocation(
-                tool_name=tool_name, arguments=tool_args, invocation_id=tool_call_id, dependencies=[]
-            )
+            invocation = ToolInvocation(tool_name=tool_name, arguments=tool_args, invocation_id=tool_call_id, dependencies=[])
             invocations.append(invocation)
 
         # Define tool executor function for parallel executor

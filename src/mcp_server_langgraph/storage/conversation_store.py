@@ -76,7 +76,12 @@ class ConversationStore:
         return f"conversation:metadata:{thread_id}"
 
     async def record_conversation(
-        self, thread_id: str, user_id: str, message_count: int = 1, title: Optional[str] = None, tags: Optional[list[str]] = None
+        self,
+        thread_id: str,
+        user_id: str,
+        message_count: int = 1,
+        title: Optional[str] = None,
+        tags: Optional[list[str]] = None,
     ) -> None:
         """
         Record or update conversation metadata.
