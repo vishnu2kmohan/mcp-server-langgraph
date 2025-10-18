@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760821139118,
+  "lastUpdate": 1760822986045,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3616,6 +3616,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0001558903894654142",
             "extra": "mean: 85.94019822438369 usec\nrounds: 3491"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7e9ac1c821da2be1dea31174ed7ab5e20df55edf",
+          "message": "fix(tools): make web_search async to support httpx async calls\n\nCritical syntax fix for web_search tool - must be async def to use async with.\n\nError: SyntaxError: 'async with' outside async function\nFix: Changed 'def web_search' to 'async def web_search'\n\nThis allows the function to use async HTTP clients (httpx.AsyncClient)\nfor calling Tavily and Serper APIs.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T17:26:58-04:00",
+          "tree_id": "ac61eb293c31fc87f0a465c6aec5e58c97f2d4f5",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7e9ac1c821da2be1dea31174ed7ab5e20df55edf"
+        },
+        "date": 1760822985660,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37039.87810230181,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002718178254575285",
+            "extra": "mean: 26.99792902228412 usec\nrounds: 4593"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33137.49701014484,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003165794913830452",
+            "extra": "mean: 30.17729431084841 usec\nrounds: 6398"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 32080.6794285578,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028979152774908167",
+            "extra": "mean: 31.171409640090516 usec\nrounds: 15228"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.87638696569005,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021981231835281748",
+            "extra": "mean: 5.294468070175723 msec\nrounds: 171"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.327297485329645,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015154186514632824",
+            "extra": "mean: 51.740291200000854 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939017735404674,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000058642479399054456",
+            "extra": "mean: 100.61356430000217 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1790865.479955032,
+            "unit": "iter/sec",
+            "range": "stddev: 4.912318489823291e-8",
+            "extra": "mean: 558.3892320182025 nsec\nrounds: 90992"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3977.070725078083,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001579202936556289",
+            "extra": "mean: 251.4413419138697 usec\nrounds: 2059"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3024.860531634908,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001000634043924805",
+            "extra": "mean: 330.59375450262814 usec\nrounds: 2554"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2973.5633529396455,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002109133060762782",
+            "extra": "mean: 336.29685374330643 usec\nrounds: 1723"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 41103.273018953616,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002798212628938933",
+            "extra": "mean: 24.328962794249456 usec\nrounds: 7472"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11408.192091211917,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016203429166470687",
+            "extra": "mean: 87.65630802888838 usec\nrounds: 3201"
           }
         ]
       }
