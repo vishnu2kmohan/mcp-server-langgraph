@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760820766762,
+  "lastUpdate": 1760820936034,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3400,6 +3400,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00014024838724685165",
             "extra": "mean: 84.88151055192412 usec\nrounds: 3459"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7887fd65680967649495111ccea4ec408c385cfd",
+          "message": "feat(alerting): wire alerting system to all critical modules\n\n**CRITICAL Implementation - Resolves 6 Production TODOs**\n\nCompleted full alerting integration across all modules, enabling production\nalerts for SLA breaches, compliance issues, security events, and operational\nnotifications. Part of Technical Debt Sprint Phase 1.\n\n## Issues Resolved\n\n### 1. SLA Monitor Alerting (CRITICAL)\n**File**: `src/mcp_server_langgraph/monitoring/sla.py`\n**Resolved TODO**: Line 505\n\n**Implementation**:\n- ✅ Wired AlertingService to _send_sla_alert()\n- ✅ Maps severity (critical/warning) to AlertSeverity enum\n- ✅ Sends alerts on SLA breaches\n- ✅ Includes full SLA metrics in alert metadata\n- ✅ Graceful error handling if alerting fails\n\n**Alert Triggers**:\n- SLA breach detected (critical)\n- Multiple metrics breached\n- Includes uptime %, response time, error rate\n\n---\n\n### 2. Compliance Scheduler Alerting (CRITICAL)\n**File**: `src/mcp_server_langgraph/schedulers/compliance.py`\n**Resolved TODOs**: Lines 418, 433, 452\n\n**Implementation**:\n- ✅ Compliance alerts (_send_compliance_alert) - Line 418\n- ✅ Access review notifications (_send_access_review_notification) - Line 433\n- ✅ Monthly report notifications (_send_monthly_report_notification) - Line 452\n\n**Alert Types**:\n1. **Compliance Alerts** (critical/warning)\n   - SOC2 compliance issues\n   - Access control violations\n   - Tags: compliance, soc2\n\n2. **Access Review Notifications** (info)\n   - Weekly access review ready\n   - Tags: compliance, access-review, security\n   - Metadata: total_users, inactive_users, excessive_access\n\n3. **Monthly Report Notifications** (info)\n   - Monthly SOC2 report generated\n   - Tags: compliance, soc2, monthly-report\n   - Metadata: report_id, period_start, period_end\n\n---\n\n### 3. Cleanup Scheduler Alerting (CRITICAL)\n**File**: `src/mcp_server_langgraph/schedulers/cleanup.py`\n**Resolved TODO**: Line 167\n\n**Implementation**:\n- ✅ Wired AlertingService to _send_cleanup_notification()\n- ✅ Smart severity detection (WARNING if >1000 deletions, INFO otherwise)\n- ✅ Includes deletion metrics in alert\n- ✅ Tags: cleanup, retention, data-governance\n\n**Alert Logic**:\n```python\nif total_deleted > 1000:\n    severity = AlertSeverity.WARNING\n    title = \"Large Data Cleanup Executed\"\nelse:\n    severity = AlertSeverity.INFO\n    title = \"Data Cleanup Completed\"\n```\n\n---\n\n### 4. HIPAA Security Team Alerts (HIGH)\n**File**: `src/mcp_server_langgraph/auth/hipaa.py`\n**Resolved TODO**: Line 207\n\n**Implementation**:\n- ✅ Emergency access grants trigger CRITICAL alerts\n- ✅ Alerts sent to security team immediately\n- ✅ Full audit trail in alert metadata\n- ✅ Tags: hipaa, emergency-access, phi, security\n\n**Alert Content**:\n- User requesting access\n- Approver user ID\n- Reason for emergency access\n- Duration and expiration\n- Access level granted\n\n---\n\n### 5. HIPAA SIEM Integration (HIGH)\n**File**: `src/mcp_server_langgraph/auth/hipaa.py`\n**Resolved TODO**: Line 320\n\n**Implementation**:\n- ✅ All PHI access logged to SIEM via alerting service\n- ✅ Smart severity (INFO for success, WARNING for failures)\n- ✅ Complete audit log data in alert\n- ✅ Tags: hipaa, phi-access, audit, siem\n\n**SIEM Events**:\n- PHI read/write/delete operations\n- User ID and resource details\n- Success/failure status\n- Timestamps and checksums\n- Failure reasons\n\n---\n\n## Alerting Architecture\n\n**Centralized Alert Routing**:\n```\n┌─────────────────┐\n│   SLA Monitor   │──┐\n└─────────────────┘  │\n                     │\n┌─────────────────┐  │\n│   Compliance    │──┤\n│   Scheduler     │  │     ┌──────────────────┐\n└─────────────────┘  │────►│ AlertingService  │\n                     │     └────────┬─────────┘\n┌─────────────────┐  │              │\n│    Cleanup      │──┤              ├──► PagerDuty\n│   Scheduler     │  │              ├──► Slack\n└─────────────────┘  │              ├──► OpsGenie\n                     │              └──► Email\n┌─────────────────┐  │\n│  HIPAA Module   │──┘\n└─────────────────┘\n```\n\n**Alert Categories**:\n1. **SLA Alerts** (critical/warning)\n   - Uptime breaches\n   - Response time violations\n   - Error rate thresholds\n\n2. **Compliance Alerts** (critical/warning/info)\n   - Access control issues\n   - Weekly access reviews\n   - Monthly compliance reports\n\n3. **Operational Alerts** (warning/info)\n   - Data cleanup notifications\n   - Large deletion warnings\n\n4. **Security Alerts** (critical)\n   - Emergency PHI access grants\n   - PHI access audit logs (SIEM)\n\n## Configuration\n\n**Alert Providers** (from `.env`):\n```bash\n# PagerDuty - Incidents\nPAGERDUTY_INTEGRATION_KEY=your-key\n\n# Slack - Real-time notifications\nSLACK_WEBHOOK_URL=https://hooks.slack.com/...\n\n# OpsGenie - Alert aggregation\nOPSGENIE_API_KEY=your-key\n\n# Email - SMTP notifications\nEMAIL_SMTP_HOST=smtp.gmail.com\nEMAIL_FROM_ADDRESS=alerts@company.com\nEMAIL_TO_ADDRESSES=ops@company.com,security@company.com\n```\n\n**Alert Routing**:\n- CRITICAL → PagerDuty (creates incident)\n- WARNING → Slack + Email\n- INFO → Slack only\n\n## Error Handling\n\nAll alert integrations include try/except:\n- **On Success**: Alert sent, logged with alert_id\n- **On Failure**: Error logged, operation continues\n- **Philosophy**: Never fail core operation due to alerting failure\n\n## Files Modified\n\n**Monitoring** (1 file):\n- `src/mcp_server_langgraph/monitoring/sla.py`\n  - Imported AlertingService, Alert, AlertSeverity\n  - Wired _send_sla_alert() to alerting service\n\n**Schedulers** (2 files):\n- `src/mcp_server_langgraph/schedulers/compliance.py`\n  - Imported AlertingService, Alert, AlertSeverity\n  - Wired 3 alert methods (compliance, access review, monthly report)\n\n- `src/mcp_server_langgraph/schedulers/cleanup.py`\n  - Imported AlertingService, Alert, AlertSeverity\n  - Wired _send_cleanup_notification()\n  - Smart severity detection\n\n**Security** (1 file):\n- `src/mcp_server_langgraph/auth/hipaa.py`\n  - Imported AlertingService, Alert, AlertSeverity\n  - Wired emergency access alerts\n  - Wired SIEM integration for PHI access logs\n\n## Testing\n\n**Manual Testing**:\n```bash\n# 1. Configure Slack webhook in .env\nSLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK\n\n# 2. Trigger SLA report\nfrom mcp_server_langgraph.monitoring.sla import SLAMonitor\nmonitor = SLAMonitor()\nreport = await monitor.generate_report()  # Alerts if breach\n\n# 3. Run compliance check\nfrom mcp_server_langgraph.schedulers.compliance import ComplianceScheduler\nscheduler = ComplianceScheduler()\nawait scheduler.run_daily_checks()  # Sends notifications\n\n# 4. Test emergency access\nfrom mcp_server_langgraph.auth.hipaa import HIPAAControls\nhipaa = HIPAAControls()\ngrant = await hipaa.grant_emergency_access(...)  # CRITICAL alert\n\n# 5. Check Slack for alerts\n```\n\n## Impact\n\n**Before**:\n- ❌ Alerts logged but not sent\n- ❌ No external notifications\n- ❌ 6 TODO items in production code\n- ❌ Manual monitoring required\n\n**After**:\n- ✅ Automatic alerts to PagerDuty/Slack/OpsGenie/Email\n- ✅ Real-time notifications\n- ✅ 6 TODOs resolved\n- ✅ Production-ready alerting\n\n## Technical Debt Progress\n\n**Completed** (10/27 items = 37%):\n1-3. ✅ Prometheus integration (3 items)\n4. ✅ Alerting configuration (1 item)\n5-8. ✅ Alerting wiring (4 items)\n9-10. ✅ HIPAA alerts & SIEM (2 items)\n\n**Remaining CRITICAL** (8 items):\n- Compliance evidence collection (7 items)\n- User session analysis (1 item)\n\n**Remaining HIGH** (7 items):\n- Search tools (2 items)\n- GDPR integration (2 items)\n- User session analysis (2 items)\n- Prompt versioning (1 item)\n\n**Progress**: 37% complete (10/27 items)\n\n## Next Steps\n\n**Immediate** (Quick Wins - 2-3 hours):\n1. Prometheus evidence queries (1 item)\n2. Session count query (1 item)\n3. MFA statistics query (1 item)\n4. RBAC role count query (1 item)\n\n**This Week**:\n5. Search tools implementation (2 items)\n6. GDPR integration (2 items)\n7. User provider & session analysis (2 items)\n\n## Related\n\n- Part of Technical Debt Sprint - Phase 1 Complete\n- Resolves: 6 critical/high priority TODOs\n- Enables: Production monitoring and alerting\n- Dependencies: Alerting configuration (commit 8e57464)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T16:52:34-04:00",
+          "tree_id": "1f9d18c457c4f7c0424e53a0dd8ab5baaea282b7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7887fd65680967649495111ccea4ec408c385cfd"
+        },
+        "date": 1760820935680,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37306.75964231031,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032629220166443345",
+            "extra": "mean: 26.804793811839954 usec\nrounds: 4234"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32432.819591143285,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003778272122897831",
+            "extra": "mean: 30.832965268091552 usec\nrounds: 5816"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31413.667961195344,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033140223777527634",
+            "extra": "mean: 31.833277197533228 usec\nrounds: 12161"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 186.85243490046173,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002685474265978082",
+            "extra": "mean: 5.351816798816191 msec\nrounds: 169"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.23591065675817,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007044072257119253",
+            "extra": "mean: 51.98610130000105 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.920119477918659,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004475534776967322",
+            "extra": "mean: 100.80523750000339 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1967277.3843563707,
+            "unit": "iter/sec",
+            "range": "stddev: 7.445288124258442e-8",
+            "extra": "mean: 508.3167264321333 nsec\nrounds: 72224"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3861.5566517266006,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003183882563239026",
+            "extra": "mean: 258.9629235538664 usec\nrounds: 1936"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2968.5428445857983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001883861094774769",
+            "extra": "mean: 336.8656112960803 usec\nrounds: 2107"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2970.989913800258,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002446859259519837",
+            "extra": "mean: 336.5881504191572 usec\nrounds: 1549"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39571.429694556246,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031804745203249555",
+            "extra": "mean: 25.270757405501776 usec\nrounds: 5165"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11204.838860122432,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017319439732254622",
+            "extra": "mean: 89.24715584790421 usec\nrounds: 3189"
           }
         ]
       }
