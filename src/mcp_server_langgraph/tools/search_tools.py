@@ -166,7 +166,7 @@ async def web_search(
                 # Fall through to placeholder
 
         # No API key configured
-        return f"""Web search for: "{query}"
+        config_message = f"""Web search for: "{query}"
 
 ❌ Web search API not configured.
 
@@ -190,7 +190,7 @@ To enable web search, add one of these API keys to .env:
 After configuration, this tool will return real web search results."""
 
         logger.info("Web search completed (no API key)", extra={"query": query})
-        return results
+        return config_message
 
     except Exception as e:
         error_msg = f"Error performing web search: {e}"
