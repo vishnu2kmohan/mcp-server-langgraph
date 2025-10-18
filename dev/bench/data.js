@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760805665636,
+  "lastUpdate": 1760806413296,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -2752,6 +2752,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0001569394776780476",
             "extra": "mean: 86.5660513798778 usec\nrounds: 3406"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "af0e8af211ee2e5e98856b964629731a9945f3a8",
+          "message": "fix(checkpoint): handle RedisSaver context manager API change\n\n**Critical Fix**: langgraph-checkpoint-redis 0.1.2+ API breaking change\n\n**Issue**:\nRedisSaver.from_conn_string() now returns Iterator[RedisSaver] context manager\ninstead of RedisSaver instance directly, causing:\n- Integration test failures (checkpointer isinstance checks fail)\n- Type mismatch errors (returning context manager, not checkpointer)\n\n**Root Cause**:\n```python\n# Old API (< 0.1.2)\ncheckpointer = RedisSaver.from_conn_string(conn_string=\"redis://...\")\n# Returns: RedisSaver instance\n\n# New API (>= 0.1.2)\ncheckpointer_ctx = RedisSaver.from_conn_string(redis_url=\"redis://...\")\n# Returns: Iterator[RedisSaver] context manager\n```\n\n**Fix Applied** (agent.py:138-143):\n```python\n# Create context manager\ncheckpointer_ctx = RedisSaver.from_conn_string(\n    redis_url=settings.checkpoint_redis_url,\n)\n\n# Enter context to get actual RedisSaver instance\ncheckpointer = checkpointer_ctx.__enter__()\n```\n\n**Alternative Approach Considered**:\nUsing `with` statement would be cleaner but requires refactoring the entire\ncheckpointer lifecycle management. Current fix provides immediate compatibility.\n\n**Test Results**:\n- ✅ test_redis_unavailable_fallback_to_memory: PASSED\n- ✅ All unit tests: 727/743 passed (98%)\n- ✅ Integration test fallback logic works correctly\n\n**Impact**:\n- Redis checkpointer now initializes correctly\n- Fallback to MemorySaver works as expected\n- No breaking changes for users\n\n**Files Modified**:\n- src/mcp_server_langgraph/core/agent.py:135-146\n\n**Related**:\n- langgraph-checkpoint-redis version: 0.1.2\n- Previous fix: RedisSaver parameter rename (conn_string → redis_url)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T12:51:00-04:00",
+          "tree_id": "19298c1097a8ccb09d6ee666e30f3693580f10c2",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/af0e8af211ee2e5e98856b964629731a9945f3a8"
+        },
+        "date": 1760806412888,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37332.859821862956,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031857174273057925",
+            "extra": "mean: 26.7860540224239 usec\nrounds: 5146"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33141.54251630455,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033984383011738186",
+            "extra": "mean: 30.173610643138677 usec\nrounds: 6164"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31205.342291478617,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034537551823969244",
+            "extra": "mean: 32.04579493662771 usec\nrounds: 14298"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.19522950836398,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042217825282274674",
+            "extra": "mean: 5.31363097041499 msec\nrounds: 169"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.337431864639015,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001761143009755122",
+            "extra": "mean: 51.71317509997948 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.928115322162055,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004569750463858792",
+            "extra": "mean: 100.7240515999797 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1980073.3081527965,
+            "unit": "iter/sec",
+            "range": "stddev: 4.515886577929343e-8",
+            "extra": "mean: 505.0318065914926 nsec\nrounds: 97953"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3875.8955182016043,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017234354686493542",
+            "extra": "mean: 258.0048908191403 usec\nrounds: 2015"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3004.3721966390417,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000123696881485337",
+            "extra": "mean: 332.8482406802622 usec\nrounds: 2468"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3039.6014394291356,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022214920617186184",
+            "extra": "mean: 328.9905008690248 usec\nrounds: 1723"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39662.530335032905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003470024233924656",
+            "extra": "mean: 25.212713146461194 usec\nrounds: 7523"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11203.568192939867,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013948856940598886",
+            "extra": "mean: 89.25727792955892 usec\nrounds: 3285"
           }
         ]
       }
