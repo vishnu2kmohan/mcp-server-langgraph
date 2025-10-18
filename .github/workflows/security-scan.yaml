@@ -29,7 +29,7 @@ jobs:
       run: docker build -f docker/Dockerfile -t mcp-server-langgraph:scan .
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.30.0
+      uses: aquasecurity/trivy-action@0.33.1
       with:
         image-ref: 'mcp-server-langgraph:scan'
         format: 'sarif'
@@ -50,7 +50,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'  # Match tested versions (3.10-3.12)
 
@@ -126,7 +126,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'  # Match tested versions (3.10-3.12)
 
