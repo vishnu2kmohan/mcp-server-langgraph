@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760797487814,
+  "lastUpdate": 1760803905363,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -2428,6 +2428,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00009137962967428036",
             "extra": "mean: 82.94112896103944 usec\nrounds: 3629"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "53325aa01bdb41bed988dcb8a52119f88188b0ad",
+          "message": "fix(ci): standardize GitHub Actions versions and update benchmark action\n\n**CI/CD Pipeline Fixes**:\n\n1. **Standardized actions/checkout to v5** (was inconsistent v4/v5)\n   - build-hygiene.yml: v4 → v5\n   - link-checker.yml: v4 → v5 (3 occurrences)\n   - optional-deps-test.yaml: v4 → v5 (6 occurrences)\n\n2. **Updated benchmark-action** (quality-tests.yaml:203)\n   - benchmark-action/github-action-benchmark: v1.20.3 → v1.20.7\n   - Latest stable release with improved parsing and validation\n\n3. **Standardized actions/labeler** (pr-checks.yaml:221)\n   - actions/labeler: v6 → v6.0.1\n   - Matches version used in ci.yaml\n\n**Issues Resolved**:\n- Inconsistent action versions causing potential compatibility issues\n- Outdated benchmark action (missing 4 patch releases)\n- ROADMAP blocker: \"CI/CD pipeline failures (benchmark action version, workflow issues)\"\n\n**Validation**:\n- All 10 workflow files validated with YAML parser\n- ✅ All workflows pass syntax validation\n- ✅ No breaking changes (all version updates are backward compatible)\n\n**Benefits**:\n- Consistent GitHub Actions versions across all workflows\n- Latest bug fixes and improvements from action updates\n- Improved reliability and performance\n\n**Files Modified** (5 workflows):\n- .github/workflows/build-hygiene.yml:16\n- .github/workflows/link-checker.yml:29,85,143\n- .github/workflows/optional-deps-test.yaml:13,25,38,51,64,77\n- .github/workflows/pr-checks.yaml:221\n- .github/workflows/quality-tests.yaml:203\n\n**ROADMAP Updated**:\n- Known Limitations: CI/CD pipeline status changed from 🔴 → ✅\n- Updated TODO count: 24 → 30 (accurate count)\n\n**Related**: ROADMAP.md \"Known Limitations\" section",
+          "timestamp": "2025-10-18T12:07:33-04:00",
+          "tree_id": "d97b93280fe5dfa9d674d7354dae408a30955e36",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/53325aa01bdb41bed988dcb8a52119f88188b0ad"
+        },
+        "date": 1760803904444,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37423.82363439169,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002763279381135439",
+            "extra": "mean: 26.72094678965464 usec\nrounds: 5638"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33474.647227341884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032944289498891653",
+            "extra": "mean: 29.873354398883887 usec\nrounds: 6820"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31302.40069057974,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004821002982994696",
+            "extra": "mean: 31.94643151766132 usec\nrounds: 15274"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.9468465017334,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016037075168465367",
+            "extra": "mean: 5.2924937278105135 msec\nrounds: 169"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.360107687890807,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012013667364657867",
+            "extra": "mean: 51.65260524999411 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.946420383961883,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003404660371681592",
+            "extra": "mean: 100.53868239999701 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1934832.1678102063,
+            "unit": "iter/sec",
+            "range": "stddev: 5.226857301971449e-8",
+            "extra": "mean: 516.840693801248 nsec\nrounds: 93024"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3837.145854689475,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003790490285338794",
+            "extra": "mean: 260.61036975643606 usec\nrounds: 2050"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3016.8756801543773,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010104268311917272",
+            "extra": "mean: 331.4687464843857 usec\nrounds: 2489"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3027.204241829131,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002244041002209157",
+            "extra": "mean: 330.3378035027359 usec\nrounds: 1827"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40216.76941682857,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002515567291495664",
+            "extra": "mean: 24.86524935992381 usec\nrounds: 8201"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11677.035793190735,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015431353055062784",
+            "extra": "mean: 85.63817202505562 usec\nrounds: 3639"
           }
         ]
       }
