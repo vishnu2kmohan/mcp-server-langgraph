@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760809633626,
+  "lastUpdate": 1760820434583,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3076,6 +3076,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00017188031351637688",
             "extra": "mean: 89.06555512328852 usec\nrounds: 3084"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "af3e6a91e6e680ccced1d62808567272063d8926",
+          "message": "feat(monitoring): integrate Prometheus client for real-time SLA metrics\n\n**CRITICAL Implementation - Resolves 3 Production TODOs**\n\nIntegrated Prometheus client with SLA monitoring to replace mock data with\nreal metrics from production systems. Part of Technical Debt Sprint Phase 1.\n\n## Issues Resolved\n\n### 1. Prometheus Dependency (CRITICAL)\n**Files**: `requirements-pinned.txt`, `pyproject.toml`\n- ✅ Added `prometheus-api-client==0.5.5` dependency\n- ✅ Production-ready Prometheus HTTP API client\n- ✅ Pinned version for stability\n\n### 2. Prometheus Configuration (CRITICAL)\n**Files**: `src/mcp_server_langgraph/core/config.py`, `.env.example`\n- ✅ Added `prometheus_url` setting (default: http://prometheus:9090)\n- ✅ Added `prometheus_timeout` setting (30 seconds)\n- ✅ Added `prometheus_retry_attempts` setting (3 attempts)\n- ✅ Configuration documented in .env.example\n\n### 3. SLA Monitoring Integration (CRITICAL)\n**File**: `src/mcp_server_langgraph/monitoring/sla.py`\n\n**Resolved TODOs**:\n- ✅ Line 157: Query Prometheus for actual downtime\n- ✅ Line 241: Query Prometheus for actual response times\n- ✅ Line 315: Query Prometheus for actual error rate\n\n**Implementation Details**:\n- **Uptime Monitoring** (measure_uptime):\n  - Queries Prometheus `up` metric via prometheus_client.query_downtime()\n  - Calculates downtime in seconds from service availability\n  - Graceful fallback to zero downtime if Prometheus unavailable\n  - Supports dynamic timeranges (converted to days)\n\n- **Response Time Monitoring** (measure_response_time):\n  - Queries histogram_quantile from http_request_duration_seconds\n  - Supports p50, p95, p99 percentiles\n  - Converts seconds to milliseconds for display\n  - Fallback to 350ms estimate if query fails\n  - Dynamic timerange calculation (minimum 1 hour)\n\n- **Error Rate Monitoring** (measure_error_rate):\n  - Queries rate of 5xx errors vs total requests\n  - Returns percentage (0-100)\n  - Fallback to 0.5% if query fails\n  - Dynamic timerange calculation (minimum 5 minutes)\n\n## Implementation Architecture\n\n**Prometheus Client** (`monitoring/prometheus_client.py` - already existed):\n- Full-featured async HTTP client for Prometheus API\n- Instant queries and range queries\n- Specialized methods for uptime, response time, error rate\n- Automatic retry logic and error handling\n- Global singleton pattern via `get_prometheus_client()`\n\n**SLA Monitor** (`monitoring/sla.py` - updated):\n- Imported prometheus_client.get_prometheus_client()\n- Replaced 3 TODO placeholders with real Prometheus queries\n- Maintained backward compatibility with error fallbacks\n- Preserved existing SLA calculation logic\n- Added comprehensive logging for query failures\n\n## Metrics Queries\n\n**Uptime Query**:\n```promql\navg_over_time(up{job=\"mcp-server-langgraph\"}[30d]) * 100\n```\n\n**Response Time Query** (p95):\n```promql\nhistogram_quantile(0.95, rate(http_request_duration_seconds_bucket[1h]))\n```\n\n**Error Rate Query**:\n```promql\nrate(http_requests_total{status=~\"5..\"}[5m]) /\nrate(http_requests_total[5m]) * 100\n```\n\n## Error Handling\n\nAll Prometheus queries include try/except blocks:\n- **On Success**: Uses real metrics from Prometheus\n- **On Failure**: Logs warning and uses conservative fallback\n  - Uptime: 0 seconds downtime (assumes 100% up)\n  - Response Time: 350ms (conservative estimate)\n  - Error Rate: 0.5% (conservative estimate)\n\nThis ensures SLA monitoring continues to function even if Prometheus is temporarily unavailable.\n\n## Configuration\n\n**Environment Variables** (`.env.example`):\n```bash\nPROMETHEUS_URL=http://prometheus:9090\nPROMETHEUS_TIMEOUT=30\nPROMETHEUS_RETRY_ATTEMPTS=3\n```\n\n**Settings Object** (`core/config.py`):\n```python\nclass Settings(BaseSettings):\n    prometheus_url: str = \"http://prometheus:9090\"\n    prometheus_timeout: int = 30\n    prometheus_retry_attempts: int = 3\n```\n\n## Testing\n\n**Manual Verification**:\n```python\nfrom mcp_server_langgraph.monitoring.sla import SLAMonitor\nfrom datetime import datetime, timedelta, timezone\n\nmonitor = SLAMonitor()\nend = datetime.now(timezone.utc)\nstart = end - timedelta(days=7)\n\n# Test uptime query\nuptime = await monitor.measure_uptime(start, end)\nprint(f\"Uptime: {uptime.measured_value}%\")\n\n# Test response time query\nresponse_time = await monitor.measure_response_time(start, end)\nprint(f\"P95 Response Time: {response_time.measured_value}ms\")\n\n# Test error rate query\nerror_rate = await monitor.measure_error_rate(start, end)\nprint(f\"Error Rate: {error_rate.measured_value}%\")\n```\n\n## Impact\n\n**Before**:\n- ❌ SLA monitoring returned hardcoded mock data\n- ❌ No visibility into real system performance\n- ❌ Compliance metrics unreliable\n- ❌ 3 TODO items in production code\n\n**After**:\n- ✅ Real-time metrics from Prometheus\n- ✅ Accurate SLA compliance tracking\n- ✅ Production-ready monitoring\n- ✅ 3 TODOs resolved\n\n## Technical Debt Progress\n\n**Completed** (3/27 items):\n1. ✅ Add prometheus-api-client dependency\n2. ✅ Prometheus client wrapper (pre-existing)\n3. ✅ SLA Prometheus queries integration\n\n**Remaining CRITICAL** (15 items):\n- Alerting system wiring (4 items)\n- Compliance evidence integration (7 items)\n- Storage backend integration (3 items)\n- User session analysis (1 item)\n\n**Progress**: 11% complete (3/27 items)\n\n## Related\n\n- Part of Technical Debt Sprint - Phase 1 (Week 1-2)\n- Resolves: TODO Catalog items #1, #2, #3\n- Enables: Compliance evidence collection (depends on Prometheus)\n- References: ADR-0012 (Compliance Framework)\n\n## Next Steps\n\n1. Wire alerting system to SLA monitor\n2. Integrate Prometheus with compliance evidence\n3. Complete remaining monitoring TODOs\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T16:44:12-04:00",
+          "tree_id": "c7179b7680b786311109ec33026e9c45d9575fc2",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/af3e6a91e6e680ccced1d62808567272063d8926"
+        },
+        "date": 1760820434084,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36999.22181561262,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003136959786473399",
+            "extra": "mean: 27.02759547169796 usec\nrounds: 4593"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32866.03557381632,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003533523675690119",
+            "extra": "mean: 30.426547727486764 usec\nrounds: 4400"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31221.352617085395,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033609912484159327",
+            "extra": "mean: 32.02936183657737 usec\nrounds: 10911"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.32606722993137,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003425247340979832",
+            "extra": "mean: 5.30993937647027 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.38988454367983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011889584940210894",
+            "extra": "mean: 51.57328284999778 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.930713629482964,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005016041755083589",
+            "extra": "mean: 100.69769779999831 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1890465.6765496354,
+            "unit": "iter/sec",
+            "range": "stddev: 6.806735368988296e-8",
+            "extra": "mean: 528.9701962879009 nsec\nrounds: 93537"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3960.3558583736567,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014853455848060093",
+            "extra": "mean: 252.5025618305563 usec\nrounds: 2054"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3012.5868396833107,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011070531745945394",
+            "extra": "mean: 331.9406387983565 usec\nrounds: 2464"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3023.2171765017674,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002304867785574398",
+            "extra": "mean: 330.773458080548 usec\nrounds: 1646"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39709.4920311664,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030471485983159872",
+            "extra": "mean: 25.182895797688364 usec\nrounds: 7543"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11270.025770649798,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000171294896251633",
+            "extra": "mean: 88.73094173433668 usec\nrounds: 2952"
           }
         ]
       }
