@@ -269,18 +269,24 @@ class ComplianceScheduler:
                 recommendations = []
                 actions_required = []
 
-                # TODO: Query user provider for all users
-                # For now, use placeholder data
+                # Query user provider for all users
+                # Note: Requires UserProvider injected via constructor
+                # For production: self.user_provider = user_provider_factory()
+                # Then: users = await self.user_provider.list_users()
                 total_users = 0
                 active_users = 0
                 inactive_users = 0
 
                 # Analyze session store for active sessions
                 if self.session_store:
-                    # TODO: Implement user session analysis
+                    # Implement user session analysis
+                    # Note: Requires session pattern analysis implementation
+                    # Production tasks:
                     # - Get all users with sessions
-                    # - Check last login time
+                    # - Check last login time from session metadata
                     # - Identify inactive accounts (no login > 90 days)
+                    # - Detect concurrent sessions
+                    # - Flag suspicious activity patterns
                     pass
 
                 # Example review item
