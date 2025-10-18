@@ -87,7 +87,7 @@ Verify Qdrant is running and accessible at {settings.qdrant_url}"""
 
 
 @tool
-def web_search(
+async def web_search(
     query: Annotated[str, Field(description="Search query for web search")],
     num_results: Annotated[int, Field(ge=1, le=10, description="Number of results to return (1-10)")] = 5,
 ) -> str:
