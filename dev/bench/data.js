@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760820434583,
+  "lastUpdate": 1760820603430,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -3184,6 +3184,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000171294896251633",
             "extra": "mean: 88.73094173433668 usec\nrounds: 2952"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8e57464766f40db021655b43f58a929b677f134e",
+          "message": "feat(alerting): add comprehensive alerting configuration and settings\n\n**CRITICAL Configuration - Enables Production Alerting**\n\nAdded complete alerting configuration to enable PagerDuty, Slack, OpsGenie,\nand Email alerts for SLA breaches, compliance issues, and security events.\nPart of Technical Debt Sprint Phase 1.\n\n## Issues Resolved\n\n### 1. Alerting Settings (CRITICAL)\n**File**: `src/mcp_server_langgraph/core/config.py`\n**Resolved TODO**: `integrations/alerting.py:407`\n\n**Added Settings**:\n- ✅ `pagerduty_integration_key` - PagerDuty Events API v2 key\n- ✅ `slack_webhook_url` - Slack incoming webhook URL\n- ✅ `opsgenie_api_key` - OpsGenie API key\n- ✅ `email_smtp_host` - SMTP server host\n- ✅ `email_smtp_port` - SMTP port (default: 587)\n- ✅ `email_from_address` - From email address\n- ✅ `email_to_addresses` - Comma-separated recipient list\n\n### 2. Environment Configuration (CRITICAL)\n**File**: `.env.example`\n\n**Documented Variables**:\n```bash\n# PagerDuty\nPAGERDUTY_INTEGRATION_KEY=your-integration-key\n\n# Slack\nSLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL\n\n# OpsGenie\nOPSGENIE_API_KEY=your-api-key\n\n# Email (SMTP)\nEMAIL_SMTP_HOST=smtp.gmail.com\nEMAIL_SMTP_PORT=587\nEMAIL_FROM_ADDRESS=alerts@example.com\nEMAIL_TO_ADDRESSES=ops@example.com,security@example.com\n```\n\n### 3. Alerting Service Integration (CRITICAL)\n**File**: `src/mcp_server_langgraph/integrations/alerting.py`\n\n**Updated `_load_config_from_settings()`**:\n- ✅ Dynamically loads provider configs from settings\n- ✅ Auto-enables alerting when providers configured\n- ✅ Supports multiple providers simultaneously\n- ✅ Graceful degradation if no providers configured\n\n**Provider Auto-Configuration**:\n```python\n# PagerDuty\nif settings.pagerduty_integration_key:\n    providers[\"pagerduty\"] = {\"integration_key\": settings.pagerduty_integration_key}\n\n# Slack\nif settings.slack_webhook_url:\n    providers[\"slack\"] = {\"webhook_url\": settings.slack_webhook_url}\n\n# OpsGenie\nif settings.opsgenie_api_key:\n    providers[\"opsgenie\"] = {\"api_key\": settings.opsgenie_api_key}\n\n# Email\nif settings.email_smtp_host and settings.email_from_address:\n    providers[\"email\"] = {\n        \"smtp_host\": settings.email_smtp_host,\n        \"smtp_port\": settings.email_smtp_port,\n        \"from_address\": settings.email_from_address,\n        \"to_addresses\": settings.email_to_addresses.split(\",\")\n    }\n```\n\n## Alerting Configuration\n\n**Supported Providers**:\n1. **PagerDuty** - Incident management and on-call\n2. **Slack** - Real-time notifications to channels\n3. **OpsGenie** - Alert aggregation and escalation\n4. **Email** - SMTP email notifications\n\n**Alert Types**:\n- SLA breaches (uptime, response time, error rate)\n- Compliance issues (GDPR, HIPAA, SOC2)\n- Security events (authentication failures, access violations)\n- Infrastructure issues (service unavailability)\n\n**Features**:\n- Multi-provider routing\n- Severity-based escalation\n- Alert deduplication\n- Rate limiting\n- Retry logic with exponential backoff\n\n## Usage\n\n**Development** (no alerts):\n```bash\n# Don't set any alert provider variables\n# Alerting will be disabled gracefully\n```\n\n**Production** (Slack only):\n```bash\nSLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00/B00/xxx\n```\n\n**Production** (Multi-provider):\n```bash\nPAGERDUTY_INTEGRATION_KEY=your-pd-key\nSLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00/B00/xxx\nOPSGENIE_API_KEY=your-ops-key\nEMAIL_SMTP_HOST=smtp.gmail.com\nEMAIL_FROM_ADDRESS=alerts@company.com\nEMAIL_TO_ADDRESSES=ops@company.com,security@company.com\n```\n\n## Implementation Details\n\n**Auto-Enable Logic**:\n- Alerting automatically enabled if ANY provider configured\n- No manual \"alerting_enabled\" flag needed\n- Graceful operation with zero providers (no errors, just no alerts)\n\n**Configuration Loading**:\n- Settings loaded from environment variables\n- Secrets can be loaded from Infisical\n- Comma-separated email addresses automatically parsed\n- SMTP port defaults to 587 (STARTTLS)\n\n## Impact\n\n**Before**:\n- ❌ Alerting service existed but no configuration\n- ❌ No way to specify alert destinations\n- ❌ Manual integration required for each deployment\n- ❌ 1 TODO in production code\n\n**After**:\n- ✅ Complete configuration via environment variables\n- ✅ Support for 4 alert providers\n- ✅ Auto-enable when providers configured\n- ✅ Production-ready alert routing\n- ✅ 1 TODO resolved\n\n## Technical Debt Progress\n\n**Completed** (4/27 items):\n1. ✅ Prometheus dependency\n2. ✅ Prometheus client wrapper\n3. ✅ SLA Prometheus queries\n4. ✅ Alerting configuration\n\n**Remaining** (23 items):\n- Alerting wiring (4 items)\n- Compliance evidence (7 items)\n- Storage backends (3 items)\n- Search tools (2 items)\n- GDPR/HIPAA integration (4 items)\n- Other (3 items)\n\n**Progress**: 15% complete (4/27 items)\n\n## Next Steps\n\n1. Wire alerting to SLA monitor (send alerts on SLA breaches)\n2. Wire alerting to compliance scheduler\n3. Wire alerting to cleanup scheduler\n4. Wire alerting to HIPAA module\n\n## Related\n\n- Part of Technical Debt Sprint - Phase 1\n- Resolves: TODO Catalog item #8\n- Enables: Production alerting for SLA/compliance/security\n- References: `docs-internal/TODO_CATALOG.md`\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-18T16:45:34-04:00",
+          "tree_id": "4614181230e6c02ae8185e95d421b7cf82c1daad",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8e57464766f40db021655b43f58a929b677f134e"
+        },
+        "date": 1760820603049,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36101.41989039764,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026928983975727375",
+            "extra": "mean: 27.699741534708522 usec\nrounds: 4991"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33356.75811136074,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029925702384322894",
+            "extra": "mean: 29.978932504817283 usec\nrounds: 6519"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31355.390838814797,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003587420051398157",
+            "extra": "mean: 31.892442519392915 usec\nrounds: 15179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.91395310038996,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002777310998377871",
+            "extra": "mean: 5.293415248521078 msec\nrounds: 169"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.329415546230425,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015858886637553602",
+            "extra": "mean: 51.734621650007284 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938029084209523,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008766998321657108",
+            "extra": "mean: 100.62357349999047 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1881555.1552221333,
+            "unit": "iter/sec",
+            "range": "stddev: 5.545824085134534e-8",
+            "extra": "mean: 531.4752518545977 nsec\nrounds: 91819"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3790.4071312656447,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003051966042835044",
+            "extra": "mean: 263.8239021215889 usec\nrounds: 2074"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3032.882047502618,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008030598195315313",
+            "extra": "mean: 329.71938385254225 usec\nrounds: 2824"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2995.1932339732884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002120461037722871",
+            "extra": "mean: 333.86827556145516 usec\nrounds: 1829"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39582.875213181935,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027868872609740734",
+            "extra": "mean: 25.26345028283794 usec\nrounds: 7593"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11484.760410357812,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016488522610034963",
+            "extra": "mean: 87.07190783868033 usec\nrounds: 3049"
           }
         ]
       }
