@@ -13,17 +13,17 @@ Exit codes:
     1 - Broken high-priority links found
 """
 
-import re
 import argparse
+import re
 import sys
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 
 def find_broken_links(root_dir, exclude_patterns=None):
     """Find broken internal links in markdown files"""
     if exclude_patterns is None:
-        exclude_patterns = ['archive/', 'reports/', 'node_modules/', '.venv/', 'venv/', 'docs/']
+        exclude_patterns = ["archive/", "reports/", "node_modules/", ".venv/", "venv/", "docs/"]
 
     broken_links = []
     root_path = Path(root_dir)
@@ -37,44 +37,46 @@ def find_broken_links(root_dir, exclude_patterns=None):
             continue
 
         try:
-            with open(md_file, 'r', encoding='utf-8') as f:
+            with open(md_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Find markdown links [text](path)
-            links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', content)
+            links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)
 
             for link_text, link_path in links:
                 # Skip external links and anchors
-                if link_path.startswith(('http://', 'https://', 'mailto:', '#')):
+                if link_path.startswith(("http://", "https://", "mailto:", "#")):
                     continue
 
                 # Skip Mintlify internal navigation links (start with /)
-                if link_path.startswith('/') and not link_path.startswith('//'):
+                if link_path.startswith("/") and not link_path.startswith("//"):
                     continue
 
                 # Skip invalid markdown (like **arguments)
-                if link_path.startswith('**'):
+                if link_path.startswith("**"):
                     continue
 
                 # Remove anchors
-                link_path_no_anchor = link_path.split('#')[0]
+                link_path_no_anchor = link_path.split("#")[0]
                 if not link_path_no_anchor:
                     continue
 
                 # Resolve relative path
-                if link_path_no_anchor.startswith('/'):
-                    target = root_path / link_path_no_anchor.lstrip('/')
+                if link_path_no_anchor.startswith("/"):
+                    target = root_path / link_path_no_anchor.lstrip("/")
                 else:
                     target = (md_file.parent / link_path_no_anchor).resolve()
 
                 # Check if target exists
                 if not target.exists():
-                    broken_links.append({
-                        'file': str(md_file.relative_to(root_path)),
-                        'link_text': link_text,
-                        'link_path': link_path,
-                        'line': None  # Could add line number if needed
-                    })
+                    broken_links.append(
+                        {
+                            "file": str(md_file.relative_to(root_path)),
+                            "link_text": link_text,
+                            "link_path": link_path,
+                            "line": None,  # Could add line number if needed
+                        }
+                    )
         except Exception as e:
             print(f"⚠️  Error processing {md_file}: {e}")
 
@@ -83,25 +85,29 @@ def find_broken_links(root_dir, exclude_patterns=None):
 
 def categorize_links(broken_links):
     """Categorize broken links by priority"""
-    categories = {cat: [] for cat in ['github', 'adr', 'other']}
+    categories = {cat: [] for cat in ["github", "adr", "other"]}
 
     for link in broken_links:
-        file_path = link['file']
-        if file_path.startswith('.github/'):
-            categories['github'].append(link)
-        elif file_path.startswith('adr/'):
-            categories['adr'].append(link)
+        file_path = link["file"]
+        if file_path.startswith(".github/"):
+            categories["github"].append(link)
+        elif file_path.startswith("adr/"):
+            categories["adr"].append(link)
         else:
-            categories['other'].append(link)
+            categories["other"].append(link)
 
     return categories
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Check internal documentation links')
-    parser.add_argument('--root-dir', default='.', help='Root directory to search (default: current directory)')
-    parser.add_argument('--exclude', nargs='*', default=['archive/', 'reports/', 'docs/'],
-                        help='Directories to exclude (default: archive/, reports/, docs/)')
+    parser = argparse.ArgumentParser(description="Check internal documentation links")
+    parser.add_argument("--root-dir", default=".", help="Root directory to search (default: current directory)")
+    parser.add_argument(
+        "--exclude",
+        nargs="*",
+        default=["archive/", "reports/", "docs/"],
+        help="Directories to exclude (default: archive/, reports/, docs/)",
+    )
 
     args = parser.parse_args()
 
@@ -111,7 +117,7 @@ def main():
 
     broken = find_broken_links(args.root_dir, args.exclude)
     categories = categorize_links(broken)
-    high_priority = categories['github'] + categories['adr']
+    high_priority = categories["github"] + categories["adr"]
 
     if high_priority:
         print(f"❌ Found {len(high_priority)} HIGH-PRIORITY broken links:")
@@ -119,7 +125,7 @@ def main():
 
         by_file = defaultdict(list)
         for link in high_priority:
-            by_file[link['file']].append(link)
+            by_file[link["file"]].append(link)
 
         for file, links in sorted(by_file.items())[:10]:
             print(f"📄 {file}:")
@@ -142,5 +148,5 @@ def main():
         sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

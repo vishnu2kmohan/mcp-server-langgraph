@@ -17,16 +17,16 @@ Exit codes:
     1 - No CHANGELOG section found (generates fallback)
 """
 
-import re
-import sys
 import argparse
+import re
 import subprocess
+import sys
 from pathlib import Path
 
 
-def extract_changelog_section(version, changelog_path='CHANGELOG.md'):
+def extract_changelog_section(version, changelog_path="CHANGELOG.md"):
     """Extract the section for a specific version from CHANGELOG.md"""
-    version_no_v = version.lstrip('v')
+    version_no_v = version.lstrip("v")
     version_escaped = re.escape(version_no_v)
 
     changelog_file = Path(changelog_path)
@@ -34,20 +34,20 @@ def extract_changelog_section(version, changelog_path='CHANGELOG.md'):
         print(f"⚠️  CHANGELOG file not found: {changelog_path}")
         return None, False
 
-    with open(changelog_file, 'r', encoding='utf-8') as f:
+    with open(changelog_file, "r", encoding="utf-8") as f:
         content = f.read()
 
     # Extract section between "## [VERSION]" and next "---"
-    pattern = rf'^## \[{version_escaped}\].*?^---$'
+    pattern = rf"^## \[{version_escaped}\].*?^---$"
     match = re.search(pattern, content, re.MULTILINE | re.DOTALL)
 
     if match:
         section = match.group(0)
         # Remove the trailing "---"
-        section = section.rsplit('---', 1)[0].strip()
+        section = section.rsplit("---", 1)[0].strip()
 
         # Basic validation - should have more than just the header
-        if len(section.split('\n')) > 5:
+        if len(section.split("\n")) > 5:
             return section, True
 
     return None, False
@@ -58,29 +58,26 @@ def generate_fallback_notes(version, repository):
     try:
         # Get previous tag
         previous_tag_cmd = subprocess.run(
-            ['git', 'describe', '--tags', '--abbrev=0', 'HEAD^'],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["git", "describe", "--tags", "--abbrev=0", "HEAD^"], capture_output=True, text=True, timeout=10
         )
 
         if previous_tag_cmd.returncode == 0:
             previous_tag = previous_tag_cmd.stdout.strip()
             # Get commits between tags
             log_cmd = subprocess.run(
-                ['git', 'log', f'{previous_tag}..HEAD', '--pretty=format:- %s (%h)', '--no-merges'],
+                ["git", "log", f"{previous_tag}..HEAD", "--pretty=format:- %s (%h)", "--no-merges"],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
             )
             commits = log_cmd.stdout
         else:
             # Get recent commits if no previous tag
             log_cmd = subprocess.run(
-                ['git', 'log', '--pretty=format:- %s (%h)', '--no-merges', '--max-count=20'],
+                ["git", "log", "--pretty=format:- %s (%h)", "--no-merges", "--max-count=20"],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
             )
             commits = log_cmd.stdout
 
@@ -146,11 +143,11 @@ helm upgrade --install mcp-server-langgraph \\
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract CHANGELOG section for release')
-    parser.add_argument('version', help='Version to extract (e.g., v2.8.0 or 2.8.0)')
-    parser.add_argument('--changelog', default='CHANGELOG.md', help='Path to CHANGELOG file')
-    parser.add_argument('--output', default='release_notes.md', help='Output file path')
-    parser.add_argument('--repository', help='GitHub repository (e.g., owner/repo)')
+    parser = argparse.ArgumentParser(description="Extract CHANGELOG section for release")
+    parser.add_argument("version", help="Version to extract (e.g., v2.8.0 or 2.8.0)")
+    parser.add_argument("--changelog", default="CHANGELOG.md", help="Path to CHANGELOG file")
+    parser.add_argument("--output", default="release_notes.md", help="Output file path")
+    parser.add_argument("--repository", help="GitHub repository (e.g., owner/repo)")
 
     args = parser.parse_args()
 
@@ -158,25 +155,22 @@ def main():
     if not args.repository:
         try:
             remote_cmd = subprocess.run(
-                ['git', 'config', '--get', 'remote.origin.url'],
-                capture_output=True,
-                text=True,
-                timeout=5
+                ["git", "config", "--get", "remote.origin.url"], capture_output=True, text=True, timeout=5
             )
             if remote_cmd.returncode == 0:
                 # Extract owner/repo from git URL
                 remote_url = remote_cmd.stdout.strip()
-                match = re.search(r'github\.com[:/](.+?)(?:\.git)?$', remote_url)
+                match = re.search(r"github\.com[:/](.+?)(?:\.git)?$", remote_url)
                 if match:
                     args.repository = match.group(1)
         except Exception:
             pass
 
     if not args.repository:
-        args.repository = 'unknown/repository'
+        args.repository = "unknown/repository"
 
-    version = args.version.lstrip('v')
-    version_tag = f'v{version}'
+    version = args.version.lstrip("v")
+    version_tag = f"v{version}"
 
     print(f"Extracting CHANGELOG section for version: {version}")
 
@@ -193,7 +187,7 @@ def main():
 
     # Write to output file
     output_path = Path(args.output)
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(notes)
 
     print(f"📝 Release notes written to: {output_path}")
@@ -203,5 +197,5 @@ def main():
     sys.exit(0 if has_changelog else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
