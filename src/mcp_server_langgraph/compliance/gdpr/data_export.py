@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
-from mcp_server_langgraph.core.compliance.storage import (
+from mcp_server_langgraph.compliance.gdpr.storage import (
     AuditLogStore,
     ConsentStore,
     ConversationStore,

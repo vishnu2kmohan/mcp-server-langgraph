@@ -13,7 +13,7 @@ import yaml
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
-from mcp_server_langgraph.core.compliance.storage import AuditLogStore, ConversationStore
+from mcp_server_langgraph.compliance.gdpr.storage import AuditLogStore, ConversationStore
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 

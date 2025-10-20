@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from mcp_server_langgraph.core.compliance.data_deletion import DataDeletionService, DeletionResult
-from mcp_server_langgraph.core.compliance.storage import (
+from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService, DeletionResult
+from mcp_server_langgraph.compliance.gdpr.storage import (
     InMemoryAuditLogStore,
     InMemoryConversationStore,
     InMemoryPreferencesStore,
@@ -59,7 +59,7 @@ class TestDataDeletionAuditLogging:
         )
 
         # Create a user profile first
-        from mcp_server_langgraph.core.compliance.storage import UserProfile
+        from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
 
         user_id = "user:test123"
         username = "testuser"
@@ -113,7 +113,7 @@ class TestDataDeletionAuditLogging:
         username = "testuser2"
 
         # Create a user profile first
-        from mcp_server_langgraph.core.compliance.storage import UserProfile
+        from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
 
         profile = UserProfile(
             user_id=user_id,
@@ -161,7 +161,7 @@ class TestDataDeletionAuditLogging:
         username = "testuser3"
 
         # Create test data
-        from mcp_server_langgraph.core.compliance.storage import (
+        from mcp_server_langgraph.compliance.gdpr.storage import (
             Conversation,
             UserPreferences,
             UserProfile,
@@ -225,7 +225,7 @@ class TestDataDeletionAuditLogging:
         username = "sensitiveuser"
 
         # Create user
-        from mcp_server_langgraph.core.compliance.storage import UserProfile
+        from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
 
         profile = UserProfile(
             user_id=user_id,
@@ -270,7 +270,7 @@ class TestDataDeletionAuditLogging:
         username = "partialuser"
 
         # Create user
-        from mcp_server_langgraph.core.compliance.storage import UserProfile
+        from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
 
         profile = UserProfile(
             user_id=user_id,

@@ -11,7 +11,7 @@ import pytest
 from apscheduler.triggers.cron import CronTrigger
 
 from mcp_server_langgraph.auth.session import InMemorySessionStore
-from mcp_server_langgraph.core.compliance.retention import RetentionResult
+from mcp_server_langgraph.compliance.retention import RetentionResult
 from mcp_server_langgraph.schedulers.cleanup import (
     CleanupScheduler,
     get_cleanup_scheduler,

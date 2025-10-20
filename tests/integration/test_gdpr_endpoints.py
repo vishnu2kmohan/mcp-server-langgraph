@@ -87,7 +87,7 @@ class TestGDPREndpoints:
         """Test GET /api/v1/users/me/data returns user data."""
         with patch("mcp_server_langgraph.api.gdpr.DataExportService") as mock_export:
             # Import UserDataExport to create actual Pydantic model
-            from mcp_server_langgraph.core.compliance.data_export import UserDataExport
+            from mcp_server_langgraph.compliance.gdpr.data_export import UserDataExport
 
             # Mock the export service to return actual UserDataExport object
             mock_instance = mock_export.return_value

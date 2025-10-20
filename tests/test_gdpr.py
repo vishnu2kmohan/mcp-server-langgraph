@@ -12,8 +12,8 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.api.gdpr import ConsentRecord, ConsentType, UserProfileUpdate, router
 from mcp_server_langgraph.auth.session import InMemorySessionStore, SessionData
-from mcp_server_langgraph.core.compliance.data_deletion import DataDeletionService, DeletionResult
-from mcp_server_langgraph.core.compliance.data_export import DataExportService, UserDataExport
+from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService, DeletionResult
+from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
 
 # ==================== Test Fixtures ====================
 

@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 
 import pytest
 
-from mcp_server_langgraph.core.compliance.storage import (
+from mcp_server_langgraph.compliance.gdpr.storage import (
     AuditLogEntry,
     ConsentRecord,
     Conversation,

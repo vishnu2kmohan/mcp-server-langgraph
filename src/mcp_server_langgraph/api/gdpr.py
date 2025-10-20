@@ -18,8 +18,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.middleware import get_current_user, require_auth
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
-from mcp_server_langgraph.core.compliance.data_deletion import DataDeletionService
-from mcp_server_langgraph.core.compliance.data_export import DataExportService
+from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
+from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 router = APIRouter(prefix="/api/v1/users", tags=["GDPR Compliance"])

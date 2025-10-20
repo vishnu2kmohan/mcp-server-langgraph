@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from mcp_server_langgraph.core.compliance.evidence import (
+from mcp_server_langgraph.compliance.soc2.evidence import (
     ComplianceReport,
     ControlCategory,
     Evidence,

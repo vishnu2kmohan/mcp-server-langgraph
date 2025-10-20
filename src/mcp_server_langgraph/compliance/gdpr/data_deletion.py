@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import SessionStore
-from mcp_server_langgraph.core.compliance.storage import (
+from mcp_server_langgraph.compliance.gdpr.storage import (
     AuditLogStore,
     ConsentStore,
     ConversationStore,
@@ -322,7 +322,7 @@ class DataDeletionService:
 
         This record is kept for compliance purposes.
         """
-        from mcp_server_langgraph.core.compliance.storage import AuditLogEntry
+        from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry
 
         timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         audit_record_id = f"deletion_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
