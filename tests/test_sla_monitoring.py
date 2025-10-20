@@ -451,7 +451,7 @@ class TestBreachDetection:
         if measurement.status == SLAStatus.MEETING:
             assert measurement.breach_details is None
 
-    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
+    @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client", new_callable=AsyncMock)
     async def test_alert_on_breach(self, mock_prom_client, sla_monitor):
         """Test alerting on SLA breach"""
         # Mock Prometheus to return low uptime (will breach 100% target)
