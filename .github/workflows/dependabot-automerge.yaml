@@ -22,6 +22,15 @@ jobs:
     if: github.actor == 'dependabot[bot]'
 
     steps:
+      - name: Validate PR context
+        run: |
+          if [ -z "${{ github.event.pull_request.html_url }}" ]; then
+            echo "Error: PR URL not found in event context"
+            exit 1
+          fi
+          echo "✓ PR context validated"
+          echo "PR URL: ${{ github.event.pull_request.html_url }}"
+
       - name: Get PR metadata
         id: pr-metadata
         uses: dependabot/fetch-metadata@v2
@@ -80,7 +89,19 @@ jobs:
       - name: Enable auto-merge
         if: steps.check-update.outputs.auto_merge == 'true'
         run: |
-          gh pr merge --auto --squash "$PR_URL"
+          # Verify gh CLI is available
+          if ! command -v gh &> /dev/null; then
+            echo "Error: GitHub CLI (gh) not found"
+            exit 1
+          fi
+
+          # Enable auto-merge with error handling
+          if gh pr merge --auto --squash "$PR_URL"; then
+            echo "✅ Auto-merge enabled successfully"
+          else
+            echo "❌ Failed to enable auto-merge"
+            exit 1
+          fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,15 +109,27 @@ jobs:
       - name: Approve PR
         if: steps.check-update.outputs.auto_merge == 'true'
         run: |
-          gh pr review --approve "$PR_URL" --body "✅ Automated approval: ${{ steps.pr-metadata.outputs.update-type }} update passed all checks."
+          # Approve PR with error handling
+          if gh pr review --approve "$PR_URL" --body "✅ Automated approval: ${{ steps.pr-metadata.outputs.update-type }} update passed all checks."; then
+            echo "✅ PR approved successfully"
+          else
+            echo "⚠️ Failed to approve PR (may already be approved)"
+          fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true  # Don't fail if already approved
 
       - name: Comment on manual review required
         if: steps.check-update.outputs.auto_merge == 'false'
         run: |
-          gh pr comment "$PR_URL" --body "⚠️ This PR requires manual review before merging:\n\n**Update Type**: ${{ steps.pr-metadata.outputs.update-type }}\n**Dependencies**: ${{ steps.pr-metadata.outputs.dependency-names }}\n\nPlease review the changes and merge when ready."
+          # Add comment with error handling
+          if gh pr comment "$PR_URL" --body "⚠️ This PR requires manual review before merging:\n\n**Update Type**: ${{ steps.pr-metadata.outputs.update-type }}\n**Dependencies**: ${{ steps.pr-metadata.outputs.dependency-names }}\n\nPlease review the changes and merge when ready."; then
+            echo "✅ Comment added successfully"
+          else
+            echo "⚠️ Failed to add comment"
+          fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true  # Don't fail if commenting fails
