@@ -26,9 +26,9 @@ if tomllib:
         __version__ = pyproject_data["project"]["version"]
     except Exception:
         # Fallback if reading fails
-        __version__ = "2.7.0"
+        __version__ = "2.8.0"
 else:
-    __version__ = "2.7.0"
+    __version__ = "2.8.0"
 
 # Auth exports
 from mcp_server_langgraph.auth.middleware import AuthMiddleware

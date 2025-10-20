@@ -186,6 +186,67 @@ async def openfga_client_real(integration_test_env):
     # Cleanup happens per-test
 
 
+@pytest.fixture(scope="session")
+def qdrant_available():
+    """Check if Qdrant is available for testing."""
+    qdrant_url = os.getenv("QDRANT_URL", "localhost")
+    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+
+    try:
+        import httpx
+
+        # Quick check if Qdrant is accessible
+        response = httpx.get(f"http://{qdrant_url}:{qdrant_port}/", timeout=2.0)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
+@pytest.fixture
+def qdrant_client():
+    """Qdrant client for integration tests with vector search."""
+    try:
+        from qdrant_client import QdrantClient
+    except ImportError:
+        pytest.skip("Qdrant client not installed")
+
+    qdrant_url = os.getenv("QDRANT_URL", "localhost")
+    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+
+    # Check if Qdrant is available
+    try:
+        import httpx
+
+        response = httpx.get(f"http://{qdrant_url}:{qdrant_port}/", timeout=2.0)
+        if response.status_code != 200:
+            pytest.skip("Qdrant instance not available")
+    except Exception as e:
+        pytest.skip(f"Qdrant instance not available: {e}")
+
+    # Create client
+    client = QdrantClient(url=qdrant_url, port=qdrant_port)
+
+    # Test connection
+    try:
+        client.get_collections()
+    except Exception as e:
+        pytest.skip(f"Cannot connect to Qdrant: {e}")
+
+    yield client
+
+    # Cleanup: Delete test collections
+    try:
+        collections = client.get_collections().collections
+        test_collections = [c.name for c in collections if c.name.startswith("test_")]
+        for collection_name in test_collections:
+            try:
+                client.delete_collection(collection_name)
+            except Exception:
+                pass  # Best effort cleanup
+    except Exception:
+        pass  # Ignore cleanup errors
+
+
 @pytest.fixture
 def mock_infisical_response():
     """Mock Infisical API responses"""

@@ -398,39 +398,50 @@ class TestSearchAndLoadContext:
 class TestDynamicContextIntegration:
     """Integration tests requiring actual Qdrant instance"""
 
-    @pytest.mark.skip(reason="Requires running Qdrant instance")
     @pytest.mark.asyncio
-    async def test_full_workflow(self):
+    async def test_full_workflow(self, qdrant_client):
         """Test complete workflow: index → search → load"""
+        from os import getenv
+
+        qdrant_url = getenv("QDRANT_URL", "localhost")
+        qdrant_port = int(getenv("QDRANT_PORT", "6333"))
+
         loader = DynamicContextLoader(
-            qdrant_url="localhost",
-            qdrant_port=6333,
-            collection_name="integration_test",
+            qdrant_url=qdrant_url,
+            qdrant_port=qdrant_port,
+            collection_name="test_integration_workflow",
         )
 
-        # Index some test documents
-        await loader.index_context(
-            ref_id="test_1",
-            content="Python is a programming language",
-            ref_type="document",
-            summary="About Python language",
-        )
+        try:
+            # Index some test documents
+            await loader.index_context(
+                ref_id="test_1",
+                content="Python is a programming language",
+                ref_type="document",
+                summary="About Python language",
+            )
 
-        await loader.index_context(
-            ref_id="test_2",
-            content="JavaScript is also a programming language",
-            ref_type="document",
-            summary="About JavaScript language",
-        )
+            await loader.index_context(
+                ref_id="test_2",
+                content="JavaScript is also a programming language",
+                ref_type="document",
+                summary="About JavaScript language",
+            )
 
-        # Search
-        results = await loader.semantic_search(
-            query="programming languages",
-            top_k=2,
-        )
+            # Search
+            results = await loader.semantic_search(
+                query="programming languages",
+                top_k=2,
+            )
 
-        assert len(results) == 2
+            assert len(results) == 2
 
-        # Load
-        loaded = await loader.load_batch(results, max_tokens=1000)
-        assert len(loaded) == 2
+            # Load
+            loaded = await loader.load_batch(results, max_tokens=1000)
+            assert len(loaded) == 2
+        finally:
+            # Cleanup test collection
+            try:
+                qdrant_client.delete_collection("test_integration_workflow")
+            except Exception:
+                pass  # Best effort cleanup
