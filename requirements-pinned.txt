@@ -15,7 +15,7 @@ mcp==1.18.0
 # Authentication
 PyJWT==2.10.1
 cryptography==46.0.3
-bcrypt==4.3.0  # Password hashing for InMemoryUserProvider
+bcrypt==5.0.0  # Password hashing for InMemoryUserProvider
 
 # OpenTelemetry Core
 # Pinned to 1.38.0 (matches pyproject.toml requirements)
