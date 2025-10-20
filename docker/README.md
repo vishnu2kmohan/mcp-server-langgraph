@@ -4,10 +4,11 @@ Docker and container-related configuration files.
 
 ## Files
 
-- `docker-compose.dev.yml` - Development-specific Docker Compose configuration
+### Development & Testing
+- `docker-compose.dev.yml` - Development-specific Docker Compose overrides
+- `docker-compose.test.yml` - Integration test infrastructure (PostgreSQL, OpenFGA, Redis, etc.)
 
-## Main Files (in root)
-
+### Main Files (in root)
 The primary Docker files remain in the root directory following standard conventions:
 - `../Dockerfile` - Main container build configuration
 - `../docker-compose.yml` - Standard Docker Compose setup with all services
