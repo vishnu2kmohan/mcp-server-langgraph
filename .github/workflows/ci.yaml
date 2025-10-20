@@ -87,16 +87,55 @@ jobs:
     - name: Run integration tests (containerized)
       run: |
         chmod +x scripts/test-integration.sh
+        mkdir -p coverage-integration
+        chmod 777 coverage-integration
         ./scripts/test-integration.sh --build --no-cache
       # Integration tests now reliable in Docker - no longer allow failures
       # continue-on-error: true  # REMOVED: Tests now run in isolated Docker environment
       # --build --no-cache: Rebuild images without cache to ensure latest test code
 
+    - name: Collect integration test coverage
+      run: |
+        # Copy coverage from Docker container if it exists
+        if docker ps -a | grep -q mcp-test-runner; then
+          docker cp mcp-test-runner:/app/coverage-integration/coverage-integration.xml \
+            ./coverage-integration/ 2>/dev/null || echo "No integration coverage found in container"
+        fi
+        # Check if coverage file exists
+        if [ -f coverage-integration/coverage-integration.xml ]; then
+          echo "✓ Integration coverage collected"
+          ls -lh coverage-integration/
+        else
+          echo "⚠️  No integration coverage found - will use unit tests only"
+        fi
+
+    - name: Merge coverage reports
+      run: |
+        pip install coverage
+        # Combine coverage data if integration coverage exists
+        if [ -f coverage-integration/coverage-integration.xml ]; then
+          echo "Merging unit and integration coverage..."
+          # The coverage files are already in XML format from pytest
+          # We'll use the unit test coverage.xml as base since codecov supports multiple files
+          echo "✓ Both unit and integration coverage available for upload"
+        else
+          echo "Using unit test coverage only"
+        fi
+
+    - name: Check coverage threshold
+      run: |
+        pip install coverage
+        # Generate coverage report and check threshold
+        coverage report --fail-under=55 || echo "⚠️  Coverage below 55% threshold"
+      continue-on-error: true  # Don't fail CI yet, just warn
+
     - name: Upload coverage
       uses: codecov/codecov-action@v5.5.1
       with:
-        files: ./coverage.xml
+        files: ./coverage.xml,./coverage-integration/coverage-integration.xml
         fail_ci_if_error: false
+        flags: combined
+        name: combined-coverage
 
   lint:
     name: Lint

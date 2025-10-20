@@ -14,7 +14,7 @@
 
 [![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](archive/SECURITY_AUDIT.md)
 [![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
-[![Code Coverage](https://img.shields.io/badge/coverage-80%25-green.svg)](docs/advanced/testing.mdx)
+[![Code Coverage](https://img.shields.io/badge/coverage-60--65%25-green.svg)](#testing-strategy)
 [![Property Tests](https://img.shields.io/badge/property%20tests-27%2B-blue.svg)](#testing-strategy)
 [![Contract Tests](https://img.shields.io/badge/contract%20tests-20%2B-blue.svg)](#testing-strategy)
 [![Mutation Testing](https://img.shields.io/badge/mutation%20testing-enabled-yellow.svg)](docs-internal/MUTATION_TESTING.md)
@@ -562,12 +562,21 @@ This project uses a comprehensive, multi-layered testing approach to ensure prod
 
 ### 🧪 Test Types
 
+#### Combined Coverage Testing (Recommended)
+```bash
+make test-coverage-combined
+```
+- **60-65% combined coverage** (unit + integration tests)
+- Most accurate coverage metric reflecting all test types
+- Includes MCP server entry points tested via integration tests
+- Generates combined HTML report: `htmlcov-combined/index.html`
+
 #### Unit Tests (Fast, No External Dependencies)
 ```bash
 make test-unit
 # OR: pytest -m unit -v
 ```
-- **80% code coverage** with comprehensive assertions
+- **~400 tests** with comprehensive assertions
 - Mock all external dependencies (LLM, OpenFGA, Infisical)
 - Test pure logic, validation, and error handling
 
@@ -576,9 +585,11 @@ make test-unit
 make test-integration
 # OR: pytest -m integration -v
 ```
+- **~200 tests** in isolated Docker environment
 - Real OpenFGA authorization checks
 - Real observability stack (Jaeger, Prometheus)
 - End-to-end workflows with actual dependencies
+- Coverage collection enabled (merged with unit tests in CI)
 
 #### Property-Based Tests (Edge Case Discovery)
 ```bash

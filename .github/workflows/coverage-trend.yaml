@@ -1,0 +1,149 @@
+name: Coverage Trend Tracking
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  track-coverage:
+    name: Track Coverage Trends
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0  # Full history for trend analysis
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install -r requirements-test.txt
+        pip install coverage
+
+    - name: Download previous coverage data
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-history
+        path: .coverage-history
+      continue-on-error: true  # First run won't have history
+
+    - name: Run unit tests with coverage
+      run: |
+        pytest -m unit --cov=src/mcp_server_langgraph --cov-report=json --cov-report=term-missing
+
+    - name: Extract coverage percentage
+      id: coverage
+      run: |
+        # Extract coverage percentage from JSON report
+        COVERAGE=$(python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered'])")
+        echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+        echo "Coverage: $COVERAGE%"
+
+        # Round to 1 decimal place
+        COVERAGE_ROUNDED=$(python -c "print(f'{$COVERAGE:.1f}')")
+        echo "coverage_rounded=$COVERAGE_ROUNDED" >> $GITHUB_OUTPUT
+
+    - name: Save coverage to history
+      run: |
+        mkdir -p .coverage-history
+        DATE=$(date +%Y-%m-%d)
+        COMMIT_SHA=$(git rev-parse --short HEAD)
+        echo "$DATE,$COMMIT_SHA,${{ steps.coverage.outputs.coverage }}" >> .coverage-history/coverage-trend.csv
+
+        # Keep only last 100 entries
+        tail -100 .coverage-history/coverage-trend.csv > .coverage-history/coverage-trend.tmp
+        mv .coverage-history/coverage-trend.tmp .coverage-history/coverage-trend.csv
+
+    - name: Upload coverage history
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-history
+        path: .coverage-history/
+        retention-days: 90
+
+    - name: Check coverage change
+      id: coverage-change
+      run: |
+        if [ -f .coverage-history/coverage-trend.csv ]; then
+          # Get previous coverage (second to last line)
+          PREV_COVERAGE=$(tail -2 .coverage-history/coverage-trend.csv | head -1 | cut -d',' -f3)
+          CURR_COVERAGE=${{ steps.coverage.outputs.coverage }}
+
+          # Calculate change
+          CHANGE=$(python -c "print(f'{$CURR_COVERAGE - $PREV_COVERAGE:.1f}')")
+          echo "change=$CHANGE" >> $GITHUB_OUTPUT
+
+          # Determine status
+          if (( $(echo "$CHANGE < -5" | bc -l) )); then
+            echo "status=🔴 Significant decrease" >> $GITHUB_OUTPUT
+            echo "alert=true" >> $GITHUB_OUTPUT
+          elif (( $(echo "$CHANGE < -1" | bc -l) )); then
+            echo "status=🟡 Decrease" >> $GITHUB_OUTPUT
+            echo "alert=false" >> $GITHUB_OUTPUT
+          elif (( $(echo "$CHANGE > 1" | bc -l) )); then
+            echo "status=🟢 Increase" >> $GITHUB_OUTPUT
+            echo "alert=false" >> $GITHUB_OUTPUT
+          else
+            echo "status=➡️ No change" >> $GITHUB_OUTPUT
+            echo "alert=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "change=N/A" >> $GITHUB_OUTPUT
+          echo "status=📊 First measurement" >> $GITHUB_OUTPUT
+          echo "alert=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const coverage = '${{ steps.coverage.outputs.coverage_rounded }}';
+          const change = '${{ steps.coverage-change.outputs.change }}';
+          const status = '${{ steps.coverage-change.outputs.status }}';
+
+          const body = `## 📊 Coverage Report
+
+          **Current Coverage:** ${coverage}%
+          **Change:** ${change === 'N/A' ? 'First measurement' : change + '%'}
+          **Status:** ${status}
+
+          ${change !== 'N/A' && parseFloat(change) < -5 ? '⚠️ **Warning:** Coverage decreased by more than 5%' : ''}
+
+          <details>
+          <summary>Coverage Trend</summary>
+
+          Run \`make test-coverage-combined\` locally for detailed coverage report.
+          View detailed coverage in the workflow artifacts.
+
+          </details>`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+
+    - name: Alert on significant coverage drop
+      if: steps.coverage-change.outputs.alert == 'true'
+      run: |
+        echo "⚠️ Coverage dropped by more than 5%!"
+        echo "Previous: Check coverage-trend.csv"
+        echo "Current: ${{ steps.coverage.outputs.coverage }}%"
+        exit 1  # Fail the workflow
