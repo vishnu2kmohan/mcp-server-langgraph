@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 17:26:41
+**Last Updated**: 2025-10-20 17:27:00
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,7 +9,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 281 |
+| Total Commits | 282 |
 | Contributors | 2 |
 | Current Branch | `main` |
 | Source Files | 170 Python files |
@@ -68,6 +68,9 @@
 
 ### 🔧 Chore
 
+- **`1e906d8`** (2025-10-20) - chore: further organize docs-internal with subdirectories
+  _by Vishnu Mohan_
+
 - **`ee34ea6`** (2025-10-20) - chore: reorganize documentation files for better structure
   _by Vishnu Mohan_
 
@@ -75,9 +78,6 @@
   _by Vishnu Mohan_
 
 - **`3ae37b5`** (2025-10-20) - chore: remove old audit reports from root (moved to docs-internal/audits/)
-  _by Vishnu Mohan_
-
-- **`4bae6f2`** (2025-10-20) - chore: sync Claude Code context and add compliance test enhancements
   _by Vishnu Mohan_
 
 
@@ -103,12 +103,12 @@ Files changed most frequently:
 | `README.md` | 12 |
 | `docs/mint.json` | 9 |
 | `requirements-pinned.txt` | 9 |
+| `.claude/context/recent-work.md` | 8 |
 | `.github/workflows/release.yaml` | 8 |
 | `docker/docker-compose.yml` | 8 |
 | `src/mcp_server_langgraph/mcp/server_stdio.py` | 8 |
 | `.env.example` | 8 |
 | `deployments/kustomize/base/kustomization.yaml` | 8 |
-| `.claude/context/recent-work.md` | 7 |
 
 
 ---
@@ -134,7 +134,7 @@ Most active areas in the codebase (by file change frequency):
 - `.github/` - 43 file changes
 - `deployments/` - 15 file changes
 - `docs/` - 9 file changes
-- `docker/` - 8 file changes
+- `.claude/` - 8 file changes
 
 
 ---
@@ -160,5 +160,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 17:26:41
+**Generated**: 2025-10-20 17:27:00
 **Source**: Git commit history (last 15 commits, 7 days of file activity)

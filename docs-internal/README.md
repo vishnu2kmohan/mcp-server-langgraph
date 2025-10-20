@@ -1,96 +1,86 @@
-# Internal Project Documentation
+# Internal Documentation
 
-This directory contains internal project documentation, technical guides, and implementation details that are not part of the user-facing Mintlify documentation.
+This directory contains internal documentation for maintainers, contributors, and developers.
 
-## Contents
+## Directory Structure
 
-### Implementation Guides
-- **PYDANTIC_AI_INTEGRATION.md** - Pydantic AI integration guide
-- **PYDANTIC_MIGRATION_COMPLETE.md** - Pydantic migration details
-- **STRICT_TYPING_GUIDE.md** - Python strict typing guide
-- **MUTATION_TESTING.md** - Mutation testing documentation
+### 📐 architecture/
+Technical architecture and design documentation:
+- `AGENTIC_LOOP_GUIDE.md` - Implementation guide for agentic loop
+- `PYDANTIC_AI_INTEGRATION.md` - Pydantic AI integration details
+- `STRICT_TYPING_GUIDE.md` - Gradual mypy strict mode rollout
 
-### Operational Documentation
-- **COMPLIANCE.md** - Compliance framework details
-- **DEPLOYMENT.md** - Internal deployment procedures
-- **SLA_OPERATIONS_RUNBOOK.md** - SLA operations runbook
-- **DEPENDENCY_MANAGEMENT.md** - Dependency management guide
+### 🔍 audits/
+Audit reports and assessments (timestamped):
+- Documentation audits
+- Infrastructure audits
+- Security audits
+- Compliance reviews
 
-### Test and Quality Reports
-- **TEST_FIXES_COMPLETE.md** - Test fixes documentation
+### 🔧 operations/
+Operational guides and runbooks:
+- `SLA_OPERATIONS_RUNBOOK.md` - SLA monitoring and incident response
+- `DEPENDENCY_MANAGEMENT.md` - Dependency update procedures
+- `STORAGE_BACKEND_REQUIREMENTS.md` - Storage backend configuration
 
-### Other
-- **index.html** - Internal documentation index page
+### 🔄 migrations/
+Migration guides for major changes:
+- `EMBEDDING_MIGRATION_GUIDE.md` - Embedding provider migration
+- `MIGRATION.md` - General migration procedures
 
-## Purpose
+### 🚀 releases/
+Release-specific documentation:
+- `RELEASE_v2.8.0_COMMANDS.md` - Release commands and procedures
 
-This directory serves as a repository for:
-- Technical implementation details
-- Internal guides and procedures
-- Migration and upgrade documentation
-- Testing strategies
-- Compliance implementation details
+### 🏃 sprints/
+Sprint summaries and progress tracking:
+- Sprint completion reports
+- Technical debt sprint progress
+- TODO catalogs
 
-## Relationship to Other Documentation
+### 🧪 testing/
+Testing guides and reports:
+- `MUTATION_TESTING.md` - Mutation testing procedures
+- `TEST_RESULTS_SUMMARY.md` - Test execution summaries
+- `TESTING_QUICK_START.md` - Quick start testing guide
 
-### User-Facing Documentation → `../docs/`
-- Mintlify `.mdx` format
-- Published to documentation site
-- For end users, API consumers, operators
+### 📋 Root-level Files
+- `BREAKING_CHANGES.md` - Breaking changes log
+- `COMPLIANCE.md` - Compliance framework documentation
+- `DEPLOYMENT.md` - Internal deployment notes
+- `DOCUMENTATION_VERSIONING.md` - Documentation versioning strategy
+- `GITHUB_ACTIONS_FIXES.md` - CI/CD fixes and improvements
+- `MINTLIFY_USAGE.md` - Mintlify usage guide
+- `PIP_AUTHENTICATION_FIX.md` - PIP authentication workarounds
+- `ROOT_DIRECTORY_POLICY.md` - Root directory organization policy
+- `SECURITY_REMEDIATION.md` - Security issue remediation
 
-### Project Reports → `../reports/`
-- Test coverage reports
-- CI/CD analysis
-- Repository health metrics
-- Timestamped and archived
+## Document Retention
 
-### Architecture Decisions → `../adr/`
-- Architecture Decision Records (ADRs)
-- Immutable after approval
-- Source markdown format
+- **Audits**: Archived after 90 days to `audits/archive/`
+- **Sprints**: Kept for 6 months, then archived
+- **Migrations**: Kept for 1 year after migration completion
+- **Architecture**: Permanent (updated as needed)
+- **Operations**: Permanent (kept current)
 
-### Operational Runbooks → `../runbooks/`
-- Operational procedures
-- Incident response
-- Disaster recovery
+## Contributing
 
-## Guidelines
+When adding new internal documentation:
 
-### When to Use This Directory
-
-Place content here when it:
-- ✅ Is internal technical documentation
-- ✅ Documents implementation details
-- ✅ Provides guides for maintainers/contributors
-- ✅ Is not intended for end users
-- ✅ Doesn't fit in `docs/`, `reports/`, `adr/`, or `runbooks/`
-
-### When NOT to Use This Directory
-
-Do not place content here if it:
-- ❌ Should be user-facing (use `docs/`)
-- ❌ Is a project report (use `reports/`)
-- ❌ Is an ADR (use `adr/`)
-- ❌ Is an operational runbook (use `runbooks/`)
-- ❌ Is configuration (use appropriate config directory)
-
-## Maintenance
-
-- Review quarterly for outdated content
-- Move outdated content to `../archive/`
-- Update cross-references when structure changes
-- Keep file names descriptive and consistent
+1. Choose the appropriate subdirectory based on content type
+2. Use descriptive filenames with UPPERCASE convention
+3. Add timestamps for time-sensitive documents (e.g., `_YYYY-MM-DD`)
+4. Update this README if adding new categories
+5. Link from relevant external docs (docs/) if applicable
 
 ## Related Documentation
 
-- [Repository Structure](../REPOSITORY_STRUCTURE.md)
-- [Mintlify Documentation](../docs/README.md)
-- [Reports Directory](../reports/README.md)
-- [ADR Directory](../adr/README.md)
-- [Runbooks Directory](../runbooks/README.md)
+- **User Documentation**: [docs/](../docs/) - Mintlify documentation
+- **ADRs**: [adr/](../adr/) - Architecture Decision Records
+- **Runbooks**: [runbooks/](../runbooks/) - Operational runbooks
+- **Reports**: [reports/](../reports/) - Project reports and metrics
 
 ---
 
-**Purpose:** Internal technical documentation and implementation guides
-**Audience:** Maintainers, contributors, developers
-**Format:** Standard Markdown (.md)
+**Last Updated:** 2025-10-20
+**Maintained By:** Repository Maintainers
