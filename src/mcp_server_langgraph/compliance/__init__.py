@@ -15,8 +15,6 @@ from mcp_server_langgraph.compliance.gdpr.storage import (
     ConversationStore,
     InMemoryAuditLogStore,
     InMemoryConversationStore,
-    PostgresAuditLogStore,
-    PostgresConversationStore,
 )
 from mcp_server_langgraph.compliance.retention import DataRetentionService
 from mcp_server_langgraph.compliance.soc2.evidence import EvidenceCollector
@@ -31,8 +29,6 @@ __all__ = [
     "ConversationStore",
     "InMemoryAuditLogStore",
     "InMemoryConversationStore",
-    "PostgresAuditLogStore",
-    "PostgresConversationStore",
     # Retention
     "DataRetentionService",
     # SOC2

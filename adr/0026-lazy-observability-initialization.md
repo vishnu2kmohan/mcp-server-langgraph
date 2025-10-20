@@ -277,8 +277,8 @@ async def main():
 - **Related ADRs**:
   - ADR-0023: Anthropic Tool Design Best Practices
   - ADR-0024: Agentic Loop Implementation
-- **Migration Guide**: [MIGRATION.md](../MIGRATION.md)
-- **Breaking Changes**: [BREAKING_CHANGES.md](../BREAKING_CHANGES.md)
+- **Migration Guide**: [MIGRATION.md](../docs-internal/migrations/MIGRATION.md)
+- **Breaking Changes**: [BREAKING_CHANGES.md](../docs-internal/BREAKING_CHANGES.md)
 - **Anthropic Best Practices**: https://docs.anthropic.com/en/docs/build-with-claude/tool-use
 
 ## Validation

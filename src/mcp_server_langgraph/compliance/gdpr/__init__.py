@@ -15,8 +15,6 @@ from mcp_server_langgraph.compliance.gdpr.storage import (
     ConversationStore,
     InMemoryAuditLogStore,
     InMemoryConversationStore,
-    PostgresAuditLogStore,
-    PostgresConversationStore,
 )
 
 __all__ = [
@@ -27,6 +25,4 @@ __all__ = [
     "ConversationStore",
     "InMemoryAuditLogStore",
     "InMemoryConversationStore",
-    "PostgresAuditLogStore",
-    "PostgresConversationStore",
 ]

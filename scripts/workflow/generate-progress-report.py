@@ -30,6 +30,7 @@ from typing import Dict, List, Optional
 @dataclass
 class CommitInfo:
     """Information about a git commit"""
+
     hash: str
     date: datetime
     author: str
@@ -48,14 +49,14 @@ class ProgressReportGenerator:
     """Generates automated sprint progress reports"""
 
     COMMIT_TYPE_PATTERN = {
-        'feat': 'Feature',
-        'fix': 'Bug Fix',
-        'docs': 'Documentation',
-        'test': 'Testing',
-        'refactor': 'Refactoring',
-        'chore': 'Chore',
-        'style': 'Style',
-        'perf': 'Performance',
+        "feat": "Feature",
+        "fix": "Bug Fix",
+        "docs": "Documentation",
+        "test": "Testing",
+        "refactor": "Refactoring",
+        "chore": "Chore",
+        "style": "Style",
+        "perf": "Performance",
     }
 
     def __init__(self, since_date: Optional[str] = None):
@@ -65,18 +66,18 @@ class ProgressReportGenerator:
     def _get_week_ago(self) -> str:
         """Get date one week ago"""
         week_ago = datetime.now() - timedelta(days=7)
-        return week_ago.strftime('%Y-%m-%d')
+        return week_ago.strftime("%Y-%m-%d")
 
     def collect_metrics(self):
         """Collect git metrics"""
         print(f"Collecting metrics since {self.since_date}...")
 
         # Get commit hashes
-        cmd = ['git', 'log', f'--since={self.since_date}', '--pretty=format:%H']
+        cmd = ["git", "log", f"--since={self.since_date}", "--pretty=format:%H"]
         result = subprocess.run(cmd, capture_output=True, text=True)
-        commit_hashes = result.stdout.strip().split('\n')
+        commit_hashes = result.stdout.strip().split("\n")
 
-        if not commit_hashes or commit_hashes == ['']:
+        if not commit_hashes or commit_hashes == [""]:
             print("No commits found in date range")
             return
 
@@ -92,26 +93,26 @@ class ProgressReportGenerator:
         """Get detailed information about a commit"""
         try:
             # Get commit message and metadata
-            cmd = ['git', 'show', '--no-patch', '--pretty=format:%H|%aI|%an|%s', commit_hash]
+            cmd = ["git", "show", "--no-patch", "--pretty=format:%H|%aI|%an|%s", commit_hash]
             result = subprocess.run(cmd, capture_output=True, text=True)
-            hash_str, date_str, author, message = result.stdout.strip().split('|', 3)
+            hash_str, date_str, author, message = result.stdout.strip().split("|", 3)
 
             # Get file statistics
-            cmd = ['git', 'show', '--numstat', '--pretty=format:', commit_hash]
+            cmd = ["git", "show", "--numstat", "--pretty=format:", commit_hash]
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             insertions = 0
             deletions = 0
             files_changed = 0
 
-            for line in result.stdout.strip().split('\n'):
+            for line in result.stdout.strip().split("\n"):
                 if not line:
                     continue
-                parts = line.split('\t')
+                parts = line.split("\t")
                 if len(parts) >= 2:
                     try:
-                        ins = int(parts[0]) if parts[0] != '-' else 0
-                        dels = int(parts[1]) if parts[1] != '-' else 0
+                        ins = int(parts[0]) if parts[0] != "-" else 0
+                        dels = int(parts[1]) if parts[1] != "-" else 0
                         insertions += ins
                         deletions += dels
                         files_changed += 1
@@ -119,21 +120,21 @@ class ProgressReportGenerator:
                         continue
 
             # Determine commit type
-            commit_type = 'other'
+            commit_type = "other"
             for type_prefix in self.COMMIT_TYPE_PATTERN.keys():
-                if message.lower().startswith(f'{type_prefix}:') or message.lower().startswith(f'{type_prefix}('):
+                if message.lower().startswith(f"{type_prefix}:") or message.lower().startswith(f"{type_prefix}("):
                     commit_type = type_prefix
                     break
 
             return CommitInfo(
                 hash=commit_hash[:7],
-                date=datetime.fromisoformat(date_str.replace('Z', '+00:00')),
+                date=datetime.fromisoformat(date_str.replace("Z", "+00:00")),
                 author=author,
                 message=message,
                 files_changed=files_changed,
                 insertions=insertions,
                 deletions=deletions,
-                commit_type=commit_type
+                commit_type=commit_type,
             )
 
         except Exception as e:
@@ -215,12 +216,12 @@ class ProgressReportGenerator:
             report.append("- ⚡ **High velocity**: Excellent progress rate!")
 
         # Documentation commits
-        doc_commits = type_counts.get('docs', 0)
+        doc_commits = type_counts.get("docs", 0)
         if doc_commits / total_commits > 0.3:
             report.append("- 📚 **Documentation-heavy**: Good documentation practice!")
 
         # Test commits
-        test_commits = type_counts.get('test', 0)
+        test_commits = type_counts.get("test", 0)
         if test_commits / total_commits > 0.2:
             report.append("- 🧪 **Test-driven**: Strong testing discipline!")
 
@@ -232,7 +233,7 @@ class ProgressReportGenerator:
         report.append("\n---\n")
         report.append("**Auto-generated by**: `scripts/workflow/generate-progress-report.py`\n")
 
-        return '\n'.join(report)
+        return "\n".join(report)
 
     def _calculate_duration(self) -> int:
         """Calculate duration in days"""
@@ -247,17 +248,17 @@ class ProgressReportGenerator:
         """Group commits by day"""
         daily = defaultdict(list)
         for commit in self.commits:
-            date_str = commit.date.strftime('%Y-%m-%d')
+            date_str = commit.date.strftime("%Y-%m-%d")
             daily[date_str].append(commit)
         return dict(daily)
 
     def _get_file_changes(self) -> Dict[str, int]:
         """Get count of changes per file"""
-        cmd = ['git', 'log', f'--since={self.since_date}', '--name-only', '--pretty=format:']
+        cmd = ["git", "log", f"--since={self.since_date}", "--name-only", "--pretty=format:"]
         result = subprocess.run(cmd, capture_output=True, text=True)
 
         file_counts = Counter()
-        for line in result.stdout.strip().split('\n'):
+        for line in result.stdout.strip().split("\n"):
             if line:
                 file_counts[line] += 1
 
@@ -266,10 +267,10 @@ class ProgressReportGenerator:
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='Generate sprint progress report')
-    parser.add_argument('--since', help='Start date (YYYY-MM-DD). Default: 7 days ago')
-    parser.add_argument('--sprint-file', help='Sprint tracking file to update')
-    parser.add_argument('--output', help='Output file for report (default: stdout)')
+    parser = argparse.ArgumentParser(description="Generate sprint progress report")
+    parser.add_argument("--since", help="Start date (YYYY-MM-DD). Default: 7 days ago")
+    parser.add_argument("--sprint-file", help="Sprint tracking file to update")
+    parser.add_argument("--output", help="Output file for report (default: stdout)")
 
     args = parser.parse_args()
 
@@ -284,7 +285,7 @@ def main():
     if args.output:
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write(report)
         print(f"\n✅ Report saved to: {args.output}")
     else:
@@ -301,5 +302,5 @@ def main():
             print(f"⚠️  Sprint file not found: {args.sprint_file}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

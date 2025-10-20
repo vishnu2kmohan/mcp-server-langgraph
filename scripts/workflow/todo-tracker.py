@@ -31,6 +31,7 @@ from typing import Dict, List, Set
 @dataclass
 class TodoItem:
     """Represents a TODO item found in code"""
+
     file_path: str
     line_number: int
     content: str
@@ -46,28 +47,25 @@ class TodoTracker:
 
     # TODO patterns to match
     TODO_PATTERN = re.compile(
-        r'#\s*TODO:?\s*(.+)$|'
-        r'//\s*TODO:?\s*(.+)$|'
-        r'/\*\s*TODO:?\s*(.+?)\s*\*/',
-        re.IGNORECASE | re.MULTILINE
+        r"#\s*TODO:?\s*(.+)$|" r"//\s*TODO:?\s*(.+)$|" r"/\*\s*TODO:?\s*(.+?)\s*\*/", re.IGNORECASE | re.MULTILINE
     )
 
     # Priority indicators
     PRIORITY_PATTERNS = {
-        'CRITICAL': re.compile(r'\b(CRITICAL|URGENT|BLOCKER|ASAP)\b', re.IGNORECASE),
-        'HIGH': re.compile(r'\b(HIGH|IMPORTANT|SOON)\b', re.IGNORECASE),
-        'MEDIUM': re.compile(r'\b(MEDIUM|NORMAL)\b', re.IGNORECASE),
-        'LOW': re.compile(r'\b(LOW|MINOR|SOMEDAY)\b', re.IGNORECASE),
+        "CRITICAL": re.compile(r"\b(CRITICAL|URGENT|BLOCKER|ASAP)\b", re.IGNORECASE),
+        "HIGH": re.compile(r"\b(HIGH|IMPORTANT|SOON)\b", re.IGNORECASE),
+        "MEDIUM": re.compile(r"\b(MEDIUM|NORMAL)\b", re.IGNORECASE),
+        "LOW": re.compile(r"\b(LOW|MINOR|SOMEDAY)\b", re.IGNORECASE),
     }
 
     # Category indicators
     CATEGORY_PATTERNS = {
-        'monitoring': re.compile(r'\b(prometheus|metric|alert|monitor|sla)\b', re.IGNORECASE),
-        'compliance': re.compile(r'\b(compliance|gdpr|hipaa|soc2|audit)\b', re.IGNORECASE),
-        'testing': re.compile(r'\b(test|mock|assert|coverage)\b', re.IGNORECASE),
-        'documentation': re.compile(r'\b(doc|readme|comment|explain)\b', re.IGNORECASE),
-        'performance': re.compile(r'\b(performance|optimize|cache|slow)\b', re.IGNORECASE),
-        'security': re.compile(r'\b(security|auth|encrypt|sanitize)\b', re.IGNORECASE),
+        "monitoring": re.compile(r"\b(prometheus|metric|alert|monitor|sla)\b", re.IGNORECASE),
+        "compliance": re.compile(r"\b(compliance|gdpr|hipaa|soc2|audit)\b", re.IGNORECASE),
+        "testing": re.compile(r"\b(test|mock|assert|coverage)\b", re.IGNORECASE),
+        "documentation": re.compile(r"\b(doc|readme|comment|explain)\b", re.IGNORECASE),
+        "performance": re.compile(r"\b(performance|optimize|cache|slow)\b", re.IGNORECASE),
+        "security": re.compile(r"\b(security|auth|encrypt|sanitize)\b", re.IGNORECASE),
     }
 
     def __init__(self, root_dir: str = "src"):
@@ -90,13 +88,13 @@ class TodoTracker:
     def _should_skip(self, file_path: Path) -> bool:
         """Check if file should be skipped"""
         skip_patterns = [
-            '__pycache__',
-            '.venv',
-            'venv',
-            'build',
-            'dist',
-            '.egg-info',
-            'test_',  # Skip test files (they have TODOs for test cases)
+            "__pycache__",
+            ".venv",
+            "venv",
+            "build",
+            "dist",
+            ".egg-info",
+            "test_",  # Skip test files (they have TODOs for test cases)
         ]
 
         path_str = str(file_path)
@@ -105,7 +103,7 @@ class TodoTracker:
     def _scan_file(self, file_path: Path):
         """Scan a single file for TODOs"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
 
             for line_num, line in enumerate(lines, 1):
@@ -125,7 +123,7 @@ class TodoTracker:
                         line_number=line_num,
                         content=content.strip(),
                         category=category,
-                        priority=priority
+                        priority=priority,
                     )
                     self.todos.append(todo)
 
@@ -181,9 +179,9 @@ class TodoTracker:
 
         # Summary by priority
         report.append("## 📊 Summary by Priority\n")
-        for priority in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']:
+        for priority in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
             count = len(by_priority.get(priority, []))
-            emoji = {'CRITICAL': '🔴', 'HIGH': '🟡', 'MEDIUM': '🟢', 'LOW': '⚪'}.get(priority, '')
+            emoji = {"CRITICAL": "🔴", "HIGH": "🟡", "MEDIUM": "🟢", "LOW": "⚪"}.get(priority, "")
             report.append(f"- {emoji} **{priority}**: {count} items")
         report.append("\n---\n")
 
@@ -195,7 +193,7 @@ class TodoTracker:
 
         # Details by priority
         report.append("## 🔍 Details by Priority\n")
-        for priority in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']:
+        for priority in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
             todos = by_priority.get(priority, [])
             if not todos:
                 continue
@@ -216,8 +214,8 @@ class TodoTracker:
         report.append("\n---\n")
         report.append("## 💡 Recommendations\n")
 
-        critical_count = len(by_priority.get('CRITICAL', []))
-        high_count = len(by_priority.get('HIGH', []))
+        critical_count = len(by_priority.get("CRITICAL", []))
+        high_count = len(by_priority.get("HIGH", []))
 
         if critical_count > 0:
             report.append(f"- ⚠️ **URGENT**: Address {critical_count} CRITICAL TODOs immediately")
@@ -231,7 +229,7 @@ class TodoTracker:
         report.append("\n---\n")
         report.append("**Auto-generated by**: `scripts/workflow/todo-tracker.py`\n")
 
-        return '\n'.join(report)
+        return "\n".join(report)
 
     def compare_with_catalog(self, catalog_path: str = "docs-internal/TODO_CATALOG.md") -> Dict:
         """Compare current TODOs with catalog"""
@@ -239,34 +237,34 @@ class TodoTracker:
 
         if not catalog_path.exists():
             return {
-                'catalog_exists': False,
-                'in_code_not_catalog': len(self.todos),
-                'in_catalog_not_code': 0,
-                'status': 'No catalog found'
+                "catalog_exists": False,
+                "in_code_not_catalog": len(self.todos),
+                "in_catalog_not_code": 0,
+                "status": "No catalog found",
             }
 
         # Parse catalog (simplified - would need more robust parsing)
-        with open(catalog_path, 'r') as f:
+        with open(catalog_path, "r") as f:
             catalog_content = f.read()
 
         # Count items in catalog (count lines starting with ###)
-        catalog_items = len(re.findall(r'^###\s+\d+\.', catalog_content, re.MULTILINE))
+        catalog_items = len(re.findall(r"^###\s+\d+\.", catalog_content, re.MULTILINE))
 
         return {
-            'catalog_exists': True,
-            'todos_in_code': len(self.todos),
-            'items_in_catalog': catalog_items,
-            'status': 'Comparison complete'
+            "catalog_exists": True,
+            "todos_in_code": len(self.todos),
+            "items_in_catalog": catalog_items,
+            "status": "Comparison complete",
         }
 
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='Track TODO items in codebase')
-    parser.add_argument('--root', default='src', help='Root directory to scan (default: src)')
-    parser.add_argument('--update', action='store_true', help='Update TODO catalog')
-    parser.add_argument('--burndown', action='store_true', help='Show sprint burndown')
-    parser.add_argument('--output', help='Output file for report (default: stdout)')
+    parser = argparse.ArgumentParser(description="Track TODO items in codebase")
+    parser.add_argument("--root", default="src", help="Root directory to scan (default: src)")
+    parser.add_argument("--update", action="store_true", help="Update TODO catalog")
+    parser.add_argument("--burndown", action="store_true", help="Show sprint burndown")
+    parser.add_argument("--output", help="Output file for report (default: stdout)")
 
     args = parser.parse_args()
 
@@ -282,26 +280,26 @@ def main():
     if args.output:
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write(report)
         print(f"\nReport saved to: {args.output}")
     else:
         print("\n" + report)
 
     # Compare with catalog
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Comparing with TODO_CATALOG.md...")
     comparison = tracker.compare_with_catalog()
 
-    if comparison['catalog_exists']:
+    if comparison["catalog_exists"]:
         print(f"TODOs in code: {comparison['todos_in_code']}")
         print(f"Items in catalog: {comparison['items_in_catalog']}")
 
-        if comparison['todos_in_code'] > comparison['items_in_catalog']:
-            diff = comparison['todos_in_code'] - comparison['items_in_catalog']
+        if comparison["todos_in_code"] > comparison["items_in_catalog"]:
+            diff = comparison["todos_in_code"] - comparison["items_in_catalog"]
             print(f"⚠️  {diff} new TODOs not in catalog - consider updating!")
-        elif comparison['todos_in_code'] < comparison['items_in_catalog']:
-            diff = comparison['items_in_catalog'] - comparison['todos_in_code']
+        elif comparison["todos_in_code"] < comparison["items_in_catalog"]:
+            diff = comparison["items_in_catalog"] - comparison["todos_in_code"]
             print(f"✅ {diff} TODOs resolved since last catalog update!")
         else:
             print("✅ Catalog is up to date!")
@@ -319,10 +317,10 @@ def main():
         print("\n📊 Sprint Burndown:")
         by_priority = tracker.group_by_priority()
         total = len(tracker.todos)
-        critical = len(by_priority.get('CRITICAL', []))
-        high = len(by_priority.get('HIGH', []))
-        medium = len(by_priority.get('MEDIUM', []))
-        low = len(by_priority.get('LOW', []))
+        critical = len(by_priority.get("CRITICAL", []))
+        high = len(by_priority.get("HIGH", []))
+        medium = len(by_priority.get("MEDIUM", []))
+        low = len(by_priority.get("LOW", []))
 
         print(f"Total Remaining: {total}")
         print(f"  CRITICAL: {critical}")
@@ -340,5 +338,5 @@ def main():
                 print(f"  Week 4+: {medium} MEDIUM items (as time permits)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
