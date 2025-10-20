@@ -62,7 +62,7 @@ class TestWebSearch:
         mock_settings.serper_api_key = None
         mock_settings.brave_api_key = None
 
-        result = await web_search.invoke({"query": "test query", "num_results": 5})
+        result = await web_search.ainvoke({"query": "test query", "num_results": 5})
         assert isinstance(result, str)
         assert "not configured" in result.lower()  # Shows configuration message
 
@@ -73,7 +73,7 @@ class TestWebSearch:
         mock_settings.tavily_api_key = None
         mock_settings.serper_api_key = None
 
-        result = await web_search.invoke({"query": "test", "num_results": 3})
+        result = await web_search.ainvoke({"query": "test", "num_results": 3})
         assert isinstance(result, str)
 
     @pytest.mark.asyncio
@@ -81,7 +81,7 @@ class TestWebSearch:
     async def test_web_search_default_results(self, mock_settings):
         """Test web search uses default result count"""
         mock_settings.tavily_api_key = None
-        result = await web_search.invoke({"query": "test"})
+        result = await web_search.ainvoke({"query": "test"})
         assert isinstance(result, str)
 
     @pytest.mark.asyncio
@@ -92,7 +92,7 @@ class TestWebSearch:
         mock_settings.serper_api_key = None
         mock_settings.brave_api_key = None
 
-        result = await web_search.invoke({"query": "test", "num_results": 5})
+        result = await web_search.ainvoke({"query": "test", "num_results": 5})
         assert "not configured" in result.lower()  # Updated implementation
 
 

@@ -459,22 +459,27 @@ class TestBreachDetection:
         mock_client.query_downtime.return_value = 1440  # 24 minutes downtime = 98.3% uptime
         mock_prom_client.return_value = mock_client
 
-        with patch.object(sla_monitor, "_send_sla_alert", new_callable=AsyncMock) as mock_alert:
-            # Create report that will breach
-            low_target = SLATarget(
-                metric=SLAMetric.UPTIME,
-                target_value=100.0,
-                comparison=">=",
-                unit="%",
-                warning_threshold=99.9,
-                critical_threshold=99.5,
-            )
+        # Create report that will breach
+        low_target = SLATarget(
+            metric=SLAMetric.UPTIME,
+            target_value=100.0,
+            comparison=">=",
+            unit="%",
+            warning_threshold=99.9,
+            critical_threshold=99.5,
+        )
 
-            monitor = SLAMonitor(sla_targets=[low_target])
+        monitor = SLAMonitor(sla_targets=[low_target])
+
+        # Patch the alert method on the NEW monitor instance
+        with patch.object(monitor, "_send_sla_alert", new_callable=AsyncMock) as mock_alert:
             report = await monitor.generate_sla_report(period_days=1)
 
-            if report.overall_status == SLAStatus.BREACH:
-                mock_alert.assert_called_once()
+            # Verify breach detected
+            assert report.overall_status == SLAStatus.BREACH
+
+            # Verify alert sent
+            mock_alert.assert_called_once()
 
 
 # --- Integration Tests ---
