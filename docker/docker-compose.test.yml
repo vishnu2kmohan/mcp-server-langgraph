@@ -59,7 +59,15 @@ services:
       - LOG_LEVEL=INFO
     networks:
       - test-network
-    command: pytest -m integration -v --tb=short --maxfail=5
+    volumes:
+      # Mount coverage output directory to collect integration test coverage
+      - ../coverage-integration:/app/coverage-integration
+    command: >
+      sh -c "pytest -m integration -v --tb=short --maxfail=5
+      --cov=src/mcp_server_langgraph
+      --cov-append
+      --cov-report=xml:/app/coverage-integration/coverage-integration.xml
+      --cov-report=term-missing"
     # Exit code propagates to docker compose
     # Non-zero exit code stops other services
 

@@ -261,9 +261,8 @@ omit = [
     "*/hooks/*",
     "*/langgraph_platform/*",
     "setup.py",
-    # MCP server entry points (tested via integration tests)
-    "src/mcp_server_langgraph/mcp/server_stdio.py",
-    "src/mcp_server_langgraph/mcp/server_streamable.py",
+    # Note: MCP server entry points are now included in coverage
+    # They are tested via integration tests with coverage collection enabled
 ]
 
 [tool.coverage.report]

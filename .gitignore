@@ -64,6 +64,12 @@ coverage.xml
 .hypothesis/
 .cache
 
+# Coverage outputs
+coverage-integration/
+.coverage-integration
+htmlcov-combined/
+coverage-combined.xml
+
 # mypy
 .mypy_cache/
 .dmypy.json

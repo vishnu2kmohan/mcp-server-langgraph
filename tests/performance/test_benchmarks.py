@@ -160,7 +160,7 @@ class TestOpenFGABenchmarks:
         assert result["allowed"] is True
 
         # Performance assertion: < 50ms average (with network simulation)
-        assert benchmark.stats["mean"] < 0.050, f"Auth check took {benchmark.stats["mean"] * 1000:.2f}ms (target: < 50ms)"
+        assert benchmark.stats["mean"] < 0.050, f"Auth check took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
 
     def test_batch_authorization_performance(self, mock_openfga_client, benchmark):
         """Benchmark batch authorization checks.

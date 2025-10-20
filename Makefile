@@ -12,18 +12,19 @@ help:
 	@echo "  make setup-infisical  Initialize Infisical"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test                Run all automated tests (unit + integration)"
-	@echo "  make test-unit           Run unit tests only"
-	@echo "  make test-integration    Run integration tests"
-	@echo "  make test-coverage       Run tests with coverage report"
-	@echo "  make test-property       Run property-based tests (Hypothesis)"
-	@echo "  make test-contract       Run contract tests (MCP, OpenAPI)"
-	@echo "  make test-regression     Run performance regression tests"
-	@echo "  make test-mutation       Run mutation tests (slow)"
-	@echo "  make test-all-quality    Run all quality tests (property+contract+regression)"
-	@echo "  make benchmark           Run performance benchmarks"
-	@echo "  make test-auth           Test OpenFGA authorization (manual)"
-	@echo "  make test-mcp            Test MCP server (manual)"
+	@echo "  make test                     Run all automated tests (unit + integration)"
+	@echo "  make test-unit                Run unit tests only"
+	@echo "  make test-integration         Run integration tests"
+	@echo "  make test-coverage            Run tests with coverage report (unit only)"
+	@echo "  make test-coverage-combined   Run all tests with COMBINED coverage (unit + integration)"
+	@echo "  make test-property            Run property-based tests (Hypothesis)"
+	@echo "  make test-contract            Run contract tests (MCP, OpenAPI)"
+	@echo "  make test-regression          Run performance regression tests"
+	@echo "  make test-mutation            Run mutation tests (slow)"
+	@echo "  make test-all-quality         Run all quality tests (property+contract+regression)"
+	@echo "  make benchmark                Run performance benchmarks"
+	@echo "  make test-auth                Test OpenFGA authorization (manual)"
+	@echo "  make test-mcp                 Test MCP server (manual)"
 	@echo ""
 	@echo "Validation:"
 	@echo "  make validate-openapi         Validate OpenAPI schema"
@@ -168,6 +169,35 @@ test-coverage:
 	@echo "  HTML: htmlcov/index.html"
 	@echo "  XML: coverage.xml"
 	@echo "  Terminal: Above"
+
+test-coverage-combined:
+	@echo "Running all tests with combined coverage..."
+	@echo ""
+	@echo "Step 1: Running unit tests with coverage..."
+	pytest -m unit --cov=src/mcp_server_langgraph --cov-report= --cov-report=term-missing
+	@echo ""
+	@echo "Step 2: Running integration tests in Docker with coverage..."
+	mkdir -p coverage-integration
+	chmod 777 coverage-integration
+	./scripts/test-integration.sh --build
+	@echo ""
+	@echo "Step 3: Combining coverage reports..."
+	@if [ -f coverage-integration/coverage-integration.xml ]; then \
+		echo "  Found integration coverage, combining..."; \
+		coverage combine --append coverage-integration/.coverage* 2>/dev/null || true; \
+		coverage xml -o coverage-combined.xml; \
+		coverage html -d htmlcov-combined; \
+		coverage report; \
+		echo ""; \
+		echo "✓ Combined coverage reports generated:"; \
+		echo "  HTML: htmlcov-combined/index.html"; \
+		echo "  XML: coverage-combined.xml"; \
+	else \
+		echo "  ⚠️  No integration coverage found, using unit tests only"; \
+		coverage xml; \
+		coverage html; \
+		coverage report; \
+	fi
 
 test-auth:
 	@echo "Testing OpenFGA authorization..."
