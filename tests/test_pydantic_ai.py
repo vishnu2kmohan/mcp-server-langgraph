@@ -196,6 +196,7 @@ async def test_route_message_with_context(mock_settings, mock_pydantic_agent_cla
 @pytest.mark.asyncio
 async def test_route_message_error_handling(mock_settings, mock_pydantic_agent_class):
     """Test route_message handles errors gracefully."""
+    pytest.importorskip("pydantic_ai", reason="pydantic-ai is an optional dependency")
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     # Mock agent that raises an error
@@ -324,6 +325,7 @@ async def test_generate_response_error_handling(mock_settings, mock_pydantic_age
 @pytest.mark.unit
 def test_create_pydantic_agent_factory(mock_settings, mock_pydantic_agent_class):
     """Test create_pydantic_agent factory function."""
+    pytest.importorskip("pydantic_ai", reason="pydantic-ai is an optional dependency")
     from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
     agent = create_pydantic_agent()
@@ -335,6 +337,7 @@ def test_create_pydantic_agent_factory(mock_settings, mock_pydantic_agent_class)
 @pytest.mark.unit
 def test_create_pydantic_agent_custom_params(mock_settings, mock_pydantic_agent_class):
     """Test create_pydantic_agent with custom parameters."""
+    pytest.importorskip("pydantic_ai", reason="pydantic-ai is an optional dependency")
     from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
     agent = create_pydantic_agent(provider="anthropic", model_name="claude-3-opus-20240229")

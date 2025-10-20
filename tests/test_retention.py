@@ -384,7 +384,7 @@ class TestRetentionMetrics:
                 service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch("mcp_server_langgraph.core.compliance.retention.metrics") as mock_metrics:
+                    with patch("mcp_server_langgraph.compliance.retention.metrics") as mock_metrics:
                         await service.cleanup_sessions()
 
                         # Verify metrics were recorded
@@ -404,7 +404,7 @@ class TestRetentionMetrics:
                 )
 
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch("mcp_server_langgraph.core.compliance.retention.metrics") as mock_metrics:
+                    with patch("mcp_server_langgraph.compliance.retention.metrics") as mock_metrics:
                         await service.cleanup_sessions()
 
                         # Metrics should not be recorded in dry-run
@@ -425,7 +425,7 @@ class TestRetentionLogging:
                 service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
                 with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
-                    with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
+                    with patch("mcp_server_langgraph.compliance.retention.logger") as mock_logger:
                         await service.cleanup_sessions()
 
                         # Verify logging occurred
@@ -445,7 +445,7 @@ class TestRetentionLogging:
                     "_cleanup_inactive_sessions",
                     side_effect=Exception("Test error"),
                 ):
-                    with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
+                    with patch("mcp_server_langgraph.compliance.retention.logger") as mock_logger:
                         await service.cleanup_sessions()
 
                         # Verify error was logged
@@ -525,7 +525,7 @@ class TestConversationStorageIntegration:
                     config_path="test.yaml",
                 )
 
-                with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
+                with patch("mcp_server_langgraph.compliance.retention.logger") as mock_logger:
                     result = await service.cleanup_conversations()
 
                     # Should log warning about missing store
@@ -599,7 +599,7 @@ class TestAuditLogStorageIntegration:
                     config_path="test.yaml",
                 )
 
-                with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
+                with patch("mcp_server_langgraph.compliance.retention.logger") as mock_logger:
                     result = await service.cleanup_audit_logs()
 
                     # Should log warning about missing store

@@ -161,17 +161,19 @@ class TestWebSearch:
         # Mock Tavily API response
         mock_response = AsyncMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "results": [
-                {"title": "Result 1", "content": "Content for result 1", "url": "https://example.com/1"},
-                {"title": "Result 2", "content": "Content for result 2", "url": "https://example.com/2"},
-            ]
-        }
-        mock_response.raise_for_status = MagicMock()
+        mock_response.json = AsyncMock(
+            return_value={
+                "results": [
+                    {"title": "Result 1", "content": "Content for result 1", "url": "https://example.com/1"},
+                    {"title": "Result 2", "content": "Content for result 2", "url": "https://example.com/2"},
+                ]
+            }
+        )
+        mock_response.raise_for_status = AsyncMock()
 
         # Mock client context manager
         mock_client_instance = AsyncMock()
-        mock_client_instance.post.return_value = mock_response
+        mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
         result = await web_search.ainvoke({"query": "Python programming", "num_results": 2})
@@ -201,17 +203,19 @@ class TestWebSearch:
         # Mock Serper API response
         mock_response = AsyncMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "organic": [
-                {"title": "Serper Result 1", "snippet": "Snippet 1", "link": "https://example.com/serper1"},
-                {"title": "Serper Result 2", "snippet": "Snippet 2", "link": "https://example.com/serper2"},
-            ]
-        }
-        mock_response.raise_for_status = MagicMock()
+        mock_response.json = AsyncMock(
+            return_value={
+                "organic": [
+                    {"title": "Serper Result 1", "snippet": "Snippet 1", "link": "https://example.com/serper1"},
+                    {"title": "Serper Result 2", "snippet": "Snippet 2", "link": "https://example.com/serper2"},
+                ]
+            }
+        )
+        mock_response.raise_for_status = AsyncMock()
 
         # Mock client context manager
         mock_client_instance = AsyncMock()
-        mock_client_instance.post.return_value = mock_response
+        mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
         result = await web_search.ainvoke({"query": "machine learning", "num_results": 2})
