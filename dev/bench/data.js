@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760981132808,
+  "lastUpdate": 1760981322951,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -4372,6 +4372,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00015704006513874436",
             "extra": "mean: 84.80046230891897 usec\nrounds: 3396"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "32184518443fe72533292e38096859358fd4c7af",
+          "message": "feat(ci): implement combined coverage tracking and trending\n\nImplemented comprehensive coverage tracking across unit and integration tests\nwith historical trending and automated alerts.\n\nChanges Made:\n\n1. **CI/CD Combined Coverage** (.github/workflows/ci.yaml)\n   - Collect integration test coverage from Docker containers\n   - Merge unit and integration coverage reports\n   - Upload combined coverage to Codecov\n   - Set coverage threshold at 55% (will increase to 60%)\n   - Added coverage merging step with proper error handling\n\n2. **Coverage Trend Tracking** (.github/workflows/coverage-trend.yaml) - NEW\n   - Track coverage changes over time\n   - Store historical coverage data (last 100 entries)\n   - Alert on coverage drops >5%\n   - Comment on PRs with coverage changes\n   - Visualize trends with status indicators\n   - Fail workflow on significant coverage decrease\n\n3. **README Updates** (README.md)\n   - Updated coverage badge: 80% → 60-65% (accurate)\n   - Added Combined Coverage Testing section\n   - Documented coverage collection in integration tests\n   - Added test counts (~400 unit, ~200 integration)\n   - Linked to combined coverage make target\n\nFeatures:\n\nCoverage Trend Tracking:\n- 📊 Historical tracking (90 days retention)\n- 🔴 Alert on >5% decrease (fails CI)\n- 🟡 Warn on 1-5% decrease\n- 🟢 Celebrate on increases\n- 💬 PR comments with coverage changes\n- 📈 Trend visualization in artifacts\n\nCoverage Reporting:\n- Unit + Integration combined in CI\n- Accurate metrics (60-65% expected)\n- Multiple coverage files uploaded to Codecov\n- Threshold checking (55% minimum)\n- Detailed reports in artifacts\n\nImpact:\n- Before: 29% (unit only, misleading)\n- After: 60-65% (combined, accurate)\n- Integration tests (200+) now counted\n- Entry points included in coverage\n- Historical trending enabled\n- Automated quality gates\n\nUsage:\n```bash\n# Local combined coverage\nmake test-coverage-combined\n\n# View coverage trends\ngh run view --workflow=\"Coverage Trend Tracking\"\ngh run download --name coverage-history\n```\n\nNext Steps:\n- Monitor coverage trends over next few commits\n- Gradually increase threshold to 60%, then 65%\n- Add module-level coverage tracking\n- Integrate with Codecov dashboard\n\nFiles Modified:\n- .github/workflows/ci.yaml - Combined coverage collection\n- .github/workflows/coverage-trend.yaml - NEW: Trend tracking\n- README.md - Updated badges and documentation\n\nRelated:\n- Implements Priority 1-4 from coverage analysis\n- Completes short-term improvements roadmap\n- Addresses coverage accuracy investigation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T13:26:16-04:00",
+          "tree_id": "56b043591a8a58c6a4a90e733826792e1cde131b",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/32184518443fe72533292e38096859358fd4c7af"
+        },
+        "date": 1760981322392,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36812.25684616293,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002995105782784143",
+            "extra": "mean: 27.164865337622828 usec\nrounds: 4916"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33588.94689833398,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000280730030731064",
+            "extra": "mean: 29.771698500306368 usec\nrounds: 6534"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 32071.556254255473,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030680246551563604",
+            "extra": "mean: 31.18027675589685 usec\nrounds: 14623"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.66609456520447,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020452340453923808",
+            "extra": "mean: 5.3003694294121955 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.29155357716856,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008339661348777641",
+            "extra": "mean: 51.836156999998906 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.92347588970764,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004442546568827981",
+            "extra": "mean: 100.77114219999999 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1985254.0474361607,
+            "unit": "iter/sec",
+            "range": "stddev: 4.8349316760884985e-8",
+            "extra": "mean: 503.71387041947673 nsec\nrounds: 97762"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3894.1532426381195,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019330612537664043",
+            "extra": "mean: 256.79523575259805 usec\nrounds: 2053"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2989.7222799601873,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024565133219195765",
+            "extra": "mean: 334.4792279546836 usec\nrounds: 2733"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3052.1216775899743,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023150911130350248",
+            "extra": "mean: 327.64093494123836 usec\nrounds: 1783"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39842.6297806798,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030069845241048885",
+            "extra": "mean: 25.098744874639593 usec\nrounds: 7463"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11347.482810273219,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016792220055653154",
+            "extra": "mean: 88.12527119183383 usec\nrounds: 3079"
           }
         ]
       }
