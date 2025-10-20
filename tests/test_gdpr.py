@@ -281,42 +281,69 @@ class TestDataDeletionService:
 
 @pytest.mark.unit
 @pytest.mark.gdpr
+@pytest.mark.skip(reason="Requires auth mocking infrastructure - tracked in TODO_TRACKING_ISSUES.md #7")
 class TestGDPREndpoints:
-    """Test GDPR API endpoints"""
+    """Test GDPR API endpoints
+
+    NOTE: These tests are currently skipped pending implementation of proper
+    authentication mocking infrastructure. See reports/TODO_TRACKING_ISSUES.md
+    for the implementation plan.
+
+    Prerequisites for implementation:
+    1. Auth mocking helper that works with FastAPI dependency injection
+    2. Test user fixtures with various permission levels
+    3. Expected API response schemas
+
+    Issue: Implement GDPR API endpoint tests with auth mocking
+    """
 
     def test_get_user_data_endpoint(self, client):
         """Test GET /api/v1/users/me/data endpoint"""
-        # This test requires mocking the authentication decorator
-        # For now, skip or implement with proper auth mocking
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: authenticated user can retrieve their own data
+        pass
 
     def test_export_user_data_json(self, client):
         """Test GET /api/v1/users/me/export?format=json"""
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: JSON export format with complete user data
+        pass
 
     def test_export_user_data_csv(self, client):
         """Test GET /api/v1/users/me/export?format=csv"""
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: CSV export format with flattened user data
+        pass
 
     def test_update_user_profile(self, client):
         """Test PATCH /api/v1/users/me"""
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: user can update their own profile fields
+        pass
 
     def test_delete_user_account(self, client):
         """Test DELETE /api/v1/users/me?confirm=true"""
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: user can delete their account with confirmation
+        pass
 
     def test_delete_user_account_without_confirmation(self, client):
         """Test DELETE /api/v1/users/me without confirmation"""
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: deletion fails without confirmation parameter
+        pass
 
     def test_update_consent(self, client):
         """Test POST /api/v1/users/me/consent"""
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: user can update consent preferences
+        pass
 
     def test_get_consent_status(self, client):
         """Test GET /api/v1/users/me/consent"""
-        pass  # TODO: Implement with auth mocking
+        # TODO(issue-7): Implement with auth mocking
+        # Should test: user can retrieve current consent status
+        pass
 
 
 # ==================== Model Tests ====================
