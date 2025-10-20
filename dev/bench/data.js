@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761001720994,
+  "lastUpdate": 1761002485942,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -5452,6 +5452,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0001522982425811867",
             "extra": "mean: 90.7013066232846 usec\nrounds: 3669"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "3c6ed524ef572e8a640b54f144cff1c5030dc02c",
+          "message": "fix: resolve 18 CI/CD test failures from resilience refactoring\n\n## Fixes\n\n### 1. Optional Dependencies Smoke Test (workflow: optional-deps-test.yaml:152)\n- **Issue**: ModuleNotFoundError: No module named 'mcp_server_langgraph.storage'\n- **Fix**: Updated import path from `mcp_server_langgraph.storage` to `mcp_server_langgraph.core.storage`\n- **File**: `.github/workflows/optional-deps-test.yaml:152`\n\n### 2. Exception Trace ID Auto-Capture (test_exceptions.py:382)\n- **Issue**: Mock patch failed because `trace` was imported locally in method\n- **Fix**:\n  - Added module-level import: `from opentelemetry import trace`\n  - Updated `_get_current_trace_id()` to use module-level import\n- **File**: `src/mcp_server_langgraph/core/exceptions.py:13,85`\n\n### 3. Bulkhead Fail-Fast Rejection (3 failures)\n- **Issues**:\n  - Semaphore check using `.locked()` instead of `._value`\n  - Context manager not checking slots correctly\n  - Metrics not exported at module level\n- **Fixes**:\n  - Check `semaphore._value == 0` instead of `.locked()` for fail-fast\n  - Import metrics at module top for proper mocking\n  - Fixed context manager slot checking\n- **Files**:\n  - `src/mcp_server_langgraph/resilience/bulkhead.py:17-20,145-146,235`\n  - `tests/resilience/test_bulkhead.py:90-91` (fixed test to use create_task)\n\n### 4. Fallback Stale Data Caching (2 failures)\n- **Issues**:\n  - Cache key mismatch between `cache_value(key)` and `get_fallback_value(*args)`\n  - Metric not exported at module level\n- **Fixes**:\n  - Support both direct key (single string arg) and generated key\n  - Import metric at module top\n- **Files**:\n  - `src/mcp_server_langgraph/resilience/fallback.py:16,104-107`\n  - `tests/resilience/test_fallback.py:293-294` (fixed decorator order)\n\n### 5. Retry Decorator Execution (11+ failures)\n- **Issue**: Retry logic not retrying because of overly restrictive exception filtering\n- **Fix**: Removed custom retry filter, use tenacity default (retry all exceptions)\n- **File**: `src/mcp_server_langgraph/resilience/retry.py:207-210`\n\n## Test Fixes\n\n### tests/resilience/test_bulkhead.py:90-91\n- Fixed `test_fail_fast_rejects_when_full` to use `asyncio.create_task()`\n- Original code created coroutine objects but didn't schedule them\n\n### tests/resilience/test_fallback.py:293-294\n- Fixed `test_fallback_with_retry` decorator order\n- Swapped to `@with_fallback` outer, `@retry_with_backoff` inner\n- This allows retry to exhaust attempts before fallback catches final exception\n\n## Impact\n\n- **Workflows Fixed**: 2/2 failing workflows now passing\n  - Optional Dependencies Tests ✅\n  - Coverage Trend Tracking ✅\n- **Tests Fixed**: 18/18 failing tests now passing\n- **Coverage**: Maintained at 65%+\n\n## Related Issues\n\n- Fixes GitHub Actions run #18667371844 (Optional Dependencies Tests)\n- Fixes GitHub Actions run #18667371810 (Coverage Trend Tracking)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T19:18:48-04:00",
+          "tree_id": "3fc68325092eecf62335624e2f90c98633b48232",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/3c6ed524ef572e8a640b54f144cff1c5030dc02c"
+        },
+        "date": 1761002485593,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 36572.1338971878,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000319603512477823",
+            "extra": "mean: 27.343222651738532 usec\nrounds: 5174"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33364.821147246395,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027959440789110096",
+            "extra": "mean: 29.971687712239696 usec\nrounds: 6478"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31750.439967200346,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003022225708644142",
+            "extra": "mean: 31.49562654983823 usec\nrounds: 14840"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.04935082707397,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001774395695069999",
+            "extra": "mean: 5.289624088234579 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.320219133093108,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001498022215914665",
+            "extra": "mean: 51.75924730000219 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.932962130658659,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008904349968685008",
+            "extra": "mean: 100.67490309999698 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2002413.6698071978,
+            "unit": "iter/sec",
+            "range": "stddev: 4.938284851976643e-8",
+            "extra": "mean: 499.3973098956546 nsec\nrounds: 98435"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4003.0688493785565,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017032169005026332",
+            "extra": "mean: 249.8083439547241 usec\nrounds: 2134"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3024.157879554224,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008105127557289754",
+            "extra": "mean: 330.67056675870543 usec\nrounds: 2539"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2803.312308853682,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026041806489246625",
+            "extra": "mean: 356.72086796812 usec\nrounds: 1742"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39879.88989157567,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002757421687836099",
+            "extra": "mean: 25.07529490975958 usec\nrounds: 7426"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11139.37221552165,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017490688687008408",
+            "extra": "mean: 89.7716658221184 usec\nrounds: 2762"
           }
         ]
       }
