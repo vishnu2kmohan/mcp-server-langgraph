@@ -126,7 +126,7 @@ async def web_search(
                     response.raise_for_status()
                     data = response.json()
 
-                    results = [f"Web search: \"{query}\"\n"]
+                    results = [f'Web search: "{query}"\n']
                     for i, result in enumerate(data.get("results", [])[:num_results], 1):
                         results.append(f"\n{i}. {result.get('title', 'No title')}")
                         results.append(f"   {result.get('content', 'No snippet')[:200]}...")
@@ -152,7 +152,7 @@ async def web_search(
                     response.raise_for_status()
                     data = response.json()
 
-                    results = [f"Web search: \"{query}\"\n"]
+                    results = [f'Web search: "{query}"\n']
                     for i, result in enumerate(data.get("organic", [])[:num_results], 1):
                         results.append(f"\n{i}. {result.get('title', 'No title')}")
                         results.append(f"   {result.get('snippet', 'No snippet')}")
