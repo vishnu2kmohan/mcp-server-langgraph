@@ -24,8 +24,8 @@ except ImportError:
     Agent = None  # type: ignore
 
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.prompts import RESPONSE_SYSTEM_PROMPT, ROUTER_SYSTEM_PROMPT
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
-from mcp_server_langgraph.prompts import RESPONSE_SYSTEM_PROMPT, ROUTER_SYSTEM_PROMPT
 
 
 # Structured Response Models

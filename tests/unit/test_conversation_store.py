@@ -6,7 +6,7 @@ Tests in-memory backend for conversation tracking.
 
 import pytest
 
-from mcp_server_langgraph.storage.conversation_store import ConversationMetadata, ConversationStore
+from mcp_server_langgraph.core.storage.conversation_store import ConversationMetadata, ConversationStore
 
 
 @pytest.mark.unit

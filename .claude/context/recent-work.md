@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 17:27:00
+**Last Updated**: 2025-10-20 17:27:42
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,7 +9,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 282 |
+| Total Commits | 283 |
 | Contributors | 2 |
 | Current Branch | `main` |
 | Source Files | 170 Python files |
@@ -22,6 +22,9 @@
 
 
 ### ♻️  Refactor
+
+- **`c70a90e`** (2025-10-20) - refactor: Phase 2 - Elevate compliance package and reorganize docs-internal
+  _by Vishnu Mohan_
 
 - **`9918c45`** (2025-10-20) - refactor: complete compliance module reorganization with import fixes
   _by Vishnu Mohan_
@@ -80,12 +83,6 @@
 - **`3ae37b5`** (2025-10-20) - chore: remove old audit reports from root (moved to docs-internal/audits/)
   _by Vishnu Mohan_
 
-
-### 🔹 Other
-
-- **`7fc5115`** (2025-10-20) - Merge branch 'release/v2.8.0' - Comprehensive codebase cleanup
-  _by Vishnu Mohan_
-
 ---
 
 ## 📁 Recently Modified Files (Last 7 Days)
@@ -101,9 +98,9 @@ Files changed most frequently:
 | `src/mcp_server_langgraph/core/agent.py` | 14 |
 | `.github/workflows/quality-tests.yaml` | 12 |
 | `README.md` | 12 |
+| `.claude/context/recent-work.md` | 9 |
 | `docs/mint.json` | 9 |
 | `requirements-pinned.txt` | 9 |
-| `.claude/context/recent-work.md` | 8 |
 | `.github/workflows/release.yaml` | 8 |
 | `docker/docker-compose.yml` | 8 |
 | `src/mcp_server_langgraph/mcp/server_stdio.py` | 8 |
@@ -119,8 +116,8 @@ Files changed most frequently:
 
 Based on recent commits, the team has been focused on:
 
+- **♻️  Refactor**: 4 recent commits
 - **🔧 Chore**: 4 recent commits
-- **♻️  Refactor**: 3 recent commits
 - **📝 Documentation**: 2 recent commits
 - **✨ Feature**: 2 recent commits
 - **💄 Style**: 2 recent commits
@@ -133,8 +130,8 @@ Most active areas in the codebase (by file change frequency):
 - `src/` - 45 file changes
 - `.github/` - 43 file changes
 - `deployments/` - 15 file changes
+- `.claude/` - 9 file changes
 - `docs/` - 9 file changes
-- `.claude/` - 8 file changes
 
 
 ---
@@ -160,5 +157,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 17:27:00
+**Generated**: 2025-10-20 17:27:42
 **Source**: Git commit history (last 15 commits, 7 days of file activity)

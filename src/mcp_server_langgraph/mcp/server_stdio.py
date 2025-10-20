@@ -395,7 +395,7 @@ class MCPAgentServer:
 
                 # Record conversation metadata in store for search functionality
                 try:
-                    from mcp_server_langgraph.storage.conversation_store import get_conversation_store
+                    from mcp_server_langgraph.core.storage.conversation_store import get_conversation_store
 
                     store = get_conversation_store()
                     # Count messages in result
@@ -563,7 +563,7 @@ class MCPAgentServer:
                 logger.info("Using conversation store for search (OpenFGA unavailable or returning mock data)")
 
                 try:
-                    from mcp_server_langgraph.storage.conversation_store import get_conversation_store
+                    from mcp_server_langgraph.core.storage.conversation_store import get_conversation_store
 
                     store = get_conversation_store()
                     metadata_list = await store.search_conversations(user_id=user_id, query=query, limit=limit)

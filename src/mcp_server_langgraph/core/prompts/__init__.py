@@ -13,9 +13,9 @@ References:
 
 from typing import Dict, Optional
 
-from mcp_server_langgraph.prompts.response_prompt import RESPONSE_SYSTEM_PROMPT
-from mcp_server_langgraph.prompts.router_prompt import ROUTER_SYSTEM_PROMPT
-from mcp_server_langgraph.prompts.verification_prompt import VERIFICATION_SYSTEM_PROMPT
+from mcp_server_langgraph.core.prompts.response_prompt import RESPONSE_SYSTEM_PROMPT
+from mcp_server_langgraph.core.prompts.router_prompt import ROUTER_SYSTEM_PROMPT
+from mcp_server_langgraph.core.prompts.verification_prompt import VERIFICATION_SYSTEM_PROMPT
 
 __all__ = [
     "ROUTER_SYSTEM_PROMPT",
