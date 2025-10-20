@@ -542,16 +542,15 @@ class MCPAgentServer:
             span.set_attribute("search.query", query)
             span.set_attribute("search.limit", limit)
 
+            # Initialize all_conversations for logging
+            all_conversations = []
+
             # Try to get conversations from OpenFGA first, fall back to conversation store
             try:
                 # Get all conversations user can view from OpenFGA
                 all_conversations = await self.auth.list_accessible_resources(
                     user_id=user_id, relation="viewer", resource_type="conversation"
                 )
-
-                # If we got mock data or empty list, try conversation store
-                if not all_conversations or (all_conversations and "conversation:project_" in str(all_conversations[0])):
-                    raise Exception("OpenFGA returned mock data, using conversation store")
 
                 # Filter conversations based on query
                 if query:

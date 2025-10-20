@@ -246,6 +246,30 @@ class Settings(BaseSettings):
     session_sliding_window: bool = True
     session_max_concurrent: int = 5  # Max concurrent sessions per user
 
+    # Storage Backend Configuration (for compliance data retention)
+    # Conversation Storage (uses checkpoint backend by default)
+    conversation_storage_backend: str = "checkpoint"  # "checkpoint" (uses checkpoint_backend), "database"
+
+    # Audit Log Cold Storage (for long-term compliance archival)
+    audit_log_cold_storage_backend: Optional[str] = None  # None, "s3", "gcs", "azure", "local"
+    audit_log_cold_storage_path: Optional[str] = None  # Local path or bucket name
+
+    # S3 Configuration (for audit log archival)
+    aws_s3_bucket: Optional[str] = None  # S3 bucket for audit log archival
+    aws_s3_region: Optional[str] = None  # S3 region (defaults to aws_region if not set)
+    aws_s3_prefix: str = "audit-logs/"  # S3 key prefix for audit logs
+
+    # GCS Configuration (for audit log archival)
+    gcp_storage_bucket: Optional[str] = None  # GCS bucket for audit log archival
+    gcp_storage_prefix: str = "audit-logs/"  # GCS object prefix for audit logs
+    gcp_credentials_path: Optional[str] = None  # Path to GCP service account credentials JSON
+
+    # Azure Blob Storage Configuration (for audit log archival)
+    azure_storage_account: Optional[str] = None  # Azure storage account name
+    azure_storage_container: Optional[str] = None  # Azure blob container for audit logs
+    azure_storage_prefix: str = "audit-logs/"  # Blob prefix for audit logs
+    azure_storage_connection_string: Optional[str] = None  # Azure storage connection string
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -459,6 +483,21 @@ class Settings(BaseSettings):
                 self.keycloak_admin_password = secrets_mgr.get_secret("KEYCLOAK_ADMIN_PASSWORD", fallback=None)
 
         # Checkpoint configuration loaded on-demand (redis backend specific)
+
+        # Load cloud storage credentials if cold storage is configured
+        if self.audit_log_cold_storage_backend == "s3":
+            # S3 credentials already loaded via AWS Bedrock configuration if set
+            pass
+        elif self.audit_log_cold_storage_backend == "azure":
+            if not self.azure_storage_connection_string:
+                self.azure_storage_connection_string = secrets_mgr.get_secret(
+                    "AZURE_STORAGE_CONNECTION_STRING", fallback=None
+                )
+        elif self.audit_log_cold_storage_backend == "gcs":
+            if not self.gcp_credentials_path:
+                # GCP credentials are typically loaded from a file path
+                # or via GOOGLE_APPLICATION_CREDENTIALS environment variable
+                pass
 
     def get_secret(self, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """

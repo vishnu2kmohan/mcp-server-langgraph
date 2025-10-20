@@ -325,6 +325,38 @@ Please update the tests to properly mock the Redis client."
 
 ## Configuration for Claude Code
 
+### Python Environment
+
+**IMPORTANT**: Always use the project's virtual environment, never system Python.
+
+**Virtual Environment**: `/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv`
+**Python Version**: 3.13.7
+**Package Manager**: uv
+
+**Approved Methods** (in order of preference):
+
+1. **Use `uv run`** (preferred):
+   ```bash
+   uv run python script.py
+   uv run pytest tests/
+   uv run mypy src/
+   ```
+
+2. **Explicit venv path**:
+   ```bash
+   .venv/bin/python script.py
+   .venv/bin/pytest tests/
+   ```
+
+3. **Activate first** (only for multiple commands):
+   ```bash
+   source .venv/bin/activate && python -m pytest && mypy src/
+   ```
+
+**Never Use**: Bare `python`, `python3`, `pytest`, or `pip` commands (these use system Python).
+
+**Full Documentation**: See `.claude/memory/python-environment-usage.md` for complete guidelines, troubleshooting, and examples.
+
 ### Environment Setup
 
 Claude Code automatically detects:
