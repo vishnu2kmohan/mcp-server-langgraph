@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760998817972,
+  "lastUpdate": 1760999481532,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -5128,6 +5128,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00015631152618149366",
             "extra": "mean: 86.7088878529046 usec\nrounds: 3433"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6aa555341502ac5295cbd3de7d28c21d0aae63fa",
+          "message": "fix: resolve 9 failing tests from refactoring and mocking issues\n\nFixes test failures identified in CI/CD Pipeline run #18666451456\n\nChanges:\n1. Fix Pydantic AI tests - skip when optional dependency not installed\n   - Added pytest.importorskip() to 3 tests requiring pydantic-ai\n   - Tests now properly skip instead of failing ImportError\n   - Pydantic AI is an optional enhancement (ADR-0005)\n\n2. Fix web search mock tests - correct async/await handling\n   - Changed mock_response.json.return_value to AsyncMock(return_value=...)\n   - Changed mock_response.raise_for_status to AsyncMock()\n   - Fixed \"AttributeError: 'coroutine' object has no attribute 'get'\"\n   - Affects test_web_search_tavily_success and test_web_search_serper_success\n\n3. Fix retention tests - correct import paths after refactoring\n   - Changed mcp_server_langgraph.core.compliance.* → mcp_server_langgraph.compliance.*\n   - Fixes AttributeError in 4 retention tests\n   - Import path changed during Phase 2 & 3 refactoring (c76a328, c70a90e)\n\nTest Results:\n- 3 Pydantic AI tests: Now skip gracefully when dependency unavailable\n- 2 Web search tests: Async mocks now work correctly\n- 4 Retention tests: Import paths fixed\n\nAll 9 tests now pass or skip appropriately!\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T18:28:01-04:00",
+          "tree_id": "6f8441ff4593f45f8bfead97e0da61bf6ca573ba",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6aa555341502ac5295cbd3de7d28c21d0aae63fa"
+        },
+        "date": 1760999480550,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37153.92778697318,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002923292667101714",
+            "extra": "mean: 26.91505473482181 usec\nrounds: 5280"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33435.79903527821,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029221218754434795",
+            "extra": "mean: 29.908063478456047 usec\nrounds: 6837"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31059.92890802096,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033545568080292426",
+            "extra": "mean: 32.195823852699114 usec\nrounds: 15101"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.7911153196311,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003319309098300341",
+            "extra": "mean: 5.2968594327490415 msec\nrounds: 171"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.303568928758907,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017872086044210542",
+            "extra": "mean: 51.80389200000093 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941854329257852,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003692951348551019",
+            "extra": "mean: 100.58485740000265 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2009861.4306051382,
+            "unit": "iter/sec",
+            "range": "stddev: 4.430011446701678e-8",
+            "extra": "mean: 497.5467386818382 nsec\nrounds: 97476"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3970.1850968255294,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018948303754315296",
+            "extra": "mean: 251.87742526150166 usec\nrounds: 2201"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2976.4258101842424,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004230710614734788",
+            "extra": "mean: 335.97343383408554 usec\nrounds: 2796"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2822.28872377871,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000049122254245644444",
+            "extra": "mean: 354.32235957103586 usec\nrounds: 1677"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 38663.841143071586,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000806347208323635",
+            "extra": "mean: 25.863958945506795 usec\nrounds: 5651"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11881.100195085026,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001250985318048953",
+            "extra": "mean: 84.16728952539935 usec\nrounds: 3599"
           }
         ]
       }
