@@ -43,6 +43,89 @@ mcp_server_langgraph/
 └── monitoring/                   # Grafana dashboards, Prometheus alerts
 ```
 
+## Workflow Optimization Features (New!)
+
+**Added**: 2025-10-20
+
+The project now includes optimized workflow templates and automation to make Claude Code sessions more efficient.
+
+### Available Resources
+
+**Templates** (`.claude/templates/`):
+- `sprint-planning.md` - Comprehensive sprint initialization template
+- `technical-analysis.md` - Deep technical analysis framework
+- `progress-tracking.md` - Real-time sprint progress tracking
+
+**Context Files** (`.claude/context/`):
+- `recent-work.md` - Last 15 commits, recent sprint summary, current TODO status
+- `testing-patterns.md` - Complete testing patterns with examples from 437+ tests
+- `code-patterns.md` - Common code patterns and conventions from the codebase
+
+**Slash Commands** (`.claude/commands/`):
+- `/start-sprint <type>` - Initialize sprint with template (types: technical-debt, feature, bug-fix, docs, refactoring)
+- `/progress-update` - Generate comprehensive sprint progress report
+- `/test-summary [scope]` - Detailed test analysis (scopes: all, unit, integration, quality, failed)
+- `/validate` - Run all validations (existing)
+- `/test-all` - Run complete test suite (existing)
+- `/fix-issue <number>` - Fix GitHub issue workflow (existing)
+- `/deploy-dev` - Development deployment (existing)
+- `/debug-auth` - Debug authentication (existing)
+- `/setup-env` - Environment setup (existing)
+
+### Quick Start with New Workflow
+
+**Starting a Sprint**:
+```
+/start-sprint technical-debt
+
+# Automatically:
+1. Reads recent-work.md for context
+2. Analyzes TODO_CATALOG.md with ultrathink
+3. Creates sprint plan from template
+4. Sets up progress tracking
+5. Provides first task to work on
+```
+
+**Tracking Progress**:
+```
+/progress-update
+
+# Automatically:
+1. Collects git metrics (commits, files, lines)
+2. Runs tests and captures results
+3. Calculates completion rate and velocity
+4. Assesses sprint health
+5. Generates comprehensive update
+```
+
+**Checking Tests**:
+```
+/test-summary
+
+# Automatically:
+1. Runs all tests with coverage
+2. Analyzes pass/fail/skip counts
+3. Categorizes by test type
+4. Identifies slow tests
+5. Provides actionable recommendations
+```
+
+### Context Loading Benefits
+
+**Before Optimization**:
+- Manual context gathering: ~10 minutes per session
+- Repeated explanations of recent work
+- Inconsistent progress tracking
+
+**After Optimization** (projected):
+- Automated context loading: ~2 minutes
+- Immediate understanding of recent changes
+- Structured progress updates
+
+**Expected Efficiency Gain**: 25-35% overall workflow improvement
+
+---
+
 ## Best Practices for Claude Code
 
 ### 1. Task Decomposition
