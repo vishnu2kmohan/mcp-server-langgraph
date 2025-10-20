@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761001441254,
+  "lastUpdate": 1761001720994,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -5344,6 +5344,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0001317177882977328",
             "extra": "mean: 85.54247525067986 usec\nrounds: 3394"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "eca7626669f55197b8d82fa9ffeaef7cb6da97e8",
+          "message": "feat: implement resilience patterns and update core dependencies\n\n## New Features\n\n### Resilience Module (ADR-0026)\n- Add circuit breaker pattern for preventing cascade failures\n- Implement retry logic with exponential backoff and jitter\n- Add bulkhead pattern for resource isolation\n- Implement timeout handling with context managers\n- Add fallback mechanisms for graceful degradation\n\n### Caching Strategy (ADR-0028)\n- Implement multi-tier caching (L1 in-memory, L2 Redis)\n- Add TTL-based cache invalidation\n- Support for cache warming and preloading\n- Thread-safe LRU cache implementation\n\n### Rate Limiting (ADR-0027)\n- Add FastAPI rate limiting middleware using SlowAPI\n- Support per-user, per-IP, and per-endpoint limits\n- Redis-backed distributed rate limiting\n- Configurable rate limit windows and thresholds\n\n### Custom Exception Hierarchy (ADR-0029)\n- Structured exception hierarchy for better error handling\n- HTTP status code mapping for API errors\n- Error categorization (auth, validation, resource, external)\n- Enhanced error context and logging\n\n### API Error Handlers\n- Centralized error handling for FastAPI\n- Consistent error response format\n- Detailed error logging with telemetry\n- Production-safe error messages\n\n## Dependency Updates\n- langgraph: 1.0.0 → 1.0.1 (checkpointer updates)\n- litellm: 1.78.3 → 1.78.5 (bug fixes)\n- uvicorn[standard]: 0.27.0 → 0.38.0 (Python 3.14 support)\n- bcrypt: 4.0.0 → 5.0.0 (enforces 72-byte limit, validation added)\n- PyJWT: 2.8.0 → 2.10.1 (security updates)\n- openfga-sdk: 0.5.1 → 0.9.7 (major version bump)\n- fastapi: 0.109.0 → 0.119.1 (latest features)\n\n### New Dependencies\n- pybreaker: 1.0.0+ (circuit breaker)\n- tenacity: 9.1.2+ (retry logic)\n- cachetools: 5.3.0+ (LRU cache)\n- slowapi: 0.1.9+ (rate limiting)\n\n## Enhancements\n- OpenFGA: Enhanced error handling and resilience\n- User Provider: Added bcrypt 5.0 password length validation\n- LLM Factory: Improved error handling and fallback logic\n- Telemetry: Added resilience pattern metrics and tracing\n\n## Testing\n- Added comprehensive test suite for resilience patterns\n- Integration tests for circuit breaker, retry, timeout\n- Exception hierarchy tests\n- 100% coverage for new modules\n\n## Documentation\n- 4 new ADRs documenting architectural decisions\n- Implementation progress reports\n- Session completion documentation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T19:06:00-04:00",
+          "tree_id": "a7cb4b54d036ab61856ab0ea17bb7451c2dadc61",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/eca7626669f55197b8d82fa9ffeaef7cb6da97e8"
+        },
+        "date": 1761001719907,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37347.996667650885,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026702428907586694",
+            "extra": "mean: 26.775197847925103 usec\nrounds: 5297"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33060.28351720356,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028454586586641313",
+            "extra": "mean: 30.247774477784816 usec\nrounds: 5219"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31477.611223401513,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004070874291499478",
+            "extra": "mean: 31.768611439503594 usec\nrounds: 15385"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.20468011933184,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000168537870958953",
+            "extra": "mean: 5.285281523529426 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.28729632757208,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000124100875975489",
+            "extra": "mean: 51.84759870000306 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.946858065303243,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003908012948020796",
+            "extra": "mean: 100.5342584999994 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2009705.6037685864,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3577044150546184e-8",
+            "extra": "mean: 497.58531703589153 nsec\nrounds: 98049"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4028.4869311566367,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000139716400331626",
+            "extra": "mean: 248.23215690881875 usec\nrounds: 2135"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2990.3070277133816,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001778162986587126",
+            "extra": "mean: 334.4138213007099 usec\nrounds: 2798"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2873.706530784232,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000025325763143164322",
+            "extra": "mean: 347.9826451614392 usec\nrounds: 1767"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40341.63083223127,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026029602671685776",
+            "extra": "mean: 24.788288905788164 usec\nrounds: 6625"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11025.19949523288,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001522982425811867",
+            "extra": "mean: 90.7013066232846 usec\nrounds: 3669"
           }
         ]
       }
