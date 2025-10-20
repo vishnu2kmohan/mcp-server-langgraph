@@ -62,12 +62,14 @@ def run_git_command(args: List[str], timeout: int = 10) -> str:
 def get_recent_commits(count: int = 15) -> List[Dict[str, str]]:
     """Get recent commits with metadata."""
     log_format = "%H|%an|%ae|%ad|%s"
-    log_output = run_git_command([
-        "log",
-        f"-n{count}",
-        f"--format={log_format}",
-        "--date=short",
-    ])
+    log_output = run_git_command(
+        [
+            "log",
+            f"-n{count}",
+            f"--format={log_format}",
+            "--date=short",
+        ]
+    )
 
     commits = []
     for line in log_output.split("\n"):
@@ -75,13 +77,15 @@ def get_recent_commits(count: int = 15) -> List[Dict[str, str]]:
             continue
         parts = line.split("|", 4)
         if len(parts) == 5:
-            commits.append({
-                "hash": parts[0][:7],
-                "author": parts[1],
-                "email": parts[2],
-                "date": parts[3],
-                "message": parts[4],
-            })
+            commits.append(
+                {
+                    "hash": parts[0][:7],
+                    "author": parts[1],
+                    "email": parts[2],
+                    "date": parts[3],
+                    "message": parts[4],
+                }
+            )
 
     return commits
 
@@ -114,12 +118,14 @@ def categorize_commit(message: str) -> str:
 
 def get_recent_files(since_days: int = 7) -> List[Tuple[str, int]]:
     """Get recently modified files with change frequency."""
-    log_output = run_git_command([
-        "log",
-        f"--since={since_days}.days.ago",
-        "--name-only",
-        "--pretty=format:",
-    ])
+    log_output = run_git_command(
+        [
+            "log",
+            f"--since={since_days}.days.ago",
+            "--name-only",
+            "--pretty=format:",
+        ]
+    )
 
     # Count file modifications
     file_counts: Dict[str, int] = {}

@@ -259,9 +259,7 @@ class TestDataDeletionAuditLogging:
         assert isinstance(audit_record.metadata["original_username_hash"], int)
 
     @pytest.mark.asyncio
-    async def test_audit_record_on_partial_failure(
-        self, mock_audit_log_store, mock_user_profile_store
-    ):
+    async def test_audit_record_on_partial_failure(self, mock_audit_log_store, mock_user_profile_store):
         """Test that audit record is created even when deletion partially fails"""
         service = DataDeletionService(
             audit_log_store=mock_audit_log_store,

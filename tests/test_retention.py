@@ -494,9 +494,7 @@ class TestConversationStorageIntegration:
         assert service.conversation_store == mock_conversation_store
 
     @pytest.mark.asyncio
-    async def test_cleanup_with_conversation_store_configured(
-        self, mock_conversation_store, sample_config
-    ):
+    async def test_cleanup_with_conversation_store_configured(self, mock_conversation_store, sample_config):
         """Test conversation cleanup with storage backend configured"""
         config_yaml = yaml.dump(sample_config)
 
@@ -546,9 +544,7 @@ class TestAuditLogStorageIntegration:
         assert service.audit_log_store == mock_audit_log_store
 
     @pytest.mark.asyncio
-    async def test_cleanup_with_audit_log_store_configured(
-        self, mock_audit_log_store, sample_config
-    ):
+    async def test_cleanup_with_audit_log_store_configured(self, mock_audit_log_store, sample_config):
         """Test audit log cleanup with storage backend configured"""
         config_yaml = yaml.dump(sample_config)
 
@@ -570,9 +566,7 @@ class TestAuditLogStorageIntegration:
                     assert result.archived_count == 0
 
     @pytest.mark.asyncio
-    async def test_cleanup_with_cold_storage_configured(
-        self, mock_audit_log_store, sample_config
-    ):
+    async def test_cleanup_with_cold_storage_configured(self, mock_audit_log_store, sample_config):
         """Test audit log cleanup with cold storage configured"""
         config_yaml = yaml.dump(sample_config)
 
@@ -617,9 +611,7 @@ class TestAuditLogStorageIntegration:
 class TestFullStorageBackendIntegration:
     """Test complete storage backend integration"""
 
-    def test_init_with_all_stores(
-        self, mock_session_store, mock_conversation_store, mock_audit_log_store
-    ):
+    def test_init_with_all_stores(self, mock_session_store, mock_conversation_store, mock_audit_log_store):
         """Test initialization with all storage backends"""
         service = DataRetentionService(
             session_store=mock_session_store,

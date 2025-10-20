@@ -148,9 +148,7 @@ async def test_route_message_success(mock_settings, mock_pydantic_agent_class):
 
     # Mock agent response
     mock_result = Mock()
-    mock_result.data = RouterDecision(
-        action="use_tools", reasoning="User wants to search", tool_name="search", confidence=0.9
-    )
+    mock_result.data = RouterDecision(action="use_tools", reasoning="User wants to search", tool_name="search", confidence=0.9)
 
     mock_agent_instance = Mock()
     mock_agent_instance.run = AsyncMock(return_value=mock_result)

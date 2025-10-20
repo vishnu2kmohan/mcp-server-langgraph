@@ -47,13 +47,15 @@ def count_todos_at_commit(commit_hash: str) -> int:
     """Count TODOs in source code at a specific commit."""
     try:
         # Get all Python files in src/
-        files_output = run_git_command([
-            "ls-tree",
-            "-r",
-            "--name-only",
-            commit_hash,
-            "src/",
-        ])
+        files_output = run_git_command(
+            [
+                "ls-tree",
+                "-r",
+                "--name-only",
+                commit_hash,
+                "src/",
+            ]
+        )
 
         if not files_output:
             return 0
@@ -80,13 +82,15 @@ def get_todo_history(days: int = 30) -> List[Tuple[str, int, str]]:
     since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
     # Get commits in date range
-    log_output = run_git_command([
-        "log",
-        f"--since={since_date}",
-        "--format=%H|%ad|%s",
-        "--date=short",
-        "--reverse",  # Oldest first
-    ])
+    log_output = run_git_command(
+        [
+            "log",
+            f"--since={since_date}",
+            "--format=%H|%ad|%s",
+            "--date=short",
+            "--reverse",  # Oldest first
+        ]
+    )
 
     if not log_output:
         return []
@@ -138,8 +142,7 @@ def calculate_velocity(history: List[Tuple[str, int, str]], days: int = 7) -> fl
     start_date, start_count = recent_data[0]
     end_date, end_count = recent_data[-1]
 
-    date_diff = (datetime.strptime(end_date, "%Y-%m-%d") -
-                 datetime.strptime(start_date, "%Y-%m-%d")).days
+    date_diff = (datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days
 
     if date_diff == 0:
         return 0.0
@@ -148,11 +151,7 @@ def calculate_velocity(history: List[Tuple[str, int, str]], days: int = 7) -> fl
     return velocity
 
 
-def draw_burndown_chart(
-    history: List[Tuple[str, int, str]],
-    width: int = 40,
-    height: int = 10
-) -> str:
+def draw_burndown_chart(history: List[Tuple[str, int, str]], width: int = 40, height: int = 10) -> str:
     """Draw ASCII burndown chart."""
     if not history or len(history) < 2:
         return "Not enough data for chart (need at least 2 data points)"
@@ -289,7 +288,7 @@ At current velocity ({velocity_7:.2f} TODOs/day):
 
     for i, (date, count, msg) in enumerate(history[-10:]):  # Last 10 points
         if i > 0:
-            prev_count = history[i-1][1]
+            prev_count = history[i - 1][1]
             change = count - prev_count
             change_str = f"{change:+d}"
         else:
