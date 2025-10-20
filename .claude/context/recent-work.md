@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 17:19:43
+**Last Updated**: 2025-10-20 17:21:50
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,7 +9,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 276 |
+| Total Commits | 277 |
 | Contributors | 2 |
 | Current Branch | `main` |
 | Source Files | 168 Python files |
@@ -59,6 +59,9 @@
 
 ### 🔧 Chore
 
+- **`ee34ea6`** (2025-10-20) - chore: reorganize documentation files for better structure
+  _by Vishnu Mohan_
+
 - **`79d3609`** (2025-10-20) - chore: remove old internal docs (moved to docs-internal/)
   _by Vishnu Mohan_
 
@@ -66,9 +69,6 @@
   _by Vishnu Mohan_
 
 - **`4bae6f2`** (2025-10-20) - chore: sync Claude Code context and add compliance test enhancements
-  _by Vishnu Mohan_
-
-- **`797e19f`** (2025-10-20) - chore: consolidate docker-compose files and remove duplicates
   _by Vishnu Mohan_
 
 
@@ -156,5 +156,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 17:19:43
+**Generated**: 2025-10-20 17:21:50
 **Source**: Git commit history (last 15 commits, 7 days of file activity)
