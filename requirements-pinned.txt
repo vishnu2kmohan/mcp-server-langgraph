@@ -95,7 +95,7 @@ httpx==0.28.1
 
 # Health checks and API
 fastapi==0.119.0
-uvicorn[standard]==0.37.0
+uvicorn[standard]==0.38.0
 
 # Additional runtime dependencies
 python-multipart==0.0.20  # For FastAPI file uploads (FastAPI 0.119.0 requires >=0.0.17, MCP 1.18.0 requires >=0.0.9)
