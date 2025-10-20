@@ -19,12 +19,12 @@ Features:
 """
 
 import argparse
+import math
 import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict, Tuple
-import math
+from typing import Dict, List, Tuple
 
 
 def run_git_command(args: List[str], timeout: int = 30) -> str:
