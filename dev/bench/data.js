@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760964979151,
+  "lastUpdate": 1760981132808,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -4264,6 +4264,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00016063320027713543",
             "extra": "mean: 85.86801859751898 usec\nrounds: 3280"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "dced3c06e5a7f93eb8f302b4c16d34452639bc7d",
+          "message": "fix(tests): correct async mock in SLA monitoring test\n\nFixed incorrect patch decorator in test_alert_on_breach to use AsyncMock\nfor properly mocking async functions.\n\nChanges:\n- tests/test_sla_monitoring.py:454 - Added new_callable=AsyncMock to patch decorator\n\nImpact:\n- Resolves potential test failures with async mocking\n- Follows pytest best practices for async test mocking\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T13:23:07-04:00",
+          "tree_id": "ca4e9b7a7106b9adf571aad76f05f1f8d37c4a0e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/dced3c06e5a7f93eb8f302b4c16d34452639bc7d"
+        },
+        "date": 1760981132249,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37935.80470757544,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031998922367101116",
+            "extra": "mean: 26.360321277178787 usec\nrounds: 4949"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33906.48813252149,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003033529918778734",
+            "extra": "mean: 29.492880421338818 usec\nrounds: 6640"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31942.607801117472,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032845516192592702",
+            "extra": "mean: 31.306147770596745 usec\nrounds: 10002"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.8525953932308,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001854214970805392",
+            "extra": "mean: 5.29513506509026 msec\nrounds: 169"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35545238366162,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015242364346408768",
+            "extra": "mean: 51.66502854999777 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.925966503865718,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042197010832041985",
+            "extra": "mean: 100.74585679999473 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1985488.5008874403,
+            "unit": "iter/sec",
+            "range": "stddev: 4.8504713298628435e-8",
+            "extra": "mean: 503.6543901176143 nsec\nrounds: 96535"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3910.599341211704,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001809403700076038",
+            "extra": "mean: 255.7152785920914 usec\nrounds: 2046"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3070.648952636704,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011795506248641479",
+            "extra": "mean: 325.66405845296 usec\nrounds: 2857"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3025.158155964997,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000025183543324939706",
+            "extra": "mean: 330.56122967594376 usec\nrounds: 1759"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40707.305898653154,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029047419763936714",
+            "extra": "mean: 24.565614892069927 usec\nrounds: 7964"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11792.388540962282,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015704006513874436",
+            "extra": "mean: 84.80046230891897 usec\nrounds: 3396"
           }
         ]
       }
