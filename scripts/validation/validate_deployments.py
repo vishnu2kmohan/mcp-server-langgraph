@@ -241,13 +241,14 @@ class DeploymentValidator:
 
         services = compose.get("services", {})
 
-        # Check required services
-        required_services = {"agent", "keycloak", "redis", "openfga", "postgres"}
+        # Check required infrastructure services
+        # Note: "agent" service is deployed separately via Kubernetes/Helm
+        required_services = {"keycloak", "redis", "openfga", "postgres"}
         missing_services = required_services - set(services.keys())
         if missing_services:
             self.errors.append(f"Docker Compose missing services: {missing_services}")
         else:
-            print(f"  ✓ All required services present ({len(services)} total)")
+            print(f"  ✓ All required infrastructure services present ({len(services)} total)")
 
         # Check agent service
         agent = services.get("agent", {})

@@ -124,7 +124,7 @@ async def web_search(
                         timeout=30.0,
                     )
                     response.raise_for_status()
-                    data = response.json()
+                    data = await response.json()
 
                     results = [f'Web search: "{query}"\n']
                     for i, result in enumerate(data.get("results", [])[:num_results], 1):
@@ -150,7 +150,7 @@ async def web_search(
                         timeout=30.0,
                     )
                     response.raise_for_status()
-                    data = response.json()
+                    data = await response.json()
 
                     results = [f'Web search: "{query}"\n']
                     for i, result in enumerate(data.get("organic", [])[:num_results], 1):

@@ -82,9 +82,13 @@ class SessionData(BaseModel):
     @field_validator("created_at", "last_accessed", "expires_at")
     @classmethod
     def validate_timestamp(cls, v: str) -> str:
-        """Validate timestamp is in ISO format"""
+        """Validate timestamp is in ISO format and normalize Zulu time to explicit timezone"""
         try:
-            datetime.fromisoformat(v)
+            # Handle Zulu time (Z) suffix by replacing with +00:00
+            # This normalizes timestamps from datetime.isoformat() calls
+            normalized = v.replace("Z", "+00:00") if v.endswith("Z") else v
+            datetime.fromisoformat(normalized)
+            return normalized
         except (ValueError, TypeError):
             raise ValueError(f"Timestamp must be in ISO format, got: {v}")
         return v
