@@ -87,17 +87,18 @@ class TestBulkheadFailFast:
             return "success"
 
         # Start 2 concurrent tasks (fill bulkhead)
-        tasks = [slow_func(), slow_func()]
+        task1 = asyncio.create_task(slow_func())
+        task2 = asyncio.create_task(slow_func())
 
-        # Start them
-        await asyncio.sleep(0.01)  # Let them start
+        # Let them start
+        await asyncio.sleep(0.01)
 
         # 3rd task should be rejected immediately
         with pytest.raises(BulkheadRejectedError):
             await slow_func()
 
         # Wait for original tasks to complete
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(task1, task2)
         assert all(r == "success" for r in results)
 
     @pytest.mark.unit

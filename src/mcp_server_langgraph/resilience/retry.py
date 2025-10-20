@@ -207,11 +207,7 @@ def retry_with_backoff(
                 # Configure retry condition
                 if retry_on:
                     retry_kwargs["retry"] = retry_if_exception_type(retry_on)
-                else:
-                    # Auto-detect retry-able exceptions
-                    retry_kwargs["retry"] = lambda retry_state: should_retry_exception(
-                        retry_state.outcome.exception() if retry_state.outcome else None
-                    )
+                # Otherwise, retry all exceptions (tenacity default behavior)
 
                 try:
                     # Execute with retry

@@ -149,7 +149,7 @@ jobs:
           uv run python -c "
           from mcp_server_langgraph.core.agent import create_agent_graph
           from mcp_server_langgraph.tools import ALL_TOOLS
-          from mcp_server_langgraph.storage import ConversationStore
+          from mcp_server_langgraph.core.storage import ConversationStore
 
           print('✓ All core modules importable')
           print(f'✓ Tools: {len(ALL_TOOLS)}')

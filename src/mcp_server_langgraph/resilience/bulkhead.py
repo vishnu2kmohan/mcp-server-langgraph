@@ -14,6 +14,10 @@ from typing import Callable, Dict, Optional, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
+from mcp_server_langgraph.observability.telemetry import (
+    bulkhead_active_operations_gauge,
+    bulkhead_rejected_counter,
+)
 from mcp_server_langgraph.resilience.config import get_resilience_config
 
 logger = logging.getLogger(__name__)
@@ -141,8 +145,9 @@ def with_bulkhead(
                     "bulkhead.available": semaphore._value if hasattr(semaphore, "_value") else 0,
                 },
             ) as span:
-                # Check if slots are available
-                if not wait and semaphore.locked():
+                # Check if slots are available (semaphore._value == 0 means no slots)
+                slots_available = semaphore._value if hasattr(semaphore, "_value") else 1
+                if not wait and slots_available == 0:
                     # No slots available, reject immediately
                     span.set_attribute("bulkhead.rejected", True)
 
@@ -156,8 +161,6 @@ def with_bulkhead(
                     )
 
                     # Emit metric
-                    from mcp_server_langgraph.observability.telemetry import bulkhead_rejected_counter
-
                     bulkhead_rejected_counter.add(
                         1,
                         attributes={
@@ -184,8 +187,6 @@ def with_bulkhead(
                     span.set_attribute("bulkhead.active", waiters_count + 1)
 
                     # Emit metric for active operations
-                    from mcp_server_langgraph.observability.telemetry import bulkhead_active_operations_gauge
-
                     # Get active count safely (since we're inside the semaphore, use the value we calculated earlier)
                     active_count = waiters_count + 1
                     bulkhead_active_operations_gauge.set(
@@ -230,15 +231,23 @@ class BulkheadContext:
 
     async def __aenter__(self):
         """Acquire bulkhead slot"""
-        if not self.wait and self.semaphore.locked():
+        # Check if slots are available (semaphore._value == 0 means no slots)
+        slots_available = self.semaphore._value if hasattr(self.semaphore, "_value") else 1
+        if not self.wait and slots_available == 0:
             # Reject immediately if no slots
             from mcp_server_langgraph.core.exceptions import BulkheadRejectedError
+
+            # Calculate total limit safely
+            waiters_count = (
+                len(self.semaphore._waiters) if hasattr(self.semaphore, "_waiters") and self.semaphore._waiters else 0
+            )
+            total_limit = self.semaphore._value + waiters_count if hasattr(self.semaphore, "_value") else 10
 
             raise BulkheadRejectedError(
                 message=f"Bulkhead rejected request for {self.resource_type}",
                 metadata={
                     "resource_type": self.resource_type,
-                    "limit": self.semaphore._value + len(self.semaphore._waiters),
+                    "limit": total_limit,
                 },
             )
 

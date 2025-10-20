@@ -290,8 +290,8 @@ class TestFallbackComposition:
 
         call_count = 0
 
-        @retry_with_backoff(max_attempts=2)
         @with_fallback(fallback="fallback_value")
+        @retry_with_backoff(max_attempts=2)
         async def func():
             nonlocal call_count
             call_count += 1

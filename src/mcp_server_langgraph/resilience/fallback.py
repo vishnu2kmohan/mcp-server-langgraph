@@ -13,6 +13,8 @@ from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
+from mcp_server_langgraph.observability.telemetry import fallback_used_counter
+
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
 
@@ -100,7 +102,12 @@ class StaleDataFallback(FallbackStrategy):
         """Get stale data if within staleness limit"""
         import time
 
-        key = str(args) + str(kwargs)
+        # Support both direct key (single arg) and generated key (multiple args/kwargs)
+        if len(args) == 1 and not kwargs and isinstance(args[0], str):
+            key = args[0]
+        else:
+            key = str(args) + str(kwargs)
+
         if key in self._cache:
             value, timestamp = self._cache[key]
             age = time.time() - timestamp
@@ -208,8 +215,6 @@ def with_fallback(
                     )
 
                     # Emit metric
-                    from mcp_server_langgraph.observability.telemetry import fallback_used_counter
-
                     fallback_used_counter.add(
                         1,
                         attributes={

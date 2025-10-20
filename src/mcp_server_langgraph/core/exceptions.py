@@ -10,6 +10,8 @@ See ADR-0029 for design rationale.
 from enum import Enum
 from typing import Any, Dict, Optional
 
+from opentelemetry import trace
+
 
 class ErrorCategory(str, Enum):
     """High-level error categories for metrics"""
@@ -80,8 +82,6 @@ class MCPServerException(Exception):
     def _get_current_trace_id(self) -> Optional[str]:
         """Get current OpenTelemetry trace ID"""
         try:
-            from opentelemetry import trace
-
             span = trace.get_current_span()
             if span and span.get_span_context().is_valid:
                 return format(span.get_span_context().trace_id, "032x")
