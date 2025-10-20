@@ -170,7 +170,8 @@
         "deployment/kubernetes/gke",
         "deployment/kubernetes/eks",
         "deployment/kubernetes/aks",
-        "deployment/kubernetes/kustomize"
+        "deployment/kubernetes/kustomize",
+        "deployment/VMWARE_RESOURCE_ESTIMATION"
       ]
     },
     {
