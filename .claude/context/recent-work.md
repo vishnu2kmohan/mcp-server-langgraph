@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 17:26:11
+**Last Updated**: 2025-10-20 17:26:41
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,11 +9,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 280 |
+| Total Commits | 281 |
 | Contributors | 2 |
 | Current Branch | `main` |
-| Source Files | 168 Python files |
-| Test Files | 170 Python files |
+| Source Files | 170 Python files |
+| Test Files | 172 Python files |
 | Total Tests | 0 tests |
 
 ---
@@ -22,6 +22,9 @@
 
 
 ### ♻️  Refactor
+
+- **`9918c45`** (2025-10-20) - refactor: complete compliance module reorganization with import fixes
+  _by Vishnu Mohan_
 
 - **`fdbeef0`** (2025-10-20) - refactor: reorganize compliance module structure
   _by Vishnu Mohan_
@@ -60,9 +63,6 @@
   _by Vishnu Mohan_
 
 - **`87799e4`** (2025-10-20) - docs: comprehensive documentation audit and cleanup
-  _by Vishnu Mohan_
-
-- **`ce28519`** (2025-10-20) - docs: comprehensive codebase cleanup initiative - final summary
   _by Vishnu Mohan_
 
 
@@ -108,7 +108,7 @@ Files changed most frequently:
 | `src/mcp_server_langgraph/mcp/server_stdio.py` | 8 |
 | `.env.example` | 8 |
 | `deployments/kustomize/base/kustomization.yaml` | 8 |
-| `.github/workflows/security-scan.yaml` | 7 |
+| `.claude/context/recent-work.md` | 7 |
 
 
 ---
@@ -120,8 +120,8 @@ Files changed most frequently:
 Based on recent commits, the team has been focused on:
 
 - **🔧 Chore**: 4 recent commits
-- **📝 Documentation**: 3 recent commits
-- **♻️  Refactor**: 2 recent commits
+- **♻️  Refactor**: 3 recent commits
+- **📝 Documentation**: 2 recent commits
 - **✨ Feature**: 2 recent commits
 - **💄 Style**: 2 recent commits
 
@@ -130,8 +130,8 @@ Based on recent commits, the team has been focused on:
 
 Most active areas in the codebase (by file change frequency):
 
+- `src/` - 45 file changes
 - `.github/` - 43 file changes
-- `src/` - 38 file changes
 - `deployments/` - 15 file changes
 - `docs/` - 9 file changes
 - `docker/` - 8 file changes
@@ -160,5 +160,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 17:26:11
+**Generated**: 2025-10-20 17:26:41
 **Source**: Git commit history (last 15 commits, 7 days of file activity)
