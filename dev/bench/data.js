@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760999481532,
+  "lastUpdate": 1761001441254,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -5236,6 +5236,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0001250985318048953",
             "extra": "mean: 84.16728952539935 usec\nrounds: 3599"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6886eec4026566f896b4157fc6f30cffad29897e",
+          "message": "fix: resolve 9 CI/CD test failures\n\nThis commit fixes 3 categories of test failures:\n\n1. **Timestamp validation (7 tests)**: Updated SessionData validator to\n   accept both Zulu time format (Z) and explicit timezone (+00:00).\n   The validator now normalizes 'Z' to '+00:00' for consistency.\n   - Fixed: tests/test_gdpr.py (2 failures)\n   - Fixed: tests/test_session_timeout.py (5 failures)\n\n2. **Async/await bugs (2 tests)**: Added missing 'await' keywords before\n   response.json() calls in web search tool.\n   - Fixed: tests/unit/test_search_tools.py::test_web_search_tavily_success\n   - Fixed: tests/unit/test_search_tools.py::test_web_search_serper_success\n\n3. **Deployment validation (1 failure)**: Removed 'agent' from required\n   services list in deployment validator, as agent service is deployed\n   separately via Kubernetes/Helm, not in docker-compose.yml.\n   - Fixed: Validate Deployment Configurations job\n\nFiles modified:\n- src/mcp_server_langgraph/auth/session.py\n- src/mcp_server_langgraph/tools/search_tools.py\n- scripts/validation/validate_deployments.py\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T19:01:09-04:00",
+          "tree_id": "1e88d135fa0be1e1c8667c540524681ff19f717d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6886eec4026566f896b4157fc6f30cffad29897e"
+        },
+        "date": 1761001440708,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37937.58851362536,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029931592746215027",
+            "extra": "mean: 26.3590818283257 usec\nrounds: 4485"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33186.83199931301,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031181575775698954",
+            "extra": "mean: 30.13243325005233 usec\nrounds: 6809"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31836.21993892779,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000035016075661046282",
+            "extra": "mean: 31.41076427786731 usec\nrounds: 14568"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.97269197870486,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001786762494192916",
+            "extra": "mean: 5.291769882352572 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.269153291486315,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010297596961049208",
+            "extra": "mean: 51.89641624999837 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.929544016839913,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000036940133706235484",
+            "extra": "mean: 100.70955910000094 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2009147.5497662297,
+            "unit": "iter/sec",
+            "range": "stddev: 4.433126190609824e-8",
+            "extra": "mean: 497.7235246442467 nsec\nrounds: 99315"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3955.9319717536578,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027210315815816107",
+            "extra": "mean: 252.78493339628935 usec\nrounds: 2117"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2929.824409907755,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003398423110036335",
+            "extra": "mean: 341.3173829183452 usec\nrounds: 1405"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2824.646335840837,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000025498928601417337",
+            "extra": "mean: 354.02662177965067 usec\nrounds: 1708"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 41279.679070005535,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026499183488913856",
+            "extra": "mean: 24.224994537969064 usec\nrounds: 6774"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11690.0989487331,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001317177882977328",
+            "extra": "mean: 85.54247525067986 usec\nrounds: 3394"
           }
         ]
       }
