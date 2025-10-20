@@ -1,0 +1,185 @@
+name: Documentation Link Checker
+
+# ==============================================================================
+# Documentation Link Checker - Internal Link Validation
+# ==============================================================================
+#
+# Purpose:
+#   Validate internal documentation links to prevent broken references.
+#   Prioritizes high-priority links (.github/, adr/) over other content.
+#
+# Triggers:
+#   - Pull requests to main/develop (on doc changes)
+#   - Pushes to main (on doc changes)
+#   - Weekly schedule (Mondays at 9 AM UTC)
+#   - Manual workflow dispatch
+#
+# Path Filters:
+#   - Markdown files (*.md, *.mdx)
+#   - Documentation directories (docs/, adr/)
+#   - GitHub configs (.github/)
+#
+# Jobs:
+#   - Internal Link Check: Uses scripts/ci/check-links.py
+#     - Validates relative links
+#     - Categorizes by priority (high: .github/, adr/)
+#     - Fails on high-priority broken links
+#     - Warns on low-priority broken links
+#
+#   - External Link Check: Uses lychee-action (optional)
+#     - Non-blocking (continue-on-error: true)
+#     - Checks HTTP status codes
+#
+#   - Markdown Validation: Uses markdownlint-cli2
+#     - Non-blocking style checks
+#
+# History:
+#   - 2025-10-20: Extracted inline Python to scripts/ci/check-links.py
+#   - 2025-10-20: Migrated to composite action for Python setup
+#
+# ==============================================================================
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '**.mdx'
+      - 'docs/**'
+      - 'adr/**'
+      - '.github/**'
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '**.mdx'
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  check-links:
+    name: Check Internal Documentation Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          cache-key-prefix: 'link-checker'
+
+      - name: Check for broken internal links
+        id: link-check
+        run: |
+          python3 scripts/ci/check-links.py --root-dir . --exclude archive/ reports/ docs/
+        continue-on-error: false
+
+      - name: Comment on PR (if failed)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Documentation Link Check Failed
+
+              Broken internal links were detected in the documentation.
+
+              Please review the workflow logs for details and fix the broken links.
+
+              **Common fixes:**
+              - Update relative paths (../ vs ../../)
+              - Change file extensions (.md vs .mdx)
+              - Update paths for moved/renamed files
+
+              **To test locally:**
+              \`\`\`bash
+              python scripts/check-links.py
+              \`\`\`
+              `
+            })
+
+      - name: Create issue (if scheduled check failed)
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📚 Broken Documentation Links Detected',
+              body: `## Weekly Documentation Link Check Failed
+
+              The automated link checker found broken internal links in the documentation.
+
+              **Action Required:**
+              1. Review the workflow run logs
+              2. Fix the broken links
+              3. Update any moved/renamed files
+
+              **Run Logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+              **To fix locally:**
+              \`\`\`bash
+              python scripts/check-links.py --fix
+              \`\`\`
+              `,
+              labels: ['documentation', 'automated']
+            })
+
+  check-external-links:
+    name: Check External Links (Optional)
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Don't fail CI for external link issues
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: |
+            --verbose
+            --no-progress
+            --exclude-path ./archive
+            --exclude-path ./reports/archive
+            --exclude-path ./node_modules
+            --exclude-path ./.venv
+            --accept 200,204,429
+            --timeout 10
+            --max-retries 3
+            '**/*.md'
+            '**/*.mdx'
+          fail: false  # Don't fail CI for external links
+
+      - name: Report external link issues
+        if: steps.lychee.outputs.exit_code != 0
+        run: |
+          echo "⚠️ Some external links may be broken or timing out"
+          echo "This does not fail the CI as external sites may be temporarily unavailable"
+          echo "Review the logs above for details"
+
+  validate-markdown:
+    name: Validate Markdown Syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Lint markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v18
+        with:
+          globs: |
+            **/*.md
+            **/*.mdx
+          config: .markdownlint.json
+        continue-on-error: true  # Don't fail CI for style issues

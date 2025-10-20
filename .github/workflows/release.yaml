@@ -1,5 +1,51 @@
 name: Release
 
+# ==============================================================================
+# Release - Automated Release Publication
+# ==============================================================================
+#
+# Purpose:
+#   Automate the creation and publication of releases including GitHub releases,
+#   Docker images, Helm charts, PyPI packages, and registry updates.
+#
+# Triggers:
+#   - Tag push (v*.*.*)
+#   - Manual workflow dispatch
+#
+# Jobs:
+#   1. Create Release:
+#      - Extracts CHANGELOG section using scripts/ci/extract-changelog.py
+#      - Creates GitHub release with auto-generated notes
+#      - Marks pre-releases (alpha, beta, rc)
+#
+#   2. Build and Push:
+#      - Multi-platform Docker images (amd64, arm64)
+#      - Pushes to ghcr.io with multiple tags (version, major.minor, latest, sha)
+#      - Generates SBOM (Software Bill of Materials)
+#
+#   3. Publish Helm:
+#      - Packages Helm chart with version
+#      - Pushes to OCI registry (oci://ghcr.io)
+#
+#   4. Publish PyPI:
+#      - Builds Python package
+#      - Publishes to PyPI (stable releases only, not alpha/beta)
+#
+#   5. Update MCP Registry:
+#      - Updates .mcp/manifest.json and registry.json
+#      - Publishes to MCP registry (if token configured)
+#
+# Features:
+#   - Uses extracted script for CHANGELOG parsing
+#   - Fallback to git commits if no CHANGELOG entry
+#   - Slack notifications on completion
+#   - SBOM attachments for supply chain security
+#
+# History:
+#   - 2025-10-20: Extracted inline bash to scripts/ci/extract-changelog.py
+#
+# ==============================================================================
+
 on:
   push:
     tags:
@@ -31,83 +77,17 @@ jobs:
     - name: Extract CHANGELOG section
       id: extract_changelog
       run: |
-        # Extract version from tag
-        VERSION="${{ github.ref_name }}"
-        VERSION_NO_V="${VERSION#v}"
+        python3 scripts/ci/extract-changelog.py \
+          ${{ github.ref_name }} \
+          --changelog CHANGELOG.md \
+          --output release_notes.md \
+          --repository ${{ github.repository }}
 
-        echo "Extracting CHANGELOG section for version: $VERSION_NO_V"
-
-        # Extract the section for this version from CHANGELOG.md
-        # Get content between "## [VERSION]" and next "---" (escape dots in version)
-        VERSION_ESCAPED=$(echo "$VERSION_NO_V" | sed 's/\./\\./g')
-        sed -n "/^## \[$VERSION_ESCAPED\]/,/^---$/p" CHANGELOG.md | sed '$d' > release_notes.md
-
-        # Check if we got content
-        if [ -s release_notes.md ] && [ $(wc -l < release_notes.md) -gt 5 ]; then
-          echo "✅ Found CHANGELOG content ($(wc -l < release_notes.md) lines)"
+        # Set output based on script exit code
+        if [ $? -eq 0 ]; then
           echo "has_changelog=true" >> $GITHUB_OUTPUT
-
-          # Add deployment info and links
-          {
-            echo ""
-            echo "## 🚀 Quick Start"
-            echo ""
-            echo "### Docker Images"
-            echo ""
-            echo "Pull the latest release:"
-            echo ""
-            echo '```bash'
-            echo "docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
-            echo "docker pull ghcr.io/${{ github.repository }}:latest"
-            echo '```'
-            echo ""
-            echo "### Helm Deployment"
-            echo ""
-            echo "Install with Helm:"
-            echo ""
-            echo '```bash'
-            echo "helm upgrade --install mcp-server-langgraph \\"
-            echo "  oci://ghcr.io/${{ github.repository }}/charts/mcp-server-langgraph \\"
-            echo "  --version ${{ github.ref_name }}"
-            echo '```'
-            echo ""
-            echo "## 📚 Documentation"
-            echo ""
-            echo "- [Installation Guide](README.md)"
-            echo "- [Kubernetes Deployment](docs/deployment/kubernetes.md)"
-            echo "- [Testing Guide](docs/development/testing.md)"
-            echo "- [Release Process](docs/deployment/RELEASE_PROCESS.md)"
-          } >> release_notes.md
         else
-          echo "⚠️ No CHANGELOG content found, using fallback"
           echo "has_changelog=false" >> $GITHUB_OUTPUT
-
-          # Fallback: generate from commits
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -n "$PREVIOUS_TAG" ]; then
-            git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges > changelog.txt
-          else
-            git log --pretty=format:"- %s (%h)" --no-merges --max-count=20 > changelog.txt
-          fi
-
-          # Create basic release notes
-          {
-            echo "## Changes in this Release"
-            echo ""
-            cat changelog.txt
-            echo ""
-            echo "## Docker Images"
-            echo ""
-            echo '```bash'
-            echo "docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
-            echo "docker pull ghcr.io/${{ github.repository }}:latest"
-            echo '```'
-            echo ""
-            echo "## Documentation"
-            echo ""
-            echo "- [Installation Guide](README.md)"
-            echo "- [Kubernetes Deployment](docs/deployment/kubernetes.md)"
-          } > release_notes.md
         fi
 
     - name: Create Release

@@ -191,7 +191,7 @@ The project supports optional feature sets that can be installed on demand:
 ## 📚 Documentation
 
 - **[Documentation Index](docs/README.md)** - Complete guide to all documentation
-- **[API Documentation](/docs)** - Interactive OpenAPI/Swagger UI (when running locally)
+- **[API Documentation](http://localhost:8000/docs)** - Interactive OpenAPI/Swagger UI (when running locally)
 - **[Mintlify Deployment](docs-internal/DEPLOYMENT.md)** - Mintlify documentation deployment instructions
 
 ### 📖 Quality & Testing Guides
@@ -222,6 +222,61 @@ The project supports optional feature sets that can be installed on demand:
   - [Parallel Tool Execution](examples/parallel_execution_demo.py) - Concurrent execution patterns
   - [Enhanced Note-Taking](examples/llm_extraction_demo.py) - LLM-based information extraction
   - [Complete Workflow](examples/full_workflow_demo.py) - Full agentic loop demonstration
+
+## Requirements
+
+### System Requirements
+- **Python**: 3.10, 3.11, or 3.12
+- **Memory**: 2GB RAM minimum (4GB recommended for production)
+- **Disk**: 500MB for dependencies + 1GB for optional vector databases
+- **OS**: Linux, macOS, or Windows with WSL2
+
+### Required Services (for full features)
+- **Redis**: Session storage (or use in-memory mode)
+- **PostgreSQL**: Compliance data storage (optional)
+- **OpenFGA**: Fine-grained authorization (optional)
+
+### Optional Components
+- **Qdrant/Weaviate**: Vector database for semantic search
+- **Jaeger**: Distributed tracing visualization
+- **Prometheus + Grafana**: Metrics and monitoring
+
+See [Production Checklist](docs/deployment/production-checklist.mdx) for detailed requirements.
+
+## Installation
+
+### Quick Install
+
+**Using uv (recommended)**:
+```bash
+uv pip install mcp-server-langgraph
+
+# Or clone and install in development mode
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
+cd mcp-server-langgraph
+uv sync
+```
+
+**Using pip**:
+```bash
+pip install mcp-server-langgraph
+
+# Or install from source
+git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
+cd mcp-server-langgraph
+pip install -e .
+```
+
+### Verify Installation
+```bash
+python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__version__)"
+```
+
+See [Installation Guide](docs/getting-started/installation.mdx) for complete instructions, including:
+- Docker installation
+- Virtual environment setup
+- Dependency management
+- Configuration options
 
 ## Architecture
 

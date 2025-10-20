@@ -198,7 +198,36 @@
         "advanced/contributing",
         "advanced/testing",
         "advanced/development-setup",
-        "advanced/troubleshooting"
+        "advanced/troubleshooting",
+        "development/integration-testing"
+      ]
+    },
+    {
+      "group": "Reference",
+      "pages": [
+        "reference/environment-variables",
+        "reference/development/ide-setup",
+        "reference/development/github-actions",
+        "reference/development/build-verification",
+        "reference/development/ci-cd",
+        "reference/development/development"
+      ]
+    },
+    {
+      "group": "Operations",
+      "pages": [
+        "deployment/VERSION_PINNING",
+        "deployment/VERSION_COMPATIBILITY",
+        "deployment/RELEASE_PROCESS",
+        "deployment/model-configuration",
+        "deployment/infisical-installation",
+        "deployment/gdpr-storage-configuration"
+      ]
+    },
+    {
+      "group": "Diagrams",
+      "pages": [
+        "diagrams/system-architecture"
       ]
     },
     {
@@ -262,6 +291,7 @@
       "group": "Version History",
       "pages": [
         "releases/overview",
+        "releases/v2-8-0",
         "releases/v2-7-0",
         "releases/v2-6-0",
         "releases/v2-5-0",

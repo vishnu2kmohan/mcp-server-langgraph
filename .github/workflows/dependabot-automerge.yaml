@@ -1,5 +1,38 @@
 name: Dependabot Auto-Merge
 
+# ==============================================================================
+# Dependabot Auto-Merge - Automated Dependency Updates
+# ==============================================================================
+#
+# Purpose:
+#   Automatically merge Dependabot PRs based on update type and package criticality.
+#
+# Triggers:
+#   - Pull request events (opened, synchronize, reopened)
+#   - Pull request review submissions
+#   - Check suite completions
+#   - Manual workflow dispatch
+#
+# Auto-Merge Policy:
+#   ✅ Always auto-merge:
+#      - Patch updates (version-update:semver-patch)
+#
+#   ✅ Auto-merge minor updates EXCEPT:
+#      - langgraph, langchain-core, fastapi, pydantic
+#      (These require manual review due to criticality)
+#
+#   ❌ Never auto-merge:
+#      - Major updates (version-update:semver-major)
+#      (Always require manual review for breaking changes)
+#
+# Features:
+#   - Validates PR context before processing
+#   - Auto-approves eligible PRs
+#   - Adds comments explaining review requirements
+#   - Comprehensive error handling
+#
+# ==============================================================================
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]

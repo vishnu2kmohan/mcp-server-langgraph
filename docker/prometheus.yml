@@ -1,0 +1,91 @@
+# Prometheus Configuration for MCP Server LangGraph
+# =================================================
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+  external_labels:
+    cluster: 'local-development'
+    environment: 'dev'
+
+# Alertmanager configuration (optional for local dev)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # MCP Server metrics (when running locally)
+  - job_name: 'mcp-server-langgraph'
+    metrics_path: '/metrics/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8000']  # Adjust if running in Docker
+        labels:
+          service: 'mcp-server-langgraph'
+          component: 'api'
+    # For containerized MCP server:
+    # static_configs:
+    #   - targets: ['mcp-server:8000']
+
+  # OpenFGA metrics
+  - job_name: 'openfga'
+    static_configs:
+      - targets: ['openfga:8080']
+        labels:
+          service: 'openfga'
+          component: 'authorization'
+
+  # Redis metrics (via redis_exporter if available)
+  - job_name: 'redis-checkpoints'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+          component: 'checkpoints'
+
+  - job_name: 'redis-sessions'
+    static_configs:
+      - targets: ['redis-sessions:6379']
+        labels:
+          service: 'redis'
+          component: 'sessions'
+
+  # PostgreSQL metrics (via postgres_exporter if available)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'postgres'
+          component: 'database'
+
+  # Keycloak metrics
+  - job_name: 'keycloak'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['keycloak:8080']
+        labels:
+          service: 'keycloak'
+          component: 'authentication'
+
+  # Qdrant metrics
+  - job_name: 'qdrant'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['qdrant:6333']
+        labels:
+          service: 'qdrant'
+          component: 'vector-db'

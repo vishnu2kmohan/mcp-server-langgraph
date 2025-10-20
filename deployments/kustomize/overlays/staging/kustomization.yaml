@@ -31,4 +31,4 @@ replicas:
 
 images:
   - name: mcp-server-langgraph
-    newTag: staging-2.5.0
+    newTag: staging-2.7.0

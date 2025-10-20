@@ -1,0 +1,51 @@
+# Grafana Datasource Provisioning
+# ================================
+
+apiVersion: 1
+
+datasources:
+  # Prometheus datasource
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      httpMethod: POST
+    version: 1
+
+  # Jaeger datasource for traces
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    editable: true
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'loki'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: false
+        filterBySpanID: false
+    version: 1
+
+  # Redis datasource (requires redis-datasource plugin)
+  - name: Redis (Checkpoints)
+    type: redis-datasource
+    access: proxy
+    url: redis://redis:6379
+    editable: true
+    jsonData:
+      client: standalone
+    version: 1
+
+  - name: Redis (Sessions)
+    type: redis-datasource
+    access: proxy
+    url: redis://redis-sessions:6379
+    editable: true
+    jsonData:
+      client: standalone
+    version: 1

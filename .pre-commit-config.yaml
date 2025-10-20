@@ -65,3 +65,12 @@ repos:
           types-redis,
           types-requests
         ]
+
+  # GitHub Actions workflow validation
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.29.4
+    hooks:
+      - id: check-github-workflows
+        name: Validate GitHub Actions workflows
+        description: Validates GitHub Actions workflow syntax
+        files: ^\.github/workflows/.*\.ya?ml$

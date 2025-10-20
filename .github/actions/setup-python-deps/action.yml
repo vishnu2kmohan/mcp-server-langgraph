@@ -1,0 +1,64 @@
+name: 'Setup Python and Dependencies'
+description: 'Set up Python environment with caching and install project dependencies'
+author: 'MCP Server LangGraph Team'
+
+inputs:
+  python-version:
+    description: 'Python version to set up (e.g., 3.12 or ["3.10", "3.11", "3.12"])'
+    required: false
+    default: '3.12'
+
+  install-dev:
+    description: 'Install development dependencies'
+    required: false
+    default: 'false'
+
+  install-test:
+    description: 'Install test dependencies'
+    required: false
+    default: 'false'
+
+  cache-key-prefix:
+    description: 'Prefix for cache key (e.g., "lint", "test")'
+    required: false
+    default: 'deps'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements-pinned.txt
+          requirements-test.txt
+
+    - name: Cache Python dependencies
+      uses: actions/cache@v4.3.0
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ inputs.cache-key-prefix }}-${{ hashFiles('requirements-pinned.txt', 'requirements-test.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ inputs.cache-key-prefix }}-
+          ${{ runner.os }}-pip-
+      shell: bash
+
+    - name: Install base dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install -r requirements-pinned.txt
+      shell: bash
+
+    - name: Install test dependencies
+      if: inputs.install-test == 'true'
+      run: pip install -r requirements-test.txt
+      shell: bash
+
+    - name: Validate dependency consistency
+      run: |
+        pip check
+        echo "✓ All dependencies are consistent (no conflicts detected)"
+      shell: bash

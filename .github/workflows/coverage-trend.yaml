@@ -1,5 +1,37 @@
 name: Coverage Trend Tracking
 
+# ==============================================================================
+# Coverage Trend Tracking - Test Coverage Monitoring
+# ==============================================================================
+#
+# Purpose:
+#   Track test coverage trends over time and alert on significant drops.
+#   Maintains historical coverage data for trend analysis.
+#
+# Triggers:
+#   - Pushes to main/develop branches
+#   - Pull requests to main
+#   - Manual workflow dispatch
+#
+# Features:
+#   - Tracks coverage percentage in CSV history (.coverage-history/)
+#   - Alerts if coverage drops >5% from previous run
+#   - Posts coverage reports on PRs
+#   - Uses extracted script: scripts/ci/track-coverage.py
+#   - Retains coverage history for 90 days
+#
+# Alert Thresholds:
+#   - 🔴 Significant decrease: >5% drop (fails workflow)
+#   - 🟡 Decrease: 1-5% drop (warning only)
+#   - 🟢 Increase: >1% improvement
+#   - ➡️  No change: -1% to +1%
+#
+# History:
+#   - 2025-10-20: Extracted inline Python to scripts/ci/track-coverage.py
+#   - 2025-10-20: Migrated to composite action for Python setup
+#
+# ==============================================================================
+
 on:
   push:
     branches: [main, develop]
@@ -22,18 +54,15 @@ jobs:
       with:
         fetch-depth: 0  # Full history for trend analysis
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
+    - name: Setup Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        cache: 'pip'
+        install-test: 'true'
+        cache-key-prefix: 'coverage-trend'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install -r requirements-test.txt
-        pip install coverage
+    - name: Install coverage tool
+      run: pip install coverage
 
     - name: Download previous coverage data
       uses: actions/download-artifact@v4
@@ -46,28 +75,20 @@ jobs:
       run: |
         pytest -m unit --cov=src/mcp_server_langgraph --cov-report=json --cov-report=term-missing
 
-    - name: Extract coverage percentage
+    - name: Track coverage and save to history
       id: coverage
       run: |
-        # Extract coverage percentage from JSON report
+        # Run coverage tracking script
+        python3 scripts/ci/track-coverage.py \
+          --coverage-json coverage.json \
+          --history-dir .coverage-history \
+          --fail-threshold 5.0
+
+        # Extract coverage for GitHub outputs (for PR comments)
         COVERAGE=$(python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered'])")
-        echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
-        echo "Coverage: $COVERAGE%"
-
-        # Round to 1 decimal place
         COVERAGE_ROUNDED=$(python -c "import sys; print(f'{float(sys.argv[1]):.1f}')" "$COVERAGE")
+        echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
         echo "coverage_rounded=$COVERAGE_ROUNDED" >> $GITHUB_OUTPUT
-
-    - name: Save coverage to history
-      run: |
-        mkdir -p .coverage-history
-        DATE=$(date +%Y-%m-%d)
-        COMMIT_SHA=$(git rev-parse --short HEAD)
-        echo "$DATE,$COMMIT_SHA,${{ steps.coverage.outputs.coverage }}" >> .coverage-history/coverage-trend.csv
-
-        # Keep only last 100 entries
-        tail -100 .coverage-history/coverage-trend.csv > .coverage-history/coverage-trend.tmp
-        mv .coverage-history/coverage-trend.tmp .coverage-history/coverage-trend.csv
 
     - name: Upload coverage history
       uses: actions/upload-artifact@v4
@@ -76,37 +97,31 @@ jobs:
         path: .coverage-history/
         retention-days: 90
 
-    - name: Check coverage change
+    - name: Calculate coverage change for PR comment
       id: coverage-change
       run: |
-        if [ -f .coverage-history/coverage-trend.csv ]; then
-          # Get previous coverage (second to last line)
+        # Extract change data from coverage history for PR comments
+        if [ -f .coverage-history/coverage-trend.csv ] && [ $(wc -l < .coverage-history/coverage-trend.csv) -ge 2 ]; then
           PREV_COVERAGE=$(tail -2 .coverage-history/coverage-trend.csv | head -1 | cut -d',' -f3)
           CURR_COVERAGE=${{ steps.coverage.outputs.coverage }}
+          CHANGE=$(python -c "print(f'{float('$CURR_COVERAGE') - float('$PREV_COVERAGE'):.1f}')")
 
-          # Calculate change using Python
-          CHANGE=$(python -c "import sys; print(f'{float(sys.argv[1]) - float(sys.argv[2]):.1f}')" "$CURR_COVERAGE" "$PREV_COVERAGE")
-          echo "change=$CHANGE" >> $GITHUB_OUTPUT
-
-          # Determine status based on change value
-          CHANGE_FLOAT=$(python -c "print(float('$CHANGE'))")
+          # Determine status emoji
           if (( $(python -c "print(1 if float('$CHANGE') < -5 else 0)") )); then
-            echo "status=🔴 Significant decrease" >> $GITHUB_OUTPUT
-            echo "alert=true" >> $GITHUB_OUTPUT
+            STATUS="🔴 Significant decrease"
           elif (( $(python -c "print(1 if float('$CHANGE') < -1 else 0)") )); then
-            echo "status=🟡 Decrease" >> $GITHUB_OUTPUT
-            echo "alert=false" >> $GITHUB_OUTPUT
+            STATUS="🟡 Decrease"
           elif (( $(python -c "print(1 if float('$CHANGE') > 1 else 0)") )); then
-            echo "status=🟢 Increase" >> $GITHUB_OUTPUT
-            echo "alert=false" >> $GITHUB_OUTPUT
+            STATUS="🟢 Increase"
           else
-            echo "status=➡️ No change" >> $GITHUB_OUTPUT
-            echo "alert=false" >> $GITHUB_OUTPUT
+            STATUS="➡️  No change"
           fi
+
+          echo "change=$CHANGE" >> $GITHUB_OUTPUT
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
         else
           echo "change=N/A" >> $GITHUB_OUTPUT
           echo "status=📊 First measurement" >> $GITHUB_OUTPUT
-          echo "alert=false" >> $GITHUB_OUTPUT
         fi
 
     - name: Comment on PR
@@ -141,10 +156,5 @@ jobs:
             body: body
           });
 
-    - name: Alert on significant coverage drop
-      if: steps.coverage-change.outputs.alert == 'true'
-      run: |
-        echo "⚠️ Coverage dropped by more than 5%!"
-        echo "Previous: Check coverage-trend.csv"
-        echo "Current: ${{ steps.coverage.outputs.coverage }}%"
-        exit 1  # Fail the workflow
+    # Note: Alert on significant coverage drop is now handled by track-coverage.py
+    # The script will exit with code 1 if coverage drops > 5%, failing the workflow

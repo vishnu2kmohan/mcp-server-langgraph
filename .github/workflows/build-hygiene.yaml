@@ -1,5 +1,28 @@
 name: Build Hygiene
 
+# ==============================================================================
+# Build Hygiene - Python Build Artifact Validation
+# ==============================================================================
+#
+# Purpose:
+#   Ensure no Python build artifacts are accidentally committed to git.
+#   Prevents __pycache__, .pyc, and .pyo files from being tracked.
+#
+# Triggers:
+#   - Pull requests to main/develop
+#   - Pushes to main/develop
+#
+# Checks:
+#   - __pycache__ directories
+#   - .pyc files (Python bytecode)
+#   - .pyo files (optimized bytecode)
+#
+# Failure Actions:
+#   - Provides remediation commands
+#   - Fails the workflow if artifacts found
+#
+# ==============================================================================
+
 on:
   pull_request:
     branches: [main, develop]

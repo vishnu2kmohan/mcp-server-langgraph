@@ -56,6 +56,9 @@ description: 'Complete release history and version comparison for MCP Server wit
 ## Release Highlights
 
 <CardGroup cols={2}>
+  <Card title="v2.8.0 (Unreleased)" icon="flask" href="/releases/v2-8-0">
+    Test coverage +35% + Infrastructure improvements
+  </Card>
   <Card title="v2.7.0 (Latest)" icon="sparkles" href="/releases/v2-7-0">
     Agentic loop + Anthropic best practices (9.8/10)
   </Card>
@@ -105,17 +108,15 @@ graph LR
 ## Migration Guides
 
 <AccordionGroup>
-  <Accordion title="v2.4.0 → v2.5.0 (Unreleased)">
-    **Breaking Changes**: None
+  <Accordion title="v2.7.0 → v2.8.0 (Unreleased - In Development)">
+    **Status**: In Development (not yet released)
 
-    **New Features**:
-    - Docker-based integration tests (fully automated)
-    - Infisical multi-track installation (5 options)
+    **Planned Features**:
+    - Test coverage improvements (+35% overall)
+    - Docker-based integration testing infrastructure
+    - 61 new comprehensive test cases
 
-    **Recommended Actions**:
-    1. Update to latest: `git pull origin main`
-    2. Use `make test-integration` for containerized tests
-    3. Review Infisical installation options if needed
+    **Note**: This version is currently in development. Current release is v2.7.0.
   </Accordion>
 
   <Accordion title="v2.3.0 → v2.4.0">

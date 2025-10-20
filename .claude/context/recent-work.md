@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 14:59:35
+**Last Updated**: 2025-10-20 15:58:36
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,11 +9,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 266 |
+| Total Commits | 271 |
 | Contributors | 2 |
-| Current Branch | `release/v2.8.0` |
-| Source Files | 164 Python files |
-| Test Files | 166 Python files |
+| Current Branch | `main` |
+| Source Files | 165 Python files |
+| Test Files | 167 Python files |
 | Total Tests | 0 tests |
 
 ---
@@ -23,28 +23,19 @@
 
 ### ✨ Feature
 
+- **`f878b65`** (2025-10-20) - feat: implement comprehensive lint enforcement system to prevent CI/CD failures
+  _by Vishnu Mohan_
+
 - **`1b69120`** (2025-10-20) - feat(workflow): add Claude Code workflow automation commands and scripts
-  _by Vishnu Mohan_
-
-- **`f4bb2af`** (2025-10-20) - feat(workflow): comprehensive Claude Code workflow optimization
-  _by Vishnu Mohan_
-
-- **`f60e37b`** (2025-10-20) - feat(ci): add Dependabot auto-merge workflow
-  _by Vishnu Mohan_
-
-- **`3218451`** (2025-10-20) - feat(ci): implement combined coverage tracking and trending
-  _by Vishnu Mohan_
-
-
-### 🐛 Bug Fix
-
-- **`ce7d8eb`** (2025-10-20) - fix(ci): fix GitHub workflow syntax and standardize action versions
   _by Vishnu Mohan_
 
 
 ### 💄 Style
 
-- **`b5d1a8d`** (2025-10-20) - style: fix black formatting in search_tools.py
+- **`563059d`** (2025-10-20) - style: fix import sorting in workflow scripts
+  _by Vishnu Mohan_
+
+- **`26efb2f`** (2025-10-20) - style: apply black formatting to test and script files
   _by Vishnu Mohan_
 
 
@@ -65,6 +56,9 @@
 
 ### 🔧 Chore
 
+- **`4bae6f2`** (2025-10-20) - chore: sync Claude Code context and add compliance test enhancements
+  _by Vishnu Mohan_
+
 - **`797e19f`** (2025-10-20) - chore: consolidate docker-compose files and remove duplicates
   _by Vishnu Mohan_
 
@@ -75,6 +69,12 @@
   _by Vishnu Mohan_
 
 - **`6234ea0`** (2025-10-20) - chore(release): prepare v2.8.0 - test coverage & infrastructure enhancement
+  _by Vishnu Mohan_
+
+
+### 🔹 Other
+
+- **`7fc5115`** (2025-10-20) - Merge branch 'release/v2.8.0' - Comprehensive codebase cleanup
   _by Vishnu Mohan_
 
 
@@ -91,21 +91,21 @@ Files changed most frequently:
 
 | File | Changes |
 |------|---------|
-| `pyproject.toml` | 21 |
+| `pyproject.toml` | 20 |
+| `src/mcp_server_langgraph/core/config.py` | 16 |
 | `.github/workflows/ci.yaml` | 15 |
-| `src/mcp_server_langgraph/core/config.py` | 15 |
-| `src/mcp_server_langgraph/core/agent.py` | 15 |
-| `CHANGELOG.md` | 14 |
-| `README.md` | 12 |
+| `src/mcp_server_langgraph/core/agent.py` | 14 |
+| `CHANGELOG.md` | 13 |
+| `README.md` | 11 |
 | `.github/workflows/quality-tests.yaml` | 11 |
-| `.env.example` | 9 |
 | `requirements-pinned.txt` | 9 |
+| `src/mcp_server_langgraph/mcp/server_stdio.py` | 8 |
+| `.env.example` | 8 |
 | `deployments/kustomize/base/kustomization.yaml` | 8 |
+| `tests/test_retention.py` | 7 |
+| `Makefile` | 7 |
 | `docker/docker-compose.yml` | 7 |
 | `tests/integration/test_anthropic_enhancements_integration.py` | 7 |
-| `.github/workflows/release.yaml` | 7 |
-| `src/mcp_server_langgraph/schedulers/cleanup.py` | 7 |
-| `src/mcp_server_langgraph/mcp/server_stdio.py` | 7 |
 
 
 ---
@@ -116,20 +116,21 @@ Files changed most frequently:
 
 Based on recent commits, the team has been focused on:
 
+- **🔧 Chore**: 5 recent commits
 - **📝 Documentation**: 4 recent commits
-- **🔧 Chore**: 4 recent commits
-- **✨ Feature**: 4 recent commits
+- **💄 Style**: 2 recent commits
+- **✨ Feature**: 2 recent commits
 
 
 ### Hot Spots
 
 Most active areas in the codebase (by file change frequency):
 
-- `src/` - 50 file changes
+- `src/` - 44 file changes
 - `.github/` - 33 file changes
 - `deployments/` - 14 file changes
+- `tests/` - 14 file changes
 - `docker/` - 7 file changes
-- `tests/` - 7 file changes
 
 
 ---
@@ -155,5 +156,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 14:59:35
+**Generated**: 2025-10-20 15:58:36
 **Source**: Git commit history (last 15 commits, 7 days of file activity)

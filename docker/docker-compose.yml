@@ -1,0 +1,276 @@
+# Docker Compose for MCP Server LangGraph - Full Development Stack
+# ==================================================================
+# Comprehensive local development environment with all dependencies
+#
+# USAGE:
+#   # Start all services
+#   docker compose up -d
+#
+#   # Or use Makefile
+#   make setup-infra
+#
+#   # View logs
+#   make logs
+#
+#   # Stop all services
+#   docker compose down
+#
+# SERVICES:
+#   - PostgreSQL: Database for OpenFGA and Keycloak
+#   - OpenFGA: Authorization service (http://localhost:8080)
+#   - Keycloak: SSO/authentication (http://localhost:8081)
+#   - Redis: Session storage (localhost:6379)
+#   - Redis (Sessions): Dedicated Redis for session data (localhost:6380)
+#   - Jaeger: Distributed tracing UI (http://localhost:16686)
+#   - Prometheus: Metrics collection (http://localhost:9090)
+#   - Grafana: Metrics visualization (http://localhost:3000)
+#   - Qdrant: Vector database for context loading (http://localhost:6333)
+#
+# PORTS:
+#   5432  - PostgreSQL
+#   6379  - Redis (checkpoints)
+#   6380  - Redis (sessions)
+#   6333  - Qdrant
+#   8080  - OpenFGA HTTP API
+#   8081  - Keycloak
+#   9090  - Prometheus
+#   3000  - Grafana
+#   16686 - Jaeger UI
+#   14268 - Jaeger collector
+
+services:
+  # ==============================================================================
+  # DATABASE SERVICES
+  # ==============================================================================
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: mcp-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: openfga
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+
+  # ==============================================================================
+  # AUTHORIZATION SERVICES
+  # ==============================================================================
+
+  openfga:
+    image: openfga/openfga:v1.10.2
+    container_name: mcp-openfga
+    command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"  # HTTP API
+      - "8081:8081"  # gRPC API (different from Keycloak)
+      - "3000:3000"  # Playground (conflicts with Grafana - disabled below)
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable
+      - OPENFGA_LOG_FORMAT=json
+      - OPENFGA_LOG_LEVEL=info
+      - OPENFGA_PLAYGROUND_ENABLED=false  # Disabled to avoid port conflict with Grafana
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - mcp-network
+
+  # ==============================================================================
+  # AUTHENTICATION SERVICES
+  # ==============================================================================
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.0
+    container_name: mcp-keycloak
+    command: start-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8082:8080"  # Map to 8082 externally to avoid conflict with OpenFGA
+    environment:
+      # Admin credentials
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+      # Database configuration
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/openfga
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+
+      # Development settings
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks:
+      - mcp-network
+
+  # ==============================================================================
+  # CACHE & SESSION STORAGE
+  # ==============================================================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis-checkpoints
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - mcp-network
+
+  redis-sessions:
+    image: redis:7-alpine
+    container_name: mcp-redis-sessions
+    command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - mcp-network
+
+  # ==============================================================================
+  # VECTOR DATABASE (for Anthropic Best Practices: Just-in-Time Context)
+  # ==============================================================================
+
+  qdrant:
+    image: qdrant/qdrant:v1.15.1
+    container_name: mcp-qdrant
+    ports:
+      - "6333:6333"  # HTTP API
+      - "6334:6334"  # gRPC API
+    volumes:
+      - qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT_ALLOW_RECOVERY_MODE=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6333"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - mcp-network
+
+  # ==============================================================================
+  # OBSERVABILITY SERVICES
+  # ==============================================================================
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    container_name: mcp-jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger collector HTTP
+      - "14250:14250"  # Jaeger collector gRPC
+      - "6831:6831/udp"  # Jaeger agent compact
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+
+  prometheus:
+    image: prom/prometheus:v3.7.1
+    container_name: mcp-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    container_name: mcp-grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    ports:
+      - "3001:3000"  # Changed to 3001 to avoid port conflict
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=redis-datasource
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
+    name: mcp-network
+
+volumes:
+  postgres-data:
+    name: mcp-postgres-data
+  redis-data:
+    name: mcp-redis-data
+  qdrant-data:
+    name: mcp-qdrant-data
+  prometheus-data:
+    name: mcp-prometheus-data
+  grafana-data:
+    name: mcp-grafana-data
