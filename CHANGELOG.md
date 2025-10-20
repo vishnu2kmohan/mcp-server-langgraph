@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Codebase Restructuring (2025-10-20)
+
+**Phase 1: Root Directory Cleanup**
+- Relocated 18 markdown files from root to appropriate subdirectories
+- Root directory now contains only 8 essential files (README, CHANGELOG, SECURITY, etc.)
+- Improved Mintlify performance and professional appearance
+- Files moved to: `docs-internal/audits/`, `docs-internal/migrations/`, `docs/`, `reports/`
+
+**Phase 2: Compliance Package Elevation & Internal Docs Organization**
+- Elevated `core/compliance` to top-level `compliance/` package
+- Created GDPR and SOC2 subdirectories for better organization:
+  - `compliance/gdpr/` - Data export, deletion, storage
+  - `compliance/soc2/` - Evidence collection
+  - `compliance/retention.py` - Retention policies
+- Reorganized `docs-internal/` with clear subdirectories:
+  - `architecture/` - Technical architecture docs
+  - `audits/` - Audit reports (timestamped)
+  - `operations/` - Operational guides and runbooks
+  - `migrations/` - Migration guides
+  - `releases/` - Release-specific documentation
+  - `sprints/` - Sprint summaries and progress tracking
+  - `testing/` - Testing guides and reports
+- Updated 15+ import statements across `src/` and `tests/`
+
+**Phase 3: Package Consolidation**
+- Consolidated `prompts/` into `core/prompts/`
+- Consolidated `storage/` into `core/storage/`
+- Reduced top-level packages from 18 to 16
+- Reflects tight coupling with core agent functionality
+- Clearer module hierarchy for easier navigation
+
+**Benefits:**
+- Improved code organization and maintainability
+- Better separation of concerns (compliance is now a distinct domain)
+- Easier to find related files (GDPR, SOC2, architecture, operations)
+- More professional repository appearance
+- Better Mintlify documentation performance
+
 ### Version 2.8.0 (In Development)
 
 ### Added - Test Coverage & Infrastructure Improvements
