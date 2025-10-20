@@ -1,5 +1,11 @@
 """
 OpenFGA integration for fine-grained relationship-based access control
+
+Enhanced with resilience patterns (ADR-0026):
+- Circuit breaker for OpenFGA failures (fail-open by default)
+- Retry logic with exponential backoff
+- Timeout enforcement (5s for auth operations)
+- Bulkhead isolation (50 concurrent auth checks max)
 """
 
 from typing import Any, Dict, List, Optional
@@ -8,7 +14,9 @@ from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
 from pydantic import BaseModel, ConfigDict, Field
 
+from mcp_server_langgraph.core.exceptions import OpenFGAError, OpenFGATimeoutError, OpenFGAUnavailableError
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 
 
 class OpenFGAConfig(BaseModel):
@@ -80,9 +88,19 @@ class OpenFGAClient:
         self.client = OpenFgaClient(configuration)
         logger.info("OpenFGA client initialized", extra={"api_url": config.api_url})
 
+    @circuit_breaker(name="openfga", fail_max=10, timeout=30, fallback=lambda self, *args, **kwargs: True)
+    @retry_with_backoff(max_attempts=3, exponential_base=1.5)
+    @with_timeout(operation_type="auth")
+    @with_bulkhead(resource_type="openfga")
     async def check_permission(self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None) -> bool:
         """
-        Check if user has permission via relationship
+        Check if user has permission via relationship (with resilience protection).
+
+        Protected by:
+        - Circuit breaker: Fail-open (allow) if OpenFGA is down (10 failures → open, 30s timeout)
+        - Retry logic: Up to 3 attempts with 1.5x exponential backoff (1s, 1.5s, 2.25s)
+        - Timeout: 5s timeout for auth operations
+        - Bulkhead: Limit to 50 concurrent auth checks
 
         Args:
             user: User identifier (e.g., "user:123")
@@ -92,6 +110,12 @@ class OpenFGAClient:
 
         Returns:
             True if user has permission, False otherwise
+            True if OpenFGA is unavailable (fail-open for availability)
+
+        Raises:
+            CircuitBreakerOpenError: If circuit breaker is open (returns True via fallback)
+            OpenFGATimeoutError: If check exceeds 5s timeout
+            OpenFGAError: For other OpenFGA errors
         """
         with tracer.start_as_current_span("openfga.check") as span:
             span.set_attribute("user", user)
@@ -119,20 +143,54 @@ class OpenFGAClient:
                 return allowed
 
             except Exception as e:
-                logger.error(
-                    f"OpenFGA check failed: {e}", extra={"user": user, "relation": relation, "object": object}, exc_info=True
-                )
-                span.record_exception(e)
-                metrics.failed_calls.add(1, {"operation": "check_permission"})
-                raise
+                error_msg = str(e).lower()
 
+                if "timeout" in error_msg or "timed out" in error_msg:
+                    raise OpenFGATimeoutError(
+                        message=f"OpenFGA check timed out: {e}",
+                        metadata={"user": user, "relation": relation, "object": object},
+                        cause=e,
+                    )
+                elif "unavailable" in error_msg or "connection" in error_msg:
+                    raise OpenFGAUnavailableError(
+                        message=f"OpenFGA service unavailable: {e}",
+                        metadata={"user": user, "relation": relation, "object": object},
+                        cause=e,
+                    )
+                else:
+                    logger.error(
+                        f"OpenFGA check failed: {e}",
+                        extra={"user": user, "relation": relation, "object": object},
+                        exc_info=True,
+                    )
+                    span.record_exception(e)
+                    metrics.failed_calls.add(1, {"operation": "check_permission"})
+
+                    raise OpenFGAError(
+                        message=f"OpenFGA error: {e}",
+                        metadata={"user": user, "relation": relation, "object": object},
+                        cause=e,
+                    )
+
+    @circuit_breaker(name="openfga")
+    @retry_with_backoff(max_attempts=3)
+    @with_timeout(operation_type="auth")
     async def write_tuples(self, tuples: List[Dict[str, str]]) -> None:
         """
-        Write relationship tuples to OpenFGA
+        Write relationship tuples to OpenFGA (with resilience protection).
+
+        Protected by:
+        - Circuit breaker: Fail fast if OpenFGA is down
+        - Retry logic: Up to 3 attempts (writes are idempotent)
+        - Timeout: 5s timeout for auth operations
 
         Args:
             tuples: List of relationship tuples
                    Each tuple: {"user": "user:123", "relation": "member", "object": "org:acme"}
+
+        Raises:
+            CircuitBreakerOpenError: If circuit breaker is open
+            OpenFGAError: For OpenFGA errors
         """
         with tracer.start_as_current_span("openfga.write_tuples"):
             try:
@@ -148,7 +206,12 @@ class OpenFGAClient:
             except Exception as e:
                 logger.error(f"Failed to write tuples: {e}", exc_info=True)
                 metrics.failed_calls.add(1, {"operation": "write_tuples"})
-                raise
+
+                raise OpenFGAError(
+                    message=f"Failed to write tuples: {e}",
+                    metadata={"tuple_count": len(tuples)},
+                    cause=e,
+                )
 
     async def delete_tuples(self, tuples: List[Dict[str, str]]) -> None:
         """

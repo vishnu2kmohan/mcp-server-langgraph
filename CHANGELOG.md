@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Dependency Updates (2025-10-20)
+
+**Comprehensive dependency update to latest stable versions - all tests passing**
+
+#### Security & Authentication (High Priority)
+- **PyJWT** 2.8.0 → 2.10.1 (security updates, improved token handling)
+  - Files: `pyproject.toml:35`, `requirements.txt:19`, `requirements-pinned.txt:16`
+  - Impact: All 36 auth tests passing
+  - Reason: Security improvements in JWT token validation
+
+#### Authorization (Medium Priority)
+- **openfga-sdk** 0.5.1 → 0.9.7 (major update, backward compatible)
+  - Files: `pyproject.toml:43`, `requirements.txt:40`, `requirements-pinned.txt:35`
+  - Impact: All 21 OpenFGA tests passing, 1 skipped (integration)
+  - Reason: Adds `/streamed-list-objects`, contextual tuples, configurable timeouts
+  - Breaking changes: None affecting our usage (`check()`, `write()`, `list_objects()`)
+
+- **bcrypt** 4.0.0 → 5.0.0 (major update with enhanced validation)
+  - Files: `pyproject.toml:37`, `requirements.txt:21`, `requirements-pinned.txt:18`
+  - Files Modified: `src/mcp_server_langgraph/auth/user_provider.py:298-309,323-324`
+  - Impact: All 42 user provider tests passing
+  - Reason: Strict 72-byte password limit (raises ValueError vs silent truncation)
+  - Changes: Added password length validation in `_hash_password()` and `_verify_password()`
+
+#### LangGraph Ecosystem
+- **langgraph** 1.0.0 → 1.0.1 (patch release)
+  - Files: `pyproject.toml:29`, `requirements.txt:2`, `requirements-pinned.txt:6`
+  - Reason: Bug fixes in production/stable release
+
+#### LLM & API (Low Priority)
+- **litellm** 1.78.3 → 1.78.5 (patch updates)
+  - Files: `pyproject.toml:33`, `requirements.txt:13`, `requirements-pinned.txt:10`
+  - Reason: Provider-specific bug fixes
+
+#### Web Framework
+- **fastapi** 0.109.0 → 0.119.1 (minor updates)
+  - Files: `pyproject.toml:50`, `requirements.txt:52`, `requirements-pinned.txt:97`
+  - Reason: API improvements and bug fixes
+
+- **uvicorn** 0.27.0 → 0.38.0 (minor updates)
+  - Files: `pyproject.toml:51`, `requirements.txt:53`, `requirements-pinned.txt:98`
+  - Reason: Performance and compatibility improvements
+
+#### Resilience & Quality
+- **tenacity** 8.2.0 → 9.1.2 (major update, backward compatible)
+  - Files: `pyproject.toml:66`
+  - Reason: Enhanced retry logic and exponential backoff improvements
+
+- **mypy** 1.8.0 → 1.18.2 (dev dependency)
+  - Files: `pyproject.toml:91`
+  - Reason: Improved type checking and Python 3.12/3.13 support
+
+#### Test Results
+- ✅ **36 authentication tests** passed (PyJWT, JWT tokens)
+- ✅ **42 user provider tests** passed (bcrypt password hashing)
+- ✅ **21 OpenFGA tests** passed (authorization, permissions)
+- ✅ **99 total tests** verified with no failures
+
+#### Files Changed
+- Configuration: `pyproject.toml`, `requirements.txt`, `requirements-pinned.txt`
+- Source Code: `src/mcp_server_langgraph/auth/user_provider.py` (bcrypt 5.0 compatibility)
+
 ### Changed - Codebase Restructuring (2025-10-20)
 
 **Phase 1: Root Directory Cleanup**

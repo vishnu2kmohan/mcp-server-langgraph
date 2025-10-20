@@ -153,6 +153,84 @@ class ObservabilityConfig:
             name="agent.response.duration", description="Response time distribution", unit="ms"
         )
 
+        # Resilience pattern metrics (ADR-0026)
+        # Circuit breaker metrics
+        self.circuit_breaker_state_gauge = self.meter.create_gauge(
+            name="circuit_breaker.state",
+            description="Circuit breaker state (0=closed, 1=open, 0.5=half-open)",
+            unit="1",
+        )
+        self.circuit_breaker_failure_counter = self.meter.create_counter(
+            name="circuit_breaker.failures",
+            description="Total circuit breaker failures",
+            unit="1",
+        )
+        self.circuit_breaker_success_counter = self.meter.create_counter(
+            name="circuit_breaker.successes",
+            description="Total circuit breaker successes",
+            unit="1",
+        )
+
+        # Retry metrics
+        self.retry_attempt_counter = self.meter.create_counter(
+            name="retry.attempts",
+            description="Total retry attempts",
+            unit="1",
+        )
+        self.retry_exhausted_counter = self.meter.create_counter(
+            name="retry.exhausted",
+            description="Total retry exhaustion events",
+            unit="1",
+        )
+        self.retry_success_after_retry_counter = self.meter.create_counter(
+            name="retry.success_after_retry",
+            description="Total successful retries",
+            unit="1",
+        )
+
+        # Timeout metrics
+        self.timeout_exceeded_counter = self.meter.create_counter(
+            name="timeout.exceeded",
+            description="Total timeout violations",
+            unit="1",
+        )
+        self.timeout_duration_histogram = self.meter.create_histogram(
+            name="timeout.duration",
+            description="Timeout duration in seconds",
+            unit="s",
+        )
+
+        # Bulkhead metrics
+        self.bulkhead_rejected_counter = self.meter.create_counter(
+            name="bulkhead.rejections",
+            description="Total bulkhead rejections",
+            unit="1",
+        )
+        self.bulkhead_active_operations_gauge = self.meter.create_gauge(
+            name="bulkhead.active_operations",
+            description="Current active operations in bulkhead",
+            unit="1",
+        )
+        self.bulkhead_queue_depth_gauge = self.meter.create_gauge(
+            name="bulkhead.queue_depth",
+            description="Current queued operations in bulkhead",
+            unit="1",
+        )
+
+        # Fallback metrics
+        self.fallback_used_counter = self.meter.create_counter(
+            name="fallback.used",
+            description="Total fallback invocations",
+            unit="1",
+        )
+
+        # Error counter by type (for custom exceptions)
+        self.error_counter = self.meter.create_counter(
+            name="error.total",
+            description="Total errors by type",
+            unit="1",
+        )
+
     def _setup_logging(self, enable_file_logging: bool = False):
         """
         Configure structured logging with OpenTelemetry and optional log rotation.
@@ -433,3 +511,61 @@ def extract_context(carrier: dict[str, str]) -> Any:
     if _propagator is None:
         raise RuntimeError("Observability not initialized. Call init_observability() first.")
     return _propagator.extract(carrier)
+
+
+# Resilience pattern metrics (convenient exports for resilience module)
+# These are lazy proxies that will raise RuntimeError if accessed before init_observability()
+circuit_breaker_state_gauge = type(
+    "LazyMetric",
+    (),
+    {
+        "add": lambda self, *args, **kwargs: config.circuit_breaker_state_gauge.add(*args, **kwargs),
+        "set": lambda self, *args, **kwargs: config.circuit_breaker_state_gauge.set(*args, **kwargs),
+    },
+)()
+
+circuit_breaker_failure_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.circuit_breaker_failure_counter.add(*args, **kwargs)}
+)()
+
+circuit_breaker_success_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.circuit_breaker_success_counter.add(*args, **kwargs)}
+)()
+
+retry_attempt_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.retry_attempt_counter.add(*args, **kwargs)}
+)()
+
+retry_exhausted_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.retry_exhausted_counter.add(*args, **kwargs)}
+)()
+
+retry_success_after_retry_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.retry_success_after_retry_counter.add(*args, **kwargs)}
+)()
+
+timeout_exceeded_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.timeout_exceeded_counter.add(*args, **kwargs)}
+)()
+
+timeout_duration_histogram = type(
+    "LazyMetric", (), {"record": lambda self, *args, **kwargs: config.timeout_duration_histogram.record(*args, **kwargs)}
+)()
+
+bulkhead_rejected_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.bulkhead_rejected_counter.add(*args, **kwargs)}
+)()
+
+bulkhead_active_operations_gauge = type(
+    "LazyMetric", (), {"set": lambda self, *args, **kwargs: config.bulkhead_active_operations_gauge.set(*args, **kwargs)}
+)()
+
+bulkhead_queue_depth_gauge = type(
+    "LazyMetric", (), {"set": lambda self, *args, **kwargs: config.bulkhead_queue_depth_gauge.set(*args, **kwargs)}
+)()
+
+fallback_used_counter = type(
+    "LazyMetric", (), {"add": lambda self, *args, **kwargs: config.fallback_used_counter.add(*args, **kwargs)}
+)()
+
+error_counter = type("LazyMetric", (), {"add": lambda self, *args, **kwargs: config.error_counter.add(*args, **kwargs)})()

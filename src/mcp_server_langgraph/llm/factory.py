@@ -3,6 +3,12 @@ LiteLLM Factory for Multi-Provider LLM Support
 
 Supports: Anthropic, OpenAI, Google (Gemini), Azure OpenAI, AWS Bedrock,
 Ollama (Llama, Qwen, Mistral, etc.)
+
+Enhanced with resilience patterns (ADR-0026):
+- Circuit breaker for provider failures
+- Retry logic with exponential backoff
+- Timeout enforcement
+- Bulkhead isolation (10 concurrent LLM calls max)
 """
 
 import os
@@ -12,7 +18,9 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from litellm import acompletion, completion
 from litellm.utils import ModelResponse
 
+from mcp_server_langgraph.core.exceptions import LLMModelNotFoundError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_timeout
 
 
 class LLMFactory:
@@ -308,9 +316,19 @@ class LLMFactory:
 
                 raise
 
+    @circuit_breaker(name="llm", fail_max=5, timeout=60)
+    @retry_with_backoff(max_attempts=3, exponential_base=2)
+    @with_timeout(operation_type="llm")
+    @with_bulkhead(resource_type="llm")
     async def ainvoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:
         """
-        Asynchronous LLM invocation
+        Asynchronous LLM invocation with full resilience protection.
+
+        Protected by:
+        - Circuit breaker: Fail fast if LLM provider is down (5 failures → open, 60s timeout)
+        - Retry logic: Up to 3 attempts with exponential backoff (1s, 2s, 4s)
+        - Timeout: 60s timeout for LLM operations
+        - Bulkhead: Limit to 10 concurrent LLM calls
 
         Args:
             messages: List of messages
@@ -318,6 +336,13 @@ class LLMFactory:
 
         Returns:
             AIMessage with the response
+
+        Raises:
+            CircuitBreakerOpenError: If circuit breaker is open
+            RetryExhaustedError: If all retry attempts failed
+            TimeoutError: If operation exceeds 60s timeout
+            BulkheadRejectedError: If too many concurrent LLM calls
+            LLMProviderError: For other LLM provider errors
         """
         with tracer.start_as_current_span("llm.ainvoke") as span:
             span.set_attribute("llm.provider", self.provider)
@@ -349,19 +374,46 @@ class LLMFactory:
                 return AIMessage(content=content)
 
             except Exception as e:
-                logger.error(
-                    f"Async LLM invocation failed: {e}",
-                    extra={"model": self.model_name, "provider": self.provider},
-                    exc_info=True,
-                )
+                # Convert to custom exceptions for better error handling
+                error_msg = str(e).lower()
 
-                metrics.failed_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
-                span.record_exception(e)
+                if "rate limit" in error_msg or "429" in error_msg:
+                    raise LLMRateLimitError(
+                        message=f"LLM provider rate limit exceeded: {e}",
+                        metadata={"model": self.model_name, "provider": self.provider},
+                        cause=e,
+                    )
+                elif "timeout" in error_msg or "timed out" in error_msg:
+                    raise LLMTimeoutError(
+                        message=f"LLM request timed out: {e}",
+                        metadata={"model": self.model_name, "provider": self.provider, "timeout": self.timeout},
+                        cause=e,
+                    )
+                elif "model not found" in error_msg or "404" in error_msg:
+                    raise LLMModelNotFoundError(
+                        message=f"LLM model not found: {e}",
+                        metadata={"model": self.model_name, "provider": self.provider},
+                        cause=e,
+                    )
+                else:
+                    logger.error(
+                        f"Async LLM invocation failed: {e}",
+                        extra={"model": self.model_name, "provider": self.provider},
+                        exc_info=True,
+                    )
 
-                if self.enable_fallback and self.fallback_models:
-                    return await self._try_fallback_async(messages, **kwargs)
+                    metrics.failed_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
+                    span.record_exception(e)
 
-                raise
+                    # Try fallback if enabled
+                    if self.enable_fallback and self.fallback_models:
+                        return await self._try_fallback_async(messages, **kwargs)
+
+                    raise LLMProviderError(
+                        message=f"LLM provider error: {e}",
+                        metadata={"model": self.model_name, "provider": self.provider},
+                        cause=e,
+                    )
 
     def _try_fallback(self, messages: list[BaseMessage], **kwargs) -> AIMessage:
         """Try fallback models if primary fails"""

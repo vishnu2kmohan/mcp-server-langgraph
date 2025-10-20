@@ -295,8 +295,16 @@ class InMemoryUserProvider(UserProvider):
         if not BCRYPT_AVAILABLE:
             return password  # Fallback to plaintext
 
-        salt = bcrypt.gensalt()
         password_bytes = password.encode("utf-8")
+
+        # bcrypt 5.0+ enforces 72-byte password limit (raises ValueError instead of silent truncation)
+        if len(password_bytes) > 72:
+            raise ValueError(
+                f"Password exceeds bcrypt's 72-byte limit ({len(password_bytes)} bytes). "
+                "Consider hashing long passwords with SHA256 before bcrypt."
+            )
+
+        salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(password_bytes, salt)
         return hashed.decode("utf-8")
 
@@ -317,6 +325,12 @@ class InMemoryUserProvider(UserProvider):
 
         # Bcrypt comparison (secure)
         password_bytes = password.encode("utf-8")
+
+        # Silently handle overly long passwords during verification
+        # (they would have been rejected during hashing with bcrypt 5.0+)
+        if len(password_bytes) > 72:
+            return False
+
         hash_bytes = password_hash.encode("utf-8")
         return bcrypt.checkpw(password_bytes, hash_bytes)
 

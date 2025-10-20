@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 17:27:42
+**Last Updated**: 2025-10-20 19:01:19
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,7 +9,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 283 |
+| Total Commits | 288 |
 | Contributors | 2 |
 | Current Branch | `main` |
 | Source Files | 170 Python files |
@@ -22,6 +22,9 @@
 
 
 ### ♻️  Refactor
+
+- **`c76a328`** (2025-10-20) - refactor: Phase 3 - Consolidate prompts and storage into core
+  _by Vishnu Mohan_
 
 - **`c70a90e`** (2025-10-20) - refactor: Phase 2 - Elevate compliance package and reorganize docs-internal
   _by Vishnu Mohan_
@@ -36,36 +39,27 @@
   _by Vishnu Mohan_
 
 
-### ✨ Feature
-
-- **`b4b28fa`** (2025-10-20) - feat: complete infrastructure audit phases 2 & 3 with service upgrades
-  _by Vishnu Mohan_
-
-- **`f878b65`** (2025-10-20) - feat: implement comprehensive lint enforcement system to prevent CI/CD failures
-  _by Vishnu Mohan_
-
-
 ### 🐛 Bug Fix
+
+- **`6886eec`** (2025-10-20) - fix: resolve 9 CI/CD test failures
+  _by Vishnu Mohan_
+
+- **`6aa5553`** (2025-10-20) - fix: resolve 9 failing tests from refactoring and mocking issues
+  _by Vishnu Mohan_
+
+- **`fcf52e0`** (2025-10-20) - fix: resolve CI/CD failures from refactoring
+  _by Vishnu Mohan_
 
 - **`020d60f`** (2025-10-20) - fix: remove invalid shell property from cache action in composite action
   _by Vishnu Mohan_
 
 
-### 💄 Style
-
-- **`563059d`** (2025-10-20) - style: fix import sorting in workflow scripts
-  _by Vishnu Mohan_
-
-- **`26efb2f`** (2025-10-20) - style: apply black formatting to test and script files
-  _by Vishnu Mohan_
-
-
 ### 📝 Documentation
 
-- **`8a79e5e`** (2025-10-20) - docs: document pip authentication fix
+- **`2c7fae5`** (2025-10-20) - docs: update CHANGELOG with codebase restructuring details
   _by Vishnu Mohan_
 
-- **`87799e4`** (2025-10-20) - docs: comprehensive documentation audit and cleanup
+- **`8a79e5e`** (2025-10-20) - docs: document pip authentication fix
   _by Vishnu Mohan_
 
 
@@ -94,18 +88,18 @@ Files changed most frequently:
 | `pyproject.toml` | 21 |
 | `.github/workflows/ci.yaml` | 16 |
 | `src/mcp_server_langgraph/core/config.py` | 16 |
-| `CHANGELOG.md` | 14 |
+| `CHANGELOG.md` | 15 |
 | `src/mcp_server_langgraph/core/agent.py` | 14 |
 | `.github/workflows/quality-tests.yaml` | 12 |
 | `README.md` | 12 |
-| `.claude/context/recent-work.md` | 9 |
+| `.claude/context/recent-work.md` | 10 |
+| `src/mcp_server_langgraph/mcp/server_stdio.py` | 9 |
 | `docs/mint.json` | 9 |
 | `requirements-pinned.txt` | 9 |
+| `tests/test_retention.py` | 8 |
 | `.github/workflows/release.yaml` | 8 |
 | `docker/docker-compose.yml` | 8 |
-| `src/mcp_server_langgraph/mcp/server_stdio.py` | 8 |
 | `.env.example` | 8 |
-| `deployments/kustomize/base/kustomization.yaml` | 8 |
 
 
 ---
@@ -116,21 +110,20 @@ Files changed most frequently:
 
 Based on recent commits, the team has been focused on:
 
-- **♻️  Refactor**: 4 recent commits
+- **♻️  Refactor**: 5 recent commits
+- **🐛 Bug Fix**: 4 recent commits
 - **🔧 Chore**: 4 recent commits
 - **📝 Documentation**: 2 recent commits
-- **✨ Feature**: 2 recent commits
-- **💄 Style**: 2 recent commits
 
 
 ### Hot Spots
 
 Most active areas in the codebase (by file change frequency):
 
-- `src/` - 45 file changes
+- `src/` - 53 file changes
 - `.github/` - 43 file changes
 - `deployments/` - 15 file changes
-- `.claude/` - 9 file changes
+- `.claude/` - 10 file changes
 - `docs/` - 9 file changes
 
 
@@ -157,5 +150,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 17:27:42
+**Generated**: 2025-10-20 19:01:19
 **Source**: Git commit history (last 15 commits, 7 days of file activity)

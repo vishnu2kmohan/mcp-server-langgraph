@@ -26,29 +26,29 @@ classifiers = [
 requires-python = ">=3.10,<3.13"
 keywords = ["mcp", "model-context-protocol", "langgraph", "llm", "agent", "anthropic", "openai", "openfga", "authorization", "observability", "opentelemetry", "langchain", "litellm", "multi-llm", "ai-agent"]
 dependencies = [
-    "langgraph>=1.0.0",
+    "langgraph>=1.0.1",
     "langgraph-checkpoint-redis>=0.1.2",  # Redis checkpointer for distributed conversation state
     "langchain-core>=1.0.0",
     "langsmith>=0.4.37",
-    "litellm>=1.78.3",
+    "litellm>=1.78.5",
     "mcp>=1.18.0",
-    "PyJWT>=2.8.0",
+    "PyJWT>=2.10.1",
     "cryptography>=46.0.3",
-    "bcrypt>=4.0.0",  # Password hashing for InMemoryUserProvider (production security)
+    "bcrypt>=5.0.0",  # Password hashing for InMemoryUserProvider (production security)
     "opentelemetry-api>=1.38.0",
     "opentelemetry-sdk>=1.38.0",
     "opentelemetry-instrumentation-logging>=0.59b0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
     "opentelemetry-exporter-otlp-proto-http>=1.38.0",
-    "openfga-sdk>=0.5.1",
+    "openfga-sdk>=0.9.7",
     # infisical-python moved to optional-dependencies[secrets]
     # Application falls back to environment variables if not installed
     "python-dotenv>=1.1.1",
     "pydantic>=2.12.3",
     "pydantic-settings>=2.11.0",
     "httpx>=0.28.1",
-    "fastapi>=0.109.0",
-    "uvicorn[standard]>=0.27.0",
+    "fastapi>=0.119.1",
+    "uvicorn[standard]>=0.38.0",
     "python-keycloak>=5.8.1",
     "authlib>=1.6.5",
     "redis[hiredis]>=6.4.0",  # Also used for conversation checkpoints (db 1)
@@ -61,6 +61,11 @@ dependencies = [
     "langchain-google-genai>=3.0.0",  # Google Gemini embeddings (API-based, no model hosting)
     # Monitoring
     "prometheus-api-client>=0.5.5",  # For querying Prometheus metrics in SLA monitoring
+    # Resilience Patterns (ADR-0026)
+    "pybreaker>=1.0.0",  # Circuit breaker pattern for preventing cascade failures
+    "tenacity>=9.1.2",  # Retry logic with exponential backoff
+    "cachetools>=5.3.0",  # In-memory LRU cache for L1 caching (ADR-0028)
+    "slowapi>=0.1.9",  # Rate limiting for FastAPI (ADR-0027)
 ]
 
 [project.optional-dependencies]
@@ -83,7 +88,7 @@ dev = [
     # Code quality
     "black>=25.9.0",
     "flake8>=7.0.0",
-    "mypy>=1.8.0",
+    "mypy>=1.18.2",
     "isort>=7.0.0",
     "bandit>=1.7.6",
     # Deployment tools

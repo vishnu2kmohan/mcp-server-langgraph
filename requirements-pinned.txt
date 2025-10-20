@@ -3,19 +3,19 @@
 
 # LangGraph and LangChain (pinned)
 # Note: langgraph 1.0.0 is production/stable
-langgraph==1.0.0
+langgraph==1.0.1  # Updated from 1.0.0 - patch release
 langchain-core==1.0.0
 
 # LiteLLM for multi-provider LLM support
-litellm==1.78.3
+litellm==1.78.5  # Updated from 1.78.3 - provider bug fixes
 
 # MCP Server
 mcp==1.18.0
 
 # Authentication
-PyJWT==2.10.1
+PyJWT==2.10.1  # Updated from 2.8.0 for security improvements
 cryptography==46.0.3
-bcrypt==4.3.0  # Password hashing for InMemoryUserProvider
+bcrypt==5.0.0  # Updated from 4.0.0 - strict password length validation (72 byte limit)
 
 # OpenTelemetry Core
 # Pinned to 1.38.0 (matches pyproject.toml requirements)
@@ -32,7 +32,7 @@ opentelemetry-exporter-otlp-proto-grpc==1.38.0
 opentelemetry-exporter-otlp-proto-http==1.38.0
 
 # Fine-grained Authorization
-openfga-sdk==0.9.7
+openfga-sdk==0.9.7  # Updated from 0.5.1 - no breaking changes for used methods (check, write, list_objects)
 
 # Prometheus Monitoring
 prometheus-api-client==0.5.5  # For querying Prometheus metrics in SLA monitoring
@@ -94,8 +94,8 @@ pydantic-settings==2.11.0
 httpx==0.28.1
 
 # Health checks and API
-fastapi==0.119.0
-uvicorn[standard]==0.37.0
+fastapi==0.119.1  # Updated from 0.109.0
+uvicorn[standard]==0.38.0  # Updated from 0.27.0
 
 # Additional runtime dependencies
 python-multipart==0.0.20  # For FastAPI file uploads (FastAPI 0.119.0 requires >=0.0.17, MCP 1.18.0 requires >=0.0.9)
