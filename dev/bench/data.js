@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760990562982,
+  "lastUpdate": 1760995676494,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -4912,6 +4912,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00015523751913890354",
             "extra": "mean: 87.3297949017562 usec\nrounds: 3452"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "020d60fe4e6d7e33f700bce9fce99ad0b23c9c85",
+          "message": "fix: remove invalid shell property from cache action in composite action\n\nGitHub Actions syntax error: 'shell' is not valid for 'uses' steps.\nOnly 'run' steps support the 'shell' property.\n\nError: Unexpected value 'shell' (Line: 46, Col: 7)\n\nThis was causing all quality tests and link checker to fail.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T17:25:21-04:00",
+          "tree_id": "f6baf78bf2c0e327cf61984dbc782bde9a78baee",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/020d60fe4e6d7e33f700bce9fce99ad0b23c9c85"
+        },
+        "date": 1760995675897,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37441.53220226552,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026076656688695513",
+            "extra": "mean: 26.708308693079925 usec\nrounds: 4843"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32790.87011973229,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027207426695717974",
+            "extra": "mean: 30.49629352159943 usec\nrounds: 5526"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31545.409060985414,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032628718754632566",
+            "extra": "mean: 31.700333892223174 usec\nrounds: 10138"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.9941247595071,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017994108493166166",
+            "extra": "mean: 5.291169771930682 msec\nrounds: 171"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.28526737512717,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009974410644809857",
+            "extra": "mean: 51.853053449999464 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.942589796276085,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000049886170300282255",
+            "extra": "mean: 100.57741699999951 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1929413.8670570995,
+            "unit": "iter/sec",
+            "range": "stddev: 9.649564058760686e-8",
+            "extra": "mean: 518.2921181785026 nsec\nrounds: 97192"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3937.3846199695245,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015629009814914373",
+            "extra": "mean: 253.97569618376275 usec\nrounds: 2044"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3006.807441626598,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009712694876822054",
+            "extra": "mean: 332.578663387579 usec\nrounds: 2338"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2896.3804688907976,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024683925625022608",
+            "extra": "mean: 345.25850824527953 usec\nrounds: 1698"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 39888.68861104377,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000036925782310036058",
+            "extra": "mean: 25.06976375561104 usec\nrounds: 7615"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11742.518700247574,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015265581284554415",
+            "extra": "mean: 85.16060527788783 usec\nrounds: 3562"
           }
         ]
       }
