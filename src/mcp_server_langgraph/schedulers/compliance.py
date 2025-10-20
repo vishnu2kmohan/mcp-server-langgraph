@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.core.compliance.evidence import EvidenceCollector
-from mcp_server_langgraph.integrations.alerting import Alert, AlertCategory, AlertSeverity, AlertingService
+from mcp_server_langgraph.integrations.alerting import Alert, AlertCategory, AlertingService, AlertSeverity
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
 

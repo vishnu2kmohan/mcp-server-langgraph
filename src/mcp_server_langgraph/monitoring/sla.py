@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.integrations.alerting import Alert, AlertSeverity, AlertingService
+from mcp_server_langgraph.integrations.alerting import Alert, AlertingService, AlertSeverity
 from mcp_server_langgraph.monitoring.prometheus_client import get_prometheus_client
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 

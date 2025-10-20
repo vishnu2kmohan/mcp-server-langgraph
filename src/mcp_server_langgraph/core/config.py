@@ -490,9 +490,7 @@ class Settings(BaseSettings):
             pass
         elif self.audit_log_cold_storage_backend == "azure":
             if not self.azure_storage_connection_string:
-                self.azure_storage_connection_string = secrets_mgr.get_secret(
-                    "AZURE_STORAGE_CONNECTION_STRING", fallback=None
-                )
+                self.azure_storage_connection_string = secrets_mgr.get_secret("AZURE_STORAGE_CONNECTION_STRING", fallback=None)
         elif self.audit_log_cold_storage_backend == "gcs":
             if not self.gcp_credentials_path:
                 # GCP credentials are typically loaded from a file path

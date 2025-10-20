@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-property test-contract test-regression test-mutation validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check clean dev-setup quick-start monitoring-dashboard health-check db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
+.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-property test-contract test-regression test-mutation validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
 
 help:
 	@echo "LangGraph MCP Agent - Make Commands"
@@ -48,6 +48,11 @@ help:
 	@echo "  make lint                Run linters (flake8, mypy)"
 	@echo "  make format              Format code (black, isort)"
 	@echo "  make security-check      Run security scans"
+	@echo "  make lint-check          Run comprehensive lint checks (non-destructive)"
+	@echo "  make lint-fix            Auto-fix formatting issues"
+	@echo "  make lint-pre-commit     Simulate pre-commit hook"
+	@echo "  make lint-pre-push       Simulate pre-push hook"
+	@echo "  make lint-install        Install/reinstall lint hooks"
 	@echo "  make pre-commit-setup    Setup pre-commit hooks"
 	@echo "  make git-hooks           Install git hooks"
 	@echo ""
@@ -293,6 +298,62 @@ format:
 security-check:
 	@echo "Running bandit security scan..."
 	bandit -r . -x ./tests,./.venv -ll
+
+# Enhanced lint targets for pre-commit/pre-push workflow
+lint-check:
+	@echo "🔍 Running comprehensive lint checks (non-destructive)..."
+	@echo ""
+	@echo "1/5 Running flake8..."
+	@uv run flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
+	@echo ""
+	@echo "2/5 Checking black formatting..."
+	@uv run black --check src/ --line-length=127 || true
+	@echo ""
+	@echo "3/5 Checking isort import order..."
+	@uv run isort --check src/ --profile=black --line-length=127 || true
+	@echo ""
+	@echo "4/5 Running mypy type checking..."
+	@uv run mypy src/ --ignore-missing-imports --show-error-codes || true
+	@echo ""
+	@echo "5/5 Running bandit security scan..."
+	@uv run bandit -r src/ -ll || true
+	@echo ""
+	@echo "✓ Lint check complete (see above for any issues)"
+
+lint-fix:
+	@echo "🔧 Auto-fixing formatting issues..."
+	@echo ""
+	@echo "Formatting with black..."
+	@uv run black src/ --line-length=127
+	@echo ""
+	@echo "Sorting imports with isort..."
+	@uv run isort src/ --profile=black --line-length=127
+	@echo ""
+	@echo "✓ Auto-fix complete"
+	@echo ""
+	@echo "Run 'make lint-check' to verify remaining issues"
+
+lint-pre-commit:
+	@echo "🎯 Simulating pre-commit hook (runs on staged files)..."
+	@uv run pre-commit run --all-files
+	@echo "✓ Pre-commit simulation complete"
+
+lint-pre-push:
+	@echo "🚀 Simulating pre-push hook (runs on changed files)..."
+	@bash .git/hooks/pre-push
+	@echo "✓ Pre-push simulation complete"
+
+lint-install:
+	@echo "📦 Installing/reinstalling lint hooks..."
+	@uv run pre-commit install
+	@chmod +x .git/hooks/pre-push
+	@echo "✓ Hooks installed:"
+	@echo "  • pre-commit (auto-fix black/isort, run flake8/mypy/bandit)"
+	@echo "  • pre-push (comprehensive validation before push)"
+	@echo ""
+	@echo "Test hooks:"
+	@echo "  make lint-pre-commit"
+	@echo "  make lint-pre-push"
 
 # Running servers
 run:

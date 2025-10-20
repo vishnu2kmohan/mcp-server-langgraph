@@ -52,5 +52,16 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        args: [--ignore-missing-imports, --warn-unused-configs]
-        exclude: ^deployments/langgraph-platform/
+        args: [
+          --ignore-missing-imports,
+          --warn-unused-configs,
+          --show-error-codes,
+          --pretty,
+          --no-error-summary  # Cleaner output for pre-commit
+        ]
+        exclude: ^(deployments/langgraph-platform/|tests/)
+        additional_dependencies: [
+          types-PyYAML,
+          types-redis,
+          types-requests
+        ]

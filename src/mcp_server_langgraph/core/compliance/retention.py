@@ -342,9 +342,7 @@ class DataRetentionService:
             if self.dry_run:
                 # In dry-run mode, count conversations that would be deleted
                 # This would require a count_old_archived method on the store
-                logger.debug(
-                    f"DRY RUN: Would delete archived conversations older than {cutoff_date.isoformat()}"
-                )
+                logger.debug(f"DRY RUN: Would delete archived conversations older than {cutoff_date.isoformat()}")
                 return 0
 
             # Production implementation: Delete old archived conversations
@@ -387,9 +385,7 @@ class DataRetentionService:
         try:
             if self.dry_run:
                 # In dry-run mode, count logs that would be archived
-                logger.debug(
-                    f"DRY RUN: Would archive audit logs older than {cutoff_date.isoformat()}"
-                )
+                logger.debug(f"DRY RUN: Would archive audit logs older than {cutoff_date.isoformat()}")
                 return 0
 
             # Production implementation: Archive old logs to cold storage
