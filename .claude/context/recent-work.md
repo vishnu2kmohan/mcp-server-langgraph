@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 17:15:30
+**Last Updated**: 2025-10-20 17:19:43
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,9 +9,9 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 272 |
+| Total Commits | 276 |
 | Contributors | 2 |
-| Current Branch | `HEAD` |
+| Current Branch | `main` |
 | Source Files | 168 Python files |
 | Test Files | 170 Python files |
 | Total Tests | 0 tests |
@@ -29,9 +29,6 @@
 - **`f878b65`** (2025-10-20) - feat: implement comprehensive lint enforcement system to prevent CI/CD failures
   _by Vishnu Mohan_
 
-- **`1b69120`** (2025-10-20) - feat(workflow): add Claude Code workflow automation commands and scripts
-  _by Vishnu Mohan_
-
 
 ### 💄 Style
 
@@ -44,6 +41,12 @@
 
 ### 📝 Documentation
 
+- **`8a79e5e`** (2025-10-20) - docs: document pip authentication fix
+  _by Vishnu Mohan_
+
+- **`87799e4`** (2025-10-20) - docs: comprehensive documentation audit and cleanup
+  _by Vishnu Mohan_
+
 - **`ce28519`** (2025-10-20) - docs: comprehensive codebase cleanup initiative - final summary
   _by Vishnu Mohan_
 
@@ -53,22 +56,19 @@
 - **`11641f0`** (2025-10-20) - docs: create comprehensive TODO tracking document for GitHub issues
   _by Vishnu Mohan_
 
-- **`46d6963`** (2025-10-20) - docs: reorganize and archive historical documentation
-  _by Vishnu Mohan_
-
 
 ### 🔧 Chore
+
+- **`79d3609`** (2025-10-20) - chore: remove old internal docs (moved to docs-internal/)
+  _by Vishnu Mohan_
+
+- **`3ae37b5`** (2025-10-20) - chore: remove old audit reports from root (moved to docs-internal/audits/)
+  _by Vishnu Mohan_
 
 - **`4bae6f2`** (2025-10-20) - chore: sync Claude Code context and add compliance test enhancements
   _by Vishnu Mohan_
 
 - **`797e19f`** (2025-10-20) - chore: consolidate docker-compose files and remove duplicates
-  _by Vishnu Mohan_
-
-- **`700857a`** (2025-10-20) - chore: remove obsolete one-off commit script
-  _by Vishnu Mohan_
-
-- **`3914239`** (2025-10-20) - chore: update .gitignore for coverage history and benchmark outputs
   _by Vishnu Mohan_
 
 
@@ -94,14 +94,14 @@ Files changed most frequently:
 | `pyproject.toml` | 21 |
 | `.github/workflows/ci.yaml` | 16 |
 | `src/mcp_server_langgraph/core/config.py` | 16 |
+| `CHANGELOG.md` | 14 |
 | `src/mcp_server_langgraph/core/agent.py` | 14 |
-| `CHANGELOG.md` | 13 |
 | `.github/workflows/quality-tests.yaml` | 12 |
 | `README.md` | 12 |
+| `docs/mint.json` | 9 |
 | `requirements-pinned.txt` | 9 |
 | `.github/workflows/release.yaml` | 8 |
 | `docker/docker-compose.yml` | 8 |
-| `docs/mint.json` | 8 |
 | `src/mcp_server_langgraph/mcp/server_stdio.py` | 8 |
 | `.env.example` | 8 |
 | `deployments/kustomize/base/kustomization.yaml` | 8 |
@@ -116,9 +116,9 @@ Files changed most frequently:
 
 Based on recent commits, the team has been focused on:
 
+- **📝 Documentation**: 5 recent commits
 - **🔧 Chore**: 4 recent commits
-- **📝 Documentation**: 4 recent commits
-- **✨ Feature**: 3 recent commits
+- **✨ Feature**: 2 recent commits
 - **💄 Style**: 2 recent commits
 
 
@@ -129,8 +129,8 @@ Most active areas in the codebase (by file change frequency):
 - `.github/` - 49 file changes
 - `src/` - 38 file changes
 - `deployments/` - 15 file changes
+- `docs/` - 9 file changes
 - `docker/` - 8 file changes
-- `docs/` - 8 file changes
 
 
 ---
@@ -156,5 +156,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 17:15:30
+**Generated**: 2025-10-20 17:19:43
 **Source**: Git commit history (last 15 commits, 7 days of file activity)
