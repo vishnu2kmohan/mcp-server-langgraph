@@ -43,7 +43,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pip-${{ inputs.cache-key-prefix }}-
           ${{ runner.os }}-pip-
-      shell: bash
 
     - name: Install base dependencies
       run: |
