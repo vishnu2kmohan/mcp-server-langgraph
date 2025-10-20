@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760824193031,
+  "lastUpdate": 1760964979151,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -4156,6 +4156,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00015882660346426482",
             "extra": "mean: 86.1512246241663 usec\nrounds: 3192"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "12a838a1df59ae02e2f0fdab9e971fdae8db136e",
+          "message": "docs(tests): comprehensive test results summary - 100% pass rate\n\n**TEST VALIDATION COMPLETE - ALL TESTS PASSING**\n\nCreated comprehensive test results summary documenting 100% pass rate\nacross all test suites after Technical Debt Sprint implementation.\n\n## Test Results\n\n**Overall**: ✅ 784/784 tests passing (100%)\n\n### By Test Type\n- Unit Tests: 727 passed, 0 failed (100%)\n- Property Tests: 26 passed, 0 failed (100%)\n- Contract Tests: 20 passed, 0 failed (100%)\n- Regression Tests: 11 passed, 0 failed (100%)\n\n### Execution Time\n- Unit tests: 2m 48s\n- Property tests: 3.6s\n- Contract tests: 1.9s\n- Regression tests: 1.8s\n- Total: ~3 minutes\n\n### Code Coverage\n- Overall: 69%\n- High coverage modules: 80-95%\n- New code fully tested\n- No regressions introduced\n\n## Test Fixes Summary\n\nApplied 3 test fix commits:\n1. fix(tools): async def web_search\n2. fix(alerting): Alert model parameters\n3. fix(tests): Prometheus mocking + async tools\n\n**All issues resolved**: ✅\n\n## Validation Results\n\n**Code Quality**: ✅ VERIFIED\n- 100% test pass rate\n- 69% coverage maintained\n- All critical paths tested\n\n**Production Readiness**: ✅ CONFIRMED\n- No blocking issues\n- Performance within targets\n- Protocol compliance verified\n\n**Deployment Confidence**: HIGH (9.5/10)\n\n## Recommendation\n\n✅ **APPROVED FOR PRODUCTION DEPLOYMENT**\n\nAll technical debt sprint changes verified and tested.\nReady to deploy with confidence.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com)",
+          "timestamp": "2025-10-20T08:53:46-04:00",
+          "tree_id": "9f65369394f8f7796a8b1aaf628d493a11b74229",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/12a838a1df59ae02e2f0fdab9e971fdae8db136e"
+        },
+        "date": 1760964978743,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37106.896256307016,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003507056156568385",
+            "extra": "mean: 26.949168507458534 usec\nrounds: 4979"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 34286.13094848409,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027906136313637024",
+            "extra": "mean: 29.166312218270683 usec\nrounds: 6662"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 32161.93133285732,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002937043886434944",
+            "extra": "mean: 31.092660128229877 usec\nrounds: 14479"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.72088180131686,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023275489909022414",
+            "extra": "mean: 5.298830688237183 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.338620961606697,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010643576384197344",
+            "extra": "mean: 51.7099953499951 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.926253258758209,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006623009546863481",
+            "extra": "mean: 100.74294640000971 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1895416.9890991885,
+            "unit": "iter/sec",
+            "range": "stddev: 5.239015816032731e-8",
+            "extra": "mean: 527.5883912358819 nsec\nrounds: 93985"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3978.726504155695,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017641110929796076",
+            "extra": "mean: 251.33670257443467 usec\nrounds: 2098"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3045.133609474,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009567808554043535",
+            "extra": "mean: 328.39281563502055 usec\nrounds: 2712"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2964.746463227286,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027345713013777293",
+            "extra": "mean: 337.29697038290624 usec\nrounds: 1722"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40492.5071577818,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030768502544542836",
+            "extra": "mean: 24.69592697985907 usec\nrounds: 7450"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11645.779375522861,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016063320027713543",
+            "extra": "mean: 85.86801859751898 usec\nrounds: 3280"
           }
         ]
       }
