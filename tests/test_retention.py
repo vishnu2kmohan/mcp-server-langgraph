@@ -13,12 +13,28 @@ import yaml
 
 from mcp_server_langgraph.auth.session import InMemorySessionStore
 from mcp_server_langgraph.core.compliance.retention import DataRetentionService, RetentionPolicy, RetentionResult
+from mcp_server_langgraph.core.compliance.storage import (
+    InMemoryAuditLogStore,
+    InMemoryConversationStore,
+)
 
 
 @pytest.fixture
 def mock_session_store():
     """Create mock session store"""
     return InMemorySessionStore()
+
+
+@pytest.fixture
+def mock_conversation_store():
+    """Create mock conversation store"""
+    return InMemoryConversationStore()
+
+
+@pytest.fixture
+def mock_audit_log_store():
+    """Create mock audit log store"""
+    return InMemoryAuditLogStore()
 
 
 @pytest.fixture
@@ -465,3 +481,183 @@ class TestRetentionCompliance:
                 session_retention = service.config["retention_periods"]["user_sessions"]["inactive"]
 
                 assert audit_retention > session_retention
+
+
+@pytest.mark.integration
+class TestConversationStorageIntegration:
+    """Test conversation storage backend integration"""
+
+    def test_init_with_conversation_store(self, mock_conversation_store):
+        """Test initialization with conversation store"""
+        service = DataRetentionService(conversation_store=mock_conversation_store)
+
+        assert service.conversation_store == mock_conversation_store
+
+    @pytest.mark.asyncio
+    async def test_cleanup_with_conversation_store_configured(
+        self, mock_conversation_store, sample_config
+    ):
+        """Test conversation cleanup with storage backend configured"""
+        config_yaml = yaml.dump(sample_config)
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("builtins.open", mock_open(read_data=config_yaml)):
+                service = DataRetentionService(
+                    conversation_store=mock_conversation_store,
+                    config_path="test.yaml",
+                )
+
+                result = await service.cleanup_conversations()
+
+                # Should complete without error when store is configured
+                assert result.policy_name == "conversations"
+                # Actual deletion count will be 0 in this implementation
+                # because we haven't populated the store with test data
+                assert result.deleted_count == 0
+
+    @pytest.mark.asyncio
+    async def test_cleanup_without_conversation_store(self, sample_config):
+        """Test conversation cleanup logs warning when store not configured"""
+        config_yaml = yaml.dump(sample_config)
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("builtins.open", mock_open(read_data=config_yaml)):
+                service = DataRetentionService(
+                    conversation_store=None,  # No store configured
+                    config_path="test.yaml",
+                )
+
+                with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
+                    result = await service.cleanup_conversations()
+
+                    # Should log warning about missing store
+                    mock_logger.warning.assert_called()
+                    assert result.deleted_count == 0
+
+
+@pytest.mark.integration
+class TestAuditLogStorageIntegration:
+    """Test audit log storage backend integration"""
+
+    def test_init_with_audit_log_store(self, mock_audit_log_store):
+        """Test initialization with audit log store"""
+        service = DataRetentionService(audit_log_store=mock_audit_log_store)
+
+        assert service.audit_log_store == mock_audit_log_store
+
+    @pytest.mark.asyncio
+    async def test_cleanup_with_audit_log_store_configured(
+        self, mock_audit_log_store, sample_config
+    ):
+        """Test audit log cleanup with storage backend configured"""
+        config_yaml = yaml.dump(sample_config)
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("builtins.open", mock_open(read_data=config_yaml)):
+                service = DataRetentionService(
+                    audit_log_store=mock_audit_log_store,
+                    config_path="test.yaml",
+                )
+
+                # Mock the cold storage settings
+                with patch("mcp_server_langgraph.core.config.settings") as mock_settings:
+                    mock_settings.audit_log_cold_storage_backend = None
+
+                    result = await service.cleanup_audit_logs()
+
+                    # Should complete and log warning about missing cold storage
+                    assert result.policy_name == "audit_logs"
+                    assert result.archived_count == 0
+
+    @pytest.mark.asyncio
+    async def test_cleanup_with_cold_storage_configured(
+        self, mock_audit_log_store, sample_config
+    ):
+        """Test audit log cleanup with cold storage configured"""
+        config_yaml = yaml.dump(sample_config)
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("builtins.open", mock_open(read_data=config_yaml)):
+                service = DataRetentionService(
+                    audit_log_store=mock_audit_log_store,
+                    config_path="test.yaml",
+                )
+
+                # Mock the cold storage settings
+                with patch("mcp_server_langgraph.core.config.settings") as mock_settings:
+                    mock_settings.audit_log_cold_storage_backend = "s3"
+
+                    result = await service.cleanup_audit_logs()
+
+                    # Should recognize cold storage is configured
+                    assert result.policy_name == "audit_logs"
+                    # Implementation note will be logged
+
+    @pytest.mark.asyncio
+    async def test_cleanup_without_audit_log_store(self, sample_config):
+        """Test audit log cleanup logs warning when store not configured"""
+        config_yaml = yaml.dump(sample_config)
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("builtins.open", mock_open(read_data=config_yaml)):
+                service = DataRetentionService(
+                    audit_log_store=None,  # No store configured
+                    config_path="test.yaml",
+                )
+
+                with patch("mcp_server_langgraph.core.compliance.retention.logger") as mock_logger:
+                    result = await service.cleanup_audit_logs()
+
+                    # Should log warning about missing store
+                    mock_logger.warning.assert_called()
+                    assert result.archived_count == 0
+
+
+@pytest.mark.integration
+class TestFullStorageBackendIntegration:
+    """Test complete storage backend integration"""
+
+    def test_init_with_all_stores(
+        self, mock_session_store, mock_conversation_store, mock_audit_log_store
+    ):
+        """Test initialization with all storage backends"""
+        service = DataRetentionService(
+            session_store=mock_session_store,
+            conversation_store=mock_conversation_store,
+            audit_log_store=mock_audit_log_store,
+        )
+
+        assert service.session_store == mock_session_store
+        assert service.conversation_store == mock_conversation_store
+        assert service.audit_log_store == mock_audit_log_store
+
+    @pytest.mark.asyncio
+    async def test_run_all_cleanups_with_stores(
+        self, mock_session_store, mock_conversation_store, mock_audit_log_store, sample_config
+    ):
+        """Test running all cleanups with all storage backends configured"""
+        config_yaml = yaml.dump(sample_config)
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("builtins.open", mock_open(read_data=config_yaml)):
+                service = DataRetentionService(
+                    session_store=mock_session_store,
+                    conversation_store=mock_conversation_store,
+                    audit_log_store=mock_audit_log_store,
+                    config_path="test.yaml",
+                )
+
+                # Mock the cleanup methods to simulate successful operations
+                with patch.object(service, "_cleanup_inactive_sessions", return_value=5):
+                    with patch("mcp_server_langgraph.core.config.settings") as mock_settings:
+                        mock_settings.audit_log_cold_storage_backend = None
+
+                        results = await service.run_all_cleanups()
+
+                        # Should have results for all configured cleanups
+                        assert len(results) >= 1
+                        # All should complete without errors
+                        for result in results:
+                            # Errors are acceptable for missing configuration
+                            # but services should not crash
+                            assert isinstance(result, RetentionResult)

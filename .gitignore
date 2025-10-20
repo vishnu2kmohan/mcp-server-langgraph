@@ -69,6 +69,11 @@ coverage-integration/
 .coverage-integration
 htmlcov-combined/
 coverage-combined.xml
+.coverage-history/
+
+# Benchmark outputs
+.benchmarks/
+.pytest-benchmark/
 
 # mypy
 .mypy_cache/

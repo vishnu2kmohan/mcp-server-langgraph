@@ -1,212 +1,159 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20
-**Auto-Generated**: This file is auto-updated from git history
-**Purpose**: Provides quick context on recent changes for Claude Code
+**Last Updated**: 2025-10-20 14:59:35
+**Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
 
-## 📊 Repository Status
+## 📊 Repository Overview
 
-**Branch**: main
-**Status**: Clean (all changes committed)
-**Last 15 Commits**: See below
-**Recent Focus Areas**:
-- Technical debt sprint (89% success)
-- Test fixes and documentation
-- Compliance and monitoring integration
-- Search tools implementation
-
----
-
-## 🔄 Recent Commits (Last 15)
-
-### Latest (Last 7 Days)
-
-```
-ec9b863 fix(hipaa): resolve undefined variable in PHI access logging
-12a838a docs(tests): comprehensive test results summary - 100% pass rate
-9b51c4c docs(sprint): final summary - 89% success, production-ready
-af22bf1 fix(tools): correct return statement in web_search
-a4e2ca2 fix(alerting): correct Alert instantiation parameters across all modules
-85341ca test: fix search tool test assertions
-dacebb2 test: update SLA and search tool tests for Prometheus integration
-7e9ac1c fix(tools): make web_search async to support httpx async calls
-0b565dd docs(sprint): technical debt sprint completion summary - 89% success
-a8040d1 docs(storage): comprehensive storage backend requirements for future sprint
-3c36f0e feat(prompts): implement versioning system with metadata tracking
-3042d04 docs(compliance): document user provider and session analysis integration
-0e4448b feat(gdpr,compliance): document integration patterns for remaining TODOs
-4cf3898 feat(tools): implement production-ready search tools with API integration
-58359fa feat(compliance): integrate real data sources for SOC2 evidence collection
-```
+| Metric | Value |
+|--------|-------|
+| Total Commits | 266 |
+| Contributors | 2 |
+| Current Branch | `release/v2.8.0` |
+| Source Files | 164 Python files |
+| Test Files | 166 Python files |
+| Total Tests | 0 tests |
 
 ---
 
-## 🎯 Recent Sprint Summary
+## 🕐 Recent Commits (Last 15)
 
-**Sprint Type**: Technical Debt Sprint (CRITICAL + HIGH items)
-**Duration**: 1 day (2025-10-18)
-**Status**: ✅ SUCCESS
 
-**Key Metrics**:
-- **Completion Rate**: 89% (24/27 items)
-- **Test Pass Rate**: 99.3% (722/727)
-- **Velocity**: 8x faster than estimated
-- **Quality**: Production-ready
+### ✨ Feature
 
-**Major Deliverables**:
-1. ✅ CI/CD fixes (release workflow, version bumps)
-2. ✅ Prometheus integration for SLA monitoring
-3. ✅ Multi-provider alerting system (PagerDuty, Slack, OpsGenie)
-4. ✅ SOC2 compliance evidence with real data
-5. ✅ Search tools (Qdrant + Tavily/Serper)
-6. ✅ Prompt versioning system
-7. ✅ 18 production commits
+- **`1b69120`** (2025-10-20) - feat(workflow): add Claude Code workflow automation commands and scripts
+  _by Vishnu Mohan_
 
-**Deferred (3 items)**:
-- Storage backend implementation (PostgreSQL + S3/GCS)
-- Documented in `STORAGE_BACKEND_REQUIREMENTS.md`
-- Planned for next sprint
+- **`f4bb2af`** (2025-10-20) - feat(workflow): comprehensive Claude Code workflow optimization
+  _by Vishnu Mohan_
 
----
+- **`f60e37b`** (2025-10-20) - feat(ci): add Dependabot auto-merge workflow
+  _by Vishnu Mohan_
 
-## 📁 Recently Modified Files
+- **`3218451`** (2025-10-20) - feat(ci): implement combined coverage tracking and trending
+  _by Vishnu Mohan_
 
-**Production Code** (~2,500 lines added):
-- `src/mcp_server_langgraph/monitoring/sla.py` - Prometheus integration
-- `src/mcp_server_langgraph/monitoring/prometheus_client.py` - Real SLA queries
-- `src/mcp_server_langgraph/integrations/alerting.py` - Alert configuration
-- `src/mcp_server_langgraph/tools/search_tools.py` - Web + KB search
-- `src/mcp_server_langgraph/prompts/__init__.py` - Versioning system
-- `src/mcp_server_langgraph/core/compliance/evidence.py` - Real data integration
-- `src/mcp_server_langgraph/auth/hipaa.py` - PHI access logging fix
 
-**Tests** (~100 lines modified):
-- `tests/test_search_tools.py` - Search tool assertions
-- `tests/test_sla.py` - Prometheus mock updates
+### 🐛 Bug Fix
 
-**Documentation** (~2,200 lines added):
-- `docs-internal/TODO_CATALOG.md` - Complete TODO inventory
-- `docs-internal/TECHNICAL_DEBT_SPRINT_COMPLETE.md` - Sprint summary
-- `docs-internal/STORAGE_BACKEND_REQUIREMENTS.md` - Deferred items spec
-- `docs-internal/TEST_RESULTS_SUMMARY.md` - Test analysis
+- **`ce7d8eb`** (2025-10-20) - fix(ci): fix GitHub workflow syntax and standardize action versions
+  _by Vishnu Mohan_
 
-**CI/CD** (~50 lines modified):
-- `.github/workflows/release.yaml` - Docker tag fix
-- `.github/workflows/version-bump.yaml` - Git push fix
-- `.github/workflows/security-scan.yaml` - Release trigger
 
----
+### 💄 Style
 
-## 🚧 Active Work Areas
+- **`b5d1a8d`** (2025-10-20) - style: fix black formatting in search_tools.py
+  _by Vishnu Mohan_
 
-**Current Focus**:
-1. **Workflow optimization** - Creating templates and context files
-2. **Test stabilization** - Fixing remaining 5/727 test failures
-3. **Documentation** - Maintaining comprehensive docs
 
-**Next Up** (from TODO catalog):
-1. Storage backend sprint (2-3 days, 3 items)
-2. Minor test fixes (30 minutes)
-3. Continuous improvements (MyPy, coverage, Kustomize)
+### 📝 Documentation
+
+- **`ce28519`** (2025-10-20) - docs: comprehensive codebase cleanup initiative - final summary
+  _by Vishnu Mohan_
+
+- **`74554e5`** (2025-10-20) - docs: create comprehensive deprecation tracking document
+  _by Vishnu Mohan_
+
+- **`11641f0`** (2025-10-20) - docs: create comprehensive TODO tracking document for GitHub issues
+  _by Vishnu Mohan_
+
+- **`46d6963`** (2025-10-20) - docs: reorganize and archive historical documentation
+  _by Vishnu Mohan_
+
+
+### 🔧 Chore
+
+- **`797e19f`** (2025-10-20) - chore: consolidate docker-compose files and remove duplicates
+  _by Vishnu Mohan_
+
+- **`700857a`** (2025-10-20) - chore: remove obsolete one-off commit script
+  _by Vishnu Mohan_
+
+- **`3914239`** (2025-10-20) - chore: update .gitignore for coverage history and benchmark outputs
+  _by Vishnu Mohan_
+
+- **`6234ea0`** (2025-10-20) - chore(release): prepare v2.8.0 - test coverage & infrastructure enhancement
+  _by Vishnu Mohan_
+
+
+### 🧪 Test
+
+- **`2fc6b12`** (2025-10-20) - test: properly mark GDPR endpoint tests as skipped with documentation
+  _by Vishnu Mohan_
 
 ---
 
-## 📊 Current Statistics
+## 📁 Recently Modified Files (Last 7 Days)
 
-**Codebase**:
-- **Source files**: ~100 files in src/
-- **Test files**: 437+ tests
-- **Test coverage**: 69% (maintained after adding new code)
-- **Documentation**: 77+ pages (Mintlify)
-- **ADRs**: 25 architecture decision records
+Files changed most frequently:
 
-**Quality**:
-- **Linting**: Clean (flake8, black, isort)
-- **Type checking**: 3/11 modules strict mypy (27%)
-- **Security**: Bandit scan clean
-- **Dependencies**: Up to date (LangGraph 0.6.10)
+| File | Changes |
+|------|---------|
+| `pyproject.toml` | 21 |
+| `.github/workflows/ci.yaml` | 15 |
+| `src/mcp_server_langgraph/core/config.py` | 15 |
+| `src/mcp_server_langgraph/core/agent.py` | 15 |
+| `CHANGELOG.md` | 14 |
+| `README.md` | 12 |
+| `.github/workflows/quality-tests.yaml` | 11 |
+| `.env.example` | 9 |
+| `requirements-pinned.txt` | 9 |
+| `deployments/kustomize/base/kustomization.yaml` | 8 |
+| `docker/docker-compose.yml` | 7 |
+| `tests/integration/test_anthropic_enhancements_integration.py` | 7 |
+| `.github/workflows/release.yaml` | 7 |
+| `src/mcp_server_langgraph/schedulers/cleanup.py` | 7 |
+| `src/mcp_server_langgraph/mcp/server_stdio.py` | 7 |
 
-**TODO Status**:
-- **Total TODOs**: 30 (original)
-- **Resolved**: 24 (80%)
-- **Remaining**: 6 (3 deferred + 3 minor)
-- **Production TODOs**: 0 (all resolved or cataloged)
-
----
-
-## 🎨 Recent Patterns & Conventions
-
-**Commit Message Format** (from recent commits):
-```
-<type>(<scope>): <description>
-
-Types: feat, fix, docs, test, refactor, chore
-Scopes: component names (tools, alerting, compliance, sprint, etc.)
-```
-
-**Documentation Style**:
-- Comprehensive progress tracking (metrics + narrative)
-- File references with line numbers (file.py:123)
-- Clear success criteria and completion rates
-- Sprint retrospectives with lessons learned
-
-**Testing Approach**:
-- Mock external dependencies (Prometheus, OpenFGA, etc.)
-- Comprehensive edge cases
-- Property-based testing for critical paths
-- Integration tests with infrastructure
-
-**Feature Flags**:
-- All new features behind flags (default: disabled)
-- Gradual rollout strategy
-- Backward compatibility maintained
-- Documented in .env.example
 
 ---
 
-## 🔗 Related Documents
+## 🎯 Quick Context
 
-**For Context**:
-- TODO Status: `docs-internal/TODO_CATALOG.md`
-- Recent Sprint: `docs-internal/SPRINT_FINAL_SUMMARY.md`
-- Test Results: `docs-internal/TEST_RESULTS_SUMMARY.md`
-- Storage Backend: `docs-internal/STORAGE_BACKEND_REQUIREMENTS.md`
+### What's Been Happening
 
-**For Development**:
-- Claude Guide: `.github/CLAUDE.md`
-- Testing Guide: `TESTING.md`
-- Developer Onboarding: `DEVELOPER_ONBOARDING.md`
-- Repository Structure: `REPOSITORY_STRUCTURE.md`
+Based on recent commits, the team has been focused on:
 
-**For Deployment**:
-- Release Notes: `RELEASE_NOTES_V2.7.0.md`
-- Deployment Guide: `deployments/README.md`
-- Version Compatibility: `docs/deployment/VERSION_COMPATIBILITY.md`
+- **📝 Documentation**: 4 recent commits
+- **🔧 Chore**: 4 recent commits
+- **✨ Feature**: 4 recent commits
 
----
 
-## 💡 Quick Wins Available
+### Hot Spots
 
-**Low-hanging fruit for next session**:
-1. Fix remaining 5 test assertions (~30 minutes)
-2. Add missing slash commands (~1 hour)
-3. Create test pattern library (~2 hours)
-4. Generate automated progress reports (~2 hours)
+Most active areas in the codebase (by file change frequency):
 
-**High-impact next sprints**:
-1. Storage backend implementation (2-3 days, completes deferred items)
-2. MyPy strict mode rollout (1 week, 8 remaining modules)
-3. Kustomize deployment validation (1-2 days)
+- `src/` - 50 file changes
+- `.github/` - 33 file changes
+- `deployments/` - 14 file changes
+- `docker/` - 7 file changes
+- `tests/` - 7 file changes
+
 
 ---
 
-**Auto-Update Command**:
-```bash
-git log --oneline -n 15 > .claude/context/recent-work.md
-# (This file should be auto-updated at sprint start/end)
-```
+## 🔄 Next Steps Suggestions
 
-**Manual Update**: When starting a new conversation or sprint
-**Frequency**: Daily during active sprints, weekly otherwise
+Based on recent activity, consider:
+
+1. Review recent changes in hot spot directories
+2. Check if any patterns suggest needed refactoring
+3. Ensure test coverage for recently modified code
+4. Update documentation for new features
+
+---
+
+## 📝 Usage
+
+**Auto-update**: Run `python scripts/workflow/update-context-files.py --recent-work`
+
+**Git hook**: Automatically updates after commits (if configured)
+
+**Manual refresh**: When starting a new Claude Code session
+
+---
+
+**Generated**: 2025-10-20 14:59:35
+**Source**: Git commit history (last 15 commits, 7 days of file activity)

@@ -54,112 +54,134 @@ def mock_settings():
 class TestDynamicContextIntegration:
     """Test dynamic context loading integration"""
 
-    @pytest.mark.skip(reason="Requires running Qdrant instance")
     @pytest.mark.asyncio
-    async def test_index_search_load_workflow(self):
+    async def test_index_search_load_workflow(self, qdrant_client):
         """Test complete workflow: index → search → load"""
+        from os import getenv
+
+        qdrant_url = getenv("QDRANT_URL", "localhost")
+        qdrant_port = int(getenv("QDRANT_PORT", "6333"))
+
         loader = DynamicContextLoader(
-            qdrant_url="localhost",
-            qdrant_port=6333,
-            collection_name="integration_test_contexts",
+            qdrant_url=qdrant_url,
+            qdrant_port=qdrant_port,
+            collection_name="test_integration_contexts",
         )
 
-        # Index some contexts
-        contexts_to_index = [
-            {
-                "ref_id": "python_basics",
-                "content": "Python is a high-level programming language with dynamic typing. "
-                "It supports multiple paradigms including procedural, object-oriented, and functional.",
-                "ref_type": "documentation",
-                "summary": "Python language basics",
-                "metadata": {"topic": "programming", "difficulty": "beginner"},
-            },
-            {
-                "ref_id": "python_async",
-                "content": "Python's asyncio library provides infrastructure for asynchronous I/O. "
-                "Use async/await syntax for coroutines. Great for concurrent network operations.",
-                "ref_type": "documentation",
-                "summary": "Python async programming",
-                "metadata": {"topic": "programming", "difficulty": "intermediate"},
-            },
-            {
-                "ref_id": "docker_intro",
-                "content": "Docker is a containerization platform that packages applications with their dependencies. "
-                "Uses images and containers for consistent deployment across environments.",
-                "ref_type": "documentation",
-                "summary": "Docker introduction",
-                "metadata": {"topic": "devops", "difficulty": "beginner"},
-            },
-        ]
+        try:
+            # Index some contexts
+            contexts_to_index = [
+                {
+                    "ref_id": "python_basics",
+                    "content": "Python is a high-level programming language with dynamic typing. "
+                    "It supports multiple paradigms including procedural, object-oriented, and functional.",
+                    "ref_type": "documentation",
+                    "summary": "Python language basics",
+                    "metadata": {"topic": "programming", "difficulty": "beginner"},
+                },
+                {
+                    "ref_id": "python_async",
+                    "content": "Python's asyncio library provides infrastructure for asynchronous I/O. "
+                    "Use async/await syntax for coroutines. Great for concurrent network operations.",
+                    "ref_type": "documentation",
+                    "summary": "Python async programming",
+                    "metadata": {"topic": "programming", "difficulty": "intermediate"},
+                },
+                {
+                    "ref_id": "docker_intro",
+                    "content": "Docker is a containerization platform that packages applications with their dependencies. "
+                    "Uses images and containers for consistent deployment across environments.",
+                    "ref_type": "documentation",
+                    "summary": "Docker introduction",
+                    "metadata": {"topic": "devops", "difficulty": "beginner"},
+                },
+            ]
 
-        # Index all contexts
-        for ctx in contexts_to_index:
-            await loader.index_context(**ctx)
+            # Index all contexts
+            for ctx in contexts_to_index:
+                await loader.index_context(**ctx)
 
-        # Search for Python-related content
-        python_results = await loader.semantic_search(
-            query="How do I write asynchronous code in Python?",
-            top_k=2,
-            min_score=0.5,
-        )
+            # Search for Python-related content
+            python_results = await loader.semantic_search(
+                query="How do I write asynchronous code in Python?",
+                top_k=2,
+                min_score=0.5,
+            )
 
-        assert len(python_results) >= 1
-        # Should find python_async as most relevant
-        assert any(r.ref_id == "python_async" for r in python_results)
+            assert len(python_results) >= 1
+            # Should find python_async as most relevant
+            assert any(r.ref_id == "python_async" for r in python_results)
 
-        # Load the contexts
-        loaded = await loader.load_batch(python_results, max_tokens=1000)
-        assert len(loaded) >= 1
+            # Load the contexts
+            loaded = await loader.load_batch(python_results, max_tokens=1000)
+            assert len(loaded) >= 1
 
-        # Verify loaded content
-        async_ctx = next((c for c in loaded if c.ref_id == "python_async"), None)
-        assert async_ctx is not None
-        assert "asyncio" in async_ctx.content
+            # Verify loaded content
+            async_ctx = next((c for c in loaded if c.ref_id == "python_async"), None)
+            assert async_ctx is not None
+            assert "asyncio" in async_ctx.content
+        finally:
+            # Cleanup test collection
+            try:
+                qdrant_client.delete_collection("test_integration_contexts")
+            except Exception:
+                pass  # Best effort cleanup
 
-    @pytest.mark.skip(reason="Requires running Qdrant instance")
     @pytest.mark.asyncio
-    async def test_progressive_discovery(self):
+    async def test_progressive_discovery(self, qdrant_client):
         """Test progressive discovery pattern"""
+        from os import getenv
+
+        qdrant_url = getenv("QDRANT_URL", "localhost")
+        qdrant_port = int(getenv("QDRANT_PORT", "6333"))
+
         loader = DynamicContextLoader(
-            qdrant_url="localhost",
-            qdrant_port=6333,
-            collection_name="integration_test_progressive",
+            qdrant_url=qdrant_url,
+            qdrant_port=qdrant_port,
+            collection_name="test_integration_progressive",
         )
 
-        # Index related contexts at different specificity levels
-        await loader.index_context(
-            ref_id="ml_overview",
-            content="Machine learning is a subset of AI focused on learning from data",
-            ref_type="documentation",
-            summary="ML overview",
-        )
+        try:
+            # Index related contexts at different specificity levels
+            await loader.index_context(
+                ref_id="ml_overview",
+                content="Machine learning is a subset of AI focused on learning from data",
+                ref_type="documentation",
+                summary="ML overview",
+            )
 
-        await loader.index_context(
-            ref_id="neural_networks",
-            content="Neural networks are ML models inspired by biological neurons",
-            ref_type="documentation",
-            summary="Neural networks intro",
-        )
+            await loader.index_context(
+                ref_id="neural_networks",
+                content="Neural networks are ML models inspired by biological neurons",
+                ref_type="documentation",
+                summary="Neural networks intro",
+            )
 
-        await loader.index_context(
-            ref_id="transformers",
-            content="Transformers are neural network architectures using self-attention mechanisms",
-            ref_type="documentation",
-            summary="Transformer architecture",
-        )
+            await loader.index_context(
+                ref_id="transformers",
+                content="Transformers are neural network architectures using self-attention mechanisms",
+                ref_type="documentation",
+                summary="Transformer architecture",
+            )
 
-        # Progressive discovery: start broad, get specific
-        # Round 1: Broad query
-        round1 = await loader.semantic_search("machine learning", top_k=1)
-        assert len(round1) >= 1
+            # Progressive discovery: start broad, get specific
+            # Round 1: Broad query
+            round1 = await loader.semantic_search("machine learning", top_k=1)
+            assert len(round1) >= 1
 
-        # Round 2: More specific based on discovery
-        round2 = await loader.semantic_search("neural network architectures", top_k=1)
-        assert len(round2) >= 1
+            # Round 2: More specific based on discovery
+            round2 = await loader.semantic_search("neural network architectures", top_k=1)
+            assert len(round2) >= 1
 
-        # Round 3: Very specific
-        round3 = await loader.semantic_search("transformer attention mechanism", top_k=1)
-        assert len(round3) >= 1
+            # Round 3: Very specific
+            round3 = await loader.semantic_search("transformer attention mechanism", top_k=1)
+            assert len(round3) >= 1
+        finally:
+            # Cleanup test collection
+            try:
+                qdrant_client.delete_collection("test_integration_progressive")
+            except Exception:
+                pass  # Best effort cleanup
 
 
 @pytest.mark.integration

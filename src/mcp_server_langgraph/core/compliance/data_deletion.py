@@ -322,22 +322,62 @@ class DataDeletionService:
 
         This record is kept for compliance purposes.
         """
-        # TODO: Integrate with audit log storage
-        # For now, create a simple record
-        audit_record_id = f"deletion_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        from mcp_server_langgraph.core.compliance.storage import AuditLogEntry
 
-        logger.warning(
-            "User account deletion audit record",
-            extra={
-                "audit_record_id": audit_record_id,
-                "user_id": "DELETED",  # Anonymized
-                "original_user_id_hash": hash(user_id),  # Hash for correlation
-                "username": "DELETED",  # Anonymized
-                "action": "account_deletion",
-                "reason": reason,
+        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        audit_record_id = f"deletion_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+
+        # Create anonymized audit log entry
+        audit_entry = AuditLogEntry(
+            log_id=audit_record_id,
+            user_id="DELETED",  # Anonymized for GDPR compliance
+            action="account_deletion",
+            resource_type="user_account",
+            resource_id=f"hash_{abs(hash(user_id))}",  # Hash for correlation if needed
+            timestamp=timestamp,
+            ip_address=None,  # Not applicable for system action
+            user_agent=None,  # Not applicable for system action
+            metadata={
+                "original_username_hash": abs(hash(username)),  # Hash for potential correlation
+                "deletion_reason": reason,
                 "deleted_items": deleted_items,
                 "errors_count": len(errors),
-                "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "errors": errors if errors else [],
+                "compliance_note": "User data deleted per GDPR Article 17 (Right to Erasure)",
+            },
+        )
+
+        # Store audit record if audit log store is configured
+        if self.audit_log_store:
+            try:
+                stored_id = await self.audit_log_store.log(audit_entry)
+                logger.info(
+                    "User account deletion audit record stored",
+                    extra={
+                        "audit_record_id": stored_id,
+                        "deleted_items_count": sum(deleted_items.values()),
+                        "errors_count": len(errors),
+                    },
+                )
+                return stored_id
+            except Exception as e:
+                logger.error(
+                    f"Failed to store deletion audit record: {e}",
+                    exc_info=True,
+                    extra={"audit_record_id": audit_record_id},
+                )
+                # Fall through to log-only mode
+
+        # Fallback: Log to application logs if audit store not configured
+        logger.warning(
+            "User account deletion audit record (log-only, audit store not configured)",
+            extra={
+                "audit_record_id": audit_record_id,
+                "action": audit_entry.action,
+                "resource_type": audit_entry.resource_type,
+                "resource_id": audit_entry.resource_id,
+                "metadata": audit_entry.metadata,
+                "timestamp": timestamp,
             },
         )
 

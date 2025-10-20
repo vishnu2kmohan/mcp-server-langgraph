@@ -509,6 +509,98 @@ mutmut html
 
 **Note**: Slow (30+ minutes), run periodically or in CI
 
+## Test Infrastructure with Docker Compose
+
+### Quick Start
+
+We provide a lightweight `docker-compose.test.yml` for running integration tests with real services:
+
+```bash
+# Start test infrastructure
+docker compose -f docker-compose.test.yml up -d
+
+# Run integration tests
+pytest -m integration
+
+# Stop and clean up
+docker compose -f docker-compose.test.yml down
+```
+
+### Services Included
+
+- **Qdrant** (port 6333): Vector database for semantic search and dynamic context loading tests
+- **Redis** (port 6379): For session management and conversation checkpoint tests
+- **Postgres** (port 5432): For database integration tests
+
+All services use `tmpfs` for faster performance and don't persist data between runs.
+
+### Qdrant Integration Tests
+
+The `qdrant_client` fixture enables previously-skipped Qdrant tests:
+
+```python
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_with_qdrant(qdrant_client):
+    """Test using real Qdrant instance."""
+    loader = DynamicContextLoader(
+        qdrant_url="localhost",
+        qdrant_port=6333,
+        collection_name="test_my_collection",
+    )
+    # Test code...
+```
+
+**Enabled tests**:
+- `test_dynamic_context_loader.py::test_full_workflow`
+- `test_anthropic_enhancements_integration.py::test_index_search_load_workflow`
+- `test_anthropic_enhancements_integration.py::test_progressive_discovery`
+
+### Environment Variables
+
+Override default ports if needed:
+
+```bash
+export QDRANT_URL=localhost
+export QDRANT_PORT=6333
+export REDIS_HOST=localhost
+export REDIS_PORT=6379
+export POSTGRES_HOST=localhost
+export POSTGRES_PORT=5432
+```
+
+### Troubleshooting Test Infrastructure
+
+**Qdrant not responding**:
+```bash
+# Check if running
+curl http://localhost:6333/
+
+# View logs
+docker compose -f docker-compose.test.yml logs qdrant-test
+
+# Restart
+docker compose -f docker-compose.test.yml restart qdrant-test
+```
+
+**Redis connection issues**:
+```bash
+# Test connection
+redis-cli -h localhost -p 6379 ping
+
+# View logs
+docker compose -f docker-compose.test.yml logs redis-test
+```
+
+**Clean slate**:
+```bash
+# Remove all test containers and volumes
+docker compose -f docker-compose.test.yml down -v
+
+# Start fresh
+docker compose -f docker-compose.test.yml up -d
+```
+
 ## Additional Resources
 
 - **pytest Documentation**: https://docs.pytest.org/
@@ -516,4 +608,4 @@ mutmut html
 - **Project Testing Guide**: `../docs/development/testing.md`
 - **Contributing Guide**: `../.github/CONTRIBUTING.md`
 
-**Last Updated**: 2025-10-12
+**Last Updated**: 2025-10-20

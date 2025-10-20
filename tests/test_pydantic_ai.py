@@ -81,6 +81,27 @@ def test_get_pydantic_model_name_openai(mock_settings, mock_pydantic_agent_class
 
 
 @pytest.mark.unit
+def test_get_pydantic_model_name_gemini(mock_settings, mock_pydantic_agent_class):
+    """Test model name mapping for Gemini provider (alternative name for google)."""
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
+
+    wrapper = PydanticAIAgentWrapper(provider="gemini", model_name="gemini-1.5-pro")
+
+    assert wrapper.pydantic_model_name == "gemini-1.5-pro"
+
+
+@pytest.mark.unit
+def test_get_pydantic_model_name_unknown_provider(mock_settings, mock_pydantic_agent_class):
+    """Test model name mapping for unknown provider falls back to model name."""
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
+
+    wrapper = PydanticAIAgentWrapper(provider="unknown", model_name="some-model")
+
+    # Should use model name directly for unknown providers
+    assert wrapper.pydantic_model_name == "some-model"
+
+
+@pytest.mark.unit
 def test_format_conversation(mock_settings, mock_pydantic_agent_class):
     """Test conversation formatting."""
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
@@ -94,6 +115,253 @@ def test_format_conversation(mock_settings, mock_pydantic_agent_class):
     assert "User: Hello" in formatted
     assert "Assistant: Hi there!" in formatted
     assert "User: How are you?" in formatted
+
+
+@pytest.mark.unit
+def test_format_conversation_with_system_message(mock_settings, mock_pydantic_agent_class):
+    """Test conversation formatting with system messages."""
+    from langchain_core.messages import SystemMessage
+
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
+
+    wrapper = PydanticAIAgentWrapper()
+
+    messages = [
+        SystemMessage(content="You are a helpful assistant"),
+        HumanMessage(content="Hello"),
+        AIMessage(content="Hi!"),
+    ]
+
+    formatted = wrapper._format_conversation(messages)
+
+    assert "System: You are a helpful assistant" in formatted
+    assert "User: Hello" in formatted
+    assert "Assistant: Hi!" in formatted
+
+
+# Tests for route_message method
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_route_message_success(mock_settings, mock_pydantic_agent_class):
+    """Test successful message routing."""
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper, RouterDecision
+
+    # Mock agent response
+    mock_result = Mock()
+    mock_result.data = RouterDecision(
+        action="use_tools", reasoning="User wants to search", tool_name="search", confidence=0.9
+    )
+
+    mock_agent_instance = Mock()
+    mock_agent_instance.run = AsyncMock(return_value=mock_result)
+    mock_pydantic_agent_class.return_value = mock_agent_instance
+
+    wrapper = PydanticAIAgentWrapper()
+    wrapper.router_agent = mock_agent_instance
+
+    decision = await wrapper.route_message("Find me information about Python")
+
+    assert decision.action == "use_tools"
+    assert decision.tool_name == "search"
+    assert decision.confidence == 0.9
+    assert "search" in decision.reasoning.lower()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_route_message_with_context(mock_settings, mock_pydantic_agent_class):
+    """Test message routing with context."""
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper, RouterDecision
+
+    mock_result = Mock()
+    mock_result.data = RouterDecision(action="respond", reasoning="Direct answer", confidence=0.95)
+
+    mock_agent_instance = Mock()
+    mock_agent_instance.run = AsyncMock(return_value=mock_result)
+    mock_pydantic_agent_class.return_value = mock_agent_instance
+
+    wrapper = PydanticAIAgentWrapper()
+    wrapper.router_agent = mock_agent_instance
+
+    context = {"user_tier": "premium", "previous_action": "search"}
+    decision = await wrapper.route_message("What did you find?", context=context)
+
+    # Verify context was included in the prompt
+    call_args = mock_agent_instance.run.call_args
+    prompt = call_args[0][0]
+    assert "user_tier" in prompt
+    assert "premium" in prompt
+    assert "What did you find?" in prompt
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_route_message_error_handling(mock_settings, mock_pydantic_agent_class):
+    """Test route_message handles errors gracefully."""
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
+
+    # Mock agent that raises an error
+    mock_agent_instance = Mock()
+    mock_agent_instance.run = AsyncMock(side_effect=Exception("API error"))
+    mock_pydantic_agent_class.return_value = mock_agent_instance
+
+    wrapper = PydanticAIAgentWrapper()
+    wrapper.router_agent = mock_agent_instance
+
+    with pytest.raises(Exception) as exc_info:
+        await wrapper.route_message("test message")
+
+    assert "API error" in str(exc_info.value)
+
+
+# Tests for generate_response method
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_generate_response_success(mock_settings, mock_pydantic_agent_class):
+    """Test successful response generation."""
+    from mcp_server_langgraph.llm.pydantic_agent import AgentResponse, PydanticAIAgentWrapper
+
+    # Mock agent response
+    mock_result = Mock()
+    mock_result.data = AgentResponse(
+        content="Here is your answer about Python",
+        confidence=0.88,
+        requires_clarification=False,
+        sources=["python.org", "docs.python.org"],
+    )
+
+    mock_agent_instance = Mock()
+    mock_agent_instance.run = AsyncMock(return_value=mock_result)
+    mock_pydantic_agent_class.return_value = mock_agent_instance
+
+    wrapper = PydanticAIAgentWrapper()
+    wrapper.response_agent = mock_agent_instance
+
+    messages = [HumanMessage(content="Tell me about Python")]
+    response = await wrapper.generate_response(messages)
+
+    assert "Python" in response.content
+    assert response.confidence == 0.88
+    assert not response.requires_clarification
+    assert len(response.sources) == 2
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_generate_response_with_context(mock_settings, mock_pydantic_agent_class):
+    """Test response generation with context."""
+    from mcp_server_langgraph.llm.pydantic_agent import AgentResponse, PydanticAIAgentWrapper
+
+    mock_result = Mock()
+    mock_result.data = AgentResponse(content="Context-aware response", confidence=0.9)
+
+    mock_agent_instance = Mock()
+    mock_agent_instance.run = AsyncMock(return_value=mock_result)
+    mock_pydantic_agent_class.return_value = mock_agent_instance
+
+    wrapper = PydanticAIAgentWrapper()
+    wrapper.response_agent = mock_agent_instance
+
+    messages = [HumanMessage(content="Test")]
+    context = {"conversation_id": "conv-123", "user_preferences": {"verbosity": "concise"}}
+
+    response = await wrapper.generate_response(messages, context=context)
+
+    # Verify context was included
+    call_args = mock_agent_instance.run.call_args
+    prompt = call_args[0][0]
+    assert "conversation_id" in prompt
+    assert "conv-123" in prompt
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_generate_response_requires_clarification(mock_settings, mock_pydantic_agent_class):
+    """Test response generation when clarification is needed."""
+    from mcp_server_langgraph.llm.pydantic_agent import AgentResponse, PydanticAIAgentWrapper
+
+    mock_result = Mock()
+    mock_result.data = AgentResponse(
+        content="I need more information",
+        confidence=0.5,
+        requires_clarification=True,
+        clarification_question="Which Python version are you asking about?",
+    )
+
+    mock_agent_instance = Mock()
+    mock_agent_instance.run = AsyncMock(return_value=mock_result)
+    mock_pydantic_agent_class.return_value = mock_agent_instance
+
+    wrapper = PydanticAIAgentWrapper()
+    wrapper.response_agent = mock_agent_instance
+
+    messages = [HumanMessage(content="How do I install Python?")]
+    response = await wrapper.generate_response(messages)
+
+    assert response.requires_clarification
+    assert response.clarification_question is not None
+    assert "version" in response.clarification_question.lower()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_generate_response_error_handling(mock_settings, mock_pydantic_agent_class):
+    """Test generate_response handles errors."""
+    from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
+
+    mock_agent_instance = Mock()
+    mock_agent_instance.run = AsyncMock(side_effect=Exception("LLM timeout"))
+    mock_pydantic_agent_class.return_value = mock_agent_instance
+
+    wrapper = PydanticAIAgentWrapper()
+    wrapper.response_agent = mock_agent_instance
+
+    with pytest.raises(Exception) as exc_info:
+        await wrapper.generate_response([HumanMessage(content="test")])
+
+    assert "LLM timeout" in str(exc_info.value)
+
+
+# Tests for create_pydantic_agent factory
+@pytest.mark.unit
+def test_create_pydantic_agent_factory(mock_settings, mock_pydantic_agent_class):
+    """Test create_pydantic_agent factory function."""
+    from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
+
+    agent = create_pydantic_agent()
+
+    assert agent is not None
+    assert agent.provider == "google"
+
+
+@pytest.mark.unit
+def test_create_pydantic_agent_custom_params(mock_settings, mock_pydantic_agent_class):
+    """Test create_pydantic_agent with custom parameters."""
+    from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
+
+    agent = create_pydantic_agent(provider="anthropic", model_name="claude-3-opus-20240229")
+
+    assert agent.provider == "anthropic"
+    assert agent.model_name == "claude-3-opus-20240229"
+
+
+@pytest.mark.unit
+def test_create_pydantic_agent_unavailable():
+    """Test create_pydantic_agent when pydantic-ai is not available."""
+    from mcp_server_langgraph.llm import pydantic_agent
+
+    # Temporarily set PYDANTIC_AI_AVAILABLE to False
+    original_value = pydantic_agent.PYDANTIC_AI_AVAILABLE
+    pydantic_agent.PYDANTIC_AI_AVAILABLE = False
+
+    try:
+        with pytest.raises(ImportError) as exc_info:
+            pydantic_agent.create_pydantic_agent()
+
+        assert "pydantic-ai is not installed" in str(exc_info.value)
+    finally:
+        # Restore original value
+        pydantic_agent.PYDANTIC_AI_AVAILABLE = original_value
 
 
 # Tests for RouterDecision
