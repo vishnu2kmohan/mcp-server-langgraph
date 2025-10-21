@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761009511537,
+  "lastUpdate": 1761010044877,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -6316,6 +6316,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00010788769521012858",
             "extra": "mean: 60.69306406743516 usec\nrounds: 4745"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f23c4db96abd3cec5a44457ecafb6e4a6e3124a8",
+          "message": "test: improve Keycloak coverage and enable 19 contract compliance tests\n\n**Keycloak Coverage Improvements:**\n- Added 7 new tests for private helper methods\n- Test coverage: 73% → 80%+ (exceeds 60%+ target)\n- New tests cover:\n  - _get_user_realm_roles() success and error paths\n  - _get_user_client_roles() success and error paths\n  - _get_user_groups() success and error paths\n  - TokenValidator generic exception handling\n- Total Keycloak tests: 31 → 38 (all passing)\n\n**Contract Compliance Tests Enabled:**\n- Generated OpenAPI schema (openapi.json, 30KB)\n- Fixed generate_openapi.py import and path issues\n- Enabled 16/18 OpenAPI compliance tests (was 18 skipped)\n- Enabled 3/3 MCP server contract tests (was 3 skipped)\n- Total enabled: 19 tests (only 2 minor skips remain)\n\n**OpenAPI Tests Now Running:**\n- Schema structure validation (5 tests)\n- Endpoint documentation completeness (3 tests)\n- Schema definitions validation (3 tests)\n- Response schemas validation (2 tests)\n- API contract integration (2 tests)\n- Security schemes documentation (2 tests)\n\n**MCP Contract Tests Now Running:**\n- Server initialization validation\n- Tools list contract compliance\n- Tools call contract compliance\n\n**Files Modified:**\n- tests/test_keycloak.py: +7 tests (38 total)\n- tests/contract/test_mcp_contract.py: enabled 3 tests with mcp_server fixture\n- scripts/development/generate_openapi.py: fixed import and output path\n- openapi.json: NEW (generated schema, 10 endpoints, 12 schemas)\n- tests/property/*: linter fixes\n\n**Impact:**\n- Keycloak coverage: 73% → 80%+ ✅\n- Contract tests enabled: 19/21 (90%) ✅\n- All new tests passing ✅\n- OpenAPI schema now available for API documentation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T21:24:53-04:00",
+          "tree_id": "38d94f5e044355808641bda7b534a39c63eca1ad",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f23c4db96abd3cec5a44457ecafb6e4a6e3124a8"
+        },
+        "date": 1761010043804,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57217.95589190978,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010832561265356509",
+            "extra": "mean: 17.477031194352627 usec\nrounds: 7277"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 60523.45160396777,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000183022918775075",
+            "extra": "mean: 16.52252099803314 usec\nrounds: 12787"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 57023.09683523871,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012493046750637009",
+            "extra": "mean: 17.536753622648348 usec\nrounds: 20704"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.69637030169685,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005656290203166531",
+            "extra": "mean: 5.216582861877737 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.60162753803298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004836068143042552",
+            "extra": "mean: 51.01617189999672 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941698539352812,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003362758985838289",
+            "extra": "mean: 100.58643360001724 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2776095.4382534404,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6601962065792613e-8",
+            "extra": "mean: 360.2181633312803 nsec\nrounds: 133263"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6926.163401816668,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009691398930496151",
+            "extra": "mean: 144.3800762392798 usec\nrounds: 2925"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2893.136216266271,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006128489661668627",
+            "extra": "mean: 345.64566797015436 usec\nrounds: 2557"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3142.408737456701,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003789180869404297",
+            "extra": "mean: 318.2272210741582 usec\nrounds: 1936"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66864.81462562755,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011076575503405352",
+            "extra": "mean: 14.955548827869267 usec\nrounds: 12155"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20491.638683541496,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008751158889008539",
+            "extra": "mean: 48.800391976615394 usec\nrounds: 5434"
           }
         ]
       }
