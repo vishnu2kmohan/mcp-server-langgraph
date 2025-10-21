@@ -295,6 +295,12 @@ addopts = "-v --strict-markers --tb=short"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# Filter warnings to reduce test output noise
+filterwarnings = [
+    "ignore:GDPR endpoints use in-memory storage.*:RuntimeWarning",
+    "ignore:.*enable_cleanup_closed ignored.*:DeprecationWarning",
+    "ignore:coroutine.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.resilience.circuit_breaker",
+]
 markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "integration: Integration tests (may require external services)",
