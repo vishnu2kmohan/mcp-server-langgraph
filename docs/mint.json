@@ -108,7 +108,8 @@
         "guides/google-gemini",
         "guides/anthropic-claude",
         "guides/openai-gpt",
-        "guides/local-models"
+        "guides/local-models",
+        "guides/uv-migration"
       ]
     },
     {

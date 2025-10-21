@@ -4,8 +4,18 @@
 # Internal documentation (not for public Mintlify site)
 ../docs-internal/
 
-# Regular markdown files (only scan .mdx)
+# Archive directories
+../archive/
+../reports/archive/
+
+# Regular markdown files (only scan .mdx files)
 *.md
 
 # README files in subdirectories
 README.md
+
+# Build and temporary files
+**/.DS_Store
+**/node_modules/
+**/.venv/
+**/__pycache__/

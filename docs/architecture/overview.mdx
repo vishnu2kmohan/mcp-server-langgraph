@@ -14,7 +14,7 @@ This section documents the architectural decisions made throughout the developme
 
 ## Architecture Decision Records
 
-We maintain **21 ADRs** organized into five categories:
+We maintain **30 ADRs** organized into six categories:
 
 ### Core Architecture (ADRs 1-5)
 
@@ -51,7 +51,7 @@ Security and session management patterns:
   </Card>
 </CardGroup>
 
-### Infrastructure & Deployment (ADRs 8-9, 13, 20-21)
+### Infrastructure & Deployment (ADRs 8-9, 13, 20-21, 27-28, 30)
 
 Infrastructure, deployment, and operational decisions:
 
@@ -71,9 +71,18 @@ Infrastructure, deployment, and operational decisions:
   <Card title="ADR-0021: CI/CD Pipeline" icon="circle-nodes" href="/architecture/adr-0021-cicd-pipeline-strategy">
     Automated testing and deployment
   </Card>
+  <Card title="ADR-0027: Rate Limiting" icon="gauge-high" href="/architecture/adr-0027-rate-limiting-strategy">
+    API protection and traffic control
+  </Card>
+  <Card title="ADR-0028: Caching Strategy" icon="layer-group" href="/architecture/adr-0028-caching-strategy">
+    Multi-layer performance optimization
+  </Card>
+  <Card title="ADR-0030: Resilience Patterns" icon="shield-halved" href="/architecture/adr-0030-resilience-patterns">
+    Circuit breakers and retry policies
+  </Card>
 </CardGroup>
 
-### Development & Quality (ADRs 10, 14-19)
+### Development & Quality (ADRs 10, 14-19, 22-26, 29)
 
 Code quality, testing, and development practices:
 
@@ -98,6 +107,24 @@ Code quality, testing, and development practices:
   </Card>
   <Card title="ADR-0019: Async-First" icon="bolt" href="/architecture/adr-0019-async-first-architecture">
     Async by default for scalability
+  </Card>
+  <Card title="ADR-0022: Distributed Checkpointing" icon="database" href="/architecture/adr-0022-distributed-conversation-checkpointing">
+    Redis-backed conversation state
+  </Card>
+  <Card title="ADR-0023: Anthropic Tool Design" icon="toolbox" href="/architecture/adr-0023-anthropic-tool-design-best-practices">
+    Best practices for tool implementations
+  </Card>
+  <Card title="ADR-0024: Agentic Loop" icon="rotate" href="/architecture/adr-0024-agentic-loop-implementation">
+    Gather-Action-Verify-Repeat cycle
+  </Card>
+  <Card title="ADR-0025: Anthropic Enhancements" icon="sparkles" href="/architecture/adr-0025-anthropic-best-practices-enhancements">
+    Advanced best practices implementation
+  </Card>
+  <Card title="ADR-0026: Lazy Observability" icon="eye-slash" href="/architecture/adr-0026-lazy-observability-initialization">
+    On-demand telemetry initialization
+  </Card>
+  <Card title="ADR-0029: Custom Exceptions" icon="circle-exclamation" href="/architecture/adr-0029-custom-exception-hierarchy">
+    Domain-specific error handling
   </Card>
 </CardGroup>
 
@@ -141,6 +168,15 @@ Quick reference table of all architectural decisions:
 | [0019](/architecture/adr-0019-async-first-architecture) | Async-First Architecture | Development | Accepted | 2025-10-13 |
 | [0020](/architecture/adr-0020-dual-mcp-transport-protocol) | Dual MCP Transport Protocol (STDIO + StreamableHTTP) | Infrastructure | Accepted | 2025-10-13 |
 | [0021](/architecture/adr-0021-cicd-pipeline-strategy) | CI/CD Pipeline Strategy | Infrastructure | Accepted | 2025-10-13 |
+| [0022](/architecture/adr-0022-distributed-conversation-checkpointing) | Distributed Conversation Checkpointing with Redis | Development | Accepted | 2025-10-15 |
+| [0023](/architecture/adr-0023-anthropic-tool-design-best-practices) | Anthropic Tool Design Best Practices | Development | Accepted | 2025-10-17 |
+| [0024](/architecture/adr-0024-agentic-loop-implementation) | Agentic Loop Implementation (Gather-Action-Verify-Repeat) | Development | Accepted | 2025-10-17 |
+| [0025](/architecture/adr-0025-anthropic-best-practices-enhancements) | Anthropic Best Practices - Advanced Enhancements | Development | Accepted | 2025-10-17 |
+| [0026](/architecture/adr-0026-lazy-observability-initialization) | Lazy Observability Initialization | Development | Accepted | 2025-10-17 |
+| [0027](/architecture/adr-0027-rate-limiting-strategy) | Rate Limiting Strategy for API Protection | Infrastructure | Accepted | 2025-10-20 |
+| [0028](/architecture/adr-0028-caching-strategy) | Multi-Layer Caching Strategy | Infrastructure | Accepted | 2025-10-20 |
+| [0029](/architecture/adr-0029-custom-exception-hierarchy) | Custom Exception Hierarchy | Development | Accepted | 2025-10-20 |
+| [0030](/architecture/adr-0030-resilience-patterns) | Resilience Patterns for Production Systems | Infrastructure | Accepted | 2025-10-20 |
 
 ## Design Principles
 
