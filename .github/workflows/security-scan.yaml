@@ -91,7 +91,9 @@ jobs:
         cache-key-prefix: 'security-deps'
 
     - name: Install security scanning tools
-      run: pip install safety pip-audit
+      run: |
+        uv tool install safety
+        uv tool install pip-audit
 
     - name: Run Safety check
       run: |
@@ -163,7 +165,7 @@ jobs:
         cache-key-prefix: 'license-check'
 
     - name: Install license checking tool
-      run: pip install pip-licenses
+      run: uv tool install pip-licenses
 
     - name: Check licenses
       run: |
