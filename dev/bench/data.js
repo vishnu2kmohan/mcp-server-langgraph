@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761002485942,
+  "lastUpdate": 1761005471559,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -5560,6 +5560,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00017490688687008408",
             "extra": "mean: 89.7716658221184 usec\nrounds: 2762"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "72ff136f7e47c27951eb4141ec48c5a48c4e6374",
+          "message": "fix: resolve all 20 failing resilience module tests\n\nComplete test suite now passes with 851/851 tests (100% success rate).\n\n## Changes Made\n\n### Resilience Module Fixes\n- **retry.py**: Changed reraise=True to reraise=False to properly wrap\n  exceptions in RetryExhaustedError after max attempts\n- **retry.py**: Added module-level metric imports (retry_attempt_counter,\n  retry_exhausted_counter) for test mocking\n- **retry.py**: Removed unused imports (random, Any) for linting compliance\n- **timeout.py**: Added module-level import for timeout_exceeded_counter\n  for test mocking\n\n### Test Updates\n- **test_openfga_client.py**: Updated error handling tests to expect\n  RetryExhaustedError after retry exhaustion (resilience decorators wrap\n  original exceptions)\n\n## Test Results\n- Unit tests: 851 passed, 0 failed (100%)\n- Integration tests: 70 passed (100%)\n- Property tests: 26 passed (100%)\n- Contract tests: 20 passed (100%)\n- Regression tests: 11 passed (100%)\n\n## Coverage Impact\n- resilience/retry.py: 77% coverage (+70%)\n- resilience/timeout.py: 87% coverage (+39%)\n- resilience/bulkhead.py: 94% coverage (+48%)\n- core/exceptions.py: 94% coverage (+12%)\n\nFixes #resilience-tests\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T20:07:58-04:00",
+          "tree_id": "17b86ef8d11c5ec1c5bbff43ea43c78a0927e46a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/72ff136f7e47c27951eb4141ec48c5a48c4e6374"
+        },
+        "date": 1761005471183,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 38477.99336010071,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000030097453907476754",
+            "extra": "mean: 25.988881245479345 usec\nrounds: 4943"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 32881.49931347618,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003250365210209312",
+            "extra": "mean: 30.41223851949352 usec\nrounds: 6620"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31795.823141667333,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002983020236342044",
+            "extra": "mean: 31.45067185537129 usec\nrounds: 14969"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.39560305230893,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020634421573243917",
+            "extra": "mean: 5.307979505882338 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.287850474396414,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009416617374314267",
+            "extra": "mean: 51.84610909999776 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939412808375119,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000666038587123659",
+            "extra": "mean: 100.60956510000096 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2021953.7443093366,
+            "unit": "iter/sec",
+            "range": "stddev: 4.9671204368330207e-8",
+            "extra": "mean: 494.5711556530104 nsec\nrounds: 79981"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3831.5498637744804,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006166345677004852",
+            "extra": "mean: 260.9909920407233 usec\nrounds: 1759"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2993.450252176587,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014517302762516907",
+            "extra": "mean: 334.06267542708736 usec\nrounds: 2397"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2880.4538707184934,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021899577138529098",
+            "extra": "mean: 347.16751070572167 usec\nrounds: 1588"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40898.9204192449,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003429096136447774",
+            "extra": "mean: 24.45052313726726 usec\nrounds: 7218"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11416.813623336668,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016278396431967964",
+            "extra": "mean: 87.59011340571756 usec\nrounds: 3148"
           }
         ]
       }
