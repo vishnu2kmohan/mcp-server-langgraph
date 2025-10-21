@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761055191643,
+  "lastUpdate": 1761056114455,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -11500,6 +11500,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0033417557768518147",
             "extra": "mean: 111.36625685722835 usec\nrounds: 4302"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a1cb06d9800bc923781a0f65d1d3e0f04b395cc4",
+          "message": "fix(ci): use full python path for distroless image testing\n\nFix test failures on PR builds caused by missing python path in distroless images.\n\n**Problem:**\nThe test step was failing with:\n```\n/usr/bin/python3.11: can't open file '/app/python': [Errno 2] No such file or directory\n```\n\n**Root Cause:**\n- Base and full images use distroless runtime (no shell, no PATH resolution)\n- The command `docker run image python -c \"...\"` was being interpreted as:\n  - Command: `/usr/bin/python3.11`\n  - Args: `/app/python`, `-c`, `import ...`\n- Distroless doesn't have `python` in PATH, only `/opt/venv/bin/python`\n\n**Fix:**\nUse explicit path `/opt/venv/bin/python` in test command to work with distroless images.\n\n**Testing:**\n- Base variant (distroless): ✓ Will use /opt/venv/bin/python\n- Full variant (distroless): ✓ Will use /opt/venv/bin/python\n- Test variant (slim): ✓ Also has /opt/venv/bin/python\n\nAffected file: .github/workflows/ci.yaml:197\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T10:13:59-04:00",
+          "tree_id": "d9d557df9dc56d68146fdf63d8f968ce0bcbf390",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a1cb06d9800bc923781a0f65d1d3e0f04b395cc4"
+        },
+        "date": 1761056113881,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51011.92819078293,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022775411445088677",
+            "extra": "mean: 19.60325820776727 usec\nrounds: 5848"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52760.2414923755,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021310385286984303",
+            "extra": "mean: 18.95366608859272 usec\nrounds: 12108"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49409.29660331434,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026056495915073123",
+            "extra": "mean: 20.239106175272305 usec\nrounds: 12291"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.06840162901196,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001767429967105236",
+            "extra": "mean: 5.233727772222904 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.42023802133142,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012522256133238132",
+            "extra": "mean: 51.49267474999988 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.943554250899147,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003872452571439624",
+            "extra": "mean: 100.56766169999776 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2328602.167244717,
+            "unit": "iter/sec",
+            "range": "stddev: 5.1847843710780645e-8",
+            "extra": "mean: 429.4421838416627 nsec\nrounds: 195695"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5099.902875554585,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013947608724825777",
+            "extra": "mean: 196.0821655630561 usec\nrounds: 453"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2908.409602422773,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007725069282968642",
+            "extra": "mean: 343.8305248225617 usec\nrounds: 2538"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2757.321430017151,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003643442301302704",
+            "extra": "mean: 362.67081128578457 usec\nrounds: 1595"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58883.26323317062,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023516978521629146",
+            "extra": "mean: 16.98275443805009 usec\nrounds: 12168"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10928.360690547275,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0023897555434744884",
+            "extra": "mean: 91.50503248533624 usec\nrounds: 5387"
           }
         ]
       }
