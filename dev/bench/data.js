@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761030382660,
+  "lastUpdate": 1761030521151,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -9340,6 +9340,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00003408471771577948",
             "extra": "mean: 60.46987478554168 usec\nrounds: 4081"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "2c49ea8ae646e93a8e0a404ba413d45ad47071fa",
+          "message": "fix(ci): include dev dependencies for pytest in test jobs\n\nRoot cause: Unit tests were failing with \"pytest: command not found\"\nbecause `uv sync --no-dev` excluded all dev dependencies, including\npytest and testing tools.\n\nSolution: Changed to `uv sync` (without --no-dev flag) to include\ndev dependencies needed for testing.\n\nImpact:\n- ✅ Fixes pytest not found error in all Python test jobs (3.10, 3.11, 3.12)\n- ✅ Maintains fast lockfile-based installation (no resolution needed)\n- ✅ No impact on Docker builds (they have separate installation logic)\n\nFiles modified:\n- .github/workflows/ci.yaml:91 - Removed --no-dev flag from uv sync\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T03:07:29-04:00",
+          "tree_id": "4b6327b110155bb80cb033975dff9243be729c39",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/2c49ea8ae646e93a8e0a404ba413d45ad47071fa"
+        },
+        "date": 1761030519950,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51130.201128878834,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021195303450977163",
+            "extra": "mean: 19.55791250418513 usec\nrounds: 6206"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52390.44532324548,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002202738190924698",
+            "extra": "mean: 19.087449893393117 usec\nrounds: 12174"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49218.85464408107,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024655533343727268",
+            "extra": "mean: 20.317417120559867 usec\nrounds: 19649"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.83739483452217,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001764572342176278",
+            "extra": "mean: 5.240063148352629 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.345028296677263,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007795532495814879",
+            "extra": "mean: 51.69286830000459 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936855239819176,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002445381414446246",
+            "extra": "mean: 100.6354602000016 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2575274.5077192704,
+            "unit": "iter/sec",
+            "range": "stddev: 5.395086295285855e-8",
+            "extra": "mean: 388.3081189995647 nsec\nrounds: 196503"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5051.061212012939,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001589594124128936",
+            "extra": "mean: 197.97819864500948 usec\nrounds: 443"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2881.090129460221,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003959879894910113",
+            "extra": "mean: 347.0908423775526 usec\nrounds: 2709"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2772.3558256609163,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004669809857079441",
+            "extra": "mean: 360.70405924953906 usec\nrounds: 1519"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59037.90898101298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020680062388237437",
+            "extra": "mean: 16.938269279178012 usec\nrounds: 12734"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16882.223024840576,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002452894868528283",
+            "extra": "mean: 59.2339053055155 usec\nrounds: 4203"
           }
         ]
       }
