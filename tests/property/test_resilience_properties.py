@@ -179,7 +179,7 @@ class TestTimeoutProperties:
         """Property: Timeout correctly determines if operation times out"""
         from mcp_server_langgraph.core.exceptions import TimeoutError as ResilienceTimeoutError
 
-        # Add margin to avoid race conditions
+        # Add margin to avoid race conditions and timing precision issues
         margin = 0.05
 
         # Skip tests where sleep_duration is too close to timeout_duration
@@ -192,12 +192,12 @@ class TestTimeoutProperties:
             await asyncio.sleep(sleep_duration)
             return "completed"
 
-        if sleep_duration > timeout_duration + margin:
-            # Should timeout
+        if sleep_duration > timeout_duration:
+            # Should timeout (sleep exceeds timeout)
             with pytest.raises((ResilienceTimeoutError, asyncio.TimeoutError)):
                 await slow_operation()
         else:
-            # Should complete successfully (sleep_duration < timeout_duration - margin)
+            # Should complete successfully (sleep finishes before timeout)
             result = await slow_operation()
             assert result == "completed"
 
