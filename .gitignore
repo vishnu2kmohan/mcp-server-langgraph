@@ -40,7 +40,6 @@ venv.bak/
 
 # uv
 .uv_cache/
-uv.lock
 
 # PyCharm
 .idea/
@@ -186,6 +185,7 @@ _site/
 # Claude Code - ignore settings but track commands
 .claude/*
 !.claude/commands/
+# Note: .claude/context/ should not be tracked as it contains session-specific info
 .vscode/.ropeproject/
 .vscode/tags
 

@@ -9,6 +9,7 @@ repos:
         exclude: ^deployments/helm/mcp-server-langgraph/templates/
       - id: check-added-large-files
         args: ['--maxkb=500']
+        exclude: ^uv\.lock$  # uv lockfile can be large (738KB)
       - id: check-merge-conflict
       - id: detect-private-key
       - id: check-json
