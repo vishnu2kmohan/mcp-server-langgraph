@@ -38,8 +38,8 @@ dependencies = [
     "opentelemetry-api>=1.38.0",
     "opentelemetry-sdk>=1.38.0",
     "opentelemetry-instrumentation-logging>=0.59b0",
-    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    # OTEL exporters moved to optional-dependencies[observability-*]
+    # Choose observability-grpc OR observability-http based on your backend
     "openfga-sdk>=0.9.7",
     # infisical-python moved to optional-dependencies[secrets]
     # Application falls back to environment variables if not installed
@@ -105,15 +105,73 @@ secrets = [
     "infisical-python>=2.1.7,<=2.3.6",
 ]
 
-embeddings = [
-    # Self-hosted embeddings (backwards compatibility)
-    "sentence-transformers>=5.1.1",
+# ==============================================================================
+# EMBEDDING OPTIONS - Choose based on deployment strategy
+# ==============================================================================
+#
+# embeddings-api:   Lightweight (~0MB overhead) - Uses Google Gemini API
+#                   Already included in core dependencies via langchain-google-genai
+#                   Recommended for: Cloud deployments, cost-sensitive environments
+#
+# embeddings-local: Heavy (~800MB overhead) - Self-hosted sentence-transformers
+#                   Includes: PyTorch, transformers, tokenizers
+#                   Recommended for: Air-gapped environments, data residency requirements
+#
+# ==============================================================================
+
+embeddings-api = [
+    # API-based embeddings (already in core deps, listed for clarity)
+    # No additional dependencies required
 ]
 
+embeddings-local = [
+    # Self-hosted embeddings with full ML stack
+    "sentence-transformers>=5.1.1",
+    "torch>=2.0.0,<3.0.0",  # Explicit PyTorch version control
+]
+
+# Backwards compatibility alias
+embeddings = [
+    "sentence-transformers>=5.1.1",  # Maps to embeddings-local
+]
+
+# ==============================================================================
+# OBSERVABILITY OPTIONS - Choose based on backend
+# ==============================================================================
+
+observability-grpc = [
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+]
+
+observability-http = [
+    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+]
+
+# Both exporters (for flexibility)
+observability-full = [
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+]
+
+# ==============================================================================
+# COMBINED EXTRAS
+# ==============================================================================
+
+# All production features (explicit control, no heavy ML by default)
 all = [
-    # Install all optional dependencies
-    "infisical-python>=2.1.7,<2.3.6",
-    "sentence-transformers>=2.2.0",
+    "infisical-python>=2.1.7,<=2.3.6",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    # embeddings-local intentionally excluded - choose explicitly
+]
+
+# Everything including local embeddings (for full-featured deployments)
+all-full = [
+    "infisical-python>=2.1.7,<=2.3.6",
+    "sentence-transformers>=5.1.1",
+    "torch>=2.0.0,<3.0.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
 ]
 
 [project.scripts]

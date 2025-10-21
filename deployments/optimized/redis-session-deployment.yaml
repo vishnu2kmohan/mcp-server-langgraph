@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-session
+  namespace: mcp-server-langgraph
+  labels:
+    app: redis-session
+    component: session-store
+  annotations:
+    optimized.mcp/changes: "cpu:100m→50m,memory:256Mi→128Mi"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-session
+  template:
+    metadata:
+      labels:
+        app: redis-session
+        component: session-store
+    spec:
+      serviceAccountName: mcp-server-langgraph
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: redis
+          containerPort: 6379
+          protocol: TCP
+
+        command: ["redis-server"]
+        args:
+          - "--maxmemory"
+          - "128mb"  # Match memory limit
+          - "--maxmemory-policy"
+          - "allkeys-lru"
+          - "--save"
+          - ""  # No persistence for sessions
+          - "--appendonly"
+          - "no"
+
+        # OPTIMIZED: Right-sized for session storage
+        resources:
+          requests:
+            cpu: 50m           # Was: 100m (-50%)
+            memory: 128Mi      # Was: 256Mi (-50%)
+          limits:
+            cpu: 200m          # Was: 500m (-60%)
+            memory: 256Mi      # Was: 1Gi (-75%)
+
+        startupProbe:
+          exec:
+            command: ["redis-cli", "ping"]
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 20
+
+        livenessProbe:
+          exec:
+            command: ["redis-cli", "ping"]
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        readinessProbe:
+          exec:
+            command: ["redis-cli", "ping"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 999
+          capabilities:
+            drop:
+            - ALL

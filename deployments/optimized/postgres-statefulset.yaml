@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: mcp-server-langgraph
+  labels:
+    app: postgres
+    component: database
+  annotations:
+    optimized.mcp/changes: "cpu:250m→100m,memory:512Mi→256Mi,storage:10Gi→2Gi"
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+    spec:
+      serviceAccountName: mcp-server-langgraph
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+
+      containers:
+      - name: postgres
+        image: postgres:16.8-alpine
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: postgres
+          containerPort: 5432
+          protocol: TCP
+
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: mcp-server-langgraph-secrets
+              key: postgres-username
+              optional: true
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-server-langgraph-secrets
+              key: postgres-password
+              optional: true
+        - name: POSTGRES_MULTIPLE_DATABASES
+          value: "openfga,keycloak"
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+
+        # OPTIMIZED: Right-sized resources for read-heavy workload
+        resources:
+          requests:
+            cpu: 100m          # Was: 250m (-60%)
+            memory: 256Mi      # Was: 512Mi (-50%)
+          limits:
+            cpu: 500m          # Was: 2000m (-75%)
+            memory: 512Mi      # Was: 2Gi (-75%)
+
+        startupProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U ${POSTGRES_USER}"]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U ${POSTGRES_USER}"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U ${POSTGRES_USER}"]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 999
+          capabilities:
+            drop:
+            - ALL
+
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+      labels:
+        app: postgres
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 2Gi  # Was: 10Gi (-80%)
+      # Enable volume expansion for future growth
+      allowVolumeExpansion: true

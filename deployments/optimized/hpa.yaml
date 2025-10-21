@@ -1,0 +1,50 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+  annotations:
+    optimized.mcp/changes: "minReplicas:3→2,maxReplicas:10→20,cpu-threshold:70→60"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mcp-server-langgraph
+  minReplicas: 2          # Was: 3 (-33% base cost)
+  maxReplicas: 20         # Was: 10 (better burst capacity)
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60  # Was: 70 (more responsive scaling)
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70  # Was: 80 (safer buffer)
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 4
+        periodSeconds: 30
+      selectPolicy: Max
