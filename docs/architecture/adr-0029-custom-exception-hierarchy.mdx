@@ -1,0 +1,433 @@
+---
+title: "ADR-0029: Custom Exception Hierarchy"
+description: "Comprehensive custom exception hierarchy for improved error handling and observability"
+---
+
+# ADR-0029: Custom Exception Hierarchy
+
+<Note>
+**Status**: Accepted
+**Date**: 2025-10-20
+**Deciders**: Engineering Team
+</Note>
+
+## Context
+
+The MCP server currently uses generic Python exceptions (`Exception`, `ValueError`, `RuntimeError`) throughout the codebase.
+
+### Current Problems
+
+<Warning>
+1. **Poor Error Handling**: Cannot distinguish between different error types
+2. **Vague Error Messages**: Generic exceptions lack context
+3. **Difficult Debugging**: Hard to trace error source in logs
+4. **Lost Context**: Stack traces don't show business logic clearly
+5. **Poor Observability**: Cannot filter errors by type in metrics
+6. **Inconsistent HTTP Status**: Same exception → different status codes
+</Warning>
+
+### Analysis
+
+```bash
+# Current state: No custom exceptions
+$ grep -r "class.*Exception" src/ | wc -l
+0
+
+# Examples of generic exceptions:
+src/auth/middleware.py:    raise Exception("JWT verification failed")
+src/llm/factory.py:         raise ValueError(f"Unsupported model")
+src/auth/openfga.py:        raise RuntimeError("OpenFGA check failed")
+```
+
+### Impact
+
+- Error handling is reactive, not proactive
+- Difficult to implement proper retry logic
+- Metrics are generic (all errors lumped together)
+- User-facing errors lack clarity
+
+## Decision
+
+Implement a **comprehensive custom exception hierarchy** that:
+
+<Check>Provides clear error semantics</Check>
+<Check>Includes rich error context (metadata, trace IDs)</Check>
+<Check>Maps to HTTP status codes automatically</Check>
+<Check>Enables fine-grained error handling</Check>
+<Check>Improves observability and debugging</Check>
+
+## Exception Hierarchy
+
+```
+MCPServerException (base)
+├── ConfigurationError
+│   ├── MissingConfigError
+│   ├── InvalidConfigError
+│   └── SecretNotFoundError
+│
+├── AuthenticationError (401)
+│   ├── InvalidCredentialsError
+│   ├── TokenExpiredError
+│   ├── TokenInvalidError
+│   └── MFARequiredError
+│
+├── AuthorizationError (403)
+│   ├── PermissionDeniedError
+│   ├── ResourceNotFoundError
+│   └── InsufficientPermissionsError
+│
+├── RateLimitError (429)
+│   ├── RateLimitExceededError
+│   └── QuotaExceededError
+│
+├── ValidationError (400)
+│   ├── InputValidationError
+│   ├── SchemaValidationError
+│   └── ConstraintViolationError
+│
+├── ExternalServiceError (503)
+│   ├── LLMProviderError
+│   │   ├── LLMRateLimitError
+│   │   ├── LLMTimeoutError
+│   │   └── LLMModelNotFoundError
+│   ├── OpenFGAError
+│   │   ├── OpenFGATimeoutError
+│   │   └── OpenFGAUnavailableError
+│   ├── RedisError
+│   │   ├── RedisConnectionError
+│   │   └── RedisTimeoutError
+│   └── KeycloakError
+│
+├── ResilienceError
+│   ├── CircuitBreakerOpenError
+│   ├── RetryExhaustedError
+│   ├── TimeoutError
+│   └── BulkheadRejectedError
+│
+├── StorageError
+│   ├── DataNotFoundError
+│   └── DataIntegrityError
+│
+├── ComplianceError
+│   ├── GDPRViolationError
+│   ├── HIPAAViolationError
+│   └── SOC2ViolationError
+│
+└── InternalServerError (500)
+    ├── UnexpectedError
+    └── NotImplementedError
+```
+
+## Base Exception Class
+
+### Features
+
+```python
+class MCPServerException(Exception):
+    """
+    Base exception for all MCP server errors.
+
+    Attributes:
+        message: Human-readable error message
+        error_code: Machine-readable code (e.g., "auth.token_expired")
+        status_code: HTTP status code (e.g., 401, 500)
+        category: Error category for metrics
+        retry_policy: Whether this error is retry-able
+        metadata: Additional context (user_id, resource_id)
+        trace_id: OpenTelemetry trace ID for correlation
+        user_message: User-friendly message (safe to display)
+    """
+```
+
+### Error Categories
+
+```python
+class ErrorCategory(str, Enum):
+    CLIENT_ERROR = "client_error"      # 4xx errors
+    SERVER_ERROR = "server_error"      # 5xx errors
+    EXTERNAL_ERROR = "external_error"  # External service
+    RATE_LIMIT = "rate_limit"          # 429 errors
+    AUTH_ERROR = "auth_error"          # 401/403 errors
+```
+
+### Retry Policy
+
+```python
+class RetryPolicy(str, Enum):
+    NEVER = "never"          # Never retry (client errors)
+    ALWAYS = "always"        # Always retry (transient)
+    CONDITIONAL = "conditional"  # Retry if idempotent
+```
+
+## Usage Examples
+
+### Raising Exceptions
+
+```python
+# Authentication error with context
+raise TokenExpiredError(
+    message="JWT token expired at 2025-10-20T10:30:00Z",
+    metadata={
+        "user_id": "user:alice",
+        "token_age": "2 hours",
+        "issued_at": "2025-10-20T08:30:00Z"
+    }
+)
+
+# External service error
+raise LLMProviderError(
+    message="Anthropic API returned 503",
+    metadata={
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet",
+        "status_code": 503
+    },
+    retry_policy=RetryPolicy.ALWAYS
+)
+
+# Validation error
+raise InputValidationError(
+    message="Email format is invalid",
+    metadata={
+        "field": "email",
+        "value": "not-an-email",
+        "constraint": "email_format"
+    }
+)
+```
+
+### Handling Exceptions
+
+```python
+from mcp_server_langgraph.core.exceptions import (
+    MCPServerException,
+    AuthenticationError,
+    ExternalServiceError,
+    RetryPolicy
+)
+
+try:
+    result = await call_llm(prompt)
+except ExternalServiceError as e:
+    # Retry based on policy
+    if e.retry_policy == RetryPolicy.ALWAYS:
+        await retry_with_backoff(call_llm, prompt)
+    else:
+        raise
+
+except AuthenticationError as e:
+    # Log with full context
+    logger.error(
+        "Authentication failed",
+        extra={
+            "error_code": e.error_code,
+            "trace_id": e.trace_id,
+            "metadata": e.metadata
+        }
+    )
+    # Return user-friendly error
+    return JSONResponse(
+        status_code=e.status_code,
+        content=e.to_dict()
+    )
+```
+
+### JSON Response Format
+
+```json
+{
+  "error": {
+    "code": "auth.token_expired",
+    "message": "Your session has expired. Please sign in again.",
+    "details": "JWT token expired at 2025-10-20T10:30:00Z",
+    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+    "metadata": {
+      "user_id": "user:alice",
+      "token_age": "2 hours"
+    }
+  }
+}
+```
+
+## FastAPI Integration
+
+### Exception Handlers
+
+```python
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+@app.exception_handler(MCPServerException)
+async def mcp_exception_handler(
+    request: Request,
+    exc: MCPServerException
+):
+    """Global handler for all MCP exceptions"""
+    # Log with full context
+    logger.error(
+        exc.message,
+        extra={
+            "error_code": exc.error_code,
+            "category": exc.category.value,
+            "trace_id": exc.trace_id,
+            "metadata": exc.metadata
+        }
+    )
+
+    # Record metric
+    error_counter.labels(
+        error_code=exc.error_code,
+        category=exc.category.value
+    ).inc()
+
+    # Return user-friendly response
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=exc.to_dict()
+    )
+```
+
+## Observability Integration
+
+### Metrics
+
+```python
+from prometheus_client import Counter
+
+# Error counter by type
+error_counter = Counter(
+    "mcp_errors_total",
+    "Total errors by type",
+    labelnames=["error_code", "category", "retry_policy"]
+)
+
+# Track errors
+try:
+    result = await some_operation()
+except MCPServerException as e:
+    error_counter.labels(
+        error_code=e.error_code,
+        category=e.category.value,
+        retry_policy=e.retry_policy.value
+    ).inc()
+    raise
+```
+
+### Logging
+
+```python
+import structlog
+
+logger = structlog.get_logger()
+
+try:
+    result = await risky_operation()
+except MCPServerException as e:
+    logger.error(
+        "Operation failed",
+        error_code=e.error_code,
+        category=e.category.value,
+        trace_id=e.trace_id,
+        metadata=e.metadata,
+        exc_info=True  # Include stack trace
+    )
+```
+
+## Migration Strategy
+
+### Phase 1: Create Exception Hierarchy
+
+<Check>Define all exception classes in `core/exceptions.py`</Check>
+<Check>Add base class with rich context</Check>
+<Check>Create error categories and retry policies</Check>
+
+### Phase 2: Replace Generic Exceptions
+
+**Before**:
+```python
+raise Exception("JWT verification failed")
+```
+
+**After**:
+```python
+raise TokenInvalidError(
+    message="JWT signature verification failed",
+    metadata={"algorithm": "RS256", "issuer": issuer}
+)
+```
+
+### Phase 3: Add Exception Handlers
+
+<Check>Add FastAPI exception handlers</Check>
+<Check>Integrate with metrics and logging</Check>
+<Check>Test error responses</Check>
+
+### Phase 4: Update Tests
+
+```python
+# Old test
+with pytest.raises(Exception):
+    verify_token(invalid_token)
+
+# New test
+with pytest.raises(TokenInvalidError) as exc_info:
+    verify_token(invalid_token)
+
+assert exc_info.value.error_code == "auth.token_invalid"
+assert exc_info.value.status_code == 401
+assert exc_info.value.retry_policy == RetryPolicy.NEVER
+```
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Exception Handling
+EXCEPTION_INCLUDE_TRACEBACK=false  # Don't expose in prod
+EXCEPTION_DETAILED_ERRORS=false    # Sanitize error messages
+EXCEPTION_LOG_LEVEL=ERROR          # Minimum level to log
+```
+
+## Consequences
+
+### Positive
+
+<Check>**Clear Error Semantics** - Explicit exception types</Check>
+<Check>**Better Debugging** - Rich context in every error</Check>
+<Check>**Improved Observability** - Metrics by error type</Check>
+<Check>**Automatic HTTP Mapping** - Consistent status codes</Check>
+<Check>**Retry Logic** - Built-in retry policy guidance</Check>
+<Check>**User-Friendly** - Safe messages for end users</Check>
+
+### Negative
+
+<Warning>**More Code** - Need to define many exception classes</Warning>
+<Warning>**Learning Curve** - Developers need to know hierarchy</Warning>
+<Warning>**Migration Effort** - Replace all generic exceptions</Warning>
+
+### Mitigations
+
+1. **Auto-complete**: IDE will suggest correct exception type
+2. **Documentation**: Clear examples for each exception
+3. **Linting**: Add rules to detect generic exceptions
+4. **Templates**: Provide exception templates for common cases
+
+## Performance Impact
+
+- **Minimal overhead**: Exception creation ~1-2μs
+- **No runtime impact**: Only affects error paths
+- **Improved debugging**: Saves hours of troubleshooting
+
+## Related
+
+- [ADR-0017: Error Handling Strategy](./adr-0017-error-handling-strategy)
+- [ADR-0026: Resilience Patterns](./adr-0026-resilience-patterns)
+- [API Error Responses](/api-reference/errors)
+
+---
+
+**Last Updated**: 2025-10-20
+**Next Review**: 2025-11-20

@@ -91,6 +91,9 @@ What becomes easier or more difficult to do because of this change?
 | [0024](0024-agentic-loop-implementation.md) | Agentic Loop Implementation (Gather-Action-Verify-Repeat) | Accepted | 2025-10-17 |
 | [0025](0025-anthropic-best-practices-enhancements.md) | Anthropic Best Practices - Advanced Enhancements | Accepted | 2025-10-17 |
 | [0026](0026-lazy-observability-initialization.md) | Lazy Observability Initialization | Accepted | 2025-10-17 |
+| [0027](0027-rate-limiting-strategy.md) | Rate Limiting Strategy for API Protection | Accepted | 2025-10-20 |
+| [0028](0028-caching-strategy.md) | Multi-Layer Caching Strategy | Accepted | 2025-10-20 |
+| [0029](0029-custom-exception-hierarchy.md) | Custom Exception Hierarchy | Accepted | 2025-10-20 |
 
 ## When to Create an ADR
 

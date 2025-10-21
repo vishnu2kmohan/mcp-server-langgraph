@@ -512,7 +512,7 @@ Add to your MCP client config (e.g., Claude Desktop):
 
 ## Authentication & Authorization
 
-### Token-Based Authentication (v2.8.0+)
+### Token-Based Authentication (v2.8.0)
 
 All tool calls now require JWT token authentication for security:
 

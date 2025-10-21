@@ -3,7 +3,38 @@
 Documentation of deprecated code and planned removal timeline.
 
 Generated: 2025-10-20
+Last Updated: 2025-10-21
 Status: Active
+
+---
+
+## Recent Cleanup (2025-10-21)
+
+The following deprecated items have been **removed** from the codebase:
+
+### ✅ Removed Deprecations
+1. **Deployment Configs**: Deleted `deployments/DEPRECATED/` directory (~224KB)
+   - `kubernetes-20251021-002310/` - Old Kubernetes manifests
+   - `kustomize-20251021-002310/` - Old Kustomize overlays
+   - **Impact**: No breaking changes - consolidated structure is active
+
+2. **Docker Files**: Deleted `docker/DEPRECATED/` directory (379 lines)
+   - `Dockerfile.deprecated` - Old multi-stage build
+   - `Dockerfile.old` - Legacy build configuration
+   - **Impact**: No breaking changes - current Dockerfile is optimized
+
+3. **Requirements File**: Deleted `requirements-infisical.txt`
+   - Functionality migrated to `pyproject.toml[project.optional-dependencies.secrets]`
+   - **Migration Guide**: See `docs/guides/uv-migration.md`
+
+4. **MCP Manifest**: Removed SSE transport from `.mcp/manifest.json`
+   - Deprecated `http-sse` transport removed
+   - Only `stdio` and `streamable-http` transports remain
+   - **Impact**: No breaking changes - SSE was never implemented
+
+### Disk Space Reclaimed
+- Total: ~246KB of deprecated files removed
+- Repository is now cleaner and easier to maintain
 
 ---
 
@@ -304,21 +335,27 @@ The `old_feature` has been deprecated in favor of `new_feature`.
 
 ## Summary
 
-### Current Status
-- **Total Deprecations**: 2
-- **Formally Marked**: 1 (`username` field)
-- **Comment-Only**: 1 (`embedding_model` field)
-- **Removal Planned**: v3.0.0
+### Current Status (as of 2025-10-21)
+- **Active Code Deprecations**: 2
+  - **Formally Marked**: 1 (`username` field with `deprecated=True`)
+  - **Comment-Only**: 1 (`embedding_model` field - needs formalization)
+- **Removed Deprecations**: 4 (deployment configs, Docker files, requirements file, SSE transport)
+- **Removal Planned**: v3.0.0 for active deprecations
 
-### Action Items
+### Completed Action Items
 1. ✅ Document all deprecations (this file)
-2. [ ] Formalize `embedding_model` deprecation
-3. [ ] Add deprecation warnings (v2.9.0)
-4. [ ] Update MIGRATION.md
-5. [ ] Plan v3.0.0 removal
+2. ✅ Remove DEPRECATED directories and files (2025-10-21 cleanup)
+3. ✅ Update deprecation tracking documentation
+
+### Pending Action Items
+1. [ ] Formalize `embedding_model` deprecation with proper Pydantic marking
+2. [ ] Add runtime deprecation warnings for `username` field (v2.9.0)
+3. [ ] Update all examples to use `user_id` instead of `username`
+4. [ ] Add comprehensive migration guide to MIGRATION.md
+5. [ ] Plan v3.0.0 breaking changes removal
 
 ---
 
 **Maintained by**: Development Team
-**Last Updated**: 2025-10-20
-**Next Review**: 2025-11-20 (monthly during active deprecation period)
+**Last Updated**: 2025-10-21
+**Next Review**: 2025-11-21 (monthly during active deprecation period)

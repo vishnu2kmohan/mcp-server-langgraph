@@ -25,17 +25,6 @@
       "url": "https://langgraph-agent.example.com",
       "endpoint": "/message",
       "streaming": true
-    },
-    "http-sse": {
-      "url": "https://langgraph-agent.example.com",
-      "endpoints": {
-        "sse": "/sse",
-        "messages": "/messages",
-        "tools": "/tools",
-        "resources": "/resources"
-      },
-      "deprecated": true,
-      "deprecationMessage": "SSE transport is deprecated. Use streamable-http instead."
     }
   },
   "capabilities": {
