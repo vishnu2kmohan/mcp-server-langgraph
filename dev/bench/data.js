@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761033726660,
+  "lastUpdate": 1761033910628,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -9988,6 +9988,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002615689809433723",
             "extra": "mean: 94.59041894917875 usec\nrounds: 5404"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b1ebcb9e13dbd5e9e8207f1c1160af56c46cdf7c",
+          "message": "fix(tests): correct timeout property test logic\n\nFix flaky property test that was failing in CI due to incorrect\nboundary condition logic.\n\n**Issue:**\nTest `test_timeout_enforced_correctly` failed in CI with:\n- sleep_duration=0.1\n- timeout_duration=0.05\n- Expected: timeout should occur (0.1s > 0.05s)\n- Actual: test expected successful completion (incorrect logic)\n\n**Root Cause:**\nLine 195 had incorrect condition:\n```python\nif sleep_duration > timeout_duration + margin:  # WRONG\n```\n\nThis evaluated to `0.1 > 0.1` = False for the failing case,\ncausing the test to go to the else branch expecting success,\nbut the operation actually timed out (correctly).\n\n**Fix:**\nSimplified the logic to:\n```python\nif sleep_duration > timeout_duration:\n    # Should timeout\nelse:\n    # Should complete\n```\n\nThe margin is only used to skip borderline cases (line 187-188)\nwhere timing precision could cause flakiness.\n\n**Why it wasn't caught locally:**\n- Local Hypothesis config: max_examples=25 (fast iteration)\n- CI runs with more examples or different random seed\n- The failing case (0.1, 0.05) is relatively rare in sample space\n- Hypothesis database didn't have this example stored\n\n**Testing:**\n✅ Test passes with fix\n✅ Test passes with deterministic seed (--hypothesis-seed=0)\n✅ Logic now matches actual timeout behavior\n\n**Files changed:**\n- tests/property/test_resilience_properties.py:195-202\n  - Fixed timeout expectation logic\n  - Improved comments for clarity\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T04:03:53-04:00",
+          "tree_id": "9582008c4c785ae82b545bd44e40fa7708e00390",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b1ebcb9e13dbd5e9e8207f1c1160af56c46cdf7c"
+        },
+        "date": 1761033910114,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50796.17575826134,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023448341258784642",
+            "extra": "mean: 19.686521378282357 usec\nrounds: 6268"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53291.25918941998,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002223589516470556",
+            "extra": "mean: 18.7648033694526 usec\nrounds: 12465"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50366.57648656214,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023825159139054618",
+            "extra": "mean: 19.854436607713474 usec\nrounds: 19821"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.076612899035,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016880278981066128",
+            "extra": "mean: 5.233502859548805 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.42726199447782,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000137705293011135",
+            "extra": "mean: 51.47405745000242 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.95167983748608,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003068490158616373",
+            "extra": "mean: 100.48554779999961 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2553759.8499781517,
+            "unit": "iter/sec",
+            "range": "stddev: 5.070364343991029e-8",
+            "extra": "mean: 391.5794979737642 nsec\nrounds: 198808"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5015.823254383125,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014157751670934096",
+            "extra": "mean: 199.36906650890072 usec\nrounds: 421"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2892.335271097339,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001060701277978796",
+            "extra": "mean: 345.74138413096364 usec\nrounds: 2382"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2823.1375944064084,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000460331769804584",
+            "extra": "mean: 354.2158207171123 usec\nrounds: 1506"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58881.47021480962,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002104199881181503",
+            "extra": "mean: 16.9832715853023 usec\nrounds: 12578"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10644.6061068695,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0025535120279452494",
+            "extra": "mean: 93.94429347222625 usec\nrounds: 5193"
           }
         ]
       }
