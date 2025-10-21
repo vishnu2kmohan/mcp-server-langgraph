@@ -341,7 +341,7 @@ jobs:
 
     - name: Install linting tools
       run: |
-        uv sync --frozen
+        uv sync --frozen --all-groups
         echo "✓ Linting tools installed from lockfile"
 
     - name: Validate dependency consistency

@@ -11,6 +11,16 @@ import pytest
 from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
+from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+
+
+@pytest.fixture(autouse=True)
+def reset_llm_circuit_breaker():
+    """Reset the LLM circuit breaker before each test to ensure clean state."""
+    reset_circuit_breaker("llm")
+    yield
+    # Also reset after test to ensure cleanup
+    reset_circuit_breaker("llm")
 
 
 @pytest.fixture
