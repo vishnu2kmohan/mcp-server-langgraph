@@ -142,6 +142,7 @@ jobs:
         file: docker/Dockerfile
         target: final-${{ matrix.variant }}
         push: ${{ github.event_name != 'pull_request' }}
+        load: ${{ github.event_name == 'pull_request' }}
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
@@ -157,7 +158,7 @@ jobs:
     - name: Test ${{ matrix.variant }} image
       if: github.event_name == 'pull_request'
       run: |
-        docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }} \
+        docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest \
           python -c "import mcp_server_langgraph.core.agent; print('✓ Import successful')"
 
   # ============================================================================
