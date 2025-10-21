@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761027800185,
+  "lastUpdate": 1761028368278,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8800,6 +8800,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002809368477267218",
             "extra": "mean: 97.10572557100976 usec\nrounds: 5342"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "25e8ee95cd6b9b9db90cb540cb5b28adf6ebce9d",
+          "message": "feat: comprehensive infrastructure optimization (CI/CD, Docker, K8s, Makefile)\n\nThis optimization pass achieves 15-20% additional performance improvement and 40%\nreduction in configuration duplication across all infrastructure components.\n\n## Phase 1: Cleanup & Consolidation\n\n### Remove Duplicate CI Workflows\n- Move .github/workflows/ci-optimized.yaml → DEPRECATED/ (100% duplicate of ci.yaml)\n- Move .github/workflows/ci.old.yaml → DEPRECATED/\n- Single source of truth for CI/CD pipeline\n\n### Consolidate Dockerfiles\n- Rename docker/Dockerfile.optimized → docker/Dockerfile (canonical)\n- Move docker/Dockerfile → DEPRECATED/Dockerfile.deprecated\n- Move docker/Dockerfile.old → DEPRECATED/\n- Update .github/workflows/ci.yaml to reference docker/Dockerfile\n- All build targets now use single optimized multi-stage Dockerfile\n\n### Fix Grafana Port Mismatch\n- Update docker-compose.yml: GF_SERVER_ROOT_URL http://localhost:3000 → http://localhost:3001\n- Update Makefile: All Grafana URLs from :3000 → :3001 (lines 127, 580, 608-625)\n- Eliminates redirect errors and confusion\n\n### Standardize Image Tag Strategy\n- Consistent semantic versioning across all environments\n- Dev: dev-latest → 2.7.0-dev\n- Staging: staging-2.7.0 → 2.7.0-rc\n- Production: v2.7.0 → 2.7.0 (removed v prefix)\n\n## Phase 2: Performance Enhancements\n\n### Makefile Parallel Execution\n- Add .NOTPARALLEL for sequential-only targets (deploy-*, setup-*)\n- Prevents race conditions in stateful operations\n- Enables safe parallel execution with make -j4\n- Expected: 20-30% faster multi-target executions\n\n### Fast Health Check Target\n- Add new `make health-check-fast` (70% faster than full check)\n- Parallel port scanning for all 7 services\n- ~2-3s vs 8-10s for full check\n- Perfect for rapid development iterations\n\n## Phase 3: Resource Management\n\n### Docker Compose Resource Limits\n- Add resource limits to all 7 services (PostgreSQL, Redis x2, Jaeger, Prometheus, Grafana, AlertManager)\n- Total max: ~4 CPU cores, ~4GB RAM\n- Prevents resource exhaustion during local development\n- Protects host system from runaway processes\n\n### Enhanced BuildKit Caching in CI\n- Add inline cache export for all Docker builds\n- Multi-layer caching: GitHub Actions + Registry + Inline\n- Add BUILDKIT_INLINE_CACHE=1 build arg\n- Expected: 15-20% faster Docker builds, better cache hit rates\n\n### Deployment Smoke Tests\n- Add deployment-verification job to CI/CD\n- Automated pod readiness checks\n- Python import verification\n- Health endpoint testing\n- Automatic GitHub Step Summary with results\n\n## Impact Summary\n\nBuild Performance:\n- Cache hit rate: ~60% → ~80% (+33%)\n- Build time (cached): 120s → 90s (-25%)\n\nResource Efficiency:\n- Docker Compose RAM: Unlimited → 4GB bounded\n- Configuration duplication: 3 CI files → 1 (-67%)\n- Dockerfile variants: 3 files → 1 (-67%)\n\nDeveloper Experience:\n- Health check: 10s → 3s (-70%)\n- Deployment verification: Manual → Automatic (100%)\n- Port conflicts: Manual fix → Auto-corrected (100%)\n\nCost Savings:\n- GitHub Actions: Additional $7.50/month\n- Developer time: ~10 hours/month saved (~$750 value)\n\nAll changes are backward compatible.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T02:30:42-04:00",
+          "tree_id": "cabd797c5238df00654bfa1d57f2d88d26e1568d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/25e8ee95cd6b9b9db90cb540cb5b28adf6ebce9d"
+        },
+        "date": 1761028367177,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51849.88957767348,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002174075561574815",
+            "extra": "mean: 19.286444159190637 usec\nrounds: 8963"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54324.97356598353,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002098798768368912",
+            "extra": "mean: 18.407740204151086 usec\nrounds: 14215"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50714.41446737515,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002774118938046146",
+            "extra": "mean: 19.718259798568813 usec\nrounds: 20743"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.26608819332094,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014274856025533743",
+            "extra": "mean: 5.228318357142625 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.386952364507447,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00022151706810591543",
+            "extra": "mean: 51.58108304999729 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954130867257119,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028482930369848026",
+            "extra": "mean: 100.46080500000016 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2567473.3624882204,
+            "unit": "iter/sec",
+            "range": "stddev: 4.771929442215027e-8",
+            "extra": "mean: 389.48797467984946 nsec\nrounds: 193051"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5111.009144420723,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014930972403922479",
+            "extra": "mean: 195.65607725269274 usec\nrounds: 466"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2987.9613803623115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008737354428443969",
+            "extra": "mean: 334.67634708141475 usec\nrounds: 2570"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2833.441091943296,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003492996019676069",
+            "extra": "mean: 352.9277537632367 usec\nrounds: 1661"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58897.23179482734,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002079621085153733",
+            "extra": "mean: 16.9787266655175 usec\nrounds: 15567"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11220.202585755056,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002157951062915356",
+            "extra": "mean: 89.12495049506326 usec\nrounds: 5353"
           }
         ]
       }
