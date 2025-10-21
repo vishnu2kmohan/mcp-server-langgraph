@@ -17,18 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.12
-
-      - name: Install minimal dependencies
-        run: |
-          uv sync --no-dev
-          echo "✓ Minimal install complete"
+          python-version: '3.12'
+          cache-key-prefix: 'optional-minimal'
 
       - name: Verify import works
         run: |
@@ -58,13 +51,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.12
+          python-version: '3.12'
+          cache-key-prefix: 'optional-secrets'
 
       - name: Install with secrets extra
         run: |
@@ -93,13 +84,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.12
+          python-version: '3.12'
+          cache-key-prefix: 'optional-embeddings'
 
       - name: Install with embeddings extra
         run: |
@@ -127,13 +116,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.12
+          python-version: '3.12'
+          cache-key-prefix: 'optional-all-extras'
 
       - name: Install all extras
         run: |
@@ -163,16 +150,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.12
-
-      - name: Install dependencies
-        run: uv sync --no-dev
+          python-version: '3.12'
+          cache-key-prefix: 'optional-production'
 
       - name: Verify production config requirements
         run: |
@@ -217,16 +199,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.12
-
-      - name: Install dependencies
-        run: uv sync --no-dev
+          python-version: '3.12'
+          cache-key-prefix: 'optional-feature-flags'
 
       - name: Test with ${{ matrix.config.name }}
         run: |

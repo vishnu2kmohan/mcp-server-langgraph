@@ -49,7 +49,7 @@ on:
       - 'adr/**'
       - '.github/**'
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - '**.md'
       - '**.mdx'
