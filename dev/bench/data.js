@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761027127456,
+  "lastUpdate": 1761027247633,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8584,6 +8584,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002433161990490354",
             "extra": "mean: 91.72845089717691 usec\nrounds: 5407"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "09c94182b474bd067837a67f2fef08a0410b25f1",
+          "message": "fix(tests): ensure observability initialization in pytest-xdist workers\n\nAdd session-scoped autouse fixture to initialize observability in each\nworker process when running tests with pytest-xdist in parallel mode.\n\nThe pytest_configure hook only runs in the main process, not in worker\nprocesses, which caused RuntimeError when tests accessed lazy observability\nproxies (logger, metrics) before initialization.\n\nThis fix ensures the lazy observability system (introduced in v2.8.0 per\nADR-0026) works correctly with parallel test execution.\n\nFixes: FAILED tests/unit/test_search_tools.py::TestSearchKnowledgeBase::test_search_default_limit\nFixes: FAILED tests/unit/test_search_tools.py::TestSearchKnowledgeBase::test_search_empty_query\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T02:12:49-04:00",
+          "tree_id": "fb89a9e2c4299d1d26aa0ca3b593c2fe88509f01",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/09c94182b474bd067837a67f2fef08a0410b25f1"
+        },
+        "date": 1761027246462,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 54440.03782322353,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001352774277184175",
+            "extra": "mean: 18.36883367434787 usec\nrounds: 6842"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 58517.88430144139,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012430637519381344",
+            "extra": "mean: 17.088792801337974 usec\nrounds: 12669"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 54089.668217195496,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001398131795242287",
+            "extra": "mean: 18.487819078211555 usec\nrounds: 18052"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.59970200884322,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009971232224744963",
+            "extra": "mean: 5.274269892857524 msec\nrounds: 168"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.528210388283664,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00019483057090853657",
+            "extra": "mean: 51.20796940000041 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941372762291536,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003534475140250075",
+            "extra": "mean: 100.58972980000149 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2498529.0646399106,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013022168634506798",
+            "extra": "mean: 400.2354882127899 nsec\nrounds: 189826"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6335.193826694869,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004541415137078583",
+            "extra": "mean: 157.8483669728081 usec\nrounds: 436"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2744.285995091636,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007172429568534476",
+            "extra": "mean: 364.39350774247873 usec\nrounds: 2454"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2930.813731074394,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010730197955519813",
+            "extra": "mean: 341.2021683252502 usec\nrounds: 1206"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 64871.745429180875,
+            "unit": "iter/sec",
+            "range": "stddev: 9.560863710421647e-7",
+            "extra": "mean: 15.415031511548877 usec\nrounds: 12789"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12549.786336278761,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0022295131610830677",
+            "extra": "mean: 79.68263149701703 usec\nrounds: 5137"
           }
         ]
       }
