@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761019893108,
+  "lastUpdate": 1761022473199,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -7612,6 +7612,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00009964644258835923",
             "extra": "mean: 60.86344743419184 usec\nrounds: 5203"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "e34deffd96ffafeb4c76af50f5b2e7ad79f88171",
+          "message": "fix(types): resolve 78% of mypy type errors (626 → 139)\n\nMajor improvements to type safety across the codebase:\n\nPhase 1: Simple Type Annotations (~150 errors fixed)\n- Added return type annotations (-> None, -> str, etc.) to 120+ functions\n- Fixed 34 generic type parameter issues (dict → dict[str, Any])\n- Removed 6 unused type: ignore comments\n- Fixed 8 unreachable code issues\n\nPhase 2: Function Signature Issues (~100 errors fixed)\n- Added missing parameter type annotations\n- Fixed optional parameter defaults (Optional[float] = None)\n- Added proper type hints to callback functions\n\nPhase 3: Complex Type Mismatches (~100 errors fixed)\n- Fixed Redis type issues in conversation_store.py\n- Fixed async/await type compatibility\n- Restructured exception handling logic\n- Fixed Optional type assignments\n\nPhase 4: Architecture-Specific Issues (~137 errors fixed)\n- auth/user_provider.py: Fixed Pydantic Field defaults, added TypedDict\n- mcp/server_streamable.py: Fixed TypedDict keys, OpenFGA API calls\n- resilience modules: Fixed retry/circuit breaker/fallback types\n- observability modules: Added proper return type annotations\n\nFixed 19 flake8 line length errors by moving type: ignore comments\n\nRemaining work:\n- 139 errors remain (mostly arg-type, unused-ignore, union-attr)\n- Files affected: api/gdpr.py (14), integrations/alerting.py (13)\n- Next steps: null safety checks, cleanup unused ignores\n\nAll other lint checks pass: flake8, black, isort, bandit ✓\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T00:53:18-04:00",
+          "tree_id": "fc620ba204f1556825d54dfcf4d799966102f2a8",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/e34deffd96ffafeb4c76af50f5b2e7ad79f88171"
+        },
+        "date": 1761022472134,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52683.53371148316,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019410260210403734",
+            "extra": "mean: 18.981262826377858 usec\nrounds: 6510"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54797.635693713695,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002081495659129437",
+            "extra": "mean: 18.24896252074464 usec\nrounds: 12060"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51138.72439762623,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022985995378649373",
+            "extra": "mean: 19.55465279549324 usec\nrounds: 20354"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.0224297263547,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001489708465849971",
+            "extra": "mean: 5.23498733333321 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.391957832017432,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013884168783612685",
+            "extra": "mean: 51.56776889999897 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.95560156123106,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018605717401189143",
+            "extra": "mean: 100.44596440000007 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2442938.91015264,
+            "unit": "iter/sec",
+            "range": "stddev: 4.717979013054486e-8",
+            "extra": "mean: 409.3430236196605 nsec\nrounds: 186568"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5080.040249713171,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001543944791914574",
+            "extra": "mean: 196.84883403364017 usec\nrounds: 476"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2922.045542248166,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010864350662808057",
+            "extra": "mean: 342.22601446198513 usec\nrounds: 2351"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2801.7332380500166,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003690410854962794",
+            "extra": "mean: 356.9219176255309 usec\nrounds: 1651"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60114.85986321438,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001862334809218374",
+            "extra": "mean: 16.63482211013058 usec\nrounds: 12890"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20194.36588054054,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004791147095351514",
+            "extra": "mean: 49.518762109960996 usec\nrounds: 5801"
           }
         ]
       }
