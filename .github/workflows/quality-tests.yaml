@@ -69,8 +69,11 @@ jobs:
       - name: Run property-based tests
         run: |
           # CI uses 100 examples for comprehensive testing (dev defaults to 25 for speed)
-          pytest -m property -v --tb=short --hypothesis-max-examples=100
+          # HYPOTHESIS_PROFILE=ci activates the CI profile registered in conftest.py
+          HYPOTHESIS_PROFILE=ci pytest -m property -v --tb=short
         timeout-minutes: 15
+        env:
+          HYPOTHESIS_PROFILE: ci
 
       - name: Upload property test results
         if: always()

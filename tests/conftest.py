@@ -30,6 +30,32 @@ os.environ.setdefault("ENABLE_METRICS", "false")
 os.environ.setdefault("ENABLE_CONSOLE_EXPORT", "false")
 
 
+# Configure Hypothesis profiles for property-based testing
+from hypothesis import settings
+
+# Register CI profile with comprehensive testing (100 examples)
+settings.register_profile(
+    "ci",
+    max_examples=100,
+    deadline=None,  # No deadline in CI for comprehensive testing
+    print_blob=True,  # Print failing examples for debugging
+    derandomize=True,  # Deterministic test execution in CI
+)
+
+# Register dev profile for fast iteration (25 examples)
+settings.register_profile(
+    "dev",
+    max_examples=25,
+    deadline=2000,  # 2 second deadline for fast feedback
+    print_blob=False,  # No blob printing in dev for clean output
+    derandomize=False,  # Randomized for better coverage
+)
+
+# Load appropriate profile based on environment
+# CI sets HYPOTHESIS_PROFILE=ci, defaults to dev otherwise
+settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
+
+
 # Initialize observability for tests (required after lazy init refactor)
 def pytest_configure(config):
     """Initialize observability system for tests."""
@@ -423,3 +449,56 @@ def async_context_manager():
         return AsyncContextManager()
 
     return _create
+
+
+@pytest.fixture(autouse=True)
+def reset_resilience_state():
+    """
+    Reset all resilience patterns between tests to prevent state pollution.
+
+    This fixture automatically runs before each test to ensure:
+    - Circuit breakers are closed
+    - Bulkheads are cleared
+    - Retry state is reset
+
+    This prevents test failures caused by resilience state from previous tests.
+    """
+    # Import resilience modules
+    try:
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+    except ImportError:
+        reset_circuit_breaker = None
+
+    try:
+        from mcp_server_langgraph.resilience.bulkhead import reset_bulkhead
+    except ImportError:
+        reset_bulkhead = None
+
+    # Reset all known circuit breakers
+    if reset_circuit_breaker:
+        known_services = ["llm", "openfga", "redis", "keycloak", "qdrant"]
+        for service in known_services:
+            try:
+                reset_circuit_breaker(service)
+            except Exception:
+                pass  # Ignore errors if service not initialized
+
+    # Reset bulkheads
+    if reset_bulkhead:
+        known_bulkheads = ["default", "llm", "openfga", "redis"]
+        for bulkhead_name in known_bulkheads:
+            try:
+                reset_bulkhead(bulkhead_name)
+            except Exception:
+                pass  # Ignore errors if bulkhead not initialized
+
+    yield
+
+    # Cleanup after test (optional, but helps with test isolation)
+    # Same cleanup logic can run after the test
+    if reset_circuit_breaker:
+        for service in ["llm", "openfga", "redis", "keycloak", "qdrant"]:
+            try:
+                reset_circuit_breaker(service)
+            except Exception:
+                pass
