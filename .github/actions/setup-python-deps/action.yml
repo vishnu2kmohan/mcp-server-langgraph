@@ -30,34 +30,34 @@ runs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ inputs.python-version }}
-        cache: 'pip'
-        cache-dependency-path: |
-          requirements-pinned.txt
-          requirements-test.txt
 
-    - name: Cache Python dependencies
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
+
+    - name: Cache uv dependencies
       uses: actions/cache@v4.3.0
       with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ inputs.cache-key-prefix }}-${{ hashFiles('requirements-pinned.txt', 'requirements-test.txt') }}
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-${{ inputs.cache-key-prefix }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
         restore-keys: |
-          ${{ runner.os }}-pip-${{ inputs.cache-key-prefix }}-
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-uv-${{ inputs.cache-key-prefix }}-
+          ${{ runner.os }}-uv-
 
     - name: Install base dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install -r requirements-pinned.txt
+        uv venv --python ${{ inputs.python-version }}
+        uv sync --frozen
       shell: bash
 
     - name: Install test dependencies
       if: inputs.install-test == 'true'
-      run: pip install -r requirements-test.txt
+      run: uv sync --frozen --group dev
       shell: bash
 
     - name: Validate dependency consistency
       run: |
-        pip check
+        uv pip check
         echo "✓ All dependencies are consistent (no conflicts detected)"
       shell: bash

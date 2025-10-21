@@ -131,49 +131,43 @@ source .venv/Scripts/activate
 ### Install Dependencies
 
 ```bash
-# Install main dependencies
-uv pip install -r requirements.txt
+# Install all dependencies including dev (recommended)
+uv sync --group dev
 
-# Install development dependencies
-uv pip install -r requirements-dev.txt
+# Or install production dependencies only
+uv sync
+
+# Or use the Makefile shorthand
+make install-dev  # Development + test dependencies
+make install      # Production dependencies only
 
 # Verify installation
-python -c "import fastapi, langchain, anthropic; print('All imports successful')"
+uv run python -c "import fastapi, langchain, anthropic; print('All imports successful')"
 ```
 
 ### Development Dependencies
 
-The `requirements-dev.txt` includes:
+The `pyproject.toml` `[dependency-groups]` section includes:
 
-```txt
-# Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-pytest-mock==3.12.0
-hypothesis==6.92.1
-
-# Code quality
-black==23.12.1
-isort==5.13.2
-flake8==7.0.0
-mypy==1.8.0
-bandit==1.7.6
-
-# Pre-commit hooks
-pre-commit==3.6.0
-
-# Load testing
-locust==2.20.0
-
-# Development tools
-ipython==8.19.0
-ipdb==0.13.13
-
-# Documentation
-mkdocs==1.5.3
-mkdocs-material==9.5.3
+```toml
+[dependency-groups]
+dev = [
+    "bandit>=1.8.0",           # Security scanning
+    "hypothesis>=6.142.1",     # Property-based testing
+    "hypothesis-jsonschema>=0.23.1",
+    "mypy>=1.18.0",            # Type checking
+    "pre-commit>=4.0.0",       # Git hooks
+    "pytest>=8.4.2",           # Testing framework
+    "pytest-asyncio>=1.2.0",   # Async test support
+    "pytest-benchmark>=5.1.0", # Performance benchmarking
+    "pytest-cov>=7.0.0",       # Code coverage
+    "pytest-mock>=3.15.1",     # Mocking utilities
+    "pytest-testmon>=2.1.3",   # Test selection
+    "pytest-xdist>=3.8.0",     # Parallel testing
+]
 ```
+
+All development dependencies are managed through `pyproject.toml` and installed via `uv sync --group dev`.
 
 ## IDE Setup
 

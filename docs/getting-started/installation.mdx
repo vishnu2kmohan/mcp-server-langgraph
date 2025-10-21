@@ -65,36 +65,35 @@ Choose the installation method that best fits your use case:
         ```
       </Step>
 
-      <Step title="Create Virtual Environment">
+      <Step title="Install uv Package Manager">
+        Install uv (recommended for fast dependency management):
+
         ```bash
-        # Create venv
-        python -m venv venv
+        # macOS/Linux
+        curl -LsSf https://astral.sh/uv/install.sh | sh
 
-        # Activate (macOS/Linux)
-        source venv/bin/activate
+        # Windows
+        powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-        # Activate (Windows PowerShell)
-        venv\Scripts\Activate.ps1
-
-        # Activate (Windows CMD)
-        venv\Scripts\activate.bat
+        # Verify installation
+        uv --version
         ```
 
         <Tip>
-          Always activate the virtual environment before running commands!
+          uv is 10-100x faster than pip and handles virtual environments automatically!
         </Tip>
       </Step>
 
       <Step title="Install Dependencies">
         ```bash
-        # Upgrade pip
-        pip install --upgrade pip
+        # Create venv and install dependencies (one command!)
+        uv sync
 
-        # Install runtime dependencies
-        pip install -r requirements.txt
+        # Or install runtime dependencies only
+        uv pip install -r requirements-pinned.txt
 
-        # Install development dependencies (optional)
-        pip install -r requirements-test.txt
+        # Install with development dependencies
+        uv sync --group dev
         ```
 
         Or use the Makefile:
