@@ -150,12 +150,9 @@ jobs:
           type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}
-          type=inline
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
-        build-args: |
-          BUILDKIT_INLINE_CACHE=1
 
     - name: Test ${{ matrix.variant }} image
       if: github.event_name == 'pull_request'
@@ -216,9 +213,6 @@ jobs:
           type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ steps.platform.outputs.name }}
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}-${{ steps.platform.outputs.name }}
-          type=inline
-        build-args: |
-          BUILDKIT_INLINE_CACHE=1
 
   # ============================================================================
   # CREATE MULTI-ARCH MANIFEST
