@@ -41,7 +41,7 @@ isort>=7.0.0  # Import sorter - use latest for best sorting (matches pyproject.t
 pylint>=3.3.9  # Additional linting - flexible for improvements
 
 # Coverage reporting
-coverage[toml]==7.10.7
+coverage[toml]==7.11.0
 
 # Security scanning
 bandit==1.8.6
