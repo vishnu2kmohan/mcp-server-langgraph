@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761024722540,
+  "lastUpdate": 1761026231251,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8152,6 +8152,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000005540582985762315",
             "extra": "mean: 50.29093389990016 usec\nrounds: 5295"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ee9c762bfe72a3b10d33dd8c030325c2994396f3",
+          "message": "feat: implement Grafana dashboards, AlertManager, Prometheus rules, and Jaeger tracing\n\nThis commit adds comprehensive observability infrastructure for both Docker\nand Kubernetes deployments, including dashboard provisioning, alerting, and\ndistributed tracing.\n\n## Docker Deployment Changes\n\n### Grafana Dashboards\n- Mount 9 pre-built dashboards in Grafana container\n- Add dashboard provisioning configuration\n- Dashboards: authentication, keycloak, langgraph-agent, llm-performance,\n  openfga, redis-sessions, security, sla-monitoring, soc2-compliance\n\n### AlertManager\n- Add AlertManager v0.28.1 service to docker-compose.yml\n- Create comprehensive alertmanager.yml configuration\n- Configure multi-receiver routing (PagerDuty, Slack, Email, Webhooks)\n- Implement severity-based alert routing (critical, warning, info)\n- Add inhibition rules to reduce alert noise\n- Configure persistent storage for AlertManager data\n\n### Prometheus Alert Rules\n- Enable AlertManager integration in prometheus.yml\n- Mount alert rules and recording rules directories\n- Include 30+ alerts for service health, performance, security\n- Add SLA monitoring alerts (uptime, response time, error rate)\n\n## Kubernetes/Helm Deployment Changes\n\n### Helm Chart Dependencies\n- Add Grafana v12.1.8 (Bitnami)\n- Add Jaeger v3.4.1 (jaegertracing)\n- Add kube-prometheus-stack v78.3.2 (prometheus-community)\n- Update Chart.lock with new dependencies\n- Add charts/*.tgz to .gitignore (regenerated via helm dependency update)\n\n### Grafana Configuration\n- Enable dashboard provisioning via ConfigMaps\n- Configure 9 dashboard JSON files\n- Set up Prometheus and Jaeger datasources\n- Resource limits: 500m CPU / 512Mi memory\n\n### Jaeger Configuration\n- Deploy all-in-one Jaeger instance\n- Configure OTLP collector endpoints\n- Expose UI (16686), HTTP (14268), gRPC (14250) ports\n- Resource limits: 500m CPU / 512Mi memory\n\n### Prometheus Stack Configuration\n- Deploy Prometheus with 30-day retention and 50Gi storage\n- Configure AlertManager with Slack/email/webhook receivers\n- Enable Prometheus Operator for auto-discovery\n- Create PrometheusRule CRDs for alert rules\n- Resource configuration:\n  - Prometheus: 1000m CPU / 2Gi memory\n  - AlertManager: 200m CPU / 256Mi memory\n  - Prometheus Operator: 200m CPU / 256Mi memory\n\n### PrometheusRule Templates\n- Create templates for langgraph-agent alerts\n- Create templates for SLA monitoring alerts\n- Copy alert rule YAML files to helm chart\n- Enable auto-discovery via Prometheus Operator\n\n## Files Changed\n\n### Docker\n- docker/docker-compose.yml: Add AlertManager service, mount alert rules\n- docker/prometheus.yml: Enable alerting, configure rule files\n- monitoring/prometheus/alertmanager.yml: New AlertManager config\n\n### Kubernetes/Helm\n- .gitignore: Ignore Helm chart tgz files\n- Chart.yaml: Add Grafana, Jaeger, kube-prometheus-stack dependencies\n- Chart.lock: Update with new dependency versions\n- values.yaml: Configure Grafana, Jaeger, Prometheus, AlertManager\n- templates/grafana-dashboards-configmap.yaml: Dashboard provisioning\n- templates/prometheus-rules-langgraph.yaml: LangGraph alert rules\n- templates/prometheus-rules-sla.yaml: SLA monitoring rules\n- dashboards/*.json: 9 Grafana dashboard JSON files (216KB)\n- prometheus-rules/*.yaml: Alert rule definitions\n\n## Testing\n\nDocker:\n  docker compose up -d\n  # Prometheus: http://localhost:9090\n  # AlertManager: http://localhost:9093\n  # Grafana: http://localhost:3001\n  # Jaeger: http://localhost:16686\n\nKubernetes:\n  helm dependency update deployments/helm/mcp-server-langgraph\n  helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph\n  kubectl get prometheusrule,alertmanager,prometheus -n default\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T01:55:31-04:00",
+          "tree_id": "2d72ffd72434db4fb40e571324a5b0d7f86f38a4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ee9c762bfe72a3b10d33dd8c030325c2994396f3"
+        },
+        "date": 1761026230634,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51175.46016390983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000240057367397989",
+            "extra": "mean: 19.54061569348084 usec\nrounds: 5977"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 55099.73905457054,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023335915282279948",
+            "extra": "mean: 18.148906277207672 usec\nrounds: 12665"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51146.94290321372,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023082751636533307",
+            "extra": "mean: 19.55151067175839 usec\nrounds: 17195"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.04854936408046,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017313675621560127",
+            "extra": "mean: 5.234271620112142 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35767861850857,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012635928672887435",
+            "extra": "mean: 51.65908679999802 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.955914107226917,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002031390461893252",
+            "extra": "mean: 100.44281109999815 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2538016.0607090835,
+            "unit": "iter/sec",
+            "range": "stddev: 4.737169717912928e-8",
+            "extra": "mean: 394.0085389848223 nsec\nrounds: 194970"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4966.411104391926,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015054897026486238",
+            "extra": "mean: 201.35264257839515 usec\nrounds: 512"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2933.1813818843148,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009106648082760757",
+            "extra": "mean: 340.926751470646 usec\nrounds: 2720"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2797.6581881227653,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000444035605177325",
+            "extra": "mean: 357.4418076680776 usec\nrounds: 1591"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59548.97154796149,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002136755675775547",
+            "extra": "mean: 16.792901271092273 usec\nrounds: 13532"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20097.488454906987,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005908056210357488",
+            "extra": "mean: 49.75746109986398 usec\nrounds: 5437"
           }
         ]
       }
