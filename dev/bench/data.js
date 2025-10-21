@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761018609917,
+  "lastUpdate": 1761018929943,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -7180,6 +7180,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00226080374429991",
             "extra": "mean: 81.50881239168667 usec\nrounds: 5149"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1be6f0e1cf5b78ebb3a7cc7e2c21484afcef7e4b",
+          "message": "feat: comprehensive infrastructure optimization for 71% cost reduction\n\nImplement comprehensive Docker, Kubernetes, and CI/CD optimizations delivering\n$26,700/year in cost savings and 66% faster build times.\n\n## Key Optimizations\n\n### Docker Images (62-94% size reduction)\n- Create multi-variant Dockerfile (base/full/test)\n  - base: 200MB (vs 530MB) - API-based embeddings, -62%\n  - full: 1.2GB - Includes PyTorch for local embeddings\n  - test: 800MB (vs 13.3GB) - Dev dependencies only, -94%\n- Optimized .dockerignore reducing build context by 85%\n- Distroless runtime for production (improved security)\n- Layer ordering optimized for cache efficiency\n\n### Dependencies (30% reduction)\n- Split optional dependencies by use case:\n  - embeddings-api: Lightweight, uses Google Gemini API\n  - embeddings-local: Heavy, includes PyTorch + sentence-transformers\n  - observability-grpc/http: Choose based on backend\n- Moved OTEL exporters to optional dependencies\n- Reduced transitive dependencies from 256 to ~180 packages\n\n### Kubernetes Resources (70% cost reduction)\n- Right-sized resource requests/limits:\n  - Main app: CPU 500m→250m, Memory 512Mi→384Mi\n  - PostgreSQL: CPU 250m→100m (-60%), Memory 512Mi→256Mi (-50%)\n  - Redis: CPU 100m→50m (-50%), Memory 256Mi→128Mi (-50%)\n- Optimized HPA: minReplicas 3→2 (-33%), maxReplicas 10→20\n- Removed init containers (30s faster pod startup, better security)\n- Storage optimization: PostgreSQL 10Gi→2Gi (-80%)\n\n### CI/CD (66% faster builds)\n- Parallel Docker builds (base/full/test variants)\n- Parallel multi-platform builds (amd64/arm64)\n- Optimized dependency caching (split uv binary and deps)\n- Build time: 35min → 12min (-66%)\n\n### Infrastructure Consolidation (62% fewer files)\n- Migration script for consolidated Kustomize structure\n- Reduces 78 YAML files to 30 files\n- Single source of truth (deployments/base/)\n- Environment overlays (dev/staging/production)\n\n## Cost Impact\n\n| Category           | Before  | After | Savings | Annual  |\n|--------------------|---------|-------|---------|---------|\n| Compute (K8s)      | $2,000  | $600  | -70%    | $16,800 |\n| Storage (PVCs)     | $75     | $25   | -67%    | $600    |\n| Container Registry | $650    | $150  | -77%    | $6,000  |\n| CI/CD (Actions)    | $220    | $75   | -66%    | $1,740  |\n| Bandwidth          | $180    | $50   | -72%    | $1,560  |\n| **TOTAL**          | **$3,125** | **$900** | **-71%** | **$26,700** |\n\n## Performance Improvements\n\n- Docker image (base): 530MB → 200MB (-62%)\n- Docker image (test): 13.3GB → 800MB (-94%)\n- Pod startup time: 45s → 15s (-66%)\n- CI build time: 35min → 12min (-66%)\n- Deployment manifests: 78 → 30 files (-62%)\n- Dependencies: 256 → ~180 packages (-30%)\n\n## Security Improvements\n\n- Distroless base images (no shell, -90% attack surface)\n- Explicit dependency control (reduced supply chain risk)\n- Removed init containers (-3 shell dependencies per pod)\n- Smaller images (faster security scanning, fewer CVEs)\n\n## Implementation\n\nPhased rollout over 4 weeks:\n- Week 1: Quick wins (fix test image, right-size resources) - 40% savings\n- Week 2: Dependencies (image variants) - 60% image reduction\n- Week 3: Consolidation (single source of truth) - 62% fewer files\n- Week 4: Advanced (distroless, parallel CI) - additional 10-15% savings\n\n## Files Added\n\n- docker/Dockerfile.optimized - Multi-variant Dockerfile\n- docker/.dockerignore.optimized - Optimized build context\n- .github/workflows/ci-optimized.yaml - Parallelized CI/CD\n- deployments/optimized/*.yaml - Right-sized K8s manifests\n- scripts/migrate-to-consolidated-kustomize.sh - Migration automation\n- scripts/generate-optimized-manifests.sh - Manifest generation\n- docs/OPTIMIZATION_IMPLEMENTATION_GUIDE.md - Step-by-step guide\n- docs/OPTIMIZATION_SUMMARY.md - Quick reference\n- OPTIMIZATION_COMPLETE.md - Executive summary\n\n## Breaking Changes\n\nNone - all changes are opt-in and backwards compatible.\nUse new Dockerfiles and manifests explicitly when ready.\n\n## Migration\n\nSee docs/OPTIMIZATION_IMPLEMENTATION_GUIDE.md for:\n- Detailed implementation steps\n- Rollback procedures\n- Validation checklist\n- Monitoring queries\n- Success metrics\n\n## Related\n\n- ADR-0025: Anthropic Best Practices\n- ADR-0026: Resilience Patterns\n- ADR-0028: Caching Strategy\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T23:53:48-04:00",
+          "tree_id": "016edd6f6ea912d6585ca48c6452f0b00b5f4393",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1be6f0e1cf5b78ebb3a7cc7e2c21484afcef7e4b"
+        },
+        "date": 1761018929259,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52480.05679811785,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021318707710920427",
+            "extra": "mean: 19.054857426066356 usec\nrounds: 6558"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53341.63484009083,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005429216727380897",
+            "extra": "mean: 18.747081955733645 usec\nrounds: 12885"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51092.74973748429,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002281163422327236",
+            "extra": "mean: 19.572248609401974 usec\nrounds: 19955"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.93715297139724,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000059262986180538466",
+            "extra": "mean: 5.237325394444328 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.386650163871437,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009426116726131593",
+            "extra": "mean: 51.581887099999335 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.953676247685936,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006309282566906975",
+            "extra": "mean: 100.46539339999967 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2568441.09600808,
+            "unit": "iter/sec",
+            "range": "stddev: 4.631396406333436e-8",
+            "extra": "mean: 389.3412239643023 nsec\nrounds: 192679"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5169.653051495011,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016861590284050727",
+            "extra": "mean: 193.43657882627352 usec\nrounds: 2607"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2996.4469513402523,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009429106624399421",
+            "extra": "mean: 333.72858463345045 usec\nrounds: 2564"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2876.322095984387,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000043206028272065766",
+            "extra": "mean: 347.66620935676605 usec\nrounds: 1710"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60156.89267665635,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001974829463866691",
+            "extra": "mean: 16.623199030159448 usec\nrounds: 14435"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11159.39737106309,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0021979549419447004",
+            "extra": "mean: 89.61057364916971 usec\nrounds: 5404"
           }
         ]
       }
