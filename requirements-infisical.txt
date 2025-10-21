@@ -61,4 +61,4 @@
 
 # Infisical Python SDK
 # Pinned range: Avoid 2.3.6 (missing x86_64 wheels)
-infisical-python>=2.1.7,<2.3.6
+infisical-python>=2.1.7,<2.3.7
