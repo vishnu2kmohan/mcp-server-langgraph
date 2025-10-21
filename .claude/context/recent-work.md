@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 19:01:19
+**Last Updated**: 2025-10-20 19:18:57
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,11 +9,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 288 |
+| Total Commits | 290 |
 | Contributors | 2 |
 | Current Branch | `main` |
-| Source Files | 170 Python files |
-| Test Files | 172 Python files |
+| Source Files | 190 Python files |
+| Test Files | 192 Python files |
 | Total Tests | 0 tests |
 
 ---
@@ -39,7 +39,16 @@
   _by Vishnu Mohan_
 
 
+### ✨ Feature
+
+- **`eca7626`** (2025-10-20) - feat: implement resilience patterns and update core dependencies
+  _by Vishnu Mohan_
+
+
 ### 🐛 Bug Fix
+
+- **`3c6ed52`** (2025-10-20) - fix: resolve 18 CI/CD test failures from resilience refactoring
+  _by Vishnu Mohan_
 
 - **`6886eec`** (2025-10-20) - fix: resolve 9 CI/CD test failures
   _by Vishnu Mohan_
@@ -71,12 +80,6 @@
 - **`ee34ea6`** (2025-10-20) - chore: reorganize documentation files for better structure
   _by Vishnu Mohan_
 
-- **`79d3609`** (2025-10-20) - chore: remove old internal docs (moved to docs-internal/)
-  _by Vishnu Mohan_
-
-- **`3ae37b5`** (2025-10-20) - chore: remove old audit reports from root (moved to docs-internal/audits/)
-  _by Vishnu Mohan_
-
 ---
 
 ## 📁 Recently Modified Files (Last 7 Days)
@@ -85,17 +88,17 @@ Files changed most frequently:
 
 | File | Changes |
 |------|---------|
-| `pyproject.toml` | 21 |
+| `pyproject.toml` | 22 |
+| `CHANGELOG.md` | 16 |
 | `.github/workflows/ci.yaml` | 16 |
 | `src/mcp_server_langgraph/core/config.py` | 16 |
-| `CHANGELOG.md` | 15 |
 | `src/mcp_server_langgraph/core/agent.py` | 14 |
 | `.github/workflows/quality-tests.yaml` | 12 |
 | `README.md` | 12 |
-| `.claude/context/recent-work.md` | 10 |
+| `.claude/context/recent-work.md` | 11 |
+| `requirements-pinned.txt` | 10 |
 | `src/mcp_server_langgraph/mcp/server_stdio.py` | 9 |
 | `docs/mint.json` | 9 |
-| `requirements-pinned.txt` | 9 |
 | `tests/test_retention.py` | 8 |
 | `.github/workflows/release.yaml` | 8 |
 | `docker/docker-compose.yml` | 8 |
@@ -110,21 +113,21 @@ Files changed most frequently:
 
 Based on recent commits, the team has been focused on:
 
+- **🐛 Bug Fix**: 5 recent commits
 - **♻️  Refactor**: 5 recent commits
-- **🐛 Bug Fix**: 4 recent commits
-- **🔧 Chore**: 4 recent commits
 - **📝 Documentation**: 2 recent commits
+- **🔧 Chore**: 2 recent commits
 
 
 ### Hot Spots
 
 Most active areas in the codebase (by file change frequency):
 
-- `src/` - 53 file changes
+- `src/` - 60 file changes
 - `.github/` - 43 file changes
-- `deployments/` - 15 file changes
-- `.claude/` - 10 file changes
+- `.claude/` - 11 file changes
 - `docs/` - 9 file changes
+- `tests/` - 8 file changes
 
 
 ---
@@ -150,5 +153,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 19:01:19
+**Generated**: 2025-10-20 19:18:57
 **Source**: Git commit history (last 15 commits, 7 days of file activity)

@@ -15,6 +15,7 @@ from typing import Callable, Optional, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
+from mcp_server_langgraph.observability.telemetry import timeout_exceeded_counter
 from mcp_server_langgraph.resilience.config import get_resilience_config
 
 logger = logging.getLogger(__name__)
@@ -147,8 +148,6 @@ def with_timeout(
                     )
 
                     # Emit metric
-                    from mcp_server_langgraph.observability.telemetry import timeout_exceeded_counter
-
                     timeout_exceeded_counter.add(
                         1,
                         attributes={

@@ -9,9 +9,8 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
-import random
 from enum import Enum
-from typing import Any, Callable, Optional, ParamSpec, Type, TypeVar, Union
+from typing import Callable, Optional, ParamSpec, Type, TypeVar, Union
 
 from opentelemetry import trace
 from tenacity import (
@@ -25,6 +24,7 @@ from tenacity import (
     wait_random,
 )
 
+from mcp_server_langgraph.observability.telemetry import retry_attempt_counter, retry_exhausted_counter
 from mcp_server_langgraph.resilience.config import get_resilience_config
 
 logger = logging.getLogger(__name__)
@@ -126,8 +126,6 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
     )
 
     # Emit metric
-    from mcp_server_langgraph.observability.telemetry import retry_attempt_counter
-
     retry_attempt_counter.add(
         1,
         attributes={
@@ -190,7 +188,7 @@ def retry_with_backoff(
                 # Configure retry behavior
                 retry_kwargs = {
                     "stop": stop_after_attempt(max_attempts),
-                    "reraise": True,
+                    "reraise": False,  # Raise RetryError instead of original exception
                     "before_sleep": log_retry_attempt,
                 }
 
@@ -230,8 +228,6 @@ def retry_with_backoff(
                     )
 
                     # Emit metric
-                    from mcp_server_langgraph.observability.telemetry import retry_exhausted_counter
-
                     retry_exhausted_counter.add(1, attributes={"function": func.__name__})
 
                     # Wrap in our custom exception
@@ -251,7 +247,7 @@ def retry_with_backoff(
             # Similar to async_wrapper but for sync functions
             retry_kwargs = {
                 "stop": stop_after_attempt(max_attempts),
-                "reraise": True,
+                "reraise": False,  # Raise RetryError instead of original exception
                 "before_sleep": log_retry_attempt,
             }
 

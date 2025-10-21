@@ -65,8 +65,9 @@ class TestOpenFGAClient:
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_check_permission_error(self, mock_sdk_client):
-        """Test permission check handles errors"""
+        """Test permission check handles errors (wrapped in RetryExhaustedError after retries)"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from mcp_server_langgraph.core.exceptions import RetryExhaustedError
 
         mock_instance = AsyncMock()
         mock_instance.check.side_effect = Exception("OpenFGA unavailable")
@@ -74,7 +75,8 @@ class TestOpenFGAClient:
 
         client = OpenFGAClient()
 
-        with pytest.raises(Exception, match="OpenFGA unavailable"):
+        # After resilience decorators, exceptions are wrapped in RetryExhaustedError
+        with pytest.raises(RetryExhaustedError, match="Retry exhausted after 3 attempts"):
             await client.check_permission(user="user:alice", relation="executor", object="tool:chat")
 
     @pytest.mark.asyncio
@@ -104,8 +106,9 @@ class TestOpenFGAClient:
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     async def test_write_tuples_error(self, mock_sdk_client):
-        """Test write tuples handles errors"""
+        """Test write tuples handles errors (wrapped in RetryExhaustedError after retries)"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from mcp_server_langgraph.core.exceptions import RetryExhaustedError
 
         mock_instance = AsyncMock()
         mock_instance.write.side_effect = Exception("Write failed")
@@ -115,7 +118,8 @@ class TestOpenFGAClient:
 
         tuples = [{"user": "user:alice", "relation": "executor", "object": "tool:chat"}]
 
-        with pytest.raises(Exception, match="Write failed"):
+        # After resilience decorators, exceptions are wrapped in RetryExhaustedError
+        with pytest.raises(RetryExhaustedError, match="Retry exhausted after 3 attempts"):
             await client.write_tuples(tuples)
 
     @pytest.mark.asyncio
