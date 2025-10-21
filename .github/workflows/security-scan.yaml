@@ -57,6 +57,7 @@ jobs:
   trivy-scan:
     name: Trivy Container Scan
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -80,6 +81,7 @@ jobs:
   dependency-check:
     name: Dependency Check
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -117,6 +119,7 @@ jobs:
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     permissions:
       actions: read
       contents: read
@@ -137,6 +140,7 @@ jobs:
   secrets-scan:
     name: Secrets Scan
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -154,6 +158,7 @@ jobs:
   license-check:
     name: License Compliance
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -185,7 +190,7 @@ jobs:
     name: Notify Security Team
     runs-on: ubuntu-latest
     needs: [trivy-scan, dependency-check, codeql, secrets-scan]
-    if: failure()
+    if: failure() && github.event_name != 'push'
     steps:
     - name: Send notification
       uses: slackapi/slack-github-action@v2.0.0
