@@ -11,5 +11,14 @@ dependencies:
 - name: keycloak
   repository: https://charts.bitnami.com/bitnami
   version: 24.2.2
-digest: sha256:a4c49602c6802ee9dffb13f338072970256ad48581484166ecefc92957feb273
-generated: "2025-10-14T02:05:16.434046852-04:00"
+- name: grafana
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.8
+- name: jaeger
+  repository: https://jaegertracing.github.io/helm-charts
+  version: 3.4.1
+- name: kube-prometheus-stack
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 78.3.2
+digest: sha256:5722144a7874913a556b1d00669b1dfcd0da2e78a51716f1238ccfd95acd71f8
+generated: "2025-10-21T01:51:03.073168711-04:00"

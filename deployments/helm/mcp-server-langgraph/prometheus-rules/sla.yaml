@@ -1,0 +1,296 @@
+---
+# Prometheus Alert Rules for SLA Monitoring
+# SOC 2 A1.2 - System Availability Monitoring
+
+groups:
+  - name: sla_uptime
+    interval: 5m
+    rules:
+      - alert: SLAUptimeBreach
+        expr: |
+          (
+            sum(up{job="mcp-server-langgraph"})
+            / count(up{job="mcp-server-langgraph"})
+            * 100
+          ) < 99.9
+        for: 5m
+        labels:
+          severity: critical
+          sla_metric: uptime
+          component: availability
+        annotations:
+          summary: "SLA uptime breach detected"
+          description: "System uptime {{ $value | humanizePercentage }} is below SLA target of 99.9% for the last 5 minutes."
+          dashboard: "https://grafana.example.com/d/sla/sla-dashboard"
+          runbook: "https://docs.example.com/runbooks/sla-uptime-breach"
+
+      - alert: SLAUptimeAtRisk
+        expr: |
+          (
+            sum(up{job="mcp-server-langgraph"})
+            / count(up{job="mcp-server-langgraph"})
+            * 100
+          ) < 99.95 and >= 99.9
+        for: 5m
+        labels:
+          severity: warning
+          sla_metric: uptime
+          component: availability
+        annotations:
+          summary: "SLA uptime at risk"
+          description: "System uptime {{ $value | humanizePercentage }} is approaching SLA threshold (99.9%). Current value is between 99.9% and 99.95%."
+
+  - name: sla_response_time
+    interval: 5m
+    rules:
+      - alert: SLAResponseTimeBreach
+        expr: |
+          histogram_quantile(
+            0.95,
+            rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])
+          ) * 1000 > 500
+        for: 10m
+        labels:
+          severity: critical
+          sla_metric: response_time
+          component: performance
+        annotations:
+          summary: "SLA response time breach (p95)"
+          description: "API p95 response time {{ $value | humanizeDuration }} exceeds SLA target of 500ms for the last 10 minutes."
+          dashboard: "https://grafana.example.com/d/performance/performance-dashboard"
+          runbook: "https://docs.example.com/runbooks/sla-response-time-breach"
+
+      - alert: SLAResponseTimeAtRisk
+        expr: |
+          histogram_quantile(
+            0.95,
+            rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])
+          ) * 1000 > 400 and <= 500
+        for: 10m
+        labels:
+          severity: warning
+          sla_metric: response_time
+          component: performance
+        annotations:
+          summary: "SLA response time at risk (p95)"
+          description: "API p95 response time {{ $value | humanizeDuration }} is approaching SLA threshold of 500ms."
+
+      - alert: SLAResponseTimeP99Breach
+        expr: |
+          histogram_quantile(
+            0.99,
+            rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])
+          ) * 1000 > 1000
+        for: 10m
+        labels:
+          severity: warning
+          sla_metric: response_time_p99
+          component: performance
+        annotations:
+          summary: "P99 response time degraded"
+          description: "API p99 response time {{ $value | humanizeDuration }} exceeds 1000ms threshold."
+
+  - name: sla_error_rate
+    interval: 5m
+    rules:
+      - alert: SLAErrorRateBreach
+        expr: |
+          (
+            sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{job="mcp-server-langgraph"}[5m]))
+            * 100
+          ) > 1.0
+        for: 5m
+        labels:
+          severity: critical
+          sla_metric: error_rate
+          component: reliability
+        annotations:
+          summary: "SLA error rate breach"
+          description: "API error rate {{ $value | humanizePercentage }} exceeds SLA target of 1% for the last 5 minutes."
+          dashboard: "https://grafana.example.com/d/errors/error-dashboard"
+          runbook: "https://docs.example.com/runbooks/sla-error-rate-breach"
+
+      - alert: SLAErrorRateAtRisk
+        expr: |
+          (
+            sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{job="mcp-server-langgraph"}[5m]))
+            * 100
+          ) > 0.5 and <= 1.0
+        for: 5m
+        labels:
+          severity: warning
+          sla_metric: error_rate
+          component: reliability
+        annotations:
+          summary: "SLA error rate at risk"
+          description: "API error rate {{ $value | humanizePercentage }} is approaching SLA threshold of 1%."
+
+  - name: sla_throughput
+    interval: 5m
+    rules:
+      - alert: SLAThroughputDegraded
+        expr: |
+          sum(rate(http_requests_total{job="mcp-server-langgraph"}[5m]))
+          < (
+            avg_over_time(
+              sum(rate(http_requests_total{job="mcp-server-langgraph"}[5m]))[7d:1h]
+            ) * 0.5
+          )
+        for: 15m
+        labels:
+          severity: warning
+          sla_metric: throughput
+          component: capacity
+        annotations:
+          summary: "System throughput degraded"
+          description: "Current throughput {{ $value | humanize }}rps is less than 50% of the 7-day average."
+
+  - name: sla_monthly_budget
+    interval: 1h
+    rules:
+      - alert: SLAMonthlyUptimeBudgetExhausted
+        expr: |
+          (
+            (
+              sum(up{job="mcp-server-langgraph"})
+              / count(up{job="mcp-server-langgraph"})
+              * 100
+            ) < 99.9
+          ) and (
+            # Calculate remaining downtime budget for the month
+            (
+              (time() - (time() - time() % (30 * 24 * 3600)))
+              / (30 * 24 * 3600)
+            ) > 0.8
+          )
+        for: 1h
+        labels:
+          severity: critical
+          sla_metric: uptime_budget
+          component: sla_compliance
+        annotations:
+          summary: "Monthly uptime budget exhausted"
+          description: "System has used >80% of monthly downtime budget (43.2 minutes for 99.9% SLA). Remaining budget: {{ $value | humanizeDuration }}."
+          dashboard: "https://grafana.example.com/d/sla/sla-budget-dashboard"
+
+  - name: sla_compliance_score
+    interval: 1h
+    rules:
+      - alert: SLAComplianceScoreLow
+        expr: |
+          (
+            (
+              # Uptime component (40% weight)
+              (
+                sum(up{job="mcp-server-langgraph"})
+                / count(up{job="mcp-server-langgraph"})
+                * 100
+              ) * 0.4
+            ) + (
+              # Response time component (30% weight)
+              (
+                (500 - histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="mcp-server-langgraph"}[5m])) * 1000)
+                / 500 * 100
+              ) * 0.3
+            ) + (
+              # Error rate component (30% weight)
+              (
+                (1.0 - sum(rate(http_requests_total{job="mcp-server-langgraph",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="mcp-server-langgraph"}[5m])) * 100)
+                / 1.0 * 100
+              ) * 0.3
+            )
+          ) < 95.0
+        for: 1h
+        labels:
+          severity: warning
+          sla_metric: composite_score
+          component: sla_compliance
+        annotations:
+          summary: "Overall SLA compliance score low"
+          description: "Composite SLA compliance score {{ $value | humanizePercentage }} is below 95% threshold."
+
+  - name: sla_forecasting
+    interval: 1h
+    rules:
+      - alert: SLAProjectedBreach
+        expr: |
+          predict_linear(
+            sum(up{job="mcp-server-langgraph"})
+            / count(up{job="mcp-server-langgraph"})
+            * 100 [4h], 24 * 3600
+          ) < 99.9
+        for: 2h
+        labels:
+          severity: warning
+          sla_metric: uptime_forecast
+          component: predictive
+        annotations:
+          summary: "Projected SLA breach in 24 hours"
+          description: "Based on current trend, uptime is projected to fall below 99.9% SLA threshold within 24 hours. Projected value: {{ $value | humanizePercentage }}."
+          dashboard: "https://grafana.example.com/d/sla/sla-forecast-dashboard"
+
+  - name: sla_dependencies
+    interval: 5m
+    rules:
+      - alert: SLADependencyDown
+        expr: |
+          up{job=~"postgres|redis|openfga|keycloak"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          sla_metric: dependency_availability
+          component: dependencies
+        annotations:
+          summary: "Critical dependency down: {{ $labels.job }}"
+          description: "Critical dependency {{ $labels.job }} is down, which may impact SLA compliance."
+          runbook: "https://docs.example.com/runbooks/dependency-recovery"
+
+      - alert: SLADependencyDegraded
+        expr: |
+          (
+            histogram_quantile(
+              0.95,
+              rate(dependency_request_duration_seconds_bucket{job=~"postgres|redis|openfga"}[5m])
+            ) * 1000
+          ) > 200
+        for: 10m
+        labels:
+          severity: warning
+          sla_metric: dependency_performance
+          component: dependencies
+        annotations:
+          summary: "Dependency {{ $labels.job }} performance degraded"
+          description: "Dependency {{ $labels.job }} p95 response time {{ $value | humanizeDuration }} exceeds 200ms threshold."
+
+  - name: sla_resource_exhaustion
+    interval: 5m
+    rules:
+      - alert: SLAResourceCPUHigh
+        expr: |
+          rate(process_cpu_seconds_total{job="mcp-server-langgraph"}[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          sla_metric: resource_utilization
+          component: resources
+        annotations:
+          summary: "High CPU utilization impacting SLA"
+          description: "CPU utilization {{ $value | humanizePercentage }} may impact response time SLA."
+
+      - alert: SLAResourceMemoryHigh
+        expr: |
+          (
+            process_resident_memory_bytes{job="mcp-server-langgraph"}
+            / node_memory_MemTotal_bytes
+            * 100
+          ) > 80
+        for: 10m
+        labels:
+          severity: warning
+          sla_metric: resource_utilization
+          component: resources
+        annotations:
+          summary: "High memory utilization impacting SLA"
+          description: "Memory utilization {{ $value | humanizePercentage }} may impact system stability and SLA."

@@ -1,0 +1,29 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  authentication.json: |
+{{ .Files.Get "dashboards/authentication.json" | indent 4 }}
+  keycloak.json: |
+{{ .Files.Get "dashboards/keycloak.json" | indent 4 }}
+  langgraph-agent.json: |
+{{ .Files.Get "dashboards/langgraph-agent.json" | indent 4 }}
+  llm-performance.json: |
+{{ .Files.Get "dashboards/llm-performance.json" | indent 4 }}
+  openfga.json: |
+{{ .Files.Get "dashboards/openfga.json" | indent 4 }}
+  redis-sessions.json: |
+{{ .Files.Get "dashboards/redis-sessions.json" | indent 4 }}
+  security.json: |
+{{ .Files.Get "dashboards/security.json" | indent 4 }}
+  sla-monitoring.json: |
+{{ .Files.Get "dashboards/sla-monitoring.json" | indent 4 }}
+  soc2-compliance.json: |
+{{ .Files.Get "dashboards/soc2-compliance.json" | indent 4 }}
+{{- end }}

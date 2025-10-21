@@ -10,15 +10,17 @@ global:
     cluster: 'local-development'
     environment: 'dev'
 
-# Alertmanager configuration (optional for local dev)
-# alerting:
-#   alertmanagers:
-#     - static_configs:
-#         - targets: ['alertmanager:9093']
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+      timeout: 10s
 
 # Load rules once and periodically evaluate them
 rule_files:
-  # - "alerts/*.yml"
+  - "/etc/prometheus/rules/*.yaml"
+  - "/etc/prometheus/alerts/*.yaml"
 
 # Scrape configurations
 scrape_configs:

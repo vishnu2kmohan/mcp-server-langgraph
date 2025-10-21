@@ -36,3 +36,15 @@ dependencies:
     version: "24.2.2"
     repository: "https://charts.bitnami.com/bitnami"
     condition: keycloak.enabled
+  - name: grafana
+    version: "12.1.8"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: grafana.enabled
+  - name: jaeger
+    version: "3.4.1"
+    repository: "https://jaegertracing.github.io/helm-charts"
+    condition: jaeger.enabled
+  - name: kube-prometheus-stack
+    version: "78.3.2"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: kube-prometheus-stack.enabled

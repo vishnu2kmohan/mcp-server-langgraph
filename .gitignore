@@ -126,6 +126,9 @@ kubeconfig
 secrets.yaml
 *-secrets.yaml
 
+# Helm
+deployments/**/charts/*.tgz
+
 # Infisical
 .infisical.json
 
