@@ -146,25 +146,25 @@ setup-infisical:
 
 test:
 	@echo "Running all tests with coverage (parallel execution)..."
-	$(PYTEST) -n auto $(COV_OPTIONS) --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Tests complete. Coverage report above."
 	@echo ""
 	@echo "Tip: Use 'make test-fast' or 'make test-parallel' for faster iteration"
 
 test-unit:
 	@echo "Running unit tests with coverage (parallel execution, matches CI)..."
-	$(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Unit tests complete"
 
 test-unit-fast:
 	@echo "Running unit tests without coverage (fast iteration)..."
 	@echo "⚠️  DEPRECATED: Use 'make test-parallel-unit' or 'make test-dev' instead"
-	$(PYTEST) -m unit --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -m unit --tb=short
 	@echo "✓ Fast unit tests complete"
 
 test-ci:
 	@echo "Running tests exactly as CI does..."
-	$(PYTEST) -m unit $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(PYTEST) -m unit $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
 	@echo "✓ CI-equivalent tests complete"
 	@echo "  Coverage XML: coverage.xml"
 
@@ -176,7 +176,7 @@ test-integration:
 test-integration-local:
 	@echo "⚠️  Running integration tests locally (requires services running)..."
 	@echo "Note: CI uses Docker. Use 'make test-integration' to match CI exactly."
-	$(PYTEST) -m integration --no-cov --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -m integration --no-cov --tb=short
 	@echo "✓ Local integration tests complete"
 
 test-integration-services:
@@ -198,7 +198,7 @@ test-integration-cleanup:
 
 test-coverage:
 	@echo "Generating comprehensive coverage report (parallel execution)..."
-	$(PYTEST) -n auto $(COV_OPTIONS) --cov-report=html --cov-report=term-missing --cov-report=xml
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=html --cov-report=term-missing --cov-report=xml
 	@echo "✓ Coverage reports generated:"
 	@echo "  HTML: htmlcov/index.html"
 	@echo "  XML: coverage.xml"
@@ -208,7 +208,7 @@ test-coverage:
 
 test-coverage-fast:
 	@echo "Generating fast coverage report (unit tests only, parallel)..."
-	$(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=html --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=html --cov-report=term-missing
 	@echo "✓ Fast coverage report generated:"
 	@echo "  HTML: htmlcov/index.html"
 	@echo "  Terminal: Above"
@@ -217,25 +217,25 @@ test-coverage-fast:
 
 test-coverage-html:
 	@echo "Generating HTML coverage report only (fastest for browsing)..."
-	$(PYTEST) -n auto $(COV_OPTIONS) --cov-report=html
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=html
 	@echo "✓ HTML coverage report generated:"
 	@echo "  Open: htmlcov/index.html"
 
 test-coverage-xml:
 	@echo "Generating XML coverage report (for CI/coverage services)..."
-	$(PYTEST) -n auto $(COV_OPTIONS) --cov-report=xml
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=xml
 	@echo "✓ XML coverage report generated:"
 	@echo "  File: coverage.xml"
 
 test-coverage-terminal:
 	@echo "Generating terminal coverage report (quick overview)..."
-	$(PYTEST) -n auto $(COV_OPTIONS) --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Terminal coverage displayed above"
 
 test-coverage-changed:
 	@echo "Running tests for changed code only (incremental coverage)..."
 	@echo "Using pytest-testmon for selective test execution..."
-	$(PYTEST) -n auto --testmon $(COV_OPTIONS) --cov-report=html --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto --testmon $(COV_OPTIONS) --cov-report=html --cov-report=term-missing
 	@echo "✓ Incremental coverage complete"
 	@echo "  HTML: htmlcov/index.html"
 	@echo ""
@@ -246,7 +246,7 @@ test-coverage-combined:
 	@echo "Running all tests with combined coverage..."
 	@echo ""
 	@echo "Step 1: Running unit tests with coverage (parallel)..."
-	$(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report= --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report= --cov-report=term-missing
 	@echo ""
 	@echo "Step 2: Running integration tests in Docker with coverage..."
 	mkdir -p coverage-integration
@@ -287,17 +287,17 @@ benchmark:
 # New test targets
 test-property:
 	@echo "Running property-based tests (Hypothesis, parallel)..."
-	$(PYTEST) -n auto -m property -v
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m property -v
 	@echo "✓ Property tests complete"
 
 test-contract:
 	@echo "Running contract tests (MCP protocol, OpenAPI, parallel)..."
-	$(PYTEST) -n auto -m contract -v
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m contract -v
 	@echo "✓ Contract tests complete"
 
 test-regression:
 	@echo "Running performance regression tests (parallel)..."
-	$(PYTEST) -n auto -m regression -v
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m regression -v
 	@echo "✓ Regression tests complete"
 
 test-mutation:
@@ -665,7 +665,7 @@ load-test:
 stress-test:
 	@echo "💪 Running stress tests (parallel)..."
 	@echo "This will test system limits and failure modes"
-	@$(PYTEST) -n auto -m "stress" -v --tb=short || echo "No stress tests found. Add tests with @pytest.mark.stress"
+	@OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "stress" -v --tb=short || echo "No stress tests found. Add tests with @pytest.mark.stress"
 
 # ==============================================================================
 # Git Hooks & Pre-commit
@@ -742,14 +742,14 @@ test-watch:
 
 test-fast:
 	@echo "⚡ Running all tests without coverage (parallel, fast iteration)..."
-	$(PYTEST) -n auto --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto --tb=short
 	@echo "✓ Fast tests complete"
 	@echo ""
 	@echo "For maximum speed: 'make test-dev' (parallel + fast-fail)"
 
 test-fast-unit:
 	@echo "⚡ Running unit tests without coverage (parallel)..."
-	$(PYTEST) -n auto -m unit --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit --tb=short
 
 # ==============================================================================
 # Parallel Testing (40-60% faster)
@@ -757,45 +757,45 @@ test-fast-unit:
 
 test-parallel:
 	@echo "⚡⚡ Running all tests in parallel (pytest-xdist)..."
-	$(PYTEST) -n auto --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto --tb=short
 	@echo "✓ Parallel tests complete"
 	@echo ""
 	@echo "Speedup: ~40-60% faster than sequential execution"
 
 test-parallel-unit:
 	@echo "⚡⚡ Running unit tests in parallel..."
-	$(PYTEST) -m unit -n auto --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -m unit -n auto --tb=short
 	@echo "✓ Parallel unit tests complete"
 
 test-dev:
 	@echo "🚀 Running tests in development mode (parallel, fast-fail, no coverage)..."
-	$(PYTEST) -n auto -x --maxfail=3 --tb=short -m "unit and not slow"
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -x --maxfail=3 --tb=short -m "unit and not slow"
 	@echo "✓ Development tests complete"
 	@echo ""
 	@echo "Features: Parallel execution, stop on first failure, skip slow tests"
 
 test-fast-core:
 	@echo "⚡ Running core unit tests only (fastest iteration)..."
-	$(PYTEST) -n auto -m "unit and not slow and not integration" --tb=line -q
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "unit and not slow and not integration" --tb=line -q
 	@echo "✓ Core tests complete"
 	@echo ""
 	@echo "Use for rapid iteration (typically < 5 seconds)"
 
 test-slow:
 	@echo "🐌 Running slow tests only (parallel)..."
-	$(PYTEST) -n auto -m slow -v --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m slow -v --tb=short
 
 test-compliance:
 	@echo "📋 Running compliance tests (GDPR, HIPAA, SOC2, SLA, parallel)..."
-	$(PYTEST) -n auto -m "gdpr or soc2 or sla" -v --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "gdpr or soc2 or sla" -v --tb=short
 
 test-failed:
 	@echo "🔁 Re-running failed tests (parallel)..."
-	$(PYTEST) -n auto --lf -v
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto --lf -v
 
 test-debug:
 	@echo "🐛 Running tests in debug mode..."
-	$(PYTEST) -v --pdb --pdbcls=IPython.terminal.debugger:Pdb
+	OTEL_SDK_DISABLED=true $(PYTEST) -v --pdb --pdbcls=IPython.terminal.debugger:Pdb
 
 # ==============================================================================
 # Monitoring & Observability

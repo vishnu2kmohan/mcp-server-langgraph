@@ -51,6 +51,7 @@ services:
       - ENABLE_METRICS=false
       - ENABLE_CONSOLE_EXPORT=false
       - LANGSMITH_TRACING=false
+      - OTEL_SDK_DISABLED=true  # Disable OTLP exporters (no collector in test env)
 
       # Test credentials
       - JWT_SECRET_KEY=test-secret-key-for-integration-tests
