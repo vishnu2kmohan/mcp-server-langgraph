@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761014287204,
+  "lastUpdate": 1761017855874,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -6856,6 +6856,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00009404416342964227",
             "extra": "mean: 59.11266988807025 usec\nrounds: 5277"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "92e838f096018aa54edc3a957689f4c2281eaae0",
+          "message": "build: track uv.lock for reproducible CI builds\n\nThe uv.lock file was in .gitignore causing all CI workflows to fail\nwith \"Unable to find lockfile at uv.lock\" errors. This lockfile is\nrequired for uv sync --frozen to work in CI environments.\n\nChanges:\n- Remove uv.lock from .gitignore to enable CI builds\n- Exclude uv.lock from pre-commit large file check (738KB lockfile)\n- Stop tracking .claude/context/recent-work.md (session-specific file)\n- Add clarifying comment about .claude/context/ in .gitignore\n\nFixes failing workflows:\n- CI/CD Pipeline (all Python versions)\n- Quality Tests (all test types)\n- Coverage Trend Tracking\n- Code Quality checks\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T23:35:50-04:00",
+          "tree_id": "2619db295c49d1e9bf143ab91ce14d55ad40efcd",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/92e838f096018aa54edc3a957689f4c2281eaae0"
+        },
+        "date": 1761017855292,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51073.622970570446,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025876814380379306",
+            "extra": "mean: 19.579578299667876 usec\nrounds: 6175"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53573.854550045115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023600225368458537",
+            "extra": "mean: 18.66582138617386 usec\nrounds: 11774"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50175.399396741544,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026625591500422182",
+            "extra": "mean: 19.93008550052401 usec\nrounds: 19649"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.55149593797768,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006438536539173457",
+            "extra": "mean: 5.2479252134839625 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.453131637545205,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013039564243123996",
+            "extra": "mean: 51.40560495000024 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94062398690442,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030730708755587727",
+            "extra": "mean: 100.59730669999993 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2634700.682406795,
+            "unit": "iter/sec",
+            "range": "stddev: 4.100510595645596e-8",
+            "extra": "mean: 379.5497555671111 nsec\nrounds: 126824"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5152.928979061119,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015115896134332159",
+            "extra": "mean: 194.06438630601957 usec\nrounds: 2366"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2986.194723540648,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008389085329833501",
+            "extra": "mean: 334.87434430073864 usec\nrounds: 2553"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2829.2224889616823,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003822525642972909",
+            "extra": "mean: 353.45399801589923 usec\nrounds: 1512"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59502.04945468378,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023224742304914435",
+            "extra": "mean: 16.80614380789675 usec\nrounds: 11870"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10288.14668004062,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002706370283676261",
+            "extra": "mean: 97.19923627644584 usec\nrounds: 5210"
           }
         ]
       }
