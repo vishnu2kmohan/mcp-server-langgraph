@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761029966049,
+  "lastUpdate": 1761030382660,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -9232,6 +9232,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0026436671105594593",
             "extra": "mean: 96.71125047824985 usec\nrounds: 4707"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "fe716b55145771acce0864fa1720dadad31af193",
+          "message": "ci: synchronize GitHub workflows for consistency\n\nStandardize action versions, migrate to composite actions, and align branch triggers\nacross all workflow files for improved maintainability and consistency.\n\nChanges:\n1. Docker Build-Push Action Standardization\n   - .github/workflows/release.yaml:145\n   - Updated docker/build-push-action@v6 → @v6.18.0\n   - Ensures consistent, pinned versions across ci.yaml and release.yaml\n\n2. Composite Action Migration\n   - .github/workflows/optional-deps-test.yaml (6 jobs)\n   - Migrated all jobs to use ./.github/actions/setup-python-deps\n   - Replaced direct astral-sh/setup-uv@v5 calls\n   - Jobs: test-minimal, test-with-secrets, test-with-embeddings,\n     test-all-extras, test-production-config, test-feature-flags\n   - Benefits: unified caching, easier maintenance, -23 lines of duplication\n\n3. Branch Trigger Alignment\n   - .github/workflows/coverage-trend.yaml:39\n     PR trigger: [main] → [main, develop]\n   - .github/workflows/link-checker.yaml:52\n     Push trigger: [main] → [main, develop]\n   - Ensures consistent CI coverage across main and develop branches\n\nResults:\n- All workflows use docker/build-push-action@v6.18.0 (3 instances)\n- 15 composite action usages across workflows\n- 0 direct uv setup calls remaining\n- Consistent branch triggers for quality/coverage workflows\n\nImpact:\n- Reduced code duplication: -23 lines\n- Improved maintainability: single source of truth for Python setup\n- Enhanced cache efficiency: unified cache keys per job type\n- Better CI coverage: develop branch now tested consistently\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T03:05:07-04:00",
+          "tree_id": "cde1a7ebdda11fb59d38c6980c47dd4c8aecc23e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/fe716b55145771acce0864fa1720dadad31af193"
+        },
+        "date": 1761030381988,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50478.199051012285,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024323833712598605",
+            "extra": "mean: 19.810532443707423 usec\nrounds: 5471"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52790.19190008736,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000223489693118775",
+            "extra": "mean: 18.9429127647923 usec\nrounds: 9205"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49488.248297190476,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028088779871959215",
+            "extra": "mean: 20.20681746492069 usec\nrounds: 15345"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.1554964660162,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007023566982318372",
+            "extra": "mean: 5.314753056818702 msec\nrounds: 176"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.27811587555371,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017789610828895336",
+            "extra": "mean: 51.87228909999888 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.932886219359334,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003758902393979864",
+            "extra": "mean: 100.67567250000167 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2554102.852128614,
+            "unit": "iter/sec",
+            "range": "stddev: 4.569232784515233e-8",
+            "extra": "mean: 391.52691097251244 nsec\nrounds: 115661"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4898.876403365494,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017794092776438366",
+            "extra": "mean: 204.12844041401146 usec\nrounds: 579"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2933.8140399467984,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011844775945795199",
+            "extra": "mean: 340.8532328170786 usec\nrounds: 2066"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2716.2440005606277,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000463473078219829",
+            "extra": "mean: 368.1554380952528 usec\nrounds: 1365"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57634.88733046412,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024091112268999736",
+            "extra": "mean: 17.35060214946285 usec\nrounds: 10049"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16537.160090814337,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003408471771577948",
+            "extra": "mean: 60.46987478554168 usec\nrounds: 4081"
           }
         ]
       }
