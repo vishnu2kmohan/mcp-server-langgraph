@@ -3,7 +3,7 @@
 **Status**: Accepted
 **Date**: 2025-10-20
 **Deciders**: Engineering Team
-**Related**: [ADR-0026: Resilience Patterns](0026-resilience-patterns.md), [ROADMAP.md](../ROADMAP.md)
+**Related**: [ADR-0030: Resilience Patterns](0030-resilience-patterns.md), [ROADMAP](../docs-internal/ROADMAP.md)
 
 ## Context
 

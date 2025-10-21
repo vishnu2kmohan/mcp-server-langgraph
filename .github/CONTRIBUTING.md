@@ -363,7 +363,7 @@ Check issues labeled `enhancement` for requested features.
 - **GitHub Issues**: For bug reports and feature requests (use templates)
 - **Documentation**: Check our comprehensive guides first
   - [README.md](../README.md) - Getting started
-  - [TESTING.md](../TESTING.md) - Testing guide
+  - [Testing Guide](../docs-internal/testing/TESTING.md) - Testing guide
   - [Production Checklist](../docs/deployment/production-checklist.mdx) - Deployment
   - [Security Audit](../archive/SECURITY_AUDIT.md) - Security
 
@@ -380,7 +380,7 @@ We welcome community members helping each other! If you know the answer to someo
 ### Additional Resources
 
 For more information:
-- **Testing Guide**: [TESTING.md](../TESTING.md)
+- **Testing Guide**: [Testing Documentation](../docs-internal/testing/TESTING.md)
 - **Production Checklist**: [docs/deployment/production-checklist.mdx](../docs/deployment/production-checklist.mdx)
 - **Security Policy**: [SECURITY.md](../SECURITY.md)
 

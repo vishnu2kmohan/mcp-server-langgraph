@@ -3,7 +3,7 @@
 **Status**: Accepted
 **Date**: 2025-10-20
 **Deciders**: Engineering Team, Security Team
-**Related**: [ADR-0026: Resilience Patterns](0026-resilience-patterns.md), [Kong Gateway Integration](../integrations/kong.md)
+**Related**: [ADR-0030: Resilience Patterns](0030-resilience-patterns.md), [Kong Gateway Integration](../integrations/kong.md)
 
 ## Context
 
@@ -494,7 +494,7 @@ docker-compose start redis
 - **slowapi Library**: https://github.com/laurents/slowapi
 - **Kong Rate Limiting**: https://docs.konghq.com/hub/kong-inc/rate-limiting/
 - **Google Cloud Armor**: https://cloud.google.com/armor/docs/rate-limiting-overview
-- **ADR-0026: Resilience Patterns**: ./0026-resilience-patterns.md
+- **ADR-0030: Resilience Patterns**: ./0026-resilience-patterns.md
 - **Kong Integration Guide**: ../integrations/kong.md
 
 ## Success Metrics

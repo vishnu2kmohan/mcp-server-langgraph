@@ -8,7 +8,7 @@ Before asking for help, please check our comprehensive documentation:
 
 ### Getting Started
 - [README.md](../README.md) - Project overview and quick start
-- [Developer Onboarding](../DEVELOPER_ONBOARDING.md) - Developer setup guide
+- [Developer Onboarding](../docs-internal/DEVELOPER_ONBOARDING.md) - Developer setup guide
 - [.env.example](../.env.example) - Configuration reference
 
 ### Deployment & Operations
@@ -23,7 +23,7 @@ Before asking for help, please check our comprehensive documentation:
 - [MCP Registry](../reference/mcp-registry.md) - MCP registry integration
 
 ### Testing & Security
-- [Testing Guide](../TESTING.md) - Testing strategy and guide
+- [Testing Guide](../docs-internal/testing/TESTING.md) - Testing strategy and guide
 - [Security Audit](../archive/SECURITY_AUDIT.md) - Security checklist
 
 ## Getting Help
