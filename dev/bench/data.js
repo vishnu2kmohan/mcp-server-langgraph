@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761018507587,
+  "lastUpdate": 1761018609917,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -7072,6 +7072,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0024480560344887006",
             "extra": "mean: 92.588933082776 usec\nrounds: 5574"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "220034566c5ee92e5a2127a580855870d0d8d8e4",
+          "message": "fix: resolve CI test failures with flake8 and circuit breaker isolation\n\nFixes two CI-specific issues that were causing workflow failures:\n\n1. **flake8 not found in Code Quality job**\n   - Problem: CI ran `uv sync --frozen` which only installs base dependencies\n   - flake8 is in dev dependencies but wasn't being installed\n   - Solution: Changed to `uv sync --frozen --all-groups` to include dev deps\n   - File: .github/workflows/ci.yaml:344\n\n2. **Async test failures with circuit breaker state pollution**\n   - Problem: 2 async tests failing with CircuitBreakerOpenError in CI\n   - Root cause: Global circuit breaker state shared across tests\n   - Tests failed when circuit breaker opened from previous test failures\n   - Solution: Added explicit circuit breaker reset fixture in test file\n   - Fixture runs before AND after each test for complete isolation\n   - File: tests/unit/test_llm_fallback_kwargs.py:17-23\n\nTest Results:\n- Local: All 137 unit tests pass\n- Fixed tests: test_fallback_forwards_kwargs_async, test_fallback_forwards_ollama_kwargs_async\n\nImpact:\n- Code Quality job will now execute successfully\n- Async fallback kwargs tests will pass consistently in CI\n- No changes to test logic, only improved isolation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T23:48:19-04:00",
+          "tree_id": "58ceca299d578ca1aa31f03545a89b6a78511eca",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/220034566c5ee92e5a2127a580855870d0d8d8e4"
+        },
+        "date": 1761018608854,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57089.002111559064,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011907265235436269",
+            "extra": "mean: 17.516508662139067 usec\nrounds: 6696"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 58548.42124808015,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012378924065225435",
+            "extra": "mean: 17.079879844459356 usec\nrounds: 12650"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 54230.09866033066,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005276302541790378",
+            "extra": "mean: 18.43994432434069 usec\nrounds: 18106"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.61195071445763,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002875161376732458",
+            "extra": "mean: 5.273929181320065 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.5076886175101,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012392992863800864",
+            "extra": "mean: 51.261839349967886 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94220839831412,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000039329031163123516",
+            "extra": "mean: 100.58127529991907 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2726395.4053892554,
+            "unit": "iter/sec",
+            "range": "stddev: 3.452746860891467e-8",
+            "extra": "mean: 366.78465567514667 nsec\nrounds: 130856"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6609.641388077424,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011488551168222546",
+            "extra": "mean: 151.2941385600459 usec\nrounds: 2634"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2867.7511737090613,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009180197265593737",
+            "extra": "mean: 348.7052883694336 usec\nrounds: 2365"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3062.996177349004,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003967682091818767",
+            "extra": "mean: 326.4777172740356 usec\nrounds: 1811"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66372.67299264403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000115112194377045",
+            "extra": "mean: 15.066441577708167 usec\nrounds: 10775"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12268.612075888777,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00226080374429991",
+            "extra": "mean: 81.50881239168667 usec\nrounds: 5149"
           }
         ]
       }
