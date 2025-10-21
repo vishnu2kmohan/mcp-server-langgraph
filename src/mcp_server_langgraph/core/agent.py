@@ -609,8 +609,9 @@ def create_agent_graph() -> Any:  # noqa: C901
 
         try:
             logger.info("Verifying response quality")
+            # type: ignore[arg-type]
             verification_result = await output_verifier.verify_response(
-                response=response_text, user_request=user_request, conversation_context=conversation_context  # type: ignore[arg-type]
+                response=response_text, user_request=user_request, conversation_context=conversation_context
             )
 
             state["verification_passed"] = verification_result.passed
@@ -765,7 +766,7 @@ def get_agent_graph() -> None:
     """
     global _agent_graph_cache
     if _agent_graph_cache is None:
-        _agent_graph_cache = create_agent_graph()  # type: ignore[no-untyped-call]
+        _agent_graph_cache = create_agent_graph()
     return _agent_graph_cache  # type: ignore[no-any-return]
 
 

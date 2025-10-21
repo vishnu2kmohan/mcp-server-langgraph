@@ -330,4 +330,4 @@ def rate_limit_for_search(func: Callable) -> Callable:  # type: ignore[type-arg]
 
 def exempt_from_rate_limit(func: Callable) -> Callable:  # type: ignore[type-arg]
     """Exempt endpoint from rate limiting (health checks, metrics)"""
-    return limiter.exempt(func)  # type: ignore[no-any-return]
+    return limiter.exempt(func)  # type: ignore[no-any-return,no-untyped-call]

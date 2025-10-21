@@ -153,12 +153,12 @@ class CleanupScheduler:
 
             # Send notification if configured
             if self.retention_service.config.get("notifications", {}).get("enabled", True):
-                await self._send_cleanup_notification(results)  # type: ignore[attr-defined]
+                await self._send_cleanup_notification(results)
 
         except Exception as e:
             logger.error(f"Data retention cleanup failed: {e}", exc_info=True)
 
-    async def _send_cleanup_notification(self, results: list) -> None:
+    async def _send_cleanup_notification(self, results: list[Any]) -> None:
         """
         Send notification about cleanup execution
 
@@ -197,7 +197,7 @@ class CleanupScheduler:
                 metadata={
                     "results_count": len(results),
                     "total_deleted": total_deleted,
-                    "data_types": [r.data_type for r in results],  # type: ignore[attr-defined]
+                    "data_types": [r.data_type for r in results],
                 },
             )
 
