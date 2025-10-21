@@ -8,6 +8,7 @@ from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from hypothesis import settings
 from langchain_core.messages import HumanMessage
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -31,8 +32,6 @@ os.environ.setdefault("ENABLE_CONSOLE_EXPORT", "false")
 
 
 # Configure Hypothesis profiles for property-based testing
-from hypothesis import settings
-
 # Register CI profile with comprehensive testing (100 examples)
 settings.register_profile(
     "ci",
@@ -455,6 +454,30 @@ def async_context_manager():
     return _create
 
 
+def _reset_circuit_breakers(reset_fn):
+    """Helper to reset all known circuit breakers."""
+    if not reset_fn:
+        return
+    known_services = ["llm", "openfga", "redis", "keycloak", "qdrant"]
+    for service in known_services:
+        try:
+            reset_fn(service)
+        except Exception:
+            pass  # Ignore errors if service not initialized
+
+
+def _reset_bulkheads(reset_fn):
+    """Helper to reset all known bulkheads."""
+    if not reset_fn:
+        return
+    known_bulkheads = ["default", "llm", "openfga", "redis"]
+    for bulkhead_name in known_bulkheads:
+        try:
+            reset_fn(bulkhead_name)
+        except Exception:
+            pass  # Ignore errors if bulkhead not initialized
+
+
 @pytest.fixture(autouse=True)
 def reset_resilience_state():
     """
@@ -478,31 +501,11 @@ def reset_resilience_state():
     except ImportError:
         reset_bulkhead = None
 
-    # Reset all known circuit breakers
-    if reset_circuit_breaker:
-        known_services = ["llm", "openfga", "redis", "keycloak", "qdrant"]
-        for service in known_services:
-            try:
-                reset_circuit_breaker(service)
-            except Exception:
-                pass  # Ignore errors if service not initialized
-
-    # Reset bulkheads
-    if reset_bulkhead:
-        known_bulkheads = ["default", "llm", "openfga", "redis"]
-        for bulkhead_name in known_bulkheads:
-            try:
-                reset_bulkhead(bulkhead_name)
-            except Exception:
-                pass  # Ignore errors if bulkhead not initialized
+    # Reset before test
+    _reset_circuit_breakers(reset_circuit_breaker)
+    _reset_bulkheads(reset_bulkhead)
 
     yield
 
-    # Cleanup after test (optional, but helps with test isolation)
-    # Same cleanup logic can run after the test
-    if reset_circuit_breaker:
-        for service in ["llm", "openfga", "redis", "keycloak", "qdrant"]:
-            try:
-                reset_circuit_breaker(service)
-            except Exception:
-                pass
+    # Cleanup after test (helps with test isolation)
+    _reset_circuit_breakers(reset_circuit_breaker)
