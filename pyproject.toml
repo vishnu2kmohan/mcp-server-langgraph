@@ -312,8 +312,11 @@ dict_synonyms = "Struct,NamedStruct"
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8.0",
     "hypothesis>=6.142.1",
     "hypothesis-jsonschema>=0.23.1",
+    "mypy>=1.18.0",
+    "pre-commit>=4.0.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
     "pytest-benchmark>=5.1.0",
