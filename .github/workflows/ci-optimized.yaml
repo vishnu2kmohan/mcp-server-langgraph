@@ -83,15 +83,12 @@ jobs:
         curl -LsSf https://astral.sh/uv/install.sh | sh
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    # OPTIMIZATION: Use uv pip sync instead of uv sync (no resolution)
+    # OPTIMIZATION: Use uv sync for lockfile-based installation (no resolution)
     - name: Install dependencies (fast path)
       run: |
-        # Create venv
-        python -m venv .venv
-        source .venv/bin/activate
-
         # Install from lockfile (no resolution, 60s faster)
-        uv pip sync --python $(which python) uv.lock
+        # uv sync automatically creates/uses .venv
+        uv sync --no-dev
 
         echo "✓ Dependencies installed from lockfile (no resolution needed)"
 
