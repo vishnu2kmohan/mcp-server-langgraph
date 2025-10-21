@@ -35,7 +35,7 @@ opentelemetry-exporter-otlp-proto-http==1.38.0
 openfga-sdk==0.9.7  # Updated from 0.5.1 - no breaking changes for used methods (check, write, list_objects)
 
 # Prometheus Monitoring
-prometheus-api-client==0.5.5  # For querying Prometheus metrics in SLA monitoring
+prometheus-api-client==0.6.0  # For querying Prometheus metrics in SLA monitoring
 
 # Secrets Management - Infisical (OPTIONAL)
 # ==========================================
