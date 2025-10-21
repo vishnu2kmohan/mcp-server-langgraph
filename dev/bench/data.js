@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761026514924,
+  "lastUpdate": 1761026728196,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8368,6 +8368,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000005181647374191312",
             "extra": "mean: 51.351225000045446 usec\nrounds: 5520"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8dce6503fa55a971445b6eff6d0fd39840385f32",
+          "message": "fix(tests): resolve flaky search tools tests with xdist_group\n\nApplied @pytest.mark.xdist_group to TestSearchKnowledgeBase class to ensure\nall search tool tests run in same worker, preventing state pollution from\nparallel test execution.\n\nFixes:\n- test_search_empty_query\n- test_search_with_qdrant_configured\n\nRoot cause: Shared state contamination when tests from different modules\nrun in parallel across pytest-xdist workers.\n\n🎉 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T02:03:40-04:00",
+          "tree_id": "a45b4df24874acb32befd3a859a7b1e9eccada3f",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8dce6503fa55a971445b6eff6d0fd39840385f32"
+        },
+        "date": 1761026727067,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57236.28543065373,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001357250483059338",
+            "extra": "mean: 17.471434291653654 usec\nrounds: 6818"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 60078.205918331485,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013947466380757315",
+            "extra": "mean: 16.64497107918585 usec\nrounds: 12275"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 56398.46038005637,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012450162763556767",
+            "extra": "mean: 17.730980478212135 usec\nrounds: 17775"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.39704824759215,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003245447415339387",
+            "extra": "mean: 5.2247409725274085 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.59840836739814,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005571571847950399",
+            "extra": "mean: 51.024551649994976 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.940705155033651,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006444680629312504",
+            "extra": "mean: 100.59648530000231 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2828011.4949534424,
+            "unit": "iter/sec",
+            "range": "stddev: 2.731051155717174e-8",
+            "extra": "mean: 353.6053519529499 nsec\nrounds: 110072"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6632.059162264992,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001151843443778012",
+            "extra": "mean: 150.78273210977787 usec\nrounds: 545"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2871.892087890207,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008514518629907878",
+            "extra": "mean: 348.2024983517522 usec\nrounds: 2123"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3068.9331066598916,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003819561502078871",
+            "extra": "mean: 325.84613780922757 usec\nrounds: 1698"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66269.03205180455,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012497345056370037",
+            "extra": "mean: 15.0900046226459 usec\nrounds: 13196"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12625.601057514945,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0022644315871406927",
+            "extra": "mean: 79.20415000003388 usec\nrounds: 5380"
           }
         ]
       }
