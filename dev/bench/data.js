@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761008254427,
+  "lastUpdate": 1761008993223,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -5992,6 +5992,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00013261356162642471",
             "extra": "mean: 69.66087071593061 usec\nrounds: 2947"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f2c0c4d4adc58a07783b0a9411c83fbc9947c958",
+          "message": "test: add extensive property-based tests for resilience and cache modules\n\n**Resilience Property Tests (18 tests):**\n- Circuit breaker state transitions and failure thresholds\n- Retry logic with exponential backoff validation\n- Timeout enforcement for slow operations\n- Bulkhead concurrency limiting and fail-fast behavior\n- Fallback strategies and degraded service patterns\n- Composition of resilience patterns (retry+timeout, circuit+fallback)\n- Exception classification for retry decisions\n\n**Cache Property Tests (30 tests):**\n- Value preservation across cache get/set (integers, strings, lists, dicts, booleans)\n- Cache key normalization and hashing for long keys\n- TTL behavior and expiration validation\n- Cache statistics invariants (hit rate, counts)\n- Stampede prevention with concurrent access\n- Cache level isolation (L1 vs L2)\n- Decorator memoization properties\n\n**Test Coverage Improvements:**\n- Added 48 new property-based tests\n- 81 total property tests now (26 existing + 55 new)\n- Increased Hypothesis test coverage for edge case discovery\n- Better validation of resilience pattern invariants\n\n**Files Added:**\n- tests/property/test_resilience_properties.py: 18 resilience pattern tests\n- tests/property/test_cache_properties.py: 30 cache module tests\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T21:06:55-04:00",
+          "tree_id": "c7e2de9fa03b12a4da49b9c105946ff400dc5768",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f2c0c4d4adc58a07783b0a9411c83fbc9947c958"
+        },
+        "date": 1761008992210,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 37945.95861373212,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002793780034334661",
+            "extra": "mean: 26.353267555562923 usec\nrounds: 5027"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 33144.0130062507,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031129424689282797",
+            "extra": "mean: 30.171361561178717 usec\nrounds: 6660"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 31378.01192101403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000035846281156824023",
+            "extra": "mean: 31.86945057313508 usec\nrounds: 15447"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.93826394496324,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020848005034903237",
+            "extra": "mean: 5.292734140350178 msec\nrounds: 171"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.34267639665567,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015402378380212963",
+            "extra": "mean: 51.699153699996714 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.947771355322173,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000494983830677197",
+            "extra": "mean: 100.52502859999777 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1995478.501008599,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4128755206314855e-8",
+            "extra": "mean: 501.13293603241425 nsec\nrounds: 98834"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 3968.0530293585516,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001419225009380759",
+            "extra": "mean: 252.01276106979174 usec\nrounds: 2168"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2997.941776036377,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001455530642061463",
+            "extra": "mean: 333.5621818920428 usec\nrounds: 2463"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2825.57020111783,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002309908782149287",
+            "extra": "mean: 353.91086712493916 usec\nrounds: 1746"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 40618.87704728403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029436314251976636",
+            "extra": "mean: 24.619095176755128 usec\nrounds: 7754"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11577.34360163342,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015243776294925906",
+            "extra": "mean: 86.37560000023774 usec\nrounds: 3570"
           }
         ]
       }
