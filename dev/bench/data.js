@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761032474218,
+  "lastUpdate": 1761032719127,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -9772,6 +9772,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002687276206381081",
             "extra": "mean: 95.36610466413677 usec\nrounds: 5360"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "67cf606c8ae7d89c98f284ed84d77adaa2f0fa6a",
+          "message": "fix(ci): remove duplicate cache exports in Docker builds\n\nIssue: Docker builds failing with \"duplicate cache exports [inline]\" error\n\nRoot cause:\n- Docker Buildx doesn't allow multiple incompatible cache export types\n- CI workflow specified both type=gha and type=inline exports\n- This causes a conflict and build failure\n\nError message:\n  ERROR: failed to build: failed to solve: duplicate cache exports [inline]\n\nFix:\n- Removed type=inline cache export (lines 153, 216)\n- Removed BUILDKIT_INLINE_CACHE=1 build arg (no longer needed)\n- Kept type=gha (GitHub Actions cache) as primary cache method\n\nBenefits of using type=gha over type=inline:\n✅ Doesn't bloat image size\n✅ Better cache performance in GitHub Actions\n✅ Supports mode=max for comprehensive caching\n✅ Scoped per variant for better cache isolation\n\nChanges applied to:\n- docker-build job (base, full, test variants)\n- docker-multiplatform job (multi-arch builds)\n\nThis resolves the build failures seen in recent CI runs.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T03:43:53-04:00",
+          "tree_id": "d4bf75491b1d81bf9a0e4c81fd6ad7843a737493",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/67cf606c8ae7d89c98f284ed84d77adaa2f0fa6a"
+        },
+        "date": 1761032718522,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 56562.14353576015,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001657398219407138",
+            "extra": "mean: 17.6796694306285 usec\nrounds: 7236"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 59324.353646700554,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001272318194409202",
+            "extra": "mean: 16.85648369564018 usec\nrounds: 11776"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 55938.14745082807,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014068275669671455",
+            "extra": "mean: 17.876888055312183 usec\nrounds: 16928"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 192.70418258869492,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003410591721220755",
+            "extra": "mean: 5.189300961538473 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.62992611130926,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004628964834194828",
+            "extra": "mean: 50.94262679999986 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94326907601739,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007325164252025335",
+            "extra": "mean: 100.57054600000157 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2802440.1121392096,
+            "unit": "iter/sec",
+            "range": "stddev: 3.161888369581056e-8",
+            "extra": "mean: 356.83188934826575 nsec\nrounds: 192160"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6560.039889897132,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012285608648655417",
+            "extra": "mean: 152.43809744816673 usec\nrounds: 431"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2869.635252440198,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007097599489040607",
+            "extra": "mean: 348.4763435177515 usec\nrounds: 2422"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3081.109663725712,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000047219179642089605",
+            "extra": "mean: 324.5583926379267 usec\nrounds: 1793"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67303.22711578367,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010917972696841087",
+            "extra": "mean: 14.858128545302463 usec\nrounds: 12058"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20635.53639550146,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001951987648170305",
+            "extra": "mean: 48.46009237821409 usec\nrounds: 4579"
           }
         ]
       }
