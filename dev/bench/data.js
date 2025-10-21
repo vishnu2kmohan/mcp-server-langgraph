@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761022473199,
+  "lastUpdate": 1761022948599,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -7720,6 +7720,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000004791147095351514",
             "extra": "mean: 49.518762109960996 usec\nrounds: 5801"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "83883afed3745d7fccf528ed6ef5e1d3db63b1ca",
+          "message": "docs: fix lint configuration inconsistencies and documentation alignment\n\nResolved critical discrepancies between lint documentation and actual\nimplementation to ensure developers have accurate expectations.\n\nKey Changes:\n\n1. Documentation Alignment (.claude/memory/lint-workflow.md):\n   - Corrected mypy status from \"BLOCKING\" to \"NON-BLOCKING/DISABLED\"\n   - Clarified mypy is disabled in pre-commit (500+ type errors)\n   - Updated mypy as warning-only in pre-push and CI/CD\n   - Added 4-phase roadmap for gradual mypy enforcement\n   - Fixed pre-commit/pre-push behavior tables\n\n2. Lint Command Documentation (.claude/commands/lint.md):\n   - Added mypy non-blocking status throughout\n   - Clarified blocking checks (flake8, bandit) vs warnings (mypy)\n   - Added \"Important Notes\" section for mypy gradual rollout\n   - Updated troubleshooting to reflect mypy is optional to fix\n\n3. Repository Cleanup (.gitignore):\n   - Added patterns for temporary mypy fix scripts\n   - Prevents accidental commit of *mypy_fix.py, *mypy_fix.sh, ultimate_fix.sh\n\nImpact:\n- Developers now have accurate understanding of lint enforcement\n- No false expectations about mypy blocking commits/pushes\n- Clear roadmap for future strict type checking enforcement\n- Prevents confusion between docs and actual behavior\n\nRelated Files Modified:\n- .claude/memory/lint-workflow.md (non-tracked, documentation update)\n- .git/hooks/pre-push (non-tracked, help text updated)\n- .claude/settings.local.json (non-tracked, scope alignment)\n- Makefile (already had correct deprecation notices)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T01:01:16-04:00",
+          "tree_id": "f7387a491de7eadefd3ae027d165bd0407e98982",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/83883afed3745d7fccf528ed6ef5e1d3db63b1ca"
+        },
+        "date": 1761022948204,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51669.90048169722,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021428870573521063",
+            "extra": "mean: 19.353627366753397 usec\nrounds: 6285"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53160.814453934,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023700728474069195",
+            "extra": "mean: 18.810847995313175 usec\nrounds: 11947"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50339.88733510748,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024837632819611367",
+            "extra": "mean: 19.864963013188774 usec\nrounds: 15492"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.47772719809086,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003169714179609186",
+            "extra": "mean: 5.249957644444336 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.40214981931651,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011623206536144286",
+            "extra": "mean: 51.54068025000065 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.944396197051582,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005281394275891913",
+            "extra": "mean: 100.55914710000096 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2550204.495721275,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6830040162846084e-8",
+            "extra": "mean: 392.12541648240244 nsec\nrounds: 196079"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5013.335178740853,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015608300397419566",
+            "extra": "mean: 199.468011682227 usec\nrounds: 428"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2874.738874197477,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010077912344102314",
+            "extra": "mean: 347.85768160566016 usec\nrounds: 2566"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2712.128648207065,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004212200820930998",
+            "extra": "mean: 368.7140728597371 usec\nrounds: 1647"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58431.3789487332,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022084769856570485",
+            "extra": "mean: 17.11409208530548 usec\nrounds: 13835"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 19124.678266250277,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000056191543066384235",
+            "extra": "mean: 52.288461331384646 usec\nrounds: 5573"
           }
         ]
       }
