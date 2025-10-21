@@ -7,7 +7,7 @@ import os
 from mcp_server_langgraph.secrets.manager import SecretsManager
 
 
-def setup_infisical():
+def setup_infisical():  # noqa: C901
     """Setup Infisical and create sample secrets"""
     print("\n" + "=" * 60)
     print("Infisical Setup")

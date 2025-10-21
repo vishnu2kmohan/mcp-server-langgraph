@@ -8,7 +8,6 @@ Provides a fallback for development environments where OpenFGA isn't running.
 import json
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from typing import Optional
 
 try:

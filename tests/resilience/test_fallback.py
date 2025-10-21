@@ -224,7 +224,7 @@ class TestFallbackMetrics:
         async def failing_func():
             raise ValueError("Error")
 
-        with patch("mcp_server_langgraph.resilience.fallback.fallback_used_counter") as mock_metric:
+        with patch("mcp_server_langgraph.resilience.fallback.fallback_used_counter") as mock_metric:  # noqa: F841
             result = await failing_func()
             assert result == "fallback_value"
 

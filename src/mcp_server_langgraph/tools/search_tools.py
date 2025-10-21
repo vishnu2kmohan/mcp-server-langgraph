@@ -4,7 +4,7 @@ Search tools for querying information
 Provides knowledge base and web search capabilities for the agent.
 """
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import httpx
 from langchain_core.tools import tool
@@ -49,7 +49,7 @@ See: docs/advanced/dynamic-context.md"""
 
         # Query Qdrant for semantic search
         try:
-            client = QdrantClient(
+            client = QdrantClient(  # noqa: F841
                 url=settings.qdrant_url,
                 port=getattr(settings, "qdrant_port", 6333),
             )
@@ -112,7 +112,7 @@ async def web_search(
         # Check for configured web search API key
         serper_api_key = getattr(settings, "serper_api_key", None)
         tavily_api_key = getattr(settings, "tavily_api_key", None)
-        brave_api_key = getattr(settings, "brave_api_key", None)
+        brave_api_key = getattr(settings, "brave_api_key", None)  # noqa: F841
 
         # Try Tavily API (recommended for AI applications)
         if tavily_api_key:

@@ -6,9 +6,7 @@ This script validates all internal links in markdown and mdx files,
 categorizes broken links, and generates a detailed report.
 """
 
-import glob
 import json
-import os
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -145,13 +143,13 @@ class DocumentationLinkValidator:
         report_lines = []
         report_lines.append("# Documentation Link Validation Report")
         report_lines.append(f"\nGenerated: {self._get_timestamp()}")
-        report_lines.append(f"\n## Summary\n")
+        report_lines.append("\n## Summary\n")
         report_lines.append(f"- Total files scanned: {len(self.all_files)}")
         report_lines.append(f"- Total broken links: {len(self.broken_links)}")
         report_lines.append(f"- Categories: {len(self.categories)}")
 
         # Summary by category
-        report_lines.append(f"\n## Broken Links by Category\n")
+        report_lines.append("\n## Broken Links by Category\n")
         for category, links in sorted(self.categories.items(), key=lambda x: len(x[1]), reverse=True):
             report_lines.append(f"### {category.replace('_', ' ').title()} ({len(links)} links)\n")
 

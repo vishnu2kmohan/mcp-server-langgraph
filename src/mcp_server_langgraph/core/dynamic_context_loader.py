@@ -12,21 +12,14 @@ import base64
 import time
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from cryptography.fernet import Fernet
 from langchain_core.embeddings import Embeddings
 from langchain_core.messages import BaseMessage, SystemMessage
 from pydantic import BaseModel, Field
 from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    Distance,
-    FieldCondition,
-    Filter,
-    MatchValue,
-    PointStruct,
-    VectorParams,
-)
+from qdrant_client.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer

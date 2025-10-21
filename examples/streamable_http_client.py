@@ -226,7 +226,7 @@ class MCPStreamableClient:
         return await self.send_message("resources/list")
 
 
-async def main():
+async def main():  # noqa: C901
     """Example usage demonstrating token-based authentication"""
     print("=" * 70)
     print("MCP StreamableHTTP Client Example (v2.8.0+ with Token Auth)")
@@ -246,7 +246,7 @@ async def main():
     # Login to get JWT token
     print("1. Authenticating...")
     try:
-        login_data = await client.login()
+        login_data = await client.login()  # noqa: F841
         print()
     except Exception as e:
         print(f"   ✗ Login failed: {e}")

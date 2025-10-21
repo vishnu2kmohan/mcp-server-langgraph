@@ -191,7 +191,7 @@ async def example_3_compaction_with_extraction():
 
         print(f"\n   Original: {compaction_result.original_token_count} tokens, {len(messages)} messages")
         print(
-            f"   Compacted: {compaction_result.compacted_token_count} tokens, {len(compaction_result.compacted_messages)} messages"
+            f"   Compacted: {compaction_result.compacted_token_count} tokens, {len(compaction_result.compacted_messages)} messages"  # noqa: E501
         )
         print(f"   Compression ratio: {compaction_result.compression_ratio:.2%}")
         print(f"   Messages summarized: {compaction_result.messages_summarized}")

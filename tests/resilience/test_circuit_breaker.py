@@ -56,7 +56,7 @@ class TestCircuitBreakerBasics:
     @pytest.mark.unit
     def test_get_circuit_breaker_state(self, reset_breakers):
         """Test get_circuit_breaker_state function"""
-        breaker = get_circuit_breaker("test_service")
+        breaker = get_circuit_breaker("test_service")  # noqa: F841
         state = get_circuit_breaker_state("test_service")
         assert state == CircuitBreakerState.CLOSED
 
@@ -131,7 +131,7 @@ class TestCircuitBreakerStateTransitions:
         await asyncio.sleep(1.5)
 
         # Circuit should now be HALF_OPEN (trying recovery)
-        breaker = get_circuit_breaker("test")
+        breaker = get_circuit_breaker("test")  # noqa: F841
         # Note: Can't directly test HALF_OPEN state without triggering a call
 
 
@@ -252,13 +252,13 @@ class TestCircuitBreakerConfiguration:
     @pytest.mark.unit
     def test_custom_fail_max(self, reset_breakers):
         """Test custom fail_max configuration"""
-        breaker = get_circuit_breaker("test")
+        breaker = get_circuit_breaker("test")  # noqa: F841
         # Default from config should be applied
 
     @pytest.mark.unit
     def test_custom_timeout_duration(self, reset_breakers):
         """Test custom timeout_duration configuration"""
-        breaker = get_circuit_breaker("test")
+        breaker = get_circuit_breaker("test")  # noqa: F841
         # Default from config should be applied
 
 

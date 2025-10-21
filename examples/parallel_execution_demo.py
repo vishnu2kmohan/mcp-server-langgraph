@@ -229,7 +229,7 @@ async def example_2_dependency_management():
 
     print("\n2. Executing with dependency resolution...")
 
-    executor = ParallelToolExecutor(max_parallelism=5)
+    executor = ParallelToolExecutor(max_parallelism=5)  # noqa: F841
     start = time.time()
 
     # We need to manually handle parameter substitution for this demo
@@ -280,7 +280,7 @@ async def example_2_dependency_management():
 
     total_time = time.time() - start
     print(f"\n   Total execution time: {total_time * 1000:.0f}ms")
-    print(f"   ✅ All dependencies respected, Level 0 executed in parallel")
+    print("   ✅ All dependencies respected, Level 0 executed in parallel")
 
 
 async def example_3_error_handling():
@@ -423,7 +423,7 @@ async def example_5_real_world_workflow():
         {"email": profile_result.result["email"], "amount": discount_result.result},
         [],
     )
-    email_result = await execute_tool(email_inv)
+    email_result = await execute_tool(email_inv)  # noqa: F841
 
     elapsed = time.time() - start
 
@@ -433,7 +433,7 @@ async def example_5_real_world_workflow():
 
     print("\n📊 Performance benefits of parallelism:")
     print(
-        f"   • Level 0 tools ran concurrently (saved ~{max(profile_result.execution_time_ms, orders_result.execution_time_ms) - min(profile_result.execution_time_ms, orders_result.execution_time_ms):.0f}ms)"
+        f"   • Level 0 tools ran concurrently (saved ~{max(profile_result.execution_time_ms, orders_result.execution_time_ms) - min(profile_result.execution_time_ms, orders_result.execution_time_ms):.0f}ms)"  # noqa: E501
     )
     print("   • Dependencies respected (correct execution order)")
     print("   • Clean error handling (graceful degradation)")

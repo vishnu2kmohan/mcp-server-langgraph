@@ -139,7 +139,7 @@ class TestDynamicContextLoader:
     @pytest.mark.asyncio
     async def test_semantic_search_with_filter(self, context_loader, mock_qdrant_client):
         """Test semantic search with type filter"""
-        results = await context_loader.semantic_search(
+        results = await context_loader.semantic_search(  # noqa: F841
             query="test query",
             top_k=3,
             ref_type_filter="document",
@@ -271,7 +271,7 @@ class TestDynamicContextLoader:
 
         # Load once
         loaded1 = await context_loader.load_context(ref)
-        initial_call_count = mock_qdrant_client.retrieve.call_count
+        initial_call_count = mock_qdrant_client.retrieve.call_count  # noqa: F841
 
         # Load again - should use cache
         loaded2 = await context_loader.load_context(ref)

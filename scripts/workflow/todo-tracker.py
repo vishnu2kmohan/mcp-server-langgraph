@@ -19,13 +19,12 @@ Created: 2025-10-20
 """
 
 import argparse
-import os
 import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List
 
 
 @dataclass
@@ -329,7 +328,7 @@ def main():
         print(f"  LOW: {low}")
 
         if total > 0:
-            print(f"\nRecommended Sprint Scope:")
+            print("\nRecommended Sprint Scope:")
             if critical > 0:
                 print(f"  Week 1: {critical} CRITICAL items")
             if high > 0:

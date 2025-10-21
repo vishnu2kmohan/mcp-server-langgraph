@@ -14,10 +14,7 @@ from typing import Callable, Dict, Optional, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
-from mcp_server_langgraph.observability.telemetry import (
-    bulkhead_active_operations_gauge,
-    bulkhead_rejected_counter,
-)
+from mcp_server_langgraph.observability.telemetry import bulkhead_active_operations_gauge, bulkhead_rejected_counter
 from mcp_server_langgraph.resilience.config import get_resilience_config
 
 logger = logging.getLogger(__name__)

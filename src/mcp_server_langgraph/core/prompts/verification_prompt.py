@@ -149,12 +149,12 @@ Scores: accuracy=0.65, completeness=0.70, clarity=0.80, relevance=0.75, safety=1
 Overall: 0.72
 Critical Issues: Makes claims without citing sources or acknowledging uncertainty
 Requires Refinement: yes
-Feedback: Response structure is clear, but needs better source attribution. Several factual claims lack support or acknowledgment of uncertainty.
+Feedback: Response structure is clear, but needs better source attribution. Several factual claims lack support or acknowledgment of uncertainty.  # noqa: E501
 
 Example 3 - Major Issues:
 Scores: accuracy=0.30, completeness=0.50, clarity=0.60, relevance=0.40, safety=1.0, sources=0.20
 Overall: 0.50
 Critical Issues: Contains factual errors, doesn't fully address the question, makes unsupported claims
 Requires Refinement: yes
-Feedback: Response has significant accuracy issues and doesn't completely address the question. Need to verify facts and provide more comprehensive coverage of the topic.
+Feedback: Response has significant accuracy issues and doesn't completely address the question. Need to verify facts and provide more comprehensive coverage of the topic.  # noqa: E501
 </examples>"""

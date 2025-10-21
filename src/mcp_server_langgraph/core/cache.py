@@ -18,9 +18,7 @@ See ADR-0028 for design rationale.
 import asyncio
 import functools
 import hashlib
-import logging
 import pickle
-import time
 from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
 
 import redis
@@ -162,7 +160,7 @@ class CacheService:
             try:
                 data = self.redis.get(key)
                 if data:
-                    value = pickle.loads(data)
+                    value = pickle.loads(data)  # nosec B301 - Internal cache data only, not user-provided
 
                     # Promote to L1
                     self.l1_cache[key] = value
@@ -473,7 +471,7 @@ def cached(
 
             # Hash if too long
             if len(key) > 200:
-                key_hash = hashlib.md5(key.encode()).hexdigest()
+                key_hash = hashlib.md5(key.encode(), usedforsecurity=False).hexdigest()  # nosec B324
                 key = f"{key_prefix}:hash:{key_hash}"
 
             with tracer.start_as_current_span(
@@ -507,7 +505,7 @@ def cached(
             key = ":".join(key_parts)
 
             if len(key) > 200:
-                key_hash = hashlib.md5(key.encode()).hexdigest()
+                key_hash = hashlib.md5(key.encode(), usedforsecurity=False).hexdigest()  # nosec B324
                 key = f"{key_prefix}:hash:{key_hash}"
 
             # Try cache
@@ -600,7 +598,7 @@ def generate_cache_key(*parts: Any, prefix: str = "", version: str = "v1") -> st
 
     # Hash if too long
     if len(key) > 200:
-        key_hash = hashlib.md5(key.encode()).hexdigest()
+        key_hash = hashlib.md5(key.encode(), usedforsecurity=False).hexdigest()  # nosec B324
         key = f"{prefix}:hash:{key_hash}:{version}"
 
     return key

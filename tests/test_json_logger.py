@@ -111,7 +111,7 @@ class TestCustomJSONFormatter:
         """Test OpenTelemetry trace context injection"""
         tracer = tracer_provider.get_tracer(__name__)
 
-        with tracer.start_as_current_span("test_span") as span:
+        with tracer.start_as_current_span("test_span") as span:  # noqa: F841
             formatted = json_formatter.format(log_record)
             log_data = json.loads(formatted)
 

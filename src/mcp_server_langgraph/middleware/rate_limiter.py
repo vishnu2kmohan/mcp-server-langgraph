@@ -11,12 +11,10 @@ Provides DoS protection with:
 See ADR-0027 for design rationale.
 """
 
-import logging
 from typing import Callable, Optional
 
 from fastapi import Request
-from redis import Redis
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
@@ -175,7 +173,7 @@ def get_dynamic_limit(request: Request) -> str:
     limit = get_rate_limit_for_tier(tier)
 
     logger.debug(
-        f"Rate limit determined",
+        "Rate limit determined",
         extra={
             "tier": tier,
             "limit": limit,
@@ -262,7 +260,7 @@ def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded)
 
     # Log rate limit violation
     logger.warning(
-        f"Rate limit exceeded",
+        "Rate limit exceeded",
         extra={
             "tier": tier,
             "limit": limit,

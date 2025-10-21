@@ -10,11 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-from mcp_server_langgraph.core.context_manager import (
-    CompactionResult,
-    ContextManager,
-    compact_if_needed,
-)
+from mcp_server_langgraph.core.context_manager import CompactionResult, ContextManager, compact_if_needed
 
 
 @pytest.fixture

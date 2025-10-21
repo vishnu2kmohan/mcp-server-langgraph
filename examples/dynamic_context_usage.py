@@ -19,7 +19,6 @@ Usage:
 import asyncio
 
 from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader, search_and_load_context
-from mcp_server_langgraph.observability.telemetry import logger
 
 
 async def example_1_basic_indexing_and_search():
@@ -147,31 +146,31 @@ async def example_2_progressive_discovery():
     knowledge_base = [
         {
             "ref_id": "ml_overview",
-            "content": "Machine learning is a branch of AI focused on learning patterns from data without explicit programming.",
+            "content": "Machine learning is a branch of AI focused on learning patterns from data without explicit programming.",  # noqa: E501
             "ref_type": "overview",
             "summary": "Machine learning overview",
         },
         {
             "ref_id": "supervised_learning",
-            "content": "Supervised learning uses labeled training data to learn mappings from inputs to outputs. Examples: classification, regression.",
+            "content": "Supervised learning uses labeled training data to learn mappings from inputs to outputs. Examples: classification, regression.",  # noqa: E501
             "ref_type": "concept",
             "summary": "Supervised learning introduction",
         },
         {
             "ref_id": "neural_networks",
-            "content": "Neural networks are ML models with layers of interconnected nodes inspired by biological neurons. Used for complex pattern recognition.",
+            "content": "Neural networks are ML models with layers of interconnected nodes inspired by biological neurons. Used for complex pattern recognition.",  # noqa: E501
             "ref_type": "concept",
             "summary": "Neural networks basics",
         },
         {
             "ref_id": "transformers",
-            "content": "Transformers are neural network architectures using self-attention mechanisms. Revolutionary for NLP. Key innovation: parallel processing of sequences.",
+            "content": "Transformers are neural network architectures using self-attention mechanisms. Revolutionary for NLP. Key innovation: parallel processing of sequences.",  # noqa: E501
             "ref_type": "advanced",
             "summary": "Transformer architecture",
         },
         {
             "ref_id": "bert",
-            "content": "BERT (Bidirectional Encoder Representations from Transformers) uses masked language modeling for pre-training. Bidirectional context understanding.",
+            "content": "BERT (Bidirectional Encoder Representations from Transformers) uses masked language modeling for pre-training. Bidirectional context understanding.",  # noqa: E501
             "ref_type": "advanced",
             "summary": "BERT model architecture",
         },
@@ -237,24 +236,24 @@ async def example_3_token_budget_management():
     query = "programming tools and databases"
     references = await loader.semantic_search(query, top_k=10)
 
-    print(f"\n2. Loading with different token budgets:")
+    print("\n2. Loading with different token budgets:")
 
     # Budget 1: Small (only small docs)
     loaded_small = await loader.load_batch(references, max_tokens=50)
     total_tokens_small = sum(c.token_count for c in loaded_small)
-    print(f"\n   Budget: 50 tokens")
+    print("\n   Budget: 50 tokens")
     print(f"   Loaded: {len(loaded_small)} contexts ({total_tokens_small} tokens)")
 
     # Budget 2: Medium (small + medium)
     loaded_medium = await loader.load_batch(references, max_tokens=200)
     total_tokens_medium = sum(c.token_count for c in loaded_medium)
-    print(f"\n   Budget: 200 tokens")
+    print("\n   Budget: 200 tokens")
     print(f"   Loaded: {len(loaded_medium)} contexts ({total_tokens_medium} tokens)")
 
     # Budget 3: Large (all)
     loaded_large = await loader.load_batch(references, max_tokens=500)
     total_tokens_large = sum(c.token_count for c in loaded_large)
-    print(f"\n   Budget: 500 tokens")
+    print("\n   Budget: 500 tokens")
     print(f"   Loaded: {len(loaded_large)} contexts ({total_tokens_large} tokens)")
 
     print("\n   ✓ Token budgets allow precise context control")
@@ -313,7 +312,7 @@ async def example_4_integration_with_agent():
     # Convert to messages for agent
     context_messages = loader.to_messages(loaded_contexts)
 
-    print(f"\n4. Context ready for agent:")
+    print("\n4. Context ready for agent:")
     for msg in context_messages:
         print(f"\n   {msg.type}:")
         print(f"   {msg.content[:200]}...")

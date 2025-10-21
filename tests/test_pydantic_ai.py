@@ -182,7 +182,7 @@ async def test_route_message_with_context(mock_settings, mock_pydantic_agent_cla
     wrapper.router_agent = mock_agent_instance
 
     context = {"user_tier": "premium", "previous_action": "search"}
-    decision = await wrapper.route_message("What did you find?", context=context)
+    decision = await wrapper.route_message("What did you find?", context=context)  # noqa: F841
 
     # Verify context was included in the prompt
     call_args = mock_agent_instance.run.call_args
@@ -264,7 +264,7 @@ async def test_generate_response_with_context(mock_settings, mock_pydantic_agent
     messages = [HumanMessage(content="Test")]
     context = {"conversation_id": "conv-123", "user_preferences": {"verbosity": "concise"}}
 
-    response = await wrapper.generate_response(messages, context=context)
+    response = await wrapper.generate_response(messages, context=context)  # noqa: F841
 
     # Verify context was included
     call_args = mock_agent_instance.run.call_args

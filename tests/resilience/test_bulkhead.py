@@ -198,13 +198,13 @@ class TestBulkheadConfiguration:
     @pytest.mark.unit
     def test_get_bulkhead_with_default_limit(self, reset_bulkheads):
         """Test bulkhead creation with default limit from config"""
-        bulkhead = get_bulkhead("llm")
+        bulkhead = get_bulkhead("llm")  # noqa: F841
         # Should use default from config (10)
 
     @pytest.mark.unit
     def test_get_bulkhead_with_custom_limit(self, reset_bulkheads):
         """Test bulkhead creation with custom limit"""
-        bulkhead = get_bulkhead("custom", limit=25)
+        bulkhead = get_bulkhead("custom", limit=25)  # noqa: F841
         # Should use provided limit
 
     @pytest.mark.unit
@@ -236,7 +236,7 @@ class TestBulkheadMetrics:
         await asyncio.sleep(0.01)
 
         # Second call should be rejected and emit metric
-        with patch("mcp_server_langgraph.resilience.bulkhead.bulkhead_rejected_counter") as mock_metric:
+        with patch("mcp_server_langgraph.resilience.bulkhead.bulkhead_rejected_counter") as mock_metric:  # noqa: F841
             with pytest.raises(BulkheadRejectedError):
                 await func()
 
@@ -251,7 +251,7 @@ class TestBulkheadMetrics:
         async def func():
             await asyncio.sleep(0.1)
 
-        with patch("mcp_server_langgraph.resilience.bulkhead.bulkhead_active_operations_gauge") as mock_metric:
+        with patch("mcp_server_langgraph.resilience.bulkhead.bulkhead_active_operations_gauge") as mock_metric:  # noqa: F841
             await func()
 
 

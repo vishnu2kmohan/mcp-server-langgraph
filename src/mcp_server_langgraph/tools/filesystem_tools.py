@@ -5,7 +5,6 @@ Provides READ-ONLY file system access for the agent.
 All tools are restricted to safe operations for security.
 """
 
-import os
 from pathlib import Path
 from typing import Annotated
 

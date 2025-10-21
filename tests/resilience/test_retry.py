@@ -243,7 +243,7 @@ class TestRetryMetrics:
                 raise ValueError("Retry")
             return "success"
 
-        with patch("mcp_server_langgraph.resilience.retry.retry_attempt_counter") as mock_metric:
+        with patch("mcp_server_langgraph.resilience.retry.retry_attempt_counter") as mock_metric:  # noqa: F841
             result = await func()
             assert result == "success"
 
@@ -256,7 +256,7 @@ class TestRetryMetrics:
         async def func():
             raise ValueError("Always fails")
 
-        with patch("mcp_server_langgraph.resilience.retry.retry_exhausted_counter") as mock_metric:
+        with patch("mcp_server_langgraph.resilience.retry.retry_exhausted_counter") as mock_metric:  # noqa: F841
             with pytest.raises(RetryExhaustedError):
                 await func()
 

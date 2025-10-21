@@ -10,12 +10,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from mcp_server_langgraph.llm.verifier import (
-    OutputVerifier,
-    VerificationCriterion,
-    VerificationResult,
-    verify_output,
-)
+from mcp_server_langgraph.llm.verifier import OutputVerifier, VerificationCriterion, VerificationResult, verify_output
 
 
 @pytest.fixture
@@ -62,7 +57,7 @@ SUGGESTIONS:
 REQUIRES_REFINEMENT: no
 
 FEEDBACK:
-Excellent response with accurate information, comprehensive coverage, and clear structure. Minor improvements suggested but not required."""
+Excellent response with accurate information, comprehensive coverage, and clear structure. Minor improvements suggested but not required."""  # noqa: E501
 
 
 @pytest.fixture

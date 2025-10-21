@@ -18,7 +18,7 @@ Resolves production TODOs:
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
@@ -453,7 +453,7 @@ class PrometheusClient:
         """
         if timerange and "[" not in promql:
             # Auto-inject timerange into rate/increase functions
-            promql = promql.replace("rate(", f"rate(").replace(")", f"[{timerange}])")
+            promql = promql.replace("rate(", "rate(").replace(")", "[{timerange}])")
 
         return await self.query(promql)
 

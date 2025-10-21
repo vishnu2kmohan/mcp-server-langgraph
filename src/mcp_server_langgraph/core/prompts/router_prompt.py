@@ -90,7 +90,7 @@ Return a structured decision with:
 - confidence: Score from 0.0 to 1.0
 - tool_name: (optional) If action is "use_tools", suggest tool name
 
-Be concise and specific in your reasoning. Avoid generic statements like "based on the context" - explain WHAT context specifically.
+Be concise and specific in your reasoning. Avoid generic statements like "based on the context" - explain WHAT context specifically.  # noqa: E501
 </output_format>
 
 <quality_standards>

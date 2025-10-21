@@ -14,11 +14,7 @@ from mcp_server_langgraph.auth.keycloak import KeycloakConfig
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import RedisSessionStore, SessionStore
-from mcp_server_langgraph.auth.user_provider import (
-    InMemoryUserProvider,
-    KeycloakUserProvider,
-    UserProvider,
-)
+from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, KeycloakUserProvider, UserProvider
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.observability.telemetry import logger
 

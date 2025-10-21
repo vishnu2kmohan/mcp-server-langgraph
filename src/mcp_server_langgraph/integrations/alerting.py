@@ -72,7 +72,9 @@ class Alert:
     timestamp: datetime = field(default_factory=datetime.utcnow)
     metadata: Dict[str, Any] = field(default_factory=dict)
     dedupe_key: Optional[str] = None  # For deduplication
-    alert_id: str = field(default_factory=lambda: hashlib.md5(str(datetime.utcnow()).encode()).hexdigest()[:16])
+    alert_id: str = field(
+        default_factory=lambda: hashlib.md5(str(datetime.utcnow()).encode(), usedforsecurity=False).hexdigest()[:16]
+    )  # nosec B324
 
     def __post_init__(self) -> None:
         """Generate deduplication key if not provided"""

@@ -642,7 +642,7 @@ async def verify_token(token: str, secret_key: Optional[str] = None) -> TokenVer
 # FastAPI Dependency Injection Support
 # ============================================================================
 
-if FASTAPI_AVAILABLE:
+if FASTAPI_AVAILABLE:  # noqa: C901
     # Global auth middleware instance (set by application)
     _global_auth_middleware: Optional[AuthMiddleware] = None
 

@@ -243,7 +243,7 @@ def update_recent_work(repo_root: Path) -> None:
             content += f"- **`{commit['hash']}`** ({commit['date']}) - {commit['message']}\n"
             content += f"  _by {commit['author']}_\n\n"
 
-    content += f"""---
+    content += """---
 
 ## 📁 Recently Modified Files (Last 7 Days)
 
@@ -256,7 +256,7 @@ Files changed most frequently:
     for file_path, count in recent_files[:15]:
         content += f"| `{file_path}` | {count} |\n"
 
-    content += f"""
+    content += """
 
 ---
 
@@ -273,7 +273,7 @@ Based on recent commits, the team has been focused on:
         if len(commits_list) >= 2:  # Only mention significant categories
             content += f"- **{category}**: {len(commits_list)} recent commits\n"
 
-    content += f"""
+    content += """
 
 ### Hot Spots
 

@@ -58,7 +58,7 @@ def check_regression(metric_name: str, measured_p95: float, unit: str = "seconds
         return {
             "regression": True,
             "reason": "threshold_exceeded",
-            "message": f"{metric_name} p95 ({measured_p95:.2f}{baseline['unit']}) exceeds threshold ({threshold}{baseline['unit']})",
+            "message": f"{metric_name} p95 ({measured_p95:.2f}{baseline['unit']}) exceeds threshold ({threshold}{baseline['unit']})",  # noqa: E501
             "baseline_p95": baseline["p95"],
             "measured_p95": measured_p95,
             "regression_percent": regression_percent,

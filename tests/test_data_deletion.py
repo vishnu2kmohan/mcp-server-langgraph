@@ -161,11 +161,7 @@ class TestDataDeletionAuditLogging:
         username = "testuser3"
 
         # Create test data
-        from mcp_server_langgraph.compliance.gdpr.storage import (
-            Conversation,
-            UserPreferences,
-            UserProfile,
-        )
+        from mcp_server_langgraph.compliance.gdpr.storage import Conversation, UserPreferences, UserProfile
 
         profile = UserProfile(
             user_id=user_id,

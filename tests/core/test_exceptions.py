@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mcp_server_langgraph.core.exceptions import (  # Configuration errors; Authentication errors; Authorization errors; Rate limiting errors; Validation errors; External service errors; Resilience errors; Storage errors; Compliance errors; Internal errors
+from mcp_server_langgraph.core.exceptions import (  # Configuration errors; Authentication errors; Authorization errors; Rate limiting errors; Validation errors; External service errors; Resilience errors; Storage errors; Compliance errors; Internal errors  # noqa: E501
     AuthenticationError,
     AuthorizationError,
     BulkheadRejectedError,

@@ -242,7 +242,7 @@ class TestParallelExecutionPerformance:
             return "result"
 
         start = time.time()
-        result = await single_tool()
+        result = await single_tool()  # noqa: F841
         single_time = time.time() - start
 
         # Should be close to tool_delay with minimal overhead

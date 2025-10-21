@@ -50,7 +50,7 @@ def test_fallback_forwards_kwargs_sync(mock_litellm_responses):
         # Second call (fallback) succeeds
         mock_completion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
 
-        result = factory.invoke(messages)
+        result = factory.invoke(messages)  # noqa: F841
 
         # Should have tried twice (primary + fallback)
         assert mock_completion.call_count == 2
@@ -95,7 +95,7 @@ async def test_fallback_forwards_kwargs_async(mock_litellm_responses):
         # Second call (fallback) succeeds
         mock_acompletion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
 
-        result = await factory.ainvoke(messages)
+        result = await factory.ainvoke(messages)  # noqa: F841
 
         # Should have tried twice (primary + fallback)
         assert mock_acompletion.call_count == 2
@@ -133,7 +133,7 @@ def test_fallback_forwards_ollama_kwargs_sync(mock_litellm_responses):
     with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
         mock_completion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
 
-        result = factory.invoke(messages)
+        result = factory.invoke(messages)  # noqa: F841
 
         assert mock_completion.call_count == 2
 
@@ -163,7 +163,7 @@ async def test_fallback_forwards_ollama_kwargs_async(mock_litellm_responses):
     with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
         mock_acompletion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
 
-        result = await factory.ainvoke(messages)
+        result = await factory.ainvoke(messages)  # noqa: F841
 
         assert mock_acompletion.call_count == 2
 

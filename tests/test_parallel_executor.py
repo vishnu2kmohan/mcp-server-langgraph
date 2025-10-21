@@ -9,11 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from mcp_server_langgraph.core.parallel_executor import (
-    ParallelToolExecutor,
-    ToolInvocation,
-    ToolResult,
-)
+from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation, ToolResult
 
 
 @pytest.fixture
@@ -297,7 +293,7 @@ class TestParallelToolExecutor:
             "D": [],
         }
 
-        invocations = {
+        invocations = {  # noqa: F841
             "A": ToolInvocation(tool_name="tool_a", arguments={}, invocation_id="A", dependencies=[]),
             "B": ToolInvocation(tool_name="tool_b", arguments={}, invocation_id="B", dependencies=["A"]),
             "C": ToolInvocation(tool_name="tool_c", arguments={}, invocation_id="C", dependencies=["B"]),

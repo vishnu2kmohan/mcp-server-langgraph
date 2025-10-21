@@ -9,14 +9,16 @@ Implements data subject rights under GDPR:
 - Article 21: Right to Object (Consent Management)
 """
 
+import os
+import warnings
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from mcp_server_langgraph.auth.middleware import get_current_user, require_auth
+from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService
@@ -103,9 +105,6 @@ _consent_storage: Dict[str, Dict[str, dict]] = {}
 
 
 # PRODUCTION READINESS WARNING AND GUARD
-import os
-import warnings
-
 # Check if running in production and guard against using in-memory storage
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 GDPR_STORAGE_BACKEND = os.getenv("GDPR_STORAGE_BACKEND", "memory")  # "memory", "postgres", "redis"

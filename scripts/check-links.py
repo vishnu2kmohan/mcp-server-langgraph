@@ -10,7 +10,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 
 class Colors:
@@ -135,9 +135,9 @@ def categorize_links(broken_links: List[Dict]) -> Dict[str, List[Dict]]:
 
 def print_summary(broken_links: List[Dict], total_files: int):
     """Print a summary of broken links"""
-    print(f"\n{Colors.BOLD}{'='*70}{Colors.RESET}")
+    print(f"\n{Colors.BOLD}{'=' * 70}{Colors.RESET}")
     print(f"{Colors.BOLD}Documentation Link Check Summary{Colors.RESET}")
-    print(f"{Colors.BOLD}{'='*70}{Colors.RESET}\n")
+    print(f"{Colors.BOLD}{'=' * 70}{Colors.RESET}\n")
 
     print(f"📊 Total markdown files scanned: {Colors.CYAN}{total_files}{Colors.RESET}")
     print(f"🔗 Broken links found: {Colors.RED if broken_links else Colors.GREEN}{len(broken_links)}{Colors.RESET}\n")
@@ -204,13 +204,13 @@ def main():
 
     if high_priority_count > 0:
         print(
-            f"\n{Colors.RED}{Colors.BOLD}❌ Link check failed! Found {high_priority_count} high-priority broken links{Colors.RESET}"
+            f"\n{Colors.RED}{Colors.BOLD}❌ Link check failed! Found {high_priority_count} high-priority broken links{Colors.RESET}"  # noqa: E501
         )
         print(f"\n{Colors.YELLOW}💡 Quick fixes:{Colors.RESET}")
-        print(f"  • Review file paths and update broken links")
-        print(f"  • Check for moved/renamed files")
-        print(f"  • Verify .md vs .mdx extensions")
-        print(f"  • Fix relative path navigation (../ vs ../../)")
+        print("  • Review file paths and update broken links")
+        print("  • Check for moved/renamed files")
+        print("  • Verify .md vs .mdx extensions")
+        print("  • Fix relative path navigation (../ vs ../../)")
         print()
         sys.exit(1)
     elif broken:

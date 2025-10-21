@@ -187,7 +187,7 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     return state
 
 
-def create_agent_graph():
+def create_agent_graph():  # noqa: C901
     """
     Create the LangGraph agent using functional API with LiteLLM and observability.
 
@@ -376,10 +376,6 @@ def create_agent_graph():
         - LangChain tool binding: https://python.langchain.com/docs/how_to/tool_calling/
         - Parallel execution: docs/adr/ADR-0023-anthropic-tool-design-best-practices.md
         """
-        from langchain_core.messages import ToolMessage
-
-        from mcp_server_langgraph.tools import get_tool_by_name
-
         messages = state["messages"]
         last_message = messages[-1]
 

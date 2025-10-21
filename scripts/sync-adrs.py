@@ -17,7 +17,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 
 class Colors:
@@ -98,7 +98,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     Returns:
         True if sync was needed, False otherwise
     """
-    source_path = Path(f"adr/{adr_number}-*.md")
+    source_path = Path(f"adr/{adr_number}-*.md")  # noqa: F841
     source_files = list(Path("adr").glob(f"{adr_number}-*.md"))
 
     if not source_files:

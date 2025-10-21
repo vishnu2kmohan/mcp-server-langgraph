@@ -11,7 +11,7 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.core.config import settings
 
 
-async def test_chat():
+async def test_chat():  # noqa: C901
     """Test the chat functionality with OpenFGA authorization"""
 
     print("\n" + "=" * 60)

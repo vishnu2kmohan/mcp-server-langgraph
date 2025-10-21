@@ -136,7 +136,7 @@ FALLBACK_STRATEGIES = {
 }
 
 
-def with_fallback(
+def with_fallback(  # noqa: C901
     fallback: Optional[Any] = None,
     fallback_fn: Optional[Callable] = None,
     fallback_strategy: Optional[FallbackStrategy] = None,
@@ -239,7 +239,7 @@ def with_fallback(
             """Sync wrapper with fallback"""
             try:
                 return func(*args, **kwargs)
-            except exception_types as e:
+            except exception_types as e:  # noqa: F841
                 logger.warning(f"Using fallback for {func.__name__}", exc_info=True)
 
                 if fallback is not None:

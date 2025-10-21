@@ -135,7 +135,7 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
     )
 
 
-def retry_with_backoff(
+def retry_with_backoff(  # noqa: C901
     max_attempts: Optional[int] = None,
     exponential_base: Optional[float] = None,
     exponential_max: Optional[float] = None,

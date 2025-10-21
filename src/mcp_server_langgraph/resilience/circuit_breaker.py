@@ -14,7 +14,7 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
 
@@ -170,7 +170,7 @@ def get_circuit_breaker(name: str) -> pybreaker.CircuitBreaker:
     return breaker
 
 
-def circuit_breaker(
+def circuit_breaker(  # noqa: C901
     name: str,
     fail_max: Optional[int] = None,
     timeout: Optional[int] = None,
@@ -297,7 +297,7 @@ def circuit_breaker(
                         span.set_attribute("circuit_breaker.success", False)
                         raise
 
-                except pybreaker.CircuitBreakerError as e:
+                except pybreaker.CircuitBreakerError as e:  # noqa: F841
                     # This shouldn't happen with our manual implementation, but just in case
                     span.set_attribute("circuit_breaker.success", False)
                     raise

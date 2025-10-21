@@ -338,9 +338,9 @@ def check_documentation(result: ValidationResult) -> None:
 
 def main():
     """Main validation function"""
-    print(f"\n{BOLD}{BLUE}{'='*60}{RESET}")
+    print(f"\n{BOLD}{BLUE}{'=' * 60}{RESET}")
     print(f"{BOLD}{BLUE}MCP Server with LangGraph - Production Readiness Validation{RESET}")
-    print(f"{BOLD}{BLUE}{'='*60}{RESET}\n")
+    print(f"{BOLD}{BLUE}{'=' * 60}{RESET}\n")
 
     strict = "--strict" in sys.argv
     if strict:
@@ -362,9 +362,9 @@ def main():
     check_documentation(result)
 
     # Print summary
-    print(f"\n{BOLD}{BLUE}{'='*60}{RESET}")
+    print(f"\n{BOLD}{BLUE}{'=' * 60}{RESET}")
     print(f"{BOLD}Validation Summary{RESET}")
-    print(f"{BOLD}{BLUE}{'='*60}{RESET}\n")
+    print(f"{BOLD}{BLUE}{'=' * 60}{RESET}\n")
 
     summary = result.summary()
     print(f"{GREEN}✓ Passed:{RESET}   {summary['passed']}")
@@ -373,7 +373,7 @@ def main():
     print(f"{BLUE}ℹ Info:{RESET}     {summary['info']}")
 
     # Determine production readiness
-    print(f"\n{BOLD}{BLUE}{'='*60}{RESET}")
+    print(f"\n{BOLD}{BLUE}{'=' * 60}{RESET}")
     if result.is_production_ready(strict):
         print(f"{BOLD}{GREEN}✓ PRODUCTION READY{RESET}")
         print("\nThis codebase meets production deployment standards.")

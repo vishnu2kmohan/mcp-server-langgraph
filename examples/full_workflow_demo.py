@@ -28,10 +28,8 @@ from datetime import datetime
 
 from langchain_core.messages import HumanMessage
 
-from mcp_server_langgraph.core.agent import AgentState, create_agent_graph
 from mcp_server_langgraph.core.context_manager import ContextManager
 from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader
-from mcp_server_langgraph.observability.telemetry import logger
 
 
 def print_section(title: str):
@@ -201,7 +199,7 @@ Should I use Kong or another solution?
     print("   3. Database per Service Pattern (relevance: 0.88)")
 
     elapsed = time.time() - start_time
-    print(f"\n   ✅ Context loaded in {elapsed*1000:.0f}ms")
+    print(f"\n   ✅ Context loaded in {elapsed * 1000:.0f}ms")
 
     # Step 4: Context Compaction (if needed)
     print_step(4, "Context Compaction")
@@ -380,7 +378,7 @@ async def demo_multi_turn_conversation():
     """Demonstrate multi-turn conversation with context preservation"""
     print_section("MULTI-TURN CONVERSATION WITH CONTEXT PRESERVATION")
 
-    context_manager = ContextManager()
+    context_manager = ContextManager()  # noqa: F841
 
     print("\n🔄 Scenario: Follow-up questions building on previous context\n")
 
@@ -404,7 +402,7 @@ async def demo_multi_turn_conversation():
     print("\nTurn 2:")
     print('   User: "How do I handle token refresh?"')
 
-    turn2_messages = turn1_messages + [HumanMessage(content="How do I handle token refresh?")]
+    turn2_messages = turn1_messages + [HumanMessage(content="How do I handle token refresh?")]  # noqa: F841
 
     print("   → Context: Loading notes from Turn 1...")
     print("   → Agent has context: Previous discussion about OAuth2/JWT")

@@ -19,12 +19,11 @@ Features:
 """
 
 import argparse
-import math
 import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 
 def run_git_command(args: List[str], timeout: int = 30) -> str:
@@ -67,7 +66,7 @@ def count_todos_at_commit(commit_hash: str) -> int:
             try:
                 content = run_git_command(["show", f"{commit_hash}:{file_path}"])
                 total_todos += content.count("TODO")
-            except:
+            except Exception:
                 continue
 
         return total_todos
@@ -177,7 +176,7 @@ def draw_burndown_chart(history: List[Tuple[str, int, str]], width: int = 40, he
 
         # Plot points
         for i, (date, count, _) in enumerate(history):
-            x_pos = int(i * width / (len(history) - 1))
+            x_pos = int(i * width / (len(history) - 1))  # noqa: F841
 
             # Calculate Y position for this count
             y_pos = int((count - min_count) / (max_count - min_count) * height)
@@ -245,7 +244,7 @@ def generate_report(history: List[Tuple[str, int, str]], days: int) -> str:
 |--------|-------|
 | Current TODOs | {current_count} |
 | Started With | {start_count} |
-| Resolved | {resolved} ({resolved/start_count*100:.1f}%) |
+| Resolved | {resolved} ({resolved / start_count * 100:.1f}%) |
 | Net Change | {current_count - start_count:+d} |
 
 ---
@@ -298,7 +297,7 @@ At current velocity ({velocity_7:.2f} TODOs/day):
         msg_short = (msg[:40] + "...") if len(msg) > 40 else msg
         report += f"| {date} | {count} | {change_str} | {msg_short} |\n"
 
-    report += f"""
+    report += """
 
 ---
 
@@ -308,7 +307,7 @@ At current velocity ({velocity_7:.2f} TODOs/day):
 
     # Add insights
     if resolved > 0:
-        report += f"- ✅ **Great progress!** Resolved {resolved} TODOs ({resolved/start_count*100:.1f}%)\n"
+        report += f"- ✅ **Great progress!** Resolved {resolved} TODOs ({resolved / start_count * 100:.1f}%)\n"
 
     if velocity_7 > velocity_14:
         report += f"- 📈 **Accelerating** - velocity increased from {velocity_14:.2f} to {velocity_7:.2f} TODOs/day\n"
@@ -321,7 +320,7 @@ At current velocity ({velocity_7:.2f} TODOs/day):
     if velocity_7 > 1.0:
         report += f"- ⚡ **High velocity** - resolving {velocity_7:.2f} TODOs per day\n"
 
-    report += f"""
+    report += """
 
 ---
 
@@ -342,7 +341,7 @@ def main():
     args = parser.parse_args()
 
     print(f"🔄 Analyzing TODO history ({args.days} days)...", file=sys.stderr)
-    print(f"⏳ This may take a moment (scanning git commits)...", file=sys.stderr)
+    print("⏳ This may take a moment (scanning git commits)...", file=sys.stderr)
 
     # Get TODO history
     history = get_todo_history(args.days)

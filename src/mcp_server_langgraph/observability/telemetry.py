@@ -249,7 +249,7 @@ class ObservabilityConfig:
             # Logging already configured - skip to avoid duplicate handlers
             self.logger = logging.getLogger(self.service_name)
             if OBSERVABILITY_VERBOSE:
-                print(f"✓ Logging already configured, reusing existing setup")
+                print("✓ Logging already configured, reusing existing setup")
             return
 
         # Instrument logging to include trace context

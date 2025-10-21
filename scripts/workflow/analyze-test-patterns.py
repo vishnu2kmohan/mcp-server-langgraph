@@ -21,7 +21,7 @@ Created: 2025-10-20
 import argparse
 import ast
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Set
@@ -155,7 +155,7 @@ class TestPatternAnalyzer:
         asyncio_tests = self.marker_usage.get("asyncio", 0)
         async_percentage = (asyncio_tests / self.test_count) * 100 if self.test_count > 0 else 0
         report.append(
-            f"- **Async tests**: {asyncio_tests} ({async_percentage:.1f}%) - {'High' if async_percentage > 50 else 'Moderate'} async usage"
+            f"- **Async tests**: {asyncio_tests} ({async_percentage:.1f}%) - {'High' if async_percentage > 50 else 'Moderate'} async usage"  # noqa: E501
         )
 
         unit_tests = self.marker_usage.get("unit", 0)

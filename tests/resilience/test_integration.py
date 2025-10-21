@@ -111,7 +111,7 @@ class TestFullResilienceStack:
 
         # Start 10 tasks (some will retry)
         tasks = [func(i < 5) for i in range(10)]  # First 5 will fail and retry
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)  # noqa: F841
 
         # Max concurrent should still be limited to 3
         assert max_active <= 3

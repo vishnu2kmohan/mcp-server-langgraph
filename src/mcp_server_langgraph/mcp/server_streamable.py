@@ -10,7 +10,6 @@ Implements Anthropic's best practices for writing tools for agents:
 - High-signal information in responses
 """
 
-import asyncio
 import json
 import logging
 from typing import Any, AsyncIterator, Literal, Optional
@@ -587,8 +586,8 @@ class MCPAgentStreamableServer:
                 return [
                     TextContent(
                         type="text",
-                        text=f"Conversation history unavailable: checkpointing is disabled. "
-                        f"Enable checkpointing to persist conversation history.",
+                        text="Conversation history unavailable: checkpointing is disabled. "
+                        "Enable checkpointing to persist conversation history.",
                     )
                 ]
 

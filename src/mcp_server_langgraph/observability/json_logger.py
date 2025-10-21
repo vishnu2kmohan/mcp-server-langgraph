@@ -7,7 +7,6 @@ compatible with centralized log aggregation platforms (ELK, Datadog, Splunk, Clo
 
 import json
 import logging
-import traceback
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 

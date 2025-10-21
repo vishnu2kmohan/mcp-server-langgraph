@@ -152,7 +152,7 @@ class TestTimeoutMetrics:
         async def slow_func():
             await asyncio.sleep(2)
 
-        with patch("mcp_server_langgraph.resilience.timeout.timeout_exceeded_counter") as mock_metric:
+        with patch("mcp_server_langgraph.resilience.timeout.timeout_exceeded_counter") as mock_metric:  # noqa: F841
             with pytest.raises((MCPTimeoutError, asyncio.TimeoutError)):
                 await slow_func()
 
