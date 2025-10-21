@@ -188,6 +188,14 @@ jobs:
         provenance: false
         sbom: false
 
+    - name: Verify image was loaded
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "=== Checking if image was loaded ==="
+        docker images | grep "${{ matrix.variant }}"
+        echo "=== Inspecting image ==="
+        docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }} | jq '.[0].Config.Cmd, .[0].Config.Entrypoint, .[0].Config.WorkingDir'
+
     - name: Test ${{ matrix.variant }} image
       if: github.event_name == 'pull_request'
       run: |
