@@ -1,0 +1,132 @@
+---
+# Kong Consumer for free tier users
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: free-tier-user
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+    tier: free
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/plugins: rate-limit-basic
+username: free-tier-user
+custom_id: "free-tier"
+
+---
+# Kong Consumer for premium tier users
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: premium-tier-user
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+    tier: premium
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/plugins: rate-limit-premium
+username: premium-tier-user
+custom_id: "premium-tier"
+
+---
+# Kong Consumer for enterprise tier users
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: enterprise-tier-user
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+    tier: enterprise
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/plugins: rate-limit-enterprise
+username: enterprise-tier-user
+custom_id: "enterprise-tier"
+
+---
+# API Key credential for free tier
+apiVersion: configuration.konghq.com/v1
+kind: KongCredential
+metadata:
+  name: free-tier-apikey
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+consumerRef: free-tier-user
+type: key-auth
+config:
+  key: free-tier-api-key-example
+
+---
+# API Key credential for premium tier
+apiVersion: configuration.konghq.com/v1
+kind: KongCredential
+metadata:
+  name: premium-tier-apikey
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+consumerRef: premium-tier-user
+type: key-auth
+config:
+  key: premium-tier-api-key-example
+
+---
+# JWT credential for enterprise tier
+apiVersion: configuration.konghq.com/v1
+kind: KongCredential
+metadata:
+  name: enterprise-tier-jwt
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+consumerRef: enterprise-tier-user
+type: jwt
+config:
+  key: enterprise-tier-issuer
+  algorithm: HS256
+  secret: enterprise-jwt-secret-change-me
+  rsa_public_key: null
+
+---
+# Kong Consumer Groups for advanced rate limiting
+apiVersion: configuration.konghq.com/v1beta1
+kind: KongConsumerGroup
+metadata:
+  name: free-tier-group
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+  annotations:
+    konghq.com/plugins: rate-limit-basic
+spec:
+  name: free_tier
+
+---
+apiVersion: configuration.konghq.com/v1beta1
+kind: KongConsumerGroup
+metadata:
+  name: premium-tier-group
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+  annotations:
+    konghq.com/plugins: rate-limit-premium
+spec:
+  name: premium_tier
+
+---
+apiVersion: configuration.konghq.com/v1beta1
+kind: KongConsumerGroup
+metadata:
+  name: enterprise-tier-group
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+  annotations:
+    konghq.com/plugins: rate-limit-enterprise
+spec:
+  name: enterprise_tier

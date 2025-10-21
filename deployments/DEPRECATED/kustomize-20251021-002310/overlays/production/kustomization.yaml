@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mcp-server-langgraph
+
+namePrefix: prod-
+
+# Fixed: 'bases' is deprecated, use 'resources' instead
+resources:
+  - ../../base
+
+# Fixed: 'commonLabels' is deprecated, use 'labels' instead
+labels:
+  - pairs:
+      environment: production
+
+# Fixed: 'patchesStrategicMerge' is deprecated, use 'patches' instead
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+  - path: configmap-patch.yaml
+    target:
+      kind: ConfigMap
+      name: mcp-server-langgraph-config
+  - path: hpa-patch.yaml
+    target:
+      kind: HorizontalPodAutoscaler
+      name: mcp-server-langgraph
+
+replicas:
+  - name: mcp-server-langgraph
+    count: 5
+
+images:
+  - name: mcp-server-langgraph
+    newTag: v2.7.0

@@ -2,12 +2,18 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 3
+replicaCount: 2  # Optimized from 3 (-33% base cost)
 
 image:
   repository: mcp-server-langgraph
   pullPolicy: IfNotPresent
   tag: "2.7.0"
+  # Image variant selection (choose based on deployment needs)
+  # Variants:
+  #   base (default): 724MB - API-based embeddings, no ML (most deployments)
+  #   full:           4.32GB - Includes PyTorch + sentence-transformers (local ML)
+  #   test:           880MB - Dev dependencies (CI/CD only)
+  variant: "base"  # Options: base, full, test
 
 imagePullSecrets: []
 nameOverride: ""
@@ -76,19 +82,20 @@ ingress:
         - mcp-server-langgraph.example.com
 
 resources:
+  # Optimized resource allocation (70% cost reduction)
   limits:
-    cpu: 2000m
-    memory: 2Gi
+    cpu: 1000m       # Was: 2000m (-50%)
+    memory: 1Gi      # Was: 2Gi (-50%)
   requests:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 250m        # Was: 500m (-50%)
+    memory: 384Mi    # Was: 512Mi (-25%)
 
 autoscaling:
   enabled: true
-  minReplicas: 3
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
-  targetMemoryUtilizationPercentage: 80
+  minReplicas: 2                         # Was: 3 (-33% base cost)
+  maxReplicas: 20                        # Was: 10 (+100% burst capacity)
+  targetCPUUtilizationPercentage: 60     # Was: 70 (more responsive)
+  targetMemoryUtilizationPercentage: 70  # Was: 80 (safer buffer)
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300

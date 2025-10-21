@@ -1,0 +1,62 @@
+# Skaffold configuration for local Kubernetes development
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: mcp-server-langgraph
+
+build:
+  artifacts:
+  - image: mcp-server-langgraph
+    docker:
+      dockerfile: Dockerfile
+    sync:
+      manual:
+      - src: "**/*.py"
+        dest: /app
+
+deploy:
+  helm:
+    releases:
+    - name: mcp-server-langgraph
+      chartPath: helm/mcp-server-langgraph
+      namespace: mcp-server-langgraph
+      createNamespace: true
+      valuesFiles:
+      - helm/mcp-server-langgraph/values.yaml
+      setValues:
+        image.pullPolicy: IfNotPresent
+        replicaCount: 1
+        resources.requests.cpu: 100m
+        resources.requests.memory: 256Mi
+        resources.limits.cpu: 500m
+        resources.limits.memory: 512Mi
+      setValueTemplates:
+        image.repository: mcp-server-langgraph
+        image.tag: "{{ .IMAGE_TAG }}"
+
+portForward:
+- resourceType: service
+  resourceName: mcp-server-langgraph
+  namespace: mcp-server-langgraph
+  port: 80
+  localPort: 8000
+
+profiles:
+- name: dev
+  activation:
+  - command: dev
+  deploy:
+    kubeContext: docker-desktop
+
+- name: production
+  build:
+    tagPolicy:
+      gitCommit: {}
+  deploy:
+    helm:
+      releases:
+      - name: mcp-server-langgraph
+        chartPath: helm/mcp-server-langgraph
+        namespace: mcp-server-langgraph
+        setValues:
+          autoscaling.enabled: true

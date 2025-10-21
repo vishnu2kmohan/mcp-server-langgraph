@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: mcp-server-langgraph

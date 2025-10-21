@@ -22,7 +22,8 @@ services:
   test-runner:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.test
+      dockerfile: docker/Dockerfile
+      target: final-test  # Use optimized test variant (880MB vs 13.3GB)
     container_name: mcp-test-runner
     depends_on:
       postgres-test:

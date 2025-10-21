@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mcp-server-langgraph
+
+# Resources are copied into this directory to avoid Kustomize security constraint
+# which prevents referencing files outside the kustomization directory tree
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+  - secret.yaml
+  - serviceaccount.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - networkpolicy.yaml
+  # PostgreSQL database (for OpenFGA and Keycloak)
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  # OpenFGA authorization
+  - openfga-deployment.yaml
+  - openfga-service.yaml
+  # Keycloak resources
+  - keycloak-deployment.yaml
+  - keycloak-service.yaml
+  # Redis session store resources
+  - redis-session-deployment.yaml
+  - redis-session-service.yaml
+  # Qdrant vector database (for dynamic context loading)
+  - qdrant-deployment.yaml
+  - qdrant-service.yaml
+
+labels:
+  - pairs:
+      app: mcp-server-langgraph
+      managed-by: kustomize
+
+images:
+  - name: mcp-server-langgraph
+    newTag: 2.7.0

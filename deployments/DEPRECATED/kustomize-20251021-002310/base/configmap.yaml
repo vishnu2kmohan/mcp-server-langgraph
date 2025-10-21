@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-langgraph-config
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+data:
+  # Service Configuration
+  environment: "production"
+  log_level: "INFO"
+
+  # LLM Provider Configuration
+  llm_provider: "anthropic"  # google, anthropic, openai, azure, bedrock, ollama
+  model_name: "claude-3-5-sonnet-20241022"
+  model_temperature: "0.7"
+  model_max_tokens: "4096"
+  model_timeout: "60"
+
+  # Fallback Models
+  enable_fallback: "true"
+
+  # Agent Configuration
+  max_iterations: "10"
+  enable_checkpointing: "true"
+
+  # Observability
+  enable_tracing: "true"
+  enable_metrics: "true"
+  enable_console_export: "false"
+  observability_backend: "opentelemetry"  # opentelemetry, langsmith, both
+  langsmith_tracing: "false"
+
+  # Authentication Configuration
+  auth_provider: "keycloak"  # inmemory, keycloak
+  auth_mode: "token"  # token (JWT), session
+
+  # Keycloak Settings
+  keycloak_server_url: "http://keycloak:8080"
+  keycloak_realm: "mcp-server-langgraph"
+  keycloak_client_id: "langgraph-client"
+  keycloak_verify_ssl: "true"
+  keycloak_timeout: "30"
+  keycloak_hostname: "mcp-server-langgraph.example.com"
+
+  # Session Management
+  session_backend: "redis"  # memory, redis
+  redis_url: "redis://redis-session:6379/0"
+  redis_ssl: "false"
+  session_ttl_seconds: "86400"  # 24 hours
+  session_sliding_window: "true"
+  session_max_concurrent: "5"
+
+  # OpenFGA Configuration
+  openfga_api_url: "http://openfga:8080"
+
+  # OpenTelemetry Configuration
+  otlp_endpoint: "http://otel-collector:4317"
+
+  # Agentic Loop Configuration (Anthropic Best Practices)
+  # Context Management - Implements "Compaction" technique
+  enable_context_compaction: "true"
+  compaction_threshold: "8000"  # Token count that triggers compaction
+  target_after_compaction: "4000"  # Target tokens after compaction (40-60% reduction)
+  recent_message_count: "5"  # Number of recent messages to keep uncompacted
+
+  # Work Verification - Implements "LLM-as-Judge" pattern
+  enable_verification: "true"
+  verification_quality_threshold: "0.7"  # Minimum quality score (0.0-1.0)
+  max_refinement_attempts: "3"  # Maximum refinement iterations
+  verification_mode: "standard"  # strict (0.8), standard (0.7), lenient (0.6)
+
+  # Dynamic Context Loading (Just-in-Time) - Requires Qdrant
+  enable_dynamic_context_loading: "false"  # Enable semantic search-based context
+  qdrant_url: "qdrant"  # Qdrant service name
+  qdrant_port: "6333"  # Qdrant HTTP API port
+  qdrant_collection_name: "mcp_context"  # Collection for context storage
+  dynamic_context_max_tokens: "2000"  # Max tokens from dynamic context
+  dynamic_context_top_k: "3"  # Top semantic search results
+  embedding_model: "all-MiniLM-L6-v2"  # SentenceTransformer model
+  context_cache_size: "100"  # LRU cache size for contexts
+
+  # Parallel Tool Execution - Performance Optimization
+  enable_parallel_execution: "false"
+  max_parallel_tools: "5"  # Maximum concurrent tool executions
+
+  # Enhanced Note-Taking - Structured Information Extraction
+  enable_llm_extraction: "false"  # Use LLM for note extraction
+
+  # Conversation Checkpointing (Distributed State)
+  checkpoint_backend: "redis"  # memory or redis (use redis for production)
+  checkpoint_redis_url: "redis://redis-session:6379/1"  # Use db 1 (sessions use db 0)
+  checkpoint_redis_ttl: "604800"  # 7 days TTL for conversation checkpoints

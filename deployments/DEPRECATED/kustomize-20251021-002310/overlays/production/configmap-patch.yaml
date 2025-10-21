@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-langgraph-config
+data:
+  # Service Configuration
+  environment: "production"
+  log_level: "INFO"
+
+  # Authentication (Keycloak required for production)
+  auth_provider: "keycloak"
+  auth_mode: "token"
+
+  # Session Management (Redis required for production)
+  session_backend: "redis"
+  session_ttl_seconds: "86400"  # 24 hours
+  session_sliding_window: "true"
+  session_max_concurrent: "5"
+
+  # Observability
+  enable_console_export: "false"
+  enable_tracing: "true"
+  enable_metrics: "true"
+  observability_backend: "both"  # OpenTelemetry + LangSmith
+  langsmith_tracing: "true"
+
+  # Security
+  keycloak_verify_ssl: "true"
+  redis_ssl: "true"
