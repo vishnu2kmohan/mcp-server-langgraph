@@ -146,6 +146,66 @@ class MCPAgentServer:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
             return None
 
+    async def list_tools_public(self) -> list[Tool]:
+        """
+        Public method to list available tools (used for testing and external access).
+
+        Returns the same tools list as the MCP protocol handler.
+        """
+        return [
+            Tool(
+                name="agent_chat",
+                description=(
+                    "Chat with the AI agent for questions, research, and problem-solving. "
+                    "Returns responses optimized for agent consumption. "
+                    "Response format: 'concise' (~500 tokens, 2-5 sec) or 'detailed' (~2000 tokens, 5-10 sec). "
+                    "For specialized tasks like code execution or web search, use dedicated tools instead. "
+                    "Rate limit: 60 requests/minute per user."
+                ),
+                inputSchema=ChatInput.model_json_schema(),
+            ),
+            Tool(
+                name="conversation_get",
+                description=(
+                    "Retrieve a specific conversation thread by ID. "
+                    "Returns conversation history with messages, participants, and metadata. "
+                    "Response time: <1 second. "
+                    "Use conversation_search to find conversation IDs first."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "thread_id": {
+                            "type": "string",
+                            "description": "Conversation thread identifier (e.g., 'conv_abc123')",
+                        },
+                        "token": {
+                            "type": "string",
+                            "description": "JWT authentication token. Required for all tool calls.",
+                        },
+                        "user_id": {
+                            "type": "string",
+                            "description": "User identifier for authentication and authorization",
+                        },
+                        "username": {"type": "string", "description": "DEPRECATED: Use 'user_id' instead"},
+                    },
+                    "required": ["thread_id", "token", "user_id"],
+                },
+            ),
+            Tool(
+                name="conversation_search",
+                description=(
+                    "Search conversations using keywords or filters. "
+                    "Returns matching conversations sorted by relevance. "
+                    "Much more efficient than listing all conversations. "
+                    "Response time: <2 seconds. "
+                    "Examples: 'project updates', 'conversations with alice', 'last week'. "
+                    "Results limited to 50 conversations max to prevent context overflow."
+                ),
+                inputSchema=SearchConversationsInput.model_json_schema(),
+            ),
+        ]
+
     def _setup_handlers(self):
         """Setup MCP protocol handlers"""
 
@@ -162,59 +222,7 @@ class MCPAgentServer:
             """
             with tracer.start_as_current_span("mcp.list_tools"):
                 logger.info("Listing available tools")
-                return [
-                    Tool(
-                        name="agent_chat",
-                        description=(
-                            "Chat with the AI agent for questions, research, and problem-solving. "
-                            "Returns responses optimized for agent consumption. "
-                            "Response format: 'concise' (~500 tokens, 2-5 sec) or 'detailed' (~2000 tokens, 5-10 sec). "
-                            "For specialized tasks like code execution or web search, use dedicated tools instead. "
-                            "Rate limit: 60 requests/minute per user."
-                        ),
-                        inputSchema=ChatInput.model_json_schema(),
-                    ),
-                    Tool(
-                        name="conversation_get",
-                        description=(
-                            "Retrieve a specific conversation thread by ID. "
-                            "Returns conversation history with messages, participants, and metadata. "
-                            "Response time: <1 second. "
-                            "Use conversation_search to find conversation IDs first."
-                        ),
-                        inputSchema={
-                            "type": "object",
-                            "properties": {
-                                "thread_id": {
-                                    "type": "string",
-                                    "description": "Conversation thread identifier (e.g., 'conv_abc123')",
-                                },
-                                "token": {
-                                    "type": "string",
-                                    "description": "JWT authentication token. Required for all tool calls.",
-                                },
-                                "user_id": {
-                                    "type": "string",
-                                    "description": "User identifier for authentication and authorization",
-                                },
-                                "username": {"type": "string", "description": "DEPRECATED: Use 'user_id' instead"},
-                            },
-                            "required": ["thread_id", "token", "user_id"],
-                        },
-                    ),
-                    Tool(
-                        name="conversation_search",
-                        description=(
-                            "Search conversations using keywords or filters. "
-                            "Returns matching conversations sorted by relevance. "
-                            "Much more efficient than listing all conversations. "
-                            "Response time: <2 seconds. "
-                            "Examples: 'project updates', 'conversations with alice', 'last week'. "
-                            "Results limited to 50 conversations max to prevent context overflow."
-                        ),
-                        inputSchema=SearchConversationsInput.model_json_schema(),
-                    ),
-                ]
+                return await self.list_tools_public()
 
         @self.server.call_tool()
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
@@ -553,8 +561,17 @@ class MCPAgentServer:
                 )
 
                 # Filter conversations based on query
+                # Normalize query and conversation names to handle spaces/underscores/hyphens
                 if query:
-                    filtered_conversations = [conv for conv in all_conversations if query.lower() in conv.lower()]
+                    normalized_query = query.lower().replace(" ", "_").replace("-", "_")
+                    filtered_conversations = [
+                        conv
+                        for conv in all_conversations
+                        if (
+                            query.lower() in conv.lower()
+                            or normalized_query in conv.lower().replace(" ", "_").replace("-", "_")
+                        )
+                    ]
                 else:
                     filtered_conversations = all_conversations
 

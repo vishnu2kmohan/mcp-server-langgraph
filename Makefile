@@ -118,24 +118,24 @@ setup-infisical:
 
 test:
 	@echo "Running all tests with coverage..."
-	pytest
+	.venv/bin/pytest
 	@echo "✓ Tests complete. Coverage report above."
 	@echo ""
 	@echo "Tip: Use 'make test-fast' for quick iteration without coverage"
 
 test-unit:
 	@echo "Running unit tests with coverage (matches CI)..."
-	pytest -m unit
+	.venv/bin/pytest -m unit
 	@echo "✓ Unit tests complete"
 
 test-unit-fast:
 	@echo "Running unit tests without coverage (fast iteration)..."
-	pytest -m unit --no-cov
+	.venv/bin/pytest -m unit --no-cov
 	@echo "✓ Fast unit tests complete"
 
 test-ci:
 	@echo "Running tests exactly as CI does..."
-	pytest -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
+	.venv/bin/pytest -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
 	@echo "✓ CI-equivalent tests complete"
 	@echo "  Coverage XML: coverage.xml"
 
@@ -147,7 +147,7 @@ test-integration:
 test-integration-local:
 	@echo "⚠️  Running integration tests locally (requires services running)..."
 	@echo "Note: CI uses Docker. Use 'make test-integration' to match CI exactly."
-	pytest -m integration --no-cov --tb=short
+	.venv/bin/pytest -m integration --no-cov --tb=short
 	@echo "✓ Local integration tests complete"
 
 test-integration-services:
@@ -169,7 +169,7 @@ test-integration-cleanup:
 
 test-coverage:
 	@echo "Generating comprehensive coverage report..."
-	pytest --cov=src/mcp_server_langgraph --cov-report=html --cov-report=term-missing --cov-report=xml
+	.venv/bin/pytest --cov=src/mcp_server_langgraph --cov-report=html --cov-report=term-missing --cov-report=xml
 	@echo "✓ Coverage reports generated:"
 	@echo "  HTML: htmlcov/index.html"
 	@echo "  XML: coverage.xml"
@@ -179,7 +179,7 @@ test-coverage-combined:
 	@echo "Running all tests with combined coverage..."
 	@echo ""
 	@echo "Step 1: Running unit tests with coverage..."
-	pytest -m unit --cov=src/mcp_server_langgraph --cov-report= --cov-report=term-missing
+	.venv/bin/pytest -m unit --cov=src/mcp_server_langgraph --cov-report= --cov-report=term-missing
 	@echo ""
 	@echo "Step 2: Running integration tests in Docker with coverage..."
 	mkdir -p coverage-integration
@@ -189,19 +189,19 @@ test-coverage-combined:
 	@echo "Step 3: Combining coverage reports..."
 	@if [ -f coverage-integration/coverage-integration.xml ]; then \
 		echo "  Found integration coverage, combining..."; \
-		coverage combine --append coverage-integration/.coverage* 2>/dev/null || true; \
-		coverage xml -o coverage-combined.xml; \
-		coverage html -d htmlcov-combined; \
-		coverage report; \
+		.venv/bin/coverage combine --append coverage-integration/.coverage* 2>/dev/null || true; \
+		.venv/bin/coverage xml -o coverage-combined.xml; \
+		.venv/bin/coverage html -d htmlcov-combined; \
+		.venv/bin/coverage report; \
 		echo ""; \
 		echo "✓ Combined coverage reports generated:"; \
 		echo "  HTML: htmlcov-combined/index.html"; \
 		echo "  XML: coverage-combined.xml"; \
 	else \
 		echo "  ⚠️  No integration coverage found, using unit tests only"; \
-		coverage xml; \
-		coverage html; \
-		coverage report; \
+		.venv/bin/coverage xml; \
+		.venv/bin/coverage html; \
+		.venv/bin/coverage report; \
 	fi
 
 test-auth:
@@ -214,23 +214,23 @@ test-mcp:
 
 benchmark:
 	@echo "Running performance benchmarks..."
-	pytest -m benchmark -v --benchmark-only --benchmark-autosave
+	.venv/bin/pytest -m benchmark -v --benchmark-only --benchmark-autosave
 	@echo "✓ Benchmark results saved"
 
 # New test targets
 test-property:
 	@echo "Running property-based tests (Hypothesis)..."
-	pytest -m property -v
+	.venv/bin/pytest -m property -v
 	@echo "✓ Property tests complete"
 
 test-contract:
 	@echo "Running contract tests (MCP protocol, OpenAPI)..."
-	pytest -m contract -v
+	.venv/bin/pytest -m contract -v
 	@echo "✓ Contract tests complete"
 
 test-regression:
 	@echo "Running performance regression tests..."
-	pytest -m regression -v
+	.venv/bin/pytest -m regression -v
 	@echo "✓ Regression tests complete"
 
 test-mutation:
@@ -577,7 +577,7 @@ load-test:
 stress-test:
 	@echo "💪 Running stress tests..."
 	@echo "This will test system limits and failure modes"
-	@pytest -m "stress" -v --tb=short || echo "No stress tests found. Add tests with @pytest.mark.stress"
+	@.venv/bin/pytest -m "stress" -v --tb=short || echo "No stress tests found. Add tests with @pytest.mark.stress"
 
 # ==============================================================================
 # Git Hooks & Pre-commit
@@ -650,34 +650,34 @@ docs-deploy:
 
 test-watch:
 	@echo "👀 Running tests in watch mode..."
-	pytest-watch --no-cov
+	.venv/bin/pytest-watch --no-cov
 
 test-fast:
 	@echo "⚡ Running all tests without coverage (fast iteration)..."
-	pytest --no-cov --tb=short
+	.venv/bin/pytest --no-cov --tb=short
 	@echo "✓ Fast tests complete"
 	@echo ""
 	@echo "Tip: Use 'make test' for full coverage report"
 
 test-fast-unit:
 	@echo "⚡ Running unit tests without coverage..."
-	pytest -m unit --no-cov --tb=short
+	.venv/bin/pytest -m unit --no-cov --tb=short
 
 test-slow:
 	@echo "🐌 Running slow tests only..."
-	pytest -m slow -v --tb=short
+	.venv/bin/pytest -m slow -v --tb=short
 
 test-compliance:
 	@echo "📋 Running compliance tests (GDPR, HIPAA, SOC2, SLA)..."
-	pytest -m "gdpr or soc2 or sla" -v --tb=short
+	.venv/bin/pytest -m "gdpr or soc2 or sla" -v --tb=short
 
 test-failed:
 	@echo "🔁 Re-running failed tests..."
-	pytest --lf -v
+	.venv/bin/pytest --lf -v
 
 test-debug:
 	@echo "🐛 Running tests in debug mode..."
-	pytest -v --pdb --pdbcls=IPython.terminal.debugger:Pdb
+	.venv/bin/pytest -v --pdb --pdbcls=IPython.terminal.debugger:Pdb
 
 # ==============================================================================
 # Monitoring & Observability

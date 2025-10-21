@@ -679,8 +679,14 @@ class MCPAgentStreamableServer:
 
             # Filter conversations based on query (simple implementation)
             # In production, this would use a proper search index
+            # Normalize query and conversation names to handle spaces/underscores/hyphens
             if query:
-                filtered_conversations = [conv for conv in all_conversations if query.lower() in conv.lower()]
+                normalized_query = query.lower().replace(" ", "_").replace("-", "_")
+                filtered_conversations = [
+                    conv
+                    for conv in all_conversations
+                    if (query.lower() in conv.lower() or normalized_query in conv.lower().replace(" ", "_").replace("-", "_"))
+                ]
             else:
                 # No query: return most recent (up to limit)
                 filtered_conversations = all_conversations
