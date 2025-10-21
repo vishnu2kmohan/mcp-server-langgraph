@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761032719127,
+  "lastUpdate": 1761033726660,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -9880,6 +9880,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001951987648170305",
             "extra": "mean: 48.46009237821409 usec\nrounds: 4579"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "c123180ed36c7e619a2093590a2bed7b9b4135e3",
+          "message": "fix(ci): remove duplicate cache exports in Docker builds\n\nFix CI/CD pipeline failures caused by:\n\n1. **infisical-python platform incompatibility**\n   - Remove secrets extra from full variant Docker build\n   - infisical-python 2.3.6 lacks manylinux_2_41_x86_64 wheels\n   - Application already has fallback to env vars when infisical unavailable\n   - Removes unnecessary Rust toolchain installation (saves build time)\n\n2. **Registry cache configuration error**\n   - Remove non-existent registry cache reference\n   - Keep only GHA cache and latest image as fallback\n   - Prevents \"cache not found\" errors\n\n**Files changed:**\n- docker/Dockerfile:76-91\n  - Changed full variant to exclude secrets extra\n  - Removed Rust installation (no longer needed)\n  - Updated comments to reflect changes\n\n- docker/Dockerfile:127-141\n  - Removed Rust-related cache mounts from build-full stage\n\n- .github/workflows/ci.yaml:136-151\n  - Removed registry cache reference from cache-from\n  - Simplified to GHA cache + latest image fallback\n\n**Testing:**\n✅ Local Docker build successful (12.1GB full image)\n✅ All Python tests passing (3.10, 3.11, 3.12)\n✅ infisical fallback mechanism verified in code\n\n**Impact:**\n- Unblocks deployment pipeline\n- Maintains security (infisical optional, env vars work)\n- Reduces build complexity and time\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T04:00:51-04:00",
+          "tree_id": "515e7ca04fc9ae4b544b96a204c6d166ab01a7e4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/c123180ed36c7e619a2093590a2bed7b9b4135e3"
+        },
+        "date": 1761033725433,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 53071.912551262736,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002174750039238714",
+            "extra": "mean: 18.84235845154608 usec\nrounds: 6277"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53642.36038239008,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000232117708189656",
+            "extra": "mean: 18.641983553137678 usec\nrounds: 12282"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49866.916204105575,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002403698736000494",
+            "extra": "mean: 20.05337558687195 usec\nrounds: 16614"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.99350553192627,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015056517001255102",
+            "extra": "mean: 5.2357801235960935 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.34643915356067,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007200544921905864",
+            "extra": "mean: 51.68909855000123 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93964918356068,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017971934658937893",
+            "extra": "mean: 100.60717250000266 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2547754.8596006706,
+            "unit": "iter/sec",
+            "range": "stddev: 4.692134794568883e-8",
+            "extra": "mean: 392.50244042581784 nsec\nrounds: 190115"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5135.996228368939,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016498395087683056",
+            "extra": "mean: 194.7041928256194 usec\nrounds: 446"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2939.6725557127997,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008975608100130803",
+            "extra": "mean: 340.1739415012922 usec\nrounds: 2718"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2805.95579776737,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004260293906338064",
+            "extra": "mean: 356.38480149818304 usec\nrounds: 1602"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59056.657928904875,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020676388458167978",
+            "extra": "mean: 16.93289182066222 usec\nrounds: 12507"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10571.895241708116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002615689809433723",
+            "extra": "mean: 94.59041894917875 usec\nrounds: 5404"
           }
         ]
       }
