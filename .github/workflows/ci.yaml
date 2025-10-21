@@ -88,7 +88,8 @@ jobs:
       run: |
         # Install from lockfile (no resolution, 60s faster)
         # uv sync automatically creates/uses .venv
-        uv sync --no-dev
+        # Include dev dependencies for testing (pytest, pytest-cov, etc.)
+        uv sync
 
         echo "✓ Dependencies installed from lockfile (no resolution needed)"
 
