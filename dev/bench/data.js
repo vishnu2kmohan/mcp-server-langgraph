@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761037653566,
+  "lastUpdate": 1761054964043,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -11284,6 +11284,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002373068312052149",
             "extra": "mean: 92.35816630030621 usec\nrounds: 5460"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7b687390e3394a3e289ac12922a632b3d871e69e",
+          "message": "fix(ci): load Docker images locally for PR testing\n\nFix CI failures on PR builds where Docker images weren't available for testing.\n\nChanges:\n- Add `load: true` for PR builds to load images into local Docker daemon\n- Update test step to use `-latest` tag (matches loaded image tag)\n- Maintain `push: true` for non-PR builds (releases, main branch)\n\nThis resolves the \"manifest unknown\" error on PR #53 and future PRs.\n\nAffected workflow: .github/workflows/ci.yaml\n- Line 145: Added conditional load parameter\n- Line 161: Updated image tag reference\n\nFixes the docker-build job failure affecting all PR builds.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T09:54:19-04:00",
+          "tree_id": "76a7776d07e8f2a335cc95fbe27cff663be2f996",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7b687390e3394a3e289ac12922a632b3d871e69e"
+        },
+        "date": 1761054963454,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50827.390931472844,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023610674140158394",
+            "extra": "mean: 19.67443108280401 usec\nrounds: 6087"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53374.40726107911,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023578077647231915",
+            "extra": "mean: 18.73557105952547 usec\nrounds: 8908"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50012.375412468835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023858386156860002",
+            "extra": "mean: 19.995051059915962 usec\nrounds: 17450"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.8214510979998,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002193363754448052",
+            "extra": "mean: 5.240500972222625 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.378364563098028,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001270271450470049",
+            "extra": "mean: 51.603941949997534 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938755391587815,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000029432977664789145",
+            "extra": "mean: 100.61622009999382 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2602473.9057872016,
+            "unit": "iter/sec",
+            "range": "stddev: 4.646202945139508e-8",
+            "extra": "mean: 384.2497701038497 nsec\nrounds: 190477"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5021.533528621153,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013629209183938183",
+            "extra": "mean: 199.14235249059203 usec\nrounds: 522"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2960.3464599010067,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008177034659529312",
+            "extra": "mean: 337.79829947115036 usec\nrounds: 2461"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2793.4092598294988,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005230977778058808",
+            "extra": "mean: 357.98549621083345 usec\nrounds: 1584"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58089.366676592974,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000040263693964030586",
+            "extra": "mean: 17.21485458031252 usec\nrounds: 12543"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10325.88987922415,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002757278204002919",
+            "extra": "mean: 96.84395356685097 usec\nrounds: 5341"
           }
         ]
       }
