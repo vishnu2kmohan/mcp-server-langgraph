@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761058540317,
+  "lastUpdate": 1761059614695,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -11932,6 +11932,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002512777140151971",
             "extra": "mean: 92.47122630992988 usec\nrounds: 5382"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "2524b98db3f5e4a879c432b2b52c5915c5d0915b",
+          "message": "fix(ci): use SHA tag for PR image testing instead of latest\n\nFix test failures where images couldn't be found after being loaded locally.\n\n**Problem:**\nTest was failing with:\n```\nexec: \"/opt/venv/bin/python\": stat /opt/venv/bin/python: no such file or directory\n```\n\n**Root Cause:**\nDocker BuildKit's `load: true` can only load ONE tag when loading to local\nDocker daemon. Our build specifies TWO tags:\n\n```yaml\ntags: |\n  ghcr.io/repo:variant-SHA    # ← Only this gets loaded!\n  ghcr.io/repo:variant-latest # ← This tag is NOT created locally\n```\n\nThe test was looking for `variant-latest`, but only `variant-SHA` was loaded\ninto the local Docker daemon.\n\n**Why This Limitation Exists:**\n- With `push: true`, BuildKit can create multiple tags in the registry\n- With `load: true`, BuildKit can only load ONE tag to local Docker\n- This is a BuildKit limitation when using local Docker daemon\n\n**Fix:**\nChange test to use the SHA tag (which actually exists locally):\n\n```yaml\n# Before (wrong - tag doesn't exist locally)\ndocker run ghcr.io/repo:variant-latest ...\n\n# After (correct - tag exists locally)\ndocker run ghcr.io/repo:variant-${{ github.sha }} ...\n```\n\n**Impact:**\n- ✅ Test uses the actual loaded image\n- ✅ Works for all three variants (base, full, test)\n- ✅ Consistent with what BuildKit actually creates\n- ✅ No changes needed to push workflow (uses latest tag correctly)\n\n**Reference:**\nhttps://github.com/docker/buildx/issues/1509\n\nAffected workflow: .github/workflows/ci.yaml:199\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T11:11:04-04:00",
+          "tree_id": "0c43440216d48a705a2aece7d70874881cabe66f",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/2524b98db3f5e4a879c432b2b52c5915c5d0915b"
+        },
+        "date": 1761059614100,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52170.25972446585,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002134650578632236",
+            "extra": "mean: 19.16800884798046 usec\nrounds: 5764"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53147.05730225852,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025149966147296963",
+            "extra": "mean: 18.81571719602064 usec\nrounds: 11584"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49410.00055775132,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026824489450463902",
+            "extra": "mean: 20.238817824565324 usec\nrounds: 19591"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.53180832793464,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002001598623630594",
+            "extra": "mean: 5.248467480447389 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.42924500274645,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013365529084719986",
+            "extra": "mean: 51.46880385000259 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.956066923224334,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003750726309228738",
+            "extra": "mean: 100.44126939999956 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2546011.8766297614,
+            "unit": "iter/sec",
+            "range": "stddev: 4.603972226880397e-8",
+            "extra": "mean: 392.7711450127768 nsec\nrounds: 197668"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5064.394748777788,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014638676006529996",
+            "extra": "mean: 197.45696171123592 usec\nrounds: 444"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2923.9326697253423,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007974582722005291",
+            "extra": "mean: 342.005139295473 usec\nrounds: 2527"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2804.5054477277813,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000468413884718936",
+            "extra": "mean: 356.56910590428805 usec\nrounds: 1558"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59319.99661653704,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001944680855543056",
+            "extra": "mean: 16.857721797664823 usec\nrounds: 12038"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10596.068504505783,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002553559665354463",
+            "extra": "mean: 94.37462579396956 usec\nrounds: 5195"
           }
         ]
       }
