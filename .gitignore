@@ -187,10 +187,14 @@ _site/
 .openai/
 .cursor/
 .mcp.json
-# Claude Code - ignore settings but track commands
+# Claude Code - track important directories, ignore session-specific data
 .claude/*
 !.claude/commands/
-# Note: .claude/context/ should not be tracked as it contains session-specific info
+!.claude/memory/
+!.claude/templates/
+# Session-specific context should not be tracked
+.claude/context/
+.claude/handoff/
 .vscode/.ropeproject/
 .vscode/tags
 

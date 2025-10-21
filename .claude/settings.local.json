@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "includeCoAuthoredBy": true,
+  "permissions": {
+    "allow": [
+      "Edit(**)",
+      "Write(**)",
+      "Read(**)",
+      "Glob(**)",
+      "Grep(**)",
+      "Bash",
+      "WebFetch(domain:*)",
+      "Read(//tmp/**)",
+      "WebFetch(domain:hub.docker.com)",
+      "WebFetch(domain:github.com)",
+      "Read(//home/vishnu/.config/pip/**)",
+      "WebFetch(domain:pypi.org)",
+      "Read(//home/vishnu/.claude/**)",
+      "Read(//home/vishnu/**)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "disabledMcpjsonServers": [
+    "langgraph-agent",
+    "langgraph-agent-streamable"
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(**git commit**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run black --check src/ --line-length=127 && uv run isort --check src/ --profile=black --line-length=127",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "uv run flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash(**git commit**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/workflow/update-context-files.py --recent-work --quiet",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status --short",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
