@@ -1,12 +1,12 @@
 # Test Runner Dockerfile
 # ======================
-# Optimized image for running integration tests
+# Optimized image for running integration tests with uv
 #
 # FEATURES:
-#   - Only test dependencies (smaller image)
-#   - No production build tools (unless needed for tests)
+#   - Uses uv for 10-100x faster dependency installation
+#   - Only test dependencies (from dependency-groups)
 #   - Test environment variables pre-configured
-#   - Fast builds with layer caching
+#   - Fast builds with layer caching and lockfile
 
 FROM python:3.12-slim
 
@@ -22,23 +22,25 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements files
-# Separate layers for better caching
-COPY requirements.txt requirements-test.txt ./
+# Install uv - Fast Python package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Install Python dependencies with cache mounts
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r requirements.txt -r requirements-test.txt
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Export all dependencies (including dev/test) to requirements format
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv export --frozen --no-hashes --no-emit-project --all-extras > /tmp/requirements.txt
 
 # Copy source code
-# This layer changes most frequently, so it's last
 COPY src/ ./src/
 COPY tests/ ./tests/
-COPY pyproject.toml setup.py* ./
-# Note: pytest.ini removed - using pyproject.toml for pytest configuration
 
-# Install package in editable mode for tests
-RUN pip install -e .
+# Install Python dependencies with uv (10-100x faster than pip)
+# Includes all test dependencies from lockfile
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --python $(which python) --no-cache -r /tmp/requirements.txt && \
+    uv pip install --python $(which python) --no-cache --no-deps -e .
 
 # Set test environment variables
 ENV TESTING=true
@@ -53,7 +55,7 @@ ENV ENABLE_CONSOLE_EXPORT=false
 # Set pytest default options
 ENV PYTEST_ADDOPTS="-v --tb=short --strict-markers"
 
-# Default command runs integration tests
+# Default command runs integration tests using uv run
 # Can be overridden in docker-compose or docker run
 CMD ["pytest", "-m", "integration", "-v", "--tb=short"]
 

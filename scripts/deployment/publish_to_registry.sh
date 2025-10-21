@@ -82,7 +82,8 @@ cp "$REGISTRY_INFO_PATH" "$PACKAGE_DIR/"
 # Copy source code
 echo "  Copying source files..."
 cp *.py "$PACKAGE_DIR/" 2>/dev/null || true
-cp requirements.txt "$PACKAGE_DIR/"
+cp pyproject.toml "$PACKAGE_DIR/"
+cp uv.lock "$PACKAGE_DIR/" 2>/dev/null || true
 cp README.md "$PACKAGE_DIR/"
 
 # Copy configuration
@@ -159,7 +160,7 @@ git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp-server-langgraph
 
 # Install dependencies
-pip install -r requirements.txt
+uv sync --frozen
 
 # Run server
 python mcp_server.py

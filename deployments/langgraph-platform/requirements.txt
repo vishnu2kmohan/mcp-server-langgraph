@@ -1,5 +1,14 @@
-# LangGraph Platform deployment requirements
-# Lighter dependency set for platform deployment
+# LangGraph Platform Deployment Requirements
+# ============================================
+#
+# This is a SPECIALIZED requirements file for LangGraph Platform deployment.
+# It contains a lighter dependency set optimized for the managed platform.
+#
+# Note: The main project uses uv/pyproject.toml. This file is maintained
+# separately for LangGraph Platform compatibility and has a reduced dependency set.
+#
+# Sync with: src/mcp_server_langgraph when updating versions
+# ============================================
 
 # Core LangGraph and LangChain
 langgraph>=0.2.28

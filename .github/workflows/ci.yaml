@@ -219,10 +219,6 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: |
-          requirements-pinned.txt
-          requirements-test.txt
 
     - name: Cache uv dependencies
       uses: actions/cache@v4.3.0

@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1.4
 # Multi-stage build for LangGraph MCP Agent with BuildKit caching
+# Optimized with uv for 10-100x faster dependency resolution
 FROM python:3.12-slim AS builder
 
 # Set working directory
@@ -15,7 +16,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     make \
     curl
 
-# Install Rust toolchain with cache mount
+# Install Rust toolchain with cache mount (needed for infisical-python)
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/root/.cargo/git \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -26,23 +27,27 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Set PyO3 forward compatibility for infisical-python
 ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
-# Copy requirements
-COPY requirements.txt requirements-infisical.txt ./
+# Install uv - Fast Python package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Build wheels first (enables better caching)
-RUN --mount=type=cache,target=/root/.cache/pip \
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Export dependencies to requirements format for installation
+# This ensures compatibility while using uv's fast resolution
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv export --frozen --all-extras --no-hashes --no-emit-project > /tmp/requirements.txt
+
+# Copy source code
+COPY src/ ./src/
+
+# Build and install with cache mounts (uv is 10-100x faster than pip)
+RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/root/.cargo/git \
-    mkdir -p /wheels && \
-    pip wheel --no-cache-dir --wheel-dir=/wheels \
-        -r requirements.txt \
-        -r requirements-infisical.txt
-
-# Install Python dependencies from pre-built wheels
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --user --no-cache-dir --no-index --find-links=/wheels \
-        -r requirements.txt \
-        -r requirements-infisical.txt
+    uv pip install --python $(which python) --user --no-cache \
+        -r /tmp/requirements.txt && \
+    uv pip install --python $(which python) --user --no-cache --no-deps -e .
 
 # Final stage
 FROM python:3.12-slim
@@ -70,11 +75,11 @@ WORKDIR /app
 # Copy Python packages from builder
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 
-# Update PATH for non-root user
-ENV PATH=/home/appuser/.local/bin:$PATH
-
 # Copy application code
 COPY --chown=appuser:appuser . .
+
+# Update PATH for non-root user
+ENV PATH=/home/appuser/.local/bin:$PATH
 
 # Switch to non-root user
 USER appuser

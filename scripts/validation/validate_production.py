@@ -93,9 +93,8 @@ def check_required_files(result: ValidationResult) -> None:
         "CHANGELOG.md",
         "LICENSE",
         ".gitignore",
-        "requirements.txt",
-        "requirements-pinned.txt",
         "pyproject.toml",
+        "uv.lock",
         "Dockerfile",
         "docker-compose.yml",
         ".env.example",
@@ -298,8 +297,11 @@ def check_dependencies(result: ValidationResult) -> None:
     """Check dependency management"""
     print(f"\n{BOLD}Checking Dependencies...{RESET}")
 
-    if Path("requirements-pinned.txt").exists():
-        result.add_pass("Pinned requirements found")
+    if Path("uv.lock").exists():
+        result.add_pass("Lockfile found (uv.lock) - dependencies are pinned")
+        result.add_info("Using uv.lock for reproducible builds")
+    elif Path("requirements-pinned.txt").exists():
+        result.add_warning("Using legacy requirements-pinned.txt (migrate to uv.lock)")
 
         # Check if versions are actually pinned
         content = Path("requirements-pinned.txt").read_text()
@@ -311,9 +313,9 @@ def check_dependencies(result: ValidationResult) -> None:
         else:
             result.add_pass("All dependencies pinned with exact versions")
     else:
-        result.add_warning("requirements-pinned.txt not found")
+        result.add_fail("No lockfile found (expected uv.lock or requirements-pinned.txt)")
 
-    result.add_info("Run 'pip-audit' to check for known vulnerabilities")
+    result.add_info("Run 'uv tool install pip-audit && pip-audit' to check vulnerabilities")
 
 
 def check_documentation(result: ValidationResult) -> None:
