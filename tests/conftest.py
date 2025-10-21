@@ -1,8 +1,10 @@
 """Pytest configuration and shared fixtures"""
 
 import asyncio
+import logging
 import os
 import sys
+import warnings
 from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -29,6 +31,18 @@ os.environ.setdefault("OTLP_ENDPOINT", "http://localhost:4317")
 os.environ.setdefault("ENABLE_TRACING", "false")
 os.environ.setdefault("ENABLE_METRICS", "false")
 os.environ.setdefault("ENABLE_CONSOLE_EXPORT", "false")
+
+# Disable OTLP exporters in tests to prevent gRPC connection errors
+# This forces OpenTelemetry to use no-op exporters
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+
+# Suppress gRPC logging noise in tests
+warnings.filterwarnings("ignore", message=".*failed to connect to all addresses.*")
+warnings.filterwarnings("ignore", message=".*Connection refused.*")
+
+# Also suppress grpc library logs
+logging.getLogger("grpc").setLevel(logging.CRITICAL)
+logging.getLogger("opentelemetry.exporter.otlp").setLevel(logging.CRITICAL)
 
 
 # Configure Hypothesis profiles for property-based testing

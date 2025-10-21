@@ -11,16 +11,40 @@ import pytest
 from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
-from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+from mcp_server_langgraph.resilience.circuit_breaker import _circuit_breakers, reset_circuit_breaker
+from mcp_server_langgraph.resilience.config import CircuitBreakerConfig, ResilienceConfig, set_resilience_config
 
 
 @pytest.fixture(autouse=True)
-def reset_llm_circuit_breaker():
-    """Reset the LLM circuit breaker before each test to ensure clean state."""
+def configure_test_circuit_breaker():
+    """Configure circuit breaker with minimal timeout for testing."""
+    # Set up test-friendly resilience config with very short timeout
+    test_config = ResilienceConfig(
+        enabled=True,
+        circuit_breakers={
+            "llm": CircuitBreakerConfig(
+                name="llm",
+                fail_max=5,
+                timeout_duration=1,  # 1 second instead of 60 - allows quick recovery in tests
+            ),
+        },
+    )
+    set_resilience_config(test_config)
+
+    # Clear any existing circuit breaker instances to force recreation with new config
+    if "llm" in _circuit_breakers:
+        del _circuit_breakers["llm"]
+
+    # Reset circuit breaker before test
     reset_circuit_breaker("llm")
     yield
-    # Also reset after test to ensure cleanup
+
+    # Reset after test to ensure cleanup
     reset_circuit_breaker("llm")
+
+    # Clear circuit breaker instance after test
+    if "llm" in _circuit_breakers:
+        del _circuit_breakers["llm"]
 
 
 @pytest.fixture
