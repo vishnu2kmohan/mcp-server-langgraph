@@ -22,8 +22,21 @@ class TestSearchKnowledgeBase:
 
     @pytest.fixture(autouse=True)
     def setup_method(self):
-        """Ensure clean state before each test to prevent parallel execution issues"""
-        # This runs before each test method to ensure isolation
+        """Ensure observability is initialized and clean state before each test"""
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+        # Ensure observability is initialized for xdist workers
+        # This provides defense-in-depth beyond the session-scoped fixture
+        if not is_initialized():
+            test_settings = Settings(
+                log_format="text",
+                enable_file_logging=False,
+                langsmith_tracing=False,
+                observability_backend="opentelemetry",
+            )
+            init_observability(settings=test_settings, enable_file_logging=False)
+
         yield
         # Cleanup after each test (if needed)
 
