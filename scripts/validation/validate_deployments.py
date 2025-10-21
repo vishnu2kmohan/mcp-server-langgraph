@@ -54,8 +54,18 @@ class DeploymentValidator:
         """Validate YAML syntax for all deployment files."""
         print("📄 Validating YAML syntax...")
 
-        yaml_files = [
-            # Kubernetes base
+        # Required files (must exist)
+        required_files = [
+            # Docker Compose
+            "docker/docker-compose.yml",
+            "docker/docker-compose.dev.yml",
+            # Helm
+            "deployments/helm/mcp-server-langgraph/Chart.yaml",
+            "deployments/helm/mcp-server-langgraph/values.yaml",
+        ]
+
+        # Optional files (Kubernetes base - project uses Helm/Kustomize overlays)
+        optional_files = [
             "deployments/kubernetes/base/deployment.yaml",
             "deployments/kubernetes/base/service.yaml",
             "deployments/kubernetes/base/configmap.yaml",
@@ -64,20 +74,29 @@ class DeploymentValidator:
             "deployments/kubernetes/base/keycloak-service.yaml",
             "deployments/kubernetes/base/redis-session-deployment.yaml",
             "deployments/kubernetes/base/redis-session-service.yaml",
-            # Docker Compose
-            "docker/docker-compose.yml",
-            "docker/docker-compose.dev.yml",
-            # Helm
-            "deployments/helm/mcp-server-langgraph/Chart.yaml",
-            "deployments/helm/mcp-server-langgraph/values.yaml",
-            # Kustomize
             "deployments/kustomize/base/kustomization.yaml",
         ]
 
-        for file_path in yaml_files:
+        # Validate required files
+        for file_path in required_files:
             full_path = self.project_root / file_path
             if not full_path.exists():
-                self.errors.append(f"File not found: {file_path}")
+                self.errors.append(f"Required file not found: {file_path}")
+                continue
+
+            try:
+                with open(full_path) as f:
+                    # Handle multi-document YAML files
+                    list(yaml.safe_load_all(f))
+                print(f"  ✓ {file_path}")
+            except yaml.YAMLError as e:
+                self.errors.append(f"Invalid YAML in {file_path}: {e}")
+
+        # Validate optional files (only if they exist)
+        for file_path in optional_files:
+            full_path = self.project_root / file_path
+            if not full_path.exists():
+                # Skip silently - these are optional
                 continue
 
             try:
@@ -92,28 +111,34 @@ class DeploymentValidator:
         """Validate Kubernetes manifest configurations."""
         print("\n☸️  Validating Kubernetes manifests...")
 
+        # Check if base directory exists
+        base_dir = self.project_root / "deployments/kubernetes/base"
+        if not base_dir.exists():
+            print("  ℹ️  Kubernetes base manifests not found (project uses Helm/Kustomize overlays)")
+            return
+
         # Validate main deployment
-        deployment = self._load_yaml("deployments/kubernetes/base/deployment.yaml")
+        deployment = self._load_yaml_optional("deployments/kubernetes/base/deployment.yaml")
         if deployment:
             self._check_deployment(deployment)
 
         # Validate ConfigMap
-        configmap = self._load_yaml("deployments/kubernetes/base/configmap.yaml")
+        configmap = self._load_yaml_optional("deployments/kubernetes/base/configmap.yaml")
         if configmap:
             self._check_configmap(configmap)
 
         # Validate Secret
-        secret = self._load_yaml("deployments/kubernetes/base/secret.yaml")
+        secret = self._load_yaml_optional("deployments/kubernetes/base/secret.yaml")
         if secret:
             self._check_secret(secret)
 
         # Validate Keycloak deployment
-        keycloak_deploy = self._load_yaml("deployments/kubernetes/base/keycloak-deployment.yaml")
+        keycloak_deploy = self._load_yaml_optional("deployments/kubernetes/base/keycloak-deployment.yaml")
         if keycloak_deploy:
             self._check_keycloak_deployment(keycloak_deploy)
 
         # Validate Redis deployment
-        redis_docs = self._load_yaml_all("deployments/kubernetes/base/redis-session-deployment.yaml")
+        redis_docs = self._load_yaml_all_optional("deployments/kubernetes/base/redis-session-deployment.yaml")
         if redis_docs:
             self._check_redis_deployment(redis_docs)
 
@@ -303,11 +328,11 @@ class DeploymentValidator:
         print("\n🔗 Validating configuration consistency...")
 
         # Load configurations
-        k8s_configmap = self._load_yaml("deployments/kubernetes/base/configmap.yaml")
+        k8s_configmap = self._load_yaml_optional("deployments/kubernetes/base/configmap.yaml")
         helm_values = self._load_yaml("deployments/helm/mcp-server-langgraph/values.yaml")
 
         if not k8s_configmap or not helm_values:
-            self.warnings.append("Cannot validate consistency: Missing config files")
+            print("  ℹ️  Skipping consistency check (Kubernetes base manifests not used)")
             return
 
         k8s_data = k8s_configmap.get("data", {})
@@ -357,6 +382,30 @@ class DeploymentValidator:
         """Load a multi-document YAML file."""
         try:
             with open(self.project_root / relative_path) as f:
+                return list(yaml.safe_load_all(f))
+        except Exception as e:
+            self.errors.append(f"Failed to load {relative_path}: {e}")
+            return None
+
+    def _load_yaml_optional(self, relative_path: str) -> Dict[str, Any] | None:
+        """Load a single-document YAML file (optional - no error if missing)."""
+        full_path = self.project_root / relative_path
+        if not full_path.exists():
+            return None
+        try:
+            with open(full_path) as f:
+                return yaml.safe_load(f)
+        except Exception as e:
+            self.errors.append(f"Failed to load {relative_path}: {e}")
+            return None
+
+    def _load_yaml_all_optional(self, relative_path: str) -> List[Dict[str, Any]] | None:
+        """Load a multi-document YAML file (optional - no error if missing)."""
+        full_path = self.project_root / relative_path
+        if not full_path.exists():
+            return None
+        try:
+            with open(full_path) as f:
                 return list(yaml.safe_load_all(f))
         except Exception as e:
             self.errors.append(f"Failed to load {relative_path}: {e}")
