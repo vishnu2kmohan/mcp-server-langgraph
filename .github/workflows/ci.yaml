@@ -193,9 +193,10 @@ jobs:
       run: |
         # Use explicit entrypoint for distroless images (base, full)
         # Distroless images have limited command parsing - use --entrypoint
+        # For PRs with load:true, only the first tag is loaded, so use the SHA tag
         docker run --rm \
           --entrypoint /opt/venv/bin/python \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }} \
           -c "import mcp_server_langgraph.core.agent; print('✓ Import successful')"
 
   # ============================================================================
