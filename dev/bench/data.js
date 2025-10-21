@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761054964043,
+  "lastUpdate": 1761055191643,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -11392,6 +11392,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002757278204002919",
             "extra": "mean: 96.84395356685097 usec\nrounds: 5341"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "21335ce2ce871fc357ba0075d66c34edbd56d4fa",
+          "message": "feat(ci): improve Docker build robustness and reliability\n\nAddress flaky Docker builds in CI with comprehensive improvements.\n\n**Workflow Changes (.github/workflows/ci.yaml):**\n- Add 30-minute timeout to docker-build job (prevent hanging builds)\n- Add fail-fast: false to strategy (don't cancel successful variants)\n- Configure BuildKit max-parallelism=4 for better resource management\n- Add automatic retry step for failed builds (handles transient network issues)\n- Disable provenance/sbom generation (reduces build time and failure points)\n\n**Dockerfile Changes (docker/Dockerfile):**\n- Remove `sharing=locked` from apt cache mounts (lines 40-41, 187-188)\n- Prevent cache lock contention between parallel variant builds\n- Use private cache mounts instead of shared locked mounts\n\n**Impact:**\nThese changes address common flakiness sources:\n1. Network timeouts pulling external images (uv, distroless, python base)\n2. Parallel build cache contention\n3. Missing timeout causing zombie builds\n4. Transient registry/network failures\n\n**Expected Improvement:**\n- Reduced manual re-runs needed\n- Faster failure recovery (automatic retry)\n- Better parallel build efficiency\n- Clearer failure modes (timeout vs actual error)\n\nFixes Docker build flakiness requiring manual CI re-runs.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T09:58:34-04:00",
+          "tree_id": "e5ff9e752671eb5e8ccb4db01b38bac7df421ff1",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/21335ce2ce871fc357ba0075d66c34edbd56d4fa"
+        },
+        "date": 1761055190820,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 47904.40584790182,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005682101422065877",
+            "extra": "mean: 20.874906645852892 usec\nrounds: 5131"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53049.90690743859,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005007044726566888",
+            "extra": "mean: 18.85017445449619 usec\nrounds: 8753"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49582.96896065596,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029235801650726625",
+            "extra": "mean: 20.16821543690736 usec\nrounds: 17063"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 184.92427822987136,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005294868983381694",
+            "extra": "mean: 5.407618780898759 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.337976480754367,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001870005239180079",
+            "extra": "mean: 51.71171870000073 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.932739994222977,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003806886697991527",
+            "extra": "mean: 100.67715460000102 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2556644.2546489793,
+            "unit": "iter/sec",
+            "range": "stddev: 5.1271854426210386e-8",
+            "extra": "mean: 391.1377181950946 nsec\nrounds: 195313"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4925.955931595073,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019985221029025512",
+            "extra": "mean: 203.0062822093072 usec\nrounds: 326"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2545.737627591117,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010704869546018625",
+            "extra": "mean: 392.8134577427925 usec\nrounds: 1905"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2659.6838232388845,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008626886001930036",
+            "extra": "mean: 375.98454044143847 usec\nrounds: 1360"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59376.30257583304,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023133814994527985",
+            "extra": "mean: 16.841735787149087 usec\nrounds: 11275"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 8979.380543264564,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0033417557768518147",
+            "extra": "mean: 111.36625685722835 usec\nrounds: 4302"
           }
         ]
       }
