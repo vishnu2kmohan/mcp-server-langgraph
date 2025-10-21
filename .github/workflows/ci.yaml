@@ -133,7 +133,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    # OPTIMIZATION: Variant-specific cache scopes with inline cache export
+    # OPTIMIZATION: Variant-specific cache scopes with GitHub Actions cache
     - name: Build ${{ matrix.variant }} image
       uses: docker/build-push-action@v6.18.0
       with:
@@ -146,7 +146,6 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         cache-from: |
           type=gha,scope=build-${{ matrix.variant }}
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-cache
           type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}

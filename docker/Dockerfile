@@ -76,26 +76,18 @@ RUN echo "=== Base Dependencies ===" && \
 # ==============================================================================
 # STAGE: dependencies-full
 # Complete dependencies including ML models
+# Note: Excludes infisical-python (secrets extra) due to platform wheel availability
+# Application falls back to environment variables when infisical is not available
 # ==============================================================================
 FROM base-builder AS dependencies-full
 
-# Install Rust toolchain (needed for infisical-python)
-RUN --mount=type=cache,target=/root/.cargo/registry \
-    --mount=type=cache,target=/root/.cargo/git \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-    --default-toolchain stable \
-    --profile minimal
-
-ENV PATH="/root/.cargo/bin:${PATH}"
-ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
-
-# Export full dependencies (includes embeddings-local and secrets)
+# Export full dependencies (includes embeddings-local, excludes secrets)
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv export --frozen \
     --no-hashes \
     --no-emit-project \
     --extra embeddings-local \
-    --extra secrets \
+    --no-extra secrets \
     > /tmp/requirements-full.txt
 
 # ==============================================================================
@@ -134,7 +126,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # ==============================================================================
 # STAGE: build-full
-# Build full variant packages (with ML)
+# Build full variant packages (with ML, without secrets management)
 # ==============================================================================
 FROM dependencies-full AS build-full
 
@@ -142,8 +134,6 @@ COPY src/ ./src/
 
 # Create virtual environment and install full dependencies (includes PyTorch, sentence-transformers)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/root/.cargo/registry \
-    --mount=type=cache,target=/root/.cargo/git \
     python -m venv /opt/venv && \
     . /opt/venv/bin/activate && \
     uv pip install --python /opt/venv/bin/python --no-cache \
