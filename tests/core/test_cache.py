@@ -118,8 +118,8 @@ class TestCacheL1Operations:
         # Should exist immediately
         assert cache_short_ttl.get("expiring:key", level=CacheLayer.L1) == "value"
 
-        # Wait for expiration
-        time.sleep(1.5)
+        # Wait for expiration (1s TTL + small buffer)
+        time.sleep(1.05)
 
         # Should be expired
         result = cache_short_ttl.get("expiring:key", level=CacheLayer.L1)

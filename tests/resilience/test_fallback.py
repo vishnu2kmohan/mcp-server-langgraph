@@ -128,8 +128,8 @@ class TestFallbackStrategies:
         # Cache data
         strategy.cache_value("old_data", "key1")
 
-        # Wait for data to become stale
-        time.sleep(1.5)
+        # Wait for data to become stale (1s staleness + small buffer)
+        time.sleep(1.05)
 
         # Should return None (too stale)
         result = strategy.get_fallback_value("key1")

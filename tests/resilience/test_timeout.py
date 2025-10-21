@@ -23,7 +23,7 @@ class TestTimeoutBasics:
 
         @with_timeout(seconds=1)
         async def slow_func():
-            await asyncio.sleep(2)
+            await asyncio.sleep(1.05)  # Just over timeout
             return "should_not_reach"
 
         with pytest.raises((MCPTimeoutError, asyncio.TimeoutError)):
@@ -49,7 +49,7 @@ class TestTimeoutBasics:
 
         @with_timeout(seconds=2)
         async def func():
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)  # Well under timeout
             return "success"
 
         result = await func()
@@ -127,7 +127,7 @@ class TestTimeoutContextManager:
         """Test that TimeoutContext enforces timeout"""
         with pytest.raises((MCPTimeoutError, asyncio.TimeoutError)):
             async with TimeoutContext(seconds=1):
-                await asyncio.sleep(2)
+                await asyncio.sleep(1.05)  # Just over timeout
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -150,7 +150,7 @@ class TestTimeoutMetrics:
 
         @with_timeout(seconds=1)
         async def slow_func():
-            await asyncio.sleep(2)
+            await asyncio.sleep(1.05)  # Just over timeout
 
         with patch("mcp_server_langgraph.resilience.timeout.timeout_exceeded_counter") as mock_metric:  # noqa: F841
             with pytest.raises((MCPTimeoutError, asyncio.TimeoutError)):
@@ -194,7 +194,7 @@ class TestTimeoutEdgeCases:
 
         @with_timeout(seconds=1)
         async def slow_func():
-            await asyncio.sleep(1.5)
+            await asyncio.sleep(1.05)  # Just over timeout
             return "slow"
 
         # Run concurrently

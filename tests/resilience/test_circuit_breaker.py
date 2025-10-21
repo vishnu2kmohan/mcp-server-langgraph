@@ -127,8 +127,8 @@ class TestCircuitBreakerStateTransitions:
             with pytest.raises(ValueError):
                 await failing_func()
 
-        # Wait for timeout
-        await asyncio.sleep(1.5)
+        # Wait for timeout (1s timeout + small buffer)
+        await asyncio.sleep(1.05)
 
         # Circuit should now be HALF_OPEN (trying recovery)
         breaker = get_circuit_breaker("test")  # noqa: F841
@@ -307,8 +307,8 @@ class TestCircuitBreakerEdgeCases:
             with pytest.raises(ValueError):
                 await sometimes_failing_func()
 
-        # Wait for timeout
-        await asyncio.sleep(1.5)
+        # Wait for timeout (1s timeout + small buffer)
+        await asyncio.sleep(1.05)
 
         # Next call should succeed (HALF_OPEN → CLOSED)
         result = await sometimes_failing_func()

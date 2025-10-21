@@ -163,8 +163,8 @@ class TestInMemorySessionStore:
         # Should exist immediately
         assert await store.get(session_id) is not None
 
-        # Wait for expiration
-        await asyncio.sleep(1.5)
+        # Wait for expiration (1s TTL + small buffer)
+        await asyncio.sleep(1.05)
 
         # Should be expired
         assert await store.get(session_id) is None
@@ -291,8 +291,8 @@ class TestInMemorySessionStore:
         # Long TTL session
         session_id2 = await store.create(user_id="user:nina", username="nina", roles=["user"], ttl_seconds=3600)
 
-        # Wait for first to expire
-        await asyncio.sleep(1.5)
+        # Wait for first to expire (1s TTL + small buffer)
+        await asyncio.sleep(1.05)
 
         # First should be expired
         assert await store.get(session_id1) is None

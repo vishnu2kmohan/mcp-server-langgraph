@@ -259,6 +259,8 @@ markers = [
 
 [tool.coverage.run]
 source = ["src/mcp_server_langgraph"]
+parallel = true  # Enable parallel coverage for pytest-xdist
+branch = true  # Enable branch coverage for more comprehensive analysis
 omit = [
     "*/venv/*",
     "*/tests/*",
