@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761033910628,
+  "lastUpdate": 1761034088943,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -10096,6 +10096,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0025535120279452494",
             "extra": "mean: 93.94429347222625 usec\nrounds: 5193"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6be70d68348db62a57ae8ac8a1664e8d09b995bd",
+          "message": "fix(ci): ensure consistent Hypothesis configuration across all workflows\n\nAdd HYPOTHESIS_PROFILE=ci to all workflows running unit tests to ensure\nproperty-based tests use the same configuration everywhere.\n\n**Problem:**\nConfiguration drift between workflows caused inconsistent property test behavior:\n- quality-tests.yaml: HYPOTHESIS_PROFILE=ci (100 examples) ✅\n- ci.yaml: No profile set (25 examples, dev default) ❌\n- coverage-trend.yaml: No profile set (25 examples, dev default) ❌\n\nProperty tests are marked with both @pytest.mark.unit and @pytest.mark.property,\nso they run in all unit test executions. Without consistent configuration,\ndifferent workflows could catch different edge cases.\n\n**Solution:**\nSet HYPOTHESIS_PROFILE=ci in all workflows that run unit tests:\n1. ci.yaml (line 101): Added HYPOTHESIS_PROFILE=ci\n2. coverage-trend.yaml (line 75): Added HYPOTHESIS_PROFILE=ci\n\n**Configuration Matrix (After Fix):**\n\n| Environment | max_examples | deadline | derandomize | Usage |\n|-------------|--------------|----------|-------------|-------|\n| Local (dev) | 25 | 2000ms | False | Fast iteration |\n| CI (all workflows) | 100 | None | True | Comprehensive |\n\n**Benefits:**\n✅ All CI workflows now use 100 examples for property tests\n✅ Deterministic execution in CI (derandomize=True)\n✅ Consistent edge case detection across workflows\n✅ No configuration drift between CI jobs\n✅ Local development remains fast (25 examples)\n\n**Testing:**\n- Profiles defined in tests/conftest.py (lines 50-65)\n- CI profile: max_examples=100, deadline=None, derandomize=True\n- Dev profile: max_examples=25, deadline=2000ms, derandomize=False\n- Profile selection: HYPOTHESIS_PROFILE env var (default: dev)\n\n**Files changed:**\n- .github/workflows/ci.yaml:101\n  - Added HYPOTHESIS_PROFILE=ci to unit test execution\n\n- .github/workflows/coverage-trend.yaml:75\n  - Added HYPOTHESIS_PROFILE=ci to unit test execution\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T04:06:52-04:00",
+          "tree_id": "b1ed6c130b794984c8534c2fe16691ddedf849bc",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6be70d68348db62a57ae8ac8a1664e8d09b995bd"
+        },
+        "date": 1761034087889,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51128.90721434421,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021544244754768957",
+            "extra": "mean: 19.558407454471276 usec\nrounds: 6278"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52093.29841804928,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000230270874528696",
+            "extra": "mean: 19.19632717389076 usec\nrounds: 12177"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48627.30224426625,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002373690510669195",
+            "extra": "mean: 20.564579029631698 usec\nrounds: 14134"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.97173626475927,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015995300653472653",
+            "extra": "mean: 5.236376961110207 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.4155770543656,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011986891840822902",
+            "extra": "mean: 51.505036250011926 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.948039519360623,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005330246507855133",
+            "extra": "mean: 100.52231879998317 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2593460.6959719304,
+            "unit": "iter/sec",
+            "range": "stddev: 4.514570513941685e-8",
+            "extra": "mean: 385.5851764220541 nsec\nrounds: 196503"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5044.153434825892,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014539327953115652",
+            "extra": "mean: 198.249322293765 usec\nrounds: 453"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2925.172801371123,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009941696394187782",
+            "extra": "mean: 341.8601456745624 usec\nrounds: 2739"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2821.5919701374405,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004642380916647436",
+            "extra": "mean: 354.4098546436145 usec\nrounds: 1658"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59384.01314404631,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002124406637921949",
+            "extra": "mean: 16.83954901421575 usec\nrounds: 9732"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10963.818477913768,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0024387670605683113",
+            "extra": "mean: 91.20909854668476 usec\nrounds: 5368"
           }
         ]
       }
