@@ -150,11 +150,11 @@ class TestRealWorldScenarios:
 
         call_count = 0
 
+        @with_fallback(fallback="Cached response from previous call")
         @circuit_breaker(name="llm", fail_max=5, timeout=60)
         @retry_with_backoff(max_attempts=3)
         @with_timeout(operation_type="llm")
         @with_bulkhead(resource_type="llm")
-        @with_fallback(fallback="Cached response from previous call")
         async def call_llm_api(prompt):
             nonlocal call_count
             call_count += 1
@@ -180,7 +180,7 @@ class TestRealWorldScenarios:
             # Fail-open: allow access if service is down
             return True
 
-        @circuit_breaker(name="openfga", fail_max=10, timeout=30, fallback=check_permission_fallback)
+        @circuit_breaker(name="openfga", fail_max=2, timeout=30, fallback=check_permission_fallback)
         @retry_with_backoff(max_attempts=3)
         @with_timeout(operation_type="auth")
         @with_bulkhead(resource_type="openfga")
@@ -194,10 +194,15 @@ class TestRealWorldScenarios:
         result = await check_permission("admin", "resource_123")
         assert result is True
 
-        # Service unavailable - should fail-open to True
+        # Service unavailable - make enough calls to open circuit
         service_available = False
+        # First call - will fail and exhaust retries (counts as 1 failure)
+        with pytest.raises(RetryExhaustedError):
+            await check_permission("user", "resource_123")
+        # Second call - will fail, exhaust retries, count as 2nd failure and open circuit
+        # When circuit opens, fallback is used, so no exception is raised
         result = await check_permission("user", "resource_123")
-        # Should return True (fallback allows access)
+        assert result is True  # Fallback returns True (fail-open)
 
 
 class TestMetricsIntegration:
@@ -209,10 +214,10 @@ class TestMetricsIntegration:
         """Test that all resilience metrics are emitted"""
         call_count = 0
 
-        @circuit_breaker(name="test")
+        @circuit_breaker(name="test_metrics")
         @retry_with_backoff(max_attempts=3)
         @with_timeout(seconds=5)
-        @with_bulkhead(resource_type="test")
+        @with_bulkhead(resource_type="test_metrics")
         async def func():
             nonlocal call_count
             call_count += 1
@@ -236,8 +241,8 @@ class TestErrorPropagation:
     async def test_timeout_overrides_retry(self, reset_all_resilience):
         """Test that timeout can interrupt retry loop"""
 
-        @retry_with_backoff(max_attempts=10, exponential_base=2)
         @with_timeout(seconds=2)
+        @retry_with_backoff(max_attempts=10, exponential_base=2)
         async def slow_func_with_retries():
             await asyncio.sleep(1)
             raise ValueError("Keep retrying")

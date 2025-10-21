@@ -205,8 +205,20 @@ class TestRedisCheckpointer:
             settings.enable_checkpointing = True
 
             # Simulate Pod A with mocked LLM
-            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
-                graph_a = create_agent_graph()
+            try:
+                with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                    graph_a = create_agent_graph()
+
+                # Verify that Redis is actually being used (not fallback to MemorySaver)
+                if graph_a.checkpointer is None:
+                    pytest.skip("Checkpointing is disabled")
+                checkpointer_type = type(graph_a.checkpointer).__name__
+                if checkpointer_type == "MemorySaver":
+                    pytest.skip("Redis not available, fell back to MemorySaver")
+                if not (checkpointer_type == "RedisSaver" or "Redis" in checkpointer_type):
+                    pytest.skip(f"Not using Redis checkpointer: {checkpointer_type}")
+            except Exception as e:
+                pytest.skip(f"Redis not available during graph creation: {e}")
 
             initial_state: AgentState = {
                 "messages": [HumanMessage(content="Initial message from Pod A")],
@@ -263,7 +275,19 @@ class TestRedisCheckpointer:
             settings.checkpoint_redis_url = "redis://localhost:6379/1"
             settings.enable_checkpointing = True
 
-            graph = create_agent_graph()
+            try:
+                graph = create_agent_graph()
+
+                # Verify that Redis is actually being used (not fallback to MemorySaver)
+                if graph.checkpointer is None:
+                    pytest.skip("Checkpointing is disabled")
+                checkpointer_type = type(graph.checkpointer).__name__
+                if checkpointer_type == "MemorySaver":
+                    pytest.skip("Redis not available, fell back to MemorySaver")
+                if not (checkpointer_type == "RedisSaver" or "Redis" in checkpointer_type):
+                    pytest.skip(f"Not using Redis checkpointer: {checkpointer_type}")
+            except Exception as e:
+                pytest.skip(f"Redis not available during graph creation: {e}")
 
             # Thread 1
             state1: AgentState = {

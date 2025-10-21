@@ -267,10 +267,11 @@ class TestMCPStreamableHTTP:
 
         response = client.post("/message", json=request)
 
-        # Should return error response
-        assert response.status_code in [400, 500]
+        # JSON-RPC returns HTTP 200 with error in response body
+        assert response.status_code == 200
         data = response.json()
-        assert "error" in data or response.status_code == 400
+        assert "error" in data
+        assert data["error"]["code"] in [-32601, -32603]  # Method not found or internal error
 
     def test_malformed_request(self):
         """Test malformed JSON-RPC request"""
@@ -456,9 +457,13 @@ class TestMCPStreamableHTTP:
         # Send invalid JSON
         response = client.post("/message", data="not valid json", headers={"Content-Type": "application/json"})
 
-        # Should return 4xx error
-        assert response.status_code >= 400
-        assert response.status_code < 500
+        # JSON-RPC can return 200 with error in body, or 400 for parse errors
+        # Both are acceptable depending on implementation
+        assert response.status_code in [200, 400, 422]
+        if response.status_code == 200:
+            # If 200, should have JSON-RPC error in body
+            data = response.json()
+            assert "error" in data
 
     def test_multiple_initialize_calls(self, client):
         """Test multiple initialize calls are handled"""

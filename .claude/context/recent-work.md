@@ -1,6 +1,6 @@
 # Recent Work Context
 
-**Last Updated**: 2025-10-20 20:08:07
+**Last Updated**: 2025-10-20 22:09:55
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -9,11 +9,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 291 |
+| Total Commits | 301 |
 | Contributors | 2 |
 | Current Branch | `main` |
-| Source Files | 190 Python files |
-| Test Files | 192 Python files |
+| Source Files | 194 Python files |
+| Test Files | 196 Python files |
 | Total Tests | 0 tests |
 
 ---
@@ -21,21 +21,9 @@
 ## 🕐 Recent Commits (Last 15)
 
 
-### ♻️  Refactor
+### ⚡ Performance
 
-- **`c76a328`** (2025-10-20) - refactor: Phase 3 - Consolidate prompts and storage into core
-  _by Vishnu Mohan_
-
-- **`c70a90e`** (2025-10-20) - refactor: Phase 2 - Elevate compliance package and reorganize docs-internal
-  _by Vishnu Mohan_
-
-- **`9918c45`** (2025-10-20) - refactor: complete compliance module reorganization with import fixes
-  _by Vishnu Mohan_
-
-- **`fdbeef0`** (2025-10-20) - refactor: reorganize compliance module structure
-  _by Vishnu Mohan_
-
-- **`872ae4b`** (2025-10-20) - refactor: Phase 1 - Clean up root directory structure
+- **`1af48b7`** (2025-10-20) - perf: optimize test suite for faster development iteration
   _by Vishnu Mohan_
 
 
@@ -46,6 +34,18 @@
 
 
 ### 🐛 Bug Fix
+
+- **`eefe61b`** (2025-10-20) - fix: resolve CI test failures - property tests and unit test isolation
+  _by Vishnu Mohan_
+
+- **`28829bc`** (2025-10-20) - fix: resolve 31 test failures across integration, resilience, and MCP server tests
+  _by Vishnu Mohan_
+
+- **`6ef4a4c`** (2025-10-20) - fix: resolve test failures and improve test infrastructure
+  _by Vishnu Mohan_
+
+- **`286b4d3`** (2025-10-20) - fix: resolve all pre-commit hook failures (135 flake8 + 5 bandit violations)
+  _by Vishnu Mohan_
 
 - **`72ff136`** (2025-10-20) - fix: resolve all 20 failing resilience module tests
   _by Vishnu Mohan_
@@ -59,25 +59,28 @@
 - **`6aa5553`** (2025-10-20) - fix: resolve 9 failing tests from refactoring and mocking issues
   _by Vishnu Mohan_
 
-- **`fcf52e0`** (2025-10-20) - fix: resolve CI/CD failures from refactoring
-  _by Vishnu Mohan_
-
-- **`020d60f`** (2025-10-20) - fix: remove invalid shell property from cache action in composite action
-  _by Vishnu Mohan_
-
 
 ### 📝 Documentation
 
-- **`2c7fae5`** (2025-10-20) - docs: update CHANGELOG with codebase restructuring details
+- **`8248f03`** (2025-10-20) - docs: add test performance improvements documentation
   _by Vishnu Mohan_
 
 
-### 🔧 Chore
+### 🔹 Other
 
-- **`1e906d8`** (2025-10-20) - chore: further organize docs-internal with subdirectories
+- **`a56bf4c`** (2025-10-20) - cleanup: remove duplicate openapi.json from scripts directory
   _by Vishnu Mohan_
 
-- **`ee34ea6`** (2025-10-20) - chore: reorganize documentation files for better structure
+
+### 🧪 Test
+
+- **`f23c4db`** (2025-10-20) - test: improve Keycloak coverage and enable 19 contract compliance tests
+  _by Vishnu Mohan_
+
+- **`f2c0c4d`** (2025-10-20) - test: add extensive property-based tests for resilience and cache modules
+  _by Vishnu Mohan_
+
+- **`1f1aa65`** (2025-10-20) - test: add comprehensive tests for cache and rate limiter modules
   _by Vishnu Mohan_
 
 ---
@@ -88,21 +91,21 @@ Files changed most frequently:
 
 | File | Changes |
 |------|---------|
-| `pyproject.toml` | 22 |
+| `pyproject.toml` | 23 |
+| `src/mcp_server_langgraph/core/config.py` | 17 |
 | `CHANGELOG.md` | 16 |
 | `.github/workflows/ci.yaml` | 16 |
-| `src/mcp_server_langgraph/core/config.py` | 16 |
-| `src/mcp_server_langgraph/core/agent.py` | 14 |
-| `.claude/context/recent-work.md` | 12 |
-| `.github/workflows/quality-tests.yaml` | 12 |
+| `src/mcp_server_langgraph/core/agent.py` | 15 |
+| `.github/workflows/quality-tests.yaml` | 14 |
+| `.claude/context/recent-work.md` | 13 |
 | `README.md` | 12 |
+| `src/mcp_server_langgraph/mcp/server_stdio.py` | 10 |
 | `requirements-pinned.txt` | 10 |
-| `src/mcp_server_langgraph/mcp/server_stdio.py` | 9 |
+| `Makefile` | 9 |
+| `tests/test_retention.py` | 9 |
 | `docs/mint.json` | 9 |
-| `tests/test_retention.py` | 8 |
-| `.github/workflows/release.yaml` | 8 |
-| `docker/docker-compose.yml` | 8 |
-| `.env.example` | 8 |
+| `src/mcp_server_langgraph/observability/telemetry.py` | 8 |
+| `src/mcp_server_langgraph/tools/search_tools.py` | 8 |
 
 
 ---
@@ -113,20 +116,19 @@ Files changed most frequently:
 
 Based on recent commits, the team has been focused on:
 
-- **🐛 Bug Fix**: 6 recent commits
-- **♻️  Refactor**: 5 recent commits
-- **🔧 Chore**: 2 recent commits
+- **🐛 Bug Fix**: 8 recent commits
+- **🧪 Test**: 3 recent commits
 
 
 ### Hot Spots
 
 Most active areas in the codebase (by file change frequency):
 
-- `src/` - 60 file changes
-- `.github/` - 43 file changes
-- `.claude/` - 12 file changes
+- `src/` - 58 file changes
+- `.github/` - 38 file changes
+- `tests/` - 16 file changes
+- `.claude/` - 13 file changes
 - `docs/` - 9 file changes
-- `tests/` - 8 file changes
 
 
 ---
@@ -152,5 +154,5 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: 2025-10-20 20:08:07
+**Generated**: 2025-10-20 22:09:55
 **Source**: Git commit history (last 15 commits, 7 days of file activity)

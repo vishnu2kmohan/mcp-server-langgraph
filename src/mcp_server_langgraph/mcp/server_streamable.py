@@ -335,7 +335,7 @@ class MCPAgentStreamableServer:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
             with tracer.start_as_current_span("mcp.call_tool", attributes={"tool.name": name}) as span:
-                logger.info(f"Tool called: {name}", extra={"tool": name, "args": arguments})
+                logger.info(f"Tool called: {name}", extra={"tool": name, "tool_args": arguments})
                 metrics.tool_calls.add(1, {"tool": name})
 
                 # SECURITY: Require JWT token for all tool calls
@@ -1094,7 +1094,11 @@ async def handle_message(request: Request):
             elif method == "tools/list":
                 # Use public API instead of private _tool_manager
                 tools = await get_mcp_server().list_tools_public()
-                response = {"jsonrpc": "2.0", "id": message_id, "result": {"tools": [tool.model_dump() for tool in tools]}}
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": message_id,
+                    "result": {"tools": [tool.model_dump(mode="json") for tool in tools]},
+                }
                 return JSONResponse(response)
 
             elif method == "tools/call":
@@ -1112,7 +1116,7 @@ async def handle_message(request: Request):
                 response_data = {
                     "jsonrpc": "2.0",
                     "id": message_id,
-                    "result": {"content": [item.model_dump() for item in result]},
+                    "result": {"content": [item.model_dump(mode="json") for item in result]},
                 }
 
                 # If streaming is supported, stream the response
@@ -1131,7 +1135,7 @@ async def handle_message(request: Request):
                 response = {
                     "jsonrpc": "2.0",
                     "id": message_id,
-                    "result": {"resources": [res.model_dump() for res in resources]},
+                    "result": {"resources": [res.model_dump(mode="json") for res in resources]},
                 }
                 return JSONResponse(response)
 
@@ -1218,7 +1222,7 @@ async def list_tools():
     """List available tools (convenience endpoint)"""
     # Use public API instead of private _tool_manager
     tools = await get_mcp_server().list_tools_public()
-    return {"tools": [tool.model_dump() for tool in tools]}
+    return {"tools": [tool.model_dump(mode="json") for tool in tools]}
 
 
 @app.get("/resources")
@@ -1226,7 +1230,7 @@ async def list_resources():
     """List available resources (convenience endpoint)"""
     # Use public API instead of private _resource_manager
     resources = await get_mcp_server().list_resources_public()
-    return {"resources": [res.model_dump() for res in resources]}
+    return {"resources": [res.model_dump(mode="json") for res in resources]}
 
 
 # Include health check routes

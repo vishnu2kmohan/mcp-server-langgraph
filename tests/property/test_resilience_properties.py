@@ -170,8 +170,8 @@ class TestTimeoutProperties:
     """Property-based tests for timeout enforcement"""
 
     @given(
-        sleep_duration=st.floats(min_value=0.01, max_value=0.5),
-        timeout_duration=st.floats(min_value=0.02, max_value=0.4),
+        sleep_duration=st.floats(min_value=0.05, max_value=0.5),
+        timeout_duration=st.floats(min_value=0.05, max_value=0.4),
     )
     @settings(max_examples=15, deadline=3000)
     @pytest.mark.asyncio
@@ -179,12 +179,15 @@ class TestTimeoutProperties:
         """Property: Timeout correctly determines if operation times out"""
         from mcp_server_langgraph.core.exceptions import TimeoutError as ResilienceTimeoutError
 
+        # Add margin to avoid race conditions
+        margin = 0.05
+
         @with_timeout(timeout_duration)
         async def slow_operation():
             await asyncio.sleep(sleep_duration)
             return "completed"
 
-        if sleep_duration > timeout_duration:
+        if sleep_duration > timeout_duration + margin:
             # Should timeout
             with pytest.raises((ResilienceTimeoutError, asyncio.TimeoutError)):
                 await slow_operation()
