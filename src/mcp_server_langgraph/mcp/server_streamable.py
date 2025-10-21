@@ -1161,11 +1161,44 @@ async def handle_message(request: Request):
     except PermissionError as e:
         logger.warning(f"Permission denied: {e}")
         return JSONResponse(
-            status_code=403,
+            status_code=200,  # JSON-RPC errors should return 200 with error in body
             content={
                 "jsonrpc": "2.0",
                 "id": message.get("id") if "message" in locals() else None,
                 "error": {"code": -32001, "message": str(e)},
+            },
+        )
+    except ValueError as e:
+        # Validation errors (missing fields, invalid arguments)
+        logger.warning(f"Validation error: {e}")
+        return JSONResponse(
+            status_code=200,  # JSON-RPC errors should return 200 with error in body
+            content={
+                "jsonrpc": "2.0",
+                "id": message.get("id") if "message" in locals() else None,
+                "error": {"code": -32602, "message": f"Invalid params: {str(e)}"},
+            },
+        )
+    except HTTPException as e:
+        # HTTP exceptions (unknown methods, etc.)
+        logger.warning(f"HTTP exception: {e.detail}")
+        return JSONResponse(
+            status_code=200,  # JSON-RPC errors should return 200 with error in body
+            content={
+                "jsonrpc": "2.0",
+                "id": message.get("id") if "message" in locals() else None,
+                "error": {"code": -32601 if e.status_code == 400 else -32603, "message": e.detail},
+            },
+        )
+    except json.JSONDecodeError as e:
+        # Invalid JSON in request body
+        logger.warning(f"JSON parse error: {e}")
+        return JSONResponse(
+            status_code=400,  # Parse errors can return 400
+            content={
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {"code": -32700, "message": "Parse error: Invalid JSON"},
             },
         )
     except Exception as e:

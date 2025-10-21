@@ -190,6 +190,10 @@ class TestRedisCheckpointer:
         Test conversation state persists across different graph instances
         (Simulates pod restart or scaling scenario)
         """
+        # Mock LLM to avoid actual API calls
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
+
         original_backend = settings.checkpoint_backend
         original_url = settings.checkpoint_redis_url
         original_checkpointing = settings.enable_checkpointing
@@ -200,8 +204,9 @@ class TestRedisCheckpointer:
             settings.checkpoint_redis_url = "redis://localhost:6379/1"
             settings.enable_checkpointing = True
 
-            # Simulate Pod A
-            graph_a = create_agent_graph()
+            # Simulate Pod A with mocked LLM
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                graph_a = create_agent_graph()
 
             initial_state: AgentState = {
                 "messages": [HumanMessage(content="Initial message from Pod A")],
@@ -220,8 +225,9 @@ class TestRedisCheckpointer:
             except Exception as e:
                 pytest.skip(f"Redis not available: {e}")
 
-            # Simulate pod restart (new graph instance = Pod B)
-            graph_b = create_agent_graph()
+            # Simulate pod restart (new graph instance = Pod B) with mocked LLM
+            with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
+                graph_b = create_agent_graph()
 
             followup_state: AgentState = {
                 "messages": [HumanMessage(content="Followup message from Pod B")],

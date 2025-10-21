@@ -491,13 +491,18 @@ class InMemoryUserProvider(UserProvider):
 
         user = self.users_db[username]
 
+        # Use timestamp with microseconds for unique jti to ensure each token is different
+        now = datetime.now(timezone.utc)
+        jti = f"{username}_{int(now.timestamp() * 1000000)}"  # Microsecond precision
+
         payload = {
             "sub": user["user_id"],
             "username": username,
             "email": user["email"],
             "roles": user["roles"],
-            "exp": datetime.now(timezone.utc) + timedelta(seconds=expires_in),
-            "iat": datetime.now(timezone.utc),
+            "exp": now + timedelta(seconds=expires_in),
+            "iat": now,
+            "jti": jti,  # Unique token ID to ensure each token is different
         }
 
         token = jwt.encode(payload, self.secret_key, algorithm="HS256")

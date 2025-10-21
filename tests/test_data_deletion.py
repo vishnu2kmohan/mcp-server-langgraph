@@ -125,7 +125,7 @@ class TestDataDeletionAuditLogging:
         await mock_user_profile_store.create(profile)
 
         # Mock logger to verify logging
-        with patch("mcp_server_langgraph.compliance.data_deletion.logger") as mock_logger:
+        with patch("mcp_server_langgraph.compliance.gdpr.data_deletion.logger") as mock_logger:
             result = await service.delete_user_account(
                 user_id=user_id,
                 username=username,

@@ -459,8 +459,10 @@ class TestEndToEndToolImprovements:
             "conversation:design_discussion",
         ]
 
-        # Mock the auth.list_accessible_resources method
-        mcp_server.auth.list_accessible_resources = mocker.AsyncMock(return_value=conversations)
+        # Use mocker.patch to properly mock the auth method
+        # This ensures the mock is called correctly and doesn't raise exceptions
+        async_mock = mocker.AsyncMock(return_value=conversations)
+        mocker.patch.object(mcp_server.auth, "list_accessible_resources", new=async_mock)
 
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)

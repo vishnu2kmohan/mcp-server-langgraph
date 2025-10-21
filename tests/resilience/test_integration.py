@@ -17,14 +17,37 @@ from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff,
 @pytest.fixture
 def reset_all_resilience():
     """Reset all resilience state before each test"""
-    import mcp_server_langgraph.resilience.bulkhead as bh_module
-    import mcp_server_langgraph.resilience.circuit_breaker as cb_module
+    # Import modules and clear state before test
+    try:
+        import mcp_server_langgraph.resilience.bulkhead as bh_module
+        import mcp_server_langgraph.resilience.circuit_breaker as cb_module
 
-    cb_module._circuit_breakers.clear()
-    bh_module._bulkhead_semaphores.clear()
+        # Ensure module-level dicts exist before clearing
+        if hasattr(cb_module, "_circuit_breakers"):
+            cb_module._circuit_breakers.clear()
+        if hasattr(bh_module, "_bulkhead_semaphores"):
+            bh_module._bulkhead_semaphores.clear()
+    except (ImportError, AttributeError) as e:
+        # If modules not loaded or attributes missing, log and continue
+        import logging
+
+        logging.getLogger(__name__).warning(f"Could not reset resilience state: {e}")
+
     yield
-    cb_module._circuit_breakers.clear()
-    bh_module._bulkhead_semaphores.clear()
+
+    # Clean up after test
+    try:
+        import mcp_server_langgraph.resilience.bulkhead as bh_module
+        import mcp_server_langgraph.resilience.circuit_breaker as cb_module
+
+        if hasattr(cb_module, "_circuit_breakers"):
+            cb_module._circuit_breakers.clear()
+        if hasattr(bh_module, "_bulkhead_semaphores"):
+            bh_module._bulkhead_semaphores.clear()
+    except (ImportError, AttributeError) as e:
+        import logging
+
+        logging.getLogger(__name__).warning(f"Could not clean up resilience state: {e}")
 
 
 class TestFullResilienceStack:
