@@ -63,8 +63,8 @@ def _safe_eval(expression: str) -> float:
     """
 
     def _eval(node: Any) -> float:
-        if isinstance(node, ast.Num):  # Number
-            return float(node.n)
+        if isinstance(node, ast.Constant):  # Number (Python 3.8+)
+            return float(node.value)
         elif isinstance(node, ast.BinOp):  # Binary operation
             op_func = SAFE_OPERATORS.get(type(node.op))
             if op_func is None:

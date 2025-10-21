@@ -29,7 +29,7 @@ def validate_with_schema(mcp_schemas):
         """Validate instance against a schema definition by name"""
         # Use $ref to reference the definition, allowing proper resolution
         schema_ref = {"$ref": f"#/definitions/{schema_name}"}
-        validator.validate(instance, schema_ref)
+        validator.evolve(schema=schema_ref).validate(instance)
 
     return validate_instance
 

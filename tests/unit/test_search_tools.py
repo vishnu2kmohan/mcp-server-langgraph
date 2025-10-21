@@ -155,6 +155,8 @@ class TestWebSearch:
     @patch("mcp_server_langgraph.tools.search_tools.settings")
     async def test_web_search_tavily_success(self, mock_settings, mock_async_client):
         """Test successful web search with Tavily API"""
+        from unittest.mock import Mock
+
         mock_settings.tavily_api_key = "test-tavily-key"
         mock_settings.serper_api_key = None
 
@@ -169,7 +171,7 @@ class TestWebSearch:
                 ]
             }
         )
-        mock_response.raise_for_status = AsyncMock()
+        mock_response.raise_for_status = Mock()  # Sync method, not async
 
         # Mock client context manager
         mock_client_instance = AsyncMock()
@@ -197,6 +199,8 @@ class TestWebSearch:
     @patch("mcp_server_langgraph.tools.search_tools.settings")
     async def test_web_search_serper_success(self, mock_settings, mock_async_client):
         """Test successful web search with Serper API"""
+        from unittest.mock import Mock
+
         mock_settings.tavily_api_key = None
         mock_settings.serper_api_key = "test-serper-key"
 
@@ -211,7 +215,7 @@ class TestWebSearch:
                 ]
             }
         )
-        mock_response.raise_for_status = AsyncMock()
+        mock_response.raise_for_status = Mock()  # Sync method, not async
 
         # Mock client context manager
         mock_client_instance = AsyncMock()
@@ -257,13 +261,15 @@ class TestWebSearch:
     @patch("mcp_server_langgraph.tools.search_tools.settings")
     async def test_web_search_serper_api_error(self, mock_settings, mock_async_client):
         """Test web search handles Serper API errors"""
+        from unittest.mock import Mock
+
         mock_settings.tavily_api_key = None
         mock_settings.serper_api_key = "test-serper-key"
 
         # Mock API error response
         mock_response = AsyncMock()
         mock_response.status_code = 429  # Rate limit
-        mock_response.raise_for_status.side_effect = Exception("Rate limit exceeded")
+        mock_response.raise_for_status = Mock(side_effect=Exception("Rate limit exceeded"))
 
         mock_client_instance = AsyncMock()
         mock_client_instance.post.return_value = mock_response
@@ -324,7 +330,7 @@ class TestSearchToolSchemas:
         """Test search_knowledge_base has proper schema"""
         assert search_knowledge_base.name == "search_knowledge_base"
         assert search_knowledge_base.description is not None
-        schema = search_knowledge_base.args_schema.schema()
+        schema = search_knowledge_base.args_schema.model_json_schema()
         assert "query" in str(schema)
         assert "limit" in str(schema)
 
@@ -332,6 +338,6 @@ class TestSearchToolSchemas:
         """Test web_search has proper schema"""
         assert web_search.name == "web_search"
         assert web_search.description is not None
-        schema = web_search.args_schema.schema()
+        schema = web_search.args_schema.model_json_schema()
         assert "query" in str(schema)
         assert "num_results" in str(schema)

@@ -36,9 +36,9 @@ class TestReadFile:
         assert len(result) < len(test_content)
         assert "truncated" in result
 
-    def test_read_nonexistent_file(self):
+    def test_read_nonexistent_file(self, tmp_path):
         """Test error handling for nonexistent file"""
-        result = read_file.invoke({"file_path": "/tmp/nonexistent_file_12345.txt"})
+        result = read_file.invoke({"file_path": str(tmp_path / "nonexistent_file_12345.txt")})
         assert "Error" in result or "does not exist" in result
 
     def test_read_directory_instead_of_file(self, tmp_path):
@@ -111,9 +111,9 @@ class TestListDirectory:
         result = list_directory.invoke({"directory_path": str(empty_dir)})
         assert "(empty)" in result
 
-    def test_list_nonexistent_directory(self):
+    def test_list_nonexistent_directory(self, tmp_path):
         """Test error handling for nonexistent directory"""
-        result = list_directory.invoke({"directory_path": "/tmp/nonexistent_dir_12345"})
+        result = list_directory.invoke({"directory_path": str(tmp_path / "nonexistent_dir_12345")})
         assert "Error" in result or "does not exist" in result
 
     def test_list_file_instead_of_directory(self, tmp_path):
@@ -195,7 +195,7 @@ class TestFilesystemToolSchemas:
         """Test read_file has proper schema"""
         assert read_file.name == "read_file"
         assert read_file.description is not None
-        schema = read_file.args_schema.schema()
+        schema = read_file.args_schema.model_json_schema()
         assert "file_path" in str(schema)
         assert "max_bytes" in str(schema)
 
@@ -203,7 +203,7 @@ class TestFilesystemToolSchemas:
         """Test list_directory has proper schema"""
         assert list_directory.name == "list_directory"
         assert list_directory.description is not None
-        schema = list_directory.args_schema.schema()
+        schema = list_directory.args_schema.model_json_schema()
         assert "directory_path" in str(schema)
         assert "show_hidden" in str(schema)
 
@@ -211,7 +211,7 @@ class TestFilesystemToolSchemas:
         """Test search_files has proper schema"""
         assert search_files.name == "search_files"
         assert search_files.description is not None
-        schema = search_files.args_schema.schema()
+        schema = search_files.args_schema.model_json_schema()
         assert "directory_path" in str(schema)
         assert "pattern" in str(schema)
         assert "max_results" in str(schema)

@@ -69,11 +69,11 @@ class Alert:
     severity: AlertSeverity
     category: AlertCategory
     source: str  # Component that generated the alert
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
     dedupe_key: Optional[str] = None  # For deduplication
     alert_id: str = field(
-        default_factory=lambda: hashlib.md5(str(datetime.utcnow()).encode(), usedforsecurity=False).hexdigest()[:16]
+        default_factory=lambda: hashlib.md5(str(datetime.now(timezone.utc)).encode(), usedforsecurity=False).hexdigest()[:16]
     )  # nosec B324
 
     def __post_init__(self) -> None:

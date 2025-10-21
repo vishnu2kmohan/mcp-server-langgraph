@@ -12,6 +12,7 @@ Implements Anthropic's best practices for writing tools for agents:
 
 import json
 import logging
+from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Literal, Optional
 
 import uvicorn
@@ -30,6 +31,53 @@ from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for application startup and shutdown.
+
+    CRITICAL: This ensures observability is initialized before handling requests,
+    preventing crashes when launching with: uvicorn mcp_server_langgraph.mcp.server_streamable:app
+
+    Without this handler, logger/tracer/metrics usage in get_mcp_server() and downstream
+    code would fail when observability hasn't been initialized yet.
+    """
+    # Startup
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    if not is_initialized():
+        logger_temp = logging.getLogger(__name__)
+        logger_temp.info("Initializing observability from startup event")
+
+        # Initialize with file logging if configured
+        enable_file_logging = getattr(settings, "enable_file_logging", False)
+        init_observability(settings=settings, enable_file_logging=enable_file_logging)
+
+        logger_temp.info("Observability initialized successfully")
+
+    # Initialize global auth middleware for FastAPI dependencies
+    # This must happen AFTER observability is initialized (for logging)
+    try:
+        from mcp_server_langgraph.auth.middleware import FASTAPI_AVAILABLE, set_global_auth_middleware
+
+        if FASTAPI_AVAILABLE:
+            # Get MCP server instance (creates it if needed)
+            mcp_server = get_mcp_server()
+
+            # Set the auth middleware globally for FastAPI dependencies
+            set_global_auth_middleware(mcp_server.auth)
+
+            logger.info("Global auth middleware initialized for FastAPI dependencies")
+    except Exception as e:
+        logger.warning(f"Failed to initialize global auth middleware: {e}")
+
+    yield
+
+    # Shutdown (if needed in the future)
+    pass
+
 
 app = FastAPI(
     title="MCP Server with LangGraph",
@@ -57,6 +105,7 @@ app = FastAPI(
         429: {"description": "Too Many Requests - Rate limit exceeded"},
         500: {"description": "Internal Server Error"},
     },
+    lifespan=lifespan,
 )
 
 # CORS middleware
@@ -71,54 +120,6 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
 )
-
-
-# ============================================================================
-# Startup Event Handler
-# ============================================================================
-
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Initialize observability and auth middleware on application startup.
-
-    CRITICAL: This ensures observability is initialized before handling requests,
-    preventing crashes when launching with: uvicorn mcp_server_langgraph.mcp.server_streamable:app
-
-    Without this handler, logger/tracer/metrics usage in get_mcp_server() and downstream
-    code would fail when observability hasn't been initialized yet.
-    """
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-    if not is_initialized():
-        logger_temp = logging.getLogger(__name__)
-        logger_temp.info("Initializing observability from startup event")
-
-        # Initialize with file logging if configured
-        enable_file_logging = getattr(settings, "enable_file_logging", False)
-        init_observability(settings=settings, enable_file_logging=enable_file_logging)
-
-        logger_temp.info("Observability initialized successfully")
-    else:
-        # Already initialized (e.g., via main() entry point)
-        pass
-
-    # Initialize global auth middleware for FastAPI dependencies
-    # This must happen AFTER observability is initialized (for logging)
-    try:
-        from mcp_server_langgraph.auth.middleware import FASTAPI_AVAILABLE, set_global_auth_middleware
-
-        if FASTAPI_AVAILABLE:
-            # Get MCP server instance (creates it if needed)
-            mcp_server = get_mcp_server()
-
-            # Set the auth middleware globally for FastAPI dependencies
-            set_global_auth_middleware(mcp_server.auth)
-
-            logger.info("Global auth middleware initialized for FastAPI dependencies")
-    except Exception as e:
-        logger.warning(f"Failed to initialize global auth middleware: {e}")
 
 
 class ChatInput(BaseModel):

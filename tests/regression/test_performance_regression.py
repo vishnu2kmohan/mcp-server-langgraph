@@ -185,7 +185,7 @@ class TestAuthPerformance:
         token = auth.create_token("alice")
 
         async def validate():
-            auth.verify_token(token)
+            await auth.verify_token(token)
 
         stats = await measure_latency_async(validate, iterations=100)
 

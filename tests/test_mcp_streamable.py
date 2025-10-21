@@ -455,7 +455,7 @@ class TestMCPStreamableHTTP:
     def test_message_endpoint_handles_json_parse_error(self, client):
         """Test message endpoint handles invalid JSON gracefully"""
         # Send invalid JSON
-        response = client.post("/message", data="not valid json", headers={"Content-Type": "application/json"})
+        response = client.post("/message", content="not valid json", headers={"Content-Type": "application/json"})
 
         # JSON-RPC can return 200 with error in body, or 400 for parse errors
         # Both are acceptable depending on implementation

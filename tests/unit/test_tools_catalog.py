@@ -141,7 +141,7 @@ class TestToolInvocation:
         import json
 
         for tool in ALL_TOOLS:
-            schema = tool.args_schema.schema()
+            schema = tool.args_schema.model_json_schema()
             # Should not raise exception
             json_str = json.dumps(schema)
             assert len(json_str) > 0

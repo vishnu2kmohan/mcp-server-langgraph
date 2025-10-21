@@ -177,13 +177,13 @@ class TestToolSchemas:
         """Test that calculator tool has proper schema"""
         assert calculator.name == "calculator"
         assert calculator.description is not None
-        assert "expression" in str(calculator.args_schema.schema())
+        assert "expression" in str(calculator.args_schema.model_json_schema())
 
     def test_add_has_schema(self):
         """Test that add tool has proper schema"""
         assert add.name == "add"
         assert add.description is not None
-        schema = add.args_schema.schema()
+        schema = add.args_schema.model_json_schema()
         assert "a" in str(schema)
         assert "b" in str(schema)
 
