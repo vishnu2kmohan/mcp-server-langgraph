@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761017855874,
+  "lastUpdate": 1761018507587,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -6964,6 +6964,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002706370283676261",
             "extra": "mean: 97.19923627644584 usec\nrounds: 5210"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "898bc7279e0abcc777d8d73e0ab9b3dd2e712c44",
+          "message": "perf: parallelize and optimize Makefile targets for 40-80% speedup\n\n## Summary\nComprehensive Makefile optimization with variable extraction, parallel\nexecution, and improved maintainability. Achieves 40-80% performance\nimprovements across multiple targets.\n\n## Changes\n\n### 1. Added Makefile Variables (Makefile:3-10)\n- PYTEST = .venv/bin/pytest\n- DOCKER_COMPOSE = docker compose\n- UV_RUN = uv run\n- COV_SRC = src/mcp_server_langgraph\n- COV_OPTIONS = --cov=$(COV_SRC)\n\nImpact: Improved maintainability, DRY principle\n\n### 2. Parallelized Test Execution (11 targets)\nAdded `-n auto` flag for pytest-xdist parallel execution:\n\n**Critical fixes** (were missing parallelization):\n- test (Makefile:142-147) - Now runs in parallel\n- test-unit (Makefile:149-152) - Now runs in parallel\n\n**Additional improvements**:\n- test-coverage-combined (Makefile:240-267)\n- test-property (Makefile:283-286)\n- test-contract (Makefile:288-291)\n- test-regression (Makefile:293-296)\n- test-fast (Makefile:717-722)\n- test-fast-unit (Makefile:724-726)\n- test-slow (Makefile:758-760)\n- test-compliance (Makefile:762-764)\n- test-failed (Makefile:766-768)\n\nImpact: ~40-60% speedup for test execution\n\n### 3. Parallelized Shell-Based Targets (5 targets)\nImplemented background process parallelization using `&` and `wait`:\n\n**lint-check** (Makefile:365-387)\n- Runs 5 linters in parallel: flake8, black, isort, mypy, bandit\n- Uses sed to prefix output with tool name\n- Speedup: ~80% faster\n\n**lint-fix** (Makefile:389-404)\n- Runs black and isort in parallel\n- Speedup: ~50% faster\n\n**validate-kustomize** (Makefile:336-348)\n- Validates 3 environments in parallel: dev, staging, production\n\n**health-check** (Makefile:612-639)\n- Checks 7 ports in parallel\n\n**clean** (Makefile:444-452)\n- Runs cleanup operations in parallel\n- Speedup: ~60% faster\n\n### 4. Added Performance Documentation (Makefile:12-19)\nUpdated help target with performance tips:\n- Documents `make -j` flag for parallel builds\n- Examples of how to use parallel execution\n- Mentions optimized targets\n\n### 5. Code Consistency\nAll operations now use consistent patterns:\n- All pytest calls use $(PYTEST) variable\n- All docker-compose calls use $(DOCKER_COMPOSE) variable\n- All uv run calls use $(UV_RUN) variable\n\n## Performance Impact\n\n| Target | Before | After | Speedup |\n|--------|--------|-------|---------|\n| test | Sequential | Parallel (-n auto) | ~40-60% |\n| test-unit | Sequential | Parallel (-n auto) | ~40-60% |\n| lint-check | Sequential (5) | Parallel (5) | ~80% |\n| lint-fix | Sequential (2) | Parallel (2) | ~50% |\n| validate-kustomize | Sequential (3) | Parallel (3) | ~66% |\n| health-check | Sequential (7) | Parallel (7) | ~85% |\n| clean | Sequential (5) | Parallel (5) | ~60% |\n\n## Testing\n- ✅ Verified Makefile syntax with `make help`\n- ✅ Dry-run tested lint-check target\n- ✅ All targets maintain backward compatibility\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T23:46:47-04:00",
+          "tree_id": "5c2eecaf7e6ec8512ebd03b1de6d8eab342c7a96",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/898bc7279e0abcc777d8d73e0ab9b3dd2e712c44"
+        },
+        "date": 1761018507150,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51573.908016221576,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022883138810153957",
+            "extra": "mean: 19.389649504270054 usec\nrounds: 6157"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53622.550629002115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000650688436238264",
+            "extra": "mean: 18.64887045225975 usec\nrounds: 11764"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50177.467642442985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022797078005274045",
+            "extra": "mean: 19.929264010010392 usec\nrounds: 17969"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.9475359254604,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000052938220675569385",
+            "extra": "mean: 5.237040609889656 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.391395562507572,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016841352440220324",
+            "extra": "mean: 51.56926414999532 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.946488953702298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000058017123881692655",
+            "extra": "mean: 100.53798930001108 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2500794.9143909677,
+            "unit": "iter/sec",
+            "range": "stddev: 5.3993521409221744e-8",
+            "extra": "mean: 399.87285412547936 nsec\nrounds: 197278"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5231.16524101844,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014200365077963663",
+            "extra": "mean: 191.16199812593055 usec\nrounds: 2668"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2896.881873718391,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013066718231741856",
+            "extra": "mean: 345.19874941135106 usec\nrounds: 2546"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2827.020874579172,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004434349704176718",
+            "extra": "mean: 353.72925930335026 usec\nrounds: 1666"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58661.25747419991,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019793737637448662",
+            "extra": "mean: 17.04702631783532 usec\nrounds: 13945"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10800.426862095754,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0024480560344887006",
+            "extra": "mean: 92.588933082776 usec\nrounds: 5574"
           }
         ]
       }
