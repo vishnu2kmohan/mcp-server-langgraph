@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761022948599,
+  "lastUpdate": 1761023164504,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -7828,6 +7828,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000056191543066384235",
             "extra": "mean: 52.288461331384646 usec\nrounds: 5573"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a4cfadd0d895cd81827039f239f28d4661fe6f60",
+          "message": "feat: track lint workflow documentation and git hooks\n\nAdded critical lint configuration files to version control that were\npreviously ignored but should be tracked for team consistency.\n\nChanges:\n\n1. Updated .gitignore to track important .claude/ directories:\n   - !.claude/memory/ - Workflow documentation and best practices\n   - !.claude/templates/ - Project templates (ADR, API design, bug investigation)\n   - Explicitly ignore session-specific data (.claude/context/, .claude/handoff/)\n\n2. Added lint-workflow.md to version control:\n   - Comprehensive 600+ line documentation of lint enforcement\n   - Describes pre-commit/pre-push hook behavior\n   - Documents mypy gradual rollout strategy\n   - Includes troubleshooting and best practices\n   - Previously ignored but essential for developer onboarding\n\n3. Added git hooks to trackable location:\n   - Created scripts/git-hooks/pre-push\n   - Allows team to share and update hooks consistently\n   - Original in .git/hooks/pre-push (not tracked by git by design)\n   - Developers can copy from scripts/git-hooks/ to .git/hooks/\n\n4. Added Claude Code settings to track:\n   - .claude/settings.local.json - PreToolUse hooks configuration\n   - Ensures consistent lint enforcement in Claude Code\n\n5. Added templates for documentation consistency:\n   - ADR template (Architecture Decision Records)\n   - API design template\n   - Bug investigation template\n\nWhy these should be tracked:\n- lint-workflow.md is documentation, not session data\n- Templates are project standards, not personal config\n- Git hooks should be shared across team\n- Claude Code settings affect code quality enforcement\n\nFiles Added:\n- .claude/memory/lint-workflow.md (18,953 bytes)\n- .claude/templates/*.md (3 templates)\n- scripts/git-hooks/pre-push (trackable hook location)\n- .claude/settings.local.json (hook configuration)\n\nFiles Modified:\n- .gitignore (updated claude tracking rules)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T01:05:00-04:00",
+          "tree_id": "6b40b47026b40d5700ea863a359535d14b6a94ea",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a4cfadd0d895cd81827039f239f28d4661fe6f60"
+        },
+        "date": 1761023164103,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51508.83406944767,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000220385514497977",
+            "extra": "mean: 19.414145516315372 usec\nrounds: 6178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52855.56676178278,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002451553280891449",
+            "extra": "mean: 18.919483060449366 usec\nrounds: 12338"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49245.95808579272,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025366739322066135",
+            "extra": "mean: 20.30623504690218 usec\nrounds: 19511"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.22742630748775,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001883983535706846",
+            "extra": "mean: 5.2293754055552215 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.373241295339064,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011994127315647407",
+            "extra": "mean: 51.617588649999746 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94637025573548,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006413794001426983",
+            "extra": "mean: 100.5391890999995 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2572715.8594433023,
+            "unit": "iter/sec",
+            "range": "stddev: 5.5489971215463076e-8",
+            "extra": "mean: 388.6943038538212 nsec\nrounds: 192716"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5120.91475736217,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001354973445885324",
+            "extra": "mean: 195.27761100930903 usec\nrounds: 545"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2877.522922840022,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009719229419684154",
+            "extra": "mean: 347.52112383279723 usec\nrounds: 2463"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2831.0468332878913,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004773320558500595",
+            "extra": "mean: 353.22623004389885 usec\nrounds: 1591"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 54852.19701850161,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012538600760208049",
+            "extra": "mean: 18.230810329487817 usec\nrounds: 13534"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 19388.338477517034,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000056083223004846165",
+            "extra": "mean: 51.57739541011277 usec\nrounds: 5316"
           }
         ]
       }
