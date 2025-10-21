@@ -70,7 +70,8 @@ jobs:
         run: |
           # CI uses 100 examples for comprehensive testing (dev defaults to 25 for speed)
           # HYPOTHESIS_PROFILE=ci activates the CI profile registered in conftest.py
-          HYPOTHESIS_PROFILE=ci uv run pytest -m property -v --tb=short
+          # Match local development: parallel execution with OTEL disabled
+          OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m property -v --tb=short
         timeout-minutes: 15
         env:
           HYPOTHESIS_PROFILE: ci
@@ -105,7 +106,8 @@ jobs:
 
       - name: Run contract tests
         run: |
-          uv run pytest -m contract -v --tb=short
+          # Match local development: parallel execution with OTEL disabled
+          OTEL_SDK_DISABLED=true uv run pytest -n auto -m contract -v --tb=short
 
       - name: Upload OpenAPI schema
         if: always()
@@ -131,7 +133,8 @@ jobs:
 
       - name: Run regression tests
         run: |
-          uv run pytest -m regression -v --tb=short
+          # Match local development: parallel execution with OTEL disabled
+          OTEL_SDK_DISABLED=true uv run pytest -n auto -m regression -v --tb=short
 
       - name: Check for performance regressions
         run: |
