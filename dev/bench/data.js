@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761030521151,
+  "lastUpdate": 1761032133690,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -9448,6 +9448,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002452894868528283",
             "extra": "mean: 59.2339053055155 usec\nrounds: 4203"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d80a213b214797b1586ec74faef8de9a599f9042",
+          "message": "fix(tests): suppress non-actionable test warnings\n\nAdd pytest filterwarnings to suppress three categories of warnings that\nwere creating noise in test output without indicating actual issues:\n\n1. GDPR in-memory storage warnings (16 occurrences)\n   - Expected in test environment where in-memory storage is appropriate\n   - Production guard prevents use in production (ENVIRONMENT check)\n\n2. aiohttp enable_cleanup_closed deprecation warnings (11 occurrences)\n   - Third-party library issue in Python 3.12+\n   - Fix must come from aiohttp upstream\n\n3. Circuit breaker coroutine warnings (1 occurrence)\n   - Spurious warning from pybreaker's state machine when inspecting async functions\n   - Does not affect functionality (test passes)\n\nVerified with comprehensive test run:\n- 59 tests passed, 11 skipped, 0 warnings\n- All affected modules tested: circuit_breaker, agent, distributed_checkpointing, gdpr\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T03:34:20-04:00",
+          "tree_id": "7ece4efafd23a317bdc1160506263e909b79e58a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d80a213b214797b1586ec74faef8de9a599f9042"
+        },
+        "date": 1761032132536,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57044.30819167219,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001165737340131621",
+            "extra": "mean: 17.530232755912156 usec\nrounds: 6466"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 58897.88007425738,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012259935004931893",
+            "extra": "mean: 16.978539783422054 usec\nrounds: 12568"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 55466.05016184045,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001347068599017425",
+            "extra": "mean: 18.029046544366704 usec\nrounds: 18434"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.21278114658097,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021568613732586685",
+            "extra": "mean: 5.229775928176132 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.56170468961748,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000378052795198254",
+            "extra": "mean: 51.120289149992004 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.942137268148384,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003748973641680437",
+            "extra": "mean: 100.58199489999993 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2695327.077217635,
+            "unit": "iter/sec",
+            "range": "stddev: 3.314015013535523e-8",
+            "extra": "mean: 371.01248618490206 nsec\nrounds: 195313"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6543.285249850973,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011299051865155985",
+            "extra": "mean: 152.82842820015762 usec\nrounds: 383"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2843.8796885753436,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008350682139395975",
+            "extra": "mean: 351.6323155361594 usec\nrounds: 2491"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3082.599068523128,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000047526749088171855",
+            "extra": "mean: 324.4015772959731 usec\nrounds: 1753"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 65073.97714709352,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011659610916278531",
+            "extra": "mean: 15.367125905638062 usec\nrounds: 11874"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 12386.41415920329,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00234835040809434",
+            "extra": "mean: 80.73361564912514 usec\nrounds: 5227"
           }
         ]
       }
