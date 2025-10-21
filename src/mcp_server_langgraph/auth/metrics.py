@@ -9,6 +9,8 @@ Defines comprehensive metrics for monitoring authentication workflows:
 - OpenFGA role synchronization
 """
 
+from typing import Optional
+
 from opentelemetry import metrics as otel_metrics
 
 # Get meter for auth metrics
@@ -169,7 +171,7 @@ auth_session_limit_reached = meter.create_counter(
 # Helper functions for common metric patterns
 
 
-def record_login_attempt(provider: str, result: str, duration_ms: float):
+def record_login_attempt(provider: str, result: str, duration_ms: float) -> None:
     """Record login attempt with all relevant metrics"""
     auth_login_attempts.add(1, {"provider": provider, "result": result})
     auth_login_duration.record(duration_ms, {"provider": provider})
@@ -178,13 +180,13 @@ def record_login_attempt(provider: str, result: str, duration_ms: float):
         auth_login_failures.add(1, {"provider": provider, "reason": result})
 
 
-def record_token_verification(result: str, duration_ms: float, provider: str = "unknown"):
+def record_token_verification(result: str, duration_ms: float, provider: str = "unknown") -> None:
     """Record token verification metrics"""
     auth_token_verifications.add(1, {"result": result, "provider": provider})
     auth_token_verify_duration.record(duration_ms, {"provider": provider})
 
 
-def record_session_operation(operation: str, backend: str, result: str, duration_ms: float):
+def record_session_operation(operation: str, backend: str, result: str, duration_ms: float) -> None:
     """Record session operation metrics"""
     if operation == "create":
         auth_session_created.add(1, {"backend": backend, "result": result})
@@ -202,7 +204,7 @@ def record_session_operation(operation: str, backend: str, result: str, duration
     auth_session_operations_duration.record(duration_ms, {"operation": operation, "backend": backend})
 
 
-def record_jwks_operation(operation: str, result: str, duration_ms: float = None):
+def record_jwks_operation(operation: str, result: str, duration_ms: Optional[float] = None) -> None:
     """Record JWKS cache operation metrics"""
     if operation in ["hit", "miss"]:
         auth_jwks_cache_operations.add(1, {"type": operation})
@@ -213,7 +215,7 @@ def record_jwks_operation(operation: str, result: str, duration_ms: float = None
         auth_jwks_fetch_duration.record(duration_ms)
 
 
-def record_openfga_sync(result: str, duration_ms: float, tuple_count: int):
+def record_openfga_sync(result: str, duration_ms: float, tuple_count: int) -> None:
     """Record OpenFGA role sync metrics"""
     auth_openfga_sync_attempts.add(1, {"result": result})
     auth_openfga_sync_duration.record(duration_ms)
@@ -224,7 +226,7 @@ def record_openfga_sync(result: str, duration_ms: float, tuple_count: int):
         auth_openfga_sync_errors.add(1, {"result": result})
 
 
-def record_role_mapping(mapping_type: str, rules_count: int, tuples_count: int, duration_ms: float):
+def record_role_mapping(mapping_type: str, rules_count: int, tuples_count: int, duration_ms: float) -> None:
     """Record role mapping metrics"""
     auth_role_mapping_operations.add(1, {"type": mapping_type})
     auth_role_mapping_rules_applied.record(rules_count)

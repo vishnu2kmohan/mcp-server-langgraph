@@ -113,7 +113,7 @@ class ConditionalMappingConfig(BaseModel):
 class MappingRule:
     """Base class for mapping rules"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any]) -> None:
         self.config = config
 
     def applies_to(self, user: KeycloakUser) -> bool:
@@ -128,7 +128,7 @@ class MappingRule:
 class SimpleRoleMapping(MappingRule):
     """Simple 1:1 role to tuple mapping"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
         # Validate and store config as Pydantic model
         self.mapping_config = SimpleRoleMappingConfig(**config)
@@ -161,7 +161,7 @@ class SimpleRoleMapping(MappingRule):
 class GroupMapping(MappingRule):
     """Pattern-based group mapping with regex"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
         # Validate and store config as Pydantic model
         self.mapping_config = GroupMappingConfig(**config)
@@ -196,7 +196,7 @@ class GroupMapping(MappingRule):
 class ConditionalMapping(MappingRule):
     """Conditional mapping based on user attributes"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__(config)
         # Validate and store config as Pydantic model
         self.mapping_config = ConditionalMappingConfig(**config)
@@ -222,9 +222,9 @@ class ConditionalMapping(MappingRule):
 
         # Apply operator (already validated by Pydantic)
         if self.operator == "==":
-            return attr_value == self.value
+            return attr_value == self.value  # type: ignore[no-any-return]
         elif self.operator == "!=":
-            return attr_value != self.value
+            return attr_value != self.value  # type: ignore[no-any-return]
         elif self.operator == "in":
             return attr_value in self.value
         elif self.operator == ">=":
@@ -257,7 +257,7 @@ class RoleMapper:
     OpenFGA tuples from Keycloak user data.
     """
 
-    def __init__(self, config_path: Optional[str] = None, config_dict: Optional[Dict[str, Any]] = None):
+    def __init__(self, config_path: Optional[str] = None, config_dict: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize role mapper
 
@@ -279,7 +279,7 @@ class RoleMapper:
 
         logger.info(f"RoleMapper initialized with {len(self.rules)} rules")
 
-    def load_from_file(self, config_path: str):
+    def load_from_file(self, config_path: str) -> None:
         """Load configuration from YAML file"""
         path = Path(config_path)
 
@@ -299,7 +299,7 @@ class RoleMapper:
             logger.error(f"Failed to load role mapping config: {e}", exc_info=True)
             self._load_default_config()
 
-    def load_from_dict(self, config: Dict[str, Any]):
+    def load_from_dict(self, config: Dict[str, Any]) -> None:
         """Load configuration from dictionary"""
         self.rules = []
 
@@ -320,7 +320,7 @@ class RoleMapper:
 
         logger.info(f"Loaded {len(self.rules)} mapping rules")
 
-    def _load_default_config(self):
+    def _load_default_config(self) -> None:
         """Load default hardcoded mapping for backward compatibility"""
         default_config = {
             "simple_mappings": [
@@ -351,7 +351,7 @@ class RoleMapper:
             List of OpenFGA tuples
         """
         tuples = []
-        seen_tuples: Set[tuple] = set()  # Deduplicate
+        seen_tuples: Set[tuple] = set()  # Deduplicate # type: ignore[type-arg]
 
         # Apply all mapping rules
         for rule in self.rules:
@@ -407,7 +407,7 @@ class RoleMapper:
 
         return expanded_tuples
 
-    def add_rule(self, rule: MappingRule):
+    def add_rule(self, rule: MappingRule) -> None:
         """Dynamically add a mapping rule"""
         self.rules.append(rule)
         logger.info(f"Added new mapping rule: {type(rule).__name__}")
@@ -442,7 +442,7 @@ class RoleMapper:
         # Validate hierarchies
         for role, inherited in self.hierarchies.items():
             if not isinstance(inherited, list):
-                errors.append(f"Hierarchy for '{role}': must be a list")
+                errors.append(f"Hierarchy for '{role}': must be a list")  # type: ignore[unreachable]
 
             # Check for circular dependencies
             if role in inherited:

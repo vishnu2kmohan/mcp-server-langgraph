@@ -770,7 +770,7 @@ class EvidenceCollector:
 
     def _summarize_by_type(self, evidence_items: List[Evidence]) -> Dict[str, int]:
         """Summarize evidence by type"""
-        summary = {}
+        summary = {}  # type: ignore[var-annotated]
         for evidence in evidence_items:
             type_name = evidence.evidence_type.value
             summary[type_name] = summary.get(type_name, 0) + 1
@@ -778,7 +778,7 @@ class EvidenceCollector:
 
     def _summarize_by_control(self, evidence_items: List[Evidence]) -> Dict[str, int]:
         """Summarize evidence by control category"""
-        summary = {}
+        summary = {}  # type: ignore[var-annotated]
         for evidence in evidence_items:
             control = evidence.control_category.value
             summary[control] = summary.get(control, 0) + 1
@@ -800,7 +800,7 @@ class EvidenceCollector:
             "recommendations": all_recommendations,
         }
 
-    async def _save_report(self, report: ComplianceReport):
+    async def _save_report(self, report: ComplianceReport) -> None:
         """Save report to file"""
         report_file = self.evidence_dir / f"{report.report_id}.json"
 

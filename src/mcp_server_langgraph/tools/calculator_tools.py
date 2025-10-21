@@ -12,7 +12,7 @@ from langchain_core.tools import tool
 from pydantic import Field
 
 
-def _safe_log(level: str, message: str, **kwargs) -> None:
+def _safe_log(level: str, message: str, **kwargs: Any) -> None:
     """Safely log message, handling cases where observability isn't initialized"""
     try:
         from mcp_server_langgraph.observability.telemetry import logger
@@ -23,7 +23,7 @@ def _safe_log(level: str, message: str, **kwargs) -> None:
         pass
 
 
-def _safe_metric(metric_name: str, value: float, attributes: dict) -> None:
+def _safe_metric(metric_name: str, value: float, attributes: dict[str, Any]) -> None:
     """Safely record metric, handling cases where observability isn't initialized"""
     try:
         from mcp_server_langgraph.observability.telemetry import metrics
@@ -64,17 +64,20 @@ def _safe_eval(expression: str) -> float:
 
     def _eval(node: Any) -> float:
         if isinstance(node, ast.Constant):  # Number (Python 3.8+)
-            return float(node.value)
+            if isinstance(node.value, (int, float)):
+                return float(node.value)
+            else:
+                raise ValueError(f"Invalid constant type: {type(node.value).__name__}")
         elif isinstance(node, ast.BinOp):  # Binary operation
             op_func = SAFE_OPERATORS.get(type(node.op))
             if op_func is None:
                 raise ValueError(f"Unsafe operator: {type(node.op).__name__}")
-            return op_func(_eval(node.left), _eval(node.right))
+            return float(op_func(_eval(node.left), _eval(node.right)))  # type: ignore[operator]
         elif isinstance(node, ast.UnaryOp):  # Unary operation
             op_func = SAFE_OPERATORS.get(type(node.op))
             if op_func is None:
                 raise ValueError(f"Unsafe operator: {type(node.op).__name__}")
-            return op_func(_eval(node.operand))
+            return float(op_func(_eval(node.operand)))  # type: ignore[operator]
         else:
             raise ValueError(f"Unsafe node type: {type(node).__name__}")
 

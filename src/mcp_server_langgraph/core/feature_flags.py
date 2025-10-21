@@ -5,7 +5,7 @@ Enables gradual rollouts, A/B testing, and safe feature deployment.
 All flags are configurable via environment variables for different environments.
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -223,7 +223,7 @@ class FeatureFlags(BaseSettings):
         """
         return getattr(self, feature_name, False)
 
-    def get_feature_value(self, feature_name: str, default: Optional[any] = None) -> any:
+    def get_feature_value(self, feature_name: str, default: Optional[Any] = None) -> Any:
         """
         Get feature flag value with fallback
 

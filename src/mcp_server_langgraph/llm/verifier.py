@@ -53,7 +53,7 @@ class OutputVerifier:
     - Supports iterative refinement
     """
 
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         criteria: Optional[list[VerificationCriterion]] = None,
         quality_threshold: float = 0.7,
@@ -122,7 +122,7 @@ class OutputVerifier:
                 judgment = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
 
                 # Parse judgment into structured result
-                result = self._parse_verification_judgment(judgment, threshold)
+                result = self._parse_verification_judgment(judgment, threshold)  # type: ignore[ list]
 
                 span.set_attribute("verification.passed", result.passed)
                 span.set_attribute("verification.overall_score", result.overall_score)
@@ -295,7 +295,7 @@ FEEDBACK:
                 try:
                     criterion, score = line.split(":", 1)
                     criterion = criterion.strip(" -")
-                    score = float(score.strip())
+                    score = float(score.strip())  # type: ignore[assignment]
                     criterion_scores[criterion] = score
                 except (ValueError, IndexError):
                     pass
@@ -316,7 +316,7 @@ FEEDBACK:
         # Calculate overall score from criteria if not explicitly provided in OVERALL
         if overall_score is None:
             if criterion_scores:
-                overall_score = sum(criterion_scores.values()) / len(criterion_scores)
+                overall_score = sum(criterion_scores.values()) / len(criterion_scores)  # type: ignore[arg-type]
                 logger.info("Calculated overall score from criterion scores")
             else:
                 overall_score = 0.5  # Default fallback

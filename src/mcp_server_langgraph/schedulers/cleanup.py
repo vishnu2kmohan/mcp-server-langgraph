@@ -6,7 +6,7 @@ Runs daily at configured time (default: 3 AM UTC).
 """
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -48,7 +48,7 @@ class CleanupScheduler:
         self.scheduler = AsyncIOScheduler()
         self.retention_service: Optional[DataRetentionService] = None
 
-    async def start(self):
+    async def start(self) -> None:
         """
         Start the cleanup scheduler
 
@@ -107,13 +107,13 @@ class CleanupScheduler:
         self.scheduler.start()
         logger.info("Cleanup scheduler started")
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the cleanup scheduler"""
         logger.info("Stopping data retention cleanup scheduler")
         self.scheduler.shutdown(wait=True)
         logger.info("Cleanup scheduler stopped")
 
-    async def _run_cleanup(self):
+    async def _run_cleanup(self) -> None:
         """
         Execute data retention cleanup
 
@@ -158,7 +158,7 @@ class CleanupScheduler:
         except Exception as e:
             logger.error(f"Data retention cleanup failed: {e}", exc_info=True)
 
-    async def _send_cleanup_notification(self, results):
+    async def _send_cleanup_notification(self, results: Any) -> None:  # type: ignore[name-defined]
         """
         Send notification about cleanup execution
 
@@ -182,7 +182,7 @@ class CleanupScheduler:
 
             # Determine severity based on deleted count
             if total_deleted > 1000:
-                severity = AlertSeverity.WARNING
+                severity = AlertSeverity.WARNING  # type: ignore[attr-defined]
                 title = "Large Data Cleanup Executed"
             else:
                 severity = AlertSeverity.INFO
@@ -212,12 +212,12 @@ class CleanupScheduler:
         try:
             job = self.scheduler.get_job("data_retention_cleanup")
             if job and hasattr(job, "next_run_time") and job.next_run_time:
-                return job.next_run_time.isoformat()
+                return job.next_run_time.isoformat()  # type: ignore[no-any-return]
         except Exception:
             pass
         return "Not scheduled"
 
-    async def run_now(self):
+    async def run_now(self) -> None:
         """
         Manually trigger cleanup immediately (for testing/admin)
 
@@ -232,7 +232,7 @@ class CleanupScheduler:
 _cleanup_scheduler: Optional[CleanupScheduler] = None
 
 
-async def start_cleanup_scheduler(
+async def start_cleanup_scheduler(  # type: ignore[no-untyped-def]
     session_store: Optional[SessionStore] = None,
     config_path: str = "config/retention_policies.yaml",
     dry_run: bool = False,
@@ -267,7 +267,7 @@ async def start_cleanup_scheduler(
     await _cleanup_scheduler.start()
 
 
-async def stop_cleanup_scheduler():
+async def stop_cleanup_scheduler() -> None:
     """Stop the global cleanup scheduler"""
     global _cleanup_scheduler
 

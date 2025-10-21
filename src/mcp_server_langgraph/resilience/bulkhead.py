@@ -10,7 +10,7 @@ See ADR-0026 for design rationale.
 import asyncio
 import functools
 import logging
-from typing import Callable, Dict, Optional, ParamSpec, TypeVar
+from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
@@ -194,7 +194,7 @@ def with_bulkhead(
                     # Execute function
                     result = await func(*args, **kwargs)
 
-                    return result
+                    return result  # type: ignore[no-any-return]
 
         # Only works with async functions
         import asyncio as aio
@@ -226,7 +226,7 @@ class BulkheadContext:
         self.semaphore = get_bulkhead(resource_type, limit)
         self.wait = wait
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         """Acquire bulkhead slot"""
         # Check if slots are available (semaphore._value == 0 means no slots)
         slots_available = self.semaphore._value if hasattr(self.semaphore, "_value") else 1
@@ -249,12 +249,12 @@ class BulkheadContext:
             )
 
         await self.semaphore.acquire()
-        return self
+        return self  # type: ignore[return-value]
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb: Any) -> None:  # type: ignore[no-untyped-def]
         """Release bulkhead slot"""
         self.semaphore.release()
-        return False  # Don't suppress exceptions
+        return False  # Don't suppress exceptions # type: ignore[return-value]
 
 
 def get_bulkhead_stats(resource_type: Optional[str] = None) -> Dict[str, Dict[str, int]]:

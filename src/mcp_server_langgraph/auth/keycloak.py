@@ -89,7 +89,7 @@ class KeycloakConfig(BaseModel):
 class TokenValidator:
     """JWT token validator using Keycloak JWKS"""
 
-    def __init__(self, config: KeycloakConfig):
+    def __init__(self, config: KeycloakConfig) -> None:
         self.config = config
         self._jwks_cache: Optional[Dict[str, Any]] = None
         self._jwks_cache_time: Optional[datetime] = None
@@ -124,7 +124,7 @@ class TokenValidator:
                     self._jwks_cache_time = datetime.now(timezone.utc)
 
                     logger.info("JWKS fetched and cached", extra={"keys_count": len(jwks.get("keys", []))})
-                    return jwks
+                    return jwks  # type: ignore[no-any-return]
 
                 except httpx.HTTPError as e:
                     logger.error(f"Failed to fetch JWKS: {e}", exc_info=True)
@@ -202,7 +202,7 @@ class TokenValidator:
 
                 metrics.successful_calls.add(1, {"operation": "verify_token"})
 
-                return payload
+                return payload  # type: ignore[no-any-return]
 
             except jwt.ExpiredSignatureError:
                 logger.warning("Token expired")
@@ -230,7 +230,7 @@ class KeycloakClient:
     - Admin API operations
     """
 
-    def __init__(self, config: KeycloakConfig):
+    def __init__(self, config: KeycloakConfig) -> None:
         """
         Initialize Keycloak client
 
@@ -279,7 +279,7 @@ class KeycloakClient:
                     logger.info("User authenticated successfully", extra={"username": username})
                     metrics.successful_calls.add(1, {"operation": "authenticate_user"})
 
-                    return tokens
+                    return tokens  # type: ignore[no-any-return]
 
                 except httpx.HTTPStatusError as e:
                     logger.warning(
@@ -335,7 +335,7 @@ class KeycloakClient:
                     logger.info("Token refreshed successfully")
                     metrics.successful_calls.add(1, {"operation": "refresh_token"})
 
-                    return tokens
+                    return tokens  # type: ignore[no-any-return]
 
                 except httpx.HTTPStatusError as e:
                     logger.warning("Token refresh failed", extra={"status_code": e.response.status_code})
@@ -369,7 +369,7 @@ class KeycloakClient:
                     logger.info("User info retrieved", extra={"sub": userinfo.get("sub")})
                     metrics.successful_calls.add(1, {"operation": "get_userinfo"})
 
-                    return userinfo
+                    return userinfo  # type: ignore[no-any-return]
 
                 except httpx.HTTPError as e:
                     logger.error(f"Failed to get user info: {e}", exc_info=True)
@@ -579,7 +579,7 @@ async def sync_user_to_openfga(
                     tuples.append({"user": keycloak_user.user_id, "relation": "member", "object": f"organization:{org_name}"})
 
             # Map client roles
-            client_roles = keycloak_user.client_roles.get(keycloak_user.client_id, [])
+            client_roles = keycloak_user.client_roles.get(keycloak_user.client_id, [])  # type: ignore[attr-defined]
             for role in client_roles:
                 tuples.append({"user": keycloak_user.user_id, "relation": "assignee", "object": f"role:{role}"})
 

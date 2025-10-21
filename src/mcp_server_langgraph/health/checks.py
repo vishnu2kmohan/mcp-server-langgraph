@@ -27,13 +27,13 @@ class HealthResponse(BaseModel):
 
 
 @app.get("/health", response_model=HealthResponse)
-async def health_check():
+async def health_check() -> None:
     """
     Liveness probe - returns 200 if application is running
 
     Used by Kubernetes to determine if pod should be restarted
     """
-    return HealthResponse(
+    return HealthResponse(  # type: ignore[return-value]
         status="healthy",
         timestamp=datetime.now(timezone.utc).isoformat(),
         version=settings.service_version,
@@ -42,7 +42,7 @@ async def health_check():
 
 
 @app.get("/health/ready", response_model=HealthResponse)
-async def readiness_check():
+async def readiness_check() -> None:
     """
     Readiness probe - returns 200 if application can serve traffic
 
@@ -96,7 +96,7 @@ async def readiness_check():
     response_status = "ready" if all_healthy else "not_ready"
     http_status = status.HTTP_200_OK if all_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
 
-    return JSONResponse(
+    return JSONResponse(  # type: ignore[return-value]
         status_code=http_status,
         content=HealthResponse(
             status=response_status,
@@ -108,7 +108,7 @@ async def readiness_check():
 
 
 @app.get("/health/startup")
-async def startup_check():
+async def startup_check() -> None:
     """
     Startup probe - returns 200 when application has fully started
 
@@ -126,13 +126,15 @@ async def startup_check():
         checks["logging"] = {"status": "initialized"}
     except Exception as e:
         checks["logging"] = {"status": "failed", "error": str(e)}
+        # type: ignore[return-value]
         return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"status": "starting", "checks": checks})
 
+    # type: ignore[return-value]
     return {"status": "started", "timestamp": datetime.now(timezone.utc).isoformat(), "checks": checks}
 
 
 @app.get("/metrics/prometheus")
-async def prometheus_metrics():
+async def prometheus_metrics() -> None:
     """
     Prometheus metrics endpoint
 
@@ -140,7 +142,7 @@ async def prometheus_metrics():
     """
     # This would integrate with OpenTelemetry's Prometheus exporter
     # For now, return basic info
-    return {
+    return {  # type: ignore[return-value]
         "# HELP langgraph_agent_info Application information",
         "# TYPE langgraph_agent_info gauge",
         f'langgraph_agent_info{{version="{settings.service_version}",service="{settings.service_name}"}} 1',

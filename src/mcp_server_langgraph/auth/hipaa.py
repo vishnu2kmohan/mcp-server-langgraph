@@ -288,7 +288,7 @@ class HIPAAControls:
 
         return None
 
-    async def log_phi_access(
+    async def log_phi_access(  # type: ignore[no-untyped-def]
         self,
         user_id: str,
         action: str,
@@ -349,7 +349,7 @@ class HIPAAControls:
                 await alerting_service.initialize()
 
                 # Determine severity based on success
-                alert_severity = AlertSeverity.INFO if success else AlertSeverity.WARNING
+                alert_severity = AlertSeverity.INFO if success else AlertSeverity.WARNING  # type: ignore[attr-defined]
 
                 alert = Alert(
                     title=f"HIPAA: PHI Access {action.upper()}",
@@ -361,6 +361,7 @@ class HIPAAControls:
                 )
 
                 await alerting_service.send_alert(alert)
+                # type: ignore[attr-defined]
                 logger.debug("PHI access logged to SIEM", extra={"log_entry_id": log_entry.log_entry_id})
 
             except Exception as e:
@@ -459,7 +460,7 @@ def get_hipaa_controls() -> HIPAAControls:
     return _hipaa_controls
 
 
-def set_hipaa_controls(controls: HIPAAControls):
+def set_hipaa_controls(controls: HIPAAControls) -> None:
     """
     Set global HIPAA controls instance
 

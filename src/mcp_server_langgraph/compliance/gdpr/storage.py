@@ -302,7 +302,7 @@ class ConsentStore(ABC):
 class InMemoryUserProfileStore(UserProfileStore):
     """In-memory implementation of user profile storage"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.profiles: Dict[str, UserProfile] = {}
 
     async def create(self, profile: UserProfile) -> bool:
@@ -336,7 +336,7 @@ class InMemoryUserProfileStore(UserProfileStore):
 class InMemoryConversationStore(ConversationStore):
     """In-memory implementation of conversation storage"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.conversations: Dict[str, Conversation] = {}
         self.user_conversations: Dict[str, List[str]] = {}
 
@@ -404,7 +404,7 @@ class InMemoryConversationStore(ConversationStore):
 class InMemoryPreferencesStore(PreferencesStore):
     """In-memory implementation of preferences storage"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.preferences: Dict[str, UserPreferences] = {}
 
     async def get(self, user_id: str) -> Optional[UserPreferences]:
@@ -436,7 +436,7 @@ class InMemoryPreferencesStore(PreferencesStore):
 class InMemoryAuditLogStore(AuditLogStore):
     """In-memory implementation of audit log storage"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.logs: Dict[str, AuditLogEntry] = {}
         self.user_logs: Dict[str, List[str]] = {}
 
@@ -499,7 +499,7 @@ class InMemoryAuditLogStore(AuditLogStore):
 class InMemoryConsentStore(ConsentStore):
     """In-memory implementation of consent storage"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.consents: Dict[str, ConsentRecord] = {}
         self.user_consents: Dict[str, List[str]] = {}
 

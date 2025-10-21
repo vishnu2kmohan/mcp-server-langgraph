@@ -30,7 +30,7 @@ class ResponseOptimizer:
     - High-signal information extraction
     """
 
-    def __init__(self, model: str = "gpt-4"):
+    def __init__(self, model: str = "gpt-4") -> None:
         """
         Initialize response optimizer.
 

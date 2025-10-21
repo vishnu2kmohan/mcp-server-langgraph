@@ -104,7 +104,7 @@ class SearchConversationsInput(BaseModel):
 class MCPAgentServer:
     """MCP Server exposing LangGraph agent with OpenFGA authorization"""
 
-    def __init__(self, openfga_client: OpenFGAClient | None = None):
+    def __init__(self, openfga_client: OpenFGAClient | None = None) -> None:
         self.server = Server("langgraph-agent")
 
         # Initialize OpenFGA client
@@ -206,10 +206,10 @@ class MCPAgentServer:
             ),
         ]
 
-    def _setup_handlers(self):
+    def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers"""
 
-        @self.server.list_tools()
+        @self.server.list_tools()  # type: ignore[misc]
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -224,7 +224,7 @@ class MCPAgentServer:
                 logger.info("Listing available tools")
                 return await self.list_tools_public()
 
-        @self.server.call_tool()
+        @self.server.call_tool()  # type: ignore[misc]
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
@@ -289,13 +289,14 @@ class MCPAgentServer:
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
-        @self.server.list_resources()
+        @self.server.list_resources()  # type: ignore[misc]
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
+                # type: ignore[arg-type]
                 return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]
 
-    async def _handle_chat(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
+    async def _handle_chat(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """
         Handle agent_chat tool invocation.
 
@@ -328,7 +329,7 @@ class MCPAgentServer:
             conversation_resource = f"conversation:{thread_id}"
 
             # Check if conversation exists by trying to get state from checkpointer
-            graph = get_agent_graph()
+            graph = get_agent_graph()  # type: ignore[func-returns-value]
             conversation_exists = False
             if hasattr(graph, "checkpointer") and graph.checkpointer is not None:
                 try:
@@ -371,13 +372,22 @@ class MCPAgentServer:
                 "next_action": "",
                 "user_id": user_id,
                 "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,
+                "routing_confidence": None,
+                "reasoning": None,
+                "compaction_applied": None,
+                "original_message_count": None,
+                "verification_passed": None,
+                "verification_score": None,
+                "verification_feedback": None,
+                "refinement_attempts": None,
+                "user_request": message,
             }
 
             # Run the agent graph
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await get_agent_graph().ainvoke(initial_state, config)
+                result = await get_agent_graph().ainvoke(initial_state, config)  # type: ignore[func-returns-value]
 
                 # Extract response
                 response_message = result["messages"][-1]
@@ -428,7 +438,7 @@ class MCPAgentServer:
                 span.record_exception(e)
                 raise
 
-    async def _handle_get_conversation(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
+    async def _handle_get_conversation(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """Retrieve conversation history from checkpointer"""
         with tracer.start_as_current_span("agent.get_conversation"):
             thread_id = arguments["thread_id"]
@@ -445,7 +455,7 @@ class MCPAgentServer:
             # Retrieve conversation state from checkpointer
             try:
                 # Get the checkpointer from agent_graph
-                graph = get_agent_graph()
+                graph = get_agent_graph()  # type: ignore[func-returns-value]
                 if not hasattr(graph, "checkpointer") or graph.checkpointer is None:
                     logger.warning("Checkpointing not enabled, cannot retrieve conversation history")
                     return [
@@ -522,7 +532,7 @@ class MCPAgentServer:
                     )
                 ]
 
-    async def _handle_search_conversations(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
+    async def _handle_search_conversations(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """
         Search conversations (replacing list-all approach).
 
@@ -640,14 +650,14 @@ class MCPAgentServer:
 
             return [TextContent(type="text", text=response_text)]
 
-    async def run(self):
+    async def run(self) -> None:
         """Run the MCP server"""
         logger.info("Starting MCP Agent Server")
         async with stdio_server() as (read_stream, write_stream):
             await self.server.run(read_stream, write_stream, self.server.create_initialization_options())
 
 
-async def main():
+async def main() -> None:
     """Main entry point"""
     # Initialize observability system before creating server
     from mcp_server_langgraph.core.config import settings

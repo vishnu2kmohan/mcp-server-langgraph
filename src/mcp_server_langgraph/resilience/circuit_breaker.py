@@ -45,14 +45,14 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
     Emits metrics and logs for observability.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
         self._state = CircuitBreakerState.CLOSED
         self._last_state_change = datetime.now()
 
     def state_change(
         self, breaker: pybreaker.CircuitBreaker, old: pybreaker.CircuitBreakerState, new: pybreaker.CircuitBreakerState
-    ):
+    ) -> None:
         """Called when circuit breaker state changes"""
         old_state = self._map_state(old)
         new_state = self._map_state(new)
@@ -79,17 +79,18 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
             attributes={"service": self.name, "state": new_state.value},
         )
 
-    def before_call(self, breaker: pybreaker.CircuitBreaker, func: Callable, *args: Any, **kwargs: Any):
+    # type: ignore[override]
+    def before_call(self, breaker: pybreaker.CircuitBreaker, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
         """Called before calling the protected function"""
         pass
 
-    def success(self, breaker: pybreaker.CircuitBreaker):
+    def success(self, breaker: pybreaker.CircuitBreaker) -> None:
         """Called on successful call"""
         from mcp_server_langgraph.observability.telemetry import circuit_breaker_success_counter
 
         circuit_breaker_success_counter.add(1, attributes={"service": self.name})
 
-    def failure(self, breaker: pybreaker.CircuitBreaker, exception: Exception):
+    def failure(self, breaker: pybreaker.CircuitBreaker, exception: Exception) -> None:  # type: ignore[override]
         """Called on failed call"""
         from mcp_server_langgraph.observability.telemetry import circuit_breaker_failure_counter
 
@@ -114,9 +115,9 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
     @staticmethod
     def _map_state(state: pybreaker.CircuitBreakerState) -> CircuitBreakerState:
         """Map pybreaker state to our enum"""
-        if state == pybreaker.STATE_CLOSED:
+        if state == pybreaker.STATE_CLOSED:  # type: ignore[comparison-overlap]
             return CircuitBreakerState.CLOSED
-        elif state == pybreaker.STATE_OPEN:
+        elif state == pybreaker.STATE_OPEN:  # type: ignore[comparison-overlap]
             return CircuitBreakerState.OPEN
         else:  # STATE_HALF_OPEN
             return CircuitBreakerState.HALF_OPEN
@@ -221,7 +222,7 @@ def circuit_breaker(  # noqa: C901
                 try:
                     # Wrap the async function in a sync callable for pybreaker
                     # pybreaker will handle the state transitions
-                    def _sync_wrapper():
+                    def _sync_wrapper() -> None:
                         # This won't work directly - we need a different approach
                         raise RuntimeError("Should not be called directly")
 
@@ -246,9 +247,9 @@ def circuit_breaker(  # noqa: C901
                         if fallback:
                             logger.info(f"Using fallback for {name}")
                             if asyncio.iscoroutinefunction(fallback):
-                                return await fallback(*args, **kwargs)
+                                return await fallback(*args, **kwargs)  # type: ignore[no-any-return]
                             else:
-                                return fallback(*args, **kwargs)
+                                return fallback(*args, **kwargs)  # type: ignore[no-any-return]
                         else:
                             # Raise our custom exception
                             from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
@@ -260,12 +261,12 @@ def circuit_breaker(  # noqa: C901
 
                     # Call the function
                     try:
-                        result = await func(*args, **kwargs)
+                        result: T = await func(*args, **kwargs)  # type: ignore[misc]
 
                         # Success - handle via state machine
                         with breaker._lock:
                             breaker._state_storage.increment_counter()
-                            for listener in breaker.listeners:
+                            for listener in breaker.listeners:  # type: ignore[assignment]
                                 listener.success(breaker)
                             breaker.state.on_success()
 
@@ -278,13 +279,13 @@ def circuit_breaker(  # noqa: C901
                             with breaker._lock:
                                 if breaker.is_system_error(e):
                                     breaker._inc_counter()
-                                    for listener in breaker.listeners:
+                                    for listener in breaker.listeners:  # type: ignore[assignment]
                                         listener.failure(breaker, e)
                                     breaker.state.on_failure(e)
                                 else:
                                     # Not a system error, treat as success
                                     breaker._state_storage.increment_counter()
-                                    for listener in breaker.listeners:
+                                    for listener in breaker.listeners:  # type: ignore[assignment]
                                         listener.success(breaker)
                                     breaker.state.on_success()
                         except pybreaker.CircuitBreakerError:
@@ -307,11 +308,11 @@ def circuit_breaker(  # noqa: C901
             """Sync wrapper with circuit breaker"""
             # Similar to async_wrapper but for sync functions
             try:
-                result = breaker.call(func, *args, **kwargs)
+                result: T = breaker.call(func, *args, **kwargs)
                 return result
             except pybreaker.CircuitBreakerError as e:
                 if fallback:
-                    return fallback(*args, **kwargs)
+                    return fallback(*args, **kwargs)  # type: ignore[no-any-return]
                 else:
                     from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 
@@ -324,9 +325,9 @@ def circuit_breaker(  # noqa: C901
         import asyncio
 
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper  # type: ignore
+            return async_wrapper  # type: ignore[return-value]
         else:
-            return sync_wrapper  # type: ignore
+            return sync_wrapper
 
     return decorator
 
@@ -362,7 +363,7 @@ def get_circuit_breaker_state(name: str) -> CircuitBreakerState:
         return CircuitBreakerState.CLOSED
 
     breaker = _circuit_breakers[name]
-    return CircuitBreakerMetricsListener._map_state(breaker.current_state)
+    return CircuitBreakerMetricsListener._map_state(breaker.current_state)  # type: ignore[arg-type]
 
 
 def get_all_circuit_breaker_states() -> Dict[str, CircuitBreakerState]:

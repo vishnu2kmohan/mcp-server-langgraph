@@ -4,7 +4,10 @@ Infisical integration for secure secrets management
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from opentelemetry.trace import Tracer
 
 # Conditional import - infisical-python is an optional dependency
 try:
@@ -19,7 +22,7 @@ except ImportError:
 _stdlib_logger = logging.getLogger(__name__)
 
 
-def _get_logger():
+def _get_logger() -> logging.Logger:
     """
     Get logger instance, preferring observability logger if initialized.
 
@@ -29,13 +32,13 @@ def _get_logger():
         from mcp_server_langgraph.observability.telemetry import get_logger, is_initialized
 
         if is_initialized():
-            return get_logger()
+            return get_logger()  # type: ignore[no-any-return]
     except (ImportError, RuntimeError):
         pass
     return _stdlib_logger
 
 
-def _get_tracer():
+def _get_tracer() -> Optional["Tracer"]:
     """
     Get tracer instance if observability is initialized, otherwise return None.
     """
@@ -43,7 +46,7 @@ def _get_tracer():
         from mcp_server_langgraph.observability.telemetry import get_tracer, is_initialized
 
         if is_initialized():
-            return get_tracer()
+            return get_tracer()  # type: ignore[no-any-return]
     except (ImportError, RuntimeError):
         pass
     return None
@@ -141,7 +144,7 @@ class SecretsManager:
         else:
             return self._get_secret_impl(key, path, use_cache, fallback, None)
 
-    def _get_secret_impl(self, key: str, path: str, use_cache: bool, fallback: Optional[str], span) -> Optional[str]:
+    def _get_secret_impl(self, key: str, path: str, use_cache: bool, fallback: Optional[str], span: Any) -> Optional[str]:
         """Implementation of get_secret with optional tracing span."""
         if span:
             span.set_attribute("secret.key", key)
@@ -152,7 +155,7 @@ class SecretsManager:
         # Check cache first
         if use_cache and cache_key in self._cache:
             _get_logger().debug("Secret retrieved from cache", extra={"key": key})
-            return self._cache[cache_key]
+            return self._cache[cache_key]  # type: ignore[no-any-return]
 
         # Fallback if client not initialized
         if not self.client:
@@ -178,7 +181,7 @@ class SecretsManager:
 
             if span:
                 span.set_attribute("secret.found", True)
-            return value
+            return value  # type: ignore[no-any-return]
 
         except Exception as e:
             _get_logger().error(f"Failed to retrieve secret '{key}': {e}", extra={"key": key, "path": path}, exc_info=True)
@@ -339,7 +342,7 @@ class SecretsManager:
             _get_logger().error(f"Failed to delete secret '{key}': {e}", exc_info=True)
             return False
 
-    def invalidate_cache(self, key: Optional[str] = None):
+    def invalidate_cache(self, key: Optional[str] = None) -> None:
         """
         Invalidate secret cache
 

@@ -9,7 +9,7 @@ Enables switching between different user management systems:
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 import jwt
 from pydantic import BaseModel, ConfigDict, Field
@@ -30,6 +30,16 @@ except ImportError:
 # ============================================================================
 # Pydantic Models for Type-Safe Authentication Responses
 # ============================================================================
+
+
+class UserDBEntry(TypedDict):
+    """Type definition for user database entries"""
+
+    user_id: str
+    email: str
+    password: str
+    roles: List[str]
+    active: bool
 
 
 class UserData(BaseModel):
@@ -78,16 +88,16 @@ class AuthResponse(BaseModel):
     """
 
     authorized: bool = Field(..., description="Whether authentication was successful")
-    username: Optional[str] = Field(None, description="Username if authorized")
-    user_id: Optional[str] = Field(None, description="User ID if authorized")
-    email: Optional[str] = Field(None, description="Email if authorized")
+    username: Optional[str] = Field(default=None, description="Username if authorized")
+    user_id: Optional[str] = Field(default=None, description="User ID if authorized")
+    email: Optional[str] = Field(default=None, description="Email if authorized")
     roles: List[str] = Field(default_factory=list, description="User roles if authorized")
-    reason: Optional[str] = Field(None, description="Failure reason if not authorized")
-    error: Optional[str] = Field(None, description="Error details if not authorized")
+    reason: Optional[str] = Field(default=None, description="Failure reason if not authorized")
+    error: Optional[str] = Field(default=None, description="Error details if not authorized")
     # Keycloak-specific fields (optional)
-    access_token: Optional[str] = Field(None, description="JWT access token (Keycloak)")
-    refresh_token: Optional[str] = Field(None, description="JWT refresh token (Keycloak)")
-    expires_in: Optional[int] = Field(None, description="Token expiration in seconds (Keycloak)")
+    access_token: Optional[str] = Field(default=None, description="JWT access token (Keycloak)")
+    refresh_token: Optional[str] = Field(default=None, description="JWT refresh token (Keycloak)")
+    expires_in: Optional[int] = Field(default=None, description="Token expiration in seconds (Keycloak)")
 
     model_config = ConfigDict(
         frozen=False,
@@ -127,8 +137,8 @@ class TokenVerification(BaseModel):
     """
 
     valid: bool = Field(..., description="Whether token is valid")
-    payload: Optional[Dict[str, Any]] = Field(None, description="Token payload if valid")
-    error: Optional[str] = Field(None, description="Error message if not valid")
+    payload: Optional[Dict[str, Any]] = Field(default=None, description="Token payload if valid")
+    error: Optional[str] = Field(default=None, description="Error message if not valid")
 
     model_config = ConfigDict(
         frozen=False,
@@ -229,7 +239,7 @@ class InMemoryUserProvider(UserProvider):
     NOT suitable for large-scale production (use KeycloakUserProvider instead).
     """
 
-    def __init__(self, secret_key: Optional[str] = None, use_password_hashing: bool = False):
+    def __init__(self, secret_key: Optional[str] = None, use_password_hashing: bool = False) -> None:
         """
         Initialize in-memory user provider
 
@@ -267,6 +277,7 @@ class InMemoryUserProvider(UserProvider):
         self.use_password_hashing = use_password_hashing and BCRYPT_AVAILABLE
 
         # Initialize users with hashed or plaintext passwords
+        self.users_db: Dict[str, UserDBEntry] = {}
         self._init_users()
 
         if self.use_password_hashing:
@@ -334,7 +345,7 @@ class InMemoryUserProvider(UserProvider):
         hash_bytes = password_hash.encode("utf-8")
         return bcrypt.checkpw(password_bytes, hash_bytes)
 
-    def _init_users(self):
+    def _init_users(self) -> None:
         """Initialize user database with default users"""
         # Default plaintext passwords for development
         default_users = {
@@ -343,19 +354,17 @@ class InMemoryUserProvider(UserProvider):
             "admin": ("admin123", ["admin"]),
         }
 
-        self.users_db = {}
-
         for username, (password, roles) in default_users.items():
             # Hash password if hashing enabled
             stored_password = self._hash_password(password) if self.use_password_hashing else password
 
-            self.users_db[username] = {
-                "user_id": f"user:{username}",
-                "email": f"{username}@acme.com",
-                "password": stored_password,
-                "roles": roles,
-                "active": True,
-            }
+            self.users_db[username] = UserDBEntry(
+                user_id=f"user:{username}",
+                email=f"{username}@acme.com",
+                password=stored_password,
+                roles=roles,
+                active=True,
+            )
 
     def add_user(self, username: str, password: str, email: str, roles: list[str]) -> None:
         """
@@ -369,13 +378,13 @@ class InMemoryUserProvider(UserProvider):
         """
         stored_password = self._hash_password(password) if self.use_password_hashing else password
 
-        self.users_db[username] = {
-            "user_id": f"user:{username}",
-            "email": email,
-            "password": stored_password,
-            "roles": roles,
-            "active": True,
-        }
+        self.users_db[username] = UserDBEntry(
+            user_id=f"user:{username}",
+            email=email,
+            password=stored_password,
+            roles=roles,
+            active=True,
+        )
 
         logger.info(f"Added user: {username}", extra={"user_id": f"user:{username}", "roles": roles})
 
@@ -519,7 +528,7 @@ class KeycloakUserProvider(UserProvider):
     Uses Keycloak as the identity provider for authentication and user management.
     """
 
-    def __init__(self, config: KeycloakConfig, openfga_client: Optional[Any] = None, sync_on_login: bool = True):
+    def __init__(self, config: KeycloakConfig, openfga_client: Optional[Any] = None, sync_on_login: bool = True) -> None:
         """
         Initialize Keycloak user provider
 

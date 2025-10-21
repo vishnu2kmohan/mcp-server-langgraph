@@ -79,20 +79,20 @@ def _create_embeddings(
             class SentenceTransformerEmbeddings(Embeddings):
                 """Wrapper to make SentenceTransformer compatible with LangChain Embeddings interface."""
 
-                def __init__(self, model_name: str):
+                def __init__(self, model_name: str) -> None:
                     self.model = SentenceTransformer(model_name)
 
                 def embed_documents(self, texts: list[str]) -> list[list[float]]:
                     """Embed multiple documents."""
                     embeddings = self.model.encode(texts)
-                    return embeddings.tolist()
+                    return embeddings.tolist()  # type: ignore[no-any-return]
 
                 def embed_query(self, text: str) -> list[float]:
                     """Embed a single query."""
                     embedding = self.model.encode(text)
-                    return embedding.tolist()
+                    return embedding.tolist()  # type: ignore[no-any-return]
 
-            embeddings = SentenceTransformerEmbeddings(model_name)
+            embeddings = SentenceTransformerEmbeddings(model_name)  # type: ignore[assignment]
 
             logger.info(
                 "Initialized local sentence-transformers embeddings",
@@ -276,7 +276,7 @@ class DynamicContextLoader:
         expiry_date = datetime.now(timezone.utc) + timedelta(days=self.retention_days)
         return expiry_date.timestamp()
 
-    def _ensure_collection_exists(self):
+    def _ensure_collection_exists(self) -> None:
         """Create Qdrant collection if it doesn't exist."""
         try:
             collections = self.client.get_collections().collections
@@ -404,10 +404,10 @@ class DynamicContextLoader:
                 for result in results:
                     payload = result.payload
                     ref = ContextReference(
-                        ref_id=payload["ref_id"],
-                        ref_type=payload["ref_type"],
-                        summary=payload["summary"],
-                        metadata=payload.get("metadata", {}),
+                        ref_id=payload["ref_id"],  # type: ignore[ Any ]
+                        ref_type=payload["ref_type"],  # type: ignore[ Any ]
+                        summary=payload["summary"],  # type: ignore[ Any ]
+                        metadata=payload.get("metadata", {}),  # type: ignore[ Any ]
                         relevance_score=result.score,
                     )
                     references.append(ref)
@@ -529,21 +529,21 @@ class DynamicContextLoader:
             payload = result.payload
 
             reference = ContextReference(
-                ref_id=payload["ref_id"],
-                ref_type=payload["ref_type"],
-                summary=payload["summary"],
-                metadata=payload.get("metadata", {}),
+                ref_id=payload["ref_id"],  # type: ignore[ Any ]
+                ref_type=payload["ref_type"],  # type: ignore[ Any ]
+                summary=payload["summary"],  # type: ignore[ Any ]
+                metadata=payload.get("metadata", {}),  # type: ignore[ Any ]
             )
 
             # Decrypt content if it was encrypted
-            stored_content = payload["content"]
-            is_encrypted = payload.get("encrypted", False)
+            stored_content = payload["content"]  # type: ignore[ Any ]
+            is_encrypted = payload.get("encrypted", False)  # type: ignore[ Any ]
             content = self._decrypt_content(stored_content) if is_encrypted else stored_content
 
             loaded = LoadedContext(
                 reference=reference,
                 content=content,  # Decrypted content
-                token_count=payload["token_count"],
+                token_count=payload["token_count"],  # type: ignore[ Any ]
                 loaded_at=time.time(),
             )
 
@@ -611,7 +611,7 @@ class DynamicContextLoader:
             )
             messages.append(message)
 
-        return messages
+        return messages  # type: ignore[return-value]
 
 
 # Convenience functions

@@ -15,9 +15,10 @@ try:
     from redis import Redis
 
     REDIS_AVAILABLE = True
+    RedisType = Redis
 except ImportError:
     REDIS_AVAILABLE = False
-    Redis = None
+    RedisType = None  # type: ignore[assignment]
 
 
 @dataclass
@@ -30,9 +31,9 @@ class ConversationMetadata:
     last_activity: float  # Unix timestamp
     message_count: int
     title: Optional[str] = None
-    tags: list[str] = None
+    tags: Optional[list[str]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.tags is None:
             self.tags = []
 
@@ -45,7 +46,9 @@ class ConversationStore:
     Used as fallback when OpenFGA is not available.
     """
 
-    def __init__(self, backend: str = "memory", redis_url: str = "redis://localhost:6379/2", ttl_seconds: int = 604800):
+    def __init__(
+        self, backend: str = "memory", redis_url: str = "redis://localhost:6379/2", ttl_seconds: int = 604800
+    ) -> None:
         """
         Initialize conversation store.
 
@@ -64,7 +67,7 @@ class ConversationStore:
                 raise ImportError("Redis backend requires redis-py. Install with: pip install redis")
 
             try:
-                self._redis_client = redis.from_url(redis_url, decode_responses=True)
+                self._redis_client = redis.from_url(redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
                 # Test connection
                 self._redis_client.ping()
             except Exception as e:
@@ -140,7 +143,8 @@ class ConversationStore:
             key = self._redis_key(thread_id)
             data = self._redis_client.get(key)
             if data:
-                return ConversationMetadata(**json.loads(data))
+                data_str = data if isinstance(data, str) else (data.decode("utf-8") if hasattr(data, "decode") else str(data))
+                return ConversationMetadata(**json.loads(data_str))
             return None
         else:
             return self._memory_store.get(thread_id)
@@ -164,7 +168,10 @@ class ConversationStore:
             for key in self._redis_client.scan_iter(match=pattern, count=100):
                 data = self._redis_client.get(key)
                 if data:
-                    metadata = ConversationMetadata(**json.loads(data))
+                    data_str = (
+                        data if isinstance(data, str) else (data.decode("utf-8") if hasattr(data, "decode") else str(data))
+                    )
+                    metadata = ConversationMetadata(**json.loads(data_str))
                     if metadata.user_id == user_id:
                         conversations.append(metadata)
 
@@ -207,7 +214,7 @@ class ConversationStore:
                 matches.append(conv)
             elif conv.title and query_lower in conv.title.lower():
                 matches.append(conv)
-            elif any(query_lower in tag.lower() for tag in conv.tags):
+            elif conv.tags and any(query_lower in tag.lower() for tag in conv.tags):
                 matches.append(conv)
 
         return matches[:limit]
@@ -225,14 +232,14 @@ class ConversationStore:
         if self.backend == "redis" and self._redis_client:
             key = self._redis_key(thread_id)
             deleted = self._redis_client.delete(key)
-            return deleted > 0
+            return int(deleted) > 0  # type: ignore[Any ]
         else:
             if thread_id in self._memory_store:
                 del self._memory_store[thread_id]
                 return True
             return False
 
-    async def get_stats(self) -> dict:
+    async def get_stats(self) -> dict[str, object]:
         """
         Get store statistics.
 

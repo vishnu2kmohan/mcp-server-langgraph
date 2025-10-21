@@ -87,7 +87,7 @@ class SLAMonitor:
     Provides automated alerting on SLA breaches and trend analysis.
     """
 
-    def __init__(self, sla_targets: Optional[List[SLATarget]] = None):
+    def __init__(self, sla_targets: Optional[List[SLATarget]] = None) -> None:
         """
         Initialize SLA monitor
 
@@ -510,7 +510,7 @@ class SLAMonitor:
 
             return report
 
-    async def _send_sla_alert(self, severity: str, message: str, details: Dict[str, Any]):
+    async def _send_sla_alert(self, severity: str, message: str, details: Dict[str, Any]) -> None:
         """
         Send SLA alert
 
@@ -530,6 +530,7 @@ class SLAMonitor:
             await alerting_service.initialize()
 
             # Map severity string to AlertSeverity enum
+            # type: ignore[attr-defined]
             alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING
 
             from mcp_server_langgraph.integrations.alerting import AlertCategory
@@ -569,7 +570,7 @@ def get_sla_monitor() -> SLAMonitor:
     return _sla_monitor
 
 
-def set_sla_monitor(monitor: SLAMonitor):
+def set_sla_monitor(monitor: SLAMonitor) -> None:
     """
     Set global SLA monitor instance
 

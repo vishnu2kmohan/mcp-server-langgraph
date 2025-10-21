@@ -154,7 +154,7 @@ def retry_with_backoff(  # noqa: C901
 
     Usage:
         @retry_with_backoff(max_attempts=3, exponential_base=2)
-        async def call_external_api() -> dict:
+        async def call_external_api() -> dict[str, Any]:
             async with httpx.AsyncClient() as client:
                 response = await client.get("https://api.example.com")
                 return response.json()
@@ -209,9 +209,9 @@ def retry_with_backoff(  # noqa: C901
 
                 try:
                     # Execute with retry
-                    async for attempt in AsyncRetrying(**retry_kwargs):
+                    async for attempt in AsyncRetrying(**retry_kwargs):  # type: ignore[arg-type]
                         with attempt:
-                            result = await func(*args, **kwargs)
+                            result: T = await func(*args, **kwargs)  # type: ignore[misc]
                             span.set_attribute("retry.success", True)
                             span.set_attribute("retry.attempts", attempt.retry_state.attempt_number)
                             return result
@@ -240,6 +240,8 @@ def retry_with_backoff(  # noqa: C901
                             "function": func.__name__,
                         },
                     ) from e.last_attempt.exception()
+                # This should never be reached, but mypy needs an explicit return path
+                raise RuntimeError("Unreachable code")  # pragma: no cover
 
         @functools.wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
@@ -261,7 +263,7 @@ def retry_with_backoff(  # noqa: C901
                 retry_kwargs["retry"] = retry_if_exception_type(retry_on)
 
             try:
-                for attempt in Retrying(**retry_kwargs):
+                for attempt in Retrying(**retry_kwargs):  # type: ignore[arg-type]
                     with attempt:
                         return func(*args, **kwargs)
             except RetryError as e:
@@ -271,13 +273,15 @@ def retry_with_backoff(  # noqa: C901
                     message=f"Retry exhausted after {max_attempts} attempts",
                     metadata={"max_attempts": max_attempts},
                 ) from e.last_attempt.exception()
+            # This should never be reached, but mypy needs an explicit return path
+            raise RuntimeError("Unreachable code")  # pragma: no cover
 
         # Return appropriate wrapper
         import asyncio
 
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper  # type: ignore
+            return async_wrapper  # type: ignore[return-value]
         else:
-            return sync_wrapper  # type: ignore
+            return sync_wrapper
 
     return decorator

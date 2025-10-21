@@ -22,7 +22,7 @@ try:
 
     REDIS_AVAILABLE = True
 except ImportError:
-    redis = None
+    redis = None  # type: ignore[assignment]
     REDIS_AVAILABLE = False
 
 from mcp_server_langgraph.observability.telemetry import logger, tracer
@@ -502,7 +502,7 @@ class RedisSessionStore(SessionStore):
         self.decode_responses = decode_responses
 
         # Initialize Redis client
-        self.redis = redis.from_url(
+        self.redis = redis.from_url(  # type: ignore[no-untyped-call]
             redis_url,
             ssl=ssl,
             decode_responses=decode_responses,
@@ -748,6 +748,7 @@ class RedisSessionStore(SessionStore):
         return count
 
 
+# type: ignore[no-untyped-def]
 def create_session_store(backend: str = "memory", redis_url: Optional[str] = None, **kwargs) -> SessionStore:
     """
     Factory function to create session store

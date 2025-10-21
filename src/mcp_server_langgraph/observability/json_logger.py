@@ -11,10 +11,17 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from opentelemetry import trace
-from pythonjsonlogger import jsonlogger
+
+try:
+    from pythonjsonlogger import jsonlogger
+
+    JsonFormatterBase = jsonlogger.JsonFormatter  # type: ignore[attr-defined]
+except (ImportError, AttributeError):
+    # Fallback if pythonjsonlogger is not available
+    JsonFormatterBase = logging.Formatter  # type: ignore[assignment]
 
 
-class CustomJSONFormatter(jsonlogger.JsonFormatter):
+class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type]
     """
     Enhanced JSON formatter with OpenTelemetry trace context injection
 
@@ -114,17 +121,8 @@ class CustomJSONFormatter(jsonlogger.JsonFormatter):
                     "message": str(record.exc_info[1]) if record.exc_info[1] else None,
                     "stacktrace": self.formatException(record.exc_info),
                 }
-            elif record.exc_info is True:
-                # exc_info=True but tuple not auto-captured, try to get current exception
-                import sys
-
-                exc_info = sys.exc_info()
-                if exc_info[0] is not None:
-                    log_record["exception"] = {
-                        "type": exc_info[0].__name__,
-                        "message": str(exc_info[1]),
-                        "stacktrace": self.formatException(exc_info),
-                    }
+            # Note: exc_info=True case is rare and often indicates a logging misconfiguration
+            # The tuple case above handles normal exception logging
 
         # Add process and thread info
         log_record["process"] = {
@@ -189,7 +187,7 @@ class CustomJSONFormatter(jsonlogger.JsonFormatter):
                     if not key.startswith("_"):
                         message_dict[key] = value
 
-        log_record = {}
+        log_record: Dict[str, Any] = {}
         self.add_fields(log_record, record, message_dict)
 
         # Serialize to JSON

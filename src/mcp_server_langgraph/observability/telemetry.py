@@ -11,8 +11,6 @@ from typing import Any
 
 from opentelemetry import metrics as otel_metrics
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricExporter, PeriodicExportingMetricReader
@@ -20,6 +18,27 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
+# Conditional imports for OTLP exporters (optional dependencies)
+try:
+    from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter as OTLPMetricExporterGRPC
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter as OTLPSpanExporterGRPC
+
+    GRPC_AVAILABLE = True
+except ImportError:
+    GRPC_AVAILABLE = False
+    OTLPMetricExporterGRPC = None  # type: ignore
+    OTLPSpanExporterGRPC = None  # type: ignore
+
+try:
+    from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter as OTLPMetricExporterHTTP
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as OTLPSpanExporterHTTP
+
+    HTTP_AVAILABLE = True
+except ImportError:
+    HTTP_AVAILABLE = False
+    OTLPMetricExporterHTTP = None  # type: ignore
+    OTLPSpanExporterHTTP = None  # type: ignore
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 
@@ -62,7 +81,7 @@ class ObservabilityConfig:
         if self.enable_langsmith:
             self._setup_langsmith()
 
-    def _setup_tracing(self):
+    def _setup_tracing(self) -> None:
         """Configure distributed tracing"""
         # Get version from settings
         try:
@@ -88,9 +107,15 @@ class ObservabilityConfig:
 
         provider = TracerProvider(resource=resource)
 
-        # OTLP exporter for production
-        otlp_exporter = OTLPSpanExporter(endpoint=self.otlp_endpoint)
-        provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+        # OTLP exporter for production (if available)
+        if GRPC_AVAILABLE and OTLPSpanExporterGRPC is not None:
+            otlp_exporter = OTLPSpanExporterGRPC(endpoint=self.otlp_endpoint)
+            provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+        elif HTTP_AVAILABLE and OTLPSpanExporterHTTP is not None:
+            otlp_exporter = OTLPSpanExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))
+            provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+        elif OBSERVABILITY_VERBOSE:
+            print("⚠ OTLP exporters not available, using console-only tracing")
 
         # Console exporter for development
         if self.enable_console_export:
@@ -103,15 +128,23 @@ class ObservabilityConfig:
         if OBSERVABILITY_VERBOSE:
             print(f"✓ Tracing configured: {self.service_name}")
 
-    def _setup_metrics(self):
+    def _setup_metrics(self) -> None:
         """Configure metrics collection"""
         resource = Resource.create({"service.name": self.service_name})
 
-        # OTLP metric exporter
-        otlp_metric_exporter = OTLPMetricExporter(endpoint=self.otlp_endpoint)
-        otlp_reader = PeriodicExportingMetricReader(otlp_metric_exporter, export_interval_millis=5000)
+        readers = []
 
-        readers = [otlp_reader]
+        # OTLP metric exporter (if available)
+        if GRPC_AVAILABLE and OTLPMetricExporterGRPC is not None:
+            otlp_metric_exporter = OTLPMetricExporterGRPC(endpoint=self.otlp_endpoint)
+            otlp_reader = PeriodicExportingMetricReader(otlp_metric_exporter, export_interval_millis=5000)
+            readers.append(otlp_reader)
+        elif HTTP_AVAILABLE and OTLPMetricExporterHTTP is not None:
+            otlp_metric_exporter = OTLPMetricExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))
+            otlp_reader = PeriodicExportingMetricReader(otlp_metric_exporter, export_interval_millis=5000)
+            readers.append(otlp_reader)
+        elif OBSERVABILITY_VERBOSE:
+            print("⚠ OTLP exporters not available, using console-only metrics")
 
         # Console exporter for development
         if self.enable_console_export:
@@ -129,7 +162,7 @@ class ObservabilityConfig:
         if OBSERVABILITY_VERBOSE:
             print(f"✓ Metrics configured: {self.service_name}")
 
-    def _create_metrics(self):
+    def _create_metrics(self) -> None:
         """Create standard metrics for the service"""
         self.tool_calls = self.meter.create_counter(name="agent.tool.calls", description="Number of tool calls", unit="1")
 
@@ -231,7 +264,7 @@ class ObservabilityConfig:
             unit="1",
         )
 
-    def _setup_logging(self, enable_file_logging: bool = False):
+    def _setup_logging(self, enable_file_logging: bool = False) -> None:
         """
         Configure structured logging with OpenTelemetry and optional log rotation.
 
@@ -274,7 +307,7 @@ class ObservabilityConfig:
             log_format_str = (
                 "%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s"
             )
-            formatter = logging.Formatter(log_format_str)
+            formatter = logging.Formatter(log_format_str)  # type: ignore[assignment]
             console_formatter = formatter
 
         # Console handler (stdout) - always enabled
@@ -300,7 +333,7 @@ class ObservabilityConfig:
             )
             rotating_handler.setLevel(logging.INFO)
             rotating_handler.setFormatter(formatter)
-            handlers.append(rotating_handler)
+            handlers.append(rotating_handler)  # type: ignore[TextIO ]
 
             # Time-based rotating handler (daily rotation)
             # Rotates daily at midnight, keeps 30 days of logs
@@ -313,7 +346,7 @@ class ObservabilityConfig:
             )
             daily_handler.setLevel(logging.INFO)
             daily_handler.setFormatter(formatter)
-            handlers.append(daily_handler)
+            handlers.append(daily_handler)  # type: ignore[TextIO ]
 
             # Error log handler (only ERROR and CRITICAL)
             error_handler = RotatingFileHandler(
@@ -324,7 +357,7 @@ class ObservabilityConfig:
             )
             error_handler.setLevel(logging.ERROR)
             error_handler.setFormatter(formatter)
-            handlers.append(error_handler)
+            handlers.append(error_handler)  # type: ignore[TextIO ]
 
         # Configure root logger
         logging.basicConfig(level=logging.INFO, handlers=handlers)
@@ -341,19 +374,19 @@ class ObservabilityConfig:
             else:
                 print("  - File logging: disabled (console only)")
 
-    def get_tracer(self):
+    def get_tracer(self) -> None:
         """Get tracer instance"""
-        return self.tracer
+        return self.tracer  # type: ignore[return-value]
 
-    def get_meter(self):
+    def get_meter(self) -> None:
         """Get meter instance"""
-        return self.meter
+        return self.meter  # type: ignore[return-value]
 
-    def get_logger(self):
+    def get_logger(self) -> None:
         """Get logger instance"""
-        return self.logger
+        return self.logger  # type: ignore[return-value]
 
-    def _setup_langsmith(self):
+    def _setup_langsmith(self) -> None:
         """Configure LangSmith tracing"""
         try:
             from mcp_server_langgraph.observability.langsmith import langsmith_config
@@ -387,7 +420,7 @@ def is_initialized() -> bool:
     return _observability_config is not None
 
 
-def init_observability(
+def init_observability(  # type: ignore[no-untyped-def]
     settings=None,
     service_name: str = SERVICE_NAME,
     otlp_endpoint: str = OTLP_ENDPOINT,
@@ -469,27 +502,30 @@ def get_config() -> ObservabilityConfig:
 # Note: config is available via get_config() function or via the lazy 'config' proxy below
 
 
-def get_tracer():
+def get_tracer() -> None:
     """Get tracer instance (lazy accessor)."""
     return get_config().get_tracer()
 
 
-def get_meter():
+def get_meter() -> None:
     """Get meter instance (lazy accessor)."""
     return get_config().get_meter()
 
 
-def get_logger():
+def get_logger() -> None:
     """Get logger instance (lazy accessor)."""
     return get_config().get_logger()
 
 
 # Module-level exports with lazy initialization
 # These will raise RuntimeError if accessed before init_observability()
+# type: ignore[func-returns-value]
 tracer = type("LazyTracer", (), {"__getattr__": lambda self, name: getattr(get_tracer(), name)})()
 
+# type: ignore[func-returns-value]
 meter = type("LazyMeter", (), {"__getattr__": lambda self, name: getattr(get_meter(), name)})()
 
+# type: ignore[func-returns-value]
 logger = type("LazyLogger", (), {"__getattr__": lambda self, name: getattr(get_logger(), name)})()
 
 # Alias for backward compatibility - provides access to both config and metric instruments

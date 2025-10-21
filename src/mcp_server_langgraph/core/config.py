@@ -317,7 +317,7 @@ class Settings(BaseSettings):
             # Production/staging: No CORS by default (fail-closed)
             return []
 
-    def validate_cors_config(self):
+    def validate_cors_config(self) -> None:
         """
         Validate CORS configuration for security issues.
 
@@ -348,7 +348,7 @@ class Settings(BaseSettings):
                 self.environment,
             )
 
-    def _validate_fallback_credentials(self):
+    def _validate_fallback_credentials(self) -> None:
         """
         Validate that fallback models have corresponding API keys configured.
 
@@ -392,7 +392,7 @@ class Settings(BaseSettings):
             for model, provider, cred in missing_creds:
                 logger.warning(f"  - Model '{model}' (provider: {provider}) requires '{cred.upper()}' environment variable")
 
-    def load_secrets(self):  # noqa: C901
+    def load_secrets(self):  # noqa: C901 # type: ignore[no-untyped-def]
         """
         Load secrets from Infisical or environment variables.
 
@@ -517,7 +517,7 @@ settings = Settings()
 
 # Load secrets on initialization
 try:
-    settings.load_secrets()
+    settings.load_secrets()  # type: ignore[no-untyped-call]
 except Exception as e:
     print(f"Warning: Failed to load secrets from Infisical: {e}")
     print("Using environment variables and defaults")

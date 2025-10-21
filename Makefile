@@ -357,16 +357,24 @@ validate-all: validate-deployments validate-docker-compose validate-helm validat
 
 # Code quality
 lint:
-	@echo "Running flake8..."
-	flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv,tests
-	@echo "Running mypy..."
-	-mypy *.py --ignore-missing-imports
+	@echo "⚠️  DEPRECATED: Use 'make lint-check' for comprehensive linting"
+	@echo ""
+	@echo "Running flake8 on src/..."
+	flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+	@echo "Running mypy on src/..."
+	-mypy src/ --ignore-missing-imports
+	@echo ""
+	@echo "💡 For better lint checking, use: make lint-check"
 
 format:
-	@echo "Formatting with black..."
-	black . --exclude .venv
-	@echo "Sorting imports with isort..."
-	isort . --skip .venv
+	@echo "⚠️  DEPRECATED: Use 'make lint-fix' for auto-fixing"
+	@echo ""
+	@echo "Formatting src/ with black..."
+	black src/ --line-length=127
+	@echo "Sorting imports in src/ with isort..."
+	isort src/ --profile=black --line-length=127
+	@echo ""
+	@echo "💡 For better lint fixing, use: make lint-fix"
 
 security-check:
 	@echo "Running bandit security scan..."

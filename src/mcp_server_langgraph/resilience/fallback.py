@@ -46,7 +46,7 @@ class FallbackStrategy:
 class DefaultValueFallback(FallbackStrategy):
     """Return a default value on failure"""
 
-    def __init__(self, default_value: Any):
+    def __init__(self, default_value: Any) -> None:
         self.default_value = default_value
 
     def get_fallback_value(self, *args: Any, **kwargs: Any) -> Any:
@@ -56,7 +56,7 @@ class DefaultValueFallback(FallbackStrategy):
 class CachedValueFallback(FallbackStrategy):
     """Return cached value on failure"""
 
-    def __init__(self, cache_key_fn: Optional[Callable] = None):
+    def __init__(self, cache_key_fn: Optional[Callable[..., str]] = None) -> None:
         self.cache_key_fn = cache_key_fn or self._default_cache_key
         self._cache: Dict[str, Any] = {}
 
@@ -78,7 +78,7 @@ class CachedValueFallback(FallbackStrategy):
 class FunctionFallback(FallbackStrategy):
     """Call a fallback function on failure"""
 
-    def __init__(self, fallback_fn: Callable):
+    def __init__(self, fallback_fn: Callable[..., Any]) -> None:
         self.fallback_fn = fallback_fn
 
     def get_fallback_value(self, *args: Any, **kwargs: Any) -> Any:
@@ -88,7 +88,7 @@ class FunctionFallback(FallbackStrategy):
 class StaleDataFallback(FallbackStrategy):
     """Return stale data with warning on failure"""
 
-    def __init__(self, max_staleness_seconds: int = 3600):
+    def __init__(self, max_staleness_seconds: int = 3600) -> None:
         self.max_staleness_seconds = max_staleness_seconds
         self._cache: Dict[str, tuple[Any, float]] = {}  # value, timestamp
 
@@ -138,7 +138,7 @@ FALLBACK_STRATEGIES = {
 
 def with_fallback(  # noqa: C901
     fallback: Optional[Any] = None,
-    fallback_fn: Optional[Callable] = None,
+    fallback_fn: Optional[Callable[..., Any]] = None,
     fallback_strategy: Optional[FallbackStrategy] = None,
     fallback_on: Optional[tuple[type, ...]] = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
@@ -167,7 +167,7 @@ def with_fallback(  # noqa: C901
         # Cached value fallback
         cache_strategy = CachedValueFallback()
         @with_fallback(fallback_strategy=cache_strategy)
-        async def get_user_profile(user_id: str) -> dict:
+        async def get_user_profile(user_id: str) -> dict[str, Any]:
             profile = await db.get_user(user_id)
             cache_strategy.cache_value(profile, user_id)
             return profile
@@ -195,11 +195,15 @@ def with_fallback(  # noqa: C901
             ) as span:
                 try:
                     # Try primary operation
-                    result = await func(*args, **kwargs)
+                    result: T = await func(*args, **kwargs)  # type: ignore[misc]
                     span.set_attribute("fallback.used", False)
                     return result
 
-                except exception_types as e:
+                except BaseException as e:
+                    # Check if this is an exception type we should handle
+                    if not isinstance(e, exception_types):
+                        raise
+
                     # Primary operation failed, use fallback
                     span.set_attribute("fallback.used", True)
                     span.set_attribute("fallback.exception_type", type(e).__name__)
@@ -225,37 +229,41 @@ def with_fallback(  # noqa: C901
 
                     # Determine fallback value
                     if fallback is not None:
-                        return fallback  # type: ignore
+                        return fallback  # type: ignore[no-any-return]
                     elif fallback_fn is not None:
                         if asyncio.iscoroutinefunction(fallback_fn):
-                            return await fallback_fn(*args, **kwargs)  # type: ignore
+                            return await fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
                         else:
-                            return fallback_fn(*args, **kwargs)  # type: ignore
-                    elif fallback_strategy is not None:
-                        return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore
+                            return fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
+                    else:  # fallback_strategy is not None
+                        return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return]
 
         @functools.wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             """Sync wrapper with fallback"""
             try:
                 return func(*args, **kwargs)
-            except exception_types as e:  # noqa: F841
+            except BaseException as e:
+                # Check if this is an exception type we should handle
+                if not isinstance(e, exception_types):
+                    raise
+
                 logger.warning(f"Using fallback for {func.__name__}", exc_info=True)
 
                 if fallback is not None:
-                    return fallback  # type: ignore
+                    return fallback  # type: ignore[no-any-return]
                 elif fallback_fn is not None:
-                    return fallback_fn(*args, **kwargs)  # type: ignore
-                elif fallback_strategy is not None:
-                    return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore
+                    return fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
+                else:  # fallback_strategy is not None
+                    return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return]
 
         # Return appropriate wrapper
         import asyncio
 
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper  # type: ignore
+            return async_wrapper  # type: ignore[return-value]
         else:
-            return sync_wrapper  # type: ignore
+            return sync_wrapper
 
     return decorator
 
@@ -295,7 +303,7 @@ def return_empty_on_error(func: Callable[P, T]) -> Callable[P, T]:
             return await db.query_users()  # Returns [] on error
     """
 
-    def determine_empty_value():
+    def determine_empty_value() -> Any:
         """Determine empty value based on return type hint"""
         import inspect
 

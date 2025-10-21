@@ -119,7 +119,7 @@ class LLMValidator:
                 import json
 
                 try:
-                    data_dict = json.loads(content)
+                    data_dict = json.loads(content)  # type: ignore[ list]
                     validated = model_class(**data_dict)
                 except json.JSONDecodeError:
                     # Not JSON, try to parse as text
@@ -140,7 +140,7 @@ class LLMValidator:
 
                 metrics.successful_calls.add(1, {"operation": "validate_response"})
 
-                return ValidatedResponse(data=validated, raw_content=content, validation_success=True)
+                return ValidatedResponse(data=validated, raw_content=content, validation_success=True)  # type: ignore[ list]
 
             except ValidationError as e:
                 span.set_attribute("validation.success", False)
@@ -176,6 +176,7 @@ class LLMValidator:
                 if strict:
                     raise
 
+                # type: ignore[arg-type]
                 return ValidatedResponse(data=None, raw_content=content, validation_success=False, validation_errors=[str(e)])
 
     @staticmethod

@@ -237,7 +237,7 @@ class SlackProvider(AlertProvider):
 
             # Add metadata fields
             for key, value in alert.metadata.items():
-                attachment["fields"].append({"title": key, "value": str(value), "short": True})
+                attachment["fields"].append({"title": key, "value": str(value), "short": True})  # type: ignore[ list]
 
             payload = {"text": text, "attachments": [attachment]}
 
@@ -274,7 +274,7 @@ class EmailProvider(AlertProvider):
         provider_type: str,  # "sendgrid" or "ses"
         api_key: Optional[str] = None,
         from_email: str = "alerts@example.com",
-        to_emails: List[str] = None,
+        to_emails: Optional[List[str]] = None,
     ):
         self.provider_type = provider_type
         self.api_key = api_key
@@ -398,7 +398,7 @@ class AlertingService:
         await alerting.close()
     """
 
-    def __init__(self, config: Optional[AlertingConfig] = None):
+    def __init__(self, config: Optional[AlertingConfig] = None) -> None:
         self.config = config or self._load_config_from_settings()
         self.providers: List[AlertProvider] = []
         self.alert_history: List[Alert] = []
@@ -422,7 +422,7 @@ class AlertingService:
         if settings.email_smtp_host and settings.email_from_address:
             providers["email"] = {
                 "smtp_host": settings.email_smtp_host,
-                "smtp_port": settings.email_smtp_port,
+                "smtp_port": settings.email_smtp_port,  # type: ignore[dict-item]
                 "from_address": settings.email_from_address,
                 "to_addresses": settings.email_to_addresses.split(",") if settings.email_to_addresses else [],
             }
@@ -458,7 +458,7 @@ class AlertingService:
         if slack_config.get("enabled"):
             webhook_url = slack_config.get("webhook_url")
             if webhook_url:
-                provider = SlackProvider(
+                provider = SlackProvider(  # type: ignore[assignment]
                     webhook_url=webhook_url,
                     channel=slack_config.get("channel"),
                     mention_on_critical=slack_config.get("mention_on_critical"),
@@ -469,7 +469,7 @@ class AlertingService:
         # Initialize Email
         email_config = self.config.providers.get("email", {})
         if email_config.get("enabled"):
-            provider = EmailProvider(
+            provider = EmailProvider(  # type: ignore[assignment]
                 provider_type=email_config.get("provider_type", "sendgrid"),
                 api_key=email_config.get("api_key"),
                 from_email=email_config.get("from_email", "alerts@example.com"),

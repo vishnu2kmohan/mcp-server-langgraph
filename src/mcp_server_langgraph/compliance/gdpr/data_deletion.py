@@ -80,6 +80,7 @@ class DataDeletionService:
         self.audit_log_store = audit_log_store
         self.consent_store = consent_store
 
+    # type: ignore[no-untyped-def]
     async def _safe_delete(self, operation_name: str, delete_func, user_id: str, deleted_items: dict, errors: list) -> None:
         """
         Safely execute a deletion operation with error handling
@@ -100,8 +101,8 @@ class DataDeletionService:
             errors.append(error_msg)
             logger.error(error_msg, exc_info=True)
 
-    async def _safe_anonymize(
-        self, operation_name: str, anonymize_func, user_id: str, anonymized_items: dict, errors: list
+    async def _safe_anonymize(  # type: ignore[no-untyped-def]
+        self, operation_name: str, anonymize_func, user_id: str, anonymized_items: dict, errors: list  # type: ignore[type-arg]
     ) -> None:
         """
         Safely execute an anonymization operation with error handling
@@ -146,9 +147,9 @@ class DataDeletionService:
                 extra={"user_id": user_id, "username": username, "reason": reason},
             )
 
-            deleted_items = {}
-            anonymized_items = {}
-            errors = []
+            deleted_items: dict[str, int] = {}
+            anonymized_items: dict[str, int] = {}
+            errors: list[str] = []
 
             # 1. Delete sessions
             await self._safe_delete("sessions", self._delete_user_sessions, user_id, deleted_items, errors)

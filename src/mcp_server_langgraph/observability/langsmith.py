@@ -98,7 +98,7 @@ def get_run_tags(user_id: Optional[str] = None, additional_tags: Optional[list[s
 class LangSmithConfig:
     """LangSmith configuration helper class"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.enabled = configure_langsmith()
 
     def is_enabled(self) -> bool:

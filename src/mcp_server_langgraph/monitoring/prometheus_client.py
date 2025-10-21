@@ -93,7 +93,7 @@ class PrometheusClient:
         await client.close()
     """
 
-    def __init__(self, config: Optional[PrometheusConfig] = None):
+    def __init__(self, config: Optional[PrometheusConfig] = None) -> None:
         self.config = config or self._load_config_from_settings()
         self.client: Optional[httpx.AsyncClient] = None
         self._initialized = False
@@ -138,7 +138,7 @@ class PrometheusClient:
 
         params = {"query": promql}
         if time:
-            params["time"] = time.timestamp()
+            params["time"] = time.timestamp()  # type: ignore[assignment]
 
         url = f"{self.config.url}/api/v1/query"
 
@@ -203,7 +203,7 @@ class PrometheusClient:
             logger.error(f"Prometheus range query failed: {e}", exc_info=True, extra={"query": promql})
             raise
 
-    def _parse_query_result(self, result: List[Dict]) -> List[QueryResult]:
+    def _parse_query_result(self, result: List[Dict]) -> List[QueryResult]:  # type: ignore[type-arg]
         """Parse instant query result"""
         parsed = []
         for item in result:
@@ -216,7 +216,7 @@ class PrometheusClient:
 
         return parsed
 
-    def _parse_range_result(self, result: List[Dict]) -> List[QueryResult]:
+    def _parse_range_result(self, result: List[Dict]) -> List[QueryResult]:  # type: ignore[type-arg]
         """Parse range query result"""
         parsed = []
         for item in result:
@@ -305,7 +305,7 @@ class PrometheusClient:
     async def query_percentiles(
         self,
         metric: str,
-        percentiles: List[int] = None,
+        percentiles: Optional[List[int]] = None,
         timerange: str = "1h",
         label_filters: Optional[Dict[str, str]] = None,
     ) -> Dict[int, float]:
@@ -324,7 +324,7 @@ class PrometheusClient:
         Resolves: monitoring/sla.py:235
         """
         if percentiles is None:
-            percentiles = [50, 95, 99]
+            percentiles = [50, 95, 99]  # type: ignore[unreachable]
 
         # Build label filter string
         label_str = ""

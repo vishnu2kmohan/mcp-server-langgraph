@@ -68,7 +68,7 @@ def get_user_id_from_jwt(request: Request) -> Optional[str]:
                 algorithms=[settings.jwt_algorithm],
                 options={"verify_exp": False},  # Don't verify expiration for rate limiting
             )
-            return payload.get("sub") or payload.get("user_id")
+            return payload.get("sub") or payload.get("user_id")  # type: ignore[no-any-return]
         except jwt.InvalidTokenError:
             return None
 
@@ -212,7 +212,7 @@ limiter = Limiter(
 )
 
 
-def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> None:
     """
     Custom handler for rate limit exceeded errors.
 
@@ -271,7 +271,7 @@ def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded)
     )
 
     # Return structured error response
-    return JSONResponse(
+    return JSONResponse(  # type: ignore[return-value]
         status_code=429,
         content=rate_limit_error.to_dict(),
         headers={
@@ -282,7 +282,7 @@ def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded)
     )
 
 
-def setup_rate_limiting(app):
+def setup_rate_limiting(app) -> None:  # type: ignore[no-untyped-def]
     """
     Setup rate limiting for FastAPI application.
 
@@ -313,21 +313,21 @@ def setup_rate_limiting(app):
 
 
 # Decorators for endpoint-specific rate limits
-def rate_limit_for_auth(func: Callable) -> Callable:
+def rate_limit_for_auth(func: Callable) -> Callable:  # type: ignore[type-arg]
     """Rate limit decorator for authentication endpoints"""
-    return limiter.limit(ENDPOINT_RATE_LIMITS["auth_login"])(func)
+    return limiter.limit(ENDPOINT_RATE_LIMITS["auth_login"])(func)  # type: ignore[no-any-return]
 
 
-def rate_limit_for_llm(func: Callable) -> Callable:
+def rate_limit_for_llm(func: Callable) -> Callable:  # type: ignore[type-arg]
     """Rate limit decorator for LLM endpoints"""
-    return limiter.limit(ENDPOINT_RATE_LIMITS["llm_chat"])(func)
+    return limiter.limit(ENDPOINT_RATE_LIMITS["llm_chat"])(func)  # type: ignore[no-any-return]
 
 
-def rate_limit_for_search(func: Callable) -> Callable:
+def rate_limit_for_search(func: Callable) -> Callable:  # type: ignore[type-arg]
     """Rate limit decorator for search endpoints"""
-    return limiter.limit(ENDPOINT_RATE_LIMITS["search"])(func)
+    return limiter.limit(ENDPOINT_RATE_LIMITS["search"])(func)  # type: ignore[no-any-return]
 
 
-def exempt_from_rate_limit(func: Callable) -> Callable:
+def exempt_from_rate_limit(func: Callable) -> Callable:  # type: ignore[type-arg]
     """Exempt endpoint from rate limiting (health checks, metrics)"""
-    return limiter.exempt(func)
+    return limiter.exempt(func)  # type: ignore[no-any-return]

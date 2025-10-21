@@ -140,7 +140,7 @@ class OpenFGAClient:
                 else:
                     metrics.authz_failures.add(1, {"relation": relation})
 
-                return allowed
+                return allowed  # type: ignore[no-any-return]
 
             except Exception as e:
                 error_msg = str(e).lower()
@@ -409,14 +409,14 @@ async def initialize_openfga_store(client: OpenFGAClient) -> str:
             client.model_id = model_id
             client.client.authorization_model_id = model_id
 
-            return store_id
+            return store_id  # type: ignore[no-any-return]
 
         except Exception as e:
             logger.error(f"Failed to initialize OpenFGA store: {e}", exc_info=True)
             raise
 
 
-async def seed_sample_data(client: OpenFGAClient):
+async def seed_sample_data(client: OpenFGAClient) -> None:
     """
     Seed sample relationship data for testing
     """

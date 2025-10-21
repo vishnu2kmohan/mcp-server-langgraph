@@ -86,7 +86,7 @@ class DataRetentionService:
                 config = yaml.safe_load(f)
 
             logger.info(f"Loaded retention policies from {self.config_path}")
-            return config
+            return config  # type: ignore[no-any-return]
 
         except Exception as e:
             logger.error(f"Failed to load retention config: {e}", exc_info=True)
@@ -252,7 +252,7 @@ class DataRetentionService:
         with tracer.start_as_current_span("retention.run_all_cleanups") as span:
             logger.info("Starting retention policy cleanup", extra={"dry_run": self.dry_run})
 
-            results = []
+            results = []  # type: ignore[var-annotated]
 
             # Check if retention is globally enabled
             if not self.config.get("global", {}).get("enabled", True):

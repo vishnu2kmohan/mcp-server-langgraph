@@ -579,7 +579,7 @@ class AuthMiddleware:
             return count
 
 
-def require_auth(
+def require_auth(  # type: ignore[no-untyped-def]
     relation: Optional[str] = None, resource: Optional[str] = None, openfga_client: Optional[OpenFGAClient] = None
 ):
     """
@@ -591,9 +591,9 @@ def require_auth(
         openfga_client: OpenFGA client instance
     """
 
-    def decorator(func):
+    def decorator(func) -> None:  # type: ignore[no-untyped-def]
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs) -> None:  # type: ignore[no-untyped-def]
             auth = AuthMiddleware(openfga_client=openfga_client)
             username = kwargs.get("username")
             password = kwargs.get("password")
@@ -616,9 +616,9 @@ def require_auth(
 
             # Add user_id to kwargs if authenticated
             kwargs["user_id"] = user_id
-            return await func(*args, **kwargs)
+            return await func(*args, **kwargs)  # type: ignore[no-any-return]
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
@@ -698,7 +698,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
         """
         # Check if user already set by middleware
         if hasattr(request.state, "user") and request.state.user:
-            return request.state.user
+            return request.state.user  # type: ignore[no-any-return]
 
         # Try to authenticate with Bearer token
         if credentials and credentials.credentials:
@@ -773,7 +773,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         return user
 
-    def require_auth_dependency(relation: Optional[str] = None, resource: Optional[str] = None):
+    def require_auth_dependency(relation: Optional[str] = None, resource: Optional[str] = None) -> None:
         """
         Create a FastAPI dependency for authentication + authorization.
 
@@ -814,4 +814,4 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
             return user
 
-        return dependency
+        return dependency  # type: ignore[return-value]

@@ -42,7 +42,7 @@ class ContextManager:
     Implementation follows "Long-Horizon Task Techniques" from Anthropic's guide.
     """
 
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         compaction_threshold: int = 8000,
         target_after_compaction: int = 4000,
@@ -244,7 +244,7 @@ Focus on high-signal information that maintains conversation context.
 
                 logger.info("Messages summarized", extra={"message_count": len(messages), "summary_length": len(summary)})
 
-                return summary
+                return summary  # type: ignore[ list]
 
             except Exception as e:
                 logger.error(f"Summarization failed: {e}", exc_info=True)
@@ -296,7 +296,7 @@ Focus on high-signal information that maintains conversation context.
         Returns:
             Dictionary with categorized key information
         """
-        key_info = {
+        key_info = {  # type: ignore[var-annotated]
             "decisions": [],
             "requirements": [],
             "facts": [],
@@ -307,7 +307,7 @@ Focus on high-signal information that maintains conversation context.
 
         # Simple keyword-based extraction
         for msg in messages:
-            content = msg.content.lower() if hasattr(msg, "content") else ""
+            content = msg.content.lower() if hasattr(msg, "content") else ""  # type: ignore[str ]
 
             if any(keyword in content for keyword in ["decided", "agreed", "chose"]):
                 key_info["decisions"].append(msg.content[:200])
@@ -389,7 +389,7 @@ PREFERENCES:
                 extraction_text = response.content if hasattr(response, "content") else str(response)
 
                 # Parse response
-                key_info = self._parse_extraction_response(extraction_text)
+                key_info = self._parse_extraction_response(extraction_text)  # type: ignore[ list]
 
                 logger.info(
                     "Key information extracted with LLM",
@@ -423,7 +423,7 @@ PREFERENCES:
         Returns:
             Dictionary with categorized information
         """
-        categories = {
+        categories = {  # type: ignore[var-annotated]
             "decisions": [],
             "requirements": [],
             "facts": [],

@@ -45,7 +45,7 @@ class ParallelToolExecutor:
     - Aggregates results
     """
 
-    def __init__(self, max_parallelism: int = 5):
+    def __init__(self, max_parallelism: int = 5) -> None:
         """
         Initialize parallel executor.
 
@@ -120,8 +120,9 @@ class ParallelToolExecutor:
             if failed > 0:
                 metrics.failed_calls.add(failed, {"operation": "parallel_tool_execution"})
 
-            return results
+            return results  # type: ignore[ToolResult ]
 
+    # type: ignore[type-arg]
     async def _execute_single(self, invocation: ToolInvocation, tool_executor: Callable) -> ToolResult:
         """Execute a single tool invocation."""
         async with self.semaphore:  # Limit concurrency
@@ -258,7 +259,7 @@ async def execute_multi_tool_request(user_request: str, tool_calls: list[dict[st
         invocations.append(inv)
 
     # Mock tool executor for demonstration
-    async def mock_tool_executor(name: str, args: dict) -> Any:
+    async def mock_tool_executor(name: str, args: dict) -> Any:  # type: ignore[type-arg]
         await asyncio.sleep(0.1)  # Simulate work
         return f"Result from {name}"
 

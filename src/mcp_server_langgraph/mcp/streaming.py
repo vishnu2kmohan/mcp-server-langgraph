@@ -49,11 +49,11 @@ class MCPStreamingValidator:
     the complete response once streaming is finished.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize streaming validator."""
         self.active_streams: dict[str, list[StreamChunk]] = {}
 
-    async def validate_chunk(self, chunk_data: dict, stream_id: str) -> Optional[StreamChunk]:
+    async def validate_chunk(self, chunk_data: dict, stream_id: str) -> Optional[StreamChunk]:  # type: ignore[type-arg]
         """
         Validate a single stream chunk.
 

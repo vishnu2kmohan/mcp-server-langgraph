@@ -89,7 +89,7 @@ class ComplianceScheduler:
 
         logger.info(f"Compliance scheduler initialized (enabled: {enabled})")
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the compliance scheduler"""
         if not self.enabled:
             logger.info("Compliance scheduler disabled, skipping startup")
@@ -136,7 +136,7 @@ class ComplianceScheduler:
                 },
             )
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the compliance scheduler"""
         if self.scheduler.running:
             # Shutdown the scheduler. Use wait=False since we're in async context
@@ -265,7 +265,7 @@ class ComplianceScheduler:
             try:
                 logger.info("Starting weekly access review")
 
-                users_reviewed = []
+                users_reviewed = []  # type: ignore[var-annotated]
                 recommendations = []
                 actions_required = []
 
@@ -408,7 +408,7 @@ class ComplianceScheduler:
 
     # --- Notification Helpers ---
 
-    async def _send_compliance_alert(self, severity: str, message: str, details: Dict[str, Any]):
+    async def _send_compliance_alert(self, severity: str, message: str, details: Dict[str, Any]) -> None:
         """
         Send compliance alert
 
@@ -427,6 +427,7 @@ class ComplianceScheduler:
             alerting_service = AlertingService()
             await alerting_service.initialize()
 
+            # type: ignore[attr-defined]
             alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING
 
             alert = Alert(
@@ -444,7 +445,7 @@ class ComplianceScheduler:
         except Exception as e:
             logger.error(f"Failed to send compliance alert: {e}", exc_info=True)
 
-    async def _send_access_review_notification(self, report: AccessReviewReport):
+    async def _send_access_review_notification(self, report: AccessReviewReport) -> None:
         """
         Send access review notification
 
@@ -471,7 +472,7 @@ class ComplianceScheduler:
                     "review_id": report.review_id,
                     "total_users": report.total_users,
                     "inactive_users": report.inactive_users,
-                    "excessive_access": report.excessive_access,
+                    "excessive_access": report.excessive_access,  # type: ignore[attr-defined]
                 },
             )
 
@@ -481,7 +482,7 @@ class ComplianceScheduler:
         except Exception as e:
             logger.error(f"Failed to send access review notification: {e}", exc_info=True)
 
-    async def _send_monthly_report_notification(self, report: Any):
+    async def _send_monthly_report_notification(self, report: Any) -> None:
         """
         Send monthly compliance report notification
 
@@ -555,7 +556,7 @@ async def start_compliance_scheduler(
     return _compliance_scheduler
 
 
-async def stop_compliance_scheduler():
+async def stop_compliance_scheduler() -> None:
     """Stop global compliance scheduler"""
     global _compliance_scheduler
 

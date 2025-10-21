@@ -49,7 +49,8 @@ def _is_safe_path(path: str) -> bool:
         ]
 
         for dangerous in dangerous_paths:
-            if abs_path.is_relative_to(dangerous):
+            dangerous_path = Path(dangerous) if isinstance(dangerous, str) else dangerous
+            if abs_path.is_relative_to(dangerous_path):  # type: ignore[ PathLike]
                 return False
 
         return True

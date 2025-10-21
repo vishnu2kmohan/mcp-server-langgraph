@@ -213,7 +213,7 @@ class DataExportService:
         writer.writerow(["Sessions"])
         if export.sessions:
             # Get all unique keys from sessions
-            keys = set()
+            keys = set()  # type: ignore
             for session in export.sessions:
                 keys.update(session.keys())
             writer.writerow(list(keys))

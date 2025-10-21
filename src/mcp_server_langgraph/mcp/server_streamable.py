@@ -34,7 +34,7 @@ from mcp_server_langgraph.utils.response_optimizer import format_response
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
     Lifespan context manager for application startup and shutdown.
 
@@ -190,7 +190,7 @@ class SearchConversationsInput(BaseModel):
 class MCPAgentStreamableServer:
     """MCP Server with StreamableHTTP transport"""
 
-    def __init__(self, openfga_client: OpenFGAClient | None = None):
+    def __init__(self, openfga_client: OpenFGAClient | None = None) -> None:
         self.server = Server("langgraph-agent")
 
         # Initialize OpenFGA client
@@ -240,7 +240,7 @@ class MCPAgentStreamableServer:
         """
         # Call the registered handler
         # The handler is registered below in _setup_handlers()
-        return await self._list_tools_handler()
+        return await self._list_tools_handler()  # type: ignore[no-any-return]
 
     async def call_tool_public(self, name: str, arguments: dict[str, Any]) -> list[TextContent]:
         """
@@ -248,7 +248,7 @@ class MCPAgentStreamableServer:
 
         This wraps the internal MCP handler to avoid accessing private SDK attributes.
         """
-        return await self._call_tool_handler(name, arguments)
+        return await self._call_tool_handler(name, arguments)  # type: ignore[no-any-return]
 
     async def list_resources_public(self) -> list[Resource]:
         """
@@ -256,12 +256,12 @@ class MCPAgentStreamableServer:
 
         This wraps the internal MCP handler to avoid accessing private SDK attributes.
         """
-        return await self._list_resources_handler()
+        return await self._list_resources_handler()  # type: ignore[no-any-return]
 
-    def _setup_handlers(self):
+    def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()
+        @self.server.list_tools()  # type: ignore[misc]
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -331,7 +331,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._list_tools_handler = list_tools
 
-        @self.server.call_tool()
+        @self.server.call_tool()  # type: ignore[misc]
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
@@ -399,16 +399,17 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()
+        @self.server.list_resources()  # type: ignore[misc]
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
+                # type: ignore[arg-type]
                 return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]
 
         # Store reference to handler for public API
         self._list_resources_handler = list_resources
 
-    async def _handle_chat(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
+    async def _handle_chat(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """
         Handle agent_chat tool invocation.
 
@@ -441,7 +442,7 @@ class MCPAgentStreamableServer:
             conversation_resource = f"conversation:{thread_id}"
 
             # Check if conversation exists by trying to get state from checkpointer
-            graph = get_agent_graph()
+            graph = get_agent_graph()  # type: ignore[func-returns-value]
             conversation_exists = False
             if hasattr(graph, "checkpointer") and graph.checkpointer is not None:
                 try:
@@ -485,36 +486,33 @@ class MCPAgentStreamableServer:
                 "next_action": "",
                 "user_id": user_id,
                 "request_id": str(span.get_span_context().trace_id) if span.get_span_context() else None,
+                "routing_confidence": None,
+                "reasoning": None,
+                "compaction_applied": None,
+                "original_message_count": None,
+                "verification_passed": None,
+                "verification_score": None,
+                "verification_feedback": None,
+                "refinement_attempts": None,
+                "user_request": message,
             }
 
             # Run the agent graph
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await get_agent_graph().ainvoke(initial_state, config)
+                result = await get_agent_graph().ainvoke(initial_state, config)  # type: ignore[func-returns-value]
 
                 # Seed OpenFGA tuples for new conversations
                 if not conversation_exists and self.openfga is not None:
                     try:
-                        # Create ownership tuple: user owns the conversation
-                        await self.openfga.write_tuple(
-                            user=user_id,
-                            relation="owner",
-                            object=conversation_resource,
-                        )
-
-                        # Create viewer tuple: owner can view
-                        await self.openfga.write_tuple(
-                            user=user_id,
-                            relation="viewer",
-                            object=conversation_resource,
-                        )
-
-                        # Create editor tuple: owner can edit
-                        await self.openfga.write_tuple(
-                            user=user_id,
-                            relation="editor",
-                            object=conversation_resource,
+                        # Create ownership, viewer, and editor tuples in batch
+                        await self.openfga.write_tuples(
+                            [
+                                {"user": user_id, "relation": "owner", "object": conversation_resource},
+                                {"user": user_id, "relation": "viewer", "object": conversation_resource},
+                                {"user": user_id, "relation": "editor", "object": conversation_resource},
+                            ]
                         )
 
                         logger.info(
@@ -561,7 +559,7 @@ class MCPAgentStreamableServer:
                 span.record_exception(e)
                 raise
 
-    async def _handle_get_conversation(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
+    async def _handle_get_conversation(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """
         Retrieve conversation history from LangGraph checkpointer.
 
@@ -580,7 +578,7 @@ class MCPAgentStreamableServer:
                 raise PermissionError(f"Not authorized to view conversation {thread_id}")
 
             # Retrieve conversation from checkpointer
-            graph = get_agent_graph()
+            graph = get_agent_graph()  # type: ignore[func-returns-value]
 
             if not hasattr(graph, "checkpointer") or graph.checkpointer is None:
                 logger.warning("No checkpointer available, cannot retrieve conversation history")
@@ -645,7 +643,7 @@ class MCPAgentStreamableServer:
                     )
                 ]
 
-    async def _handle_search_conversations(self, arguments: dict[str, Any], span, user_id: str) -> list[TextContent]:
+    async def _handle_search_conversations(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """
         Search conversations (replacing list-all approach).
 
@@ -806,8 +804,8 @@ class LoginResponse(BaseModel):
 class RefreshTokenRequest(BaseModel):
     """Token refresh request"""
 
-    refresh_token: str = Field(description="Refresh token (Keycloak only)", default=None)
-    current_token: str = Field(description="Current access token (for InMemory provider)", default=None)
+    refresh_token: str | None = Field(description="Refresh token (Keycloak only)", default=None)
+    current_token: str | None = Field(description="Current access token (for InMemory provider)", default=None)
 
 
 class RefreshTokenResponse(BaseModel):
@@ -816,12 +814,12 @@ class RefreshTokenResponse(BaseModel):
     access_token: str = Field(description="New JWT access token")
     token_type: str = Field(default="bearer", description="Token type")
     expires_in: int = Field(description="Token expiration in seconds")
-    refresh_token: str = Field(default=None, description="New refresh token (Keycloak only)")
+    refresh_token: str | None = Field(default=None, description="New refresh token (Keycloak only)")
 
 
 # FastAPI endpoints for MCP StreamableHTTP transport
 @app.get("/")
-async def root():
+async def root() -> dict[str, Any]:
     """Root endpoint with server info"""
     return {
         "name": "MCP Server with LangGraph",
@@ -852,7 +850,7 @@ async def root():
 
 
 @app.post("/auth/login", response_model=LoginResponse, tags=["auth"])
-async def login(request: LoginRequest):
+async def login(request: LoginRequest) -> LoginResponse:
     """
     Authenticate user and return JWT token
 
@@ -935,7 +933,7 @@ async def login(request: LoginRequest):
 
 
 @app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])
-async def refresh_token(request: RefreshTokenRequest):
+async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
     """
     Refresh authentication token
 
@@ -1042,7 +1040,7 @@ async def refresh_token(request: RefreshTokenRequest):
             )
 
 
-async def stream_jsonrpc_response(data: dict) -> AsyncIterator[str]:
+async def stream_jsonrpc_response(data: dict[str, Any]) -> AsyncIterator[str]:
     """
     Stream a JSON-RPC response in chunks
 
@@ -1053,8 +1051,8 @@ async def stream_jsonrpc_response(data: dict) -> AsyncIterator[str]:
     yield json.dumps(data) + "\n"
 
 
-@app.post("/message")
-async def handle_message(request: Request):
+@app.post("/message", response_model=None)
+async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
     """
     Handle MCP messages via StreamableHTTP POST
 
@@ -1219,7 +1217,7 @@ async def handle_message(request: Request):
 
 
 @app.get("/tools")
-async def list_tools():
+async def list_tools() -> dict[str, Any]:
     """List available tools (convenience endpoint)"""
     # Use public API instead of private _tool_manager
     tools = await get_mcp_server().list_tools_public()
@@ -1227,7 +1225,7 @@ async def list_tools():
 
 
 @app.get("/resources")
-async def list_resources():
+async def list_resources() -> dict[str, Any]:
     """List available resources (convenience endpoint)"""
     # Use public API instead of private _resource_manager
     resources = await get_mcp_server().list_resources_public()
@@ -1259,10 +1257,13 @@ def main() -> None:
 
     logger.info(f"Starting MCP StreamableHTTP server on port {settings.get_secret('PORT', fallback='8000')}")
 
+    port_str = settings.get_secret("PORT", fallback="8000")
+    port = int(port_str) if port_str else 8000
+
     uvicorn.run(
         app,
         host="0.0.0.0",  # nosec B104 - Required for containerized deployment
-        port=int(settings.get_secret("PORT", fallback="8000")),
+        port=port,
         log_level=settings.log_level.lower(),
         access_log=True,
     )

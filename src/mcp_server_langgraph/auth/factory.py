@@ -120,7 +120,7 @@ def create_session_store(settings: Settings) -> Optional[SessionStore]:
         if not settings.redis_url:
             raise ValueError("CRITICAL: Redis URL required for Redis session store. " "Set REDIS_URL environment variable.")
 
-        return RedisSessionStore(
+        return RedisSessionStore(  # type: ignore[call-arg]
             redis_url=settings.redis_url,
             password=settings.redis_password,
             ssl=settings.redis_ssl,
