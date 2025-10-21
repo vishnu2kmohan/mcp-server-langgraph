@@ -524,7 +524,7 @@ def cached(
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore[return-value]
         else:
-            raise TypeError(f"Function {func.__name__} must be async to use @cached decorator")
+            return sync_wrapper  # type: ignore[return-value]
 
     return decorator
 

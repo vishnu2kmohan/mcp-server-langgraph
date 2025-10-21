@@ -21,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
-from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService
+from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 router = APIRouter(prefix="/api/v1/users", tags=["GDPR Compliance"])
@@ -131,11 +131,11 @@ if GDPR_STORAGE_BACKEND == "memory":
 # ==================== Endpoints ====================
 
 
-@router.get("/me/data")
+@router.get("/me/data", response_model=UserDataExport)
 async def get_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     session_store: SessionStore = Depends(get_session_store),
-) -> Dict[str, Any]:
+) -> UserDataExport:
     """
     Export all user data (GDPR Article 15 - Right to Access)
 
@@ -163,7 +163,9 @@ async def get_user_data(
         export_service = DataExportService(session_store=session_store)
 
         # Export all user data
-        export = await export_service.export_user_data(user_id=user_id, username=username, email=email)  # type: ignore[arg-type]
+        export = await export_service.export_user_data(
+            user_id=user_id, username=username, email=email
+        )  # type: ignore[arg-type]
 
         # Log the data access request (GDPR requirement)
         logger.info(

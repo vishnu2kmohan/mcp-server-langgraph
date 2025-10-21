@@ -12,8 +12,20 @@ from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_s
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="search_tools")
 class TestSearchKnowledgeBase:
-    """Test suite for search_knowledge_base tool"""
+    """Test suite for search_knowledge_base tool
+
+    Note: All tests in this class run in the same xdist worker to prevent
+    shared state issues with settings/metrics mocking in parallel execution.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        """Ensure clean state before each test to prevent parallel execution issues"""
+        # This runs before each test method to ensure isolation
+        yield
+        # Cleanup after each test (if needed)
 
     @patch("mcp_server_langgraph.tools.search_tools.settings")
     def test_search_with_query(self, mock_settings):
@@ -31,24 +43,22 @@ class TestSearchKnowledgeBase:
             result = search_knowledge_base.invoke({"query": "test", "limit": limit})
             assert isinstance(result, str)
 
-    @patch("mcp_server_langgraph.tools.search_tools.logger")
-    @patch("mcp_server_langgraph.tools.search_tools.metrics")
     @patch("mcp_server_langgraph.tools.search_tools.settings")
-    def test_search_default_limit(self, mock_settings, mock_metrics, mock_logger):
+    def test_search_default_limit(self, mock_settings):
         """Test search uses default limit"""
         mock_settings.qdrant_url = None
         result = search_knowledge_base.invoke({"query": "test"})
         assert isinstance(result, str)
 
-    def test_search_empty_query(self):
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    def test_search_empty_query(self, mock_settings):
         """Test search with empty query"""
+        mock_settings.qdrant_url = None  # Not configured
         result = search_knowledge_base.invoke({"query": "", "limit": 5})
         assert isinstance(result, str)
 
-    @patch("mcp_server_langgraph.tools.search_tools.logger")
-    @patch("mcp_server_langgraph.tools.search_tools.metrics")
     @patch("mcp_server_langgraph.tools.search_tools.settings")
-    def test_search_long_query(self, mock_settings, mock_metrics, mock_logger):
+    def test_search_long_query(self, mock_settings):
         """Test search handles long queries"""
         mock_settings.qdrant_url = None
         long_query = "a" * 500  # Maximum query length

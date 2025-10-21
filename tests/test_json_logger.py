@@ -19,17 +19,22 @@ from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter, 
 
 
 @pytest.fixture
-def tracer_provider():
+def tracer_provider(monkeypatch):
     """Get the current tracer provider for testing"""
-    # Get the current provider instead of overriding it
-    provider = trace.get_tracer_provider()
-    # If it's a NoOpTracerProvider, create a real one
-    if isinstance(provider, trace.NoOpTracerProvider):
-        provider = TracerProvider()
-        exporter = InMemorySpanExporter()
-        provider.add_span_processor(SimpleSpanProcessor(exporter))
-        trace.set_tracer_provider(provider)
-    return provider
+    # Temporarily enable OTEL SDK for these trace injection tests
+    # This ensures we get real trace IDs even when OTEL_SDK_DISABLED=true is set globally
+    import os
+
+    if os.getenv("OTEL_SDK_DISABLED"):
+        monkeypatch.delenv("OTEL_SDK_DISABLED", raising=False)
+
+    # Create a real tracer provider for these tests
+    provider = TracerProvider()
+    exporter = InMemorySpanExporter()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    trace.set_tracer_provider(provider)
+
+    yield provider
 
 
 @pytest.fixture
