@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761026728196,
+  "lastUpdate": 1761027127456,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8476,6 +8476,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0022644315871406927",
             "extra": "mean: 79.20415000003388 usec\nrounds: 5380"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "aa827088c9b4e8165fd095350122ea893568c453",
+          "message": "fix(ci): resolve uv.lock parse error and sync CI with uv 0.9.4\n\n## Problem\nCI was failing with:\n```\nerror: Couldn't parse requirement in `uv.lock` at position 0\nCaused by: no such comparison operator \"=\", must be one of ~= == != <= >= < > ===\nversion = 1\n        ^^^\n```\n\n## Root Cause\nTwo issues were causing the failure:\n1. **Incorrect command**: CI workflows used `uv pip sync uv.lock`, but `uv pip sync` expects requirements.txt format, not lock files\n2. **Version mismatch**: Local uv 0.9.3 vs CI using latest (0.9.4)\n\n## Solution\n1. **Upgraded local uv**: 0.9.3 → 0.9.4 to match CI\n2. **Regenerated lock file**: Updated uv.lock with uv 0.9.4\n   - Updated infisical-python: 2.3.5 → 2.3.6\n   - Fixed exceptiongroup marker: python < '3.11' → python < '3.12'\n3. **Fixed CI workflows**: Replaced `uv pip sync uv.lock` with `uv sync --no-dev`\n   - `.github/workflows/ci.yaml`\n   - `.github/workflows/ci-optimized.yaml`\n\n## Changes\n- `uv.lock`: Regenerated with uv 0.9.4 (255 packages resolved)\n- `.github/workflows/ci.yaml:86-96`: Use `uv sync --no-dev` instead of `uv pip sync`\n- `.github/workflows/ci-optimized.yaml:86-96`: Use `uv sync --no-dev` instead of `uv pip sync`\n\n## Verification\n```bash\nuv --version  # 0.9.4\nuv sync --dry-run  # ✓ Would make no changes\n```\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T02:10:56-04:00",
+          "tree_id": "4ac6498e8551efd6810371948d1e8fac5e699285",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/aa827088c9b4e8165fd095350122ea893568c453"
+        },
+        "date": 1761027126388,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51686.6644678229,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022398739270587696",
+            "extra": "mean: 19.347350236201482 usec\nrounds: 6350"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54366.33037871031,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021623466057995157",
+            "extra": "mean: 18.393737319294903 usec\nrounds: 12795"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50984.539380410904,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022866065582184732",
+            "extra": "mean: 19.613789045708558 usec\nrounds: 19919"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.07818867886905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018398165712242287",
+            "extra": "mean: 5.233459700000746 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.397622619223075,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011084349186686802",
+            "extra": "mean: 51.55270930000455 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.950483132175565,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005582164016993464",
+            "extra": "mean: 100.49763280000263 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2537544.8812483065,
+            "unit": "iter/sec",
+            "range": "stddev: 5.2103841736444015e-8",
+            "extra": "mean: 394.0816997522682 nsec\nrounds: 190477"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5100.550854876459,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013588146340543268",
+            "extra": "mean: 196.05725507940673 usec\nrounds: 443"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2946.3972384849158,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009326006231964314",
+            "extra": "mean: 339.3975486191454 usec\nrounds: 2499"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2833.475445960626,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004319127084079092",
+            "extra": "mean: 352.9234747474484 usec\nrounds: 1584"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59642.58353866755,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002661222572790549",
+            "extra": "mean: 16.766543980303585 usec\nrounds: 13813"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10901.743027590763,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002433161990490354",
+            "extra": "mean: 91.72845089717691 usec\nrounds: 5407"
           }
         ]
       }
