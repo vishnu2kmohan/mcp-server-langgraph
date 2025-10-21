@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761034212002,
+  "lastUpdate": 1761034506339,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -10312,6 +10312,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002784819958604189",
             "extra": "mean: 98.84731853746183 usec\nrounds: 5114"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "37a054429ddae482db79057350cdddd9f567dee4",
+          "message": "chore: comprehensive deprecation cleanup - remove 246KB of deprecated files\n\nRemove deprecated files and configurations that have been superseded by\nactive implementations. This cleanup improves repository maintainability\nand reduces confusion for contributors.\n\n## Removed Items\n\n### 1. Deployment Configurations (~224KB)\n- deployments/DEPRECATED/kubernetes-20251021-002310/\n- deployments/DEPRECATED/kustomize-20251021-002310/\n- Migrated to consolidated deployment structure\n- No breaking changes - new structure is fully operational\n\n### 2. Docker Files (379 lines)\n- docker/DEPRECATED/Dockerfile.deprecated\n- docker/DEPRECATED/Dockerfile.old\n- Old optimization iterations, replaced by current Dockerfile\n- No active references in build scripts or CI/CD\n\n### 3. Requirements File\n- requirements-infisical.txt\n- Migrated to pyproject.toml[project.optional-dependencies.secrets]\n- Migration guide: docs/guides/uv-migration.md\n\n### 4. MCP Manifest SSE Transport\n- Removed deprecated http-sse transport from .mcp/manifest.json\n- Never implemented, only streamable-http and stdio are active\n- Per ADR-0004\n\n## Documentation Updates\n\n- Updated reports/DEPRECATION_TRACKING.md with cleanup details\n- Created reports/DEPRECATION_CLEANUP_2025-10-21.md\n- Documented remaining active deprecations (username→user_id, etc.)\n\n## Impact\n\n- Zero breaking changes\n- 246KB disk space reclaimed\n- Cleaner repository structure\n- Reduced technical debt\n- Improved contributor onboarding\n\n## Remaining Active Deprecations\n\nCode-level deprecations tracked for v3.0.0 removal:\n1. username → user_id field migration (formally marked)\n2. embedding_model → embedding_model_name (needs formalization)\n3. embeddings alias in pyproject.toml (backward compatibility)\n\nSee reports/DEPRECATION_TRACKING.md for complete tracking details.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T04:13:48-04:00",
+          "tree_id": "352faf518a8f38e4c987dafdcce7aa5fdf1848bb",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/37a054429ddae482db79057350cdddd9f567dee4"
+        },
+        "date": 1761034505839,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51555.85019417966,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020539873539427844",
+            "extra": "mean: 19.39644087399598 usec\nrounds: 6224"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52025.44172566345,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003527004765225472",
+            "extra": "mean: 19.221364909751713 usec\nrounds: 11422"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49953.9704750508,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022858087054031533",
+            "extra": "mean: 20.01842877533516 usec\nrounds: 19649"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.56877131004063,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019126478384892503",
+            "extra": "mean: 5.2474494804454475 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.379222572716348,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012259190971967648",
+            "extra": "mean: 51.601657200009754 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939129599748432,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000035733511930182576",
+            "extra": "mean: 100.61243190000368 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2566476.033378274,
+            "unit": "iter/sec",
+            "range": "stddev: 4.81306142749636e-8",
+            "extra": "mean: 389.6393291791981 nsec\nrounds: 192679"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5176.07810696015,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012141657491858062",
+            "extra": "mean: 193.1964663854905 usec\nrounds: 476"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2954.5460631829833,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009308712187483503",
+            "extra": "mean: 338.46146873834243 usec\nrounds: 2703"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2765.353011128488,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000046632439591462213",
+            "extra": "mean: 361.61748463062196 usec\nrounds: 1529"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59231.4466476295,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020595871816910537",
+            "extra": "mean: 16.882923794670155 usec\nrounds: 11574"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10316.415424315768,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0028123854058556",
+            "extra": "mean: 96.93289373002585 usec\nrounds: 5279"
           }
         ]
       }
