@@ -79,6 +79,11 @@ coverage-combined.xml
 .dmypy.json
 dmypy.json
 
+# Temporary mypy fix scripts (should not be committed)
+*mypy_fix.py
+*mypy_fix.sh
+ultimate_fix.sh
+
 # Environment files
 .env
 .env.local

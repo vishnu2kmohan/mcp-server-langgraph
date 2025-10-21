@@ -12,7 +12,7 @@ Runs all lint checks without modifying files:
 - flake8 (syntax errors, code style)
 - black (formatting check)
 - isort (import order check)
-- mypy (type checking)
+- mypy (type checking - **warning-only**, non-blocking during gradual rollout)
 - bandit (security scan)
 
 ### Auto-fix Formatting Issues
@@ -80,7 +80,11 @@ uv run isort src/ --profile=black --line-length=127
 ```bash
 uv run mypy src/ --ignore-missing-imports --show-error-codes
 ```
-Enforces type safety based on `pyproject.toml` configuration.
+Checks type safety based on `pyproject.toml` configuration.
+
+**Note**: Mypy is currently **non-blocking** (warning-only) during gradual rollout.
+500+ type errors remain to be fixed. Mypy will be made blocking in future once
+type error count is significantly reduced.
 
 ### Bandit (Security Scan)
 ```bash
@@ -111,12 +115,18 @@ Installs or reinstalls:
    make lint-check
    ```
 
-3. **Fix remaining issues manually** (flake8, mypy, bandit errors)
+3. **Fix remaining issues manually**:
+   - **flake8 errors**: Must be fixed (syntax errors, undefined names)
+   - **bandit errors**: Must be fixed (security issues)
+   - **mypy errors**: Optional during gradual rollout (type annotations)
 
 4. **Test before committing**:
    ```bash
    make lint-pre-commit
    ```
+
+**Note**: Only flake8 and bandit errors will block commits/pushes. Mypy errors
+are currently warnings only.
 
 ### Bypass hooks (NOT RECOMMENDED):
 ```bash
@@ -148,16 +158,38 @@ make lint-pre-push
 ```
 
 ### CI/CD Alignment:
-The local lint checks match exactly what CI/CD runs:
-- Pre-commit: Formatting + basic validation
-- Pre-push: Comprehensive checks (same as CI lint job)
-- CI will fail if pre-push passes but CI fails (shouldn't happen!)
+The local lint checks match what CI/CD runs:
+- Pre-commit: Formatting + basic validation (mypy disabled due to 500+ errors)
+- Pre-push: Comprehensive checks (mypy warning-only, same as CI lint job)
+- CI will fail if pre-push passes but CI fails (rare, but possible)
+
+**Mypy Status**:
+- Pre-commit hook: **Disabled** (commented out in `.pre-commit-config.yaml`)
+- Pre-push hook: **Warning-only** (shows errors but doesn't block)
+- CI/CD: **Warning-only** (`continue-on-error: true`)
+- Future: Will be made **blocking** once type error count is reduced
 
 ## Summary
 
 After running lint checks, provide:
 - ✅ Checks that passed
-- ❌ Checks that failed with error details
+- ❌ Checks that failed with error details (blocking: flake8, bandit)
+- ⚠️ Mypy warnings (non-blocking, optional to fix)
 - 🔧 Auto-fix suggestions
 - 📝 File references for manual fixes
 - 🚀 Next steps to resolve all issues
+
+## Important Notes
+
+### Mypy is Non-Blocking
+During gradual rollout, mypy type checking is **non-blocking**:
+- Shows warnings but doesn't prevent commits/pushes
+- Fixing mypy errors is **optional** but recommended
+- Future versions will make mypy blocking once error count is reduced
+- See `.claude/memory/lint-workflow.md` for full mypy enforcement roadmap
+
+### What Will Block You
+Only these checks will prevent commits/pushes:
+- **flake8**: Syntax errors, undefined names, critical code issues
+- **bandit**: Security vulnerabilities (high/medium severity)
+- **black/isort**: Auto-fixed by pre-commit, just re-stage files
