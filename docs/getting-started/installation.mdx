@@ -86,21 +86,28 @@ Choose the installation method that best fits your use case:
 
       <Step title="Install Dependencies">
         ```bash
-        # Create venv and install dependencies (one command!)
+        # Create venv and install ALL dependencies (recommended)
         uv sync
 
-        # Or install runtime dependencies only
-        uv pip install -r requirements-pinned.txt
+        # Install production dependencies only
+        uv sync --frozen --no-dev
 
-        # Install with development dependencies
-        uv sync --group dev
+        # Install with optional extras
+        uv sync --extra secrets      # With Infisical support
+        uv sync --extra embeddings   # With self-hosted embeddings
+        uv sync --all-extras         # All optional features
         ```
 
         Or use the Makefile:
         ```bash
-        make install     # Runtime only
-        make install-dev # Runtime + dev tools
+        make install     # Production only (from lockfile)
+        make install-dev # Development with all tools
         ```
+
+        <Note>
+          **requirements*.txt files are deprecated.** All dependencies are managed via
+          `pyproject.toml` and locked in `uv.lock` for reproducible builds.
+        </Note>
       </Step>
     </Steps>
   </Tab>
@@ -308,13 +315,19 @@ Install additional tools for development:
 
 <CodeGroup>
 ```bash Pre-commit Hooks
-pip install pre-commit
+# Install as a tool (recommended)
+uv tool install pre-commit
 pre-commit install
 pre-commit run --all-files
+
+# Or use the Makefile
+make pre-commit-setup
 ```
 
 ```bash Code Quality Tools
-pip install black isort flake8 mypy bandit
+# Already included in dev dependencies!
+# Just run: uv sync
+# This installs: black, isort, flake8, mypy, bandit, pytest, etc.
 ```
 
 ```bash Kubernetes Tools
@@ -405,21 +418,29 @@ brew install kubectl helm kustomize  # macOS
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="pip install fails">
+  <Accordion title="Dependency installation fails">
     **Problem**: Dependencies fail to install
 
     **Solution**:
     ```bash
-    # Upgrade pip
-    pip install --upgrade pip setuptools wheel
+    # Using uv (recommended - handles this automatically):
+    uv sync
+
+    # If using pip:
+    # Upgrade pip first
+    python -m pip install --upgrade pip setuptools wheel
 
     # Try again
-    pip install -r requirements.txt
+    pip install -e .
 
     # If still failing, install build tools:
     # Ubuntu: sudo apt install build-essential python3-dev
     # macOS: xcode-select --install
     ```
+
+    <Tip>
+      uv handles most dependency resolution issues automatically and is much faster than pip!
+    </Tip>
   </Accordion>
 
   <Accordion title="Docker not found">

@@ -1,3 +1,17 @@
+# ==============================================================================
+# DEPRECATED: This file is maintained for backward compatibility only
+# ==============================================================================
+#
+# This project uses uv for dependency management. Please use:
+#   uv sync              # Install all dependencies including dev dependencies
+#   uv sync --group dev  # Install development dependencies
+#
+# All test dependencies are defined in pyproject.toml [dependency-groups]
+# This file may be removed in a future release
+#
+# Migration guide: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/guides/uv-migration.md
+# ==============================================================================
+
 # Test dependencies for LangGraph MCP Agent
 
 # Main dependencies (pinned versions)

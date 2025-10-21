@@ -1,3 +1,19 @@
+# ==============================================================================
+# DEPRECATED: This file is maintained for backward compatibility only
+# ==============================================================================
+#
+# This project uses uv for dependency management with uv.lock for pinning.
+# Please use:
+#   uv sync --frozen  # Install from lockfile (production)
+#   uv sync           # Update dependencies (development)
+#
+# All dependencies are defined in pyproject.toml
+# Pinning is handled automatically by uv.lock
+# This file may be removed in a future release
+#
+# Migration guide: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/guides/uv-migration.md
+# ==============================================================================
+
 # Production dependencies with pinned versions
 # Generated for production deployment stability
 

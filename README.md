@@ -248,17 +248,28 @@ See [Production Checklist](docs/deployment/production-checklist.mdx) for detaile
 ### Quick Install
 
 **Using uv (recommended)**:
+
+This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable dependency management:
+
 ```bash
+# Install from PyPI
 uv pip install mcp-server-langgraph
 
-# Or clone and install in development mode
+# Or clone and develop locally (creates virtual environment automatically)
 git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp-server-langgraph
-uv sync
+uv sync  # Installs all dependencies from pyproject.toml and uv.lock
 ```
 
-**Using pip**:
+**Why uv?**
+- ⚡ **10-100x faster** than pip
+- 🔒 **Reproducible builds** via uv.lock lockfile
+- 📦 **Single source of truth** in pyproject.toml
+- 🛡️ **Better dependency resolution**
+
+**Alternative: Using pip**:
 ```bash
+# Install from PyPI
 pip install mcp-server-langgraph
 
 # Or install from source
@@ -266,6 +277,8 @@ git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp-server-langgraph
 pip install -e .
 ```
+
+> **Note**: requirements*.txt files are deprecated. Use `uv sync` instead.
 
 ### Verify Installation
 ```bash
@@ -431,7 +444,7 @@ See [Docker Compose documentation](docs/deployment/docker.mdx) for details.
 1. **Install dependencies**:
 ```bash
 uv sync  # Install all dependencies and create virtual environment
-# OR: uv pip install -r requirements.txt
+# Note: Creates .venv automatically with all dependencies from pyproject.toml
 ```
 
 2. **Start infrastructure** (without agent):

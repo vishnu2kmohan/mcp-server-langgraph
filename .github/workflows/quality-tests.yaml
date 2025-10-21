@@ -70,7 +70,7 @@ jobs:
         run: |
           # CI uses 100 examples for comprehensive testing (dev defaults to 25 for speed)
           # HYPOTHESIS_PROFILE=ci activates the CI profile registered in conftest.py
-          HYPOTHESIS_PROFILE=ci pytest -m property -v --tb=short
+          HYPOTHESIS_PROFILE=ci uv run pytest -m property -v --tb=short
         timeout-minutes: 15
         env:
           HYPOTHESIS_PROFILE: ci
@@ -101,11 +101,11 @@ jobs:
 
       - name: Generate OpenAPI schema
         run: |
-          python scripts/validation/validate_openapi.py || true
+          uv run python scripts/validation/validate_openapi.py || true
 
       - name: Run contract tests
         run: |
-          pytest -m contract -v --tb=short
+          uv run pytest -m contract -v --tb=short
 
       - name: Upload OpenAPI schema
         if: always()
@@ -131,7 +131,7 @@ jobs:
 
       - name: Run regression tests
         run: |
-          pytest -m regression -v --tb=short
+          uv run pytest -m regression -v --tb=short
 
       - name: Check for performance regressions
         run: |
@@ -163,20 +163,17 @@ jobs:
           install-test: 'true'
           cache-key-prefix: 'mutation-tests'
 
-      - name: Install mutation testing tool
-        run: pip install mutmut
-
       - name: Run mutation tests
         run: |
-          mutmut run --paths-to-mutate=src/mcp_server_langgraph/
+          uv run mutmut run --paths-to-mutate=src/mcp_server_langgraph/
         timeout-minutes: 60
         continue-on-error: true  # Don't fail workflow if mutation score is low
 
       - name: Generate mutation report
         if: always()
         run: |
-          mutmut results || true
-          mutmut html || true
+          uv run mutmut results || true
+          uv run mutmut html || true
 
       - name: Upload mutation results
         if: always()
@@ -204,7 +201,7 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          pytest -m benchmark -v --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
+          uv run pytest -m benchmark -v --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
         continue-on-error: true  # Don't fail if no benchmarks exist yet
 
       - name: Store benchmark results

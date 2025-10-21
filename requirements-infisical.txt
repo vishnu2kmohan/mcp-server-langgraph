@@ -1,3 +1,16 @@
+# ==============================================================================
+# DEPRECATED: This file is maintained for backward compatibility only
+# ==============================================================================
+#
+# This project uses uv for dependency management. Please use:
+#   uv sync --extra secrets  # Install with Infisical support
+#
+# Infisical is defined as optional dependency in pyproject.toml [project.optional-dependencies]
+# This file may be removed in a future release
+#
+# Migration guide: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/guides/uv-migration.md
+# ==============================================================================
+
 # Infisical Secrets Management (Optional Dependency)
 # ===================================================
 #

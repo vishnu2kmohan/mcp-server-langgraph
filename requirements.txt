@@ -1,3 +1,18 @@
+# ==============================================================================
+# DEPRECATED: This file is maintained for backward compatibility only
+# ==============================================================================
+#
+# This project uses uv for dependency management. Please use:
+#   uv sync                    # Install all dependencies
+#   uv sync --extra secrets    # Install with optional [secrets] dependencies
+#   uv sync --extra embeddings # Install with optional [embeddings] dependencies
+#
+# All dependencies are defined in pyproject.toml
+# This file may be removed in a future release
+#
+# Migration guide: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/guides/uv-migration.md
+# ==============================================================================
+
 # LangGraph and LangChain
 langgraph>=1.0.1
 langgraph-checkpoint-redis>=0.1.2  # Redis checkpointer for distributed conversation state

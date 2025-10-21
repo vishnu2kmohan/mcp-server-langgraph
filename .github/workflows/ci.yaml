@@ -224,29 +224,34 @@ jobs:
           requirements-pinned.txt
           requirements-test.txt
 
-    - name: Cache Python dependencies
+    - name: Cache uv dependencies
       uses: actions/cache@v4.3.0
       with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements-pinned.txt', 'requirements-test.txt') }}
+        path: |
+          ~/.cache/uv
+          ~/.cargo/bin/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock', 'pyproject.toml') }}
         restore-keys: |
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-uv-
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install -r requirements-pinned.txt
-        pip install -r requirements-test.txt
+        uv sync --frozen
+        echo "✓ Dependencies installed from lockfile (uv.lock)"
 
     - name: Validate dependency consistency
       run: |
-        pip check
+        uv pip check
         echo "✓ All dependencies are consistent (no conflicts detected)"
 
     - name: Run unit tests
       run: |
-        pytest -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
+        uv run pytest -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -283,8 +288,7 @@ jobs:
 
     - name: Check coverage threshold
       run: |
-        pip install coverage
-        coverage report --fail-under=55 || echo "⚠️  Coverage below 55% threshold"
+        uv run coverage report --fail-under=55 || echo "⚠️  Coverage below 55% threshold"
       continue-on-error: true
 
     - name: Upload coverage
@@ -323,41 +327,45 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.12'
-        cache: 'pip'
-        cache-dependency-path: requirements-test.txt
 
-    - name: Cache Python dependencies
+    - name: Cache uv dependencies
       uses: actions/cache@v4.3.0
       with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-lint-${{ hashFiles('requirements-test.txt') }}
+        path: |
+          ~/.cache/uv
+          ~/.cargo/bin/uv
+        key: ${{ runner.os }}-uv-lint-${{ hashFiles('uv.lock', 'pyproject.toml') }}
         restore-keys: |
-          ${{ runner.os }}-pip-lint-
+          ${{ runner.os }}-uv-lint-
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Install linting tools
       run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install -r requirements-test.txt
+        uv sync --frozen
+        echo "✓ Linting tools installed from lockfile"
 
     - name: Validate dependency consistency
       run: |
-        pip check
+        uv pip check
         echo "✓ All dependencies are consistent (no conflicts detected)"
 
     - name: Run flake8
       run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,tests
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,tests || true
+        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,tests
+        uv run flake8 . --count --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,tests || true
 
     - name: Run black check
-      run: black --check . --exclude venv
+      run: uv run black --check . --exclude venv
 
     - name: Run isort check
-      run: isort --check . --skip venv --profile black --line-length 127
+      run: uv run isort --check . --skip venv --profile black --line-length 127
 
     - name: Run mypy
-      run: mypy src/ --ignore-missing-imports
+      run: uv run mypy src/ --ignore-missing-imports
       continue-on-error: true
 
   # ============================================================================

@@ -105,44 +105,53 @@ git remote -v
 
 ## Python Environment
 
-### Create Virtual Environment
+### Create Virtual Environment and Install Dependencies
+
+<Note>
+**With uv, virtual environment creation and dependency installation happen in one command!**
+
+`uv sync` automatically:
+- Creates `.venv` if it doesn't exist
+- Installs all dependencies from `pyproject.toml`
+- Uses `uv.lock` for reproducible builds
+</Note>
 
 ```bash
-# Using uv (recommended - fast!)
-uv venv --python 3.12
+# Install ALL dependencies (recommended for development)
+uv sync
 
-# Or using standard venv
-python3.12 -m venv .venv
+# Or use the Makefile
+make install-dev  # Same as: uv sync
+
+# Install production dependencies only
+make install      # Same as: uv sync --frozen --no-dev
+
+# Verify installation
+uv run python -c "import fastapi, langchain, anthropic; print('All imports successful')"
 ```
 
-### Activate Virtual Environment
+<Tip>
+No need to manually create or activate virtual environments with `uv`!
+Use `uv run <command>` to run commands in the virtual environment.
+</Tip>
+
+### Manual Virtual Environment (Optional)
+
+If you prefer manual control:
 
 ```bash
+# Create venv manually
+uv venv --python 3.12
+
+# Activate it (only if needed)
 # macOS/Linux
 source .venv/bin/activate
 
 # Windows (Git Bash)
 source .venv/Scripts/activate
 
-# Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
-```
-
-### Install Dependencies
-
-```bash
-# Install all dependencies including dev (recommended)
-uv sync --group dev
-
-# Or install production dependencies only
+# Then install
 uv sync
-
-# Or use the Makefile shorthand
-make install-dev  # Development + test dependencies
-make install      # Production dependencies only
-
-# Verify installation
-uv run python -c "import fastapi, langchain, anthropic; print('All imports successful')"
 ```
 
 ### Development Dependencies
