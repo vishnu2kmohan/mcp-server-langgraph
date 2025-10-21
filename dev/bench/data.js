@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761007906676,
+  "lastUpdate": 1761008254427,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -5884,6 +5884,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0001537892436632467",
             "extra": "mean: 84.45349957396178 usec\nrounds: 3521"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1f1aa65d7f5cd56c9c56b124a9199467990247a7",
+          "message": "test: add comprehensive tests for cache and rate limiter modules\n\n**Cache Module Tests (44 tests, 0% → 100% coverage):**\n- L1 in-memory cache operations (TTLCache)\n- L2 Redis distributed cache with fallback\n- Cache stampede prevention with asyncio locks\n- @cached decorator for both sync and async functions\n- Cache statistics and hit rate calculations\n- TTL logic from cache key prefixes\n- Cache key generation and hashing for long keys\n- Error handling and graceful degradation\n- Anthropic prompt caching (L3) helpers\n\n**Rate Limiter Tests (39 tests, 0% → 100% coverage):**\n- Tiered rate limits (anonymous, free, standard, premium, enterprise)\n- User ID extraction from JWT tokens\n- User tier determination from JWT claims\n- Rate limit key hierarchy (user > IP > global)\n- Redis storage URI configuration\n- Custom rate limit exceeded error handler\n- Endpoint-specific decorators (auth, LLM, search)\n- Limiter configuration validation\n- Fail-open behavior and error resilience\n\n**Impact:**\n- Added 83 new tests (all passing)\n- Increased coverage for 2 critical 0% modules\n- Improved overall test suite robustness\n- Better test coverage for DoS protection and caching strategies\n\n**Files Added:**\n- tests/core/test_cache.py: 44 tests covering multi-layer caching\n- tests/middleware/test_rate_limiter.py: 39 tests for tiered rate limiting\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T20:54:50-04:00",
+          "tree_id": "d095e6cfe8f7b58b4e421dd202926d5e523b46ba",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1f1aa65d7f5cd56c9c56b124a9199467990247a7"
+        },
+        "date": 1761008253354,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 41092.78638481868,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013594391901103954",
+            "extra": "mean: 24.33517140053175 usec\nrounds: 4084"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 36133.02563477465,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013784682737556436",
+            "extra": "mean: 27.67551242754478 usec\nrounds: 5874"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 35057.380435940264,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016511836099288672",
+            "extra": "mean: 28.524664066879797 usec\nrounds: 12181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 186.06299520207526,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013626364356706134",
+            "extra": "mean: 5.374523821429091 msec\nrounds: 168"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.401355725607548,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002460528809402087",
+            "extra": "mean: 51.542789799999156 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.917892564306097,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001539679235190015",
+            "extra": "mean: 100.82787179999713 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1334008.5698964247,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3713618885415624e-7",
+            "extra": "mean: 749.6203716874488 nsec\nrounds: 187407"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4954.597504316017,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000909186620182332",
+            "extra": "mean: 201.83274203987034 usec\nrounds: 1853"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2880.9218836077766,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014319234131650627",
+            "extra": "mean: 347.1111124844873 usec\nrounds: 2427"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3140.2106191263406,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005950087053179347",
+            "extra": "mean: 318.44997717962525 usec\nrounds: 1709"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 43522.580654993755,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015418548781072242",
+            "extra": "mean: 22.976578708120808 usec\nrounds: 6378"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 14355.261278284768,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013261356162642471",
+            "extra": "mean: 69.66087071593061 usec\nrounds: 2947"
           }
         ]
       }
