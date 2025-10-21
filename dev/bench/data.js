@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761027247633,
+  "lastUpdate": 1761027800185,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8692,6 +8692,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0022295131610830677",
             "extra": "mean: 79.68263149701703 usec\nrounds: 5137"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "bc91410a08d6044b76c02c771f456189aa06d392",
+          "message": "fix(ci): resolve Code Quality and deployment validation failures\n\n## Issues Fixed\n\n### 1. Code Quality - flake8 not found (Exit Code 2)\n**Root Cause**: Dev dependencies not installed in CI\n- Changed `uv sync --frozen --all-groups` to `uv sync --frozen --group dev`\n- flake8 is in `[dependency-groups] dev` section of pyproject.toml\n- Ensures all linting tools are available\n\n**File**: .github/workflows/ci.old.yaml:344\n\n### 2. Deployment Validation - 15 file not found errors\n**Root Cause**: Script expects Kubernetes base manifests that don't exist\n- Project uses Helm charts and Kustomize overlays, not base manifests\n- deployments/kubernetes/base/ directory doesn't exist\n\n**Changes**:\n- Split YAML validation into required vs optional files\n- Made Kubernetes base manifests optional (skip if missing)\n- Added graceful handling when base directory doesn't exist\n- Added helper methods: _load_yaml_optional(), _load_yaml_all_optional()\n- Updated consistency validation to skip if base manifests missing\n\n**File**: scripts/validation/validate_deployments.py\n\n## Validation Results\n\nLocal test passes:\n```\n✓ docker/docker-compose.yml\n✓ docker/docker-compose.dev.yml\n✓ deployments/helm/mcp-server-langgraph/Chart.yaml\n✓ deployments/helm/mcp-server-langgraph/values.yaml\n✓ All required infrastructure services present (10 total)\n✓ All dependencies defined (7 total)\n✓ Helm values validated\n✅ All validation checks passed!\n```\n\n## Impact\n- CI Code Quality job will now pass\n- Deployment validation will pass\n- No functional changes to actual deployments\n- Validation focuses on files that exist (Docker Compose, Helm)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T02:22:06-04:00",
+          "tree_id": "e16602f335daeac90be6d64e1554d23dfd5ddaa0",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/bc91410a08d6044b76c02c771f456189aa06d392"
+        },
+        "date": 1761027799103,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50723.58774657307,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022646587722494254",
+            "extra": "mean: 19.714693783023282 usec\nrounds: 6048"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54362.30844674572,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002473690491720701",
+            "extra": "mean: 18.395098158490043 usec\nrounds: 11512"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49694.8256567672,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003946166971038117",
+            "extra": "mean: 20.122819363665982 usec\nrounds: 18922"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.87653228918623,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014785286028770068",
+            "extra": "mean: 5.238988722222575 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.373170115692492,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013446948168577874",
+            "extra": "mean: 51.61777829999998 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936687748128008,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004037808098230421",
+            "extra": "mean: 100.63715650000091 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2585815.657948912,
+            "unit": "iter/sec",
+            "range": "stddev: 4.952360005942597e-8",
+            "extra": "mean: 386.72517003520943 nsec\nrounds: 196079"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4997.574064921809,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001354057404843345",
+            "extra": "mean: 200.09708450727 usec\nrounds: 426"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2927.687063799808,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012131283958505638",
+            "extra": "mean: 341.5665602942251 usec\nrounds: 2720"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2777.3421687411715,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000045091086075226556",
+            "extra": "mean: 360.0564637857529 usec\nrounds: 1643"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59785.462243004295,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021031361170059833",
+            "extra": "mean: 16.72647433811576 usec\nrounds: 13522"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10298.05394192475,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002809368477267218",
+            "extra": "mean: 97.10572557100976 usec\nrounds: 5342"
           }
         ]
       }
