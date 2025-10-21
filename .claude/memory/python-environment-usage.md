@@ -1,6 +1,6 @@
 # Python Environment Usage Guidelines
 
-**Date**: 2025-10-20
+**Date**: 2025-10-21
 **Repo**: mcp-server-langgraph
 **Purpose**: Ensure consistent use of project virtual environment
 **Status**: Active Configuration
@@ -13,9 +13,9 @@ This document establishes the mandatory requirement to **always use the project'
 
 **Environment Details**:
 - Virtual environment: `/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv`
-- Python version: 3.13.7
+- Python version: 3.12.12
 - Package manager: uv (`/usr/bin/uv`)
-- Created with: `python3 -m venv`
+- Created with: `uv venv` (uv-managed virtual environment)
 
 **Key Principle**: Never use bare `python`, `python3`, `pytest`, or `pip` commands. Always use the virtual environment.
 
@@ -391,16 +391,16 @@ uv run pytest  # Matches CI environment
 
 **Configuration** (from `pyvenv.cfg`):
 ```
-home = /usr/lib/python-exec/python3.13
+home = /usr
 include-system-site-packages = false
-version = 3.13.7
-executable = /usr/bin/python3.13
+version = 3.12.12
+executable = /usr/bin/python3.12
 ```
 
 **Key Points**:
 - Does NOT include system site packages (`include-system-site-packages = false`)
-- Python 3.13.7 (project requires `>=3.10,<3.13` per pyproject.toml)
-- All dependencies installed via uv/pip into `.venv/lib/python3.13/site-packages/`
+- Python 3.12.12 (project requires `>=3.10,<3.13` per pyproject.toml - ✅ within range)
+- All dependencies installed via uv/pip into `.venv/lib/python3.12/site-packages/`
 
 ---
 
@@ -415,11 +415,11 @@ uv run python -c "import sys; print(sys.executable)"
 
 # Check Python version
 uv run python --version
-# Expected: Python 3.13.7
+# Expected: Python 3.12.12
 
 # Check package location
 uv run python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__file__)"
-# Expected: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/lib/python3.13/site-packages/...
+# Expected: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/lib/python3.12/site-packages/...
 
 # Verify pytest is from venv
 uv run pytest --version
@@ -436,7 +436,7 @@ Before running any Python command, verify:
 - [ ] Using `uv run pytest` or `.venv/bin/pytest` (NOT bare `pytest`)
 - [ ] Using `uv pip` or `.venv/bin/pip` (NOT bare `pip`)
 - [ ] For multiple commands, consider activation OR use multiple `uv run` calls
-- [ ] Python version is 3.13.7 (verify with `uv run python --version`)
+- [ ] Python version is 3.12.12 (verify with `uv run python --version`)
 
 ---
 
@@ -453,8 +453,9 @@ Before running any Python command, verify:
 
 ---
 
-**Last Updated**: 2025-10-20
-**Virtual Environment Python Version**: 3.13.7
-**Package Manager**: uv (1.10.0+)
+**Last Updated**: 2025-10-21
+**Virtual Environment Python Version**: 3.12.12
+**Package Manager**: uv (latest)
+**pyproject.toml Python Requirement**: >=3.10,<3.13
 
 _This is active configuration. All Python commands must follow these guidelines._

@@ -134,20 +134,20 @@ setup-infra:
 
 setup-openfga:
 	@echo "Setting up OpenFGA..."
-	python scripts/setup/setup_openfga.py
+	$(UV_RUN) python scripts/setup/setup_openfga.py
 	@echo ""
 	@echo "⚠️  Remember to update .env with OPENFGA_STORE_ID and OPENFGA_MODEL_ID"
 
 setup-keycloak:
 	@echo "Setting up Keycloak..."
 	@echo "Waiting for Keycloak to start (this may take 60+ seconds)..."
-	python scripts/setup/setup_keycloak.py
+	$(UV_RUN) python scripts/setup/setup_keycloak.py
 	@echo ""
 	@echo "⚠️  Remember to update .env with KEYCLOAK_CLIENT_SECRET"
 
 setup-infisical:
 	@echo "Setting up Infisical..."
-	python scripts/setup/setup_infisical.py
+	$(UV_RUN) python scripts/setup/setup_infisical.py
 
 test:
 	@echo "Running all tests with coverage (parallel execution)..."
@@ -278,11 +278,11 @@ test-coverage-combined:
 
 test-auth:
 	@echo "Testing OpenFGA authorization..."
-	python examples/openfga_usage.py
+	$(UV_RUN) python examples/openfga_usage.py
 
 test-mcp:
 	@echo "Testing MCP server..."
-	python examples/client_stdio.py
+	$(UV_RUN) python examples/client_stdio.py
 
 benchmark:
 	@echo "Running performance benchmarks..."
@@ -329,7 +329,7 @@ validate-openapi:
 
 validate-deployments:
 	@echo "Validating all deployment configurations..."
-	python3 scripts/validation/validate_deployments.py
+	$(UV_RUN) python scripts/validation/validate_deployments.py
 	@echo "✓ Deployment validation complete"
 
 validate-docker-compose:
@@ -451,10 +451,10 @@ lint-install:
 
 # Running servers
 run:
-	python -m mcp_server_langgraph.mcp.server_stdio
+	$(UV_RUN) python -m mcp_server_langgraph.mcp.server_stdio
 
 run-streamable:
-	python -m mcp_server_langgraph.mcp.server_streamable
+	$(UV_RUN) python -m mcp_server_langgraph.mcp.server_streamable
 
 logs:
 	$(DOCKER_COMPOSE) logs -f
