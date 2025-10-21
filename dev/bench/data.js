@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761036011495,
+  "lastUpdate": 1761036106253,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -10636,6 +10636,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002412465424840532",
             "extra": "mean: 92.0759318689201 usec\nrounds: 5372"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8b62d306f2c6b292b53120b92c55d625a6705b4b",
+          "message": "fix(ci): resolve multi-arch manifest creation failures\n\n**Problem**: The docker-manifest job in ci.yaml and manifest creation in\nrelease.yaml were failing with error:\n  \"ghcr.io/vishnu2kmohan/mcp-server-langgraph:base-linux-amd64 is a manifest list\"\n\n**Root Cause**: When docker/build-push-action builds images with individual\nplatforms (e.g., platforms: linux/amd64), Docker Buildx automatically creates\nmanifest lists. The legacy docker manifest create command expects individual\nplatform images, not manifest lists, causing the failure.\n\n**Solution**:\n1. ci.yaml (.github/workflows/ci.yaml:221-256):\n   - Added docker/setup-buildx-action step\n   - Replaced docker manifest create/push with docker buildx imagetools create\n   - This tool properly handles manifest lists created by buildx\n\n2. release.yaml (.github/workflows/release.yaml:106-227):\n   - Simplified build-and-push job to create platform-specific tags\n   - Added new create-manifest job that uses docker buildx imagetools create\n   - Creates manifests for: version, major.minor, major, latest, and sha tags\n   - Updated job dependencies: attach-sbom, update-mcp-registry, notify now\n     depend on create-manifest instead of build-and-push\n\n**Impact**:\n- Fixes multi-arch manifest creation in CI/CD pipeline\n- Enables proper multi-platform Docker image distribution\n- Uses modern buildx tools designed for manifest list handling\n- Maintains parallel platform builds for optimal performance\n\n**Testing**: Will be verified in next CI run on main branch\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T04:40:36-04:00",
+          "tree_id": "f90570cb92193cea03a86c06bd6727ca52a531e7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8b62d306f2c6b292b53120b92c55d625a6705b4b"
+        },
+        "date": 1761036105475,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51756.46551256714,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002709060004595553",
+            "extra": "mean: 19.321257549111174 usec\nrounds: 6259"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53244.17284103502,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003489983570981737",
+            "extra": "mean: 18.78139797542887 usec\nrounds: 12546"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49751.08502868964,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002593638322234189",
+            "extra": "mean: 20.10006413776376 usec\nrounds: 20035"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.97104819599977,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000180341757495906",
+            "extra": "mean: 5.236395827778395 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37683991754033,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007469992931486722",
+            "extra": "mean: 51.60800235000025 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.951123039115432,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000046981764638759424",
+            "extra": "mean: 100.49117029999977 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2517388.337367987,
+            "unit": "iter/sec",
+            "range": "stddev: 4.9961080973782116e-8",
+            "extra": "mean: 397.2370830340515 nsec\nrounds: 198847"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5039.517966126266,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015199874493831962",
+            "extra": "mean: 198.4316767440104 usec\nrounds: 430"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2890.873981515582,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011843951308862792",
+            "extra": "mean: 345.91615075373704 usec\nrounds: 2388"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2760.169224785181,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000053296362601455114",
+            "extra": "mean: 362.29662696780053 usec\nrounds: 1461"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 61174.71803448519,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002092647471673379",
+            "extra": "mean: 16.34662213622764 usec\nrounds: 12920"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10972.140537362753,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0024095351698739183",
+            "extra": "mean: 91.13991901532448 usec\nrounds: 5322"
           }
         ]
       }
