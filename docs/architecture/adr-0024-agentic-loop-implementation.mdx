@@ -341,8 +341,8 @@ VERIFICATION_MODE=standard
    - `context.overflow_prevented_total`: Times we avoided hitting limits
 
 2. **Verification**
-   - `verification.passed_total`: Pass rate (target: >70%)
-   - `verification.refinement_total`: Refinement frequency (target: <30%)
+   - `verification.passed_total`: Pass rate (target: &gt;70%)
+   - `verification.refinement_total`: Refinement frequency (target: &lt;30%)
    - `verification.score_distribution`: Quality score distribution
 
 3. **Overall Quality**
@@ -442,10 +442,10 @@ def test_verification_threshold_consistency(response, threshold)
 - **Anthropic**: [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)
 - **Implementation**: `src/mcp_server_langgraph/core/agent.py:1-505`
 - **Related ADRs**:
-  - [ADR-0005](adr-0005-pydantic-ai-integration.mdx) - Type-safe responses
-  - [ADR-0010](adr-0010-langgraph-functional-api.mdx) - Functional API choice
-  - [ADR-0022](adr-0022-distributed-conversation-checkpointing.mdx) - Checkpointing
-  - [ADR-0023](adr-0023-anthropic-tool-design-best-practices.mdx) - Tool design
+  - [ADR-0005](/architecture/adr-0005-pydantic-ai-integration) - Type-safe responses
+  - [ADR-0010](/architecture/adr-0010-langgraph-functional-api) - Functional API choice
+  - [ADR-0022](/architecture/adr-0022-distributed-conversation-checkpointing) - Checkpointing
+  - [ADR-0023](/architecture/adr-0023-anthropic-tool-design-best-practices) - Tool design
 
 ## Implementation Checklist
 

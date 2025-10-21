@@ -1,4 +1,4 @@
-# ADR-0026: Resilience Patterns for Production Systems
+# ADR-0030: Resilience Patterns for Production Systems
 
 **Status**: Accepted
 **Date**: 2025-10-20

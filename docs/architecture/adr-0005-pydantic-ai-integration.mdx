@@ -251,7 +251,7 @@ Benchmarks on routing latency:
 
 | Method | Latency | Tokens | Accuracy |
 |--------|---------|--------|----------|
-| Keywords | <1ms | 0 | 65% |
+| Keywords | &lt;1ms | 0 | 65% |
 | Pydantic AI | 150ms | ~50 | 92% |
 | Function Calling | 120ms | ~40 | 90% |
 
@@ -265,7 +265,6 @@ Benchmarks on routing latency:
 ## References
 
 - [Pydantic AI Documentation](https://ai.pydantic.dev/)
-- [PYDANTIC_AI_INTEGRATION.md](../../docs-internal/PYDANTIC_AI_INTEGRATION.md)
-- [reference/pydantic-ai.md](../../reference/pydantic-ai.md)
+- [Type Safety Guide](/architecture/adr-0014-pydantic-type-safety)
 - Related Files: `src/mcp_server_langgraph/core/agent.py`, `llm_validators.py`
-- Related ADRs: [0001](adr-0001-llm-multi-provider.mdx) (LiteLLM integration)
+- Related ADRs: [0001](/architecture/adr-0001-llm-multi-provider) (LiteLLM integration)

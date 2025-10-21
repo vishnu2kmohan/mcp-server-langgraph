@@ -444,7 +444,7 @@ Before running any Python command, verify:
 
 ### Internal Documentation
 - `.venv/pyvenv.cfg` - Virtual environment configuration
-- `pyproject.toml` - Python version requirements (>=3.10,<3.13)
+- `pyproject.toml` - Python version requirements (>=3.10, &lt;3.13)
 - `.github/CLAUDE.md` - Claude Code integration guide
 
 ### External Resources
@@ -456,6 +456,6 @@ Before running any Python command, verify:
 **Last Updated**: 2025-10-21
 **Virtual Environment Python Version**: 3.12.12
 **Package Manager**: uv (latest)
-**pyproject.toml Python Requirement**: >=3.10,<3.13
+**pyproject.toml Python Requirement**: >=3.10, <3.13
 
 _This is active configuration. All Python commands must follow these guidelines._

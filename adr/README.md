@@ -94,6 +94,7 @@ What becomes easier or more difficult to do because of this change?
 | [0027](0027-rate-limiting-strategy.md) | Rate Limiting Strategy for API Protection | Accepted | 2025-10-20 |
 | [0028](0028-caching-strategy.md) | Multi-Layer Caching Strategy | Accepted | 2025-10-20 |
 | [0029](0029-custom-exception-hierarchy.md) | Custom Exception Hierarchy | Accepted | 2025-10-20 |
+| [0030](0030-resilience-patterns.md) | Resilience Patterns for Production Systems | Accepted | 2025-10-20 |
 
 ## When to Create an ADR
 

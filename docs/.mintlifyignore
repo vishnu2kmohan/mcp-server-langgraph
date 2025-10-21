@@ -1,0 +1,11 @@
+# Mintlify Ignore File (docs/ directory)
+# Only ignore files/dirs within the docs/ directory that shouldn't be scanned
+
+# Internal documentation (not for public Mintlify site)
+../docs-internal/
+
+# Regular markdown files (only scan .mdx)
+*.md
+
+# README files in subdirectories
+README.md

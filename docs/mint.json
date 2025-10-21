@@ -255,7 +255,7 @@
       ]
     },
     {
-      "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28)",
+      "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30)",
       "pages": [
         "architecture/adr-0008-infisical-secrets-management",
         "architecture/adr-0009-feature-flag-system",
@@ -263,7 +263,8 @@
         "architecture/adr-0020-dual-mcp-transport-protocol",
         "architecture/adr-0021-cicd-pipeline-strategy",
         "architecture/adr-0027-rate-limiting-strategy",
-        "architecture/adr-0028-caching-strategy"
+        "architecture/adr-0028-caching-strategy",
+        "architecture/adr-0030-resilience-patterns"
       ]
     },
     {

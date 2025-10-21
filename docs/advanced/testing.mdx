@@ -595,8 +595,8 @@ export let options = {
     { duration: '1m', target: 0 },   // Ramp down
   ],
   thresholds: {
-    http_req_duration: ['p(95)<500'], // 95% of requests < 500ms
-    http_req_failed: ['rate<0.01'],   // Error rate < 1%
+    http_req_duration: ['p(95)&lt;500'], // 95% of requests &lt; 500ms
+    http_req_failed: ['rate&lt;0.01'],   // Error rate &lt; 1%
   },
 };
 
@@ -968,7 +968,7 @@ show_missing = True
   <Card title="Contributing" icon="code-pull-request" href="/advanced/contributing">
     Contributing guidelines
   </Card>
-  <Card title="CI/CD" icon="code-branch" href="/deployment/cicd">
+  <Card title="CI/CD" icon="code-branch" href="/reference/development/ci-cd">
     Continuous integration
   </Card>
   <Card title="Monitoring" icon="chart-line" href="/deployment/monitoring">
