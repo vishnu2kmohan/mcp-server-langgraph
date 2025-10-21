@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761014101167,
+  "lastUpdate": 1761014287204,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -6748,6 +6748,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00009439331665277604",
             "extra": "mean: 59.66286032549162 usec\nrounds: 5341"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d83effcb384301bf523d7b0a1a3d26f42f7709ea",
+          "message": "build: add pre-commit, bandit, and mypy to dev dependencies\n\nMove these development tools to the dependency-groups section in pyproject.toml to ensure they are managed via uv rather than manually installed. This provides better dependency management and ensures all developers use consistent tooling versions.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T22:33:00-04:00",
+          "tree_id": "cb09fc3155a46e782cd5a1bf7f8f911550a64732",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d83effcb384301bf523d7b0a1a3d26f42f7709ea"
+        },
+        "date": 1761014286777,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50670.81916885177,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027318834035672144",
+            "extra": "mean: 19.73522465993045 usec\nrounds: 7794"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54062.32402056092,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002315808709316723",
+            "extra": "mean: 18.49717003693147 usec\nrounds: 12215"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 47372.03297088985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000573181969080055",
+            "extra": "mean: 21.10950147768623 usec\nrounds: 19963"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.10353125937328,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004803265039238147",
+            "extra": "mean: 5.232765681565352 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.423634830756235,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007045171730534612",
+            "extra": "mean: 51.483669699996426 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.952230646400585,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028559433655341673",
+            "extra": "mean: 100.4799864000006 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2464673.1460586716,
+            "unit": "iter/sec",
+            "range": "stddev: 5.0704843527283816e-8",
+            "extra": "mean: 405.7333125891878 nsec\nrounds: 198453"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5289.693365884549,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016378649212000885",
+            "extra": "mean: 189.04687490004986 usec\nrounds: 2502"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3011.0716959332394,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008700791164828939",
+            "extra": "mean: 332.1076682931869 usec\nrounds: 2870"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2866.142368067541,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004066111863399927",
+            "extra": "mean: 348.9010215058636 usec\nrounds: 1767"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59676.79307243862,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019842403145909816",
+            "extra": "mean: 16.756932611746596 usec\nrounds: 13489"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16916.847130970375,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009404416342964227",
+            "extra": "mean: 59.11266988807025 usec\nrounds: 5277"
           }
         ]
       }
