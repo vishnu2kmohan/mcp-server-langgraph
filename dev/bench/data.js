@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761028368278,
+  "lastUpdate": 1761028993476,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8908,6 +8908,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002157951062915356",
             "extra": "mean: 89.12495049506326 usec\nrounds: 5353"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "e775dec304ab7ff8f455b80346d6d09fe269f5b5",
+          "message": "fix(tests): resolve flaky circuit breaker and OpenTelemetry gRPC errors\n\nFixes two categories of test failures appearing in Dependabot PRs:\n\n1. Circuit Breaker Test Flakiness:\n   - Fixed test isolation in test_llm_fallback_kwargs.py\n   - Reduced circuit breaker timeout_duration from 60s to 1s for tests\n   - Added proper cleanup in test fixtures to prevent state bleeding\n   - Tests now pass consistently: all 4 tests in test_llm_fallback_kwargs.py\n\n2. OpenTelemetry gRPC Connection Errors:\n   - Set OTEL_SDK_DISABLED=true in test environment\n   - Added warnings filters for gRPC connection error messages\n   - Suppressed grpc and opentelemetry.exporter.otlp logging\n   - Prevents noisy \"Connection refused\" errors in test output\n\nThese failures were NOT caused by the dependency updates themselves,\nbut by existing flaky tests in the codebase. All tests now pass:\n259/259 tests passed in unit, core, and contract test suites.\n\nFiles Modified:\n- tests/conftest.py:\n  * Added logging and warnings imports\n  * Set OTEL_SDK_DISABLED environment variable\n  * Added gRPC error suppression filters\n  * Set grpc/otlp loggers to CRITICAL level\n\n- tests/unit/test_llm_fallback_kwargs.py:\n  * Replaced reset fixture with configuration fixture\n  * Set test circuit breaker timeout to 1 second\n  * Added proper circuit breaker instance cleanup\n  * Prevents circuit breaker state bleeding between tests\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T02:41:48-04:00",
+          "tree_id": "e760ff93e9bbb55201f32f7177fb6357be8463d7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/e775dec304ab7ff8f455b80346d6d09fe269f5b5"
+        },
+        "date": 1761028992694,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51594.25526134287,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002154565368335411",
+            "extra": "mean: 19.38200280117722 usec\nrounds: 6426"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53476.66426084035,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002004805594135572",
+            "extra": "mean: 18.69974527809648 usec\nrounds: 13395"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49644.84717975858,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021073072203732155",
+            "extra": "mean: 20.143077415045894 usec\nrounds: 19389"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.0961924672822,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000180441398319575",
+            "extra": "mean: 5.232966638889003 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.43578733445503,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012116139004838771",
+            "extra": "mean: 51.451478799998895 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.952562325886133,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003170026032979345",
+            "extra": "mean: 100.47663780000136 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2575000.77177356,
+            "unit": "iter/sec",
+            "range": "stddev: 4.517330597636133e-8",
+            "extra": "mean: 388.34939816784555 nsec\nrounds: 194553"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5104.183796926751,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014537104928755158",
+            "extra": "mean: 195.91770982112826 usec\nrounds: 448"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2963.681128497476,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010343515457566112",
+            "extra": "mean: 337.41821627989344 usec\nrounds: 2543"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2790.043876451557,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000048908214182994243",
+            "extra": "mean: 358.4173024804984 usec\nrounds: 1653"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59506.149916158414,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019639202066207165",
+            "extra": "mean: 16.80498572683591 usec\nrounds: 12541"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11188.060579674768,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0023782984489209742",
+            "extra": "mean: 89.38099618594212 usec\nrounds: 5506"
           }
         ]
       }
