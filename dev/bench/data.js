@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761056114455,
+  "lastUpdate": 1761056393396,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -11608,6 +11608,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0023897555434744884",
             "extra": "mean: 91.50503248533624 usec\nrounds: 5387"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7c8010d812ce07bf8daf0ebc771e9ef42f69a0a3",
+          "message": "fix(docker): add unique cache IDs to prevent apt lock contention\n\nFix Docker build failures caused by cache lock contention between parallel builds.\n\n**Problem:**\nAll three image variants (base, full, test) build in parallel and share the same\ncache mounts, causing apt lock failures:\n```\nE: Could not get lock /var/lib/apt/lists/lock. It is held by process 0\nE: Unable to lock directory /var/lib/apt/lists/\n```\n\n**Root Cause:**\n- Parallel Docker builds for base/full/test variants run simultaneously\n- Both base-builder and runtime-slim stages use `apt-get update`\n- Without unique cache IDs, BuildKit tries to use the same cache mount\n- This causes lock contention and build failures\n\n**Fix:**\nAdd unique cache IDs with `sharing=private` to prevent contention:\n- Line 40-41: `id=apt-cache-base-builder`, `id=apt-lib-base-builder`\n- Line 187-188: `id=apt-cache-runtime-slim`, `id=apt-lib-runtime-slim`\n\nThe `sharing=private` ensures each stage gets its own cache instance,\npreventing lock contention between parallel builds.\n\n**Impact:**\n- ✅ Eliminates \"lock is held by process 0\" errors\n- ✅ Allows parallel builds to proceed independently\n- ✅ Maintains cache benefits (each stage has dedicated cache)\n- ✅ Fixes both base and test image build failures\n\n**Testing:**\nBase, full, and test variants can now build in parallel without conflicts.\n\nFixes the apt lock contention causing 100% build failure rate.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T10:18:39-04:00",
+          "tree_id": "26e35e3319257150831fa06277fab94f72c08094",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7c8010d812ce07bf8daf0ebc771e9ef42f69a0a3"
+        },
+        "date": 1761056392241,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50903.7946138663,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002082871302737188",
+            "extra": "mean: 19.644900887754208 usec\nrounds: 6195"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52237.70893130406,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002064494618976446",
+            "extra": "mean: 19.14325916006508 usec\nrounds: 12691"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48536.38899758569,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029174235029256356",
+            "extra": "mean: 20.60309843094719 usec\nrounds: 19821"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.33582431199966,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012990180501406418",
+            "extra": "mean: 5.22641279329563 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.374060283606386,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001013103782860244",
+            "extra": "mean: 51.61540665000217 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954740057587085,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016331948615010545",
+            "extra": "mean: 100.45465719999811 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2548048.511718904,
+            "unit": "iter/sec",
+            "range": "stddev: 5.029578100290321e-8",
+            "extra": "mean: 392.4572061327843 nsec\nrounds: 189754"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5206.460834242359,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001298627469211422",
+            "extra": "mean: 192.06905263228 usec\nrounds: 456"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2923.4808988871314,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007742146557074016",
+            "extra": "mean: 342.05798997375547 usec\nrounds: 2693"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2807.227297245519,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004256954265516811",
+            "extra": "mean: 356.2233813347464 usec\nrounds: 1618"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59634.454450129895,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019252402160332753",
+            "extra": "mean: 16.768829516773113 usec\nrounds: 12664"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11293.134829159531,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0022662794274620926",
+            "extra": "mean: 88.54937226269023 usec\nrounds: 5480"
           }
         ]
       }
