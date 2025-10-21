@@ -97,7 +97,8 @@ jobs:
       run: |
         source .venv/bin/activate
         # Match local development environment: parallel execution with OTEL disabled
-        OTEL_SDK_DISABLED=true pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
+        # Use CI Hypothesis profile for consistent property test behavior (100 examples)
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
 
     - name: Upload coverage
       if: matrix.python-version == '3.12'

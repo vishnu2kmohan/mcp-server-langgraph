@@ -71,7 +71,8 @@ jobs:
     - name: Run unit tests with coverage
       run: |
         # Match local development environment: parallel execution with OTEL disabled
-        OTEL_SDK_DISABLED=true uv run pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=json --cov-report=term-missing
+        # Use CI Hypothesis profile for consistent property test behavior (100 examples)
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=json --cov-report=term-missing
 
     - name: Track coverage and save to history
       id: coverage
