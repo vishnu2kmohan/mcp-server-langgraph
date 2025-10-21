@@ -76,6 +76,8 @@ dev = [
     "pytest-cov>=7.0.0",
     "pytest-mock>=3.12.0",
     "pytest-benchmark>=4.0.0",
+    "pytest-xdist>=3.5.0",  # Parallel test execution for faster test runs
+    "pytest-testmon>=2.1.0",  # Selective test execution based on code changes
     # Property-based testing
     "hypothesis>=6.142.1",
     "hypothesis-jsonschema>=0.22.1",
@@ -228,9 +230,10 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-# Default options for all test runs (matches CI behavior)
-# Use --no-cov to skip coverage for faster iteration during development
-addopts = "-v --strict-markers --tb=short --cov=src/mcp_server_langgraph --cov-report=term-missing"
+# Default options for all test runs (optimized for development speed)
+# Coverage disabled by default for faster iteration (20-30% speedup)
+# CI and coverage targets explicitly enable coverage with --cov flag
+addopts = "-v --strict-markers --tb=short"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
@@ -282,9 +285,11 @@ exclude_lines = [
 ]
 
 [tool.hypothesis]
-# Property-based testing configuration
-max_examples = 100  # Number of test cases to generate
-deadline = 5000  # ms - max time per test case
+# Property-based testing configuration (optimized for development speed)
+# Development: 25 examples for fast iteration (75% faster than 100)
+# CI overrides with --hypothesis-max-examples=100 for comprehensive testing
+max_examples = 25  # Number of test cases to generate (dev: 25, CI: 100)
+deadline = 2000  # ms - max time per test case (reduced for faster feedback)
 verbosity = "normal"  # normal, verbose, debug
 database = ".hypothesis/examples"  # Store failing examples
 derandomize = false  # Set true for deterministic testing

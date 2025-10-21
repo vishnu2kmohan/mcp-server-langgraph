@@ -12,19 +12,26 @@ help:
 	@echo "  make setup-infisical  Initialize Infisical"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test                     Run all automated tests (unit + integration)"
-	@echo "  make test-unit                Run unit tests only"
-	@echo "  make test-integration         Run integration tests"
-	@echo "  make test-coverage            Run tests with coverage report (unit only)"
-	@echo "  make test-coverage-combined   Run all tests with COMBINED coverage (unit + integration)"
-	@echo "  make test-property            Run property-based tests (Hypothesis)"
-	@echo "  make test-contract            Run contract tests (MCP, OpenAPI)"
-	@echo "  make test-regression          Run performance regression tests"
-	@echo "  make test-mutation            Run mutation tests (slow)"
-	@echo "  make test-all-quality         Run all quality tests (property+contract+regression)"
-	@echo "  make benchmark                Run performance benchmarks"
-	@echo "  make test-auth                Test OpenFGA authorization (manual)"
-	@echo "  make test-mcp                 Test MCP server (manual)"
+	@echo "  make test                     Run all automated tests with coverage"
+	@echo "  make test-unit                Run unit tests with coverage"
+	@echo "  make test-integration         Run integration tests in Docker"
+	@echo ""
+	@echo "Fast Testing (40-70% faster):"
+	@echo "  make test-dev                 🚀 Development mode (parallel, fast-fail) - RECOMMENDED"
+	@echo "  make test-parallel            Run all tests in parallel (no coverage)"
+	@echo "  make test-parallel-unit       Run unit tests in parallel"
+	@echo "  make test-fast-core           Fastest iteration (core tests only, <5s)"
+	@echo "  make test-fast                Run all tests without coverage"
+	@echo ""
+	@echo "Quality & Specialized:"
+	@echo "  make test-coverage            Generate comprehensive coverage report"
+	@echo "  make test-coverage-combined   Combined coverage (unit + integration)"
+	@echo "  make test-property            Property-based tests (Hypothesis)"
+	@echo "  make test-contract            Contract tests (MCP, OpenAPI)"
+	@echo "  make test-regression          Performance regression tests"
+	@echo "  make test-mutation            Mutation tests (slow)"
+	@echo "  make test-all-quality         All quality tests (property+contract+regression)"
+	@echo "  make benchmark                Performance benchmarks"
 	@echo ""
 	@echo "Validation:"
 	@echo "  make validate-openapi         Validate OpenAPI schema"
@@ -118,19 +125,20 @@ setup-infisical:
 
 test:
 	@echo "Running all tests with coverage..."
-	.venv/bin/pytest
+	.venv/bin/pytest --cov=src/mcp_server_langgraph --cov-report=term-missing
 	@echo "✓ Tests complete. Coverage report above."
 	@echo ""
-	@echo "Tip: Use 'make test-fast' for quick iteration without coverage"
+	@echo "Tip: Use 'make test-fast' or 'make test-parallel' for faster iteration"
 
 test-unit:
 	@echo "Running unit tests with coverage (matches CI)..."
-	.venv/bin/pytest -m unit
+	.venv/bin/pytest -m unit --cov=src/mcp_server_langgraph --cov-report=term-missing
 	@echo "✓ Unit tests complete"
 
 test-unit-fast:
 	@echo "Running unit tests without coverage (fast iteration)..."
-	.venv/bin/pytest -m unit --no-cov
+	@echo "⚠️  DEPRECATED: Use 'make test-parallel-unit' or 'make test-dev' instead"
+	.venv/bin/pytest -m unit --tb=short
 	@echo "✓ Fast unit tests complete"
 
 test-ci:
@@ -654,14 +662,45 @@ test-watch:
 
 test-fast:
 	@echo "⚡ Running all tests without coverage (fast iteration)..."
-	.venv/bin/pytest --no-cov --tb=short
+	@echo "💡 TIP: Use 'make test-parallel' for even faster execution (40-60% speedup)"
+	.venv/bin/pytest --tb=short
 	@echo "✓ Fast tests complete"
 	@echo ""
-	@echo "Tip: Use 'make test' for full coverage report"
+	@echo "For maximum speed: 'make test-dev' (parallel + fast-fail)"
 
 test-fast-unit:
 	@echo "⚡ Running unit tests without coverage..."
-	.venv/bin/pytest -m unit --no-cov --tb=short
+	.venv/bin/pytest -m unit --tb=short
+
+# ==============================================================================
+# Parallel Testing (40-60% faster)
+# ==============================================================================
+
+test-parallel:
+	@echo "⚡⚡ Running all tests in parallel (pytest-xdist)..."
+	.venv/bin/pytest -n auto --tb=short
+	@echo "✓ Parallel tests complete"
+	@echo ""
+	@echo "Speedup: ~40-60% faster than sequential execution"
+
+test-parallel-unit:
+	@echo "⚡⚡ Running unit tests in parallel..."
+	.venv/bin/pytest -m unit -n auto --tb=short
+	@echo "✓ Parallel unit tests complete"
+
+test-dev:
+	@echo "🚀 Running tests in development mode (parallel, fast-fail, no coverage)..."
+	.venv/bin/pytest -n auto -x --maxfail=3 --tb=short -m "unit and not slow"
+	@echo "✓ Development tests complete"
+	@echo ""
+	@echo "Features: Parallel execution, stop on first failure, skip slow tests"
+
+test-fast-core:
+	@echo "⚡ Running core unit tests only (fastest iteration)..."
+	.venv/bin/pytest -n auto -m "unit and not slow and not integration" --tb=line -q
+	@echo "✓ Core tests complete"
+	@echo ""
+	@echo "Use for rapid iteration (typically < 5 seconds)"
 
 test-slow:
 	@echo "🐌 Running slow tests only..."

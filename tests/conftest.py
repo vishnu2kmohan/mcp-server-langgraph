@@ -75,9 +75,9 @@ def mock_mcp_modules():
         }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_settings():
-    """Mock settings for testing"""
+    """Mock settings for testing (session-scoped for performance)"""
     from mcp_server_langgraph.core.config import Settings
 
     return Settings(
@@ -93,9 +93,9 @@ def mock_settings():
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_openfga_response():
-    """Mock OpenFGA API responses"""
+    """Mock OpenFGA API responses (session-scoped for performance)"""
     return {
         "check": {"allowed": True},
         "list_objects": {"objects": ["tool:chat", "tool:search"]},
@@ -247,9 +247,9 @@ def qdrant_client():
         pass  # Ignore cleanup errors
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_infisical_response():
-    """Mock Infisical API responses"""
+    """Mock Infisical API responses (session-scoped for performance)"""
     return {
         "secrets": [
             {"secretKey": "JWT_SECRET_KEY", "secretValue": "test-jwt-secret", "version": 1},
@@ -273,15 +273,15 @@ def mock_jwt_token():
     return jwt.encode(payload, "test-secret-key", algorithm="HS256")
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_user_alice():
-    """Mock user alice"""
+    """Mock user alice (session-scoped for performance)"""
     return {"username": "alice", "tier": "premium", "organization": "acme", "roles": ["admin", "user"]}
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_user_bob():
-    """Mock user bob"""
+    """Mock user bob (session-scoped for performance)"""
     return {"username": "bob", "tier": "standard", "organization": "acme", "roles": ["user"]}
 
 
@@ -337,9 +337,9 @@ def mock_anthropic_client():
     return mock_client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_mcp_request():
-    """Mock MCP JSON-RPC request"""
+    """Mock MCP JSON-RPC request (session-scoped for performance)"""
     return {
         "jsonrpc": "2.0",
         "id": 1,
@@ -348,9 +348,9 @@ def mock_mcp_request():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_mcp_initialize_request():
-    """Mock MCP initialize request"""
+    """Mock MCP initialize request (session-scoped for performance)"""
     return {
         "jsonrpc": "2.0",
         "id": 1,
@@ -388,9 +388,9 @@ async def mock_infisical_client(mock_infisical_response):
         yield mock_client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def sample_openfga_tuples():
-    """Sample OpenFGA relationship tuples"""
+    """Sample OpenFGA relationship tuples (session-scoped for performance)"""
     return [
         {"user": "user:alice", "relation": "executor", "object": "tool:chat"},
         {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
@@ -408,9 +408,9 @@ def temp_checkpoint_dir(tmp_path):
 
 
 # Async context manager helpers
-@pytest.fixture
+@pytest.fixture(scope="session")
 def async_context_manager():
-    """Helper to create async context managers for mocking"""
+    """Helper to create async context managers for mocking (session-scoped for performance)"""
 
     def _create(return_value):
         class AsyncContextManager:
