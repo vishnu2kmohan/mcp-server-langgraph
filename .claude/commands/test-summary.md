@@ -379,6 +379,24 @@ pytest --lf  # Last failed
 pytest -n auto
 ```
 
+**Specialized test commands**:
+```bash
+# Fast testing (40-70% faster)
+make test-dev           # Development mode (recommended)
+make test-fast-core     # Core tests only (<5s)
+make test-parallel      # All tests in parallel
+
+# Specialized test types
+make test-compliance    # GDPR, SOC2, SLA tests
+make test-slow          # Slow tests only
+make test-failed        # Re-run failed tests
+make test-debug         # Debug mode with pdb
+
+# Coverage options
+make test-coverage-fast       # Fast coverage (unit only)
+make test-coverage-changed    # Incremental coverage
+```
+
 ---
 
 **Report saved to**: `docs-internal/TEST_SUMMARY_$(date +%Y%m%d).md`
@@ -499,10 +517,12 @@ Coverage: file://htmlcov/index.html
 
 ## 🔗 Related Commands
 
+- `/test-fast` - Fast test iteration (40-70% faster)
 - `/validate` - Run all validations (includes tests)
 - `/progress-update` - Include test status in sprint update
 - `/start-sprint` - Initialize sprint with test baseline
 - `/fix-issue` - Fix failing tests
+- `/test-failure-analysis` - Deep analysis of failures
 
 ---
 
