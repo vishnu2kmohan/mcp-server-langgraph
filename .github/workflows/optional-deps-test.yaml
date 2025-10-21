@@ -173,7 +173,7 @@ jobs:
 
       - name: Check for critical production settings
         run: |
-          if grep -q "GDPR_STORAGE_BACKEND" docs/deployment/gdpr-storage-configuration.md; then
+          if grep -q "GDPR_STORAGE_BACKEND" docs/deployment/gdpr-storage-configuration.mdx; then
             echo "✓ GDPR storage documentation exists"
           else
             echo "✗ GDPR storage documentation missing"
