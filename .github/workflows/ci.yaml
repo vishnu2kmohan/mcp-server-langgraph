@@ -191,10 +191,12 @@ jobs:
     - name: Test ${{ matrix.variant }} image
       if: github.event_name == 'pull_request'
       run: |
-        # Use full python path for distroless images (base, full)
-        # Test variant uses slim base with shell, so it works either way
-        docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest \
-          /opt/venv/bin/python -c "import mcp_server_langgraph.core.agent; print('✓ Import successful')"
+        # Use explicit entrypoint for distroless images (base, full)
+        # Distroless images have limited command parsing - use --entrypoint
+        docker run --rm \
+          --entrypoint /opt/venv/bin/python \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest \
+          -c "import mcp_server_langgraph.core.agent; print('✓ Import successful')"
 
   # ============================================================================
   # MULTI-PLATFORM BUILDS (Parallel by platform)
