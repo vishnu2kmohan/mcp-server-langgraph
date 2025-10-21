@@ -32,15 +32,18 @@ def configure_test_circuit_breaker():
     set_resilience_config(test_config)
 
     # Clear any existing circuit breaker instances to force recreation with new config
+    # This is critical for CI where state can pollute between sequential tests
     if "llm" in _circuit_breakers:
         del _circuit_breakers["llm"]
 
-    # Reset circuit breaker before test
-    reset_circuit_breaker("llm")
     yield
 
-    # Reset after test to ensure cleanup
-    reset_circuit_breaker("llm")
+    # Always reset and clear circuit breaker after test to prevent state pollution
+    # This ensures the next test starts with a clean slate
+    try:
+        reset_circuit_breaker("llm")
+    except Exception:
+        pass  # Ignore errors if circuit breaker doesn't exist
 
     # Clear circuit breaker instance after test
     if "llm" in _circuit_breakers:
