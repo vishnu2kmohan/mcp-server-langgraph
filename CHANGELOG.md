@@ -251,6 +251,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed duplicate cache exports
   - Fixed uv.lock parse errors
   - Standardized Python setup across jobs
+  - Updated optional deps test to check .mdx files (.github/workflows/ci.yaml)
+
+- **GitHub Actions Updates** (.github/actions/, .github/workflows/):
+  - Updated astral-sh/setup-uv: v5 → v7.1.1
+  - Updated actions/upload-artifact: v4 → v4.6.2
+  - Updated actions/download-artifact: v4 → v5.0.0
+  - Updated actions/stale: v9 → v10.1.0
+  - **Impact**: Improved stability and security with latest action versions
 
 - **Security Scan Optimization**:
   - Prevented duplicate runs on push events
