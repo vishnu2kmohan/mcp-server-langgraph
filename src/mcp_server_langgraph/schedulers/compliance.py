@@ -427,8 +427,7 @@ class ComplianceScheduler:
             alerting_service = AlertingService()
             await alerting_service.initialize()
 
-            # type: ignore[attr-defined]
-            alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING
+            alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING  # type: ignore[attr-defined]
 
             alert = Alert(
                 title=f"Compliance {severity.upper()}: {message}",

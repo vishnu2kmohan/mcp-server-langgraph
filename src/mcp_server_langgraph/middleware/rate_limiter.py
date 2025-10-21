@@ -64,7 +64,7 @@ def get_user_id_from_jwt(request: Request) -> Optional[str]:
         try:
             payload = jwt.decode(
                 token,
-                settings.jwt_secret_key,
+                settings.jwt_secret_key,  # type: ignore[arg-type]
                 algorithms=[settings.jwt_algorithm],
                 options={"verify_exp": False},  # Don't verify expiration for rate limiting
             )
@@ -101,7 +101,7 @@ def get_user_tier(request: Request) -> str:
         try:
             payload = jwt.decode(
                 token,
-                settings.jwt_secret_key,
+                settings.jwt_secret_key,  # type: ignore[arg-type]
                 algorithms=[settings.jwt_algorithm],
                 options={"verify_exp": False},
             )

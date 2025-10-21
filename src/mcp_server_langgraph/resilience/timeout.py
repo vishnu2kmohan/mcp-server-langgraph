@@ -124,7 +124,7 @@ def with_timeout(
                     # Use asyncio.timeout() for Python 3.11+, wait_for() for 3.10
                     if sys.version_info >= (3, 11):
                         async with asyncio.timeout(timeout_value):
-                            result = await func(*args, **kwargs)
+                            result = await func(*args, **kwargs)  # type: ignore[misc]
                     else:
                         result = await asyncio.wait_for(
                             func(*args, **kwargs),
@@ -248,7 +248,7 @@ class TimeoutContext:
                     },
                 )
 
-        return False  # Don't suppress exceptions # type: ignore[return-value]
+        return None  # Don't suppress exceptions
 
 
 # Convenience functions for common timeout patterns

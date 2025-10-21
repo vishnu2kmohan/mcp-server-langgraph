@@ -120,10 +120,9 @@ class ParallelToolExecutor:
             if failed > 0:
                 metrics.failed_calls.add(failed, {"operation": "parallel_tool_execution"})
 
-            return results  # type: ignore[ToolResult ]
+            return results  # type: ignore[return-value]
 
-    # type: ignore[type-arg]
-    async def _execute_single(self, invocation: ToolInvocation, tool_executor: Callable) -> ToolResult:
+    async def _execute_single(self, invocation: ToolInvocation, tool_executor: Callable[..., Any]) -> ToolResult:
         """Execute a single tool invocation."""
         async with self.semaphore:  # Limit concurrency
             start_time = time.time()
@@ -198,7 +197,7 @@ class ParallelToolExecutor:
         inv_lookup = {inv.invocation_id: inv for inv in invocations}
 
         levels = []
-        processed = set()
+        processed: set[str] = set()
 
         while processed != set(sorted_nodes):
             current_level = []

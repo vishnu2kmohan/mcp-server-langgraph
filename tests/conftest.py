@@ -58,15 +58,14 @@ settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
 # Initialize observability for tests (required after lazy init refactor)
 def pytest_configure(config):
     """Initialize observability system for tests."""
-    # Skip observability initialization if OTEL SDK is disabled
-    if os.getenv("OTEL_SDK_DISABLED", "false").lower() in ("true", "1", "yes"):
-        return
-
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
 
     # Only initialize if not already done
     if not is_initialized():
+        # Always initialize observability, even when OTEL SDK is disabled
+        # This ensures lazy metrics don't raise RuntimeError
+        # The OTEL SDK environment variable will ensure no-op implementations are used
         test_settings = Settings(
             log_format="text",  # Text format for easier test debugging
             enable_file_logging=False,  # No file logging in tests

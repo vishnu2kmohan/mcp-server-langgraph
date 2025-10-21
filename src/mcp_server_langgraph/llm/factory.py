@@ -239,7 +239,7 @@ class LLMFactory:
                 formatted.append({"role": "assistant", "content": msg.content})
             elif isinstance(msg, SystemMessage):
                 formatted.append({"role": "system", "content": msg.content})
-            elif isinstance(msg, dict):
+            elif isinstance(msg, dict):  # type: ignore[unreachable]
                 # Handle dict messages (already in correct format or need conversion)
                 if "role" in msg and "content" in msg:  # type: ignore[unreachable]
                     # Already formatted dict
@@ -258,7 +258,7 @@ class LLMFactory:
                     # Last resort: convert entire object to string
                     formatted.append({"role": "user", "content": str(msg)})
 
-        return formatted  # type: ignore[ str ]
+        return formatted  # type: ignore[return-value]
 
     def invoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """
@@ -290,15 +290,14 @@ class LLMFactory:
             try:
                 response: ModelResponse = completion(**params)
 
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content  # type: ignore[union-attr]
 
                 # Track metrics
                 metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
 
-                # type: ignore[attr-defined]
                 logger.info(
                     "LLM invocation successful",
-                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},
+                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},  # type: ignore[attr-defined]
                 )
 
                 return AIMessage(content=content)
@@ -363,14 +362,13 @@ class LLMFactory:
             try:
                 response: ModelResponse = await acompletion(**params)
 
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content  # type: ignore[union-attr]
 
                 metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 
-                # type: ignore[attr-defined]
                 logger.info(
                     "Async LLM invocation successful",
-                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},
+                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},  # type: ignore[attr-defined]
                 )
 
                 return AIMessage(content=content)

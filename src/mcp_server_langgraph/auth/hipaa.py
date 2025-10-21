@@ -361,8 +361,8 @@ class HIPAAControls:
                 )
 
                 await alerting_service.send_alert(alert)
-                # type: ignore[attr-defined]
-                logger.debug("PHI access logged to SIEM", extra={"log_entry_id": log_entry.log_entry_id})
+
+                logger.debug("PHI access logged to SIEM", extra={"log_entry_id": log_entry.log_entry_id})  # type: ignore[attr-defined]
 
             except Exception as e:
                 logger.error(f"Failed to send PHI access to SIEM: {e}", exc_info=True)

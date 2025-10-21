@@ -21,7 +21,7 @@ except (ImportError, AttributeError):
     JsonFormatterBase = logging.Formatter  # type: ignore[assignment]
 
 
-class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type]
+class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type,misc]
     """
     Enhanced JSON formatter with OpenTelemetry trace context injection
 

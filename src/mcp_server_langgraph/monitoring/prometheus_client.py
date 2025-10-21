@@ -48,7 +48,7 @@ class MetricValue:
     @classmethod
     def from_prometheus(cls, data: List[Union[float, str]]) -> "MetricValue":
         """Parse from Prometheus response format: [timestamp, value]"""
-        return cls(timestamp=datetime.fromtimestamp(data[0]), value=float(data[1]))
+        return cls(timestamp=datetime.fromtimestamp(data[0]), value=float(data[1]))  # type: ignore[arg-type]
 
 
 @dataclass
@@ -143,7 +143,7 @@ class PrometheusClient:
         url = f"{self.config.url}/api/v1/query"
 
         try:
-            response = await self.client.get(url, params=params)
+            response = await self.client.get(url, params=params)  # type: ignore[union-attr]
             response.raise_for_status()
 
             data = response.json()
@@ -189,7 +189,7 @@ class PrometheusClient:
         url = f"{self.config.url}/api/v1/query_range"
 
         try:
-            response = await self.client.get(url, params=params)
+            response = await self.client.get(url, params=params)  # type: ignore[union-attr,arg-type]
             response.raise_for_status()
 
             data = response.json()
@@ -256,7 +256,7 @@ class PrometheusClient:
             if results and results[0].values:
                 uptime_pct = results[0].get_latest_value()
                 logger.info(f"Uptime queried: {uptime_pct:.2f}% over {timerange}", extra={"service": service})
-                return uptime_pct
+                return uptime_pct  # type: ignore[return-value]
 
             # Fallback: assume 100% if no data
             logger.warning(f"No uptime data found for {service}, assuming 100%")
@@ -324,7 +324,7 @@ class PrometheusClient:
         Resolves: monitoring/sla.py:235
         """
         if percentiles is None:
-            percentiles = [50, 95, 99]  # type: ignore[unreachable]
+            percentiles = [0.5, 0.95, 0.99]  # type: ignore[list-item]
 
         # Build label filter string
         label_str = ""
@@ -354,7 +354,7 @@ class PrometheusClient:
 
         logger.info(f"Percentiles queried: {results}", extra={"metric": metric, "timerange": timerange})
 
-        return results
+        return results  # type: ignore[return-value]
 
     async def query_error_rate(
         self,
@@ -387,10 +387,10 @@ class PrometheusClient:
             total_rate_value = 0.0
 
             if error_results and error_results[0].values:
-                error_rate_value = error_results[0].get_latest_value()
+                error_rate_value = error_results[0].get_latest_value()  # type: ignore[assignment]
 
             if total_results and total_results[0].values:
-                total_rate_value = total_results[0].get_latest_value()
+                total_rate_value = total_results[0].get_latest_value()  # type: ignore[assignment]
 
             if total_rate_value > 0:
                 error_pct = (error_rate_value / total_rate_value) * 100
@@ -428,7 +428,7 @@ class PrometheusClient:
             if results and results[0].values:
                 rps = results[0].get_latest_value()
                 logger.info(f"Request rate: {rps:.2f} req/s", extra={"service": service})
-                return rps
+                return rps  # type: ignore[return-value]
 
             return 0.0
 

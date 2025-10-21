@@ -530,8 +530,7 @@ class SLAMonitor:
             await alerting_service.initialize()
 
             # Map severity string to AlertSeverity enum
-            # type: ignore[attr-defined]
-            alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING
+            alert_severity = AlertSeverity.CRITICAL if severity == "critical" else AlertSeverity.WARNING  # type: ignore[attr-defined]
 
             from mcp_server_langgraph.integrations.alerting import AlertCategory
 

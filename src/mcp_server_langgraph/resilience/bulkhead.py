@@ -158,13 +158,17 @@ def with_bulkhead(
                     )
 
                     # Emit metric
-                    bulkhead_rejected_counter.add(
-                        1,
-                        attributes={
-                            "resource_type": resource_type,
-                            "function": func.__name__,
-                        },
-                    )
+                    try:
+                        bulkhead_rejected_counter.add(
+                            1,
+                            attributes={
+                                "resource_type": resource_type,
+                                "function": func.__name__,
+                            },
+                        )
+                    except RuntimeError:
+                        # Observability not initialized (can happen in tests or during shutdown)
+                        pass
 
                     # Raise our custom exception
                     from mcp_server_langgraph.core.exceptions import BulkheadRejectedError
@@ -186,13 +190,17 @@ def with_bulkhead(
                     # Emit metric for active operations
                     # Get active count safely (since we're inside the semaphore, use the value we calculated earlier)
                     active_count = waiters_count + 1
-                    bulkhead_active_operations_gauge.set(
-                        active_count,
-                        attributes={"resource_type": resource_type},
-                    )
+                    try:
+                        bulkhead_active_operations_gauge.set(
+                            active_count,
+                            attributes={"resource_type": resource_type},
+                        )
+                    except RuntimeError:
+                        # Observability not initialized (can happen in tests or during shutdown)
+                        pass
 
                     # Execute function
-                    result = await func(*args, **kwargs)
+                    result = await func(*args, **kwargs)  # type: ignore[misc]
 
                     return result  # type: ignore[no-any-return]
 
@@ -254,7 +262,7 @@ class BulkheadContext:
     async def __aexit__(self, exc_type, exc_val, exc_tb: Any) -> None:  # type: ignore[no-untyped-def]
         """Release bulkhead slot"""
         self.semaphore.release()
-        return False  # Don't suppress exceptions # type: ignore[return-value]
+        return None  # Don't suppress exceptions
 
 
 def get_bulkhead_stats(resource_type: Optional[str] = None) -> Dict[str, Dict[str, int]]:

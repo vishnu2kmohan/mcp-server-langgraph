@@ -80,8 +80,7 @@ class DataDeletionService:
         self.audit_log_store = audit_log_store
         self.consent_store = consent_store
 
-    # type: ignore[no-untyped-def]
-    async def _safe_delete(self, operation_name: str, delete_func, user_id: str, deleted_items: dict, errors: list) -> None:
+    async def _safe_delete(self, operation_name: str, delete_func, user_id: str, deleted_items: dict, errors: list) -> None:  # type: ignore[no-untyped-def,type-arg]
         """
         Safely execute a deletion operation with error handling
 

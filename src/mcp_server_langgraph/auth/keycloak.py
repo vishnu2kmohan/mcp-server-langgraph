@@ -182,7 +182,7 @@ class TokenValidator:
                 # Verify and decode token
                 payload = jwt.decode(
                     token,
-                    public_key,
+                    public_key,  # type: ignore[arg-type]
                     algorithms=["RS256"],
                     audience=self.config.client_id,
                     options={

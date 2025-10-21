@@ -611,7 +611,7 @@ def require_auth(  # type: ignore[no-untyped-def]
 
             # Authorize if relation and resource specified
             if relation and resource:
-                if not await auth.authorize(user_id, relation, resource):
+                if not await auth.authorize(user_id, relation, resource):  # type: ignore[arg-type]
                     raise PermissionError(f"Not authorized: {user_id} cannot {relation} {resource}")
 
             # Add user_id to kwargs if authenticated
@@ -796,7 +796,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         async def dependency(
             request: Request,
-            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,
+            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,  # type: ignore[assignment]
         ) -> Dict[str, Any]:
             # Get authenticated user
             user = await get_current_user(request, credentials)

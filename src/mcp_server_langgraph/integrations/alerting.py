@@ -237,7 +237,7 @@ class SlackProvider(AlertProvider):
 
             # Add metadata fields
             for key, value in alert.metadata.items():
-                attachment["fields"].append({"title": key, "value": str(value), "short": True})  # type: ignore[ list]
+                attachment["fields"].append({"title": key, "value": str(value), "short": True})  # type: ignore[union-attr]
 
             payload = {"text": text, "attachments": [attachment]}
 
@@ -424,7 +424,7 @@ class AlertingService:
                 "smtp_host": settings.email_smtp_host,
                 "smtp_port": settings.email_smtp_port,  # type: ignore[dict-item]
                 "from_address": settings.email_from_address,
-                "to_addresses": settings.email_to_addresses.split(",") if settings.email_to_addresses else [],
+                "to_addresses": settings.email_to_addresses.split(",") if settings.email_to_addresses else [],  # type: ignore[dict-item]
             }
 
         # Enabled if at least one provider is configured
@@ -507,7 +507,7 @@ class AlertingService:
         self.alert_history.append(alert)
 
         # Update dedupe cache
-        self.dedupe_cache[alert.dedupe_key] = datetime.now(timezone.utc)
+        self.dedupe_cache[alert.dedupe_key] = datetime.now(timezone.utc)  # type: ignore[index]
 
         # Send to all providers concurrently
         results = {}
@@ -550,8 +550,8 @@ class AlertingService:
         if not self.alert_history:
             return {"total_alerts": 0}
 
-        severity_counts = {}
-        category_counts = {}
+        severity_counts = {}  # type: ignore[var-annotated]
+        category_counts = {}  # type: ignore[var-annotated]
 
         for alert in self.alert_history:
             severity_counts[alert.severity.value] = severity_counts.get(alert.severity.value, 0) + 1

@@ -27,13 +27,13 @@ class HealthResponse(BaseModel):
 
 
 @app.get("/health", response_model=HealthResponse)
-async def health_check() -> None:
+async def health_check() -> HealthResponse:
     """
     Liveness probe - returns 200 if application is running
 
     Used by Kubernetes to determine if pod should be restarted
     """
-    return HealthResponse(  # type: ignore[return-value]
+    return HealthResponse(
         status="healthy",
         timestamp=datetime.now(timezone.utc).isoformat(),
         version=settings.service_version,
@@ -41,8 +41,8 @@ async def health_check() -> None:
     )
 
 
-@app.get("/health/ready", response_model=HealthResponse)
-async def readiness_check() -> None:
+@app.get("/health/ready", response_model=None)
+async def readiness_check() -> JSONResponse:
     """
     Readiness probe - returns 200 if application can serve traffic
 
@@ -88,7 +88,7 @@ async def readiness_check() -> None:
         critical_secrets_missing.append("JWT_SECRET_KEY")
 
     if critical_secrets_missing:
-        checks["secrets"] = {"status": "unhealthy", "missing": critical_secrets_missing}
+        checks["secrets"] = {"status": "unhealthy", "missing": critical_secrets_missing}  # type: ignore[dict-item]
         all_healthy = False
     else:
         checks["secrets"] = {"status": "healthy", "message": "All critical secrets loaded"}
@@ -96,7 +96,7 @@ async def readiness_check() -> None:
     response_status = "ready" if all_healthy else "not_ready"
     http_status = status.HTTP_200_OK if all_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
 
-    return JSONResponse(  # type: ignore[return-value]
+    return JSONResponse(
         status_code=http_status,
         content=HealthResponse(
             status=response_status,
@@ -107,8 +107,8 @@ async def readiness_check() -> None:
     )
 
 
-@app.get("/health/startup")
-async def startup_check() -> None:
+@app.get("/health/startup", response_model=None)
+async def startup_check() -> JSONResponse | Dict[str, Any]:
     """
     Startup probe - returns 200 when application has fully started
 
@@ -126,15 +126,14 @@ async def startup_check() -> None:
         checks["logging"] = {"status": "initialized"}
     except Exception as e:
         checks["logging"] = {"status": "failed", "error": str(e)}
-        # type: ignore[return-value]
+
         return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"status": "starting", "checks": checks})
 
-    # type: ignore[return-value]
     return {"status": "started", "timestamp": datetime.now(timezone.utc).isoformat(), "checks": checks}
 
 
 @app.get("/metrics/prometheus")
-async def prometheus_metrics() -> None:
+async def prometheus_metrics() -> Dict[str, Any]:
     """
     Prometheus metrics endpoint
 
@@ -142,10 +141,12 @@ async def prometheus_metrics() -> None:
     """
     # This would integrate with OpenTelemetry's Prometheus exporter
     # For now, return basic info
-    return {  # type: ignore[return-value]
-        "# HELP langgraph_agent_info Application information",
-        "# TYPE langgraph_agent_info gauge",
-        f'langgraph_agent_info{{version="{settings.service_version}",service="{settings.service_name}"}} 1',
+    return {
+        "metrics": [
+            "# HELP langgraph_agent_info Application information",
+            "# TYPE langgraph_agent_info gauge",
+            f'langgraph_agent_info{{version="{settings.service_version}",service="{settings.service_name}"}} 1',
+        ]
     }
 
 
@@ -156,6 +157,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",  # nosec B104 - Required for containerized deployment
-        port=int(settings.get_secret("HEALTH_PORT", fallback="8000")),
+        port=int(settings.get_secret("HEALTH_PORT", fallback="8000") or "8000"),
         log_level="info",
     )

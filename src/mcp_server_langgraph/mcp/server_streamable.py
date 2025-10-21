@@ -403,8 +403,8 @@ class MCPAgentStreamableServer:
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
-                # type: ignore[arg-type]
-                return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]
+
+                return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]  # type: ignore[arg-type]
 
         # Store reference to handler for public API
         self._list_resources_handler = list_resources

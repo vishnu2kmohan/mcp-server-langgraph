@@ -59,9 +59,11 @@ def _create_embeddings(
             raise ValueError("GOOGLE_API_KEY is required for Google embeddings. " "Set via environment variable or Infisical.")
 
         # Create Google embeddings with task type optimization
+        from pydantic import SecretStr
+
         embeddings = GoogleGenerativeAIEmbeddings(
             model=model_name,
-            google_api_key=google_api_key,
+            google_api_key=SecretStr(google_api_key),
             task_type=task_type or "RETRIEVAL_DOCUMENT",
         )
 
@@ -403,11 +405,13 @@ class DynamicContextLoader:
                 references = []
                 for result in results:
                     payload = result.payload
+                    if payload is None:
+                        continue
                     ref = ContextReference(
-                        ref_id=payload["ref_id"],  # type: ignore[ Any ]
-                        ref_type=payload["ref_type"],  # type: ignore[ Any ]
-                        summary=payload["summary"],  # type: ignore[ Any ]
-                        metadata=payload.get("metadata", {}),  # type: ignore[ Any ]
+                        ref_id=payload["ref_id"],
+                        ref_type=payload["ref_type"],
+                        summary=payload["summary"],
+                        metadata=payload.get("metadata", {}),
                         relevance_score=result.score,
                     )
                     references.append(ref)
@@ -528,22 +532,25 @@ class DynamicContextLoader:
             result = results[0]
             payload = result.payload
 
+            if payload is None:
+                raise ValueError(f"Context payload is None: {ref_id}")
+
             reference = ContextReference(
-                ref_id=payload["ref_id"],  # type: ignore[ Any ]
-                ref_type=payload["ref_type"],  # type: ignore[ Any ]
-                summary=payload["summary"],  # type: ignore[ Any ]
-                metadata=payload.get("metadata", {}),  # type: ignore[ Any ]
+                ref_id=payload["ref_id"],
+                ref_type=payload["ref_type"],
+                summary=payload["summary"],
+                metadata=payload.get("metadata", {}),
             )
 
             # Decrypt content if it was encrypted
-            stored_content = payload["content"]  # type: ignore[ Any ]
-            is_encrypted = payload.get("encrypted", False)  # type: ignore[ Any ]
+            stored_content = payload["content"]
+            is_encrypted = payload.get("encrypted", False)
             content = self._decrypt_content(stored_content) if is_encrypted else stored_content
 
             loaded = LoadedContext(
                 reference=reference,
                 content=content,  # Decrypted content
-                token_count=payload["token_count"],  # type: ignore[ Any ]
+                token_count=payload["token_count"],
                 loaded_at=time.time(),
             )
 

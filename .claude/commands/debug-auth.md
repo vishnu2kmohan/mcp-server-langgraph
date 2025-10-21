@@ -24,6 +24,14 @@ Comprehensive authentication and authorization debugging workflow.
    - Tuple writes and reads
 
 3. **Review Authentication Logs**
+
+   **Quick log access:**
+   ```bash
+   make logs-follow        # Follow all logs
+   make logs-agent         # Agent logs only
+   ```
+
+   **Filter for auth issues:**
    ```bash
    docker compose logs -f --tail=100 | grep -i "auth\|jwt\|token"
    ```
@@ -57,9 +65,25 @@ Comprehensive authentication and authorization debugging workflow.
 
 ## Interactive Debugging
 
+### Web UIs
+
 1. **OpenFGA Playground**: http://localhost:3001
 2. **Prometheus Metrics**: http://localhost:9090 (search for auth_* metrics)
 3. **Grafana Dashboards**: http://localhost:3000 (Authentication dashboard)
+
+Quick access:
+```bash
+make prometheus-ui    # Opens Prometheus
+make jaeger-ui        # Opens Jaeger (for tracing)
+```
+
+### Component Logs
+
+View specific component logs:
+```bash
+make logs-prometheus  # Prometheus logs
+make logs-grafana     # Grafana logs
+```
 
 ## Summary
 

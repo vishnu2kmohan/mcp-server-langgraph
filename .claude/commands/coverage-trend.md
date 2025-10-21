@@ -303,6 +303,38 @@ Analyze specific module:
 coverage report --include="src/auth/*"
 ```
 
+### Specialized Coverage Reports
+
+**HTML Report Only** (fastest for browsing):
+```bash
+make test-coverage-html
+# Opens: htmlcov/index.html
+```
+
+**XML Report Only** (for CI/coverage services):
+```bash
+make test-coverage-xml
+# Generates: coverage.xml
+```
+
+**Terminal Report Only** (quick overview):
+```bash
+make test-coverage-terminal
+```
+
+**Incremental Coverage** (80-90% faster):
+```bash
+make test-coverage-changed
+```
+Only tests changed code since last run using pytest-testmon.
+First run tests all files, subsequent runs only test changes.
+
+**Fast Coverage** (unit tests only, 70-80% faster):
+```bash
+make test-coverage-fast
+```
+Parallel execution, unit tests only.
+
 ---
 
 ## 💡 Coverage Improvement Strategies

@@ -38,7 +38,7 @@ make test-integration
 make test-all-quality
 
 # 2. Linting clean
-make lint
+make lint-check
 
 # 3. Security scan
 make security-check

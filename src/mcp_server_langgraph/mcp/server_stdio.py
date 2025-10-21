@@ -293,8 +293,8 @@ class MCPAgentServer:
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
-                # type: ignore[arg-type]
-                return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]
+
+                return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]  # type: ignore[arg-type]
 
     async def _handle_chat(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """

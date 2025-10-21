@@ -21,7 +21,7 @@ try:
     PYDANTIC_AI_AVAILABLE = True
 except ImportError:
     PYDANTIC_AI_AVAILABLE = False
-    Agent = None  # type: ignore
+    Agent = None  # type: ignore[unused-ignore,assignment]
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.prompts import RESPONSE_SYSTEM_PROMPT, ROUTER_SYSTEM_PROMPT
@@ -166,8 +166,7 @@ class PydanticAIAgentWrapper:
                 span.record_exception(e)
                 raise
 
-    # type: ignore[type-arg]
-    async def generate_response(self, messages: list[BaseMessage], context: Optional[dict] = None) -> AgentResponse:
+    async def generate_response(self, messages: list[BaseMessage], context: Optional[dict] = None) -> AgentResponse:  # type: ignore[type-arg]
         """
         Generate a typed response to user messages.
 

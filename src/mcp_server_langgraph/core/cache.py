@@ -19,7 +19,7 @@ import asyncio
 import functools
 import hashlib
 import pickle
-from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
+from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar, cast
 
 import redis
 from cachetools import TTLCache
@@ -160,7 +160,7 @@ class CacheService:
             try:
                 data = self.redis.get(key)
                 if data:
-                    value = pickle.loads(data)  # nosec B301 - Internal cache data only, not user-provided # type: ignore[Any ]
+                    value = pickle.loads(cast(bytes, data))  # nosec B301 - Internal cache data only, not user-provided
 
                     # Promote to L1
                     self.l1_cache[key] = value
@@ -255,7 +255,7 @@ class CacheService:
                     keys = self.redis.keys(pattern)
                     if keys:
                         self.redis.delete(*keys)  # type: ignore[misc]
-                        logger.info(f"Cleared L2 cache by pattern: {pattern} ({len(keys)} keys)")  # type: ignore[Any ]
+                        logger.info(f"Cleared L2 cache by pattern: {pattern} ({len(cast(list[Any], keys))} keys)")
                 else:
                     self.redis.flushdb()
                     logger.info("Cleared all L2 cache")
@@ -486,7 +486,7 @@ def cached(
                 span.set_attribute("cache.hit", False)
 
                 # Cache miss: call function
-                result = await func(*args, **kwargs)
+                result = await func(*args, **kwargs)  # type: ignore[misc]
 
                 # Store in cache
                 cache.set(key, result, ttl=ttl, level=level)
@@ -522,9 +522,9 @@ def cached(
 
         # Return appropriate wrapper
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper  # type: ignore
+            return async_wrapper  # type: ignore[return-value]
         else:
-            return sync_wrapper  # type: ignore
+            raise TypeError(f"Function {func.__name__} must be async to use @cached decorator")
 
     return decorator
 

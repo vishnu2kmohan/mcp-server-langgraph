@@ -392,7 +392,7 @@ class Settings(BaseSettings):
             for model, provider, cred in missing_creds:
                 logger.warning(f"  - Model '{model}' (provider: {provider}) requires '{cred.upper()}' environment variable")
 
-    def load_secrets(self):  # noqa: C901 # type: ignore[no-untyped-def]
+    def load_secrets(self) -> None:  # noqa: C901
         """
         Load secrets from Infisical or environment variables.
 
@@ -517,7 +517,7 @@ settings = Settings()
 
 # Load secrets on initialization
 try:
-    settings.load_secrets()  # type: ignore[no-untyped-call]
+    settings.load_secrets()
 except Exception as e:
     print(f"Warning: Failed to load secrets from Infisical: {e}")
     print("Using environment variables and defaults")

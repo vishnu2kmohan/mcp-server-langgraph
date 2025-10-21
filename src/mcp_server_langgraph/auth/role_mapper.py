@@ -351,7 +351,7 @@ class RoleMapper:
             List of OpenFGA tuples
         """
         tuples = []
-        seen_tuples: Set[tuple] = set()  # Deduplicate # type: ignore[type-arg]
+        seen_tuples: Set[tuple[str, ...]] = set()  # Deduplicate
 
         # Apply all mapping rules
         for rule in self.rules:

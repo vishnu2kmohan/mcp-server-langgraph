@@ -11,7 +11,7 @@ Implements Anthropic's gather-action-verify-repeat agentic loop:
 """
 
 import operator
-from typing import Annotated, Literal, Optional, TypedDict
+from typing import Annotated, Any, Literal, Optional, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -176,7 +176,8 @@ def _get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str
 def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentState:
     """Fallback routing logic without Pydantic AI"""
     # Determine if this needs tools or direct response
-    if any(keyword in last_message.content.lower() for keyword in ["search", "calculate", "lookup"]):  # type: ignore[str ]
+    content = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
+    if any(keyword in content.lower() for keyword in ["search", "calculate", "lookup"]):
         state["next_action"] = "use_tools"
     else:
         state["next_action"] = "respond"
@@ -187,7 +188,7 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     return state
 
 
-def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
+def create_agent_graph() -> Any:  # noqa: C901
     """
     Create the LangGraph agent using functional API with LiteLLM and observability.
 
@@ -244,8 +245,9 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
                 logger.info("Loading dynamic context")
 
                 # Search for relevant context
+                query = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
                 loaded_contexts = await search_and_load_context(
-                    query=last_message.content,  # type: ignore[ list]
+                    query=query,
                     loader=context_loader,
                     top_k=getattr(settings, "dynamic_context_top_k", 3),
                     max_tokens=getattr(settings, "dynamic_context_max_tokens", 2000),
@@ -321,7 +323,8 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
 
         # Capture original user request for verification
         if isinstance(last_message, HumanMessage):
-            state["user_request"] = last_message.content  # type: ignore[ list]
+            user_request = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
+            state["user_request"] = user_request
 
         if isinstance(last_message, HumanMessage):
             # Use Pydantic AI for intelligent routing if available
@@ -419,13 +422,13 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
         # Append all tool messages to state (preserves conversation history)
         return {**state, "messages": state["messages"] + tool_messages, "next_action": "respond"}
 
-    async def _execute_tools_serial(tool_calls: list) -> list:  # type: ignore[type-arg]
+    async def _execute_tools_serial(tool_calls: list[dict]) -> list:  # type: ignore[type-arg]
         """Execute tools serially (one at a time)"""
         from langchain_core.messages import ToolMessage
 
         from mcp_server_langgraph.tools import get_tool_by_name
 
-        tool_messages = []
+        tool_messages: list = []  # type: ignore[type-arg]
         for tool_call in tool_calls:
             tool_name = tool_call.get("name", "unknown")
             tool_call_id = tool_call.get("id", str(len(tool_messages)))
@@ -474,7 +477,7 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
 
         return tool_messages
 
-    async def _execute_tools_parallel(tool_calls: list) -> list:  # type: ignore[type-arg]
+    async def _execute_tools_parallel(tool_calls: list[dict]) -> list:  # type: ignore[type-arg]
         """Execute tools in parallel using ParallelToolExecutor"""
         from langchain_core.messages import ToolMessage
 
@@ -486,7 +489,7 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
         executor = ParallelToolExecutor(max_parallelism=max_parallelism)
 
         # Convert tool_calls to ToolInvocation objects
-        invocations = []
+        invocations: list[ToolInvocation] = []
         for tool_call in tool_calls:
             tool_name = tool_call.get("name", "unknown")
             tool_args = tool_call.get("args", {})
@@ -496,16 +499,16 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
             invocations.append(invocation)
 
         # Define tool executor function for parallel executor
-        async def execute_single_tool(tool_name: str, arguments: dict) -> None:  # type: ignore[type-arg]
+        async def execute_single_tool(tool_name: str, arguments: dict):  # type: ignore[type-arg, no-untyped-def]
             """Execute a single tool"""
             tool = get_tool_by_name(tool_name)
             if tool is None:
                 raise ValueError(f"Tool '{tool_name}' not found")
 
             if hasattr(tool, "ainvoke"):
-                return await tool.ainvoke(arguments)  # type: ignore[no-any-return]
+                return await tool.ainvoke(arguments)
             else:
-                return tool.invoke(arguments)  # type: ignore[no-any-return]
+                return tool.invoke(arguments)
 
         # Execute tools in parallel
         try:
@@ -599,16 +602,15 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
         response_text = response_message.content if hasattr(response_message, "content") else str(response_message)
 
         # Get user request
-        user_request = state.get("user_request", "")
+        user_request = state.get("user_request") or ""
 
         # Get conversation context (excluding the response we're verifying)
         conversation_context = state["messages"][:-1]
 
         try:
             logger.info("Verifying response quality")
-            # type: ignore[list]
             verification_result = await output_verifier.verify_response(
-                response=response_text, user_request=user_request, conversation_context=conversation_context
+                response=response_text, user_request=user_request, conversation_context=conversation_context  # type: ignore[arg-type]
             )
 
             state["verification_passed"] = verification_result.passed
@@ -623,13 +625,13 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
                 logger.info(
                     "Verification passed", extra={"score": verification_result.overall_score, "attempts": refinement_attempts}
                 )
-            elif refinement_attempts < max_refinement_attempts:  # type: ignore[operator]
+            elif (refinement_attempts or 0) < max_refinement_attempts:
                 state["next_action"] = "refine"
                 logger.info(
                     "Verification failed, refining response",
                     extra={
                         "score": verification_result.overall_score,
-                        "attempt": refinement_attempts + 1,  # type: ignore[operator]
+                        "attempt": (refinement_attempts or 0) + 1,
                         "max_attempts": max_refinement_attempts,
                     },
                 )
@@ -656,8 +658,8 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
         Implements iterative refinement loop (part of "Repeat" in agentic loop).
         """
         # Increment refinement attempts
-        refinement_attempts = state.get("refinement_attempts", 0)
-        state["refinement_attempts"] = refinement_attempts + 1  # type: ignore[operator]
+        refinement_attempts = state.get("refinement_attempts", 0) or 0
+        state["refinement_attempts"] = refinement_attempts + 1
 
         # Remove the failed response from messages
         # It will be regenerated with refinement guidance
@@ -666,28 +668,30 @@ def create_agent_graph():  # noqa: C901 # type: ignore[no-untyped-def]
         # Set next action to respond (will regenerate with feedback)
         state["next_action"] = "respond"
 
+        feedback = state.get("verification_feedback") or ""
+        feedback_preview = feedback[:100] if isinstance(feedback, str) else ""
         logger.info(
             "Refining response",
-            extra={"attempt": state["refinement_attempts"], "feedback": state.get("verification_feedback", "")[:100]},
+            extra={"attempt": state["refinement_attempts"], "feedback": feedback_preview},
         )
 
         return state
 
     def should_continue(state: AgentState) -> Literal["use_tools", "respond", "end"]:
         """Conditional edge function for routing"""
-        next_action = state.get("next_action", "respond")
+        next_action = state.get("next_action", "respond") or "respond"
         # Default to "respond" if next_action is empty or not set
         if not next_action or next_action not in ["use_tools", "respond", "end"]:
             return "respond"
-        return next_action
+        return next_action  # type: ignore[return-value]
 
     def should_verify(state: AgentState) -> Literal["verify", "refine", "end"]:
         """Conditional edge function for verification loop"""
-        next_action = state.get("next_action", "end")
+        next_action = state.get("next_action", "end") or "end"
         # Default to "end" if next_action is empty or invalid
         if not next_action or next_action not in ["verify", "refine", "end"]:
             return "end"
-        return next_action
+        return next_action  # type: ignore[return-value]
 
     # Build the graph with full agentic loop
     workflow = StateGraph(AgentState)

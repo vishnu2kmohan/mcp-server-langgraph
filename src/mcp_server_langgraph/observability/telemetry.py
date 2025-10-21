@@ -27,8 +27,8 @@ try:
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False
-    OTLPMetricExporterGRPC = None  # type: ignore
-    OTLPSpanExporterGRPC = None  # type: ignore
+    OTLPMetricExporterGRPC = None
+    OTLPSpanExporterGRPC = None
 
 try:
     from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter as OTLPMetricExporterHTTP
@@ -37,8 +37,8 @@ try:
     HTTP_AVAILABLE = True
 except ImportError:
     HTTP_AVAILABLE = False
-    OTLPMetricExporterHTTP = None  # type: ignore
-    OTLPSpanExporterHTTP = None  # type: ignore
+    OTLPMetricExporterHTTP = None
+    OTLPSpanExporterHTTP = None
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 
@@ -333,7 +333,7 @@ class ObservabilityConfig:
             )
             rotating_handler.setLevel(logging.INFO)
             rotating_handler.setFormatter(formatter)
-            handlers.append(rotating_handler)  # type: ignore[TextIO ]
+            handlers.append(rotating_handler)  # type: ignore[arg-type]
 
             # Time-based rotating handler (daily rotation)
             # Rotates daily at midnight, keeps 30 days of logs
@@ -346,7 +346,7 @@ class ObservabilityConfig:
             )
             daily_handler.setLevel(logging.INFO)
             daily_handler.setFormatter(formatter)
-            handlers.append(daily_handler)  # type: ignore[TextIO ]
+            handlers.append(daily_handler)  # type: ignore[arg-type]
 
             # Error log handler (only ERROR and CRITICAL)
             error_handler = RotatingFileHandler(
@@ -357,7 +357,7 @@ class ObservabilityConfig:
             )
             error_handler.setLevel(logging.ERROR)
             error_handler.setFormatter(formatter)
-            handlers.append(error_handler)  # type: ignore[TextIO ]
+            handlers.append(error_handler)  # type: ignore[arg-type]
 
         # Configure root logger
         logging.basicConfig(level=logging.INFO, handlers=handlers)
@@ -502,30 +502,27 @@ def get_config() -> ObservabilityConfig:
 # Note: config is available via get_config() function or via the lazy 'config' proxy below
 
 
-def get_tracer() -> None:
+def get_tracer() -> Any:
     """Get tracer instance (lazy accessor)."""
     return get_config().get_tracer()
 
 
-def get_meter() -> None:
+def get_meter() -> Any:
     """Get meter instance (lazy accessor)."""
     return get_config().get_meter()
 
 
-def get_logger() -> None:
+def get_logger() -> Any:
     """Get logger instance (lazy accessor)."""
     return get_config().get_logger()
 
 
 # Module-level exports with lazy initialization
 # These will raise RuntimeError if accessed before init_observability()
-# type: ignore[func-returns-value]
 tracer = type("LazyTracer", (), {"__getattr__": lambda self, name: getattr(get_tracer(), name)})()
 
-# type: ignore[func-returns-value]
 meter = type("LazyMeter", (), {"__getattr__": lambda self, name: getattr(get_meter(), name)})()
 
-# type: ignore[func-returns-value]
 logger = type("LazyLogger", (), {"__getattr__": lambda self, name: getattr(get_logger(), name)})()
 
 # Alias for backward compatibility - provides access to both config and metric instruments

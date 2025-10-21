@@ -119,12 +119,12 @@ class LLMValidator:
                 import json
 
                 try:
-                    data_dict = json.loads(content)  # type: ignore[ list]
+                    data_dict = json.loads(content)  # type: ignore[arg-type]
                     validated = model_class(**data_dict)
                 except json.JSONDecodeError:
                     # Not JSON, try to parse as text
                     # This requires the model to handle string input
-                    validated = model_class(content=content) if hasattr(model_class, "content") else None
+                    validated = model_class(content=content) if hasattr(model_class, "content") else None  # type: ignore[assignment]
 
                     if validated is None:
                         raise ValueError(
@@ -140,7 +140,7 @@ class LLMValidator:
 
                 metrics.successful_calls.add(1, {"operation": "validate_response"})
 
-                return ValidatedResponse(data=validated, raw_content=content, validation_success=True)  # type: ignore[ list]
+                return ValidatedResponse(data=validated, raw_content=content, validation_success=True)  # type: ignore[arg-type]
 
             except ValidationError as e:
                 span.set_attribute("validation.success", False)
@@ -163,7 +163,7 @@ class LLMValidator:
                     empty_data = None
 
                 return ValidatedResponse(
-                    data=empty_data, raw_content=content, validation_success=False, validation_errors=errors
+                    data=empty_data, raw_content=content, validation_success=False, validation_errors=errors  # type: ignore[arg-type]
                 )
 
             except Exception as e:
@@ -176,8 +176,7 @@ class LLMValidator:
                 if strict:
                     raise
 
-                # type: ignore[arg-type]
-                return ValidatedResponse(data=None, raw_content=content, validation_success=False, validation_errors=[str(e)])
+                return ValidatedResponse(data=None, raw_content=content, validation_success=False, validation_errors=[str(e)])  # type: ignore[arg-type]
 
     @staticmethod
     def extract_entities(response: AIMessage | str) -> ValidatedResponse[EntityExtraction]:

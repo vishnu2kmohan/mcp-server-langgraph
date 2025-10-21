@@ -132,10 +132,10 @@ if GDPR_STORAGE_BACKEND == "memory":
 
 
 @router.get("/me/data")
-async def get_user_data(  # type: ignore[no-untyped-def]
+async def get_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     session_store: SessionStore = Depends(get_session_store),
-):
+) -> Dict[str, Any]:
     """
     Export all user data (GDPR Article 15 - Right to Access)
 
@@ -163,7 +163,7 @@ async def get_user_data(  # type: ignore[no-untyped-def]
         export_service = DataExportService(session_store=session_store)
 
         # Export all user data
-        export = await export_service.export_user_data(user_id=user_id, username=username, email=email)
+        export = await export_service.export_user_data(user_id=user_id, username=username, email=email)  # type: ignore[arg-type]
 
         # Log the data access request (GDPR requirement)
         logger.info(
@@ -175,15 +175,15 @@ async def get_user_data(  # type: ignore[no-untyped-def]
             },
         )
 
-        return export
+        return export  # type: ignore[return-value]
 
 
-@router.get("/me/export")
-async def export_user_data(  # type: ignore[no-untyped-def]
+@router.get("/me/export", response_model=None)
+async def export_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
-):
+) -> Response:
     """
     Export user data in portable format (GDPR Article 20 - Right to Data Portability)
 
@@ -206,7 +206,7 @@ async def export_user_data(  # type: ignore[no-untyped-def]
 
         # Export data in requested format
         data_bytes, content_type = await export_service.export_user_data_portable(
-            user_id=user_id, username=username, email=email, format=format
+            user_id=user_id, username=username, email=email, format=format  # type: ignore[arg-type]
         )
 
         # Log the export request
@@ -228,10 +228,10 @@ async def export_user_data(  # type: ignore[no-untyped-def]
 
 
 @router.patch("/me")
-async def update_user_profile(  # type: ignore[no-untyped-def]
+async def update_user_profile(
     profile_update: UserProfileUpdate,
     user: Dict[str, Any] = Depends(get_current_user),
-):
+) -> Dict[str, Any]:
     """
     Update user profile (GDPR Article 16 - Right to Rectification)
 
@@ -285,11 +285,11 @@ async def update_user_profile(  # type: ignore[no-untyped-def]
 
 
 @router.delete("/me")
-async def delete_user_account(  # type: ignore[no-untyped-def]
+async def delete_user_account(
     user: Dict[str, Any] = Depends(get_current_user),
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
     session_store: SessionStore = Depends(get_session_store),
-):
+) -> Dict[str, Any]:
     """
     Delete user account and all data (GDPR Article 17 - Right to Erasure)
 
@@ -345,7 +345,7 @@ async def delete_user_account(  # type: ignore[no-untyped-def]
 
         # Delete all user data
         result = await deletion_service.delete_user_account(
-            user_id=user_id, username=username, reason="user_request_gdpr_article_17"
+            user_id=user_id, username=username, reason="user_request_gdpr_article_17"  # type: ignore[arg-type]
         )
 
         if not result.success:
@@ -377,10 +377,10 @@ async def delete_user_account(  # type: ignore[no-untyped-def]
 
 
 @router.post("/me/consent")
-async def update_consent(  # type: ignore[no-untyped-def]
+async def update_consent(
     consent: ConsentRecord,
     user: Dict[str, Any] = Depends(get_current_user),
-):
+) -> ConsentResponse:
     """
     Update user consent preferences (GDPR Article 21 - Right to Object)
 
@@ -402,9 +402,9 @@ async def update_consent(  # type: ignore[no-untyped-def]
 
         # Store consent (in-memory for now)
         if user_id not in _consent_storage:
-            _consent_storage[user_id] = {}
+            _consent_storage[user_id] = {}  # type: ignore[index]
 
-        _consent_storage[user_id][consent.consent_type] = {
+        _consent_storage[user_id][consent.consent_type] = {  # type: ignore[index]
             "granted": consent.granted,
             "timestamp": consent.timestamp,
             "ip_address": consent.ip_address,
@@ -423,11 +423,11 @@ async def update_consent(  # type: ignore[no-untyped-def]
             },
         )
 
-        return ConsentResponse(user_id=user_id, consents=_consent_storage.get(user_id, {}))
+        return ConsentResponse(user_id=user_id, consents=_consent_storage.get(user_id, {}))  # type: ignore[arg-type]
 
 
 @router.get("/me/consent")
-async def get_consent_status(user: Dict[str, Any] = Depends(get_current_user)):  # type: ignore[no-untyped-def]
+async def get_consent_status(user: Dict[str, Any] = Depends(get_current_user)) -> ConsentResponse:
     """
     Get current consent status (GDPR Article 21 - Right to Object)
 
@@ -440,8 +440,8 @@ async def get_consent_status(user: Dict[str, Any] = Depends(get_current_user)): 
         user_id = user.get("user_id")
 
         # Get consent status
-        consents = _consent_storage.get(user_id, {})
+        consents = _consent_storage.get(user_id, {})  # type: ignore[arg-type]
 
         logger.info("User consent status retrieved", extra={"user_id": user_id})
 
-        return ConsentResponse(user_id=user_id, consents=consents)
+        return ConsentResponse(user_id=user_id, consents=consents)  # type: ignore[arg-type]

@@ -244,7 +244,7 @@ Focus on high-signal information that maintains conversation context.
 
                 logger.info("Messages summarized", extra={"message_count": len(messages), "summary_length": len(summary)})
 
-                return summary  # type: ignore[ list]
+                return summary  # type: ignore[return-value]
 
             except Exception as e:
                 logger.error(f"Summarization failed: {e}", exc_info=True)
@@ -307,16 +307,20 @@ Focus on high-signal information that maintains conversation context.
 
         # Simple keyword-based extraction
         for msg in messages:
-            content = msg.content.lower() if hasattr(msg, "content") else ""  # type: ignore[str ]
+            msg_content = msg.content if hasattr(msg, "content") else ""
+            content = msg_content.lower() if isinstance(msg_content, str) else ""
 
             if any(keyword in content for keyword in ["decided", "agreed", "chose"]):
-                key_info["decisions"].append(msg.content[:200])
+                if isinstance(msg_content, str):
+                    key_info["decisions"].append(msg_content[:200])
 
             if any(keyword in content for keyword in ["need", "require", "must", "should"]):
-                key_info["requirements"].append(msg.content[:200])
+                if isinstance(msg_content, str):
+                    key_info["requirements"].append(msg_content[:200])
 
             if any(keyword in content for keyword in ["error", "issue", "problem", "failed"]):
-                key_info["issues"].append(msg.content[:200])
+                if isinstance(msg_content, str):
+                    key_info["issues"].append(msg_content[:200])
 
         return key_info
 
@@ -386,10 +390,11 @@ PREFERENCES:
             try:
                 # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
                 response = await self.llm.ainvoke([HumanMessage(content=extraction_prompt)])
-                extraction_text = response.content if hasattr(response, "content") else str(response)
+                response_content = response.content if hasattr(response, "content") else str(response)
+                extraction_text = response_content if isinstance(response_content, str) else str(response_content)
 
                 # Parse response
-                key_info = self._parse_extraction_response(extraction_text)  # type: ignore[ list]
+                key_info = self._parse_extraction_response(extraction_text)
 
                 logger.info(
                     "Key information extracted with LLM",

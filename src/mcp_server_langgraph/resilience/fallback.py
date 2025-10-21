@@ -236,7 +236,7 @@ def with_fallback(  # noqa: C901
                         else:
                             return fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
                     else:  # fallback_strategy is not None
-                        return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return]
+                        return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return,union-attr]
 
         @functools.wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
@@ -255,7 +255,7 @@ def with_fallback(  # noqa: C901
                 elif fallback_fn is not None:
                     return fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
                 else:  # fallback_strategy is not None
-                    return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return]
+                    return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return,union-attr]
 
         # Return appropriate wrapper
         import asyncio

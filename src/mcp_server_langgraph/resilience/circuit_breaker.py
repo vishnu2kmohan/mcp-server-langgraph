@@ -50,7 +50,7 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
         self._state = CircuitBreakerState.CLOSED
         self._last_state_change = datetime.now()
 
-    def state_change(
+    def state_change(  # type: ignore[override]
         self, breaker: pybreaker.CircuitBreaker, old: pybreaker.CircuitBreakerState, new: pybreaker.CircuitBreakerState
     ) -> None:
         """Called when circuit breaker state changes"""
@@ -79,8 +79,7 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
             attributes={"service": self.name, "state": new_state.value},
         )
 
-    # type: ignore[override]
-    def before_call(self, breaker: pybreaker.CircuitBreaker, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+    def before_call(self, breaker: pybreaker.CircuitBreaker, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
         """Called before calling the protected function"""
         pass
 

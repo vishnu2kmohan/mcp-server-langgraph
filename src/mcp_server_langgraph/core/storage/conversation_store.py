@@ -15,7 +15,7 @@ try:
     from redis import Redis
 
     REDIS_AVAILABLE = True
-    RedisType = Redis
+    RedisType = Redis  # type: type[Redis]
 except ImportError:
     REDIS_AVAILABLE = False
     RedisType = None  # type: ignore[assignment]
@@ -232,7 +232,7 @@ class ConversationStore:
         if self.backend == "redis" and self._redis_client:
             key = self._redis_key(thread_id)
             deleted = self._redis_client.delete(key)
-            return int(deleted) > 0  # type: ignore[Any ]
+            return int(deleted) > 0  # type: ignore[arg-type]
         else:
             if thread_id in self._memory_store:
                 del self._memory_store[thread_id]
