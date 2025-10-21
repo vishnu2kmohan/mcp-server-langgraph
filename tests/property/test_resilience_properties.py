@@ -182,6 +182,11 @@ class TestTimeoutProperties:
         # Add margin to avoid race conditions
         margin = 0.05
 
+        # Skip tests where sleep_duration is too close to timeout_duration
+        # to avoid unpredictable behavior due to timing precision
+        if abs(sleep_duration - timeout_duration) < margin:
+            return
+
         @with_timeout(timeout_duration)
         async def slow_operation():
             await asyncio.sleep(sleep_duration)
@@ -192,7 +197,7 @@ class TestTimeoutProperties:
             with pytest.raises((ResilienceTimeoutError, asyncio.TimeoutError)):
                 await slow_operation()
         else:
-            # Should complete successfully
+            # Should complete successfully (sleep_duration < timeout_duration - margin)
             result = await slow_operation()
             assert result == "completed"
 
@@ -411,24 +416,24 @@ class TestRetryExceptionHandling:
     """Property-based tests for retry exception classification"""
 
     @given(
-        error_code=st.sampled_from(
-            ["INVALID_CREDENTIALS", "TOKEN_EXPIRED", "PERMISSION_DENIED", "INVALID_INPUT", "SCHEMA_VALIDATION_ERROR"]
-        )
+        error_code=st.sampled_from(["INVALID_CREDENTIALS", "PERMISSION_DENIED", "INVALID_INPUT", "SCHEMA_VALIDATION_ERROR"])
     )
     @settings(max_examples=10, deadline=1000)
     def test_client_errors_never_retry(self, error_code):
-        """Property: Client errors should never be retried"""
+        """Property: Client errors (non-retryable) should never be retried
+
+        Note: TOKEN_EXPIRED is intentionally excluded as it has retry_policy=CONDITIONAL
+        (can be retried with token refresh)
+        """
         from mcp_server_langgraph.core.exceptions import (
             InputValidationError,
             InvalidCredentialsError,
             PermissionDeniedError,
             SchemaValidationError,
-            TokenExpiredError,
         )
 
         exception_map = {
             "INVALID_CREDENTIALS": InvalidCredentialsError("Invalid credentials"),
-            "TOKEN_EXPIRED": TokenExpiredError("Token expired"),
             "PERMISSION_DENIED": PermissionDeniedError("Permission denied"),
             "INVALID_INPUT": InputValidationError("Invalid input"),
             "SCHEMA_VALIDATION_ERROR": SchemaValidationError("Schema validation failed"),
@@ -436,7 +441,7 @@ class TestRetryExceptionHandling:
 
         exc = exception_map[error_code]
 
-        # Property: Client errors should not be retried
+        # Property: Non-retryable client errors should not be retried
         should_retry = should_retry_exception(exc)
         assert should_retry is False
 

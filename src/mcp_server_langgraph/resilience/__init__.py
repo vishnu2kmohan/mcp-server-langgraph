@@ -17,6 +17,7 @@ from mcp_server_langgraph.resilience.circuit_breaker import (
     circuit_breaker,
     get_circuit_breaker,
     get_circuit_breaker_state,
+    reset_circuit_breaker,
 )
 from mcp_server_langgraph.resilience.config import ResilienceConfig, get_resilience_config
 from mcp_server_langgraph.resilience.fallback import (
@@ -35,6 +36,7 @@ __all__ = [
     "CircuitBreakerState",
     "get_circuit_breaker",
     "get_circuit_breaker_state",
+    "reset_circuit_breaker",
     # Retry
     "retry_with_backoff",
     "RetryPolicy",

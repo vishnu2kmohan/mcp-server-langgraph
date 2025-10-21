@@ -94,11 +94,18 @@ class TestFullResilienceStack:
     @pytest.mark.asyncio
     async def test_circuit_breaker_opens_after_retries_exhausted(self, reset_all_resilience):
         """Test that circuit breaker tracks failures across retries"""
+        from mcp_server_langgraph.resilience import CircuitBreakerState, get_circuit_breaker_state, reset_circuit_breaker
 
-        @circuit_breaker(name="test", fail_max=3)
+        # Ensure circuit breaker starts in clean state
+        reset_circuit_breaker("test_cb_retry_exhausted")
+
+        @circuit_breaker(name="test_cb_retry_exhausted", fail_max=3)
         @retry_with_backoff(max_attempts=2)
         async def func():
             raise ValueError("Always fails")
+
+        # Verify initial state
+        assert get_circuit_breaker_state("test_cb_retry_exhausted") == CircuitBreakerState.CLOSED
 
         # Each call retries twice, counts as 1 failure for circuit breaker
         # Need 3 calls to open circuit
@@ -107,9 +114,7 @@ class TestFullResilienceStack:
                 await func()
 
         # Circuit should be open now
-        from mcp_server_langgraph.resilience import CircuitBreakerState, get_circuit_breaker_state
-
-        state = get_circuit_breaker_state("test")
+        state = get_circuit_breaker_state("test_cb_retry_exhausted")
         assert state == CircuitBreakerState.OPEN
 
     @pytest.mark.integration
@@ -255,11 +260,18 @@ class TestErrorPropagation:
     @pytest.mark.asyncio
     async def test_circuit_breaker_stops_retries(self, reset_all_resilience):
         """Test that open circuit stops retry attempts"""
+        from mcp_server_langgraph.resilience import CircuitBreakerState, get_circuit_breaker_state, reset_circuit_breaker
 
-        @circuit_breaker(name="test", fail_max=2)
+        # Ensure circuit breaker starts in clean state
+        reset_circuit_breaker("test_cb_stops_retry")
+
+        @circuit_breaker(name="test_cb_stops_retry", fail_max=2)
         @retry_with_backoff(max_attempts=5)
         async def func():
             raise ValueError("Always fails")
+
+        # Verify initial state
+        assert get_circuit_breaker_state("test_cb_stops_retry") == CircuitBreakerState.CLOSED
 
         # First two calls (with retries) should open circuit
         for i in range(2):
@@ -304,14 +316,23 @@ class TestConcurrentOperations:
     @pytest.mark.asyncio
     async def test_independent_circuit_breakers(self, reset_all_resilience):
         """Test that different services have independent circuit breakers"""
+        from mcp_server_langgraph.resilience import CircuitBreakerState, get_circuit_breaker_state, reset_circuit_breaker
 
-        @circuit_breaker(name="service1", fail_max=2)
+        # Ensure circuit breakers start in clean state
+        reset_circuit_breaker("test_service1")
+        reset_circuit_breaker("test_service2")
+
+        @circuit_breaker(name="test_service1", fail_max=2)
         async def service1():
             raise ValueError("Service1 down")
 
-        @circuit_breaker(name="service2", fail_max=2)
+        @circuit_breaker(name="test_service2", fail_max=2)
         async def service2():
             return "service2_ok"
+
+        # Verify initial states
+        assert get_circuit_breaker_state("test_service1") == CircuitBreakerState.CLOSED
+        assert get_circuit_breaker_state("test_service2") == CircuitBreakerState.CLOSED
 
         # Fail service1 to open its circuit
         for i in range(2):
@@ -319,11 +340,9 @@ class TestConcurrentOperations:
                 await service1()
 
         # Service1 circuit should be open
-        from mcp_server_langgraph.resilience import CircuitBreakerState, get_circuit_breaker_state
-
-        assert get_circuit_breaker_state("service1") == CircuitBreakerState.OPEN
+        assert get_circuit_breaker_state("test_service1") == CircuitBreakerState.OPEN
 
         # Service2 should still work (independent circuit)
         result = await service2()
         assert result == "service2_ok"
-        assert get_circuit_breaker_state("service2") == CircuitBreakerState.CLOSED
+        assert get_circuit_breaker_state("test_service2") == CircuitBreakerState.CLOSED
