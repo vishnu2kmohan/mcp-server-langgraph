@@ -264,6 +264,12 @@ class TestCacheDecoratorProperties:
         # Use unique key prefix to avoid cache pollution between test runs
         import random
 
+        from mcp_server_langgraph.core.cache import get_cache
+
+        # Clear the global cache before test to ensure clean slate
+        cache = get_cache()
+        cache.clear()
+
         unique_prefix = f"memo_test_{random.randint(1000000, 9999999)}"
         call_count = [0]
 

@@ -637,3 +637,163 @@ class TestRoleSynchronization:
 
         with pytest.raises(Exception, match="OpenFGA error"):
             await sync_user_to_openfga(keycloak_user, mock_openfga)
+
+
+# Additional tests for uncovered methods
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+class TestKeycloakPrivateMethods:
+    """Test private helper methods for comprehensive coverage"""
+
+    @pytest.mark.asyncio
+    async def test_get_user_realm_roles_success(self, keycloak_config):
+        """Test retrieving user's realm roles"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = [{"name": "admin"}, {"name": "user"}]
+            mock_response.raise_for_status = MagicMock()
+
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+
+            roles = await client._get_user_realm_roles("user-id-123", "admin-token")
+
+            assert roles == ["admin", "user"]
+
+    @pytest.mark.asyncio
+    async def test_get_user_realm_roles_http_error(self, keycloak_config):
+        """Test realm roles retrieval handles HTTP errors"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Error", request=MagicMock(), response=MagicMock()
+            )
+
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+
+            roles = await client._get_user_realm_roles("user-id-123", "admin-token")
+
+            # Should return empty list on error
+            assert roles == []
+
+    @pytest.mark.asyncio
+    async def test_get_user_client_roles_success(self, keycloak_config):
+        """Test retrieving user's client roles"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock clients list response
+            clients_response = MagicMock()
+            clients_response.json.return_value = [
+                {"id": "client-uuid", "clientId": "test-client"},
+                {"id": "other-uuid", "clientId": "other-client"},
+            ]
+            clients_response.raise_for_status = MagicMock()
+
+            # Mock client roles response
+            roles_response = MagicMock()
+            roles_response.status_code = 200
+            roles_response.json.return_value = [{"name": "executor"}, {"name": "viewer"}]
+
+            async def mock_get(url, headers):
+                if "clients" in url and "role-mappings" not in url:
+                    return clients_response
+                else:
+                    return roles_response
+
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(side_effect=mock_get)
+
+            client_roles = await client._get_user_client_roles("user-id-123", "admin-token")
+
+            assert "test-client" in client_roles
+            assert client_roles["test-client"] == ["executor", "viewer"]
+
+    @pytest.mark.asyncio
+    async def test_get_user_client_roles_http_error(self, keycloak_config):
+        """Test client roles retrieval handles HTTP errors"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Error", request=MagicMock(), response=MagicMock()
+            )
+
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+
+            client_roles = await client._get_user_client_roles("user-id-123", "admin-token")
+
+            # Should return empty dict on error
+            assert client_roles == {}
+
+    @pytest.mark.asyncio
+    async def test_get_user_groups_success(self, keycloak_config):
+        """Test retrieving user's group memberships"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.json.return_value = [
+                {"path": "/acme", "name": "acme"},
+                {"path": "/acme/engineering", "name": "engineering"},
+            ]
+            mock_response.raise_for_status = MagicMock()
+
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+
+            groups = await client._get_user_groups("user-id-123", "admin-token")
+
+            assert groups == ["/acme", "/acme/engineering"]
+
+    @pytest.mark.asyncio
+    async def test_get_user_groups_http_error(self, keycloak_config):
+        """Test groups retrieval handles HTTP errors"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_response = MagicMock()
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Error", request=MagicMock(), response=MagicMock()
+            )
+
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+
+            groups = await client._get_user_groups("user-id-123", "admin-token")
+
+            # Should return empty list on error
+            assert groups == []
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+class TestTokenValidatorErrorPaths:
+    """Test error paths in TokenValidator for higher coverage"""
+
+    @pytest.mark.asyncio
+    async def test_verify_token_generic_exception(self, keycloak_config, rsa_keypair, jwks_response):
+        """Test generic exception handling during token verification"""
+        private_pem, _ = rsa_keypair
+        validator = TokenValidator(keycloak_config)
+
+        # Create a valid token
+        payload = {
+            "sub": "user-id-123",
+            "preferred_username": "alice",
+            "aud": "test-client",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        }
+
+        private_key = serialization.load_pem_private_key(private_pem, password=None)
+        token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
+
+        # Mock JWKS to raise generic exception
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_client.side_effect = Exception("Network error")
+
+            with pytest.raises(Exception, match="Network error"):
+                await validator.verify_token(token)

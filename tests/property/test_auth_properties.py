@@ -310,7 +310,7 @@ class TestSecurityInvariants:
         result = run_async(auth.verify_token(token))
 
         # Property: Payload should only contain expected fields
-        expected_fields = {"sub", "username", "email", "roles", "exp", "iat"}
+        expected_fields = {"sub", "username", "email", "roles", "exp", "iat", "jti"}
         actual_fields = set(result.payload.keys())
 
         # All actual fields should be expected (no injection)

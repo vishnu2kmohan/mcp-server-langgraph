@@ -42,7 +42,6 @@ class TestCircuitBreakerProperties:
         """Property: Circuit breaker opens after fail_max consecutive failures"""
         resource_name = f"test_resource_{fail_count}_{fail_max}"
         reset_circuit_breaker(resource_name)
-        _ = get_circuit_breaker(resource_name, fail_max=fail_max, timeout_duration=5)  # noqa: F841
 
         # Simulate failures
         for i in range(fail_count):
@@ -92,11 +91,10 @@ class TestCircuitBreakerProperties:
         reset_circuit_breaker(resource_name)
 
         # Open the circuit
-        _ = get_circuit_breaker(resource_name, fail_max=1)  # noqa: F841
         for _ in range(2):
             try:
 
-                @circuit_breaker(resource_name, fail_max=1, fallback_value="fallback")
+                @circuit_breaker(resource_name, fail_max=1, fallback=lambda: "fallback")
                 def failing_with_fallback():
                     raise Exception("Failure")
 
@@ -105,7 +103,7 @@ class TestCircuitBreakerProperties:
                 pass
 
         # Should return fallback when circuit is open
-        @circuit_breaker(resource_name, fail_max=1, fallback_value=value)
+        @circuit_breaker(resource_name, fail_max=1, fallback=lambda: value)
         def operation():
             raise Exception("Should not execute")
 
@@ -126,10 +124,10 @@ class TestRetryProperties:
     @settings(max_examples=15, deadline=3000)
     @pytest.mark.asyncio
     async def test_retry_eventually_succeeds_or_exhausts(self, num_retries, fail_before_success):
-        """Property: Retry either succeeds within max_retries or raises RetryExhaustedError"""
+        """Property: Retry either succeeds within max_attempts or raises RetryExhaustedError"""
         attempt_count = [0]
 
-        @retry_with_backoff(max_retries=num_retries, initial_delay=0.01, max_delay=0.1)
+        @retry_with_backoff(max_attempts=num_retries, exponential_base=0.01, exponential_max=0.1)
         async def sometimes_failing_operation():
             attempt_count[0] += 1
             if attempt_count[0] <= fail_before_success:
@@ -150,10 +148,10 @@ class TestRetryProperties:
     @settings(max_examples=10, deadline=2000)
     @pytest.mark.asyncio
     async def test_retry_count_matches_configuration(self, max_retries):
-        """Property: Retry attempts match max_retries configuration"""
+        """Property: Retry attempts match max_attempts configuration"""
         attempt_count = [0]
 
-        @retry_with_backoff(max_retries=max_retries, initial_delay=0.01)
+        @retry_with_backoff(max_attempts=max_retries, exponential_base=0.01)
         async def always_failing_operation():
             attempt_count[0] += 1
             raise Exception("Always fails")
@@ -163,8 +161,8 @@ class TestRetryProperties:
         except Exception:
             pass
 
-        # Should have attempted exactly max_retries times
-        # Note: tenacity counts initial attempt + retries, so total = 1 + max_retries
+        # Should have attempted exactly max_attempts times
+        # Note: tenacity counts initial attempt + retries, so total = 1 + max_attempts
         assert attempt_count[0] in [max_retries, max_retries + 1]
 
 
@@ -179,6 +177,7 @@ class TestTimeoutProperties:
     @pytest.mark.asyncio
     async def test_timeout_enforced_correctly(self, sleep_duration, timeout_duration):
         """Property: Timeout correctly determines if operation times out"""
+        from mcp_server_langgraph.core.exceptions import TimeoutError as ResilienceTimeoutError
 
         @with_timeout(timeout_duration)
         async def slow_operation():
@@ -187,7 +186,7 @@ class TestTimeoutProperties:
 
         if sleep_duration > timeout_duration:
             # Should timeout
-            with pytest.raises(TimeoutError):
+            with pytest.raises((ResilienceTimeoutError, asyncio.TimeoutError)):
                 await slow_operation()
         else:
             # Should complete successfully
@@ -222,7 +221,7 @@ class TestBulkheadProperties:
         current_concurrent = [0]
         max_observed = [0]
 
-        @with_bulkhead(resource_name, max_concurrent=max_concurrent, fail_fast=False)
+        @with_bulkhead(resource_name, limit=max_concurrent, wait=True)
         async def concurrent_operation():
             current_concurrent[0] += 1
             max_observed[0] = max(max_observed[0], current_concurrent[0])
@@ -246,13 +245,13 @@ class TestBulkheadProperties:
     @settings(max_examples=10, deadline=4000)
     @pytest.mark.asyncio
     async def test_bulkhead_fail_fast_rejects_excess(self, max_concurrent, num_requests):
-        """Property: Bulkhead with fail_fast rejects requests beyond capacity"""
+        """Property: Bulkhead with wait=False rejects requests beyond capacity"""
         resource_name = f"test_fail_fast_{max_concurrent}_{num_requests}"
         reset_bulkhead(resource_name)
         accepted_count = [0]
         rejected_count = [0]
 
-        @with_bulkhead(resource_name, max_concurrent=max_concurrent, fail_fast=True)
+        @with_bulkhead(resource_name, limit=max_concurrent, wait=False)
         async def limited_operation():
             accepted_count[0] += 1
             await asyncio.sleep(0.2)
@@ -280,7 +279,7 @@ class TestFallbackProperties:
     async def test_fallback_to_default_always_returns_default(self, default_value):
         """Property: fallback_to_default always returns the default value on error"""
 
-        @with_fallback(default=default_value)
+        @with_fallback(fallback=default_value)
         async def failing_operation():
             raise Exception("Always fails")
 
@@ -295,7 +294,7 @@ class TestFallbackProperties:
     async def test_fallback_not_used_on_success(self, success_value):
         """Property: Fallback is not used when operation succeeds"""
 
-        @with_fallback(default="fallback_value")
+        @with_fallback(fallback="fallback_value")
         async def successful_operation():
             return success_value
 
@@ -309,44 +308,44 @@ class TestFallbackProperties:
     @settings(max_examples=15, deadline=2000)
     @pytest.mark.asyncio
     async def test_fail_open_returns_empty_list(self, expected_list):
-        """Property: fail_open returns empty list on error"""
+        """Property: fail_open returns True on error (for boolean checks)"""
 
         @fail_open
-        async def operation_returning_list():
-            if expected_list:  # If list is non-empty, return it
-                return expected_list
+        async def operation_returning_bool():
+            if expected_list:  # If list is non-empty, succeed
+                return True
             else:  # If empty, simulate failure
                 raise Exception("Operation failed")
 
-        result = await operation_returning_list()
+        result = await operation_returning_bool()
 
-        # Should either return the list or empty list
-        assert isinstance(result, list)
-        if expected_list:
-            assert result == expected_list
-        else:
-            assert result == []
+        # Should either return True on success or True on error (fail-open)
+        assert isinstance(result, bool)
+        # fail_open always returns True (either from success or fallback)
+        assert result is True
 
     @given(st.dictionaries(st.text(min_size=1, max_size=5), st.integers(), min_size=0, max_size=5))
     @settings(max_examples=15, deadline=2000)
     @pytest.mark.asyncio
     async def test_fail_closed_raises_on_error(self, test_dict):
-        """Property: fail_closed raises error without fallback"""
+        """Property: fail_closed returns False on error (for boolean checks)"""
 
         @fail_closed
-        async def operation_returning_dict():
+        async def operation_returning_bool():
             if test_dict:
-                return test_dict
+                return True
             else:
                 raise ValueError("Empty dict not allowed")
 
+        result = await operation_returning_bool()
+
+        # Should return True if dict is non-empty, or False if error (fail-closed)
+        assert isinstance(result, bool)
         if test_dict:
-            result = await operation_returning_dict()
-            assert result == test_dict
+            assert result is True
         else:
-            # Should raise error (fail-closed)
-            with pytest.raises(ValueError):
-                await operation_returning_dict()
+            # fail_closed returns False on error
+            assert result is False
 
 
 class TestCacheProperties:
@@ -513,7 +512,7 @@ class TestFallbackStrategyProperties:
     async def test_default_fallback_returns_default(self, default):
         """Property: Default fallback returns default value on any error"""
 
-        @with_fallback(default=default)
+        @with_fallback(fallback=default)
         async def unpredictable_operation():
             # Randomly fail
             import random
@@ -537,7 +536,7 @@ class TestResilienceComposition:
     async def test_retry_with_timeout_composition(self, value):
         """Property: Retry + Timeout composition behaves correctly"""
 
-        @retry_with_backoff(max_retries=2, initial_delay=0.01)
+        @retry_with_backoff(max_attempts=2, exponential_base=0.01)
         @with_timeout(0.5)
         async def composed_operation(x):
             await asyncio.sleep(0.01)
@@ -556,7 +555,7 @@ class TestResilienceComposition:
         resource_name = f"test_composed_{hash(value)}"
         reset_circuit_breaker(resource_name)
 
-        @circuit_breaker(resource_name, fail_max=1, fallback_value=f"fallback_{value}")
+        @circuit_breaker(resource_name, fail_max=1, fallback=lambda: f"fallback_{value}")
         async def operation_with_cb_and_fallback():
             raise Exception("Service down")
 
@@ -584,7 +583,7 @@ class TestResilienceInvariants:
         # This is more of a conceptual test - actual backoff is handled by tenacity
         # We verify that the retry decorator accepts backoff configuration
 
-        @retry_with_backoff(max_retries=attempts, initial_delay=0.01, max_delay=1.0)
+        @retry_with_backoff(max_attempts=attempts, exponential_base=0.01, exponential_max=1.0)
         async def operation():
             return "success"
 
