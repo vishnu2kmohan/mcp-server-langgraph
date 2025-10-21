@@ -31,8 +31,10 @@ class TestSearchKnowledgeBase:
             result = search_knowledge_base.invoke({"query": "test", "limit": limit})
             assert isinstance(result, str)
 
+    @patch("mcp_server_langgraph.tools.search_tools.logger")
+    @patch("mcp_server_langgraph.tools.search_tools.metrics")
     @patch("mcp_server_langgraph.tools.search_tools.settings")
-    def test_search_default_limit(self, mock_settings):
+    def test_search_default_limit(self, mock_settings, mock_metrics, mock_logger):
         """Test search uses default limit"""
         mock_settings.qdrant_url = None
         result = search_knowledge_base.invoke({"query": "test"})
@@ -43,8 +45,12 @@ class TestSearchKnowledgeBase:
         result = search_knowledge_base.invoke({"query": "", "limit": 5})
         assert isinstance(result, str)
 
-    def test_search_long_query(self):
+    @patch("mcp_server_langgraph.tools.search_tools.logger")
+    @patch("mcp_server_langgraph.tools.search_tools.metrics")
+    @patch("mcp_server_langgraph.tools.search_tools.settings")
+    def test_search_long_query(self, mock_settings, mock_metrics, mock_logger):
         """Test search handles long queries"""
+        mock_settings.qdrant_url = None
         long_query = "a" * 500  # Maximum query length
         result = search_knowledge_base.invoke({"query": long_query, "limit": 5})
         assert isinstance(result, str)
