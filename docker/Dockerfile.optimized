@@ -63,7 +63,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv export --frozen \
     --no-hashes \
     --no-emit-project \
-    --no-extra embeddings-local \
+    --no-extra embeddings \
     --no-extra secrets \
     --no-extra all \
     > /tmp/requirements-base.txt
@@ -88,12 +88,12 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
 ENV PATH="/root/.cargo/bin:${PATH}"
 ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
-# Export full dependencies (includes embeddings-local and secrets)
+# Export full dependencies (includes embeddings and secrets)
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv export --frozen \
     --no-hashes \
     --no-emit-project \
-    --extra embeddings-local \
+    --extra embeddings \
     --extra secrets \
     > /tmp/requirements-full.txt
 
@@ -109,7 +109,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --no-hashes \
     --no-emit-project \
     --extra dev \
-    --no-extra embeddings-local \
+    --no-extra embeddings \
     --no-extra all \
     > /tmp/requirements-test.txt
 
@@ -122,11 +122,13 @@ FROM dependencies-base AS build-base
 # Copy source code (changes frequently, after dependencies)
 COPY src/ ./src/
 
-# Install base dependencies
+# Create virtual environment and install base dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --python $(which python) --user --no-cache \
+    python -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    uv pip install --python /opt/venv/bin/python --no-cache \
     -r /tmp/requirements-base.txt && \
-    uv pip install --python $(which python) --user --no-cache --no-deps -e .
+    uv pip install --python /opt/venv/bin/python --no-cache --no-deps -e .
 
 # ==============================================================================
 # STAGE: build-full
@@ -136,13 +138,15 @@ FROM dependencies-full AS build-full
 
 COPY src/ ./src/
 
-# Install full dependencies (includes PyTorch, sentence-transformers)
+# Create virtual environment and install full dependencies (includes PyTorch, sentence-transformers)
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/root/.cargo/git \
-    uv pip install --python $(which python) --user --no-cache \
+    python -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    uv pip install --python /opt/venv/bin/python --no-cache \
     -r /tmp/requirements-full.txt && \
-    uv pip install --python $(which python) --user --no-cache --no-deps -e .
+    uv pip install --python /opt/venv/bin/python --no-cache --no-deps -e .
 
 # ==============================================================================
 # STAGE: build-test
@@ -153,11 +157,13 @@ FROM dependencies-test AS build-test
 COPY src/ ./src/
 COPY tests/ ./tests/
 
-# Install test dependencies
+# Create virtual environment and install test dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --python $(which python) --no-cache \
+    python -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    uv pip install --python /opt/venv/bin/python --no-cache \
     -r /tmp/requirements-test.txt && \
-    uv pip install --python $(which python) --no-cache --no-deps -e .
+    uv pip install --python /opt/venv/bin/python --no-cache --no-deps -e .
 
 # ==============================================================================
 # STAGE: runtime-distroless
@@ -196,12 +202,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # ==============================================================================
 FROM runtime-distroless AS final-base
 
-# Copy Python packages from builder
-COPY --from=build-base --chown=nonroot:nonroot /root/.local /home/nonroot/.local
+# Copy virtual environment from builder
+COPY --from=build-base --chown=nonroot:nonroot /opt/venv /opt/venv
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
 COPY --chown=nonroot:nonroot pyproject.toml ./
+
+# Set PATH to use virtual environment
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Metadata
 LABEL org.opencontainers.image.title="MCP Server LangGraph (Base)"
@@ -212,19 +221,22 @@ LABEL org.opencontainers.image.size="~200MB"
 EXPOSE 8000
 
 # Distroless has no shell, use exec form
-CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
+CMD ["/opt/venv/bin/python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 
 # ==============================================================================
 # FINAL STAGE: full variant (distroless)
 # ==============================================================================
 FROM runtime-distroless AS final-full
 
-# Copy Python packages from builder (includes ML dependencies)
-COPY --from=build-full --chown=nonroot:nonroot /root/.local /home/nonroot/.local
+# Copy virtual environment from builder (includes ML dependencies)
+COPY --from=build-full --chown=nonroot:nonroot /opt/venv /opt/venv
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
 COPY --chown=nonroot:nonroot pyproject.toml ./
+
+# Set PATH to use virtual environment
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Metadata
 LABEL org.opencontainers.image.title="MCP Server LangGraph (Full)"
@@ -234,22 +246,23 @@ LABEL org.opencontainers.image.size="~1.2GB"
 
 EXPOSE 8000
 
-CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
+CMD ["/opt/venv/bin/python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 
 # ==============================================================================
 # FINAL STAGE: test variant (slim, with shell)
 # ==============================================================================
 FROM runtime-slim AS final-test
 
-# Copy Python packages from builder
-COPY --from=build-test /root/.local /root/.local
+# Copy virtual environment from builder
+COPY --from=build-test /opt/venv /opt/venv
 
 # Copy application and test code
 COPY src/ ./src/
 COPY tests/ ./tests/
 COPY pyproject.toml ./
 
-ENV PATH=/root/.local/bin:$PATH
+# Set PATH to use virtual environment
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Disable observability during tests
 ENV ENABLE_TRACING=false \
@@ -263,7 +276,7 @@ LABEL org.opencontainers.image.variant="test"
 LABEL org.opencontainers.image.size="~800MB"
 
 # Default command runs integration tests
-CMD ["pytest", "-m", "integration", "-v", "--tb=short"]
+CMD ["/opt/venv/bin/pytest", "-m", "integration", "-v", "--tb=short"]
 
 # No health check for test variant
 HEALTHCHECK NONE
