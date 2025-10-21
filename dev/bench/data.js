@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761018929943,
+  "lastUpdate": 1761019501101,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -7288,6 +7288,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0021979549419447004",
             "extra": "mean: 89.61057364916971 usec\nrounds: 5404"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "25e70fd2e4a3011f7e32c02c70acfdeb5405315a",
+          "message": "fix(ci): prevent security-scan workflow from running on push events\n\nAdd event guards to all jobs in security-scan.yaml to prevent execution\non inappropriate push events. The workflow is configured to trigger on\nschedule, pull_request, release, workflow_dispatch, and workflow_call,\nbut was incorrectly executing on push events.\n\nChanges:\n- Add 'if: github.event_name != push' to all 5 main jobs:\n  * trivy-scan (line 60)\n  * dependency-check (line 84)\n  * codeql (line 122)\n  * secrets-scan (line 143)\n  * license-check (line 161)\n- Update notify-security job condition (line 193):\n  * Changed from: if: failure()\n  * Changed to: if: failure() && github.event_name != 'push'\n\nRoot Cause:\nHistorical version (commit 01d60a5) had these guards but they were\nremoved in subsequent updates, causing 30+ consecutive failures when\nworkflow triggered on push events despite not having 'push' in its\ntrigger configuration.\n\nImpact:\n- Resolves 100% failure rate (30+ consecutive failures)\n- Prevents workflow from running on ~50 push events per day\n- Reduces CI noise and improves signal-to-noise ratio\n- Jobs will now only execute on intended trigger events\n\nRelated:\n- Workflow trigger analysis documented in investigation\n- Part of comprehensive workflow audit fixing 2 critical trigger issues\n\nFile: .github/workflows/security-scan.yaml\nLines modified: 60, 84, 122, 143, 161, 193\nJobs affected: 6/6 (all jobs)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T00:02:33-04:00",
+          "tree_id": "8b7c0474997aca0cd92c6c775ec86c25c5ba30d5",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/25e70fd2e4a3011f7e32c02c70acfdeb5405315a"
+        },
+        "date": 1761019499970,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51250.141952840146,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003028681963764849",
+            "extra": "mean: 19.51214107699818 usec\nrounds: 6096"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 51102.872926960976,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000041450497295787806",
+            "extra": "mean: 19.568371457887597 usec\nrounds: 11646"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49089.569197626966,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002738057997964004",
+            "extra": "mean: 20.370926376928583 usec\nrounds: 16666"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.65511776223985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006533562364080033",
+            "extra": "mean: 5.272728792131224 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.337560443475013,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015497084186654115",
+            "extra": "mean: 51.712831249994906 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93560832593665,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003830768915355304",
+            "extra": "mean: 100.64808989999392 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2587400.6199498465,
+            "unit": "iter/sec",
+            "range": "stddev: 5.2628263884149495e-8",
+            "extra": "mean: 386.48827409625636 nsec\nrounds: 195351"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5192.628712461086,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001630169559426359",
+            "extra": "mean: 192.5806860791405 usec\nrounds: 2198"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2934.5808215853367,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002032320445278385",
+            "extra": "mean: 340.76417069330336 usec\nrounds: 2525"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2823.8721687068623,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004484090895689124",
+            "extra": "mean: 354.12367850132915 usec\nrounds: 1549"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59973.04769198482,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002256111003350986",
+            "extra": "mean: 16.67415678349203 usec\nrounds: 12597"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 9672.810490380696,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0029312251206693855",
+            "extra": "mean: 103.38256921237819 usec\nrounds: 4963"
           }
         ]
       }
