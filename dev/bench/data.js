@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761010192511,
+  "lastUpdate": 1761012782291,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -6532,6 +6532,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00012480331977800113",
             "extra": "mean: 60.618960712968075 usec\nrounds: 5218"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "eefe61b8c1afcd4e7ec07dca99734613e2affca7",
+          "message": "fix: resolve CI test failures - property tests and unit test isolation\n\n## Problem\nCI/CD workflows failing with 4 workflows showing failures:\n- Property Tests: Invalid --hypothesis-max-examples=100 CLI flag\n- CI/CD Pipeline: 5 unit tests failing due to resilience state pollution\n- Coverage Trend Tracking: Failed (dependent on unit tests)\n- Quality Tests: Property test configuration error\n\n## Root Causes\n\n### Issue 1: Property Test Configuration\n- GitHub Actions workflow using invalid pytest flag\n- Hypothesis doesn't support --hypothesis-max-examples via CLI\n- Tests failing immediately on startup\n\n### Issue 2: Test Isolation\n- Circuit breakers remaining in \"open\" state between tests\n- Bulkheads remaining \"full\" from previous tests\n- Test state pollution causing cascading failures\n\n## Solution\n\n### 1. Hypothesis Profile Configuration (tests/conftest.py:33-56)\n- Register \"ci\" profile: 100 examples, no deadline, deterministic\n- Register \"dev\" profile: 25 examples, 2s deadline, randomized\n- Auto-load profile from HYPOTHESIS_PROFILE env var\n\n### 2. Resilience State Reset (tests/conftest.py:454-504)\n- Add autouse fixture to reset resilience patterns before each test\n- Reset circuit breakers for: llm, openfga, redis, keycloak, qdrant\n- Reset bulkheads for: default, llm, openfga, redis\n- Ensures complete test isolation\n\n### 3. Workflow Configuration (.github/workflows/quality-tests.yaml:70-76)\n- Replace invalid --hypothesis-max-examples=100 flag\n- Use HYPOTHESIS_PROFILE=ci environment variable\n- Activate CI profile registered in conftest.py\n\n## Test Results\n\nBefore fixes:\n- ❌ Property Tests: Failed (invalid CLI flag)\n- ❌ Unit Tests: 5 failing (resilience state pollution)\n\nAfter fixes:\n- ✅ Property Tests: 81/81 passed with 100 examples\n- ✅ Unit Tests: 927/927 passed, 37 skipped\n- ✅ All previously failing tests now pass\n\n## Impact\n- Fixes 4 failing CI/CD workflows\n- Improves test reliability for all future tests\n- No changes to production code required\n- Benefits all property-based tests automatically\n\n## Files Modified\n- .github/workflows/quality-tests.yaml (6 lines)\n- tests/conftest.py (+79 lines)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T22:09:49-04:00",
+          "tree_id": "1431b218f26dbb076ab493050dd6fe0538d62a22",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/eefe61b8c1afcd4e7ec07dca99734613e2affca7"
+        },
+        "date": 1761012781899,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50943.518172705066,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002491385922693912",
+            "extra": "mean: 19.629582641109938 usec\nrounds: 6855"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52798.2450517705,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002264559792869652",
+            "extra": "mean: 18.940023461375763 usec\nrounds: 12446"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49316.70091060487,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023362653927989645",
+            "extra": "mean: 20.27710656908447 usec\nrounds: 19987"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.9769232792587,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004121494281498441",
+            "extra": "mean: 5.236234738883796 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.351321450954007,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005790563414578086",
+            "extra": "mean: 51.67605749997506 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.949894312274985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003906987434151975",
+            "extra": "mean: 100.50358009997353 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2524456.0171084753,
+            "unit": "iter/sec",
+            "range": "stddev: 5.052679970521128e-8",
+            "extra": "mean: 396.1249446308061 nsec\nrounds: 190115"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5295.678202688715,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015240778124868692",
+            "extra": "mean: 188.83322621308093 usec\nrounds: 2701"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3019.0841059888435,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008351696671898901",
+            "extra": "mean: 331.22628084998945 usec\nrounds: 2731"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2898.006605388225,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003900849469533077",
+            "extra": "mean: 345.0647759534824 usec\nrounds: 1705"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59242.170883408544,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019823606130936645",
+            "extra": "mean: 16.879867585677243 usec\nrounds: 13775"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16742.014943962797,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010415587442935558",
+            "extra": "mean: 59.72996699304716 usec\nrounds: 4605"
           }
         ]
       }
