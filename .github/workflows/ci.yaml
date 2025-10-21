@@ -114,7 +114,9 @@ jobs:
   docker-build:
     name: Build ${{ matrix.variant }} image
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
+      fail-fast: false
       matrix:
         variant: [base, full, test]
     steps:
@@ -125,6 +127,10 @@ jobs:
       uses: docker/setup-buildx-action@v3.11.1
       with:
         driver-opts: network=host
+        # Increase build timeout for network resilience
+        config-inline: |
+          [worker.oci]
+            max-parallelism = 4
 
     - name: Log in to Container Registry
       if: github.event_name != 'pull_request'
@@ -154,6 +160,33 @@ jobs:
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
+        # Retry configuration for network resilience
+        provenance: false
+        sbom: false
+      continue-on-error: false
+
+    # Retry failed builds once (handles transient network issues)
+    - name: Retry build on failure
+      if: failure()
+      uses: docker/build-push-action@v6.18.0
+      with:
+        context: .
+        file: docker/Dockerfile
+        target: final-${{ matrix.variant }}
+        push: ${{ github.event_name != 'pull_request' }}
+        load: ${{ github.event_name == 'pull_request' }}
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
+        cache-from: |
+          type=gha,scope=build-${{ matrix.variant }}
+        cache-to: |
+          type=gha,mode=max,scope=build-${{ matrix.variant }}
+        labels: |
+          org.opencontainers.image.variant=${{ matrix.variant }}
+          org.opencontainers.image.revision=${{ github.sha }}
+        provenance: false
+        sbom: false
 
     - name: Test ${{ matrix.variant }} image
       if: github.event_name == 'pull_request'

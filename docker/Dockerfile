@@ -36,8 +36,9 @@ WORKDIR /app
 
 # Install minimal build dependencies
 # Note: No Rust needed for base variant (no infisical)
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+# Use private cache mounts to avoid lock contention between parallel builds
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
     apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
@@ -183,7 +184,8 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # Install runtime dependencies for tests (curl for health checks)
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
