@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761026231251,
+  "lastUpdate": 1761026514924,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -8260,6 +8260,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000005908056210357488",
             "extra": "mean: 49.75746109986398 usec\nrounds: 5437"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "2765a68b5d4b929ac97059ee5ed53c8d472a2d11",
+          "message": "feat(workflow): add fast testing and database operations commands\n\nAdd comprehensive Claude Code commands to improve developer workflow\nefficiency and operational capabilities.\n\nNew Commands:\n- /test-fast: Fast test iteration workflows (40-70% faster)\n  - Documents test-dev, test-fast-core, test-parallel targets\n  - Provides speed comparison and usage guidelines\n  - Enables rapid development iteration\n\n- /db-operations: Complete database management workflow\n  - Documents db-shell, db-backup, db-restore targets\n  - Includes safety guidelines and troubleshooting\n  - Covers backup automation and disaster recovery\n\nEnhanced Commands:\n- /test-summary: Added specialized test command reference\n  - Documents fast testing options\n  - References compliance and debug test modes\n  - Links to new /test-fast command\n\nImpact:\n- Closes 3/5 high-priority coverage gaps identified in analysis\n- Improves Makefile target documentation coverage from 60% to 85%\n- Enables 40-70% faster test iteration for developers\n- Provides complete database operational workflow\n\nAnalysis Summary:\n- Total Makefile targets: 95\n- Total Claude commands: 23 (was 21)\n- Coverage improvement: +25%\n- Zero critical issues found in existing commands\n- All command references validated as correct\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-21T02:00:28-04:00",
+          "tree_id": "b975b8b93a2d8f98dd6f686474d3cd4bb0c8d9b3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/2765a68b5d4b929ac97059ee5ed53c8d472a2d11"
+        },
+        "date": 1761026514305,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51519.81350401147,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027152417741640017",
+            "extra": "mean: 19.410008150012757 usec\nrounds: 6135"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54410.6128884096,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023046718586088764",
+            "extra": "mean: 18.37876743000293 usec\nrounds: 11747"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51090.32897378872,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002430372526610063",
+            "extra": "mean: 19.57317598234762 usec\nrounds: 20843"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.08433243952038,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001678255536660523",
+            "extra": "mean: 5.233291433333538 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37812357548399,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010534008921130321",
+            "extra": "mean: 51.60458369999965 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.95086158077195,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000487500752290692",
+            "extra": "mean: 100.4938107000001 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2588978.562087705,
+            "unit": "iter/sec",
+            "range": "stddev: 4.519644572788029e-8",
+            "extra": "mean: 386.2527155086283 nsec\nrounds: 197668"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5169.089115379061,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001668940834676104",
+            "extra": "mean: 193.45768232642817 usec\nrounds: 447"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2908.3533220371482,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016340048532054422",
+            "extra": "mean: 343.8371783864117 usec\nrounds: 2702"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2806.365245273951,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004109407642475632",
+            "extra": "mean: 356.33280510583796 usec\nrounds: 1606"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59399.54969353494,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020717728643173414",
+            "extra": "mean: 16.835144460848333 usec\nrounds: 13540"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 19473.732126139443,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005181647374191312",
+            "extra": "mean: 51.351225000045446 usec\nrounds: 5520"
           }
         ]
       }
