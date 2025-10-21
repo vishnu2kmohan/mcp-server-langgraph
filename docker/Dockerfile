@@ -63,6 +63,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv export --frozen \
     --no-hashes \
     --no-emit-project \
+    --no-extra embeddings-local \
     --no-extra embeddings \
     --no-extra secrets \
     --no-extra all \
@@ -88,12 +89,12 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
 ENV PATH="/root/.cargo/bin:${PATH}"
 ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
-# Export full dependencies (includes embeddings and secrets)
+# Export full dependencies (includes embeddings-local and secrets)
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv export --frozen \
     --no-hashes \
     --no-emit-project \
-    --extra embeddings \
+    --extra embeddings-local \
     --extra secrets \
     > /tmp/requirements-full.txt
 
@@ -109,6 +110,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --no-hashes \
     --no-emit-project \
     --extra dev \
+    --no-extra embeddings-local \
     --no-extra embeddings \
     --no-extra all \
     > /tmp/requirements-test.txt

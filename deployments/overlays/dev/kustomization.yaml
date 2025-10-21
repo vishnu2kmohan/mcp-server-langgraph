@@ -31,4 +31,4 @@ replicas:
 
 images:
   - name: mcp-server-langgraph
-    newTag: dev-latest
+    newTag: 2.7.0-dev
