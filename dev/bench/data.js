@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761008993223,
+  "lastUpdate": 1761009164361,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -6100,6 +6100,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00015243776294925906",
             "extra": "mean: 86.37560000023774 usec\nrounds: 3570"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1af48b7da4141a4d27f504bac5c1179b22736044",
+          "message": "perf: optimize test suite for faster development iteration\n\n**Test Performance Improvements:**\n\n1. **Parallel Test Execution**\n   - Add pytest-xdist for parallel testing (40-70% faster)\n   - Add pytest-testmon for selective test execution\n   - New Makefile targets: test-dev, test-parallel, test-parallel-unit\n\n2. **Hypothesis Configuration Optimization**\n   - Dev default: 25 examples (75% faster than 100)\n   - CI override: 100 examples for comprehensive testing\n   - Reduced deadline: 5000ms → 2000ms for faster feedback\n\n3. **Pytest Fixture Optimization**\n   - Changed common fixtures to session-scoped:\n     - mock_settings (used across all tests)\n     - mock_openfga_response (static mock data)\n     - mock_infisical_response (static mock data)\n     - mock_user_alice (immutable test data)\n   - Reduces fixture setup overhead by ~60%\n\n4. **Coverage Configuration**\n   - Disabled default coverage for dev (20-30% speedup)\n   - CI and coverage targets explicitly enable coverage\n   - Faster test iteration during development\n\n5. **Makefile Improvements**\n   - Reorganized help text by speed/purpose\n   - Added fast testing section\n   - Updated test target to include coverage explicitly\n   - Better developer experience with recommended workflows\n\n**Performance Impact:**\n- Unit tests: ~3 min → ~1.5 min (parallel mode)\n- Property tests: 45s → 15s (reduced examples)\n- Fixture overhead: ~60% reduction (session scope)\n- Overall dev cycle: ~40-50% faster\n\n**CI Unchanged:**\n- CI still runs comprehensive tests (100 Hypothesis examples)\n- Coverage reporting unchanged\n- All quality gates maintained\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-20T21:09:42-04:00",
+          "tree_id": "b65117ad7181c5f970c518bf5ba8905e186837ac",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1af48b7da4141a4d27f504bac5c1179b22736044"
+        },
+        "date": 1761009163337,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51599.325640807976,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000234852144401354",
+            "extra": "mean: 19.380098239290504 usec\nrounds: 6759"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53237.808824574415,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002283633340356678",
+            "extra": "mean: 18.783643092733804 usec\nrounds: 11821"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50079.486859873294,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000244880372976766",
+            "extra": "mean: 19.968255721111635 usec\nrounds: 19533"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.00701334646106,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042790466479197076",
+            "extra": "mean: 5.235409854747765 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.422711280266174,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017503375123201494",
+            "extra": "mean: 51.48611774999807 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.949489169645192,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003922208300467787",
+            "extra": "mean: 100.50767260000555 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2517769.5202027676,
+            "unit": "iter/sec",
+            "range": "stddev: 5.195718444899361e-8",
+            "extra": "mean: 397.17694251833876 nsec\nrounds: 192308"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5331.685956530839,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001359057827708332",
+            "extra": "mean: 187.5579334853902 usec\nrounds: 2631"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3033.1496273959465,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008309148677205976",
+            "extra": "mean: 329.69029650493417 usec\nrounds: 2489"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2864.993591124888,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003885935029211771",
+            "extra": "mean: 349.0409204047706 usec\nrounds: 1583"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58588.66084773944,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002165871866774707",
+            "extra": "mean: 17.068149118458365 usec\nrounds: 11796"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16635.802510318295,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009739326199614359",
+            "extra": "mean: 60.1113171053668 usec\nrounds: 5279"
           }
         ]
       }
