@@ -75,6 +75,31 @@ def pytest_configure(config):
         init_observability(settings=test_settings, enable_file_logging=False)
 
 
+@pytest.fixture(scope="session", autouse=True)
+def init_observability_for_workers():
+    """
+    Initialize observability in each worker process (for pytest-xdist).
+
+    This fixture ensures observability is initialized even when tests run in parallel.
+    pytest_configure() only runs in the main process, not in worker processes.
+    """
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    # Initialize if not already done (may already be done by pytest_configure in main process)
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+    # No cleanup needed - observability persists for the session
+
+
 # Mock MCP server initialization at session level to prevent event loop issues
 @pytest.fixture(scope="session")
 def mock_mcp_modules():
