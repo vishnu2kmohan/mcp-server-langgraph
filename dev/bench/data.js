@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761061039850,
+  "lastUpdate": 1761170051058,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -12256,6 +12256,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0027666046739341574",
             "extra": "mean: 100.1164877610296 usec\nrounds: 4412"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "baa64dd968b7fe67f94c82e71e31a83826091e00",
+          "message": "docs: comprehensive Mintlify documentation audit and improvements\n\nUpdate all documentation for v2.8.0 release and fix consistency issues:\n\nVersion Consistency:\n- Update version references from v2.7.0 to v2.8.0 as current release\n- Expand version comparison matrix to include v2.6, v2.7, v2.8\n- Update support policy table (v2.8.x now Current)\n- Add v2.8.0 to version timeline diagram\n- Update release highlights and migration guides\n- Remove \"unreleased\" warnings from v2.8.0 documentation\n\nLink Standardization:\n- Standardize 8+ internal links to Mintlify format (absolute paths, no extensions)\n- Fix broken relative path references\n- Convert .mdx/.md extension links to clean URLs\n- Update cross-references in ADRs and guides\n\nContent Updates:\n- Update diagram maintenance timestamp to 2025-10-22\n- Update authentication migration guide status\n- Fix version inconsistencies in release notes\n\nFiles modified: 11 documentation files\nIssues fixed: version inconsistencies, broken links, outdated timestamps\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-22T17:53:10-04:00",
+          "tree_id": "3233db61e184814d9ff229510b3fd0b6e57ee381",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/baa64dd968b7fe67f94c82e71e31a83826091e00"
+        },
+        "date": 1761170050321,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50632.49742036103,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002341206151555729",
+            "extra": "mean: 19.750161476290643 usec\nrounds: 6069"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52673.31353976586,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023679901856268936",
+            "extra": "mean: 18.984945749521664 usec\nrounds: 11834"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49939.31393527323,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024240508769777626",
+            "extra": "mean: 20.024303924080908 usec\nrounds: 19393"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.51449034004415,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019689645515802026",
+            "extra": "mean: 5.2489445722219195 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35360898760574,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010809615521770433",
+            "extra": "mean: 51.66994954999922 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.9367158588491,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020024363287334233",
+            "extra": "mean: 100.6368717999976 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2541253.7686129366,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7669228967389005e-8",
+            "extra": "mean: 393.5065487559782 nsec\nrounds: 192679"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4976.4317906532,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012420049559560826",
+            "extra": "mean: 200.9471931029404 usec\nrounds: 435"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2916.626322096852,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001055205826503232",
+            "extra": "mean: 342.86188546809433 usec\nrounds: 2436"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2773.6220540631903,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000041553589399188276",
+            "extra": "mean: 360.53938875163607 usec\nrounds: 1618"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58120.43908471627,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002260707003822163",
+            "extra": "mean: 17.205651157287395 usec\nrounds: 12487"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10818.277229662857,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002475275067388697",
+            "extra": "mean: 92.43615954470822 usec\nrounds: 5359"
           }
         ]
       }
