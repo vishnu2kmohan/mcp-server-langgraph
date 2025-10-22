@@ -16,36 +16,38 @@ Deploy the MCP Server with LangGraph on Kubernetes for production-grade reliabil
 
 ```mermaid
 graph TB
-    subgraph "Kubernetes Cluster"
-        subgraph "Ingress Layer"
+    Internet[Internet]
+
+    subgraph Kubernetes_Cluster["Kubernetes Cluster"]
+        subgraph Ingress_Layer["Ingress Layer"]
             Ingress[Ingress Controller]
         end
 
-        subgraph "Application Layer"
+        subgraph Application_Layer["Application Layer"]
             Agent1[Agent Pod 1]
             Agent2[Agent Pod 2]
             Agent3[Agent Pod 3]
         end
 
-        subgraph "Authentication Layer"
+        subgraph Authentication_Layer["Authentication Layer"]
             KC1[Keycloak Pod 1]
             KC2[Keycloak Pod 2]
         end
 
-        subgraph "Session Layer"
+        subgraph Session_Layer["Session Layer"]
             Redis1[Redis Master]
             Redis2[Redis Replica]
         end
 
-        subgraph "Authorization Layer"
+        subgraph Authorization_Layer["Authorization Layer"]
             FGA[OpenFGA Pod]
         end
 
-        subgraph "Data Layer"
+        subgraph Data_Layer["Data Layer"]
             PG[(PostgreSQL)]
         end
 
-        subgraph "Observability"
+        subgraph Observability_Layer["Observability"]
             Jaeger[Jaeger]
             Prometheus[Prometheus]
         end

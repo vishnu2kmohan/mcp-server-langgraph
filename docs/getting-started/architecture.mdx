@@ -629,44 +629,46 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Kubernetes Cluster"
-        subgraph "Ingress"
+    Internet[Internet]
+
+    subgraph Kubernetes_Cluster["Kubernetes Cluster"]
+        subgraph Ingress_Layer["Ingress"]
             LB[Load Balancer]
-            Ingress[Ingress Controller]
+            IngressCtrl[Ingress Controller]
         end
 
-        subgraph "Application Pods"
+        subgraph Application_Pods["Application Pods"]
             A1[Agent Pod 1]
             A2[Agent Pod 2]
             A3[Agent Pod 3]
         end
 
-        subgraph "Auth Services"
+        subgraph Auth_Services["Auth Services"]
             KC1[Keycloak Pod 1]
             KC2[Keycloak Pod 2]
         end
 
-        subgraph "Session Store"
+        subgraph Session_Store["Session Store"]
             RM[Redis Master]
             RR[Redis Replica]
         end
 
-        subgraph "Authorization"
+        subgraph Authorization_Layer["Authorization"]
             FGA1[OpenFGA Pod 1]
             FGA2[OpenFGA Pod 2]
         end
 
-        subgraph "Data"
+        subgraph Data_Layer["Data"]
             PG[(PostgreSQL Primary)]
             PGR[(PostgreSQL Replica)]
         end
     end
 
     Internet --> LB
-    LB --> Ingress
-    Ingress --> A1
-    Ingress --> A2
-    Ingress --> A3
+    LB --> IngressCtrl
+    IngressCtrl --> A1
+    IngressCtrl --> A2
+    IngressCtrl --> A3
     A1 --> KC1
     A2 --> KC2
     A3 --> KC1
