@@ -5,61 +5,64 @@ description: 'Complete release history and version comparison for MCP Server wit
 
 ## Current Version
 
-**Latest Release**: v2.7.0 (2025-10-17)
-**Highlights**: Agentic loop implementation, Anthropic best practices (9.8/10 adherence), advanced enhancements
+**Latest Release**: v2.8.0 (2025-10-22)
+**Highlights**: Test Coverage +35% (85%+ overall), Docker-based integration testing infrastructure, 61 new comprehensive test cases
 
 ## Version Comparison Matrix
 
-| Feature | v2.1 | v2.2 | v2.3 | v2.4 | v2.5 |
-|---------|:----:|:----:|:----:|:----:|:----:|
-| **Authentication & Sessions** | | | | | |
-| Keycloak SSO Integration | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Redis Session Management | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Session Store Architecture | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Provider Pattern | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Compliance & Security** | | | | | |
-| GDPR Data Subject Rights | ❌ | ✅ | ✅ | ✅ | ✅ |
-| SOC 2 Automation | ❌ | ✅ | ✅ | ✅ | ✅ |
-| HIPAA Technical Safeguards | ❌ | ✅ | ✅ | ✅ | ✅ |
-| SLA Monitoring (99.9%) | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Data Retention Policies | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Compliance Storage Backend | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Testing & Quality** | | | | | |
-| Unit Tests (437) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Integration Tests | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Docker Integration Tests | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 100% Test Pass Rate | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Property-Based Testing | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Contract Testing | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Documentation** | | | | | |
-| Mintlify Docs (77 pages) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Architecture Decision Records | 5 ADRs | 5 ADRs | 21 ADRs | 21 ADRs | 21 ADRs |
-| **Core Features** | | | | | |
-| LangGraph Version | 0.2.28 | 0.2.28 | 0.2.28 | 0.6.10 | 0.6.10 |
-| Multi-LLM Support (LiteLLM) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| OpenFGA Authorization | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Pydantic Version | V1 | V1 | V2 | V2 | V2 |
-| Type Safety Coverage | 27% | 27% | 64% | 64% | 64% |
-| **Secrets Management** | | | | | |
-| Infisical Integration | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Infisical Docker Builds | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 5 Installation Options | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Deployment** | | | | | |
-| Kubernetes/Helm/Kustomize | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Multi-Cloud (GKE/EKS/AKS) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Docker Compose | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Observability** | | | | | |
-| OpenTelemetry + LangSmith | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Grafana Dashboards | 7 | 9 | 9 | 9 | 9 |
-| Prometheus Alerts | Basic | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA |
+| Feature | v2.1 | v2.2 | v2.3 | v2.4 | v2.5 | v2.6 | v2.7 | v2.8 |
+|---------|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
+| **Authentication & Sessions** | | | | | | | | |
+| Keycloak SSO Integration | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Redis Session Management | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Session Store Architecture | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Provider Pattern | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Compliance & Security** | | | | | | | | |
+| GDPR Data Subject Rights | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| SOC 2 Automation | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| HIPAA Technical Safeguards | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| SLA Monitoring (99.9%) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Data Retention Policies | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Compliance Storage Backend | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Testing & Quality** | | | | | | | | |
+| Unit Tests (498+) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Integration Tests | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Docker Integration Tests | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| 100% Test Pass Rate | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Property-Based Testing | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Contract Testing | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test Coverage | ~75% | ~75% | ~75% | ~75% | ~75% | ~75% | ~75% | **85%+** |
+| **Documentation** | | | | | | | | |
+| Mintlify Docs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Architecture Decision Records | 5 ADRs | 5 ADRs | 21 ADRs | 21 ADRs | 21 ADRs | 26 ADRs | 30 ADRs | 30 ADRs |
+| **Core Features** | | | | | | | | |
+| LangGraph Version | 0.2.28 | 0.2.28 | 0.2.28 | 0.6.10 | 0.6.10 | 0.6.10 | 0.6.10 | 0.6.10 |
+| Multi-LLM Support (LiteLLM) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OpenFGA Authorization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Pydantic Version | V1 | V1 | V2 | V2 | V2 | V2 | V2 | V2 |
+| Type Safety Coverage | 27% | 27% | 64% | 64% | 64% | 64% | 64% | 64% |
+| Agentic Loop (GAVR) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Anthropic Best Practices | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 9.8/10 | 9.8/10 |
+| **Secrets Management** | | | | | | | | |
+| Infisical Integration | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Infisical Docker Builds | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| 5 Installation Options | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Deployment** | | | | | | | | |
+| Kubernetes/Helm/Kustomize | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Multi-Cloud (GKE/EKS/AKS) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Docker Compose | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Observability** | | | | | | | | |
+| OpenTelemetry + LangSmith | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Grafana Dashboards | 7 | 9 | 9 | 9 | 9 | 9 | 9 | 9 |
+| Prometheus Alerts | Basic | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA |
 
 ## Release Highlights
 
 <CardGroup cols={2}>
-  <Card title="v2.8.0 (Unreleased)" icon="flask" href="/releases/v2-8-0">
-    Test coverage +35% + Infrastructure improvements
+  <Card title="v2.8.0 (Latest)" icon="flask" href="/releases/v2-8-0">
+    Test coverage +35% (85%+) + Infrastructure improvements
   </Card>
-  <Card title="v2.7.0 (Latest)" icon="sparkles" href="/releases/v2-7-0">
+  <Card title="v2.7.0" icon="sparkles" href="/releases/v2-7-0">
     Agentic loop + Anthropic best practices (9.8/10)
   </Card>
   <Card title="v2.6.0" icon="rocket" href="/releases/v2-6-0">
@@ -95,6 +98,9 @@ graph LR
     V22 --> V23[v2.3.0<br/>Storage + Types]
     V23 --> V24[v2.4.0<br/>LangGraph 0.6.10]
     V24 --> V25[v2.5.0<br/>Docker Tests]
+    V25 --> V26[v2.6.0<br/>CI/CD Fixes]
+    V26 --> V27[v2.7.0<br/>Agentic Loop]
+    V27 --> V28[v2.8.0<br/>Test Coverage 85%+]
 
     style V1 fill:#e3f2fd
     style V2 fill:#e3f2fd
@@ -102,21 +108,29 @@ graph LR
     style V22 fill:#e8f5e9
     style V23 fill:#fff3e0
     style V24 fill:#fff3e0
-    style V25 fill:#ffebee,stroke:#c62828,stroke-width:3px
+    style V25 fill:#e8eaf6
+    style V26 fill:#fce4ec
+    style V27 fill:#f3e5f5
+    style V28 fill:#ffebee,stroke:#c62828,stroke-width:3px
 ```
 
 ## Migration Guides
 
 <AccordionGroup>
-  <Accordion title="v2.7.0 → v2.8.0 (Unreleased - In Development)">
-    **Status**: In Development (not yet released)
+  <Accordion title="v2.7.0 → v2.8.0 (Latest)">
+    **Breaking Changes**: None
 
-    **Planned Features**:
-    - Test coverage improvements (+35% overall)
-    - Docker-based integration testing infrastructure
+    **New Features**:
+    - Test coverage improvements (+35% overall, now 85%+)
+    - Docker Compose test environment (Qdrant, Redis, PostgreSQL)
     - 61 new comprehensive test cases
+    - 25 previously-skipped tests now enabled
 
-    **Note**: This version is currently in development. Current release is v2.7.0.
+    **Recommended Actions**:
+    1. Update dependencies: `uv sync`
+    2. Run tests with new Docker infrastructure: `make test-integration`
+    3. Review new test coverage reports
+    4. Update CI/CD to use Docker Compose test environment
   </Accordion>
 
   <Accordion title="v2.3.0 → v2.4.0">
@@ -218,10 +232,14 @@ This project follows [Semantic Versioning 2.0.0](https://semver.org/):
 
 | Version | Status | Support Until | Security Fixes |
 |---------|--------|---------------|----------------|
-| v2.4.x | **Current** | Active | ✅ Yes |
-| v2.3.x | Maintenance | 2025-04-13 | ✅ Yes |
-| v2.2.x | Maintenance | 2025-04-13 | ✅ Yes |
-| v2.1.x | Maintenance | 2025-04-12 | ✅ Yes |
+| v2.8.x | **Current** | Active | ✅ Yes |
+| v2.7.x | Maintenance | 2026-04-22 | ✅ Yes |
+| v2.6.x | Maintenance | 2026-01-17 | ✅ Yes |
+| v2.5.x | End of Life | 2025-10-20 | ❌ No |
+| v2.4.x | End of Life | 2025-10-14 | ❌ No |
+| v2.3.x | End of Life | 2025-04-13 | ❌ No |
+| v2.2.x | End of Life | 2025-04-13 | ❌ No |
+| v2.1.x | End of Life | 2025-04-12 | ❌ No |
 | v2.0.x | End of Life | 2025-02-11 | ❌ No |
 | v1.x | End of Life | 2025-01-10 | ❌ No |
 
