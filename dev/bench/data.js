@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761170051058,
+  "lastUpdate": 1761170372467,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -12364,6 +12364,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002475275067388697",
             "extra": "mean: 92.43615954470822 usec\nrounds: 5359"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "5056d0c826b7c0e96fde38ed8e2ab01675743160",
+          "message": "fix: correct Mermaid diagram syntax errors in architecture diagrams\n\nFix syntax errors in Kubernetes deployment architecture diagrams:\n\nChanges:\n- Add explicit Internet node definition before subgraphs\n- Rename subgraph IDs to use underscores (Kubernetes_Cluster, Ingress_Layer, etc.)\n- Fix node naming conflicts (Ingress subgraph vs Ingress node -> IngressCtrl)\n- Ensure all referenced nodes are properly defined\n\nFiles fixed:\n- docs/getting-started/architecture.mdx (Production Kubernetes diagram)\n- docs/deployment/kubernetes.mdx (Architecture diagram)\n\nThese fixes ensure diagrams render correctly in Mermaid viewers and Mintlify.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-22T17:58:28-04:00",
+          "tree_id": "91234af73b6da0ac63015606dde0afe4517c39b9",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/5056d0c826b7c0e96fde38ed8e2ab01675743160"
+        },
+        "date": 1761170371361,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51817.15840666978,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022498415558577696",
+            "extra": "mean: 19.298626762815353 usec\nrounds: 6382"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53863.56979360228,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023233542686372506",
+            "extra": "mean: 18.565423788877364 usec\nrounds: 12695"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50120.175953384445,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023101083511853994",
+            "extra": "mean: 19.952044879692277 usec\nrounds: 20321"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.09839917954943,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016097048487307257",
+            "extra": "mean: 5.232906211110825 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.345065364243194,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004175906708317902",
+            "extra": "mean: 51.69276925000048 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938323114592226,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002442281067773526",
+            "extra": "mean: 100.62059649999924 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2536547.114644399,
+            "unit": "iter/sec",
+            "range": "stddev: 4.841560189300173e-8",
+            "extra": "mean: 394.2367142430119 nsec\nrounds: 196079"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5066.633438759959,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013288231291323347",
+            "extra": "mean: 197.36971543075484 usec\nrounds: 499"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2916.1632856512324,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017603399992333188",
+            "extra": "mean: 342.91632602345237 usec\nrounds: 2736"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2760.959866432698,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004294476293415987",
+            "extra": "mean: 362.19287797618415 usec\nrounds: 1680"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60362.43197230295,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002111978887188833",
+            "extra": "mean: 16.566595601364206 usec\nrounds: 12913"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11585.542617000496,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0021343210654427803",
+            "extra": "mean: 86.31447253343241 usec\nrounds: 5625"
           }
         ]
       }
