@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761170372467,
+  "lastUpdate": 1761224794045,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -12472,6 +12472,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0021343210654427803",
             "extra": "mean: 86.31447253343241 usec\nrounds: 5625"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "77820625b752652c2f86cc0f6ebf405cd356d695",
+          "message": "fix: resolve all 13 broken links in Mintlify documentation\n\nFix all broken links detected by mintlify broken-links checker:\n\nFiles fixed:\n- deployment/VERSION_PINNING.mdx (2 links)\n- deployment/infisical-installation.mdx (3 links)\n- deployment/model-configuration.mdx (2 links)\n- development/integration-testing.mdx (1 link)\n- reference/development/ci-cd.mdx (2 links)\n- reference/development/development.mdx (3 links)\n\nChanges:\n- Convert relative paths to GitHub URLs for repo root files\n- Fix ADR references to use Mintlify paths\n- Update file extension references (.md -> proper format)\n- Standardize external repository links\n\nVerification:\n✅ mintlify broken-links: success no broken links found\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-23T09:05:26-04:00",
+          "tree_id": "878c5eecc23285472f14b6e3d8d171ff32771170",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/77820625b752652c2f86cc0f6ebf405cd356d695"
+        },
+        "date": 1761224793318,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52113.938935652965,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002044887860784621",
+            "extra": "mean: 19.188724176745446 usec\nrounds: 6225"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52378.17436603054,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023990978137644087",
+            "extra": "mean: 19.091921627733218 usec\nrounds: 9506"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49217.734734735124,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002356630000418719",
+            "extra": "mean: 20.317879426788323 usec\nrounds: 19963"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.06145499206474,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014461692900065798",
+            "extra": "mean: 5.233918060770199 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.413341195376,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015465098340951486",
+            "extra": "mean: 51.51096814999505 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.942086135326885,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005201920985286243",
+            "extra": "mean: 100.5825122000033 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2553344.051784831,
+            "unit": "iter/sec",
+            "range": "stddev: 6.607215731250461e-8",
+            "extra": "mean: 391.64326456553425 nsec\nrounds: 181456"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5072.96937288135,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012916691587548834",
+            "extra": "mean: 197.12320861736626 usec\nrounds: 441"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2915.6442447772833,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007742646362739813",
+            "extra": "mean: 342.9773717391186 usec\nrounds: 2569"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2723.783263220532,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005898349759621287",
+            "extra": "mean: 367.13640674097746 usec\nrounds: 1721"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59089.46666272098,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002041611748781879",
+            "extra": "mean: 16.92349003093797 usec\nrounds: 12338"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10568.646176070792,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0026321825926449126",
+            "extra": "mean: 94.61949840502464 usec\nrounds: 5325"
           }
         ]
       }
