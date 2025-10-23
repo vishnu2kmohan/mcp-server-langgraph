@@ -93,16 +93,16 @@ graph TB
     Agent --> Infisical
     Agent --> K8sSecrets
 
-    %% ColorBrewer2 Dark2 palette styling
-    classDef clientStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
-    classDef gatewayStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
-    classDef appStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
-    classDef llmStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
-    classDef authStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
-    classDef authzStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
-    classDef dataStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
-    classDef obsStyle fill:#e6ab02,stroke:#b38501,stroke-width:2px,color:#fff
-    classDef secretsStyle fill:#a6761d,stroke:#735214,stroke-width:2px,color:#fff
+    %% ColorBrewer2 Set3 palette styling
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef gatewayStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+    classDef authzStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef obsStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef secretsStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
 
     class WebApp,CLI,API clientStyle
     class Ingress,Kong gatewayStyle
@@ -303,11 +303,11 @@ graph LR
     Org -->|member| Tool2[Tool: search]
     User2[User: bob] -->|member| Org
 
-    style User fill:#1b9e77,color:#fff
-    style User2 fill:#1b9e77,color:#fff
-    style Org fill:#d95f02,color:#fff
-    style Tool1 fill:#7570b3,color:#fff
-    style Tool2 fill:#7570b3,color:#fff
+    style User fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    style User2 fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    style Org fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    style Tool1 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+    style Tool2 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
 ```
 
 **Authorization Model**:
@@ -352,11 +352,11 @@ type tool
         Redis --> Master[Redis Master]
         Redis --> Replica[Redis Replica]
 
-        %% ColorBrewer2 Dark2 palette styling
-        classDef appStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
-        classDef managerStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
-        classDef storeStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
-        classDef redisStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
+        %% ColorBrewer2 Set3 palette styling
+        classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+        classDef managerStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+        classDef storeStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+        classDef redisStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
 
         class App appStyle
         class SM managerStyle
@@ -419,12 +419,12 @@ graph TB
     Fallback1 --> Gemini[Gemini 2.5 Flash]
     Fallback2 --> GPT[GPT-4o]
 
-    %% ColorBrewer2 Dark2 palette styling
-    classDef agentStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
-    classDef routerStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
-    classDef primaryStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
-    classDef fallbackStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
-    classDef llmStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
+    %% ColorBrewer2 Set3 palette styling
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef routerStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef primaryStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef fallbackStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
 
     class Agent agentStyle
     class LLMFactory,LiteLLM routerStyle
@@ -472,11 +472,11 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
         Collector --> Prometheus[Prometheus]
         Prometheus --> Grafana[Grafana]
 
-        %% ColorBrewer2 Dark2 palette styling
-        classDef appStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
-        classDef exporterStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
-        classDef collectorStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
-        classDef backendStyle fill:#e6ab02,stroke:#b38501,stroke-width:2px,color:#fff
+        %% ColorBrewer2 Set3 palette styling
+        classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+        classDef exporterStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+        classDef collectorStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+        classDef backendStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
 
         class App appStyle
         class Exporter exporterStyle

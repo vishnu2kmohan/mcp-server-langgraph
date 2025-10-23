@@ -58,12 +58,12 @@ graph TB
     API --> Redis
     API --> Secrets
 
-    %% ColorBrewer2 Dark2 palette styling
-    classDef perimeterStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
-    classDef authStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
-    classDef authzStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
-    classDef appStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
-    classDef dataStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+    %% ColorBrewer2 Set3 palette styling
+    classDef perimeterStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+    classDef authzStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
 
     class WAF,LB perimeterStyle
     class KC,JWT,Session authStyle
