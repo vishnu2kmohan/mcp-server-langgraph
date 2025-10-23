@@ -345,11 +345,18 @@ graph TB
     D --> J[Redis]
     D --> K[Postgres]
 
-    style A fill:#1b9e77,color:#fff
-    style D fill:#d95f02,color:#fff
-    style I fill:#66a61e,color:#fff
-    style J fill:#66a61e,color:#fff
-    style K fill:#66a61e,color:#fff
+    %% ColorBrewer2 Dark2 palette styling
+    classDef suiteStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+    classDef unitStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
+    classDef integrationStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
+    classDef dockerStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    classDef serviceStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+
+    class A suiteStyle
+    class B,E,F unitStyle
+    class C,G,H integrationStyle
+    class D dockerStyle
+    class I,J,K serviceStyle
 ```
 
 ### Coverage Thresholds

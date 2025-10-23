@@ -30,12 +30,27 @@ graph LR
     Kong --> Metrics[Prometheus]
     Kong --> Logs[Centralized Logging]
 
-    subgraph "Kong Plugins"
+    subgraph Kong_Plugins["Kong Plugins"]
         Auth
         Rate
         Cache
         Transform
     end
+
+    %% ColorBrewer2 Dark2 palette styling
+    classDef clientStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+    classDef kongStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    classDef pluginStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
+    classDef lbStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
+    classDef appStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+    classDef obsStyle fill:#e6ab02,stroke:#b38501,stroke-width:2px,color:#fff
+
+    class Client clientStyle
+    class Kong kongStyle
+    class Auth,Rate,Cache,Transform pluginStyle
+    class LB lbStyle
+    class App1,App2,App3 appStyle
+    class Metrics,Logs obsStyle
 ```
 
 ## Features

@@ -30,6 +30,19 @@ graph TB
     Prometheus --> Grafana[Grafana]
     Jaeger --> Dashboard1[Trace UI]
     LSCloud --> Dashboard2[LangSmith UI]
+
+    %% ColorBrewer2 Dark2 palette styling
+    classDef appStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+    classDef sdkStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    classDef collectorStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
+    classDef backendStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+    classDef dashStyle fill:#e6ab02,stroke:#b38501,stroke-width:2px,color:#fff
+
+    class App appStyle
+    class OTel,LS sdkStyle
+    class Exporter,Collector collectorStyle
+    class Jaeger,Prometheus,LSCloud backendStyle
+    class Grafana,Dashboard1,Dashboard2 dashStyle
 ```
 
 ## Quick Start

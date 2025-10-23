@@ -220,34 +220,34 @@ Based on our ADRs, these principles guide our architecture:
 
 ```mermaid
 graph TB
-    subgraph "Client Layer"
+    subgraph Client_Layer["Client Layer"]
         Client[MCP Client]
     end
 
-    subgraph "Transport Layer"
+    subgraph Transport_Layer["Transport Layer"]
         STDIO[STDIO Transport]
         HTTP[StreamableHTTP Transport]
     end
 
-    subgraph "Security Layer"
+    subgraph Security_Layer["Security Layer"]
         Auth[Authentication<br/>Keycloak/InMemory]
         AuthZ[Authorization<br/>OpenFGA]
         Secrets[Secrets<br/>Infisical]
     end
 
-    subgraph "Agent Layer"
+    subgraph Agent_Layer["Agent Layer"]
         Router[Pydantic AI Router]
         Agent[LangGraph Agent]
         Tools[Agent Tools]
     end
 
-    subgraph "LLM Layer"
+    subgraph LLM_Layer["LLM Layer"]
         LiteLLM[LiteLLM Factory]
         Primary[Primary Model]
         Fallback[Fallback Models]
     end
 
-    subgraph "Observability Layer"
+    subgraph Observability_Layer["Observability Layer"]
         OTEL[OpenTelemetry]
         Jaeger[Jaeger Traces]
         Prom[Prometheus Metrics]
@@ -270,6 +270,21 @@ graph TB
     Agent --> LangSmith
     OTEL --> Jaeger
     OTEL --> Prom
+
+    %% ColorBrewer2 Dark2 palette styling
+    classDef clientStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+    classDef transportStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    classDef securityStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
+    classDef agentStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+    classDef llmStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
+    classDef obsStyle fill:#e6ab02,stroke:#b38501,stroke-width:2px,color:#fff
+
+    class Client clientStyle
+    class STDIO,HTTP transportStyle
+    class Auth,AuthZ,Secrets securityStyle
+    class Router,Agent,Tools agentStyle
+    class LiteLLM,Primary,Fallback llmStyle
+    class OTEL,Jaeger,Prom,LangSmith obsStyle
 ```
 
 ## When to Create an ADR

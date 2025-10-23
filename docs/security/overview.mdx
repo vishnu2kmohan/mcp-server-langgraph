@@ -16,30 +16,30 @@ Security is **everyone's responsibility**. Follow all security best practices an
 
 ```mermaid
 graph TB
-    subgraph "Perimeter Security"
+    subgraph Perimeter_Security["Perimeter Security"]
         WAF[WAF/DDoS Protection]
         LB[Load Balancer + TLS]
     end
 
-    subgraph "Authentication Layer"
+    subgraph Authentication_Layer["Authentication Layer"]
         KC[Keycloak SSO]
         JWT[JWT Tokens]
         Session[Redis Sessions]
     end
 
-    subgraph "Authorization Layer"
+    subgraph Authorization_Layer["Authorization Layer"]
         RBAC[Role-Based Access]
         FGA[OpenFGA Fine-Grained Auth]
         Tuples[Relationship Tuples]
     end
 
-    subgraph "Application Layer"
+    subgraph Application_Layer["Application Layer"]
         API[MCP Server API]
         Middleware[Auth Middleware]
         RateLimit[Rate Limiting]
     end
 
-    subgraph "Data Layer"
+    subgraph Data_Layer["Data Layer"]
         PG[(PostgreSQL + Encryption)]
         Redis[(Redis + TLS)]
         Secrets[Infisical Secrets]
@@ -57,6 +57,19 @@ graph TB
     API --> PG
     API --> Redis
     API --> Secrets
+
+    %% ColorBrewer2 Dark2 palette styling
+    classDef perimeterStyle fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
+    classDef authStyle fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
+    classDef authzStyle fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    classDef appStyle fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+    classDef dataStyle fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+
+    class WAF,LB perimeterStyle
+    class KC,JWT,Session authStyle
+    class RBAC,FGA,Tuples authzStyle
+    class API,Middleware,RateLimit appStyle
+    class PG,Redis,Secrets dataStyle
 ```
 
 ## Defense-in-Depth Layers
