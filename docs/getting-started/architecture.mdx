@@ -93,26 +93,41 @@ graph TB
     Agent --> Infisical
     Agent --> K8sSecrets
 
-    %% ColorBrewer2 Set3 palette styling
+    %% ColorBrewer2 Set3 (12-color) palette - optimized for node type distinction
+    %% Each layer uses distinct colors to avoid visual confusion
     classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef gatewayStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef llmStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+    classDef ingressStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef kongStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef mcpStyle fill:#ffed6f,stroke:#f39c12,stroke-width:2px,color:#333
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
     classDef authStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    classDef authzStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
-    classDef obsStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
-    classDef secretsStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef llmRouterStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef llmProviderStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+    classDef authSvcStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+    classDef authzStyle fill:#d9d9d9,stroke:#95a5a6,stroke-width:2px,color:#333
+    classDef redisStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef secretsStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
 
     class WebApp,CLI,API clientStyle
-    class Ingress,Kong gatewayStyle
-    class MCP,Agent,Auth appStyle
-    class LiteLLM,Anthropic,Google,OpenAI,Ollama llmStyle
-    class Keycloak,JWT,Sessions authStyle
-    class OpenFGA,RoleMapper authzStyle
-    class Redis,Postgres dataStyle
+    class Ingress ingressStyle
+    class Kong,LiteLLM kongStyle
+    class MCP mcpStyle
+    class Agent agentStyle
+    class Auth authStyle
+    class Anthropic,Google,OpenAI,Ollama llmProviderStyle
+    class Keycloak,JWT,Sessions authSvcStyle
+    class OpenFGA,RoleMapper,Postgres authzStyle
+    class Redis redisStyle
     class OTel,Jaeger,Prometheus,LangSmith obsStyle
     class Infisical,K8sSecrets secretsStyle
+
+    %% Additional styling for observability layer distinction
+    classDef obsStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef langsmithStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+
+    class OTel obsStyle
+    class Jaeger,Prometheus obsStyle
+    class LangSmith langsmithStyle
 ```
 
 ## Core Components
@@ -217,6 +232,7 @@ START → authenticate → authorize → execute_tool → END
 **Pluggable authentication** with multiple provider support.
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
 sequenceDiagram
     participant Client
     participant AuthMiddleware
@@ -596,6 +612,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
 ### Request Flow (Authenticated Request)
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
 sequenceDiagram
     participant Client
     participant MCP as MCP Server
@@ -629,6 +646,7 @@ sequenceDiagram
 ### Authentication Flow (Keycloak SSO)
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
 sequenceDiagram
     participant User
     participant App as MCP Server
@@ -658,7 +676,7 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "Docker Host"
+    subgraph Docker_Host["Docker Host"]
         Agent[Agent Container]
         KC[Keycloak Container]
         Redis[Redis Container]
@@ -675,6 +693,23 @@ graph TB
     KC --> PG
     FGA --> PG
     Prom --> Agent
+
+    %% ColorBrewer2 Set3 palette - each service type gets unique color
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
+    classDef cacheStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef authzStyle fill:#d9d9d9,stroke:#95a5a6,stroke-width:2px,color:#333
+    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef tracingStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef metricsStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Agent agentStyle
+    class KC authStyle
+    class Redis cacheStyle
+    class FGA authzStyle
+    class PG dataStyle
+    class Jaeger tracingStyle
+    class Prom metricsStyle
 ```
 
 **Command**: `docker compose up`

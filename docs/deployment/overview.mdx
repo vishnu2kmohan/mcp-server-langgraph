@@ -89,6 +89,33 @@ graph TB
     OTEL --> Jaeger[Jaeger]
     OTEL --> Prom[Prometheus]
     Prom --> Grafana[Grafana]
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef externalStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef lbStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef ingressStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef authzStyle fill:#d9d9d9,stroke:#95a5a6,stroke-width:2px,color:#333
+    classDef secretsStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef otelStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef tracingStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef metricsStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef dashStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+
+    class Internet externalStyle
+    class LB lbStyle
+    class Ingress,Kong ingressStyle
+    class Agent agentStyle
+    class OpenFGA authzStyle
+    class Infisical secretsStyle
+    class LLM llmStyle
+    class Postgres dataStyle
+    class OTEL otelStyle
+    class Jaeger tracingStyle
+    class Prom metricsStyle
+    class Grafana dashStyle
 ```
 
 ## Supported Platforms
