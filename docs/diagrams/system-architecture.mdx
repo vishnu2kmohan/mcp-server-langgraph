@@ -93,14 +93,14 @@ graph TD
     OTEL --> LangSmith
     Prometheus --> Grafana
 
-    %% Styling
-    classDef client fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef server fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef auth fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef agent fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    classDef llm fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-    classDef services fill:#e0f2f1,stroke:#004d40,stroke-width:2px
-    classDef obs fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    %% Styling (ColorBrewer2 Dark2 palette - dark mode friendly)
+    classDef client fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+    classDef server fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    classDef auth fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
+    classDef agent fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+    classDef llm fill:#e7298a,stroke:#b31e6d,stroke-width:2px,color:#fff
+    classDef services fill:#e6ab02,stroke:#b38501,stroke-width:2px,color:#fff
+    classDef obs fill:#a6761d,stroke:#735214,stroke-width:2px,color:#fff
 
     class Client client
     class STDIO,HTTP server
@@ -179,15 +179,15 @@ flowchart TD
     ExtractNotes --> SaveState[Save to Checkpoint<br/>Memory/PostgreSQL]
     SaveState --> End
 
-    style LoadContext fill:#e3f2fd
-    style Compact fill:#fff3e0
-    style Route fill:#f3e5f5
-    style ExecuteTools fill:#e8f5e9
-    style GenerateResp fill:#e8f5e9
-    style Verify fill:#fce4ec
-    style ExtractNotes fill:#e0f2f1
-    style Quality fill:#ffebee
-    style Refine fill:#fff9c4
+    style LoadContext fill:#1b9e77,color:#fff
+    style Compact fill:#d95f02,color:#fff
+    style Route fill:#7570b3,color:#fff
+    style ExecuteTools fill:#66a61e,color:#fff
+    style GenerateResp fill:#66a61e,color:#fff
+    style Verify fill:#e7298a,color:#fff
+    style ExtractNotes fill:#e6ab02,color:#fff
+    style Quality fill:#d95f02,color:#fff
+    style Refine fill:#a6761d,color:#fff
 ```
 
 ## Deployment Architecture (Kubernetes)
@@ -288,9 +288,9 @@ graph TB
     OTELCol --> PrometheusPod
     PrometheusPod --> GrafanaPod
 
-    style PostgresDB fill:#4db6ac,stroke:#004d40,stroke-width:3px
-    style RedisPod fill:#ef5350,stroke:#b71c1c,stroke-width:2px
-    style QdrantPod fill:#ab47bc,stroke:#4a148c,stroke-width:2px
+    style PostgresDB fill:#1b9e77,stroke:#116b52,stroke-width:3px,color:#fff
+    style RedisPod fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    style QdrantPod fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
 ```
 
 ## Data Flow - MCP Tool Execution
@@ -387,12 +387,12 @@ graph LR
 
     Tool3 --> Results[Aggregated Results]
 
-    style Tool1A fill:#a5d6a7,stroke:#2e7d32
-    style Tool1B fill:#a5d6a7,stroke:#2e7d32
-    style Tool1C fill:#a5d6a7,stroke:#2e7d32
-    style Tool2A fill:#ffcc80,stroke:#e65100
-    style Tool2B fill:#ffcc80,stroke:#e65100
-    style Tool3 fill:#ef9a9a,stroke:#c62828
+    style Tool1A fill:#66a61e,stroke:#477315,color:#fff
+    style Tool1B fill:#66a61e,stroke:#477315,color:#fff
+    style Tool1C fill:#66a61e,stroke:#477315,color:#fff
+    style Tool2A fill:#d95f02,stroke:#a64801,color:#fff
+    style Tool2B fill:#d95f02,stroke:#a64801,color:#fff
+    style Tool3 fill:#e7298a,stroke:#b31e6d,color:#fff
 ```
 
 ## Context Loading Strategy
@@ -424,10 +424,10 @@ flowchart TD
 
     InjectMsg --> AgentInvoke[Agent Invoke<br/>with Context]
 
-    style CheckCache fill:#e1f5ff
-    style Search fill:#f3e5f5
-    style Progressive fill:#fff3e0
-    style CacheResults fill:#e8f5e9
+    style CheckCache fill:#1b9e77,color:#fff
+    style Search fill:#7570b3,color:#fff
+    style Progressive fill:#d95f02,color:#fff
+    style CacheResults fill:#66a61e,color:#fff
 
     %% Annotations
     Note1[60% Token Reduction<br/>vs Loading All Contexts]
@@ -493,12 +493,12 @@ graph TD
     Redis --> BulkRevoke
     Redis --> Tracking
 
-    style InMemory fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px
-    style Redis fill:#ef9a9a,stroke:#c62828,stroke-width:2px
-    style Sliding fill:#e1f5ff
-    style ConcurrentLimit fill:#fff3e0
-    style BulkRevoke fill:#f3e5f5
-    style Tracking fill:#e8f5e9
+    style InMemory fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+    style Redis fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    style Sliding fill:#1b9e77,color:#fff
+    style ConcurrentLimit fill:#e6ab02,color:#fff
+    style BulkRevoke fill:#7570b3,color:#fff
+    style Tracking fill:#66a61e,color:#fff
 ```
 
 ## LLM Provider Fallback Chain
@@ -530,12 +530,12 @@ flowchart LR
     Alert -->|No| End([End])
     Notify --> End
 
-    style Primary fill:#e3f2fd,stroke:#01579b,stroke-width:2px
-    style Fallback1 fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    style Fallback2 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    style Fallback3 fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    style Error fill:#ffcdd2,stroke:#b71c1c,stroke-width:3px
-    style Response fill:#c5e1a5,stroke:#33691e,stroke-width:2px
+    style Primary fill:#1b9e77,stroke:#116b52,stroke-width:2px,color:#fff
+    style Fallback1 fill:#d95f02,stroke:#a64801,stroke-width:2px,color:#fff
+    style Fallback2 fill:#7570b3,stroke:#4e4a7f,stroke-width:2px,color:#fff
+    style Fallback3 fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
+    style Error fill:#e7298a,stroke:#b31e6d,stroke-width:3px,color:#fff
+    style Response fill:#66a61e,stroke:#477315,stroke-width:2px,color:#fff
 ```
 
 ## Observability Data Flow
@@ -601,13 +601,13 @@ graph TB
     Prometheus --> Grafana
     LangSmith --> LangSmithUI
 
-    style Agent fill:#e3f2fd
-    style Auth fill:#f3e5f5
-    style Tools fill:#e8f5e9
-    style LLM fill:#fce4ec
-    style Grafana fill:#fff9c4,stroke-width:3px
-    style JaegerUI fill:#fff9c4,stroke-width:3px
-    style LangSmithUI fill:#fff9c4,stroke-width:3px
+    style Agent fill:#1b9e77,color:#fff
+    style Auth fill:#7570b3,color:#fff
+    style Tools fill:#66a61e,color:#fff
+    style LLM fill:#e7298a,color:#fff
+    style Grafana fill:#e6ab02,stroke-width:3px,color:#fff
+    style JaegerUI fill:#e6ab02,stroke-width:3px,color:#fff
+    style LangSmithUI fill:#e6ab02,stroke-width:3px,color:#fff
 ```
 
 ---
