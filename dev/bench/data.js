@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761226539436,
+  "lastUpdate": 1761227660696,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -12904,6 +12904,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0030499590353869135",
             "extra": "mean: 103.91951587765625 usec\nrounds: 5133"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "0859570f218b53911c32b2657d14eaa566c4ba5a",
+          "message": "style: ensure unique colors for distinct node types across all diagrams\n\nApply comprehensive ColorBrewer2 Set3 palette with strategic color\nassignments to ensure each node type is visually distinguishable.\n\nKey Improvements:\n1. Unique colors for adjacent/connected nodes\n2. Semantic color grouping (same type = same color, different type = different color)\n3. All sequence diagrams now styled with Set3 theme\n4. Previously unstyled diagrams now have full color treatment\n\nDiagram Updates:\n\nGraph Diagrams (7 files):\n- getting-started/introduction.mdx\n  * Fixed: Otel, Jaeger, Prom, Grafana, Secrets all had same color\n  * Now: Each component type has unique color\n  * Otel (telemetry): yellow, Jaeger/Prom (backends): blue,\n    Grafana (dashboard): pink, Secrets: purple\n\n- getting-started/architecture.mdx\n  * High-level: 12 distinct colors for 9 layer types\n  * Docker Compose: 7 unique colors for 7 service types\n  * Fixed: MCP, Agent, Auth now have distinct colors\n\n- deployment/kubernetes.mdx\n  * Added styling: 9 unique colors for 9 component types\n  * Internet, Ingress, Agents, Keycloak, Redis, OpenFGA, Postgres,\n    Jaeger, Prometheus each visually distinct\n\n- deployment/overview.mdx\n  * Added styling: 12 unique colors for 12 components\n  * Observability chain (OTEL→Jaeger→Prom→Grafana) uses 4 distinct colors\n\nSequence Diagrams (7 total - all now styled):\n- diagrams/system-architecture.mdx (2 diagrams)\n- getting-started/architecture.mdx (3 diagrams)\n- guides/keycloak-sso.mdx (1 diagram)\n- guides/redis-sessions.mdx (1 diagram)\n\nSet3 Theme Variables Applied:\n- Actor backgrounds: cyan #8dd3c7\n- Signals/arrows: lime green #7cb342\n- Label boxes: light yellow #ffffb3\n- Notes: orange #fdb462\n- Activations: lime green #b3de69\n- All with dark text (#333) for readability\n\nColor Strategy:\n✅ Nodes of same type share colors (e.g., multiple agent pods)\n✅ Different types at same level get unique colors\n✅ Strategic reuse only for visually separated nodes\n✅ All 12 Set3 colors utilized efficiently\n✅ Dark text ensures readability on light backgrounds\n\nFiles Modified: 7\nTotal Diagrams Enhanced: 15+ diagrams\nColor Conflicts Resolved: All adjacent node color issues fixed\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-23T09:53:01-04:00",
+          "tree_id": "e9185e28f2954d01147e9369e2b3fa4623a89d0c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/0859570f218b53911c32b2657d14eaa566c4ba5a"
+        },
+        "date": 1761227660110,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 49238.970793437984,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023015596779688785",
+            "extra": "mean: 20.309116618117223 usec\nrounds: 8575"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 50476.98447275593,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027065440774260025",
+            "extra": "mean: 19.811009125153515 usec\nrounds: 13808"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50151.707846566605,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020920967169026294",
+            "extra": "mean: 19.939500426573414 usec\nrounds: 21098"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.20551675486487,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014743911438196747",
+            "extra": "mean: 5.229974620879012 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.393082130383274,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00018179781016541797",
+            "extra": "mean: 51.56477930000065 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954930693847043,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030144084064324063",
+            "extra": "mean: 100.4527335000013 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2579164.167048679,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7554254218376157e-8",
+            "extra": "mean: 387.7225082357955 nsec\nrounds: 196079"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5120.823111390456,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012892495329225324",
+            "extra": "mean: 195.2811058393443 usec\nrounds: 548"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2947.080121815005,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008979222936233864",
+            "extra": "mean: 339.3189050401977 usec\nrounds: 2738"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2844.071674057236,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003421475251742686",
+            "extra": "mean: 351.60857903888234 usec\nrounds: 1727"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60576.04379520052,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000018775516124440895",
+            "extra": "mean: 16.50817612620702 usec\nrounds: 14007"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11601.176225326417,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0020571587197021784",
+            "extra": "mean: 86.1981561677263 usec\nrounds: 5699"
           }
         ]
       }
