@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761225027422,
+  "lastUpdate": 1761225689230,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -12688,6 +12688,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0026936948050159046",
             "extra": "mean: 96.75234482060262 usec\nrounds: 5020"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9bffb152823eff8c8f0ca6a5819954ea6e6cb706",
+          "message": "style: apply ColorBrewer2 Dark2 palette to all remaining diagrams\n\nComplete the dark mode-friendly color treatment across all Mermaid diagrams\nin the documentation with comprehensive ColorBrewer2 Dark2 palette.\n\nDiagrams Updated (8 files):\n- architecture/overview.mdx - System architecture diagram\n- getting-started/architecture.mdx - High-level, session, LLM, observability diagrams\n- getting-started/introduction.mdx - Quick start architecture\n- getting-started/observability.mdx - Dual observability stack\n- guides/observability.mdx - Observability architecture\n- guides/openfga-setup.mdx - Authorization architecture\n- deployment/kong-gateway.mdx - API gateway architecture\n- security/overview.mdx - Security layers diagram\n- releases/v2-8-0.mdx - Test infrastructure (enhanced)\n- releases/overview.mdx - Version timeline (comment added)\n\nComprehensive Styling Applied:\n✅ Consistent ColorBrewer2 Dark2 palette across all diagrams\n✅ White text (color:#fff) on all colored nodes\n✅ Darker stroke colors matching fill colors\n✅ Stroke widths (2-3px) for visual hierarchy\n✅ Subgraph IDs use underscores (no spaces)\n✅ All nodes properly classified with semantic color meanings\n\nColor Semantics:\n- Teal #1b9e77: Clients, infrastructure, primary components\n- Orange #d95f02: Servers, routers, orchestration\n- Purple #7570b3: Authentication, authorization, security\n- Green #66a61e: Agents, application logic, execution\n- Pink #e7298a: LLM providers, gateways, critical paths\n- Yellow #e6ab02: Observability, monitoring, dashboards\n- Brown #a6761d: Secrets, special highlights\n\nTotal Diagrams with Dark Mode Colors: 20+ diagrams\nAccessibility: WCAG 2.1 AA compliant contrast ratios\nMaintainability: Consistent pattern for future diagrams\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-23T09:20:27-04:00",
+          "tree_id": "aef06f020e24ab29af5366ba1c3dd6130ec19c06",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9bffb152823eff8c8f0ca6a5819954ea6e6cb706"
+        },
+        "date": 1761225687997,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51261.53922133388,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002203472159420445",
+            "extra": "mean: 19.50780283210503 usec\nrounds: 5650"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52706.25668217775,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002208471759933944",
+            "extra": "mean: 18.973079534562032 usec\nrounds: 8248"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48905.50851421902,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029518428723355626",
+            "extra": "mean: 20.4475943586039 usec\nrounds: 16273"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.55491995619812,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026288191442232733",
+            "extra": "mean: 5.247830915254588 msec\nrounds: 177"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35783693888673,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009465331584757068",
+            "extra": "mean: 51.658664299995394 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.929382411021999,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003348391541911915",
+            "extra": "mean: 100.71119819999694 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2487804.807943009,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2339388408516413e-7",
+            "extra": "mean: 401.96079564088865 nsec\nrounds: 192716"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4981.088279533338,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017175706074996303",
+            "extra": "mean: 200.75934090726187 usec\nrounds: 352"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2894.5332590984603,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011374514733352672",
+            "extra": "mean: 345.47884252380743 usec\nrounds: 2140"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2721.5248136865152,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000680778942092186",
+            "extra": "mean: 367.44107383148304 usec\nrounds: 1219"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58897.215852291876,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022582831328023366",
+            "extra": "mean: 16.978731261387576 usec\nrounds: 7658"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 9262.119033345649,
+            "unit": "iter/sec",
+            "range": "stddev: 0.003372033085148278",
+            "extra": "mean: 107.96665389418791 usec\nrounds: 4802"
           }
         ]
       }
