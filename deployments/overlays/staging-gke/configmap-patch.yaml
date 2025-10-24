@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-langgraph-config
+data:
+  # Environment
+  environment: "staging"
+  log_level: "INFO"
+
+  # Authentication (use Keycloak for staging)
+  auth_provider: "keycloak"
+  auth_mode: "token"
+
+  # Session Management (use Redis for staging)
+  session_backend: "redis"
+  session_ttl_seconds: "43200"  # 12 hours
+
+  # Cloud SQL connection
+  # Connection will be via Cloud SQL Proxy sidecar at 127.0.0.1:5432
+  postgres_host: "127.0.0.1"
+  postgres_port: "5432"
+  postgres_database: "keycloak"
+  postgres_ssl_mode: "disable"  # Proxy handles TLS
+
+  # Redis connection
+  # Values will be loaded from External Secrets
+  redis_port: "6379"
+  redis_ssl: "true"
+
+  # Observability
+  enable_console_export: "false"
+  enable_tracing: "true"
+  enable_metrics: "true"
+  observability_backend: "opentelemetry"
+  langsmith_tracing: "false"
+
+  # GCP-specific
+  gcp_project_id: "vishnu-sandbox-20250310"
+  gcp_region: "us-central1"
+
+  # Feature flags (test new features in staging)
+  enable_experimental_features: "true"
+  enable_dynamic_context_loading: "true"
+  enable_parallel_execution: "true"
+  enable_llm_extraction: "true"
+
+  # Rate limiting (slightly more lenient than production)
+  rate_limit_enabled: "true"
+  rate_limit_requests_per_minute: "120"
+
+  # Resource limits
+  max_concurrent_requests: "50"
+  request_timeout_seconds: "60"

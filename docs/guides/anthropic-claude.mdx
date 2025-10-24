@@ -466,7 +466,7 @@ async def call_with_fallback(query: str):
         logger.error(f"Claude failed after retries: {e}")
 
         # Fallback to another provider
-        fallback_llm = LLMFactory(provider="google", model_name="gemini-2.0-flash-exp")
+        fallback_llm = LLMFactory(provider="google", model_name="gemini-2.5-flash")
         return await fallback_llm.ainvoke(query)
 ```
 

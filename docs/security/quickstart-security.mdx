@@ -26,12 +26,12 @@ python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().
 Add to `.env` or `config.py`:
 ```bash
 use_dedicated_summarization_model=true
-summarization_model_name="gemini-2.0-flash-lite"  # Cheaper model
+summarization_model_name="gemini-2.5-flash"  # Cheaper model
 summarization_model_temperature=0.3
 summarization_model_max_tokens=2000
 
 use_dedicated_verification_model=true
-verification_model_name="gemini-2.0-flash-lite"
+verification_model_name="gemini-2.5-flash"
 verification_model_temperature=0.0
 verification_model_max_tokens=1000
 ```

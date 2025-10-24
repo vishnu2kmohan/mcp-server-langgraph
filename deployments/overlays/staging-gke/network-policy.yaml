@@ -1,0 +1,226 @@
+---
+# Network Policy: Ingress - Allow traffic from ingress controllers
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress
+  namespace: mcp-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-server-langgraph
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow from ingress controllers
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+
+  # Allow from same namespace (for internal communication)
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000
+
+---
+# Network Policy: Egress - Allow only necessary outbound traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress
+  namespace: mcp-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-server-langgraph
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS lookups
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # Allow Cloud SQL proxy connection (to GCP private IP)
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8  # GCP private IP range
+    ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL proxy
+
+  # Allow Redis connection (Memorystore private IP)
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    ports:
+    - protocol: TCP
+      port: 6379
+
+  # Allow Keycloak
+  - to:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow OpenFGA
+  - to:
+    - podSelector:
+        matchLabels:
+          app: openfga
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow Qdrant (vector database)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: qdrant
+    ports:
+    - protocol: TCP
+      port: 6333
+
+  # Allow HTTPS egress (for LLM API calls)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32  # Block metadata service
+    ports:
+    - protocol: TCP
+      port: 443
+
+  # Allow HTTP egress (for health checks, webhooks)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32
+    ports:
+    - protocol: TCP
+      port: 80
+
+  # Allow OTLP collector
+  - to:
+    - podSelector:
+        matchLabels:
+          app: otel-collector
+    ports:
+    - protocol: TCP
+      port: 4317
+    - protocol: TCP
+      port: 4318
+
+---
+# Network Policy: Deny all ingress by default
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: mcp-staging
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+---
+# Network Policy: Keycloak - Allow only necessary traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keycloak-network-policy
+  namespace: mcp-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: keycloak
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow from MCP server
+  - from:
+    - podSelector:
+        matchLabels:
+          app: mcp-server-langgraph
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow from ingress
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow Cloud SQL
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    ports:
+    - protocol: TCP
+      port: 3307
+
+---
+# Network Policy: OpenFGA - Restrict access
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openfga-network-policy
+  namespace: mcp-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: openfga
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow only from MCP server
+  - from:
+    - podSelector:
+        matchLabels:
+          app: mcp-server-langgraph
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow Cloud SQL
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    ports:
+    - protocol: TCP
+      port: 3307

@@ -94,6 +94,12 @@ class Settings(BaseSettings):
     google_project_id: Optional[str] = None
     google_location: str = "us-central1"
 
+    # Vertex AI (Google Cloud AI Platform)
+    # Use Workload Identity on GKE (no GOOGLE_APPLICATION_CREDENTIALS needed)
+    # or set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+    vertex_project: Optional[str] = None  # GCP project ID for Vertex AI (falls back to google_project_id)
+    vertex_location: str = "us-central1"  # Vertex AI location/region
+
     # Azure OpenAI
     azure_api_key: Optional[str] = None
     azure_api_base: Optional[str] = None

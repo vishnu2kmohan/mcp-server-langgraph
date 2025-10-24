@@ -297,7 +297,10 @@ class LLMFactory:
 
                 logger.info(
                     "LLM invocation successful",
-                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},  # type: ignore[attr-defined]
+                    extra={
+                        "model": self.model_name,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
+                    },
                 )
 
                 return AIMessage(content=content)
@@ -368,7 +371,10 @@ class LLMFactory:
 
                 logger.info(
                     "Async LLM invocation successful",
-                    extra={"model": self.model_name, "tokens": response.usage.total_tokens if response.usage else 0},  # type: ignore[attr-defined]
+                    extra={
+                        "model": self.model_name,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
+                    },
                 )
 
                 return AIMessage(content=content)
@@ -502,6 +508,7 @@ def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def
         "openai": config.openai_api_key,
         "google": config.google_api_key,
         "gemini": config.google_api_key,
+        "vertex_ai": None,  # Vertex AI uses Workload Identity or GOOGLE_APPLICATION_CREDENTIALS
         "azure": config.azure_api_key,
         "bedrock": config.aws_access_key_id,
     }
@@ -531,6 +538,18 @@ def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def
                 "api_base": config.ollama_base_url,
             }
         )
+    elif config.llm_provider in ["vertex_ai", "google"]:
+        # Vertex AI configuration
+        # LiteLLM requires vertex_project and vertex_location for Vertex AI models
+        # If using Workload Identity on GKE, authentication is automatic
+        vertex_project = config.vertex_project or config.google_project_id
+        if vertex_project:
+            provider_kwargs.update(
+                {
+                    "vertex_project": vertex_project,
+                    "vertex_location": config.vertex_location,
+                }
+            )
 
     factory = LLMFactory(
         provider=config.llm_provider,
@@ -575,6 +594,7 @@ def create_summarization_model(config) -> LLMFactory:  # type: ignore[no-untyped
         "openai": config.openai_api_key,
         "google": config.google_api_key,
         "gemini": config.google_api_key,
+        "vertex_ai": None,  # Vertex AI uses Workload Identity or GOOGLE_APPLICATION_CREDENTIALS
         "azure": config.azure_api_key,
         "bedrock": config.aws_access_key_id,
     }
@@ -589,6 +609,10 @@ def create_summarization_model(config) -> LLMFactory:  # type: ignore[no-untyped
         provider_kwargs.update({"aws_secret_access_key": config.aws_secret_access_key, "aws_region_name": config.aws_region})
     elif provider == "ollama":
         provider_kwargs.update({"api_base": config.ollama_base_url})
+    elif provider in ["vertex_ai", "google"]:
+        vertex_project = config.vertex_project or config.google_project_id
+        if vertex_project:
+            provider_kwargs.update({"vertex_project": vertex_project, "vertex_location": config.vertex_location})
 
     factory = LLMFactory(
         provider=provider,
@@ -633,6 +657,7 @@ def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-
         "openai": config.openai_api_key,
         "google": config.google_api_key,
         "gemini": config.google_api_key,
+        "vertex_ai": None,  # Vertex AI uses Workload Identity or GOOGLE_APPLICATION_CREDENTIALS
         "azure": config.azure_api_key,
         "bedrock": config.aws_access_key_id,
     }
@@ -647,6 +672,10 @@ def create_verification_model(config) -> LLMFactory:  # type: ignore[no-untyped-
         provider_kwargs.update({"aws_secret_access_key": config.aws_secret_access_key, "aws_region_name": config.aws_region})
     elif provider == "ollama":
         provider_kwargs.update({"api_base": config.ollama_base_url})
+    elif provider in ["vertex_ai", "google"]:
+        vertex_project = config.vertex_project or config.google_project_id
+        if vertex_project:
+            provider_kwargs.update({"vertex_project": vertex_project, "vertex_location": config.vertex_location})
 
     factory = LLMFactory(
         provider=provider,

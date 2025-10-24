@@ -9,18 +9,17 @@ icon: 'google'
 Google Gemini provides state-of-the-art multimodal AI models through two access methods: **Google AI Studio** (direct API) and **Vertex AI** (enterprise platform). This guide covers both approaches with the MCP Server.
 
 <Info>
-Gemini 2.0 Flash and Gemini 2.5 Pro are now available with enhanced capabilities including native tool use and multimodal understanding.
+**Gemini 2.5 Flash** and **Gemini 2.5 Pro** are production-grade models recommended for enterprise deployments. Both offer enhanced capabilities including native tool use, multimodal understanding, and improved reasoning.
 </Info>
 
 ## Available Models
 
-| Model | Context Window | Use Case | Pricing (per 1M tokens) |
-|-------|---------------|----------|-------------------------|
-| gemini-2.5-flash-002 | 1M tokens | Fast responses, chat | $0.15 input / $0.60 output |
-| gemini-2.5-pro-002 | 2M tokens | Complex reasoning | $1.25 input / $10.00 output |
-| gemini-2.0-flash-exp | 1M tokens | Experimental, free | Free (rate limited) |
-| gemini-1.5-pro-latest | 2M tokens | Production-ready | $3.50 input / $10.50 output |
-| gemini-1.5-flash-latest | 1M tokens | Cost-effective | $0.35 input / $1.05 output |
+The following models are **production-ready** and suitable for enterprise use:
+
+| Model | Context Window | Use Case | Pricing (per 1M tokens) | Status |
+|-------|---------------|----------|-------------------------|--------|
+| gemini-2.5-flash | 1M tokens | Fast responses, chat | $0.15 input / $0.60 output | ✅ Production |
+| gemini-2.5-pro | 2M tokens | Complex reasoning | $1.25 input / $10.00 output | ✅ Production |
 
 ## Quick Start
 
@@ -40,7 +39,7 @@ Gemini 2.0 Flash and Gemini 2.5 Pro are now available with enhanced capabilities
         # .env
         LLM_PROVIDER=google
         GOOGLE_API_KEY=AIzaSy...your-key
-        LLM_MODEL_NAME=gemini-2.0-flash-exp
+        LLM_MODEL_NAME=gemini-2.5-flash
         ```
 
         Or use Infisical:
@@ -59,7 +58,7 @@ Gemini 2.0 Flash and Gemini 2.5 Pro are now available with enhanced capabilities
 
         llm = LLMFactory(
             provider="google",
-            model_name="gemini-2.0-flash-exp"
+            model_name="gemini-2.5-flash"
         )
 
         response = await llm.ainvoke("What is the capital of France?")
@@ -116,7 +115,7 @@ Gemini 2.0 Flash and Gemini 2.5 Pro are now available with enhanced capabilities
         GOOGLE_APPLICATION_CREDENTIALS=/path/to/vertex-key.json
         VERTEX_AI_PROJECT=YOUR_PROJECT_ID
         VERTEX_AI_LOCATION=us-central1
-        LLM_MODEL_NAME=gemini-2.0-flash-002
+        LLM_MODEL_NAME=gemini-2.5-flash
         ```
       </Step>
 
@@ -126,7 +125,7 @@ Gemini 2.0 Flash and Gemini 2.5 Pro are now available with enhanced capabilities
 
         llm = LLMFactory(
             provider="vertex_ai",
-            model_name="gemini-2.0-flash-002"
+            model_name="gemini-2.5-flash"
         )
 
         response = await llm.ainvoke("Explain quantum computing")
@@ -147,7 +146,7 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 # Google AI Studio
 llm = LLMFactory(
     provider="google",
-    model_name="gemini-2.0-flash-exp",
+    model_name="gemini-2.5-flash",
     temperature=0.7,
     max_tokens=8192,
     top_p=0.95,
@@ -157,7 +156,7 @@ llm = LLMFactory(
 # Vertex AI
 llm = LLMFactory(
     provider="vertex_ai",
-    model_name="gemini-2.0-flash-002",
+    model_name="gemini-2.5-flash",
     project="your-project-id",
     location="us-central1",
     temperature=0.7
@@ -171,7 +170,7 @@ llm = LLMFactory(
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-flash",
     google_api_key=settings.google_api_key,
     temperature=0.7,
     max_output_tokens=8192,
@@ -238,7 +237,7 @@ llm = ChatGoogleGenerativeAI(
     # Analyze video
     from vertexai.generative_models import GenerativeModel, Part
 
-    model = GenerativeModel("gemini-2.0-flash-002")
+    model = GenerativeModel("gemini-2.5-flash")
     video_part = Part.from_uri(
         uri="gs://your-bucket/video.mp4",
         mime_type="video/mp4"
@@ -352,7 +351,7 @@ spec:
         - name: LLM_PROVIDER
           value: "vertex_ai"
         - name: LLM_MODEL_NAME
-          value: "gemini-2.0-flash-002"
+          value: "gemini-2.5-flash"
         - name: VERTEX_AI_PROJECT
           valueFrom:
             secretKeyRef:
@@ -424,7 +423,7 @@ spec:
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-pro-002",
+    model="gemini-2.5-pro",
     google_api_key=settings.google_api_key,
     cache_content=True  # Enable caching
 )
@@ -487,11 +486,11 @@ async def stream_message(request: Request):
 # Use cheaper model for simple tasks
 def select_model(task_complexity: str) -> str:
     if task_complexity == "simple":
-        return "gemini-2.0-flash-exp"  # Free
+        return "gemini-2.5-flash"  # Free
     elif task_complexity == "medium":
         return "gemini-2.5-flash-002"  # $0.15/1M
     else:
-        return "gemini-2.5-pro-002"  # $1.25/1M
+        return "gemini-2.5-pro"  # $1.25/1M
 
 # Dynamic selection
 llm = LLMFactory(
@@ -544,7 +543,7 @@ from langchain_google_genai import HarmBlockThreshold, HarmCategory
 
 # Configure safety settings
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-002",
+    model="gemini-2.5-flash",
     safety_settings={
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
@@ -599,14 +598,14 @@ gemini_latency = Histogram(
 # Track usage
 import time
 
-@gemini_latency.labels(model="gemini-2.0-flash-002").time()
+@gemini_latency.labels(model="gemini-2.5-flash").time()
 async def call_gemini(query: str):
     try:
         response = await llm.ainvoke(query)
-        gemini_requests.labels(model="gemini-2.0-flash-002", status="success").inc()
+        gemini_requests.labels(model="gemini-2.5-flash", status="success").inc()
         return response
     except Exception as e:
-        gemini_requests.labels(model="gemini-2.0-flash-002", status="error").inc()
+        gemini_requests.labels(model="gemini-2.5-flash", status="error").inc()
         raise
 ```
 
@@ -672,7 +671,7 @@ async def call_gemini(query: str):
     # Enable fallback to another model
     llm = LLMFactory(
         provider="google",
-        model_name="gemini-2.0-flash-002",
+        model_name="gemini-2.5-flash",
         enable_fallback=True,
         fallback_models=["claude-3-5-sonnet-20241022"]
     )
@@ -686,7 +685,7 @@ async def call_gemini(query: str):
     ```python
     # Adjust safety settings (use with caution)
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-002",
+        model="gemini-2.5-flash",
         safety_settings={
             HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
             # More permissive

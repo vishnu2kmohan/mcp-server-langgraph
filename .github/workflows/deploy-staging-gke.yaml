@@ -1,0 +1,365 @@
+name: Deploy to GKE Staging
+
+# ==============================================================================
+# GKE Staging Deployment Workflow
+# ==============================================================================
+#
+# This workflow deploys to staging GKE cluster with:
+# - Workload Identity Federation (keyless authentication)
+# - Automated smoke tests
+# - GitHub Environment protection rules
+# - Rollback capability
+#
+# ==============================================================================
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [prereleased]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy (leave empty for latest)'
+        required: false
+        default: 'staging-latest'
+
+concurrency:
+  group: deploy-staging-${{ github.ref }}
+  cancel-in-progress: false  # Don't cancel ongoing deployments
+
+env:
+  GCP_PROJECT_ID: vishnu-sandbox-20250310
+  GCP_REGION: us-central1
+  GKE_CLUSTER: mcp-staging-cluster
+  NAMESPACE: mcp-staging
+  DEPLOYMENT_NAME: staging-mcp-server-langgraph
+
+permissions:
+  contents: read
+  id-token: write  # Required for Workload Identity Federation
+  pull-requests: write
+
+jobs:
+  # ============================================================================
+  # BUILD AND PUSH IMAGE
+  # ============================================================================
+
+  build-and-push:
+    name: Build and Push to Artifact Registry
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.image.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set image tag
+        id: image
+        run: |
+          if [ -n "${{ github.event.inputs.image_tag }}" ]; then
+            TAG="${{ github.event.inputs.image_tag }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="staging-${GITHUB_SHA::8}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Using image tag: $TAG"
+
+      # Authenticate to Google Cloud using Workload Identity Federation (keyless)
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          # Replace with your actual Workload Identity Provider (get from infrastructure setup output)
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
+          token_format: access_token
+
+      # Configure Docker to use gcloud credentials
+      - name: Configure Docker for Artifact Registry
+        run: |
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.11.1
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          target: final-base
+          push: true
+          tags: |
+            us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:${{ steps.image.outputs.tag }}
+            us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:staging-latest
+          cache-from: |
+            type=registry,ref=us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:staging-latest
+          cache-to: |
+            type=inline
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            environment=staging
+            platform=gke
+
+  # ============================================================================
+  # DEPLOY TO STAGING
+  # ============================================================================
+
+  deploy-staging:
+    name: Deploy to GKE Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment:
+      name: staging-gke
+      url: https://staging.yourdomain.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      # Authenticate to Google Cloud
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
+
+      # Get GKE credentials
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GCP_REGION }}
+
+      # Verify cluster connection
+      - name: Verify cluster access
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      # Update image tag in Kustomization
+      - name: Update image tag
+        working-directory: deployments/overlays/staging-gke
+        run: |
+          # Update image tag in kustomization.yaml
+          kubectl kustomize edit set image \
+            mcp-server-langgraph=us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:${{ needs.build-and-push.outputs.image_tag }}
+
+      # Validate manifests
+      - name: Validate Kubernetes manifests
+        run: |
+          echo "Validating manifests..."
+          kubectl kustomize deployments/overlays/staging-gke > /tmp/staging-manifests.yaml
+          kubectl apply --dry-run=client -f /tmp/staging-manifests.yaml
+
+      # Deploy to cluster
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging..."
+          kubectl apply -k deployments/overlays/staging-gke
+
+      # Wait for rollout to complete
+      - name: Wait for rollout
+        run: |
+          echo "Waiting for deployment rollout..."
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=10m
+
+      # Verify deployment
+      - name: Verify deployment
+        run: |
+          echo "Verifying deployment..."
+
+          # Check pods are running
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph
+
+          # Get pod name
+          POD_NAME=$(kubectl get pods -n ${{ env.NAMESPACE }} \
+            -l app=mcp-server-langgraph \
+            -o jsonpath='{.items[0].metadata.name}')
+
+          echo "Pod: $POD_NAME"
+
+          # Verify Python import works
+          kubectl exec $POD_NAME -n ${{ env.NAMESPACE }} -- \
+            python -c "import mcp_server_langgraph; print('✓ Import successful')"
+
+          # Check readiness
+          kubectl wait --for=condition=ready pod \
+            -l app=mcp-server-langgraph \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=5m
+
+      # Run smoke tests
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          ./scripts/gcp/staging-smoke-tests.sh
+
+      # Deployment summary
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** GKE Staging" >> $GITHUB_STEP_SUMMARY
+          echo "**Cluster:** ${{ env.GKE_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Namespace:** ${{ env.NAMESPACE }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** ${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph >> $GITHUB_STEP_SUMMARY || true
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # POST-DEPLOYMENT VALIDATION
+  # ============================================================================
+
+  validate-deployment:
+    name: Post-Deployment Validation
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GCP_REGION }}
+
+      # Security validation
+      - name: Security checks
+        run: |
+          echo "Running security checks..."
+
+          # Check no privileged containers
+          PRIVILEGED=$(kubectl get pods -n ${{ env.NAMESPACE }} -o json | \
+            jq '.items[].spec.containers[] | select(.securityContext.privileged == true) | .name' | wc -l)
+
+          if [ "$PRIVILEGED" -gt 0 ]; then
+            echo "❌ Found privileged containers"
+            exit 1
+          fi
+
+          echo "✓ No privileged containers"
+
+          # Check network policies are applied
+          POLICIES=$(kubectl get networkpolicies -n ${{ env.NAMESPACE }} -o json | jq '.items | length')
+          if [ "$POLICIES" -lt 3 ]; then
+            echo "❌ Insufficient network policies"
+            exit 1
+          fi
+
+          echo "✓ Network policies configured ($POLICIES policies)"
+
+      # Performance baseline
+      - name: Performance baseline check
+        run: |
+          echo "Checking performance baseline..."
+
+          # Get service endpoint
+          kubectl port-forward -n ${{ env.NAMESPACE }} \
+            svc/staging-mcp-server-langgraph 8080:80 &
+          PF_PID=$!
+
+          sleep 10
+
+          # Test response time
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' http://localhost:8080/health)
+
+          kill $PF_PID
+
+          echo "Response time: ${RESPONSE_TIME}s"
+
+          # Fail if response time > 2s
+          if (( $(echo "$RESPONSE_TIME > 2.0" | bc -l) )); then
+            echo "❌ Response time too slow: ${RESPONSE_TIME}s"
+            exit 1
+          fi
+
+          echo "✓ Response time acceptable"
+
+      # Cloud Logging check
+      - name: Check Cloud Logging
+        run: |
+          echo "Verifying logs are being sent to Cloud Logging..."
+
+          # Wait for logs to propagate
+          sleep 30
+
+          # Check recent logs
+          gcloud logging read \
+            "resource.type=k8s_container
+             resource.labels.cluster_name=${{ env.GKE_CLUSTER }}
+             resource.labels.namespace_name=${{ env.NAMESPACE }}" \
+            --limit=10 \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }}
+
+          echo "✓ Logs are being sent to Cloud Logging"
+
+  # ============================================================================
+  # ROLLBACK ON FAILURE
+  # ============================================================================
+
+  rollback-on-failure:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, validate-deployment]
+    if: failure()
+
+    steps:
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GCP_REGION }}
+
+      - name: Rollback deployment
+        run: |
+          echo "⚠️ Deployment failed, rolling back..."
+
+          kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }}
+
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=5m
+
+          echo "✓ Rollback completed"
+
+      - name: Notify failure
+        run: |
+          echo "## 🚨 Deployment Failed - Rollback Executed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment to staging failed and has been rolled back to the previous version." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Action Required:** Review the deployment logs and fix the issues before redeploying." >> $GITHUB_STEP_SUMMARY

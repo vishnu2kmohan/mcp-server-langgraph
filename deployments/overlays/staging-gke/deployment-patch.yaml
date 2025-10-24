@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-langgraph
+spec:
+  template:
+    spec:
+      serviceAccountName: mcp-server-langgraph
+
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+      # Main application container
+      - name: mcp-server-langgraph
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+
+        # Security context for container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Application needs to write temp files
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
+
+        # Environment variables from External Secrets
+        env:
+        # LLM Provider Configuration
+        - name: LLM_PROVIDER
+          value: "google"  # Use "google" provider for both AI Studio and Vertex AI
+        - name: MODEL_NAME
+          value: "gemini-2.5-flash"  # Vertex AI model name
+
+        # Vertex AI Configuration (Workload Identity - no credentials needed)
+        # Authentication handled automatically via Workload Identity
+        - name: VERTEX_PROJECT
+          value: "vishnu-sandbox-20250310"
+        - name: VERTEX_LOCATION
+          value: "us-central1"
+
+        # API Keys (for fallback to Google AI Studio if Vertex AI fails)
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: anthropic-api-key
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: google-api-key
+
+        # Authentication & Secrets
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: jwt-secret
+
+        # Redis Configuration
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: redis-host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: redis-password
+
+        # PostgreSQL Configuration
+        - name: POSTGRES_USER
+          value: "keycloak"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: keycloak-db-password
+
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+      # Cloud SQL Proxy sidecar
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+        args:
+          - "--structured-logs"
+          - "--port=5432"
+          - "--private-ip"
+          - "vishnu-sandbox-20250310:us-central1:mcp-staging-postgres"
+
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+        # Liveness probe for proxy
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 9801
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+
+        # Readiness probe for proxy
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 9801
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+      # Node affinity for GKE
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mcp-server-langgraph
+              topologyKey: kubernetes.io/hostname
+
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                - default-pool

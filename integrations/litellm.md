@@ -137,16 +137,14 @@ export MODEL_NAME=gpt-4o
 # Configure
 export LLM_PROVIDER=google
 export GOOGLE_API_KEY=...
-export MODEL_NAME=gemini-2.5-flash-002
+export MODEL_NAME=gemini-2.5-flash
 
-# Available Gemini 2.5 models (Latest):
-# - gemini-2.5-flash-002 (Fastest, most efficient - RECOMMENDED)
-# - gemini-2.5-pro (Most capable, slower)
-
-# Previous generation:
-# - gemini-2.0-flash-exp
-# - gemini-1.5-pro (1M context)
-# - gemini-1.5-flash
+# Production-grade Gemini models (officially supported):
+# - gemini-2.5-flash (Fast, efficient, production-ready - RECOMMENDED)
+# - gemini-2.5-pro (Most capable for complex reasoning, production-ready)
+#
+# Note: Only these two models are production-grade. Other Gemini variants
+# may be experimental or preview releases not suitable for production use.
 ```
 
 ### 4. Azure OpenAI
@@ -234,21 +232,11 @@ MODEL_NAME=gpt-3.5-turbo
 ### Google Gemini Models (Default/Recommended)
 
 ```bash
-# Gemini 2.5 Flash (Latest, fastest, most efficient - DEFAULT)
-MODEL_NAME=gemini-2.5-flash-002
+# Gemini 2.5 Flash (Production-grade: fast, efficient - RECOMMENDED)
+MODEL_NAME=gemini-2.5-flash
 
-# Gemini 2.5 Pro (Latest, most capable)
+# Gemini 2.5 Pro (Production-grade: most capable for complex tasks)
 MODEL_NAME=gemini-2.5-pro
-
-# Previous generation (if needed):
-# Gemini 2.0 Flash
-MODEL_NAME=gemini-2.0-flash-exp
-
-# Gemini 1.5 Pro (1M context, multimodal)
-MODEL_NAME=gemini-1.5-pro
-
-# Gemini 1.5 Flash (Fast, 1M context)
-MODEL_NAME=gemini-1.5-flash
 ```
 
 ### Ollama (Open-Source)

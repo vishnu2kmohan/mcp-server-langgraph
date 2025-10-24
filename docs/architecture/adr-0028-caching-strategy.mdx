@@ -149,7 +149,7 @@ response = anthropic.messages.create(
 from google.generativeai import caching
 
 cached_content = caching.CachedContent.create(
-    model="gemini-1.5-flash-001",
+    model="gemini-2.5-flash",
     system_instruction="You are an AI assistant...",
     ttl=datetime.timedelta(minutes=5)
 )

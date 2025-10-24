@@ -1034,6 +1034,37 @@ kubectl apply -k deployments/kustomize/overlays/production
 
 See **[Kubernetes Deployment Guide](docs/deployment/kubernetes.mdx)** for complete deployment guide.
 
+### GKE Staging Environment (Production-Grade)
+
+Deploy to a secure, production-ready staging environment on Google Kubernetes Engine:
+
+```bash
+# One-time infrastructure setup
+./scripts/gcp/setup-staging-infrastructure.sh
+
+# Deploy application
+kubectl apply -k deployments/overlays/staging-gke
+
+# Run smoke tests
+./scripts/gcp/staging-smoke-tests.sh
+```
+
+**Security Features**:
+- ✅ **Network Isolation**: Separate VPC from production
+- ✅ **Workload Identity**: Keyless authentication (no service account keys)
+- ✅ **Private GKE**: Private nodes with shielded boot
+- ✅ **Binary Authorization**: Only approved images deployed
+- ✅ **Network Policies**: Restrict pod-to-pod traffic
+- ✅ **Secret Manager**: Centralized secret management
+
+**Automated Deployments**:
+- GitHub Actions with Workload Identity Federation
+- Automated smoke tests and validation
+- Auto-rollback on failure
+- Approval gates before deployment
+
+See **[GKE Staging Guide](docs/deployment/kubernetes/gke-staging.mdx)** for complete setup guide.
+
 ## API Gateway & Rate Limiting
 
 Kong API Gateway integration provides:
