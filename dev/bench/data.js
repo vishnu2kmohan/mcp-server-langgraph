@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761227660696,
+  "lastUpdate": 1761321374769,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -13012,6 +13012,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0020571587197021784",
             "extra": "mean: 86.1981561677263 usec\nrounds: 5699"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "793147dba3d56afc543903057939dc8f775c2a6e",
+          "message": "feat(deployment): add production-grade GKE staging environment with security hardening\n\nImplement complete GKE staging deployment on GCP with comprehensive security best practices:\n\nInfrastructure & Automation:\n- Add automated infrastructure setup script (scripts/gcp/setup-staging-infrastructure.sh)\n- Create staging VPC network with network isolation from production\n- Deploy GKE Autopilot cluster with security hardening (private nodes, shielded nodes, Binary Authorization)\n- Provision Cloud SQL PostgreSQL and Memorystore Redis with private IPs\n- Configure Workload Identity Federation for GitHub Actions (keyless authentication)\n- Set up Artifact Registry and Secret Manager integration\n\nKubernetes Manifests (deployments/overlays/staging-gke/):\n- Complete staging overlay with Cloud SQL Proxy sidecar\n- Network policies with default deny and restricted egress\n- External Secrets integration for GCP Secret Manager sync\n- Security contexts (non-root, dropped capabilities, seccomp)\n- OTel collector configuration for Cloud Logging/Monitoring\n- Vertex AI Workload Identity configuration\n\nCI/CD & Testing:\n- Add GitHub Actions workflow for automated deployments (.github/workflows/deploy-staging-gke.yaml)\n- Implement Workload Identity Federation (no service account keys)\n- Add comprehensive smoke tests (11 automated checks)\n- Configure approval gates and auto-rollback on failure\n\nVertex AI Integration:\n- Configure Workload Identity for Vertex AI access\n- Add vertex-ai-staging service account with required IAM roles\n- Support Gemini 2.5 Flash via Vertex AI (no API keys required)\n- Implement fallback to Google AI Studio with API key\n\nSecurity Features:\n- Network isolation via separate VPC (10.1.0.0/20)\n- Private GKE nodes (no public IPs)\n- Shielded nodes with secure boot and integrity monitoring\n- Binary Authorization (signed images only)\n- Network policies restricting all traffic by default\n- Metadata service blocked (169.254.169.254)\n- Secret Manager for centralized secrets\n- Least privilege IAM roles\n- Audit logging enabled\n\nDocumentation:\n- Complete deployment guide (docs/deployment/kubernetes/gke-staging.mdx)\n- Security verification checklist with ~80 checks (docs/security/gke-staging-checklist.md)\n- Implementation summary (docs/deployment/GKE_STAGING_IMPLEMENTATION_SUMMARY.md)\n- Vertex AI Workload Identity guide (docs/deployment/vertex-ai-workload-identity.mdx)\n- Updated README with GKE staging section\n\nConfiguration Updates:\n- Update LLM factory to support Vertex AI with Workload Identity\n- Add VERTEX_PROJECT and VERTEX_LOCATION environment variables\n- Update .env.example with Vertex AI configuration options\n- Enhance troubleshooting guides for Vertex AI\n\nCost Estimate: ~$210/month (GKE Autopilot + Cloud SQL + Redis + Networking)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-24T11:54:26-04:00",
+          "tree_id": "cfdbfbf93f2665448fb7e9de63b214e7f19c1654",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/793147dba3d56afc543903057939dc8f775c2a6e"
+        },
+        "date": 1761321374012,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52255.60062378754,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002069509459484827",
+            "extra": "mean: 19.1367047371528 usec\nrounds: 5805"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53917.565743397296,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021920097798318003",
+            "extra": "mean: 18.546831375124892 usec\nrounds: 12341"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50519.21809779763,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023873811750341594",
+            "extra": "mean: 19.794447294575104 usec\nrounds: 19258"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.9837243125938,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002118901791193465",
+            "extra": "mean: 5.2360482737431795 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.33511345728998,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010998888050197979",
+            "extra": "mean: 51.71937585000137 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.937396804978828,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026326908861382857",
+            "extra": "mean: 100.6299757999983 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2533732.6236471897,
+            "unit": "iter/sec",
+            "range": "stddev: 4.702964698221414e-8",
+            "extra": "mean: 394.67463562139665 nsec\nrounds: 190840"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5050.82655866768,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001277930244609023",
+            "extra": "mean: 197.98739639632026 usec\nrounds: 444"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2905.375529057409,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008585412843354765",
+            "extra": "mean: 344.1895858207459 usec\nrounds: 2680"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2793.1589268195175,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004016596841879916",
+            "extra": "mean: 358.0175801663633 usec\nrounds: 1684"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60220.3514802795,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001950602508471901",
+            "extra": "mean: 16.605681890240582 usec\nrounds: 11977"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 10271.237787727305,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0027114294565806466",
+            "extra": "mean: 97.35924926155059 usec\nrounds: 5079"
           }
         ]
       }
