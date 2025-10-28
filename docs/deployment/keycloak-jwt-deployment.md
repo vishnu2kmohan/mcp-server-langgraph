@@ -1,0 +1,652 @@
+# Keycloak JWT Authentication Deployment Guide
+
+Complete deployment guide for the Keycloak-centric authentication architecture with service principals, API keys, identity federation, and SCIM provisioning.
+
+## Architecture Overview
+
+```
+External IdPs (LDAP, SAML, OIDC) → Keycloak (Authoritative)
+  → Kong Gateway (JWT Validation) → MCP Server → OpenFGA
+```
+
+**Key Features**:
+- Single source of truth (Keycloak)
+- JWT standardization (all auth → JWT)
+- Service principals (long-lived credentials)
+- API key management (exchange for JWT)
+- Identity federation (LDAP, SAML, OIDC)
+- SCIM 2.0 provisioning
+- OpenFGA permission inheritance
+
+## Prerequisites
+
+- Kubernetes cluster (1.24+)
+- Helm 3.x
+- kubectl configured
+- PostgreSQL (for Keycloak)
+- Redis (for sessions)
+- OpenFGA deployed
+
+## Deployment Checklist
+
+### Phase 1: Keycloak Setup (Week 1)
+
+- [ ] **1.1 Deploy Keycloak**
+  ```bash
+  kubectl apply -f deployments/base/keycloak-deployment.yaml
+  kubectl apply -f deployments/base/keycloak-service.yaml
+  ```
+
+- [ ] **1.2 Initialize Realm**
+  ```bash
+  python scripts/setup/setup_keycloak.py
+  ```
+
+- [ ] **1.3 Enable Service Accounts**
+  - Edit client configuration
+  - Set `serviceAccountsEnabled: true`
+  - Verify client credentials flow
+
+- [ ] **1.4 Configure Token Lifetimes**
+  ```
+  Access Token: 900s (15 min)
+  Refresh Token: 1800s (30 min)
+  Service Account Refresh: 2592000s (30 days)
+  ```
+
+### Phase 2: OpenFGA Update (Week 1)
+
+- [ ] **2.1 Deploy New Authorization Model**
+  ```bash
+  # Model includes service_principal type with acts_as relation
+  python scripts/setup/setup_openfga.py
+  ```
+
+- [ ] **2.2 Verify Model**
+  ```bash
+  openfga-cli model list
+  openfga-cli model get --model-id <MODEL_ID>
+  ```
+
+- [ ] **2.3 Test Permission Inheritance**
+  ```bash
+  # Create test service principal with acts_as relationship
+  # Verify permission check works
+  ```
+
+### Phase 3: Kong Configuration (Week 2)
+
+- [ ] **3.1 Extract Keycloak Public Key**
+  ```bash
+  curl http://keycloak:8080/realms/langgraph-agent/protocol/openid-connect/certs \
+    | jq '.keys[0]'
+
+  # Convert to PEM (or run update_kong_jwks.py once)
+  python scripts/update_kong_jwks.py
+  ```
+
+- [ ] **3.2 Update Kong JWT Plugin**
+  ```bash
+  kubectl apply -f deployments/kubernetes/kong/kong-plugins.yaml
+  kubectl apply -f deployments/kubernetes/kong/kong-consumers.yaml
+  ```
+
+- [ ] **3.3 Deploy JWKS Updater CronJob**
+  ```bash
+  kubectl apply -f deployments/kubernetes/kong/kong-jwks-updater-cronjob.yaml
+
+  # Verify CronJob is scheduled
+  kubectl get cronjobs -n mcp-server-langgraph
+  ```
+
+- [ ] **3.4 Deploy Kong Custom Plugin** (Optional)
+  ```bash
+  # If using API key→JWT exchange
+  kubectl apply -f deployments/kubernetes/kong/kong-apikey-jwt-plugin.yaml
+  ```
+
+- [ ] **3.5 Configure Hybrid Routes**
+  ```bash
+  kubectl apply -f deployments/kubernetes/kong/kong-hybrid-ingress.yaml
+  ```
+
+### Phase 4: MCP Server Deployment (Week 2)
+
+- [ ] **4.1 Update Configuration**
+  ```bash
+  # Update .env or ConfigMap
+  AUTH_PROVIDER=keycloak
+  ENABLE_SERVICE_PRINCIPALS=true
+  API_KEY_ENABLED=true
+  ```
+
+- [ ] **4.2 Deploy Updated Application**
+  ```bash
+  kubectl apply -f deployments/base/
+  kubectl rollout status deployment/mcp-server-langgraph
+  ```
+
+- [ ] **4.3 Verify New API Endpoints**
+  ```bash
+  curl https://api.example.com/api/v1/service-principals
+  curl https://api.example.com/api/v1/api-keys
+  curl https://api.example.com/scim/v2/Users
+  ```
+
+### Phase 5: Identity Federation (Week 3) - Optional
+
+- [ ] **5.1 Configure LDAP** (if needed)
+  ```bash
+  export LDAP_CONNECTION_URL='ldap://ad.example.com:389'
+  export LDAP_BIND_DN='CN=svc_keycloak,OU=Service Accounts,DC=example,DC=com'
+  export LDAP_BIND_PASSWORD='password'
+  export LDAP_USERS_DN='OU=Users,DC=example,DC=com'
+
+  python scripts/setup/setup_ldap_federation.py
+  ```
+
+- [ ] **5.2 Configure SAML** (if needed)
+  ```bash
+  export SAML_ALIAS='adfs'
+  export SAML_SSO_URL='https://adfs.example.com/adfs/ls/'
+
+  python scripts/setup/setup_saml_idp.py
+  ```
+
+- [ ] **5.3 Configure OIDC** (if needed)
+  ```bash
+  export GOOGLE_CLIENT_ID='...'
+  export GOOGLE_CLIENT_SECRET='...'
+
+  python scripts/setup/setup_oidc_idp.py --provider google
+  ```
+
+- [ ] **5.4 Test Federated Login**
+  - Login with LDAP user
+  - Verify JWT issuance
+  - Check OpenFGA role sync
+
+### Phase 6: Testing (Week 3)
+
+- [ ] **6.1 Run Integration Tests**
+  ```bash
+  pytest tests/integration/test_service_principal_jwt.py
+  pytest tests/integration/test_kong_jwt_validation.py
+  pytest tests/test_permission_inheritance.py
+  ```
+
+- [ ] **6.2 Performance Testing**
+  ```bash
+  # Load test with 1000 concurrent JWT validations
+  k6 run tests/load/jwt_validation.js
+  ```
+
+- [ ] **6.3 Security Audit**
+  - Token tampering test
+  - Expired token rejection
+  - Permission escalation attempts
+  - API key brute force protection
+
+### Phase 7: Production Rollout (Week 4)
+
+- [ ] **7.1 Staging Deployment**
+  - Deploy to staging environment
+  - Run smoke tests
+  - Monitor for 48 hours
+
+- [ ] **7.2 Create Service Principals**
+  - Migrate batch jobs to service principals
+  - Create API keys for integrations
+  - Document credentials securely
+
+- [ ] **7.3 Client Migration**
+  - Update client SDKs
+  - Implement token refresh logic
+  - Test end-to-end flows
+
+- [ ] **7.4 Production Deployment**
+  - Blue-green deployment
+  - Monitor authentication metrics
+  - Gradual traffic shift (10% → 50% → 100%)
+
+- [ ] **7.5 Cleanup**
+  - Remove old authentication mechanisms
+  - Clean up unused Kong consumers
+  - Archive legacy configuration
+
+## Configuration Reference
+
+### Environment Variables
+
+```bash
+# Keycloak (Authoritative Identity)
+AUTH_PROVIDER=keycloak
+KEYCLOAK_SERVER_URL=https://keycloak.example.com
+KEYCLOAK_REALM=langgraph-agent
+KEYCLOAK_CLIENT_ID=langgraph-client
+KEYCLOAK_CLIENT_SECRET=<from-secrets-manager>
+
+# Service Principals
+ENABLE_SERVICE_PRINCIPALS=true
+SERVICE_PRINCIPAL_DEFAULT_TTL=2592000  # 30 days
+SERVICE_PRINCIPAL_REFRESH_TOKEN_LIFESPAN=2592000
+SERVICE_PRINCIPAL_INHERIT_PERMISSIONS=true
+
+# API Keys
+API_KEY_ENABLED=true
+API_KEY_STORAGE=keycloak
+API_KEY_MAX_PER_USER=5
+API_KEY_EXCHANGE_CACHE_TTL=300
+
+# Identity Federation
+KEYCLOAK_LDAP_ENABLED=true
+KEYCLOAK_SAML_ENABLED=true
+KEYCLOAK_OIDC_ENABLED=true
+
+# SCIM 2.0
+SCIM_ENABLED=true
+SCIM_AUTO_SYNC_TO_OPENFGA=true
+
+# Kong
+KONG_ADMIN_URL=http://kong-admin:8001
+KONG_JWKS_UPDATE_ENABLED=true
+
+# OpenFGA
+OPENFGA_API_URL=http://openfga:8080
+OPENFGA_STORE_ID=<store-id>
+OPENFGA_MODEL_ID=<model-id>
+
+# Redis (for sessions and checkpoints)
+REDIS_URL=redis://redis:6379/0
+SESSION_BACKEND=redis
+SESSION_TTL_SECONDS=86400
+```
+
+### Kubernetes Resources
+
+```bash
+# Keycloak
+kubectl apply -f deployments/base/keycloak-deployment.yaml
+kubectl apply -f deployments/base/keycloak-service.yaml
+
+# Kong Plugins
+kubectl apply -f deployments/kubernetes/kong/kong-plugins.yaml
+kubectl apply -f deployments/kubernetes/kong/kong-consumers.yaml
+kubectl apply -f deployments/kubernetes/kong/kong-hybrid-ingress.yaml
+
+# JWKS Updater
+kubectl apply -f deployments/kubernetes/kong/kong-jwks-updater-cronjob.yaml
+
+# MCP Server
+kubectl apply -f deployments/base/deployment.yaml
+kubectl apply -f deployments/base/service.yaml
+```
+
+## Monitoring
+
+### Key Metrics
+
+```promql
+# Authentication rate
+rate(http_requests_total{endpoint="/auth/login"}[5m])
+
+# JWT validation latency (Kong)
+histogram_quantile(0.95, kong_latency_ms_bucket{route="api-route"})
+
+# Service principal usage
+count(service_principal_authentications_total) by (service_id)
+
+# API key validations
+rate(api_key_validations_total[5m])
+
+# SCIM provisioning rate
+rate(scim_operations_total{operation="create"}[5m])
+
+# OpenFGA permission checks
+rate(openfga_check_requests_total[5m])
+```
+
+### Health Checks
+
+```bash
+# Keycloak
+curl http://keycloak:8080/health/ready
+
+# Kong
+curl http://kong:8001/status
+
+# MCP Server
+curl http://mcp-server:80/health
+
+# OpenFGA
+curl http://openfga:8080/healthz
+```
+
+### Logs
+
+```bash
+# View Keycloak logs
+kubectl logs -n mcp-server-langgraph deployment/keycloak --tail=100
+
+# View Kong logs
+kubectl logs -n kong deployment/kong-gateway --tail=100
+
+# View MCP Server logs
+kubectl logs -n mcp-server-langgraph deployment/mcp-server-langgraph --tail=100
+
+# View JWKS updater logs
+kubectl logs -n mcp-server-langgraph job/kong-jwks-updater-<timestamp>
+```
+
+## Security Considerations
+
+### Secrets Management
+
+**Never commit secrets to git**. Use one of:
+
+1. **Kubernetes Secrets**
+   ```bash
+   kubectl create secret generic keycloak-creds \
+     --from-literal=client-secret=<secret>
+   ```
+
+2. **External Secrets Operator**
+   ```yaml
+   apiVersion: external-secrets.io/v1beta1
+   kind: ExternalSecret
+   metadata:
+     name: keycloak-secrets
+   spec:
+     secretStoreRef:
+       name: vault
+     data:
+     - secretKey: client-secret
+       remoteRef:
+         key: keycloak/client-secret
+   ```
+
+3. **Infisical** (Already integrated)
+   ```bash
+   INFISICAL_CLIENT_ID=<id>
+   INFISICAL_CLIENT_SECRET=<secret>
+   ```
+
+### Network Policies
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mcp-server-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-server-langgraph
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kong
+    ports:
+    - protocol: TCP
+      port: 80
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: mcp-server-langgraph
+    ports:
+    - protocol: TCP
+      port: 8080  # Keycloak
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: openfga
+    ports:
+    - protocol: TCP
+      port: 8080  # OpenFGA
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Keycloak Unavailable
+
+**Symptom**: `503 Service Unavailable`
+
+**Solutions**:
+- Check Keycloak pod status: `kubectl get pods -l app=keycloak`
+- Check PostgreSQL connectivity
+- Verify resource limits (CPU/memory)
+- Check logs for errors
+
+#### JWT Validation Fails at Kong
+
+**Symptom**: `401 Unauthorized` from Kong
+
+**Solutions**:
+- Verify JWKS is up-to-date: Check CronJob logs
+- Run manual update: `kubectl create job --from=cronjob/kong-jwks-updater manual-update`
+- Verify issuer matches: Token `iss` claim must match Kong configuration
+- Check public key in Kong consumer
+
+#### Service Principal Authentication Fails
+
+**Symptom**: `401` when using client credentials
+
+**Solutions**:
+- Verify service principal exists in Keycloak
+- Check client_id and client_secret
+- Ensure serviceAccountsEnabled=true
+- Verify Keycloak token endpoint URL
+
+#### API Key Not Working
+
+**Symptom**: `401 Invalid or expired API key`
+
+**Solutions**:
+- Verify key not expired: Check `expires_at`
+- Check user is enabled in Keycloak
+- Clear Kong cache if recently created
+- Verify Kong plugin is deployed
+
+#### Permission Denied (OpenFGA)
+
+**Symptom**: `403 Forbidden`
+
+**Solutions**:
+- Check OpenFGA tuples exist
+- Verify acts_as relationship for service principals
+- Check role mapping configuration
+- Test with openfga-cli: `openfga-cli check`
+
+## Rollback Plan
+
+If issues arise, rollback steps:
+
+### 1. Revert to Previous Auth
+
+```bash
+# Update ConfigMap
+kubectl edit configmap mcp-server-config
+# Set: AUTH_PROVIDER=inmemory
+
+# Restart pods
+kubectl rollout restart deployment/mcp-server-langgraph
+```
+
+### 2. Revert Kong Configuration
+
+```bash
+# Reapply old Kong plugins
+kubectl apply -f deployments/kubernetes/kong/kong-plugins-backup.yaml
+```
+
+### 3. Disable New Features
+
+```bash
+# Update .env
+ENABLE_SERVICE_PRINCIPALS=false
+API_KEY_ENABLED=false
+SCIM_ENABLED=false
+```
+
+## Performance Tuning
+
+### Keycloak
+
+```yaml
+# Increase replicas
+spec:
+  replicas: 3
+
+# Resource limits
+resources:
+  limits:
+    cpu: "2"
+    memory: "2Gi"
+  requests:
+    cpu: "1"
+    memory: "1Gi"
+
+# Enable caching
+env:
+- name: KC_CACHE
+  value: "ispn"
+- name: KC_CACHE_STACK
+  value: "kubernetes"
+```
+
+### Kong
+
+```yaml
+# Increase worker processes
+env:
+- name: KONG_NGINX_WORKER_PROCESSES
+  value: "4"
+
+# Enable cache
+- name: KONG_MEM_CACHE_SIZE
+  value: "256m"
+```
+
+### OpenFGA
+
+```yaml
+# Tune check cache
+--check-query-cache-enabled=true
+--check-query-cache-ttl=10s
+```
+
+## Migration from Old Auth
+
+### Step 1: Dual Authentication (Week 1)
+
+Run both old and new auth in parallel:
+
+```python
+# Support both inmemory and keycloak
+if token.startswith("old_"):
+    # Validate with old system
+else:
+    # Validate with Keycloak
+```
+
+### Step 2: Client Migration (Week 2-3)
+
+Gradually migrate clients:
+- Week 2: 25% of clients
+- Week 3: 75% of clients
+- Week 4: 100% of clients
+
+### Step 3: Sunset Old Auth (Week 4)
+
+Remove old authentication system:
+```bash
+# Remove old providers
+# Update AUTH_PROVIDER=keycloak (no fallback)
+```
+
+## Validation
+
+### End-to-End Test
+
+```bash
+#!/bin/bash
+set -e
+
+echo "=== End-to-End Authentication Test ==="
+
+# 1. User Login
+echo "1. Testing user login..."
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/login \
+  -d '{"username":"alice","password":"alice123"}' \
+  | jq -r '.access_token')
+
+# 2. Service Principal
+echo "2. Creating service principal..."
+SP_RESP=$(curl -s -X POST http://localhost:8000/api/v1/service-principals \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Test SP","description":"Test","authentication_mode":"client_credentials"}')
+
+SP_ID=$(echo $SP_RESP | jq -r '.service_id')
+SP_SECRET=$(echo $SP_RESP | jq -r '.client_secret')
+
+# 3. Service Principal Auth
+echo "3. Testing service principal authentication..."
+SP_TOKEN=$(curl -s -X POST http://keycloak:8080/realms/langgraph-agent/protocol/openid-connect/token \
+  -d "grant_type=client_credentials&client_id=$SP_ID&client_secret=$SP_SECRET" \
+  | jq -r '.access_token')
+
+# 4. API Key
+echo "4. Creating API key..."
+API_KEY_RESP=$(curl -s -X POST http://localhost:8000/api/v1/api-keys \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Test Key"}')
+
+API_KEY=$(echo $API_KEY_RESP | jq -r '.api_key')
+
+# 5. Test API Key Usage
+echo "5. Testing API key..."
+curl -s -X POST http://localhost:8000/message \
+  -H "apikey: $API_KEY" \
+  -d '{"query":"test"}' | jq .
+
+echo "=== All tests passed! ==="
+```
+
+## References
+
+### Architecture Decision Records
+- [ADR-0031: Keycloak as Authoritative Identity](/adr/0031-keycloak-authoritative-identity.md)
+- [ADR-0032: JWT Standardization](/adr/0032-jwt-standardization.md)
+- [ADR-0033: Service Principal Design](/adr/0033-service-principal-design.md)
+- [ADR-0034: API Key to JWT Exchange](/adr/0034-api-key-jwt-exchange.md)
+- [ADR-0035: Kong JWT Validation](/adr/0035-kong-jwt-validation.md)
+- [ADR-0036: Hybrid Session Model](/adr/0036-hybrid-session-model.md)
+- [ADR-0037: Identity Federation](/adr/0037-identity-federation.md)
+- [ADR-0038: SCIM Implementation](/adr/0038-scim-implementation.md)
+- [ADR-0039: OpenFGA Permission Inheritance](/adr/0039-openfga-permission-inheritance.md)
+
+### User Guides
+- [Service Principals Guide](/docs/guides/service-principals.md)
+- [API Key Management](/docs/guides/api-key-management.md)
+- [Identity Federation Quick Start](/docs/guides/identity-federation-quickstart.md)
+- [SCIM Provisioning](/docs/guides/scim-provisioning.md)
+
+### Scripts
+- [setup_keycloak.py](/scripts/setup/setup_keycloak.py)
+- [setup_ldap_federation.py](/scripts/setup/setup_ldap_federation.py)
+- [setup_saml_idp.py](/scripts/setup/setup_saml_idp.py)
+- [setup_oidc_idp.py](/scripts/setup/setup_oidc_idp.py)
+- [update_kong_jwks.py](/scripts/update_kong_jwks.py)
+
+### Configuration Files
+- [.env.example](/.env.example)
+- [config/ldap_mappers.yaml](/config/ldap_mappers.yaml)
+- [config/oidc_providers.yaml](/config/oidc_providers.yaml)
+- [config/role_mappings.yaml](/config/role_mappings.yaml)

@@ -549,28 +549,69 @@ response = await client.post(
 
 **See**: [Authentication Migration Guide](docs/guides/authentication-migration-v2-8.mdx) for complete details
 
-### Configurable Authentication Providers
+### Enterprise Authentication & Identity (NEW in v3.0)
 
-The system supports multiple authentication backends via the auth factory:
+Comprehensive identity and access management with Keycloak as authoritative provider:
 
-```python
-# Development: In-memory user provider (with password validation)
-# Set in .env:
-AUTH_PROVIDER=inmemory
+#### 🔐 Authentication Methods
 
-# Production: Keycloak SSO with OIDC/OAuth2
-# Set in .env:
-AUTH_PROVIDER=keycloak
-KEYCLOAK_SERVER_URL=https://auth.example.com
-KEYCLOAK_REALM=production
-KEYCLOAK_CLIENT_ID=mcp-server
-KEYCLOAK_CLIENT_SECRET=<secret>
+1. **User Authentication** (JWT-based)
+   - Username/password (ROPC flow)
+   - Federated identity (LDAP, SAML, OIDC)
+   - Automatic JWT issuance
+
+2. **Service Principals** ([ADR-0033](/adr/0033-service-principal-design.md))
+   - Machine-to-machine authentication
+   - 30-day refresh tokens for long-running tasks
+   - Permission inheritance from users
+   - Both client credentials and service account modes
+
+3. **API Keys** ([ADR-0034](/adr/0034-api-key-jwt-exchange.md))
+   - Long-lived keys exchanged for JWTs
+   - Stored in Keycloak (bcrypt hashed)
+   - Rotation and expiration support
+
+#### 🌐 Identity Federation ([ADR-0037](/adr/0037-identity-federation.md))
+
+Integrate existing identity providers:
+- **LDAP/Active Directory**: Direct user federation
+- **SAML 2.0**: ADFS, Azure AD, Ping Identity
+- **OIDC/OAuth2**: Google, Microsoft, GitHub, Okta, OneLogin
+
+All federated users receive consistent Keycloak JWTs.
+
+#### 📋 SCIM 2.0 Provisioning ([ADR-0038](/adr/0038-scim-implementation.md))
+
+Automated user provisioning from external systems:
+- User create/update/delete operations
+- Group synchronization
+- Enterprise user attributes
+- Automatic OpenFGA role sync
+
+#### 🔑 JWT Standardization ([ADR-0032](/adr/0032-jwt-standardization.md))
+
+All authentication methods produce Keycloak-issued RS256 JWTs:
+- Stateless validation at Kong gateway
+- Consistent authorization model
+- Short-lived tokens (15 min) with refresh
+
+**Configuration**:
+```bash
+# .env
+AUTH_PROVIDER=keycloak  # Keycloak as authoritative source
+AUTH_MODE=hybrid  # Stateless users + stateful service principals
+ENABLE_SERVICE_PRINCIPALS=true
+API_KEY_ENABLED=true
+SCIM_ENABLED=true
+KEYCLOAK_LDAP_ENABLED=true
+KEYCLOAK_OIDC_ENABLED=true
 ```
 
-**Provider Features**:
-- **InMemoryUserProvider**: Fast, password-protected, for development/testing
-- **KeycloakUserProvider**: Enterprise SSO, OIDC, automatic role sync to OpenFGA
-- **Custom Providers**: Extend `UserProvider` interface for custom auth systems
+**See Guides**:
+- [Service Principals](/docs/guides/service-principals.md)
+- [API Key Management](/docs/guides/api-key-management.md)
+- [Identity Federation](/docs/guides/identity-federation-quickstart.md)
+- [SCIM Provisioning](/docs/guides/scim-provisioning.md)
 
 ### OpenFGA Fine-Grained Authorization
 

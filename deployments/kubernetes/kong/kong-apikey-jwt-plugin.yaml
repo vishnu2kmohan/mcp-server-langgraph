@@ -1,0 +1,40 @@
+---
+# Kong API Key JWT Exchange Plugin Configuration
+
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: apikey-jwt-exchange
+  namespace: mcp-server-langgraph
+spec:
+  plugin: kong-apikey-jwt-exchange
+  config:
+    mcp_server_url: "http://mcp-server-langgraph.mcp-server-langgraph.svc.cluster.local:80"
+    cache_ttl: 300  # 5 minutes
+    timeout: 5000  # 5 seconds
+    api_key_headers:
+      - "apikey"
+      - "x-api-key"
+
+---
+# Apply to legacy route for backward compatibility
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-legacy-apikey-route
+  namespace: mcp-server-langgraph
+  annotations:
+    konghq.com/plugins: apikey-jwt-exchange,rate-limit-basic,cors
+spec:
+  ingressClassName: kong
+  rules:
+  - host: legacy.mcp-langgraph.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mcp-server-langgraph
+            port:
+              number: 80

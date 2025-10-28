@@ -302,6 +302,7 @@ class OpenFGAAuthorizationModel:
         - tool: AI tools (chat, search, etc.)
         - conversation: Conversation threads
         - role: Roles that grant permissions
+        - service_principal: Service accounts for machine-to-machine auth (ADR-0033)
 
         Relations:
         - member: User is a member of organization
@@ -309,6 +310,7 @@ class OpenFGAAuthorizationModel:
         - viewer: User can view a resource
         - executor: User can execute a tool
         - admin: User has admin privileges
+        - acts_as: Service principal acts as user (permission inheritance, ADR-0039)
         """
         return {
             "schema_version": "1.1",
@@ -371,6 +373,23 @@ class OpenFGAAuthorizationModel:
                     "type": "role",
                     "relations": {"assignee": {"this": {}}},
                     "metadata": {"relations": {"assignee": {"directly_related_user_types": [{"type": "user"}]}}},
+                },
+                {
+                    "type": "service_principal",
+                    "relations": {
+                        "owner": {"this": {}},
+                        "acts_as": {"this": {}},
+                        "viewer": {"computedUserset": {"relation": "owner"}},
+                        "editor": {"computedUserset": {"relation": "owner"}},
+                    },
+                    "metadata": {
+                        "relations": {
+                            "owner": {"directly_related_user_types": [{"type": "user"}]},
+                            "acts_as": {"directly_related_user_types": [{"type": "user"}]},
+                            "viewer": {"directly_related_user_types": [{"type": "user"}]},
+                            "editor": {"directly_related_user_types": [{"type": "user"}]},
+                        }
+                    },
                 },
             ],
         }
@@ -439,3 +458,84 @@ async def seed_sample_data(client: OpenFGAClient) -> None:
 
     await client.write_tuples(sample_tuples)
     logger.info("Sample OpenFGA data seeded")
+
+
+async def check_permission(
+    user_id: str,
+    relation: str,
+    object: str,
+    openfga_client: OpenFGAClient,
+) -> bool:
+    """
+    Check if user has permission with support for service principal inheritance.
+
+    This function implements permission checking with acts_as relationship support (ADR-0039).
+    Service principals (user_id starting with "service:") can inherit permissions from
+    associated users via the acts_as relationship.
+
+    Args:
+        user_id: User or service principal ID (e.g., "user:alice" or "service:batch-job")
+        relation: Relation to check (e.g., "viewer", "editor", "executor")
+        object: Object to check permission on (e.g., "conversation:thread1")
+        openfga_client: OpenFGA client instance
+
+    Returns:
+        True if user/service has permission (directly or inherited), False otherwise
+
+    Example:
+        >>> # Direct permission check
+        >>> allowed = await check_permission("user:alice", "viewer", "conversation:1", openfga)
+        >>> # Service principal with inherited permission
+        >>> allowed = await check_permission("service:batch-job", "viewer", "conversation:1", openfga)
+    """
+    # 1. Direct permission check
+    has_direct_permission = await openfga_client.check_permission(
+        user=user_id,
+        relation=relation,
+        object=object,
+    )
+
+    if has_direct_permission:
+        return True
+
+    # 2. If service principal, check inherited permissions via acts_as
+    if user_id.startswith("service:"):
+        # List all users this service principal acts as
+        try:
+            # Query for acts_as relationships
+            associated_users = await openfga_client.list_objects(
+                user=user_id,
+                relation="acts_as",
+                object_type="user",
+            )
+
+            # Check if any associated user has the permission
+            for associated_user in associated_users:
+                user_has_permission = await openfga_client.check_permission(
+                    user=associated_user,
+                    relation=relation,
+                    object=object,
+                )
+
+                if user_has_permission:
+                    # Log inherited access for audit trail
+                    logger.info(
+                        f"{user_id} accessed {object} via inherited permission from {associated_user}",
+                        extra={
+                            "service_principal": user_id,
+                            "associated_user": associated_user,
+                            "resource": object,
+                            "relation": relation,
+                            "permission_type": "inherited",
+                        },
+                    )
+                    return True
+
+        except Exception as e:
+            logger.warning(
+                f"Error checking acts_as relationships for {user_id}: {e}",
+                exc_info=True,
+            )
+            # Continue with denial if acts_as check fails
+
+    return False

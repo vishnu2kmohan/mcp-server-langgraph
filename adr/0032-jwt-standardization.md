@@ -1,0 +1,127 @@
+# 32. JWT Standardization Across All Authentication Flows
+
+Date: 2025-01-28
+
+## Status
+
+Accepted
+
+## Context
+
+Authentication systems often support multiple token formats (sessions, cookies, opaque tokens, JWTs, API keys) leading to complexity in validation, authorization, and client integration. This creates challenges:
+
+- **Inconsistent Validation**: Different code paths for each token type
+- **Authorization Complexity**: Permission checks must handle multiple formats
+- **Client Confusion**: Different authentication methods require different implementations
+- **Security Gaps**: Inconsistent validation rules across token types
+- **Operational Burden**: Multiple token management systems to monitor
+- **Federation Issues**: External identity providers return different token formats
+
+The system currently supports multiple authentication methods with different token formats, creating maintenance burden and security inconsistencies.
+
+## Decision
+
+We will **standardize on JSON Web Tokens (JWT) as the sole authentication token format** across all authentication flows. All authentication methods will produce a JWT, and all validation will use JWT verification.
+
+### Core Principles
+
+1. **Universal JWT Output**: Every authentication method produces a JWT
+2. **Stateless Validation**: JWTs validated without database lookups
+3. **Keycloak as Issuer**: All JWTs issued by Keycloak (single issuer)
+4. **RS256 Signing**: Asymmetric cryptography (public key validation)
+5. **Standard Claims**: Consistent JWT structure across all flows
+6. **Refresh Token Pattern**: Short-lived JWTs with refresh tokens
+
+### JWT Structure
+
+```json
+{
+  "header": {"alg": "RS256", "typ": "JWT", "kid": "keycloak-key-id"},
+  "payload": {
+    "iss": "http://keycloak:8180/realms/langgraph-agent",
+    "sub": "user:alice",
+    "aud": "langgraph-client",
+    "exp": 1706480400,
+    "preferred_username": "alice",
+    "email": "alice@example.com",
+    "realm_access": {"roles": ["admin", "premium", "user"]},
+    "scope": "openid profile email"
+  }
+}
+```
+
+### Authentication Flows → JWT
+
+1. **User Login (Password)**: `User → Keycloak (ROPC) → JWT + Refresh Token`
+2. **Federated Identity**: `User → External IdP → Keycloak → JWT + Refresh Token`
+3. **API Key**: `Client → Kong (validate) → Keycloak → JWT`
+4. **Service Principal**: `Service → Keycloak (client_credentials) → JWT + Refresh Token`
+5. **Token Refresh**: `Client → Keycloak (refresh_token) → New JWT`
+
+### Token Lifetimes
+
+```bash
+ACCESS_TOKEN_LIFESPAN=900  # 15 minutes
+REFRESH_TOKEN_LIFESPAN=1800  # 30 minutes (interactive)
+SERVICE_ACCOUNT_REFRESH_TOKEN_LIFESPAN=2592000  # 30 days (batch jobs)
+```
+
+## Consequences
+
+### Positive Consequences
+- Unified validation (single code path)
+- Stateless architecture, scalability via public key cryptography
+- Standard protocol (RFC 7519) with ecosystem support
+- Client simplicity, federation compatible
+- Authorization ready (user context embedded)
+
+### Negative Consequences
+- Token size larger than opaque tokens (200-2000 bytes)
+- Revocation challenge (cannot revoke before expiration without blacklist)
+- Refresh complexity (clients must implement refresh logic)
+- Short lifetime issues for long-running tasks
+- Clock synchronization required
+
+### Mitigation Strategies
+- **Revocation**: Hybrid mode with server-side sessions (optional), Redis blacklist for emergencies
+- **Long-Running**: Service principals get 30-day refresh tokens, server-side storage, auto-refresh
+- **Token Size**: Minimize custom claims, gzip compression
+- **Key Rotation**: Automated JWKS fetching (1-hour cache), gradual rotation
+
+## Alternatives Considered
+
+1. **Opaque Tokens**: Rejected - requires DB lookup, stateful, poor scalability
+2. **Mixed Tokens**: Rejected - multiple code paths, inconsistent authorization
+3. **Macaroons**: Rejected - non-standard, complex, over-engineered
+4. **OAuth2 Introspection**: Rejected - latency, stateful, network dependency
+
+## Implementation Details
+
+**JWT Issuance** (`src/mcp_server_langgraph/auth/keycloak.py:245-294`):
+```python
+async def authenticate(self, username: str, password: str) -> AuthResponse:
+    data = {
+        "grant_type": "password",
+        "client_id": self.config.client_id,
+        "username": username,
+        "password": password,
+    }
+    response = await self.client.post(self.config.token_endpoint, data=data)
+    return AuthResponse(access_token=response.json()["access_token"], ...)
+```
+
+**JWT Validation** (`src/mcp_server_langgraph/auth/keycloak.py:89-219`):
+```python
+async def verify_token(self, token: str) -> Dict[str, Any]:
+    jwks = await self.get_jwks()  # Cached 1 hour
+    public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key_data)
+    payload = jwt.decode(token, public_key, algorithms=["RS256"], ...)
+    return payload
+```
+
+## References
+
+- JWT Verification: `src/mcp_server_langgraph/auth/keycloak.py:89-219`
+- Authentication: `src/mcp_server_langgraph/auth/keycloak.py:245-294`
+- Related ADRs: [ADR-0007](0007-authentication-provider-pattern.md), [ADR-0031](0031-keycloak-authoritative-identity.md), [ADR-0034](0034-api-key-jwt-exchange.md), [ADR-0035](0035-kong-jwt-validation.md), [ADR-0036](0036-hybrid-session-model.md)
+- External: [RFC 7519 (JWT)](https://datatracker.ietf.org/doc/html/rfc7519), [RFC 7515 (JWS)](https://datatracker.ietf.org/doc/html/rfc7515), [OIDC Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)

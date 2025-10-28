@@ -1,0 +1,195 @@
+# OIDC Identity Providers Configuration
+#
+# Defines OIDC identity provider configurations for federation.
+# Used by scripts/setup/setup_oidc_idp.py
+#
+# See ADR-0037 for identity federation architecture.
+
+providers:
+  # Google Workspace / Gmail
+  google:
+    alias: google
+    display_name: Google
+    provider_id: google  # Keycloak has built-in Google provider
+    enabled: true
+    trust_email: true
+    config:
+      client_id: ${GOOGLE_CLIENT_ID}
+      client_secret: ${GOOGLE_CLIENT_SECRET}
+      default_scope: "openid profile email"
+      hosted_domain: ${GOOGLE_HOSTED_DOMAIN:-}  # Optional: restrict to specific domain
+
+    # Attribute mappers
+    mappers:
+      - name: email
+        claim: email
+        user_attribute: email
+      - name: firstName
+        claim: given_name
+        user_attribute: firstName
+      - name: lastName
+        claim: family_name
+        user_attribute: lastName
+      - name: picture
+        claim: picture
+        user_attribute: picture
+
+  # Microsoft 365 / Azure AD
+  microsoft:
+    alias: microsoft
+    display_name: Microsoft
+    provider_id: microsoft  # Keycloak has built-in Microsoft provider
+    enabled: true
+    trust_email: true
+    config:
+      client_id: ${MICROSOFT_CLIENT_ID}
+      client_secret: ${MICROSOFT_CLIENT_SECRET}
+      default_scope: "openid profile email"
+      tenant_id: ${MICROSOFT_TENANT_ID:-common}
+
+    mappers:
+      - name: email
+        claim: email
+        user_attribute: email
+      - name: firstName
+        claim: given_name
+        user_attribute: firstName
+      - name: lastName
+        claim: family_name
+        user_attribute: lastName
+      - name: tenantId
+        claim: tid
+        user_attribute: tenantId
+
+  # GitHub
+  github:
+    alias: github
+    display_name: GitHub
+    provider_id: github  # Keycloak has built-in GitHub provider
+    enabled: true
+    trust_email: false  # GitHub emails may not be verified
+    config:
+      client_id: ${GITHUB_CLIENT_ID}
+      client_secret: ${GITHUB_CLIENT_SECRET}
+      default_scope: "user:email"
+
+    mappers:
+      - name: email
+        claim: email
+        user_attribute: email
+      - name: username
+        claim: login
+        user_attribute: githubUsername
+      - name: name
+        claim: name
+        user_attribute: displayName
+
+  # Okta
+  okta:
+    alias: okta
+    display_name: Okta
+    provider_id: oidc  # Generic OIDC provider
+    enabled: true
+    trust_email: true
+    config:
+      client_id: ${OKTA_CLIENT_ID}
+      client_secret: ${OKTA_CLIENT_SECRET}
+      default_scope: "openid profile email groups"
+      authorization_url: https://${OKTA_DOMAIN}/oauth2/v1/authorize
+      token_url: https://${OKTA_DOMAIN}/oauth2/v1/token
+      user_info_url: https://${OKTA_DOMAIN}/oauth2/v1/userinfo
+      jwks_url: https://${OKTA_DOMAIN}/oauth2/v1/keys
+      issuer: https://${OKTA_DOMAIN}
+      validate_signature: true
+      use_jwks_url: true
+
+    mappers:
+      - name: email
+        claim: email
+        user_attribute: email
+      - name: firstName
+        claim: given_name
+        user_attribute: firstName
+      - name: lastName
+        claim: family_name
+        user_attribute: lastName
+      - name: groups
+        claim: groups
+        user_attribute: oktaGroups
+
+  # OneLogin
+  onelogin:
+    alias: onelogin
+    display_name: OneLogin
+    provider_id: oidc
+    enabled: true
+    trust_email: true
+    config:
+      client_id: ${ONELOGIN_CLIENT_ID}
+      client_secret: ${ONELOGIN_CLIENT_SECRET}
+      default_scope: "openid profile email"
+      authorization_url: https://${ONELOGIN_SUBDOMAIN}.onelogin.com/oidc/2/auth
+      token_url: https://${ONELOGIN_SUBDOMAIN}.onelogin.com/oidc/2/token
+      user_info_url: https://${ONELOGIN_SUBDOMAIN}.onelogin.com/oidc/2/me
+      jwks_url: https://${ONELOGIN_SUBDOMAIN}.onelogin.com/oidc/2/certs
+      validate_signature: true
+      use_jwks_url: true
+
+    mappers:
+      - name: email
+        claim: email
+        user_attribute: email
+      - name: firstName
+        claim: given_name
+        user_attribute: firstName
+      - name: lastName
+        claim: family_name
+        user_attribute: lastName
+
+  # Generic OIDC Provider Template
+  custom:
+    alias: custom-oidc
+    display_name: Custom OIDC Provider
+    provider_id: oidc
+    enabled: true
+    trust_email: true
+    config:
+      client_id: ${CUSTOM_OIDC_CLIENT_ID}
+      client_secret: ${CUSTOM_OIDC_CLIENT_SECRET}
+      default_scope: "openid profile email"
+      authorization_url: ${CUSTOM_OIDC_AUTHORIZATION_URL}
+      token_url: ${CUSTOM_OIDC_TOKEN_URL}
+      user_info_url: ${CUSTOM_OIDC_USERINFO_URL}
+      jwks_url: ${CUSTOM_OIDC_JWKS_URL}
+      issuer: ${CUSTOM_OIDC_ISSUER}
+      validate_signature: true
+      use_jwks_url: true
+
+    mappers:
+      - name: email
+        claim: email
+        user_attribute: email
+      - name: firstName
+        claim: given_name
+        user_attribute: firstName
+      - name: lastName
+        claim: family_name
+        user_attribute: lastName
+      - name: username
+        claim: preferred_username
+        user_attribute: username
+
+# Global OIDC settings
+global_settings:
+  # Account linking strategy
+  account_linking_strategy: AUTO  # AUTO, PROMPT, DISABLED
+
+  # First broker login flow
+  first_broker_login_flow: first broker login
+
+  # Token exchange
+  store_token: false  # Don't store IdP tokens
+  add_read_token_role: false
+
+  # Sync mode
+  sync_mode: IMPORT  # IMPORT, FORCE, LEGACY

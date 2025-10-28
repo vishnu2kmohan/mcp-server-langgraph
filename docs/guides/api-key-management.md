@@ -1,0 +1,359 @@
+# API Key Management Guide
+
+API keys provide simple, long-lived authentication for CLI tools, webhooks, and legacy integrations. All API keys are exchanged for JWTs and stored securely in Keycloak.
+
+See [ADR-0034](/adr/0034-api-key-jwt-exchange.md) for architectural details.
+
+## Overview
+
+API keys are:
+- **Stored in Keycloak** (user attributes with bcrypt hashing)
+- **Exchanged for JWTs** (standardized authentication)
+- **User-attributed** (linked to user or service principal identity)
+- **Rotatable** (without changing client code)
+- **Expirable** (default 365 days)
+- **Rate-limited** (5 keys per user)
+
+## Creating API Keys
+
+### Via API
+
+```bash
+curl -X POST https://api.example.com/api/v1/api-keys \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Production API Key",
+    "expires_days": 365
+  }'
+```
+
+**Response**:
+```json
+{
+  "key_id": "abc123",
+  "api_key": "mcpkey_live_EXAMPLE1234567890abcdefghijklmnop...",
+  "name": "Production API Key",
+  "created": "2025-01-28T00:00:00Z",
+  "expires_at": "2026-01-28T00:00:00Z",
+  "message": "Save this API key securely. It will not be shown again."
+}
+```
+
+⚠️ **Save the `api_key` value immediately** - it cannot be retrieved later.
+
+### Via CLI
+
+```bash
+python scripts/create_api_key.py --name "My API Key" --expires 90
+```
+
+## Using API Keys
+
+### Direct API Calls
+
+```bash
+curl -X POST https://api.example.com/message \
+  -H "apikey: mcpkey_live_EXAMPLE1234567890abcdefghijklmnop..." \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Hello, world!"}'
+```
+
+### Python Client
+
+```python
+import httpx
+
+API_KEY = "mcpkey_live_EXAMPLE1234567890abcdefghijklmnop..."
+
+async def make_request(query: str):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api.example.com/message",
+            headers={"apikey": API_KEY},
+            json={"query": query}
+        )
+        return response.json()
+```
+
+### JavaScript Client
+
+```javascript
+const API_KEY = 'mcpkey_live_EXAMPLE1234567890abcdefghijklmnop...';
+
+async function makeRequest(query) {
+  const response = await fetch('https://api.example.com/message', {
+    method: 'POST',
+    headers: {
+      'apikey': API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query }),
+  });
+  return response.json();
+}
+```
+
+## How API Keys Work
+
+### Exchange Flow
+
+```
+1. Client sends request with API key header
+2. Kong custom plugin intercepts request
+3. Plugin validates key with Keycloak (via MCP server)
+4. Keycloak returns JWT if key is valid
+5. Plugin replaces API key with JWT in Authorization header
+6. Request forwarded to MCP server with JWT
+7. MCP server validates JWT (standard flow)
+```
+
+### Storage Format
+
+API keys are stored in Keycloak user attributes as bcrypt hashes:
+
+```json
+{
+  "username": "alice",
+  "attributes": {
+    "apiKeys": [
+      "key:abc123:$2b$12$abcd1234...",
+      "key:xyz789:$2b$12$wxyz5678..."
+    ],
+    "apiKey_abc123_name": "Production Key",
+    "apiKey_abc123_created": "2025-01-28T00:00:00Z",
+    "apiKey_abc123_lastUsed": "2025-01-28T12:30:00Z",
+    "apiKey_abc123_expiresAt": "2026-01-28T00:00:00Z"
+  }
+}
+```
+
+## Managing API Keys
+
+### List Keys
+
+```bash
+curl -X GET https://api.example.com/api/v1/api-keys \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+**Response**:
+```json
+[
+  {
+    "key_id": "abc123",
+    "name": "Production Key",
+    "created": "2025-01-28T00:00:00Z",
+    "last_used": "2025-01-28T12:30:00Z",
+    "expires_at": "2026-01-28T00:00:00Z"
+  },
+  {
+    "key_id": "xyz789",
+    "name": "Test Key",
+    "created": "2025-01-15T00:00:00Z",
+    "expires_at": "2025-04-15T00:00:00Z"
+  }
+]
+```
+
+### Rotate Key
+
+```bash
+curl -X POST https://api.example.com/api/v1/api-keys/abc123/rotate \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+**Response**:
+```json
+{
+  "key_id": "abc123",
+  "new_api_key": "sk_live_NEW_KEY_HERE...",
+  "message": "API key rotated successfully. Update your configuration."
+}
+```
+
+### Revoke Key
+
+```bash
+curl -X DELETE https://api.example.com/api/v1/api-keys/abc123 \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+## Security Best Practices
+
+### Storage
+✅ **DO**: Store in secrets manager (Vault, AWS Secrets Manager, GCP Secret Manager)
+✅ **DO**: Use environment variables in production
+❌ **DON'T**: Commit to version control
+❌ **DON'T**: Log API keys
+❌ **DON'T**: Include in error messages
+
+### Rotation
+✅ **DO**: Rotate keys every 90-180 days
+✅ **DO**: Rotate immediately if compromised
+✅ **DO**: Test new key before revoking old key
+❌ **DON'T**: Share keys across multiple systems
+❌ **DON'T**: Reuse revoked keys
+
+### Usage
+✅ **DO**: Use HTTPS only
+✅ **DO**: Monitor key usage (last_used timestamp)
+✅ **DO**: Set appropriate expiration dates
+✅ **DO**: Use different keys for dev/staging/production
+❌ **DON'T**: Use in client-side code (browsers)
+❌ **DON'T**: Share keys in public repositories
+
+## Rate Limiting
+
+API keys are subject to rate limits based on user tier:
+
+| Tier | Rate Limit |
+|------|------------|
+| Free | 60 req/min, 1,000 req/hour |
+| Premium | 300 req/min, 10,000 req/hour |
+| Enterprise | 1,000 req/min, 100,000 req/hour |
+
+Rate limit headers:
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1706480400
+```
+
+## Monitoring
+
+### Key Usage
+
+Check last_used timestamps to identify unused keys:
+
+```bash
+curl -X GET /api/v1/api-keys | jq '.[] | select(.last_used == null)'
+```
+
+### Prometheus Metrics
+
+```promql
+# API key validation rate
+rate(api_key_validations_total[5m])
+
+# API key validation errors
+rate(api_key_validations_errors_total[5m])
+
+# Cache hit rate
+api_key_cache_hits / (api_key_cache_hits + api_key_cache_misses)
+```
+
+## Troubleshooting
+
+### Invalid API Key
+
+**Symptom**: `401 Unauthorized - Invalid or expired API key`
+
+**Solutions**:
+- Verify key is copied correctly (no whitespace)
+- Check expiration date: `GET /api/v1/api-keys`
+- Ensure user account is enabled
+- Verify key hasn't been revoked
+
+### Kong Validation Timeout
+
+**Symptom**: `504 Gateway Timeout`
+
+**Solutions**:
+- Check MCP server health
+- Verify Kong→MCP connectivity
+- Increase timeout in Kong plugin config
+- Check Keycloak availability
+
+### Cache Issues
+
+**Symptom**: Old key still works after revocation
+
+**Solutions**:
+- Wait for cache TTL (5 minutes by default)
+- Clear Kong cache: `kong cache:purge apikey:*`
+- Reduce cache TTL if faster revocation needed
+
+## Migration from Kong-Stored Keys
+
+### Step 1: Export Existing Keys
+
+```bash
+# List Kong consumers
+curl http://kong-admin:8001/consumers
+
+# Export key-auth credentials
+curl http://kong-admin:8001/consumers/USER/key-auth
+```
+
+### Step 2: Recreate in Keycloak
+
+```bash
+# For each user, create new API key
+curl -X POST /api/v1/api-keys \
+  -H "Authorization: Bearer USER_JWT" \
+  -d '{"name": "Migrated Key"}'
+```
+
+### Step 3: Update Clients
+
+Provide new API keys to clients (gradual rollout).
+
+### Step 4: Sunset Old Keys
+
+After migration period, remove Kong key-auth plugin.
+
+## Examples
+
+### CLI Tool Authentication
+
+```python
+#!/usr/bin/env python3
+import os
+import httpx
+
+API_KEY = os.getenv("MCP_API_KEY")
+
+async def main():
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api.example.com/message",
+            headers={"apikey": API_KEY},
+            json={"query": "Process data"}
+        )
+        print(response.json())
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+```
+
+### Webhook Integration
+
+```python
+# External system calls your webhook with API key
+from fastapi import FastAPI, Header, HTTPException
+
+app = FastAPI()
+
+@app.post("/webhook")
+async def handle_webhook(
+    data: dict,
+    apikey: str = Header(None)
+):
+    # Webhook calls MCP with your API key
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api.example.com/message",
+            headers={"apikey": apikey},
+            json={"query": data["message"]}
+        )
+        return response.json()
+```
+
+## References
+
+- ADR: [ADR-0034: API Key to JWT Exchange](/adr/0034-api-key-jwt-exchange.md)
+- API Reference: [API Keys API](/api/api-keys)
+- Kong Plugin: [kong-apikey-jwt-exchange](/deployments/kong/custom-plugins/)
+- Security: [Best Practices](/docs/security/api-key-best-practices.md)

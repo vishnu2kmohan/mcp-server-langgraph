@@ -1,0 +1,115 @@
+# LDAP Attribute Mappers Configuration
+#
+# Defines how LDAP attributes are mapped to Keycloak user attributes.
+# Used by scripts/setup/setup_ldap_federation.py
+#
+# See ADR-0037 for identity federation architecture.
+
+# Standard attribute mappings (Active Directory)
+attribute_mappers:
+  - name: email
+    ldap_attribute: mail
+    keycloak_attribute: email
+    read_only: true
+    always_read_from_ldap: true
+    mandatory: false
+
+  - name: firstName
+    ldap_attribute: givenName
+    keycloak_attribute: firstName
+    read_only: true
+    always_read_from_ldap: true
+    mandatory: false
+
+  - name: lastName
+    ldap_attribute: sn
+    keycloak_attribute: lastName
+    read_only: true
+    always_read_from_ldap: true
+    mandatory: false
+
+  - name: displayName
+    ldap_attribute: displayName
+    keycloak_attribute: displayName
+    read_only: true
+    always_read_from_ldap: false
+    mandatory: false
+
+  - name: department
+    ldap_attribute: department
+    keycloak_attribute: department
+    read_only: true
+    always_read_from_ldap: false
+    mandatory: false
+
+  - name: title
+    ldap_attribute: title
+    keycloak_attribute: title
+    read_only: true
+    always_read_from_ldap: false
+    mandatory: false
+
+  - name: telephoneNumber
+    ldap_attribute: telephoneNumber
+    keycloak_attribute: phoneNumber
+    read_only: true
+    always_read_from_ldap: false
+    mandatory: false
+
+  - name: mobile
+    ldap_attribute: mobile
+    keycloak_attribute: mobilePhone
+    read_only: true
+    always_read_from_ldap: false
+    mandatory: false
+
+  - name: employeeNumber
+    ldap_attribute: employeeNumber
+    keycloak_attribute: employeeNumber
+    read_only: true
+    always_read_from_ldap: false
+    mandatory: false
+
+  - name: manager
+    ldap_attribute: manager
+    keycloak_attribute: manager
+    read_only: true
+    always_read_from_ldap: false
+    mandatory: false
+
+# Group mapper configuration
+group_mapper:
+  enabled: true
+  groups_dn: OU=Groups,DC=example,DC=com
+  group_name_attribute: cn
+  group_object_classes: group
+  membership_attribute: member
+  membership_type: DN
+  preserve_inheritance: true
+  user_attribute: distinguishedName
+  groups_path: /
+  mode: READ_ONLY
+
+# Sync settings
+sync_settings:
+  full_sync_period: 86400  # Daily (24 hours)
+  changed_sync_period: 3600  # Hourly
+  batch_size: 1000
+  connection_timeout: 10000  # 10 seconds
+  read_timeout: 30000  # 30 seconds
+  connection_pooling: true
+  pagination: true
+
+# Role mapping (LDAP groups to Keycloak roles)
+role_mappings:
+  - ldap_group: CN=Administrators,OU=Groups,DC=example,DC=com
+    keycloak_role: admin
+
+  - ldap_group: CN=Premium Users,OU=Groups,DC=example,DC=com
+    keycloak_role: premium
+
+  - ldap_group: CN=Engineers,OU=Groups,DC=example,DC=com
+    keycloak_role: engineer
+
+  - ldap_group: CN=Finance,OU=Groups,DC=example,DC=com
+    keycloak_role: finance

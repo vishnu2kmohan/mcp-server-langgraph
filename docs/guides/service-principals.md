@@ -1,0 +1,307 @@
+# Service Principals Guide
+
+Service principals enable machine-to-machine authentication for batch jobs, streaming tasks, and background processes. They support long-lived credentials (30-day refresh tokens) and can inherit permissions from user principals.
+
+See [ADR-0033](/adr/0033-service-principal-design.md) for architectural details.
+
+## Overview
+
+Service principals are first-class identities separate from users, designed for:
+- **Batch ETL Jobs**: Multi-hour data processing tasks
+- **Streaming Connections**: WebSocket connections requiring persistent auth
+- **Background Processors**: Queue processors with continuous authentication
+- **Scheduled Reports**: Automated report generation on behalf of users
+- **CI/CD Pipelines**: Deployment automation
+- **API Integrations**: Third-party systems with programmatic access
+
+## Authentication Modes
+
+### Mode 1: Client Credentials (Recommended)
+
+OAuth2 client credentials flow using Keycloak client configuration.
+
+**Use when**:
+- Dedicated service or microservice
+- OAuth2 compliance required
+- Rotating credentials needed
+
+**Setup**:
+```bash
+curl -X POST https://api.example.com/api/v1/service-principals \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Batch ETL Job",
+    "description": "Nightly data processing",
+    "authentication_mode": "client_credentials",
+    "associated_user_id": "user:alice",
+    "inherit_permissions": true
+  }'
+```
+
+**Response**:
+```json
+{
+  "service_id": "batch-etl-job",
+  "name": "Batch ETL Job",
+  "authentication_mode": "client_credentials",
+  "client_secret": "abc123xyz...",
+  "message": "Save the client_secret securely. It will not be shown again."
+}
+```
+
+**Authentication**:
+```python
+import httpx
+
+# Get JWT using client credentials
+response = await httpx.post(
+    "https://keycloak.example.com/realms/langgraph-agent/protocol/openid-connect/token",
+    data={
+        "grant_type": "client_credentials",
+        "client_id": "batch-etl-job",
+        "client_secret": "abc123xyz...",
+        "scope": "openid",
+    }
+)
+
+token_data = response.json()
+access_token = token_data["access_token"]
+
+# Use JWT in API calls
+response = await httpx.post(
+    "https://api.example.com/message",
+    headers={"Authorization": f"Bearer {access_token}"},
+    json={"query": "Process data"}
+)
+```
+
+### Mode 2: Service Account User
+
+Special user account marked as service principal.
+
+**Use when**:
+- Legacy system migration
+- Mixed authentication needs
+- Simpler deployment (username/password)
+
+**Setup**:
+```bash
+curl -X POST https://api.example.com/api/v1/service-principals \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -d '{
+    "name": "Legacy Integration",
+    "description": "Legacy system connector",
+    "authentication_mode": "service_account_user"
+  }'
+```
+
+**Authentication**:
+```python
+# Use Resource Owner Password Credentials (ROPC)
+response = await httpx.post(
+    "https://keycloak.example.com/realms/langgraph-agent/protocol/openid-connect/token",
+    data={
+        "grant_type": "password",
+        "client_id": "langgraph-client",
+        "username": "svc_legacy-integration",
+        "password": "service-password",
+    }
+)
+```
+
+## Permission Inheritance
+
+Service principals can inherit permissions from user principals via the `acts_as` relationship.
+
+### Example Scenario
+
+Alice owns a conversation. She creates a service principal for scheduled reports:
+
+```bash
+curl -X POST /api/v1/service-principals \
+  -d '{
+    "name": "Scheduled Reports",
+    "description": "Generate weekly reports for Alice",
+    "authentication_mode": "client_credentials",
+    "associated_user_id": "user:alice",
+    "inherit_permissions": true
+  }'
+```
+
+**OpenFGA Tuples Created**:
+```
+service:scheduled-reports acts_as user:alice
+user:alice owner conversation:thread1
+```
+
+**Permission Check**:
+```
+Can service:scheduled-reports view conversation:thread1?
+→ Direct check: No
+→ acts_as check: service:scheduled-reports acts_as user:alice
+→ Can user:alice view conversation:thread1? → Yes (owner)
+→ Result: ✓ Permission granted (inherited)
+```
+
+## Long-Lived Sessions
+
+Service principals support 30-day refresh tokens for persistent authentication.
+
+### Configuration
+
+```bash
+# .env
+SERVICE_PRINCIPAL_REFRESH_TOKEN_LIFESPAN=2592000  # 30 days
+SERVICE_PRINCIPAL_SESSION_ENABLED=true
+SERVICE_PRINCIPAL_AUTO_REFRESH=true
+```
+
+### Client Implementation
+
+```python
+class ServicePrincipalClient:
+    def __init__(self, client_id, client_secret, keycloak_url):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.keycloak_url = keycloak_url
+        self.access_token = None
+        self.refresh_token = None
+        self.expires_at = None
+
+    async def ensure_valid_token(self):
+        """Ensure we have a valid access token"""
+        # Initial authentication
+        if not self.access_token:
+            await self.authenticate()
+            return
+
+        # Refresh if expires in < 5 minutes
+        if time.time() > (self.expires_at - 300):
+            await self.refresh()
+
+    async def authenticate(self):
+        """Get initial token"""
+        response = await httpx.post(
+            f"{self.keycloak_url}/protocol/openid-connect/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            }
+        )
+        data = response.json()
+        self.access_token = data["access_token"]
+        self.refresh_token = data.get("refresh_token")
+        self.expires_at = time.time() + data["expires_in"]
+
+    async def refresh(self):
+        """Refresh access token"""
+        if not self.refresh_token:
+            await self.authenticate()
+            return
+
+        response = await httpx.post(
+            f"{self.keycloak_url}/protocol/openid-connect/token",
+            data={
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": self.refresh_token,
+            }
+        )
+        data = response.json()
+        self.access_token = data["access_token"]
+        self.refresh_token = data.get("refresh_token", self.refresh_token)
+        self.expires_at = time.time() + data["expires_in"]
+```
+
+## Management Operations
+
+### List Service Principals
+
+```bash
+curl -X GET https://api.example.com/api/v1/service-principals \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+### Rotate Secret
+
+```bash
+curl -X POST https://api.example.com/api/v1/service-principals/batch-etl-job/rotate-secret \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+### Delete Service Principal
+
+```bash
+curl -X DELETE https://api.example.com/api/v1/service-principals/batch-etl-job \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+## Best Practices
+
+### Security
+- ✅ Store client secrets in secrets manager (not environment variables)
+- ✅ Rotate secrets every 90 days
+- ✅ Use IP whitelisting for sensitive services
+- ✅ Monitor service principal usage
+- ✅ Revoke unused service principals
+
+### Permissions
+- ✅ Use least privilege (only associate with user if needed)
+- ✅ Document permission inheritance in service description
+- ✅ Audit inherited access regularly
+- ✅ Create dedicated users for services when possible
+
+### Operations
+- ✅ Name services descriptively (e.g., "nightly-etl-job")
+- ✅ Document purpose in description field
+- ✅ Tag owner for accountability
+- ✅ Monitor token refresh failures
+- ✅ Set alerts for authentication errors
+
+## Troubleshooting
+
+### Authentication Fails
+
+**Symptom**: `401 Unauthorized` when authenticating
+
+**Solutions**:
+- Verify client_id matches service_id
+- Check client_secret is correct
+- Ensure service principal is enabled
+- Verify Keycloak realm and endpoint URLs
+
+### Permission Denied
+
+**Symptom**: `403 Forbidden` when accessing resources
+
+**Solutions**:
+- Check if service has direct permissions
+- Verify acts_as relationship exists (if using inheritance)
+- Confirm associated user has required permissions
+- Check OpenFGA tuples: `openfga-cli check`
+
+### Token Expired
+
+**Symptom**: `401 Unauthorized` with "Token has expired"
+
+**Solutions**:
+- Implement automatic refresh before expiration
+- Check system clock synchronization (NTP)
+- Verify refresh token hasn't expired (30 days)
+- Re-authenticate if refresh token expired
+
+## Examples
+
+See `examples/service_principals/` for complete examples:
+- `batch_job_example.py` - Batch processing with 12-hour runtime
+- `streaming_example.py` - WebSocket streaming with persistent auth
+- `scheduled_task_example.py` - Cron job with user permission inheritance
+
+## References
+
+- ADR: [ADR-0033: Service Principal Design](/adr/0033-service-principal-design.md)
+- API Reference: [Service Principals API](/api/service-principals)
+- Keycloak Docs: [Service Accounts](https://www.keycloak.org/docs/latest/server_admin/#_service_accounts)
+- OpenFGA: [Permission Inheritance](/docs/guides/permission-inheritance.md)

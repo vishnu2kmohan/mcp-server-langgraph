@@ -1,0 +1,198 @@
+# Identity Federation Quick Start
+
+Integrate existing identity providers (LDAP, SAML, OIDC) with Keycloak for centralized authentication.
+
+See [ADR-0037](/adr/0037-identity-federation.md) for architecture details.
+
+## Quick Setup
+
+### LDAP/Active Directory
+
+```bash
+# Set environment variables
+export LDAP_CONNECTION_URL='ldap://ad.example.com:389'
+export LDAP_BIND_DN='CN=Service Account,OU=Service Accounts,DC=example,DC=com'
+export LDAP_BIND_PASSWORD='your-password'
+export LDAP_USERS_DN='OU=Users,DC=example,DC=com'
+export LDAP_GROUPS_DN='OU=Groups,DC=example,DC=com'
+
+# Run setup script
+python scripts/setup/setup_ldap_federation.py
+```
+
+### Google Workspace
+
+```bash
+# Set credentials
+export GOOGLE_CLIENT_ID='your-client-id.apps.googleusercontent.com'
+export GOOGLE_CLIENT_SECRET='your-secret'
+export GOOGLE_HOSTED_DOMAIN='example.com'  # Optional
+
+# Run setup
+python scripts/setup/setup_oidc_idp.py --provider google
+```
+
+### Microsoft 365 / Azure AD
+
+```bash
+export MICROSOFT_CLIENT_ID='your-app-id'
+export MICROSOFT_CLIENT_SECRET='your-secret'
+export MICROSOFT_TENANT_ID='common'  # or specific tenant
+
+python scripts/setup/setup_oidc_idp.py --provider microsoft
+```
+
+### GitHub
+
+```bash
+export GITHUB_CLIENT_ID='your-oauth-app-id'
+export GITHUB_CLIENT_SECRET='your-secret'
+
+python scripts/setup/setup_oidc_idp.py --provider github
+```
+
+### Okta
+
+```bash
+export OKTA_CLIENT_ID='your-app-id'
+export OKTA_CLIENT_SECRET='your-secret'
+export OKTA_DOMAIN='example.okta.com'
+
+python scripts/setup/setup_oidc_idp.py --provider okta
+```
+
+### ADFS (SAML)
+
+```bash
+export SAML_ALIAS='adfs'
+export SAML_SSO_URL='https://adfs.example.com/adfs/ls/'
+export SAML_LOGOUT_URL='https://adfs.example.com/adfs/ls/'
+
+python scripts/setup/setup_saml_idp.py
+```
+
+## Authentication Flow
+
+### Federated User Login
+
+```
+1. User visits: https://app.example.com
+2. Clicks "Sign in with Google" (or LDAP, ADFS, etc.)
+3. Redirects to Keycloak
+4. Keycloak redirects to external IdP (Google)
+5. User authenticates with external IdP
+6. External IdP returns to Keycloak with assertion/token
+7. Keycloak maps attributes and issues JWT
+8. Client receives Keycloak JWT
+9. Client uses JWT for API calls (standard flow)
+```
+
+### What Users See
+
+All federated users receive standard Keycloak JWTs:
+
+```json
+{
+  "iss": "http://keycloak:8180/realms/langgraph-agent",
+  "sub": "user:alice@example.com",
+  "email": "alice@example.com",
+  "given_name": "Alice",
+  "family_name": "Smith",
+  "realm_access": {
+    "roles": ["admin", "premium", "user"]
+  }
+}
+```
+
+## Configuration Details
+
+### LDAP Attribute Mapping
+
+Edit `config/ldap_mappers.yaml`:
+
+```yaml
+attribute_mappers:
+  - name: email
+    ldap_attribute: mail
+    keycloak_attribute: email
+  - name: department
+    ldap_attribute: department
+    keycloak_attribute: department
+```
+
+### OIDC Provider Configuration
+
+Edit `config/oidc_providers.yaml`:
+
+```yaml
+providers:
+  google:
+    alias: google
+    config:
+      client_id: ${GOOGLE_CLIENT_ID}
+      hosted_domain: ${GOOGLE_HOSTED_DOMAIN}
+```
+
+## Testing
+
+### Test LDAP Connection
+
+```bash
+# In Keycloak Admin Console:
+# User Federation → ldap → Test connection
+# User Federation → ldap → Test authentication
+# User Federation → ldap → Synchronize all users
+```
+
+### Test OIDC Login
+
+```bash
+# Visit Keycloak account console
+https://keycloak.example.com/realms/langgraph-agent/account
+
+# Click "Sign in with Google" (or other provider)
+# Complete OAuth2 flow
+# Verify user is created in Keycloak
+```
+
+### Verify JWT Issuance
+
+```bash
+# After federated login, get JWT
+curl -X POST http://localhost:8080/auth/login \
+  -d '{"username": "alice@example.com", "password": "federated-password"}'
+
+# Should return Keycloak-issued JWT
+```
+
+## Troubleshooting
+
+### LDAP Connection Failed
+
+**Check**:
+- LDAP URL is accessible from Keycloak pod
+- Bind DN and password are correct
+- Users DN exists
+- Firewall allows LDAP traffic (port 389/636)
+
+### SAML Metadata Import Failed
+
+**Solutions**:
+- Download SAML metadata from IdP
+- Import manually in Keycloak Admin Console
+- Verify SAML signature algorithm matches (RSA-SHA256)
+
+### OIDC Provider Not Found
+
+**Check**:
+- Client ID and secret are correct
+- Redirect URI is configured in external IdP
+- Scopes are correct (openid profile email)
+
+## References
+
+- ADR: [ADR-0037: Identity Federation](/adr/0037-identity-federation.md)
+- LDAP Setup: [scripts/setup/setup_ldap_federation.py](/scripts/setup/setup_ldap_federation.py)
+- SAML Setup: [scripts/setup/setup_saml_idp.py](/scripts/setup/setup_saml_idp.py)
+- OIDC Setup: [scripts/setup/setup_oidc_idp.py](/scripts/setup/setup_oidc_idp.py)
+- Configuration: [config/ldap_mappers.yaml](/config/ldap_mappers.yaml), [config/oidc_providers.yaml](/config/oidc_providers.yaml)
