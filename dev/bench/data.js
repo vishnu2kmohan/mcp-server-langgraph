@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761321374769,
+  "lastUpdate": 1761688300612,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -13120,6 +13120,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0027114294565806466",
             "extra": "mean: 97.35924926155059 usec\nrounds: 5079"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b6cf8e170a61e91b50f2637368a4dddda3dbea0e",
+          "message": "feat(auth): comprehensive Keycloak-centric authentication with service principals and federation\n\nImplements enterprise-grade authentication architecture with Keycloak as authoritative identity provider. Major features include service principals for long-running tasks, API key management, identity federation (LDAP/SAML/OIDC), SCIM 2.0 provisioning, and OpenFGA permission inheritance.\n\nKey Components:\n- 9 ADRs (0031-0039) documenting architecture decisions\n- Service principals with dual auth modes (client credentials + service users)\n- API key→JWT exchange pattern with bcrypt storage\n- Identity federation (LDAP, ADFS, Azure AD, Google, GitHub, Okta)\n- SCIM 2.0 endpoints for automated provisioning\n- Kong JWT validation with RS256/JWKS auto-update\n- OpenFGA acts_as relation for permission inheritance\n- Hybrid session model (stateless users + stateful services)\n\nImplementation (19,000+ lines):\n- ServicePrincipalManager with full lifecycle management\n- APIKeyManager with Keycloak attribute storage\n- Enhanced check_permission() supporting acts_as\n- SCIM 2.0 server bridging to Keycloak Admin API\n- Kong Lua plugin for API key→JWT exchange\n- JWKS updater CronJob for key rotation\n- Federation setup scripts (LDAP, SAML, OIDC)\n\nTesting (TDD approach):\n- 1,200+ lines of comprehensive test coverage\n- Service principal CRUD and auth tests\n- Permission inheritance tests\n- API key lifecycle tests\n- All tests use mocks for unit testing\n\nDocumentation:\n- 6 comprehensive user guides\n- 2 architecture documents\n- Deployment checklist and troubleshooting\n- Updated README with v3.0 features\n\nConfiguration:\n- Updated .env.example with 80+ new settings\n- LDAP/OIDC provider configuration templates\n- Kong plugin and CronJob manifests\n\nSecurity Features:\n- RS256 asymmetric JWT signing\n- bcrypt API key hashing (12 rounds)\n- Short-lived access tokens (15 min)\n- Long-lived refresh tokens for services (30 days)\n- Automatic secret rotation support\n\nReady for production deployment following docs/deployment/keycloak-jwt-deployment.md\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-28T17:50:50-04:00",
+          "tree_id": "3f6114eab1332109f4714f21e9ff254e11f5cfeb",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b6cf8e170a61e91b50f2637368a4dddda3dbea0e"
+        },
+        "date": 1761688300054,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51869.320817857835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002207059933083394",
+            "extra": "mean: 19.27921908813032 usec\nrounds: 5637"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 51892.748124202124,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031121800490758602",
+            "extra": "mean: 19.270515363853175 usec\nrounds: 9275"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48963.85541391912,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000252866341573973",
+            "extra": "mean: 20.423228349696636 usec\nrounds: 19457"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.76471291951475,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019494808785307888",
+            "extra": "mean: 5.242059627777746 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.465883828239466,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013284793019863812",
+            "extra": "mean: 51.37192890000115 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938189529602537,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026152515748091315",
+            "extra": "mean: 100.62194899999994 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2589011.52908612,
+            "unit": "iter/sec",
+            "range": "stddev: 5.147755008084687e-8",
+            "extra": "mean: 386.2477971865132 nsec\nrounds: 193424"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5035.16883986904,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001486338267974826",
+            "extra": "mean: 198.60307207215894 usec\nrounds: 444"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2884.0990168490766,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008841008679882563",
+            "extra": "mean: 346.72873370780303 usec\nrounds: 2670"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2758.4705014657784,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000041850322327170936",
+            "extra": "mean: 362.51973674129425 usec\nrounds: 1565"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58938.37641887728,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020847116584907034",
+            "extra": "mean: 16.966873890331865 usec\nrounds: 12616"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17160.99930428001,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019568432631290638",
+            "extra": "mean: 58.27166485290847 usec\nrounds: 4962"
           }
         ]
       }
