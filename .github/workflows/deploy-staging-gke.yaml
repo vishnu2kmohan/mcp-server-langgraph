@@ -133,7 +133,7 @@ jobs:
 
       # Get GKE credentials
       - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
+        uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GCP_REGION }}
@@ -243,7 +243,7 @@ jobs:
           service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
 
       - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
+        uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GCP_REGION }}
@@ -338,7 +338,7 @@ jobs:
           service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
 
       - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
+        uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GCP_REGION }}
