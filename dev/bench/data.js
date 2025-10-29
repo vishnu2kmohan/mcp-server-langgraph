@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761688300612,
+  "lastUpdate": 1761743678255,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -13228,6 +13228,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019568432631290638",
             "extra": "mean: 58.27166485290847 usec\nrounds: 4962"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "c85dbfd6506be965368629fe4de9cf53c63835ff",
+          "message": "fix(types): improve type safety - reduce mypy errors from 119 to 19 (84% improvement)\n\nComprehensive type annotation improvements across new authentication modules:\n\nType Annotation Fixes:\n- Add Dict, Any imports to all API modules\n- Add return type annotations to all endpoint functions\n- Add return type annotations to service principal methods\n- Add return type annotations to SCIM validators\n- Fix Field alias to use string literal (Pydantic requirement)\n\nKeycloak Client Enhancements:\n- Add 15 Admin API method stubs for future implementation\n  * create_client, create_user, update_user, delete_user\n  * get_user, get_users, search_users\n  * get/update_user_attributes (for API keys)\n  * get/update_client_attributes (for service principals)\n  * create_group, get_group, get_group_members, add_user_to_group\n  * issue_token_for_user (for API key→JWT exchange)\n- All stubs properly typed with NotImplementedError\n- Ready for gradual Admin API implementation\n\nOpenFGA Client Enhancements:\n- Add delete_tuples_for_object() helper method\n- Stub implementation for cleanup operations\n- Properly typed with return type annotation\n\nSCIM Schema Improvements:\n- Fix Pydantic Field alias to use literal string\n- Add type annotations to all validators\n- Fix indexed assignment issue in user_to_keycloak()\n- Properly type attributes dict to avoid mypy errors\n\nAPI Endpoint Improvements:\n- Convert error responses from JSONResponse to HTTPException\n- Add proper None checking before accessing optional objects\n- Fix Union type issues in response models\n- Add safety checks for get_service_principal results\n\nResults:\n- Mypy errors reduced: 119 → 19 (84% improvement)\n- All critical type issues resolved\n- Remaining 19 errors are non-blocking SCIM edge cases\n- All new code follows type-safe patterns\n\nRemaining Work (documented in stubs):\n- Implement Keycloak Admin API methods (15 TODO comments)\n- Complete OpenFGA cleanup logic\n- Full SCIM endpoint error handling refinement\n\nSince mypy is non-blocking during gradual rollout, these improvements\nprepare the codebase for future strict type checking while maintaining\ncurrent functionality.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-29T09:13:46-04:00",
+          "tree_id": "18f813259d8595f58d85ccc872d17433fc565a91",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/c85dbfd6506be965368629fe4de9cf53c63835ff"
+        },
+        "date": 1761743677674,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52534.75097027089,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022064970900202824",
+            "extra": "mean: 19.03501932589143 usec\nrounds: 6468"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53945.78190505456,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022495358567721123",
+            "extra": "mean: 18.537130516710576 usec\nrounds: 8566"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50191.09383999578,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002409054418978397",
+            "extra": "mean: 19.923853486594663 usec\nrounds: 19848"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.16940904554372,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004553960043818558",
+            "extra": "mean: 5.2584693038642705 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.394525132112935,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015246261700333963",
+            "extra": "mean: 51.56094274998395 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934532957727807,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028239332817953906",
+            "extra": "mean: 100.65898459998834 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2537676.3606066033,
+            "unit": "iter/sec",
+            "range": "stddev: 4.486403735931325e-8",
+            "extra": "mean: 394.06128201507977 nsec\nrounds: 122775"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5073.742722803046,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013483478891312098",
+            "extra": "mean: 197.09316270722115 usec\nrounds: 547"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2920.711960214978,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014416684385323008",
+            "extra": "mean: 342.38227309700045 usec\nrounds: 2457"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2766.7266316344326,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003479507327505574",
+            "extra": "mean: 361.43794929579076 usec\nrounds: 1558"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58833.74933344605,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000038005620168812543",
+            "extra": "mean: 16.997046955692078 usec\nrounds: 11926"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17366.706529117844,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024585823230044422",
+            "extra": "mean: 57.5814417272125 usec\nrounds: 4702"
           }
         ]
       }
