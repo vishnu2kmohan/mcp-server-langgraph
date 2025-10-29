@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761745094485,
+  "lastUpdate": 1761745452327,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -13552,6 +13552,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000023648110027415186",
             "extra": "mean: 47.829460460447095 usec\nrounds: 4995"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d557e381350ad2b64ef83a5139a87775c4b94814",
+          "message": "fix(ci): add disk space cleanup to prevent build failures\n\nAdd disk cleanup step before Docker builds to resolve \"no space left\non device\" errors affecting all Dependabot PRs.\n\nChanges:\n- Add disk cleanup step to docker-build job in ci.yaml:124-135\n  - Prune Docker system (images, containers, volumes)\n  - Remove unnecessary system packages (.NET, Android, GHC)\n  - Display disk usage before/after for monitoring\n\nAlso update Dependabot configuration to group major version updates:\n- Add \"major\" to github-core-actions group update-types\n- Add \"major\" to cicd-actions group update-types\n- Add missing patterns (anchore/*, slackapi/*, google-github-actions/*)\n- Prevents future ungrouped major version PRs\n\nThis resolves the blocking issue preventing merge of PRs #59-63.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-29T09:43:22-04:00",
+          "tree_id": "78e09085aa277c9ba65812785ded5ce928ddfa2d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d557e381350ad2b64ef83a5139a87775c4b94814"
+        },
+        "date": 1761745451761,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50778.41912305115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021190344365343333",
+            "extra": "mean: 19.693405530737454 usec\nrounds: 5822"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52650.42627746154,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022788558244634674",
+            "extra": "mean: 18.99319854943088 usec\nrounds: 11030"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49237.72495821231,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022750406273151965",
+            "extra": "mean: 20.30963048858761 usec\nrounds: 18584"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.91331177068395,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014846163905374666",
+            "extra": "mean: 5.237979430167514 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.427900362248884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010681174203345201",
+            "extra": "mean: 51.472366100000144 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941597321034516,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007580430468522195",
+            "extra": "mean: 100.58745770000073 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2533628.968366596,
+            "unit": "iter/sec",
+            "range": "stddev: 5.017287592002394e-8",
+            "extra": "mean: 394.69078246476226 nsec\nrounds: 192716"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5058.5161317521515,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015092724852015545",
+            "extra": "mean: 197.6864309521582 usec\nrounds: 420"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2842.972185033819,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011887792653064963",
+            "extra": "mean: 351.7445598885113 usec\nrounds: 2513"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2745.3922629280637,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004607244889376934",
+            "extra": "mean: 364.2466737825882 usec\nrounds: 1499"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60253.46326211421,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020550241489440772",
+            "extra": "mean: 16.596556378009456 usec\nrounds: 12159"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16703.27103196796,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024492323296745358",
+            "extra": "mean: 59.86851306466415 usec\nrounds: 4516"
           }
         ]
       }
