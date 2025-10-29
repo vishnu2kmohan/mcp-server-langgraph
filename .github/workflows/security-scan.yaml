@@ -108,7 +108,7 @@ jobs:
       continue-on-error: true  # Allow failures but report them
 
     - name: Upload reports
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       with:
         name: dependency-reports
         path: |
@@ -178,7 +178,7 @@ jobs:
         pip-licenses --format=markdown --output-file=licenses.md
 
     - name: Upload license report
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       with:
         name: license-report
         path: |
