@@ -71,7 +71,7 @@ jobs:
       # Authenticate to Google Cloud using Workload Identity Federation (keyless)
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
@@ -125,14 +125,14 @@ jobs:
       # Authenticate to Google Cloud
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
 
       # Get GKE credentials
       - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
+        uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GCP_REGION }}
@@ -236,13 +236,13 @@ jobs:
 
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
 
       - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
+        uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GCP_REGION }}
@@ -331,13 +331,13 @@ jobs:
     steps:
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com'
 
       - name: Get GKE Credentials
-        uses: google-github-actions/get-gke-credentials@v2
+        uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GCP_REGION }}
