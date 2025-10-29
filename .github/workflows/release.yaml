@@ -147,7 +147,7 @@ jobs:
         cache-to: type=gha,mode=max,scope=release-${{ steps.platform.outputs.name }}
 
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0.20.8
+      uses: anchore/sbom-action@v0.20.9
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
