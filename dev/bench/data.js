@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761744345377,
+  "lastUpdate": 1761745094485,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -13444,6 +13444,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001871190214256076",
             "extra": "mean: 59.43587880957467 usec\nrounds: 5578"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6292998e5c4c21f45dfb99ef72ede8e43648c714",
+          "message": "docs: comprehensive Mintlify documentation update for v3.0 enterprise authentication\n\nComplete documentation integration for new enterprise authentication architecture,\nensuring all Mintlify docs are current and properly structured.\n\nMintlify Configuration Updates (mint.json):\n- Added \"Enterprise Authentication (ADRs 31-39)\" navigation group\n- Added \"Enterprise Identity & Access\" guides section\n- Added keycloak-jwt-deployment to Advanced deployment section\n- Added keycloak-jwt-architecture-overview to Architecture section\n- Total: 15 new documentation entries in navigation\n\nDocumentation Files Added/Converted:\n- 9 ADR files copied to docs/architecture/ as .mdx (ADRs 31-39)\n- 5 guides converted from .md to .mdx format:\n  * service-principals.mdx\n  * api-key-management.mdx\n  * identity-federation-quickstart.mdx\n  * scim-provisioning.mdx\n  * keycloak-jwt-deployment.mdx\n- 1 architecture overview created (keycloak-jwt-architecture-overview.mdx)\n- All files follow Mintlify MDX conventions\n\nDocumentation Content Updates:\n- architecture/overview.mdx: Updated ADR count from 30 to 40\n- architecture/overview.mdx: Added v3.0 note with link to new auth docs\n- .env.example: Fixed version from 2.7.0 to 2.8.0 (consistency fix)\n- Fixed 2 broken internal links in guides\n\nComprehensive Audit:\n- Created DOCUMENTATION_AUDIT_REPORT.md with full analysis\n- 170+ documentation files inventoried\n- 95/100 documentation health score\n- 100% feature documentation coverage verified\n- All internal links validated (200+ links checked)\n\nDocumentation now includes:\n✅ 40 ADRs (100% of architectural decisions)\n✅ 25+ user guides (all features covered)\n✅ 20+ deployment guides (7 platforms)\n✅ Complete API reference\n✅ 9 operational runbooks\n✅ Mermaid diagrams for new architecture\n✅ Troubleshooting sections in all guides\n✅ Code examples in Python/JavaScript/Bash\n\nMintlify Site Structure:\n- 7 tabs (API Reference, Deployment, Guides, Architecture, Releases)\n- 18 navigation groups (2 new)\n- 143 MDX pages (14 new)\n- Consistent formatting and cross-referencing\n- Mobile-friendly navigation\n\nAll documentation verified current and accurate as of 2025-01-28.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-29T09:37:18-04:00",
+          "tree_id": "5e657cd5c1aad2f19ebac6c980117027bd7818d1",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6292998e5c4c21f45dfb99ef72ede8e43648c714"
+        },
+        "date": 1761745093287,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57550.206995420886,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001033903050360011",
+            "extra": "mean: 17.37613211503422 usec\nrounds: 6676"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 59397.97028575356,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012369653811172108",
+            "extra": "mean: 16.835592111803983 usec\nrounds: 12018"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 55946.01878473913,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012741639263712685",
+            "extra": "mean: 17.8743728637359 usec\nrounds: 17320"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.58143631377624,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023263515869623888",
+            "extra": "mean: 5.219712406593394 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.59249961693022,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008100528208147923",
+            "extra": "mean: 51.039939749999164 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.932445800833321,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009237694037287989",
+            "extra": "mean: 100.68013660000048 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2669103.20144138,
+            "unit": "iter/sec",
+            "range": "stddev: 2.667320276560358e-8",
+            "extra": "mean: 374.6576750797705 nsec\nrounds: 102924"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6569.985541450178,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012601974619292347",
+            "extra": "mean: 152.2073364836161 usec\nrounds: 529"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2864.3007796890456,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001916913328715976",
+            "extra": "mean: 349.1253457357094 usec\nrounds: 2392"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3054.691235749177,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003975344679679103",
+            "extra": "mean: 327.3653285467804 usec\nrounds: 1741"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66302.51536447126,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001083490279067556",
+            "extra": "mean: 15.082384046863147 usec\nrounds: 11772"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20907.61615065587,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023648110027415186",
+            "extra": "mean: 47.829460460447095 usec\nrounds: 4995"
           }
         ]
       }
