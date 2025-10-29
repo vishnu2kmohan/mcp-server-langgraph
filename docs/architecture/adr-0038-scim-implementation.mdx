@@ -1,0 +1,200 @@
+# 38. SCIM 2.0 Implementation Approach
+
+Date: 2025-01-28
+
+## Status
+
+Accepted
+
+## Context
+
+External identity management systems (Azure AD, Okta, Google Workspace, OneLogin) need to programmatically provision/deprovision users and groups. Industry standard is SCIM 2.0 (System for Cross-domain Identity Management), but Keycloak does not have native SCIM 2.0 server support.
+
+Requirements:
+- External systems provision users automatically
+- User creation/update/deactivation via API
+- Group/role synchronization
+- Bulk operations for initial provisioning
+- Consistent with Keycloak as authoritative source (ADR-0031)
+
+Keycloak gap: No built-in SCIM 2.0 server endpoints.
+
+## Decision
+
+Implement **FastAPI SCIM 2.0 endpoints** that bridge to Keycloak Admin API, providing standard SCIM interface while maintaining Keycloak as authoritative identity store.
+
+### Architecture
+
+```
+External System (SCIM Client) → MCP Server SCIM Endpoints
+  → Keycloak Admin API → Keycloak (User Storage)
+  → Sync to OpenFGA (via existing sync_user_to_openfga)
+```
+
+### Core Principles
+
+1. **SCIM 2.0 Compliance**: Implement RFC 7643/7644 endpoints
+2. **Keycloak Bridge**: All operations proxy to Keycloak Admin API
+3. **Automatic Sync**: User provisioning triggers OpenFGA role sync
+4. **JWT Authentication**: SCIM endpoints require JWT tokens (service principals)
+5. **Idempotent Operations**: Multiple creates/updates safe
+6. **Event-Driven**: User events trigger webhooks/notifications
+
+### SCIM Endpoints
+
+**Users**:
+- POST `/scim/v2/Users` - Create user
+- GET `/scim/v2/Users/{id}` - Get user
+- PUT `/scim/v2/Users/{id}` - Replace user
+- PATCH `/scim/v2/Users/{id}` - Update user (partial)
+- DELETE `/scim/v2/Users/{id}` - Deactivate user
+- GET `/scim/v2/Users?filter=...` - Search users
+
+**Groups**:
+- POST `/scim/v2/Groups` - Create group
+- GET `/scim/v2/Groups/{id}` - Get group
+- PATCH `/scim/v2/Groups/{id}` - Update group membership
+
+### SCIM Schema
+
+**Core User Schema**:
+```json
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "userName": "alice@example.com",
+  "name": {"givenName": "Alice", "familyName": "Smith"},
+  "emails": [{"value": "alice@example.com", "primary": true}],
+  "active": true,
+  "groups": [{"value": "engineering", "display": "Engineering"}]
+}
+```
+
+**Enterprise Extension**:
+```json
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:User",
+    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+  ],
+  "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+    "department": "Engineering",
+    "manager": {"value": "user:bob"}
+  }
+}
+```
+
+### Configuration
+
+```bash
+# SCIM Server
+SCIM_ENABLED=true
+SCIM_BASE_URL=https://api.example.com/scim/v2
+SCIM_AUTHENTICATION=jwt  # Require JWT tokens
+
+# Provisioning
+SCIM_AUTO_SYNC_TO_OPENFGA=true
+SCIM_DEFAULT_ROLES=["user"]  # Default roles for new users
+SCIM_SEND_WELCOME_EMAIL=false
+```
+
+## Consequences
+
+### Positive Consequences
+- Standard SCIM 2.0 interface (works with all SCIM clients)
+- Keycloak remains authoritative (no duplicate identity stores)
+- Automatic OpenFGA synchronization
+- Audit trail (all changes via Keycloak Admin API)
+- Deprovisioning support (disable users)
+
+### Negative Consequences
+- Custom implementation (not standard Keycloak feature)
+- Maintenance burden (SCIM spec changes)
+- Keycloak Admin API dependency (performance)
+- No built-in bulk operations (must implement)
+
+### Mitigation Strategies
+- Use FastAPI OpenAPI for auto-documentation
+- Comprehensive test suite with SCIM client simulation
+- Asynchronous provisioning (queue bulk operations)
+- Monitor Keycloak Admin API latency
+
+## Alternatives Considered
+
+1. **Keycloak SCIM Extension**: Rejected - community extensions unmaintained
+2. **External SCIM Bridge Service**: Rejected - additional microservice overhead
+3. **Direct Keycloak Admin API**: Rejected - not SCIM standard, client compatibility
+4. **Manual Provisioning**: Rejected - doesn't scale for large orgs
+
+## Implementation
+
+**SCIM Endpoints** (`src/mcp_server_langgraph/api/scim.py`):
+```python
+from fastapi import APIRouter
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/scim/v2", tags=["SCIM 2.0"])
+
+class SCIMUser(BaseModel):
+    schemas: List[str]
+    userName: str
+    name: dict
+    emails: List[dict]
+    active: bool = True
+
+@router.post("/Users")
+async def create_user(
+    user: SCIMUser,
+    current_user: dict = Depends(get_current_user),  # Require JWT
+    keycloak: KeycloakClient = Depends(get_keycloak_client)
+):
+    # 1. Validate SCIM schema
+    # 2. Map SCIM attributes to Keycloak user
+    keycloak_user = {
+        "username": user.userName,
+        "email": user.emails[0]["value"],
+        "firstName": user.name.get("givenName"),
+        "lastName": user.name.get("familyName"),
+        "enabled": user.active,
+    }
+
+    # 3. Create in Keycloak
+    user_id = await keycloak.create_user(keycloak_user)
+
+    # 4. Sync to OpenFGA
+    await sync_user_to_openfga(user_id, openfga_client)
+
+    # 5. Return SCIM response
+    return {
+        "schemas": user.schemas,
+        "id": user_id,
+        "userName": user.userName,
+        "meta": {"resourceType": "User", "created": "2025-01-28T00:00:00Z"},
+    }
+
+@router.delete("/Users/{user_id}")
+async def deprovision_user(user_id: str, keycloak: KeycloakClient = Depends(...)):
+    # Disable user in Keycloak (soft delete)
+    await keycloak.update_user(user_id, {"enabled": False})
+
+    # Remove OpenFGA tuples
+    await openfga_client.delete_tuples_for_user(f"user:{user_id}")
+
+    return {"status": "deprovisioned"}
+```
+
+**SCIM Schema Validation** (`src/mcp_server_langgraph/scim/schema.py`):
+```python
+def validate_scim_user(data: dict) -> bool:
+    required_schemas = ["urn:ietf:params:scim:schemas:core:2.0:User"]
+    if not all(schema in data.get("schemas", []) for schema in required_schemas):
+        raise ValueError("Missing required SCIM schemas")
+    # Additional validation...
+```
+
+## References
+
+- SCIM API: `src/mcp_server_langgraph/api/scim.py` (to be created)
+- Schema: `src/mcp_server_langgraph/scim/schema.py` (to be created)
+- Provisioning: `src/mcp_server_langgraph/scim/provisioning.py` (to be created)
+- Related ADRs: [ADR-0031](0031-keycloak-authoritative-identity.md)
+- External: [RFC 7643 (SCIM Core Schema)](https://datatracker.ietf.org/doc/html/rfc7643), [RFC 7644 (SCIM Protocol)](https://datatracker.ietf.org/doc/html/rfc7644)

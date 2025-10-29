@@ -123,6 +123,15 @@
       ]
     },
     {
+      "group": "Enterprise Identity & Access - NEW",
+      "pages": [
+        "guides/service-principals",
+        "guides/api-key-management",
+        "guides/identity-federation-quickstart",
+        "guides/scim-provisioning"
+      ]
+    },
+    {
       "group": "Secrets Management",
       "pages": [
         "guides/infisical-setup",
@@ -179,6 +188,7 @@
       "group": "Advanced",
       "pages": [
         "deployment/kong-gateway",
+        "deployment/keycloak-jwt-deployment",
         "deployment/monitoring",
         "deployment/log-aggregation",
         "deployment/scaling",
@@ -235,7 +245,8 @@
     {
       "group": "Architecture Decision Records",
       "pages": [
-        "architecture/overview"
+        "architecture/overview",
+        "architecture/keycloak-jwt-architecture-overview"
       ]
     },
     {
@@ -253,6 +264,20 @@
       "pages": [
         "architecture/adr-0006-session-storage-architecture",
         "architecture/adr-0007-authentication-provider-pattern"
+      ]
+    },
+    {
+      "group": "Enterprise Authentication (ADRs 31-39) - NEW",
+      "pages": [
+        "architecture/adr-0031-keycloak-authoritative-identity",
+        "architecture/adr-0032-jwt-standardization",
+        "architecture/adr-0033-service-principal-design",
+        "architecture/adr-0034-api-key-jwt-exchange",
+        "architecture/adr-0035-kong-jwt-validation",
+        "architecture/adr-0036-hybrid-session-model",
+        "architecture/adr-0037-identity-federation",
+        "architecture/adr-0038-scim-implementation",
+        "architecture/adr-0039-openfga-permission-inheritance"
       ]
     },
     {

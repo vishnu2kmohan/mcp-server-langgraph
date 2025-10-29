@@ -1,0 +1,121 @@
+# 34. API Key to JWT Exchange Pattern
+
+Date: 2025-01-28
+
+## Status
+
+Accepted
+
+## Context
+
+Legacy systems and simple integrations use API keys for authentication due to simplicity and stateless nature. However, our architecture standardizes on JWTs (ADR-0032) for consistent authentication and authorization. This creates tension between legacy support and JWT standardization.
+
+Current challenges:
+- Kong stores API keys separately from Keycloak (inconsistent)
+- No user attribution for API key requests
+- API keys don't integrate with OpenFGA authorization
+- Cannot enforce same permission model as user JWTs
+
+## Decision
+
+We will implement an **API Key to JWT Exchange Pattern** where API keys are stored in Keycloak and exchanged for short-lived JWTs on each request.
+
+### Architecture
+
+```
+Client (API Key) → Kong (custom plugin) → Keycloak (validate & exchange)
+  → JWT → Replace header → MCP Server (validates JWT normally)
+```
+
+### Core Principles
+
+1. **Exchange, Not Replace**: API keys exchanged for JWTs, not standalone auth
+2. **Keycloak Storage**: API keys stored in Keycloak user/client attributes
+3. **Transparent to Backend**: MCP Server only sees JWTs
+4. **User Attribution**: API keys linked to user or service principal identity
+5. **Standard Validation**: JWT validation applies same rules
+6. **Rotation Support**: Keys can be rotated without changing client code
+
+### API Key Storage in Keycloak
+
+**User Attributes**:
+```json
+{
+  "attributes": {
+    "apiKeys": ["key:abc123:$2b$12$hash", "key:xyz789:$2b$12$hash"],
+    "apiKey_abc123_name": "Production Key",
+    "apiKey_abc123_created": "2025-01-28T00:00:00Z",
+    "apiKey_abc123_expiresAt": "2026-01-28T00:00:00Z"
+  }
+}
+```
+
+### Exchange Flow
+
+1. Client → Kong: `Authorization: ApiKey sk_live_abc123xyz`
+2. Kong Plugin: Extract key, hash with bcrypt, query Keycloak for match
+3. If found: Call Keycloak token endpoint, get JWT
+4. Replace header: `Authorization: Bearer <JWT>`
+5. Kong → MCP Server: Standard JWT validation
+
+### Configuration
+
+```bash
+API_KEY_ENABLED=true
+API_KEY_STORAGE=keycloak
+API_KEY_HASH_ALGORITHM=bcrypt
+API_KEY_PREFIX=sk_live_
+API_KEY_MAX_PER_USER=5
+API_KEY_EXCHANGE_CACHE_TTL=300  # 5 min cache
+```
+
+## Consequences
+
+### Positive Consequences
+- JWT standardization maintained, consistent authorization
+- User attribution, centralized management in Keycloak
+- Audit trail, rotation support, expiration support
+
+### Negative Consequences
+- Custom Kong plugin (Lua development)
+- Exchange latency (20-50ms Keycloak call)
+- Cache complexity, migration required
+
+### Mitigation Strategies
+- Cache key→user mappings (5-min TTL, >90% hit rate target)
+- Connection pooling to Keycloak
+- Gradual migration with fallback period
+
+## Alternatives Considered
+
+1. **Standalone API Keys**: Rejected - violates JWT standardization
+2. **Kong-Only Storage**: Rejected - inconsistent with Keycloak authority
+3. **No API Keys**: Rejected - too disruptive for legacy integrations
+4. **Long-Lived JWTs**: Rejected - cannot revoke, security risk
+
+## Implementation
+
+**APIKeyManager** (`src/mcp_server_langgraph/auth/api_keys.py`):
+```python
+class APIKeyManager:
+    async def create_api_key(self, user_id, name, expires_days=365):
+        api_key = self.generate_api_key()  # sk_live_...
+        key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt())
+        # Store in Keycloak user attributes
+```
+
+**Kong Plugin** (`deployments/kong/custom-plugins/kong-apikey-jwt-exchange.lua`):
+```lua
+-- Extract API key, validate with Keycloak, cache JWT, replace header
+```
+
+**API Endpoints** (`src/mcp_server_langgraph/api/api_keys.py`):
+- POST `/api/v1/api-keys` - Create
+- POST `/api/v1/api-keys/validate` - Validate & exchange (Kong calls this)
+- GET `/api/v1/api-keys` - List
+- DELETE `/api/v1/api-keys/{key_id}` - Revoke
+
+## References
+
+- Related ADRs: [ADR-0031](0031-keycloak-authoritative-identity.md), [ADR-0032](0032-jwt-standardization.md), [ADR-0035](0035-kong-jwt-validation.md)
+- External: [API Key Best Practices](https://cloud.google.com/endpoints/docs/openapi/when-why-api-key), [bcrypt](https://en.wikipedia.org/wiki/Bcrypt)
