@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761745452327,
+  "lastUpdate": 1761762143034,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -13660,6 +13660,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000024492323296745358",
             "extra": "mean: 59.86851306466415 usec\nrounds: 4516"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "0e5043f55b9e4be7ac69372457aac57cf5c68f4d",
+          "message": "docs: comprehensive Mermaid diagram update and documentation cleanup\n\nAdd 17 professional Mermaid diagrams with consistent ColorBrewer2 Set3 styling across enterprise authentication, infrastructure, and operations documentation. Remove duplicate content and improve documentation structure.\n\n## New Diagrams Added (17 total)\n\n### P0 - Critical Enterprise Authentication (7 diagrams)\n- ADR-0033: Service Principal authentication flow with permission inheritance\n- ADR-0034: API Key to JWT exchange (initial + cached flows)\n- ADR-0036: Hybrid Session Model (architecture comparison + lifecycle)\n- ADR-0038: SCIM 2.0 provisioning (user flow + bulk operations)\n\n### P1 - High Priority Features (4 diagrams)\n- ADR-0037: Identity Federation (architecture + LDAP/SAML/OIDC flows)\n- ADR-0039: OpenFGA Permission Inheritance (model + check sequence)\n\n### P2 - Infrastructure & Resilience (4 diagrams)\n- ADR-0027: Rate Limiting (two-layer architecture + token bucket)\n- ADR-0028: Caching Strategy (multi-layer flow + lookup sequence)\n- ADR-0030: Circuit Breaker (state machine + resilience flow)\n\n### P3 - Operations (2 diagrams)\n- GDPR: Data Subject Rights flow (Articles 15-21 compliance)\n- Disaster Recovery: Backup/restore architecture + timeline\n\n## Documentation Cleanup\n\n### Duplicates Removed\n- Removed duplicate system architecture diagram from introduction.mdx\n- Removed duplicate observability diagram from guides/observability.mdx\n- Removed duplicate keycloak-jwt-architecture-overview.md\n- Added references to central diagram locations\n\n### File Conversions\n- Converted gke-staging-checklist.md → .mdx\n- Converted GKE_STAGING_IMPLEMENTATION_SUMMARY.md → .mdx\n- Updated mint.json with new documentation indices\n\n### Quality Improvements\n- All diagrams: Syntactically valid, accessibility-friendly\n- Consistent ColorBrewer2 Set3 palette across all new diagrams\n- Professional sequence flows, state machines, and architecture diagrams\n\n## Files Changed\n- 9 ADR files: Added comprehensive diagrams\n- 2 operational docs: GDPR + Disaster Recovery\n- 2 getting-started files: Removed duplicates, added references\n- 1 guide file: Removed duplicate, added reference\n- 1 mint.json: Updated navigation indices\n- 27 files changed, 1170 insertions(+), 478 deletions(-)\n\n## Impact\n- v3.0 enterprise features now have complete visual documentation\n- 30% reduction in duplicate content\n- All diagrams follow consistent styling and accessibility standards\n- Documentation structure improved with centralized diagram references\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-29T14:21:23-04:00",
+          "tree_id": "545d2af7dea7473514934da5923b8cbcb43648c1",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/0e5043f55b9e4be7ac69372457aac57cf5c68f4d"
+        },
+        "date": 1761762142266,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57022.82082487778,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015595455712639356",
+            "extra": "mean: 17.536838506658412 usec\nrounds: 7152"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 59547.69230524123,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011864799387096366",
+            "extra": "mean: 16.793262027250424 usec\nrounds: 12056"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 55933.8425241053,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013328139216483793",
+            "extra": "mean: 17.87826394314031 usec\nrounds: 16890"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.55320523890057,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004401737944447591",
+            "extra": "mean: 5.220481686812935 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.561906066665344,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010736832512511263",
+            "extra": "mean: 51.1197628999998 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.949854365772534,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018187241871455824",
+            "extra": "mean: 100.50398360000088 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2661186.686488346,
+            "unit": "iter/sec",
+            "range": "stddev: 3.03518359145012e-8",
+            "extra": "mean: 375.77220909652976 nsec\nrounds: 125282"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6565.320294224399,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011371170565078302",
+            "extra": "mean: 152.3154934085567 usec\nrounds: 531"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2848.0251859783207,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006893341647316247",
+            "extra": "mean: 351.12049040974034 usec\nrounds: 2294"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3054.144057471152,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000035804331135889906",
+            "extra": "mean: 327.42397908630596 usec\nrounds: 1817"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66295.98565075043,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010414617780962794",
+            "extra": "mean: 15.083869561394485 usec\nrounds: 11722"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20859.908908342608,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021842438734117885",
+            "extra": "mean: 47.93884788250753 usec\nrounds: 5384"
           }
         ]
       }
