@@ -27,6 +27,116 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Broker + Normalizer)
   → Keycloak-issued JWT → Kong → MCP Server → OpenFGA
 ```
 
+### Identity Federation Architecture
+
+```mermaid
+graph TB
+    subgraph "External Identity Providers"
+        LDAP[LDAP / Active Directory<br/>Corporate Directory]
+        SAML[SAML 2.0 Providers<br/>Azure AD, ADFS, Ping]
+        OIDC1[OIDC Providers<br/>Google Workspace]
+        OIDC2[GitHub]
+        OIDC3[Okta]
+        Azure[Azure AD / Entra ID]
+    end
+
+    subgraph "Keycloak Identity Broker"
+        KC[Keycloak<br/>Identity Federation Hub]
+        Normalizer[Identity Normalizer<br/>Attribute Mapping]
+        UserDB[(Federated Users<br/>Synchronized Cache)]
+    end
+
+    subgraph "MCP Server Platform"
+        Kong[Kong Gateway<br/>JWT Validation]
+        App[MCP Server<br/>Application]
+        FGA[OpenFGA<br/>Authorization]
+    end
+
+    %% Federation connections
+    LDAP -->|LDAP Bind<br/>User Storage Provider| KC
+    SAML -->|SAML Assertion<br/>Identity Broker| KC
+    OIDC1 -->|OIDC Token Exchange<br/>Identity Broker| KC
+    OIDC2 -->|OIDC Token Exchange| KC
+    OIDC3 -->|OIDC Token Exchange| KC
+    Azure -->|SAML or OIDC<br/>Identity Broker| KC
+
+    %% Keycloak processing
+    KC --> Normalizer
+    Normalizer -->|Standard Attributes<br/>sub, email, name, groups| UserDB
+    UserDB --> JWT[Issue Standardized JWT<br/>sub: user:alice<br/>TTL: 15 min]
+
+    %% Application flow
+    JWT --> Kong
+    Kong -->|Validate JWT| App
+    App --> FGA
+    FGA -->|Check permissions<br/>user:alice| Response[Response]
+
+    %% Styling
+    style LDAP fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    style SAML fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    style OIDC1 fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    style OIDC2 fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    style OIDC3 fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    style Azure fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    style KC fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    style Normalizer fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    style UserDB fill:#80b1d3,stroke:#3498db,stroke-width:2px
+    style JWT fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+    style Kong fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    style App fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    style FGA fill:#fb8072,stroke:#c0392b,stroke-width:2px
+```
+
+**Authentication Flows by Provider Type**:
+```mermaid
+sequenceDiagram
+    participant User
+    participant KC as Keycloak
+    participant LDAP as LDAP/AD
+    participant SAML as SAML IdP
+    participant OIDC as OIDC Provider
+    participant App as MCP Server
+
+    Note over User,LDAP: Flow 1: LDAP Authentication (Direct)
+    User->>KC: Login (username + password)
+    KC->>LDAP: LDAP Bind<br/>uid=alice,ou=Users,...
+    LDAP-->>KC: Bind successful<br/>User attributes
+    KC->>KC: Normalize attributes<br/>Create local user record (cached)
+    KC-->>User: JWT (sub: user:alice)
+    User->>App: Request + JWT
+    App-->>User: Response
+
+    Note over User,SAML: Flow 2: SAML Federation (Redirect)
+    User->>KC: Click "Login with Azure AD"
+    KC-->>User: Redirect to SAML IdP
+    User->>SAML: Authenticate at IdP
+    SAML-->>User: SAML Assertion (signed)
+    User->>KC: POST SAML Response
+    KC->>KC: Validate assertion<br/>Extract attributes<br/>Map to Keycloak user
+    KC-->>User: JWT (sub: user:alice)
+
+    Note over User,OIDC: Flow 3: OIDC Federation (Authorization Code)
+    User->>KC: Click "Login with Google"
+    KC-->>User: Redirect to Google
+    User->>OIDC: Authenticate + Consent
+    OIDC-->>User: Authorization code
+    User->>KC: Authorization code
+    KC->>OIDC: Exchange code for token
+    OIDC-->>KC: ID Token + Access Token
+    KC->>KC: Validate ID Token<br/>Extract claims<br/>Normalize to Keycloak user
+    KC-->>User: JWT (sub: user:alice)
+
+    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef kcStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    classDef idpStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+
+    class User userStyle
+    class KC kcStyle
+    class LDAP,SAML,OIDC idpStyle
+    class App appStyle
+```
+
 ### Federation Strategies
 
 #### 1. LDAP/Active Directory (User Storage Provider)

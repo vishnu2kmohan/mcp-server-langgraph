@@ -53,7 +53,7 @@ replicas:
 images:
   - name: mcp-server-langgraph
     newName: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent
-    newTag: staging-latest
+    newTag: 2.8.0-staging
 
 # Generate ConfigMap from GCP-specific OTel config
 configMapGenerator:

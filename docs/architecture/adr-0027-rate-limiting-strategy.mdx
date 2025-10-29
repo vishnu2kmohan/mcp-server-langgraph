@@ -37,6 +37,102 @@ The MCP server exposes HTTP endpoints without rate limiting, creating vulnerabil
 
 Implement a **hybrid rate limiting strategy** with two layers:
 
+### Rate Limiting Architecture
+
+```mermaid
+graph TB
+    Client[Client Request] --> Kong[Kong Gateway<br/>Layer 2: Gateway Rate Limiting]
+
+    subgraph "Kong Rate Limiting"
+        Kong --> KongCheck{Check Rate Limit}
+        KongCheck -->|Limit Exceeded| Kong429[429 Too Many Requests<br/>Retry-After header]
+        KongCheck -->|Allowed| KongRedis[(Redis<br/>Distributed Counter)]
+        KongRedis --> UpdateKong[Increment Counter<br/>Sliding Window]
+    end
+
+    UpdateKong --> App[MCP Server<br/>Layer 1: Application Rate Limiting]
+
+    subgraph "Application Rate Limiting (slowapi)"
+        App --> AppCheck{Check Rate Limit}
+        AppCheck -->|Limit Exceeded| App429[429 Too Many Requests<br/>X-RateLimit-* headers]
+        AppCheck -->|Allowed| AppRedis[(Redis<br/>Token Bucket)]
+        AppRedis --> UpdateApp[Update Bucket<br/>Per User/IP]
+    end
+
+    UpdateApp --> Handler[Route Handler<br/>Business Logic]
+    Handler --> Response[Response]
+
+    Kong429 --> Client
+    App429 --> Client
+    Response --> Client
+
+    style Client fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    style Kong fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    style App fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    style KongRedis fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    style AppRedis fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    style Kong429 fill:#d35400,stroke:#c0392b,stroke-width:2px
+    style App429 fill:#d35400,stroke:#c0392b,stroke-width:2px
+    style Handler fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+```
+
+**Rate Limiting Flow with Token Bucket**:
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Kong as Kong Gateway
+    participant Redis as Redis Store
+    participant App as MCP Server
+    participant Bucket as Token Bucket
+
+    Note over Client,Kong: Request arrives at Kong Gateway
+    Client->>Kong: GET /api/tools<br/>Authorization: Bearer JWT
+
+    Note over Kong,Redis: Layer 2: Gateway Rate Limiting
+    Kong->>Redis: GET rate_limit:user:alice:minute
+    Redis-->>Kong: Current: 45/60
+
+    alt Rate limit exceeded (≥60)
+        Kong-->>Client: 429 Too Many Requests<br/>Retry-After: 30<br/>X-RateLimit-Limit: 60<br/>X-RateLimit-Remaining: 0
+    else Rate limit OK
+        Kong->>Redis: INCR rate_limit:user:alice:minute<br/>EXPIRE 60 seconds
+        Redis-->>Kong: New count: 46
+
+        Note over Kong,App: Forward to application
+        Kong->>App: GET /api/tools
+
+        Note over App,Bucket: Layer 1: Application Rate Limiting
+        App->>Bucket: Check token bucket<br/>user:alice tier:premium
+        Bucket->>Bucket: Calculate tokens<br/>Rate: 1000/min<br/>Capacity: 1000<br/>Current: 954
+
+        alt Tokens available
+            Bucket->>Bucket: Consume 1 token<br/>Remaining: 953
+            Bucket-->>App: Allowed
+
+            App->>App: Execute business logic
+            App-->>Kong: 200 OK + Response<br/>X-RateLimit-Limit: 1000<br/>X-RateLimit-Remaining: 953
+
+            Kong-->>Client: 200 OK + Response
+        else No tokens available
+            Bucket-->>App: Denied (bucket empty)
+            App-->>Kong: 429 Too Many Requests
+            Kong-->>Client: 429 Too Many Requests
+        end
+    end
+
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef gatewayStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef redisStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef bucketStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+
+    class Client clientStyle
+    class Kong gatewayStyle
+    class Redis redisStyle
+    class App appStyle
+    class Bucket bucketStyle
+```
+
 ### Layer 1: Application-Level Rate Limiting (Immediate)
 
 **Implementation**: FastAPI middleware using `slowapi` library.

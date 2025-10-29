@@ -67,6 +67,112 @@ CIRCUIT_BREAKER_TIMEOUT_DURATION = 60  # Stay open for 60s
 - **Open** (failing): Fail fast, return cached/default response
 - **Half-Open** (testing): Allow one test request after timeout
 
+### Circuit Breaker State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> Closed: Initial state
+
+    Closed --> Open: Failure threshold reached<br/>(5 consecutive failures)
+    Closed --> Closed: Success (reset counter)
+    Closed --> Closed: Failure (increment counter)
+
+    Open --> HalfOpen: Timeout elapsed<br/>(60 seconds)
+    Open --> Open: Request blocked<br/>(fail fast)
+
+    HalfOpen --> Closed: Test request succeeds<br/>(reset counter)
+    HalfOpen --> Open: Test request fails<br/>(back to Open)
+
+    note right of Closed
+        Normal Operation
+        - All requests pass through
+        - Track failure count
+        - Success resets counter
+    end note
+
+    note right of Open
+        Failing Fast
+        - Immediate rejection
+        - Return cached/default response
+        - Prevent cascading failures
+        - Wait for timeout
+    end note
+
+    note right of HalfOpen
+        Recovery Testing
+        - Allow 1 test request
+        - If success → Closed
+        - If failure → Open
+    end note
+
+    classDef closedState fill:#d4edda,stroke:#28a745,stroke-width:3px
+    classDef openState fill:#f8d7da,stroke:#dc3545,stroke-width:3px
+    classDef halfOpenState fill:#fff3cd,stroke:#ffc107,stroke-width:3px
+
+    class Closed closedState
+    class Open openState
+    class HalfOpen halfOpenState
+```
+
+**Circuit Breaker in Action**:
+```mermaid
+sequenceDiagram
+    participant App as MCP Server
+    participant CB as Circuit Breaker
+    participant LLM as LLM API<br/>(Anthropic)
+    participant Cache as Fallback Cache
+
+    Note over App,CB: State: Closed (Normal)
+    loop First 5 requests (all fail)
+        App->>CB: Call LLM API
+        CB->>LLM: Forward request
+        LLM-->>CB: 503 Service Unavailable
+        CB->>CB: Increment failure counter<br/>(1/5, 2/5, 3/5, 4/5, 5/5)
+        CB-->>App: Error (forwarded)
+    end
+
+    Note over CB: Threshold reached (5 failures)<br/>State: Closed → Open
+
+    Note over App,CB: State: Open (Failing Fast)
+    loop Next 10 requests
+        App->>CB: Call LLM API
+        CB->>CB: Circuit is OPEN<br/>Don't call LLM
+        CB->>Cache: Get cached response
+        Cache-->>CB: Cached result
+        CB-->>App: Cached response ✓<br/>(fail fast, no delay)
+    end
+
+    Note over CB: Wait 60 seconds...
+
+    Note over CB: Timeout elapsed<br/>State: Open → Half-Open
+
+    Note over App,CB: State: Half-Open (Testing)
+    App->>CB: Call LLM API (test request)
+    CB->>LLM: Forward test request
+    LLM-->>CB: 200 OK ✓<br/>(service recovered)
+    CB->>CB: Test succeeded<br/>Reset failure counter
+
+    Note over CB: State: Half-Open → Closed
+
+    Note over App,CB: State: Closed (Recovered)
+    loop Subsequent requests
+        App->>CB: Call LLM API
+        CB->>LLM: Forward request
+        LLM-->>CB: 200 OK
+        CB-->>App: Response
+    end
+
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef cbStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef llmStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    classDef cacheStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px
+
+    class App appStyle
+    class CB cbStyle
+    class LLM llmStyle
+    class Cache cacheStyle
+```
+
 ### 2. Retry Logic with Exponential Backoff
 
 **Implementation**: Use `tenacity` library for declarative retry policies.

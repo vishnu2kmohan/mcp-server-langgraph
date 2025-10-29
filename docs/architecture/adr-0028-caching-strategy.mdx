@@ -62,6 +62,104 @@ Implement a **multi-layer caching strategy** with three distinct layers:
     External Service (uncached)          2000ms+
 ```
 
+### Multi-Layer Caching Flow
+
+```mermaid
+graph TB
+    Request[API Request] --> L1{L1: In-Memory<br/>LRU Cache}
+
+    L1 -->|Hit ~5ms| L1Hit[Return from L1<br/>Authorization results<br/>User profiles]
+    L1 -->|Miss| L2{L2: Redis<br/>Distributed Cache}
+
+    L2 -->|Hit ~20ms| L2Hit[Return from L2<br/>Update L1]
+    L2 -->|Miss| L3{L3: Provider Cache<br/>Anthropic/Gemini}
+
+    L3 -->|Hit ~100ms| L3Hit[Return from L3<br/>Update L2 + L1]
+    L3 -->|Miss| External[External Service<br/>LLM API Call<br/>2000ms+]
+
+    External --> Update[Update All Layers<br/>L3 → L2 → L1]
+    Update --> Response[Response]
+
+    L1Hit --> Response
+    L2Hit --> Response
+    L3Hit --> Response
+
+    style L1 fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    style L2 fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    style L3 fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    style External fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    style L1Hit fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style L2Hit fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+    style L3Hit fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+    style Response fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+```
+
+**Cache Lookup Sequence with Fallback**:
+```mermaid
+sequenceDiagram
+    participant Client
+    participant App as MCP Server
+    participant L1 as L1: In-Memory<br/>LRU Cache
+    participant L2 as L2: Redis Cache
+    participant L3 as L3: Provider Cache<br/>(Anthropic Prompt Caching)
+    participant LLM as LLM API<br/>(Anthropic/Gemini)
+
+    Client->>App: POST /chat<br/>{prompt: "What is RAG?"}
+
+    Note over App,L1: Check L1 (In-Memory)
+    App->>L1: GET cache_key: hash(prompt)
+    L1-->>App: MISS
+
+    Note over App,L2: Check L2 (Redis)
+    App->>L2: GET llm:cache:hash(prompt)
+    L2-->>App: MISS
+
+    Note over App,L3: Check L3 (Provider Prompt Cache)
+    App->>L3: Check prompt cache<br/>with system: [cached]
+    L3-->>App: MISS
+
+    Note over App,LLM: Call External LLM (Expensive)
+    App->>LLM: POST /messages<br/>{prompt, system: [...], cache_control}
+    Note over LLM: Process request<br/>~2000ms + $0.015
+    LLM-->>App: Response + cache info<br/>{text, usage, cache_creation_input_tokens}
+
+    Note over App,L3: Populate L3 (Provider stores internally)
+    App->>L3: Store in provider cache<br/>TTL: 5 min
+    L3-->>App: Cached
+
+    Note over App,L2: Populate L2 (Redis)
+    App->>L2: SET llm:cache:hash → response<br/>TTL: 300 sec
+    L2-->>App: Stored
+
+    Note over App,L1: Populate L1 (In-Memory)
+    App->>L1: Store in LRU<br/>maxsize: 1000
+    L1-->>App: Stored
+
+    App-->>Client: Response (2000ms)
+
+    Note over Client,App: Subsequent identical request
+    Client->>App: POST /chat<br/>{prompt: "What is RAG?"}
+
+    App->>L1: GET cache_key
+    L1-->>App: HIT (~5ms)
+
+    App-->>Client: Response (5ms) ✓<br/>400x faster
+
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef l1Style fill:#80b1d3,stroke:#3498db,stroke-width:2px
+    classDef l2Style fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    classDef l3Style fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef llmStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+
+    class Client clientStyle
+    class App appStyle
+    class L1 l1Style
+    class L2 l2Style
+    class L3 l3Style
+    class LLM llmStyle
+```
+
 ### Layer 1: In-Memory LRU Cache
 
 **Use Case**: Frequently accessed, small data (< 1MB per entry)

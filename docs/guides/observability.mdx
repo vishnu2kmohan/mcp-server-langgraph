@@ -14,36 +14,11 @@ Comprehensive observability with **dual backends** - OpenTelemetry for distribut
 
 ## Architecture
 
-```mermaid
-graph TB
-    App[MCP Server] --> OTel[OpenTelemetry SDK]
-    App --> LS[LangSmith SDK]
+<Note>
+For the complete observability architecture diagram and getting started guide, see [Observability Overview](/getting-started/observability).
+</Note>
 
-    OTel --> Exporter[OTLP Exporter]
-    Exporter --> Collector[OTel Collector]
-
-    Collector --> Jaeger[Jaeger]
-    Collector --> Prometheus[Prometheus]
-
-    LS --> LSCloud[LangSmith Cloud]
-
-    Prometheus --> Grafana[Grafana]
-    Jaeger --> Dashboard1[Trace UI]
-    LSCloud --> Dashboard2[LangSmith UI]
-
-    %% ColorBrewer2 Set3 palette styling
-    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef sdkStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef collectorStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    classDef backendStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef dashStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
-
-    class App appStyle
-    class OTel,LS sdkStyle
-    class Exporter,Collector collectorStyle
-    class Jaeger,Prometheus,LSCloud backendStyle
-    class Grafana,Dashboard1,Dashboard2 dashStyle
-```
+This guide focuses on advanced observability configurations and operational best practices.
 
 ## Quick Start
 

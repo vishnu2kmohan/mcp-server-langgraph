@@ -37,6 +37,51 @@ We will implement **Service Principals as first-class identities** with two auth
 - Subject (sub) claim: `service:<client-id>` (e.g., `service:batch-etl-job`)
 - OpenFGA Object: `service_principal:batch-etl-job`
 
+### Service Principal Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant SP as Service Principal<br/>(batch-etl-job)
+    participant KC as Keycloak<br/>Identity Provider
+    participant App as MCP Server
+    participant FGA as OpenFGA<br/>Authorization
+    participant User as Associated User<br/>(alice)
+
+    Note over SP,KC: Mode 1: Client Credentials Flow (Preferred)
+    SP->>KC: POST /token<br/>grant_type=client_credentials<br/>client_id + client_secret
+    KC->>KC: Validate credentials<br/>Check service account enabled
+    KC-->>SP: JWT Token<br/>sub: service:batch-etl-job<br/>TTL: 30 days
+
+    Note over SP,App: Service Principal makes API request
+    SP->>App: API Request + JWT
+    App->>App: Validate JWT signature
+    App->>KC: Verify token (optional)
+    KC-->>App: Token valid
+
+    Note over App,FGA: Permission Check with Inheritance
+    App->>FGA: Check(service:batch-etl-job, execute, tool:chat)
+    FGA->>FGA: Find acts_as relationship<br/>service:batch-etl-job → user:alice
+    FGA->>FGA: Check inherited permissions<br/>user:alice → tool:chat
+    FGA-->>App: Allowed (via inheritance)
+
+    App-->>SP: Response with data
+
+    Note over SP,User: Audit Trail
+    App->>App: Log action<br/>Principal: service:batch-etl-job<br/>Effective User: alice
+
+    classDef serviceStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+
+    class SP serviceStyle
+    class KC authStyle
+    class App appStyle
+    class FGA fgaStyle
+    class User userStyle
+```
+
 ### Authentication Modes
 
 #### Mode 1: Client Credentials Flow (Preferred)

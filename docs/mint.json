@@ -178,6 +178,7 @@
       "group": "Kubernetes",
       "pages": [
         "deployment/kubernetes/gke",
+        "deployment/kubernetes/gke-staging",
         "deployment/kubernetes/eks",
         "deployment/kubernetes/aks",
         "deployment/kubernetes/kustomize",
@@ -189,6 +190,7 @@
       "pages": [
         "deployment/kong-gateway",
         "deployment/keycloak-jwt-deployment",
+        "deployment/vertex-ai-workload-identity",
         "deployment/monitoring",
         "deployment/log-aggregation",
         "deployment/scaling",
@@ -199,8 +201,10 @@
       "group": "Security",
       "pages": [
         "security/overview",
+        "security/quickstart-security",
         "security/best-practices",
         "security/audit-checklist",
+        "security/gke-staging-checklist",
         "security/compliance"
       ]
     },
@@ -231,6 +235,7 @@
         "deployment/VERSION_PINNING",
         "deployment/VERSION_COMPATIBILITY",
         "deployment/RELEASE_PROCESS",
+        "deployment/gke-staging-implementation-summary",
         "deployment/model-configuration",
         "deployment/infisical-installation",
         "deployment/gdpr-storage-configuration"

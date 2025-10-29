@@ -31,6 +31,116 @@ External System (SCIM Client) → MCP Server SCIM Endpoints
   → Sync to OpenFGA (via existing sync_user_to_openfga)
 ```
 
+### SCIM 2.0 Provisioning Flow
+
+```mermaid
+sequenceDiagram
+    participant IDP as Identity Provider<br/>(Azure AD/Okta/Google)
+    participant SCIM as SCIM 2.0 API<br/>(MCP Server)
+    participant Auth as Authentication<br/>(Service Principal)
+    participant KC as Keycloak<br/>Admin API
+    participant FGA as OpenFGA<br/>Authorization
+    participant Events as Event System<br/>(Webhooks)
+
+    Note over IDP,SCIM: User Provisioning (Create)
+    IDP->>SCIM: POST /scim/v2/Users<br/>Authorization: Bearer <SP JWT><br/>Body: {userName, name, emails}
+    SCIM->>Auth: Validate JWT<br/>(Service Principal token)
+    Auth-->>SCIM: Valid
+
+    SCIM->>KC: POST /admin/realms/{realm}/users<br/>Create user in Keycloak
+    KC->>KC: Generate User ID<br/>Store user attributes
+    KC-->>SCIM: User created<br/>ID: keycloak-uuid-123
+
+    Note over SCIM,FGA: Automatic OpenFGA Sync
+    SCIM->>FGA: Create OpenFGA tuples<br/>user:alice → organization:acme<br/>user:alice → role:user
+    FGA-->>SCIM: Tuples created
+
+    SCIM->>Events: Emit user.created event<br/>{userId, userName, source: scim}
+    Events-->>SCIM: Event published
+
+    SCIM-->>IDP: 201 Created<br/>{id, userName, active: true}
+
+    Note over IDP,SCIM: User Update (Attribute Change)
+    IDP->>SCIM: PATCH /scim/v2/Users/{id}<br/>Body: {Operations: [{op: replace, path: department}]}
+    SCIM->>KC: PUT /admin/users/{id}<br/>Update attributes
+    KC-->>SCIM: Updated
+    SCIM->>Events: Emit user.updated
+    SCIM-->>IDP: 200 OK
+
+    Note over IDP,SCIM: Group Membership (Add to Group)
+    IDP->>SCIM: PATCH /scim/v2/Groups/{group-id}<br/>Body: {Operations: [{op: add, members: [alice]}]}
+    SCIM->>KC: POST /admin/users/{id}/groups/{group-id}<br/>Add user to group
+    KC-->>SCIM: Group added
+
+    Note over SCIM,FGA: Sync Group Permissions to OpenFGA
+    SCIM->>FGA: Update group membership<br/>user:alice → member → group:engineering
+    SCIM->>FGA: Grant role permissions<br/>group:engineering → viewer → resource:*
+    FGA-->>SCIM: Permissions synced
+
+    SCIM->>Events: Emit group.member_added
+    SCIM-->>IDP: 200 OK
+
+    Note over IDP,SCIM: User Deactivation (Soft Delete)
+    IDP->>SCIM: PATCH /scim/v2/Users/{id}<br/>Body: {Operations: [{op: replace, active: false}]}
+    SCIM->>KC: PUT /admin/users/{id}<br/>{enabled: false}
+    KC-->>SCIM: User deactivated
+
+    SCIM->>FGA: Remove all user permissions<br/>(optional based on config)
+    FGA-->>SCIM: Removed
+
+    SCIM->>Events: Emit user.deactivated
+    SCIM-->>IDP: 200 OK
+
+    Note over IDP: User no longer has access
+
+    classDef idpStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef scimStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    classDef kcStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    classDef eventStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+
+    class IDP idpStyle
+    class SCIM scimStyle
+    class Auth authStyle
+    class KC kcStyle
+    class FGA fgaStyle
+    class Events eventStyle
+```
+
+**Bulk Provisioning (Initial Sync)**:
+```mermaid
+sequenceDiagram
+    participant IDP as Identity Provider
+    participant SCIM as SCIM 2.0 API
+    participant KC as Keycloak
+    participant FGA as OpenFGA
+
+    Note over IDP,SCIM: Bulk User Creation
+    IDP->>SCIM: POST /scim/v2/Bulk<br/>Operations: [<br/>  {method: POST, path: /Users, data: user1},<br/>  {method: POST, path: /Users, data: user2},<br/>  ...<br/>]
+
+    loop For each operation
+        SCIM->>KC: Create user in Keycloak
+        KC-->>SCIM: User created
+        SCIM->>FGA: Sync permissions
+        FGA-->>SCIM: Synced
+    end
+
+    SCIM-->>IDP: 200 OK<br/>Operations: [<br/>  {status: 201, response: user1},<br/>  {status: 201, response: user2},<br/>  {status: 409, response: user3 exists}<br/>]
+
+    Note over SCIM: Idempotent - safe to retry
+
+    classDef idpStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef scimStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef kcStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
+
+    class IDP idpStyle
+    class SCIM scimStyle
+    class KC kcStyle
+    class FGA fgaStyle
+```
+
 ### Core Principles
 
 1. **SCIM 2.0 Compliance**: Implement RFC 7643/7644 endpoints

@@ -31,4 +31,5 @@ replicas:
 
 images:
   - name: mcp-server-langgraph
-    newTag: 2.7.0-dev
+    newName: ghcr.io/vishnu2kmohan/mcp-server-langgraph
+    newTag: 2.8.0-dev

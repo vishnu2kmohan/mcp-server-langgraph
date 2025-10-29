@@ -150,6 +150,7 @@ create_gke_cluster() {
     fi
 
     # Create Autopilot cluster with security best practices
+    # Note: GKE Autopilot has simplified API - many flags are auto-managed
     gcloud container clusters create-auto "$CLUSTER_NAME" \
         --region="$REGION" \
         --network="$VPC_NAME" \
@@ -157,22 +158,11 @@ create_gke_cluster() {
         --cluster-secondary-range-name=pods \
         --services-secondary-range-name=services \
         --enable-private-nodes \
-        --enable-private-endpoint=false \
         --master-ipv4-cidr=172.16.0.0/28 \
-        --workload-pool="$PROJECT_ID.svc.id.goog" \
-        --enable-shielded-nodes \
-        --shielded-secure-boot \
-        --shielded-integrity-monitoring \
         --binauthz-evaluation-mode=PROJECT_SINGLETON_POLICY_ENFORCE \
         --release-channel=regular \
-        --enable-cloud-logging \
-        --enable-cloud-monitoring \
-        --enable-autorepair \
-        --enable-autoupgrade \
-        --disk-type=pd-balanced \
-        --maintenance-window-start=2025-01-01T04:00:00Z \
-        --maintenance-window-duration=4h \
-        --maintenance-window-recurrence="FREQ=WEEKLY;BYDAY=SU"
+        --logging=SYSTEM,WORKLOAD \
+        --monitoring=SYSTEM
 
     log_info "GKE cluster created successfully"
     log_info "Getting cluster credentials..."

@@ -12,6 +12,186 @@ Implement comprehensive disaster recovery (DR) to protect against data loss, ser
 **RTO vs RPO**: Recovery Time Objective (RTO) is how quickly you can restore service. Recovery Point Objective (RPO) is how much data you can afford to lose. Balance both based on business requirements.
 </Info>
 
+## Disaster Recovery Flow
+
+```mermaid
+graph TB
+    subgraph "Production Environment (Primary)"
+        App[MCP Server<br/>GKE Cluster]
+        PG[(PostgreSQL<br/>Keycloak + OpenFGA)]
+        Redis[(Redis<br/>Sessions + Cache)]
+        K8s[Kubernetes<br/>Manifests]
+    end
+
+    subgraph "Backup Process (Automated)"
+        Cron[Cron Jobs<br/>Scheduled Backups]
+        PGBackup[PostgreSQL Backup<br/>pg_dump / pg_basebackup]
+        RedisBackup[Redis Backup<br/>RDB snapshots]
+        K8sBackup[Kubernetes Backup<br/>Velero]
+        SecretBackup[Secret Manager<br/>Backup]
+    end
+
+    subgraph "Cloud Storage (Multi-Region)"
+        GCS[Google Cloud Storage<br/>Versioned Buckets]
+        S3[AWS S3<br/>Cross-Region Replication]
+        Vault[Secret Vault<br/>Encrypted Backups]
+    end
+
+    subgraph "Disaster Scenarios"
+        Regional[Regional Failure<br/>GCP us-central1 down]
+        Data[Data Corruption<br/>Accidental deletion]
+        Security[Security Breach<br/>Ransomware attack]
+    end
+
+    subgraph "Recovery Environment (Secondary)"
+        AppDR[MCP Server<br/>Standby Cluster]
+        PGDR[(PostgreSQL<br/>Restored from backup)]
+        RedisDR[(Redis<br/>Rebuilt from snapshot)]
+        K8sDR[Kubernetes<br/>Restored manifests]
+    end
+
+    %% Backup flows
+    App --> Cron
+    PG --> PGBackup
+    Redis --> RedisBackup
+    K8s --> K8sBackup
+
+    Cron --> PGBackup
+    Cron --> RedisBackup
+    Cron --> K8sBackup
+    Cron --> SecretBackup
+
+    PGBackup --> GCS
+    RedisBackup --> GCS
+    K8sBackup --> GCS
+    SecretBackup --> Vault
+
+    GCS --> S3
+    Vault --> S3
+
+    %% Disaster triggers
+    Regional -.->|Triggers| Restore[Restore Process]
+    Data -.->|Triggers| Restore
+    Security -.->|Triggers| Restore
+
+    %% Recovery flows
+    Restore --> GCS
+    GCS --> PGDR
+    GCS --> RedisDR
+    GCS --> K8sDR
+    Vault --> SecretBackup2[Restore Secrets]
+    SecretBackup2 --> AppDR
+
+    PGDR --> AppDR
+    RedisDR --> AppDR
+    K8sDR --> AppDR
+
+    AppDR --> Verify[Verification<br/>Health checks + Smoke tests]
+    Verify --> Switch[DNS Failover<br/>Traffic to DR cluster]
+
+    style Regional fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+    style Data fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+    style Security fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+    style App fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    style PG fill:#80b1d3,stroke:#3498db,stroke-width:2px
+    style Redis fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    style K8s fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    style GCS fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+    style S3 fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+    style Vault fill:#bc80bd,stroke:#8e44ad,stroke-width:2px
+    style AppDR fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style PGDR fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style RedisDR fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style Verify fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+    style Switch fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+```
+
+**Backup and Restore Timeline**:
+```mermaid
+sequenceDiagram
+    participant Prod as Production<br/>Environment
+    participant Cron as Backup Cron
+    participant Storage as Cloud Storage<br/>(GCS/S3)
+    participant Monitor as Monitoring<br/>Alerting
+    participant Ops as Ops Team
+    participant DR as DR Environment
+
+    Note over Prod,Cron: Daily Automated Backups
+    loop Every 24 hours
+        Cron->>Prod: Trigger backup<br/>PostgreSQL full dump
+        Prod->>Prod: Create snapshot<br/>pg_basebackup
+        Prod->>Storage: Upload backup<br/>keycloak_20250129.dump
+        Storage->>Storage: Replicate to S3<br/>Cross-region
+        Cron->>Monitor: Report success<br/>Backup completed
+    end
+
+    loop Every 1 hour
+        Cron->>Prod: Incremental backup<br/>WAL archives
+        Prod->>Storage: Upload WAL files
+    end
+
+    Note over Prod,Monitor: Disaster Occurs
+    Prod->>Prod: Regional failure<br/>GCP us-central1 unavailable
+    Monitor->>Monitor: Detect failure<br/>Health checks fail
+    Monitor->>Ops: Alert: Production DOWN<br/>PagerDuty escalation
+
+    Note over Ops,DR: Disaster Recovery Initiated
+    Ops->>DR: Provision DR cluster<br/>GKE in us-east1
+    DR->>DR: Create infrastructure<br/>Terraform apply
+
+    Ops->>Storage: Fetch latest backups<br/>keycloak_20250129_2300.dump
+    Storage->>DR: Download to DR cluster
+
+    Note over DR: Restore Database
+    DR->>DR: Create PostgreSQL<br/>Fresh instance
+    DR->>DR: Restore from backup<br/>pg_restore keycloak.dump
+    DR->>DR: Apply WAL files<br/>Point-in-time recovery
+
+    Note over DR: Restore Redis
+    DR->>Storage: Download Redis RDB
+    Storage->>DR: redis_snapshot.rdb
+    DR->>DR: redis-server --appendonly yes<br/>Load RDB + AOF
+
+    Note over DR: Restore Kubernetes
+    DR->>Storage: Download K8s backups<br/>Velero restore
+    Storage->>DR: Manifests + PVCs
+    DR->>DR: kubectl apply<br/>Restore all resources
+
+    Note over DR: Restore Secrets
+    DR->>Storage: Download encrypted secrets
+    Storage->>DR: Vault backup
+    DR->>DR: Decrypt and apply<br/>to Secret Manager
+
+    Note over DR: Verification
+    DR->>DR: Run health checks<br/>/health, /ready
+    DR->>DR: Run smoke tests<br/>Authentication, LLM calls
+    DR->>DR: Verify data integrity<br/>User count, permissions
+
+    DR->>Ops: DR Ready<br/>All checks passed ✓
+
+    Note over Ops: Failover Decision
+    Ops->>Ops: Update DNS<br/>api.example.com → DR IP
+    Ops->>Ops: Update load balancer<br/>Point to DR cluster
+
+    Note over DR: DR Now Active
+    DR->>Monitor: Send health metrics<br/>Normal operation
+    Monitor->>Ops: Alert: DR ACTIVE<br/>RTO: 45 minutes ✓
+
+    classDef prodStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef cronStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef storageStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+    classDef monitorStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    classDef opsStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef drStyle fill:#d4edda,stroke:#28a745,stroke-width:2px
+
+    class Prod prodStyle
+    class Cron cronStyle
+    class Storage storageStyle
+    class Monitor monitorStyle
+    class Ops opsStyle
+    class DR drStyle
+```
+
 ## Backup Strategy
 
 ### What to Backup

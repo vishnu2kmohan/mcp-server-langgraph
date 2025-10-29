@@ -6,6 +6,99 @@ The GDPR compliance endpoints (`/api/v1/users/me/*`) require persistent storage 
 
 **CRITICAL**: In-memory storage is **NOT production-ready** and will cause data loss on server restart, violating GDPR compliance requirements.
 
+## GDPR Data Subject Rights Flow
+
+```mermaid
+sequenceDiagram
+    participant User as Data Subject<br/>(End User)
+    participant API as GDPR API<br/>/api/v1/users/me/*
+    participant Auth as Authentication<br/>(JWT Validation)
+    participant Storage as Storage Backend<br/>(PostgreSQL/Redis)
+    participant DB as Conversation DB<br/>(PostgreSQL)
+    participant FGA as OpenFGA<br/>Authorization
+    participant Logs as Log System<br/>(Cloud Logging)
+    participant Audit as Audit Trail
+
+    Note over User,API: Article 15: Right to Access (GET /users/me)
+    User->>API: GET /api/v1/users/me<br/>Authorization: Bearer JWT
+    API->>Auth: Validate JWT
+    Auth-->>API: Valid (user_id: alice)
+    API->>Storage: SELECT * FROM user_profiles<br/>WHERE user_id = 'alice'
+    Storage-->>API: User profile data
+    API-->>User: 200 OK<br/>{user_id, name, email, preferences}
+
+    Note over User,API: Article 20: Right to Data Portability (GET /users/me/data)
+    User->>API: GET /api/v1/users/me/data<br/>Format: JSON
+    API->>Auth: Validate JWT
+    Auth-->>API: Valid (user_id: alice)
+    API->>Storage: Get user profile
+    Storage-->>API: Profile data
+    API->>DB: SELECT conversations, messages<br/>WHERE user_id = 'alice'
+    DB-->>API: Conversation history
+    API->>FGA: List permissions<br/>user:alice
+    FGA-->>API: Permission data
+    API->>API: Compile portable data<br/>JSON format
+    API-->>User: 200 OK<br/>{profile, conversations, permissions}
+    API->>Audit: Log data export<br/>user:alice, timestamp, IP
+
+    Note over User,API: Article 16: Right to Rectification (PATCH /users/me)
+    User->>API: PATCH /api/v1/users/me<br/>{name: "Alice Updated", email: "new@example.com"}
+    API->>Auth: Validate JWT
+    Auth-->>API: Valid
+    API->>Storage: UPDATE user_profiles<br/>SET name, email, updated_at<br/>WHERE user_id = 'alice'
+    Storage-->>API: Updated
+    API->>Audit: Log profile update<br/>Changed fields: name, email
+    API-->>User: 200 OK<br/>{updated_profile}
+
+    Note over User,API: Article 17: Right to Erasure (DELETE /users/me)
+    User->>API: DELETE /api/v1/users/me<br/>Confirm: true
+    API->>Auth: Validate JWT
+    Auth-->>API: Valid
+
+    Note over API,DB: Multi-step deletion process
+    API->>DB: DELETE FROM conversations<br/>WHERE user_id = 'alice'
+    DB-->>API: Deleted
+    API->>DB: DELETE FROM messages<br/>WHERE user_id = 'alice'
+    DB-->>API: Deleted
+    API->>FGA: Delete all tuples<br/>WHERE user = 'user:alice'
+    FGA-->>API: Removed
+    API->>Storage: DELETE FROM user_profiles<br/>WHERE user_id = 'alice'
+    Storage-->>API: Deleted
+    API->>Storage: DELETE FROM consent_records<br/>WHERE user_id = 'alice'
+    Storage-->>API: Deleted
+    API->>Logs: Anonymize logs<br/>Replace user_id with <deleted>
+    Logs-->>API: Anonymized
+    API->>Audit: Log deletion request<br/>user:alice (final record)
+    API-->>User: 204 No Content<br/>All data deleted
+
+    Note over User,API: Article 21: Right to Object (POST /users/me/consent)
+    User->>API: POST /api/v1/users/me/consent<br/>{analytics: false, marketing: false}
+    API->>Auth: Validate JWT
+    Auth-->>API: Valid
+    API->>Storage: INSERT/UPDATE consent_records<br/>user_id, consent_type, granted, timestamp
+    Storage-->>API: Recorded
+    API->>Audit: Log consent change<br/>analytics: true→false, marketing: true→false
+    API-->>User: 200 OK<br/>{consent_status}
+
+    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef apiStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    classDef storageStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef dbStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px
+    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
+    classDef logStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+    classDef auditStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px
+
+    class User userStyle
+    class API apiStyle
+    class Auth authStyle
+    class Storage storageStyle
+    class DB dbStyle
+    class FGA fgaStyle
+    class Logs logStyle
+    class Audit auditStyle
+```
+
 ## Environment Variables
 
 ### Required Configuration

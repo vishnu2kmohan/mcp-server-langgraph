@@ -27,6 +27,97 @@ Client (API Key) → Kong (custom plugin) → Keycloak (validate & exchange)
   → JWT → Replace header → MCP Server (validates JWT normally)
 ```
 
+### API Key to JWT Exchange Flow
+
+```mermaid
+sequenceDiagram
+    participant Client as Client<br/>(API Key Holder)
+    participant Kong as Kong Gateway<br/>(Custom Plugin)
+    participant Cache as Redis Cache<br/>(Exchange Cache)
+    participant KC as Keycloak<br/>Identity Provider
+    participant App as MCP Server
+    participant FGA as OpenFGA
+
+    Note over Client,Kong: Client sends API Key
+    Client->>Kong: GET /api/tools<br/>Authorization: ApiKey sk_live_abc123
+
+    Note over Kong,Cache: Check cache first (5-min TTL)
+    Kong->>Cache: Get cached JWT for key hash
+    Cache-->>Kong: Cache miss
+
+    Note over Kong,KC: Validate API Key and Exchange for JWT
+    Kong->>Kong: Hash API key with bcrypt
+    Kong->>KC: POST /validate-api-key<br/>key_hash: $2b$12$hash
+    KC->>KC: Query user attributes<br/>Find matching apiKeys array
+    KC->>KC: Validate expiration<br/>Check key active status
+    KC-->>Kong: User found: alice<br/>User ID: user:alice
+
+    Kong->>KC: POST /token<br/>grant_type=client_credentials<br/>for user:alice
+    KC-->>Kong: JWT Token<br/>sub: user:alice<br/>TTL: 15 min
+
+    Note over Kong,Cache: Cache the exchange result
+    Kong->>Cache: SET key_hash → JWT<br/>TTL: 300 seconds
+    Cache-->>Kong: Cached
+
+    Note over Kong,App: Replace API Key with JWT
+    Kong->>Kong: Replace header<br/>Authorization: Bearer <JWT>
+    Kong->>App: GET /api/tools<br/>Authorization: Bearer <JWT>
+
+    Note over App,FGA: Standard JWT validation and authz
+    App->>App: Validate JWT signature<br/>Check expiration
+    App->>FGA: Check(user:alice, execute, tool:chat)
+    FGA-->>App: Allowed
+    App-->>Kong: Response
+
+    Kong-->>Client: Response<br/>(API Key transparent)
+
+    Note over Client: Client only sees standard HTTP response
+
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef gatewayStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef cacheStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
+
+    class Client clientStyle
+    class Kong gatewayStyle
+    class Cache cacheStyle
+    class KC authStyle
+    class App appStyle
+    class FGA fgaStyle
+```
+
+**Subsequent Requests (Cached)**:
+```mermaid
+sequenceDiagram
+    participant Client as Client
+    participant Kong as Kong Gateway
+    participant Cache as Redis Cache
+    participant App as MCP Server
+
+    Note over Client,Cache: Fast path with cache hit
+    Client->>Kong: Request + API Key
+    Kong->>Cache: Get cached JWT
+    Cache-->>Kong: JWT (cache hit)
+    Kong->>Kong: Replace header with JWT
+    Kong->>App: Request + JWT
+    App-->>Kong: Response
+    Kong-->>Client: Response
+
+    Note over Kong,Cache: ~5ms latency (vs 20-50ms without cache)
+
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef gatewayStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
+    classDef cacheStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
+
+    class Client clientStyle
+    class Kong gatewayStyle
+    class Cache cacheStyle
+    class App appStyle
+```
+
 ### Core Principles
 
 1. **Exchange, Not Replace**: API keys exchanged for JWTs, not standalone auth

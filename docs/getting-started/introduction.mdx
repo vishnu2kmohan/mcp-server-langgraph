@@ -84,41 +84,16 @@ MCP Server with LangGraph is a **production-ready** MCP server implementation th
 
 ## Architecture
 
-```mermaid
-graph TB
-    Client[MCP Client] -->|MCP Protocol| Server[MCP Server]
-    Server --> Auth[JWT Auth]
-    Auth --> AuthZ[OpenFGA AuthZ]
-    AuthZ --> Agent[LangGraph Agent]
-    Agent --> LLM[LLM Provider]
-    Agent --> Tools[Agent Tools]
-    Server --> Otel[OpenTelemetry]
-    Otel --> Jaeger[Jaeger Tracing]
-    Otel --> Prom[Prometheus]
-    Prom --> Grafana[Grafana]
-    Server --> Secrets[Infisical]
+<Note>
+For detailed system architecture diagrams including authentication flows, deployment options, and component interactions, see [System Architecture](/diagrams/system-architecture).
+</Note>
 
-    %% ColorBrewer2 Set3 palette styling - unique colors per node type
-    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef serverStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef authStyle fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef llmStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-    classDef telemetryStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
-    classDef backendStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
-    classDef dashboardStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
-    classDef secretsStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
-
-    class Client clientStyle
-    class Server serverStyle
-    class Auth,AuthZ authStyle
-    class Agent,Tools agentStyle
-    class LLM llmStyle
-    class Otel telemetryStyle
-    class Jaeger,Prom backendStyle
-    class Grafana dashboardStyle
-    class Secrets secretsStyle
-```
+The MCP Server follows a layered architecture:
+- **Client Layer**: MCP protocol communication
+- **Security Layer**: JWT authentication and OpenFGA authorization
+- **Agent Layer**: LangGraph-powered agentic workflows
+- **Provider Layer**: Multi-LLM support with automatic fallback
+- **Observability Layer**: Dual monitoring with OpenTelemetry and LangSmith
 
 ## Use Cases
 
