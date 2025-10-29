@@ -62,7 +62,7 @@ jobs:
         cache-key-prefix: 'coverage-trend'
 
     - name: Download previous coverage data
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact@v6.0.0
       with:
         name: coverage-history
         path: .coverage-history
