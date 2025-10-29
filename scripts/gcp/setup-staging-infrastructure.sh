@@ -67,6 +67,12 @@ check_prerequisites() {
         exit 1
     fi
 
+    # Check gke-gcloud-auth-plugin
+    if ! command -v gke-gcloud-auth-plugin &> /dev/null; then
+        log_warn "gke-gcloud-auth-plugin not found. Installing..."
+        gcloud components install gke-gcloud-auth-plugin --quiet
+    fi
+
     # Set project
     log_info "Setting GCP project to: $PROJECT_ID"
     gcloud config set project "$PROJECT_ID"
@@ -74,6 +80,15 @@ check_prerequisites() {
     # Get project number (needed for Workload Identity)
     PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
     log_info "Project number: $PROJECT_NUMBER"
+
+    # Enable default Compute Engine service account if disabled
+    log_info "Checking Compute Engine service account..."
+    COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+    if ! gcloud iam service-accounts describe "$COMPUTE_SA" --format="value(disabled)" | grep -q "^$"; then
+        log_warn "Compute Engine service account is disabled. Enabling..."
+        gcloud iam service-accounts enable "$COMPUTE_SA"
+        log_info "Compute Engine service account enabled"
+    fi
 }
 
 enable_apis() {
@@ -83,13 +98,15 @@ enable_apis() {
         container.googleapis.com \
         compute.googleapis.com \
         sql-component.googleapis.com \
+        sqladmin.googleapis.com \
         redis.googleapis.com \
         secretmanager.googleapis.com \
         cloudkms.googleapis.com \
         servicenetworking.googleapis.com \
         binaryauthorization.googleapis.com \
         iamcredentials.googleapis.com \
-        sts.googleapis.com
+        sts.googleapis.com \
+        artifactregistry.googleapis.com
 
     log_info "APIs enabled successfully"
 }
@@ -281,6 +298,7 @@ create_cloud_sql() {
     fi
 
     # Create instance (smaller tier for staging)
+    # Note: shared_buffers is in 8KB pages, 32768 = 256MB
     gcloud sql instances create "$INSTANCE_NAME" \
         --database-version=POSTGRES_15 \
         --tier=db-custom-1-4096 \
@@ -292,7 +310,7 @@ create_cloud_sql() {
         --backup-location=us \
         --maintenance-window-day=SUN \
         --maintenance-window-hour=4 \
-        --database-flags=max_connections=100,shared_buffers=256MB \
+        --database-flags=max_connections=100,shared_buffers=32768 \
         --deletion-protection
 
     # Create databases
