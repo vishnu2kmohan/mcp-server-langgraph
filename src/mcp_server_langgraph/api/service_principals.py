@@ -7,7 +7,7 @@ secret rotation, and deletion.
 See ADR-0033 for service principal design decisions.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
@@ -88,9 +88,9 @@ class RotateSecretResponse(BaseModel):
 @router.post("/", response_model=CreateServicePrincipalResponse, status_code=status.HTTP_201_CREATED)
 async def create_service_principal(
     request: CreateServicePrincipalRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-):
+) -> CreateServicePrincipalResponse:
     """
     Create a new service principal
 
@@ -156,9 +156,9 @@ async def create_service_principal(
 
 @router.get("/", response_model=List[ServicePrincipalResponse])
 async def list_service_principals(
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-):
+) -> List[ServicePrincipalResponse]:
     """
     List service principals owned by the current user
 
@@ -186,9 +186,9 @@ async def list_service_principals(
 @router.get("/{service_id}", response_model=ServicePrincipalResponse)
 async def get_service_principal(
     service_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-):
+) -> ServicePrincipalResponse:
     """
     Get details of a specific service principal
 
@@ -225,9 +225,9 @@ async def get_service_principal(
 @router.post("/{service_id}/rotate-secret", response_model=RotateSecretResponse)
 async def rotate_service_principal_secret(
     service_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-):
+) -> RotateSecretResponse:
     """
     Rotate service principal secret
 
@@ -265,9 +265,9 @@ async def rotate_service_principal_secret(
 @router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_service_principal(
     service_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-):
+) -> None:
     """
     Delete a service principal
 
@@ -301,9 +301,9 @@ async def associate_service_principal_with_user(
     service_id: str,
     user_id: str,
     inherit_permissions: bool = True,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
-):
+) -> ServicePrincipalResponse:
     """
     Associate service principal with a user for permission inheritance
 
@@ -336,6 +336,12 @@ async def associate_service_principal_with_user(
 
     # Return updated service principal
     updated_sp = await sp_manager.get_service_principal(service_id)
+
+    if not updated_sp:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve updated service principal",
+        )
 
     return ServicePrincipalResponse(
         service_id=updated_sp.service_id,

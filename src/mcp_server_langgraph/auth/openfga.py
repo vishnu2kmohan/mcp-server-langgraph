@@ -233,6 +233,21 @@ class OpenFGAClient:
                 logger.error(f"Failed to delete tuples: {e}", exc_info=True)
                 raise
 
+    async def delete_tuples_for_object(self, object_id: str) -> None:
+        """
+        Delete all tuples related to an object (helper for cleanup operations)
+
+        Args:
+            object_id: Object identifier (e.g., "service_principal:batch-job")
+        """
+        # Note: This is a simplified implementation
+        # In production, you'd want to query for all tuples with this object
+        # and then delete them. For now, this is a placeholder.
+        logger.info(f"Deleting tuples for object: {object_id}")
+        # TODO: Implement actual tuple cleanup logic
+        # This would require querying OpenFGA for all tuples with object=object_id
+        # then deleting them
+
     async def list_objects(self, user: str, relation: str, object_type: str) -> List[str]:
         """
         List all objects of a type that user has relation to

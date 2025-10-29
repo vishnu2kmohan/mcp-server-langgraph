@@ -541,6 +541,109 @@ class KeycloakClient:
             logger.warning(f"Failed to get groups for user {user_id}")
             return []
 
+    # Admin API Methods (stubs for new functionality)
+    # These methods interact with Keycloak Admin API for user/client management
+
+    async def create_client(self, client_config: Dict[str, Any]) -> str:
+        """Create Keycloak client (stub for service principals)"""
+        # TODO: Implement Keycloak Admin API client creation
+        raise NotImplementedError("create_client needs implementation")
+
+    async def create_user(self, user_config: Dict[str, Any]) -> str:
+        """Create Keycloak user (stub for SCIM/service principals)"""
+        # TODO: Implement Keycloak Admin API user creation
+        raise NotImplementedError("create_user needs implementation")
+
+    async def update_user(self, user_id: str, user_config: Dict[str, Any]) -> None:
+        """Update Keycloak user (stub for SCIM)"""
+        # TODO: Implement Keycloak Admin API user update
+        raise NotImplementedError("update_user needs implementation")
+
+    async def set_user_password(self, user_id: str, password: str, temporary: bool = False) -> None:
+        """Set user password (stub for SCIM)"""
+        # TODO: Implement Keycloak Admin API password update
+        raise NotImplementedError("set_user_password needs implementation")
+
+    async def get_user(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get user by ID (stub for SCIM)"""
+        # TODO: Implement Keycloak Admin API user retrieval
+        raise NotImplementedError("get_user needs implementation")
+
+    async def get_user_attributes(self, user_id: str) -> Dict[str, Any]:
+        """Get user attributes (stub for API keys)"""
+        # TODO: Implement Keycloak Admin API attribute retrieval
+        raise NotImplementedError("get_user_attributes needs implementation")
+
+    async def update_user_attributes(self, user_id: str, attributes: Dict[str, Any]) -> None:
+        """Update user attributes (stub for API keys)"""
+        # TODO: Implement Keycloak Admin API attribute update
+        raise NotImplementedError("update_user_attributes needs implementation")
+
+    async def update_client_attributes(self, client_id: str, attributes: Dict[str, Any]) -> None:
+        """Update client attributes (stub for service principals)"""
+        # TODO: Implement Keycloak Admin API client attribute update
+        raise NotImplementedError("update_client_attributes needs implementation")
+
+    async def update_client_secret(self, client_id: str, secret: str) -> None:
+        """Update client secret (stub for service principals)"""
+        # TODO: Implement Keycloak Admin API client secret update
+        raise NotImplementedError("update_client_secret needs implementation")
+
+    async def get_clients(self, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Get clients (stub for service principals)"""
+        # TODO: Implement Keycloak Admin API client listing
+        raise NotImplementedError("get_clients needs implementation")
+
+    async def get_client(self, client_id: str) -> Optional[Dict[str, Any]]:
+        """Get client by ID (stub for service principals)"""
+        # TODO: Implement Keycloak Admin API client retrieval
+        raise NotImplementedError("get_client needs implementation")
+
+    async def delete_client(self, client_id: str) -> None:
+        """Delete client (stub for service principals)"""
+        # TODO: Implement Keycloak Admin API client deletion
+        raise NotImplementedError("delete_client needs implementation")
+
+    async def delete_user(self, user_id: str) -> None:
+        """Delete user (stub for service principals/SCIM)"""
+        # TODO: Implement Keycloak Admin API user deletion
+        raise NotImplementedError("delete_user needs implementation")
+
+    async def search_users(self, query: Optional[Dict[str, Any]] = None, first: int = 0, max: int = 100) -> List[Dict[str, Any]]:
+        """Search users (stub for API keys/SCIM)"""
+        # TODO: Implement Keycloak Admin API user search
+        raise NotImplementedError("search_users needs implementation")
+
+    async def get_users(self, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Get users with optional query (stub for service principals)"""
+        # TODO: Implement Keycloak Admin API user listing
+        raise NotImplementedError("get_users needs implementation")
+
+    async def create_group(self, group_config: Dict[str, Any]) -> str:
+        """Create group (stub for SCIM)"""
+        # TODO: Implement Keycloak Admin API group creation
+        raise NotImplementedError("create_group needs implementation")
+
+    async def get_group(self, group_id: str) -> Optional[Dict[str, Any]]:
+        """Get group by ID (stub for SCIM)"""
+        # TODO: Implement Keycloak Admin API group retrieval
+        raise NotImplementedError("get_group needs implementation")
+
+    async def get_group_members(self, group_id: str) -> List[Dict[str, Any]]:
+        """Get group members (stub for SCIM)"""
+        # TODO: Implement Keycloak Admin API group member listing
+        raise NotImplementedError("get_group_members needs implementation")
+
+    async def add_user_to_group(self, user_id: str, group_id: str) -> None:
+        """Add user to group (stub for SCIM)"""
+        # TODO: Implement Keycloak Admin API group membership
+        raise NotImplementedError("add_user_to_group needs implementation")
+
+    async def issue_token_for_user(self, user_id: str) -> Dict[str, Any]:
+        """Issue JWT token for user (stub for API key exchange)"""
+        # TODO: Implement token issuance (possibly via impersonation or token exchange)
+        raise NotImplementedError("issue_token_for_user needs implementation")
+
 
 async def sync_user_to_openfga(
     keycloak_user: KeycloakUser, openfga_client: Any, role_mapper: Optional[Any] = None, use_legacy_mapping: bool = False

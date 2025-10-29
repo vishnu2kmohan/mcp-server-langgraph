@@ -108,12 +108,12 @@ class SCIMUser(BaseModel):
     # Enterprise extension
     enterpriseUser: Optional[SCIMEnterpriseUser] = Field(
         None,
-        alias=SCIM_ENTERPRISE_USER_SCHEMA
+        alias="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
     )
 
     @field_validator("schemas")
     @classmethod
-    def validate_schemas(cls, v):
+    def validate_schemas(cls, v: List[str]) -> List[str]:
         """Validate that required schemas are present"""
         if SCIM_USER_SCHEMA not in v:
             raise ValueError(f"Missing required schema: {SCIM_USER_SCHEMA}")
@@ -121,7 +121,7 @@ class SCIMUser(BaseModel):
 
     @field_validator("emails")
     @classmethod
-    def validate_primary_email(cls, v):
+    def validate_primary_email(cls, v: List[SCIMEmail]) -> List[SCIMEmail]:
         """Ensure at most one primary email"""
         primary_count = sum(1 for email in v if email.primary)
         if primary_count > 1:
@@ -147,7 +147,7 @@ class SCIMGroup(BaseModel):
 
     @field_validator("schemas")
     @classmethod
-    def validate_schemas(cls, v):
+    def validate_schemas(cls, v: List[str]) -> List[str]:
         """Validate that required schemas are present"""
         if SCIM_GROUP_SCHEMA not in v:
             raise ValueError(f"Missing required schema: {SCIM_GROUP_SCHEMA}")
@@ -239,11 +239,12 @@ def user_to_keycloak(scim_user: SCIMUser) -> Dict[str, Any]:
     Returns:
         Keycloak user representation
     """
-    keycloak_user = {
+    attributes: Dict[str, str] = {}
+    keycloak_user: Dict[str, Any] = {
         "username": scim_user.userName,
         "enabled": scim_user.active,
         "emailVerified": False,
-        "attributes": {},
+        "attributes": attributes,
     }
 
     # Name
@@ -262,27 +263,27 @@ def user_to_keycloak(scim_user: SCIMUser) -> Dict[str, Any]:
 
     # Optional attributes
     if scim_user.displayName:
-        keycloak_user["attributes"]["displayName"] = scim_user.displayName
+        attributes["displayName"] = scim_user.displayName
     if scim_user.title:
-        keycloak_user["attributes"]["title"] = scim_user.title
+        attributes["title"] = scim_user.title
     if scim_user.userType:
-        keycloak_user["attributes"]["userType"] = scim_user.userType
+        attributes["userType"] = scim_user.userType
 
     # Enterprise extension
     if scim_user.enterpriseUser:
         ent = scim_user.enterpriseUser
         if ent.department:
-            keycloak_user["attributes"]["department"] = ent.department
+            attributes["department"] = ent.department
         if ent.organization:
-            keycloak_user["attributes"]["organization"] = ent.organization
+            attributes["organization"] = ent.organization
         if ent.employeeNumber:
-            keycloak_user["attributes"]["employeeNumber"] = ent.employeeNumber
+            attributes["employeeNumber"] = ent.employeeNumber
         if ent.costCenter:
-            keycloak_user["attributes"]["costCenter"] = ent.costCenter
+            attributes["costCenter"] = ent.costCenter
 
     # External ID
     if scim_user.externalId:
-        keycloak_user["attributes"]["externalId"] = scim_user.externalId
+        attributes["externalId"] = scim_user.externalId
 
     return keycloak_user
 

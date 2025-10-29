@@ -194,7 +194,7 @@ class APIKeyManager:
 
         return None  # Invalid key
 
-    async def revoke_api_key(self, user_id: str, key_id: str):
+    async def revoke_api_key(self, user_id: str, key_id: str) -> None:
         """
         Revoke specific API key
 

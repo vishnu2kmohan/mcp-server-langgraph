@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 
 @dataclass
@@ -38,7 +39,7 @@ class ServicePrincipal:
 class ServicePrincipalManager:
     """Manage service principal lifecycle"""
 
-    def __init__(self, keycloak_client: KeycloakClient, openfga_client):
+    def __init__(self, keycloak_client: KeycloakClient, openfga_client: OpenFGAClient):
         """
         Initialize service principal manager
 
@@ -201,7 +202,7 @@ class ServicePrincipalManager:
         associated_user_id: Optional[str],
         owner_user_id: Optional[str],
         inherit_permissions: bool,
-    ):
+    ) -> None:
         """Sync service principal relationships to OpenFGA"""
         tuples = []
 
@@ -403,7 +404,7 @@ class ServicePrincipalManager:
 
         return None
 
-    async def delete_service_principal(self, service_id: str):
+    async def delete_service_principal(self, service_id: str) -> None:
         """
         Delete service principal from Keycloak and OpenFGA
 

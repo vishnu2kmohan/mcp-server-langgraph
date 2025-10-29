@@ -7,7 +7,7 @@ Also provides validation endpoint for Kong API key→JWT exchange.
 See ADR-0034 for API key to JWT exchange pattern.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from pydantic import BaseModel, Field
 
@@ -82,9 +82,9 @@ class ValidateAPIKeyResponse(BaseModel):
 @router.post("/", response_model=CreateAPIKeyResponse, status_code=status.HTTP_201_CREATED)
 async def create_api_key(
     request: CreateAPIKeyRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
-):
+) -> CreateAPIKeyResponse:
     """
     Create a new API key for the current user
 
@@ -125,9 +125,9 @@ async def create_api_key(
 
 @router.get("/", response_model=List[APIKeyResponse])
 async def list_api_keys(
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
-):
+) -> List[APIKeyResponse]:
     """
     List all API keys for the current user
 
@@ -151,9 +151,9 @@ async def list_api_keys(
 @router.post("/{key_id}/rotate", response_model=RotateAPIKeyResponse)
 async def rotate_api_key(
     key_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
-):
+) -> RotateAPIKeyResponse:
     """
     Rotate an API key
 
@@ -183,9 +183,9 @@ async def rotate_api_key(
 @router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def revoke_api_key(
     key_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
-):
+) -> None:
     """
     Revoke an API key
 
@@ -205,10 +205,10 @@ async def revoke_api_key(
 
 @router.post("/validate", response_model=ValidateAPIKeyResponse, include_in_schema=False)
 async def validate_api_key(
-    api_key: str = Header(None, alias="X-API-Key"),
+    api_key: Optional[str] = Header(None, alias="X-API-Key"),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-):
+) -> ValidateAPIKeyResponse:
     """
     Validate API key and return JWT (internal endpoint for Kong plugin)
 
