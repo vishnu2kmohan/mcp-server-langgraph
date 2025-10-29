@@ -304,4 +304,4 @@ See `examples/service_principals/` for complete examples:
 - ADR: [ADR-0033: Service Principal Design](/adr/0033-service-principal-design.md)
 - API Reference: [Service Principals API](/api/service-principals)
 - Keycloak Docs: [Service Accounts](https://www.keycloak.org/docs/latest/server_admin/#_service_accounts)
-- OpenFGA: [Permission Inheritance](/docs/guides/permission-inheritance.md)
+- OpenFGA: [ADR-0039: Permission Inheritance](/adr/0039-openfga-permission-inheritance.md)

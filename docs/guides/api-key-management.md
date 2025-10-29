@@ -356,4 +356,4 @@ async def handle_webhook(
 - ADR: [ADR-0034: API Key to JWT Exchange](/adr/0034-api-key-jwt-exchange.md)
 - API Reference: [API Keys API](/api/api-keys)
 - Kong Plugin: [kong-apikey-jwt-exchange](/deployments/kong/custom-plugins/)
-- Security: [Best Practices](/docs/security/api-key-best-practices.md)
+- Security: See "Security Best Practices" section above
