@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761762143034,
+  "lastUpdate": 1761762734574,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -13768,6 +13768,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021842438734117885",
             "extra": "mean: 47.93884788250753 usec\nrounds: 5384"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ed6dd25b43bf823c4e2bc2d9aacae9a8db725f0f",
+          "message": "feat(infra): fix GKE staging setup script and add teardown script\n\nInfrastructure setup improvements:\n- Fix GKE Autopilot cluster creation (removed deprecated flags)\n- Add automatic gke-gcloud-auth-plugin installation check\n- Add automatic Compute Engine service account enablement\n- Add sqladmin.googleapis.com and artifactregistry.googleapis.com to API list\n- Fix Cloud SQL shared_buffers configuration (use numeric pages not MB)\n\nNew teardown script features:\n- Comprehensive resource cleanup (cluster, VPC, service accounts, etc.)\n- Safe deletion with confirmation prompt\n- Preserves secrets for manual review\n- Skip confirmation option with --skip-confirmation flag\n\nResources successfully created:\n- GKE Autopilot cluster: mcp-staging-cluster (us-central1)\n- VPC: staging-vpc with staging-gke-subnet\n- Service Account: mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com\n- Workload Identity Pool: github-actions-pool\n- Workload Identity Provider: github-provider\n- IAM bindings for secretManager, cloudSQL, logging, monitoring\n\nFiles modified:\n- scripts/gcp/setup-staging-infrastructure.sh\n\nFiles created:\n- scripts/gcp/teardown-staging-infrastructure.sh\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-29T14:31:24-04:00",
+          "tree_id": "41b5ddf709881b62e9b1f8945900fb04ba47fda1",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ed6dd25b43bf823c4e2bc2d9aacae9a8db725f0f"
+        },
+        "date": 1761762733781,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52276.912888224295,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002381840352650221",
+            "extra": "mean: 19.128903080756636 usec\nrounds: 6005"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 55076.62708828252,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020489453064526487",
+            "extra": "mean: 18.156522155888315 usec\nrounds: 12728"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51692.50083903464,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022658461879236237",
+            "extra": "mean: 19.34516581261761 usec\nrounds: 20101"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.98617531796893,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020680632284312217",
+            "extra": "mean: 5.235981077348247 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.4474142293603,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001344536356089157",
+            "extra": "mean: 51.42071784999942 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.948981533157243,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003722437619609246",
+            "extra": "mean: 100.51280089999892 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2519604.409434971,
+            "unit": "iter/sec",
+            "range": "stddev: 5.1203908764609114e-8",
+            "extra": "mean: 396.88770040859436 nsec\nrounds: 196890"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5064.871940697708,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001562235016852902",
+            "extra": "mean: 197.43835810826948 usec\nrounds: 444"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2882.872114901457,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015225578064428889",
+            "extra": "mean: 346.8762956327608 usec\nrounds: 2679"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2798.8524732757937,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005049688305764873",
+            "extra": "mean: 357.2892853582933 usec\nrounds: 1605"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57487.21839721899,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028584704622251736",
+            "extra": "mean: 17.395171098561555 usec\nrounds: 12297"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17042.221701633847,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023539039972045645",
+            "extra": "mean: 58.6777955073856 usec\nrounds: 3873"
           }
         ]
       }
