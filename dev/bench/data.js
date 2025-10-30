@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761832545134,
+  "lastUpdate": 1761832753342,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -14740,6 +14740,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000023779699887386684",
             "extra": "mean: 48.142666822912055 usec\nrounds: 4268"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "58741ca13c8755d9e21c4fd67e201730d23d9db9",
+          "message": "fix(docs): resolve Mintlify syntax errors and broken links\n\nFixes:\n1. YAML syntax error in security/quickstart-security.mdx\n   - Fixed unescaped quotes in frontmatter description\n   - Replaced problematic shell command text with clean description\n\n2. Broken internal links (6 files):\n   - Updated ADR references: /adr/0001-*.md → /architecture/adr-0001-*\n   - Removed /docs/ prefix from internal links\n   - Removed .md/.mdx extensions from internal links\n\nFiles updated:\n- docs/security/quickstart-security.mdx\n- docs/deployment/keycloak-jwt-deployment.mdx\n- docs/guides/api-key-management.mdx\n- docs/guides/identity-federation-quickstart.mdx\n- docs/guides/scim-provisioning.mdx\n- docs/guides/service-principals.mdx\n- docs/releases/v2-3-0.mdx\n\nAll 137 .mdx files now pass validation.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-30T09:58:20-04:00",
+          "tree_id": "06d0e5164a1b9ae7b8093b02c93716baa0d91bba",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/58741ca13c8755d9e21c4fd67e201730d23d9db9"
+        },
+        "date": 1761832752729,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51427.738747981835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022969503871778654",
+            "extra": "mean: 19.44475927476478 usec\nrounds: 5957"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53453.44305502866,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002357204607813035",
+            "extra": "mean: 18.707868807824614 usec\nrounds: 12112"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49380.887224468985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002396740412618352",
+            "extra": "mean: 20.250749960289994 usec\nrounds: 18897"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.50194870435692,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028045298506174216",
+            "extra": "mean: 5.249290134831724 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.359823208418014,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009001775807661673",
+            "extra": "mean: 51.653364249999 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.937066421880898,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000031241031558427185",
+            "extra": "mean: 100.6333215000005 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2571855.131506954,
+            "unit": "iter/sec",
+            "range": "stddev: 4.668172106302593e-8",
+            "extra": "mean: 388.8243889592878 nsec\nrounds: 193088"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5073.378331167543,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012638607075595985",
+            "extra": "mean: 197.1073187774405 usec\nrounds: 458"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2891.392428120648,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021012037519918638",
+            "extra": "mean: 345.854125602031 usec\nrounds: 2699"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2809.5974907309114,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004286809830470664",
+            "extra": "mean: 355.9228691295037 usec\nrounds: 1597"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60111.22104419,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001976466292599213",
+            "extra": "mean: 16.63582909528427 usec\nrounds: 12545"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17276.174194338055,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022271616908313673",
+            "extra": "mean: 57.88318575345989 usec\nrounds: 5475"
           }
         ]
       }
