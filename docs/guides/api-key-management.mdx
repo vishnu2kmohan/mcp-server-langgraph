@@ -9,7 +9,7 @@ icon: "book-open"
 
 API keys provide simple, long-lived authentication for CLI tools, webhooks, and legacy integrations. All API keys are exchanged for JWTs and stored securely in Keycloak.
 
-See [ADR-0034](/adr/0034-api-key-jwt-exchange.md) for architectural details.
+See [ADR-0034](/architecture/adr-0034-api-key-jwt-exchange) for architectural details.
 
 ## Overview
 
@@ -360,7 +360,7 @@ async def handle_webhook(
 
 ## References
 
-- ADR: [ADR-0034: API Key to JWT Exchange](/adr/0034-api-key-jwt-exchange.md)
+- ADR: [ADR-0034: API Key to JWT Exchange](/architecture/adr-0034-api-key-jwt-exchange)
 - API Reference: [API Keys API](/api/api-keys)
 - Kong Plugin: [kong-apikey-jwt-exchange](/deployments/kong/custom-plugins/)
 - Security: See "Security Best Practices" section above
