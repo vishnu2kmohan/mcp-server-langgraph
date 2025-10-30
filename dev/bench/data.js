@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761832054234,
+  "lastUpdate": 1761832269562,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -14416,6 +14416,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002898909810860039",
             "extra": "mean: 60.25137309762268 usec\nrounds: 4074"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a8976c4e1227dc988c846144f4ab3e75434c03dc",
+          "message": "docs: standardize ADR numbering in Mintlify frontmatter\n\nAdd ADR numbers to frontmatter titles for consistent navigation display:\n- Updated ADRs 25-30: Removed redundant \"ADR-00XX:\" prefix\n- Updated ADRs 31-39: Added missing number prefix\n\nAll 39 ADRs now follow consistent format: \"##. Title\"\nThis ensures numbers appear in Mintlify left navigation sidebar.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-30T09:50:14-04:00",
+          "tree_id": "696ee0d04d17951dfe6f8d3a2393017609dc95b4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a8976c4e1227dc988c846144f4ab3e75434c03dc"
+        },
+        "date": 1761832268982,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51062.09024887199,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002275354150622394",
+            "extra": "mean: 19.58400048110234 usec\nrounds: 6236"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53295.82064110254,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002306239689738576",
+            "extra": "mean: 18.76319733838163 usec\nrounds: 12699"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49890.60218646053,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025132132240712465",
+            "extra": "mean: 20.043855078409603 usec\nrounds: 19514"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.19786916009548,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013690660080404855",
+            "extra": "mean: 5.230183811110736 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.39676962009061,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014158957839730568",
+            "extra": "mean: 51.554976399999575 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941223490353401,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007290666518693641",
+            "extra": "mean: 100.59124019999786 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2453786.6062231716,
+            "unit": "iter/sec",
+            "range": "stddev: 4.972002816814689e-8",
+            "extra": "mean: 407.53340060779936 nsec\nrounds: 183824"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5172.907392050566,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012604895560579931",
+            "extra": "mean: 193.3148854620409 usec\nrounds: 454"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2957.3084829122968,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013456626700444736",
+            "extra": "mean: 338.14531212354973 usec\nrounds: 2656"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2828.152151142184,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004613181558470329",
+            "extra": "mean: 353.5877656356422 usec\nrounds: 1455"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 56988.18058759629,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034396325802605885",
+            "extra": "mean: 17.54749826523948 usec\nrounds: 12682"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16998.822673214792,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020532539005805815",
+            "extra": "mean: 58.82760348901748 usec\nrounds: 5503"
           }
         ]
       }
