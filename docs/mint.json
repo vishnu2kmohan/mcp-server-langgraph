@@ -272,7 +272,7 @@
       ]
     },
     {
-      "group": "Enterprise Authentication (ADRs 31-39) - NEW",
+      "group": "Enterprise Authentication (ADRs 31-39)",
       "pages": [
         "architecture/adr-0031-keycloak-authoritative-identity",
         "architecture/adr-0032-jwt-standardization",
