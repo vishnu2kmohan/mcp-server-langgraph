@@ -105,4 +105,4 @@ else:
 ## References
 
 - Implementation: `src/mcp_server_langgraph/core/feature_flags.py:1-281`
-- Related ADRs: [ADR-0005](0005-pydantic-ai-integration.md)
+- Related ADRs: [ADR-0005](adr-0005-pydantic-ai-integration.md)

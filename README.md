@@ -32,7 +32,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 # Answer a few questions and get a fully configured project!
 ```
 
-**See [Cookiecutter Template Strategy](adr/0011-cookiecutter-template-strategy.md) for detailed information.**
+**See [Cookiecutter Template Strategy](adr/adr-0011-cookiecutter-template-strategy.md) for detailed information.**
 
 ---
 
@@ -54,7 +54,7 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 - LLM provider preferences
 - Tool implementations
 
-**See**: [Cookiecutter Template Strategy (ADR-0011)](adr/0011-cookiecutter-template-strategy.md)
+**See**: [Cookiecutter Template Strategy (ADR-0011)](adr/adr-0011-cookiecutter-template-strategy.md)
 
 ### Using This Project Directly
 
@@ -100,7 +100,7 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
   - Iterative refinement (up to 3 attempts)
   - Observable with full tracing
 
-**See**: [Anthropic Best Practices Assessment](reports/ANTHROPIC_BEST_PRACTICES_ASSESSMENT_20251017.md) | [ADR-0023](adr/0023-anthropic-tool-design-best-practices.md) | [ADR-0024](adr/0024-agentic-loop-implementation.md) | [ADR-0025](adr/0025-anthropic-best-practices-enhancements.md) | [Examples](examples/README.md)
+**See**: [Anthropic Best Practices Assessment](reports/ANTHROPIC_BEST_PRACTICES_ASSESSMENT_20251017.md) | [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md) | [ADR-0024](adr/adr-0024-agentic-loop-implementation.md) | [ADR-0025](adr/adr-0025-anthropic-best-practices-enhancements.md) | [Examples](examples/README.md)
 
 ### 🎯 Core Capabilities
 - **Multi-LLM Support (LiteLLM)**: 100+ LLM providers - Anthropic, OpenAI, Google, Azure, AWS Bedrock, Ollama
@@ -184,7 +184,7 @@ The project supports optional feature sets that can be installed on demand:
 - **Service Mesh**: Compatible with Istio, Linkerd, and other service meshes
 
 ### 📚 Documentation & Architecture
-- **Architecture Decision Records (ADRs)**: 25 documented design decisions ([adr/](adr/))
+- **Architecture Decision Records (ADRs)**: 39 documented design decisions ([adr/](adr/))
 - **Comprehensive Documentation**: [Complete documentation index](docs/README.md) with guides, tutorials, and references
 - **API Documentation**: Interactive OpenAPI/Swagger UI
 
@@ -206,15 +206,15 @@ The project supports optional feature sets that can be installed on demand:
 - **[Keycloak Integration](integrations/keycloak.md)** - Enterprise SSO setup and configuration
 
 ### 📝 Architecture Decision Records (ADRs)
-- [0001: Multi-Provider LLM Support (LiteLLM)](adr/0001-llm-multi-provider.md)
-- [0002: Fine-Grained Authorization (OpenFGA)](adr/0002-openfga-authorization.md)
-- [0003: Dual Observability Strategy](adr/0003-dual-observability.md)
-- [0004: MCP Transport Selection (StreamableHTTP)](adr/0004-mcp-streamable-http.md)
-- [0005: Type-Safe Responses (Pydantic AI)](adr/0005-pydantic-ai-integration.md)
-- [0023: Anthropic Tool Design Best Practices](adr/0023-anthropic-tool-design-best-practices.md)
-- [0024: Agentic Loop Implementation](adr/0024-agentic-loop-implementation.md)
-- [0025: Anthropic Best Practices - Advanced Enhancements](adr/0025-anthropic-best-practices-enhancements.md)
-- [See all 25 ADRs](adr/README.md)
+- [0001: Multi-Provider LLM Support (LiteLLM)](adr/adr-0001-llm-multi-provider.md)
+- [0002: Fine-Grained Authorization (OpenFGA)](adr/adr-0002-openfga-authorization.md)
+- [0003: Dual Observability Strategy](adr/adr-0003-dual-observability.md)
+- [0004: MCP Transport Selection (StreamableHTTP)](adr/adr-0004-mcp-streamable-http.md)
+- [0005: Type-Safe Responses (Pydantic AI)](adr/adr-0005-pydantic-ai-integration.md)
+- [0023: Anthropic Tool Design Best Practices](adr/adr-0023-anthropic-tool-design-best-practices.md)
+- [0024: Agentic Loop Implementation](adr/adr-0024-agentic-loop-implementation.md)
+- [0025: Anthropic Best Practices - Advanced Enhancements](adr/adr-0025-anthropic-best-practices-enhancements.md)
+- [See all 39 ADRs](adr/README.md)
 
 ### 💡 Examples & Tutorials
 - **[Examples Directory](examples/README.md)** - Comprehensive examples demonstrating all features
@@ -403,7 +403,7 @@ Our agent implements Anthropic's full **gather-action-verify-repeat** cycle with
 - **Iterative Refinement**: Up to 3 self-correction attempts for quality
 - **Observable**: Full tracing of each loop component
 
-See [ADR-0024: Agentic Loop Implementation](adr/0024-agentic-loop-implementation.md) and [ADR-0025: Advanced Enhancements](adr/0025-anthropic-best-practices-enhancements.md) for details.
+See [ADR-0024: Agentic Loop Implementation](adr/adr-0024-agentic-loop-implementation.md) and [ADR-0025: Advanced Enhancements](adr/adr-0025-anthropic-best-practices-enhancements.md) for details.
 
 ## Quick Start
 
@@ -560,18 +560,18 @@ Comprehensive identity and access management with Keycloak as authoritative prov
    - Federated identity (LDAP, SAML, OIDC)
    - Automatic JWT issuance
 
-2. **Service Principals** ([ADR-0033](/adr/0033-service-principal-design.md))
+2. **Service Principals** ([ADR-0033](/adr/adr-0033-service-principal-design.md))
    - Machine-to-machine authentication
    - 30-day refresh tokens for long-running tasks
    - Permission inheritance from users
    - Both client credentials and service account modes
 
-3. **API Keys** ([ADR-0034](/adr/0034-api-key-jwt-exchange.md))
+3. **API Keys** ([ADR-0034](/adr/adr-0034-api-key-jwt-exchange.md))
    - Long-lived keys exchanged for JWTs
    - Stored in Keycloak (bcrypt hashed)
    - Rotation and expiration support
 
-#### 🌐 Identity Federation ([ADR-0037](/adr/0037-identity-federation.md))
+#### 🌐 Identity Federation ([ADR-0037](/adr/adr-0037-identity-federation.md))
 
 Integrate existing identity providers:
 - **LDAP/Active Directory**: Direct user federation
@@ -580,7 +580,7 @@ Integrate existing identity providers:
 
 All federated users receive consistent Keycloak JWTs.
 
-#### 📋 SCIM 2.0 Provisioning ([ADR-0038](/adr/0038-scim-implementation.md))
+#### 📋 SCIM 2.0 Provisioning ([ADR-0038](/adr/adr-0038-scim-implementation.md))
 
 Automated user provisioning from external systems:
 - User create/update/delete operations
@@ -588,7 +588,7 @@ Automated user provisioning from external systems:
 - Enterprise user attributes
 - Automatic OpenFGA role sync
 
-#### 🔑 JWT Standardization ([ADR-0032](/adr/0032-jwt-standardization.md))
+#### 🔑 JWT Standardization ([ADR-0032](/adr/adr-0032-jwt-standardization.md))
 
 All authentication methods produce Keycloak-issued RS256 JWTs:
 - Stateless validation at Kong gateway

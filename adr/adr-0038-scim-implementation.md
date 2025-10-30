@@ -196,5 +196,5 @@ def validate_scim_user(data: dict) -> bool:
 - SCIM API: `src/mcp_server_langgraph/api/scim.py` (to be created)
 - Schema: `src/mcp_server_langgraph/scim/schema.py` (to be created)
 - Provisioning: `src/mcp_server_langgraph/scim/provisioning.py` (to be created)
-- Related ADRs: [ADR-0031](0031-keycloak-authoritative-identity.md)
+- Related ADRs: [ADR-0031](adr-0031-keycloak-authoritative-identity.md)
 - External: [RFC 7643 (SCIM Core Schema)](https://datatracker.ietf.org/doc/html/rfc7643), [RFC 7644 (SCIM Protocol)](https://datatracker.ietf.org/doc/html/rfc7644)

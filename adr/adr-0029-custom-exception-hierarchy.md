@@ -3,7 +3,7 @@
 **Status**: Accepted
 **Date**: 2025-10-20
 **Deciders**: Engineering Team
-**Related**: [ADR-0017: Error Handling Strategy](0017-error-handling-strategy.md), [ADR-0030: Resilience Patterns](0030-resilience-patterns.md)
+**Related**: [ADR-0017: Error Handling Strategy](adr-0017-error-handling-strategy.md), [ADR-0030: Resilience Patterns](adr-0030-resilience-patterns.md)
 
 ## Context
 
@@ -749,8 +749,8 @@ def check_permission(user_id: str, resource: str) -> bool:
 
 ## References
 
-- **ADR-0017: Error Handling Strategy**: ./0017-error-handling-strategy.md
-- **ADR-0030: Resilience Patterns**: ./0026-resilience-patterns.md
+- **ADR-0017: Error Handling Strategy**: ./adr-0017-error-handling-strategy.md
+- **ADR-0030: Resilience Patterns**: ./adr-0026-resilience-patterns.md
 - **Python Exception Best Practices**: https://docs.python.org/3/tutorial/errors.html
 - **HTTP Status Codes**: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 - **REST API Error Handling**: https://www.baeldung.com/rest-api-error-handling-best-practices

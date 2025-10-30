@@ -3,7 +3,7 @@
 **Status**: Accepted
 **Date**: 2025-10-20
 **Deciders**: Engineering Team
-**Related**: [ADR-0017: Error Handling Strategy](0017-error-handling-strategy.md), [ADR-0023: Anthropic Tool Design Best Practices](0023-anthropic-tool-design-best-practices.md)
+**Related**: [ADR-0017: Error Handling Strategy](adr-0017-error-handling-strategy.md), [ADR-0023: Anthropic Tool Design Best Practices](adr-0023-anthropic-tool-design-best-practices.md)
 
 ## Context
 
@@ -335,8 +335,8 @@ bulkhead_active_operations{service}
 - **tenacity Library**: https://github.com/jd/tenacity
 - **Google SRE Book - Handling Overload**: https://sre.google/sre-book/handling-overload/
 - **AWS Well-Architected - Reliability Pillar**: https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/
-- **ADR-0017: Error Handling Strategy**: ./0017-error-handling-strategy.md
-- **ADR-0023: Anthropic Tool Design Best Practices**: ./0023-anthropic-tool-design-best-practices.md
+- **ADR-0017: Error Handling Strategy**: ./adr-0017-error-handling-strategy.md
+- **ADR-0023: Anthropic Tool Design Best Practices**: ./adr-0023-anthropic-tool-design-best-practices.md
 
 ## Success Metrics
 

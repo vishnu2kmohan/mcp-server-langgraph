@@ -100,5 +100,5 @@ See `scripts/setup/setup_keycloak.py`, `scripts/setup/setup_ldap_federation.py`,
 
 - Keycloak Provider: `src/mcp_server_langgraph/auth/keycloak.py`
 - Deployment: `deployments/base/keycloak-deployment.yaml`
-- Related ADRs: [ADR-0007](0007-authentication-provider-pattern.md), [ADR-0032](0032-jwt-standardization.md), [ADR-0037](0037-identity-federation.md), [ADR-0038](0038-scim-implementation.md)
+- Related ADRs: [ADR-0007](adr-0007-authentication-provider-pattern.md), [ADR-0032](adr-0032-jwt-standardization.md), [ADR-0037](adr-0037-identity-federation.md), [ADR-0038](adr-0038-scim-implementation.md)
 - External: [Keycloak Docs](https://www.keycloak.org/documentation), [SAML 2.0](https://docs.oasis-open.org/security/saml/v2.0/), [OIDC Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)

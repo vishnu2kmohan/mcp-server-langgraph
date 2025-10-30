@@ -182,5 +182,5 @@ KEYCLOAK_OIDC_GOOGLE_DOMAIN=example.com  # Restrict to domain
 
 ## References
 
-- Related ADRs: [ADR-0031](0031-keycloak-authoritative-identity.md), [ADR-0032](0032-jwt-standardization.md)
+- Related ADRs: [ADR-0031](adr-0031-keycloak-authoritative-identity.md), [ADR-0032](adr-0032-jwt-standardization.md)
 - External: [SAML 2.0](https://docs.oasis-open.org/security/saml/v2.0/), [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html), [LDAP RFC 4511](https://datatracker.ietf.org/doc/html/rfc4511)

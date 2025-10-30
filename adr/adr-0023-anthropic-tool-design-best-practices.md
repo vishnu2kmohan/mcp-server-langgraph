@@ -356,9 +356,9 @@ conversations = await client.call_tool("conversation_search", {
 
 ## Related ADRs
 
-- [0004: MCP StreamableHTTP Transport](0004-mcp-streamable-http.md)
-- [0017: Error Handling Strategy](0017-error-handling-strategy.md)
-- [0003: Dual Observability Strategy](0003-dual-observability.md)
+- [0004: MCP StreamableHTTP Transport](adr-0004-mcp-streamable-http.md)
+- [0017: Error Handling Strategy](adr-0017-error-handling-strategy.md)
+- [0003: Dual Observability Strategy](adr-0003-dual-observability.md)
 
 ## References
 

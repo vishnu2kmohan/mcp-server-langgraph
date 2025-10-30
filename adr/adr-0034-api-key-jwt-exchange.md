@@ -117,5 +117,5 @@ class APIKeyManager:
 
 ## References
 
-- Related ADRs: [ADR-0031](0031-keycloak-authoritative-identity.md), [ADR-0032](0032-jwt-standardization.md), [ADR-0035](0035-kong-jwt-validation.md)
+- Related ADRs: [ADR-0031](adr-0031-keycloak-authoritative-identity.md), [ADR-0032](adr-0032-jwt-standardization.md), [ADR-0035](adr-0035-kong-jwt-validation.md)
 - External: [API Key Best Practices](https://cloud.google.com/endpoints/docs/openapi/when-why-api-key), [bcrypt](https://en.wikipedia.org/wiki/Bcrypt)

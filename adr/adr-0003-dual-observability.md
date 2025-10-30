@@ -245,4 +245,4 @@ with tracer.start_as_current_span("agent.chat") as span:
 - [LangSmith Tracing Guide](../docs/getting-started/langsmith-tracing.mdx)
 - [Observability Overview](../docs/guides/observability.mdx)
 - Related Files: `observability.py`, `langsmith_src/mcp_server_langgraph/core/config.py`
-- Related ADRs: [0001](0001-llm-multi-provider.md) (LLM abstraction)
+- Related ADRs: [0001](adr-0001-llm-multi-provider.md) (LLM abstraction)

@@ -66,4 +66,4 @@ graph.add_conditional_edges("route", should_use_tools)
 ## References
 
 - Implementation: `src/mcp_server_langgraph/core/agent.py:50-200`
-- Related ADRs: [ADR-0015](0015-memory-checkpointing.md), [ADR-0005](0005-pydantic-ai-integration.md)
+- Related ADRs: [ADR-0015](adr-0015-memory-checkpointing.md), [ADR-0005](adr-0005-pydantic-ai-integration.md)

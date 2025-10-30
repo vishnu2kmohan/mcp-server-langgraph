@@ -437,10 +437,10 @@ def test_verification_threshold_consistency(response, threshold)
 - **Anthropic**: [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)
 - **Implementation**: `src/mcp_server_langgraph/core/agent.py:1-505`
 - **Related ADRs**:
-  - [ADR-0005](0005-pydantic-ai-integration.md) - Type-safe responses
-  - [ADR-0010](0010-langgraph-functional-api.md) - Functional API choice
-  - [ADR-0022](0022-distributed-conversation-checkpointing.md) - Checkpointing
-  - [ADR-0023](0023-anthropic-tool-design-best-practices.md) - Tool design
+  - [ADR-0005](adr-0005-pydantic-ai-integration.md) - Type-safe responses
+  - [ADR-0010](adr-0010-langgraph-functional-api.md) - Functional API choice
+  - [ADR-0022](adr-0022-distributed-conversation-checkpointing.md) - Checkpointing
+  - [ADR-0023](adr-0023-anthropic-tool-design-best-practices.md) - Tool design
 
 ## Implementation Checklist
 

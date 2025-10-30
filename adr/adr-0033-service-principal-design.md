@@ -152,5 +152,5 @@ class ServicePrincipalManager:
 
 - Implementation: `src/mcp_server_langgraph/auth/service_principal.py` (to be created)
 - API: `src/mcp_server_langgraph/api/service_principals.py` (to be created)
-- Related ADRs: [ADR-0031](0031-keycloak-authoritative-identity.md), [ADR-0032](0032-jwt-standardization.md), [ADR-0036](0036-hybrid-session-model.md), [ADR-0039](0039-openfga-permission-inheritance.md)
+- Related ADRs: [ADR-0031](adr-0031-keycloak-authoritative-identity.md), [ADR-0032](adr-0032-jwt-standardization.md), [ADR-0036](adr-0036-hybrid-session-model.md), [ADR-0039](adr-0039-openfga-permission-inheritance.md)
 - External: [OAuth 2.0 Client Credentials](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4), [Keycloak Service Accounts](https://www.keycloak.org/docs/latest/server_admin/#_service_accounts)

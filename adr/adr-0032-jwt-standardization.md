@@ -123,5 +123,5 @@ async def verify_token(self, token: str) -> Dict[str, Any]:
 
 - JWT Verification: `src/mcp_server_langgraph/auth/keycloak.py:89-219`
 - Authentication: `src/mcp_server_langgraph/auth/keycloak.py:245-294`
-- Related ADRs: [ADR-0007](0007-authentication-provider-pattern.md), [ADR-0031](0031-keycloak-authoritative-identity.md), [ADR-0034](0034-api-key-jwt-exchange.md), [ADR-0035](0035-kong-jwt-validation.md), [ADR-0036](0036-hybrid-session-model.md)
+- Related ADRs: [ADR-0007](adr-0007-authentication-provider-pattern.md), [ADR-0031](adr-0031-keycloak-authoritative-identity.md), [ADR-0034](adr-0034-api-key-jwt-exchange.md), [ADR-0035](adr-0035-kong-jwt-validation.md), [ADR-0036](adr-0036-hybrid-session-model.md)
 - External: [RFC 7519 (JWT)](https://datatracker.ietf.org/doc/html/rfc7519), [RFC 7515 (JWS)](https://datatracker.ietf.org/doc/html/rfc7515), [OIDC Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)

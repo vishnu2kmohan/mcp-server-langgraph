@@ -65,36 +65,45 @@ What becomes easier or more difficult to do because of this change?
 
 | Number | Title | Status | Date |
 |--------|-------|--------|------|
-| [0001](0001-llm-multi-provider.md) | Multi-Provider LLM Support via LiteLLM | Accepted | 2025-10-11 |
-| [0002](0002-openfga-authorization.md) | Fine-Grained Authorization with OpenFGA | Accepted | 2025-10-11 |
-| [0003](0003-dual-observability.md) | Dual Observability: OpenTelemetry + LangSmith | Accepted | 2025-10-11 |
-| [0004](0004-mcp-streamable-http.md) | MCP StreamableHTTP Transport Protocol | Accepted | 2025-10-11 |
-| [0005](0005-pydantic-ai-integration.md) | Type-Safe Agent Responses with Pydantic AI | Accepted | 2025-10-11 |
-| [0006](0006-session-storage-architecture.md) | Pluggable Session Storage Architecture | Accepted | 2025-10-13 |
-| [0007](0007-authentication-provider-pattern.md) | Pluggable Authentication Provider Pattern | Accepted | 2025-10-13 |
-| [0008](0008-infisical-secrets-management.md) | Infisical for Secrets Management | Accepted | 2025-10-13 |
-| [0009](0009-feature-flag-system.md) | Feature Flag System for Gradual Rollouts | Accepted | 2025-10-13 |
-| [0010](0010-langgraph-functional-api.md) | LangGraph Functional API over Object-Oriented | Accepted | 2025-10-13 |
-| [0011](0011-cookiecutter-template-strategy.md) | Cookiecutter Template for Project Generation | Accepted | 2025-10-13 |
-| [0012](0012-compliance-framework-integration.md) | Built-In Compliance Framework (GDPR, SOC 2, HIPAA) | Accepted | 2025-10-13 |
-| [0013](0013-multi-deployment-target-strategy.md) | Multi-Deployment Target Strategy | Accepted | 2025-10-13 |
-| [0014](0014-pydantic-type-safety.md) | Pydantic Type Safety Strategy | Accepted | 2025-10-13 |
-| [0015](0015-memory-checkpointing.md) | Memory Checkpointing for Stateful Agents | Accepted | 2025-10-13 |
-| [0016](0016-property-based-testing-strategy.md) | Property-Based Testing with Hypothesis | Accepted | 2025-10-13 |
-| [0017](0017-error-handling-strategy.md) | Error Handling Strategy | Accepted | 2025-10-13 |
-| [0018](0018-semantic-versioning-strategy.md) | Semantic Versioning Strategy | Accepted | 2025-10-13 |
-| [0019](0019-async-first-architecture.md) | Async-First Architecture | Accepted | 2025-10-13 |
-| [0020](0020-dual-mcp-transport-protocol.md) | Dual MCP Transport Protocol (STDIO + StreamableHTTP) | Accepted | 2025-10-13 |
-| [0021](0021-cicd-pipeline-strategy.md) | CI/CD Pipeline Strategy | Accepted | 2025-10-13 |
-| [0022](0022-distributed-conversation-checkpointing.md) | Distributed Conversation Checkpointing with Redis | Accepted | 2025-10-15 |
-| [0023](0023-anthropic-tool-design-best-practices.md) | Anthropic Tool Design Best Practices | Accepted | 2025-10-17 |
-| [0024](0024-agentic-loop-implementation.md) | Agentic Loop Implementation (Gather-Action-Verify-Repeat) | Accepted | 2025-10-17 |
-| [0025](0025-anthropic-best-practices-enhancements.md) | Anthropic Best Practices - Advanced Enhancements | Accepted | 2025-10-17 |
-| [0026](0026-lazy-observability-initialization.md) | Lazy Observability Initialization | Accepted | 2025-10-17 |
-| [0027](0027-rate-limiting-strategy.md) | Rate Limiting Strategy for API Protection | Accepted | 2025-10-20 |
-| [0028](0028-caching-strategy.md) | Multi-Layer Caching Strategy | Accepted | 2025-10-20 |
-| [0029](0029-custom-exception-hierarchy.md) | Custom Exception Hierarchy | Accepted | 2025-10-20 |
-| [0030](0030-resilience-patterns.md) | Resilience Patterns for Production Systems | Accepted | 2025-10-20 |
+| [0001](adr-0001-llm-multi-provider.md) | Multi-Provider LLM Support via LiteLLM | Accepted | 2025-10-11 |
+| [0002](adr-0002-openfga-authorization.md) | Fine-Grained Authorization with OpenFGA | Accepted | 2025-10-11 |
+| [0003](adr-0003-dual-observability.md) | Dual Observability: OpenTelemetry + LangSmith | Accepted | 2025-10-11 |
+| [0004](adr-0004-mcp-streamable-http.md) | MCP StreamableHTTP Transport Protocol | Accepted | 2025-10-11 |
+| [0005](adr-0005-pydantic-ai-integration.md) | Type-Safe Agent Responses with Pydantic AI | Accepted | 2025-10-11 |
+| [0006](adr-0006-session-storage-architecture.md) | Pluggable Session Storage Architecture | Accepted | 2025-10-13 |
+| [0007](adr-0007-authentication-provider-pattern.md) | Pluggable Authentication Provider Pattern | Accepted | 2025-10-13 |
+| [0008](adr-0008-infisical-secrets-management.md) | Infisical for Secrets Management | Accepted | 2025-10-13 |
+| [0009](adr-0009-feature-flag-system.md) | Feature Flag System for Gradual Rollouts | Accepted | 2025-10-13 |
+| [0010](adr-0010-langgraph-functional-api.md) | LangGraph Functional API over Object-Oriented | Accepted | 2025-10-13 |
+| [0011](adr-0011-cookiecutter-template-strategy.md) | Cookiecutter Template for Project Generation | Accepted | 2025-10-13 |
+| [0012](adr-0012-compliance-framework-integration.md) | Built-In Compliance Framework (GDPR, SOC 2, HIPAA) | Accepted | 2025-10-13 |
+| [0013](adr-0013-multi-deployment-target-strategy.md) | Multi-Deployment Target Strategy | Accepted | 2025-10-13 |
+| [0014](adr-0014-pydantic-type-safety.md) | Pydantic Type Safety Strategy | Accepted | 2025-10-13 |
+| [0015](adr-0015-memory-checkpointing.md) | Memory Checkpointing for Stateful Agents | Accepted | 2025-10-13 |
+| [0016](adr-0016-property-based-testing-strategy.md) | Property-Based Testing with Hypothesis | Accepted | 2025-10-13 |
+| [0017](adr-0017-error-handling-strategy.md) | Error Handling Strategy | Accepted | 2025-10-13 |
+| [0018](adr-0018-semantic-versioning-strategy.md) | Semantic Versioning Strategy | Accepted | 2025-10-13 |
+| [0019](adr-0019-async-first-architecture.md) | Async-First Architecture | Accepted | 2025-10-13 |
+| [0020](adr-0020-dual-mcp-transport-protocol.md) | Dual MCP Transport Protocol (STDIO + StreamableHTTP) | Accepted | 2025-10-13 |
+| [0021](adr-0021-cicd-pipeline-strategy.md) | CI/CD Pipeline Strategy | Accepted | 2025-10-13 |
+| [0022](adr-0022-distributed-conversation-checkpointing.md) | Distributed Conversation Checkpointing with Redis | Accepted | 2025-10-15 |
+| [0023](adr-0023-anthropic-tool-design-best-practices.md) | Anthropic Tool Design Best Practices | Accepted | 2025-10-17 |
+| [0024](adr-0024-agentic-loop-implementation.md) | Agentic Loop Implementation (Gather-Action-Verify-Repeat) | Accepted | 2025-10-17 |
+| [0025](adr-0025-anthropic-best-practices-enhancements.md) | Anthropic Best Practices - Advanced Enhancements | Accepted | 2025-10-17 |
+| [0026](adr-0026-lazy-observability-initialization.md) | Lazy Observability Initialization | Accepted | 2025-10-17 |
+| [0027](adr-0027-rate-limiting-strategy.md) | Rate Limiting Strategy for API Protection | Accepted | 2025-10-20 |
+| [0028](adr-0028-caching-strategy.md) | Multi-Layer Caching Strategy | Accepted | 2025-10-20 |
+| [0029](adr-0029-custom-exception-hierarchy.md) | Custom Exception Hierarchy | Accepted | 2025-10-20 |
+| [0030](adr-0030-resilience-patterns.md) | Resilience Patterns for Production Systems | Accepted | 2025-10-20 |
+| [0031](adr-0031-keycloak-authoritative-identity.md) | Keycloak as Authoritative Identity Provider | Accepted | 2025-01-28 |
+| [0032](adr-0032-jwt-standardization.md) | JWT Standardization Across All Authentication Flows | Accepted | 2025-01-28 |
+| [0033](adr-0033-service-principal-design.md) | Service Principal Design and Authentication Modes | Accepted | 2025-01-28 |
+| [0034](adr-0034-api-key-jwt-exchange.md) | API Key to JWT Exchange Pattern | Accepted | 2025-01-28 |
+| [0035](adr-0035-kong-jwt-validation.md) | Kong JWT Validation Strategy | Accepted | 2025-01-28 |
+| [0036](adr-0036-hybrid-session-model.md) | Hybrid Session Model for Long-Running Tasks | Accepted | 2025-01-28 |
+| [0037](adr-0037-identity-federation.md) | Identity Federation Architecture | Accepted | 2025-01-28 |
+| [0038](adr-0038-scim-implementation.md) | SCIM 2.0 Implementation Approach | Accepted | 2025-01-28 |
+| [0039](adr-0039-openfga-permission-inheritance.md) | OpenFGA Permission Inheritance for Service Principals | Accepted | 2025-01-28 |
 
 ## When to Create an ADR
 

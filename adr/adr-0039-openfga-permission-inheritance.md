@@ -209,5 +209,5 @@ allowed = await check_permission(
 
 - OpenFGA Integration: `src/mcp_server_langgraph/auth/openfga.py`
 - Service Principal Manager: `src/mcp_server_langgraph/auth/service_principal.py` (to be created)
-- Related ADRs: [ADR-0002](0002-openfga-authorization.md), [ADR-0033](0033-service-principal-design.md)
+- Related ADRs: [ADR-0002](adr-0002-openfga-authorization.md), [ADR-0033](adr-0033-service-principal-design.md)
 - External: [OpenFGA Docs](https://openfga.dev/docs), [ReBAC](https://openfga.dev/docs/modeling/building-blocks/usersets#the-basics)

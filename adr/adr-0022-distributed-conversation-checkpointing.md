@@ -434,8 +434,8 @@ checkpoint_errors = Counter("checkpoint.errors")
 - **Implementation**: `src/mcp_server_langgraph/core/agent.py:74-125`
 - **Configuration**: `src/mcp_server_langgraph/core/config.py:90-93`
 - **Related ADRs**:
-  - [ADR-0006](0006-session-storage-architecture.md) - Pluggable session storage (similar pattern)
-  - [ADR-0015](0015-memory-checkpointing.md) - Original checkpointing decision (superseded)
-  - [ADR-0013](0013-multi-deployment-target-strategy.md) - Multi-cloud deployment patterns
+  - [ADR-0006](adr-0006-session-storage-architecture.md) - Pluggable session storage (similar pattern)
+  - [ADR-0015](adr-0015-memory-checkpointing.md) - Original checkpointing decision (superseded)
+  - [ADR-0013](adr-0013-multi-deployment-target-strategy.md) - Multi-cloud deployment patterns
 - **LangGraph Documentation**: https://langchain-ai.github.io/langgraph/how-tos/persistence/
 - **Redis Checkpointer**: `pip install langgraph-checkpoint-redis>=2.0.0`

@@ -155,5 +155,5 @@ async def get_current_user(request: Request):
 
 - Session Store: `src/mcp_server_langgraph/auth/session.py` (existing, to be enhanced)
 - Middleware: `src/mcp_server_langgraph/auth/middleware.py` (to be updated)
-- Related ADRs: [ADR-0006](0006-session-storage-architecture.md), [ADR-0032](0032-jwt-standardization.md), [ADR-0033](0033-service-principal-design.md)
+- Related ADRs: [ADR-0006](adr-0006-session-storage-architecture.md), [ADR-0032](adr-0032-jwt-standardization.md), [ADR-0033](adr-0033-service-principal-design.md)
 - External: [Redis TTL](https://redis.io/commands/expire), [OAuth2 Refresh](https://datatracker.ietf.org/doc/html/rfc6749#section-1.5)
