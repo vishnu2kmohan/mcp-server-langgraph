@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761932117846,
+  "lastUpdate": 1761933235307,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -16792,6 +16792,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002500449815153886",
             "extra": "mean: 59.420752423834735 usec\nrounds: 5053"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "806fea2393a6e2c5bd96d6e5c4dd5d3594f26223",
+          "message": "docs: convert remaining ASCII art diagrams to Mermaid\n\nConvert all remaining ASCII art diagrams to Mermaid format for better dark mode support, accessibility, and maintainability.\n\nChanges:\n- ci-cd.mdx: Convert Pipeline Workflow and Test Pyramid diagrams\n- agentic-loop-guide.md: Convert Agentic Loop Cycle diagram\n- COMPLIANCE.md: Convert Compliance Layer Architecture diagram\n- pydantic-ai-integration.md: Convert Pydantic AI Integration diagram\n\nBenefits:\n- Automatic dark mode compatibility\n- Better rendering across documentation platforms\n- Improved accessibility for screen readers\n- Consistent visual styling throughout documentation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T13:51:53-04:00",
+          "tree_id": "ecfed9959c242d6b128ee1f7621d58d683facff4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/806fea2393a6e2c5bd96d6e5c4dd5d3594f26223"
+        },
+        "date": 1761933233977,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52542.99437783255,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021543175333139005",
+            "extra": "mean: 19.03203294446979 usec\nrounds: 6344"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52532.42435907825,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000372149606025542",
+            "extra": "mean: 19.03586236882265 usec\nrounds: 9431"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49243.913153279165,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022964544714515025",
+            "extra": "mean: 20.307078295897156 usec\nrounds: 19107"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.56187610930724,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023492235911517566",
+            "extra": "mean: 5.275322340782115 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.28653303279296,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015057241292851782",
+            "extra": "mean: 51.84965065 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934269636723284,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003414562199910771",
+            "extra": "mean: 100.66165270000056 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2619356.1681213267,
+            "unit": "iter/sec",
+            "range": "stddev: 4.575250314541381e-8",
+            "extra": "mean: 381.77320525189486 nsec\nrounds: 197239"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5048.5190984170595,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015244184428077152",
+            "extra": "mean: 198.07788789261897 usec\nrounds: 446"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2939.299632747721,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011143456923979654",
+            "extra": "mean: 340.21710099190483 usec\nrounds: 2218"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2923.8840951335974,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002217099626073987",
+            "extra": "mean: 342.0108210391658 usec\nrounds: 1559"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60893.99317949188,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001953158187984301",
+            "extra": "mean: 16.421981016294787 usec\nrounds: 12221"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16590.08124067835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000029662798232451294",
+            "extra": "mean: 60.27698029278071 usec\nrounds: 5125"
           }
         ]
       }
