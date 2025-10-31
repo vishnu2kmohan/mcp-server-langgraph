@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761931955935,
+  "lastUpdate": 1761932117846,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -16684,6 +16684,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002596795521552493",
             "extra": "mean: 94.07732947661151 usec\nrounds: 5445"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "5db5fd4b14c0ca95ac51583b6386c2dae76f3c54",
+          "message": "refactor: rename SCREAMING_SNAKE_CASE to kebab-case in docs-internal and .github (Phase 2)\n\nRenamed 35 markdown files from SCREAMING_SNAKE_CASE to kebab-case for\nconsistency across documentation.\n\nFiles renamed in docs-internal/:\n- COMPLIANCE.md → compliance.md\n- DEPLOYMENT.md → deployment.md\n- DEVELOPER_ONBOARDING.md → developer-onboarding.md\n- DOCS_README.md → docs-readme.md\n- DOCUMENTATION_VERSIONING.md → documentation-versioning.md\n- And 30 more files in architecture/, audits/, migrations/, operations/,\n  releases/, sprints/, and testing/ subdirectories\n\nFiles renamed in .github/:\n- COMPLIANCE_IMPLEMENTATION_COMPLETE.md → compliance-implementation-complete.md\n- COMPLIANCE_PHASE1_SUMMARY.md → compliance-phase1-summary.md\n- WORKFLOW_CLEANUP_SUMMARY.md → workflow-cleanup-summary.md\n- WORKFLOW_IMPROVEMENTS.md → workflow-improvements.md\n\nCreated automation script:\n- scripts/rename_screaming_snake_case.py: Bulk rename with git mv\n\nBenefits:\n- Consistent naming convention across all documentation\n- Easier to find files (alphabetical sorting works better)\n- Follows modern documentation best practices\n- Git history preserved with git mv\n\nCombined with Phase 1: 41 total files renamed/moved\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T13:34:17-04:00",
+          "tree_id": "cf6cc2d2ba4c580080fd89874253a4b1e8e04433",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/5db5fd4b14c0ca95ac51583b6386c2dae76f3c54"
+        },
+        "date": 1761932117212,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52161.56047287612,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021114686241517575",
+            "extra": "mean: 19.171205595354024 usec\nrounds: 6041"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54136.88314893711,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002273066498474023",
+            "extra": "mean: 18.471695114934473 usec\nrounds: 10194"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49925.73682369158,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025186649861138577",
+            "extra": "mean: 20.02974945630574 usec\nrounds: 19777"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.1372354778424,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016359378600746362",
+            "extra": "mean: 5.231842960896675 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.359071402025695,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000099451061465188",
+            "extra": "mean: 51.6553702000067 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.940327201892313,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002119462944771888",
+            "extra": "mean: 100.60031020001361 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2645287.573847807,
+            "unit": "iter/sec",
+            "range": "stddev: 4.612007615140208e-8",
+            "extra": "mean: 378.0307327968167 nsec\nrounds: 197629"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4995.709159038356,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013265615856524644",
+            "extra": "mean: 200.17178105550366 usec\nrounds: 475"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2960.694963542317,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008802271514959407",
+            "extra": "mean: 337.75853720626196 usec\nrounds: 2513"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2901.5696629865374,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000859982878753047",
+            "extra": "mean: 344.64104472705185 usec\nrounds: 1565"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59502.94589922256,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001982328030162728",
+            "extra": "mean: 16.80589061411606 usec\nrounds: 12296"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16829.137283002194,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002500449815153886",
+            "extra": "mean: 59.420752423834735 usec\nrounds: 5053"
           }
         ]
       }
