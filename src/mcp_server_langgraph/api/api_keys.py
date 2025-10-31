@@ -7,18 +7,15 @@ Also provides validation endpoint for Kong API key→JWT exchange.
 See ADR-0034 for API key to JWT exchange pattern.
 """
 
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
-from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
-from mcp_server_langgraph.core.dependencies import (
-    get_keycloak_client,
-    get_api_key_manager,
-)
-
+from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
 router = APIRouter(
     prefix="/api/v1/api-keys",
@@ -33,9 +30,7 @@ class CreateAPIKeyRequest(BaseModel):
     """Request to create a new API key"""
 
     name: str = Field(..., description="Human-readable name for the API key")
-    expires_days: int = Field(
-        default=365, description="Days until expiration (default: 365)"
-    )
+    expires_days: int = Field(default=365, description="Days until expiration (default: 365)")
 
 
 class APIKeyResponse(BaseModel):
@@ -52,9 +47,7 @@ class CreateAPIKeyResponse(APIKeyResponse):
     """Response when creating API key (includes the key itself)"""
 
     api_key: str = Field(..., description="API key (save securely, won't be shown again)")
-    message: str = Field(
-        default="API key created successfully. Save it securely - it will not be shown again."
-    )
+    message: str = Field(default="API key created successfully. Save it securely - it will not be shown again.")
 
 
 class RotateAPIKeyResponse(BaseModel):
@@ -62,9 +55,7 @@ class RotateAPIKeyResponse(BaseModel):
 
     key_id: str
     new_api_key: str = Field(..., description="New API key")
-    message: str = Field(
-        default="API key rotated successfully. Update your client configuration."
-    )
+    message: str = Field(default="API key rotated successfully. Update your client configuration.")
 
 
 class ValidateAPIKeyResponse(BaseModel):

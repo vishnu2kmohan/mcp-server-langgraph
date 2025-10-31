@@ -38,6 +38,7 @@ Client (API Key) → Kong (custom plugin) → Keycloak (validate & exchange)
 
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#8dd3c7','primaryTextColor':'#333','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69'}}}%%
     participant Client as Client<br/>(API Key Holder)
     participant Kong as Kong Gateway<br/>(Custom Plugin)
     participant Cache as Redis Cache<br/>(Exchange Cache)
@@ -85,6 +86,7 @@ sequenceDiagram
 **Subsequent Requests (Cached)**:
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#8dd3c7','primaryTextColor':'#333','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69'}}}%%
     participant Client as Client
     participant Kong as Kong Gateway
     participant Cache as Redis Cache

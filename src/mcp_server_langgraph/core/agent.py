@@ -599,7 +599,9 @@ def create_agent_graph() -> Any:  # noqa: C901
 
         # Get the response to verify (last message)
         response_message = state["messages"][-1]
-        response_text = response_message.content if hasattr(response_message, "content") else str(response_message)
+        response_content = response_message.content if hasattr(response_message, "content") else str(response_message)
+        # Ensure response_text is a string (content can be str or list)
+        response_text = response_content if isinstance(response_content, str) else str(response_content)
 
         # Get user request
         user_request = state.get("user_request") or ""
@@ -609,7 +611,6 @@ def create_agent_graph() -> Any:  # noqa: C901
 
         try:
             logger.info("Verifying response quality")
-            # type: ignore[arg-type]
             verification_result = await output_verifier.verify_response(
                 response=response_text, user_request=user_request, conversation_context=conversation_context
             )

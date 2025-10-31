@@ -22,26 +22,27 @@ References:
 - RFC 7644: https://datatracker.ietf.org/doc/html/rfc7644
 """
 
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Any, Dict, Optional, Union
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
-from mcp_server_langgraph.scim.schema import (
-    SCIMUser,
-    SCIMGroup,
-    SCIMListResponse,
-    SCIMError,
-    SCIMPatchRequest,
-    validate_scim_user,
-    validate_scim_group,
-    user_to_keycloak,
-    keycloak_to_scim_user,
-)
-from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
+from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client
-
+from mcp_server_langgraph.scim.schema import (
+    SCIMError,
+    SCIMGroup,
+    SCIMListResponse,
+    SCIMMember,
+    SCIMPatchRequest,
+    SCIMUser,
+    keycloak_to_scim_user,
+    user_to_keycloak,
+    validate_scim_group,
+    validate_scim_user,
+)
 
 router = APIRouter(
     prefix="/scim/v2",
@@ -165,7 +166,7 @@ async def replace_user(
     user_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-) -> SCIMUser:
+) -> Union[SCIMUser, JSONResponse]:
     """
     Replace user (SCIM 2.0 PUT)
 
@@ -183,6 +184,8 @@ async def replace_user(
 
         # Get updated user
         updated_user = await keycloak.get_user(user_id)
+        if not updated_user:
+            return scim_error(404, f"User {user_id} not found", "notFound")
         response_user = keycloak_to_scim_user(updated_user)
 
         return response_user
@@ -199,7 +202,7 @@ async def update_user(
     patch_request: SCIMPatchRequest,
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-) -> SCIMUser:
+) -> Union[SCIMUser, JSONResponse]:
     """
     Update user with PATCH operations (SCIM 2.0)
 
@@ -240,6 +243,8 @@ async def update_user(
 
         # Get updated user
         updated_user = await keycloak.get_user(user_id)
+        if not updated_user:
+            return scim_error(404, f"User {user_id} not found", "notFound")
         response_user = keycloak_to_scim_user(updated_user)
 
         return response_user
@@ -254,7 +259,7 @@ async def delete_user(
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
-) -> None:
+) -> Optional[JSONResponse]:
     """
     Delete (deactivate) user (SCIM 2.0)
 
@@ -280,7 +285,7 @@ async def list_users(
     count: int = Query(100, ge=1, le=1000, description="Number of results"),
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-) -> SCIMListResponse:
+) -> Union[SCIMListResponse, JSONResponse]:
     """
     List/search users (SCIM 2.0)
 
@@ -323,7 +328,7 @@ async def create_group(
     group_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-) -> SCIMGroup:
+) -> Union[SCIMGroup, JSONResponse]:
     """
     Create a new group (SCIM 2.0)
 
@@ -355,6 +360,8 @@ async def create_group(
 
         # Get created group
         created_group = await keycloak.get_group(group_id)
+        if not created_group:
+            return scim_error(500, "Failed to retrieve created group", "internalError")
 
         return SCIMGroup(
             id=created_group["id"],
@@ -377,7 +384,7 @@ async def get_group(
     group_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-) -> SCIMGroup:
+) -> Union[SCIMGroup, JSONResponse]:
     """Get group by ID (SCIM 2.0)"""
     try:
         group = await keycloak.get_group(group_id)
@@ -388,10 +395,7 @@ async def get_group(
         # Get group members
         members = await keycloak.get_group_members(group_id)
 
-        scim_members = [
-            {"value": member["id"], "display": member.get("username")}
-            for member in members
-        ]
+        scim_members = [SCIMMember(value=member["id"], display=member.get("username"), **{"$ref": None}) for member in members]
 
         return SCIMGroup(
             id=group["id"],

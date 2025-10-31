@@ -609,7 +609,9 @@ class KeycloakClient:
         # TODO: Implement Keycloak Admin API user deletion
         raise NotImplementedError("delete_user needs implementation")
 
-    async def search_users(self, query: Optional[Dict[str, Any]] = None, first: int = 0, max: int = 100) -> List[Dict[str, Any]]:
+    async def search_users(
+        self, query: Optional[Dict[str, Any]] = None, first: int = 0, max: int = 100
+    ) -> List[Dict[str, Any]]:
         """Search users (stub for API keys/SCIM)"""
         # TODO: Implement Keycloak Admin API user search
         raise NotImplementedError("search_users needs implementation")

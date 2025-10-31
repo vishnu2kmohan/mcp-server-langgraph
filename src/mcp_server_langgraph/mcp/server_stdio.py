@@ -16,7 +16,7 @@ from langchain_core.messages import HumanMessage
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Resource, TextContent, Tool
-from pydantic import BaseModel, Field
+from pydantic import AnyUrl, BaseModel, Field
 
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -293,8 +293,7 @@ class MCPAgentServer:
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
-                # type: ignore[arg-type]
-                return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]
+                return [Resource(uri=AnyUrl("agent://config"), name="Agent Configuration", mimeType="application/json")]
 
     async def _handle_chat(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
         """

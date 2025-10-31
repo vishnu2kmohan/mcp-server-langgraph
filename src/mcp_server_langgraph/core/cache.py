@@ -522,9 +522,9 @@ def cached(
 
         # Return appropriate wrapper
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper  # type: ignore[return-value]
+            return async_wrapper  # type: ignore[return-value]  # Complex decorator typing
         else:
-            return sync_wrapper  # type: ignore[return-value]
+            return sync_wrapper
 
     return decorator
 

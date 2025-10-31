@@ -22,7 +22,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from langchain_core.messages import HumanMessage
 from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
-from pydantic import BaseModel, Field
+from pydantic import AnyUrl, BaseModel, Field
 
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -403,8 +403,7 @@ class MCPAgentStreamableServer:
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
-                # type: ignore[arg-type]
-                return [Resource(uri="agent://config", name="Agent Configuration", mimeType="application/json")]
+                return [Resource(uri=AnyUrl("agent://config"), name="Agent Configuration", mimeType="application/json")]
 
         # Store reference to handler for public API
         self._list_resources_handler = list_resources

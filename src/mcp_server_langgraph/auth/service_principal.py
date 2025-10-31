@@ -12,9 +12,9 @@ See ADR-0033 for architectural decisions.
 """
 
 import secrets
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -187,9 +187,7 @@ class ServicePrincipalManager:
                 "purpose": description,
                 "createdAt": datetime.utcnow().isoformat(),
             },
-            "credentials": [
-                {"type": "password", "value": password, "temporary": False}
-            ],
+            "credentials": [{"type": "password", "value": password, "temporary": False}],
             "realmRoles": ["service-principal"],
         }
 
@@ -234,7 +232,7 @@ class ServicePrincipalManager:
         service_id: str,
         user_id: str,
         inherit_permissions: bool = True,
-    ):
+    ) -> None:
         """
         Associate service principal with user for permission inheritance
 
@@ -281,9 +279,7 @@ class ServicePrincipalManager:
 
         return new_secret
 
-    async def list_service_principals(
-        self, owner_user_id: Optional[str] = None
-    ) -> List[ServicePrincipal]:
+    async def list_service_principals(self, owner_user_id: Optional[str] = None) -> List[ServicePrincipal]:
         """
         List all service principals, optionally filtered by owner
 
@@ -296,9 +292,7 @@ class ServicePrincipalManager:
         service_principals = []
 
         # Query Keycloak for clients with serviceAccountsEnabled
-        clients = await self.keycloak.get_clients(
-            query={"serviceAccountsEnabled": True}
-        )
+        clients = await self.keycloak.get_clients(query={"serviceAccountsEnabled": True})
 
         for client in clients:
             attrs = client.get("attributes", {})
@@ -379,7 +373,7 @@ class ServicePrincipalManager:
                     enabled=client.get("enabled", True),
                     created_at=attrs.get("createdAt"),
                 )
-        except:
+        except Exception:
             pass
 
         # Try to find as service account user
@@ -399,7 +393,7 @@ class ServicePrincipalManager:
                         enabled=user.get("enabled", True),
                         created_at=attrs.get("createdAt"),
                     )
-        except:
+        except Exception:
             pass
 
         return None
@@ -414,10 +408,10 @@ class ServicePrincipalManager:
         # Remove from Keycloak (try both client and user)
         try:
             await self.keycloak.delete_client(service_id)
-        except:
+        except Exception:
             try:
                 await self.keycloak.delete_user(f"svc_{service_id}")
-            except:
+            except Exception:
                 pass  # May not exist
 
         # Remove from OpenFGA

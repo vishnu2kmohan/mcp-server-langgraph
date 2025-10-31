@@ -9,10 +9,11 @@ See ADR-0034 for API key to JWT exchange pattern.
 """
 
 import secrets
-import bcrypt
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+import bcrypt
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
@@ -207,9 +208,7 @@ class APIKeyManager:
         api_keys = attributes.get("apiKeys", [])
 
         # Remove key entry
-        attributes["apiKeys"] = [
-            key for key in api_keys if not key.startswith(f"key:{key_id}:")
-        ]
+        attributes["apiKeys"] = [key for key in api_keys if not key.startswith(f"key:{key_id}:")]
 
         # Remove metadata
         attributes.pop(f"apiKey_{key_id}_name", None)
@@ -256,9 +255,7 @@ class APIKeyManager:
 
         return keys
 
-    async def rotate_api_key(
-        self, user_id: str, key_id: str, grace_period_days: int = 0
-    ) -> Dict[str, Any]:
+    async def rotate_api_key(self, user_id: str, key_id: str, grace_period_days: int = 0) -> Dict[str, Any]:
         """
         Rotate API key (generate new key, keeping same key_id)
 

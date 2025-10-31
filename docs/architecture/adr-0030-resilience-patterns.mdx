@@ -118,6 +118,7 @@ stateDiagram-v2
 **Circuit Breaker in Action**:
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#8dd3c7','primaryTextColor':'#333','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69'}}}%%
     participant App as MCP Server
     participant CB as Circuit Breaker
     participant LLM as LLM API<br/>(Anthropic)

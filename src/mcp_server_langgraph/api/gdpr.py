@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.middleware import get_current_user
@@ -157,15 +157,20 @@ async def get_user_data(
         # Get authenticated user
         user_id = user.get("user_id")
         username = user.get("username")
+
+        if not user_id or not username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing user_id or username in token",
+            )
+
         email = user.get("email", f"{username}@example.com")
 
         # Create export service
         export_service = DataExportService(session_store=session_store)
 
         # Export all user data
-        export = await export_service.export_user_data(
-            user_id=user_id, username=username, email=email
-        )  # type: ignore[arg-type]
+        export = await export_service.export_user_data(user_id=user_id, username=username, email=email)
 
         # Log the data access request (GDPR requirement)
         logger.info(
@@ -177,7 +182,7 @@ async def get_user_data(
             },
         )
 
-        return export  # type: ignore[return-value]
+        return export
 
 
 @router.get("/me/export", response_model=None)

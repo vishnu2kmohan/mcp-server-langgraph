@@ -42,6 +42,7 @@ External System (SCIM Client) → MCP Server SCIM Endpoints
 
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#8dd3c7','primaryTextColor':'#333','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69'}}}%%
     participant IDP as Identity Provider<br/>(Azure AD/Okta/Google)
     participant SCIM as SCIM 2.0 API<br/>(MCP Server)
     participant Auth as Authentication<br/>(Service Principal)
@@ -105,6 +106,7 @@ sequenceDiagram
 **Bulk Provisioning (Initial Sync)**:
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#8dd3c7','primaryTextColor':'#333','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69'}}}%%
     participant IDP as Identity Provider
     participant SCIM as SCIM 2.0 API
     participant KC as Keycloak

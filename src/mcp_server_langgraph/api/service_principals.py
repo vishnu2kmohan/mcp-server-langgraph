@@ -7,19 +7,14 @@ secret rotation, and deletion.
 See ADR-0033 for service principal design decisions.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from mcp_server_langgraph.auth.service_principal import (
-    ServicePrincipal,
-    ServicePrincipalManager,
-)
 from mcp_server_langgraph.auth.middleware import get_current_user
-from mcp_server_langgraph.core.dependencies import (
-    get_service_principal_manager,
-)
-
+from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+from mcp_server_langgraph.core.dependencies import get_service_principal_manager
 
 router = APIRouter(
     prefix="/api/v1/service-principals",
@@ -42,9 +37,7 @@ class CreateServicePrincipalRequest(BaseModel):
     associated_user_id: Optional[str] = Field(
         None, description="User to act as for permission inheritance (e.g., 'user:alice')"
     )
-    inherit_permissions: bool = Field(
-        default=False, description="Whether to inherit permissions from associated user"
-    )
+    inherit_permissions: bool = Field(default=False, description="Whether to inherit permissions from associated user")
 
 
 class ServicePrincipalResponse(BaseModel):
@@ -64,12 +57,8 @@ class ServicePrincipalResponse(BaseModel):
 class CreateServicePrincipalResponse(ServicePrincipalResponse):
     """Response when creating service principal (includes secret)"""
 
-    client_secret: str = Field(
-        ..., description="Client secret (save securely, won't be shown again)"
-    )
-    message: str = Field(
-        default="Service principal created successfully. Save the client_secret securely."
-    )
+    client_secret: str = Field(..., description="Client secret (save securely, won't be shown again)")
+    message: str = Field(default="Service principal created successfully. Save the client_secret securely.")
 
 
 class RotateSecretResponse(BaseModel):
@@ -77,9 +66,7 @@ class RotateSecretResponse(BaseModel):
 
     service_id: str
     client_secret: str = Field(..., description="New client secret")
-    message: str = Field(
-        default="Secret rotated successfully. Update your service configuration."
-    )
+    message: str = Field(default="Secret rotated successfully. Update your service configuration.")
 
 
 # API Endpoints
@@ -139,6 +126,13 @@ async def create_service_principal(
         owner_user_id=current_user["user_id"],
         inherit_permissions=request.inherit_permissions,
     )
+
+    # Ensure client_secret is set (should always be present after creation)
+    if sp.client_secret is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate client secret",
+        )
 
     return CreateServicePrincipalResponse(
         service_id=sp.service_id,

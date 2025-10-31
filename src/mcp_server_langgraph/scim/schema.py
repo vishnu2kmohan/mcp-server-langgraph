@@ -11,10 +11,10 @@ References:
 - RFC 7644: SCIM Protocol
 """
 
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field, field_validator
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field, field_validator
 
 # SCIM Schema URNs
 SCIM_USER_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:User"
@@ -24,6 +24,7 @@ SCIM_ENTERPRISE_USER_SCHEMA = "urn:ietf:params:scim:schemas:extension:enterprise
 
 class SCIMEmail(BaseModel):
     """SCIM email address"""
+
     value: str
     type: Optional[str] = "work"  # work, home, other
     primary: bool = False
@@ -31,6 +32,7 @@ class SCIMEmail(BaseModel):
 
 class SCIMName(BaseModel):
     """SCIM user name"""
+
     formatted: Optional[str] = None
     familyName: Optional[str] = None
     givenName: Optional[str] = None
@@ -41,6 +43,7 @@ class SCIMName(BaseModel):
 
 class SCIMPhoneNumber(BaseModel):
     """SCIM phone number"""
+
     value: str
     type: Optional[str] = "work"
     primary: bool = False
@@ -48,6 +51,7 @@ class SCIMPhoneNumber(BaseModel):
 
 class SCIMAddress(BaseModel):
     """SCIM address"""
+
     formatted: Optional[str] = None
     streetAddress: Optional[str] = None
     locality: Optional[str] = None
@@ -60,6 +64,7 @@ class SCIMAddress(BaseModel):
 
 class SCIMGroupMembership(BaseModel):
     """SCIM group membership"""
+
     value: str  # Group ID
     ref: Optional[str] = Field(None, alias="$ref")
     display: Optional[str] = None
@@ -68,6 +73,7 @@ class SCIMGroupMembership(BaseModel):
 
 class SCIMEnterpriseUser(BaseModel):
     """SCIM Enterprise User Extension (RFC 7643 Section 4.3)"""
+
     employeeNumber: Optional[str] = None
     costCenter: Optional[str] = None
     organization: Optional[str] = None
@@ -82,6 +88,7 @@ class SCIMUser(BaseModel):
 
     Core schema with optional Enterprise extension.
     """
+
     schemas: List[str] = Field(default=[SCIM_USER_SCHEMA])
     id: Optional[str] = None
     externalId: Optional[str] = None
@@ -107,8 +114,7 @@ class SCIMUser(BaseModel):
 
     # Enterprise extension
     enterpriseUser: Optional[SCIMEnterpriseUser] = Field(
-        None,
-        alias="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+        None, alias="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
     )
 
     @field_validator("schemas")
@@ -131,6 +137,7 @@ class SCIMUser(BaseModel):
 
 class SCIMMember(BaseModel):
     """SCIM group member"""
+
     value: str  # User ID
     ref: Optional[str] = Field(None, alias="$ref")
     display: Optional[str] = None
@@ -139,6 +146,7 @@ class SCIMMember(BaseModel):
 
 class SCIMGroup(BaseModel):
     """SCIM 2.0 Group Resource"""
+
     schemas: List[str] = Field(default=[SCIM_GROUP_SCHEMA])
     id: Optional[str] = None
     displayName: str
@@ -156,6 +164,7 @@ class SCIMGroup(BaseModel):
 
 class SCIMPatchOp(str, Enum):
     """SCIM PATCH operation types"""
+
     ADD = "add"
     REMOVE = "remove"
     REPLACE = "replace"
@@ -163,6 +172,7 @@ class SCIMPatchOp(str, Enum):
 
 class SCIMPatchOperation(BaseModel):
     """SCIM PATCH operation"""
+
     op: SCIMPatchOp
     path: Optional[str] = None
     value: Any = None
@@ -170,12 +180,14 @@ class SCIMPatchOperation(BaseModel):
 
 class SCIMPatchRequest(BaseModel):
     """SCIM PATCH request"""
+
     schemas: List[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:PatchOp"])
     Operations: List[SCIMPatchOperation]
 
 
 class SCIMListResponse(BaseModel):
     """SCIM List Response"""
+
     schemas: List[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:ListResponse"])
     totalResults: int
     startIndex: int = 1
@@ -185,6 +197,7 @@ class SCIMListResponse(BaseModel):
 
 class SCIMError(BaseModel):
     """SCIM Error Response"""
+
     schemas: List[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:Error"])
     status: int
     scimType: Optional[str] = None
@@ -331,20 +344,24 @@ def keycloak_to_scim_user(keycloak_user: Dict[str, Any]) -> SCIMUser:
     if enterprise_user:
         schemas.append(SCIM_ENTERPRISE_USER_SCHEMA)
 
-    return SCIMUser(
-        schemas=schemas,
-        id=keycloak_user["id"],
-        userName=keycloak_user["username"],
-        name=name,
-        displayName=attributes.get("displayName"),
-        title=attributes.get("title"),
-        active=keycloak_user.get("enabled", True),
-        emails=emails,
-        externalId=attributes.get("externalId"),
-        enterpriseUser=enterprise_user,
-        meta={
+    user_dict = {
+        "schemas": schemas,
+        "id": keycloak_user["id"],
+        "userName": keycloak_user["username"],
+        "name": name,
+        "displayName": attributes.get("displayName"),
+        "title": attributes.get("title"),
+        "active": keycloak_user.get("enabled", True),
+        "emails": emails,
+        "externalId": attributes.get("externalId"),
+        "meta": {
             "resourceType": "User",
             "created": keycloak_user.get("createdTimestamp"),
             "lastModified": keycloak_user.get("createdTimestamp"),  # Keycloak doesn't track modification time
         },
-    )
+    }
+
+    if enterprise_user:
+        user_dict["urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"] = enterprise_user
+
+    return SCIMUser(**user_dict)

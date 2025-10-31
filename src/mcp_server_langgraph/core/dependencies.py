@@ -5,14 +5,14 @@ Provides dependency injection for commonly used services.
 """
 
 from typing import Optional
+
 from fastapi import Depends
 
-from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
+from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.core.config import settings
-
 
 # Singleton instances (will be initialized on first use)
 _keycloak_client: Optional[KeycloakClient] = None
