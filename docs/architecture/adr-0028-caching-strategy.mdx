@@ -41,26 +41,29 @@ Implement a **multi-layer caching strategy** with three distinct layers:
 
 ### Cache Architecture
 
-```
-┌─────────────────────────────────────────┐
-│         Application Layer               │
-│  ┌────────────────────────────────┐    │
-│  │   L1: In-Memory LRU Cache      │    │ < 10ms
-│  │   (local, per-instance)        │    │
-│  └────────────────────────────────┘    │
-│              ▼                          │
-│  ┌────────────────────────────────┐    │
-│  │   L2: Redis Distributed Cache  │    │ < 50ms
-│  │   (shared, cross-instance)     │    │
-│  └────────────────────────────────┘    │
-│              ▼                          │
-│  ┌────────────────────────────────┐    │
-│  │   L3: Provider-Native Cache    │    │ < 200ms
-│  │   (Anthropic, Gemini prompts)  │    │
-│  └────────────────────────────────┘    │
-└─────────────────────────────────────────┘
-              ▼
-    External Service (uncached)          2000ms+
+```mermaid
+graph TB
+    Request[API Request] --> L1[L1: In-Memory LRU Cache<br/>~10ms<br/>local, per-instance]
+    L1 -->|Cache miss| L2[L2: Redis Distributed Cache<br/>~50ms<br/>shared, cross-instance]
+    L2 -->|Cache miss| L3[L3: Provider-Native Cache<br/>~200ms<br/>Anthropic, Gemini prompts]
+    L3 -->|Cache miss| External[External Service<br/>~2000ms+<br/>uncached]
+
+    L1 -.->|Cache hit| Response1[Response ~10ms]
+    L2 -.->|Cache hit| Response2[Response ~50ms]
+    L3 -.->|Cache hit| Response3[Response ~200ms]
+    External -.-> Response4[Response ~2000ms+]
+
+    classDef l1Style fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef l2Style fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef l3Style fill:#bebada,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef externalStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
+    classDef responseStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+
+    class Request,Response1,Response2,Response3,Response4 responseStyle
+    class L1 l1Style
+    class L2 l2Style
+    class L3 l3Style
+    class External externalStyle
 ```
 
 ### Multi-Layer Caching Flow
@@ -98,7 +101,7 @@ graph TB
 **Cache Lookup Sequence with Fallback**:
 ```mermaid
 sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#8dd3c7','primaryTextColor':'#333','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69'}}}%%
+    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
     participant Client
     participant App as MCP Server
     participant L1 as L1: In-Memory<br/>LRU Cache

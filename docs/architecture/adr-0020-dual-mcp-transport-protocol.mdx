@@ -66,23 +66,23 @@ Both share the same underlying agent logic, differing only in transport layer.
 
 ### Architecture
 
-```
-                    ┌─────────────────────────┐
-                    │   Core Agent Logic      │
-                    │  (agent.py, tools)      │
-                    └───────────┬─────────────┘
-                                │
-                    ┌───────────┴─────────────┐
-                    │                         │
-         ┌──────────▼──────────┐   ┌─────────▼──────────┐
-         │  STDIO Transport    │   │ StreamableHTTP     │
-         │  (server_stdio.py)  │   │ (server_streamable)│
-         └──────────┬──────────┘   └─────────┬──────────┘
-                    │                         │
-         ┌──────────▼──────────┐   ┌─────────▼──────────┐
-         │  Claude Desktop     │   │  Cloud Deployment  │
-         │  Local Tools        │   │  Web Apps          │
-         └─────────────────────┘   └────────────────────┘
+```mermaid
+graph TD
+    Agent[Core Agent Logic<br/>agent.py, tools]
+
+    Agent --> STDIO[STDIO Transport<br/>server_stdio.py<br/>JSON-RPC over stdin/stdout]
+    Agent --> HTTP[StreamableHTTP<br/>server_streamable.py<br/>HTTP with SSE streaming]
+
+    STDIO --> Desktop[Claude Desktop<br/>Local Tools<br/>Development]
+    HTTP --> Cloud[Cloud Deployment<br/>Web Apps<br/>Production]
+
+    classDef agentStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef transportStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef clientStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Agent agentStyle
+    class STDIO,HTTP transportStyle
+    class Desktop,Cloud clientStyle
 ```
 
 ### Transport 1: STDIO (Standard Input/Output)

@@ -432,21 +432,44 @@ Based on the Kubernetes manifests and Docker configurations, here are the resour
 
 Create resource pools for workload isolation:
 
-```
-Cluster Root
-├── Production
-│   ├── Applications (50% CPU, 60% Memory)
-│   │   ├── MCP-Server (shares: high)
-│   │   ├── Keycloak (shares: high)
-│   │   └── OpenFGA (shares: normal)
-│   ├── Databases (30% CPU, 30% Memory)
-│   │   ├── PostgreSQL (shares: high, reservation: 100%)
-│   │   └── Redis (shares: normal)
-│   └── Observability (20% CPU, 10% Memory)
-│       ├── Prometheus (shares: normal)
-│       ├── Grafana (shares: low)
-│       └── Jaeger (shares: normal)
-└── Development (expandable reservation)
+```mermaid
+graph TD
+    Root[Cluster Root] --> Prod[Production]
+    Root --> Dev[Development<br/>expandable reservation]
+
+    Prod --> Apps[Applications<br/>50% CPU, 60% Memory]
+    Prod --> DB[Databases<br/>30% CPU, 30% Memory]
+    Prod --> Obs[Observability<br/>20% CPU, 10% Memory]
+
+    Apps --> MCP[MCP-Server<br/>shares: high]
+    Apps --> KC[Keycloak<br/>shares: high]
+    Apps --> OFG[OpenFGA<br/>shares: normal]
+
+    DB --> PG[PostgreSQL<br/>shares: high<br/>reservation: 100%]
+    DB --> Redis[Redis<br/>shares: normal]
+
+    Obs --> Prom[Prometheus<br/>shares: normal]
+    Obs --> Graf[Grafana<br/>shares: low]
+    Obs --> Jaeg[Jaeger<br/>shares: normal]
+
+    classDef rootStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef prodStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef devStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef appPoolStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px,color:#333
+    classDef dbPoolStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef obsPoolStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef appStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+    classDef dataStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
+
+    class Root rootStyle
+    class Prod prodStyle
+    class Dev devStyle
+    class Apps appPoolStyle
+    class DB dbPoolStyle
+    class Obs obsPoolStyle
+    class MCP,KC,OFG appStyle
+    class PG,Redis dataStyle
+    class Prom,Graf,Jaeg obsPoolStyle
 ```
 
 ### 4. Monitoring and Alerts

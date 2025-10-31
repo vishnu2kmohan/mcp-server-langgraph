@@ -235,21 +235,47 @@ def hello_world():
 
 ## Mermaid Diagrams
 
-All templates support Mermaid diagrams for visualizations:
+All templates support Mermaid diagrams for visualizations. **Always use ColorBrewer2 Set3 palette** for consistency.
+
+### Flowchart Example (with ColorBrewer2 Set3 styling)
 
 ````mdx
 ```mermaid
 graph TB
     A[Start] --> B[Process]
     B --> C[End]
+
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef processStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef endStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
+
+    class A startStyle
+    class B processStyle
+    class C endStyle
+```
+````
+
+### Sequence Diagram Example (with dark-mode compatible theme)
+
+````mdx
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
+sequenceDiagram
+    participant A as Client
+    participant B as Server
+    A->>B: Request
+    B-->>A: Response
 ```
 ````
 
 **Tips**:
 - Use `graph TB` for top-to-bottom flowcharts
-- Use `sequenceDiagram` for sequence diagrams
+- Use `sequenceDiagram` for sequence diagrams (with dark-mode theme)
 - Use `-->` for arrows, not single dashes
-- Always test diagrams in Mintlify preview
+- Always apply ColorBrewer2 Set3 palette with classDef
+- See `docs/.mintlify/SEQUENCE_DIAGRAM_THEME.md` for the standard sequence theme
+- Test diagrams in both light and dark mode
+- Validate with `python3 scripts/validate_all_mermaid.py docs`
 
 ---
 

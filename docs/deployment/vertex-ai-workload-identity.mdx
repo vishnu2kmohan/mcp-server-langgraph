@@ -14,31 +14,23 @@ This guide covers setting up **Vertex AI** with **Workload Identity Federation**
 
 ## Architecture
 
-```
-┌────────────────────────────────────────────────────────┐
-│  GKE Pod (mcp-server-langgraph)                        │
-│  ┌──────────────────────────────────────────────────┐ │
-│  │  Kubernetes Service Account                      │ │
-│  │  • mcp-staging/mcp-server-langgraph             │ │
-│  │  • Annotated with GCP SA                         │ │
-│  └──────────────────┬───────────────────────────────┘ │
-│                     │ Workload Identity Binding        │
-│                     ▼                                   │
-│  ┌──────────────────────────────────────────────────┐ │
-│  │  GCP Service Account (vertex-ai-staging)         │ │
-│  │  • roles/aiplatform.user                         │ │
-│  │  • roles/aiplatform.developer                    │ │
-│  │  • No keys required!                              │ │
-│  └──────────────────┬───────────────────────────────┘ │
-│                     │                                   │
-│                     ▼                                   │
-│  ┌──────────────────────────────────────────────────┐ │
-│  │  Vertex AI API                                   │ │
-│  │  • gemini-2.5-flash                               │ │
-│  │  • gemini-2.5-pro                                │ │
-│  │  • Automatic authentication                       │ │
-│  └──────────────────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Pod["GKE Pod (mcp-server-langgraph)"]
+        K8sSA[Kubernetes Service Account<br/>mcp-staging/mcp-server-langgraph<br/>• Annotated with GCP SA]
+
+        K8sSA -->|Workload Identity Binding| GCPSA[GCP Service Account<br/>vertex-ai-staging<br/>• roles/aiplatform.user<br/>• roles/aiplatform.developer<br/>• No keys required!]
+
+        GCPSA --> VertexAI[Vertex AI API<br/>• gemini-2.5-flash<br/>• gemini-2.5-pro<br/>• Automatic authentication]
+    end
+
+    classDef k8sStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef gcpStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef apiStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
+
+    class K8sSA k8sStyle
+    class GCPSA gcpStyle
+    class VertexAI apiStyle
 ```
 
 ## Prerequisites

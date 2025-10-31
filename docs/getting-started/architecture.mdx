@@ -775,6 +775,22 @@ graph TB
     FGA1 --> PG
     FGA2 --> PG
     PG -.-> PGR
+
+    classDef externalStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef ingressStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef sessionStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef authzStyle fill:#d9d9d9,stroke:#95a5a6,stroke-width:2px,color:#333
+    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class Internet externalStyle
+    class LB,IngressCtrl ingressStyle
+    class A1,A2,A3 appStyle
+    class KC1,KC2 authStyle
+    class RM,RR sessionStyle
+    class FGA1,FGA2 authzStyle
+    class PG,PGR dataStyle
 ```
 
 **Deployment**: See [Kubernetes Guide](/deployment/kubernetes) or [Helm Guide](/deployment/helm)

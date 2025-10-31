@@ -42,48 +42,29 @@ We will implement a **multi-stage CI/CD pipeline** using GitHub Actions with the
 
 ### Pipeline Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  PR Checks (on pull_request)                            │
-│  ├─ Lint (Black, isort, flake8)                        │
-│  ├─ Type Check (mypy)                                  │
-│  └─ Unit Tests (pytest)                                │
-└─────────────────────────────────────────────────────────┘
-                         ↓ (PR approved + merged)
-┌─────────────────────────────────────────────────────────┐
-│  CI Pipeline (on push to main)                          │
-│  ├─ Lint & Type Check                                  │
-│  ├─ Unit Tests (all markers)                           │
-│  ├─ Integration Tests                                  │
-│  ├─ Property Tests (Hypothesis)                        │
-│  ├─ Contract Tests (MCP schema)                        │
-│  ├─ Build Docker Image                                 │
-│  └─ Deployment Validation                              │
-└─────────────────────────────────────────────────────────┘
-                         ↓ (tests pass)
-┌─────────────────────────────────────────────────────────┐
-│  Quality Tests (nightly/on-demand)                      │
-│  ├─ Mutation Testing (mutmut)                          │
-│  ├─ Performance Regression Tests                       │
-│  ├─ OpenAPI Breaking Change Detection                  │
-│  └─ Deployment E2E Tests (kind clusters)               │
-└─────────────────────────────────────────────────────────┘
-                         ↓ (quality gates pass)
-┌─────────────────────────────────────────────────────────┐
-│  Security Scan (daily/on-demand)                        │
-│  ├─ Bandit (Python security linter)                    │
-│  ├─ Dependency Audit (pip-audit)                       │
-│  ├─ SAST (Static Application Security Testing)         │
-│  └─ Container Scanning                                 │
-└─────────────────────────────────────────────────────────┘
-                         ↓ (tag pushed)
-┌─────────────────────────────────────────────────────────┐
-│  Release Pipeline (on tag v*)                           │
-│  ├─ Build & Publish Docker Image                       │
-│  ├─ Build & Publish PyPI Package                       │
-│  ├─ Generate Release Notes                             │
-│  └─ Create GitHub Release                              │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    PR[PR Checks<br/>on pull_request<br/><br/>• Lint Black, isort, flake8<br/>• Type Check mypy<br/>• Unit Tests pytest]
+
+    PR -->|PR approved + merged| CI[CI Pipeline<br/>on push to main<br/><br/>• Lint & Type Check<br/>• Unit Tests all markers<br/>• Integration Tests<br/>• Property Tests Hypothesis<br/>• Contract Tests MCP schema<br/>• Build Docker Image<br/>• Deployment Validation]
+
+    CI -->|tests pass| Quality[Quality Tests<br/>nightly/on-demand<br/><br/>• Mutation Testing mutmut<br/>• Performance Regression Tests<br/>• OpenAPI Breaking Change Detection<br/>• Deployment E2E Tests kind clusters]
+
+    Quality -->|quality gates pass| Security[Security Scan<br/>daily/on-demand<br/><br/>• Bandit Python security linter<br/>• Dependency Audit pip-audit<br/>• SAST Static Application Security<br/>• Container Scanning]
+
+    Security -->|tag pushed| Release[Release Pipeline<br/>on tag v*<br/><br/>• Build & Publish Docker Image<br/>• Build & Publish PyPI Package<br/>• Generate Release Notes<br/>• Create GitHub Release]
+
+    classDef prStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef ciStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef qualityStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef securityStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
+    classDef releaseStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px,color:#333
+
+    class PR prStyle
+    class CI ciStyle
+    class Quality qualityStyle
+    class Security securityStyle
+    class Release releaseStyle
 ```
 
 ## Consequences

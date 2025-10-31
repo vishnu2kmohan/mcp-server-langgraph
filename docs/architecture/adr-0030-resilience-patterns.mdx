@@ -118,7 +118,7 @@ stateDiagram-v2
 **Circuit Breaker in Action**:
 ```mermaid
 sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#8dd3c7','primaryTextColor':'#333','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69'}}}%%
+    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
     participant App as MCP Server
     participant CB as Circuit Breaker
     participant LLM as LLM API<br/>(Anthropic)
