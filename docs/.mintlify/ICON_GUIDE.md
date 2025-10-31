@@ -63,9 +63,9 @@ icon: 'rocket'
 
 ### 3. Kubernetes-Specific Deployment
 
-**Icon**: `layers`
+**Icon**: `dharmachakra`
 
-**Rationale**: Represents orchestration and layered architecture. Note: `dharmachakra` is not a valid Lucide icon name.
+**Rationale**: Official Kubernetes icon (ship's wheel/Dharmachakra).
 
 **Usage**: Kubernetes deployment guides, manifests, K8s operations
 
@@ -74,13 +74,13 @@ icon: 'rocket'
 ---
 title: Kubernetes Deployment
 description: 'Deploy MCP Server with LangGraph on Kubernetes'
-icon: 'layers'
+icon: 'dharmachakra'
 ---
 ```
 
 **Files**:
-- `deployment/kubernetes.mdx` - uses `layers`
-- `deployment/gke-staging-implementation-summary.mdx` - uses `cloud`
+- `deployment/kubernetes.mdx`
+- `deployment/gke-staging-implementation-summary.mdx`
 - `deployment/kubernetes/gke.mdx`
 - `deployment/kubernetes/eks.mdx`
 - `deployment/kubernetes/aks.mdx`
