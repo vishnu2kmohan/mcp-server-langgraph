@@ -100,19 +100,6 @@ sequenceDiagram
 
     Note over IDP: User no longer has access
 
-    classDef idpStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    classDef scimStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
-    classDef kcStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
-    classDef eventStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-
-    class IDP idpStyle
-    class SCIM scimStyle
-    class Auth authStyle
-    class KC kcStyle
-    class FGA fgaStyle
-    class Events eventStyle
 ```
 
 **Bulk Provisioning (Initial Sync)**:
@@ -137,15 +124,6 @@ sequenceDiagram
 
     Note over SCIM: Idempotent - safe to retry
 
-    classDef idpStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    classDef scimStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    classDef kcStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
-
-    class IDP idpStyle
-    class SCIM scimStyle
-    class KC kcStyle
-    class FGA fgaStyle
 ```
 
 ### Core Principles

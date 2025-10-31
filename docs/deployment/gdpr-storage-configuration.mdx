@@ -86,24 +86,6 @@ sequenceDiagram
     Storage-->>API: Recorded
     API->>Audit: Log consent change<br/>analytics: true→false, marketing: true→false
     API-->>User: 200 OK<br/>{consent_status}
-
-    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    classDef apiStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
-    classDef storageStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    classDef dbStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px
-    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
-    classDef logStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-    classDef auditStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px
-
-    class User userStyle
-    class API apiStyle
-    class Auth authStyle
-    class Storage storageStyle
-    class DB dbStyle
-    class FGA fgaStyle
-    class Logs logStyle
-    class Audit auditStyle
 ```
 
 ## Environment Variables

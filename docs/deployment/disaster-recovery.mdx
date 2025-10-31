@@ -177,19 +177,6 @@ sequenceDiagram
     DR->>Monitor: Send health metrics<br/>Normal operation
     Monitor->>Ops: Alert: DR ACTIVE<br/>RTO: 45 minutes ✓
 
-    classDef prodStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    classDef cronStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    classDef storageStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-    classDef monitorStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
-    classDef opsStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    classDef drStyle fill:#d4edda,stroke:#28a745,stroke-width:2px
-
-    class Prod prodStyle
-    class Cron cronStyle
-    class Storage storageStyle
-    class Monitor monitorStyle
-    class Ops opsStyle
-    class DR drStyle
 ```
 
 ## Backup Strategy

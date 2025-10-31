@@ -133,15 +133,6 @@ sequenceDiagram
     KC->>KC: Validate ID Token<br/>Extract claims<br/>Normalize to Keycloak user
     KC-->>User: JWT (sub: user:alice)
 
-    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    classDef kcStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
-    classDef idpStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
-
-    class User userStyle
-    class KC kcStyle
-    class LDAP,SAML,OIDC idpStyle
-    class App appStyle
 ```
 
 ### Federation Strategies

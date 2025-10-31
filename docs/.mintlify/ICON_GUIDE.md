@@ -128,9 +128,9 @@ icon: 'docker'
 
 ### 5. Helm Deployment
 
-**Icon**: `boxes` (Lucide)
+**Icon**: `cubes` (Font Awesome)
 
-**Rationale**: Represents multiple packages/charts (Helm is a Kubernetes package manager). Note: `helm` is not a valid icon name in either Font Awesome or Lucide. `boxes` from Lucide is the best semantic alternative.
+**Rationale**: Represents multiple packages/charts (Helm is a Kubernetes package manager). Font Awesome's `cubes` icon perfectly represents containerized packages and multi-component charts.
 
 **Usage**: Helm chart deployment guides
 
@@ -139,7 +139,7 @@ icon: 'docker'
 ---
 title: Helm Deployment
 description: 'Deploy MCP Server using Helm charts for simplified management'
-icon: 'boxes'
+icon: 'cubes'
 ---
 ```
 

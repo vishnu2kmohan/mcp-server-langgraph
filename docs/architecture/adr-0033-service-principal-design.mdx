@@ -76,17 +76,6 @@ sequenceDiagram
     Note over SP,User: Audit Trail
     App->>App: Log action<br/>Principal: service:batch-etl-job<br/>Effective User: alice
 
-    classDef serviceStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    classDef authStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px
-    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    classDef fgaStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px
-    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-
-    class SP serviceStyle
-    class KC authStyle
-    class App appStyle
-    class FGA fgaStyle
-    class User userStyle
 ```
 
 ### Authentication Modes
