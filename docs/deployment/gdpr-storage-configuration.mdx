@@ -17,13 +17,13 @@ The GDPR compliance endpoints (`/api/v1/users/me/*`) require persistent storage 
 
 ```mermaid
 sequenceDiagram
-    participant User as Data Subject<br/>(End User)
-    participant API as GDPR API<br/>/api/v1/users/me/*
-    participant Auth as Authentication<br/>(JWT Validation)
-    participant Storage as Storage Backend<br/>(PostgreSQL/Redis)
-    participant DB as Conversation DB<br/>(PostgreSQL)
-    participant FGA as OpenFGA<br/>Authorization
-    participant Logs as Log System<br/>(Cloud Logging)
+    participant User as Data Subject
+    participant API as GDPR API
+    participant Auth as Authentication
+    participant Storage as Storage Backend
+    participant DB as Conversation DB
+    participant FGA as OpenFGA
+    participant Logs as Log System
     participant Audit as Audit Trail
 
     Note over User,API: Article 15: Right to Access (GET /users/me)
