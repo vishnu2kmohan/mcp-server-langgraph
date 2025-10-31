@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761919279773,
+  "lastUpdate": 1761920309435,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -16144,6 +16144,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0033948626722128086",
             "extra": "mean: 113.35772560679347 usec\nrounds: 4038"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8230f756b57bcda726a61f47b5958c7e7364a819",
+          "message": "docs: add Mermaid optimization guide and validation tools\n\nCreated comprehensive Mermaid diagram optimization guide with:\n- Current quality metrics (54 diagrams, all valid)\n- Best practices for flowcharts and sequence diagrams\n- ColorBrewer2 palette standards\n- Validation and optimization tools\n- Templates for common diagram patterns\n- Troubleshooting guide for common issues\n\nNew validation tools:\n- validate_all_mermaid.py: Validate all diagrams with mmdc CLI\n- fix_mermaid_sequence_diagrams.py: Auto-fix classDef issues\n- add_sequence_diagram_themes.py: Add ColorBrewer2 themes\n- add_diagram_styling.py: Add styling to unstyled diagrams\n\nUpdated MINTLIFY_IMPROVEMENTS_SUMMARY.md with:\n- Mermaid diagram fixes (12 files)\n- Theme additions (11 files)\n- MDX syntax fixes (2 files)\n- Complete tool inventory (7 validation scripts)\n\nAll 54 Mermaid diagrams now validated via mmdc CLI ✓\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T10:17:32-04:00",
+          "tree_id": "2061dcab127f30cf6880dddf48d14fbe47cd269b",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8230f756b57bcda726a61f47b5958c7e7364a819"
+        },
+        "date": 1761920308751,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51486.68609575646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025944533535673977",
+            "extra": "mean: 19.422496878905168 usec\nrounds: 6408"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52917.832570186576,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002292107272010904",
+            "extra": "mean: 18.89722143615139 usec\nrounds: 12297"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50129.81120917524,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024376568099894665",
+            "extra": "mean: 19.948209974845675 usec\nrounds: 19469"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.817775278377,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001964488331570282",
+            "extra": "mean: 5.240601922651791 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.416050646589486,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013315765146396037",
+            "extra": "mean: 51.503779949999995 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936080992255174,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000032826914270017645",
+            "extra": "mean: 100.64330200000029 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2602052.8547839615,
+            "unit": "iter/sec",
+            "range": "stddev: 5.4877376641258406e-8",
+            "extra": "mean: 384.31194745389837 nsec\nrounds: 35472"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4911.572656748784,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002310519630235929",
+            "extra": "mean: 203.6007751256499 usec\nrounds: 796"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2967.9161779918877,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010826114972816718",
+            "extra": "mean: 336.93673945893136 usec\nrounds: 2514"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2916.574722973685,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003007659060031654",
+            "extra": "mean: 342.8679512727926 usec\nrounds: 1375"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60388.02725482484,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022266019718059036",
+            "extra": "mean: 16.559573899975394 usec\nrounds: 10636"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 9506.441352962469,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0030366785068372637",
+            "extra": "mean: 105.1918339230455 usec\nrounds: 4522"
           }
         ]
       }
