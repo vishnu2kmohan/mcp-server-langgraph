@@ -253,11 +253,251 @@ If benchmarks fail:
 
 ---
 
+## 📈 NEW: Trend Analysis
+
+### Step 5: Historical Trend Analysis
+
+After running benchmarks, analyze historical performance trends:
+
+**Load Historical Data**:
+```bash
+# Find all benchmark results
+find .benchmark/ -name "*.json" -type f | sort -r | head -10
+
+# Or use git commits with benchmark data
+git log --all --oneline --grep="benchmark" | head -20
+```
+
+**Trend Visualization**:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PERFORMANCE TREND ANALYSIS (Last 10 Runs)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Agent Response Time (P95)
+  ─────────────────────────────────────────────────────────────────
+  6.0s ┤
+  5.5s ┤                                    Target: 5.0s
+  5.0s ┤ ════════════════════════════════════════════════════════
+  4.5s ┤                               ╭────╮
+  4.0s ┤                         ╭─────╯    ╰────╮
+  3.5s ┤                   ╭─────╯                ╰──╮
+  3.0s ┤             ╭─────╯                         ╰────╮
+  2.5s ┤       ╭─────╯                                    │
+  2.0s ┤ ╭─────╯                                          ╰────●
+       └─┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──────────────────────────→
+         10  9  8  7  6  5  4  3  2  1  now          runs
+
+  Trend: 📉 IMPROVING (-18% over last 10 runs)
+  Velocity: -0.3s per run
+  Status: ✅ Below target (2.0s < 5.0s)
+
+  ─────────────────────────────────────────────────────────────────
+  LLM Call Latency (P95)
+  ─────────────────────────────────────────────────────────────────
+  4.0s ┤                                    ●
+  3.5s ┤                          ╭────●────╯
+  3.0s ┤                    ╭─────╯              Target: 10.0s
+  2.5s ┤              ╭─────╯
+  2.0s ┤        ╭─────╯
+  1.5s ┤  ╭─────╯
+       └─┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──────────────────────────→
+         10  9  8  7  6  5  4  3  2  1  now          runs
+
+  Trend: 📈 DEGRADING (+12% over last 10 runs) ⚠️
+  Velocity: +0.15s per run
+  Status: ⚠️ Degrading but within target
+  Root Cause: Likely LLM provider latency increase
+
+  ─────────────────────────────────────────────────────────────────
+  Authorization Check (P95)
+  ─────────────────────────────────────────────────────────────────
+  60ms ┤
+  50ms ┤ ════════════════════════════════════════════════════════ Target
+  40ms ┤                     ●────●────●────●────●────●────●
+  30ms ┤       ●────●────●────╯
+  20ms ┤ ●────●╯
+       └─┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──────────────────────────→
+         10  9  8  7  6  5  4  3  2  1  now          runs
+
+  Trend: 📊 STABLE (±2% variation)
+  Velocity: +0.5ms per run (negligible)
+  Status: ✅ Consistently below target
+```
+
+**Trend Statistics**:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  TREND STATISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Benchmark            Trend      Change    Status    Concern
+  ──────────────────────────────────────────────────────────────────
+  agent_response       📉 Down    -18%      ✅ Good   None
+  llm_call             📈 Up      +12%      ⚠️ Watch  Provider latency
+  authorization        📊 Stable  ±2%       ✅ Good   None
+  database_query       📉 Down    -8%       ✅ Good   None
+  context_loading      📉 Down    -22%      ✅ Great  Recent optimization
+  ──────────────────────────────────────────────────────────────────
+
+  Overall Health: 🟢 HEALTHY
+  Improving: 3/5 benchmarks
+  Degrading: 1/5 benchmarks (under investigation)
+  Stable: 1/5 benchmarks
+```
+
+### Step 6: Automated Regression Detection
+
+**Regression Detection Algorithm**:
+```
+For each benchmark:
+  1. Calculate mean of last 5 runs
+  2. Calculate current deviation from mean
+  3. Check if deviation > threshold (20%)
+  4. Check if trend is consistently worsening (3+ runs)
+  5. Flag as regression if both conditions met
+```
+
+**Regression Alert**:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🚨 REGRESSION DETECTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Benchmark: llm_call (P95 latency)
+  Severity: ⚠️ MEDIUM
+
+  Current:  4.2s
+  Baseline: 3.2s
+  Change:   +31% (EXCEEDS 20% threshold)
+
+  Trend: Degrading for last 3 consecutive runs
+    Run -3: 3.5s (+9%)
+    Run -2: 3.8s (+19%)
+    Run -1: 4.2s (+31%) ← Current
+
+  Likely Causes:
+  1. LLM provider latency increase (external)
+  2. Increased prompt size (check recent changes)
+  3. Network latency to LLM API
+  4. Rate limiting kicking in
+
+  Recommended Actions:
+  1. Check LLM provider status page
+  2. Review recent prompt changes (git log)
+  3. Monitor for next 2 runs to confirm trend
+  4. Consider fallback model if persistent
+  5. Add timeout/circuit breaker if needed
+
+  Auto-Generated Issue:
+  Title: "Performance Regression: llm_call latency +31%"
+  Labels: performance, regression, p2
+  Link: [Create Issue] (if GitHub CLI available)
+```
+
+### Step 7: Performance Recommendations
+
+Based on trend analysis, provide actionable recommendations:
+
+**Recommendation Engine**:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PERFORMANCE RECOMMENDATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Based on trend analysis:
+
+  ✅ Celebrate Success:
+     - context_loading improved 22% (great optimization!)
+     - agent_response improved 18% (excellent work!)
+     - database_query improved 8% (good progress!)
+
+  ⚠️ Monitor Closely:
+     - llm_call degrading +12% over 10 runs
+       Action: Investigate LLM provider latency
+       Timeline: Review in next 2 benchmark runs
+
+  🔥 Optimize Now:
+     None currently (all within targets)
+
+  📊 Maintain:
+     - authorization stable at 40ms (keep it up!)
+
+  🎯 Next Targets:
+     1. Investigate llm_call latency increase
+     2. Continue optimizing context_loading (already great!)
+     3. Consider setting stricter targets (current: generous)
+
+  💡 Pro Tips:
+     - Run benchmarks weekly to catch trends early
+     - Update baselines after confirmed optimizations
+     - Document optimization wins in ADRs
+     - Share performance improvements with team
+```
+
+### Step 8: Benchmark History Storage
+
+**Store benchmark results for trend analysis**:
+```bash
+# Create benchmark history directory
+mkdir -p .benchmark/history/
+
+# Save current benchmark with timestamp
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+cp .benchmark/latest.json .benchmark/history/$TIMESTAMP.json
+
+# Store in git (optional, for CI/CD tracking)
+git add .benchmark/history/$TIMESTAMP.json
+git commit -m "chore(benchmark): performance results $TIMESTAMP"
+
+# Prune old results (keep last 30)
+ls -t .benchmark/history/*.json | tail -n +31 | xargs rm -f
+```
+
+**Integrate with CI/CD**:
+```yaml
+# .github/workflows/benchmark.yaml
+name: Performance Benchmarks
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run benchmarks
+        run: make benchmark
+
+      - name: Save results
+        run: |
+          mkdir -p .benchmark/history
+          cp .benchmark/latest.json .benchmark/history/$(date +%Y%m%d).json
+
+      - name: Detect regressions
+        run: |
+          python scripts/detect_benchmark_regressions.py \
+            --threshold 20 \
+            --consecutive 3
+
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: .benchmark/history/
+```
+
+---
+
 ## 🔗 Related Commands
 
 - `/coverage-trend` - Check test coverage trends
 - `/security-scan-report` - Security performance
 - `/test-summary regression` - Run regression tests
+- `/ci-status` - Check CI pipeline status including benchmarks
 
 ---
 
