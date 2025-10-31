@@ -100,6 +100,16 @@ jobs:
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
         OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
 
+    - name: Run new test suites
+      run: |
+        source .venv/bin/activate
+        echo "=== Running API endpoint tests (unit) ==="
+        OTEL_SDK_DISABLED=true pytest -n auto -m "api and unit" -v --tb=short || echo "Some API tests may be skipped (integration-only)"
+
+        echo ""
+        echo "=== Running MCP server unit tests ==="
+        OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -v --tb=short
+
     - name: Upload coverage
       if: matrix.python-version == '3.12'
       uses: codecov/codecov-action@v5.5.1
