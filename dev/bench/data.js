@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761916796541,
+  "lastUpdate": 1761916918456,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -15280,6 +15280,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001839308669375951",
             "extra": "mean: 58.32088874353125 usec\nrounds: 5348"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d18168f62fdae9b21e939071cc83788e0e5aef13",
+          "message": "fix(docs): replace invalid 'dharmachakra' icon with valid Lucide icons\n\n- kubernetes.mdx: dharmachakra → layers (orchestration/layering)\n- gke-staging-implementation-summary.mdx: dharmachakra → cloud (GKE/cloud)\n- Updated all Card components in overview.mdx with correct icons\n- Updated Icon Style Guide to document these changes\n\nThe 'dharmachakra' icon is not available in the Lucide library that\nMintlify uses, causing icons to not render in the navigation sidebar.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T09:21:05-04:00",
+          "tree_id": "a55fd799d6ae62e7cecc0b1311fd50ee3ef86b37",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d18168f62fdae9b21e939071cc83788e0e5aef13"
+        },
+        "date": 1761916917711,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50784.148687422596,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003968431035579635",
+            "extra": "mean: 19.691183683220114 usec\nrounds: 6288"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 51032.85717307319,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006535107508053997",
+            "extra": "mean: 19.595218755018806 usec\nrounds: 12466"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50325.17140554628,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028471200303425433",
+            "extra": "mean: 19.87077186367598 usec\nrounds: 19370"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.12124394423614,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016770648218109818",
+            "extra": "mean: 5.23228072067055 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.404949738900314,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013951313225348826",
+            "extra": "mean: 51.533243499999415 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.953358115967465,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008871472268043368",
+            "extra": "mean: 100.46860449999997 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2563635.257893598,
+            "unit": "iter/sec",
+            "range": "stddev: 4.8256960434493644e-8",
+            "extra": "mean: 390.07109023053715 nsec\nrounds: 197278"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5084.668199973255,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012095141984312396",
+            "extra": "mean: 196.66966666679647 usec\nrounds: 417"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2907.967801272335,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001432898297591729",
+            "extra": "mean: 343.88276223776137 usec\nrounds: 2431"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2760.501873831876,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000044048806910534866",
+            "extra": "mean: 362.2529690993804 usec\nrounds: 1521"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59517.05557312558,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020675231620823223",
+            "extra": "mean: 16.801906451359155 usec\nrounds: 12261"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17034.258261363193,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018504240216790247",
+            "extra": "mean: 58.705227116826244 usec\nrounds: 5539"
           }
         ]
       }
