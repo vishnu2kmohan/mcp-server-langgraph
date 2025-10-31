@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761917382230,
+  "lastUpdate": 1761917438233,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -15820,6 +15820,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002246604409809304",
             "extra": "mean: 49.763157735869086 usec\nrounds: 5300"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "346168d10b5386bd7948131bcf03d8d4dbcb7c6a",
+          "message": "fix(docs): remove HTML br tags from Mermaid participant names\n\nFixed Mermaid syntax error in GDPR Data Subject Rights Flow diagram by\nremoving <br/> HTML tags from participant alias labels. HTML tags in\nparticipant names can cause parsing issues in some Mermaid renderers.\n\nSimplified participant labels to just the main name without inline\ndescriptions. The diagram remains clear and readable.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T09:29:06-04:00",
+          "tree_id": "68174c397a695cd1616bc533df68935cd6c3d511",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/346168d10b5386bd7948131bcf03d8d4dbcb7c6a"
+        },
+        "date": 1761917437606,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51473.37530639449,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002346616420258499",
+            "extra": "mean: 19.42751945151285 usec\nrounds: 6272"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 51551.740244619745,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003817004386724676",
+            "extra": "mean: 19.397987250379316 usec\nrounds: 12471"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49676.5758443181,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002490735524432923",
+            "extra": "mean: 20.13021193598185 usec\nrounds: 20124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.98392694885874,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001720606378044501",
+            "extra": "mean: 5.236042718232397 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.39020351985728,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016431590316939892",
+            "extra": "mean: 51.57243445000006 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.952715663061745,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001796093218914742",
+            "extra": "mean: 100.47508980000046 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2569791.7320394805,
+            "unit": "iter/sec",
+            "range": "stddev: 5.2025777782891626e-8",
+            "extra": "mean: 389.1365932625068 nsec\nrounds: 198808"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4955.43536460614,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015204664802262547",
+            "extra": "mean: 201.79861635214374 usec\nrounds: 477"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2964.675295221504,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000895054177843979",
+            "extra": "mean: 337.3050673076445 usec\nrounds: 2704"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2890.539084642723,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000045185225134016364",
+            "extra": "mean: 345.9562284810282 usec\nrounds: 1580"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59172.76702072159,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034230218367380644",
+            "extra": "mean: 16.89966601781208 usec\nrounds: 11818"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17030.068279251744,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001824362372034709",
+            "extra": "mean: 58.71967062036567 usec\nrounds: 5480"
           }
         ]
       }
