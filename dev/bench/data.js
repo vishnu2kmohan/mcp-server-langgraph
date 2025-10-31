@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761920309435,
+  "lastUpdate": 1761921621930,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -16252,6 +16252,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0030366785068372637",
             "extra": "mean: 105.1918339230455 usec\nrounds: 4522"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "07e809f2ea21768d31b9db1e335e0f18473ba82e",
+          "message": "feat(tests): comprehensive testing strategy implementation with isolated infrastructure\n\nMajor testing improvements including new test infrastructure, API endpoint tests,\nMCP server unit tests, E2E test framework, and FastAPI upgrade to latest version.\n\n## New Test Infrastructure\n- Add docker-compose.test.yml with isolated test environment\n  - Port offset by 1000 (9432, 9379, 9080, 9082, 9333)\n  - Ephemeral storage (tmpfs) for speed\n  - Optimized resources for parallel execution\n  - Services: PostgreSQL, Redis (2x), OpenFGA, Keycloak, Qdrant\n\n## New Test Suites (62 passing tests, 86% pass rate)\n- Add tests/api/test_api_keys_endpoints.py (21 tests, 17 passing)\n  - API key CRUD operations\n  - Kong validation endpoint (API key → JWT exchange)\n  - Authorization and error handling\n- Add tests/api/test_service_principals_endpoints.py (21 tests, 15 passing)\n  - Service principal CRUD operations\n  - Secret rotation and user association\n  - Owner authorization verification\n- Add tests/unit/test_mcp_stdio_server.py (15 tests, 100% passing)\n  - Server initialization with fail-closed security\n  - JWT authentication (missing, invalid, expired tokens)\n  - OpenFGA authorization (tool executor, conversation editor/viewer)\n  - Chat handler (new/existing conversations, authorization)\n  - Response formatting (concise vs detailed)\n  - Error handling\n- Add tests/e2e/test_full_user_journey.py (framework ready)\n  - 6 user journey categories (Standard, GDPR, Service Principal, API Key, Error Recovery, Multi-User)\n  - Tests marked with pytest.skip() for future implementation\n\n## Makefile Updates\n- Add 8 new test targets:\n  - test-infra-up/down/logs: Manage test infrastructure\n  - test-e2e: End-to-end tests\n  - test-api: API endpoint tests\n  - test-mcp-server: MCP server unit tests\n  - test-new/test-quick-new: Run all new tests\n- Update help documentation with new testing features section\n\n## Documentation\n- Update tests/README.md with 250+ line comprehensive update\n  - Quick start guide for new testing features\n  - Test infrastructure setup instructions\n  - Documentation of all new test categories\n  - Implementation status and best practices\n- Add TESTING_IMPLEMENTATION_SUMMARY.md with complete implementation report\n\n## Dependencies\n- Upgrade FastAPI: 0.119.1 → 0.120.3 (latest stable)\n  - Includes bug fixes for nested model schema separation\n  - Full compatibility verified with Pydantic 2.12.3\n- Add test markers: api, performance\n\n## Bug Fixes\n- Fix test_permission_inheritance.py to use check_permission instead of check\n\n## Test Coverage Improvements\n- Before: ~30 passing tests, partial MCP coverage, no API tests, no E2E\n- After: 62 passing tests (+107%), 100% MCP server coverage, 42 API tests, E2E framework ready\n\n## Known Limitations\n- 10 POST endpoint tests fail due to routers not yet integrated into production app\n- Tests will work when routers are added to server_streamable.py or via E2E tests\n- All GET/DELETE endpoints work perfectly (17/17 passing)\n\n## Breaking Changes\nNone - all changes are additive\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T10:38:57-04:00",
+          "tree_id": "5a27019445361115eeac5b08a8caba21f73b8dcb",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/07e809f2ea21768d31b9db1e335e0f18473ba82e"
+        },
+        "date": 1761921621100,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50153.49113218474,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000044253801478318805",
+            "extra": "mean: 19.93879144652954 usec\nrounds: 6056"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 49802.585481371905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005072704042502094",
+            "extra": "mean: 20.079278823265888 usec\nrounds: 12169"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 47069.368801790544,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004723704311036679",
+            "extra": "mean: 21.24523921727116 usec\nrounds: 19777"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.18141216909586,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014839971933658496",
+            "extra": "mean: 5.230634027933225 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37816634635805,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006799412688744497",
+            "extra": "mean: 51.604469799999464 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.955149106550945,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004309970133444401",
+            "extra": "mean: 100.45052959999907 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2560003.5621258477,
+            "unit": "iter/sec",
+            "range": "stddev: 4.541587445222049e-8",
+            "extra": "mean: 390.62445646348704 nsec\nrounds: 189394"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5004.778592787552,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016003769379589246",
+            "extra": "mean: 199.8090387936666 usec\nrounds: 464"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2959.84548916769,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001104831076969989",
+            "extra": "mean: 337.8554737602875 usec\nrounds: 2077"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2871.2326314258844,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009319857278768334",
+            "extra": "mean: 348.28247250150173 usec\nrounds: 1691"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58147.858506249475,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002085797034829657",
+            "extra": "mean: 17.197537892002067 usec\nrounds: 12562"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 9001.254129971512,
+            "unit": "iter/sec",
+            "range": "stddev: 0.003296600313505414",
+            "extra": "mean: 111.09563018227604 usec\nrounds: 4221"
           }
         ]
       }
