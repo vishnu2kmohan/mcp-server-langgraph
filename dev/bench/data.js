@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761921993472,
+  "lastUpdate": 1761923316206,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -16468,6 +16468,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.002567663744222453",
             "extra": "mean: 93.71825733365725 usec\nrounds: 4943"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "18e279057f458c7a246fd338ea991dbc072ab3d2",
+          "message": "feat(docs): complete Mermaid diagram optimization - dark mode + ASCII conversions\n\n## Summary\nComprehensive Mermaid diagram optimization achieving 100% dark mode\ncompatibility, 100% ColorBrewer2 Set3 compliance, and conversion of\nall complex ASCII diagrams to Mermaid.\n\n## Dark Mode Fixes (11 files)\nUpdated all sequence diagrams with dark-mode-compatible theme:\n- Text colors: #333 → #1a202c (14.7:1 contrast on both modes)\n- Actor backgrounds: ColorBrewer2 Set3 #8dd3c7 (teal)\n- Label boxes: #ffffb3 → #fdb462 (orange, better contrast)\n- Sequence numbers: #fff → #4a5568 (mid-gray, works both modes)\n- All colors from ColorBrewer2 Set3 palette\n\nFiles updated:\n- 9 ADR files (adr-0027, 0028, 0030, 0033, 0034, 0036-0039)\n- deployment/disaster-recovery.mdx\n- deployment/gdpr-storage-configuration.mdx\n\n## ASCII to Mermaid Conversions (6 files)\nConverted complex ASCII diagrams to Mermaid with CB2 Set3 styling:\n1. adr-0028: Multi-layer cache architecture\n2. vertex-ai-workload-identity: GKE Workload Identity flow\n3. adr-0021: CI/CD pipeline stages\n4. vmware-resource-estimation: Resource pool hierarchy\n5. testing.mdx: Testing pyramid\n6. adr-0020: Dual MCP transport architecture\n\n## Flowchart Improvements (1 file)\n- Added ColorBrewer2 Set3 styling to unstyled K8s production diagram\n- getting-started/architecture.mdx: Production deployment now styled\n\n## Documentation & Templates\n- Created SEQUENCE_DIAGRAM_THEME.md: Standard dark-mode theme reference\n- Updated deployment-template.mdx: Added CB2 Set3 example\n- Updated templates/README.md: Added flowchart & sequence examples\n- All templates now show proper dark-mode compatible diagrams\n\n## Validation Results\n✅ All 60 Mermaid diagrams pass mmdc CLI validation\n✅ 100% ColorBrewer2 Set3 palette compliance\n✅ 100% dark mode compatibility (WCAG AA compliant)\n✅ mintlify broken-links: 28 remaining (all intentional)\n\n## Impact\n- Diagrams readable in both light AND dark mode\n- Consistent visual identity across all documentation\n- 6 ASCII diagrams converted to searchable, maintainable Mermaid\n- Future-proof: Templates ensure all new diagrams follow standards\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T11:07:34-04:00",
+          "tree_id": "9b482de5dcafc95935fd999c23849a805985e4a8",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/18e279057f458c7a246fd338ea991dbc072ab3d2"
+        },
+        "date": 1761923315291,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51100.560543913554,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022897639944375477",
+            "extra": "mean: 19.569256958358498 usec\nrounds: 6503"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54325.424214247105,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002239862678712525",
+            "extra": "mean: 18.40758750555224 usec\nrounds: 9028"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50387.50825619857,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002376645425647069",
+            "extra": "mean: 19.846188760028276 usec\nrounds: 20089"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.02656367849343,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002251776836392806",
+            "extra": "mean: 5.234874044444658 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.408790746539704,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000128102856505105",
+            "extra": "mean: 51.523045050000604 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.950261993532601,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009287428175745528",
+            "extra": "mean: 100.4998663000002 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2569778.3533816906,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5367020056980434e-8",
+            "extra": "mean: 389.138619166923 nsec\nrounds: 196079"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5079.770466431663,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013447632935977443",
+            "extra": "mean: 196.859288546252 usec\nrounds: 454"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2949.3823001319424,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009778716396670986",
+            "extra": "mean: 339.0540453013719 usec\nrounds: 2671"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2812.884767281164,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009030324165303878",
+            "extra": "mean: 355.5069200245146 usec\nrounds: 1638"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58427.7353792985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001955906607896089",
+            "extra": "mean: 17.115159324732435 usec\nrounds: 12735"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 11127.33107758577,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0023030275050644764",
+            "extra": "mean: 89.86880978263872 usec\nrounds: 5520"
           }
         ]
       }
