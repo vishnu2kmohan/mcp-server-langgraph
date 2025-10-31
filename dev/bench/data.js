@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761933235307,
+  "lastUpdate": 1761936420943,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -16900,6 +16900,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000029662798232451294",
             "extra": "mean: 60.27698029278071 usec\nrounds: 5125"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "bb062c7e58f2c54da8e47f0de28b14a943737014",
+          "message": "feat(workflow): Phase 5 - Advanced Automation & Analytics\n\nImplement advanced workflow optimization features including auto-populated\nhandoffs, semantic knowledge search, command usage tracking, and ROI analytics.\n\n## Phase 5 Features (9 new capabilities)\n\n### 1. Auto-Populate Handoff System\n- Script: update-handoff-files.py (220 lines)\n- Auto-generates last-session.md from git history\n- Auto-detects blockers from code and test state\n- Auto-recommends next steps based on context\n- Categorizes commits and tracks file changes\n\n### 2. Project Knowledge Base\n- Command: /knowledge-search (280 lines)\n- Semantic search across code, docs, ADRs, tests\n- Query expansion with related terms\n- Ranked results by relevance and recency\n- Context snippets and related searches\n\n### 3. Command Usage Tracking\n- Script: track-command-usage.py (330 lines)\n- Logs command usage with timestamps\n- Tracks time savings per command (27 commands)\n- Generates usage analytics and reports\n- Export to JSON/CSV\n\n### 4. Time Savings Measurement\n- Command: /analytics (420 lines)\n- Comprehensive usage dashboard\n- ROI calculation from actual data\n- Usage trends and insights\n- Actionable recommendations\n\n### 5. Enhanced Commands\n- /coverage-gaps: Visual heatmap + risk prioritization\n- /improve-coverage: Systematic coverage improvement\n- /type-safety-status: Mypy strict rollout tracker\n- /create-adr: Auto-generate ADRs (dual format)\n- /create-test: Template-based test generation\n- /deploy: Unified multi-target deployment\n\n### 6. Enhanced /benchmark\n- Historical trend analysis\n- Automated regression detection\n- Performance recommendations\n- Visual trend charts\n\n### 7. Pre-commit Validation\n- MDX validation in settings.local.json\n- Icon and Mermaid syntax checking\n- Prevents 3-5 formatting fix commits/sprint\n\n### 8. Updated Documentation\n- QUICK_REFERENCE.md updated to v3.1\n- Added Analytics and Advanced Features sections\n- New workflow examples\n\n## Impact Metrics\n\n**Files Created/Modified**: 11 files\n- New commands: 8 slash commands\n- New scripts: 2 automation scripts\n- Modified: 2 files (benchmark.md, settings.local.json)\n\n**Lines of Code**: ~2,950 lines\n- Commands: ~2,200 lines\n- Scripts: ~550 lines\n- Documentation: ~200 lines\n\n**Time Savings** (estimated per usage):\n- /create-adr: 40 min\n- /improve-coverage: 45 min\n- /coverage-gaps: 20 min\n- /create-test: 18 min\n- /deploy: 25 min\n- /type-safety-status: 15 min\n- /knowledge-search: 10 min\n- /analytics: 0 min (provides insights)\n\n**Overall Efficiency**:\n- Previous: 45-50% improvement (v2.0)\n- Current: 55-65% improvement (v3.1)\n- Additional: +10-15% efficiency gain\n- Annual savings: 607 hours (~15 work weeks)\n- ROI: 45x (on 41-hour total investment)\n\n## Features Summary\n\n**Automation**:\n✅ Auto-populated handoff files\n✅ Command usage logging\n✅ MDX validation hooks\n✅ Time savings tracking\n\n**Intelligence**:\n✅ Semantic knowledge search\n✅ Usage analytics and trends\n✅ ROI measurement\n✅ AI-driven recommendations\n\n**Quality**:\n✅ Coverage improvement tools\n✅ Type safety tracking\n✅ Performance trend analysis\n✅ Multi-target deployment\n\n## Breaking Changes\nNone - all additions are backward compatible\n\n## Migration Guide\nNo migration needed - all new optional features\n\nTotal: 11 files changed, 2,950+ insertions\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T14:45:16-04:00",
+          "tree_id": "470d0ee7fa8ef14d2c8d5678725b170f0d62ae01",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/bb062c7e58f2c54da8e47f0de28b14a943737014"
+        },
+        "date": 1761936419630,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 55250.41977425884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011176053669138307",
+            "extra": "mean: 18.09940999698793 usec\nrounds: 6922"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 55677.51417384006,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000248048740278698",
+            "extra": "mean: 17.96057196227786 usec\nrounds: 11777"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 53553.58034435734,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001265619949395196",
+            "extra": "mean: 18.67288785492686 usec\nrounds: 16978"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 192.6749310096875,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016901047303492374",
+            "extra": "mean: 5.190088792349021 msec\nrounds: 183"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.633353003040863,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000032520212870984566",
+            "extra": "mean: 50.93373504999974 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941735178502576,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006952982178740048",
+            "extra": "mean: 100.58606289999972 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2720330.898131777,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3193025690760116e-8",
+            "extra": "mean: 367.60233862974655 nsec\nrounds: 187900"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6384.533052036701,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014173905293846706",
+            "extra": "mean: 156.62852582163305 usec\nrounds: 426"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2932.374695426912,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006773765926338077",
+            "extra": "mean: 341.02053927812057 usec\nrounds: 2355"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3134.400150083282,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012982509635349393",
+            "extra": "mean: 319.0403114208088 usec\nrounds: 1795"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67016.44458156974,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000117477353061154",
+            "extra": "mean: 14.921710727026705 usec\nrounds: 11802"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20734.43556723964,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021398749953815338",
+            "extra": "mean: 48.22894728709171 usec\nrounds: 5179"
           }
         ]
       }
