@@ -2,12 +2,29 @@
 
 This guide defines the standard icon conventions for MCP Server LangGraph documentation. Consistent icon usage improves navigation and visual organization.
 
+## Icon Libraries
+
+Mintlify supports both **Font Awesome** and **Lucide** icon libraries.
+
+### Preference Guidelines
+
+**Prefer Font Awesome when:**
+- Brand icons are needed (docker, google, aws, microsoft, github, etc.)
+- Specialized technical icons exist (dharmachakra for Kubernetes, shield-halved for security)
+- More specific/semantic icons are available
+
+**Use Lucide for:**
+- Generic UI icons (file, folder, settings, etc.)
+- When Font Awesome doesn't have a suitable alternative
+- Simple, clean iconography needs
+
 ## Icon Selection Principles
 
 1. **Semantic Relevance**: Icons should clearly represent the document's purpose
 2. **Category Consistency**: Related documents should use related icons
 3. **Visual Distinction**: Different categories should have distinct icon families
 4. **Accessibility**: Icons should be recognizable and meaningful
+5. **Library Preference**: Use Font Awesome for brands/technical, Lucide for generic UI
 
 ## Icon Categories
 
@@ -63,9 +80,9 @@ icon: 'rocket'
 
 ### 3. Kubernetes-Specific Deployment
 
-**Icon**: `dharmachakra`
+**Icon**: `dharmachakra` (Font Awesome)
 
-**Rationale**: Official Kubernetes icon (ship's wheel/Dharmachakra).
+**Rationale**: Official Kubernetes icon (ship's wheel/Dharmachakra). Available in Font Awesome.
 
 **Usage**: Kubernetes deployment guides, manifests, K8s operations
 
@@ -89,9 +106,9 @@ icon: 'dharmachakra'
 
 ### 4. Container/Docker Deployment
 
-**Icon**: `docker`
+**Icon**: `docker` (Font Awesome)
 
-**Rationale**: Docker's official brand icon.
+**Rationale**: Docker's official brand icon. Available in Font Awesome.
 
 **Usage**: Docker-specific deployment guides
 
@@ -111,9 +128,9 @@ icon: 'docker'
 
 ### 5. Helm Deployment
 
-**Icon**: `boxes`
+**Icon**: `boxes` (Lucide)
 
-**Rationale**: Represents multiple packages/charts (Helm is a Kubernetes package manager). Note: `helm` is not a valid Lucide icon name.
+**Rationale**: Represents multiple packages/charts (Helm is a Kubernetes package manager). Note: `helm` is not a valid icon name in either Font Awesome or Lucide. `boxes` from Lucide is the best semantic alternative.
 
 **Usage**: Helm chart deployment guides
 
@@ -133,9 +150,9 @@ icon: 'boxes'
 
 ### 6. Cloud Provider-Specific (GCP)
 
-**Icon**: `google`
+**Icon**: `google` (Font Awesome)
 
-**Rationale**: Represents Google Cloud Platform services.
+**Rationale**: Google's brand icon. Available in Font Awesome.
 
 **Usage**: GCP-specific deployment guides (Cloud Run, Vertex AI, GKE-specific features)
 
@@ -160,15 +177,15 @@ icon: 'google'
 - `deployment/cloud-run.mdx`
 - `deployment/vertex-ai-workload-identity.mdx`
 
-**Note**: For AWS and Azure specific guides, use `aws` and `microsoft` icons respectively.
+**Note**: For AWS and Azure specific guides, use `aws` and `microsoft` (Font Awesome) icons respectively.
 
 ---
 
 ### 7. Security & Authentication
 
-**Icon**: `shield-halved`
+**Icon**: `shield-halved` (Font Awesome)
 
-**Rationale**: Represents security, protection, and access control.
+**Rationale**: Represents security, protection, and access control. Font Awesome provides better shield variants.
 
 **Usage**: Security guides, authentication/authorization, API gateways, secrets management
 
