@@ -20,54 +20,54 @@ This is a production-ready staging environment suitable for pre-production testi
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                 GitHub Actions (Deployment)              │
-│  - Workload Identity Federation (keyless auth)          │
-│  - Build & Push to Artifact Registry                    │
-│  - Deploy to GKE                                         │
-└────────────────────┬─────────────────────────────────────┘
-                     │
-                     ▼
-┌──────────────────────────────────────────────────────────┐
-│           GCP Project (vishnu-sandbox-20250310)          │
-│                                                           │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │  Staging VPC (10.1.0.0/20)                        │  │
-│  │                                                    │  │
-│  │  ┌──────────────────────────────────────────┐    │  │
-│  │  │  GKE Autopilot Cluster                   │    │  │
-│  │  │  - Private nodes                         │    │  │
-│  │  │  - Shielded nodes                        │    │  │
-│  │  │  - Binary Authorization                   │    │  │
-│  │  │  - Workload Identity                     │    │  │
-│  │  │                                           │    │  │
-│  │  │  ┌────────────────────────────────────┐ │    │  │
-│  │  │  │ Namespace: mcp-staging             │ │    │  │
-│  │  │  │ - MCP Server pods (2 replicas)    │ │    │  │
-│  │  │  │ - Network Policies (restrict)     │ │    │  │
-│  │  │  │ - Cloud SQL Proxy sidecar         │ │    │  │
-│  │  │  │ - External Secrets sync           │ │    │  │
-│  │  │  └────────────────────────────────────┘ │    │  │
-│  │  └──────────────────────────────────────────┘    │  │
-│  │                                                    │  │
-│  │  ┌──────────────────┐  ┌──────────────────────┐  │  │
-│  │  │ Cloud SQL        │  │ Memorystore Redis    │  │  │
-│  │  │ (PostgreSQL 15)  │  │ (Redis 7.0)          │  │  │
-│  │  │ - Private IP     │  │ - Private IP         │  │  │
-│  │  └──────────────────┘  └──────────────────────┘  │  │
-│  └────────────────────────────────────────────────────┘  │
-│                                                           │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │  Secret Manager                                    │  │
-│  │  - API keys, JWT secrets, DB passwords            │  │
-│  └────────────────────────────────────────────────────┘  │
-│                                                           │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │  Artifact Registry                                 │  │
-│  │  - Docker images (staging-*)                       │  │
-│  └────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph GitHub["GitHub Actions (Deployment)"]
+        GHA["CI/CD Pipeline<br/>- Workload Identity Federation<br/>- Build & Push to Artifact Registry<br/>- Deploy to GKE"]
+    end
+
+    GHA --> GCP
+
+    subgraph GCP["GCP Project (vishnu-sandbox-20250310)"]
+        subgraph VPC["Staging VPC (10.1.0.0/20)"]
+            subgraph GKE["GKE Autopilot Cluster"]
+                GKE_Features["Security Features:<br/>- Private nodes<br/>- Shielded nodes<br/>- Binary Authorization<br/>- Workload Identity"]
+
+                subgraph NS["Namespace: mcp-staging"]
+                    Pods["MCP Server Pods<br/>(2 replicas)<br/>+ Cloud SQL Proxy"]
+                    NetPol["Network Policies<br/>(restricted)"]
+                    ExtSec["External Secrets<br/>(synced)"]
+                end
+            end
+
+            CloudSQL["Cloud SQL<br/>(PostgreSQL 15)<br/>Private IP"]
+            Redis["Memorystore Redis<br/>(Redis 7.0)<br/>Private IP"]
+        end
+
+        SecretMgr["Secret Manager<br/>API keys, JWT secrets<br/>DB passwords"]
+        ArtifactReg["Artifact Registry<br/>Docker images (staging-*)"]
+    end
+
+    Pods --> CloudSQL
+    Pods --> Redis
+    ExtSec --> SecretMgr
+    GHA --> ArtifactReg
+
+    classDef githubStyle fill:#24292e,stroke:#f0f6fc,stroke-width:2px,color:#fff
+    classDef gcpStyle fill:#4285f4,stroke:#1967d2,stroke-width:2px,color:#fff
+    classDef vpcStyle fill:#aecbfa,stroke:#4285f4,stroke-width:2px,color:#000
+    classDef gkeStyle fill:#669df6,stroke:#1a73e8,stroke-width:2px,color:#fff
+    classDef podStyle fill:#34a853,stroke:#188038,stroke-width:2px,color:#fff
+    classDef dbStyle fill:#fbbc04,stroke:#f29900,stroke-width:2px,color:#000
+    classDef secretStyle fill:#ea4335,stroke:#c5221f,stroke-width:2px,color:#fff
+
+    class GHA githubStyle
+    class GCP gcpStyle
+    class VPC vpcStyle
+    class GKE,GKE_Features gkeStyle
+    class Pods,NetPol,ExtSec podStyle
+    class CloudSQL,Redis dbStyle
+    class SecretMgr,ArtifactReg secretStyle
 ```
 
 ## Prerequisites
