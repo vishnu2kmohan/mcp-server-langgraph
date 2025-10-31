@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761916995498,
+  "lastUpdate": 1761917053561,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -15496,6 +15496,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021215475229188313",
             "extra": "mean: 48.397368379652804 usec\nrounds: 5098"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9c95a73034a8ee781023fee4b1ff8d6b01cf3bf1",
+          "message": "docs: update Icon Style Guide to prefer Font Awesome over Lucide\n\nAdded guidelines explaining when to use Font Awesome vs Lucide:\n- Font Awesome: brand icons (docker, google, aws), specialized technical\n  icons (dharmachakra, shield-halved)\n- Lucide: generic UI icons, simple clean iconography\n\nAnnotated icon categories to show which library each icon comes from.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T09:22:35-04:00",
+          "tree_id": "4cc6894dab80c0c1f6135e6df00c272418c158f5",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9c95a73034a8ee781023fee4b1ff8d6b01cf3bf1"
+        },
+        "date": 1761917052922,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51558.636476386295,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023131555074202658",
+            "extra": "mean: 19.39539267020758 usec\nrounds: 6112"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53088.871594747914,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024980185119941295",
+            "extra": "mean: 18.836339329896965 usec\nrounds: 8894"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49727.784733812405,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002396688965466044",
+            "extra": "mean: 20.109482160785863 usec\nrounds: 19900"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.08349182770613,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015138438706697207",
+            "extra": "mean: 5.233314455555731 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.408151524562783,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010351023773110984",
+            "extra": "mean: 51.52474199999979 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.951261824377958,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004375812597657229",
+            "extra": "mean: 100.48976879999927 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2701967.5039320313,
+            "unit": "iter/sec",
+            "range": "stddev: 5.238657810158723e-8",
+            "extra": "mean: 370.100676097974 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5095.36314088749,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012116992187185332",
+            "extra": "mean: 196.25686577185235 usec\nrounds: 447"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2928.2721908189405,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011450219725720895",
+            "extra": "mean: 341.4983085026441 usec\nrounds: 2658"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2886.0868192636917,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003932341670799709",
+            "extra": "mean: 346.48992307692373 usec\nrounds: 1599"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59445.62565627038,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020552468629677574",
+            "extra": "mean: 16.822095637150035 usec\nrounds: 12171"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17234.418001970393,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001979915594477743",
+            "extra": "mean: 58.02342730028197 usec\nrounds: 5282"
           }
         ]
       }
