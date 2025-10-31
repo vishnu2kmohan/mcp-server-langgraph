@@ -1,0 +1,291 @@
+# Docker Compose for MCP Server LangGraph - Test Environment
+# ============================================================
+# Isolated test infrastructure with ephemeral storage and test-specific ports
+#
+# USAGE:
+#   # Start test services
+#   docker compose -f docker-compose.test.yml up -d
+#
+#   # Or use Makefile
+#   make test-infra-up
+#
+#   # Run tests with test infrastructure
+#   make test-e2e
+#
+#   # Stop and clean up
+#   docker compose -f docker-compose.test.yml down -v
+#
+# DIFFERENCES FROM MAIN docker-compose.yml:
+#   - Test-specific ports (offset by 1000 to avoid conflicts)
+#   - No persistent volumes (ephemeral storage for speed)
+#   - Faster healthchecks (shorter intervals)
+#   - Reduced resource limits for parallel execution
+#   - TESTING=true environment variables
+#   - Observability services optional (can be disabled)
+#
+# PORTS (offset by 1000 from main):
+#   9432  - PostgreSQL (test)
+#   9379  - Redis checkpoints (test)
+#   9380  - Redis sessions (test)
+#   9333  - Qdrant (test)
+#   9080  - OpenFGA HTTP API (test)
+#   9081  - OpenFGA gRPC (test)
+#   9082  - Keycloak (test)
+
+services:
+  # ==============================================================================
+  # DATABASE SERVICES
+  # ==============================================================================
+
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: mcp-postgres-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: openfga_test
+      # Test-specific settings for speed
+      POSTGRES_INITDB_ARGS: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
+    ports:
+      - "9432:5432"
+    # No volumes - ephemeral storage for test isolation
+    tmpfs:
+      - /var/lib/postgresql/data:rw,noexec,nosuid,size=256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
+  # AUTHORIZATION SERVICES
+  # ==============================================================================
+
+  openfga-test:
+    image: openfga/openfga:v1.10.2
+    container_name: mcp-openfga-test
+    command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    ports:
+      - "9080:8080"  # HTTP API
+      - "9081:8081"  # gRPC API
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
+      - OPENFGA_LOG_FORMAT=json
+      - OPENFGA_LOG_LEVEL=warn  # Reduced logging for tests
+      - OPENFGA_PLAYGROUND_ENABLED=false
+      - TESTING=true
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
+  # AUTHENTICATION SERVICES
+  # ==============================================================================
+
+  keycloak-test:
+    image: quay.io/keycloak/keycloak:26.0.0
+    container_name: mcp-keycloak-test
+    command: start-dev
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    ports:
+      - "9082:8080"
+    environment:
+      # Admin credentials
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+      # Database configuration
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres-test:5432/openfga_test
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+
+      # Development/test settings
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=false  # Disabled for test speed
+      - KC_LOG_LEVEL=warn  # Reduced logging
+
+      # Test-specific
+      - TESTING=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
+  # CACHE & SESSION STORAGE
+  # ==============================================================================
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: mcp-redis-checkpoints-test
+    command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
+    ports:
+      - "9379:6379"
+    # No volumes - ephemeral storage
+    tmpfs:
+      - /data:rw,noexec,nosuid,size=128m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 192M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      - mcp-test-network
+
+  redis-sessions-test:
+    image: redis:7-alpine
+    container_name: mcp-redis-sessions-test
+    command: redis-server --appendonly no --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
+    ports:
+      - "9380:6379"
+    # No volumes - ephemeral storage
+    tmpfs:
+      - /data:rw,noexec,nosuid,size=64m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
+  # VECTOR DATABASE (for Anthropic Best Practices: Just-in-Time Context)
+  # ==============================================================================
+
+  qdrant-test:
+    image: qdrant/qdrant:v1.15.1
+    container_name: mcp-qdrant-test
+    ports:
+      - "9333:6333"  # HTTP API
+      - "9334:6334"  # gRPC API
+    # No volumes - ephemeral storage
+    tmpfs:
+      - /qdrant/storage:rw,noexec,nosuid,size=256m
+    environment:
+      - QDRANT_ALLOW_RECOVERY_MODE=true
+      - QDRANT__LOG_LEVEL=WARN  # Reduced logging
+      - TESTING=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6333"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
+  # OBSERVABILITY SERVICES (Optional - comment out if not needed for tests)
+  # ==============================================================================
+  #
+  # Jaeger can be enabled for debugging E2E test flows
+  # Uncomment if you need distributed tracing during tests
+  #
+  # jaeger-test:
+  #   image: jaegertracing/all-in-one:1.62.0
+  #   container_name: mcp-jaeger-test
+  #   ports:
+  #     - "19686:16686"  # Jaeger UI (offset by 3000)
+  #     - "17268:14268"  # Jaeger collector HTTP
+  #   environment:
+  #     - COLLECTOR_OTLP_ENABLED=true
+  #     - LOG_LEVEL=warn
+  #     - SPAN_STORAGE_TYPE=memory
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.25'
+  #         memory: 256M
+  #       reservations:
+  #         cpus: '0.05'
+  #         memory: 128M
+  #   networks:
+  #     - mcp-test-network
+
+networks:
+  mcp-test-network:
+    driver: bridge
+    name: mcp-test-network
+
+# Note: No volumes section - all storage is ephemeral via tmpfs
+# This ensures:
+#   1. Fast startup/teardown
+#   2. Complete test isolation (no state persists between runs)
+#   3. Parallel test execution (multiple compose stacks can run)
+#   4. Clean slate for each test run

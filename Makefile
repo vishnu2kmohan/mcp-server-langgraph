@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
+.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -54,6 +54,16 @@ help:
 	@echo "  make test-mutation            Mutation tests (slow)"
 	@echo "  make test-all-quality         All quality tests (property+contract+regression)"
 	@echo "  make benchmark                Performance benchmarks"
+	@echo ""
+	@echo "New Testing Features:"
+	@echo "  make test-infra-up            Start test infrastructure (docker-compose.test.yml)"
+	@echo "  make test-infra-down          Stop and clean test infrastructure"
+	@echo "  make test-infra-logs          View test infrastructure logs"
+	@echo "  make test-e2e                 Run end-to-end tests (full user journeys)"
+	@echo "  make test-api                 Run API endpoint tests"
+	@echo "  make test-mcp-server          Run MCP server unit tests"
+	@echo "  make test-new                 Run all newly added tests"
+	@echo "  make test-quick-new           Quick check of new tests (parallel)"
 	@echo ""
 	@echo "Validation:"
 	@echo "  make validate-openapi         Validate OpenAPI schema"
@@ -320,6 +330,68 @@ test-mutation:
 
 test-all-quality: test-property test-contract test-regression
 	@echo "✓ All quality tests complete"
+
+# New Testing Infrastructure Targets
+
+test-infra-up:
+	@echo "Starting test infrastructure (docker-compose.test.yml)..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml up -d
+	@echo "✓ Test infrastructure started"
+	@echo ""
+	@echo "Test Services (offset ports by 1000):"
+	@echo "  PostgreSQL: localhost:9432"
+	@echo "  Redis:      localhost:9379"
+	@echo "  OpenFGA:    http://localhost:9080"
+	@echo "  Keycloak:   http://localhost:9082"
+	@echo "  Qdrant:     http://localhost:9333"
+	@echo ""
+
+test-infra-down:
+	@echo "Stopping test infrastructure..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml down -v --remove-orphans
+	@echo "✓ Test infrastructure stopped and cleaned"
+
+test-infra-logs:
+	@echo "Showing test infrastructure logs..."
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f
+
+test-e2e:
+	@echo "Running end-to-end tests (requires test infrastructure)..."
+	@echo "Ensuring test infrastructure is running..."
+	$(MAKE) test-infra-up
+	@echo ""
+	@echo "Waiting for services to be healthy..."
+	@sleep 10
+	@echo ""
+	@echo "Running E2E tests..."
+	TESTING=true OTEL_SDK_DISABLED=true $(PYTEST) -m e2e -v --tb=short
+	@echo "✓ E2E tests complete"
+
+test-api:
+	@echo "Running API endpoint tests (unit tests for REST APIs)..."
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "api and unit" -v
+	@echo "✓ API endpoint tests complete"
+
+test-mcp-server:
+	@echo "Running MCP server unit tests..."
+	OTEL_SDK_DISABLED=true $(PYTEST) tests/unit/test_mcp_stdio_server.py tests/test_mcp_streamable.py -v
+	@echo "✓ MCP server tests complete"
+
+test-new:
+	@echo "Running newly added tests..."
+	@echo ""
+	@echo "1. API Endpoint Tests:"
+	OTEL_SDK_DISABLED=true $(PYTEST) tests/api/ -v
+	@echo ""
+	@echo "2. MCP StdIO Server Tests:"
+	OTEL_SDK_DISABLED=true $(PYTEST) tests/unit/test_mcp_stdio_server.py -v
+	@echo ""
+	@echo "✓ All new tests complete"
+
+test-quick-new:
+	@echo "Quick check of newly added tests (parallel, no verbose)..."
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/api/ tests/unit/test_mcp_stdio_server.py
+	@echo "✓ Quick test complete"
 
 # Validation
 validate-openapi:

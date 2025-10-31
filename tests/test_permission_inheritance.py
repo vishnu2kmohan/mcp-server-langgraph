@@ -5,8 +5,9 @@ Following TDD principles - these tests define the expected behavior
 of service principals inheriting permissions from associated users.
 """
 
-import pytest
 from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 from mcp_server_langgraph.auth.openfga import check_permission
 
@@ -16,7 +17,7 @@ def mock_openfga_client():
     """Mock OpenFGA client for testing permission checks"""
     client = AsyncMock()
     # Default: no permissions
-    client.check = AsyncMock(return_value=False)
+    client.check_permission = AsyncMock(return_value=False)
     client.list_objects = AsyncMock(return_value=[])
     return client
 
@@ -28,7 +29,7 @@ class TestDirectPermissions:
     async def test_user_has_direct_permission(self, mock_openfga_client):
         """Test user with direct permission to resource"""
         # Arrange
-        mock_openfga_client.check.return_value = True
+        mock_openfga_client.check_permission.return_value = True
 
         # Act
         allowed = await check_permission(
@@ -40,15 +41,15 @@ class TestDirectPermissions:
 
         # Assert
         assert allowed is True
-        mock_openfga_client.check.assert_called_once_with(
-            "user:alice", "viewer", "conversation:thread1"
+        mock_openfga_client.check_permission.assert_called_once_with(
+            user="user:alice", relation="viewer", object="conversation:thread1"
         )
 
     @pytest.mark.asyncio
     async def test_user_without_permission_denied(self, mock_openfga_client):
         """Test user without permission is denied"""
         # Arrange
-        mock_openfga_client.check.return_value = False
+        mock_openfga_client.check_permission.return_value = False
 
         # Act
         allowed = await check_permission(
@@ -66,9 +67,7 @@ class TestServicePrincipalInheritedPermissions:
     """Test permission inheritance via acts_as relationship"""
 
     @pytest.mark.asyncio
-    async def test_service_principal_inherits_user_permission(
-        self, mock_openfga_client
-    ):
+    async def test_service_principal_inherits_user_permission(self, mock_openfga_client):
         """Test service principal inherits permission from associated user"""
         # Arrange
         service_id = "service:batch-job"
@@ -76,14 +75,14 @@ class TestServicePrincipalInheritedPermissions:
         resource = "conversation:thread1"
 
         # Service has no direct permission
-        async def check_side_effect(user, relation, obj):
+        async def check_side_effect(user, relation, object):
             if user == service_id:
                 return False  # No direct permission
             if user == associated_user:
                 return True  # User has permission
             return False
 
-        mock_openfga_client.check.side_effect = check_side_effect
+        mock_openfga_client.check_permission.side_effect = check_side_effect
 
         # Service acts as user:alice
         mock_openfga_client.list_objects.return_value = [associated_user]
@@ -100,19 +99,17 @@ class TestServicePrincipalInheritedPermissions:
         assert allowed is True
 
         # Verify check sequence
-        calls = mock_openfga_client.check.call_args_list
+        calls = mock_openfga_client.check_permission.call_args_list
         # First call: direct check for service principal
-        assert calls[0][0] == (service_id, "viewer", resource)
+        assert calls[0].kwargs == {"user": service_id, "relation": "viewer", "object": resource}
         # Second call: check for associated user
-        assert calls[1][0] == (associated_user, "viewer", resource)
+        assert calls[1].kwargs == {"user": associated_user, "relation": "viewer", "object": resource}
 
     @pytest.mark.asyncio
-    async def test_service_principal_without_acts_as_denied(
-        self, mock_openfga_client
-    ):
+    async def test_service_principal_without_acts_as_denied(self, mock_openfga_client):
         """Test service principal without acts_as relationship is denied"""
         # Arrange
-        mock_openfga_client.check.return_value = False
+        mock_openfga_client.check_permission.return_value = False
         mock_openfga_client.list_objects.return_value = []  # No acts_as relationships
 
         # Act
@@ -127,16 +124,14 @@ class TestServicePrincipalInheritedPermissions:
         assert allowed is False
 
     @pytest.mark.asyncio
-    async def test_service_principal_acts_as_user_without_permission(
-        self, mock_openfga_client
-    ):
+    async def test_service_principal_acts_as_user_without_permission(self, mock_openfga_client):
         """Test service principal acts as user who also lacks permission"""
         # Arrange
         service_id = "service:batch-job"
         associated_user = "user:charlie"
 
         # Neither service nor user has permission
-        mock_openfga_client.check.return_value = False
+        mock_openfga_client.check_permission.return_value = False
         mock_openfga_client.list_objects.return_value = [associated_user]
 
         # Act
@@ -151,9 +146,7 @@ class TestServicePrincipalInheritedPermissions:
         assert allowed is False
 
     @pytest.mark.asyncio
-    async def test_service_principal_acts_as_multiple_users(
-        self, mock_openfga_client
-    ):
+    async def test_service_principal_acts_as_multiple_users(self, mock_openfga_client):
         """Test service principal acting as multiple users (first with permission wins)"""
         # Arrange
         service_id = "service:multi-user-job"
@@ -161,7 +154,7 @@ class TestServicePrincipalInheritedPermissions:
         user2 = "user:bob"  # Has permission
         resource = "conversation:thread1"
 
-        async def check_side_effect(user, relation, obj):
+        async def check_side_effect(user, relation, object):
             if user == service_id:
                 return False
             if user == user1:
@@ -170,7 +163,7 @@ class TestServicePrincipalInheritedPermissions:
                 return True  # Bob has permission
             return False
 
-        mock_openfga_client.check.side_effect = check_side_effect
+        mock_openfga_client.check_permission.side_effect = check_side_effect
         mock_openfga_client.list_objects.return_value = [user1, user2]
 
         # Act
@@ -189,20 +182,18 @@ class TestServicePrincipalDirectPermissions:
     """Test service principals can also have direct permissions"""
 
     @pytest.mark.asyncio
-    async def test_service_principal_direct_permission_without_acts_as(
-        self, mock_openfga_client
-    ):
+    async def test_service_principal_direct_permission_without_acts_as(self, mock_openfga_client):
         """Test service principal with direct permission (no user association needed)"""
         # Arrange
         service_id = "service:api-integration"
 
         # Service has direct permission
-        async def check_side_effect(user, relation, obj):
+        async def check_side_effect(user, relation, object):
             if user == service_id:
                 return True  # Direct permission
             return False
 
-        mock_openfga_client.check.side_effect = check_side_effect
+        mock_openfga_client.check_permission.side_effect = check_side_effect
 
         # Act
         allowed = await check_permission(
@@ -216,20 +207,18 @@ class TestServicePrincipalDirectPermissions:
         assert allowed is True
 
         # Should only check once (direct check succeeds)
-        assert mock_openfga_client.check.call_count == 1
+        assert mock_openfga_client.check_permission.call_count == 1
         # Should not look up acts_as relationships
         mock_openfga_client.list_objects.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_service_principal_prefers_direct_over_inherited(
-        self, mock_openfga_client
-    ):
+    async def test_service_principal_prefers_direct_over_inherited(self, mock_openfga_client):
         """Test that direct permission check happens before inheritance lookup"""
         # Arrange
         service_id = "service:hybrid-job"
 
         # Service has direct permission
-        mock_openfga_client.check.return_value = True
+        mock_openfga_client.check_permission.return_value = True
 
         # Act
         allowed = await check_permission(
@@ -250,12 +239,10 @@ class TestRegularUsersUnaffected:
     """Test that regular users are unaffected by acts_as logic"""
 
     @pytest.mark.asyncio
-    async def test_regular_user_permission_check_unchanged(
-        self, mock_openfga_client
-    ):
+    async def test_regular_user_permission_check_unchanged(self, mock_openfga_client):
         """Test that regular user permission checks don't trigger acts_as lookup"""
         # Arrange
-        mock_openfga_client.check.return_value = True
+        mock_openfga_client.check_permission.return_value = True
 
         # Act
         allowed = await check_permission(
@@ -269,7 +256,7 @@ class TestRegularUsersUnaffected:
         assert allowed is True
 
         # Only direct check, no acts_as lookup
-        assert mock_openfga_client.check.call_count == 1
+        assert mock_openfga_client.check_permission.call_count == 1
         mock_openfga_client.list_objects.assert_not_called()
 
 
@@ -277,9 +264,7 @@ class TestPermissionInheritanceLogging:
     """Test that inherited access is logged for audit trail"""
 
     @pytest.mark.asyncio
-    async def test_inherited_permission_logs_both_identities(
-        self, mock_openfga_client, caplog
-    ):
+    async def test_inherited_permission_logs_both_identities(self, mock_openfga_client, caplog):
         """Test that when permission is inherited, both service and user are logged"""
         # Arrange
         import logging
@@ -290,14 +275,14 @@ class TestPermissionInheritanceLogging:
         associated_user = "user:alice"
         resource = "conversation:thread1"
 
-        async def check_side_effect(user, relation, obj):
+        async def check_side_effect(user, relation, object):
             if user == service_id:
                 return False
             if user == associated_user:
                 return True
             return False
 
-        mock_openfga_client.check.side_effect = check_side_effect
+        mock_openfga_client.check_permission.side_effect = check_side_effect
         mock_openfga_client.list_objects.return_value = [associated_user]
 
         # Act
@@ -313,10 +298,7 @@ class TestPermissionInheritanceLogging:
 
         # Verify logging (check that service and user are both mentioned)
         log_messages = [record.message for record in caplog.records]
-        assert any(
-            service_id in msg and associated_user in msg and resource in msg
-            for msg in log_messages
-        )
+        assert any(service_id in msg and associated_user in msg and resource in msg for msg in log_messages)
 
 
 class TestPermissionInheritanceCaching:
@@ -332,21 +314,17 @@ class TestPermissionInheritanceCaching:
         service_id = "service:cached-job"
         associated_user = "user:alice"
 
-        async def check_side_effect(user, relation, obj):
+        async def check_side_effect(user, relation, object):
             if user == associated_user:
                 return True
             return False
 
-        mock_openfga_client.check.side_effect = check_side_effect
+        mock_openfga_client.check_permission.side_effect = check_side_effect
         mock_openfga_client.list_objects.return_value = [associated_user]
 
         # Act - check permission twice
-        await check_permission(
-            service_id, "viewer", "conversation:1", mock_openfga_client
-        )
-        await check_permission(
-            service_id, "viewer", "conversation:2", mock_openfga_client
-        )
+        await check_permission(service_id, "viewer", "conversation:1", mock_openfga_client)
+        await check_permission(service_id, "viewer", "conversation:2", mock_openfga_client)
 
         # Assert
         # With caching, list_objects should only be called once
