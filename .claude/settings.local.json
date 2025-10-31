@@ -17,7 +17,8 @@
       "WebFetch(domain:pypi.org)",
       "Read(//home/vishnu/.claude/**)",
       "Read(//home/vishnu/**)",
-      "WebFetch(domain:mintlify.com)"
+      "WebFetch(domain:mintlify.com)",
+      "WebFetch(domain:lucide.dev)"
     ],
     "defaultMode": "acceptEdits"
   },

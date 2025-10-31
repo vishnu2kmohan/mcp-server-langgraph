@@ -111,9 +111,9 @@ icon: 'docker'
 
 ### 5. Helm Deployment
 
-**Icon**: `package`
+**Icon**: `boxes`
 
-**Rationale**: Represents package management (Helm is a Kubernetes package manager). Note: `helm` is not a valid Lucide icon name.
+**Rationale**: Represents multiple packages/charts (Helm is a Kubernetes package manager). Note: `helm` is not a valid Lucide icon name.
 
 **Usage**: Helm chart deployment guides
 
@@ -122,7 +122,7 @@ icon: 'docker'
 ---
 title: Helm Deployment
 description: 'Deploy MCP Server using Helm charts for simplified management'
-icon: 'package'
+icon: 'boxes'
 ---
 ```
 
