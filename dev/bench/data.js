@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761916918456,
+  "lastUpdate": 1761916995498,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -15388,6 +15388,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018504240216790247",
             "extra": "mean: 58.705227116826244 usec\nrounds: 5539"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f5e81de06648e767c32d01b487421e3d2e5fecf9",
+          "message": "Revert \"fix(docs): replace invalid 'dharmachakra' icon with valid Lucide icons\"\n\nThis reverts commit d18168f62fdae9b21e939071cc83788e0e5aef13.",
+          "timestamp": "2025-10-31T09:21:17-04:00",
+          "tree_id": "5c1d7e492b7ef3a13f9633a1e65b1029de2962ec",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f5e81de06648e767c32d01b487421e3d2e5fecf9"
+        },
+        "date": 1761916994300,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 56582.33587815449,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001116638641169933",
+            "extra": "mean: 17.673360148181573 usec\nrounds: 6750"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 56668.000734665584,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013093357291550689",
+            "extra": "mean: 17.646643379607863 usec\nrounds: 12167"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 53310.55270531649,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022685851451177083",
+            "extra": "mean: 18.758012236858185 usec\nrounds: 17243"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 186.7652430266673,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014894805444803732",
+            "extra": "mean: 5.354315309391989 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.483278685999665,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003239478708418331",
+            "extra": "mean: 51.32606355000107 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.935871638935156,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016696840241769273",
+            "extra": "mean: 100.64542260000167 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2714922.9954690263,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9130639228956356e-8",
+            "extra": "mean: 368.33457216610356 nsec\nrounds: 199961"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6432.129142308446,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009597359298437939",
+            "extra": "mean: 155.46951528418896 usec\nrounds: 458"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2942.1687746957123,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006597158514677502",
+            "extra": "mean: 339.885328333492 usec\nrounds: 2400"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2745.360089106105,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000050354909114721295",
+            "extra": "mean: 364.25094251501343 usec\nrounds: 1670"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 65363.96617620718,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025378090955492714",
+            "extra": "mean: 15.298949229981169 usec\nrounds: 10065"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20662.2804809449,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021215475229188313",
+            "extra": "mean: 48.397368379652804 usec\nrounds: 5098"
           }
         ]
       }
