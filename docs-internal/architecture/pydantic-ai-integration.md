@@ -13,24 +13,24 @@ Pydantic AI provides strongly-typed interactions with LLMs, ensuring outputs mat
 
 ## Architecture
 
-```
-User Message → Pydantic AI Router → Type-Safe Decision → Agent Graph
-                     ↓
-              RouterDecision(
-                  action: "use_tools" | "respond" | "clarify",
-                  reasoning: str,
-                  confidence: float,
-                  tool_name: Optional[str]
-              )
+```mermaid
+flowchart LR
+    USER1[User Message] --> ROUTER[Pydantic AI Router]
+    ROUTER --> DECISION[Type-Safe Decision]
+    DECISION --> GRAPH[Agent Graph]
 
-Agent Graph → Pydantic AI Generator → Validated Response → User
-                     ↓
-              AgentResponse(
-                  content: str,
-                  confidence: float,
-                  requires_clarification: bool,
-                  sources: list[str]
-              )
+    ROUTER -.-> SCHEMA1["RouterDecision(<br/>action: use_tools | respond | clarify,<br/>reasoning: str,<br/>confidence: float,<br/>tool_name: Optional[str]<br/>)"]
+
+    GRAPH --> GENERATOR[Pydantic AI Generator]
+    GENERATOR --> RESPONSE[Validated Response]
+    RESPONSE --> USER2[User]
+
+    GENERATOR -.-> SCHEMA2["AgentResponse(<br/>content: str,<br/>confidence: float,<br/>requires_clarification: bool,<br/>sources: list[str]<br/>)"]
+
+    style ROUTER fill:#4299e1,stroke:#2b6cb0
+    style GENERATOR fill:#48bb78,stroke:#2f855a
+    style SCHEMA1 fill:#2d3748,stroke:#4a5568,stroke-dasharray: 5 5
+    style SCHEMA2 fill:#2d3748,stroke:#4a5568,stroke-dasharray: 5 5
 ```
 
 ## Core Components

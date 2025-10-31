@@ -35,39 +35,25 @@ The CI/CD pipeline is implemented using GitHub Actions and provides:
 
 ### Pipeline Workflow
 
-```
-┌─────────────┐
-│   Push to   │
-│   Branch    │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────────────┐
-│   Test & Lint Jobs (Parallel)  │
-│  ┌──────┐ ┌──────┐ ┌─────────┐ │
-│  │ Test │ │ Lint │ │ Validate│ │
-│  └──────┘ └──────┘ └─────────┘ │
-└─────────────┬───────────────────┘
-              │
-              ▼
-       ┌──────────────┐
-       │ All Checks   │
-       │    Pass?     │
-       └──┬───────┬───┘
-     Yes  │       │  No
-          │       └────────┐
-          ▼                ▼
-   ┌──────────┐      ┌─────────┐
-   │  Build   │      │  Fail   │
-   │  & Push  │      │  Build  │
-   └────┬─────┘      └─────────┘
-        │
-        ▼
-   ┌──────────┐
-   │  Deploy  │
-   │   (main  │
-   │   only)  │
-   └──────────┘
+```mermaid
+flowchart TB
+    A[Push to Branch] --> B[Test & Lint Jobs - Parallel]
+
+    subgraph parallel[" "]
+        B1[Test]
+        B2[Lint]
+        B3[Validate]
+    end
+
+    B --> parallel
+    parallel --> C{All Checks Pass?}
+
+    C -->|Yes| D[Build & Push]
+    C -->|No| E[Fail Build]
+
+    D --> F[Deploy<br/>main only]
+
+    style parallel fill:#2d3748,stroke:#4a5568
 ```
 
 ## Pipeline Architecture
@@ -368,16 +354,18 @@ syft sbom-linux-amd64.spdx.json -o table
 
 ### Test Pyramid
 
-```
-         ┌─────────────┐
-         │  E2E Tests  │  (Manual/Staging)
-         └─────────────┘
-       ┌──────────────────┐
-       │ Integration Tests│  (CI on PR)
-       └──────────────────┘
-    ┌──────────────────────────┐
-    │      Unit Tests          │  (CI on every push)
-    └──────────────────────────┘
+```mermaid
+flowchart BT
+    A["Unit Tests<br/>(CI on every push)"]
+    B["Integration Tests<br/>(CI on PR)"]
+    C["E2E Tests<br/>(Manual/Staging)"]
+
+    A -.-> B
+    B -.-> C
+
+    style A fill:#48bb78,stroke:#2f855a,stroke-width:3px
+    style B fill:#4299e1,stroke:#2b6cb0,stroke-width:2px
+    style C fill:#ed8936,stroke:#c05621,stroke-width:1px
 ```
 
 ### Test Execution

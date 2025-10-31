@@ -34,21 +34,37 @@ The MCP Server with LangGraph includes production-ready compliance features for:
 
 ### Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Compliance Layer                          │
-├─────────────────────────────────────────────────────────────┤
-│  GDPR APIs  │  SOC 2 Evidence  │  HIPAA Controls  │  SLA    │
-│  (REST)     │  (Automated)     │  (Middleware)    │ Monitor │
-├─────────────────────────────────────────────────────────────┤
-│              Automation & Scheduling (APScheduler)           │
-├─────────────────────────────────────────────────────────────┤
-│  Daily Checks │ Weekly Reviews │ Monthly Reports │ Cleanup  │
-├─────────────────────────────────────────────────────────────┤
-│           Observability (Grafana + Prometheus)               │
-├─────────────────────────────────────────────────────────────┤
-│  SLA Dashboard │ SOC 2 Dashboard │ Auth Dashboard │ Security │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph layer1["Compliance Layer"]
+        GDPR["GDPR APIs<br/>(REST)"]
+        SOC2["SOC 2 Evidence<br/>(Automated)"]
+        HIPAA["HIPAA Controls<br/>(Middleware)"]
+        SLA["SLA<br/>Monitor"]
+    end
+
+    subgraph layer2["Automation & Scheduling (APScheduler)"]
+        direction LR
+        DAILY["Daily Checks"]
+        WEEKLY["Weekly Reviews"]
+        MONTHLY["Monthly Reports"]
+        CLEANUP["Cleanup"]
+    end
+
+    subgraph layer3["Observability (Grafana + Prometheus)"]
+        direction LR
+        DASH1["SLA Dashboard"]
+        DASH2["SOC 2 Dashboard"]
+        DASH3["Auth Dashboard"]
+        DASH4["Security"]
+    end
+
+    layer1 --> layer2
+    layer2 --> layer3
+
+    style layer1 fill:#4299e1,stroke:#2b6cb0,stroke-width:2px
+    style layer2 fill:#48bb78,stroke:#2f855a,stroke-width:2px
+    style layer3 fill:#ed8936,stroke:#c05621,stroke-width:2px
 ```
 
 ---

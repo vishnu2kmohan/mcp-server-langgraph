@@ -6,75 +6,36 @@ This MCP server now implements Anthropic's **gather-action-verify-repeat** agent
 
 ## The Agentic Loop
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    AGENTIC LOOP CYCLE                       │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    START([START]) --> GATHER
 
-    ┌──────────────┐
-    │    START     │
-    └──────┬───────┘
-           │
-           ▼
-    ┌──────────────────────────────────────┐
-    │  1. GATHER CONTEXT                   │
-    │  (compact_context node)              │
-    │                                      │
-    │  • Check token count                 │
-    │  • Trigger compaction if > 8000      │
-    │  • Summarize older messages          │
-    │  • Keep recent 5 messages intact     │
-    └──────────┬───────────────────────────┘
-           │
-           ▼
-    ┌──────────────────────────────────────┐
-    │  2. ROUTE DECISION                   │
-    │  (router node)                       │
-    │                                      │
-    │  • Analyze user intent               │
-    │  • Choose action: respond|tools      │
-    │  • Assign confidence score           │
-    └──────────┬───────────────────────────┘
-           │
-           ├─────────────┐
-           │             │
-           ▼             ▼
-    ┌──────────┐  ┌──────────┐
-    │  Tools   │  │ Respond  │
-    │  (tools) │  │(generate)│
-    └────┬─────┘  └────┬─────┘
-         │             │
-         └─────┬───────┘
-               │
-               ▼
-    ┌──────────────────────────────────────┐
-    │  3. VERIFY WORK                      │
-    │  (verify_response node)              │
-    │                                      │
-    │  • LLM-as-judge evaluation           │
-    │  • Score 6 quality criteria          │
-    │  • Generate actionable feedback      │
-    │  • Check if score ≥ 0.7             │
-    └──────────┬───────────────────────────┘
-           │
-           ├─────────────┐
-           │             │
-           ▼             ▼
-    ┌──────────┐  ┌──────────┐
-    │   END    │  │  REFINE  │
-    │ (passed) │  │ (failed) │
-    └──────────┘  └────┬─────┘
-                       │
-                       │ 4. REPEAT
-                       │ (max 3 times)
-                       │
-                       └──────────┐
-                                  │
-                                  ▼
-                           ┌──────────┐
-                           │ Respond  │
-                           │  (retry) │
-                           └──────────┘
+    GATHER["1. GATHER CONTEXT<br/>(compact_context node)<br/><br/>• Check token count<br/>• Trigger compaction if > 8000<br/>• Summarize older messages<br/>• Keep recent 5 messages intact"]
+
+    GATHER --> ROUTE
+
+    ROUTE["2. ROUTE DECISION<br/>(router node)<br/><br/>• Analyze user intent<br/>• Choose action: respond|tools<br/>• Assign confidence score"]
+
+    ROUTE --> TOOLS["Tools<br/>(tools)"]
+    ROUTE --> RESPOND["Respond<br/>(generate)"]
+
+    TOOLS --> VERIFY
+    RESPOND --> VERIFY
+
+    VERIFY["3. VERIFY WORK<br/>(verify_response node)<br/><br/>• LLM-as-judge evaluation<br/>• Score 6 quality criteria<br/>• Generate actionable feedback<br/>• Check if score ≥ 0.7"]
+
+    VERIFY -->|Passed| END([END])
+    VERIFY -->|Failed| REFINE["REFINE"]
+
+    REFINE -->|"4. REPEAT<br/>(max 3 times)"| RETRY["Respond<br/>(retry)"]
+    RETRY --> VERIFY
+
+    style GATHER fill:#4299e1,stroke:#2b6cb0
+    style ROUTE fill:#48bb78,stroke:#2f855a
+    style VERIFY fill:#ed8936,stroke:#c05621
+    style REFINE fill:#f56565,stroke:#c53030
+    style START fill:#9f7aea,stroke:#6b46c1
+    style END fill:#9f7aea,stroke:#6b46c1
 ```
 
 ## Components
