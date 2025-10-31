@@ -182,7 +182,7 @@
         "deployment/kubernetes/eks",
         "deployment/kubernetes/aks",
         "deployment/kubernetes/kustomize",
-        "deployment/VMWARE_RESOURCE_ESTIMATION"
+        "deployment/vmware-resource-estimation"
       ]
     },
     {
@@ -232,9 +232,9 @@
     {
       "group": "Operations",
       "pages": [
-        "deployment/VERSION_PINNING",
-        "deployment/VERSION_COMPATIBILITY",
-        "deployment/RELEASE_PROCESS",
+        "deployment/version-pinning",
+        "deployment/version-compatibility",
+        "deployment/release-process",
         "deployment/gke-staging-implementation-summary",
         "deployment/model-configuration",
         "deployment/infisical-installation",

@@ -181,8 +181,10 @@ yarn.lock
 # MCP test outputs
 mcp_test_*.json
 
-# Mintlify
-.mintlify/
+# Mintlify (ignore cache/build files, but track documentation guide and templates)
+.mintlify/*
+!.mintlify/ICON_GUIDE.md
+!.mintlify/templates/
 _site/
 
 # AI Tools (user-specific - these are personal IDE configurations)

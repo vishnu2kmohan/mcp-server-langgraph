@@ -28,7 +28,7 @@ These are maintained for internal reference but are not included in the public d
 
 - **Mintlify docs** (`.mdx` in `docs/`): User-facing, published documentation
 - **Reference docs** (`.md` in `docs/reference/`): Internal, contributor-focused documentation
-- **Operational docs** (`.md` in `docs/deployment/`): VERSION_COMPATIBILITY.md, VERSION_PINNING.md, model-configuration.md
+- **Operational docs** (`.md` in `docs/deployment/`): version-compatibility.md, version-pinning.md, model-configuration.md
 - **Status docs** (`.md` at root level): CHANGELOG.md, SECURITY.md, VERSION_PINNING_REMEDIATION.md
 
 See `../../README.md` for complete documentation organization strategy.

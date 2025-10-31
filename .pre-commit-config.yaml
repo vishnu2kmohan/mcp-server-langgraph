@@ -78,3 +78,22 @@ repos:
         name: Validate GitHub Actions workflows
         description: Validates GitHub Actions workflow syntax
         files: ^\.github/workflows/.*\.ya?ml$
+
+  # Mintlify documentation validation
+  - repo: local
+    hooks:
+      - id: validate-mintlify-docs
+        name: Validate Mintlify Documentation
+        entry: python3 scripts/validate_mintlify_docs.py docs
+        language: system
+        files: \.mdx$
+        pass_filenames: false
+        always_run: false  # Only run when .mdx files change
+
+      - id: check-frontmatter-quotes
+        name: Check Frontmatter Quote Style
+        entry: python3 scripts/standardize_frontmatter.py docs --dry-run
+        language: system
+        files: \.mdx$
+        pass_filenames: false
+        always_run: false
