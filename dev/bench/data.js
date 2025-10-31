@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761917280543,
+  "lastUpdate": 1761917382230,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -15712,6 +15712,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019536660338238646",
             "extra": "mean: 57.434345737437226 usec\nrounds: 5267"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "3ee4ff1291acf13b2938b6830e8a3c5a07296ca5",
+          "message": "feat(docs): convert GKE staging ASCII diagram to Mermaid\n\nReplaced the ASCII art architecture diagram in gke-staging.mdx with a\nproper Mermaid diagram featuring:\n- Color-coded components (GitHub, GCP, VPC, GKE, pods, databases, secrets)\n- Clear hierarchy with nested subgraphs\n- Better visual representation of the staging environment\n- Improved readability and maintainability\n\nThe Mermaid diagram shows the complete flow from GitHub Actions through\nto the GKE cluster with all supporting infrastructure.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T09:28:20-04:00",
+          "tree_id": "208a37d6d950795bec9ea3f467dee789d1edc77c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/3ee4ff1291acf13b2938b6830e8a3c5a07296ca5"
+        },
+        "date": 1761917381382,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57259.57497718914,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011726862713902328",
+            "extra": "mean: 17.464328025459086 usec\nrounds: 6908"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 58729.91115515902,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012632947551502638",
+            "extra": "mean: 17.027098804186714 usec\nrounds: 11791"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 54856.42238730141,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001254249401512498",
+            "extra": "mean: 18.229406083753062 usec\nrounds: 16733"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.6410929652036,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000667163310444955",
+            "extra": "mean: 5.2454588066305465 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.507455875947368,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014706574153642416",
+            "extra": "mean: 51.262450949997884 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.940473630745124,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000035131799923034556",
+            "extra": "mean: 100.59882829999935 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2687961.8205755334,
+            "unit": "iter/sec",
+            "range": "stddev: 3.363539155253315e-8",
+            "extra": "mean: 372.0290936966824 nsec\nrounds: 198256"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6435.0702039785265,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001064150293680683",
+            "extra": "mean: 155.3984600481504 usec\nrounds: 413"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2898.0313915896395,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005927025084406761",
+            "extra": "mean: 345.06182469316735 usec\nrounds: 2527"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3159.1855567410166,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004909495089225467",
+            "extra": "mean: 316.53727900414617 usec\nrounds: 1767"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 65998.75664655854,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011197672017437921",
+            "extra": "mean: 15.151800591566817 usec\nrounds: 12171"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20095.187795512502,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002246604409809304",
+            "extra": "mean: 49.763157735869086 usec\nrounds: 5300"
           }
         ]
       }
