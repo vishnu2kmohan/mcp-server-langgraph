@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761917053561,
+  "lastUpdate": 1761917280543,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -15604,6 +15604,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001979915594477743",
             "extra": "mean: 58.02342730028197 usec\nrounds: 5282"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "45bfdd3009fa9edb86c5aeedfb117eaedc5fca97",
+          "message": "fix(docs): resolve MDX syntax errors and broken ADR cross-references\n\nFixed issues uncovered by `mintlify broken-links`:\n\n1. **MDX Syntax Errors** (2 files):\n   - gke-staging-implementation-summary.mdx: Escaped < in (<1s)\n   - gke-staging-checklist.mdx: Escaped < in (<70%)\n\n2. **ADR Cross-References** (9 files, 27 links):\n   - Converted relative .md links to absolute /architecture/adr-XXXX format\n   - Fixed in ADRs 0031-0039 (enterprise auth series)\n\n3. **Missing Doc Link** (1 file):\n   - gke-staging.mdx: Changed non-existent gke-production to gke\n\n**Results**:\n- Reduced broken links from 56 to 28\n- Remaining 28 are intentional (templates, source file references)\n- All ADR documentation links now work correctly\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-10-31T09:27:03-04:00",
+          "tree_id": "93267f446721f45340f56607d49dbe72b33de4a7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/45bfdd3009fa9edb86c5aeedfb117eaedc5fca97"
+        },
+        "date": 1761917279339,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50154.06753763112,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023549349391459445",
+            "extra": "mean: 19.93856229606282 usec\nrounds: 6132"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52386.95862392315,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021870537316481998",
+            "extra": "mean: 19.08872028969702 usec\nrounds: 12016"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49207.829065863916,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002577244731080747",
+            "extra": "mean: 20.321969470783106 usec\nrounds: 19031"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.70174380542102,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006035319901054121",
+            "extra": "mean: 5.243790539326853 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35653545362214,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010055071443514839",
+            "extra": "mean: 51.66213770000212 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.942001287437426,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004680111714575393",
+            "extra": "mean: 100.58337060000042 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2552759.4791439846,
+            "unit": "iter/sec",
+            "range": "stddev: 4.982364391313722e-8",
+            "extra": "mean: 391.73294944940494 nsec\nrounds: 194970"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5032.908947628522,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016518812565778437",
+            "extra": "mean: 198.69224943383773 usec\nrounds: 441"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2919.869543181941,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008610898525338936",
+            "extra": "mean: 342.48105444815366 usec\nrounds: 2608"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2800.445352121852,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004552370882950764",
+            "extra": "mean: 357.086061058937 usec\nrounds: 1605"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59186.100809543655,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024900517875974244",
+            "extra": "mean: 16.895858762818715 usec\nrounds: 12171"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17411.18466938805,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019536660338238646",
+            "extra": "mean: 57.434345737437226 usec\nrounds: 5267"
           }
         ]
       }
