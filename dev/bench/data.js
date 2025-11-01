@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761936420943,
+  "lastUpdate": 1762012065441,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -17008,6 +17008,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021398749953815338",
             "extra": "mean: 48.22894728709171 usec\nrounds: 5179"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "c3a7dbf946bccabbb4569ed8021ee252866a95df",
+          "message": "docs: comprehensive Mintlify documentation improvements\n\n## Summary\nComplete overhaul of documentation organization, consistency, and quality\nwith automated tooling for future maintenance.\n\n## Phase 1: Reference Documentation (NEW)\n- Created comprehensive setup scripts reference (619 lines)\n- Created configuration files reference (945 lines)\n- Created API endpoints reference (1,145 lines)\n- Created Kong Gateway plugins reference (1,070 lines)\n- Fixed 18 broken internal links across 5 files\n- Updated mint.json navigation with new reference section\n\n## Phase 2: Code Block Improvements (AUTOMATED)\n- Added language specifiers to 1,899 code blocks (bash, python, yaml, json, etc.)\n- Improved syntax highlighting and copy functionality\n- Created fix_code_blocks.py automation tool\n- Processed 107 MDX files across all doc directories\n\n## Phase 3: SEO & Accessibility (AUTOMATED)\n- Removed 2,530 duplicate H1 headings from 144 files\n- Frontmatter title now serves as page H1\n- Adjusted heading hierarchy (H2→H3, H3→H4, etc.)\n- Created fix_duplicate_h1.py automation tool\n\n## Quality Metrics\n- Link integrity: 100% (18 broken → 0)\n- Code blocks with language: 100% (+2,725 blocks)\n- Duplicate H1s: 0 (-2,530)\n- New reference docs: 6,000+ lines\n- Documentation grade: A- → A+\n\n## New Files\n- docs/reference/setup-scripts.mdx\n- docs/reference/configuration-files.mdx\n- docs/reference/api-endpoints.mdx\n- docs/reference/kong-plugins.mdx\n- scripts/fix_code_blocks.py\n- scripts/fix_duplicate_h1.py\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T11:46:39-04:00",
+          "tree_id": "4fd24af48334b1cab797bd0f5a40d9c82e5d78b7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/c3a7dbf946bccabbb4569ed8021ee252866a95df"
+        },
+        "date": 1762012064188,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 47898.44995914075,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007534738302043888",
+            "extra": "mean: 20.877502316944266 usec\nrounds: 5395"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54196.854002434266,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002297066623453773",
+            "extra": "mean: 18.451255490864554 usec\nrounds: 11155"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49723.23620158511,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002464440899839459",
+            "extra": "mean: 20.111321715784083 usec\nrounds: 19023"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.7785975441746,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023069598101464343",
+            "extra": "mean: 5.241678117318433 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.432115468894693,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011230781236397651",
+            "extra": "mean: 51.461201000000045 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939298892709884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004944517328528559",
+            "extra": "mean: 100.61071819999938 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2665124.0858685584,
+            "unit": "iter/sec",
+            "range": "stddev: 7.800471052356085e-8",
+            "extra": "mean: 375.21705098173777 nsec\nrounds: 194932"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5011.927335997919,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001589542533835636",
+            "extra": "mean: 199.524041942418 usec\nrounds: 453"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2988.2158292093723,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009225170262606217",
+            "extra": "mean: 334.64784913631286 usec\nrounds: 2605"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2886.1244308770615,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008966253744125614",
+            "extra": "mean: 346.4854076634911 usec\nrounds: 1592"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59146.91324932739,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002085831819406855",
+            "extra": "mean: 16.907053049152516 usec\nrounds: 12479"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17150.37566171836,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001877325879634331",
+            "extra": "mean: 58.30776070008289 usec\nrounds: 5257"
           }
         ]
       }
