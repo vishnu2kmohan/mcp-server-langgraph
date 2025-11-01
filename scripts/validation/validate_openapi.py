@@ -15,7 +15,7 @@ try:
     from openapi_spec_validator import validate_spec
 except ImportError:
     print("Error: Required packages not installed")
-    print("Run: pip install openapi-spec-validator")
+    print("Run: uv pip install openapi-spec-validator")
     sys.exit(1)
 
 

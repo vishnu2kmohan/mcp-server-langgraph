@@ -135,13 +135,13 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
 The project supports optional feature sets that can be installed on demand:
 
 - **Secrets Management** (`[secrets]`): Infisical integration for centralized secrets
-  - Install: `pip install -e ".[secrets]"` or `uv sync --extra secrets`
+  - Install: `uv sync --extra secrets`
   - Fallback: Environment variables (`.env` file)
   - Production: Recommended for secure secret rotation
   - See: [Infisical Installation Guide](docs/deployment/infisical-installation.md)
 
 - **Self-Hosted Embeddings** (`[embeddings]`): sentence-transformers for local embedding generation
-  - Install: `pip install -e ".[embeddings]"` or `uv sync --extra embeddings`
+  - Install: `uv sync --extra embeddings`
   - Fallback: Google Gemini API (langchain-google-genai, installed by default)
   - Production: Use API-based embeddings (lower latency, no GPU required)
   - Note: Self-hosted embeddings require significant resources
@@ -153,7 +153,7 @@ The project supports optional feature sets that can be installed on demand:
   - See: [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.md)
 
 - **All Features** (`[all]`): Install all optional dependencies
-  - Install: `pip install -e ".[all]"` or `uv sync --all-extras`
+  - Install: `uv sync --all-extras`
   - Use for: Development, testing, full feature evaluation
 
 **Development vs Production**:
@@ -266,17 +266,6 @@ uv sync  # Installs all dependencies from pyproject.toml and uv.lock
 - 🔒 **Reproducible builds** via uv.lock lockfile
 - 📦 **Single source of truth** in pyproject.toml
 - 🛡️ **Better dependency resolution**
-
-**Alternative: Using pip**:
-```bash
-# Install from PyPI
-pip install mcp-server-langgraph
-
-# Or install from source
-git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
-cd mcp-server-langgraph
-pip install -e .
-```
 
 > **Note**: requirements*.txt files are deprecated. Use `uv sync` instead.
 

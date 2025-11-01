@@ -194,7 +194,7 @@ def print_next_steps():
     print("   source venv/bin/activate  # On Windows: venv\\Scripts\\activate")
 
     print("\n3. Install dependencies:")
-    print("   pip install -r requirements.txt")
+    print("   uv sync")
 
     if use_docker:
         print("\n4. Start infrastructure:")

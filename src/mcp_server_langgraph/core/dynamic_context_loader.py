@@ -52,7 +52,8 @@ def _create_embeddings(
             from langchain_google_genai import GoogleGenerativeAIEmbeddings
         except ImportError:
             raise ImportError(
-                "langchain-google-genai is required for Google embeddings. " "Install with: pip install langchain-google-genai"
+                "langchain-google-genai is required for Google embeddings. "
+                "Add 'langchain-google-genai' to pyproject.toml dependencies, then run: uv sync"
             )
 
         if not google_api_key:
@@ -105,7 +106,8 @@ def _create_embeddings(
 
         except ImportError:
             raise ImportError(
-                "sentence-transformers is required for local embeddings. " "Install with: pip install sentence-transformers"
+                "sentence-transformers is required for local embeddings. "
+                "Add 'sentence-transformers' to pyproject.toml dependencies, then run: uv sync"
             )
 
     else:

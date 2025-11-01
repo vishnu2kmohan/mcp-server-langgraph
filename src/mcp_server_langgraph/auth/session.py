@@ -493,7 +493,9 @@ class RedisSessionStore(SessionStore):
             decode_responses: Decode responses to strings
         """
         if not REDIS_AVAILABLE:
-            raise ImportError("Redis not available. Install with: pip install 'redis[hiredis]>=5.0.0'")
+            raise ImportError(
+                "Redis not available. Add 'redis[hiredis]>=5.0.0' to pyproject.toml dependencies, then run: uv sync"
+            )
 
         self.redis_url = redis_url
         self.default_ttl = default_ttl_seconds
@@ -748,7 +750,9 @@ class RedisSessionStore(SessionStore):
         return count
 
 
-def create_session_store(backend: str = "memory", redis_url: Optional[str] = None, **kwargs) -> SessionStore:  # type: ignore[no-untyped-def]
+def create_session_store(
+    backend: str = "memory", redis_url: Optional[str] = None, **kwargs
+) -> SessionStore:  # type: ignore[no-untyped-def]
     """
     Factory function to create session store
 
@@ -774,7 +778,9 @@ def create_session_store(backend: str = "memory", redis_url: Optional[str] = Non
             raise ValueError("redis_url required for Redis backend")
 
         if not REDIS_AVAILABLE:
-            raise ImportError("Redis not available. Install with: pip install 'redis[hiredis]>=5.0.0'")
+            raise ImportError(
+                "Redis not available. Add 'redis[hiredis]>=5.0.0' to pyproject.toml dependencies, then run: uv sync"
+            )
 
         logger.info("Creating RedisSessionStore")
         return RedisSessionStore(redis_url=redis_url, **kwargs)

@@ -37,13 +37,13 @@ check_prerequisites() {
 
     # Check if langgraph CLI is installed
     if ! command -v langgraph &> /dev/null; then
-        print_error "langgraph CLI not found. Install with: pip install langgraph-cli"
+        print_error "langgraph CLI not found. Install with: uv tool install langgraph-cli"
         exit 1
     fi
 
     # Check if langsmith CLI is installed
     if ! command -v langsmith &> /dev/null; then
-        print_warn "langsmith CLI not found. Install with: pip install langsmith"
+        print_warn "langsmith CLI not found. Install with: uv tool install langsmith"
         print_info "LangSmith CLI is optional but recommended for monitoring"
     fi
 

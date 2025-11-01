@@ -570,7 +570,7 @@ class MCPServerUser(HttpUser):
 **Run load test**:
 ```bash
 ## Install Locust
-pip install locust
+uv tool install locust
 
 ## Run test
 locust -f tests/load/locustfile.py \
@@ -772,8 +772,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -r requirements.txt
-          uv pip install -r requirements-dev.txt
+          uv sync
 
       - name: Run unit tests
         run: |
@@ -818,8 +817,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          uv sync
 
       - name: Run integration tests
         env:
@@ -835,12 +833,12 @@ jobs:
 
       - name: Run Bandit
         run: |
-          pip install bandit
+          uv tool install bandit
           bandit -r src/ -f json -o bandit-report.json
 
       - name: Run Safety
         run: |
-          pip install safety
+          uv tool install safety
           safety check --json
 
       - name: Run Trivy

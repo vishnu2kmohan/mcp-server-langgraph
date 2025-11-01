@@ -269,7 +269,7 @@ class InMemoryUserProvider(UserProvider):
                 "but bcrypt library is not available. "
                 "This would result in INSECURE plaintext passwords. "
                 "\n\nTo fix:\n"
-                "1. Install bcrypt: pip install bcrypt\n"
+                "1. Install bcrypt: Add 'bcrypt' to pyproject.toml dependencies, then run: uv sync\n"
                 "2. Or disable password hashing: USE_PASSWORD_HASHING=false (NOT recommended for production)\n"
                 "\nRefusing to start with insecure configuration."
             )

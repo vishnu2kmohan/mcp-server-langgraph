@@ -32,8 +32,7 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
 ## 3. Install dependencies
-pip install -r requirements.txt
-pip install -r requirements-test.txt
+uv sync
 
 ## 4. Copy environment file
 cp .env.example .env
@@ -133,18 +132,12 @@ where python  # Windows
 ##### 3. Install Dependencies
 
 ```bash
-## Upgrade pip
-pip install --upgrade pip
-
-## Install runtime dependencies
-pip install -r requirements.txt
-
-## Install development dependencies
-pip install -r requirements-test.txt
+## Install all dependencies with uv
+uv sync
 
 ## Verify installation
-pip list | grep langgraph
-pip list | grep mcp
+uv pip list | grep langgraph
+uv pip list | grep mcp
 ```
 
 **Using Make (recommended):**
@@ -154,8 +147,7 @@ pip list | grep mcp
 make install-dev
 
 ## This runs:
-## - pip install -r requirements-pinned.txt
-## - pip install -r requirements-test.txt
+## - uv sync
 ```
 
 ##### 4. Get LLM API Key
@@ -510,7 +502,7 @@ tail -f mcp-server-langgraph.log
 which python  # Should show venv path
 
 ## Reinstall dependencies
-pip install -r requirements.txt
+uv sync
 ```
 
 ##### "Port already in use"
@@ -557,7 +549,7 @@ cat .env | grep API_KEY
 
 ```bash
 ## Update dependencies
-pip install -r requirements-pinned.txt
+uv sync
 
 ## Clear pytest cache
 pytest --cache-clear

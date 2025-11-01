@@ -65,8 +65,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e .
-          pip install pytest pytest-asyncio
+          uv sync
 
       - name: Run tests
         run: pytest tests/ -v
@@ -85,7 +84,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install LangGraph CLI
-        run: pip install langgraph-cli
+        run: uv tool install langgraph-cli
 
       - name: Deploy to Staging
         env:
@@ -112,7 +111,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install LangGraph CLI
-        run: pip install langgraph-cli
+        run: uv tool install langgraph-cli
 
       - name: Deploy to Production
         env:
@@ -169,9 +168,9 @@ test:
   stage: test
   image: python:${PYTHON_VERSION}
   script:
-    - pip install -e .
-    - pip install pytest pytest-asyncio
-    - pytest tests/ -v
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - uv sync
+    - uv run pytest tests/ -v
 
 deploy-staging:
   stage: deploy-staging
@@ -180,7 +179,8 @@ deploy-staging:
     name: staging
     url: https://mcp-server-langgraph-staging.langchain.com
   script:
-    - pip install langgraph-cli
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - uv tool install langgraph-cli
     - langgraph deploy mcp-server-langgraph-staging --tag staging
     - |
       langgraph deployment invoke mcp-server-langgraph-staging \
@@ -196,7 +196,8 @@ deploy-production:
     url: https://mcp-server-langgraph-prod.langchain.com
   when: manual
   script:
-    - pip install langgraph-cli
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - uv tool install langgraph-cli
     - langgraph deploy mcp-server-langgraph-prod --tag production --tag "$CI_COMMIT_SHORT_SHA"
     - langgraph deployment get mcp-server-langgraph-prod
   only:
@@ -229,7 +230,7 @@ jobs:
       - checkout
       - run:
           name: Install LangGraph CLI
-          command: pip install langgraph-cli
+          command: uv tool install langgraph-cli
       - run:
           name: Deploy to Staging
           command: |
@@ -247,7 +248,7 @@ jobs:
       - checkout
       - run:
           name: Install LangGraph CLI
-          command: pip install langgraph-cli
+          command: uv tool install langgraph-cli
       - run:
           name: Deploy to Production
           command: |

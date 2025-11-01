@@ -40,7 +40,7 @@ LangGraph Platform is LangChain's fully managed hosting service for LangGraph ap
 #### 1. Install CLI
 
 ```bash
-pip install langgraph-cli
+uv tool install langgraph-cli
 ```
 #### 2. Login to LangChain
 
@@ -259,7 +259,9 @@ jobs:
           python-version: '3.11'
 
       - name: Install LangGraph CLI
-        run: pip install langgraph-cli
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv tool install langgraph-cli
 
       - name: Deploy
         env:
@@ -275,7 +277,8 @@ deploy:
   stage: deploy
   image: python:3.12
   script:
-    - pip install langgraph-cli
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - uv tool install langgraph-cli
     - langgraph deploy my-agent-prod --tag production
   only:
     - main

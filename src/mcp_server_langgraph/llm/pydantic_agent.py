@@ -166,7 +166,9 @@ class PydanticAIAgentWrapper:
                 span.record_exception(e)
                 raise
 
-    async def generate_response(self, messages: list[BaseMessage], context: Optional[dict] = None) -> AgentResponse:  # type: ignore[type-arg]
+    async def generate_response(
+        self, messages: list[BaseMessage], context: Optional[dict] = None
+    ) -> AgentResponse:  # type: ignore[type-arg]
         """
         Generate a typed response to user messages.
 
@@ -256,7 +258,7 @@ def create_pydantic_agent(model_name: Optional[str] = None, provider: Optional[s
     if not PYDANTIC_AI_AVAILABLE:
         raise ImportError(
             "pydantic-ai is not installed. "
-            "Install with: pip install pydantic-ai\n"
+            "Add 'pydantic-ai' to pyproject.toml dependencies, then run: uv sync\n"
             "The agent will fall back to standard routing without Pydantic AI."
         )
 

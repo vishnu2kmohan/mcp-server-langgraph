@@ -119,7 +119,8 @@ def _create_checkpointer() -> BaseCheckpointSaver:  # type: ignore[type-arg]
         if not REDIS_CHECKPOINTER_AVAILABLE:
             logger.warning(
                 "Redis checkpointer not available (langgraph-checkpoint-redis not installed), "
-                "falling back to MemorySaver. Install with: pip install langgraph-checkpoint-redis"
+                "falling back to MemorySaver. Add 'langgraph-checkpoint-redis' to "
+                "pyproject.toml dependencies, then run: uv sync"
             )
             return MemorySaver()
 

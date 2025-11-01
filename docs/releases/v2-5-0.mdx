@@ -254,22 +254,22 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
        - Zero configuration
        - Automatically includes Infisical
 
-    2. **pip extras** (One-line install)
+    2. **uv extras** (One-line install)
        ```bash
-       pip install -e ".[secrets]"
+       uv sync --extra secrets
        ```
        - Easiest for local development
 
     3. **Pre-built wheels** (Fast, no Rust)
        ```bash
-       pip install infisical-python==2.3.5
+       uv pip install infisical-python==2.3.5
        ```
        - For CI/CD pipelines
 
     4. **Build from source** (Latest version)
        ```bash
        curl -sSf https://sh.rustup.rs | sh
-       pip install -r requirements-infisical.txt
+       uv sync --extra secrets
        ```
        - For advanced users
 
@@ -317,16 +317,17 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
     RUN --mount=type=cache,target=/var/cache/apt \
         apt-get update && apt-get install -y build-essential
 
-    # Cache mounts for pip
-    RUN --mount=type=cache,target=/root/.cache/pip \
-        pip install -r requirements-infisical.txt
+    # Cache mounts for uv
+    COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+    RUN --mount=type=cache,target=/root/.cache/uv \
+        uv sync --extra secrets
     ```
   </Accordion>
 </AccordionGroup>
 
 **Migration from v2.4.0**:
 - ✅ **Backward compatible** - Docker users unaffected
-- ✅ **Optional** - Infisical moved to `pip install ".[secrets]"`
+- ✅ **Optional** - Infisical moved to `uv sync --extra secrets`
 - ✅ **Graceful fallback** - App uses environment variables if Infisical unavailable
 
 ---
@@ -399,8 +400,8 @@ git pull origin main
 ## Option 1: Docker (automatic)
 docker compose up -d
 
-## Option 2: pip extras
-pip install -e ".[secrets]"
+## Option 2: uv extras
+uv sync --extra secrets
 
 ## Option 3: Skip Infisical (use .env)
 ## No action needed - just use environment variables

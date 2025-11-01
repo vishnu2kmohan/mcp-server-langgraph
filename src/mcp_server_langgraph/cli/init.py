@@ -164,9 +164,7 @@ MCP Server with LangGraph - Quick Start Project
 
 1. **Install dependencies:**
    ```bash
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\\Scripts\\activate
-   uv pip install -e .
+   uv sync
    ```
 
 2. **Run the server:**

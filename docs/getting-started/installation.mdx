@@ -188,7 +188,7 @@ Choose the installation method that best fits your use case:
     ```
   </Tab>
 
-  <Tab title="pip Install">
+  <Tab title="uv Install">
     Best for: Using as a library
 
     <Warning>
@@ -197,10 +197,10 @@ Choose the installation method that best fits your use case:
 
     ```bash
     # Install from GitHub (future)
-    pip install git+https://github.com/vishnu2kmohan/mcp-server-langgraph.git
+    uv pip install git+https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 
     # Or install locally
-    pip install -e .
+    uv sync
     ```
   </Tab>
 </Tabs>
@@ -390,7 +390,7 @@ brew install kubectl helm kustomize  # macOS
     docker build -t mcp-server-langgraph:latest .
 
     # Python packages have ARM64 wheels
-    pip install -r requirements.txt
+    uv sync
     ```
     <Tip>
       On Apple Silicon Macs, use native Python, not Rosetta!
@@ -409,16 +409,12 @@ brew install kubectl helm kustomize  # macOS
     # Using uv (recommended - handles this automatically):
     uv sync
 
-    # If using pip:
-    # Upgrade pip first
-    python -m pip install --upgrade pip setuptools wheel
-
-    # Try again
-    pip install -e .
-
     # If still failing, install build tools:
     # Ubuntu: sudo apt install build-essential python3-dev
     # macOS: xcode-select --install
+
+    # Then try again:
+    uv sync
     ```
     <Tip>
       uv handles most dependency resolution issues automatically and is much faster than pip!

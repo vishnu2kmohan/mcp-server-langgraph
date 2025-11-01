@@ -282,9 +282,9 @@ def check_security(result: ValidationResult) -> None:
         if output.returncode == 0:
             result.add_info("Run 'bandit -r . -x ./tests,./venv -ll' for security scan")
         else:
-            result.add_warning("Bandit not installed (pip install bandit)")
+            result.add_warning("Bandit not installed (uv tool install bandit)")
     except FileNotFoundError:
-        result.add_warning("Bandit not installed (pip install bandit)")
+        result.add_warning("Bandit not installed (uv tool install bandit)")
 
     # Check for security documentation
     if Path("SECURITY_AUDIT.md").exists():

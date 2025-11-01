@@ -819,12 +819,12 @@ jobs:
 
     - name: Run Bandit
       run: |
-        pip install bandit
+        uv tool install bandit
         bandit -r src/ -f json -o bandit-report.json
 
     - name: Run Safety
       run: |
-        pip install safety
+        uv tool install safety
         safety check --json
 ```
 

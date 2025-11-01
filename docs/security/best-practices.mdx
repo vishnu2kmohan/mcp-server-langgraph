@@ -643,7 +643,8 @@ WORKDIR /app
 COPY --chown=appuser:appuser . .
 
 ## Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+RUN uv sync --frozen
 
 ## Switch to non-root user
 USER appuser
@@ -953,17 +954,17 @@ jobs:
 
     - name: Bandit security scan
       run: |
-        pip install bandit
+        uv tool install bandit
         bandit -r src/ -f json -o bandit-report.json
 
     - name: Safety dependency check
       run: |
-        pip install safety
+        uv tool install safety
         safety check --json --output safety-report.json
 
     - name: Semgrep scan
       run: |
-        pip install semgrep
+        uv tool install semgrep
         semgrep --config=auto --json -o semgrep-report.json
 ```
 

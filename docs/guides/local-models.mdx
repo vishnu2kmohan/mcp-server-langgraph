@@ -180,7 +180,7 @@ llm = Ollama(
   <Step title="Install vLLM">
     ```bash
     # Requires CUDA GPU
-    pip install vllm
+    uv pip install vllm
 
     # Or with Docker
     docker pull vllm/vllm-openai:latest
@@ -574,7 +574,7 @@ LLM_MODEL_NAME=my-custom-model
 
 ```bash
 ## Use libraries like axolotl or unsloth
-pip install unsloth
+uv pip install unsloth
 
 ## Fine-tune script
 python fine_tune.py \

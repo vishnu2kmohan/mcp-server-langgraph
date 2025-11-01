@@ -28,7 +28,7 @@ try:
 
     LANGSMITH_AVAILABLE = True
 except ImportError:
-    print("⚠ LangSmith not installed. Install with: pip install langsmith")
+    print("⚠ LangSmith not installed. Add 'langsmith' to pyproject.toml dependencies, then run: uv sync")
     LANGSMITH_AVAILABLE = False
     Client = None
 

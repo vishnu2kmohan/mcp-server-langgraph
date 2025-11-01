@@ -369,7 +369,7 @@ direnv allow
 
 ```bash
 ## Install pre-commit
-pip install pre-commit
+uv tool install pre-commit
 
 ## Install hooks
 pre-commit install
@@ -590,7 +590,7 @@ pytest --pdb
 pytest --pdb --maxfail=1
 
 ## Use ipdb for better debugging
-pip install ipdb
+uv pip install ipdb
 pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb
 ```
 
@@ -644,7 +644,7 @@ autopep8 --in-place --aggressive --aggressive src/
 
 ```bash
 ## Install Alembic
-pip install alembic
+uv pip install alembic
 
 ## Initialize (if not already done)
 alembic init migrations
@@ -688,7 +688,7 @@ breakpoint()
 
 ```python
 ## Install debugpy
-pip install debugpy
+uv pip install debugpy
 
 ## Add to your code
 import debugpy
@@ -720,8 +720,7 @@ help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 install:  ## Install dependencies
-	uv pip install -r requirements.txt
-	uv pip install -r requirements-dev.txt
+	uv sync
 	pre-commit install
 
 dev:  ## Run development server
@@ -816,7 +815,7 @@ make services-up
     source .venv/bin/activate
 
     # Reinstall dependencies
-    uv pip install -r requirements.txt
+    uv sync
 
     # Check Python path
     python -c "import sys; print('\n'.join(sys.path))"
@@ -854,7 +853,7 @@ make services-up
     rm -rf .pytest_cache
 
     # Reinstall test dependencies
-    pip install -r requirements-dev.txt
+    uv sync
     ```
   </Accordion>
 </AccordionGroup>
@@ -865,14 +864,14 @@ make services-up
 
 ```bash
 ## Use uv instead of pip (10-100x faster)
-uv pip install package-name
+uv add package-name
 
 ## Use pytest-xdist for parallel tests
-pip install pytest-xdist
+uv add --dev pytest-xdist
 pytest -n auto  # Use all CPU cores
 
 ## Use pytest-sugar for better output
-pip install pytest-sugar
+uv add --dev pytest-sugar
 
 ## Cache Docker layers
 docker build --cache-from mcp-server-langgraph:latest .

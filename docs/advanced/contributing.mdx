@@ -74,10 +74,10 @@ source .venv/bin/activate  # Linux/macOS
 .venv\Scripts\activate  # Windows
 
 ## Install dependencies
-uv pip install -r requirements.txt
-uv pip install -r requirements-dev.txt
+uv sync
 
 ## Install pre-commit hooks
+uv tool install pre-commit
 pre-commit install
 ```
 

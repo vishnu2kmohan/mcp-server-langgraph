@@ -64,7 +64,9 @@ class ConversationStore:
 
         if self.backend == "redis":
             if not REDIS_AVAILABLE:
-                raise ImportError("Redis backend requires redis-py. Install with: pip install redis")
+                raise ImportError(
+                    "Redis backend requires redis-py. Add 'redis' to pyproject.toml dependencies, then run: uv sync"
+                )
 
             try:
                 self._redis_client = redis.from_url(redis_url, decode_responses=True)  # type: ignore[no-untyped-call]

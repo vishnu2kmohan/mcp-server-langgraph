@@ -119,9 +119,8 @@ test:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-pinned.txt
-        pip install -r requirements-test.txt
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv sync
 
     - name: Run unit tests
       run: |
@@ -152,7 +151,9 @@ lint:
         python-version: '3.12'
 
     - name: Install dependencies
-      run: pip install flake8 mypy
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv pip install flake8 mypy
 
     - name: Run flake8
       run: |
@@ -184,7 +185,9 @@ security-check:
         python-version: '3.12'
 
     - name: Install Bandit
-      run: pip install bandit
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv pip install bandit
 
     - name: Run Bandit
       run: bandit -r src/ -ll
@@ -212,7 +215,8 @@ validate-deployments:
 
     - name: Install dependencies
       run: |
-        pip install pyyaml jsonschema
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv pip install pyyaml jsonschema
 
     - name: Run deployment validation script
       run: python3 scripts/validation/validate_deployments.py

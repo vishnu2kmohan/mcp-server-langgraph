@@ -74,10 +74,10 @@ kubectl apply -k deployments/kustomize/base
 **Installation**:
 ```bash
 ## Install with Infisical support
-pip install -e ".[secrets]"
+uv sync --extra secrets
 
 ## Or install all optional dependencies
-pip install -e ".[all]"
+uv sync --all-extras
 ```
 **Verification**:
 ```bash
@@ -97,10 +97,10 @@ python -c "from infisical_client import InfisicalClient; print('✓ Infisical in
 **Installation**:
 ```bash
 ## Install specific version with wheels
-pip install infisical-python==2.3.5
+uv pip install infisical-python==2.3.5
 
 ## Verify installation
-pip show infisical-python
+uv pip show infisical-python
 ```
 **Supported platforms** (version 2.3.5):
 - ✅ Linux x86_64 (manylinux)
@@ -139,7 +139,7 @@ sudo apt-get install -y gcc g++ make python3-dev
 xcode-select --install
 
 ## 3. Install infisical-python
-pip install -r requirements-infisical.txt
+uv sync --extra secrets
 
 ## Build time: 2-5 minutes
 ```
@@ -215,10 +215,10 @@ wheels/
 
 ```bash
 ## Auto-detect Python version
-pip install --no-index --find-links=wheels/py$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")') infisical-python
+uv pip install --no-index --find-links=wheels/py$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")') infisical-python
 
 ## Or specify version
-pip install --no-index --find-links=wheels/py3.12 infisical-python
+uv pip install --no-index --find-links=wheels/py3.12 infisical-python
 ```
 ---
 
@@ -234,7 +234,7 @@ WARNING: Infisical client not available, using fallback mode
 
 **To install Infisical**:
 ```bash
-pip install -e ".[secrets]"
+uv sync --extra secrets
 ```
 ---
 
@@ -252,7 +252,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 
 ## Option B: Use pre-built wheels
-pip install infisical-python==2.3.5
+uv pip install infisical-python==2.3.5
 
 ## Option C: Use Docker
 docker compose up -d
@@ -270,10 +270,10 @@ ERROR: Could not find a version that satisfies the requirement infisical-python=
 **Solutions**:
 ```bash
 ## Option A: Use version with wheels
-pip install infisical-python==2.3.5
+uv pip install infisical-python==2.3.5
 
 ## Option B: Build from source (requires Rust)
-pip install 'infisical-python>=2.1.7,&lt;2.3.6'
+uv pip install 'infisical-python>=2.1.7,<2.3.6'
 
 ## Option C: Use Docker
 docker compose up -d
@@ -299,7 +299,7 @@ sudo apt-get install python3-dev
 xcode-select --install
 
 ## Then retry
-pip install -r requirements-infisical.txt
+uv sync --extra secrets
 ```
 ---
 

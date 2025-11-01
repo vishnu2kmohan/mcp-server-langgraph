@@ -553,8 +553,6 @@ make test-all-quality
   <Step title="Update Dependencies">
     ```bash
     uv sync
-    # OR
-    pip install -r requirements.txt
     ```
   </Step>
 
@@ -603,11 +601,9 @@ make test-all-quality
 
 ### Upgrading
 
-#### pip/uv
+#### uv
 
 ```bash
-pip install mcp-server-langgraph==2.7.0
-## OR
 uv pip install mcp-server-langgraph==2.7.0
 ```
 
