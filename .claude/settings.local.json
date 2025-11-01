@@ -19,7 +19,8 @@
       "Read(//home/vishnu/**)",
       "WebFetch(domain:mintlify.com)",
       "WebFetch(domain:lucide.dev)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:www.anthropic.com)"
     ],
     "defaultMode": "acceptEdits"
   },

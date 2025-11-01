@@ -33,6 +33,15 @@
             ]
           },
           {
+            "group": "Framework Comparisons",
+            "pages": [
+              "comparisons/choosing-framework",
+              "comparisons/vs-crewai",
+              "comparisons/vs-langgraph-cloud",
+              "comparisons/vs-openai-agentkit"
+            ]
+          },
+          {
             "group": "Security",
             "pages": [
               "security/overview",
