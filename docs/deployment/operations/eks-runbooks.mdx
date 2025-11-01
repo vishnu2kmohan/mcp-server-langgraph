@@ -1,0 +1,852 @@
+---
+title: 'EKS Operational Runbooks'
+description: 'Operational procedures and troubleshooting guides for AWS EKS production environments'
+icon: 'book'
+---
+
+# EKS Operational Runbooks
+
+Operational procedures, troubleshooting guides, and incident response playbooks for AWS EKS deployments.
+
+## Quick Reference
+
+<CardGroup cols={2}>
+  <Card title="Cluster Health" icon="heartbeat" href="#cluster-health-checks">
+    Check cluster and node status
+  </Card>
+  <Card title="Pod Issues" icon="cube" href="#pod-troubleshooting">
+    Diagnose and fix pod problems
+  </Card>
+  <Card title="Networking" icon="network-wired" href="#networking-issues">
+    Resolve connectivity problems
+  </Card>
+  <Card title="Database" icon="database" href="#rds-operations">
+    RDS backup, restore, and troubleshooting
+  </Card>
+</CardGroup>
+
+---
+
+## Cluster Health Checks
+
+### Daily Health Check
+
+```bash
+# 1. Check cluster status
+kubectl cluster-info
+
+# 2. Check node health
+kubectl get nodes -o wide
+kubectl top nodes
+
+# 3. Check system pods
+kubectl get pods -n kube-system
+kubectl get pods -n amazon-cloudwatch
+
+# 4. Check application pods
+kubectl get pods -n mcp-server-langgraph
+
+# 5. Check HPA status
+kubectl get hpa -A
+
+# 6. Check Cluster Autoscaler
+kubectl logs -f deployment/cluster-autoscaler -n kube-system --tail=50
+```
+
+### Automated Health Checks
+
+```bash
+#!/bin/bash
+# scripts/eks-health-check.sh
+
+echo "=== EKS Cluster Health Check ==="
+
+# Check API server
+if kubectl cluster-info &>/dev/null; then
+  echo "✓ API server responsive"
+else
+  echo "✗ API server not responsive"
+  exit 1
+fi
+
+# Check node health
+NOT_READY=$(kubectl get nodes | grep -v Ready | grep -v NAME | wc -l)
+if [ "$NOT_READY" -eq 0 ]; then
+  echo "✓ All nodes ready"
+else
+  echo "✗ $NOT_READY nodes not ready"
+  kubectl get nodes | grep -v Ready
+fi
+
+# Check critical pods
+FAILING_PODS=$(kubectl get pods -A | grep -v Running | grep -v Completed | grep -v NAME | wc -l)
+if [ "$FAILING_PODS" -eq 0 ]; then
+  echo "✓ All pods healthy"
+else
+  echo "⚠ $FAILING_PODS pods not running"
+  kubectl get pods -A | grep -v Running | grep -v Completed
+fi
+
+echo "=== Health Check Complete ==="
+```
+
+---
+
+## Pod Troubleshooting
+
+### Runbook: Pod in CrashLoopBackOff
+
+<Steps>
+  <Step title="Identify the issue">
+    ```bash
+    kubectl get pods -n mcp-server-langgraph
+    # Output: pod/mcp-server-xxxx  0/1  CrashLoopBackOff
+
+    # Check pod events
+    kubectl describe pod mcp-server-xxxx -n mcp-server-langgraph | tail -20
+
+    # Check logs
+    kubectl logs mcp-server-xxxx -n mcp-server-langgraph --previous
+    ```
+  </Step>
+
+  <Step title="Common causes">
+    **Application errors**:
+    - Database connection failed
+    - Missing environment variables
+    - Config file not found
+
+    **Resource limits**:
+    - Out of memory (OOMKilled)
+    - CPU throttling
+
+    **Permission issues**:
+    - Can't read secrets
+    - IRSA role misconfigured
+  </Step>
+
+  <Step title="Fix based on cause">
+    <Tabs>
+      <Tab title="Database Connection">
+        ```bash
+        # Verify database secret exists
+        kubectl get secret database-credentials -n mcp-server-langgraph
+
+        # Check RDS endpoint is reachable
+        kubectl run -it --rm debug --image=postgres:15 --restart=Never -- \
+          psql -h DB_ENDPOINT -U mcp_langgraph -d mcp_langgraph
+
+        # Verify RDS security group allows EKS nodes
+        # Check in AWS Console: RDS > Security Groups
+        ```
+      </Tab>
+
+      <Tab title="IRSA Issues">
+        ```bash
+        # Check service account annotation
+        kubectl describe serviceaccount mcp-server-langgraph -n mcp-server-langgraph | grep role-arn
+
+        # Check if role exists
+        aws iam get-role --role-name mcp-langgraph-prod-application
+
+        # Check pod has AWS credentials injected
+        kubectl describe pod mcp-server-xxxx -n mcp-server-langgraph | grep AWS_ROLE_ARN
+        ```
+      </Tab>
+
+      <Tab title="Resource Limits">
+        ```bash
+        # Check if pod was OOMKilled
+        kubectl describe pod mcp-server-xxxx -n mcp-server-langgraph | grep -A 5 "Last State"
+
+        # Increase memory limit
+        kubectl set resources deployment mcp-server-langgraph \
+          -n mcp-server-langgraph \
+          --limits=memory=2Gi \
+          --requests=memory=1Gi
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Verify fix">
+    ```bash
+    kubectl get pods -n mcp-server-langgraph -w
+    # Wait for pod to reach Running state
+
+    kubectl logs -f mcp-server-xxxx -n mcp-server-langgraph
+    # Check logs for successful startup
+    ```
+  </Step>
+</Steps>
+
+### Runbook: Pod Pending (Can't Schedule)
+
+<Steps>
+  <Step title="Check why pod is pending">
+    ```bash
+    kubectl describe pod POD_NAME -n mcp-server-langgraph | grep -A 10 Events
+    ```
+
+    **Common reasons**:
+    - `Insufficient CPU`
+    - `Insufficient memory`
+    - `No nodes available matching node selector`
+    - `Taint toleration not satisfied`
+  </Step>
+
+  <Step title="Check Cluster Autoscaler">
+    ```bash
+    # Check if autoscaler is adding nodes
+    kubectl logs -f deployment/cluster-autoscaler -n kube-system --tail=100
+
+    # Check autoscaler status
+    kubectl get nodes -l node.kubernetes.io/lifecycle=spot -o wide
+    ```
+  </Step>
+
+  <Step title="Manual scaling if needed">
+    ```bash
+    # Scale node group via Terraform
+    cd terraform/environments/prod
+
+    # Edit terraform.tfvars
+    general_node_group_desired_size = 5  # Increase from 3
+
+    terraform apply -target=module.eks
+
+    # Or via AWS CLI (temporary)
+    aws eks update-nodegroup-config \
+      --cluster-name mcp-langgraph-prod \
+      --nodegroup-name general-nodes \
+      --scaling-config minSize=2,maxSize=10,desiredSize=5
+    ```
+  </Step>
+
+  <Step title="Check for taint issues">
+    ```bash
+    # If pod requires specific node group (e.g., compute-optimized)
+    kubectl describe node NODE_NAME | grep Taints
+
+    # Add toleration to pod
+    # In deployment.yaml:
+    tolerations:
+    - key: "workload"
+      operator: "Equal"
+      value: "llm"
+      effect: "NoSchedule"
+    ```
+  </Step>
+</Steps>
+
+### Runbook: Image Pull Errors
+
+<Steps>
+  <Step title="Identify image pull error">
+    ```bash
+    kubectl describe pod POD_NAME -n mcp-server-langgraph | grep -A 5 "Failed to pull image"
+    ```
+
+    **Error types**:
+    - `ImagePullBackOff`: Image not found or no permission
+    - `ErrImagePull`: Network issue or registry down
+  </Step>
+
+  <Step title="Verify image exists in ECR">
+    ```bash
+    aws ecr describe-images \
+      --repository-name mcp-server-langgraph \
+      --image-ids imageTag=v1.0.0
+
+    # List all tags
+    aws ecr list-images --repository-name mcp-server-langgraph
+    ```
+  </Step>
+
+  <Step title="Check VPC CNI IRSA permissions">
+    ```bash
+    # VPC CNI needs ECR permissions to pull images
+    kubectl describe daemonset aws-node -n kube-system | grep role-arn
+
+    # Should show IRSA role with ECR permissions
+    aws iam get-role-policy \
+      --role-name AmazonEKSVPCCNIRole \
+      --policy-name AmazonEKS_CNI_Policy
+    ```
+  </Step>
+
+  <Step title="Check VPC endpoints">
+    ```bash
+    # Verify ECR endpoints exist
+    aws ec2 describe-vpc-endpoints \
+      --filters "Name=service-name,Values=com.amazonaws.us-east-1.ecr.dkr" \
+      --query "VpcEndpoints[].VpcEndpointId"
+
+    # Should return endpoint IDs for ECR API and DKR
+    ```
+  </Step>
+
+  <Step title="Test manual pull">
+    ```bash
+    # SSH into node (via SSM)
+    aws ssm start-session --target i-INSTANCE_ID
+
+    # Try pulling image
+    sudo docker pull ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/mcp-server-langgraph:v1.0.0
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Networking Issues
+
+### Runbook: Pods Can't Reach Internet
+
+<Steps>
+  <Step title="Verify NAT Gateway">
+    ```bash
+    # Check NAT gateway status
+    aws ec2 describe-nat-gateways \
+      --filter "Name=state,Values=available" \
+      --query "NatGateways[].NatGatewayId"
+
+    # Check NAT gateway route
+    aws ec2 describe-route-tables \
+      --filters "Name=tag:Name,Values=*private*" \
+      --query "RouteTables[].Routes"
+    ```
+  </Step>
+
+  <Step title="Test from pod">
+    ```bash
+    kubectl run -it --rm debug --image=busybox --restart=Never -- sh
+
+    # Inside pod:
+    wget -O- http://checkip.amazonaws.com
+    nslookup google.com
+    ping 8.8.8.8
+    ```
+  </Step>
+
+  <Step title="Check security groups">
+    ```bash
+    # Get node security group
+    aws eks describe-cluster \
+      --name mcp-langgraph-prod \
+      --query "cluster.resourcesVpcConfig.clusterSecurityGroupId"
+
+    # Check outbound rules allow all traffic
+    aws ec2 describe-security-groups \
+      --group-ids sg-XXXXX \
+      --query "SecurityGroups[].IpPermissionsEgress"
+    ```
+  </Step>
+</Steps>
+
+### Runbook: Pod-to-Pod Communication Failing
+
+<Steps>
+  <Step title="Check NetworkPolicies">
+    ```bash
+    kubectl get networkpolicies -A
+
+    # Describe policy blocking traffic
+    kubectl describe networkpolicy POLICY_NAME -n NAMESPACE
+    ```
+  </Step>
+
+  <Step title="Test connectivity">
+    ```bash
+    # Deploy test pods
+    kubectl run test-source --image=busybox --restart=Never -- sleep 3600
+    kubectl run test-dest --image=nginx --restart=Never
+
+    # Get dest pod IP
+    DEST_IP=$(kubectl get pod test-dest -o jsonpath='{.status.podIP}')
+
+    # Test from source
+    kubectl exec test-source -- wget -O- http://$DEST_IP
+
+    # Clean up
+    kubectl delete pod test-source test-dest
+    ```
+  </Step>
+
+  <Step title="Check VPC CNI">
+    ```bash
+    # Check VPC CNI pod logs
+    kubectl logs -n kube-system -l k8s-app=aws-node --tail=100
+
+    # Restart VPC CNI if needed
+    kubectl rollout restart daemonset aws-node -n kube-system
+    ```
+  </Step>
+</Steps>
+
+---
+
+## RDS Operations
+
+### Runbook: RDS Backup and Restore
+
+<Steps>
+  <Step title="Verify automated backups">
+    ```bash
+    aws rds describe-db-instances \
+      --db-instance-identifier mcp-langgraph-prod \
+      --query "DBInstances[].{Backup:BackupRetentionPeriod,Window:PreferredBackupWindow}"
+
+    # List available snapshots
+    aws rds describe-db-snapshots \
+      --db-instance-identifier mcp-langgraph-prod \
+      --query "DBSnapshots[].[DBSnapshotIdentifier,SnapshotCreateTime,Status]"
+    ```
+  </Step>
+
+  <Step title="Create manual snapshot">
+    ```bash
+    aws rds create-db-snapshot \
+      --db-instance-identifier mcp-langgraph-prod \
+      --db-snapshot-identifier mcp-langgraph-prod-manual-$(date +%Y%m%d-%H%M)
+
+    # Wait for snapshot to complete
+    aws rds wait db-snapshot-completed \
+      --db-snapshot-identifier mcp-langgraph-prod-manual-YYYYMMDD-HHMM
+    ```
+  </Step>
+
+  <Step title="Restore from snapshot">
+    ```bash
+    # Restore to new instance
+    aws rds restore-db-instance-from-db-snapshot \
+      --db-instance-identifier mcp-langgraph-restored \
+      --db-snapshot-identifier mcp-langgraph-prod-manual-YYYYMMDD-HHMM \
+      --db-instance-class db.t3.medium \
+      --vpc-security-group-ids sg-XXXXX \
+      --db-subnet-group-name mcp-langgraph-prod-db-subnet
+
+    # Wait for restore to complete (~10-15 min)
+    aws rds wait db-instance-available \
+      --db-instance-identifier mcp-langgraph-restored
+    ```
+  </Step>
+
+  <Step title="Point application to restored DB">
+    ```bash
+    # Get restored DB endpoint
+    RESTORED_ENDPOINT=$(aws rds describe-db-instances \
+      --db-instance-identifier mcp-langgraph-restored \
+      --query "DBInstances[].Endpoint.Address" \
+      --output text)
+
+    # Update secret
+    kubectl patch secret database-credentials \
+      -n mcp-server-langgraph \
+      -p "{\"data\":{\"host\":\"$(echo -n $RESTORED_ENDPOINT | base64)\"}}"
+
+    # Restart pods to pick up new endpoint
+    kubectl rollout restart deployment mcp-server-langgraph -n mcp-server-langgraph
+    ```
+  </Step>
+</Steps>
+
+### Runbook: RDS Performance Issues
+
+<Steps>
+  <Step title="Check Performance Insights">
+    ```bash
+    # View in AWS Console
+    # RDS > mcp-langgraph-prod > Monitoring > Performance Insights
+
+    # Or via CLI
+    aws pi get-resource-metrics \
+      --service-type RDS \
+      --identifier db-XXXXX \
+      --metric-queries file://metrics-query.json
+    ```
+  </Step>
+
+  <Step title="Check slow queries">
+    ```bash
+    # View slow query log in CloudWatch
+    aws logs tail /aws/rds/instance/mcp-langgraph-prod/postgresql --follow
+
+    # Or connect and check directly
+    kubectl run -it --rm psql --image=postgres:15 --restart=Never -- \
+      psql -h DB_ENDPOINT -U mcp_langgraph -d mcp_langgraph
+
+    # Inside psql:
+    SELECT * FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 10;
+    ```
+  </Step>
+
+  <Step title="Check connections">
+    ```bash
+    # Current connections
+    aws rds describe-db-instances \
+      --db-instance-identifier mcp-langgraph-prod \
+      --query "DBInstances[].DBInstanceStatus"
+
+    # Max connections setting
+    aws rds describe-db-parameters \
+      --db-parameter-group-name mcp-langgraph-prod \
+      --query "Parameters[?ParameterName=='max_connections']"
+    ```
+  </Step>
+
+  <Step title="Scale up if needed">
+    ```bash
+    # Modify instance class (requires restart)
+    cd terraform/environments/prod
+
+    # Edit terraform.tfvars
+    rds_instance_class = "db.t3.large"  # Upgrade from db.t3.medium
+
+    terraform apply -target=module.rds
+
+    # Or via CLI (immediate, causes downtime)
+    aws rds modify-db-instance \
+      --db-instance-identifier mcp-langgraph-prod \
+      --db-instance-class db.t3.large \
+      --apply-immediately
+    ```
+  </Step>
+</Steps>
+
+---
+
+## ElastiCache Operations
+
+### Runbook: Redis Connection Issues
+
+<Steps>
+  <Step title="Verify Redis is running">
+    ```bash
+    aws elasticache describe-replication-groups \
+      --replication-group-id mcp-langgraph-prod \
+      --query "ReplicationGroups[].Status"
+    ```
+  </Step>
+
+  <Step title="Test connection from pod">
+    ```bash
+    kubectl run -it --rm redis-test --image=redis:7-alpine --restart=Never -- sh
+
+    # Inside pod:
+    redis-cli -h REDIS_ENDPOINT -p 6379 -a AUTH_TOKEN
+
+    # Test commands:
+    PING
+    INFO
+    CLUSTER INFO  # If cluster mode
+    ```
+  </Step>
+
+  <Step title="Check security group">
+    ```bash
+    # Get ElastiCache security group
+    aws elasticache describe-replication-groups \
+      --replication-group-id mcp-langgraph-prod \
+      --query "ReplicationGroups[].NodeGroups[].PrimaryEndpoint"
+
+    # Verify EKS nodes can reach Redis on port 6379
+    ```
+  </Step>
+
+  <Step title="Check application logs">
+    ```bash
+    kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph | grep -i redis
+    ```
+  </Step>
+</Steps>
+
+### Runbook: Redis Failover Testing
+
+<Steps>
+  <Step title="Trigger manual failover">
+    ```bash
+    # Test Multi-AZ failover
+    aws elasticache test-failover \
+      --replication-group-id mcp-langgraph-prod \
+      --node-group-id 0001  # Primary shard
+
+    # Monitor failover
+    aws elasticache describe-events \
+      --source-type replication-group \
+      --source-identifier mcp-langgraph-prod \
+      --duration 60
+    ```
+  </Step>
+
+  <Step title="Verify application resilience">
+    ```bash
+    # Monitor application logs during failover
+    kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
+
+    # Application should reconnect automatically
+    # Check for Redis connection errors
+    ```
+  </Step>
+
+  <Step title="Check metrics">
+    ```bash
+    # View failover in CloudWatch
+    # CloudWatch > Metrics > ElastiCache > Replication Group
+
+    # Key metrics:
+    # - ReplicationLag (should spike during failover)
+    # - PrimaryEndpoint (should change after failover)
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Cluster Autoscaler Operations
+
+### Runbook: Cluster Autoscaler Not Scaling
+
+<Steps>
+  <Step title="Check autoscaler logs">
+    ```bash
+    kubectl logs -f deployment/cluster-autoscaler -n kube-system --tail=200 | grep -E "(scale|node)"
+
+    # Look for:
+    # - "ScaleUp: group X -> Y nodes"
+    # - "ScaleDown: removing node Z"
+    # - Errors about IAM permissions
+    ```
+  </Step>
+
+  <Step title="Verify IRSA permissions">
+    ```bash
+    # Check service account annotation
+    kubectl describe serviceaccount cluster-autoscaler -n kube-system | grep role-arn
+
+    # Check IAM role has autoscaling permissions
+    aws iam get-role-policy \
+      --role-name mcp-langgraph-prod-cluster-autoscaler \
+      --policy-name cluster-autoscaler-policy
+    ```
+  </Step>
+
+  <Step title="Check node group limits">
+    ```bash
+    # Verify max_size is not reached
+    aws eks describe-nodegroup \
+      --cluster-name mcp-langgraph-prod \
+      --nodegroup-name general-nodes \
+      --query "nodegroup.scalingConfig"
+
+    # Output should show: {minSize, maxSize, desiredSize}
+    ```
+  </Step>
+
+  <Step title="Check for pending pods">
+    ```bash
+    kubectl get pods -A | grep Pending
+
+    # Autoscaler only scales up if pods are pending
+    # Check pod events for reason
+    kubectl describe pod PENDING_POD -n NAMESPACE
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Monitoring & Alerts
+
+### CloudWatch Alarms
+
+**Critical alarms to configure**:
+
+```bash
+# EKS Node CPU > 80%
+aws cloudwatch put-metric-alarm \
+  --alarm-name eks-node-cpu-high \
+  --alarm-description "EKS node CPU > 80%" \
+  --metric-name CPUUtilization \
+  --namespace AWS/EC2 \
+  --statistic Average \
+  --period 300 \
+  --threshold 80 \
+  --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 2
+
+# RDS CPU > 80%
+aws cloudwatch put-metric-alarm \
+  --alarm-name rds-cpu-high \
+  --alarm-description "RDS CPU > 80%" \
+  --metric-name CPUUtilization \
+  --namespace AWS/RDS \
+  --dimensions Name=DBInstanceIdentifier,Value=mcp-langgraph-prod \
+  --statistic Average \
+  --period 300 \
+  --threshold 80 \
+  --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 2
+
+# ElastiCache Memory > 90%
+aws cloudwatch put-metric-alarm \
+  --alarm-name redis-memory-high \
+  --alarm-description "Redis memory > 90%" \
+  --metric-name DatabaseMemoryUsagePercentage \
+  --namespace AWS/ElastiCache \
+  --dimensions Name=ReplicationGroupId,Value=mcp-langgraph-prod \
+  --statistic Average \
+  --period 300 \
+  --threshold 90 \
+  --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 2
+```
+
+---
+
+## Incident Response
+
+### Runbook: Complete Cluster Outage
+
+<Steps>
+  <Step title="Assess impact">
+    ```bash
+    # Check if API server is reachable
+    kubectl cluster-info
+
+    # Check AWS service health
+    # https://health.aws.amazon.com/health/status
+
+    # Check CloudWatch Events
+    aws cloudwatch describe-alarms --state-value ALARM
+    ```
+  </Step>
+
+  <Step title="Check control plane">
+    ```bash
+    # View control plane logs
+    aws logs tail /aws/eks/mcp-langgraph-prod/cluster --follow
+
+    # Check control plane status
+    aws eks describe-cluster --name mcp-langgraph-prod \
+      --query "cluster.status"
+    ```
+  </Step>
+
+  <Step title="Check nodes">
+    ```bash
+    # List EC2 instances
+    aws ec2 describe-instances \
+      --filters "Name=tag:eks:cluster-name,Values=mcp-langgraph-prod" \
+      --query "Reservations[].Instances[].[InstanceId,State.Name,PrivateIpAddress]"
+
+    # Check Auto Scaling Group
+    aws autoscaling describe-auto-scaling-groups \
+      --query "AutoScalingGroups[?contains(AutoScalingGroupName,'mcp-langgraph-prod')]"
+    ```
+  </Step>
+
+  <Step title="Recovery options">
+    <Tabs>
+      <Tab title="API Server Down">
+        **AWS handles control plane recovery automatically**
+
+        Wait 5-10 minutes for AWS to recover control plane.
+        If persists > 15 minutes, contact AWS Support.
+      </Tab>
+
+      <Tab title="All Nodes Down">
+        ```bash
+        # Check Auto Scaling Group health
+        aws autoscaling describe-auto-scaling-groups \
+          --auto-scaling-group-names GENERAL_NODE_GROUP_NAME
+
+        # Manual scaling if needed
+        aws autoscaling set-desired-capacity \
+          --auto-scaling-group-name GENERAL_NODE_GROUP_NAME \
+          --desired-capacity 3 \
+          --honor-cooldown
+        ```
+      </Tab>
+
+      <Tab title="Database Down">
+        ```bash
+        # Check RDS status
+        aws rds describe-db-instances \
+          --db-instance-identifier mcp-langgraph-prod
+
+        # Reboot if hung
+        aws rds reboot-db-instance \
+          --db-instance-identifier mcp-langgraph-prod
+
+        # Or failover to standby
+        aws rds failover-db-cluster \
+          --db-cluster-identifier mcp-langgraph-prod
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Post-incident review">
+    - Document timeline
+    - Analyze CloudWatch logs
+    - Review metrics during incident
+    - Update runbooks based on learnings
+  </Step>
+</Steps>
+
+---
+
+## Disaster Recovery
+
+### RTO/RPO Targets
+
+| Service | RTO | RPO | Recovery Method |
+|---------|-----|-----|-----------------|
+| **EKS Cluster** | 30 min | 0 | Terraform re-deploy |
+| **RDS Database** | 2 hours | 5 min | Snapshot restore |
+| **ElastiCache** | 1 hour | 1 hour | Snapshot restore |
+| **Application** | 15 min | 0 | GitOps redeploy |
+
+### Disaster Recovery Test Plan
+
+<Steps>
+  <Step title="Monthly: Snapshot restore test">
+    1. Create test RDS instance from latest snapshot
+    2. Verify data integrity
+    3. Delete test instance
+  </Step>
+
+  <Step title="Quarterly: Full cluster rebuild">
+    1. Deploy to staging using Terraform
+    2. Restore latest RDS backup
+    3. Verify application functionality
+    4. Destroy staging cluster
+  </Step>
+
+  <Step title="Annually: Multi-region failover">
+    1. Deploy infrastructure in secondary region
+    2. Restore cross-region RDS backup
+    3. Test application in secondary region
+    4. Document failover procedures
+  </Step>
+</Steps>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="EKS Production Guide" icon="kubernetes" href="/deployment/kubernetes/eks-production">
+    Complete deployment guide
+  </Card>
+  <Card title="Terraform AWS" icon="code" href="/deployment/infrastructure/terraform-aws">
+    Infrastructure documentation
+  </Card>
+  <Card title="AWS Security" icon="shield-halved" href="/security/aws-security-hardening">
+    Security hardening guide
+  </Card>
+  <Card title="Cost Optimization" icon="dollar-sign" href="/deployment/cost-optimization">
+    Cost optimization strategies
+  </Card>
+</CardGroup>

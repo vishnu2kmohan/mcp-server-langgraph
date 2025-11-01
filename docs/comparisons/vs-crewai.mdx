@@ -1,0 +1,428 @@
+---
+title: 'MCP Server with LangGraph vs CrewAI'
+description: 'Detailed comparison between MCP Server with LangGraph and CrewAI for agent development'
+icon: 'users'
+---
+
+## Overview
+
+**CrewAI** is a lean, fast Python framework focused on role-based multi-agent collaboration. It excels at prototyping and has excellent getting-started documentation with over 100,000 certified developers.
+
+**MCP Server with LangGraph** is a production-ready MCP server with enterprise security, multi-cloud deployment, and complete observability.
+
+## Quick Comparison
+
+| Aspect | CrewAI | MCP Server with LangGraph |
+|--------|--------|---------------------------|
+| **Primary Focus** | Role-based agent teams | Production-ready MCP server |
+| **Best For** | Prototyping, learning | Enterprise production deployments |
+| **Time to First Agent** | ~2 minutes | ~2-15 minutes (quick-start to full stack) |
+| **Architecture** | Task delegation model | LangGraph StateGraph with MCP |
+| **Licensing** | Open-source + Freemium ($29/mo+) | Open-source (MIT-style) |
+| **Deployment** | Self-hosted | Multi-cloud (GCP, AWS, Azure, Platform) |
+| **Security** | Basic | Enterprise-grade (JWT, OpenFGA, Keycloak) |
+| **Observability** | Basic | Dual stack (LangSmith + OTEL) |
+| **Multi-Agent** | ✅ Built-in (role-based) | ✅ LangGraph patterns available |
+| **Documentation** | ✅ Excellent (learn.crewai.com) | ✅ Complete with time estimates |
+
+## Detailed Feature Comparison
+
+### Architecture & Design Philosophy
+
+<AccordionGroup>
+  <Accordion title="CrewAI: Role-Based Task Delegation">
+    **Approach:**
+    - Each agent has a specific role and responsibilities
+    - Clear task delegation model
+    - Sequential, clearly defined processes
+    - Built from scratch (independent of LangChain)
+
+    **Strengths:**
+    - Intuitive role-based model
+    - Easy to understand for beginners
+    - Great for team-like agent workflows
+    - 5.76x faster than LangGraph in certain cases
+
+    **Limitations:**
+    - As agents/tasks grow, maintaining clear roles becomes challenging
+    - Significant upfront setup effort
+    - Scaling requires meticulous resource management
+  </Accordion>
+
+  <Accordion title="MCP Server with LangGraph: Graph-Based StateGraph">
+    **Approach:**
+    - LangGraph StateGraph for flexible workflows
+    - MCP protocol for standardized communication
+    - Event-driven, async-first architecture
+    - Built on battle-tested LangGraph (LinkedIn, Uber, Klarna use in production)
+
+    **Strengths:**
+    - Precise control over agent workflows
+    - Built-in persistence and fault tolerance
+    - Human-in-the-loop patterns
+    - Production-grade reliability
+
+    **Considerations:**
+    - Steeper learning curve than role-based model
+    - Requires understanding of graph concepts
+  </Accordion>
+</AccordionGroup>
+
+### Developer Experience
+
+| Feature | CrewAI | MCP Server with LangGraph |
+|---------|--------|---------------------------|
+| **Getting Started** | ✅ `crewai create my-crew` | 🔄 Coming soon: `mcpserver init` |
+| **Documentation** | ✅ Excellent (learn.crewai.com) | ✅ Complete Mintlify docs |
+| **Examples** | ✅ Extensive examples | ✅ 12+ examples |
+| **Learning Curve** | ✅ Low (role-based is intuitive) | ⚠️ Medium (graph concepts) |
+| **Community** | ✅ 100,000+ certified developers | 🔄 Growing community |
+| **Setup Time** | ✅ ~2 minutes | ⚠️ 2-15 minutes (depending on mode) |
+
+**Winner for Prototyping:** CrewAI (easier, faster start)
+**Winner for Production:** MCP Server with LangGraph (complete infrastructure)
+
+### Multi-Agent Capabilities
+
+<Tabs>
+  <Tab title="CrewAI Multi-Agent">
+    **CrewAI Crews:**
+    ```python
+    from crewai import Agent, Task, Crew
+
+    researcher = Agent(
+        role="Research Analyst",
+        goal="Find accurate information",
+        tools=[search_tool]
+    )
+
+    writer = Agent(
+        role="Content Writer",
+        goal="Write engaging content",
+        tools=[write_tool]
+    )
+
+    crew = Crew(
+        agents=[researcher, writer],
+        tasks=[research_task, write_task],
+        process="sequential"  # or hierarchical
+    )
+
+    result = crew.kickoff()
+    ```
+
+    **Strengths:**
+    - Clear role definitions
+    - Easy delegation model
+    - Sequential & hierarchical processes
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph">
+    **LangGraph Multi-Agent Patterns:**
+    ```python
+    from langgraph.graph import StateGraph
+
+    graph = StateGraph(AgentState)
+
+    # Add agent nodes
+    graph.add_node("research", research_agent)
+    graph.add_node("write", write_agent)
+
+    # Define flow
+    graph.add_edge("research", "write")
+    graph.set_entry_point("research")
+
+    # Compile with persistence
+    app = graph.compile(checkpointer=checkpointer)
+
+    result = app.invoke(input, config)
+    ```
+
+    **Strengths:**
+    - Flexible control flows
+    - Built-in persistence
+    - Human-in-the-loop support
+    - Battle-tested in production
+  </Tab>
+</Tabs>
+
+### Security & Authentication
+
+| Feature | CrewAI | MCP Server with LangGraph |
+|---------|--------|---------------------------|
+| **Authentication** | ❌ Not built-in | ✅ JWT + Keycloak SSO |
+| **Authorization** | ❌ Not built-in | ✅ OpenFGA (Zanzibar model) |
+| **Audit Logging** | ❌ Manual | ✅ Complete security event tracking |
+| **Secrets Management** | ⚠️ .env files | ✅ Infisical integration |
+| **Network Policies** | ❌ Not included | ✅ Kubernetes-native isolation |
+| **Compliance** | ⚠️ Manual | ✅ GDPR, SOC 2, HIPAA ready |
+
+**Clear Winner:** MCP Server with LangGraph for enterprise security requirements
+
+### Deployment & Operations
+
+<AccordionGroup>
+  <Accordion title="CrewAI Deployment">
+    **Options:**
+    - Python application (self-hosted)
+    - Docker containers
+    - Freemium managed service ($29/month+)
+
+    **Strengths:**
+    - Simple deployment model
+    - Managed service available
+    - Low infrastructure complexity
+
+    **Limitations:**
+    - Limited production deployment guides
+    - No Kubernetes manifests
+    - Manual scaling configuration
+    - No multi-cloud strategy
+  </Accordion>
+
+  <Accordion title="MCP Server with LangGraph Deployment">
+    **Options:**
+    - **LangGraph Platform:** 2-minute serverless (same as Cloud)
+    - **Google Cloud Run:** 10-minute serverless
+    - **Kubernetes:** GKE, EKS, AKS (1-2 hours)
+    - **Docker:** 15-minute quick start
+    - **Helm Charts:** Flexible K8s deployments
+
+    **Strengths:**
+    - Complete production manifests
+    - Multi-cloud flexibility
+    - Time estimates for each option
+    - GitOps ready (ArgoCD, FluxCD)
+    - Auto-scaling configurations
+
+    **Considerations:**
+    - More complex (but more capable)
+    - Requires infrastructure knowledge
+  </Accordion>
+</AccordionGroup>
+
+### Observability & Monitoring
+
+| Capability | CrewAI | MCP Server with LangGraph |
+|------------|--------|---------------------------|
+| **Logging** | ⚠️ Basic Python logging | ✅ Structured JSON logs |
+| **Tracing** | ❌ Manual | ✅ LangSmith + Jaeger |
+| **Metrics** | ❌ Manual | ✅ Prometheus + Grafana |
+| **Cost Tracking** | ❌ Manual | ✅ LangSmith built-in |
+| **Dashboards** | ❌ None | ✅ Pre-built Grafana dashboards |
+| **Alerts** | ❌ Manual | ✅ Prometheus alerting |
+| **Trace Correlation** | ❌ No | ✅ OpenTelemetry |
+
+**Clear Winner:** MCP Server with LangGraph for production observability
+
+### Multi-LLM Support
+
+| Feature | CrewAI | MCP Server with LangGraph |
+|---------|--------|---------------------------|
+| **Providers** | ✅ Flexible (via LangChain) | ✅ 100+ via LiteLLM |
+| **Provider Switching** | ✅ Manual config | ✅ Automatic fallback |
+| **Retry Logic** | ⚠️ Manual | ✅ Built-in |
+| **Local Models** | ✅ Supported | ✅ Ollama integration |
+| **Cost Optimization** | ⚠️ Manual | ✅ LangSmith tracking |
+
+**Winner:** MCP Server with LangGraph (automatic fallback/retry)
+
+## Performance Comparison
+
+### Speed & Efficiency
+
+**CrewAI:**
+- 5.76x faster than LangGraph in certain benchmarks
+- Lean framework with minimal overhead
+- Optimized for sequential task execution
+
+**MCP Server with LangGraph:**
+- Built for production scale (not just speed)
+- Async-first architecture
+- Optimized with caching and checkpointing
+- Parallel tool execution
+
+**Verdict:** CrewAI is faster for simple sequential workflows; MCP Server with LangGraph is optimized for complex, long-running production workloads.
+
+### Scaling
+
+**CrewAI:**
+- Requires meticulous resource management at scale
+- Maintaining clear roles becomes challenging with growth
+- Manual scaling configuration
+
+**MCP Server with LangGraph:**
+- Kubernetes-native with HPA (Horizontal Pod Autoscaler)
+- Pre-configured for production scale
+- Multi-region deployment support
+- Auto-scaling based on metrics
+
+**Clear Winner:** MCP Server with LangGraph for scaling to production
+
+## Cost Comparison
+
+### Total Cost of Ownership
+
+<Tabs>
+  <Tab title="CrewAI Costs">
+    **Framework:**
+    - Open-source (free)
+    - Managed service: $29/month+ (freemium)
+
+    **Infrastructure:**
+    - Self-hosted: Compute costs only
+    - Managed: Subscription + usage
+
+    **Operations:**
+    - Manual monitoring setup
+    - Manual security implementation
+    - Manual scaling
+
+    **Total:** Low for prototypes, increases with production needs
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph Costs">
+    **Framework:**
+    - Open-source (free)
+    - No subscription required
+
+    **Infrastructure:**
+    - LangGraph Platform: ~$0 (developer tier) to usage-based
+    - Cloud Run: $0.40-2.00 per 1M requests
+    - GKE/EKS/AKS: Cluster costs (~$200-500/month base)
+
+    **Operations:**
+    - Observability included (LangSmith + OTEL)
+    - Security included (JWT, OpenFGA, Keycloak)
+    - Auto-scaling included
+
+    **Total:** Higher initial setup, lower long-term operational costs
+  </Tab>
+</Tabs>
+
+## Use Case Recommendations
+
+### Choose CrewAI When:
+
+✅ **Quick Prototyping** - Need to validate an idea in hours
+✅ **Learning** - Getting started with AI agents
+✅ **Role-Based Tasks** - Your use case naturally fits role delegation
+✅ **Small Teams** - 2-5 agents with clear responsibilities
+✅ **Cost-Sensitive** - Need free/low-cost solution
+✅ **Simplicity** - Don't need enterprise features
+
+**Example Use Cases:**
+- Content creation pipeline (researcher → writer → editor)
+- Customer support triage (classifier → responder)
+- Data analysis workflow (collector → analyzer → reporter)
+
+### Choose MCP Server with LangGraph When:
+
+✅ **Production Deployment** - Going to production with real users
+✅ **Enterprise Requirements** - Need security, compliance, audit
+✅ **Multi-Cloud** - Want deployment flexibility
+✅ **Complex Workflows** - Need precise control over agent flows
+✅ **Observability** - Need complete monitoring/tracing
+✅ **Scaling** - Expect growth to thousands of requests
+✅ **Team Collaboration** - Multiple teams deploying agents
+
+**Example Use Cases:**
+- Enterprise customer support with GDPR compliance
+- Financial analysis with audit requirements
+- Healthcare AI assistants (HIPAA compliance)
+- Multi-region deployment with high availability
+- DevOps automation at scale
+
+## Migration Path
+
+### From CrewAI to MCP Server with LangGraph
+
+If you've prototyped with CrewAI and need to move to production:
+
+<Steps>
+  <Step title="Map Roles to Graph Nodes">
+    Convert CrewAI agent roles to LangGraph nodes:
+    ```python
+    # CrewAI
+    researcher = Agent(role="Researcher", ...)
+
+    # LangGraph
+    graph.add_node("researcher", research_function)
+    ```
+  </Step>
+
+  <Step title="Convert Tasks to State Transitions">
+    Map CrewAI tasks to LangGraph state transitions:
+    ```python
+    # CrewAI
+    task = Task(description="Research topic")
+
+    # LangGraph
+    class AgentState(TypedDict):
+        topic: str
+        research_results: str
+    ```
+  </Step>
+
+  <Step title="Add Production Features">
+    - Implement JWT authentication
+    - Configure OpenFGA authorization
+    - Set up LangSmith tracing
+    - Deploy with Kubernetes/Helm
+  </Step>
+
+  <Step title="Test & Deploy">
+    - Run 437 included tests
+    - Deploy to staging (GKE staging)
+    - Monitor with Grafana dashboards
+    - Deploy to production
+  </Step>
+</Steps>
+
+<Note>
+  **Migration Tool Coming Soon:** We're building `mcpserver migrate --from crewai` to automate this conversion.
+</Note>
+
+## Honest Recommendation
+
+### If You're Just Starting:
+- **Start with CrewAI** if you're learning or validating an idea quickly
+- **Start with MCP Server with LangGraph** if you know you'll need production features
+
+### If You're Going to Production:
+- **Choose MCP Server with LangGraph** - the production features (security, observability, multi-cloud) are difficult to add later
+
+### If Budget is Tight:
+- **Prototype with CrewAI** (free, fast)
+- **Migrate to MCP Server with LangGraph** when securing funding or launching
+
+### If You're Enterprise:
+- **Choose MCP Server with LangGraph** - CrewAI lacks enterprise security and compliance features
+
+## Summary
+
+| Criteria | Winner |
+|----------|--------|
+| **Getting Started** | 🏆 CrewAI |
+| **Production Deployment** | 🏆 MCP Server with LangGraph |
+| **Security** | 🏆 MCP Server with LangGraph |
+| **Observability** | 🏆 MCP Server with LangGraph |
+| **Multi-Cloud** | 🏆 MCP Server with LangGraph |
+| **Simplicity** | 🏆 CrewAI |
+| **Documentation** | 🤝 Tie (both excellent) |
+| **Community** | 🏆 CrewAI (100K+ devs) |
+| **Enterprise Features** | 🏆 MCP Server with LangGraph |
+| **Scaling** | 🏆 MCP Server with LangGraph |
+
+**Overall:** CrewAI wins for prototyping and learning. MCP Server with LangGraph wins for production and enterprise deployments.
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Try MCP Server with LangGraph" icon="rocket" href="/getting-started/quickstart">
+    Get started in 5 minutes
+  </Card>
+  <Card title="More Comparisons" icon="chart-bar" href="/comparisons/choosing-framework">
+    See all framework comparisons
+  </Card>
+</CardGroup>

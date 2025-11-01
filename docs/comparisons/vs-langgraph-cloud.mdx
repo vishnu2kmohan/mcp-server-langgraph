@@ -1,0 +1,456 @@
+---
+title: 'MCP Server with LangGraph vs LangGraph Cloud Platform'
+description: 'Understanding the differences between LangGraph Cloud and MCP Server with LangGraph'
+icon: 'diagram-project'
+---
+
+## Overview
+
+This comparison is unique because **MCP Server with LangGraph actually supports LangGraph Cloud as a deployment option**. The question isn't "either/or" but rather:
+
+- **LangGraph Cloud Only:** Use LangGraph Cloud as a managed service (serverless, no infrastructure)
+- **MCP Server with LangGraph:** Get the flexibility to deploy to LangGraph Cloud **OR** self-host on GCP, AWS, Azure, or Kubernetes
+
+<Note>
+  **Key Insight:** MCP Server with LangGraph gives you **deployment flexibility** while maintaining the option to use LangGraph Cloud when appropriate. Think of it as "LangGraph Cloud + Enterprise Features + Multi-Cloud Options."
+</Note>
+
+## Quick Comparison
+
+| Aspect | LangGraph Cloud Only | MCP Server with LangGraph |
+|--------|---------------------|---------------------------|
+| **LangGraph Cloud Support** | ✅ Yes (only option) | ✅ Yes (one of many options) |
+| **Self-Hosted Option** | ❌ No | ✅ GCP, AWS, Azure, Kubernetes |
+| **Deployment Time** | ✅ 2 minutes | ✅ 2 min (Platform) to 2 hours (K8s) |
+| **Authentication** | ⚠️ Basic API keys | ✅ JWT + Keycloak + SSO |
+| **Authorization** | ⚠️ Basic | ✅ OpenFGA (Zanzibar model) |
+| **Observability** | ✅ LangSmith | ✅ LangSmith + OpenTelemetry + Grafana |
+| **Cost Model** | Usage-based ($0.001/node exec) | Self-hosted OR Platform |
+| **Vendor Lock-in** | ⚠️ LangChain only | ✅ Multi-cloud portable |
+| **Enterprise Security** | ⚠️ Limited | ✅ Complete (audit, compliance) |
+| **MCP Protocol** | ❌ No | ✅ Native MCP server |
+
+## Detailed Comparison
+
+### Deployment Options
+
+<Tabs>
+  <Tab title="LangGraph Cloud Only">
+    **Single Deployment Model:**
+    ```bash
+    # Deploy to LangGraph Cloud (serverless)
+    langgraph deploy
+    ```
+
+    **Characteristics:**
+    - Fully managed serverless platform
+    - Zero infrastructure management
+    - Automatic scaling
+    - 2-minute deployment time
+    - No control over infrastructure
+
+    **Pricing:**
+    - Usage-based: $0.001 per node execution
+    - Developer plan: First 100k executions free
+    - Uptime fees apply
+
+    **Limitations:**
+    - Cannot self-host
+    - Vendor lock-in to LangChain/LangGraph
+    - Limited customization
+    - No private cloud deployment
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph">
+    **Multiple Deployment Models:**
+
+    **Option 1: LangGraph Cloud (same 2-minute deployment)**
+    ```bash
+    langgraph deploy
+    ```
+
+    **Option 2: Google Cloud Run (10 minutes)**
+    ```bash
+    gcloud run deploy --source .
+    ```
+
+    **Option 3: Kubernetes (1-2 hours)**
+    ```bash
+    helm install mcp-server ./deployments/helm/mcp-server-langgraph
+    ```
+
+    **Option 4: Docker (15 minutes)**
+    ```bash
+    docker compose up -d
+    ```
+
+    **Characteristics:**
+    - **Deployment flexibility:** Choose based on needs
+    - **No vendor lock-in:** Switch providers anytime
+    - **Cost optimization:** Self-host to reduce costs
+    - **Hybrid deployment:** Mix cloud + on-prem
+    - **Private cloud:** GCP, AWS, Azure
+    - **Complete control:** Custom networking, security
+
+    **Pricing:**
+    - Platform: Same as LangGraph Cloud
+    - Cloud Run: $0.40-2.00 per 1M requests
+    - Kubernetes: Cluster costs (~$200-500/mo)
+    - On-prem: Infrastructure costs only
+  </Tab>
+</Tabs>
+
+### Authentication & Authorization
+
+| Feature | LangGraph Cloud Only | MCP Server with LangGraph |
+|---------|---------------------|---------------------------|
+| **Authentication** | ⚠️ API keys | ✅ JWT + Keycloak SSO |
+| **Authorization** | ⚠️ Basic RBAC | ✅ OpenFGA (Zanzibar) |
+| **Single Sign-On** | ❌ No | ✅ Keycloak integration |
+| **Service Principals** | ⚠️ Limited | ✅ Full support |
+| **API Key Management** | ✅ Basic | ✅ Advanced (rotation, scopes) |
+| **Identity Federation** | ❌ No | ✅ SAML, OAuth, OIDC |
+| **SCIM Provisioning** | ❌ No | ✅ Supported |
+| **Audit Logging** | ⚠️ Basic | ✅ Complete security events |
+
+**Clear Winner:** MCP Server with LangGraph for enterprise identity requirements
+
+### Observability & Monitoring
+
+<AccordionGroup>
+  <Accordion title="LangGraph Cloud Observability">
+    **Built-in:**
+    - LangSmith tracing
+    - Basic metrics
+    - Log viewing in dashboard
+
+    **Strengths:**
+    - Works out-of-the-box
+    - Integrated with platform
+    - Good for development
+
+    **Limitations:**
+    - LangSmith only (no alternative)
+    - Limited custom metrics
+    - No infrastructure metrics
+    - Basic alerting
+  </Accordion>
+
+  <Accordion title="MCP Server with LangGraph Observability">
+    **Dual Observability Stack:**
+
+    **LangSmith (LLM-specific):**
+    - Trace every agent execution
+    - Prompt engineering insights
+    - Cost tracking per request
+    - Evaluation datasets
+
+    **OpenTelemetry (Infrastructure):**
+    - Distributed tracing with Jaeger
+    - Prometheus metrics
+    - Pre-built Grafana dashboards
+    - Custom metrics support
+    - Alert manager integration
+
+    **Additional:**
+    - Structured JSON logging
+    - Trace correlation across systems
+    - Infrastructure metrics (CPU, memory, latency)
+    - Custom dashboards for business metrics
+
+    **Strengths:**
+    - Complete visibility (LLM + infrastructure)
+    - Flexible monitoring options
+    - Enterprise-grade alerting
+    - Custom metrics
+
+    **Considerations:**
+    - More complex setup (handled by Helm charts)
+  </Accordion>
+</AccordionGroup>
+
+### Security & Compliance
+
+| Requirement | LangGraph Cloud Only | MCP Server with LangGraph |
+|------------|---------------------|---------------------------|
+| **GDPR Compliance** | ⚠️ Limited controls | ✅ Complete (data residency, audit) |
+| **SOC 2** | ⚠️ Platform-level | ✅ Full audit trails |
+| **HIPAA** | ❌ Not certified | ✅ Ready (with BAA) |
+| **Data Residency** | ⚠️ US-only | ✅ Deploy in any region |
+| **Network Isolation** | ❌ Shared infrastructure | ✅ Kubernetes network policies |
+| **Secret Management** | ⚠️ Environment vars | ✅ Infisical + Vault integration |
+| **Binary Authorization** | ❌ No | ✅ GKE Binary Authorization |
+| **Private Endpoints** | ❌ No | ✅ VPC-native deployment |
+
+**Clear Winner:** MCP Server with LangGraph for regulated industries (healthcare, finance)
+
+### Cost Analysis
+
+<Tabs>
+  <Tab title="LangGraph Cloud Costs">
+    **Pricing Model:**
+    - **Usage-based:** $0.001 per node execution
+    - **Developer:** First 100k executions free
+    - **Uptime fees:** Charged when deployed
+
+    **Example Costs:**
+
+    **Small App (100K requests/month):**
+    - 500K node executions (avg 5 nodes/request)
+    - Cost: $500/month
+    - Plus: Uptime fees
+
+    **Medium App (1M requests/month):**
+    - 5M node executions
+    - Cost: $5,000/month
+    - Plus: Uptime fees
+
+    **Large App (10M requests/month):**
+    - 50M node executions
+    - Cost: $50,000/month
+    - Plus: Uptime fees
+
+    **Characteristics:**
+    - No infrastructure costs
+    - Predictable per-execution pricing
+    - Can get expensive at scale
+    - No way to optimize costs
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph Costs">
+    **Multiple Pricing Models:**
+
+    **Option 1: LangGraph Cloud (same as above)**
+    - Use for prototyping or low-volume
+
+    **Option 2: Google Cloud Run**
+    - $0.40-2.00 per 1M requests
+    - 100K requests/month: ~$50/month
+    - 1M requests/month: ~$500/month
+    - 10M requests/month: ~$5,000/month
+    - **10x cheaper than Platform at scale**
+
+    **Option 3: Kubernetes (GKE/EKS/AKS)**
+    - Fixed cluster costs: $200-500/month
+    - Variable: $0.10-0.50 per 1M requests
+    - 100K requests/month: ~$250/month
+    - 1M requests/month: ~$350/month
+    - 10M requests/month: ~$1,000/month
+    - **50x cheaper than Platform at scale**
+
+    **Option 4: On-Premises**
+    - Infrastructure costs only
+    - No per-request charges
+    - Best for high-volume, regulated industries
+
+    **Characteristics:**
+    - Flexibility to optimize costs
+    - Switch deployment models as you grow
+    - Significant savings at scale
+    - Pay for infrastructure, not executions
+  </Tab>
+</Tabs>
+
+**Cost Winner:** MCP Server with LangGraph (10-50x cheaper at scale via self-hosting)
+
+### MCP Protocol Support
+
+| Feature | LangGraph Cloud Only | MCP Server with LangGraph |
+|---------|---------------------|---------------------------|
+| **MCP Server** | ❌ Not a native MCP server | ✅ Native MCP implementation |
+| **MCP Protocol** | ❌ No | ✅ Stdio + StreamableHTTP |
+| **MCP Tools** | ⚠️ Via LangGraph tools | ✅ Native MCP tool support |
+| **MCP Resources** | ❌ No | ✅ Full resource support |
+| **MCP Prompts** | ❌ No | ✅ Prompt management |
+| **Standard Compliance** | ❌ No | ✅ Full MCP spec compliance |
+
+**Clear Winner:** MCP Server with LangGraph (purpose-built as MCP server)
+
+## LangGraph Features Comparison
+
+### Core LangGraph Capabilities
+
+<Note>
+  **Important:** Both options use LangGraph 1.0, so core agent capabilities are identical. The differences are in deployment, security, and enterprise features.
+</Note>
+
+| LangGraph Feature | LangGraph Cloud | MCP Server with LangGraph |
+|-------------------|----------------|---------------------------|
+| **StateGraph** | ✅ Same | ✅ Same |
+| **Persistence** | ✅ Managed | ✅ Redis/PostgreSQL |
+| **Checkpointing** | ✅ Automatic | ✅ Configurable |
+| **Streaming** | ✅ Yes | ✅ Yes (+ MCP streaming) |
+| **Human-in-the-Loop** | ✅ Yes | ✅ Yes |
+| **Multi-Agent** | ✅ Yes | ✅ Yes (+ examples) |
+| **Async Support** | ✅ Yes | ✅ Yes |
+| **Memory** | ✅ Short + Long term | ✅ Short + Long term |
+
+**Verdict:** Identical LangGraph capabilities; differences are in surrounding infrastructure
+
+## When to Choose Each Option
+
+### Choose LangGraph Cloud Only When:
+
+✅ **Serverless Priority** - You only want serverless, never self-host
+✅ **No DevOps Team** - Don't want to manage infrastructure
+✅ **Quick Prototyping** - Need fastest time-to-deployment (2 minutes)
+✅ **Low Volume** - Under 100K requests/month (free tier)
+✅ **No Compliance** - Not subject to GDPR, HIPAA, SOC 2
+✅ **Simple Auth** - API keys are sufficient
+
+**Example Use Cases:**
+- Personal projects
+- Proofs of concept
+- Hackathons
+- Low-traffic applications
+- Non-regulated industries
+
+### Choose MCP Server with LangGraph When:
+
+✅ **Deployment Flexibility** - Want option to self-host or use Platform
+✅ **Cost Optimization** - High volume (>1M requests/month)
+✅ **Enterprise Security** - Need JWT, SSO, OpenFGA
+✅ **Compliance Required** - GDPR, HIPAA, SOC 2, data residency
+✅ **Multi-Cloud Strategy** - Want to avoid vendor lock-in
+✅ **Complete Observability** - Need LangSmith + OTEL + Grafana
+✅ **MCP Protocol** - Building MCP-compatible integrations
+✅ **On-Premises** - Need to deploy in private cloud
+
+**Example Use Cases:**
+- Enterprise production applications
+- Regulated industries (healthcare, finance)
+- High-volume applications (millions of requests)
+- Multi-region deployments
+- Hybrid cloud architectures
+- Organizations with DevOps teams
+
+## Hybrid Approach: Best of Both Worlds
+
+<Info>
+  **Recommended Strategy:** Use MCP Server with LangGraph and deploy to LangGraph Cloud initially, then migrate to self-hosted as you scale.
+</Info>
+
+**Development:** LangGraph Cloud (2-minute deployment)
+**Staging:** Cloud Run or Kubernetes (test production config)
+**Production:** Kubernetes (cost-optimized, enterprise features)
+
+**Benefits:**
+- Start fast with Platform
+- Migrate to self-hosted when ready
+- No code changes needed (same LangGraph code)
+- Optimize costs as you grow
+
+## Migration Paths
+
+### From LangGraph Cloud to MCP Server (Self-Hosted)
+
+<Steps>
+  <Step title="Use MCP Server with LangGraph">
+    Your existing LangGraph code works without changes:
+    ```python
+    # Your existing LangGraph agent code
+    from langgraph.graph import StateGraph
+
+    graph = StateGraph(AgentState)
+    # ... same code ...
+
+    # Works on Platform AND self-hosted
+    ```
+  </Step>
+
+  <Step title="Add Enterprise Features">
+    - Configure JWT authentication (optional)
+    - Set up OpenFGA authorization (optional)
+    - Enable LangSmith + OTEL (optional)
+    - Configure Infisical secrets (optional)
+
+    **Note:** All enterprise features are optional. Start simple, add as needed.
+  </Step>
+
+  <Step title="Choose Deployment Target">
+    **Prototype:** Keep using LangGraph Cloud
+    ```bash
+    langgraph deploy
+    ```
+
+    **Scale:** Deploy to Cloud Run
+    ```bash
+    gcloud run deploy --source .
+    ```
+
+    **Enterprise:** Deploy to Kubernetes
+    ```bash
+    helm install mcp-server ./deployments/helm
+    ```
+  </Step>
+
+  <Step title="Optimize Costs">
+    Monitor costs in LangSmith and decide when to migrate:
+    - Platform OK: <100K requests/month
+    - Consider Cloud Run: >1M requests/month
+    - Consider Kubernetes: >10M requests/month
+  </Step>
+</Steps>
+
+## Feature Parity Matrix
+
+| Feature Category | LangGraph Cloud | MCP Server with LangGraph |
+|-----------------|----------------|---------------------------|
+| **Core LangGraph** | ✅ 100% | ✅ 100% (same version) |
+| **Deployment Options** | ⚠️ Platform only | ✅ Platform + 4 others |
+| **Authentication** | ⚠️ API keys | ✅ JWT + SSO |
+| **Authorization** | ⚠️ Basic | ✅ Enterprise (OpenFGA) |
+| **Observability** | ⚠️ LangSmith only | ✅ LangSmith + OTEL |
+| **Security** | ⚠️ Platform-level | ✅ Custom network policies |
+| **Compliance** | ⚠️ Limited | ✅ GDPR, HIPAA, SOC 2 |
+| **Cost at Scale** | ⚠️ Expensive | ✅ Optimizable (10-50x) |
+| **MCP Protocol** | ❌ No | ✅ Native |
+| **Documentation** | ✅ LangGraph docs | ✅ Complete + deployment |
+
+## Honest Recommendation
+
+### If You're Starting Out:
+- **Use MCP Server with LangGraph** and deploy to LangGraph Cloud initially
+- Get the flexibility to self-host later without code changes
+- Start simple, add enterprise features as needed
+
+### If You're Enterprise:
+- **Use MCP Server with LangGraph** - you'll need the enterprise features (auth, compliance, observability)
+- Start on Platform for staging, deploy to Kubernetes for production
+
+### If You're Cost-Sensitive:
+- **Prototype:** MCP Server with LangGraph on Platform (free tier)
+- **Production:** Self-host on Cloud Run or Kubernetes (10-50x cheaper)
+
+### If You Never Want Infrastructure:
+- **Use LangGraph Cloud Only** - but recognize the trade-offs (cost, compliance, vendor lock-in)
+
+## Summary
+
+**The Real Comparison:**
+
+| Criteria | LangGraph Cloud Only | MCP Server with LangGraph |
+|----------|---------------------|---------------------------|
+| **LangGraph Support** | ✅ Yes | ✅ Yes (same capabilities) |
+| **Deployment Flexibility** | ❌ No (Platform only) | ✅ Yes (Platform + 4 options) |
+| **Enterprise Security** | ⚠️ Limited | ✅ Complete |
+| **Cost at Scale** | ⚠️ Expensive | ✅ Optimizable |
+| **MCP Protocol** | ❌ No | ✅ Yes (native server) |
+| **Time to Deploy** | 🏆 2 minutes | ✅ 2 min - 2 hours (flexible) |
+| **Vendor Lock-in** | ⚠️ Yes (LangChain) | ✅ No (portable) |
+| **Compliance** | ⚠️ Limited | ✅ Complete |
+
+**Bottom Line:** MCP Server with LangGraph = LangGraph Cloud + Enterprise Features + Multi-Cloud + MCP Protocol
+
+You're not choosing between LangGraph Cloud and MCP Server with LangGraph. You're choosing between **LangGraph Cloud only** vs **LangGraph Cloud + flexibility + enterprise features**.
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Deploy to LangGraph Cloud" icon="cloud" href="/deployment/langgraph-platform">
+    2-minute serverless deployment
+  </Card>
+  <Card title="Deploy to Kubernetes" icon="dharmachakra" href="/deployment/kubernetes">
+    Production-grade self-hosted
+  </Card>
+</CardGroup>

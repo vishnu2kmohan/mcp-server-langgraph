@@ -320,19 +320,349 @@ ORDER BY total_cost DESC
 
 ---
 
+### AWS Cost Optimization
+
+#### Current vs. Optimized
+
+<Tabs>
+  <Tab title="Production">
+    | Approach | Monthly Cost | Annual Cost | Savings |
+    |----------|--------------|-------------|---------|
+    | **Baseline EKS** | $1,980 | $23,760 | - |
+    | **Optimized** | $803 | $9,636 | 60% |
+    | **+ Spot Instances** | $688 | $8,256 | 65% |
+    | **+ Reserved Instances (1yr)** | $545 | $6,540 | 72% |
+    | **+ Reserved Instances (3yr)** | $425 | $5,100 | 79% |
+
+    **Maximum Savings**: $18,660/year (79%)
+  </Tab>
+
+  <Tab title="All Environments">
+    | Environment | Baseline | Optimized | Savings |
+    |-------------|----------|-----------|---------|
+    | Production | $1,980 | $803 | $1,177 |
+    | Staging | $890 | $385 | $505 |
+    | Development | $450 | $180 | $270 |
+    | **Total** | **$3,320** | **$1,368** | **$1,952** |
+
+    **59% overall savings** without commitments
+  </Tab>
+</Tabs>
+
+#### Strategy 1: Spot Instances (70-90% Savings)
+
+**Use spot instances for fault-tolerant workloads**:
+
+<Accordion title="How Spot Instances Save Money">
+  **On-Demand Pricing**:
+  - Fixed price, always available
+  - t3.large: $0.0832/hour = $60.74/month
+
+  **Spot Pricing**:
+  - Variable price (usually 70-90% discount)
+  - t3.large: ~$0.025/hour = $18.25/month
+  - Can be interrupted with 2-minute warning
+
+  **Savings**: $42.49/month per node (70%)
+</Accordion>
+
+**Implementation**:
+```hcl
+# terraform/environments/prod/terraform.tfvars
+enable_spot_node_group       = true
+spot_node_group_desired_size = 5
+spot_node_group_min_size     = 2
+spot_node_group_max_size     = 10
+spot_node_group_instance_types = [
+  "t3.large", "t3a.large",
+  "t3.xlarge", "t3a.xlarge"
+]
+```
+
+**Use Cases**:
+- Development/staging environments
+- Batch processing workloads
+- Stateless applications with proper graceful shutdown
+- CI/CD build agents
+
+#### Strategy 2: Reserved Instances & Savings Plans
+
+Commit to 1-year or 3-year usage for significant discounts:
+
+| Resource | On-Demand | 1-Year RI | 3-Year RI |
+|----------|-----------|-----------|-----------|
+| **EC2 Instances** | $0.0832/hr | $0.0540/hr | $0.0416/hr |
+| **RDS Multi-AZ** | $0.165/hr | $0.110/hr | $0.085/hr |
+| **ElastiCache** | $0.075/hr | $0.055/hr | $0.042/hr |
+| **Discount** | - | **35%** | **50%** |
+
+**Purchasing Options**:
+<Tabs>
+  <Tab title="Reserved Instances">
+    Best for: Predictable, always-running workloads
+
+    ```bash
+    # Purchase RDS Reserved Instance
+    aws rds purchase-reserved-db-instances-offering \
+      --reserved-db-instances-offering-id OFFERING_ID \
+      --reserved-db-instance-id mcp-langgraph-prod-ri \
+      --db-instance-count 1
+
+    # Purchase EC2 Reserved Instance
+    aws ec2 purchase-reserved-instances-offering \
+      --reserved-instances-offering-id OFFERING_ID \
+      --instance-count 3
+    ```
+  </Tab>
+
+  <Tab title="Compute Savings Plans">
+    Best for: Flexible compute needs across instance families
+
+    **Benefits**:
+    - Up to 66% discount
+    - Applies to EC2, Lambda, Fargate
+    - More flexible than Reserved Instances
+
+    Purchase via AWS Console: Billing → Savings Plans
+  </Tab>
+</Tabs>
+
+#### Strategy 3: Right-Sizing
+
+**Analyze and optimize resource allocation**:
+
+```bash
+# Check node utilization
+kubectl top nodes
+
+# Check pod resource usage
+kubectl top pods -A --containers
+
+# Right-size based on actual usage
+# Production pods: 250m CPU, 512Mi RAM = $11/month
+# vs. Over-provisioned: 1000m CPU, 2Gi RAM = $43/month
+# Savings: $32/month per pod (74%)
+```
+
+**RDS Right-Sizing**:
+```bash
+# Check CPU utilization (CloudWatch)
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/RDS \
+  --metric-name CPUUtilization \
+  --dimensions Name=DBInstanceIdentifier,Value=mcp-langgraph-prod \
+  --start-time 2025-01-01T00:00:00Z \
+  --end-time 2025-02-01T00:00:00Z \
+  --period 3600 \
+  --statistics Average
+
+# If avg < 40%, downsize instance class
+# db.t3.large ($240/mo) → db.t3.medium ($120/mo) = $120 saved
+```
+
+#### Strategy 4: VPC Endpoints (70% Data Transfer Savings)
+
+**Avoid NAT gateway data transfer charges**:
+
+```hcl
+# Enable VPC endpoints in Terraform
+enable_vpc_endpoints = true
+
+# Creates endpoints for:
+# - S3 (Gateway - free)
+# - ECR API ($7.20/month)
+# - ECR DKR ($7.20/month)
+# - CloudWatch ($7.20/month)
+
+# Cost: $21.60/month
+# Saves: ~$50-150/month in data transfer
+# ROI: Pays for itself immediately
+```
+
+**Data Transfer Savings**:
+- NAT Gateway data processing: $0.045/GB
+- VPC Endpoint data processing: $0.01/GB
+- **Savings**: $0.035/GB (78%)
+
+#### Strategy 5: Auto-Scaling
+
+**Cluster Autoscaler** removes idle nodes:
+
+```yaml
+# Deploy Cluster Autoscaler
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml
+
+# Configure
+kubectl set env deployment/cluster-autoscaler \
+  -n kube-system \
+  --containers=cluster-autoscaler \
+  AWS_REGION=us-east-1
+```
+
+**HPA** scales pods based on utilization:
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mcp-server-langgraph
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mcp-server-langgraph
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+**Savings**: 20-40% on compute costs by removing idle capacity
+
+#### Strategy 6: Development Environment Controls
+
+**Stop dev/staging environments after hours**:
+
+```bash
+# Lambda function to stop EKS node groups
+# Runs Mon-Fri at 6 PM, starts at 6 AM
+# Savings: ~65 hours/week off = $200-300/month
+```
+
+**Single NAT Gateway for Non-Production**:
+```hcl
+# terraform/environments/dev/terraform.tfvars
+single_nat_gateway = true  # vs. Multi-AZ ($97.20 → $32.40 = $65 saved)
+```
+
+#### AWS Cost Breakdown
+
+**Production Environment ($803/month)**:
+
+| Service | Configuration | Monthly Cost | Optimization |
+|---------|---------------|--------------|--------------|
+| EKS Control Plane | 1 cluster | $73.00 | Required |
+| EC2 Nodes | 3×t3.xlarge on-demand | $295.20 | Use 1yr RI: $192 |
+| Spot Nodes | 2×t3.large equiv | $14.60 | ✅ Optimized |
+| RDS PostgreSQL | db.t3.medium Multi-AZ | $157.56 | Use 1yr RI: $105 |
+| ElastiCache | 2×cache.r6g.large | $109.50 | Use 1yr RI: $80 |
+| NAT Gateway | 3×Multi-AZ | $97.20 | Required for HA |
+| VPC Endpoints | 6 endpoints | $21.60 | Saves $50+ transfer |
+| EBS Volumes | 5×100GB gp3 | $40.00 | ✅ Optimized (gp3) |
+| CloudWatch | Logs + metrics | $15.00 | Set retention limits |
+| **Total** | | **$823.66** | **With RIs: $545** |
+
+**Cost Optimization Checklist**:
+
+<AccordionGroup>
+  <Accordion title="Compute">
+    <Check>Enable spot instances for fault-tolerant workloads</Check>
+    <Check>Purchase Reserved Instances for base capacity (35-50% discount)</Check>
+    <Check>Deploy Cluster Autoscaler to remove idle nodes</Check>
+    <Check>Right-size instance types based on actual utilization</Check>
+    <Check>Use HPA to scale pods, not nodes</Check>
+    <Check>Stop dev/staging environments after hours</Check>
+  </Accordion>
+
+  <Accordion title="Storage">
+    <Check>Use gp3 instead of gp2 (20% savings + better performance)</Check>
+    <Check>Enable RDS storage autoscaling (avoid over-provisioning)</Check>
+    <Check>Delete old EBS snapshots (lifecycle policy)</Check>
+    <Check>Use S3 lifecycle policies (Standard → IA → Glacier)</Check>
+  </Accordion>
+
+  <Accordion title="Network">
+    <Check>Enable VPC endpoints (70% data transfer savings)</Check>
+    <Check>Use single NAT gateway in dev/staging</Check>
+    <Check>Optimize CloudFront caching to reduce origin requests</Check>
+    <Check>Use AWS PrivateLink instead of NAT for AWS services</Check>
+  </Accordion>
+
+  <Accordion title="Database">
+    <Check>Purchase RDS Reserved Instances (35-50% discount)</Check>
+    <Check>Right-size RDS instance class based on CPU/memory usage</Check>
+    <Check>Use Aurora Serverless v2 for variable workloads</Check>
+    <Check>Enable automated backup retention limits</Check>
+    <Check>Use read replicas only when needed</Check>
+  </Accordion>
+
+  <Accordion title="Monitoring">
+    <Check>Set CloudWatch Logs retention (7-30 days, not indefinite)</Check>
+    <Check>Use CloudWatch Logs Insights instead of exporting to S3</Check>
+    <Check>Enable AWS Cost Explorer and set budgets</Check>
+    <Check>Tag all resources for cost allocation</Check>
+    <Check>Set up billing alerts ($50, $100, $200 thresholds)</Check>
+  </Accordion>
+</AccordionGroup>
+
+#### AWS Cost Monitoring
+
+**Set Up Cost Alerts**:
+```bash
+# Create SNS topic
+aws sns create-topic --name cost-alerts
+
+# Subscribe email
+aws sns subscribe \
+  --topic-arn arn:aws:sns:us-east-1:ACCOUNT:cost-alerts \
+  --protocol email \
+  --notification-endpoint your-email@example.com
+
+# Create budget
+aws budgets create-budget \
+  --account-id ACCOUNT_ID \
+  --budget file://budget.json
+```
+
+**budget.json**:
+```json
+{
+  "BudgetName": "mcp-langgraph-monthly",
+  "BudgetLimit": {
+    "Amount": "900",
+    "Unit": "USD"
+  },
+  "TimeUnit": "MONTHLY",
+  "BudgetType": "COST"
+}
+```
+
+**Enable Cost Allocation Tags**:
+```hcl
+tags = {
+  Environment = "production"
+  Project     = "mcp-langgraph"
+  ManagedBy   = "terraform"
+  CostCenter  = "engineering"
+}
+```
+
+---
+
 ### Related Documentation
 
 <CardGroup cols={2}>
-  <Card title="Infrastructure Setup" icon="server" href="/deployment/infrastructure/terraform-gcp">
-    Terraform modules with cost-optimized defaults
+  <Card title="GCP Infrastructure" icon="google" href="/deployment/infrastructure/terraform-gcp">
+    GCP Terraform modules with cost-optimized defaults
+  </Card>
+  <Card title="AWS Infrastructure" icon="aws" href="/deployment/infrastructure/terraform-aws">
+    AWS Terraform modules with cost breakdowns
+  </Card>
+  <Card title="GKE Production" icon="google" href="/deployment/kubernetes/gke-production">
+    GCP production deployment with cost estimates
+  </Card>
+  <Card title="EKS Production" icon="aws" href="/deployment/kubernetes/eks-production">
+    AWS production deployment with cost estimates
   </Card>
   <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
     Dev/staging cost optimization strategies
   </Card>
-  <Card title="GKE Production" icon="google" href="/deployment/kubernetes/gke-production">
-    Production deployment with cost estimates
-  </Card>
   <Card title="Complete Playbook" icon="book" href="/GCP_COST_OPTIMIZATION_PLAYBOOK.md">
-    500+ line detailed cost optimization playbook
+    500+ line detailed GCP cost optimization playbook
   </Card>
 </CardGroup>
