@@ -11,45 +11,62 @@ icon: 'scale-balanced'
 
 ### Overview
 
-Compliance with data protection regulations and industry standards is essential for enterprise deployments. This guide covers implementing controls for GDPR, SOC 2, HIPAA, and other compliance frameworks.
+MCP Server with LangGraph provides **technical controls and architecture** to support compliance with data protection regulations and industry standards. This guide covers implementing controls for [GDPR](https://gdpr-info.eu/), [SOC 2](https://www.aicpa.org/soc4so), [HIPAA](https://www.hhs.gov/hipaa/), and other compliance frameworks.
 
 <Warning>
-This guide provides technical implementation guidance. Always consult with legal counsel and compliance experts for your specific regulatory requirements.
+**Important Compliance Disclaimer:**
+
+This codebase provides **technical controls** that support compliance requirements. However:
+
+- **Compliance ≠ Technical Controls Alone**: Achieving actual compliance requires organizational policies, procedures, legal review, employee training, and often third-party audits
+- **No Certification Included**: This software does not come with compliance certification or attestation
+- **Legal Review Required**: Always consult with legal counsel and compliance experts for your specific regulatory requirements
+- **Shared Responsibility**: You are responsible for configuring, deploying, and operating the system in a compliant manner
+
+See [Sources & References](/references/sources) for links to official compliance documentation.
 </Warning>
 
 ### Compliance Frameworks
 
 <CardGroup cols={2}>
-  <Card title="GDPR" icon="shield-halved">
-    **General Data Protection Regulation**
+  <Card title="GDPR" icon="shield-halved" href="https://gdpr-info.eu/">
+    **[General Data Protection Regulation](https://gdpr-info.eu/)**
     - EU data protection law
     - Applies to EU residents' data
     - Heavy penalties for non-compliance
     - Focus on privacy and consent
+
+    **We provide**: Technical controls for data access, export, deletion
   </Card>
 
-  <Card title="SOC 2" icon="building-shield">
-    **Service Organization Control 2**
+  <Card title="SOC 2" icon="building-shield" href="https://www.aicpa.org/soc4so">
+    **[Service Organization Control 2](https://www.aicpa.org/soc4so)**
     - Trust Services Criteria
     - Security, availability, confidentiality
     - Annual audits required
     - Customer trust & due diligence
+
+    **We provide**: Audit logging, access controls, monitoring infrastructure
   </Card>
 
-  <Card title="HIPAA" icon="hospital">
-    **Health Insurance Portability**
+  <Card title="HIPAA" icon="hospital" href="https://www.hhs.gov/hipaa/">
+    **[Health Insurance Portability](https://www.hhs.gov/hipaa/)**
     - US healthcare data protection
     - Protected Health Information (PHI)
     - Business Associate Agreements
     - Technical safeguards required
+
+    **We provide**: Encryption, access controls, audit trails, PHI handling capabilities
   </Card>
 
-  <Card title="ISO 27001" icon="certificate">
-    **Information Security Management**
+  <Card title="ISO 27001" icon="certificate" href="https://www.iso.org/standard/27001">
+    **[Information Security Management](https://www.iso.org/standard/27001)**
     - International standard
     - Risk-based approach
     - Continuous improvement
     - Certification available
+
+    **We provide**: Security architecture aligned with ISO 27001 controls
   </Card>
 </CardGroup>
 

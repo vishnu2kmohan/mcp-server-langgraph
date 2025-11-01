@@ -13,7 +13,7 @@ Choose the deployment method that best fits your needs:
     One-command serverless deployment
     - **Best for**: Quick production deployments
     - **Complexity**: ★☆☆☆☆ Minimal
-    - **Time**: 2 minutes
+    - **Time**: ~2 minutes*
     - **Cost**: Pay-per-use
   </Card>
 
@@ -21,7 +21,7 @@ Choose the deployment method that best fits your needs:
     GCP serverless container platform
     - **Best for**: GCP-native applications
     - **Complexity**: ★★☆☆☆ Low
-    - **Time**: 10 minutes
+    - **Time**: ~10 minutes*
     - **Cost**: Pay-per-use
   </Card>
 
@@ -29,7 +29,7 @@ Choose the deployment method that best fits your needs:
     Production-grade K8s deployment
     - **Best for**: Enterprise, self-hosted
     - **Complexity**: ★★★★☆ High
-    - **Time**: 1-2 hours
+    - **Time**: ~1-2 hours*
     - **Cost**: Fixed + usage
   </Card>
 
@@ -37,7 +37,7 @@ Choose the deployment method that best fits your needs:
     Quick Docker Compose setup
     - **Best for**: Development, testing
     - **Complexity**: ★☆☆☆☆ Minimal
-    - **Time**: 15 minutes
+    - **Time**: ~15 minutes*
     - **Cost**: Hosting only
   </Card>
 
@@ -45,7 +45,7 @@ Choose the deployment method that best fits your needs:
     Flexible Helm chart deployment
     - **Best for**: Customizable K8s
     - **Complexity**: ★★★☆☆ Medium
-    - **Time**: 30 minutes
+    - **Time**: ~30 minutes*
     - **Cost**: Fixed + usage
   </Card>
 
@@ -53,22 +53,28 @@ Choose the deployment method that best fits your needs:
     Environment-specific overlays
     - **Best for**: Multi-environment K8s
     - **Complexity**: ★★★☆☆ Medium
-    - **Time**: 45 minutes
+    - **Time**: ~45 minutes*
     - **Cost**: Fixed + usage
   </Card>
 </CardGroup>
+
+<Info>
+  *Time estimates assume prerequisites are configured (accounts, credentials, CLI tools installed). First-time setup may take longer. See individual deployment guides for detailed requirements.
+</Info>
 
 ### Platform Comparison
 
 | Feature | LangGraph Platform | Cloud Run | Kubernetes | Docker |
 |---------|-------------------|-----------|------------|--------|
-| **Setup Time** | 2 minutes | 10 minutes | 1-2 hours | 15 minutes |
+| **Setup Time** | ~2 min* | ~10 min* | ~1-2 hrs* | ~15 min* |
 | **Infrastructure** | ✅ None | ⚠️ Minimal | ❌ Complex | ⚠️ Basic |
 | **Scaling** | ✅ Auto | ✅ Auto | ⚠️ Manual config | ❌ Manual |
 | **LangSmith Integration** | ✅ Built-in | ⚠️ Manual | ⚠️ Manual | ⚠️ Manual |
 | **Versioning** | ✅ Built-in | ⚠️ Manual | ⚠️ Manual | ❌ None |
 | **Cost** | Pay-per-use | Pay-per-use | Fixed + usage | Hosting only |
 | **Best For** | Quick production | GCP apps | Enterprise | Development |
+
+*Time estimates with prerequisites configured. First-time setup takes longer.
 
 <Note>
   **Recommendation**: Start with **LangGraph Platform** for fastest time-to-production, or **Cloud Run** if you're already on GCP. Use **Kubernetes** for enterprise self-hosted deployments.
