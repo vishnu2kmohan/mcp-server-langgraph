@@ -1,0 +1,525 @@
+---
+title: 'MCP Server with LangGraph vs Claude Agent SDK'
+description: 'Detailed comparison between MCP Server with LangGraph and Anthropic Claude Agent SDK'
+icon: 'robot'
+---
+
+## Overview
+
+**Claude Agent SDK** (formerly Claude Code SDK) is Anthropic's official SDK for building autonomous agents on top of Claude. It provides the same infrastructure that powers Claude Code and other Anthropic frontier products, optimized specifically for Claude models.
+
+**MCP Server with LangGraph** is a production-ready MCP server with enterprise security, multi-cloud deployment, and provider-agnostic architecture supporting 100+ LLM providers.
+
+## Quick Comparison
+
+| Aspect | Claude Agent SDK | MCP Server with LangGraph |
+|--------|------------------|---------------------------|
+| **Primary Focus** | Claude-native agent framework | Multi-provider MCP server |
+| **Best For** | Code-heavy Claude agents | Enterprise multi-cloud deployments |
+| **Time to First Agent** | ~10 minutes | ~2-15 minutes (quick-start to full stack) |
+| **Architecture** | Tools + Subagents + Hooks | LangGraph StateGraph with MCP |
+| **Licensing** | Open-source (Apache 2.0) | Open-source (MIT-style) |
+| **Model Support** | Claude only (Anthropic) | 100+ providers via LiteLLM |
+| **Context Management** | ✅ Automatic compaction | ⚠️ Manual management |
+| **Checkpointing** | ✅ Built-in rewind system | ✅ LangGraph persistence |
+| **Security** | API key based | Enterprise-grade (JWT, OpenFGA, Keycloak) |
+| **Observability** | Basic logging | Dual stack (LangSmith + OTEL) |
+| **Deployment** | Self-hosted Python | Multi-cloud (GCP, AWS, Azure, Platform) |
+| **MCP Support** | ✅ MCP connector | ✅ Native MCP server |
+
+## Detailed Feature Comparison
+
+### Architecture & Design Philosophy
+
+<AccordionGroup>
+  <Accordion title="Claude Agent SDK: Tools-First with Subagents">
+    **Approach:**
+    - Tools as primary building blocks
+    - Subagents for parallel specialized tasks
+    - Hooks for automatic actions at trigger points
+    - Background tasks for long-running processes
+    - File system integration for context loading
+    - Compact feature for automatic context summarization
+
+    **Strengths:**
+    - Powers Claude Code (proven at scale)
+    - Automatic context management (compaction)
+    - Built-in checkpointing system (rewind to previous states)
+    - Native integration with Claude capabilities
+    - Excellent for code-heavy agent tasks
+    - Parallel development with subagents
+
+    **Limitations:**
+    - Limited to Claude models only
+    - Newer framework (evolved from Claude Code SDK)
+    - Smaller ecosystem compared to LangGraph
+    - No multi-cloud deployment patterns
+    - Basic authentication (API keys)
+  </Accordion>
+
+  <Accordion title="MCP Server with LangGraph: Graph-Based StateGraph">
+    **Approach:**
+    - LangGraph StateGraph for flexible workflows
+    - MCP protocol for standardized communication
+    - Event-driven, async-first architecture
+    - Built on battle-tested LangGraph (LinkedIn, Uber, Klarna use in production)
+
+    **Strengths:**
+    - Provider-agnostic (100+ LLM providers)
+    - Proven at scale across industries
+    - Precise control over agent workflows
+    - Built-in persistence and fault tolerance
+    - Human-in-the-loop patterns
+    - Enterprise security (JWT, OpenFGA, Keycloak)
+    - Multi-cloud deployment ready
+
+    **Considerations:**
+    - Requires understanding of graph concepts
+    - Manual context management needed
+    - Not optimized specifically for Claude
+  </Accordion>
+</AccordionGroup>
+
+### Developer Experience
+
+| Feature | Claude Agent SDK | MCP Server with LangGraph |
+|---------|------------------|---------------------------|
+| **Getting Started** | ✅ ~10 minutes | 🔄 Coming soon: `mcpserver init` |
+| **Documentation** | ✅ Official Anthropic docs | ✅ Complete Mintlify docs |
+| **Examples** | ✅ Claude-focused examples | ✅ 12+ multi-provider examples |
+| **Learning Curve** | ✅ Low (tools-based is intuitive) | ⚠️ Medium (graph concepts) |
+| **Community** | 🔄 Growing (2025 SDK) | ✅ Mature LangGraph ecosystem |
+| **IDE Integration** | ✅ JetBrains, VS Code | ✅ Standard Python support |
+| **Debugging** | ✅ Checkpointing + rewind | ✅ LangSmith debugger |
+| **Context Management** | ✅ Automatic compaction | ⚠️ Manual |
+
+**Winner for Claude Users:** Claude Agent SDK (native integration)
+**Winner for Multi-Provider:** MCP Server with LangGraph
+
+### Agent Capabilities
+
+<Tabs>
+  <Tab title="Claude Agent SDK">
+    **Claude Agent with Subagents:**
+    ```python
+    from claude_agent import Agent, Tool, Subagent
+
+    # Define custom tool
+    @Tool
+    def search_code(query: str) -> str:
+        # Search implementation
+        return results
+
+    # Create subagent for specialized task
+    backend_agent = Subagent(
+        name="backend",
+        tools=[generate_api, run_tests],
+        system_prompt="Build backend API"
+    )
+
+    # Main agent with subagents
+    main_agent = Agent(
+        tools=[search_code],
+        subagents=[backend_agent],
+        hooks={
+            "after_code_change": lambda: run_tests()
+        }
+    )
+
+    # Execute with automatic context management
+    result = main_agent.run(task, checkpoint=True)
+    ```
+
+    **Strengths:**
+    - Automatic context compaction
+    - Parallel subagent execution
+    - Built-in checkpointing
+    - Hook-based automation
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph">
+    **LangGraph Multi-Agent Patterns:**
+    ```python
+    from langgraph.graph import StateGraph
+    from typing import TypedDict
+
+    class AgentState(TypedDict):
+        task: str
+        results: list
+
+    graph = StateGraph(AgentState)
+
+    # Add agent nodes
+    graph.add_node("backend", backend_agent)
+    graph.add_node("frontend", frontend_agent)
+
+    # Define parallel execution
+    graph.add_edge(START, "backend")
+    graph.add_edge(START, "frontend")
+
+    # Compile with persistence
+    app = graph.compile(checkpointer=checkpointer)
+
+    result = app.invoke({"task": task}, config)
+    ```
+
+    **Strengths:**
+    - Flexible control flows
+    - Built-in persistence
+    - Human-in-the-loop support
+    - Provider-agnostic
+  </Tab>
+</Tabs>
+
+### Context Management
+
+| Feature | Claude Agent SDK | MCP Server with LangGraph |
+|---------|------------------|---------------------------|
+| **Auto Compaction** | ✅ Built-in | ❌ Manual required |
+| **Large File Handling** | ✅ Automatic (grep, tail) | ⚠️ Custom implementation |
+| **Context Window Mgmt** | ✅ Automatic summarization | ⚠️ Manual tracking |
+| **File System Access** | ✅ Native integration | ✅ Via tools |
+| **Prompt Caching** | ✅ Up to 1 hour | ✅ Via provider support |
+| **Checkpointing** | ✅ Built-in rewind system | ✅ LangGraph persistence |
+
+**Clear Winner:** Claude Agent SDK for automatic context management
+
+### Security & Authentication
+
+| Feature | Claude Agent SDK | MCP Server with LangGraph |
+|---------|------------------|---------------------------|
+| **Authentication** | ⚠️ API key based | ✅ JWT + Keycloak SSO |
+| **Authorization** | ❌ Not built-in | ✅ OpenFGA (Zanzibar model) |
+| **Service Accounts** | ⚠️ Via Anthropic API | ✅ Service principals |
+| **Audit Logging** | ⚠️ Basic | ✅ Complete security event tracking |
+| **Secrets Management** | ⚠️ Environment variables | ✅ Infisical integration |
+| **Network Policies** | ❌ Not included | ✅ Kubernetes-native isolation |
+| **Compliance** | ⚠️ Manual | ✅ GDPR, SOC 2, HIPAA ready |
+| **Identity Federation** | ❌ No | ✅ Keycloak federation |
+
+**Clear Winner:** MCP Server with LangGraph for enterprise security
+
+### Deployment & Operations
+
+<AccordionGroup>
+  <Accordion title="Claude Agent SDK Deployment">
+    **Options:**
+    - Python application (self-hosted)
+    - Docker containers
+    - Cloud platforms (AWS, GCP, Azure)
+    - Anthropic API infrastructure
+
+    **Strengths:**
+    - Simple deployment model
+    - Low infrastructure complexity
+    - Direct Anthropic API integration
+    - Works anywhere Python runs
+
+    **Limitations:**
+    - No Kubernetes manifests
+    - Manual scaling configuration
+    - No multi-cloud patterns
+    - Basic observability
+  </Accordion>
+
+  <Accordion title="MCP Server with LangGraph Deployment">
+    **Options:**
+    - **LangGraph Platform:** 2-minute serverless
+    - **Google Cloud Run:** 10-minute serverless
+    - **Kubernetes:** GKE, EKS, AKS (1-2 hours)
+    - **Docker:** 15-minute quick start
+    - **Helm Charts:** Flexible K8s deployments
+
+    **Strengths:**
+    - Complete production manifests
+    - Multi-cloud flexibility
+    - Time estimates for each option
+    - GitOps ready (ArgoCD, FluxCD)
+    - Auto-scaling configurations
+    - Enterprise-grade observability
+
+    **Considerations:**
+    - More complex (but more capable)
+    - Requires infrastructure knowledge
+  </Accordion>
+</AccordionGroup>
+
+### Observability & Monitoring
+
+| Capability | Claude Agent SDK | MCP Server with LangGraph |
+|------------|------------------|---------------------------|
+| **Logging** | ⚠️ Basic Python logging | ✅ Structured JSON logs |
+| **Tracing** | ⚠️ Manual | ✅ LangSmith + Jaeger |
+| **Metrics** | ❌ Manual | ✅ Prometheus + Grafana |
+| **Cost Tracking** | ⚠️ Anthropic Console | ✅ LangSmith built-in |
+| **Dashboards** | ❌ None | ✅ Pre-built Grafana dashboards |
+| **Alerts** | ❌ Manual | ✅ Prometheus alerting |
+| **Debugging** | ✅ Checkpointing + rewind | ✅ LangSmith debugger |
+
+**Winner for Development:** Claude Agent SDK (checkpointing)
+**Winner for Production:** MCP Server with LangGraph (complete observability)
+
+### Model & API Support
+
+| Feature | Claude Agent SDK | MCP Server with LangGraph |
+|---------|------------------|---------------------------|
+| **Supported Models** | Claude only | 100+ providers |
+| **Model Switching** | ❌ Claude only | ✅ Automatic fallback |
+| **Retry Logic** | ⚠️ Manual | ✅ Built-in |
+| **Local Models** | ❌ No | ✅ Ollama integration |
+| **Cost Optimization** | ⚠️ Manual | ✅ LangSmith tracking |
+| **Code Execution** | ✅ Built-in tool | ✅ Via tools |
+| **MCP Integration** | ✅ MCP connector | ✅ Native MCP server |
+| **Files API** | ✅ Native support | ✅ Via tools |
+
+**Winner for Claude:** Claude Agent SDK (optimized)
+**Winner for Flexibility:** MCP Server with LangGraph (100+ providers)
+
+## Performance Comparison
+
+### Speed & Efficiency
+
+**Claude Agent SDK:**
+- Optimized for Claude model capabilities
+- Automatic context compaction reduces latency
+- Efficient file system integration
+- Prompt caching up to 1 hour
+- Parallel subagent execution
+
+**MCP Server with LangGraph:**
+- Async-first architecture
+- Optimized with caching and checkpointing
+- Parallel tool execution
+- Multi-provider optimization
+- Streaming support
+
+**Verdict:** Claude Agent SDK has edge for Claude-specific tasks; MCP Server with LangGraph excels at multi-provider scenarios.
+
+### Scaling
+
+**Claude Agent SDK:**
+- Application-level scaling
+- Depends on hosting infrastructure
+- Manual configuration required
+- Limited production deployment guides
+
+**MCP Server with LangGraph:**
+- Kubernetes-native with HPA
+- Multi-cloud auto-scaling patterns
+- Pre-configured for production scale
+- Multi-region deployment support
+
+**Clear Winner:** MCP Server with LangGraph for production scaling
+
+## Cost Comparison
+
+### Total Cost of Ownership
+
+<Tabs>
+  <Tab title="Claude Agent SDK Costs">
+    **Framework:**
+    - Open-source (free)
+    - No subscription required
+
+    **API Usage:**
+    - Claude API: Pay-per-token
+    - Prompt caching: Reduced costs (up to 1 hour)
+    - Code execution: Included in API
+
+    **Infrastructure:**
+    - Self-hosted: Compute costs only
+    - Cloud deployment: Standard cloud costs
+
+    **Operations:**
+    - Manual monitoring setup
+    - Manual security implementation
+    - Basic observability
+
+    **Total:** Low for Claude-only deployments, increases with production needs
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph Costs">
+    **Framework:**
+    - Open-source (free)
+    - No subscription required
+
+    **API/Model Usage:**
+    - Any provider: Competitive pricing
+    - LangSmith: Usage tracking included
+    - Model fallback: Cost optimization
+
+    **Infrastructure:**
+    - LangGraph Platform: ~$0 (developer tier) to usage-based
+    - Cloud Run: $0.40-2.00 per 1M requests
+    - K8s: ~$200-500/month base
+
+    **Operations:**
+    - Observability included (LangSmith + OTEL)
+    - Security included (JWT, OpenFGA, Keycloak)
+    - Auto-scaling included
+
+    **Total:** Higher initial setup, lower long-term operational costs, multi-provider leverage
+  </Tab>
+</Tabs>
+
+## Use Case Recommendations
+
+### Choose Claude Agent SDK When:
+
+✅ **Claude Exclusive** - Committed to Claude models only
+✅ **Code-Heavy Tasks** - Building coding assistants or automation
+✅ **Rapid Prototyping** - Need quick Claude agent development
+✅ **Context Challenges** - Dealing with large codebases or documents
+✅ **Simple Deployment** - Don't need enterprise infrastructure
+✅ **Anthropic Ecosystem** - Already invested in Claude/Anthropic
+
+**Example Use Cases:**
+- Code debugging and analysis agents
+- Financial compliance agents (Claude-powered)
+- Cybersecurity agents with Claude
+- Research assistants with automatic context management
+- Video creation and note-taking agents
+- Development workflow automation
+
+### Choose MCP Server with LangGraph When:
+
+✅ **Multi-Provider Strategy** - Need model diversity (100+ providers)
+✅ **Production Deployment** - Going to production with real users
+✅ **Enterprise Requirements** - Need security, compliance, audit
+✅ **Multi-Cloud** - Want deployment flexibility
+✅ **Provider-Agnostic** - Don't want vendor lock-in
+✅ **Complete Observability** - Need production monitoring/tracing
+✅ **Team Collaboration** - Multiple teams deploying agents
+
+**Example Use Cases:**
+- Enterprise customer support (multi-provider)
+- FinTech with diverse LLM requirements
+- Healthcare AI with HIPAA compliance
+- Multi-region deployment with high availability
+- DevOps automation across clouds
+- Hybrid LLM strategies
+
+## Migration Path
+
+### From Claude Agent SDK to MCP Server with LangGraph
+
+If you need to expand beyond Claude or add enterprise features:
+
+<Steps>
+  <Step title="Map Tools to Graph Nodes">
+    Convert Claude Agent SDK tools to LangGraph nodes:
+    ```python
+    # Claude Agent SDK
+    @Tool
+    def process_data(input: str) -> str:
+        return result
+
+    # LangGraph
+    def process_node(state: AgentState) -> AgentState:
+        result = process_data(state["input"])
+        return {"result": result}
+
+    graph.add_node("process", process_node)
+    ```
+  </Step>
+
+  <Step title="Handle Context Management Manually">
+    Replace automatic compaction with manual strategies:
+    ```python
+    # Implement context windowing
+    # Use LangSmith for tracking
+    # Add summarization nodes if needed
+    ```
+  </Step>
+
+  <Step title="Add Multi-Provider Support">
+    - Configure LiteLLM for model switching
+    - Add fallback logic
+    - Set up provider credentials
+  </Step>
+
+  <Step title="Implement Enterprise Features">
+    - Add JWT authentication
+    - Configure OpenFGA authorization
+    - Set up LangSmith tracing
+    - Deploy with Kubernetes/Helm
+  </Step>
+</Steps>
+
+### From MCP Server with LangGraph to Claude Agent SDK
+
+If you want to optimize for Claude and simplify infrastructure:
+
+<Steps>
+  <Step title="Convert Graph to Tools">
+    Map LangGraph nodes to Claude Agent SDK tools:
+    ```python
+    # LangGraph
+    graph.add_node("process", process_func)
+
+    # Claude Agent SDK
+    @Tool
+    def process(input: str) -> str:
+        return process_func(input)
+    ```
+  </Step>
+
+  <Step title="Leverage Automatic Context Management">
+    - Remove manual context tracking
+    - Enable automatic compaction
+    - Use file system integration for large files
+  </Step>
+
+  <Step title="Simplify Deployment">
+    - Remove Kubernetes manifests
+    - Deploy as Python application
+    - Use Anthropic API directly
+  </Step>
+</Steps>
+
+## Honest Recommendation
+
+### If You're Building with Claude Only:
+- **Consider Claude Agent SDK** for native integration and automatic context management
+- **Consider MCP Server with LangGraph** if enterprise features are critical
+
+### If You Need Multi-Provider Support:
+- **Choose MCP Server with LangGraph** - Claude Agent SDK doesn't support other models
+
+### If Context Management is Critical:
+- **Claude Agent SDK** has superior automatic context compaction
+- **MCP Server with LangGraph** requires manual implementation
+
+### If You're Going to Production (Enterprise):
+- **Choose MCP Server with LangGraph** - enterprise security and observability are built-in
+
+### If You're Prototyping Code Agents:
+- **Claude Agent SDK** is faster to get started with Claude-specific features
+
+## Summary
+
+| Criteria | Winner |
+|----------|--------|
+| **Claude Optimization** | 🏆 Claude Agent SDK |
+| **Multi-Provider Support** | 🏆 MCP Server with LangGraph |
+| **Context Management** | 🏆 Claude Agent SDK |
+| **Enterprise Security** | 🏆 MCP Server with LangGraph |
+| **Production Deployment** | 🏆 MCP Server with LangGraph |
+| **Getting Started** | 🏆 Claude Agent SDK |
+| **Observability** | 🏆 MCP Server with LangGraph |
+| **Code-Heavy Tasks** | 🏆 Claude Agent SDK |
+| **Multi-Cloud** | 🏆 MCP Server with LangGraph |
+| **Checkpointing/Rewind** | 🏆 Claude Agent SDK |
+
+**Overall:** Claude Agent SDK wins for Claude-exclusive, code-heavy development with automatic context management. MCP Server with LangGraph wins for multi-provider, enterprise production deployments.
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Try MCP Server with LangGraph" icon="rocket" href="/getting-started/quickstart">
+    Get started in 5 minutes
+  </Card>
+  <Card title="More Comparisons" icon="chart-bar" href="/comparisons/choosing-framework">
+    See all framework comparisons
+  </Card>
+</CardGroup>

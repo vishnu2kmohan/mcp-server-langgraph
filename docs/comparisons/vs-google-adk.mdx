@@ -1,0 +1,458 @@
+---
+title: 'MCP Server with LangGraph vs Google ADK'
+description: 'Detailed comparison between MCP Server with LangGraph and Google Agent Development Kit'
+icon: 'google'
+---
+
+## Overview
+
+**Google Agent Development Kit (ADK)** is Google's open-source framework for building multi-agent AI applications, optimized for Gemini models and the Google Cloud ecosystem. Released in 2025, ADK powers agents within Google products like Agentspace and Google Customer Engagement Suite.
+
+**MCP Server with LangGraph** is a production-ready MCP server with enterprise security, multi-cloud deployment, and provider-agnostic architecture supporting 100+ LLM providers.
+
+## Quick Comparison
+
+| Aspect | Google ADK | MCP Server with LangGraph |
+|--------|------------|---------------------------|
+| **Primary Focus** | Google Cloud native agents | Multi-cloud MCP server |
+| **Best For** | Google Cloud/Vertex AI users | Multi-cloud enterprise deployments |
+| **Time to First Agent** | ~100 lines of code | ~2-15 minutes (quick-start to full stack) |
+| **Architecture** | Workflow + LLM-driven routing | LangGraph StateGraph with MCP |
+| **Licensing** | Open-source (Apache 2.0) | Open-source (MIT-style) |
+| **Cloud Integration** | Deep Google Cloud/Vertex AI | Multi-cloud (GCP, AWS, Azure, Platform) |
+| **Primary Models** | Gemini (optimized) | 100+ providers via LiteLLM |
+| **Security** | Google Cloud IAM | Enterprise-grade (JWT, OpenFGA, Keycloak) |
+| **Observability** | Google Cloud Ops | Dual stack (LangSmith + OTEL) |
+| **Multi-Agent** | ✅ Built-in hierarchies | ✅ LangGraph patterns available |
+| **Streaming** | ✅ Bidirectional audio/video | ✅ MCP streaming support |
+
+## Detailed Feature Comparison
+
+### Architecture & Design Philosophy
+
+<AccordionGroup>
+  <Accordion title="Google ADK: Workflow-First with Hierarchies">
+    **Approach:**
+    - Workflow agents (Sequential, Parallel, Loop) for predictable pipelines
+    - LLM-driven dynamic routing (LlmAgent transfer) for adaptive behavior
+    - Agent-to-Agent (A2A) protocol for communication
+    - Code-first Python development (100 lines for basic agent)
+
+    **Strengths:**
+    - Native integration with Google Cloud services
+    - Bidirectional audio/video streaming capabilities
+    - Model Context Protocol (MCP) tools support
+    - Used in production Google products
+    - Visual web-based UI for debugging
+
+    **Limitations:**
+    - Optimized primarily for Google ecosystem
+    - Newer framework (v1.0.0 released 2025)
+    - Smaller community compared to LangGraph
+    - Limited multi-cloud deployment patterns
+  </Accordion>
+
+  <Accordion title="MCP Server with LangGraph: Graph-Based StateGraph">
+    **Approach:**
+    - LangGraph StateGraph for flexible workflows
+    - MCP protocol for standardized communication
+    - Event-driven, async-first architecture
+    - Built on battle-tested LangGraph (LinkedIn, Uber, Klarna use in production)
+
+    **Strengths:**
+    - Cloud-agnostic architecture
+    - Proven at scale across industries
+    - Precise control over agent workflows
+    - Built-in persistence and fault tolerance
+    - Human-in-the-loop patterns
+    - Production-grade reliability
+
+    **Considerations:**
+    - Requires understanding of graph concepts
+    - Not optimized specifically for single cloud provider
+  </Accordion>
+</AccordionGroup>
+
+### Developer Experience
+
+| Feature | Google ADK | MCP Server with LangGraph |
+|---------|------------|---------------------------|
+| **Getting Started** | ✅ ~100 lines of code | 🔄 Coming soon: `mcpserver init` |
+| **Documentation** | ✅ Official Google docs | ✅ Complete Mintlify docs |
+| **Examples** | ✅ Google Cloud focused | ✅ 12+ multi-cloud examples |
+| **Learning Curve** | ✅ Low (workflow-based) | ⚠️ Medium (graph concepts) |
+| **Community** | 🔄 Growing (2025 release) | ✅ Mature LangGraph ecosystem |
+| **IDE Support** | ✅ Python, Java SDKs | ✅ Python-first |
+| **Local Testing** | ✅ CLI + Web UI | ✅ Complete test suite (437 tests) |
+
+**Winner for Google Cloud:** Google ADK (native integration)
+**Winner for Multi-Cloud:** MCP Server with LangGraph (provider-agnostic)
+
+### Multi-Agent Capabilities
+
+<Tabs>
+  <Tab title="Google ADK Multi-Agent">
+    **ADK Agent Hierarchies:**
+    ```python
+    from google.adk import LlmAgent, SequentialAgent
+
+    # Define specialized agents
+    researcher = LlmAgent(
+        name="Researcher",
+        model="gemini-2.0-flash",
+        tools=[search_tool]
+    )
+
+    writer = LlmAgent(
+        name="Writer",
+        model="gemini-2.0-flash",
+        tools=[write_tool]
+    )
+
+    # Compose in hierarchy
+    workflow = SequentialAgent(
+        agents=[researcher, writer]
+    )
+
+    # Execute with A2A protocol
+    result = await workflow.run(input)
+    ```
+
+    **Strengths:**
+    - Sequential, Parallel, Loop workflows
+    - LLM-driven dynamic routing
+    - Agent-to-Agent (A2A) protocol
+    - Can integrate other frameworks as tools
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph">
+    **LangGraph Multi-Agent Patterns:**
+    ```python
+    from langgraph.graph import StateGraph
+
+    graph = StateGraph(AgentState)
+
+    # Add agent nodes
+    graph.add_node("research", research_agent)
+    graph.add_node("write", write_agent)
+
+    # Define flow
+    graph.add_edge("research", "write")
+    graph.set_entry_point("research")
+
+    # Compile with persistence
+    app = graph.compile(checkpointer=checkpointer)
+
+    result = app.invoke(input, config)
+    ```
+
+    **Strengths:**
+    - Flexible control flows
+    - Built-in persistence
+    - Human-in-the-loop support
+    - Battle-tested in production
+    - MCP protocol integration
+  </Tab>
+</Tabs>
+
+### Cloud Integration & Deployment
+
+| Feature | Google ADK | MCP Server with LangGraph |
+|---------|------------|---------------------------|
+| **Google Cloud** | ✅ Native Vertex AI | ✅ Supported (Cloud Run, GKE) |
+| **AWS** | ⚠️ Via LiteLLM | ✅ Native (EKS, Lambda) |
+| **Azure** | ⚠️ Via LiteLLM | ✅ Native (AKS, Functions) |
+| **Vertex AI Models** | ✅ Direct access | ✅ Via LiteLLM |
+| **Model Garden** | ✅ Full integration | ✅ Supported |
+| **Multi-Region** | ⚠️ Manual setup | ✅ Pre-configured patterns |
+| **Deployment Docs** | ✅ Google Cloud focused | ✅ All major clouds |
+
+**Clear Winner for Google Cloud:** Google ADK
+**Clear Winner for Multi-Cloud:** MCP Server with LangGraph
+
+### Security & Authentication
+
+| Feature | Google ADK | MCP Server with LangGraph |
+|---------|------------|---------------------------|
+| **Authentication** | ✅ Google Cloud IAM | ✅ JWT + Keycloak SSO |
+| **Authorization** | ✅ IAM Policies | ✅ OpenFGA (Zanzibar model) |
+| **Identity Federation** | ✅ Workforce Identity | ✅ Keycloak federation |
+| **Service Accounts** | ✅ Google Cloud SA | ✅ Service principals |
+| **Secrets Management** | ✅ Secret Manager | ✅ Infisical + cloud-native |
+| **Network Isolation** | ✅ VPC Service Controls | ✅ Kubernetes network policies |
+| **Compliance** | ✅ Google Cloud certified | ✅ GDPR, SOC 2, HIPAA ready |
+| **Audit Logging** | ✅ Cloud Audit Logs | ✅ Complete security event tracking |
+
+**Tie:** Both offer enterprise-grade security with different approaches
+
+### Observability & Monitoring
+
+| Capability | Google ADK | MCP Server with LangGraph |
+|------------|------------|---------------------------|
+| **Logging** | ✅ Cloud Logging | ✅ Structured JSON logs |
+| **Tracing** | ✅ Cloud Trace | ✅ LangSmith + Jaeger |
+| **Metrics** | ✅ Cloud Monitoring | ✅ Prometheus + Grafana |
+| **Debugging** | ✅ Visual Web UI | ✅ LangSmith debugger |
+| **Cost Tracking** | ✅ Cloud Billing API | ✅ LangSmith built-in |
+| **Dashboards** | ✅ Cloud Console | ✅ Pre-built Grafana dashboards |
+| **Alerts** | ✅ Cloud Alerting | ✅ Prometheus alerting |
+| **Local Testing** | ✅ CLI + Web UI | ✅ Complete test suite |
+
+**Winner for Google Cloud Users:** Google ADK (native integration)
+**Winner for Multi-Cloud:** MCP Server with LangGraph (portable)
+
+### Model Support
+
+| Feature | Google ADK | MCP Server with LangGraph |
+|---------|------------|---------------------------|
+| **Primary Models** | ✅ Gemini (optimized) | ✅ Any model |
+| **Total Providers** | ✅ 100+ via LiteLLM | ✅ 100+ via LiteLLM |
+| **Provider Switching** | ✅ Configurable | ✅ Automatic fallback |
+| **Local Models** | ✅ Via Vertex AI | ✅ Ollama integration |
+| **Fine-Tuned Models** | ✅ Vertex AI | ✅ All providers |
+| **Model Garden** | ✅ Full access | ✅ Supported |
+| **Cost Optimization** | ✅ Cloud Billing | ✅ LangSmith tracking |
+
+**Winner for Gemini Users:** Google ADK (optimized)
+**Winner for Multi-Provider:** Tie (both use LiteLLM)
+
+## Performance Comparison
+
+### Speed & Efficiency
+
+**Google ADK:**
+- Optimized for Google Cloud infrastructure
+- Direct Vertex AI integration (minimal latency)
+- Bidirectional streaming for real-time interactions
+- Production-proven in Google products
+
+**MCP Server with LangGraph:**
+- Async-first architecture
+- Optimized with caching and checkpointing
+- Parallel tool execution
+- Multi-cloud edge deployment options
+
+**Verdict:** Google ADK has edge for Google Cloud deployments; MCP Server with LangGraph excels at multi-cloud optimization.
+
+### Scaling
+
+**Google ADK:**
+- Google Cloud auto-scaling
+- Vertex AI managed infrastructure
+- Cloud Run serverless scaling
+- GKE Autopilot support
+
+**MCP Server with LangGraph:**
+- Kubernetes-native with HPA
+- Multi-cloud auto-scaling patterns
+- Pre-configured for production scale
+- Multi-region deployment support
+
+**Tie:** Both offer excellent scaling with different cloud strategies
+
+## Cost Comparison
+
+### Total Cost of Ownership
+
+<Tabs>
+  <Tab title="Google ADK Costs">
+    **Framework:**
+    - Open-source (free)
+    - No subscription required
+
+    **Infrastructure (Google Cloud):**
+    - Vertex AI: Pay-per-use (Gemini models)
+    - Cloud Run: $0.40-2.00 per 1M requests
+    - GKE: Cluster costs (~$200-500/month base)
+    - Vertex AI Agent Builder: Usage-based
+
+    **Operations:**
+    - Cloud Monitoring included (free tier)
+    - Cloud Logging: Pay-per-GB
+    - Native tooling reduces ops costs
+
+    **Total:** Optimized for Google Cloud economics
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph Costs">
+    **Framework:**
+    - Open-source (free)
+    - No subscription required
+
+    **Infrastructure (Multi-Cloud):**
+    - LangGraph Platform: ~$0 (developer tier) to usage-based
+    - GCP Cloud Run: $0.40-2.00 per 1M requests
+    - AWS Lambda: ~$0.20 per 1M requests
+    - Azure Functions: Similar pricing
+    - K8s: ~$200-500/month base (any cloud)
+
+    **Operations:**
+    - Observability included (LangSmith + OTEL)
+    - Security included (JWT, OpenFGA, Keycloak)
+    - Portable across clouds (avoid lock-in)
+
+    **Total:** Flexible pricing, multi-cloud negotiation leverage
+  </Tab>
+</Tabs>
+
+**Winner:** Depends on cloud strategy (Google ADK for GCP-only, MCP Server for multi-cloud)
+
+## Use Case Recommendations
+
+### Choose Google ADK When:
+
+✅ **Google Cloud Native** - Already invested in Google Cloud ecosystem
+✅ **Gemini Optimization** - Primary focus on Gemini models
+✅ **Vertex AI Integration** - Need deep Model Garden integration
+✅ **Google Workspace** - Building for Agentspace or Google products
+✅ **Streaming Required** - Need bidirectional audio/video
+✅ **A2A Protocol** - Agent-to-Agent communication is critical
+
+**Example Use Cases:**
+- Google Workspace automation with Agentspace
+- Vertex AI Model Garden multi-agent workflows
+- Customer support with Google Customer Engagement Suite
+- Real-time voice/video agent interactions
+- Gemini-powered research assistants
+
+### Choose MCP Server with LangGraph When:
+
+✅ **Multi-Cloud Strategy** - Need deployment flexibility (GCP, AWS, Azure)
+✅ **Provider Diversity** - Want choice of 100+ LLM providers
+✅ **Cloud Agnostic** - Avoid vendor lock-in
+✅ **Enterprise Security** - Need OpenFGA + Keycloak patterns
+✅ **Existing LangGraph** - Already using LangGraph ecosystem
+✅ **MCP Protocol** - Need standardized MCP server implementation
+✅ **Proven Scale** - Want battle-tested patterns from LinkedIn, Uber, Klarna
+
+**Example Use Cases:**
+- Enterprise multi-cloud deployments
+- FinTech with multi-provider LLM requirements
+- Healthcare AI with strict compliance (HIPAA)
+- Hybrid cloud architectures
+- Organizations with multi-cloud negotiation leverage
+- DevOps automation across clouds
+
+## Migration Path
+
+### From Google ADK to MCP Server with LangGraph
+
+If you need to expand beyond Google Cloud:
+
+<Steps>
+  <Step title="Map Workflow Agents to Graph Nodes">
+    Convert ADK workflow agents to LangGraph nodes:
+    ```python
+    # Google ADK
+    workflow = SequentialAgent(agents=[agent1, agent2])
+
+    # LangGraph
+    graph.add_node("agent1", agent1_function)
+    graph.add_node("agent2", agent2_function)
+    graph.add_edge("agent1", "agent2")
+    ```
+  </Step>
+
+  <Step title="Adapt Model Configuration">
+    Switch from Gemini-specific to multi-provider:
+    ```python
+    # Google ADK
+    model = "gemini-2.0-flash"
+
+    # MCP Server with LangGraph
+    model = "gemini/gemini-2.0-flash"  # or any LiteLLM model
+    ```
+  </Step>
+
+  <Step title="Replace Google Cloud Services">
+    - Replace Cloud IAM → JWT + Keycloak
+    - Replace Secret Manager → Infisical (cloud-agnostic)
+    - Replace Cloud Logging → Structured JSON + OTEL
+    - Replace Cloud Trace → LangSmith + Jaeger
+  </Step>
+
+  <Step title="Deploy Multi-Cloud">
+    - Choose target cloud (GCP, AWS, Azure)
+    - Deploy using pre-configured manifests
+    - Set up multi-region if needed
+    - Test with complete test suite
+  </Step>
+</Steps>
+
+### From MCP Server with LangGraph to Google ADK
+
+If you want to optimize for Google Cloud:
+
+<Steps>
+  <Step title="Convert Graph to Workflow">
+    Map LangGraph nodes to ADK workflow agents:
+    ```python
+    # LangGraph
+    graph.add_node("step1", func1)
+    graph.add_edge("step1", "step2")
+
+    # Google ADK
+    workflow = SequentialAgent(agents=[agent1, agent2])
+    ```
+  </Step>
+
+  <Step title="Migrate to Vertex AI">
+    - Switch to direct Gemini model calls
+    - Leverage Vertex AI Model Garden
+    - Configure Google Cloud IAM
+  </Step>
+
+  <Step title="Adopt Google Cloud Services">
+    - Use Secret Manager for secrets
+    - Enable Cloud Logging/Trace
+    - Configure VPC Service Controls
+  </Step>
+</Steps>
+
+## Honest Recommendation
+
+### If You're Already on Google Cloud:
+- **Consider Google ADK** for native integration and optimization
+- **Consider MCP Server with LangGraph** if multi-cloud is likely in 3-5 years
+
+### If You're Multi-Cloud or Planning to Be:
+- **Choose MCP Server with LangGraph** - avoids lock-in and provides flexibility
+
+### If You're Using Gemini Exclusively:
+- **Google ADK** is optimized specifically for Gemini
+- **MCP Server with LangGraph** supports Gemini but not exclusively optimized
+
+### If You're Enterprise with Multi-Provider Strategy:
+- **Choose MCP Server with LangGraph** - supports 100+ providers with automatic fallback
+
+### If You Need Bidirectional Streaming:
+- **Google ADK** has unique audio/video streaming capabilities
+- **MCP Server with LangGraph** supports streaming but not bidirectional media
+
+## Summary
+
+| Criteria | Winner |
+|----------|--------|
+| **Google Cloud Integration** | 🏆 Google ADK |
+| **Multi-Cloud Deployment** | 🏆 MCP Server with LangGraph |
+| **Gemini Optimization** | 🏆 Google ADK |
+| **Provider Diversity** | 🏆 MCP Server with LangGraph |
+| **Streaming (Audio/Video)** | 🏆 Google ADK |
+| **Production Patterns** | 🏆 MCP Server with LangGraph |
+| **Community Maturity** | 🏆 MCP Server with LangGraph (via LangGraph) |
+| **Learning Curve** | 🏆 Google ADK |
+| **Enterprise Security** | 🤝 Tie (different approaches) |
+| **Vendor Lock-in Avoidance** | 🏆 MCP Server with LangGraph |
+
+**Overall:** Google ADK wins for Google Cloud native deployments and Gemini optimization. MCP Server with LangGraph wins for multi-cloud flexibility and provider diversity.
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Try MCP Server with LangGraph" icon="rocket" href="/getting-started/quickstart">
+    Get started in 5 minutes
+  </Card>
+  <Card title="More Comparisons" icon="chart-bar" href="/comparisons/choosing-framework">
+    See all framework comparisons
+  </Card>
+</CardGroup>

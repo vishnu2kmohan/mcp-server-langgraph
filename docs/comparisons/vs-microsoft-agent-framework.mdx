@@ -1,0 +1,491 @@
+---
+title: 'MCP Server with LangGraph vs Microsoft Agent Framework'
+description: 'Detailed comparison between MCP Server with LangGraph and Microsoft Agent Framework (AutoGen + Semantic Kernel)'
+icon: 'microsoft'
+---
+
+## Overview
+
+**Microsoft Agent Framework** is Microsoft's unified agent development platform released in October 2025, merging AutoGen's dynamic multi-agent orchestration with Semantic Kernel's enterprise foundations. It's the production-ready successor to both AutoGen and Semantic Kernel.
+
+**MCP Server with LangGraph** is a production-ready MCP server with enterprise security, multi-cloud deployment, and provider-agnostic architecture supporting 100+ LLM providers.
+
+## Quick Comparison
+
+| Aspect | Microsoft Agent Framework | MCP Server with LangGraph |
+|--------|---------------------------|---------------------------|
+| **Primary Focus** | Azure-native agent platform | Multi-cloud MCP server |
+| **Best For** | Azure/Microsoft ecosystem | Multi-cloud enterprise deployments |
+| **Time to First Agent** | Under 20 lines of code | ~2-15 minutes (quick-start to full stack) |
+| **Architecture** | Event-driven async agents | LangGraph StateGraph with MCP |
+| **Licensing** | Open-source (MIT) | Open-source (MIT-style) |
+| **Languages** | Python, .NET/C# | Python-first |
+| **Cloud Integration** | Deep Azure integration | Multi-cloud (GCP, AWS, Azure, Platform) |
+| **Model Support** | Extensive via Semantic Kernel | 100+ via LiteLLM |
+| **Security** | Microsoft Entra, PII Detection | JWT, OpenFGA, Keycloak |
+| **Observability** | OpenTelemetry built-in | Dual stack (LangSmith + OTEL) |
+| **Managed Service** | ✅ Azure AI Foundry | ✅ LangGraph Platform |
+| **Enterprise Adoption** | 10,000+ organizations | Growing ecosystem |
+
+## Detailed Feature Comparison
+
+### Architecture & Design Philosophy
+
+<AccordionGroup>
+  <Accordion title="Microsoft Agent Framework: Unified Enterprise Platform">
+    **Approach:**
+    - Event-driven async architecture (from AutoGen 0.4)
+    - Thread-based state management (from Semantic Kernel)
+    - Single- and multi-agent patterns
+    - Modular components (memory, tools, models)
+    - Cross-language support (Python, .NET)
+
+    **Strengths:**
+    - Best of AutoGen + Semantic Kernel
+    - Native Azure AI Foundry integration
+    - Built-in responsible AI (Task Adherence, PII Detection, Prompt Shields)
+    - OpenTelemetry observability built-in
+    - Functional agents in under 20 lines of code
+    - Used by KPMG, BMW, Fujitsu in production
+    - Open standards: MCP, A2A, OpenAPI
+
+    **Limitations:**
+    - In public preview (October 2025 release)
+    - AutoGen/Semantic Kernel now in maintenance mode (transition period)
+    - Optimized primarily for Azure ecosystem
+    - Smaller multi-cloud deployment patterns
+    - Newer unified framework (consolidation in progress)
+  </Accordion>
+
+  <Accordion title="MCP Server with LangGraph: Graph-Based StateGraph">
+    **Approach:**
+    - LangGraph StateGraph for flexible workflows
+    - MCP protocol for standardized communication
+    - Event-driven, async-first architecture
+    - Built on battle-tested LangGraph (LinkedIn, Uber, Klarna use in production)
+
+    **Strengths:**
+    - Cloud-agnostic architecture
+    - Proven at scale across industries
+    - Precise control over agent workflows
+    - Built-in persistence and fault tolerance
+    - Human-in-the-loop patterns
+    - Production-grade reliability
+    - Stable, mature framework
+
+    **Considerations:**
+    - Requires understanding of graph concepts
+    - Not optimized specifically for Azure
+    - Python-only (no .NET support)
+  </Accordion>
+</AccordionGroup>
+
+### Developer Experience
+
+| Feature | Microsoft Agent Framework | MCP Server with LangGraph |
+|---------|---------------------------|---------------------------|
+| **Getting Started** | ✅ Under 20 lines of code | 🔄 Coming soon: `mcpserver init` |
+| **Documentation** | ✅ Microsoft Learn + Azure docs | ✅ Complete Mintlify docs |
+| **Examples** | ✅ Azure-focused examples | ✅ 12+ multi-cloud examples |
+| **Learning Curve** | ✅ Low (unified abstraction) | ⚠️ Medium (graph concepts) |
+| **Community** | ✅ Large (10K+ orgs via Azure) | ✅ Mature LangGraph ecosystem |
+| **Language Support** | ✅ Python, .NET/C# | ⚠️ Python only |
+| **IDE Support** | ✅ VS Code, Visual Studio | ✅ Standard Python support |
+| **Local Testing** | ✅ Built-in testing | ✅ Complete test suite (437 tests) |
+
+**Winner for Azure/.NET:** Microsoft Agent Framework
+**Winner for Multi-Cloud Python:** MCP Server with LangGraph
+
+### Multi-Agent Capabilities
+
+<Tabs>
+  <Tab title="Microsoft Agent Framework">
+    **Agent Framework Multi-Agent:**
+    ```python
+    from microsoft.agent import Agent, AgentRuntime
+
+    # Define agents with simple abstractions
+    researcher = Agent(
+        name="Researcher",
+        instructions="Research and gather information",
+        tools=[search_tool]
+    )
+
+    writer = Agent(
+        name="Writer",
+        instructions="Write content based on research",
+        tools=[write_tool]
+    )
+
+    # Event-driven async orchestration
+    runtime = AgentRuntime()
+    runtime.register(researcher)
+    runtime.register(writer)
+
+    # Execute with thread-based state
+    result = await runtime.run(
+        task="Create report",
+        agents=[researcher, writer]
+    )
+    ```
+
+    **Strengths:**
+    - Simple abstractions (AutoGen heritage)
+    - Event-driven messaging
+    - Thread-based state management
+    - Cross-language agent communication
+    - Scalable, distributed design
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph">
+    **LangGraph Multi-Agent Patterns:**
+    ```python
+    from langgraph.graph import StateGraph
+    from typing import TypedDict
+
+    class AgentState(TypedDict):
+        task: str
+        research: str
+        content: str
+
+    graph = StateGraph(AgentState)
+
+    # Add agent nodes
+    graph.add_node("research", research_agent)
+    graph.add_node("write", write_agent)
+
+    # Define flow
+    graph.add_edge("research", "write")
+    graph.set_entry_point("research")
+
+    # Compile with persistence
+    app = graph.compile(checkpointer=checkpointer)
+
+    result = app.invoke({"task": task}, config)
+    ```
+
+    **Strengths:**
+    - Flexible control flows
+    - Built-in persistence
+    - Human-in-the-loop support
+    - Battle-tested patterns
+    - MCP protocol integration
+  </Tab>
+</Tabs>
+
+### Azure & Cloud Integration
+
+| Feature | Microsoft Agent Framework | MCP Server with LangGraph |
+|---------|---------------------------|---------------------------|
+| **Azure** | ✅ Native (AI Foundry, Entra) | ✅ Supported (AKS, Functions) |
+| **Google Cloud** | ⚠️ Via external connectors | ✅ Native (Cloud Run, GKE) |
+| **AWS** | ⚠️ Via external connectors | ✅ Native (EKS, Lambda) |
+| **Azure OpenAI** | ✅ Direct integration | ✅ Via LiteLLM |
+| **Azure AI Foundry** | ✅ Managed service | ⚠️ Self-hosted on Azure |
+| **Multi-Region** | ✅ Azure regions | ✅ All major clouds |
+| **Deployment Docs** | ✅ Azure-focused | ✅ All major clouds |
+
+**Clear Winner for Azure:** Microsoft Agent Framework
+**Clear Winner for Multi-Cloud:** MCP Server with LangGraph
+
+### Security & Compliance
+
+| Feature | Microsoft Agent Framework | MCP Server with LangGraph |
+|---------|---------------------------|---------------------------|
+| **Authentication** | ✅ Microsoft Entra ID | ✅ JWT + Keycloak SSO |
+| **Authorization** | ✅ Azure RBAC | ✅ OpenFGA (Zanzibar model) |
+| **Identity Federation** | ✅ Microsoft Entra | ✅ Keycloak federation |
+| **PII Detection** | ✅ Built-in alerting | ⚠️ Custom implementation |
+| **Prompt Injection** | ✅ Prompt Shields | ⚠️ Custom implementation |
+| **Task Adherence** | ✅ Built-in monitoring | ⚠️ Custom implementation |
+| **Secrets Management** | ✅ Azure Key Vault | ✅ Infisical + cloud-native |
+| **Network Isolation** | ✅ Azure VNet | ✅ Kubernetes network policies |
+| **Compliance** | ✅ Azure certified | ✅ GDPR, SOC 2, HIPAA ready |
+| **Audit Logging** | ✅ Azure Monitor | ✅ Complete security event tracking |
+
+**Winner for Responsible AI:** Microsoft Agent Framework (built-in safeguards)
+**Winner for Multi-Cloud Security:** MCP Server with LangGraph
+
+### Observability & Monitoring
+
+| Capability | Microsoft Agent Framework | MCP Server with LangGraph |
+|------------|---------------------------|---------------------------|
+| **Logging** | ✅ Azure Monitor | ✅ Structured JSON logs |
+| **Tracing** | ✅ OpenTelemetry built-in | ✅ LangSmith + Jaeger |
+| **Metrics** | ✅ Azure Monitor | ✅ Prometheus + Grafana |
+| **Debugging** | ✅ Azure AI Foundry tools | ✅ LangSmith debugger |
+| **Cost Tracking** | ✅ Azure Cost Management | ✅ LangSmith built-in |
+| **Dashboards** | ✅ Azure Portal | ✅ Pre-built Grafana dashboards |
+| **Alerts** | ✅ Azure Alerts | ✅ Prometheus alerting |
+| **Local Testing** | ✅ Built-in testing | ✅ Complete test suite |
+
+**Winner for Azure Users:** Microsoft Agent Framework (native integration)
+**Winner for Multi-Cloud:** MCP Server with LangGraph (portable)
+
+### Model Support
+
+| Feature | Microsoft Agent Framework | MCP Server with LangGraph |
+|---------|---------------------------|---------------------------|
+| **Azure OpenAI** | ✅ Direct integration | ✅ Via LiteLLM |
+| **Total Providers** | ✅ Extensive (Semantic Kernel) | ✅ 100+ via LiteLLM |
+| **Provider Switching** | ✅ Configurable | ✅ Automatic fallback |
+| **Local Models** | ✅ Supported | ✅ Ollama integration |
+| **Fine-Tuned Models** | ✅ Azure AI | ✅ All providers |
+| **Cost Optimization** | ✅ Azure Cost Mgmt | ✅ LangSmith tracking |
+| **Model Context Protocol** | ✅ Committed support | ✅ Native MCP server |
+
+**Tie:** Both offer extensive model support with different approaches
+
+## Performance Comparison
+
+### Speed & Efficiency
+
+**Microsoft Agent Framework:**
+- Optimized for Azure infrastructure
+- Direct Azure AI Foundry integration (minimal latency)
+- Event-driven async architecture
+- Thread-based state management
+- Production-proven at KPMG, BMW, Fujitsu
+
+**MCP Server with LangGraph:**
+- Async-first architecture
+- Optimized with caching and checkpointing
+- Parallel tool execution
+- Multi-cloud edge deployment options
+
+**Verdict:** Microsoft Agent Framework has edge for Azure deployments; MCP Server with LangGraph excels at multi-cloud optimization.
+
+### Scaling
+
+**Microsoft Agent Framework:**
+- Azure auto-scaling (AI Foundry)
+- Azure Container Apps scaling
+- AKS (Azure Kubernetes Service) support
+- Distributed agent networks
+- Cross-organizational boundaries
+
+**MCP Server with LangGraph:**
+- Kubernetes-native with HPA
+- Multi-cloud auto-scaling patterns
+- Pre-configured for production scale
+- Multi-region deployment support
+
+**Tie:** Both offer excellent scaling with different cloud strategies
+
+## Cost Comparison
+
+### Total Cost of Ownership
+
+<Tabs>
+  <Tab title="Microsoft Agent Framework Costs">
+    **Framework:**
+    - Open-source (free)
+    - No subscription required
+
+    **Infrastructure (Azure):**
+    - Azure AI Foundry: Usage-based managed service
+    - Azure OpenAI: Pay-per-token
+    - Azure Container Apps: Pay-per-use
+    - AKS: Cluster costs (~$200-500/month base)
+
+    **Operations:**
+    - Azure Monitor included (with costs)
+    - Microsoft Entra included (with Azure AD)
+    - Native tooling reduces ops costs
+    - Responsible AI features included
+
+    **Total:** Optimized for Azure economics, enterprise support available
+  </Tab>
+
+  <Tab title="MCP Server with LangGraph Costs">
+    **Framework:**
+    - Open-source (free)
+    - No subscription required
+
+    **Infrastructure (Multi-Cloud):**
+    - LangGraph Platform: ~$0 (developer tier) to usage-based
+    - GCP Cloud Run: $0.40-2.00 per 1M requests
+    - AWS Lambda: ~$0.20 per 1M requests
+    - Azure Functions: Similar pricing
+    - K8s: ~$200-500/month base (any cloud)
+
+    **Operations:**
+    - Observability included (LangSmith + OTEL)
+    - Security included (JWT, OpenFGA, Keycloak)
+    - Portable across clouds (avoid lock-in)
+
+    **Total:** Flexible pricing, multi-cloud negotiation leverage
+  </Tab>
+</Tabs>
+
+**Winner:** Depends on cloud strategy (Microsoft Agent Framework for Azure-only, MCP Server for multi-cloud)
+
+## Use Case Recommendations
+
+### Choose Microsoft Agent Framework When:
+
+✅ **Azure Native** - Already invested in Azure ecosystem
+✅ **Microsoft Stack** - Using Azure OpenAI, Entra ID, Azure AI
+✅ **Responsible AI** - Need built-in PII detection, prompt shields, task adherence
+✅ **.NET Development** - Need C# support alongside Python
+✅ **Managed Service** - Prefer Azure AI Foundry over self-hosting
+✅ **Enterprise Microsoft** - Organization standardized on Microsoft
+✅ **Cross-Language Agents** - Need Python ↔ .NET agent communication
+
+**Example Use Cases:**
+- Enterprise Azure deployments
+- Microsoft 365 / Dynamics 365 integration
+- Azure OpenAI + Entra ID workflows
+- .NET enterprise applications
+- Financial services with responsible AI requirements
+- Organizations using Azure AI Foundry
+- KPMG-style enterprise consulting workflows
+
+### Choose MCP Server with LangGraph When:
+
+✅ **Multi-Cloud Strategy** - Need deployment flexibility (GCP, AWS, Azure)
+✅ **Provider Diversity** - Want choice of 100+ LLM providers
+✅ **Cloud Agnostic** - Avoid vendor lock-in
+✅ **Python-First** - Don't need .NET support
+✅ **Existing LangGraph** - Already using LangGraph ecosystem
+✅ **Stable Framework** - Want mature, stable platform (not in transition)
+✅ **MCP Protocol** - Need standardized MCP server implementation
+
+**Example Use Cases:**
+- Multi-cloud enterprise deployments
+- FinTech with diverse provider requirements
+- Healthcare AI with strict compliance (HIPAA)
+- Hybrid cloud architectures
+- Organizations with multi-cloud negotiation leverage
+- Python-centric development teams
+- LinkedIn/Uber-style production workloads
+
+## Migration Path
+
+### From Microsoft Agent Framework to MCP Server with LangGraph
+
+If you need to expand beyond Azure:
+
+<Steps>
+  <Step title="Map Event-Driven Agents to Graph Nodes">
+    Convert Agent Framework patterns to LangGraph:
+    ```python
+    # Microsoft Agent Framework
+    agent = Agent(name="processor", instructions="...")
+
+    # LangGraph
+    def processor_node(state: AgentState) -> AgentState:
+        # Process logic
+        return updated_state
+
+    graph.add_node("processor", processor_node)
+    ```
+  </Step>
+
+  <Step title="Replace Azure Services">
+    - Replace Microsoft Entra → JWT + Keycloak
+    - Replace Azure Key Vault → Infisical (cloud-agnostic)
+    - Replace Azure Monitor → LangSmith + OTEL
+    - Replace Azure AI Foundry → LangGraph Platform or self-host
+  </Step>
+
+  <Step title="Adapt Model Configuration">
+    Switch from Azure OpenAI to multi-provider:
+    ```python
+    # Azure OpenAI
+    model = "gpt-4"
+
+    # LiteLLM multi-provider
+    model = "azure/gpt-4"  # or any provider
+    ```
+  </Step>
+
+  <Step title="Deploy Multi-Cloud">
+    - Choose target cloud (GCP, AWS, Azure)
+    - Deploy using pre-configured manifests
+    - Set up multi-region if needed
+    - Test with complete test suite
+  </Step>
+</Steps>
+
+### From MCP Server with LangGraph to Microsoft Agent Framework
+
+If you want to optimize for Azure:
+
+<Steps>
+  <Step title="Convert Graph to Event-Driven Agents">
+    Map LangGraph nodes to Agent Framework:
+    ```python
+    # LangGraph
+    graph.add_node("step1", func1)
+
+    # Microsoft Agent Framework
+    agent1 = Agent(name="step1", instructions="...")
+    ```
+  </Step>
+
+  <Step title="Migrate to Azure Services">
+    - Switch to Azure AI Foundry
+    - Configure Microsoft Entra ID
+    - Enable Azure Monitor
+    - Use Azure Key Vault for secrets
+  </Step>
+
+  <Step title="Enable Responsible AI">
+    - Activate PII Detection
+    - Configure Prompt Shields
+    - Set up Task Adherence monitoring
+  </Step>
+</Steps>
+
+## Honest Recommendation
+
+### If You're Already on Azure:
+- **Consider Microsoft Agent Framework** for native integration and responsible AI
+- **Consider MCP Server with LangGraph** if multi-cloud is likely in 3-5 years
+
+### If You're Multi-Cloud or Planning to Be:
+- **Choose MCP Server with LangGraph** - avoids lock-in and provides flexibility
+
+### If You Need .NET Support:
+- **Microsoft Agent Framework** is the only option with Python + .NET
+
+### If You Need Responsible AI Safeguards:
+- **Microsoft Agent Framework** has built-in PII detection, prompt shields, task adherence
+- **MCP Server with LangGraph** requires custom implementation
+
+### If You Want Stable, Mature Framework:
+- **MCP Server with LangGraph** (via LangGraph) is stable and proven
+- **Microsoft Agent Framework** is in public preview (framework consolidation)
+
+### If Framework Transition Concerns You:
+- **MCP Server with LangGraph** is stable
+- **Microsoft Agent Framework** is consolidating AutoGen + Semantic Kernel (both now in maintenance mode)
+
+## Summary
+
+| Criteria | Winner |
+|----------|--------|
+| **Azure Integration** | 🏆 Microsoft Agent Framework |
+| **Multi-Cloud Deployment** | 🏆 MCP Server with LangGraph |
+| **Responsible AI** | 🏆 Microsoft Agent Framework |
+| **Framework Stability** | 🏆 MCP Server with LangGraph |
+| **.NET Support** | 🏆 Microsoft Agent Framework |
+| **Python-First** | 🏆 MCP Server with LangGraph |
+| **Managed Service** | 🏆 Microsoft Agent Framework (Azure AI Foundry) |
+| **Multi-Cloud Patterns** | 🏆 MCP Server with LangGraph |
+| **Enterprise Security** | 🤝 Tie (different approaches) |
+| **Vendor Lock-in Avoidance** | 🏆 MCP Server with LangGraph |
+
+**Overall:** Microsoft Agent Framework wins for Azure-native deployments and responsible AI. MCP Server with LangGraph wins for multi-cloud flexibility and framework stability.
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Try MCP Server with LangGraph" icon="rocket" href="/getting-started/quickstart">
+    Get started in 5 minutes
+  </Card>
+  <Card title="More Comparisons" icon="chart-bar" href="/comparisons/choosing-framework">
+    See all framework comparisons
+  </Card>
+</CardGroup>
