@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762013340351,
+  "lastUpdate": 1762014615347,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -17224,6 +17224,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000024841476723064424",
             "extra": "mean: 63.8544417132588 usec\nrounds: 4109"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "de20312003ec5171c841574b6ba42caf5735ee00",
+          "message": "docs: comprehensive AWS EKS documentation and Mintlify migration\n\nMajor documentation overhaul achieving AWS/GCP parity and modernizing\nMintlify platform. This update adds 5,000+ lines of production-ready\nAWS documentation and fixes all broken links.\n\nMintlify Migration:\n- Migrate from deprecated mint.json to new docs.json format\n- Update navigation structure for better organization\n- Future-proof documentation platform\n\nAWS Documentation (NEW):\n- terraform-aws.mdx: Complete infrastructure guide (1,000+ lines)\n  * VPC, EKS, RDS, ElastiCache modules\n  * IRSA setup, security features, cost breakdowns\n  * Architecture diagrams and troubleshooting\n- eks-production.mdx: Production deployment guide (700+ lines)\n  * Step-by-step infrastructure setup\n  * Monitoring, auto-scaling, security checklist\n  * Cost estimates ($803/month optimized)\n- eks-runbooks.mdx: Operational procedures (600+ lines)\n  * Pod, networking, RDS, ElastiCache operations\n  * Incident response playbooks\n  * Disaster recovery procedures\n- aws-security-hardening.mdx: Security guide (500+ lines)\n  * 50+ security controls (IAM, network, data, workload)\n  * IRSA, encryption, compliance mapping\n  * CIS benchmarks and SOC 2 controls\n- backend-setup-aws.mdx: State backend setup (400+ lines)\n  * S3 + DynamoDB configuration\n  * Versioning, encryption, disaster recovery\n\nDocumentation Enhancements:\n- cost-optimization.mdx: Add comprehensive AWS section (300+ lines)\n  * 6 optimization strategies (Spot, RI, VPC endpoints, etc.)\n  * Cost breakdown showing $1,952/month savings (59%)\n  * AWS cost monitoring setup\n\nFixed Broken Links:\n- adr-0040-gcp-gke-autopilot-deployment.mdx: GKE Autopilot ADR\n- All broken navigation links resolved (4 files)\n- Remove non-existent comparison page links\n\nNavigation Updates:\n- Add eks-production to Kubernetes group\n- Add terraform-aws and backend-setup-aws to Infrastructure\n- Add eks-runbooks to Operations group\n- Add aws-security-hardening to Security group\n\nMermaid Diagrams:\n- All 75 diagrams validated (100% pass rate)\n- New AWS diagrams using modern flowchart syntax\n- ColorBrewer2 theming applied\n\nStats:\n- 5 new AWS documentation files (~5,000 lines)\n- 2 enhanced existing files\n- 4 broken links fixed\n- 5 navigation entries added\n- AWS/GCP documentation parity achieved\n- Infrastructure maturity: 96/100 (production-ready)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T12:29:20-04:00",
+          "tree_id": "b4d543f9bf8f6aaec8f6d8aec2ecd10e6dfe5011",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/de20312003ec5171c841574b6ba42caf5735ee00"
+        },
+        "date": 1762014614686,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51345.12899793055,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002052224437336264",
+            "extra": "mean: 19.47604416458482 usec\nrounds: 6272"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52603.65525383786,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020757937522503854",
+            "extra": "mean: 19.01008580438984 usec\nrounds: 12680"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49551.89436402444,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002180154462139253",
+            "extra": "mean: 20.180863170511152 usec\nrounds: 20003"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.03247745483512,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002127090206643932",
+            "extra": "mean: 5.234711988889037 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.443667651018096,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014036545377542505",
+            "extra": "mean: 51.43062605000033 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.956855878096691,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026508673012153234",
+            "extra": "mean: 100.43331069999937 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2640638.9310289,
+            "unit": "iter/sec",
+            "range": "stddev: 4.521845009522806e-8",
+            "extra": "mean: 378.6962269810812 nsec\nrounds: 187970"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4893.393532774659,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002850390321458806",
+            "extra": "mean: 204.35715895365124 usec\nrounds: 497"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2936.7211417899944,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009649937430137402",
+            "extra": "mean: 340.515817375319 usec\nrounds: 2705"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2921.5403766234053,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009687237461077307",
+            "extra": "mean: 342.28518900558834 usec\nrounds: 1619"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60082.170700457784,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021735157116703384",
+            "extra": "mean: 16.64387268871397 usec\nrounds: 13196"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17352.836892421165,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017787131248558264",
+            "extra": "mean: 57.627464961463964 usec\nrounds: 5708"
           }
         ]
       }
