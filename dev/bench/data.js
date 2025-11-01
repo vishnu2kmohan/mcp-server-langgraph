@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762022142895,
+  "lastUpdate": 1762023867263,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -18304,6 +18304,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000022556967641394768",
             "extra": "mean: 58.28677683399805 usec\nrounds: 5180"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "c79ce96ef0d5e2a7352adfa2eedbf87061cdcfd0",
+          "message": "docs: fix MDX syntax errors, broken links, and Mermaid diagram issues\n\nThis commit addresses multiple documentation quality issues identified\nby mintlify broken-links and mmdc validation tools.\n\nMDX Syntax Fixes:\n- Fixed 68 instances of mismatched code fence closures across 39 files\n- Removed language identifiers from closing code fences (e.g., ```sql -> ```)\n- Fixed malformed code fence in vertex-ai-workload-identity.mdx:426\n- Fixed malformed code fence in first-request.mdx:148\n- Fixed malformed code fence in langsmith-tracing.mdx:145 and :205\n- Fixed malformed code fence in observability.mdx:89\n- Fixed malformed code fence in keycloak-sso.mdx:148\n- Created fix_code_fence_closures.py script for automated remediation\n\nBroken Links Fixed (12 total):\n- cost-optimization.mdx: Updated 2 links to GCP_COST_OPTIMIZATION_PLAYBOOK.md\n- backend-setup-aws.mdx: Fixed GCP backend link\n- gke-runbooks.mdx: Removed 2 external runbook links, fixed troubleshooting link\n- identity-federation-quickstart.mdx: Converted 5 file links to code references\n- gcp-security-hardening.mdx: Updated security guide link\n\nMermaid Diagram Fixes (2 errors):\n- adr-0028-caching-strategy.mdx:141: Fixed malformed HTML entity <br/&gt;\n- adr-0036-hybrid-session-model.mdx:113: Replaced &lt; with \"less than\"\n- All 73 Mermaid diagrams now validate successfully with mmdc CLI\n\nFramework Comparisons Investigation:\n- Verified all 7 comparison files have proper frontmatter (title, description, icon)\n- No changes needed - all files properly configured\n\nTest Results:\n- mintlify broken-links: Only template placeholders remain (expected)\n- mmdc validation: 73/73 diagrams valid\n- Code fence validation: All closures now correct\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T15:03:23-04:00",
+          "tree_id": "eeee93f8db321844fc11248e7495c0566d30a0c4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/c79ce96ef0d5e2a7352adfa2eedbf87061cdcfd0"
+        },
+        "date": 1762023866574,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50042.326419312114,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024374647100520104",
+            "extra": "mean: 19.983083752358972 usec\nrounds: 8155"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 51940.40615623374,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003226545096264099",
+            "extra": "mean: 19.252833660793062 usec\nrounds: 11705"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48132.207620553505,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026040343920924204",
+            "extra": "mean: 20.776109167554118 usec\nrounds: 18980"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.7410584698666,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022055362495562147",
+            "extra": "mean: 5.242709713483007 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.33759260247348,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001011243274087623",
+            "extra": "mean: 51.712745250000225 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939066218864626,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004443804833148072",
+            "extra": "mean: 100.61307350000064 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2709364.205646766,
+            "unit": "iter/sec",
+            "range": "stddev: 5.0493912203424525e-8",
+            "extra": "mean: 369.09028247875773 nsec\nrounds: 191205"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5195.589847505391,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014531220541360473",
+            "extra": "mean: 192.47092810456152 usec\nrounds: 2295"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2964.578420178058,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010863622873288296",
+            "extra": "mean: 337.316089597636 usec\nrounds: 2634"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2921.841663247558,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004606700600626739",
+            "extra": "mean: 342.2498941604261 usec\nrounds: 1644"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59858.64703616837,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023095357820138317",
+            "extra": "mean: 16.70602410034043 usec\nrounds: 12116"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17025.315056815598,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002062302905013234",
+            "extra": "mean: 58.73606430558702 usec\nrounds: 5054"
           }
         ]
       }
