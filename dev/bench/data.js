@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762014714767,
+  "lastUpdate": 1762015405767,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -17440,6 +17440,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017852611721959834",
             "extra": "mean: 58.67715601706187 usec\nrounds: 5634"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8d647ca6de0be6d6873209fa454e8cf928d325e7",
+          "message": "feat: comprehensive framework comparisons and CLI scaffolding\n\nPart 1: Framework Comparison Documentation\n- Add detailed comparison guides for competing frameworks:\n  * vs-crewai.mdx: Role-based vs production-ready (4,500 words)\n  * vs-langgraph-cloud.mdx: Platform vs self-hosted flexibility (4,200 words)\n  * vs-openai-agentkit.mdx: Visual builder vs code-first (4,000 words)\n  * choosing-framework.mdx: Decision matrix with scenarios (5,000 words)\n- Update docs.json navigation with Framework Comparisons section\n- Establish clear competitive positioning:\n  * Production-ready from day one vs PoC frameworks\n  * 10-50x cost savings through self-hosting\n  * Multi-cloud flexibility (GCP, AWS, Azure, Platform)\n  * Enterprise security (JWT, OpenFGA, Keycloak)\n  * Dual observability stack (LangSmith + OpenTelemetry)\n\nPart 2: CLI Scaffolding System\n- Implement CLI module with Click framework:\n  * mcpserver init: Project scaffolding (3 templates)\n  * mcpserver create-agent: Agent generation (5 templates)\n  * mcpserver add-tool: Tool scaffolding with tests\n  * mcpserver migrate: Migration placeholder\n- Create quick-start template:\n  * In-memory setup (no Docker needed)\n  * 2-minute time-to-first-agent (7-10x faster)\n  * FastAPI server with minimal config\n  * Complete README with next steps\n- Follow TDD: Automatic test file generation\n- Agent templates: basic, research, customer-support, code-review, data-analyst\n- Tool templates with Pydantic schemas and boilerplate\n\nImplementation Roadmap\n- Add IMPLEMENTATION_ROADMAP.md documenting:\n  * Phase 1-2 completion details (17,700+ words of comparison content)\n  * Phase 3-5 planned features (multi-agent, visual builder, marketplace)\n  * Success metrics and competitive positioning\n  * Implementation priorities and timelines\n\nImpact:\n- Time-to-first-agent: 15-20 min → 2 min (quick-start)\n- Clear differentiation vs 8+ competing frameworks\n- Foundation for developer tier (learning → production path)\n- SEO-optimized comparison content\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T12:42:11-04:00",
+          "tree_id": "24d8b9f7a1555addbd96796c17b5649a8b41dce6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8d647ca6de0be6d6873209fa454e8cf928d325e7"
+        },
+        "date": 1762015404904,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50867.155881183055,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002402572199359198",
+            "extra": "mean: 19.65905077012421 usec\nrounds: 6362"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53022.07299714442,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024074111242681725",
+            "extra": "mean: 18.86006984400358 usec\nrounds: 11540"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48746.7093760388,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028671953355025806",
+            "extra": "mean: 20.514205221235816 usec\nrounds: 18195"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.69018279754002,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003203587349051334",
+            "extra": "mean: 5.244108455555481 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.398465984828984,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001259388206358257",
+            "extra": "mean: 51.55046799999923 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94971936184729,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000051889470237073514",
+            "extra": "mean: 100.50534730000038 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2645964.3105358873,
+            "unit": "iter/sec",
+            "range": "stddev: 4.671492162545206e-8",
+            "extra": "mean: 377.9340469628141 nsec\nrounds: 70438"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5006.27512747315,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014704090847323616",
+            "extra": "mean: 199.74930952401263 usec\nrounds: 672"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2837.4085903938967,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026865893118401647",
+            "extra": "mean: 352.434261102021 usec\nrounds: 2432"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2865.006052635079,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000463871890263498",
+            "extra": "mean: 349.0394022310192 usec\nrounds: 1524"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 56272.06291147798,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004421307932589905",
+            "extra": "mean: 17.77080754215654 usec\nrounds: 12039"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17061.35690383574,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018524203565949336",
+            "extra": "mean: 58.61198529732297 usec\nrounds: 4557"
           }
         ]
       }
