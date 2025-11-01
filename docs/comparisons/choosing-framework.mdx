@@ -6,28 +6,7 @@ icon: 'chart-bar'
 
 ## Framework Decision Matrix
 
-Choosing the right agent framework depends on your team, requirements, and constraints. This guide helps you make an informed decision.
-
-### Production-Ready vs Prototype Frameworks
-
-Most AI agent frameworks are proof-of-concepts or tightly coupled to specific cloud providers. Here's how production-ready frameworks compare to prototype-focused alternatives:
-
-| Feature | Prototype Frameworks | Production-Ready Frameworks |
-|---------|---------------------|----------------------------|
-| **Authentication** | ❌ None | ✅ JWT + OpenFGA (Zanzibar model) |
-| **Multi-LLM** | ⚠️ Single provider | ✅ 100+ providers with fallback |
-| **Observability** | ❌ Basic logs | ✅ Dual stack (LangSmith + OTEL) |
-| **Secrets** | ⚠️ .env files | ✅ Infisical integration |
-| **Kubernetes** | ❌ None | ✅ Production manifests (GKE/EKS/AKS) |
-| **Security** | ⚠️ Basic | ✅ Enterprise-grade |
-| **Documentation** | ⚠️ README only | ✅ Complete guides + time estimates |
-| **Testing** | ❌ Minimal | ✅ **100% pass rate** (437/437) |
-| **Multi-Cloud** | ⚠️ Single cloud | ✅ GCP, AWS, Azure, Platform |
-| **Time to Production** | ⚠️ Weeks-Months | ✅ Hours-Days |
-
-<Note>
-  **MCP Server with LangGraph** is designed as a production-ready framework from day one, unlike many alternatives that require significant hardening before enterprise use.
-</Note>
+Choosing the right agent framework depends on your team, requirements, and constraints. This guide helps you make an informed decision based on comparisons with frameworks we've thoroughly researched: CrewAI, OpenAI AgentKit, Google ADK, Claude Agent SDK, LangGraph Cloud, and Microsoft Agent Framework.
 
 ## Quick Decision Tree
 
