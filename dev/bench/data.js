@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762029119449,
+  "lastUpdate": 1762029278953,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -19276,6 +19276,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002439378287656373",
             "extra": "mean: 60.149179097734304 usec\nrounds: 4411"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9c8486cc44aaa242ea3d74b7d817d7218f021de9",
+          "message": "docs: add ColorBrewer2 Set3 palette styling to Mermaid diagrams\n\nAdd mandatory ColorBrewer2 Set3 palette styling to two Mermaid diagrams\nthat were missing the styling comment and/or complete classDef definitions.\n\n## Changes\n\n### docs/advanced/testing.mdx\n- Added mandatory styling comment to testing pyramid diagram\n- Diagram already had classDef styles, only needed comment\n\n### docs/architecture/adr-0027-rate-limiting-strategy.mdx\n- Added complete ColorBrewer2 Set3 palette styling to rate limiting flow\n- Applied semantic color assignments per style guide:\n  - Cyan: Client (external/start nodes)\n  - Orange: Kong Gateway, counters (ingress/processing)\n  - Green: MCP Server, handler (application/execution)\n  - Blue: Redis stores (data/storage)\n  - Yellow: Decision nodes (decisions)\n  - Red: 429 errors (errors)\n  - Light Green: Response (results)\n\n## Compliance\n\nBoth diagrams now comply with Mermaid styling standards:\n- ✅ ColorBrewer2 Set3 palette applied\n- ✅ Mandatory comment included\n- ✅ Semantic color assignments follow guide\n- ✅ Accessibility (WCAG AA contrast ratios)\n- ✅ Visual consistency with 95%+ of other diagrams\n\nFixes pre-commit hook violations detected in previous commit.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T16:33:23-04:00",
+          "tree_id": "b02918255ec20614ad0cf3958f52617b6c3fe775",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9c8486cc44aaa242ea3d74b7d817d7218f021de9"
+        },
+        "date": 1762029277665,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51147.09223744179,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002273405984046519",
+            "extra": "mean: 19.55145358718865 usec\nrounds: 7778"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53342.95851257655,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026994811769946865",
+            "extra": "mean: 18.74661675850304 usec\nrounds: 8342"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49880.417772725916,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002486146107772238",
+            "extra": "mean: 20.047947564440598 usec\nrounds: 17717"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.76134823230802,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002831603455675001",
+            "extra": "mean: 5.269777061110403 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.285694517878127,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003157541582494726",
+            "extra": "mean: 51.851904999998055 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.935769028821017,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003168359914940642",
+            "extra": "mean: 100.64646199999885 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2608854.324592541,
+            "unit": "iter/sec",
+            "range": "stddev: 4.916158809745113e-8",
+            "extra": "mean: 383.3100187210273 nsec\nrounds: 198060"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5057.037088882242,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016843043673936878",
+            "extra": "mean: 197.74424874171333 usec\nrounds: 2384"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2853.586437228952,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009613670203632072",
+            "extra": "mean: 350.43620440356295 usec\nrounds: 2407"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2875.881599613705,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004676445162697018",
+            "extra": "mean: 347.7194610982324 usec\nrounds: 1748"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59792.999730024196,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022847108657703767",
+            "extra": "mean: 16.724365803943172 usec\nrounds: 11282"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16742.937818900456,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003100355690866107",
+            "extra": "mean: 59.726674662264976 usec\nrounds: 5253"
           }
         ]
       }
