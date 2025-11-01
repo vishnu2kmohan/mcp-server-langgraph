@@ -8,7 +8,7 @@ documentation:
       - '**/*.md'
       - '**/*.mdx'
       - 'docs/**/*'
-      - 'mint.json'
+      - 'docs/docs.json'
       - '.mcp/*.json'
 
 # Tests

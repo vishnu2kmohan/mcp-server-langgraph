@@ -7,7 +7,7 @@ Conduct a thorough analysis of all documentation in this codebase to ensure ever
 Analyze the following documentation areas:
 
 ### 1. Mintlify Documentation (Primary)
-- **Configuration**: Validate `docs/mint.json` structure and completeness
+- **Configuration**: Validate `docs/docs.json` structure and completeness
 - **Navigation**: Verify all navigation entries reference existing files
 - **MDX Files**: Check all `.mdx` files in `docs/` directory
 - **Cross-references**: Validate internal links between documentation pages
@@ -60,7 +60,7 @@ Validate:
 ## Analysis Steps
 
 ### Phase 1: Mintlify Validation
-1. Parse `docs/mint.json` and validate JSON structure
+1. Parse `docs/docs.json` and validate JSON structure
 2. Extract all navigation references
 3. Verify each referenced file exists
 4. Check for orphaned `.mdx` files not in navigation
