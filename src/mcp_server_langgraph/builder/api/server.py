@@ -327,6 +327,48 @@ async def get_template(template_id: str):
     raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
 
 
+@app.post("/api/builder/import")
+async def import_workflow(code: str, layout: str = "hierarchical"):
+    """
+    Import Python code into visual workflow.
+
+    Round-trip capability: Code → Visual (import) + Visual → Code (export)
+
+    Args:
+        code: Python source code
+        layout: Layout algorithm (hierarchical, force, grid)
+
+    Returns:
+        Workflow definition ready for visual builder
+
+    Example:
+        POST /api/builder/import
+        {
+            "code": "from langgraph.graph import StateGraph\\n...",
+            "layout": "hierarchical"
+        }
+    """
+    try:
+        from ..importer import import_from_code, validate_import
+
+        # Import code
+        workflow = import_from_code(code, layout_algorithm=layout)  # type: ignore
+
+        # Validate
+        validation = validate_import(workflow)
+
+        return {
+            "workflow": workflow,
+            "validation": validation,
+            "message": "Code imported successfully",
+        }
+
+    except SyntaxError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid Python syntax: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+
 @app.get("/api/builder/node-types")
 async def list_node_types():
     """
