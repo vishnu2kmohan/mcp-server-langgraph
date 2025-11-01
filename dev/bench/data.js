@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762020543789,
+  "lastUpdate": 1762022142895,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -18196,6 +18196,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019374273127851497",
             "extra": "mean: 56.64083937527756 usec\nrounds: 5379"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b1941632c0010cc079deb550bea7675a9b1708c1",
+          "message": "docs: standardize placeholder syntax from xxx to ${PLACEHOLDER}\n\nConverted 24 informal placeholder instances to consistent ${VARIABLE} format\nacross 5 documentation files for improved clarity and professionalism.\n\nChanges:\n- mcp-server-langgraph-xxx → mcp-server-langgraph-${POD_ID}\n- subnet-xxx → subnet-${SUBNET_ID}\n- /subscriptions/xxx/ → /subscriptions/${SUBSCRIPTION_ID}/\n- arn:aws:iam::xxx: → arn:aws:iam::${ACCOUNT_ID}:\n- And 20 other cloud resource placeholders\n\nFiles modified:\n- docs/advanced/troubleshooting.mdx (3 replacements)\n- docs/deployment/kubernetes/aks.mdx (4 replacements)\n- docs/deployment/kubernetes/eks.mdx (13 replacements)\n- docs/deployment/operations/eks-runbooks.mdx (3 replacements)\n- docs/security/audit-checklist.mdx (1 replacement)\n\nTool used: scripts/standardize_placeholders.py\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T14:15:03-04:00",
+          "tree_id": "657f2a154a3e2cfcc4d306cad12402462ffcd67e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b1941632c0010cc079deb550bea7675a9b1708c1"
+        },
+        "date": 1762022141999,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 49897.497547437386,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026833319594535127",
+            "extra": "mean: 20.041085207716144 usec\nrounds: 7558"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52370.36921767497,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024685997978787746",
+            "extra": "mean: 19.094767039803504 usec\nrounds: 11165"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48860.2595486785,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002651869007960514",
+            "extra": "mean: 20.466530657777614 usec\nrounds: 16146"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.56320481407738,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001722021789046361",
+            "extra": "mean: 5.247602762430701 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.3676511668876,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00021782575147960955",
+            "extra": "mean: 51.63248714999966 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936020533000859,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028461615671188667",
+            "extra": "mean: 100.64391440000193 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2727915.1374773677,
+            "unit": "iter/sec",
+            "range": "stddev: 4.630659568311326e-8",
+            "extra": "mean: 366.58031852293885 nsec\nrounds: 193051"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5043.282102947459,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027516366053776814",
+            "extra": "mean: 198.28357398757592 usec\nrounds: 2568"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2865.7715566912407,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010308921845763514",
+            "extra": "mean: 348.946166928455 usec\nrounds: 2546"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2914.666593199274,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004346950077402712",
+            "extra": "mean: 343.0924148694322 usec\nrounds: 1762"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59688.251763275635,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021247642008201677",
+            "extra": "mean: 16.753715688742446 usec\nrounds: 11811"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17156.549981276556,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022556967641394768",
+            "extra": "mean: 58.28677683399805 usec\nrounds: 5180"
           }
         ]
       }
