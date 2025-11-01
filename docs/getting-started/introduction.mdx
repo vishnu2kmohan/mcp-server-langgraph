@@ -125,145 +125,83 @@ The MCP Server follows a layered architecture:
   Most AI agent frameworks are proof-of-concepts or tightly coupled to specific cloud providers. MCP Server with LangGraph is **production-ready** from day one with true multi-cloud flexibility.
 </Note>
 
-### Production-Ready vs Prototype Frameworks
-
-| Feature | Prototype Frameworks | MCP Server with LangGraph |
-|---------|---------------|---------------------|
-| **Authentication** | ❌ None | ✅ JWT + OpenFGA (Zanzibar model) |
-| **Multi-LLM** | ⚠️ Single provider | ✅ 100+ providers with fallback |
-| **Observability** | ❌ Basic logs | ✅ Dual stack (LangSmith + OTEL) |
-| **Secrets** | ⚠️ .env files | ✅ Infisical integration |
-| **Kubernetes** | ❌ None | ✅ Production manifests (GKE/EKS/AKS) |
-| **Security** | ⚠️ Basic | ✅ Enterprise-grade |
-| **Documentation** | ⚠️ README only | ✅ Complete guides + time estimates |
-| **Testing** | ❌ Minimal | ✅ **100% pass rate** (437/437) |
-| **Multi-Cloud** | ⚠️ Single cloud | ✅ GCP, AWS, Azure, Platform |
-| **Time to Production** | ⚠️ Weeks-Months | ✅ Hours-Days |
+<Tip>
+  **Choosing the right framework?** We've created a comprehensive [Framework Decision Guide](/comparisons/choosing-framework) with decision trees, comparison matrices by use case, team type analysis, and real-world scenarios to help you make the best choice for your project.
+</Tip>
 
 ### Framework Comparison Landscape
 
-The agent framework ecosystem has matured significantly in 2025. Here's how MCP Server with LangGraph compares to leading alternatives:
+The agent framework ecosystem has matured significantly in 2025. Here's how we compare to leading alternatives:
 
-<AccordionGroup>
-  <Accordion icon="code" title="vs Google ADK (Agent Development Kit)">
-    **Google ADK** offers excellent Google Cloud integration and multi-agent hierarchies, but is tightly coupled to the Google ecosystem.
-
-    **Choose Google ADK if:**
-    - Deep Google Cloud/Vertex AI integration required
-    - Gemini models are your primary focus
-    - Agent-to-Agent (A2A) protocol needed
-
-    **Choose MCP Server with LangGraph if:**
-    - Multi-cloud flexibility is critical
-    - You need provider-agnostic architecture
-    - Enterprise security/compliance is mandatory
-    - Complete documentation with deployment time estimates
-
-    [Detailed Comparison →](/comparisons/vs-google-adk)
-  </Accordion>
-
-  <Accordion icon="wand-magic-sparkles" title="vs OpenAI AgentKit">
-    **OpenAI AgentKit** provides a visual workflow builder and low-code experience, but is limited to OpenAI models with usage-based pricing.
-
-    **Choose OpenAI AgentKit if:**
-    - Non-technical users building agents
-    - Visual workflow design preferred
-    - OpenAI ecosystem commitment
-
-    **Choose MCP Server with LangGraph if:**
-    - Code-first approach preferred
-    - Multi-LLM support essential (100+ providers)
-    - Cost control needed (avoid vendor lock-in)
-    - Self-hosted deployment required
-
-    [Detailed Comparison →](/comparisons/vs-openai-agentkit)
-  </Accordion>
-
-  <Accordion icon="robot" title="vs Claude Agent SDK">
-    **Claude Agent SDK** offers excellent Claude integration with automatic context management, but is limited to Anthropic models.
-
-    **Choose Claude Agent SDK if:**
-    - Claude models exclusively
-    - Code-heavy agent tasks
-    - Anthropic ecosystem preference
-
-    **Choose MCP Server with LangGraph if:**
-    - Multi-provider flexibility needed
-    - Kubernetes/multi-cloud deployment
-    - Enterprise authentication (Keycloak, SSO)
-    - Production observability required
-
-    [Detailed Comparison →](/comparisons/vs-claude-agent-sdk)
-  </Accordion>
-
-  <Accordion icon="diagram-project" title="vs LangGraph Cloud Platform">
-    **LangGraph Cloud** offers 2-minute serverless deployment, but is a managed service with ongoing costs.
-
-    **Choose LangGraph Cloud if:**
-    - Serverless deployment only
-    - Managed service preferred
-    - Quick prototyping priority
-
-    **Choose MCP Server with LangGraph if:**
-    - Self-hosted deployment needed
-    - Multi-cloud deployment flexibility (GCP, AWS, Azure)
-    - Enterprise security requirements (OpenFGA, Keycloak)
-    - Cost optimization through self-hosting
-    - Complete control over infrastructure
-
-    **Note:** MCP Server with LangGraph **also supports** LangGraph Cloud for serverless deployment (2-minute setup), giving you the best of both worlds.
-
-    [Detailed Comparison →](/comparisons/vs-langgraph-cloud)
-  </Accordion>
-
-  <Accordion icon="users" title="vs CrewAI">
-    **CrewAI** excels at role-based multi-agent teams with excellent documentation, but requires significant setup and scaling effort.
-
-    **Choose CrewAI if:**
-    - Role-based agent teamwork fits your use case
-    - Quick prototyping (excellent getting-started experience)
-    - Learning/experimentation phase
-
-    **Choose MCP Server with LangGraph if:**
-    - Production deployment is priority
-    - Enterprise security/compliance required
-    - Multi-cloud infrastructure needed
-    - Complete observability stack essential
-    - Kubernetes-native deployment
-
-    [Detailed Comparison →](/comparisons/vs-crewai)
-  </Accordion>
-
-  <Accordion icon="microsoft" title="vs Microsoft AutoGen / Agent Framework">
-    **Microsoft Agent Framework** (formerly AutoGen + Semantic Kernel) offers dynamic multi-agent collaboration, but is in transition with framework consolidation.
-
-    **Choose Microsoft Agent Framework if:**
-    - Azure ecosystem integration
-    - .NET/C# development
-    - Dynamic conversational agents
-
-    **Choose MCP Server with LangGraph if:**
-    - Python-first development
-    - Multi-cloud flexibility (not Azure-only)
-    - Stable, production-ready framework
-    - Complete deployment documentation
-
-    [Detailed Comparison →](/comparisons/vs-microsoft-agent-framework)
-  </Accordion>
-</AccordionGroup>
+<CardGroup cols={3}>
+  <Card
+    title="vs Google ADK"
+    icon="code"
+    href="/comparisons/vs-google-adk"
+  >
+    Excellent Google Cloud integration but tightly coupled to GCP ecosystem
+  </Card>
+  <Card
+    title="vs OpenAI AgentKit"
+    icon="wand-magic-sparkles"
+    href="/comparisons/vs-openai-agentkit"
+  >
+    Visual workflow builder limited to OpenAI models with usage-based pricing
+  </Card>
+  <Card
+    title="vs Claude Agent SDK"
+    icon="robot"
+    href="/comparisons/vs-claude-agent-sdk"
+  >
+    Deep Claude integration with automatic context management, Anthropic-exclusive
+  </Card>
+  <Card
+    title="vs LangGraph Cloud"
+    icon="diagram-project"
+    href="/comparisons/vs-langgraph-cloud"
+  >
+    2-minute serverless deployment as managed service with ongoing costs
+  </Card>
+  <Card
+    title="vs CrewAI"
+    icon="users"
+    href="/comparisons/vs-crewai"
+  >
+    Role-based multi-agent teams, excellent for prototyping and learning
+  </Card>
+  <Card
+    title="vs Microsoft Agent Framework"
+    icon="microsoft"
+    href="/comparisons/vs-microsoft-agent-framework"
+  >
+    Azure-integrated multi-agent collaboration with .NET/C# support
+  </Card>
+</CardGroup>
 
 ### When to Choose MCP Server with LangGraph
 
-Choose MCP Server with LangGraph when you need:
+<CardGroup cols={2}>
+  <Card title="Production Security & Compliance" icon="shield-halved">
+    **Enterprise-grade security** with JWT authentication, OpenFGA authorization (Zanzibar model), and complete audit logging.
 
-✅ **Production-grade security** - JWT authentication, OpenFGA authorization (Zanzibar model), audit logging
-✅ **Enterprise compliance** - GDPR, SOC 2, HIPAA readiness with complete audit trails
-✅ **Multi-cloud flexibility** - Deploy to GCP, AWS, Azure, or LangGraph Platform without changes
-✅ **Provider independence** - 100+ LLM providers with automatic fallback/retry
-✅ **Complete observability** - Dual stack (LangSmith + OpenTelemetry) with pre-built dashboards
-✅ **Time-to-production clarity** - Deployment time estimates (2 min to 2 hours depending on target)
-✅ **Kubernetes-native** - Production manifests, Helm charts, GitOps ready
-✅ **Battle-tested reliability** - 100% test pass rate (437/437 tests)
+    **GDPR, SOC 2, HIPAA readiness** with audit trails for compliance requirements.
+  </Card>
+  <Card title="Multi-Cloud Flexibility" icon="cloud">
+    **Deploy anywhere** - GCP, AWS, Azure, or LangGraph Platform without code changes.
+
+    **Kubernetes-native** with production manifests, Helm charts, and GitOps ready infrastructure.
+  </Card>
+  <Card title="Complete Observability" icon="chart-line">
+    **Dual monitoring stack** - LangSmith for LLM-specific insights + OpenTelemetry for infrastructure metrics.
+
+    **Time-to-production clarity** with deployment estimates (2 min to 2 hours) for every target platform.
+  </Card>
+  <Card title="Provider Independence & Reliability" icon="circle-check">
+    **100+ LLM providers** with automatic fallback and retry logic for high availability.
+
+    **Battle-tested** with 100% test pass rate (437/437 tests) ensuring production reliability.
+  </Card>
+</CardGroup>
 
 <Info>
   **Need help choosing?** See our [Framework Decision Guide](/comparisons/choosing-framework) for a detailed decision matrix based on your use case, team size, and requirements.
