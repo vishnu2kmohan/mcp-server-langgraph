@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762029278953,
+  "lastUpdate": 1762030973981,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -19384,6 +19384,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00003100355690866107",
             "extra": "mean: 59.726674662264976 usec\nrounds: 5253"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "17b1d3a626cf907b85736464ff2170c4bbe81cd0",
+          "message": "docs: migrate venv to uv auto-management + update to latest LLM models\n\nMajor documentation and configuration update with two key improvements:\n1. Replace manual venv creation with uv's automatic management\n2. Update all LLM model references to latest versions\n\n## Part 1: Virtual Environment Migration to uv\n\n### Changes\nReplaced manual `python -m venv` instructions with uv's automatic virtual\nenvironment creation across all documentation.\n\n**Pattern Applied:**\n- REMOVED: `python -m venv venv` + manual activation\n- ADDED: `uv sync` (creates .venv automatically)\n- PROMOTED: `uv run <command>` as preferred over manual activation\n\n### Files Updated (8 documentation files)\n- docs/getting-started/quickstart.mdx - Added uv install step, removed venv step\n- docs/getting-started/installation.mdx - Clarified auto-venv creation\n- docs/reference/development/development.mdx - Rewrote venv section\n- docs/advanced/development-setup.mdx - Made manual venv truly optional\n- .github/CONTRIBUTING.md - Added uv install, removed manual venv\n- docs/advanced/contributing.mdx - Streamlined to direct uv sync\n- docs/reference/development/ide-setup.mdx - Promoted uv run workflow\n- docs-internal/developer-onboarding.md - Updated quick start\n\n### Benefits\n- Simpler onboarding (1 command vs 3)\n- No platform-specific activation commands needed\n- Consistent .venv location\n- Automatic dependency management\n- 10-100x faster than pip\n\n## Part 2: LLM Model Version Updates\n\n### Model Updates Applied\n\n**Anthropic Claude (Claude 4.5 series):**\n- claude-3-5-sonnet-20241022 → claude-sonnet-4-5\n- claude-3-opus-20240229 → claude-opus-4-1\n- claude-3-haiku-20240307 → claude-haiku-4-5\n\n**Google Gemini (Gemini 2.5 series):**\n- gemini-2.5-flash-002 → gemini-2.5-flash\n- gemini-2.5-pro (already current)\n\n**OpenAI (GPT-5 series):**\n- gpt-4o → gpt-5\n- gpt-4o-mini → gpt-5-mini\n- gpt-4-turbo → gpt-5-pro\n- gpt-3.5-turbo → gpt-5-nano\n\n### Files Updated by Category\n\n**Core Configuration (5 files):**\n- deployments/helm/mcp-server-langgraph/values.yaml\n- deployments/base/configmap.yaml\n- deployments/cloudrun/service.yaml\n- .env.example, .env.production.template, .env.quickstart\n\n**Documentation (21 files):**\n- All provider guides (anthropic-claude.mdx, google-gemini.mdx, openai-gpt.mdx)\n- Integration guides (litellm.md, gemini.md)\n- Getting started docs (installation, quickstart, architecture)\n- Deployment docs (docker, model-configuration, README)\n- Reference docs (configuration-files, development)\n- ADRs (adr-0017-error-handling-strategy)\n\n**Source Code (3 files):**\n- src/mcp_server_langgraph/core/config.py - Updated default fallbacks\n- src/mcp_server_langgraph/llm/factory.py - Updated examples\n- src/mcp_server_langgraph/presets/quickstart.py - Updated type hints\n\n**Tests (2 files):**\n- tests/test_config_validation.py - Updated assertions\n- tests/test_pydantic_ai.py - Updated model names\n\n**Examples (1 file):**\n- examples/test_llm.py - Updated provider examples\n\n### Mermaid Diagram Styling\n- Added ColorBrewer2 Set3 palette comments to 3 diagrams in architecture.mdx\n\n### Model Reference Changes\n- Total files modified: 36\n- Total model references updated: ~150+\n- Simple aliases used (e.g., claude-sonnet-4-5) for better readability\n\n## Benefits\n\n**Developer Experience:**\n- Faster setup with uv (10-100x vs pip)\n- No manual venv management needed\n- Latest, most capable LLM models\n- Consistent model naming across docs\n\n**Model Performance:**\n- Claude 4.5: Extended reasoning, better coding\n- Gemini 2.5: Improved thinking, 2M context\n- GPT-5: Latest flagship, advanced capabilities\n\n**Documentation Quality:**\n- Consistent uv workflow across all guides\n- Up-to-date model recommendations\n- Clear migration path for users\n\n## Testing\n\nAll changes are non-breaking:\n- Configuration updates use new defaults\n- Tests updated to match new model names\n- Documentation examples remain executable\n- Fallback chains updated with latest models\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T17:01:34-04:00",
+          "tree_id": "d5d4070d1d8d0ea8bb5c0a4c905d2d7cfce42343",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/17b1d3a626cf907b85736464ff2170c4bbe81cd0"
+        },
+        "date": 1762030973274,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51542.87840855526,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027472974262676096",
+            "extra": "mean: 19.401322372287545 usec\nrounds: 8819"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53326.701283610906,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019557174687613213",
+            "extra": "mean: 18.752331869950744 usec\nrounds: 12300"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49780.01618358634,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002241512757086082",
+            "extra": "mean: 20.08838238043249 usec\nrounds: 20341"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.07634996835364,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018791299583582724",
+            "extra": "mean: 5.233510061112334 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.403752264238268,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011500976444747865",
+            "extra": "mean: 51.536423800000364 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.953854795154875,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004745015510732806",
+            "extra": "mean: 100.46359130000155 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2572590.392677256,
+            "unit": "iter/sec",
+            "range": "stddev: 5.592558529284793e-8",
+            "extra": "mean: 388.71326070658114 nsec\nrounds: 187970"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5151.603851381749,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013445711807497724",
+            "extra": "mean: 194.11430475807697 usec\nrounds: 2648"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2973.108274824639,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013050810773552532",
+            "extra": "mean: 336.34832894169733 usec\nrounds: 2429"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2887.246204418981,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000056485790164674135",
+            "extra": "mean: 346.3507886752028 usec\nrounds: 1713"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60272.89210557754,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020183653315388935",
+            "extra": "mean: 16.59120651201441 usec\nrounds: 12285"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17449.98062028921,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019583477109474123",
+            "extra": "mean: 57.30665390179822 usec\nrounds: 5536"
           }
         ]
       }
