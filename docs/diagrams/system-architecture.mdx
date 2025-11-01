@@ -185,6 +185,22 @@ flowchart TD
     ExtractNotes --> SaveState[Save to Checkpoint<br/>Memory/PostgreSQL]
     SaveState --> End
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startEndStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef contextStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef toolStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef verifyStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef routeStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class Start,End startEndStyle
+    class LoadContext,CompactCtx,ExtractNotes,SaveState contextStyle
+    class Compact,Quality,Refine,Decision decisionStyle
+    class ExecuteTools toolStyle
+    class GenerateResp,RefineResp llmStyle
+    class Verify verifyStyle
+    class Route routeStyle
 ```
 
 ### Deployment Architecture (Kubernetes)
@@ -285,6 +301,22 @@ flowchart TB
     OTELCol --> PrometheusPod
     PrometheusPod --> GrafanaPod
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef externalStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef ingressStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef obsStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+
+    class Users externalStyle
+    class Ingress,Kong ingressStyle
+    class AgentPod1,AgentPod2,AgentPod3,HPA appStyle
+    class KeycloakPod1,KeycloakPod2,OpenFGAPod1,OpenFGAPod2 authStyle
+    class PostgresDB,RedisPod,QdrantPod dataStyle
+    class OTELCol,JaegerPod,PrometheusPod,GrafanaPod obsStyle
+    class Anthropic,OpenAI,Google,Infisical serviceStyle
 ```
 
 ### Data Flow - MCP Tool Execution
@@ -382,6 +414,22 @@ flowchart LR
 
     Tool3 --> Results[Aggregated Results]
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startEndStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef analysisStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef layer1Style fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef layer2Style fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef layer3Style fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef syncStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef toolStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+
+    class Request,Results startEndStyle
+    class Analyzer,Graph,Topo analysisStyle
+    class Layer1 layer1Style
+    class Layer2 layer2Style
+    class Layer3 layer3Style
+    class Sync1,Sync2 syncStyle
+    class Tool1A,Tool1B,Tool1C,Tool2A,Tool2B,Tool3 toolStyle
 ```
 
 ### Context Loading Strategy
@@ -419,6 +467,23 @@ flowchart TD
 
     Search -.-> Note1
     LoadCache -.-> Note2
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startEndStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef cacheStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef searchStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef loadStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef contextStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+    classDef noteStyle fill:#d9d9d9,stroke:#95a5a6,stroke-width:2px,color:#333
+
+    class UserQuery,AgentInvoke startEndStyle
+    class CheckCache,TokenCheck,TokenFit decisionStyle
+    class LoadCache,CacheResults cacheStyle
+    class Search,TopK,Embed searchStyle
+    class LoadAll,Progressive,LoadContext,StopLoading loadStyle
+    class InjectMsg contextStyle
+    class Note1,Note2 noteStyle
 ```
 
 ### Session Management Architecture
@@ -477,6 +542,18 @@ flowchart TD
     Redis --> BulkRevoke
     Redis --> Tracking
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef middlewareStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef storeStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef backendStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef featureStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class User clientStyle
+    class CreateSession,GetSession,RefreshSession,RevokeSession middlewareStyle
+    class InMemory,Redis storeStyle
+    class MemDict,RedisDB backendStyle
+    class Sliding,ConcurrentLimit,BulkRevoke,Tracking featureStyle
 ```
 
 ### LLM Provider Fallback Chain
@@ -508,6 +585,20 @@ flowchart LR
     Alert -->|No| End([End])
     Notify --> End
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startEndStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef failureStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef metricsStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef alertStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Request,End startEndStyle
+    class Primary,Fallback1,Fallback2,Fallback3,Alert decisionStyle
+    class Response successStyle
+    class Log1,Log2,Log3,Error failureStyle
+    class Metrics metricsStyle
+    class Notify alertStyle
 ```
 
 ### Observability Data Flow
@@ -573,6 +664,18 @@ flowchart TB
     Prometheus --> Grafana
     LangSmith --> LangSmithUI
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef appStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef instrumentStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef collectionStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef backendStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef vizStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Agent,Auth,Tools,LLM appStyle
+    class TracerProvider,MeterProvider,LoggerProvider instrumentStyle
+    class Receiver,Processor,Exporter collectionStyle
+    class Jaeger,Prometheus,LangSmith,CloudWatch backendStyle
+    class Grafana,JaegerUI,LangSmithUI vizStyle
 ```
 
 ---
