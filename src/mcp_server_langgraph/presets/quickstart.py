@@ -30,7 +30,7 @@ class QuickStartConfig(BaseModel):
 
     name: str = Field(description="Agent name")
     tools: List[str] = Field(default_factory=list, description="List of tool names to include")
-    llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-4o-mini"] = Field(
+    llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-5-mini"] = Field(
         default="gemini-flash", description="LLM model to use"
     )
     system_prompt: Optional[str] = Field(default=None, description="Custom system prompt")
@@ -181,7 +181,7 @@ class QuickStart:
     def create(
         name: str,
         tools: Optional[List[str]] = None,
-        llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-4o-mini"] = "gemini-flash",
+        llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-5-mini"] = "gemini-flash",
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
     ) -> QuickStartAgent:

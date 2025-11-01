@@ -62,24 +62,27 @@ gh pr create --title "feat: add awesome new feature" --body "Description of chan
 #### Local Environment
 
 ```bash
-## Install uv
+## Install uv (fast Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-## Create virtual environment
-uv venv
-
-## Activate virtual environment
-source .venv/bin/activate  # Linux/macOS
-## or
-.venv\Scripts\activate  # Windows
-
-## Install dependencies
+## Install dependencies (uv sync creates .venv automatically)
 uv sync
 
 ## Install pre-commit hooks
 uv tool install pre-commit
 pre-commit install
 ```
+
+<Note>
+**No manual venv creation needed!** `uv sync` automatically:
+- Creates `.venv` if it doesn't exist
+- Installs all dependencies from `pyproject.toml`
+- Uses `uv.lock` for reproducible builds
+</Note>
+
+<Tip>
+Use `uv run <command>` to run commands without activating the virtual environment.
+</Tip>
 
 #### Environment Variables
 

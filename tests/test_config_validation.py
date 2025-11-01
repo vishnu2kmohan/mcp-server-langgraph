@@ -25,7 +25,7 @@ class TestFallbackModelValidation:
             openai_api_key="test-openai-key",
             # Fallback models that match the credentials
             enable_fallback=True,
-            fallback_models=["claude-3-haiku-20240307", "gpt-4o"],
+            fallback_models=["claude-3-haiku-20240307", "gpt-5"],
         )
 
         # Should not log warnings when all credentials present
@@ -43,7 +43,7 @@ class TestFallbackModelValidation:
             anthropic_api_key=None,
             openai_api_key="test-openai-key",
             enable_fallback=True,
-            fallback_models=["claude-3-haiku-20240307", "gpt-4o"],
+            fallback_models=["claude-3-haiku-20240307", "gpt-5"],
         )
 
         settings._validate_fallback_credentials()
@@ -59,14 +59,14 @@ class TestFallbackModelValidation:
             anthropic_api_key="test-anthropic-key",
             openai_api_key=None,  # Missing
             enable_fallback=True,
-            fallback_models=["claude-3-haiku-20240307", "gpt-4o"],
+            fallback_models=["claude-3-haiku-20240307", "gpt-5"],
         )
 
         settings._validate_fallback_credentials()
 
         # Should log warning about missing OpenAI credentials
         warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        assert any("gpt-4o" in log.message for log in warning_logs)
+        assert any("gpt-5" in log.message for log in warning_logs)
         assert any("OPENAI_API_KEY" in log.message for log in warning_logs)
 
     def test_validate_fallback_credentials_no_fallback_enabled(self, caplog):
@@ -107,7 +107,7 @@ class TestFallbackModelValidation:
             enable_fallback=True,
             fallback_models=[
                 "claude-3-haiku-20240307",  # Needs anthropic_api_key
-                "gpt-4o",  # Needs openai_api_key
+                "gpt-5",  # Needs openai_api_key
                 "gemini-2.5-flash",  # Needs google_api_key
             ],
         )
@@ -119,7 +119,7 @@ class TestFallbackModelValidation:
 
         # Check for each model warning
         assert any("claude-3-haiku-20240307" in log.message for log in warning_logs)
-        assert any("gpt-4o" in log.message for log in warning_logs)
+        assert any("gpt-5" in log.message for log in warning_logs)
         assert any("gemini-2.5-flash" in log.message for log in warning_logs)
 
         # Check for credential names

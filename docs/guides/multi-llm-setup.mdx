@@ -16,15 +16,16 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
 
 <CardGroup cols={3}>
   <Card title="Anthropic" icon="robot">
-    - Claude 3.5 Sonnet
-    - Claude 3 Opus
-    - Claude 3 Haiku
+    - Claude Sonnet 4.5
+    - Claude Opus 4.1
+    - Claude Haiku 4.5
   </Card>
 
   <Card title="OpenAI" icon="openai">
-    - GPT-4o
-    - GPT-4 Turbo
-    - GPT-3.5 Turbo
+    - GPT-5
+    - GPT-5 Pro
+    - GPT-5 Mini
+    - GPT-5 Nano
   </Card>
 
   <Card title="Google" icon="google">
@@ -68,7 +69,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```bash
     # .env
     LLM_PROVIDER=anthropic
-    MODEL_NAME=claude-3-5-sonnet-20241022
+    MODEL_NAME=claude-sonnet-4-5
     ANTHROPIC_API_KEY=sk-ant-api03-...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
@@ -81,7 +82,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
 
     llm = LLMFactory(
         provider="anthropic",
-        model_name="claude-3-5-sonnet-20241022"
+        model_name="claude-sonnet-4-5"
     )
 
     response = llm.invoke([
@@ -107,7 +108,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```bash
     # .env
     LLM_PROVIDER=openai
-    MODEL_NAME=gpt-4o
+    MODEL_NAME=gpt-5
     OPENAI_API_KEY=sk-proj-...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
@@ -118,7 +119,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```python
     llm = LLMFactory(
         provider="openai",
-        model_name="gpt-4o"
+        model_name="gpt-5"
     )
 
     response = llm.invoke([
@@ -143,7 +144,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```bash
     # .env
     LLM_PROVIDER=google
-    MODEL_NAME=gemini-2.5-flash-002
+    MODEL_NAME=gemini-2.5-flash
     GOOGLE_API_KEY=AIza...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=8192
@@ -154,7 +155,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```python
     llm = LLMFactory(
         provider="google",
-        model_name="gemini-2.5-flash-002"
+        model_name="gemini-2.5-flash"
     )
 
     response = llm.invoke([
@@ -214,7 +215,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```bash
     # .env
     LLM_PROVIDER=bedrock
-    MODEL_NAME=bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+    MODEL_NAME=bedrock/anthropic.claude-sonnet-4-5-v2:0
     AWS_ACCESS_KEY_ID=AKIA...
     AWS_SECRET_ACCESS_KEY=...
     AWS_REGION_NAME=us-east-1
@@ -225,7 +226,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ```python
     llm = LLMFactory(
         provider="bedrock",
-        model_name="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0"
+        model_name="bedrock/anthropic.claude-sonnet-4-5-v2:0"
     )
     ```
   </Step>
@@ -296,9 +297,9 @@ Configure automatic fallback when primary model fails:
 ```bash
 ## .env
 LLM_PROVIDER=anthropic
-MODEL_NAME=claude-3-5-sonnet-20241022
+MODEL_NAME=claude-sonnet-4-5
 ENABLE_FALLBACK=true
-FALLBACK_MODELS=gemini-2.5-flash-002,gpt-4o,ollama/llama3.1:8b
+FALLBACK_MODELS=gemini-2.5-flash,gpt-5,ollama/llama3.1:8b
 ```
 **Fallback Flow**:
 
@@ -310,7 +311,7 @@ flowchart TD
     Primary -->|✗ Error| Fallback1[Fallback 1<br/>Gemini 2.5 Flash]
 
     Fallback1 -->|✓ Success| Response
-    Fallback1 -->|✗ Error| Fallback2[Fallback 2<br/>GPT-4o]
+    Fallback1 -->|✗ Error| Fallback2[Fallback 2<br/>GPT-5]
 
     Fallback2 -->|✓ Success| Response
     Fallback2 -->|✗ Error| Fallback3[Fallback 3<br/>Llama 3.1 Local]
@@ -338,11 +339,11 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 
 llm = LLMFactory(
     provider="anthropic",
-    model_name="claude-3-5-sonnet-20241022",
+    model_name="claude-sonnet-4-5",
     enable_fallback=True,
     fallback_models=[
-        "gemini-2.5-flash-002",
-        "gpt-4o",
+        "gemini-2.5-flash",
+        "gpt-5",
         "ollama/llama3.1:8b"
     ]
 )
@@ -365,14 +366,14 @@ response = llm.invoke(messages)
   <Tab title="Performance">
     | Model | Speed | Quality | Context | Cost |
     |-------|-------|---------|---------|------|
-    | Claude 3.5 Sonnet | ⚡⚡⚡ | ⭐⭐⭐⭐⭐ | 200K | $$ |
+    | Claude Sonnet 4.5 | ⚡⚡⚡ | ⭐⭐⭐⭐⭐ | 200K | $$ |
     | GPT-4o | ⚡⚡⚡ | ⭐⭐⭐⭐⭐ | 128K | $$$ |
     | Gemini 2.5 Flash | ⚡⚡⚡⚡⚡ | ⭐⭐⭐⭐ | 1M | $ |
     | Llama 3.1 8B | ⚡⚡⚡⚡ | ⭐⭐⭐ | 128K | Free |
   </Tab>
 
   <Tab title="Use Cases">
-    **Claude 3.5 Sonnet**: Best for complex reasoning, code generation, analysis
+    **Claude Sonnet 4.5**: Best for complex reasoning, code generation, analysis
 
     **GPT-4o**: Strong general purpose, multimodal, reliable
 
@@ -384,7 +385,7 @@ response = llm.invoke(messages)
   <Tab title="Pricing">
     **Input / Output per 1M tokens**:
 
-    - **Claude 3.5 Sonnet**: $3 / $15
+    - **Claude Sonnet 4.5**: $3 / $15
     - **GPT-4o**: $2.50 / $10
     - **Gemini 2.5 Flash**: $0.075 / $0.30
     - **Llama 3.1 (Ollama)**: $0 / $0 (local)
@@ -405,16 +406,16 @@ from litellm import Router
 router = Router(
     model_list=[
         {
-            "model_name": "claude-3-5-sonnet",
+            "model_name": "claude-sonnet-4-5",
             "litellm_params": {
-                "model": "claude-3-5-sonnet-20241022",
+                "model": "claude-sonnet-4-5",
                 "api_key": os.getenv("ANTHROPIC_API_KEY")
             }
         },
         {
-            "model_name": "gpt-4o",
+            "model_name": "gpt-5",
             "litellm_params": {
-                "model": "gpt-4o",
+                "model": "gpt-5",
                 "api_key": os.getenv("OPENAI_API_KEY")
             }
         }
@@ -423,7 +424,7 @@ router = Router(
 )
 
 response = await router.acompletion(
-    model="claude-3-5-sonnet",
+    model="claude-sonnet-4-5",
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
@@ -476,7 +477,7 @@ cache = Cache(
 
 ## Cached completion
 response = completion(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-5",
     messages=messages,
     cache=cache
 )
@@ -522,18 +523,18 @@ OLLAMA_API_BASE=http://localhost:11434
 <Tabs>
   <Tab title="Anthropic">
     ```bash
-    claude-3-5-sonnet-20241022    # Latest Sonnet
-    claude-3-opus-20240229        # Opus
-    claude-3-haiku-20240307       # Haiku (fast)
+    claude-sonnet-4-5             # Latest Sonnet
+    claude-opus-4-1               # Opus (extended reasoning)
+    claude-haiku-4-5              # Haiku (fast, cost-effective)
     ```
   </Tab>
 
   <Tab title="OpenAI">
     ```bash
-    gpt-4o                        # GPT-4 Omni
-    gpt-4-turbo                   # GPT-4 Turbo
-    gpt-4                         # GPT-4
-    gpt-3.5-turbo                 # GPT-3.5 (fast)
+    gpt-5                         # GPT-5 (flagship)
+    gpt-5-pro                     # GPT-5 Pro (most capable)
+    gpt-5-mini                    # GPT-5 Mini (fast, cost-effective)
+    gpt-5-nano                    # GPT-5 Nano (smallest, fastest)
     ```
   </Tab>
 
@@ -553,7 +554,7 @@ OLLAMA_API_BASE=http://localhost:11434
 
   <Tab title="Bedrock">
     ```bash
-    bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+    bedrock/anthropic.claude-sonnet-4-5-v2:0
     bedrock/meta.llama3-1-70b-instruct-v1:0
     bedrock/amazon.titan-text-express-v1
     ```
@@ -582,7 +583,7 @@ OLLAMA_API_BASE=http://localhost:11434
       -H "x-api-key: $ANTHROPIC_API_KEY" \
       -H "anthropic-version: 2023-06-01" \
       -H "content-type: application/json" \
-      -d '{"model":"claude-3-5-sonnet-20241022","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
+      -d '{"model":"claude-sonnet-4-5","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
 
     # Check environment
     echo $ANTHROPIC_API_KEY
@@ -601,7 +602,7 @@ OLLAMA_API_BASE=http://localhost:11434
     llm = LLMFactory(
         provider="anthropic",
         enable_fallback=True,
-        fallback_models=["gemini-2.5-flash-002"],
+        fallback_models=["gemini-2.5-flash"],
         timeout=120  # Longer timeout
     )
     ```
@@ -632,7 +633,7 @@ OLLAMA_API_BASE=http://localhost:11434
 
     ```python
     llm = LLMFactory(
-        model_name="gemini-2.5-flash-002",  # Faster
+        model_name="gemini-2.5-flash",  # Faster
         max_tokens=1024,  # Lower limit
         temperature=0.9  # Faster sampling
     )

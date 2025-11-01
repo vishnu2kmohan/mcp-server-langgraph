@@ -75,9 +75,9 @@ def test_get_pydantic_model_name_openai(mock_settings, mock_pydantic_agent_class
     """Test model name mapping for OpenAI provider."""
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
-    wrapper = PydanticAIAgentWrapper(provider="openai", model_name="gpt-4o")
+    wrapper = PydanticAIAgentWrapper(provider="openai", model_name="gpt-5")
 
-    assert wrapper.pydantic_model_name == "openai:gpt-4o"
+    assert wrapper.pydantic_model_name == "openai:gpt-5"
 
 
 @pytest.mark.unit

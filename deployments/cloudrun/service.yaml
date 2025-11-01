@@ -58,7 +58,7 @@ spec:
         - name: DEFAULT_LLM_PROVIDER
           value: "anthropic"
         - name: DEFAULT_LLM_MODEL
-          value: "claude-3-5-sonnet-20241022"
+          value: "claude-sonnet-4-5"
 
         # Secrets from Secret Manager
         - name: JWT_SECRET_KEY

@@ -43,7 +43,7 @@ LLM_PROVIDER=google
 GOOGLE_API_KEY=AIza...your-key-here
 
 # Model (already set to latest Gemini 2.5 Flash)
-MODEL_NAME=gemini-2.5-flash-002
+MODEL_NAME=gemini-2.5-flash
 ```
 
 ### 3. Test Connection
@@ -54,7 +54,7 @@ python examples/test_llm.py
 
 # Expected output:
 # Provider: google
-# Model: gemini-2.5-flash-002
+# Model: gemini-2.5-flash
 # ✓ LLM initialized successfully
 # ✓ Response: 4
 ```
@@ -71,7 +71,7 @@ python -m mcp_server_langgraph.mcp.server_stdio
 
 ## Gemini 2.5 Models
 
-### gemini-2.5-flash-002 (Default - Recommended)
+### gemini-2.5-flash (Default - Recommended)
 
 - **Speed**: Fastest Gemini model (sub-second responses)
 - **Cost**: Most cost-effective
@@ -80,7 +80,7 @@ python -m mcp_server_langgraph.mcp.server_stdio
 - **Best For**: 95% of use cases
 
 ```bash
-MODEL_NAME=gemini-2.5-flash-002
+MODEL_NAME=gemini-2.5-flash
 MODEL_MAX_TOKENS=8192
 ```
 
@@ -125,11 +125,11 @@ The default configuration includes automatic fallback:
 
 ```bash
 # Primary: Gemini 2.5 Flash
-MODEL_NAME=gemini-2.5-flash-002
+MODEL_NAME=gemini-2.5-flash
 
 # Fallbacks (in order):
 ENABLE_FALLBACK=true
-FALLBACK_MODELS=["gemini-2.5-pro","claude-3-5-sonnet-20241022","gpt-4o"]
+FALLBACK_MODELS=["gemini-2.5-pro","claude-sonnet-4-5","gpt-5"]
 ```
 
 **Fallback triggers:**
@@ -220,7 +220,7 @@ response = await llm.ainvoke(messages)
 echo $GOOGLE_API_KEY
 
 # Test directly
-curl -X POST https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-002:generateContent?key=$GOOGLE_API_KEY \
+curl -X POST https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$GOOGLE_API_KEY \
   -H 'Content-Type: application/json' \
   -d '{"contents":[{"parts":[{"text":"Hello"}]}]}'
 ```
@@ -239,18 +239,18 @@ ENABLE_FALLBACK=true
 
 ```bash
 # Verify model name is correct
-MODEL_NAME=gemini-2.5-flash-002  # ✅ Correct
+MODEL_NAME=gemini-2.5-flash  # ✅ Correct
 
 # Common mistakes:
-# MODEL_NAME=gemini-2.5-flash     # ❌ Missing version
 # MODEL_NAME=gemini-flash-2.5     # ❌ Wrong order
+# MODEL_NAME=gemini-flash         # ❌ Missing version
 ```
 
 ### Slow Responses
 
 ```bash
 # Use Flash model (default)
-MODEL_NAME=gemini-2.5-flash-002
+MODEL_NAME=gemini-2.5-flash
 
 # Reduce max tokens
 MODEL_MAX_TOKENS=4096
@@ -283,7 +283,7 @@ open http://localhost:9090
 ```bash
 export LLM_PROVIDER=anthropic
 export ANTHROPIC_API_KEY=sk-ant-...
-export MODEL_NAME=claude-3-5-sonnet-20241022
+export MODEL_NAME=claude-sonnet-4-5
 ```
 
 ### Switch to OpenAI
@@ -291,7 +291,7 @@ export MODEL_NAME=claude-3-5-sonnet-20241022
 ```bash
 export LLM_PROVIDER=openai
 export OPENAI_API_KEY=sk-...
-export MODEL_NAME=gpt-4o
+export MODEL_NAME=gpt-5
 ```
 
 ### Switch to Local (Ollama)
@@ -326,8 +326,8 @@ export MODEL_NAME=ollama/llama3.1:8b
 
 **Default Configuration Summary:**
 - **Provider**: Google
-- **Model**: gemini-2.5-flash-002
-- **Fallback**: gemini-2.5-pro, claude-3-5-sonnet, gpt-4o
+- **Model**: gemini-2.5-flash
+- **Fallback**: gemini-2.5-pro, claude-sonnet-4-5, gpt-5
 - **Cost**: ~75% cheaper than alternatives
 - **Speed**: Fastest available
 

@@ -193,7 +193,7 @@ All deployment methods require the following environment variables:
 
 ### LLM Configuration
 - `LLM_PROVIDER` - Provider: `google`, `anthropic`, `openai`, `azure`, `bedrock`, `ollama` (default: `google`)
-- `MODEL_NAME` - Model name (default: `gemini-2.5-flash-002`)
+- `MODEL_NAME` - Model name (default: `gemini-2.5-flash`)
 - `MODEL_TEMPERATURE` - Temperature (default: `0.7`)
 - `MODEL_MAX_TOKENS` - Max tokens (default: `8192`)
 - `MODEL_TIMEOUT` - Timeout in seconds (default: `60`)

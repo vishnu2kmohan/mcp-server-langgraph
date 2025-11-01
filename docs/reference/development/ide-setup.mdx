@@ -311,7 +311,7 @@ Create `.ai/prompts.md` with your custom prompts for reuse.
 Create `.openai/code-completion-config.json`:
 ```json
 {
-  "model": "gpt-4-turbo",
+  "model": "gpt-5-pro",
   "temperature": 0.2,
   "max_tokens": 2048,
   "context": {
@@ -427,17 +427,30 @@ Add Make commands as external tools:
 
 #### Virtual Environment
 
-Always activate the virtual environment:
+<Note>
+**Preferred approach**: Use `uv run` to run commands without manual activation:
+</Note>
+
+```bash
+## Preferred: No activation needed
+uv run pytest -m unit -v
+uv run python -m mcp_server_langgraph.mcp.server_stdio
+uv run python examples/demo.py
+```
+
+**Alternative**: Activate the virtual environment manually (if running multiple commands):
 ```bash
 source .venv/bin/activate  # Linux/macOS
 .venv\Scripts\activate      # Windows
+
+## Now can use bare commands
+pytest -m unit -v
+python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
-Or use `uv run` for automatic activation:
-```bash
-uv run pytest -m unit -v
-uv run python -m mcp_server_langgraph.mcp.server_stdio
-```
+<Tip>
+**IDEs can use `.venv/bin/python` directly** without requiring manual activation. Set your IDE's Python interpreter to `.venv/bin/python` and it will use the virtual environment automatically.
+</Tip>
 
 #### Environment Variables
 

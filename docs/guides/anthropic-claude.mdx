@@ -16,13 +16,11 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
 
 | Model | Context Window | Use Case | Pricing (per 1M tokens) |
 |-------|---------------|----------|-------------------------|
-| claude-3-5-sonnet-20241022 | 200K tokens | Best performance, coding | $3.00 input / $15.00 output |
-| claude-3-5-haiku-20241022 | 200K tokens | Fast responses, cost-effective | $1.00 input / $5.00 output |
-| claude-3-opus-20240229 | 200K tokens | Complex analysis | $15.00 input / $75.00 output |
-| claude-3-sonnet-20240229 | 200K tokens | Balanced performance | $3.00 input / $15.00 output |
-| claude-3-haiku-20240307 | 200K tokens | Speed + value | $0.25 input / $1.25 output |
+| claude-sonnet-4-5 | 200K tokens | Best performance, coding | $3.00 input / $15.00 output |
+| claude-haiku-4-5 | 200K tokens | Fast responses, cost-effective | $1.00 input / $5.00 output |
+| claude-opus-4-1 | 200K tokens | Complex analysis, extended reasoning | $15.00 input / $75.00 output |
 
-**Recommended**: `claude-3-5-sonnet-20241022` for production (best performance/cost ratio)
+**Recommended**: `claude-sonnet-4-5` for production (best performance/cost ratio)
 
 ### Quick Start
 
@@ -50,7 +48,7 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
     # .env
     LLM_PROVIDER=anthropic
     ANTHROPIC_API_KEY=sk-ant-api03-...your-key
-    LLM_MODEL_NAME=claude-3-5-sonnet-20241022
+    LLM_MODEL_NAME=claude-sonnet-4-5
     ```
   </Step>
 
@@ -60,7 +58,7 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
 
     llm = LLMFactory(
         provider="anthropic",
-        model_name="claude-3-5-sonnet-20241022"
+        model_name="claude-sonnet-4-5"
     )
 
     response = await llm.ainvoke("Explain quantum entanglement in simple terms")
@@ -78,7 +76,7 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 
 llm = LLMFactory(
     provider="anthropic",
-    model_name="claude-3-5-sonnet-20241022",
+    model_name="claude-sonnet-4-5",
     temperature=1.0,  # 0.0 to 1.0
     max_tokens=4096,
     timeout=60
@@ -94,7 +92,7 @@ print(response.content)
 from langchain_anthropic import ChatAnthropic
 
 llm = ChatAnthropic(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-5",
     anthropic_api_key=settings.anthropic_api_key,
 
     # Generation parameters
@@ -124,18 +122,18 @@ def select_claude_model(task_type: str, complexity: str) -> str:
 
     # Fast, simple tasks
     if task_type == "chat" and complexity == "simple":
-        return "claude-3-5-haiku-20241022"  # Fastest, cheapest
+        return "claude-haiku-4-5"  # Fastest, cheapest
 
     # Coding, analysis
     elif task_type == "code" or complexity == "high":
-        return "claude-3-5-sonnet-20241022"  # Best for coding
+        return "claude-sonnet-4-5"  # Best for coding
 
     # Maximum intelligence needed
     elif complexity == "expert":
-        return "claude-3-opus-20240229"  # Most capable
+        return "claude-opus-4-1"  # Most capable
 
     # Default
-    return "claude-3-5-sonnet-20241022"
+    return "claude-sonnet-4-5"
 
 ## Use dynamically
 llm = LLMFactory(
@@ -356,7 +354,7 @@ spec:
         - name: LLM_PROVIDER
           value: "anthropic"
         - name: LLM_MODEL_NAME
-          value: "claude-3-5-sonnet-20241022"
+          value: "claude-sonnet-4-5"
 
         # API key from secret (loaded by Infisical operator)
         - name: ANTHROPIC_API_KEY
@@ -471,7 +469,7 @@ client = Anthropic(api_key=settings.anthropic_api_key)
 
 ## Mark content for caching
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-5",
     max_tokens=1024,
     system=[
         {
@@ -550,11 +548,11 @@ response = await llm.ainvoke(query)
 ## Use cheaper model for simple tasks
 def get_optimal_model(complexity: str) -> str:
     if complexity == "simple":
-        return "claude-3-5-haiku-20241022"  # $1/$5 per 1M tokens
+        return "claude-haiku-4-5"  # $1/$5 per 1M tokens
     elif complexity == "medium":
-        return "claude-3-5-sonnet-20241022"  # $3/$15 per 1M tokens
+        return "claude-sonnet-4-5"  # $3/$15 per 1M tokens
     else:
-        return "claude-3-opus-20240229"  # $15/$75 per 1M tokens
+        return "claude-opus-4-1"  # $15/$75 per 1M tokens
 
 llm = LLMFactory(
     provider="anthropic",
@@ -577,7 +575,7 @@ with get_openai_callback() as cb:
 
 ## Store metrics
 await store_usage_metrics({
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "claude-sonnet-4-5",
     "tokens": cb.total_tokens,
     "cost": cb.total_cost,
     "user_id": user.id,
@@ -667,17 +665,17 @@ async def call_claude_with_metrics(query: str):
 
             # Record metrics
             claude_requests.labels(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-sonnet-4-5",
                 status="success"
             ).inc()
 
             claude_tokens.labels(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-sonnet-4-5",
                 type="input"
             ).inc(cb.prompt_tokens)
 
             claude_tokens.labels(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-sonnet-4-5",
                 type="output"
             ).inc(cb.completion_tokens)
 
@@ -685,7 +683,7 @@ async def call_claude_with_metrics(query: str):
 
     except Exception as e:
         claude_requests.labels(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5",
             status="error"
         ).inc()
         raise
@@ -693,7 +691,7 @@ async def call_claude_with_metrics(query: str):
     finally:
         duration = time.time() - start_time
         claude_latency.labels(
-            model="claude-3-5-sonnet-20241022"
+            model="claude-sonnet-4-5"
         ).observe(duration)
 ```
 ### Troubleshooting
@@ -713,7 +711,7 @@ async def call_claude_with_metrics(query: str):
       -H "x-api-key: $ANTHROPIC_API_KEY" \
       -H "anthropic-version: 2023-06-01" \
       -H "content-type: application/json" \
-      -d '{"model":"claude-3-5-sonnet-20241022","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
+      -d '{"model":"claude-sonnet-4-5","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
 
     # Regenerate key
     # 1. Go to https://console.anthropic.com/settings/keys
@@ -756,14 +754,14 @@ async def call_claude_with_metrics(query: str):
     ```python
     # Increase timeout
     llm = ChatAnthropic(
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5",
         timeout=120,  # 2 minutes
         max_retries=3
     )
 
     # Reduce max_tokens
     llm = ChatAnthropic(
-        model="claude-3-5-sonnet-20241022",
+        model="claude-sonnet-4-5",
         max_tokens=4096  # Smaller responses
     )
 
@@ -783,7 +781,7 @@ async def call_claude_with_metrics(query: str):
     truncated = truncate_to_tokens(long_text, max_input_tokens)
 
     # Summarize first
-    summary_llm = LLMFactory(provider="anthropic", model_name="claude-3-5-haiku-20241022")
+    summary_llm = LLMFactory(provider="anthropic", model_name="claude-haiku-4-5")
     summary = await summary_llm.ainvoke(f"Summarize:\n\n{long_text}")
 
     # Then use summary

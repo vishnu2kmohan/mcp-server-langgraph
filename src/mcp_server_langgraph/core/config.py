@@ -142,7 +142,7 @@ class Settings(BaseSettings):
     fallback_models: list[str] = [
         "claude-haiku-4-5-20251001",  # Claude Haiku 4.5 (fast, cost-effective)
         "claude-sonnet-4-5-20250929",  # Claude Sonnet 4.5 (balanced performance)
-        "gpt-4o",  # OpenAI GPT-4o (cross-provider resilience)
+        "gpt-5",  # OpenAI GPT-5 (cross-provider resilience)
     ]
 
     # Agent

@@ -27,35 +27,31 @@ Get up and running in 5 minutes:
 git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
 
-## 2. Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-## 3. Install dependencies
+## 2. Install dependencies (uv sync creates .venv automatically)
 uv sync
 
-## 4. Copy environment file
+## 3. Copy environment file
 cp .env.example .env
 
-## 5. Get an API key (choose one)
+## 4. Get an API key (choose one)
 ## - Google Gemini: https://aistudio.google.com/apikey (FREE)
 ## - Anthropic: https://console.anthropic.com/
 ## - OpenAI: https://platform.openai.com/
 
-## 6. Edit .env and add your API key
+## 5. Edit .env and add your API key
 echo "GOOGLE_API_KEY=your-api-key-here" >> .env
 
-## 7. Start infrastructure
+## 6. Start infrastructure
 docker compose up -d
 
-## 8. Setup OpenFGA
-python scripts/setup_openfga.py
+## 7. Setup OpenFGA
+uv run python scripts/setup_openfga.py
 
-## 9. Run tests
-pytest -m unit -v
+## 8. Run tests
+uv run pytest -m unit -v
 
-## 10. Test the agent
-python examples/client_stdio.py
+## 9. Test the agent
+uv run python examples/client_stdio.py
 ```
 
 **You're ready to develop!** 🚀
@@ -108,36 +104,21 @@ git remote add upstream https://github.com/vishnu2kmohan/mcp-server-langgraph.gi
 git remote -v
 ```
 
-##### 2. Create Virtual Environment
+##### 2. Install Dependencies
+
+<Note>
+  **No manual venv creation needed!** `uv sync` automatically:
+  - Creates `.venv` if it doesn't exist
+  - Installs all dependencies from `pyproject.toml`
+  - Uses `uv.lock` for reproducible builds
+</Note>
 
 ```bash
-## Create virtual environment
-python -m venv venv
-
-## Activate it
-## Linux/Mac:
-source venv/bin/activate
-
-## Windows (PowerShell):
-venv\Scripts\Activate.ps1
-
-## Windows (CMD):
-venv\Scripts\activate.bat
-
-## Verify activation (should show venv path)
-which python  # Linux/Mac
-where python  # Windows
-```
-
-##### 3. Install Dependencies
-
-```bash
-## Install all dependencies with uv
+## uv sync creates .venv automatically and installs all dependencies
 uv sync
 
 ## Verify installation
-uv pip list | grep langgraph
-uv pip list | grep mcp
+uv run python -c "import langgraph, anthropic; print('All imports successful')"
 ```
 
 **Using Make (recommended):**
@@ -149,6 +130,32 @@ make install-dev
 ## This runs:
 ## - uv sync
 ```
+
+**Manual Virtual Environment (Optional):**
+
+If you need manual control (e.g., specific Python version or custom location):
+
+```bash
+## Create venv manually with specific Python version
+uv venv --python 3.12
+
+## Activate it (only if needed)
+## Linux/Mac:
+source .venv/bin/activate
+
+## Windows (PowerShell):
+.venv\Scripts\Activate.ps1
+
+## Windows (CMD):
+.venv\Scripts\activate.bat
+
+## Then install
+uv sync
+```
+
+<Tip>
+  Most developers don't need manual venv creation. Use `uv run <command>` to run commands in the virtual environment without activating it.
+</Tip>
 
 ##### 4. Get LLM API Key
 
@@ -259,7 +266,7 @@ open http://localhost:3000
 
 ```bash
 ## Run setup script
-python scripts/setup_openfga.py
+uv run python scripts/setup_openfga.py
 
 ## This will output:
 ## ✓ Created OpenFGA store: 01HXXXXXXXXX
@@ -275,13 +282,13 @@ echo "OPENFGA_MODEL_ID=01HYYYYYYYY" >> .env
 
 ```bash
 ## Run unit tests
-pytest -m unit -v
+uv run pytest -m unit -v
 
 ## Should see all tests passing
 ## ===== X passed in Y.YYs =====
 
 ## Test the MCP server
-python examples/client_stdio.py
+uv run python examples/client_stdio.py
 
 ## Should see agent responses
 ```
@@ -308,7 +315,7 @@ docker compose up -d
 ## ... edit code ...
 
 ## 5. Run tests frequently
-pytest -m unit -v
+uv run pytest -m unit -v
 
 ## 6. Format and lint before committing
 make format
@@ -498,11 +505,14 @@ tail -f mcp-server-langgraph.log
 ##### "ModuleNotFoundError"
 
 ```bash
-## Ensure virtual environment is activated
-which python  # Should show venv path
+## Check if .venv exists
+ls -la .venv
 
-## Reinstall dependencies
+## Reinstall dependencies (creates .venv if needed)
 uv sync
+
+## Or use uv run to avoid activation issues
+uv run python your_script.py
 ```
 
 ##### "Port already in use"

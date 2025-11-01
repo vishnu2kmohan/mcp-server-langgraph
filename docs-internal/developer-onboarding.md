@@ -41,21 +41,21 @@ This will:
 ### Option B: Manual Setup
 
 ```bash
-# 1. Create virtual environment
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+# 1. Install dependencies (uv sync creates .venv automatically)
+make install-dev  # Same as: uv sync
 
-# 2. Install dependencies
-make install-dev
-
-# 3. Start infrastructure
+# 2. Start infrastructure
 make setup-infra
 
-# 4. Initialize services (wait for services to be ready first)
+# 3. Initialize services (wait for services to be ready first)
 sleep 10
 make setup-openfga
 make setup-keycloak
 ```
+
+<Note>
+**No manual venv creation needed!** `uv sync` (run by `make install-dev`) automatically creates `.venv` and installs all dependencies.
+</Note>
 
 ## ✅ Verify Installation
 
@@ -281,8 +281,9 @@ make test-debug
 ```bash
 # Recreate virtual environment
 rm -rf .venv
-uv venv
-source .venv/bin/activate
+uv sync  # Creates .venv and installs dependencies
+
+# Or use make
 make install-dev
 ```
 

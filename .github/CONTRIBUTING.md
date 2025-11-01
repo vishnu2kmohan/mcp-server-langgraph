@@ -43,13 +43,20 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 
 ### Install Dependencies
 
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+<Note>
+**No manual venv creation needed!** `uv sync` automatically creates `.venv` and installs all dependencies.
+</Note>
 
-# Install development dependencies
-make install-dev
+```bash
+# Install uv (fast Python package manager)
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Install development dependencies (creates .venv automatically)
+make install-dev  # Same as: uv sync
 
 # Start infrastructure
 make setup-infra
@@ -57,6 +64,10 @@ make setup-infra
 # Setup OpenFGA
 make setup-openfga
 ```
+
+<Tip>
+Use `uv run <command>` to run commands in the virtual environment without activation.
+</Tip>
 
 ### Environment Configuration
 

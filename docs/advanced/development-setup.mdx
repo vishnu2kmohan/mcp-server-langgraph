@@ -131,16 +131,25 @@ uv run python -c "import fastapi, langchain, anthropic; print('All imports succe
 ```
 
 <Tip>
-No need to manually create or activate virtual environments with `uv`!
-Use `uv run <command>` to run commands in the virtual environment.
+**No need to manually create or activate virtual environments!**
+Use `uv run <command>` to run commands in the virtual environment without activation.
 </Tip>
 
 #### Manual Virtual Environment (Optional)
 
-If you prefer manual control:
+<Warning>
+**Most developers don't need this section.** `uv sync` handles everything automatically.
+
+Only use manual `uv venv` if you need:
+- A specific Python version different from your default
+- A custom virtual environment location
+- Fine-grained control over the environment
+</Warning>
+
+If you need manual control:
 
 ```bash
-## Create venv manually
+## Create venv manually with specific Python version
 uv venv --python 3.12
 
 ## Activate it (only if needed)
@@ -525,14 +534,15 @@ volumes:
 #### Development Server
 
 ```bash
-## Activate virtualenv
-source .venv/bin/activate
-
-## Run with hot reload
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+## Preferred: Use uv run
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 ## Or use the Makefile
 make dev
+
+## Optional: Activate virtualenv first
+source .venv/bin/activate
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 ## Check it's running
 curl http://localhost:8000/health/live
@@ -558,40 +568,40 @@ docker run -p 8000:8000 \
 
 ```bash
 ## Run unit tests
-pytest -m unit
+uv run pytest -m unit
 
 ## Run with coverage
-pytest -m unit --cov=src --cov-report=html
+uv run pytest -m unit --cov=src --cov-report=html
 
 ## Run integration tests (requires services)
 docker compose -f docker-compose.dev.yml up -d
-pytest -m integration
+uv run pytest -m integration
 
 ## Run specific test file
-pytest tests/unit/test_auth.py
+uv run pytest tests/unit/test_auth.py
 
 ## Run specific test
-pytest tests/unit/test_auth.py::test_create_token
+uv run pytest tests/unit/test_auth.py::test_create_token
 
 ## Run with verbose output
-pytest -v --tb=short
+uv run pytest -v --tb=short
 
 ## Watch mode (requires pytest-watch)
-pytest-watch
+uv run pytest-watch
 ```
 
 #### Debugging Tests
 
 ```bash
 ## Run with pdb debugger
-pytest --pdb
+uv run pytest --pdb
 
 ## Drop into debugger on failure
-pytest --pdb --maxfail=1
+uv run pytest --pdb --maxfail=1
 
 ## Use ipdb for better debugging
-uv pip install ipdb
-pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb
+uv add --dev ipdb
+uv run pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb
 ```
 
 ### Code Quality
@@ -811,13 +821,14 @@ make services-up
 
   <Accordion title="Import Errors" icon="triangle-exclamation">
     ```bash
-    # Ensure virtual environment is activated
-    source .venv/bin/activate
-
-    # Reinstall dependencies
+    # Reinstall dependencies (creates .venv if needed)
     uv sync
 
-    # Check Python path
+    # Use uv run to avoid activation issues
+    uv run python -c "import sys; print('\n'.join(sys.path))"
+
+    # Or activate virtualenv if preferred
+    source .venv/bin/activate
     python -c "import sys; print('\n'.join(sys.path))"
 
     # Add src to PYTHONPATH

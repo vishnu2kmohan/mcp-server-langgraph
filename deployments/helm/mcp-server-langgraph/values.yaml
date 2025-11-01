@@ -180,7 +180,7 @@ config:
 
   # LLM Configuration
   llmProvider: "anthropic"  # google, anthropic, openai, azure, bedrock, ollama
-  modelName: "claude-3-5-sonnet-20241022"
+  modelName: "claude-sonnet-4-5"
   modelTemperature: "0.7"
   modelMaxTokens: "4096"
   modelTimeout: "60"

@@ -28,9 +28,9 @@ The MCP Server with LangGraph uses [LiteLLM](https://docs.litellm.ai/) to suppor
 
 | Provider | Models | Configuration Required |
 |----------|--------|------------------------|
-| **Anthropic** | Claude 3.5 Sonnet, Claude 3 Opus/Haiku | `ANTHROPIC_API_KEY` |
-| **OpenAI** | GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo | `OPENAI_API_KEY` |
-| **Google** | Gemini 1.5 Pro/Flash, Gemini 2.0 | `GOOGLE_API_KEY` |
+| **Anthropic** | Claude Sonnet 4.5, Claude Opus 4.1, Claude Haiku 4.5 | `ANTHROPIC_API_KEY` |
+| **OpenAI** | GPT-5, GPT-5 Pro, GPT-5 Mini, GPT-5 Nano | `OPENAI_API_KEY` |
+| **Google** | Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Pro | `GOOGLE_API_KEY` |
 | **Azure OpenAI** | GPT-4, GPT-3.5 | `AZURE_API_KEY`, `AZURE_API_BASE` |
 | **AWS Bedrock** | Claude, Llama, Titan | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
 
@@ -56,7 +56,7 @@ LLM_PROVIDER=google  # google, anthropic, openai, azure, bedrock, ollama
 
 # Model name (provider-specific format)
 # Default: Gemini 2.5 Flash (latest, fastest)
-MODEL_NAME=gemini-2.5-flash-002
+MODEL_NAME=gemini-2.5-flash
 
 # Model parameters
 MODEL_TEMPERATURE=0.7
@@ -65,7 +65,7 @@ MODEL_TIMEOUT=60
 
 # Fallback configuration
 ENABLE_FALLBACK=true
-FALLBACK_MODELS=["gemini-2.5-pro", "claude-3-5-sonnet-20241022", "gpt-4o"]
+FALLBACK_MODELS=["gemini-2.5-flash", "claude-sonnet-4-5", "gpt-5"]
 ```
 
 ### API Keys
@@ -105,12 +105,12 @@ OLLAMA_BASE_URL=http://localhost:11434
 # Configure
 export LLM_PROVIDER=anthropic
 export ANTHROPIC_API_KEY=sk-ant-...
-export MODEL_NAME=claude-3-5-sonnet-20241022
+export MODEL_NAME=claude-sonnet-4-5
 
 # Available models:
-# - claude-3-5-sonnet-20241022 (excellent all-around)
-# - claude-3-opus-20240229 (most capable)
-# - claude-3-haiku-20240307 (fastest)
+# - claude-sonnet-4-5 (excellent all-around)
+# - claude-opus-4-1 (most capable, extended reasoning)
+# - claude-haiku-4-5 (fastest, cost-effective)
 ```
 
 ### 3. OpenAI
@@ -121,12 +121,13 @@ export MODEL_NAME=claude-3-5-sonnet-20241022
 # Configure
 export LLM_PROVIDER=openai
 export OPENAI_API_KEY=sk-...
-export MODEL_NAME=gpt-4o
+export MODEL_NAME=gpt-5
 
 # Available models:
-# - gpt-4o (multimodal)
-# - gpt-4-turbo
-# - gpt-3.5-turbo
+# - gpt-5 (flagship)
+# - gpt-5-pro (most capable)
+# - gpt-5-mini (fast, cost-effective)
+# - gpt-5-nano (smallest, fastest)
 ```
 
 ### 1. Google Gemini (Default - Recommended)
@@ -206,27 +207,30 @@ export MODEL_NAME=ollama/llama3.1:8b
 ### Anthropic Models
 
 ```bash
-# Claude 3.5 Sonnet (Best overall, 200K context)
-MODEL_NAME=claude-3-5-sonnet-20241022
+# Claude Sonnet 4.5 (Best overall, 200K context)
+MODEL_NAME=claude-sonnet-4-5
 
-# Claude 3 Opus (Most capable, 200K context)
-MODEL_NAME=claude-3-opus-20240229
+# Claude Opus 4.1 (Most capable, 200K context with extended reasoning)
+MODEL_NAME=claude-opus-4-1
 
-# Claude 3 Haiku (Fastest, 200K context)
-MODEL_NAME=claude-3-haiku-20240307
+# Claude Haiku 4.5 (Fastest, 200K context, cost-effective)
+MODEL_NAME=claude-haiku-4-5
 ```
 
 ### OpenAI Models
 
 ```bash
-# GPT-4o (Multimodal, 128K context)
-MODEL_NAME=gpt-4o
+# GPT-5 (Flagship, 128K context)
+MODEL_NAME=gpt-5
 
-# GPT-4 Turbo (High intelligence, 128K context)
-MODEL_NAME=gpt-4-turbo
+# GPT-5 Pro (Most capable, 128K context)
+MODEL_NAME=gpt-5-pro
 
-# GPT-3.5 Turbo (Fast and cheap, 16K context)
-MODEL_NAME=gpt-3.5-turbo
+# GPT-5 Mini (Fast and cost-effective, 128K context)
+MODEL_NAME=gpt-5-mini
+
+# GPT-5 Nano (Smallest, fastest, 128K context)
+MODEL_NAME=gpt-5-nano
 ```
 
 ### Google Gemini Models (Default/Recommended)
@@ -269,20 +273,20 @@ The agent automatically falls back to alternative models if the primary fails:
 ```bash
 # Configure fallback models
 ENABLE_FALLBACK=true
-FALLBACK_MODELS=["gpt-4o", "gemini-1.5-pro", "claude-3-5-sonnet-20241022"]
+FALLBACK_MODELS=["gpt-5", "gemini-2.5-flash", "claude-sonnet-4-5"]
 ```
 
 ### Fallback Order Example
 
 ```python
-# Primary: Claude 3.5 Sonnet
+# Primary: Claude Sonnet 4.5
 LLM_PROVIDER=anthropic
-MODEL_NAME=claude-3-5-sonnet-20241022
+MODEL_NAME=claude-sonnet-4-5
 
 # Fallbacks (in order):
 FALLBACK_MODELS=[
-    "gpt-4o",                              # Try OpenAI GPT-4o
-    "gemini-1.5-pro",                      # Try Google Gemini
+    "gpt-5",                               # Try OpenAI GPT-5
+    "gemini-2.5-pro",                      # Try Google Gemini
     "ollama/llama3.1:8b"                   # Try local Llama
 ]
 ```
@@ -308,14 +312,14 @@ Fallback triggers on:
 LLM_PROVIDER=ollama
 MODEL_NAME=ollama/llama3.1:8b
 
-# Staging: Use mid-tier models
+# Staging: Use fast, cost-effective models
 LLM_PROVIDER=openai
-MODEL_NAME=gpt-3.5-turbo
+MODEL_NAME=gpt-5-nano
 
 # Production: Use best models with fallback
 LLM_PROVIDER=anthropic
-MODEL_NAME=claude-3-5-sonnet-20241022
-FALLBACK_MODELS=["gpt-4o", "gemini-1.5-pro"]
+MODEL_NAME=claude-sonnet-4-5
+FALLBACK_MODELS=["gpt-5", "gemini-2.5-flash"]
 ```
 
 ### 2. Latency Optimization
@@ -323,9 +327,10 @@ FALLBACK_MODELS=["gpt-4o", "gemini-1.5-pro"]
 **Fastest models:**
 ```bash
 # Cloud (sub-second)
-- claude-3-haiku-20240307
-- gpt-3.5-turbo
-- gemini-1.5-flash
+- claude-haiku-4-5
+- gpt-5-nano
+- gpt-5-mini
+- gemini-2.5-flash
 
 # Local (depends on hardware)
 - ollama/phi3:mini
@@ -338,16 +343,16 @@ FALLBACK_MODELS=["gpt-4o", "gemini-1.5-pro"]
 **Large context needs:**
 ```bash
 # 1M+ tokens
-- gemini-1.5-pro (1M)
-- gemini-1.5-flash (1M)
+- gemini-2.5-pro (2M)
+- gemini-2.5-flash (1M)
 
 # 200K tokens
-- claude-3-5-sonnet (200K)
-- claude-3-opus (200K)
+- claude-sonnet-4-5 (200K)
+- claude-opus-4-1 (200K)
 
 # 128K tokens
-- gpt-4o (128K)
-- gpt-4-turbo (128K)
+- gpt-5 (128K)
+- gpt-5-pro (128K)
 ```
 
 ### 4. Multilingual Support
@@ -355,8 +360,8 @@ FALLBACK_MODELS=["gpt-4o", "gemini-1.5-pro"]
 **Best for non-English:**
 ```bash
 - qwen2.5:7b (70+ languages)
-- gemini-1.5-pro (100+ languages)
-- claude-3-5-sonnet (excellent multilingual)
+- gemini-2.5-pro (100+ languages)
+- claude-sonnet-4-5 (excellent multilingual)
 ```
 
 ### 5. Code Generation
@@ -364,8 +369,8 @@ FALLBACK_MODELS=["gpt-4o", "gemini-1.5-pro"]
 **Best for coding:**
 ```bash
 - deepseek-coder:6.7b (specialized)
-- claude-3-5-sonnet (excellent)
-- gpt-4o (very good)
+- claude-sonnet-4-5 (excellent)
+- gpt-5 (very good)
 ```
 
 ## Testing Different Providers
@@ -374,15 +379,15 @@ FALLBACK_MODELS=["gpt-4o", "gemini-1.5-pro"]
 
 ```bash
 # Test Anthropic
-export LLM_PROVIDER=anthropic MODEL_NAME=claude-3-5-sonnet-20241022
+export LLM_PROVIDER=anthropic MODEL_NAME=claude-sonnet-4-5
 python examples/test_llm.py
 
 # Test OpenAI
-export LLM_PROVIDER=openai MODEL_NAME=gpt-4o
+export LLM_PROVIDER=openai MODEL_NAME=gpt-5
 python examples/test_llm.py
 
 # Test Google
-export LLM_PROVIDER=google MODEL_NAME=gemini-1.5-pro
+export LLM_PROVIDER=google MODEL_NAME=gemini-2.5-pro
 python examples/test_llm.py
 
 # Test Ollama
@@ -454,7 +459,7 @@ ollama list
 
 ```bash
 # LiteLLM uses specific formats:
-✅ claude-3-5-sonnet-20241022
+✅ claude-sonnet-4-5
 ❌ claude-3.5-sonnet
 
 ✅ ollama/llama3.1:8b

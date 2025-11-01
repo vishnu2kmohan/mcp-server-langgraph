@@ -84,8 +84,15 @@ Choose the installation method that best fits your use case:
       </Step>
 
       <Step title="Install Dependencies">
+        <Note>
+          **No manual venv creation needed!** `uv sync` automatically:
+          - Creates `.venv` if it doesn't exist
+          - Installs all dependencies from `pyproject.toml`
+          - Uses `uv.lock` for reproducible builds
+        </Note>
+
         ```bash
-        # Create venv and install ALL dependencies (recommended)
+        # uv sync creates .venv automatically and installs ALL dependencies (recommended)
         uv sync
 
         # Install production dependencies only
@@ -101,10 +108,10 @@ Choose the installation method that best fits your use case:
         make install     # Production only (from lockfile)
         make install-dev # Development with all tools
         ```
-        <Note>
+        <Tip>
           **requirements*.txt files are deprecated.** All dependencies are managed via
           `pyproject.toml` and locked in `uv.lock` for reproducible builds.
-        </Note>
+        </Tip>
       </Step>
     </Steps>
   </Tab>
@@ -275,6 +282,12 @@ JWT_SECRET_KEY=your-secret-key-change-in-production
 #### 5. Test Installation
 
 ```bash
+# Preferred: Use uv run
+uv run python examples/client_stdio.py
+
+# Alternative: Activate venv first
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
 python examples/client_stdio.py
 ```
 You should see successful responses from the agent!
@@ -285,13 +298,13 @@ Run the full test suite to verify everything is working:
 
 <CodeGroup>
 ```bash Unit Tests
-pytest -m unit -v
+uv run pytest -m unit -v
 ```
 ```bash All Tests
-pytest -v
+uv run pytest -v
 ```
 ```bash With Coverage
-pytest --cov=. --cov-report=term-missing
+uv run pytest --cov=. --cov-report=term-missing
 ```
 </CodeGroup>
 

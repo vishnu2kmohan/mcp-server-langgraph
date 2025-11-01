@@ -122,6 +122,7 @@ flowchart TB
     class Infisical,K8sSecrets secretsStyle
 
     %% Additional styling for observability layer distinction
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
     classDef obsStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
     classDef langsmithStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
 
@@ -314,6 +315,7 @@ flowchart LR
     Org -->|member| Tool2[Tool: search]
     User2[User: bob] -->|member| Org
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
 ```
 **Authorization Model**:
 
@@ -421,7 +423,7 @@ flowchart TB
 
     Primary --> Claude[Claude 3.5 Sonnet]
     Fallback1 --> Gemini[Gemini 2.5 Flash]
-    Fallback2 --> GPT[GPT-4o]
+    Fallback2 --> GPT[GPT-5]
 
     %% ColorBrewer2 Set3 palette styling
     classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
@@ -452,7 +454,7 @@ flowchart TB
 LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ENABLE_FALLBACK=true
-FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
+FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-5"]
 ```
 **Code Location**: `src/mcp_server_langgraph/llm_factory.py`
 
@@ -757,6 +759,7 @@ flowchart TB
     FGA2 --> PG
     PG -.-> PGR
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
     classDef externalStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
     classDef ingressStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
     classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333

@@ -84,7 +84,7 @@ class LLMFactory:
         Extract provider from model name.
 
         Args:
-            model_name: Model identifier (e.g., "gpt-4o", "claude-sonnet-4", "gemini-pro")
+            model_name: Model identifier (e.g., "gpt-5", "claude-sonnet-4-5", "gemini-2.5-flash")
 
         Returns:
             Provider name (e.g., "openai", "anthropic", "google")

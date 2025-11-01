@@ -27,21 +27,41 @@ Before you begin, ensure you have:
     ```
   </Step>
 
-  <Step title="Create Virtual Environment">
+  <Step title="Install uv">
+    uv is a fast Python package manager (10-100x faster than pip):
+
     ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    # macOS/Linux
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Windows (PowerShell)
+    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+    # Verify installation
+    uv --version
     ```
+
+    <Tip>
+      Already have uv? Run `uv self update` to get the latest version.
+    </Tip>
   </Step>
 
   <Step title="Install Dependencies">
     ```bash
+    # uv automatically creates .venv and installs all dependencies
     uv sync
 ```
     Or use the Makefile:
     ```bash
     make install
     ```
+
+    <Note>
+      **No manual venv creation needed!** `uv sync` automatically:
+      - Creates `.venv` if it doesn't exist
+      - Installs all dependencies from `pyproject.toml`
+      - Uses `uv.lock` for reproducible builds
+    </Note>
   </Step>
 
   <Step title="Start Infrastructure">
@@ -276,18 +296,23 @@ The agent returns a structured response:
   </Accordion>
 
   <Accordion title="Module not found">
-    Ensure virtual environment is activated:
+    Ensure dependencies are installed:
 
     ```bash
-    # Check Python path
-    which python  # Should show venv path
-
-    # Reactivate if needed
-    source venv/bin/activate
-
-    # Reinstall dependencies
+    # Reinstall dependencies (uv recreates .venv if needed)
     uv sync
+
+    # Verify Python is using .venv
+    uv run python -c "import sys; print(sys.prefix)"
+
+    # Or activate .venv manually if you prefer bare commands
+    source .venv/bin/activate  # Linux/macOS
+    .venv\Scripts\activate      # Windows
     ```
+
+    <Tip>
+      Use `uv run <command>` to run commands without manual activation.
+    </Tip>
   </Accordion>
 </AccordionGroup>
 

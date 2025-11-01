@@ -913,7 +913,7 @@ All settings via environment variables, Infisical, or `.env` file:
 | `OTLP_ENDPOINT` | OpenTelemetry collector | `http://localhost:4317` |
 | `JWT_SECRET_KEY` | Secret for JWT signing | (loaded from Infisical) |
 | `ANTHROPIC_API_KEY` | Anthropic API key | (loaded from Infisical) |
-| `MODEL_NAME` | Claude model to use | `claude-3-5-sonnet-20241022` |
+| `MODEL_NAME` | Claude model to use | `claude-sonnet-4-5` |
 | `LOG_LEVEL` | Logging level | `INFO` |
 | `OPENFGA_API_URL` | OpenFGA server URL | `http://localhost:8080` |
 | `OPENFGA_STORE_ID` | OpenFGA store ID | (from setup) |

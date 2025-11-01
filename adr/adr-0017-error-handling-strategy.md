@@ -98,7 +98,7 @@ When primary model fails:
 ```
 1. Try fallback model #1 (gemini-2.5-pro)
 2. Try fallback model #2 (claude-3-5-sonnet)
-3. Try fallback model #3 (gpt-4o)
+3. Try fallback model #3 (gpt-5)
 4. Return error if all fail
 ```
 
