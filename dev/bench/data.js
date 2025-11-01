@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762016712690,
+  "lastUpdate": 1762017597370,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -17656,6 +17656,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018839108767242192",
             "extra": "mean: 59.29021483541013 usec\nrounds: 5069"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8f9c308dbad3b5253ce9cf99a1bf91e86e6cf1f3",
+          "message": "feat: implement Phase 3 multi-agent patterns and visual workflow builder\n\n🎯 Phase 3: Medium-Term Features (Complete)\n\n1. Multi-Agent Patterns Module\n   - Supervisor Pattern (366 lines):\n     * One coordinator delegates to specialized workers\n     * Sequential and conditional routing strategies\n     * State management and execution tracking\n     * Matches CrewAI's role-based delegation\n   - Swarm Pattern (350 lines):\n     * Parallel agent execution with result aggregation\n     * Multiple aggregation strategies (consensus, voting, synthesis)\n     * Consensus scoring for agreement measurement\n     * Error resilience (one failure doesn't block others)\n   - Hierarchical Pattern (386 lines):\n     * Multi-level delegation (CEO → Managers → Workers)\n     * Manager-level summaries and consolidation\n     * Execution path tracking\n     * Matches Google ADK's hierarchical composition\n   - Comprehensive README (466 lines):\n     * Usage examples for all patterns\n     * Production best practices\n     * Migration guides from CrewAI/LangGraph\n     * Integration with observability and checkpointers\n\n2. Human-in-the-Loop Workflow System\n   - Approval System (305 lines):\n     * ApprovalNode for pausing execution\n     * Risk level classification (low, medium, high, critical)\n     * Notification webhooks for approvers\n     * Resume/reject workflows\n     * Complete audit trail\n   - Interrupt Handling (221 lines):\n     * InterruptHandler for managing pauses\n     * Conditional interrupts based on state\n     * Timeout-based interrupts\n     * Interrupt history tracking\n   - Use cases: Financial approvals, content publishing, compliance checkpoints\n\n3. Test Coverage (Following TDD)\n   - test_supervisor.py (258 lines, 15 tests):\n     * Unit tests for initialization and graph building\n     * Integration tests for execution\n     * Property-based tests for scalability\n     * Performance benchmarks\n   - test_swarm.py (292 lines, 13 tests):\n     * Parallel execution validation\n     * All aggregation strategies tested\n     * Consensus scoring tests\n     * Error handling coverage\n   - Total: 28 comprehensive tests with 100% API coverage\n\n🎨 Visual Workflow Builder (UNIQUE DIFFERENTIATOR!)\n\n4. Code Generation Engine\n   - CodeGenerator (468 lines):\n     * Export visual workflows to production-ready Python code\n     * UNIQUE FEATURE: OpenAI AgentKit can't export code!\n     * Black-formatted, type-safe with Pydantic\n     * Template-based generation\n     * Supports all node types (tool, llm, conditional, approval)\n   - WorkflowBuilder API (287 lines):\n     * Fluent API for programmatic workflow construction\n     * JSON import/export\n     * Validation and error checking\n     * save_code() and export_code() methods\n\n5. FastAPI Backend\n   - Server API (404 lines):\n     * POST /api/builder/generate - Code generation endpoint\n     * POST /api/builder/validate - Workflow validation\n     * POST /api/builder/save - Save to file\n     * GET /api/builder/templates - Template library\n     * GET /api/builder/node-types - Node schemas\n     * CORS enabled for React frontend\n\n6. React Flow Frontend\n   - App.tsx (389 lines):\n     * Drag-and-drop visual canvas\n     * React Flow integration\n     * Node palette with 5 types (tool, llm, conditional, approval, custom)\n     * Monaco Editor for code viewing\n     * Export, save, and download functionality\n   - Full frontend stack:\n     * TypeScript + React 18\n     * Tailwind CSS styling\n     * Vite build system\n     * Production-ready configuration\n\n7. Documentation\n   - Builder README (445 lines):\n     * Architecture overview\n     * Quick start guide\n     * API reference\n     * Comparison with OpenAI AgentKit (code export advantage)\n     * Development guide\n     * Deployment instructions\n   - Phase 3 Summary (961 lines):\n     * Complete implementation report\n     * Success metrics and competitive analysis\n     * Usage examples for all features\n     * Strategic impact assessment\n\nImpact:\n- Competitive parity: Multi-agent patterns match CrewAI/LangGraph\n- Unique differentiator: Visual builder + code export (OpenAI lacks this!)\n- Enterprise ready: Human-in-the-loop approval system\n- Production quality: 5,671 lines with comprehensive tests\n\nCode Statistics:\n- 27 files changed, 5,671 insertions\n- Python: ~4,000 lines (patterns, interrupts, builder)\n- TypeScript/React: ~500 lines (visual frontend)\n- Tests: ~550 lines (28 tests)\n- Documentation: ~1,900 lines\n\nUnique Value Proposition:\n\"The ONLY framework with visual builder + code export + multi-cloud + enterprise security\"\n\nVisual builder users can:\n✅ Build visually (like OpenAI AgentKit)\n✅ Export production code (UNIQUE - AgentKit can't!)\n✅ Edit in any IDE\n✅ Deploy anywhere (GCP, AWS, Azure)\n✅ No platform lock-in\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T13:18:26-04:00",
+          "tree_id": "a7b827fc694bb4bc2d8d2267d45ca07df51fbf98",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8f9c308dbad3b5253ce9cf99a1bf91e86e6cf1f3"
+        },
+        "date": 1762017596696,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51308.31267834365,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002093096946030654",
+            "extra": "mean: 19.490019215192056 usec\nrounds: 8639"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53560.61669305505,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003312836242555859",
+            "extra": "mean: 18.670434766104275 usec\nrounds: 13191"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49747.46161216222,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023262684578198647",
+            "extra": "mean: 20.101528150242764 usec\nrounds: 20284"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.1573923411905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014969825048020722",
+            "extra": "mean: 5.231291281768131 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35639738669928,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009836563954254078",
+            "extra": "mean: 51.662506199999214 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954244469186587,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000025255006664761934",
+            "extra": "mean: 100.45965850000016 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2656225.4360719123,
+            "unit": "iter/sec",
+            "range": "stddev: 4.478142583694626e-8",
+            "extra": "mean: 376.4740697155672 nsec\nrounds: 186602"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5148.1049128306095,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014239389832613476",
+            "extra": "mean: 194.24623564055628 usec\nrounds: 2716"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3004.4398109307945,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016613197381092358",
+            "extra": "mean: 332.84074999997875 usec\nrounds: 2468"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2944.6777571506127,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004769134260659513",
+            "extra": "mean: 339.5957325285194 usec\nrounds: 1574"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59613.82401004426,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002141439381905297",
+            "extra": "mean: 16.77463267297718 usec\nrounds: 12267"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17224.418621632376,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019080055100546518",
+            "extra": "mean: 58.057111938982175 usec\nrounds: 5503"
           }
         ]
       }
