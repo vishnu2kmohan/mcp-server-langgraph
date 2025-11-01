@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762017597370,
+  "lastUpdate": 1762018128136,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -17764,6 +17764,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019080055100546518",
             "extra": "mean: 58.057111938982175 usec\nrounds: 5503"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "70e6ab8803b6e8bef0ab1bfdffa0ec5a6a47cb49",
+          "message": "docs: modernize Mermaid diagrams to follow 2025 best practices\n\nComprehensive Mermaid diagram modernization following latest v11+ best practices:\n\n## Phase 1: Syntax Modernization (High Priority)\n- Convert 47 deprecated `graph` keywords → modern `flowchart` across 33 files\n- Achieve 95%+ modern syntax adoption (up from 30%)\n\n## Phase 2: Style Refactoring (High Priority)\n- Convert 134 inline `style` statements → reusable `classDef` patterns\n- Files converted: 11 (.mdx documentation files)\n- Improvements:\n  * Better maintainability (DRY principle)\n  * Consistent ColorBrewer2 Set3 palette application\n  * Semantic class naming (failureStyle, activeStyle, dataStyle, etc.)\n  * Reduced diagram complexity\n\n## Phase 3: Validation & Quality (Critical)\n- All 73 diagrams pass `mmdc` CLI validation (100% success rate)\n- Fixed malformed `classDef` generation edge case\n- Added comprehensive conversion script: convert_inline_styles_to_classdef.py\n\n## Files Modified (12 files)\n- docs/architecture/adr-0027-rate-limiting-strategy.mdx\n- docs/architecture/adr-0028-caching-strategy.mdx\n- docs/architecture/adr-0036-hybrid-session-model.mdx\n- docs/architecture/adr-0037-identity-federation.mdx\n- docs/architecture/adr-0039-openfga-permission-inheritance.mdx\n- docs/deployment/disaster-recovery.mdx\n- docs/diagrams/system-architecture.mdx\n- docs/getting-started/architecture.mdx\n- docs/guides/multi-llm-setup.mdx\n- docs/reference/development/ci-cd.mdx\n- docs/releases/overview.mdx\n- scripts/convert_inline_styles_to_classdef.py (NEW)\n\n## Benefits\n✅ WCAG 2.1 AA compliant color palette (4.5:1 contrast)\n✅ Consistent theming across all flowcharts\n✅ 35% reduction in diagram maintenance overhead\n✅ Modern Mermaid v11+ syntax compliance\n\n## Testing\n- Validated with `scripts/validate_all_mermaid.py`\n- 73/73 diagrams render successfully\n- Zero syntax errors\n\nRelated: MERMAID_OPTIMIZATION_GUIDE.md\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T13:26:46-04:00",
+          "tree_id": "59605435cd6647e520f8b2cb66c9658282a013ab",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/70e6ab8803b6e8bef0ab1bfdffa0ec5a6a47cb49"
+        },
+        "date": 1762018127398,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51088.75633254295,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002246039921994711",
+            "extra": "mean: 19.57377849425181 usec\nrounds: 8537"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52986.43993442586,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021777635279592378",
+            "extra": "mean: 18.872753127735407 usec\nrounds: 12468"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49462.14923910972,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022166475680268554",
+            "extra": "mean: 20.217479737198722 usec\nrounds: 19765"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.96958373650523,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001968720007762998",
+            "extra": "mean: 5.236435983333208 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.43875882886895,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010414983245495838",
+            "extra": "mean: 51.44361370001036 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93900120885651,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000050821581976079585",
+            "extra": "mean: 100.61373160000358 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2611116.542084836,
+            "unit": "iter/sec",
+            "range": "stddev: 4.748925780204368e-8",
+            "extra": "mean: 382.9779268303182 nsec\nrounds: 192308"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5198.214415891375,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013777896893949472",
+            "extra": "mean: 192.3737499059132 usec\nrounds: 2655"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3027.4323951449014,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008408980448072034",
+            "extra": "mean: 330.3129085900322 usec\nrounds: 2538"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2889.9148245769634,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006777865491809397",
+            "extra": "mean: 346.030959630924 usec\nrounds: 1734"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59143.59688998403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000018854666233165724",
+            "extra": "mean: 16.908001078462476 usec\nrounds: 12054"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17549.40418330746,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018707863473629965",
+            "extra": "mean: 56.98199149981253 usec\nrounds: 4588"
           }
         ]
       }
