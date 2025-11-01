@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762025584429,
+  "lastUpdate": 1762026274115,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -18628,6 +18628,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001844407163950175",
             "extra": "mean: 57.740300105680646 usec\nrounds: 5648"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d36d88b02308208a986e658b1a771489be6966f4",
+          "message": "docs: add comprehensive citations, fix misleading claims, improve decision tree\n\nPhase 1: Honesty, Citations, and Visualization Improvements\n\n**New: Central Sources Page**\n- Create docs/references/sources.mdx with organized citations\n- External framework docs, academic papers, standards, tech docs\n- Company case studies with important distinction about LangGraph usage\n- Internal testing reports with timestamps\n- Citation guidelines for contributors\n\n**Fixed: introduction.mdx**\n- Remove unverifiable \"437/437 tests\" claim\n- Replace with \"Comprehensive test coverage\" linking to testing docs\n- Add citations for 100+ LLM providers (LiteLLM docs)\n- Add citations for OpenFGA/Zanzibar model (Google research paper)\n- Add citations for observability stack (LangSmith, OTEL, Prometheus, Grafana)\n- Add compliance disclaimer with proper \"ready\" vs \"compliant\" language\n- Add qualifiers to deployment time estimates (~2 min*, ~10 min*, etc.)\n- Link all major technology claims to official documentation\n\n**Improved: choosing-framework.mdx**\n- Replace Steps-based decision tree with modern Mermaid flowchart\n- Use flowchart TD syntax with custom theme and colors\n- Add visual hierarchy with color-coded node types\n- Improve scannability with multi-line labels and checkmarks\n- Add legend for framework categories\n\n**Fixed: README.md**\n- Remove inconsistent coverage claims (60-65%, 80%, etc.)\n- Replace with \"See testing documentation\" links\n- Remove specific percentages from Quality Metrics section\n- Make coverage badge link to testing docs instead of showing stale %\n- Ensure all test claims direct readers to verifiable documentation\n\n**Updated: docs.json**\n- Add references/sources to Reference group navigation\n- Place at top of Reference section for easy access\n\n**Honesty & Transparency Improvements:**\n- No unverifiable numeric claims without citations or timestamps\n- Clear disclaimers on compliance (architecture vs certification)\n- Time estimates qualified with \"assumes prerequisites configured\"\n- All major technology claims linked to authoritative sources\n- Removed misleading \"battle-tested\" language from this codebase\n\nSee docs/references/sources.mdx for complete citation index.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T15:43:33-04:00",
+          "tree_id": "ca2aacf1f4f97952126c231392cd48c37dfbc53b",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d36d88b02308208a986e658b1a771489be6966f4"
+        },
+        "date": 1762026273178,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50625.25021996104,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023123327723521177",
+            "extra": "mean: 19.752988788304492 usec\nrounds: 7403"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53870.4554830187,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023751366465212748",
+            "extra": "mean: 18.563050767506965 usec\nrounds: 13355"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49643.63848862306,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032749930650363205",
+            "extra": "mean: 20.143567845639925 usec\nrounds: 19537"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.95713443425856,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001795637578843437",
+            "extra": "mean: 5.236777368715036 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.413914273854836,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011686591259057112",
+            "extra": "mean: 51.50944759999909 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.956338647343957,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003138361469116179",
+            "extra": "mean: 100.43852819999941 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2694672.738356798,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5426145890423026e-8",
+            "extra": "mean: 371.1025779738272 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5163.027366446186,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015016806845208203",
+            "extra": "mean: 193.6848149399448 usec\nrounds: 2664"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3019.720932656174,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001736503414605193",
+            "extra": "mean: 331.15642878972625 usec\nrounds: 2619"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2904.189457683326,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004667712823574289",
+            "extra": "mean: 344.3301528949495 usec\nrounds: 1779"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59472.02112194517,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025130641860160056",
+            "extra": "mean: 16.8146294868563 usec\nrounds: 9082"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16889.056593701363,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018325513794107623",
+            "extra": "mean: 59.20993836760201 usec\nrounds: 5403"
           }
         ]
       }
