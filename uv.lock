@@ -166,6 +166,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ast-comments"
+version = "1.2.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/9f/be024de83c52e7aecb7d3871c3e4c24bc0df377fb752fa65745c36b8f35f/ast_comments-1.2.3.tar.gz", hash = "sha256:f9d003e9608b54195bd822b1d359a18e24573d2d8beff0307d7dc6f9d0cd0ba6", size = 5360, upload-time = "2025-06-29T09:53:20.08Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/c3/85f81c3fe2f7a2bd634239056bffac4bfb4324761c787845f78dc264082c/ast_comments-1.2.3-py3-none-any.whl", hash = "sha256:2b2319312027a523dd4b30381a7662da8fdd16210786db3402d8e1b1df12a886", size = 5840, upload-time = "2025-06-29T09:53:19.211Z" },
+]
+
+[[package]]
 name = "async-property"
 version = "0.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2078,6 +2087,17 @@ all-full = [
     { name = "sentence-transformers" },
     { name = "torch" },
 ]
+builder = [
+    { name = "ast-comments" },
+    { name = "black" },
+    { name = "fastapi" },
+    { name = "jinja2" },
+]
+cli = [
+    { name = "click" },
+    { name = "jinja2" },
+    { name = "rich" },
+]
 dev = [
     { name = "bandit" },
     { name = "black" },
@@ -2116,6 +2136,12 @@ observability-grpc = [
 observability-http = [
     { name = "opentelemetry-exporter-otlp-proto-http" },
 ]
+playground = [
+    { name = "fastapi" },
+    { name = "jinja2" },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "websockets" },
+]
 secrets = [
     { name = "infisical-python" },
 ]
@@ -2139,13 +2165,18 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "apscheduler", specifier = ">=3.11.0" },
+    { name = "ast-comments", marker = "extra == 'builder'", specifier = ">=1.2.0" },
     { name = "authlib", specifier = ">=1.6.5" },
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.6" },
     { name = "bcrypt", specifier = ">=5.0.0" },
+    { name = "black", marker = "extra == 'builder'", specifier = ">=25.9.0" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=25.9.0" },
     { name = "cachetools", specifier = ">=5.3.0" },
+    { name = "click", marker = "extra == 'cli'", specifier = ">=8.1.0" },
     { name = "cryptography", specifier = ">=46.0.3" },
     { name = "fastapi", specifier = ">=0.120.3" },
+    { name = "fastapi", marker = "extra == 'builder'", specifier = ">=0.120.3" },
+    { name = "fastapi", marker = "extra == 'playground'", specifier = ">=0.120.3" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.142.1" },
@@ -2154,6 +2185,9 @@ requires-dist = [
     { name = "infisical-python", marker = "extra == 'all-full'", specifier = ">=2.1.7,<=2.3.6" },
     { name = "infisical-python", marker = "extra == 'secrets'", specifier = ">=2.1.7,<=2.3.6" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=7.0.0" },
+    { name = "jinja2", marker = "extra == 'builder'", specifier = ">=3.1.0" },
+    { name = "jinja2", marker = "extra == 'cli'", specifier = ">=3.1.0" },
+    { name = "jinja2", marker = "extra == 'playground'", specifier = ">=3.1.0" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.21.0" },
     { name = "langchain-core", specifier = ">=1.0.0" },
     { name = "langchain-google-genai", specifier = ">=3.0.0" },
@@ -2196,6 +2230,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "qdrant-client", specifier = ">=1.15.1" },
     { name = "redis", extras = ["hiredis"], specifier = ">=6.4.0" },
+    { name = "rich", marker = "extra == 'cli'", specifier = ">=13.0.0" },
     { name = "schemathesis", marker = "extra == 'dev'", specifier = ">=4.3.4" },
     { name = "sentence-transformers", marker = "extra == 'all-full'", specifier = ">=5.1.1" },
     { name = "sentence-transformers", marker = "extra == 'embeddings'", specifier = ">=5.1.1" },
@@ -2206,8 +2241,10 @@ requires-dist = [
     { name = "torch", marker = "extra == 'all-full'", specifier = ">=2.0.0,<3.0.0" },
     { name = "torch", marker = "extra == 'embeddings-local'", specifier = ">=2.0.0,<3.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.38.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'playground'", specifier = ">=0.38.0" },
+    { name = "websockets", marker = "extra == 'playground'", specifier = ">=12.0" },
 ]
-provides-extras = ["dev", "secrets", "embeddings-api", "embeddings-local", "embeddings", "observability-grpc", "observability-http", "observability-full", "all", "all-full"]
+provides-extras = ["dev", "secrets", "cli", "playground", "builder", "embeddings-api", "embeddings-local", "embeddings", "observability-grpc", "observability-http", "observability-full", "all", "all-full"]
 
 [package.metadata.requires-dev]
 dev = [
