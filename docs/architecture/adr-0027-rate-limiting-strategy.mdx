@@ -67,6 +67,22 @@ flowchart TB
     App429 --> Client
     Response --> Client
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef ingressStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef resultStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+
+    class Client clientStyle
+    class Kong,UpdateKong,UpdateApp ingressStyle
+    class App,Handler appStyle
+    class KongRedis,AppRedis storageStyle
+    class KongCheck,AppCheck decisionStyle
+    class Kong429,App429 errorStyle
+    class Response resultStyle
 ```
 **Rate Limiting Flow with Token Bucket**:
 ```mermaid
