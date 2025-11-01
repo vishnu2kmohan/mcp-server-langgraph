@@ -399,7 +399,7 @@ This checklist covers all critical security areas that should be audited before 
     **Verification**:
     ```bash
     # Check security context
-    kubectl get pod mcp-server-langgraph-xxx -n mcp-server-langgraph \
+    kubectl get pod mcp-server-langgraph-${POD_ID} -n mcp-server-langgraph \
       -o yaml | grep -A 10 securityContext
 
     # Verify Pod Security Standards

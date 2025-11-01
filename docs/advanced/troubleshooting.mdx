@@ -404,7 +404,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     kubectl exec -it redis-master-0 -- redis-cli CONFIG GET tcp-keepalive
 
     # Check connection from app pod
-    kubectl exec -it mcp-server-langgraph-xxx -- redis-cli -h redis-master ping
+    kubectl exec -it mcp-server-langgraph-${POD_ID} -- redis-cli -h redis-master ping
     ```
 
     **Fix**:
@@ -705,7 +705,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     kubectl get events --sort-by='.metadata.creationTimestamp' | grep OOMKilled
 
     # Check resource limits
-    kubectl describe pod mcp-server-langgraph-xxx | grep -A 5 Limits
+    kubectl describe pod mcp-server-langgraph-${POD_ID} | grep -A 5 Limits
 
     # Profile memory
     import tracemalloc
@@ -762,7 +762,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
     kubectl top pods -n mcp-server-langgraph
 
     # Check throttling
-    kubectl describe pod mcp-server-langgraph-xxx | grep -i throttl
+    kubectl describe pod mcp-server-langgraph-${POD_ID} | grep -i throttl
 
     # Profile CPU
     python -m cProfile -o profile.stats main.py

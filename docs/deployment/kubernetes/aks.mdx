@@ -94,7 +94,7 @@ az aks create \
   --min-count 3 \
   --max-count 10 \
   --network-plugin azure \
-  --vnet-subnet-id /subscriptions/xxx/resourceGroups/langgraph-rg/providers/Microsoft.Network/virtualNetworks/langgraph-vnet/subnets/aks-subnet \
+  --vnet-subnet-id /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/langgraph-rg/providers/Microsoft.Network/virtualNetworks/langgraph-vnet/subnets/aks-subnet \
   --service-cidr 10.0.0.0/16 \
   --dns-service-ip 10.0.0.10 \
   --docker-bridge-address 172.17.0.1/16 \
@@ -109,7 +109,7 @@ az aks create \
   --zones 1 2 3 \
   --load-balancer-sku standard \
   --outbound-type loadBalancer \
-  --attach-acr /subscriptions/xxx/resourceGroups/langgraph-rg/providers/Microsoft.ContainerRegistry/registries/langgraphacr
+  --attach-acr /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/langgraph-rg/providers/Microsoft.ContainerRegistry/registries/langgraphacr
 ```
 ### Azure AD Workload Identity
 
@@ -273,7 +273,7 @@ az redis create \
   --minimum-tls-version 1.2 \
   --replicas-per-master 1 \
   --zones 1 2 \
-  --subnet-id /subscriptions/xxx/resourceGroups/langgraph-rg/providers/Microsoft.Network/virtualNetworks/langgraph-vnet/subnets/redis-subnet
+  --subnet-id /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/langgraph-rg/providers/Microsoft.Network/virtualNetworks/langgraph-vnet/subnets/redis-subnet
 
 ## Get Redis connection details
 REDIS_HOST=$(az redis show \
@@ -544,7 +544,7 @@ from opentelemetry import trace
 
 ## Configure Azure Monitor
 configure_azure_monitor(
-    connection_string="InstrumentationKey=xxx;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/"
+    connection_string="InstrumentationKey=${INSTRUMENTATION_KEY};IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/"
 )
 
 tracer = trace.get_tracer(__name__)

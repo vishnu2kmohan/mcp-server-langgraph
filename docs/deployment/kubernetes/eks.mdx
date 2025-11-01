@@ -118,7 +118,7 @@ kubectl get nodes
 aws eks create-cluster \
   --name langgraph-cluster \
   --role-arn arn:aws:iam::ACCOUNT_ID:role/EKSClusterRole \
-  --resources-vpc-config subnetIds=subnet-xxx,subnet-yyy,securityGroupIds=sg-xxx \
+  --resources-vpc-config subnetIds=subnet-${SUBNET_ID},subnet-${SUBNET_ID_2},securityGroupIds=sg-${SECURITY_GROUP_ID} \
   --region us-east-1
 
 ## Wait for cluster to be active
@@ -129,7 +129,7 @@ aws eks create-nodegroup \
   --cluster-name langgraph-cluster \
   --nodegroup-name general \
   --node-role arn:aws:iam::ACCOUNT_ID:role/EKSNodeRole \
-  --subnets subnet-xxx subnet-yyy \
+  --subnets subnet-${SUBNET_ID} subnet-${SUBNET_ID_2} \
   --instance-types m5.xlarge \
   --scaling-config minSize=3,maxSize=10,desiredSize=3 \
   --region us-east-1
@@ -185,7 +185,7 @@ kubectl describe sa mcp-server-langgraph -n mcp-server-langgraph
 aws rds create-db-subnet-group \
   --db-subnet-group-name langgraph-db-subnet \
   --db-subnet-group-description "Subnet group for LangGraph databases" \
-  --subnet-ids subnet-xxx subnet-yyy \
+  --subnet-ids subnet-${SUBNET_ID} subnet-${SUBNET_ID_2} \
   --region us-east-1
 
 ## Create security group
@@ -280,7 +280,7 @@ PGPASSWORD=your-master-password psql \
 aws elasticache create-cache-subnet-group \
   --cache-subnet-group-name langgraph-redis-subnet \
   --cache-subnet-group-description "Subnet group for LangGraph Redis" \
-  --subnet-ids subnet-xxx subnet-yyy \
+  --subnet-ids subnet-${SUBNET_ID} subnet-${SUBNET_ID_2} \
   --region us-east-1
 
 ## Create security group
@@ -459,7 +459,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/xxx
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/${CERT_ID}
     alb.ingress.kubernetes.io/healthcheck-path: /health/ready
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
@@ -556,7 +556,7 @@ parameters:
   iops: "3000"
   throughput: "125"
   encrypted: "true"
-  kmsKeyId: arn:aws:kms:us-east-1:ACCOUNT_ID:key/xxx
+  kmsKeyId: arn:aws:kms:us-east-1:ACCOUNT_ID:key/${KMS_KEY_ID}
 allowVolumeExpansion: true
 ```
 ### CloudWatch Monitoring
@@ -637,11 +637,11 @@ spec:
         - name: SESSION_PROVIDER
           value: redis
         - name: REDIS_URL
-          value: rediss://:$(REDIS_PASSWORD)@langgraph-redis.xxx.cache.amazonaws.com:6379
+          value: rediss://:$(REDIS_PASSWORD)@langgraph-redis.${CLUSTER_ID}.cache.amazonaws.com:6379
         - name: KEYCLOAK_URL
           value: http://keycloak:8080
         - name: KC_DB_URL
-          value: jdbc:postgresql://langgraph-postgres.xxx.us-east-1.rds.amazonaws.com:5432/keycloak
+          value: jdbc:postgresql://langgraph-postgres.${DB_INSTANCE}.us-east-1.rds.amazonaws.com:5432/keycloak
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:

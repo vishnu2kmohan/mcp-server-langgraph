@@ -103,7 +103,7 @@ echo "=== Health Check Complete ==="
     # Output: pod/mcp-server-xxxx  0/1  CrashLoopBackOff
 
     # Check pod events
-    kubectl describe pod mcp-server-xxxx -n mcp-server-langgraph | tail -20
+    kubectl describe pod mcp-server-${POD_ID}x -n mcp-server-langgraph | tail -20
 
     # Check logs
     kubectl logs mcp-server-xxxx -n mcp-server-langgraph --previous
@@ -150,14 +150,14 @@ echo "=== Health Check Complete ==="
         aws iam get-role --role-name mcp-langgraph-prod-application
 
         # Check pod has AWS credentials injected
-        kubectl describe pod mcp-server-xxxx -n mcp-server-langgraph | grep AWS_ROLE_ARN
+        kubectl describe pod mcp-server-${POD_ID}x -n mcp-server-langgraph | grep AWS_ROLE_ARN
         ```
       </Tab>
 
       <Tab title="Resource Limits">
         ```bash
         # Check if pod was OOMKilled
-        kubectl describe pod mcp-server-xxxx -n mcp-server-langgraph | grep -A 5 "Last State"
+        kubectl describe pod mcp-server-${POD_ID}x -n mcp-server-langgraph | grep -A 5 "Last State"
 
         # Increase memory limit
         kubectl set resources deployment mcp-server-langgraph \
