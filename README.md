@@ -14,7 +14,7 @@
 
 [![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](archive/SECURITY_AUDIT.md)
 [![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
-[![Code Coverage](https://img.shields.io/badge/coverage-60--65%25-green.svg)](#testing-strategy)
+[![Code Coverage](https://img.shields.io/badge/coverage-see_testing_docs-blue.svg)](#testing-strategy)
 [![Property Tests](https://img.shields.io/badge/property%20tests-27%2B-blue.svg)](#testing-strategy)
 [![Contract Tests](https://img.shields.io/badge/contract%20tests-20%2B-blue.svg)](#testing-strategy)
 [![Mutation Testing](https://img.shields.io/badge/mutation%20testing-enabled-yellow.svg)](docs-internal/MUTATION_TESTING.md)
@@ -167,7 +167,7 @@ The project supports optional feature sets that can be installed on demand:
 - **Mutation Testing**: Test effectiveness verification with mutmut (80%+ target)
 - **Strict Typing**: Gradual mypy strict mode rollout (3 modules complete)
 - **OpenAPI Validation**: Automated schema generation and breaking change detection
-- **80% Code Coverage**: Comprehensive unit and integration tests
+- **Comprehensive Test Coverage**: Unit, integration, property-based, and contract tests. See [testing docs](docs/advanced/testing.mdx) for metrics.
 
 ### 🚀 Production Deployment
 - **Kubernetes Ready**: Production manifests for GKE, EKS, AKS, Rancher, VMware Tanzu
@@ -675,10 +675,11 @@ This project uses a comprehensive, multi-layered testing approach to ensure prod
 ```bash
 make test-coverage-combined
 ```
-- **60-65% combined coverage** (unit + integration tests)
+- **Combined coverage** reporting (unit + integration tests)
 - Most accurate coverage metric reflecting all test types
 - Includes MCP server entry points tested via integration tests
 - Generates combined HTML report: `htmlcov-combined/index.html`
+- See [testing documentation](docs/advanced/testing.mdx) for current metrics
 
 #### Unit Tests (Fast, No External Dependencies)
 ```bash
@@ -772,10 +773,10 @@ make test-unit && make test-all-quality && make test-mutation
 
 ### 📊 Quality Metrics
 
-- **Code Coverage**: 80% (target: 90%)
+- **Test Coverage**: See [testing documentation](docs/advanced/testing.mdx) for current coverage metrics by module
 - **Property Tests**: 27+ test classes with thousands of generated cases
 - **Contract Tests**: 20+ protocol compliance tests
-- **Mutation Score**: 80%+ target on critical modules (src/mcp_server_langgraph/core/agent.py, src/mcp_server_langgraph/auth/middleware.py, src/mcp_server_langgraph/core/config.py)
+- **Mutation Score**: 80%+ target on critical modules (agent.py, middleware.py, config.py)
 - **Type Coverage**: Strict mypy on 3 modules (config, feature_flags, observability)
 - **Performance**: All p95 latencies within target thresholds
 

@@ -43,7 +43,7 @@ MCP Server with LangGraph is a **production-ready** MCP server implementation th
 
 <AccordionGroup>
   <Accordion icon="brain" title="Multi-LLM Support">
-    Support for 100+ LLM providers via [LiteLLM](https://docs.litellm.ai/):
+    Support for [100+ LLM providers](https://docs.litellm.ai/docs/providers) via [LiteLLM](https://docs.litellm.ai/):
     - **Anthropic Claude** (3.5 Sonnet, 3 Opus)
     - **OpenAI GPT** (GPT-4, GPT-4 Turbo)
     - **Google Gemini** (2.5 Flash, 2.5 Pro)
@@ -56,30 +56,32 @@ MCP Server with LangGraph is a **production-ready** MCP server implementation th
 
   <Accordion icon="shield" title="Enterprise Security">
     Production-grade security features:
-    - **JWT Authentication** - Secure token-based auth
-    - **OpenFGA Authorization** - Fine-grained relationship-based access control (Zanzibar model)
-    - **Infisical Integration** - Centralized secrets management
+    - **[JWT Authentication](https://jwt.io/)** - Secure token-based auth
+    - **[OpenFGA Authorization](https://openfga.dev/)** - Fine-grained relationship-based access control ([Zanzibar model](https://research.google/pubs/pub48190/))
+    - **[Infisical Integration](https://infisical.com/docs)** - Centralized secrets management
     - **Audit Logging** - Complete security event tracking
     - **Network Policies** - Kubernetes-native network isolation
   </Accordion>
 
   <Accordion icon="chart-line" title="Dual Observability">
     Complete visibility with dual observability stack:
-    - **LangSmith** - LLM-specific tracing, prompt engineering, evaluations, cost tracking
-    - **OpenTelemetry** - Distributed tracing with Jaeger, infrastructure metrics
-    - **Prometheus** - Metrics collection and alerting
-    - **Grafana Dashboards** - Pre-built visualizations
+    - **[LangSmith](https://docs.smith.langchain.com/)** - LLM-specific tracing, prompt engineering, evaluations, cost tracking
+    - **[OpenTelemetry](https://opentelemetry.io/)** - Distributed tracing with [Jaeger](https://www.jaegertracing.io/), infrastructure metrics
+    - **[Prometheus](https://prometheus.io/)** - Metrics collection and alerting
+    - **[Grafana](https://grafana.com/)** - Pre-built visualization dashboards
     - **Structured Logging** - JSON logs with trace correlation
   </Accordion>
 
   <Accordion icon="cloud" title="Multi-Cloud Deployment">
     Deploy anywhere with confidence:
-    - **LangGraph Platform** - One-command serverless deployment (2 minutes)
-    - **Google Cloud Run** - Serverless GCP with auto-scaling (10 minutes)
-    - **Kubernetes** - Production-grade K8s on GKE, EKS, AKS (1-2 hours)
-    - **Helm Charts** - Flexible, customizable K8s deployments
-    - **Docker** - Quick Docker Compose setup for dev/test (15 minutes)
-    - **GitOps Ready** - ArgoCD, FluxCD compatible
+    - **[LangGraph Platform](https://langchain-ai.github.io/langgraph/cloud/)** - One-command serverless deployment (~2 min)*
+    - **Google Cloud Run** - Serverless GCP with auto-scaling (~10 min)*
+    - **[Kubernetes](https://kubernetes.io/)** - Production-grade K8s on GKE, EKS, AKS (~1-2 hours)*
+    - **[Helm Charts](https://helm.sh/)** - Flexible, customizable K8s deployments
+    - **Docker** - Quick Docker Compose setup for dev/test (~15 min)*
+    - **GitOps Ready** - [ArgoCD](https://argo-cd.readthedocs.io/), [FluxCD](https://fluxcd.io/) compatible
+
+    *Time estimates assume prerequisites configured. See [deployment docs](/deployment/overview) for details.
   </Accordion>
 </AccordionGroup>
 
@@ -182,9 +184,11 @@ The agent framework ecosystem has matured significantly in 2025. Here's how we c
 
 <CardGroup cols={2}>
   <Card title="Production Security & Compliance" icon="shield-halved">
-    **Enterprise-grade security** with JWT authentication, OpenFGA authorization (Zanzibar model), and complete audit logging.
+    **Enterprise-grade security** with [JWT authentication](https://jwt.io/), [OpenFGA authorization](https://openfga.dev/) ([Zanzibar model](https://research.google/pubs/pub48190/)), and complete audit logging.
 
-    **GDPR, SOC 2, HIPAA readiness** with audit trails for compliance requirements.
+    **[GDPR](https://gdpr-info.eu/), [SOC 2](https://www.aicpa.org/soc4so), [HIPAA](https://www.hhs.gov/hipaa/)-ready architecture** with technical controls and audit trails.*
+
+    *Compliance requires organizational policies and legal review. [Learn more](/security/compliance).
   </Card>
   <Card title="Multi-Cloud Flexibility" icon="cloud">
     **Deploy anywhere** - GCP, AWS, Azure, or LangGraph Platform without code changes.
@@ -192,14 +196,16 @@ The agent framework ecosystem has matured significantly in 2025. Here's how we c
     **Kubernetes-native** with production manifests, Helm charts, and GitOps ready infrastructure.
   </Card>
   <Card title="Complete Observability" icon="chart-line">
-    **Dual monitoring stack** - LangSmith for LLM-specific insights + OpenTelemetry for infrastructure metrics.
+    **Dual monitoring stack** - [LangSmith](https://docs.smith.langchain.com/) for LLM-specific insights + [OpenTelemetry](https://opentelemetry.io/) for infrastructure metrics.
 
-    **Time-to-production clarity** with deployment estimates (2 min to 2 hours) for every target platform.
+    **Time-to-production clarity** with [deployment estimates](/deployment/overview) (~2 min to ~2 hours) for every target platform.*
+
+    *Times assume prerequisites configured. [See detailed estimates](/deployment/overview).
   </Card>
   <Card title="Provider Independence & Reliability" icon="circle-check">
-    **100+ LLM providers** with automatic fallback and retry logic for high availability.
+    **[100+ LLM providers](https://docs.litellm.ai/docs/providers)** with automatic fallback and retry logic for high availability.
 
-    **Battle-tested** with 100% test pass rate (437/437 tests) ensuring production reliability.
+    **Comprehensive test coverage** with unit, integration, property-based, and contract tests. See [testing documentation](/advanced/testing) for details.
   </Card>
 </CardGroup>
 

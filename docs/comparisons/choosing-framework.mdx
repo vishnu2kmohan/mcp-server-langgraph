@@ -10,36 +10,46 @@ Choosing the right agent framework depends on your team, requirements, and const
 
 ## Quick Decision Tree
 
-<Steps>
-  <Step title="Are you a developer or non-developer?">
-    **Non-Developer (no coding):**
-    - → **OpenAI AgentKit** (visual builder, no code)
+Use this interactive decision tree to find the best framework for your needs:
 
-    **Developer (comfortable with Python):**
-    - → Continue to Step 2
-  </Step>
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#fb8500','primaryTextColor':'#000','primaryBorderColor':'#023047','lineColor':'#8ecae6','secondaryColor':'#219ebc','tertiaryColor':'#ffb703'}}}%%
+flowchart TD
+    Start([Start: Choose Framework]) --> DevQ{Developer or<br/>Non-Developer?}
 
-  <Step title="Production or Prototype?">
-    **Just Prototyping/Learning:**
-    - → **CrewAI** (fastest getting started, excellent docs)
+    DevQ -->|Non-Developer<br/>No Coding| AgentKit[OpenAI AgentKit<br/>✓ Visual builder<br/>✓ No-code required]
+    DevQ -->|Developer<br/>Python Skills| ProdQ{Production or<br/>Prototype?}
 
-    **Going to Production:**
-    - → Continue to Step 3
-  </Step>
+    ProdQ -->|Prototyping<br/>Learning| CrewAI[CrewAI<br/>✓ Fast getting started<br/>✓ Excellent docs<br/>✓ Role-based teams]
+    ProdQ -->|Production<br/>Deployment| EnterpriseQ{Enterprise<br/>Requirements?}
 
-  <Step title="Enterprise Requirements?">
-    **Yes (Security, Compliance, Multi-Cloud):**
-    - → **MCP Server with LangGraph**
+    EnterpriseQ -->|Yes<br/>Security, Compliance,<br/>Multi-Cloud| MCPServer[MCP Server with LangGraph<br/>✓ Enterprise-grade security<br/>✓ Multi-cloud deployment<br/>✓ Full observability]
+    EnterpriseQ -->|No<br/>Simple use case| Simple{Quick Deploy<br/>or Self-Host?}
+    EnterpriseQ -->|Specific Cloud<br/>Already Using| CloudQ{Which Cloud<br/>Platform?}
 
-    **No (Simple use case, no compliance):**
-    - → **LangGraph Cloud** or **CrewAI**
+    Simple -->|Quick Deploy| LGCloud[LangGraph Cloud<br/>✓ 2-min deployment<br/>✓ Managed service]
+    Simple -->|Self-Host| CrewAI2[CrewAI<br/>✓ Easy setup<br/>✓ Good for learning]
 
-    **Already using specific cloud:**
-    - Google Cloud → **Google ADK**
-    - Azure → **Microsoft Agent Framework**
-    - AWS → **MCP Server with LangGraph** (EKS support)
-  </Step>
-</Steps>
+    CloudQ -->|Google Cloud<br/>GCP/Vertex AI| GoogleADK[Google ADK<br/>✓ Vertex AI integration<br/>✓ Multi-agent hierarchies]
+    CloudQ -->|Microsoft Azure<br/>.NET/C#| MSAgent[Microsoft Agent Framework<br/>✓ Azure integration<br/>✓ Dynamic collaboration]
+    CloudQ -->|AWS<br/>Amazon| AWSChoice[MCP Server with LangGraph<br/>✓ EKS support<br/>✓ AWS Bedrock ready]
+
+    classDef mcpStyle fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    classDef alternativeStyle fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
+    classDef competitorStyle fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000
+    classDef decisionStyle fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    classDef startStyle fill:#00BCD4,stroke:#00838F,stroke-width:3px,color:#fff
+
+    class MCPServer,AWSChoice mcpStyle
+    class LGCloud,GoogleADK,MSAgent alternativeStyle
+    class CrewAI,CrewAI2,AgentKit competitorStyle
+    class DevQ,ProdQ,EnterpriseQ,Simple,CloudQ decisionStyle
+    class Start startStyle
+```
+
+<Info>
+  **Legend:** 🟢 MCP Server with LangGraph | 🔵 Alternative Frameworks | 🟠 Competitor Frameworks
+</Info>
 
 ## Framework Comparison Matrix
 

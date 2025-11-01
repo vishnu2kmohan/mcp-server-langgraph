@@ -70,6 +70,7 @@
           {
             "group": "Reference",
             "pages": [
+              "references/sources",
               "reference/environment-variables",
               "reference/setup-scripts",
               "reference/configuration-files",
