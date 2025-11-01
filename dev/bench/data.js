@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762026274115,
+  "lastUpdate": 1762026678960,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -18736,6 +18736,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018325513794107623",
             "extra": "mean: 59.20993836760201 usec\nrounds: 5403"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "91533831a31a6b68e46858419417841a5f43f349",
+          "message": "docs: complete Phase 2-4 honesty improvements with citations and disclaimers\n\n**Phase 2: Compliance & Security Documentation**\n- Update security/compliance.mdx with comprehensive disclaimer\n- Replace \"we provide compliance\" with \"we provide technical controls\"\n- Add citations to GDPR, SOC 2, HIPAA, ISO 27001 official docs\n- Clarify distinction between technical controls vs actual compliance\n- Add link to Sources & References for full documentation\n\n**Phase 3: Deployment Time Estimates**\n- Fix deployment/overview.mdx time estimates with qualifiers\n- Add ~2 min*, ~10 min*, ~1-2 hrs* format with asterisk disclaimers\n- Add Info callout explaining prerequisites assumption\n- Update Platform Comparison table with qualified estimates\n- Make it clear first-time setup takes longer\n\n**Phase 4: Framework Comparisons - Timestamps & Citations**\n- Add \"Last Updated: November 2025 (v2.8.0)\" to all 6 comparison pages\n- Add citations to all competitor framework official documentation\n  - CrewAI → docs.crewai.com\n  - OpenAI AgentKit → platform.openai.com/docs/assistants\n  - Claude Agent SDK → docs.anthropic.com/en/docs/agents\n  - Google ADK → cloud.google.com/products/agent-builder\n  - Microsoft → microsoft.github.io/autogen + learn.microsoft.com\n  - LangGraph Cloud → langchain-ai.github.io/langgraph/cloud\n- Add disclaimer noting \"our research and analysis\" with link to sources\n- Replace \"battle-tested LangGraph\" with proper citations to LangChain customers\n- Update sources.mdx timestamp to November 2025\n\n**Files Modified:**\n- docs/security/compliance.mdx (comprehensive disclaimer + citations)\n- docs/deployment/overview.mdx (qualified time estimates)\n- docs/comparisons/vs-*.mdx (6 files - timestamps + citations + disclaimers)\n- docs/references/sources.mdx (timestamp update)\n\n**Impact:**\n- All compliance claims now have proper disclaimers\n- All time estimates qualified with prerequisites assumption\n- All framework comparisons timestamped and cited\n- Readers can verify all claims against authoritative sources\n- No misleading \"ready\" vs \"compliant\" language\n\nSee docs/references/sources.mdx for complete citation index.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T15:49:59-04:00",
+          "tree_id": "aecef548d77fcff2efef0bc2b56a8b43f8fe0298",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/91533831a31a6b68e46858419417841a5f43f349"
+        },
+        "date": 1762026678289,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51510.164439782835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023543948152667563",
+            "extra": "mean: 19.413644100651915 usec\nrounds: 7873"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53613.385289016725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032301256785465162",
+            "extra": "mean: 18.652058522498496 usec\nrounds: 11705"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49819.89811282836,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023893057429941207",
+            "extra": "mean: 20.072301186471222 usec\nrounds: 20479"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.038038276598,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001633879284871621",
+            "extra": "mean: 5.234559614521016 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.396582294658838,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011457257096071656",
+            "extra": "mean: 51.555474299993875 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.935358935304137,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030821215318747446",
+            "extra": "mean: 100.65061629999263 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2668158.707249177,
+            "unit": "iter/sec",
+            "range": "stddev: 5.38796993044082e-8",
+            "extra": "mean: 374.790299123916 nsec\nrounds: 192345"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5164.27670109121,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014828714569740431",
+            "extra": "mean: 193.63795897859234 usec\nrounds: 2389"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3008.7601276329938,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002750959943235171",
+            "extra": "mean: 332.36281975948174 usec\nrounds: 2652"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2910.4785417366243,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000048877448384509975",
+            "extra": "mean: 343.5861098647097 usec\nrounds: 1693"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59458.18825979288,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020424555588267544",
+            "extra": "mean: 16.81854138627068 usec\nrounds: 11622"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17209.746986687507,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026371967876734582",
+            "extra": "mean: 58.106606725452956 usec\nrounds: 4966"
           }
         ]
       }
