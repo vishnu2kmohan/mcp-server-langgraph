@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762012065441,
+  "lastUpdate": 1762013340351,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -17116,6 +17116,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001877325879634331",
             "extra": "mean: 58.30776070008289 usec\nrounds: 5257"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8391b4a10e84c0e94012493bbce87888c5e22974",
+          "message": "feat: complete GCP GKE best practices implementation with Mintlify documentation\n\nThis commit represents a comprehensive implementation of GCP GKE best practices\nfor the MCP Server LangGraph project, achieving production-ready status.\n\n## Infrastructure Implementation (47/47 tasks - 100%)\n\n### Terraform Modules (6 modules, ~9,000 lines)\n- GCP VPC with VPC-native networking, Cloud NAT, Private Service Connection\n- GKE Autopilot with Workload Identity, Binary Authorization, Security Posture\n- Cloud SQL PostgreSQL with regional HA, PITR, read replicas\n- Memorystore Redis with STANDARD_HA tier and persistence\n- GKE Workload Identity for secure service account bindings\n- Backend setup for GCS state management with versioning\n\n### Environment Configurations (3 environments)\n- Development: Cost-optimized, zonal cluster (~$100/month)\n- Staging: Production-like, regional HA (~$310/month)\n- Production: Full HA, monitoring, backups (~$970/month, $466 with 3yr CUD)\n\n### Kubernetes Deployments\n- Production GKE overlay (10 YAML files)\n- Security hardening (non-root, read-only FS, dropped capabilities)\n- Network policies (zero-trust)\n- HPA with custom behaviors (scale 3-20 replicas)\n- Pod disruption budgets, resource quotas\n- External Secrets integration with Secret Manager\n\n### CI/CD & Automation (3 workflows)\n- Production deployment with approval gates and rollback\n- Daily compliance scanning (Trivy, tfsec, Checkov, kube-bench)\n- Infrastructure drift detection (every 6 hours)\n\n### Security & Advanced Features\n- Binary Authorization setup with KMS signing\n- ArgoCD GitOps with multi-cluster management\n- Anthos Service Mesh with mTLS\n- Disaster recovery automation\n- GKE Backup configuration\n- Security Posture Dashboard\n\n### Monitoring & Observability\n- Cloud Monitoring dashboards\n- SLI/SLO definitions (99.9% availability, P95 latency < 2s)\n- Cloud Trace backend (OpenTelemetry)\n- Cloud Profiler integration\n- Custom alerting policies\n\n## Mintlify Documentation (12/18 tasks - 67%)\n\n### Phase 1: Critical Production (5 files)\n- docs/deployment/kubernetes/gke-production.mdx - Complete deployment guide\n- docs/deployment/infrastructure/terraform-gcp.mdx - All 6 modules documented\n- docs/deployment/operations/gke-runbooks.mdx - Operational procedures\n- docs/deployment/cost-optimization.mdx - 40-66% cost savings strategies\n- docs/security/gcp-security-hardening.mdx - 67 security controls\n\n### Phase 2: Infrastructure (3 files)\n- docs/deployment/infrastructure/overview.mdx - IaC architecture\n- docs/deployment/infrastructure/backend-setup.mdx - State management\n- docs/deployment/infrastructure/multi-environment.mdx - Dev/staging/prod\n\n### Phase 3: Advanced Topics (3 files)\n- docs/deployment/gitops-argocd.mdx - GitOps with multi-cluster\n- docs/deployment/binary-authorization.mdx - Image signing & policies\n- docs/deployment/service-mesh.mdx - Anthos Service Mesh guide\n\n### Technical Documentation (20+ files)\n- GCP_GKE_MASTER_INDEX.md - Complete navigation\n- GCP_GKE_BEST_PRACTICES_SUMMARY.md - Executive summary\n- GCP_COST_OPTIMIZATION_PLAYBOOK.md - Cost strategies\n- GCP_SECURITY_HARDENING_GUIDE.md - Security compliance\n- GKE_DEPLOYMENT_GUIDE.md - Step-by-step deployment\n- GKE_OPERATIONAL_RUNBOOKS.md - Incident response\n- Module READMEs for all 6 Terraform modules\n- ADR-0040: GCP GKE Autopilot deployment decision\n\n## Metrics & Achievements\n\n### Code Statistics\n- Total files: 120+ files\n- Terraform code: ~9,000 lines\n- Kubernetes manifests: ~1,500 lines\n- Scripts & automation: ~2,500 lines\n- Documentation: ~24,000 lines\n- **Total**: ~37,000 lines\n\n### Infrastructure Maturity: 94/100\n- Infrastructure as Code: 95/100\n- Security: 95/100\n- Observability: 90/100\n- Documentation: 100/100\n- Automation: 95/100\n- Cost Optimization: 95/100\n- Disaster Recovery: 90/100\n\n### Best Practices Compliance\n- 67/67 GCP best practices implemented or documented (100%)\n- CIS GKE Benchmark compliant\n- SOC 2 Type II ready\n- SLSA Level 3 capable\n- AWS EKS feature parity (95/100)\n\n### Cost Optimization\n- Baseline GKE: $1,970/month (all environments)\n- With Autopilot: $1,380/month (30% savings)\n- With 3-year CUD: $663/month (66% savings)\n- **Annual savings**: $15,684/year\n\n## Production Readiness: CONFIRMED ✅\n\nAll critical components complete:\n✅ 6 production-ready Terraform modules\n✅ 3 environment configurations (dev/staging/prod)\n✅ Security foundation (Binary Auth, Workload Identity, mTLS)\n✅ CI/CD pipelines (approval gates, automated rollback)\n✅ Monitoring & alerting (dashboards, SLI/SLOs)\n✅ Core documentation (deployment guides, runbooks)\n✅ Mintlify critical pages (production-essential docs)\n\n## Deployment Path\n\n**Quick Deploy** (2.5 hours):\n```bash\ncd terraform/backend-setup-gcp && terraform apply\ncd ../environments/gcp-prod && terraform apply\nkubectl apply -k ../../deployments/overlays/production-gke\n```\n\n**Complete Guide**: See deployments/GKE_DEPLOYMENT_GUIDE.md\n\n## Related Documentation\n\n- GCP_GKE_MASTER_INDEX.md - Start here for navigation\n- COMPLETE_IMPLEMENTATION_REPORT.md - Full implementation report\n- IMPLEMENTATION_FINAL_SUMMARY.md - Executive summary\n\n🎯 ALL SYSTEMS GO FOR PRODUCTION DEPLOYMENT\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T12:07:50-04:00",
+          "tree_id": "cdc27838c55e2261c6406fb8050c3e7a0500da04",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8391b4a10e84c0e94012493bbce87888c5e22974"
+        },
+        "date": 1762013339745,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51625.6002041953,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022175659194817452",
+            "extra": "mean: 19.370234845593835 usec\nrounds: 5246"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52817.89408056565,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000283872213025735",
+            "extra": "mean: 18.932977495745142 usec\nrounds: 8354"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49037.38988874003,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000036699210988457106",
+            "extra": "mean: 20.392602507369997 usec\nrounds: 18745"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.77702100706423,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024466213642950782",
+            "extra": "mean: 5.241721433332221 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.40975503640092,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016723699565470066",
+            "extra": "mean: 51.52048535000091 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.95693244371888,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022237644177545528",
+            "extra": "mean: 100.43253839999977 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2657602.9795225933,
+            "unit": "iter/sec",
+            "range": "stddev: 4.897100306360411e-8",
+            "extra": "mean: 376.2789279306265 nsec\nrounds: 185151"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4840.510284122559,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002055449211889002",
+            "extra": "mean: 206.58978936169544 usec\nrounds: 470"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2941.3873964925397,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000910645092730598",
+            "extra": "mean: 339.97561871396164 usec\nrounds: 2426"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2865.8265853350645,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013555547605627347",
+            "extra": "mean: 348.93946658083735 usec\nrounds: 1556"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60109.3242991925,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002256357535123225",
+            "extra": "mean: 16.636354037562086 usec\nrounds: 11318"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 15660.617698147676,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024841476723064424",
+            "extra": "mean: 63.8544417132588 usec\nrounds: 4109"
           }
         ]
       }
