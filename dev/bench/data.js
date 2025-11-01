@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762028082773,
+  "lastUpdate": 1762029119449,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -19168,6 +19168,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001850865386526943",
             "extra": "mean: 57.725167510815105 usec\nrounds: 5528"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d8081ecf65f1b559f2f81c1dc64debbdae809480",
+          "message": "docs: migrate all pip references to uv commands\n\nComplete migration from pip to uv package manager across all documentation,\nsource code error messages, and operational scripts.\n\n## Changes Summary\n\n- **38 files modified** with ~105 pip references updated\n- All user-facing documentation now uses uv exclusively\n- Error messages guide users to add deps to pyproject.toml\n- CI/CD examples updated with uv installation\n\n## Transformation Patterns\n\nDocumentation:\n- `pip install -r requirements.txt` → `uv sync`\n- `pip install -e .` → `uv sync`\n- `pip install -e \".[secrets]\"` → `uv sync --extra secrets`\n- `pip install -e \".[all]\"` → `uv sync --all-extras`\n- `pip install langgraph-cli` → `uv tool install langgraph-cli`\n- `pip install package` → `uv pip install package` (ad-hoc)\n- Removed: `python -m pip install --upgrade pip` (not needed)\n\nSource Code Error Messages:\n- OLD: \"Install with: pip install package\"\n- NEW: \"Add 'package' to pyproject.toml dependencies, then run: uv sync\"\n\n## Files Modified by Category\n\n**Core Documentation (8 files):**\n- README.md\n- docs/getting-started/{installation,quickstart}.mdx\n- docs/advanced/{development-setup,contributing,testing}.mdx\n- docs/reference/development/{development,ci-cd,ide-setup}.mdx\n\n**Deployment Documentation (15 files):**\n- docs/deployment/{langgraph-platform,infisical-installation}.mdx\n- docs/deployment/{docker,monitoring}.mdx\n- docs/deployment/platform/{quickstart,ci-cd,configuration}.mdx\n- docs/deployment/kubernetes/gke.mdx\n- docs/guides/{local-models,environment-config}.mdx\n\n**Security & Testing (3 files):**\n- docs/security/{overview,best-practices}.mdx\n- docs/advanced/testing.mdx\n\n**Historical Documentation (5 files):**\n- docs/releases/{v2-5-0,v2-7-0}.mdx\n- docs/architecture/adr-{0022,0026,0027}.mdx\n\n**Source Code (9 files):**\n- src/mcp_server_langgraph/{llm,core,auth}/*.py\n- scripts/validation/*.py\n- examples/langsmith_tracing.py\n\n**Scripts & Templates (3 files):**\n- scripts/deployment/deploy_langgraph_platform.sh\n- hooks/post_gen_project.py\n- src/mcp_server_langgraph/cli/init.py\n\n## Benefits\n\n- Consistent dependency management instructions across all docs\n- 10-100x faster installation for users\n- Reproducible builds via uv.lock\n- Better error messages guiding users to proper dependency management\n- Modernized CI/CD examples\n\n## Notes\n\n- requirements*.txt files remain for backwards compatibility but deprecated\n- All uv transformations follow official uv migration patterns\n- CLI tools use `uv tool install` for proper isolation\n- Ad-hoc installs use `uv pip install` when not in pyproject.toml\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T16:30:49-04:00",
+          "tree_id": "4af920b0fadb8a890491aa6e436fd300127443f9",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d8081ecf65f1b559f2f81c1dc64debbdae809480"
+        },
+        "date": 1762029118722,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50922.990852784125,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022720148678895136",
+            "extra": "mean: 19.637495426986035 usec\nrounds: 7763"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53592.80222920622,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023394181551110637",
+            "extra": "mean: 18.65922210455035 usec\nrounds: 11328"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50132.70950013015,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002459016411449666",
+            "extra": "mean: 19.947056721468524 usec\nrounds: 19393"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.03406992849227,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017201575958742546",
+            "extra": "mean: 5.234668351955855 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.391170569826826,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015323221711487382",
+            "extra": "mean: 51.569862499999175 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.940099943848178,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000043803315879996795",
+            "extra": "mean: 100.60261019999999 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2513329.951293257,
+            "unit": "iter/sec",
+            "range": "stddev: 4.747060696941095e-8",
+            "extra": "mean: 397.87851948584813 nsec\nrounds: 187970"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5107.270749260279,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014673679537687371",
+            "extra": "mean: 195.79929263488464 usec\nrounds: 2539"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2982.21292232171,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010290025822833514",
+            "extra": "mean: 335.3214629696799 usec\nrounds: 2741"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2862.6899283799403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000041558178287012436",
+            "extra": "mean: 349.32180048082336 usec\nrounds: 1664"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59751.14704518799,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019122864184620264",
+            "extra": "mean: 16.736080384259907 usec\nrounds: 12179"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16625.33080252242,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002439378287656373",
+            "extra": "mean: 60.149179097734304 usec\nrounds: 4411"
           }
         ]
       }
