@@ -1,0 +1,192 @@
+# ArgoCD Multi-Cluster Setup for GCP (Dev, Staging, Production)
+
+# ==============================================================================
+# ApplicationSet - Deploy to multiple GKE clusters
+# ==============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: mcp-server-gcp-environments
+  namespace: argocd
+spec:
+  generators:
+    # List generator for multiple environments
+    - list:
+        elements:
+          - cluster: gcp-dev
+            url: https://GCP_DEV_CLUSTER_ENDPOINT
+            namespace: mcp-dev
+            overlay: dev-gke
+            replicas: "1"
+            project: YOUR_PROJECT_ID
+            region: us-central1
+
+          - cluster: gcp-staging
+            url: https://GCP_STAGING_CLUSTER_ENDPOINT
+            overlay: staging-gke
+            namespace: mcp-staging
+            replicas: "2"
+            project: YOUR_PROJECT_ID
+            region: us-central1
+
+          - cluster: gcp-production
+            url: https://GCP_PROD_CLUSTER_ENDPOINT
+            overlay: production-gke
+            namespace: mcp-production
+            replicas: "3"
+            project: YOUR_PROJECT_ID
+            region: us-central1
+
+  template:
+    metadata:
+      name: 'mcp-server-{{cluster}}'
+      labels:
+        environment: '{{cluster}}'
+        cloud: gcp
+        platform: gke
+    spec:
+      project: default
+
+      source:
+        repoURL: https://github.com/vishnu2kmohan/mcp-server-langgraph
+        targetRevision: main
+        path: 'deployments/overlays/{{overlay}}'
+
+      destination:
+        server: '{{url}}'
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+
+---
+# ==============================================================================
+# Cluster Secrets (for multi-cluster access)
+# ==============================================================================
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-dev-cluster
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+type: Opaque
+stringData:
+  name: gcp-dev
+  server: https://GCP_DEV_CLUSTER_ENDPOINT
+  config: |
+    {
+      "execProviderConfig": {
+        "command": "argocd-k8s-auth",
+        "args": ["gcp"],
+        "apiVersion": "client.authentication.k8s.io/v1beta1"
+      },
+      "tlsClientConfig": {
+        "insecure": false,
+        "caData": "BASE64_ENCODED_CA_CERT"
+      }
+    }
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-staging-cluster
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+type: Opaque
+stringData:
+  name: gcp-staging
+  server: https://GCP_STAGING_CLUSTER_ENDPOINT
+  config: |
+    {
+      "execProviderConfig": {
+        "command": "argocd-k8s-auth",
+        "args": ["gcp"],
+        "apiVersion": "client.authentication.k8s.io/v1beta1"
+      },
+      "tlsClientConfig": {
+        "insecure": false,
+        "caData": "BASE64_ENCODED_CA_CERT"
+      }
+    }
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-production-cluster
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+type: Opaque
+stringData:
+  name: gcp-production
+  server: https://GCP_PROD_CLUSTER_ENDPOINT
+  config: |
+    {
+      "execProviderConfig": {
+        "command": "argocd-k8s-auth",
+        "args": ["gcp"],
+        "apiVersion": "client.authentication.k8s.io/v1beta1"
+      },
+      "tlsClientConfig": {
+        "insecure": false,
+        "caData": "BASE64_ENCODED_CA_CERT"
+      }
+    }
+
+---
+# ==============================================================================
+# ArgoCD Image Updater Configuration
+# ==============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd
+data:
+  registries.conf: |
+    registries:
+    - name: gcp-artifact-registry
+      api_url: https://us-central1-docker.pkg.dev
+      prefix: us-central1-docker.pkg.dev
+      credentials: ext:/scripts/gcp-credentials.sh
+      default: true
+
+  git.user: argocd-image-updater
+  git.email: argocd-image-updater@company.com
+
+---
+# ==============================================================================
+# Image Update Policy (production)
+# ==============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcp-server-production-gke
+  namespace: argocd
+  annotations:
+    # Image updater annotations
+    argocd-image-updater.argoproj.io/image-list: mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
+    argocd-image-updater.argoproj.io/mcp-server.update-strategy: semver
+    argocd-image-updater.argoproj.io/mcp-server.allow-tags: regexp:^v?[0-9]+\.[0-9]+\.[0-9]+$
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/write-back-target: kustomization

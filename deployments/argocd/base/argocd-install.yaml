@@ -1,0 +1,272 @@
+# ArgoCD Installation using official manifest
+# This file references the official ArgoCD installation
+# Customizations are applied via kustomization.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Enable status badge
+  statusbadge.enabled: "true"
+
+  # Repository credentials template (optional)
+  repository.credentials: |
+    - url: https://github.com/vishnu2kmohan
+      usernameSecret:
+        name: github-creds
+        key: username
+      passwordSecret:
+        name: github-creds
+        key: password
+
+  # Resource customizations
+  resource.customizations: |
+    admissionregistration.k8s.io/MutatingWebhookConfiguration:
+      ignoreDifferences: |
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    admissionregistration.k8s.io/ValidatingWebhookConfiguration:
+      ignoreDifferences: |
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+
+  # Ignore differences in replicas for HPA-managed deployments
+  resource.compareoptions: |
+    ignoreAggregatedRoles: true
+
+  # Application label key
+  application.instanceLabelKey: argocd.argoproj.io/instance
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cmd-params-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Server configuration
+  server.insecure: "true"  # TLS termination at ingress
+  server.basehref: /
+  server.rootpath: /
+
+  # Disable admin user (use SSO)
+  # server.disable.auth: "false"
+
+  # Application controller settings
+  application.namespaces: "mcp-server-langgraph,monitoring,security"
+
+  # Repository server settings
+  reposerver.parallelism.limit: "10"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Policy configuration
+  policy.default: role:readonly
+
+  # CSV format for RBAC policies
+  policy.csv: |
+    # Admin role
+    p, role:admin, applications, *, */*, allow
+    p, role:admin, clusters, *, *, allow
+    p, role:admin, repositories, *, *, allow
+    p, role:admin, projects, *, *, allow
+    p, role:admin, accounts, *, *, allow
+    p, role:admin, certificates, *, *, allow
+    p, role:admin, gpgkeys, *, *, allow
+
+    # Developer role
+    p, role:developer, applications, get, */*, allow
+    p, role:developer, applications, sync, */*, allow
+    p, role:developer, applications, override, */*, allow
+    p, role:developer, repositories, get, *, allow
+    p, role:developer, projects, get, *, allow
+
+    # CI/CD role
+    p, role:cicd, applications, get, */*, allow
+    p, role:cicd, applications, sync, */*, allow
+    p, role:cicd, applications, update, */*, allow
+    p, role:cicd, repositories, get, *, allow
+
+    # Grant admin role to admin users
+    g, admin, role:admin
+
+    # Grant developer role to developers
+    g, developers, role:developer
+
+    # Grant cicd role to service accounts
+    g, cicd, role:cicd
+
+  # OIDC scopes
+  scopes: '[groups, email]'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-notifications-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Service configuration (Slack example)
+  service.slack: |
+    token: $slack-token
+
+  # Templates
+  template.app-deployed: |
+    message: |
+      Application {{.app.metadata.name}} is now running new version.
+    slack:
+      attachments: |
+        [{
+          "title": "{{ .app.metadata.name}}",
+          "title_link":"{{.context.argocdUrl}}/applications/{{.app.metadata.name}}",
+          "color": "#18be52",
+          "fields": [
+          {
+            "title": "Sync Status",
+            "value": "{{.app.status.sync.status}}",
+            "short": true
+          },
+          {
+            "title": "Repository",
+            "value": "{{.app.spec.source.repoURL}}",
+            "short": true
+          },
+          {
+            "title": "Revision",
+            "value": "{{.app.status.sync.revision}}",
+            "short": true
+          }
+          {{range $index, $c := .app.status.conditions}}
+          {{if not $index}},{{end}}
+          {{if $index}},{{end}}
+          {
+            "title": "{{$c.type}}",
+            "value": "{{$c.message}}",
+            "short": true
+          }
+          {{end}}
+          ]
+        }]
+
+  template.app-health-degraded: |
+    message: |
+      Application {{.app.metadata.name}} has degraded.
+    slack:
+      attachments: |
+        [{
+          "title": "{{ .app.metadata.name}}",
+          "title_link": "{{.context.argocdUrl}}/applications/{{.app.metadata.name}}",
+          "color": "#f4c030",
+          "fields": [
+          {
+            "title": "Health Status",
+            "value": "{{.app.status.health.status}}",
+            "short": true
+          },
+          {
+            "title": "Repository",
+            "value": "{{.app.spec.source.repoURL}}",
+            "short": true
+          }
+          {{range $index, $c := .app.status.conditions}}
+          {{if not $index}},{{end}}
+          {{if $index}},{{end}}
+          {
+            "title": "{{$c.type}}",
+            "value": "{{$c.message}}",
+            "short": true
+          }
+          {{end}}
+          ]
+        }]
+
+  template.app-sync-failed: |
+    message: |
+      Application {{.app.metadata.name}} sync failed.
+    slack:
+      attachments: |
+        [{
+          "title": "{{ .app.metadata.name}}",
+          "title_link":"{{.context.argocdUrl}}/applications/{{.app.metadata.name}}",
+          "color": "#E96D76",
+          "fields": [
+          {
+            "title": "Sync Status",
+            "value": "{{.app.status.sync.status}}",
+            "short": true
+          },
+          {
+            "title": "Repository",
+            "value": "{{.app.spec.source.repoURL}}",
+            "short": true
+          }
+          {{range $index, $c := .app.status.conditions}}
+          {{if not $index}},{{end}}
+          {{if $index}},{{end}}
+          {
+            "title": "{{$c.type}}",
+            "value": "{{$c.message}}",
+            "short": true
+          }
+          {{end}}
+          ]
+        }]
+
+  # Triggers
+  trigger.on-deployed: |
+    - description: Application is synced and healthy
+      send:
+      - app-deployed
+      when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+
+  trigger.on-health-degraded: |
+    - description: Application has degraded
+      send:
+      - app-health-degraded
+      when: app.status.health.status == 'Degraded'
+
+  trigger.on-sync-failed: |
+    - description: Application syncing has failed
+      send:
+      - app-sync-failed
+      when: app.status.operationState.phase in ['Error', 'Failed']
+
+  # Subscriptions
+  subscriptions: |
+    - recipients:
+      - slack:argocd-notifications
+      triggers:
+      - on-deployed
+      - on-health-degraded
+      - on-sync-failed
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-notifications-secret
+  namespace: argocd
+type: Opaque
+stringData:
+  # Slack token (replace with actual token)
+  slack-token: ""
+  # Add other notification service tokens as needed

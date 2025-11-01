@@ -1,0 +1,80 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mcp-production
+
+namePrefix: production-
+
+# Base configuration
+resources:
+  - ../../base
+  - namespace.yaml
+  - network-policy.yaml
+  - external-secrets.yaml
+  - pod-disruption-budget.yaml
+  - resource-quotas.yaml
+
+# GCP-specific annotations
+commonAnnotations:
+  platform: gcp
+  cloud-provider: google
+  environment: production
+  managed-by: kustomize
+  compliance: "soc2,hipaa"
+
+commonLabels:
+  environment: production
+  platform: gke
+  cloud: gcp
+  tier: production
+
+# Configuration patches
+patches:
+  # Deployment patches
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
+  # ConfigMap patches
+  - path: configmap-patch.yaml
+    target:
+      kind: ConfigMap
+      name: mcp-server-langgraph-config
+
+  # ServiceAccount - Add Workload Identity annotation
+  - path: serviceaccount-patch.yaml
+    target:
+      kind: ServiceAccount
+      name: mcp-server-langgraph
+
+  # HPA patches for production scaling
+  - path: hpa-patch.yaml
+    target:
+      kind: HorizontalPodAutoscaler
+      name: mcp-server-langgraph
+
+# Resource configuration (higher replica count for production)
+replicas:
+  - name: mcp-server-langgraph
+    count: 3
+
+# Image configuration
+images:
+  - name: mcp-server-langgraph
+    newName: us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
+    newTag: 2.8.0  # Updated via CI/CD
+
+# Generate ConfigMap from GCP-specific OTel config
+configMapGenerator:
+  - name: otel-collector-config
+    behavior: merge
+    files:
+      - otel-collector-config.yaml
+
+# Secret generator (for non-sensitive config)
+secretGenerator:
+  - name: app-config-secrets
+    behavior: create
+    literals:
+      - postgres_ssl_mode=require

@@ -1,0 +1,713 @@
+---
+title: "Backend Setup"
+description: "Initialize Terraform state storage on GCP with GCS buckets for secure, versioned state management"
+icon: "database"
+---
+
+## Overview
+
+Before deploying infrastructure with Terraform, you need to create a **remote backend** to store Terraform state files. This guide walks through setting up Google Cloud Storage (GCS) buckets for secure, versioned, and collaborative Terraform state management.
+
+<Info>
+  This is a **one-time setup** per GCP project. Once complete, all Terraform environments (dev, staging, prod) will use these buckets.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="State Bucket" icon="database">
+    Stores Terraform state with versioning
+  </Card>
+  <Card title="Log Bucket" icon="file-lines">
+    Audits all state bucket access
+  </Card>
+  <Card title="Encryption" icon="lock">
+    Google-managed encryption at rest
+  </Card>
+  <Card title="Lifecycle" icon="calendar">
+    Auto-cleanup of old versions (30 days)
+  </Card>
+</CardGroup>
+
+---
+
+## Why Remote State?
+
+<AccordionGroup>
+  <Accordion title="Collaboration">
+    **Problem**: Local state files can't be shared across team members.
+
+    **Solution**: GCS backend allows multiple engineers to work on the same infrastructure.
+  </Accordion>
+
+  <Accordion title="State Locking">
+    **Problem**: Concurrent Terraform runs can corrupt state.
+
+    **Solution**: GCS provides automatic state locking (no DynamoDB needed like AWS).
+  </Accordion>
+
+  <Accordion title="Disaster Recovery">
+    **Problem**: Losing state file means losing track of infrastructure.
+
+    **Solution**: GCS versioning allows recovery of previous state versions.
+  </Accordion>
+
+  <Accordion title="Audit Trail">
+    **Problem**: Need to know who accessed/modified state.
+
+    **Solution**: Access logging tracks all operations on state bucket.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Prerequisites
+
+<Steps>
+  <Step title="Install gcloud CLI">
+    ```bash
+    # Verify installation
+    gcloud version
+    ```
+
+    [Install gcloud CLI →](https://cloud.google.com/sdk/docs/install)
+  </Step>
+
+  <Step title="Authenticate">
+    ```bash
+    gcloud auth login
+    gcloud auth application-default login
+    ```
+  </Step>
+
+  <Step title="Create/Select GCP Project">
+    <Tabs>
+      <Tab title="New Project">
+        ```bash
+        gcloud projects create YOUR-PROJECT-ID \
+          --name="MCP LangGraph"
+
+        gcloud config set project YOUR-PROJECT-ID
+
+        # Link billing account
+        gcloud billing projects link YOUR-PROJECT-ID \
+          --billing-account=BILLING_ACCOUNT_ID
+        ```
+      </Tab>
+
+      <Tab title="Existing Project">
+        ```bash
+        gcloud config set project YOUR-PROJECT-ID
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Enable Required APIs">
+    ```bash
+    gcloud services enable \
+      storage-api.googleapis.com \
+      cloudresourcemanager.googleapis.com \
+      iam.googleapis.com
+    ```
+  </Step>
+
+  <Step title="Install Terraform">
+    ```bash
+    # Verify Terraform 1.5.0+
+    terraform version
+    ```
+
+    [Install Terraform →](https://developer.hashicorp.com/terraform/downloads)
+  </Step>
+</Steps>
+
+---
+
+## Quick Setup (5 minutes)
+
+<Steps>
+  <Step title="Navigate to Backend Setup">
+    ```bash
+    cd terraform/backend-setup-gcp
+    ```
+  </Step>
+
+  <Step title="Create Configuration File">
+    ```bash
+    cat > terraform.tfvars <<EOF
+    project_id    = "your-gcp-project-id"
+    region        = "us-central1"
+    bucket_prefix = "mcp-langgraph"
+    EOF
+    ```
+
+    <Accordion title="All Available Variables">
+      ```hcl
+      # Required
+      project_id = "your-project-123"
+      region     = "us-central1"
+
+      # Optional
+      bucket_prefix                = "mcp-langgraph"  # Default: project_id
+      terraform_service_account    = "terraform@project.iam.gserviceaccount.com"
+      state_bucket_force_destroy   = false            # DANGER: true allows deletion
+      log_bucket_force_destroy     = true             # Logs can be destroyed
+      state_bucket_lifecycle_age   = 30               # Days to keep old versions
+      log_bucket_lifecycle_age     = 7                # Days to keep logs
+      state_bucket_storage_class   = "STANDARD"       # STANDARD or NEARLINE
+      labels = {
+        environment = "shared"
+        managed_by  = "terraform"
+      }
+      ```
+    </Accordion>
+  </Step>
+
+  <Step title="Initialize Terraform">
+    ```bash
+    terraform init
+    ```
+
+    <Check>Should see: "Terraform has been successfully initialized!"</Check>
+  </Step>
+
+  <Step title="Plan & Review">
+    ```bash
+    terraform plan
+    ```
+
+    **Expected resources**:
+    - `google_storage_bucket.terraform_state` - State storage
+    - `google_storage_bucket.terraform_logs` - Access logs
+    - `google_storage_bucket_iam_member.*` - IAM bindings (if SA specified)
+  </Step>
+
+  <Step title="Apply Configuration">
+    ```bash
+    terraform apply
+    ```
+
+    Type `yes` when prompted.
+
+    **Duration**: ~30-60 seconds
+  </Step>
+
+  <Step title="Save Outputs">
+    ```bash
+    terraform output -json > backend-config.json
+    ```
+
+    **Outputs**:
+    - `state_bucket_name` - Use this in backend configurations
+    - `log_bucket_name` - For audit trail access
+    - `backend_config_hcl` - Copy-paste backend block
+  </Step>
+</Steps>
+
+---
+
+## What Gets Created
+
+### 1. State Bucket
+
+<CodeGroup>
+```hcl Resource Configuration
+resource "google_storage_bucket" "terraform_state" {
+  name          = "${var.bucket_prefix}-terraform-state"
+  location      = var.region
+  storage_class = "STANDARD"
+
+  versioning {
+    enabled = true  # Allows state recovery
+  }
+
+  lifecycle_rule {
+    condition {
+      num_newer_versions = 3
+      age                = 30
+    }
+    action {
+      type = "Delete"  # Auto-cleanup old versions
+    }
+  }
+
+  encryption {
+    default_kms_key_name = null  # Google-managed
+  }
+
+  logging {
+    log_bucket = google_storage_bucket.terraform_logs.name
+  }
+}
+```
+
+```yaml Features
+- Versioning: Enabled (keep last 3 versions)
+- Encryption: Google-managed keys
+- Lifecycle: Delete versions older than 30 days
+- Logging: All access logged to separate bucket
+- Location: us-central1 (configurable)
+- Storage Class: STANDARD (instant access)
+```
+</CodeGroup>
+
+### 2. Log Bucket
+
+```hcl
+resource "google_storage_bucket" "terraform_logs" {
+  name          = "${var.bucket_prefix}-terraform-logs"
+  location      = var.region
+  storage_class = "STANDARD"
+
+  lifecycle_rule {
+    condition {
+      age = 7  # Keep logs for 7 days
+    }
+    action {
+      type = "Delete"
+    }
+  }
+}
+```
+
+**Purpose**: Audit trail for all state bucket operations (reads, writes, deletes).
+
+---
+
+## Using the Backend
+
+### In Environment Configurations
+
+After backend setup, configure each environment to use the state bucket:
+
+<Tabs>
+  <Tab title="Production">
+    ```hcl terraform/environments/gcp-prod/backend.tf
+    terraform {
+      backend "gcs" {
+        bucket = "mcp-langgraph-terraform-state"
+        prefix = "environments/production"
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Staging">
+    ```hcl terraform/environments/gcp-staging/backend.tf
+    terraform {
+      backend "gcs" {
+        bucket = "mcp-langgraph-terraform-state"
+        prefix = "environments/staging"
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Development">
+    ```hcl terraform/environments/gcp-dev/backend.tf
+    terraform {
+      backend "gcs" {
+        bucket = "mcp-langgraph-terraform-state"
+        prefix = "environments/development"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+  Each environment uses the **same bucket** but **different prefixes** for state isolation.
+</Info>
+
+---
+
+## State Isolation Strategy
+
+<Tabs>
+  <Tab title="Recommended (Prefix-based)">
+    **One bucket, multiple prefixes**:
+
+    ```
+    mcp-langgraph-terraform-state/
+    ├── environments/
+    │   ├── development/
+    │   │   └── default.tfstate
+    │   ├── staging/
+    │   │   └── default.tfstate
+    │   └── production/
+    │       └── default.tfstate
+    └── modules/
+        └── test/
+            └── default.tfstate
+    ```
+
+    **Pros**:
+    - Single backend to manage
+    - Cost-effective (one bucket)
+    - Easy to backup
+
+    **Cons**:
+    - Accidental cross-environment changes possible (mitigated by permissions)
+  </Tab>
+
+  <Tab title="Alternative (Bucket-per-Environment)">
+    **Separate buckets**:
+
+    ```
+    mcp-langgraph-dev-terraform-state/
+    └── default.tfstate
+
+    mcp-langgraph-staging-terraform-state/
+    └── default.tfstate
+
+    mcp-langgraph-prod-terraform-state/
+    └── default.tfstate
+    ```
+
+    **Pros**:
+    - Complete isolation
+    - Easier IAM management
+
+    **Cons**:
+    - 3x setup/management cost
+    - Higher GCS costs
+  </Tab>
+</Tabs>
+
+<Check>
+  **Recommendation**: Use prefix-based strategy (one bucket) for most use cases.
+</Check>
+
+---
+
+## Security Best Practices
+
+### IAM Permissions
+
+<Tabs>
+  <Tab title="Minimal (Recommended)">
+    Grant only required permissions:
+
+    ```bash
+    gcloud storage buckets add-iam-policy-binding \
+      gs://mcp-langgraph-terraform-state \
+      --member="serviceAccount:terraform@PROJECT.iam.gserviceaccount.com" \
+      --role="roles/storage.objectUser"
+    ```
+
+    **Permissions**:
+    - `storage.objects.get` (read state)
+    - `storage.objects.create` (write state)
+    - `storage.objects.delete` (cleanup old versions)
+  </Tab>
+
+  <Tab title="Admin (Development)">
+    For development/testing:
+
+    ```bash
+    gcloud storage buckets add-iam-policy-binding \
+      gs://mcp-langgraph-terraform-state \
+      --member="user:YOUR_EMAIL@example.com" \
+      --role="roles/storage.admin"
+    ```
+
+    <Warning>**NOT recommended** for production</Warning>
+  </Tab>
+</Tabs>
+
+### Prevent Accidental Deletion
+
+<Tabs>
+  <Tab title="Terraform Variable">
+    ```hcl terraform.tfvars
+    state_bucket_force_destroy = false
+    ```
+
+    Prevents `terraform destroy` from deleting the bucket.
+  </Tab>
+
+  <Tab title="Bucket Lock (GCS)">
+    ```bash
+    gcloud storage buckets update \
+      gs://mcp-langgraph-terraform-state \
+      --retention-period=7d
+    ```
+
+    Prevents deletion of objects for 7 days after creation.
+  </Tab>
+
+  <Tab title="Organization Policy">
+    ```bash
+    # Prevent deletion of any production buckets
+    gcloud resource-manager org-policies set-policy \
+      --project=PROJECT_ID \
+      policy.yaml
+    ```
+
+    ```yaml policy.yaml
+    constraint: storage.restrictPublicBuckets
+    listPolicy:
+      deniedValues:
+      - is:public
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Accessing State Files
+
+### View State
+
+```bash
+# Download current state
+gsutil cp gs://mcp-langgraph-terraform-state/environments/production/default.tfstate .
+
+# View state JSON
+terraform show -json default.tfstate | jq .
+
+# List state resources
+terraform state list
+```
+
+### Recover Previous Version
+
+<Steps>
+  <Step title="List Versions">
+    ```bash
+    gsutil ls -a gs://mcp-langgraph-terraform-state/environments/production/
+    ```
+
+    Shows all versions with generation numbers.
+  </Step>
+
+  <Step title="Download Specific Version">
+    ```bash
+    gsutil cp gs://mcp-langgraph-terraform-state/environments/production/default.tfstate#GENERATION .
+    ```
+  </Step>
+
+  <Step title="Restore Version">
+    ```bash
+    # Backup current state first!
+    gsutil cp \
+      gs://mcp-langgraph-terraform-state/environments/production/default.tfstate \
+      ./backup-$(date +%Y%m%d).tfstate
+
+    # Upload previous version
+    gsutil cp \
+      ./default.tfstate#GENERATION \
+      gs://mcp-langgraph-terraform-state/environments/production/default.tfstate
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Cost Analysis
+
+### GCS Pricing (us-central1)
+
+| Component | Cost | Notes |
+|-----------|------|-------|
+| **State storage** | $0.020/GB/month | Typically < 10 MB |
+| **Versioning** | $0.020/GB/month | 3 versions × 10 MB = 30 MB |
+| **Access logs** | $0.020/GB/month | ~1 MB/month |
+| **Operations** | $0.004/10k ops | ~100 ops/day = $0.12/month |
+| **Data transfer** | Free (same region) | - |
+| **Total** | **~$0.15/month** | Negligible |
+
+<Check>
+  Backend storage costs are **$0.15-0.50/month** for typical usage.
+</Check>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: Bucket name already exists">
+    **Cause**: GCS bucket names are globally unique across all GCP.
+
+    **Solution**: Change `bucket_prefix` in `terraform.tfvars`:
+    ```hcl
+    bucket_prefix = "mcp-langgraph-unique-12345"
+    ```
+  </Accordion>
+
+  <Accordion title="Error: Permission denied">
+    **Cause**: Insufficient IAM permissions.
+
+    **Solution**: Grant required role:
+    ```bash
+    gcloud projects add-iam-policy-binding PROJECT_ID \
+      --member="user:YOUR_EMAIL" \
+      --role="roles/storage.admin"
+    ```
+  </Accordion>
+
+  <Accordion title="Error: API not enabled">
+    **Symptom**: `Error 403: Storage API has not been used`
+
+    **Solution**:
+    ```bash
+    gcloud services enable storage-api.googleapis.com
+    ```
+  </Accordion>
+
+  <Accordion title="State lock conflict">
+    **Symptom**: `Error acquiring the state lock`
+
+    **Cause**: Previous Terraform run didn't release lock (crash/Ctrl+C).
+
+    **Solution**: GCS automatically releases locks after 1 minute. Wait or:
+    ```bash
+    # Find lock file
+    gsutil ls gs://mcp-langgraph-terraform-state/environments/production/
+
+    # Delete lock (if safe)
+    gsutil rm gs://.../default.tflock
+    ```
+  </Accordion>
+
+  <Accordion title="Cannot destroy backend bucket">
+    **Symptom**: `Error: bucket is not empty`
+
+    **Solution**:
+    ```bash
+    # Option 1: Empty bucket first
+    gsutil rm -r gs://mcp-langgraph-terraform-state/**
+
+    # Option 2: Set force_destroy (DANGER!)
+    # terraform.tfvars
+    state_bucket_force_destroy = true
+    terraform apply
+    terraform destroy
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Migration from Local State
+
+<Steps>
+  <Step title="Backup Local State">
+    ```bash
+    cp terraform.tfstate terraform.tfstate.backup
+    ```
+  </Step>
+
+  <Step title="Add Backend Configuration">
+    ```hcl backend.tf
+    terraform {
+      backend "gcs" {
+        bucket = "mcp-langgraph-terraform-state"
+        prefix = "environments/production"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Re-initialize">
+    ```bash
+    terraform init -migrate-state
+    ```
+
+    Terraform will detect local state and ask to migrate to GCS. Type `yes`.
+  </Step>
+
+  <Step title="Verify Migration">
+    ```bash
+    # State should now be in GCS
+    gsutil ls gs://mcp-langgraph-terraform-state/environments/production/
+
+    # Local state should be removed
+    ls -la terraform.tfstate
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Advanced: Service Account Setup
+
+For CI/CD pipelines, use a dedicated service account:
+
+<Steps>
+  <Step title="Create Service Account">
+    ```bash
+    gcloud iam service-accounts create terraform \
+      --display-name="Terraform Automation"
+    ```
+  </Step>
+
+  <Step title="Grant State Bucket Access">
+    ```bash
+    gcloud storage buckets add-iam-policy-binding \
+      gs://mcp-langgraph-terraform-state \
+      --member="serviceAccount:terraform@PROJECT.iam.gserviceaccount.com" \
+      --role="roles/storage.objectUser"
+    ```
+  </Step>
+
+  <Step title="Grant Infrastructure Permissions">
+    ```bash
+    gcloud projects add-iam-policy-binding PROJECT_ID \
+      --member="serviceAccount:terraform@PROJECT.iam.gserviceaccount.com" \
+      --role="roles/editor"
+    ```
+  </Step>
+
+  <Step title="Use in Backend Setup">
+    ```hcl terraform.tfvars
+    terraform_service_account = "terraform@PROJECT.iam.gserviceaccount.com"
+    ```
+
+    Re-run `terraform apply` to grant the SA permissions to the bucket.
+  </Step>
+</Steps>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Infrastructure Overview" icon="layer-group" href="/deployment/infrastructure/overview">
+    IaC architecture and module catalog
+  </Card>
+  <Card title="GCP Terraform Modules" icon="google" href="/deployment/infrastructure/terraform-gcp">
+    All 6 production-ready modules
+  </Card>
+  <Card title="Multi-Environment" icon="server" href="/deployment/infrastructure/multi-environment">
+    Dev, staging, prod configurations
+  </Card>
+  <Card title="GKE Production" icon="kubernetes" href="/deployment/kubernetes/gke-production">
+    Deploy infrastructure to production
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<Steps>
+  <Step title="✅ Backend Setup Complete">
+    You now have remote state storage configured!
+  </Step>
+
+  <Step title="Review Terraform Modules">
+    [Terraform GCP Modules →](/deployment/infrastructure/terraform-gcp)
+  </Step>
+
+  <Step title="Choose Environment">
+    [Multi-Environment Guide →](/deployment/infrastructure/multi-environment)
+  </Step>
+
+  <Step title="Deploy Infrastructure">
+    ```bash
+    cd terraform/environments/gcp-prod
+    terraform init
+    terraform apply
+    ```
+  </Step>
+</Steps>

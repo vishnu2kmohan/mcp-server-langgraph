@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: mcp-server-langgraph
+  namespace: argocd
+  # Finalizer ensures Application deletion blocks until resources are cleaned up
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: MCP Server LangGraph Application Project
+
+  # Source repositories
+  sourceRepos:
+    - 'https://github.com/vishnu2kmohan/mcp-server-langgraph'
+    - '*'  # Allow all sources (restrict in production)
+
+  # Destination clusters and namespaces
+  destinations:
+    - namespace: 'mcp-server-langgraph'
+      server: 'https://kubernetes.default.svc'
+    - namespace: 'monitoring'
+      server: 'https://kubernetes.default.svc'
+    - namespace: 'security'
+      server: 'https://kubernetes.default.svc'
+
+  # Cluster resource whitelist (allow all for now)
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Namespace resource whitelist
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Roles for this project
+  roles:
+    # Developer role
+    - name: developer
+      description: Developer access to mcp-server-langgraph project
+      policies:
+        - p, proj:mcp-server-langgraph:developer, applications, get, mcp-server-langgraph/*, allow
+        - p, proj:mcp-server-langgraph:developer, applications, sync, mcp-server-langgraph/*, allow
+        - p, proj:mcp-server-langgraph:developer, applications, override, mcp-server-langgraph/*, allow
+        - p, proj:mcp-server-langgraph:developer, repositories, get, *, allow
+      groups:
+        - developers
+
+    # Admin role
+    - name: admin
+      description: Admin access to mcp-server-langgraph project
+      policies:
+        - p, proj:mcp-server-langgraph:admin, applications, *, mcp-server-langgraph/*, allow
+        - p, proj:mcp-server-langgraph:admin, repositories, *, *, allow
+      groups:
+        - admins
+
+  # Sync windows (maintenance windows)
+  syncWindows:
+    # Production sync window
+    - kind: allow
+      schedule: '0 2 * * *'  # 2 AM UTC daily
+      duration: 2h
+      applications:
+        - '*-prod'
+      manualSync: true
+
+    # Development - always allowed
+    - kind: allow
+      schedule: '* * * * *'
+      duration: 24h
+      applications:
+        - '*-dev'
+        - '*-staging'
+      manualSync: true

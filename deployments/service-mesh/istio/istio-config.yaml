@@ -1,0 +1,237 @@
+# Istio Service Mesh Configuration for MCP Server LangGraph
+
+---
+# Gateway for external traffic
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: mcp-server-gateway
+  namespace: mcp-server-langgraph
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "mcp.example.com"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "mcp.example.com"
+      tls:
+        mode: SIMPLE
+        credentialName: mcp-server-tls
+
+---
+# VirtualService for routing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: mcp-server
+  namespace: mcp-server-langgraph
+spec:
+  hosts:
+    - "mcp.example.com"
+  gateways:
+    - mcp-server-gateway
+  http:
+    # Canary routing (10% to new version)
+    - match:
+        - headers:
+            x-version:
+              exact: "canary"
+      route:
+        - destination:
+            host: mcp-server-langgraph
+            subset: canary
+          weight: 100
+
+    # Default routing with retries
+    - route:
+        - destination:
+            host: mcp-server-langgraph
+            subset: stable
+          weight: 90
+        - destination:
+            host: mcp-server-langgraph
+            subset: canary
+          weight: 10
+
+      # Retry configuration
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: 5xx,reset,connect-failure,refused-stream
+
+      # Timeout
+      timeout: 30s
+
+      # Circuit breaker
+      fault:
+        delay:
+          percentage:
+            value: 0.1
+          fixedDelay: 5s
+
+---
+# DestinationRule for traffic policies
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mcp-server
+  namespace: mcp-server-langgraph
+spec:
+  host: mcp-server-langgraph
+  trafficPolicy:
+    # Connection pool settings
+    connectionPool:
+      tcp:
+        maxConnections: 1000
+      http:
+        http1MaxPendingRequests: 1024
+        http2MaxRequests: 1024
+        maxRequestsPerConnection: 10
+
+    # Load balancing
+    loadBalancer:
+      consistentHash:
+        httpHeaderName: x-user-id
+
+    # Circuit breaker
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 40
+
+    # TLS mode (mutual TLS)
+    tls:
+      mode: ISTIO_MUTUAL
+
+  # Subsets for canary deployment
+  subsets:
+    - name: stable
+      labels:
+        version: stable
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 1000
+          http:
+            http1MaxPendingRequests: 1024
+
+    - name: canary
+      labels:
+        version: canary
+      trafficPolicy:
+        connectionPool:
+          tcp:
+            maxConnections: 100
+          http:
+            http1MaxPendingRequests: 100
+
+---
+# PeerAuthentication - Strict mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: mcp-server-langgraph
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# AuthorizationPolicy - Allow from ingress gateway
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-ingress
+  namespace: mcp-server-langgraph
+spec:
+  selector:
+    matchLabels:
+      app: mcp-server-langgraph
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+
+---
+# AuthorizationPolicy - Allow from monitoring
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-monitoring
+  namespace: mcp-server-langgraph
+spec:
+  selector:
+    matchLabels:
+      app: mcp-server-langgraph
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["monitoring"]
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/metrics", "/health/*"]
+
+---
+# ServiceEntry for external LLM APIs
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-llm-apis
+  namespace: mcp-server-langgraph
+spec:
+  hosts:
+    - "api.anthropic.com"
+    - "api.openai.com"
+    - "generativelanguage.googleapis.com"
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+
+---
+# Telemetry for enhanced observability
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: mcp-server-telemetry
+  namespace: mcp-server-langgraph
+spec:
+  # Access logging
+  accessLogging:
+    - providers:
+        - name: envoy
+
+  # Metrics
+  metrics:
+    - providers:
+        - name: prometheus
+      overrides:
+        - match:
+            metric: ALL_METRICS
+          tagOverrides:
+            request_protocol:
+              value: istio_protocol
+
+  # Tracing
+  tracing:
+    - providers:
+        - name: aws-xray
+      randomSamplingPercentage: 10.0

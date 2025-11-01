@@ -189,7 +189,10 @@
     {
       "group": "Infrastructure as Code",
       "pages": [
-        "deployment/infrastructure/terraform-gcp"
+        "deployment/infrastructure/overview",
+        "deployment/infrastructure/terraform-gcp",
+        "deployment/infrastructure/backend-setup",
+        "deployment/infrastructure/multi-environment"
       ]
     },
     {

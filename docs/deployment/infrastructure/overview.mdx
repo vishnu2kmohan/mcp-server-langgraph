@@ -1,0 +1,560 @@
+---
+title: "Infrastructure Overview"
+description: "Overview of infrastructure-as-code architecture for MCP Server deployments across cloud providers"
+icon: "layer-group"
+---
+
+## Overview
+
+MCP Server LangGraph uses **Terraform** as the Infrastructure as Code (IaC) tool to provision and manage cloud infrastructure across **GCP** and **AWS**. This modular approach enables consistent, repeatable, and version-controlled infrastructure deployments.
+
+<CardGroup cols={2}>
+  <Card title="GCP Modules" icon="google" href="/deployment/infrastructure/terraform-gcp">
+    6 production-ready Terraform modules for GKE
+  </Card>
+  <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
+    Dev, staging, and production configurations
+  </Card>
+  <Card title="State Management" icon="database" href="/deployment/infrastructure/backend-setup">
+    GCS and S3 backends with locking
+  </Card>
+  <Card title="AWS Modules" icon="aws">
+    EKS, RDS, ElastiCache modules (96/100 maturity)
+  </Card>
+</CardGroup>
+
+---
+
+## Architecture Principles
+
+<Steps>
+  <Step title="Modularity">
+    **Reusable modules** with clear interfaces
+    - Each cloud resource is a self-contained module
+    - Modules can be composed for different environments
+    - No hard-coded values
+  </Step>
+
+  <Step title="Environment Parity">
+    **Consistent configs** across dev/staging/prod
+    - Same module versions
+    - Parameter-driven differences (size, HA)
+    - Promote confidence through consistency
+  </Step>
+
+  <Step title="State Isolation">
+    **Separate state** per environment
+    - Development: `dev-tfstate` bucket/prefix
+    - Staging: `staging-tfstate` bucket/prefix
+    - Production: `prod-tfstate` bucket/prefix
+  </Step>
+
+  <Step title="Security by Default">
+    **Zero-trust networking** and IAM
+    - Private clusters (no public IPs)
+    - Workload Identity (GCP) / IRSA (AWS)
+    - Encryption at rest and in transit
+  </Step>
+</Steps>
+
+---
+
+## Module Catalog
+
+### GCP Infrastructure
+
+<AccordionGroup>
+  <Accordion title="GCP VPC (terraform/modules/gcp-vpc)">
+    **Purpose**: VPC-native networking for GKE with Cloud NAT
+
+    **Resources**:
+    - VPC with custom subnets
+    - Secondary IP ranges for pods and services
+    - Cloud NAT with static IPs
+    - Firewall rules (IAP, health checks)
+    - Private Service Connection for Cloud SQL
+
+    **Outputs**: Network ID, subnet names, NAT IPs
+
+    **Best for**: All GKE deployments
+  </Accordion>
+
+  <Accordion title="GKE Autopilot (terraform/modules/gke-autopilot)">
+    **Purpose**: Fully managed Kubernetes cluster
+
+    **Features**:
+    - Pay-per-pod pricing (40-60% savings)
+    - Auto-scaling, auto-repair, auto-upgrade
+    - Workload Identity enabled
+    - Binary Authorization ready
+    - Security Posture Dashboard
+    - Dataplane V2 (eBPF-based)
+
+    **Outputs**: Cluster name, endpoint, kubectl commands
+
+    **Best for**: Production workloads
+  </Accordion>
+
+  <Accordion title="Cloud SQL (terraform/modules/cloudsql)">
+    **Purpose**: Managed PostgreSQL with HA
+
+    **Features**:
+    - Regional HA (99.95% SLA)
+    - Point-in-time recovery
+    - Read replicas
+    - Query Insights
+    - Automatic backups
+
+    **Outputs**: Connection name, private IP, credentials
+
+    **Best for**: Stateful applications
+  </Accordion>
+
+  <Accordion title="Memorystore (terraform/modules/memorystore)">
+    **Purpose**: Managed Redis with HA
+
+    **Features**:
+    - STANDARD_HA tier (99.9% SLA)
+    - Automatic failover
+    - Persistence (RDB + AOF)
+    - Cross-region replicas
+
+    **Outputs**: Host, port, auth string
+
+    **Best for**: Session storage, caching
+  </Accordion>
+
+  <Accordion title="Workload Identity (terraform/modules/gke-workload-identity)">
+    **Purpose**: IAM for Kubernetes pods
+
+    **Features**:
+    - No service account keys
+    - GCP service account per workload
+    - Granular IAM bindings
+    - Automatic credential injection
+
+    **Outputs**: Service account emails, K8s manifests
+
+    **Best for**: All GKE workloads
+  </Accordion>
+
+  <Accordion title="Backend Setup (terraform/backend-setup-gcp)">
+    **Purpose**: GCS buckets for Terraform state
+
+    **Features**:
+    - Versioning enabled
+    - Object lifecycle policies
+    - Access logging
+    - Encryption at rest
+
+    **Outputs**: Bucket names, backend config
+
+    **Best for**: Initial setup (run once)
+  </Accordion>
+</AccordionGroup>
+
+### AWS Infrastructure
+
+<Info>
+  AWS infrastructure modules for EKS are already at **96/100 maturity** and production-ready. See existing documentation for details.
+</Info>
+
+**Available modules**:
+- VPC with public/private subnets
+- EKS cluster with managed node groups
+- RDS PostgreSQL with Multi-AZ
+- ElastiCache Redis cluster
+- IRSA for pod IAM
+
+---
+
+## Directory Structure
+
+```
+terraform/
+├── backend-setup-gcp/          # State bucket bootstrap
+│   ├── main.tf                 # GCS buckets with versioning
+│   ├── variables.tf            # Project ID, region, bucket prefix
+│   └── README.md               # Setup instructions
+│
+├── modules/                    # Reusable modules
+│   ├── gcp-vpc/                # VPC networking
+│   ├── gke-autopilot/          # GKE cluster
+│   ├── cloudsql/               # PostgreSQL
+│   ├── memorystore/            # Redis
+│   └── gke-workload-identity/  # IAM bindings
+│
+└── environments/               # Environment configs
+    ├── gcp-dev/                # Development
+    │   ├── main.tf             # Module composition
+    │   ├── variables.tf        # Input variables
+    │   ├── terraform.tfvars    # Dev-specific values
+    │   └── backend.tf          # State backend config
+    │
+    ├── gcp-staging/            # Staging (production-like)
+    └── gcp-prod/               # Production (HA, multi-region)
+```
+
+---
+
+## State Management
+
+### Backend Configuration
+
+<Tabs>
+  <Tab title="GCP (GCS)">
+    ```hcl
+    terraform {
+      backend "gcs" {
+        bucket  = "PROJECT-terraform-state"
+        prefix  = "environments/production"
+      }
+    }
+    ```
+
+    **Features**:
+    - Automatic state locking
+    - Versioning enabled
+    - Encrypted at rest
+    - Access logs
+
+    **Setup**: See [Backend Setup Guide](/deployment/infrastructure/backend-setup)
+  </Tab>
+
+  <Tab title="AWS (S3)">
+    ```hcl
+    terraform {
+      backend "s3" {
+        bucket         = "PROJECT-terraform-state"
+        key            = "production/terraform.tfstate"
+        region         = "us-west-2"
+        encrypt        = true
+        dynamodb_table = "terraform-locks"
+      }
+    }
+    ```
+
+    **Features**:
+    - DynamoDB state locking
+    - S3 versioning
+    - KMS encryption
+    - Lifecycle policies
+  </Tab>
+</Tabs>
+
+---
+
+## Environment Strategy
+
+<CardGroup cols={3}>
+  <Card title="Development" icon="flask">
+    **Purpose**: Testing and iteration
+
+    **Configuration**:
+    - Zonal cluster (1 zone)
+    - Smaller instances
+    - No read replicas
+    - BASIC Redis tier
+
+    **Cost**: ~$100/month
+  </Card>
+
+  <Card title="Staging" icon="vial">
+    **Purpose**: Pre-production validation
+
+    **Configuration**:
+    - Regional cluster (3 zones)
+    - Production-like sizing
+    - HA databases
+    - Full monitoring
+
+    **Cost**: ~$310/month
+  </Card>
+
+  <Card title="Production" icon="rocket">
+    **Purpose**: Live workloads
+
+    **Configuration**:
+    - Regional cluster (3 zones)
+    - HA for all components
+    - Read replicas
+    - Full observability
+    - Disaster recovery
+
+    **Cost**: ~$970/month (Autopilot)
+  </Card>
+</CardGroup>
+
+---
+
+## Deployment Workflow
+
+<Steps>
+  <Step title="Initialize Backend">
+    ```bash
+    cd terraform/backend-setup-gcp
+    terraform init
+    terraform apply
+    ```
+
+    Creates GCS buckets for state storage.
+  </Step>
+
+  <Step title="Configure Environment">
+    ```bash
+    cd terraform/environments/gcp-prod
+
+    # Edit terraform.tfvars
+    vim terraform.tfvars
+    ```
+
+    Set project ID, region, cluster name, etc.
+  </Step>
+
+  <Step title="Plan Infrastructure">
+    ```bash
+    terraform init
+    terraform plan -out=tfplan
+    ```
+
+    Review planned changes.
+  </Step>
+
+  <Step title="Apply Changes">
+    ```bash
+    terraform apply tfplan
+    ```
+
+    Provision infrastructure (~15-30 minutes for full stack).
+  </Step>
+
+  <Step title="Verify Deployment">
+    ```bash
+    # Get kubectl credentials
+    gcloud container clusters get-credentials CLUSTER_NAME \
+      --region REGION \
+      --project PROJECT_ID
+
+    # Verify nodes
+    kubectl get nodes
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Best Practices
+
+### Module Design
+
+<Check>**DO**: Use semantic versioning for module releases</Check>
+<Check>**DO**: Validate all inputs with Terraform validation blocks</Check>
+<Check>**DO**: Provide comprehensive outputs for module consumers</Check>
+<Check>**DO**: Document all variables with descriptions and examples</Check>
+
+<Warning>**DON'T**: Hard-code values inside modules</Warning>
+<Warning>**DON'T**: Mix resource types in a single module</Warning>
+<Warning>**DON'T**: Use count/for_each for critical resources (hard to change)</Warning>
+
+### State Management
+
+<Check>**DO**: Use separate state per environment</Check>
+<Check>**DO**: Enable state locking (GCS automatic, S3 with DynamoDB)</Check>
+<Check>**DO**: Enable versioning on state buckets</Check>
+<Check>**DO**: Restrict state bucket access (principle of least privilege)</Check>
+
+<Warning>**DON'T**: Commit state files to Git</Warning>
+<Warning>**DON'T**: Share state across unrelated infrastructure</Warning>
+
+### Security
+
+<Check>**DO**: Use Workload Identity (GCP) or IRSA (AWS)</Check>
+<Check>**DO**: Enable encryption at rest for all data stores</Check>
+<Check>**DO**: Use private clusters (no public IPs on nodes)</Check>
+<Check>**DO**: Rotate credentials regularly via Secret Manager/Secrets Manager</Check>
+
+<Warning>**DON'T**: Use service account keys or IAM access keys</Warning>
+<Warning>**DON'T**: Store secrets in Terraform state (use external secret stores)</Warning>
+
+---
+
+## Cost Optimization
+
+<AccordionGroup>
+  <Accordion title="GKE Autopilot (40-60% savings)">
+    **Strategy**: Pay-per-pod vs. paying for idle nodes
+
+    **Implementation**:
+    - Use GKE Autopilot instead of Standard
+    - Right-size pod requests (use VPA)
+    - Enable autoscaling
+
+    **Savings**: $200-400/month per environment
+  </Accordion>
+
+  <Accordion title="Committed Use Discounts (25-52%)">
+    **Strategy**: Commit to 1-year or 3-year usage
+
+    **Implementation**:
+    ```hcl
+    # Apply CUD to all compute resources
+    # Purchase via GCP Console: Billing → Commitments
+    ```
+
+    **Savings**: $242/month (25%) with 1-year, $466/month (52%) with 3-year
+  </Accordion>
+
+  <Accordion title="Resource Right-Sizing">
+    **Strategy**: Match resources to actual usage
+
+    **Implementation**:
+    - Monitor actual CPU/memory usage
+    - Downgrade oversized Cloud SQL/Redis instances
+    - Remove unused read replicas
+
+    **Savings**: $50-150/month
+  </Accordion>
+
+  <Accordion title="Development Auto-Shutdown">
+    **Strategy**: Turn off dev environments after hours
+
+    **Implementation**:
+    ```bash
+    # Cloud Scheduler: Scale to 0 at 6 PM, scale up at 6 AM
+    gcloud scheduler jobs create http scale-down-dev \
+      --schedule="0 18 * * 1-5" \
+      --uri="..." \
+      --message-body='{"desiredNodeCount":0}'
+    ```
+
+    **Savings**: $50-70/month per dev environment
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Migration Paths
+
+### From Manual Infrastructure
+
+<Steps>
+  <Step title="Import Existing Resources">
+    ```bash
+    terraform import google_container_cluster.main projects/PROJECT/locations/REGION/clusters/CLUSTER_NAME
+    ```
+  </Step>
+
+  <Step title="Generate Terraform Config">
+    Use `terraform plan` to match existing state
+  </Step>
+
+  <Step title="Gradually Adopt IaC">
+    Start with new resources, migrate existing over time
+  </Step>
+</Steps>
+
+### From Other IaC Tools
+
+**From Pulumi/CDK**:
+- Export resource definitions
+- Convert to HCL syntax
+- Import state
+
+**From CloudFormation** (AWS):
+- Use `former2` to generate Terraform
+- Review and customize
+- Import stacks
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="State Lock Conflicts">
+    **Symptom**: `Error acquiring the state lock`
+
+    **Cause**: Previous Terraform run didn't release lock (crash, Ctrl+C)
+
+    **Solution**:
+    ```bash
+    # GCS (automatic after 1 minute)
+    # Wait or manually delete lock in GCS console
+
+    # S3 + DynamoDB
+    aws dynamodb delete-item \
+      --table-name terraform-locks \
+      --key '{"LockID": {"S": "BUCKET/PATH/terraform.tfstate"}}'
+    ```
+  </Accordion>
+
+  <Accordion title="Backend Initialization Errors">
+    **Symptom**: `Backend configuration changed`
+
+    **Solution**:
+    ```bash
+    terraform init -reconfigure
+    ```
+  </Accordion>
+
+  <Accordion title="Module Version Conflicts">
+    **Symptom**: `Module ... does not match`
+
+    **Solution**:
+    ```bash
+    terraform init -upgrade
+    ```
+  </Accordion>
+
+  <Accordion title="Permission Denied Errors">
+    **Symptom**: `Error 403: The caller does not have permission`
+
+    **Solution**: Grant required IAM roles
+    ```bash
+    # For GCP
+    gcloud projects add-iam-policy-binding PROJECT_ID \
+      --member="user:YOUR_EMAIL" \
+      --role="roles/editor"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="GCP Terraform Modules" icon="google" href="/deployment/infrastructure/terraform-gcp">
+    Complete guide to all 6 GCP modules
+  </Card>
+  <Card title="Backend Setup" icon="database" href="/deployment/infrastructure/backend-setup">
+    Initialize Terraform state backends
+  </Card>
+  <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
+    Dev, staging, prod configurations
+  </Card>
+  <Card title="GKE Production" icon="kubernetes" href="/deployment/kubernetes/gke-production">
+    Deploy to production with Terraform + Kustomize
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<Steps>
+  <Step title="Set Up State Backend">
+    [Backend Setup Guide →](/deployment/infrastructure/backend-setup)
+  </Step>
+
+  <Step title="Review Module Documentation">
+    [Terraform GCP Modules →](/deployment/infrastructure/terraform-gcp)
+  </Step>
+
+  <Step title="Choose Environment Strategy">
+    [Multi-Environment Guide →](/deployment/infrastructure/multi-environment)
+  </Step>
+
+  <Step title="Deploy to Production">
+    [GKE Production Deployment →](/deployment/kubernetes/gke-production)
+  </Step>
+</Steps>

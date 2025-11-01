@@ -1,0 +1,270 @@
+name: GCP Compliance Scanning
+
+# Automated compliance and security scanning for GCP infrastructure
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+      - 'deployments/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  id-token: write
+
+jobs:
+  # ============================================================================
+  # Terraform Security Scan
+  # ============================================================================
+
+  terraform-scan:
+    name: Scan Terraform for Security Issues
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run Trivy on Terraform
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'terraform/'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          format: 'sarif'
+          output: 'trivy-terraform-results.sarif'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-terraform-results.sarif'
+          category: 'terraform-security'
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform/
+          soft_fail: true
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/
+          framework: terraform
+          soft_fail: true
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'checkov-results.sarif'
+          category: 'terraform-compliance'
+
+  # ============================================================================
+  # Kubernetes Manifest Scan
+  # ============================================================================
+
+  kubernetes-scan:
+    name: Scan Kubernetes Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run Trivy on Kubernetes manifests
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'deployments/'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-k8s-results.sarif'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-k8s-results.sarif'
+          category: 'kubernetes-security'
+
+      - name: Run kube-score
+        run: |
+          wget https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64
+          chmod +x kube-score_linux_amd64
+
+          kubectl kustomize deployments/overlays/production-gke \
+            | ./kube-score_linux_amd64 score - \
+            --output-format ci
+
+      - name: Validate with kubeval
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+
+          kubectl kustomize deployments/overlays/production-gke \
+            | ./kubeval --strict
+
+  # ============================================================================
+  # CIS Benchmark Check
+  # ============================================================================
+
+  cis-benchmark:
+    name: CIS Benchmark Compliance
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'compliance-scanner@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials mcp-prod-gke \
+            --region=us-central1 \
+            --project=$PROJECT_ID
+
+      - name: Run kube-bench for CIS
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job-gke.yaml
+
+          # Wait for job to complete
+          kubectl wait --for=condition=complete --timeout=300s job/kube-bench
+
+          # Get results
+          kubectl logs job/kube-bench > kube-bench-results.txt
+
+          # Check for failures
+          if grep -q "FAIL" kube-bench-results.txt; then
+            echo "⚠️ CIS benchmark failures detected"
+            cat kube-bench-results.txt
+          else
+            echo "✅ CIS benchmark passed"
+          fi
+
+      - name: Upload CIS results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cis-benchmark-results
+          path: kube-bench-results.txt
+
+  # ============================================================================
+  # Policy Validation
+  # ============================================================================
+
+  policy-validation:
+    name: Validate Policies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install OPA
+        run: |
+          wget https://openpolicyagent.org/downloads/latest/opa_linux_amd64
+          chmod +x opa_linux_amd64
+          sudo mv opa_linux_amd64 /usr/local/bin/opa
+
+      - name: Run OPA tests (if policies exist)
+        run: |
+          if [ -d "policies/" ]; then
+            opa test policies/
+          else
+            echo "No OPA policies found"
+          fi
+
+      - name: Validate network policies
+        run: |
+          # Check all namespaces have network policies
+          for overlay in deployments/overlays/*/; do
+            echo "Checking $overlay"
+            if ! kubectl kustomize "$overlay" | grep -q "kind: NetworkPolicy"; then
+              echo "⚠️ Warning: No NetworkPolicy found in $overlay"
+            fi
+          done
+
+  # ============================================================================
+  # Secret Scanning
+  # ============================================================================
+
+  secret-scan:
+    name: Scan for Leaked Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Full history for gitleaks
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  # ============================================================================
+  # Compliance Report
+  # ============================================================================
+
+  compliance-report:
+    name: Generate Compliance Report
+    runs-on: ubuntu-latest
+    needs: [terraform-scan, kubernetes-scan, cis-benchmark, policy-validation, secret-scan]
+    if: always()
+    steps:
+      - name: Generate report
+        run: |
+          cat > compliance-report.md <<EOF
+          # GCP Compliance Scan Report
+
+          **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Project**: $PROJECT_ID
+
+          ## Scan Results
+
+          - **Terraform Security**: ${{ needs.terraform-scan.result }}
+          - **Kubernetes Security**: ${{ needs.kubernetes-scan.result }}
+          - **CIS Benchmark**: ${{ needs.cis-benchmark.result }}
+          - **Policy Validation**: ${{ needs.policy-validation.result }}
+          - **Secret Scanning**: ${{ needs.secret-scan.result }}
+
+          ## Overall Status
+
+          ${{ (needs.terraform-scan.result == 'success' && needs.kubernetes-scan.result == 'success' && needs.secret-scan.result == 'success') && '✅ COMPLIANT' || '❌ NON-COMPLIANT' }}
+
+          ## Recommendations
+
+          - Review Security tab for detailed findings
+          - Address CRITICAL and HIGH severity issues
+          - Update policies as needed
+          EOF
+
+          cat compliance-report.md
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance-report.md

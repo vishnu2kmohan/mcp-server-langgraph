@@ -1,0 +1,116 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mcp-server-langgraph-network-policy
+  namespace: mcp-production
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-server-langgraph
+
+  policyTypes:
+  - Ingress
+  - Egress
+
+  ingress:
+  # Allow ingress from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+
+  # Allow ingress from within same namespace (for internal services)
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000
+
+  # Allow health check probes from GKE
+  - from:
+    - namespaceSelector: {}
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000
+
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # Allow Cloud SQL Proxy to reach Cloud SQL
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL Proxy health check
+    - protocol: TCP
+      port: 9801  # Cloud SQL Proxy metrics
+
+  # Allow egress to PostgreSQL via Cloud SQL Proxy (localhost)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: mcp-server-langgraph
+    ports:
+    - protocol: TCP
+      port: 5432
+
+  # Allow egress to Redis (Memorystore)
+  - ports:
+    - protocol: TCP
+      port: 6379
+
+  # Allow egress to Vertex AI and Google APIs
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+
+  # Allow egress to Keycloak (if in cluster)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow egress to OpenFGA (if in cluster)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: openfga
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow egress to Qdrant (if in cluster)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: qdrant
+    ports:
+    - protocol: TCP
+      port: 6333
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress-default
+  namespace: mcp-production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  # This denies all ingress by default (pods must have explicit allow policies)

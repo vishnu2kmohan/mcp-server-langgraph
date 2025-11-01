@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mcp-server-langgraph-pdb
+  namespace: mcp-production
+spec:
+  minAvailable: 2  # Always keep at least 2 pods running
+  selector:
+    matchLabels:
+      app: mcp-server-langgraph
+  unhealthyPodEvictionPolicy: IfHealthyBudget

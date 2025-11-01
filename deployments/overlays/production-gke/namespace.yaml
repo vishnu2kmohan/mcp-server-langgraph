@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcp-production
+  labels:
+    name: mcp-production
+    environment: production
+    platform: gke
+    cloud: gcp
+    istio-injection: disabled  # Enable if using Anthos Service Mesh
+  annotations:
+    # GKE-specific annotations
+    cloud.google.com/neg: '{"ingress": true}'
+    # Network policy enforcement
+    networking.gke.io/network-policy: "true"

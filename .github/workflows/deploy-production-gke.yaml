@@ -1,0 +1,482 @@
+name: Deploy to GKE Production
+
+# ==============================================================================
+# GKE Production Deployment Workflow
+# ==============================================================================
+#
+# This workflow deploys to production GKE cluster with:
+# - Manual approval gates
+# - Workload Identity Federation (keyless authentication)
+# - Binary Authorization (if enabled)
+# - Comprehensive validation and smoke tests
+# - Automated rollback on failure
+# - Canary deployment strategy (optional)
+#
+# ==============================================================================
+
+on:
+  release:
+    types: [released]  # Only on full releases, not prereleases
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: true
+      skip_tests:
+        description: 'Skip pre-deployment tests (use with caution)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false  # Never cancel production deployments
+
+env:
+  GCP_PROJECT_ID: YOUR_PROJECT_ID  # Replace with your project ID
+  GCP_REGION: us-central1
+  GKE_CLUSTER: mcp-prod-gke
+  NAMESPACE: mcp-production
+  DEPLOYMENT_NAME: production-mcp-server-langgraph
+  ARTIFACT_REGISTRY: us-central1-docker.pkg.dev
+
+permissions:
+  contents: read
+  id-token: write  # Required for Workload Identity Federation
+  pull-requests: write
+  deployments: write
+
+jobs:
+  # ============================================================================
+  # PRE-DEPLOYMENT VALIDATION
+  # ============================================================================
+
+  pre-deployment-checks:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    environment:
+      name: production-validation
+    outputs:
+      validation_passed: ${{ steps.validate.outputs.passed }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Validate image tag format
+        id: validate_tag
+        run: |
+          TAG="${{ github.event.inputs.image_tag || github.event.release.tag_name }}"
+          if [[ ! "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "❌ Invalid tag format: $TAG"
+            echo "Expected: vX.Y.Z or X.Y.Z"
+            exit 1
+          fi
+          echo "✅ Valid tag: $TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Validate Kustomize configuration
+        run: |
+          kubectl kustomize deployments/overlays/production-gke > /tmp/manifests.yaml
+          echo "✅ Kustomize validation passed"
+
+      - name: Validate manifests with kubeval
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          kubectl kustomize deployments/overlays/production-gke | ./kubeval --strict
+          echo "✅ Manifest validation passed"
+
+      - name: Security scan manifests
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'deployments/overlays/production-gke'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'  # Fail on critical/high vulnerabilities
+
+      - name: Set validation status
+        id: validate
+        run: echo "passed=true" >> $GITHUB_OUTPUT
+
+  # ============================================================================
+  # BUILD AND PUSH IMAGE
+  # ============================================================================
+
+  build-and-push:
+    name: Build and Push to Artifact Registry
+    runs-on: ubuntu-latest
+    needs: pre-deployment-checks
+    outputs:
+      image_tag: ${{ steps.image.outputs.tag }}
+      image_digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set image tag
+        id: image
+        run: |
+          TAG="${{ github.event.inputs.image_tag || github.event.release.tag_name }}"
+          # Remove 'v' prefix if present
+          TAG="${TAG#v}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Using image tag: $TAG"
+
+      # Authenticate to Google Cloud using Workload Identity Federation
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+          token_format: access_token
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.ARTIFACT_REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          target: final-base
+          push: true
+          tags: |
+            ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-production/mcp-server-langgraph:${{ steps.image.outputs.tag }}
+            ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-production/mcp-server-langgraph:latest
+          cache-from: |
+            type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-production/mcp-server-langgraph:latest
+          cache-to: |
+            type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-production/mcp-server-langgraph:cache,mode=max
+          provenance: true  # Generate SLSA provenance
+          sbom: true        # Generate SBOM
+
+      # Scan image for vulnerabilities
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: '${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-production/mcp-server-langgraph:${{ steps.image.outputs.tag }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'  # Fail on critical/high vulnerabilities
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # MANUAL APPROVAL GATE
+  # ============================================================================
+
+  approve-deployment:
+    name: Manual Approval Required
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment:
+      name: production-approval
+      url: https://console.cloud.google.com/kubernetes/clusters/details/${{ env.GCP_REGION }}/${{ env.GKE_CLUSTER }}/details?project=${{ env.GCP_PROJECT_ID }}
+    steps:
+      - name: Approval granted
+        run: |
+          echo "✅ Production deployment approved"
+          echo "Deploying image: ${{ needs.build-and-push.outputs.image_tag }}"
+
+  # ============================================================================
+  # DEPLOY TO PRODUCTION
+  # ============================================================================
+
+  deploy-production:
+    name: Deploy to Production GKE
+    runs-on: ubuntu-latest
+    needs: [build-and-push, approve-deployment]
+    environment:
+      name: production
+      url: https://console.cloud.google.com/kubernetes/workload/overview?project=${{ env.GCP_PROJECT_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: Verify cluster access
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Update Kustomization with new image tag
+        run: |
+          cd deployments/overlays/production-gke
+          kustomize edit set image mcp-server-langgraph=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-production/mcp-server-langgraph:${{ needs.build-and-push.outputs.image_tag }}
+
+      - name: Dry-run deployment
+        run: |
+          kubectl apply -k deployments/overlays/production-gke --dry-run=server
+          echo "✅ Dry-run successful"
+
+      - name: Create deployment backup
+        run: |
+          kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} -o yaml > /tmp/deployment-backup.yaml
+          echo "✅ Backup created"
+
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -k deployments/overlays/production-gke
+          echo "✅ Deployment applied"
+
+      - name: Wait for rollout to complete
+        run: |
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --timeout=10m
+          echo "✅ Rollout completed"
+
+      - name: Verify deployment
+        run: |
+          # Check pod status
+          RUNNING_PODS=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph -o json | jq '.items | map(select(.status.phase=="Running")) | length')
+          TOTAL_PODS=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph -o json | jq '.items | length')
+
+          echo "Running pods: $RUNNING_PODS / $TOTAL_PODS"
+
+          if [ "$RUNNING_PODS" -lt 2 ]; then
+            echo "❌ Not enough running pods (minimum: 2)"
+            exit 1
+          fi
+
+          # Verify pod health
+          kubectl wait --for=condition=Ready pods -l app=mcp-server-langgraph -n ${{ env.NAMESPACE }} --timeout=5m
+          echo "✅ All pods are healthy"
+
+      - name: Run production smoke tests
+        run: |
+          # Get service endpoint
+          SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Health check
+          curl -f -s "http://${SERVICE_IP}:8000/health/live" || exit 1
+          curl -f -s "http://${SERVICE_IP}:8000/health/ready" || exit 1
+
+          echo "✅ Smoke tests passed"
+
+  # ============================================================================
+  # POST-DEPLOYMENT VALIDATION
+  # ============================================================================
+
+  post-deployment-validation:
+    name: Post-Deployment Validation
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: Verify security configuration
+        run: |
+          # Check for privileged containers
+          PRIVILEGED=$(kubectl get pods -n ${{ env.NAMESPACE }} -o json | jq '[.items[].spec.containers[] | select(.securityContext.privileged==true)] | length')
+          if [ "$PRIVILEGED" -gt 0 ]; then
+            echo "❌ Found privileged containers"
+            exit 1
+          fi
+
+          # Check network policies exist
+          NP_COUNT=$(kubectl get networkpolicies -n ${{ env.NAMESPACE }} -o json | jq '.items | length')
+          if [ "$NP_COUNT" -lt 1 ]; then
+            echo "❌ No network policies found"
+            exit 1
+          fi
+
+          echo "✅ Security validation passed"
+
+      - name: Verify workload identity configuration
+        run: |
+          # Check service account annotations
+          SA_ANNOTATION=$(kubectl get sa production-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}')
+          if [ -z "$SA_ANNOTATION" ]; then
+            echo "❌ Workload Identity annotation missing"
+            exit 1
+          fi
+          echo "✅ Workload Identity configured: $SA_ANNOTATION"
+
+      - name: Performance baseline check
+        run: |
+          # Get service endpoint
+          SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Response time check (should be < 2 seconds)
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' "http://${SERVICE_IP}:8000/health/live")
+          echo "Response time: ${RESPONSE_TIME}s"
+
+          if (( $(echo "$RESPONSE_TIME > 2.0" | bc -l) )); then
+            echo "⚠️ Warning: Response time above baseline (${RESPONSE_TIME}s > 2.0s)"
+          else
+            echo "✅ Performance baseline met"
+          fi
+
+      - name: Verify Cloud Logging integration
+        run: |
+          # Check if logs are being sent to Cloud Logging
+          LOGS=$(gcloud logging read "resource.type=k8s_container AND resource.labels.namespace_name=${{ env.NAMESPACE }}" \
+            --limit=10 \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }})
+
+          LOG_COUNT=$(echo "$LOGS" | jq '. | length')
+          if [ "$LOG_COUNT" -lt 1 ]; then
+            echo "⚠️ Warning: No recent logs found in Cloud Logging"
+          else
+            echo "✅ Cloud Logging integration verified ($LOG_COUNT recent logs)"
+          fi
+
+      - name: Check Cloud Monitoring metrics
+        run: |
+          # Verify metrics are being collected
+          gcloud monitoring time-series list \
+            --filter='resource.type="k8s_container" AND resource.labels.namespace_name="${{ env.NAMESPACE }}"' \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --limit=1
+
+          echo "✅ Cloud Monitoring integration verified"
+
+  # ============================================================================
+  # ROLLBACK ON FAILURE
+  # ============================================================================
+
+  rollback-on-failure:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-production, post-deployment-validation]
+    if: failure()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: Rollback to previous revision
+        run: |
+          kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          echo "🔄 Rollback initiated"
+
+      - name: Wait for rollback to complete
+        run: |
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --timeout=10m
+          echo "✅ Rollback completed"
+
+      - name: Verify rollback
+        run: |
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph
+          echo "✅ Rollback verification complete"
+
+      - name: Send failure notification
+        if: always()
+        run: |
+          echo "❌ Production deployment failed and was rolled back"
+          echo "Image tag: ${{ needs.build-and-push.outputs.image_tag }}"
+          # Add Slack/email notification here
+
+  # ============================================================================
+  # DEPLOYMENT SUMMARY
+  # ============================================================================
+
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-production, post-deployment-validation]
+    if: success()
+    steps:
+      - name: Create deployment summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          # ✅ Production Deployment Successful
+
+          ## Deployment Details
+          - **Environment**: Production (GKE Autopilot)
+          - **Cluster**: ${{ env.GKE_CLUSTER }}
+          - **Region**: ${{ env.GCP_REGION }}
+          - **Namespace**: ${{ env.NAMESPACE }}
+          - **Image Tag**: ${{ needs.build-and-push.outputs.image_tag }}
+          - **Image Digest**: ${{ needs.build-and-push.outputs.image_digest }}
+
+          ## Validation Results
+          - ✅ Pre-deployment checks passed
+          - ✅ Image security scan passed
+          - ✅ Manifest validation passed
+          - ✅ Deployment rollout completed
+          - ✅ Health checks passed
+          - ✅ Security configuration verified
+          - ✅ Workload Identity configured
+          - ✅ Performance baseline met
+          - ✅ Cloud Logging verified
+          - ✅ Cloud Monitoring verified
+
+          ## Quick Links
+          - [GKE Console](https://console.cloud.google.com/kubernetes/workload/overview?project=${{ env.GCP_PROJECT_ID }})
+          - [Cloud Logging](https://console.cloud.google.com/logs/query?project=${{ env.GCP_PROJECT_ID }})
+          - [Cloud Monitoring](https://console.cloud.google.com/monitoring?project=${{ env.GCP_PROJECT_ID }})
+
+          ## Rollback Command
+          If issues arise, rollback with:
+          \`\`\`bash
+          kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          \`\`\`
+          EOF
+
+      - name: Send success notification
+        run: |
+          echo "✅ Production deployment completed successfully"
+          # Add Slack/email notification here

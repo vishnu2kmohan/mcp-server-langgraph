@@ -1,0 +1,758 @@
+---
+title: "Multi-Environment Strategy"
+description: "Configure dev, staging, and production environments with Terraform for consistent, cost-optimized infrastructure"
+icon: "layer-group"
+---
+
+## Overview
+
+MCP Server uses a **multi-environment Terraform strategy** to maintain consistent infrastructure across development, staging, and production while optimizing costs and managing risk.
+
+<CardGroup cols={3}>
+  <Card title="Development" icon="flask">
+    Cost-optimized for testing
+  </Card>
+  <Card title="Staging" icon="vial">
+    Production-like validation
+  </Card>
+  <Card title="Production" icon="rocket">
+    HA, resilient, monitored
+  </Card>
+</CardGroup>
+
+---
+
+## Environment Philosophy
+
+<Steps>
+  <Step title="Consistent Modules">
+    **Same Terraform modules** across all environments
+    - Reduces "works in dev, breaks in prod" issues
+    - Ensures feature parity
+    - Simplifies testing
+  </Step>
+
+  <Step title="Parameter-Driven Differences">
+    **Use variables** to adjust sizing, HA, and features
+    - Dev: Single zone, smaller instances
+    - Staging: Regional, production-like
+    - Prod: Regional, HA, monitoring
+  </Step>
+
+  <Step title="Isolated State">
+    **Separate Terraform state** per environment
+    - Prevents accidental cross-environment changes
+    - Allows independent lifecycle management
+    - Enables parallel deployments
+  </Step>
+
+  <Step title="Progressive Rollout">
+    **Test changes in dev → staging → prod**
+    - Validate in dev
+    - Load test in staging
+    - Deploy to prod with confidence
+  </Step>
+</Steps>
+
+---
+
+## Environment Comparison
+
+### Configuration Matrix
+
+| Component | Development | Staging | Production |
+|-----------|-------------|---------|------------|
+| **GKE Cluster** | Zonal (1 zone) | Regional (3 zones) | Regional (3 zones) |
+| **GKE Mode** | Autopilot | Autopilot | Autopilot |
+| **Pod Replicas** | 1-2 | 2-3 | 3-20 (HPA) |
+| **Cloud SQL** | db-custom-1-3840 | db-custom-2-7680 | db-custom-4-15360 |
+| **SQL HA** | Single zone | Regional HA | Regional HA + replicas |
+| **Redis** | BASIC (no SLA) | STANDARD_HA | STANDARD_HA + persistence |
+| **Redis Memory** | 1 GB | 3 GB | 5 GB |
+| **Monitoring** | Basic (free tier) | Full | Full + SLI/SLO |
+| **Backups** | Daily (7 days) | Daily (14 days) | Daily (30 days) + PITR |
+| **Binary Auth** | ❌ Disabled | ✅ Audit mode | ✅ Enforcing |
+| **Network** | Default VPC | Custom VPC | Custom VPC + Cloud Armor |
+| **Cost/month** | ~$100 | ~$310 | ~$970 |
+
+---
+
+## Directory Structure
+
+```
+terraform/environments/
+├── gcp-dev/
+│   ├── main.tf              # Module composition
+│   ├── variables.tf         # Input variables
+│   ├── terraform.tfvars     # Dev-specific values
+│   ├── backend.tf           # GCS backend (dev prefix)
+│   └── outputs.tf           # Cluster details, connection info
+│
+├── gcp-staging/
+│   ├── main.tf              # Same modules as dev
+│   ├── variables.tf         # Same variables
+│   ├── terraform.tfvars     # Staging-specific values (larger sizes)
+│   ├── backend.tf           # GCS backend (staging prefix)
+│   └── outputs.tf
+│
+└── gcp-prod/
+    ├── main.tf              # Same modules as dev/staging
+    ├── variables.tf         # Same variables
+    ├── terraform.tfvars     # Production values (HA, monitoring)
+    ├── backend.tf           # GCS backend (prod prefix)
+    └── outputs.tf
+```
+
+<Info>
+  **Key principle**: `main.tf`, `variables.tf`, `outputs.tf` are **identical** across environments. Only `terraform.tfvars` differs.
+</Info>
+
+---
+
+## Development Environment
+
+### Purpose
+
+- **Rapid iteration** for engineers
+- **Cost optimization** (minimal resources)
+- **No SLA requirements**
+
+### Configuration
+
+<Tabs>
+  <Tab title="terraform.tfvars">
+    ```hcl
+    # Project & Region
+    project_id = "mcp-dev-project"
+    region     = "us-central1"
+    zone       = "us-central1-a"  # Zonal cluster
+
+    # VPC
+    vpc_name = "mcp-dev-vpc"
+    nodes_cidr    = "10.0.0.0/24"
+    pods_cidr     = "10.1.0.0/16"
+    services_cidr = "10.2.0.0/16"
+
+    # GKE
+    cluster_name      = "mcp-dev-gke"
+    regional_cluster  = false  # Zonal (cheaper)
+
+    # Cloud SQL
+    cloudsql_tier                  = "db-custom-1-3840"  # 1 vCPU, 3.75 GB
+    cloudsql_availability_type     = "ZONAL"
+    cloudsql_read_replica_count    = 0
+    cloudsql_backup_retention_days = 7
+
+    # Memorystore Redis
+    redis_memory_size_gb = 1
+    redis_tier           = "BASIC"  # No HA, no SLA
+
+    # Security
+    enable_binary_authorization    = false
+    enable_security_posture        = true
+
+    # Cost
+    labels = {
+      environment = "development"
+      cost_center = "engineering"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Estimated Cost">
+    | Component | Cost/month |
+    |-----------|------------|
+    | GKE Autopilot (zonal) | $40 |
+    | Cloud SQL (db-custom-1-3840) | $35 |
+    | Memorystore (1 GB BASIC) | $15 |
+    | VPC + Cloud NAT | $10 |
+    | **Total** | **~$100** |
+
+    **Savings vs. Production**: 90%
+  </Tab>
+</Tabs>
+
+### Tradeoffs
+
+<Warning>
+  **No HA**: Single zone means cluster downtime during zone failures (rare but possible).
+</Warning>
+
+<Check>
+  **Acceptable for dev**: Downtime doesn't impact customers, cost savings are significant.
+</Check>
+
+---
+
+## Staging Environment
+
+### Purpose
+
+- **Pre-production validation**
+- **Load testing** with production-like config
+- **Integration testing** across services
+- **Security scanning** before prod deployment
+
+### Configuration
+
+<Tabs>
+  <Tab title="terraform.tfvars">
+    ```hcl
+    # Project & Region
+    project_id = "mcp-staging-project"
+    region     = "us-central1"
+
+    # VPC
+    vpc_name = "mcp-staging-vpc"
+    nodes_cidr    = "10.10.0.0/24"
+    pods_cidr     = "10.11.0.0/16"
+    services_cidr = "10.12.0.0/16"
+
+    # GKE
+    cluster_name     = "mcp-staging-gke"
+    regional_cluster = true  # 3 zones for HA
+
+    # Cloud SQL
+    cloudsql_tier                  = "db-custom-2-7680"  # 2 vCPU, 7.5 GB
+    cloudsql_availability_type     = "REGIONAL"
+    cloudsql_read_replica_count    = 0  # No replicas (cost savings)
+    cloudsql_backup_retention_days = 14
+
+    # Memorystore Redis
+    redis_memory_size_gb = 3
+    redis_tier           = "STANDARD_HA"  # HA tier
+
+    # Security
+    enable_binary_authorization    = true
+    binary_authorization_mode      = "DRYRUN_AUDIT_LOG_ONLY"  # Audit mode
+    enable_security_posture        = true
+
+    # Monitoring
+    enable_cloud_monitoring = true
+    enable_sli_slo          = true
+
+    # Cost
+    labels = {
+      environment = "staging"
+      cost_center = "engineering"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Estimated Cost">
+    | Component | Cost/month |
+    |-----------|------------|
+    | GKE Autopilot (regional) | $120 |
+    | Cloud SQL (db-custom-2-7680, HA) | $140 |
+    | Memorystore (3 GB STANDARD_HA) | $35 |
+    | VPC + Cloud NAT | $15 |
+    | **Total** | **~$310** |
+
+    **Savings vs. Production**: 68%
+  </Tab>
+</Tabs>
+
+### Key Differences from Production
+
+<AccordionGroup>
+  <Accordion title="No Read Replicas">
+    **Production**: Has Cloud SQL read replicas for read scaling.
+
+    **Staging**: No read replicas (cost savings, same testing value).
+  </Accordion>
+
+  <Accordion title="Binary Auth in Audit Mode">
+    **Production**: Binary Authorization **enforcing** (blocks unsigned images).
+
+    **Staging**: **Audit mode** (logs denials, doesn't block). Allows testing image signing without risk.
+  </Accordion>
+
+  <Accordion title="Smaller Database">
+    **Production**: db-custom-4-15360 (4 vCPU).
+
+    **Staging**: db-custom-2-7680 (2 vCPU). Sufficient for load testing without production traffic.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Production Environment
+
+### Purpose
+
+- **Live customer traffic**
+- **99.9% uptime SLA**
+- **Security compliance** (Binary Auth, audit logs)
+- **Full observability** (SLI/SLO, alerting)
+
+### Configuration
+
+<Tabs>
+  <Tab title="terraform.tfvars">
+    ```hcl
+    # Project & Region
+    project_id = "mcp-prod-project"
+    region     = "us-central1"
+
+    # VPC
+    vpc_name = "mcp-prod-vpc"
+    nodes_cidr    = "10.20.0.0/24"
+    pods_cidr     = "10.21.0.0/16"
+    services_cidr = "10.22.0.0/16"
+    nat_ip_count  = 2  # 2 static NAT IPs for egress
+
+    # GKE
+    cluster_name     = "mcp-prod-gke"
+    regional_cluster = true  # 3 zones for HA
+
+    # Security
+    enable_private_nodes               = true
+    enable_private_endpoint            = false  # Public control plane access
+    enable_master_authorized_networks  = true
+    master_authorized_networks_cidrs   = [
+      {
+        cidr_block   = "10.0.0.0/8"
+        display_name = "Internal VPC"
+      }
+    ]
+    enable_binary_authorization        = true
+    binary_authorization_mode          = "ENFORCING"  # Block unsigned images
+    enable_security_posture            = true
+    security_posture_mode              = "ENTERPRISE"
+
+    # Cloud SQL
+    cloudsql_tier                  = "db-custom-4-15360"  # 4 vCPU, 15 GB
+    cloudsql_availability_type     = "REGIONAL"
+    cloudsql_read_replica_count    = 1  # 1 read replica
+    cloudsql_backup_retention_days = 30
+    cloudsql_enable_pitr           = true  # Point-in-time recovery
+
+    # Memorystore Redis
+    redis_memory_size_gb              = 5
+    redis_tier                        = "STANDARD_HA"
+    redis_persistence_mode            = "RDB"
+    redis_replica_count               = 1  # Cross-region replica (optional)
+
+    # Monitoring & Observability
+    enable_cloud_monitoring  = true
+    enable_cloud_logging     = true
+    enable_cloud_trace       = true
+    enable_cloud_profiler    = true
+    enable_sli_slo           = true
+
+    # Backup & DR
+    enable_gke_backup        = true
+    gke_backup_retention_days = 30
+    enable_dr_automation     = true
+
+    # Cost Optimization
+    enable_committed_use_discounts = true
+    committed_use_term             = "1_YEAR"  # or "3_YEAR" for 52% discount
+
+    # Labels
+    labels = {
+      environment = "production"
+      cost_center = "engineering"
+      sla         = "99.9"
+      compliance  = "soc2"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Estimated Cost">
+    | Component | Cost/month | With CUD (3yr) |
+    |-----------|------------|----------------|
+    | GKE Autopilot (regional) | $350 | $168 (52% off) |
+    | Cloud SQL (db-custom-4-15360, HA + replica) | $420 | $202 (52% off) |
+    | Memorystore (5 GB STANDARD_HA) | $165 | $79 (52% off) |
+    | VPC + Cloud NAT (2 IPs) | $20 | $20 |
+    | Cloud Monitoring | $15 | $15 |
+    | **Total** | **~$970** | **~$484** |
+
+    **Savings with CUD**: 50%
+  </Tab>
+</Tabs>
+
+### Production-Only Features
+
+<AccordionGroup>
+  <Accordion title="Binary Authorization Enforcing">
+    **Blocks deployment** of unsigned or unverified container images.
+
+    ```hcl
+    binary_authorization_mode = "ENFORCING"
+    ```
+
+    Requires image signing in CI/CD pipeline.
+  </Accordion>
+
+  <Accordion title="Point-in-Time Recovery (PITR)">
+    **Recover database** to any second within retention period.
+
+    ```hcl
+    cloudsql_enable_pitr = true
+    ```
+
+    Essential for disaster recovery.
+  </Accordion>
+
+  <Accordion title="Read Replicas">
+    **Scale read traffic** without impacting primary database.
+
+    ```hcl
+    cloudsql_read_replica_count = 1
+    ```
+
+    Improves performance and availability.
+  </Accordion>
+
+  <Accordion title="GKE Backup">
+    **Automated cluster backups** for disaster recovery.
+
+    ```hcl
+    enable_gke_backup = true
+    ```
+
+    Enables cluster restoration after catastrophic failure.
+  </Accordion>
+
+  <Accordion title="SLI/SLO Monitoring">
+    **Service-level objectives** with error budgets.
+
+    - 99.9% availability SLO
+    - P95 latency < 2s
+    - P99 latency < 5s
+
+    Alerts when error budget is depleted.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Deployment Strategy
+
+### Progressive Rollout
+
+<Steps>
+  <Step title="1. Deploy to Development">
+    ```bash
+    cd terraform/environments/gcp-dev
+    terraform init
+    terraform plan -out=dev.tfplan
+    terraform apply dev.tfplan
+    ```
+
+    **Validation**:
+    - Terraform apply succeeds
+    - Cluster is accessible
+    - Basic smoke tests pass
+  </Step>
+
+  <Step title="2. Deploy to Staging">
+    ```bash
+    cd terraform/environments/gcp-staging
+    terraform init
+    terraform plan -out=staging.tfplan
+    terraform apply staging.tfplan
+    ```
+
+    **Validation**:
+    - Integration tests pass
+    - Load tests show acceptable performance
+    - Security scans complete (no critical issues)
+  </Step>
+
+  <Step title="3. Deploy to Production (with approval)">
+    ```bash
+    cd terraform/environments/gcp-prod
+    terraform init
+    terraform plan -out=prod.tfplan
+
+    # Review plan carefully
+    less prod.tfplan
+
+    # Apply (requires approval in CI/CD)
+    terraform apply prod.tfplan
+    ```
+
+    **Validation**:
+    - Canary deployment (10% traffic)
+    - Monitor SLI/SLO metrics
+    - Full rollout after 24 hours with no issues
+  </Step>
+</Steps>
+
+### Rollback Strategy
+
+<Accordion title="Infrastructure Rollback">
+  **If infrastructure change causes issues**:
+
+  ```bash
+  # Option 1: Terraform rollback (if state is clean)
+  git revert HEAD
+  terraform apply
+
+  # Option 2: Restore previous state
+  gsutil cp \
+    gs://BUCKET/environments/production/default.tfstate#PREVIOUS_GENERATION \
+    gs://BUCKET/environments/production/default.tfstate
+
+  # Option 3: Targeted resource replacement
+  terraform apply -replace=google_container_cluster.main
+  ```
+</Accordion>
+
+---
+
+## State Management
+
+### Separate State Per Environment
+
+<Tabs>
+  <Tab title="Development">
+    ```hcl terraform/environments/gcp-dev/backend.tf
+    terraform {
+      backend "gcs" {
+        bucket = "mcp-langgraph-terraform-state"
+        prefix = "environments/development"
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Staging">
+    ```hcl terraform/environments/gcp-staging/backend.tf
+    terraform {
+      backend "gcs" {
+        bucket = "mcp-langgraph-terraform-state"
+        prefix = "environments/staging"
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Production">
+    ```hcl terraform/environments/gcp-prod/backend.tf
+    terraform {
+      backend "gcs" {
+        bucket = "mcp-langgraph-terraform-state"
+        prefix = "environments/production"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Best practice**: Same bucket, different prefixes (cost-effective and easy to manage).
+</Info>
+
+---
+
+## Variable Management
+
+### Shared Variables (variables.tf)
+
+Variables defined in `variables.tf` are **identical** across environments:
+
+```hcl
+variable "project_id" {
+  description = "GCP project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "GCP region"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "cluster_name" {
+  description = "GKE cluster name"
+  type        = string
+}
+
+variable "regional_cluster" {
+  description = "Create regional (true) or zonal (false) cluster"
+  type        = bool
+  default     = true
+}
+
+variable "cloudsql_tier" {
+  description = "Cloud SQL machine type"
+  type        = string
+  default     = "db-custom-2-7680"
+}
+
+variable "enable_binary_authorization" {
+  description = "Enable Binary Authorization"
+  type        = bool
+  default     = false
+}
+```
+
+### Environment-Specific Values (terraform.tfvars)
+
+**Only `terraform.tfvars` differs** across environments:
+
+| Variable | Dev | Staging | Prod |
+|----------|-----|---------|------|
+| `project_id` | mcp-dev | mcp-staging | mcp-prod |
+| `cluster_name` | mcp-dev-gke | mcp-staging-gke | mcp-prod-gke |
+| `regional_cluster` | false | true | true |
+| `cloudsql_tier` | db-custom-1-3840 | db-custom-2-7680 | db-custom-4-15360 |
+| `redis_tier` | BASIC | STANDARD_HA | STANDARD_HA |
+| `enable_binary_authorization` | false | true (audit) | true (enforcing) |
+
+---
+
+## Testing Strategy
+
+<Steps>
+  <Step title="Unit Tests (Terraform Validate)">
+    ```bash
+    for env in gcp-dev gcp-staging gcp-prod; do
+      cd terraform/environments/$env
+      terraform init -backend=false
+      terraform validate
+    done
+    ```
+
+    Validates HCL syntax and module compatibility.
+  </Step>
+
+  <Step title="Integration Tests (Terraform Plan)">
+    ```bash
+    cd terraform/environments/gcp-dev
+    terraform plan -detailed-exitcode
+    ```
+
+    Exit codes:
+    - `0` = No changes
+    - `1` = Error
+    - `2` = Changes present (expected)
+  </Step>
+
+  <Step title="Compliance Scans">
+    ```bash
+    # Run compliance workflow
+    gh workflow run gcp-compliance-scan.yaml
+    ```
+
+    Scans for:
+    - CIS GKE Benchmark compliance
+    - Terraform security (Trivy, tfsec, Checkov)
+    - Secrets in code (Gitleaks)
+  </Step>
+
+  <Step title="Load Testing (Staging)">
+    ```bash
+    # Deploy to staging
+    cd terraform/environments/gcp-staging
+    terraform apply
+
+    # Run load tests (example with k6)
+    k6 run --vus 100 --duration 30m load-test.js
+    ```
+
+    Validates performance at scale.
+  </Step>
+</Steps>
+
+---
+
+## Cost Optimization by Environment
+
+### Development
+
+<Check>**Auto-shutdown** dev cluster after hours</Check>
+
+```bash
+# Cloud Scheduler: Scale to 0 at 6 PM
+gcloud scheduler jobs create http scale-down-dev \
+  --schedule="0 18 * * 1-5" \
+  --uri="https://container.googleapis.com/v1/projects/PROJECT/locations/ZONE/clusters/mcp-dev-gke" \
+  --http-method=PATCH \
+  --message-body='{"desiredNodeCount":0}'
+
+# Scale up at 6 AM
+gcloud scheduler jobs create http scale-up-dev \
+  --schedule="0 6 * * 1-5" \
+  --message-body='{"desiredNodeCount":1}'
+```
+
+**Savings**: $50-70/month (60-70%)
+
+### Staging
+
+<Check>**Right-size** based on actual load test results</Check>
+
+```bash
+# Monitor actual usage
+kubectl top pods -n mcp-staging --containers
+
+# Adjust pod requests
+kubectl patch deployment mcp-server-langgraph \
+  --type='json' \
+  -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
+```
+
+**Savings**: $50-100/month (15-30%)
+
+### Production
+
+<Check>**Purchase Committed Use Discounts (CUDs)**</Check>
+
+```hcl
+enable_committed_use_discounts = true
+committed_use_term             = "3_YEAR"  # 52% discount
+```
+
+**Savings**: $486/month (50%)
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Infrastructure Overview" icon="layer-group" href="/deployment/infrastructure/overview">
+    IaC architecture and principles
+  </Card>
+  <Card title="Backend Setup" icon="database" href="/deployment/infrastructure/backend-setup">
+    Initialize Terraform state storage
+  </Card>
+  <Card title="GCP Modules" icon="google" href="/deployment/infrastructure/terraform-gcp">
+    All 6 production-ready modules
+  </Card>
+  <Card title="Cost Optimization" icon="money-bill-trend-up" href="/deployment/cost-optimization">
+    Detailed cost reduction strategies
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<Steps>
+  <Step title="Set Up State Backend">
+    [Backend Setup →](/deployment/infrastructure/backend-setup)
+  </Step>
+
+  <Step title="Deploy Development Environment">
+    ```bash
+    cd terraform/environments/gcp-dev
+    terraform init && terraform apply
+    ```
+  </Step>
+
+  <Step title="Validate in Staging">
+    ```bash
+    cd terraform/environments/gcp-staging
+    terraform init && terraform apply
+    ```
+  </Step>
+
+  <Step title="Production Deployment">
+    [GKE Production Guide →](/deployment/kubernetes/gke-production)
+  </Step>
+</Steps>

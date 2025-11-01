@@ -1,0 +1,149 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcp-server-langgraph-prod
+  namespace: argocd
+  # Add finalizer for cleanup
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  # Annotations for notifications
+  annotations:
+    notifications.argoproj.io/subscribe.on-deployed.slack: argocd-notifications
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: argocd-notifications
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: argocd-notifications
+spec:
+  # Project reference
+  project: mcp-server-langgraph
+
+  # Source repository
+  source:
+    repoURL: https://github.com/vishnu2kmohan/mcp-server-langgraph
+    targetRevision: main
+    path: deployments/helm/mcp-server-langgraph
+
+    # Helm configuration
+    helm:
+      releaseName: mcp-server-langgraph
+
+      # Values file
+      valueFiles:
+        - values.yaml
+
+      # Override values
+      values: |
+        # Image configuration
+        image:
+          repository: ghcr.io/vishnu2kmohan/mcp-server-langgraph
+          tag: "2.8.0"
+          pullPolicy: IfNotPresent
+
+        # Replicas
+        replicaCount: 3
+
+        # Service account (with IRSA)
+        serviceAccount:
+          create: true
+          annotations:
+            eks.amazonaws.com/role-arn: "" # Set via Terraform output
+
+        # Resources
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 384Mi
+
+        # PostgreSQL configuration (from Terraform)
+        postgresql:
+          enabled: false
+          externalHost: "" # Set from Terraform output
+          externalPort: 5432
+          database: mcp_langgraph
+          existingSecret: postgres-credentials
+
+        # Redis configuration (from Terraform)
+        redis:
+          enabled: false
+          externalHost: "" # Set from Terraform output
+          externalPort: 6379
+          cluster:
+            enabled: true
+          existingSecret: redis-credentials
+
+        # OpenFGA configuration
+        openfga:
+          enabled: true
+
+        # Keycloak configuration
+        keycloak:
+          enabled: true
+
+        # Monitoring
+        prometheus:
+          enabled: true
+        grafana:
+          enabled: true
+
+        # Ingress
+        ingress:
+          enabled: true
+          className: nginx
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
+          hosts:
+            - host: mcp.example.com  # Replace with your domain
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: mcp-server-tls
+              hosts:
+                - mcp.example.com
+
+  # Destination
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mcp-server-langgraph
+
+  # Sync policy
+  syncPolicy:
+    # Automated sync
+    automated:
+      prune: true        # Delete resources not in Git
+      selfHeal: true     # Revert manual changes
+      allowEmpty: false  # Don't sync if source is empty
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+
+    # Retry strategy
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Health assessment
+  ignoreDifferences:
+    # Ignore HPA-managed replicas
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+
+    # Ignore certificate rotation
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle

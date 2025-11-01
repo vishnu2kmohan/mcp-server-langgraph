@@ -1,0 +1,237 @@
+name: GCP Infrastructure Drift Detection
+
+# Detect and remediate infrastructure drift between Terraform state and actual GCP resources
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+    inputs:
+      auto_remediate:
+        description: 'Automatically remediate drift (use with caution)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+  pull-requests: write
+
+env:
+  PROJECT_ID: YOUR_PROJECT_ID
+  TF_VERSION: 1.5.0
+
+jobs:
+  # ============================================================================
+  # Detect Drift in Production
+  # ============================================================================
+
+  detect-drift-prod:
+    name: Detect Drift - Production
+    runs-on: ubuntu-latest
+    outputs:
+      drift_detected: ${{ steps.plan.outputs.drift_detected }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'terraform@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Terraform Init
+        run: |
+          cd terraform/environments/gcp-prod
+          terraform init
+
+      - name: Terraform Plan (detect drift)
+        id: plan
+        run: |
+          cd terraform/environments/gcp-prod
+          terraform plan -detailed-exitcode -out=tfplan || EXIT_CODE=$?
+
+          # Exit codes: 0 = no changes, 1 = error, 2 = changes detected
+          if [ "$EXIT_CODE" = "2" ]; then
+            echo "drift_detected=true" >> $GITHUB_OUTPUT
+            terraform show -no-color tfplan > /tmp/drift-plan.txt
+          elif [ "$EXIT_CODE" = "1" ]; then
+            echo "❌ Terraform plan failed"
+            exit 1
+          else
+            echo "drift_detected=false" >> $GITHUB_OUTPUT
+            echo "✅ No drift detected"
+          fi
+
+      - name: Save drift plan
+        if: steps.plan.outputs.drift_detected == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-plan-production
+          path: /tmp/drift-plan.txt
+
+      - name: Create drift issue
+        if: steps.plan.outputs.drift_detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const driftPlan = fs.readFileSync('/tmp/drift-plan.txt', 'utf8');
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔍 Infrastructure Drift Detected - Production',
+              labels: ['infrastructure', 'drift', 'production'],
+              body: `## Infrastructure Drift Detected
+
+            **Environment**: Production (GCP)
+            **Detection Time**: ${new Date().toISOString()}
+
+            ### Drift Summary
+
+            Terraform detected differences between desired state and actual infrastructure.
+
+            <details>
+            <summary>View Terraform Plan</summary>
+
+            \`\`\`terraform
+            ${driftPlan.slice(0, 10000)}
+            \`\`\`
+
+            </details>
+
+            ### Recommended Actions
+
+            1. Review the drift plan above
+            2. Determine if drift is expected (manual changes) or unexpected
+            3. If expected, update Terraform code to match
+            4. If unexpected, run \`terraform apply\` to remediate
+
+            ### Remediation Command
+
+            \`\`\`bash
+            cd terraform/environments/gcp-prod
+            terraform apply
+            \`\`\`
+
+            ### Related
+
+            - [Operational Runbooks](deployments/GKE_OPERATIONAL_RUNBOOKS.md)
+            - [Drift Detection Workflow](.github/workflows/gcp-drift-detection.yaml)
+            `
+            });
+
+  # ============================================================================
+  # Auto-Remediation (if enabled)
+  # ============================================================================
+
+  auto-remediate:
+    name: Auto-Remediate Drift
+    runs-on: ubuntu-latest
+    needs: detect-drift-prod
+    if: needs.detect-drift-prod.outputs.drift_detected == 'true' && github.event.inputs.auto_remediate == 'true'
+    environment:
+      name: production-drift-remediation
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'terraform@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Terraform Init
+        run: |
+          cd terraform/environments/gcp-prod
+          terraform init
+
+      - name: Terraform Apply (remediate drift)
+        run: |
+          cd terraform/environments/gcp-prod
+          terraform apply -auto-approve
+
+      - name: Comment on drift issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find the drift issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'drift,production',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc'
+            });
+
+            if (issues.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body: '✅ Drift automatically remediated via Terraform apply.'
+              });
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                state: 'closed'
+              });
+            }
+
+  # ============================================================================
+  # Detect Drift in Staging
+  # ============================================================================
+
+  detect-drift-staging:
+    name: Detect Drift - Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'terraform@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Check staging drift
+        run: |
+          cd terraform/environments/gcp-staging
+          terraform init
+          terraform plan -detailed-exitcode || EXIT_CODE=$?
+
+          if [ "$EXIT_CODE" = "2" ]; then
+            echo "⚠️ Drift detected in staging"
+          else
+            echo "✅ No drift in staging"
+          fi

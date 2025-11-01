@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argocd
+
+resources:
+  # Official ArgoCD installation
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.9.3/manifests/install.yaml
+  - namespace.yaml
+  - ingress.yaml
+
+patches:
+  # Patch server deployment for custom configurations
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/command/-
+        value: --insecure
+    target:
+      kind: Deployment
+      name: argocd-server
+
+configMapGenerator:
+  - name: argocd-cm
+    behavior: merge
+    files:
+      - argocd-cm.yaml=argocd-install.yaml
+
+  - name: argocd-cmd-params-cm
+    behavior: merge
+    files:
+      - argocd-cmd-params-cm.yaml=argocd-install.yaml
+
+  - name: argocd-rbac-cm
+    behavior: merge
+    files:
+      - argocd-rbac-cm.yaml=argocd-install.yaml
+
+  - name: argocd-notifications-cm
+    behavior: merge
+    files:
+      - argocd-notifications-cm.yaml=argocd-install.yaml

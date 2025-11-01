@@ -1,0 +1,194 @@
+# Falco Runtime Security Configuration
+# Monitors system calls and Kubernetes audit events for security threats
+
+driver:
+  # Use eBPF driver for better performance and compatibility
+  kind: ebpf
+  ebpf:
+    hostNetwork: true
+
+# Falco configuration
+falco:
+  # Priority level for rules
+  priority: warning
+
+  # Buffer size
+  bufferedOutputs: true
+
+  # Output channels
+  outputs:
+    rate: 1
+    maxBurst: 1000
+
+  # Syscall event drops
+  syscallEventDrops:
+    actions:
+      - log
+      - alert
+    rate: .03333
+    maxBurst: 1
+
+  # Rules
+  rulesFile:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/k8s_audit_rules.yaml
+    - /etc/falco/rules.d
+
+  # JSON output for better parsing
+  jsonOutput: true
+  jsonIncludeOutputProperty: true
+
+  # Logging
+  logStderr: true
+  logSyslog: false
+  logLevel: info
+
+  # File output
+  fileOutput:
+    enabled: true
+    keepAlive: false
+    filename: /var/log/falco/events.log
+
+# Custom rules
+customRules:
+  rules-mcp-server.yaml: |-
+    # Custom rules for MCP Server LangGraph
+
+    # Detect unexpected network connections
+    - rule: Unexpected Outbound Connection from MCP Server
+      desc: Detect unexpected outbound connections from MCP Server pods
+      condition: >
+        outbound and container and
+        k8s.ns.name = "mcp-server-langgraph" and
+        not fd.sip in (allowed_ips)
+      output: >
+        Unexpected outbound connection from MCP Server
+        (user=%user.name command=%proc.cmdline connection=%fd.name
+        container=%container.name image=%container.image.repository)
+      priority: WARNING
+      tags: [network, mitre_exfiltration]
+
+    # Detect privilege escalation attempts
+    - rule: Privilege Escalation in MCP Server
+      desc: Detect privilege escalation attempts in MCP Server containers
+      condition: >
+        spawned_process and container and
+        k8s.ns.name = "mcp-server-langgraph" and
+        (proc.name in (sudo, su) or
+         proc.args contains "chmod +s")
+      output: >
+        Privilege escalation attempt detected
+        (user=%user.name command=%proc.cmdline
+        container=%container.name image=%container.image.repository)
+      priority: CRITICAL
+      tags: [privilege_escalation, mitre_privilege_escalation]
+
+    # Detect sensitive file access
+    - rule: Sensitive File Access in MCP Server
+      desc: Detect access to sensitive files
+      condition: >
+        open_read and container and
+        k8s.ns.name = "mcp-server-langgraph" and
+        (fd.name startswith "/etc/shadow" or
+         fd.name startswith "/etc/passwd" or
+         fd.name contains "id_rsa" or
+         fd.name contains "credentials")
+      output: >
+        Sensitive file accessed
+        (user=%user.name file=%fd.name command=%proc.cmdline
+        container=%container.name)
+      priority: WARNING
+      tags: [filesystem, mitre_credential_access]
+
+    # Detect container escape attempts
+    - rule: Container Escape Attempt
+      desc: Detect potential container escape
+      condition: >
+        spawned_process and container and
+        k8s.ns.name = "mcp-server-langgraph" and
+        (proc.name in (nsenter, unshare, capsh) or
+         proc.args contains "/proc/self/ns" or
+         proc.args contains "pivot_root")
+      output: >
+        Potential container escape attempt
+        (user=%user.name command=%proc.cmdline
+        container=%container.name)
+      priority: CRITICAL
+      tags: [container_escape, mitre_escape]
+
+    # Detect crypto mining
+    - rule: Crypto Mining Activity
+      desc: Detect potential crypto mining
+      condition: >
+        spawned_process and container and
+        k8s.ns.name = "mcp-server-langgraph" and
+        (proc.name in (xmrig, minerd, cpuminer) or
+         proc.cmdline contains "stratum+tcp" or
+         proc.cmdline contains "pool.minergate.com")
+      output: >
+        Potential crypto mining detected
+        (command=%proc.cmdline container=%container.name)
+      priority: CRITICAL
+      tags: [cryptomining, mitre_resource_hijacking]
+
+# Falcosidekick for forwarding alerts
+falcosidekick:
+  enabled: true
+
+  config:
+    # Slack integration
+    slack:
+      webhookurl: ""  # Set via secret
+      channel: "#security-alerts"
+      minimumpriority: "warning"
+      messageformat: "text"
+
+    # CloudWatch integration
+    cloudwatchlogs:
+      loggroup: "/aws/eks/mcp-server-langgraph/falco"
+      logstream: "falco-alerts"
+      minimumpriority: "warning"
+
+    # Prometheus metrics
+    prometheus:
+      extralabels: "environment:production,cluster:mcp-langgraph"
+
+  webui:
+    enabled: true
+
+# Service monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    prometheus: kube-prometheus
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Tolerations for all nodes
+tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/control-plane
+
+# Pod Security
+podSecurityPolicy:
+  create: false  # Using Pod Security Standards
+
+# RBAC
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  annotations:
+    # IRSA annotation (if needed for CloudWatch)
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/falco-role

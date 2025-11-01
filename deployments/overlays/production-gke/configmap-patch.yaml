@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-langgraph-config
+data:
+  # Environment
+  environment: "production"
+  log_level: "INFO"
+  enable_debug: "false"
+
+  # Authentication (production uses stricter settings)
+  auth_provider: "keycloak"
+  auth_mode: "token"
+  require_authentication: "true"
+
+  # Session Management (Redis)
+  session_backend: "redis"
+  session_ttl_seconds: "28800"  # 8 hours (stricter than staging)
+  session_cookie_secure: "true"
+  session_cookie_httponly: "true"
+  session_cookie_samesite: "strict"
+
+  # Cloud SQL connection (via proxy)
+  postgres_host: "127.0.0.1"
+  postgres_port: "5432"
+  postgres_database: "mcp_langgraph"
+  postgres_ssl_mode: "disable"  # Proxy handles TLS
+  postgres_max_connections: "100"
+  postgres_pool_size: "20"
+  postgres_pool_timeout: "30"
+
+  # Redis connection
+  redis_port: "6379"
+  redis_ssl: "true"
+  redis_max_connections: "50"
+  redis_socket_timeout: "5"
+  redis_socket_keepalive: "true"
+
+  # Observability (production-grade)
+  enable_console_export: "false"
+  enable_tracing: "true"
+  enable_metrics: "true"
+  observability_backend: "opentelemetry"
+  langsmith_tracing: "false"
+
+  # Cloud Trace
+  enable_cloud_trace: "true"
+  cloud_trace_sampling_rate: "0.1"  # 10% sampling
+
+  # Cloud Profiler
+  enable_cloud_profiler: "true"
+  cloud_profiler_service_name: "mcp-server-langgraph"
+
+  # Error Reporting
+  enable_error_reporting: "true"
+
+  # GCP-specific
+  gcp_project_id: "YOUR_PROJECT_ID"  # Replace in terraform.tfvars
+  gcp_region: "us-central1"
+
+  # Feature flags (conservative for production)
+  enable_experimental_features: "false"
+  enable_dynamic_context_loading: "true"
+  enable_parallel_execution: "true"
+  enable_llm_extraction: "true"
+  enable_caching: "true"
+
+  # Rate limiting (production)
+  rate_limit_enabled: "true"
+  rate_limit_requests_per_minute: "100"
+  rate_limit_burst: "20"
+
+  # Resource limits (production)
+  max_concurrent_requests: "100"
+  request_timeout_seconds: "30"
+  max_request_size_mb: "10"
+
+  # Circuit breaker
+  circuit_breaker_enabled: "true"
+  circuit_breaker_threshold: "5"
+  circuit_breaker_timeout: "60"
+
+  # Retry configuration
+  max_retries: "3"
+  retry_backoff_multiplier: "2"
+  retry_max_delay_seconds: "30"
+
+  # CORS (strict for production)
+  cors_enabled: "true"
+  cors_allow_origins: "https://app.example.com"  # Update with your domain
+  cors_allow_credentials: "true"
+
+  # Security headers
+  enable_security_headers: "true"
+  hsts_max_age: "31536000"  # 1 year
+
+  # Performance
+  worker_processes: "auto"
+  worker_connections: "1024"
+  keepalive_timeout: "65"
+
+  # Graceful shutdown
+  shutdown_timeout_seconds: "30"

@@ -1,0 +1,191 @@
+# Service Level Indicators (SLIs) and Service Level Objectives (SLOs)
+# For MCP Server LangGraph on GKE
+
+# ==============================================================================
+# SLI Definitions
+# ==============================================================================
+
+slis:
+  # Availability SLI
+  - name: availability
+    description: Percentage of successful requests
+    metric_type: custom.googleapis.com/application/request_count
+    good_filter: metric.labels.status_code<500
+    total_filter: metric.labels.status_code>=0
+
+  # Latency SLI (P95)
+  - name: latency_p95
+    description: 95th percentile request latency
+    metric_type: custom.googleapis.com/application/request_duration
+    threshold: 2.0  # seconds
+
+  # Latency SLI (P99)
+  - name: latency_p99
+    description: 99th percentile request latency
+    metric_type: custom.googleapis.com/application/request_duration
+    threshold: 5.0  # seconds
+
+  # Quality SLI (successful operations)
+  - name: quality
+    description: Percentage of operations without errors
+    metric_type: custom.googleapis.com/application/operation_count
+    good_filter: metric.labels.success=true
+    total_filter: metric.labels.success!=null
+
+# ==============================================================================
+# SLO Targets
+# ==============================================================================
+
+slos:
+  # Availability SLO
+  - name: availability_slo
+    display_name: "99.9% Availability"
+    sli: availability
+    goal: 0.999  # 99.9%
+    rolling_period_days: 30
+    error_budget: 0.001  # 0.1% = ~43 minutes/month
+
+  # Latency SLO (P95 < 2s)
+  - name: latency_p95_slo
+    display_name: "95% of requests < 2s"
+    sli: latency_p95
+    goal: 0.95
+    rolling_period_days: 30
+
+  # Latency SLO (P99 < 5s)
+  - name: latency_p99_slo
+    display_name: "99% of requests < 5s"
+    sli: latency_p99
+    goal: 0.99
+    rolling_period_days: 30
+
+  # Quality SLO
+  - name: quality_slo
+    display_name: "99.5% Operation Success Rate"
+    sli: quality
+    goal: 0.995
+    rolling_period_days: 30
+
+# ==============================================================================
+# Error Budget Policies
+# ==============================================================================
+
+error_budget_policies:
+  - slo: availability_slo
+    rules:
+      - condition: error_budget_remaining < 0.1  # < 10% remaining
+        action: notify
+        notification_channels:
+          - email
+          - slack
+
+      - condition: error_budget_remaining < 0.05  # < 5% remaining
+        action: page
+        notification_channels:
+          - pagerduty
+
+      - condition: error_budget_remaining < 0
+        action: freeze_deployments
+        description: "Error budget exhausted - freeze non-critical deployments"
+
+# ==============================================================================
+# Application Metrics to Implement
+# ==============================================================================
+# Add these metrics to your application code:
+
+application_metrics:
+  # Request count by status code
+  - name: request_count
+    type: counter
+    labels:
+      - status_code  # HTTP status code
+      - method       # HTTP method
+      - endpoint     # API endpoint
+    instrument_at: middleware
+
+  # Request duration
+  - name: request_duration
+    type: histogram
+    unit: seconds
+    labels:
+      - endpoint
+      - method
+    buckets: [0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
+    instrument_at: middleware
+
+  # Operation success/failure
+  - name: operation_count
+    type: counter
+    labels:
+      - operation    # Operation name
+      - success      # true/false
+      - error_type   # Error category if failed
+    instrument_at: business_logic
+
+  # Example Python implementation:
+  # from opentelemetry import metrics
+  #
+  # meter = metrics.get_meter(__name__)
+  # request_counter = meter.create_counter(
+  #     "request_count",
+  #     description="Total request count"
+  # )
+  # request_duration = meter.create_histogram(
+  #     "request_duration",
+  #     unit="s",
+  #     description="Request duration"
+  # )
+  #
+  # # In middleware:
+  # request_counter.add(1, {"status_code": 200, "method": "GET", "endpoint": "/api/v1/agent"})
+  # request_duration.record(duration, {"endpoint": "/api/v1/agent", "method": "GET"})
+
+# ==============================================================================
+# Alert on SLO Burn Rate
+# ==============================================================================
+
+burn_rate_alerts:
+  # Fast burn (2% budget consumed in 1 hour)
+  - name: fast_burn_rate
+    lookback_duration: 1h
+    burn_rate_threshold: 14.4  # Exhausts 30-day budget in 2 days
+    severity: critical
+
+  # Slow burn (5% budget consumed in 6 hours)
+  - name: slow_burn_rate
+    lookback_duration: 6h
+    burn_rate_threshold: 6.0  # Exhausts 30-day budget in 5 days
+    severity: warning
+
+# ==============================================================================
+# Dashboard Links
+# ==============================================================================
+
+dashboards:
+  - name: Production Overview
+    file: dashboards/gke-production-dashboard.json
+
+  - name: SLO Dashboard
+    url: https://console.cloud.google.com/monitoring/services
+
+  - name: Error Budget Dashboard
+    url: https://console.cloud.google.com/monitoring/slo
+
+# ==============================================================================
+# Runbook Links (for on-call)
+# ==============================================================================
+
+runbooks:
+  availability_slo_violated:
+    file: ../deployments/GKE_OPERATIONAL_RUNBOOKS.md
+    section: "P0: Service Down"
+
+  latency_slo_violated:
+    file: ../deployments/GKE_OPERATIONAL_RUNBOOKS.md
+    section: "P1: Performance Degradation"
+
+  error_budget_exhausted:
+    actions:
+      - Freeze non-critical deployments
+      - Investigate root cause
+      - Fix before resuming deployments

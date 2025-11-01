@@ -1,0 +1,37 @@
+# Terraform Backend Setup - Example Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+# REQUIRED: Your GCP project ID
+project_id = "your-gcp-project-id"
+
+# RECOMMENDED: GCP region for the backend resources
+# Choose a region close to your primary deployment region
+region = "us-central1"  # Options: us-central1, us-east1, europe-west1, asia-southeast1, etc.
+
+# OPTIONAL: Customize bucket prefix (must be globally unique)
+# The actual bucket name will include the region and a random suffix
+# bucket_prefix = "mcp-langgraph"
+
+# OPTIONAL: Service account for Terraform operations
+# If using a service account, specify its email here for automatic IAM bindings
+# terraform_service_account = "terraform@your-project-id.iam.gserviceaccount.com"
+
+# OPTIONAL: Customer-Managed Encryption Keys (CMEK)
+# Enable if you need control over encryption keys for compliance
+# enable_cmek  = false
+# kms_key_name = "projects/your-project-id/locations/us-central1/keyRings/terraform/cryptoKeys/state"
+
+# OPTIONAL: Log retention configuration
+# Number of days to retain access logs before deletion (1-3650)
+# log_retention_days = 90
+
+# OPTIONAL: State version retention
+# Number of newer versions to keep before deleting old archived versions
+# state_version_retention = 10
+
+# OPTIONAL: Additional labels for cost allocation and resource management
+# labels = {
+#   team        = "platform"
+#   environment = "infrastructure"
+#   cost_center = "engineering"
+# }

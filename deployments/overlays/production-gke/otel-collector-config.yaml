@@ -1,0 +1,99 @@
+# OpenTelemetry Collector Configuration for GCP Production
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  # Resource detection for GCP
+  resourcedetection:
+    detectors: [gcp, env, system]
+    timeout: 5s
+    override: false
+
+  # Add GCP resource attributes
+  resource:
+    attributes:
+    - key: service.name
+      value: mcp-server-langgraph
+      action: upsert
+    - key: service.version
+      value: 2.8.0
+      action: upsert
+    - key: deployment.environment
+      value: production
+      action: upsert
+    - key: cloud.provider
+      value: gcp
+      action: upsert
+    - key: cloud.platform
+      value: gcp_kubernetes_engine
+      action: upsert
+
+  # Sampling for cost optimization
+  probabilistic_sampler:
+    sampling_percentage: 10  # 10% sampling for production
+
+  # Memory limiter
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+exporters:
+  # Cloud Trace
+  googlecloud:
+    project: YOUR_PROJECT_ID  # Replace with actual project ID
+    trace:
+      endpoint: cloudtrace.googleapis.com:443
+    metric:
+      endpoint: monitoring.googleapis.com:443
+    log:
+      endpoint: logging.googleapis.com:443
+    # Workload Identity handles authentication automatically
+    use_insecure: false
+
+  # Cloud Logging
+  googlecloud/logs:
+    project: YOUR_PROJECT_ID
+    log:
+      default_log_name: mcp-server-langgraph
+
+  # Prometheus (for managed Prometheus)
+  prometheus:
+    endpoint: "0.0.0.0:8888"
+    namespace: mcp_server
+
+  # Debug exporter (optional, remove for production)
+  # logging:
+  #   loglevel: info
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, resource, probabilistic_sampler, batch]
+      exporters: [googlecloud]
+
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, resource, batch]
+      exporters: [googlecloud, prometheus]
+
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, resource, batch]
+      exporters: [googlecloud/logs]
+
+  extensions: []
+  telemetry:
+    logs:
+      level: info

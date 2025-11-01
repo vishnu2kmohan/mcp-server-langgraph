@@ -1,0 +1,11 @@
+# GCP Development Environment Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+team       = "platform"
+
+app_namespace = "mcp-dev"
+
+# Set to true if you want monitoring alerts in dev
+enable_monitoring_alerts = false

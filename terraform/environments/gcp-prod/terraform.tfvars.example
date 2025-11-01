@@ -1,0 +1,135 @@
+# GCP Production Environment Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+#######################
+# General Configuration
+#######################
+
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+team        = "platform"
+cost_center = "engineering"
+
+#######################
+# Monitoring
+#######################
+
+# Get notification channel IDs from:
+# gcloud alpha monitoring channels list
+monitoring_notification_channels = [
+  # "projects/PROJECT_ID/notificationChannels/CHANNEL_ID",
+]
+
+#######################
+# GKE Configuration
+#######################
+
+# For maximum security, set to true (control plane only accessible via VPC)
+enable_private_endpoint = false
+
+# Authorize these networks to access the control plane
+enable_master_authorized_networks = true
+master_authorized_networks_cidrs = [
+  {
+    cidr_block   = "10.0.0.0/8"
+    display_name = "Internal VPC"
+  },
+  # Add your office IP or VPN CIDR
+  # {
+  #   cidr_block   = "203.0.113.0/24"
+  #   display_name = "Office Network"
+  # },
+]
+
+# Cluster resource limits
+max_cluster_cpu    = 1000  # Maximum CPU cores
+max_cluster_memory = 10000 # Maximum memory in GB
+
+# Binary Authorization (enable after setting up attestors)
+enable_binary_authorization = false
+
+# Anthos Fleet registration
+enable_fleet_registration = false
+
+# Gateway API
+enable_gateway_api = false
+
+#######################
+# Cloud SQL Configuration
+#######################
+
+# Machine type: db-custom-CPUS-MEMORY_MB
+# Examples:
+# - db-custom-2-7680 (2 vCPU, 7.5 GB RAM)
+# - db-custom-4-15360 (4 vCPU, 15 GB RAM)
+# - db-custom-8-30720 (8 vCPU, 30 GB RAM)
+cloudsql_tier = "db-custom-4-15360"
+
+cloudsql_disk_size_gb            = 100
+cloudsql_disk_autoresize_limit_gb = 1000
+
+# Additional databases
+additional_databases = []
+
+# Read replicas
+cloudsql_read_replica_count   = 1
+cloudsql_read_replica_regions = ["us-east1"]
+
+# Additional users (passwords will be auto-generated if not provided)
+cloudsql_additional_users = {
+  # "app_user" = {
+  #   password = null  # Auto-generated
+  #   type     = "BUILT_IN"
+  # }
+}
+
+#######################
+# Memorystore (Redis) Configuration
+#######################
+
+redis_memory_size_gb = 5
+
+# Cross-region replicas (for DR)
+redis_create_cross_region_replica = false
+redis_read_replica_regions        = []
+
+#######################
+# Application Configuration
+#######################
+
+app_namespace = "mcp-production"
+
+# Secret Manager secrets for application
+app_secret_ids = [
+  # "projects/PROJECT_ID/secrets/SECRET_NAME",
+]
+
+# GCS bucket for application storage
+app_storage_bucket = ""
+
+# Pub/Sub for background workers
+worker_pubsub_topics = [
+  # {
+  #   topic = "projects/PROJECT_ID/topics/TOPIC_NAME"
+  #   role  = "roles/pubsub.publisher"
+  # }
+]
+
+worker_pubsub_subscriptions = [
+  # {
+  #   subscription = "projects/PROJECT_ID/subscriptions/SUB_NAME"
+  #   role         = "roles/pubsub.subscriber"
+  # }
+]
+
+#######################
+# Network Configuration
+#######################
+
+# Default CIDR blocks (only change if you have conflicts)
+nodes_cidr    = "10.0.0.0/20"  # 4096 IPs for nodes
+pods_cidr     = "10.4.0.0/14"  # 262k IPs for pods
+services_cidr = "10.8.0.0/20"  # 4096 IPs for services
+
+# Cloud Armor for DDoS protection
+enable_cloud_armor = true

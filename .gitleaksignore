@@ -1,0 +1,9 @@
+# Gitleaks ignore file
+# These are example/placeholder tokens in documentation, not real secrets
+
+# Kubecost example token in deployment guides
+deployments/DEPLOYMENT_GUIDE.md:generic-api-key:491
+scripts/deploy-all-phases.sh:generic-api-key:246
+
+# Terraform example password complexity setting
+terraform/environments/gcp-prod/main.tf:hashicorp-tf-password:267

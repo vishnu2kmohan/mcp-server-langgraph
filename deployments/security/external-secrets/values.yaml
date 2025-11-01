@@ -1,0 +1,95 @@
+# External Secrets Operator Helm Values
+
+# Install CRDs
+installCRDs: true
+
+# Replicas for HA
+replicaCount: 2
+
+# Service account with IRSA
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: ""  # Set from Terraform output
+
+# Resources
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Webhook
+webhook:
+  create: true
+  replicaCount: 2
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Cert controller
+certController:
+  create: true
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Metrics
+metrics:
+  service:
+    enabled: true
+
+# Service monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    prometheus: kube-prometheus
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+# Tolerations
+tolerations: []
+
+# Node selector
+nodeSelector: {}
+
+# Affinity for HA
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - external-secrets
+          topologyKey: kubernetes.io/hostname

@@ -1,0 +1,353 @@
+{
+  "displayName": "MCP Server - GKE Production Dashboard",
+  "mosaicLayout": {
+    "columns": 12,
+    "tiles": [
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Pod CPU Usage",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-production\" AND resource.labels.container_name=\"mcp-server-langgraph\" AND metric.type=\"kubernetes.io/container/cpu/core_usage_time\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_MEAN",
+                    "groupByFields": ["resource.pod_name"]
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "CPU Cores",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Pod Memory Usage",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-production\" AND resource.labels.container_name=\"mcp-server-langgraph\" AND metric.type=\"kubernetes.io/container/memory/used_bytes\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "crossSeriesReducer": "REDUCE_MEAN",
+                    "groupByFields": ["resource.pod_name"]
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "Bytes",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "yPos": 4,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Request Rate (RPS)",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\" AND metric.type=\"kubernetes.io/pod/network/received_bytes_count\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM"
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "Bytes/sec",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "yPos": 4,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Pod Count",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\" AND metadata.system_labels.app=\"mcp-server-langgraph\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "crossSeriesReducer": "REDUCE_COUNT"
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "Pod Count",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "yPos": 8,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Cloud SQL CPU Utilization",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloudsql_database\" AND metric.type=\"cloudsql.googleapis.com/database/cpu/utilization\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "CPU %",
+              "scale": "LINEAR"
+            },
+            "thresholds": [{
+              "value": 0.8,
+              "color": "YELLOW",
+              "direction": "ABOVE"
+            }]
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "yPos": 8,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Cloud SQL Memory Utilization",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloudsql_database\" AND metric.type=\"cloudsql.googleapis.com/database/memory/utilization\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "Memory %",
+              "scale": "LINEAR"
+            },
+            "thresholds": [{
+              "value": 0.8,
+              "color": "YELLOW",
+              "direction": "ABOVE"
+            }]
+          }
+        }
+      },
+      {
+        "yPos": 12,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Redis Memory Usage",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"redis_instance\" AND metric.type=\"redis.googleapis.com/stats/memory/usage_ratio\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "Memory %",
+              "scale": "LINEAR"
+            },
+            "thresholds": [{
+              "value": 0.8,
+              "color": "YELLOW",
+              "direction": "ABOVE"
+            }]
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "yPos": 12,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Redis Connected Clients",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"redis_instance\" AND metric.type=\"redis.googleapis.com/clients/connected\"",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "Connections",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "yPos": 16,
+        "width": 12,
+        "height": 4,
+        "widget": {
+          "title": "Error Rate (last hour)",
+          "xyChart": {
+            "dataSets": [{
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-production\" AND severity>=ERROR",
+                  "aggregation": {
+                    "alignmentPeriod": "60s",
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM"
+                  }
+                }
+              },
+              "plotType": "LINE",
+              "targetAxis": "Y1"
+            }],
+            "yAxis": {
+              "label": "Errors/sec",
+              "scale": "LINEAR"
+            },
+            "thresholds": [{
+              "value": 5,
+              "color": "RED",
+              "direction": "ABOVE"
+            }]
+          }
+        }
+      },
+      {
+        "yPos": 20,
+        "width": 4,
+        "height": 4,
+        "widget": {
+          "title": "Cluster Node Count",
+          "scorecard": {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "resource.type=\"k8s_node\" AND metric.type=\"kubernetes.io/node/cpu/allocatable_cores\"",
+                "aggregation": {
+                  "alignmentPeriod": "60s",
+                  "crossSeriesReducer": "REDUCE_COUNT"
+                }
+              }
+            },
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 4,
+        "yPos": 20,
+        "width": 4,
+        "height": 4,
+        "widget": {
+          "title": "Total Pod Count",
+          "scorecard": {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\"",
+                "aggregation": {
+                  "alignmentPeriod": "60s",
+                  "crossSeriesReducer": "REDUCE_COUNT"
+                }
+              }
+            },
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 8,
+        "yPos": 20,
+        "width": 4,
+        "height": 4,
+        "widget": {
+          "title": "Average Response Time",
+          "scorecard": {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\" AND metric.type=\"custom.googleapis.com/application/request_duration\"",
+                "aggregation": {
+                  "alignmentPeriod": "60s",
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "crossSeriesReducer": "REDUCE_MEAN"
+                }
+              }
+            },
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            },
+            "thresholds": [{
+              "value": 2.0,
+              "color": "YELLOW",
+              "direction": "ABOVE"
+            }]
+          }
+        }
+      }
+    ]
+  }
+}
