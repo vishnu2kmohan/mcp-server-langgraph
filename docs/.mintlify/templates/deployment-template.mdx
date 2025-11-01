@@ -4,7 +4,7 @@ description: '[Brief description of deployment method and target environment]'
 icon: 'rocket'
 ---
 
-## Overview
+### Overview
 
 [Provide a high-level overview of this deployment method. What is it? When should you use it? What are the key benefits?]
 
@@ -12,59 +12,59 @@ icon: 'rocket'
   **Key Feature**: [Highlight a key differentiator or important note]
 </Info>
 
-## Prerequisites
+### Prerequisites
 
 * [Prerequisite 1]
 * [Prerequisite 2]
 * [Prerequisite 3]
 
-## Quick Start
+### Quick Start
 
-### One-Command Deployment
+#### One-Command Deployment
 
 ```bash
-# Command to deploy
+## Command to deploy
 ./deploy.sh
 ```
 
 [Explain what this command does]
 
-## Step-by-Step Deployment
+### Step-by-Step Deployment
 
-### 1. Preparation
+#### 1. Preparation
 
 ```bash
-# Preparation commands
+## Preparation commands
 git clone https://github.com/your-org/your-repo
 cd your-repo
 ```
 
 [Explain the preparation steps]
 
-### 2. Configuration
+#### 2. Configuration
 
 Create or update configuration:
 
 ```yaml
-# config.yaml
+## config.yaml
 key: value
 ```
 
 [Explain configuration options]
 
-### 3. Deploy
+#### 3. Deploy
 
 ```bash
-# Deployment command
+## Deployment command
 kubectl apply -f deployment.yaml
 ```
 
 [Explain deployment process]
 
-### 4. Verify
+#### 4. Verify
 
 ```bash
-# Verification command
+## Verification command
 kubectl get pods
 ```
 
@@ -74,20 +74,20 @@ NAME                     READY   STATUS    RESTARTS   AGE
 mcp-server-xxxx          1/1     Running   0          2m
 ```
 
-## Configuration
+### Configuration
 
-### Environment Variables
+#### Environment Variables
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `VAR_NAME` | Description of variable | `default` | Yes |
 | `VAR_NAME_2` | Description of variable | `default` | No |
 
-### Advanced Configuration
+#### Advanced Configuration
 
 [Describe advanced configuration options]
 
-## Architecture
+### Architecture
 
 ```mermaid
 graph TB
@@ -108,22 +108,22 @@ graph TB
 
 [Explain the architecture diagram. Note: Always use ColorBrewer2 Set3 palette for diagram styling.]
 
-## Scaling
+### Scaling
 
 [Explain how to scale this deployment]
 
 ```bash
-# Example scaling command
+## Example scaling command
 kubectl scale deployment mcp-server --replicas=3
 ```
 
-## Monitoring
+### Monitoring
 
 [Explain how to monitor this deployment]
 
-## Troubleshooting
+### Troubleshooting
 
-### Issue 1: [Common Issue]
+#### Issue 1: [Common Issue]
 
 **Symptoms**:
 - [Symptom 1]
@@ -131,11 +131,11 @@ kubectl scale deployment mcp-server --replicas=3
 
 **Solution**:
 ```bash
-# Fix command
+## Fix command
 kubectl logs pod-name
 ```
 
-### Issue 2: [Another Common Issue]
+#### Issue 2: [Another Common Issue]
 
 **Symptoms**:
 - [Symptom 1]
@@ -143,7 +143,7 @@ kubectl logs pod-name
 **Solution**:
 [Explanation of fix]
 
-## Security Considerations
+### Security Considerations
 
 <Warning>
   **Important**: [Critical security consideration]
@@ -152,11 +152,11 @@ kubectl logs pod-name
 * [Security consideration 1]
 * [Security consideration 2]
 
-## Cost Optimization
+### Cost Optimization
 
 [Tips for optimizing costs in this deployment]
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Monitoring Setup" icon="chart-line" href="/deployment/monitoring">
@@ -167,12 +167,12 @@ kubectl logs pod-name
   </Card>
 </CardGroup>
 
-## Related Documentation
+### Related Documentation
 
 * [Related Guide 1](/path/to/guide)
 * [Related Guide 2](/path/to/guide)
 
-## References
+### References
 
 * [External Resource 1](https://example.com)
 * [External Resource 2](https://example.com)

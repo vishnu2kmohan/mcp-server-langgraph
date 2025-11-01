@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 7. Pluggable Authentication Provider
 icon: 'file-lines'
 ---
 
-# 7. Pluggable Authentication Provider Pattern
-
 Date: 2025-10-13
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 Enterprise applications require integration with existing identity providers (Keycloak, Okta, Auth0, Azure AD), while development and testing environments benefit from simpler authentication mechanisms. A hardcoded authentication approach creates several problems:
 
@@ -28,14 +26,14 @@ Real-world requirements:
 - **Testing**: Mock provider with predictable behavior
 - **Future**: Okta, Auth0, Azure AD, custom LDAP integration
 
-## Decision
+### Decision
 
 We will implement a **pluggable authentication provider pattern** using the Abstract Base Class (ABC) design pattern with multiple concrete implementations.
 
-### Architecture
+#### Architecture
 
 ```python
-# Abstract interface
+## Abstract interface
 class UserProvider(ABC):
     @abstractmethod
     async def authenticate(self, username: str, password: str) -> AuthResponse: ...
@@ -44,35 +42,32 @@ class UserProvider(ABC):
     @abstractmethod
     async def refresh_token(self, refresh_token: str) -> AuthResponse: ...
 
-# Implementations
+## Implementations
 class InMemoryUserProvider(UserProvider):  # Development, testing
 class KeycloakUserProvider(UserProvider):  # Production enterprise
-# Future: OktaUserProvider, Auth0UserProvider, AzureADUserProvider
-```
-
-### Factory Pattern
+## Future: OktaUserProvider, Auth0UserProvider, AzureADUserProvider
+```text
+#### Factory Pattern
 
 ```python
 def create_user_provider(auth_provider: Literal["inmemory", "keycloak"]) -> UserProvider:
     if auth_provider == "keycloak":
         return KeycloakUserProvider(config=keycloak_config)
     return InMemoryUserProvider()
-```
-
-### Configuration
+```text
+#### Configuration
 
 ```python
-# Environment variables
+## Environment variables
 AUTH_PROVIDER=keycloak  # or "inmemory"
 KEYCLOAK_SERVER_URL=https://keycloak.example.com
 KEYCLOAK_REALM=mcp-server
 KEYCLOAK_CLIENT_ID=langgraph-agent
 KEYCLOAK_CLIENT_SECRET=<secret>
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive Consequences
+#### Positive Consequences
 
 - **Enterprise Ready**: Seamless SSO integration with Keycloak, Okta, etc.
 - **Development Speed**: No SSO setup required for local development
@@ -81,47 +76,47 @@ KEYCLOAK_CLIENT_SECRET=<secret>
 - **Extensibility**: New providers (Okta, Auth0) add easily
 - **Multi-Tenant Support**: Different customers can use different providers
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Complexity**: Multiple implementations to maintain
 - **Feature Parity**: Not all providers support all features (e.g., MFA)
 - **Testing Burden**: Each provider requires separate test coverage
 - **Interface Leakage**: Provider-specific features may not fit abstraction
 
-### Neutral Consequences
+#### Neutral Consequences
 
 - **Token Format Variance**: JWT structure differs between providers
 - **Configuration Overhead**: More environment variables to manage
 
-## Alternatives Considered
+### Alternatives Considered
 
-### 1. Keycloak Only (Direct Integration)
+#### 1. Keycloak Only (Direct Integration)
 
 **Pros**: Simpler (single code path), full feature access
 **Cons**: Requires Keycloak for development, cannot test without it, vendor lock-in
 **Why Rejected**: Development friction and vendor lock-in outweigh simplicity
 
-### 2. Passport.js Strategy Pattern
+#### 2. Passport.js Strategy Pattern
 
 **Pros**: Well-established pattern, many existing strategies
 **Cons**: JavaScript library (not Python), heavier abstraction
 **Why Rejected**: Not Python-native, over-engineered for our needs
 
-### 3. OAuth2/OIDC Generic Client
+#### 3. OAuth2/OIDC Generic Client
 
 **Pros**: Works with any OIDC provider, standard protocol
 **Cons**: Does not support non-OIDC providers, complex configuration
 **Why Rejected**: Limits non-OIDC providers (e.g., simple API key auth)
 
-### 4. Hardcoded Multi-Provider Support
+#### 4. Hardcoded Multi-Provider Support
 
 **Pros**: No abstraction overhead, direct provider access
 **Cons**: if/elif chains throughout codebase, hard to extend
 **Why Rejected**: Unmaintainable as provider count grows
 
-## Implementation Details
+### Implementation Details
 
-### InMemoryUserProvider
+#### InMemoryUserProvider
 
 ```python
 class InMemoryUserProvider(UserProvider):
@@ -136,8 +131,7 @@ class InMemoryUserProvider(UserProvider):
         if user and password == "password":  # Simple check for development
             return AuthResponse(authorized=True, username=username, ...)
         return AuthResponse(authorized=False, reason="Invalid credentials")
-```
-
+```text
 **Features**:
 - In-memory user dictionary
 - Simple password validation
@@ -146,7 +140,7 @@ class InMemoryUserProvider(UserProvider):
 
 **Use Cases**: Development, unit tests, demos
 
-### KeycloakUserProvider
+#### KeycloakUserProvider
 
 ```python
 class KeycloakUserProvider(UserProvider):
@@ -170,8 +164,7 @@ class KeycloakUserProvider(UserProvider):
             refresh_token=token_response.refresh_token,
             ...
         )
-```
-
+```text
 **Features**:
 - OIDC/OAuth2 integration
 - JWT verification with JWKS
@@ -181,7 +174,7 @@ class KeycloakUserProvider(UserProvider):
 
 **Use Cases**: Production, staging, enterprise deployments
 
-### JWT Verification (Keycloak)
+#### JWT Verification (Keycloak)
 
 ```python
 class KeycloakClient:
@@ -199,15 +192,14 @@ class KeycloakClient:
         )
 
         return claims
-```
-
+```text
 **Security Features**:
 - Public key verification (no shared secrets)
 - JWKS caching (performance optimization)
 - Signature verification (prevents tampering)
 - Claims validation (audience, issuer, expiration)
 
-## Integration Points
+### Integration Points
 
 **AuthMiddleware** (`src/mcp_server_langgraph/auth/middleware.py`):
 - Accepts `user_provider: UserProvider` parameter
@@ -230,7 +222,7 @@ async def sync_user_to_openfga(user_info: KeycloakUser, config) -> None:
     ])
 ```
 
-## Testing Strategy
+### Testing Strategy
 
 **Unit Tests** (`tests/test_user_provider.py`):
 - InMemoryUserProvider: 20/20 tests passing (100%)
@@ -243,7 +235,7 @@ async def sync_user_to_openfga(user_info: KeycloakUser, config) -> None:
 - Token refresh
 - Role synchronization
 
-## Migration Path
+### Migration Path
 
 **Existing deployments**: No migration required (defaults to InMemory)
 
@@ -254,7 +246,7 @@ async def sync_user_to_openfga(user_info: KeycloakUser, config) -> None:
 4. Configure Keycloak settings
 5. Restart application
 
-## Future Enhancements
+### Future Enhancements
 
 - Okta provider (OktaUserProvider)
 - Auth0 provider (Auth0UserProvider)
@@ -262,7 +254,7 @@ async def sync_user_to_openfga(user_info: KeycloakUser, config) -> None:
 - LDAP provider (LDAPUserProvider)
 - API key provider (APIKeyUserProvider)
 
-## References
+### References
 
 - Implementation: `src/mcp_server_langgraph/auth/user_provider.py:1-400`
 - Factory Pattern: `src/mcp_server_langgraph/auth/factory.py:1-188` (recommended for production)

@@ -4,7 +4,7 @@ description: 'Manage Kubernetes configurations across environments with Kustomiz
 icon: 'layer-group'
 ---
 
-## Overview
+### Overview
 
 Kustomize is a template-free way to customize Kubernetes configurations. It allows you to maintain a base configuration and apply environment-specific overlays without duplicating YAML files.
 
@@ -12,7 +12,7 @@ Kustomize is a template-free way to customize Kubernetes configurations. It allo
 Kustomize is built into `kubectl` (version 1.14+), making it a native Kubernetes configuration management tool with no external dependencies.
 </Info>
 
-## Why Kustomize?
+### Why Kustomize?
 
 <CardGroup cols={2}>
   <Card title="Template-Free" icon="file-code">
@@ -44,9 +44,9 @@ Kustomize is built into `kubectl` (version 1.14+), making it a native Kubernetes
   </Card>
 </CardGroup>
 
-## Directory Structure
+### Directory Structure
 
-```
+```text
 k8s/
 ├── base/                      # Base configurations
 │   ├── kustomization.yaml
@@ -86,9 +86,9 @@ k8s/
         └── openfga.yaml
 ```
 
-## Base Configuration
+### Base Configuration
 
-### base/kustomization.yaml
+#### base/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -96,23 +96,23 @@ kind: Kustomization
 
 namespace: mcp-server-langgraph
 
-# Common labels applied to all resources
+## Common labels applied to all resources
 commonLabels:
   app: mcp-server-langgraph
   project: mcp-server
 
-# Common annotations
+## Common annotations
 commonAnnotations:
   managed-by: kustomize
 
-# Resources
+## Resources
 resources:
   - deployment.yaml
   - service.yaml
   - serviceaccount.yaml
   - configmap.yaml
 
-# ConfigMap generator
+## ConfigMap generator
 configMapGenerator:
   - name: langgraph-config
     literals:
@@ -120,21 +120,20 @@ configMapGenerator:
       - AUTH_PROVIDER=inmemory
       - SESSION_PROVIDER=memory
 
-# Secret generator
+## Secret generator
 secretGenerator:
   - name: langgraph-secrets
     literals:
       - JWT_SECRET=changeme
     type: Opaque
 
-# Images to use
+## Images to use
 images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: latest
-```
-
-### base/deployment.yaml
+```bash
+#### base/deployment.yaml
 
 ```yaml
 apiVersion: apps/v1
@@ -184,9 +183,8 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
-```
-
-### base/service.yaml
+```bash
+#### base/service.yaml
 
 ```yaml
 apiVersion: v1
@@ -204,40 +202,38 @@ spec:
   - name: metrics
     port: 9090
     targetPort: 9090
-```
-
-### base/serviceaccount.yaml
+```bash
+#### base/serviceaccount.yaml
 
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mcp-server-langgraph
-```
+```text
+### Development Overlay
 
-## Development Overlay
-
-### overlays/development/kustomization.yaml
+#### overlays/development/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Namespace
+## Namespace
 namespace: langgraph-dev
 
-# Base
+## Base
 bases:
   - ../../base
 
-# Name prefix
+## Name prefix
 namePrefix: dev-
 
-# Labels
+## Labels
 commonLabels:
   environment: development
 
-# ConfigMap override
+## ConfigMap override
 configMapGenerator:
   - name: langgraph-config
     behavior: merge
@@ -250,18 +246,17 @@ configMapGenerator:
       - ENABLE_TRACING=false
       - ENABLE_METRICS=false
 
-# Patches
+## Patches
 patchesStrategicMerge:
   - deployment-patch.yaml
 
-# Images
+## Images
 images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: dev
-```
-
-### overlays/development/deployment-patch.yaml
+```bash
+#### overlays/development/deployment-patch.yaml
 
 ```yaml
 apiVersion: apps/v1
@@ -281,11 +276,10 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "250m"
-```
+```text
+### Staging Overlay
 
-## Staging Overlay
-
-### overlays/staging/kustomization.yaml
+#### overlays/staging/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -327,9 +321,8 @@ images:
   - name: mcp-server-langgraph
     newName: gcr.io/project-id/mcp-server-langgraph
     newTag: staging
-```
-
-### overlays/staging/deployment-patch.yaml
+```bash
+#### overlays/staging/deployment-patch.yaml
 
 ```yaml
 apiVersion: apps/v1
@@ -349,9 +342,8 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
-```
-
-### overlays/staging/hpa.yaml
+```bash
+#### overlays/staging/hpa.yaml
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -372,11 +364,10 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
-```
+```text
+### Production Overlay
 
-## Production Overlay
-
-### overlays/production/kustomization.yaml
+#### overlays/production/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -387,7 +378,7 @@ namespace: mcp-server-langgraph
 bases:
   - ../../base
 
-# No prefix for production
+## No prefix for production
 
 commonLabels:
   environment: production
@@ -429,9 +420,8 @@ images:
 replicas:
   - name: mcp-server-langgraph
     count: 3
-```
-
-### overlays/production/deployment-patch.yaml
+```bash
+#### overlays/production/deployment-patch.yaml
 
 ```yaml
 apiVersion: apps/v1
@@ -471,9 +461,8 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-```
-
-### overlays/production/pdb.yaml
+```bash
+#### overlays/production/pdb.yaml
 
 ```yaml
 apiVersion: policy/v1
@@ -485,9 +474,8 @@ spec:
   selector:
     matchLabels:
       app: mcp-server-langgraph
-```
-
-### overlays/production/network-policy.yaml
+```bash
+#### overlays/production/network-policy.yaml
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -538,14 +526,13 @@ spec:
       port: 53
     - protocol: UDP
       port: 53
-```
+```text
+### Advanced Techniques
 
-## Advanced Techniques
-
-### JSON Patches
+#### JSON Patches
 
 ```yaml
-# overlays/production/kustomization.yaml
+## overlays/production/kustomization.yaml
 patchesJson6902:
   - target:
       group: apps
@@ -558,12 +545,11 @@ patchesJson6902:
         value:
           name: CUSTOM_ENV
           value: "production-value"
-```
-
-### Strategic Merge Patch
+```text
+#### Strategic Merge Patch
 
 ```yaml
-# Add sidecar container
+## Add sidecar container
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -578,12 +564,11 @@ spec:
           - "--structured-logs"
           - "--port=5432"
           - "project:region:instance"
-```
-
-### Transformers
+```text
+#### Transformers
 
 ```yaml
-# overlays/production/kustomization.yaml
+## overlays/production/kustomization.yaml
 transformers:
   - |-
     apiVersion: builtin
@@ -594,16 +579,14 @@ transformers:
     suffix: -v1
     fieldSpecs:
       - path: metadata/name
-```
-
-### Generators
+```text
+#### Generators
 
 ```yaml
-# overlays/production/kustomization.yaml
+## overlays/production/kustomization.yaml
 generators:
   - secret-generator.yaml
-```
-
+```text
 **secret-generator.yaml**:
 ```yaml
 apiVersion: builtin
@@ -614,46 +597,42 @@ literals:
   - username=admin
   - password=changeme
 type: Opaque
-```
+```text
+### Multi-Environment Workflow
 
-## Multi-Environment Workflow
-
-### Build and Preview
+#### Build and Preview
 
 ```bash
-# Development
+## Development
 kubectl kustomize overlays/development
 
-# Staging
+## Staging
 kubectl kustomize overlays/staging
 
-# Production
+## Production
 kubectl kustomize overlays/production
-```
-
-### Deploy
+```text
+#### Deploy
 
 ```bash
-# Development
+## Development
 kubectl apply -k overlays/development
 
-# Staging
+## Staging
 kubectl apply -k overlays/staging
 
-# Production
+## Production
 kubectl apply -k overlays/production
-```
-
-### Delete
+```text
+#### Delete
 
 ```bash
-# Delete environment
+## Delete environment
 kubectl delete -k overlays/staging
-```
+```text
+### CI/CD Integration
 
-## CI/CD Integration
-
-### GitHub Actions
+#### GitHub Actions
 
 ```yaml
 name: Deploy with Kustomize
@@ -683,9 +662,8 @@ jobs:
       - name: Verify deployment
         run: |
           kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
-
-### GitLab CI
+```text
+#### GitLab CI
 
 ```yaml
 deploy:production:
@@ -696,11 +674,10 @@ deploy:production:
     - kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
   only:
     - main
-```
+```text
+### GitOps with ArgoCD
 
-## GitOps with ArgoCD
-
-### Create Application
+#### Create Application
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -733,23 +710,21 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
-```
-
-### Deploy with ArgoCD
+```text
+#### Deploy with ArgoCD
 
 ```bash
-# Install ArgoCD
+## Install ArgoCD
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-# Create application
+## Create application
 kubectl apply -f argocd-application.yaml
 
-# Sync application
+## Sync application
 argocd app sync mcp-server-langgraph-production
-```
-
-## Best Practices
+```text
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Use ConfigMap/Secret Generators" icon="gear">
@@ -765,7 +740,7 @@ argocd app sync mcp-server-langgraph-production
     # Bad - don't commit static ConfigMaps
     resources:
       - configmap.yaml  # Contains hardcoded values
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Keep Base Minimal" icon="minimize">
@@ -784,7 +759,7 @@ argocd app sync mcp-server-langgraph-production
     images:
       - name: mcp-server-langgraph
         newTag: v1.2.3  # Not 'latest'
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Validate Before Applying" icon="check">
@@ -799,7 +774,7 @@ argocd app sync mcp-server-langgraph-production
 
     # Then apply
     kubectl apply -k overlays/production
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Name Suffixes for ConfigMaps" icon="fingerprint">
@@ -808,13 +783,12 @@ argocd app sync mcp-server-langgraph-production
     ```yaml
     generatorOptions:
       disableNameSuffixHash: false  # Default
-    ```
-
+    ```text
     This adds hash suffix to ConfigMap names, triggering pod restarts.
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Kustomize build fails">
@@ -830,7 +804,7 @@ argocd app sync mcp-server-langgraph-production
 
     # Validate overlay
     kubectl kustomize k8s/overlays/production
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Patch not applying">
@@ -848,7 +822,7 @@ argocd app sync mcp-server-langgraph-production
           - op: replace
             path: /spec/replicas
             value: 5
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="ConfigMap not updating pods">
@@ -858,35 +832,34 @@ argocd app sync mcp-server-langgraph-production
     ```yaml
     generatorOptions:
       disableNameSuffixHash: false
-    ```
-
+    ```text
     Or use Reloader:
     ```bash
     helm install reloader stakater/reloader
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Testing Kustomize
+### Testing Kustomize
 
 ```bash
-# Validate YAML syntax
+## Validate YAML syntax
 kubectl kustomize overlays/production | kubectl apply --dry-run=client -f -
 
-# Check resource counts
+## Check resource counts
 kubectl kustomize overlays/production | grep "^kind:" | sort | uniq -c
 
-# Diff between environments
+## Diff between environments
 diff <(kubectl kustomize overlays/staging) <(kubectl kustomize overlays/production)
 
-# Test with kubeval
+## Test with kubeval
 kubectl kustomize overlays/production | kubeval --strict
 
-# Test with kube-score
+## Test with kube-score
 kubectl kustomize overlays/production | kube-score score -
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Helm Charts" icon="dharmachakra" href="/deployment/helm">

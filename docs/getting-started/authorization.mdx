@@ -4,7 +4,7 @@ description: 'Fine-grained access control with OpenFGA'
 icon: 'shield'
 ---
 
-## Overview
+### Overview
 
 MCP Server with LangGraph uses **OpenFGA** for fine-grained, relationship-based authorization (Google Zanzibar model). This enables you to define complex permissions like "who can access what" with precision.
 
@@ -12,7 +12,7 @@ MCP Server with LangGraph uses **OpenFGA** for fine-grained, relationship-based 
 **OpenFGA** provides the same authorization model used by Google, Airbnb, and GitHub for billions of authorization decisions per day.
 </Info>
 
-## Key Concepts
+### Key Concepts
 
 <CardGroup cols={3}>
   <Card title="Users" icon="user">
@@ -26,25 +26,24 @@ MCP Server with LangGraph uses **OpenFGA** for fine-grained, relationship-based 
   </Card>
 </CardGroup>
 
-### Authorization Model
+#### Authorization Model
 
 The default model supports:
 
 ```yaml
-# Users can be:
+## Users can be:
 - Owners (full access)
 - Admins (manage permissions)
 - Members (standard access)
 - Executors (can use specific tools)
 - Viewers (read-only)
 
-# Objects include:
+## Objects include:
 - Tools (agent tools like chat, search)
 - Organizations (multi-tenant support)
 - Documents (context resources)
-```
-
-## Quick Start
+```text
+### Quick Start
 
 <Steps>
   <Step title="Deploy OpenFGA">
@@ -54,14 +53,13 @@ The default model supports:
 
     # Kubernetes (production)
     kubectl apply -f deployments/kubernetes/base/openfga-deployment.yaml
-    ```
+    ```xml
   </Step>
 
   <Step title="Initialize Authorization Model">
     ```bash
     python scripts/setup/setup_openfga.py
-    ```
-
+    ```text
     This creates:
     - OpenFGA store
     - Authorization model with types and relations
@@ -71,7 +69,7 @@ The default model supports:
     ```bash
     OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
     OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
-    ```
+    ```xml
   </Step>
 
   <Step title="Configure Environment">
@@ -80,7 +78,7 @@ The default model supports:
     OPENFGA_API_URL=http://localhost:8080
     OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
     OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
-    ```
+    ```xml
   </Step>
 
   <Step title="Test Authorization">
@@ -96,13 +94,13 @@ The default model supports:
         object="tool:chat"
     )
     print(f"Alice can execute chat tool: {allowed}")
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Authorization Model
+### Authorization Model
 
-### Default Model Structure
+#### Default Model Structure
 
 ```typescript
 model
@@ -127,9 +125,8 @@ type document
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor
-```
-
-### Relationship Examples
+```text
+#### Relationship Examples
 
 <Tabs>
   <Tab title="User → Tool">
@@ -149,7 +146,7 @@ type document
         "relation": "viewer",
         "object": "tool:search"
     }])
-    ```
+    ```xml
   </Tab>
 
   <Tab title="User → Organization">
@@ -169,7 +166,7 @@ type document
         "relation": "member",
         "object": "organization:acme"
     }])
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Organization → Tool">
@@ -184,18 +181,18 @@ type document
     }])
 
     # Now both alice and bob can use chat!
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Common Patterns
+### Common Patterns
 
-### Multi-Tenancy
+#### Multi-Tenancy
 
 Isolate resources by organization:
 
 ```python
-# Organization setup
+## Organization setup
 await client.write_tuples([
     # Alice owns org
     {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
@@ -203,90 +200,86 @@ await client.write_tuples([
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
 
-# Check: Does alice have access?
+## Check: Does alice have access?
 allowed = await client.check_permission(
     user="user:alice",
     relation="executor",
     object="tool:chat"
 )
-# Returns: True (alice is admin → member → can execute)
-```
-
-### Hierarchical Permissions
+## Returns: True (alice is admin → member → can execute)
+```text
+#### Hierarchical Permissions
 
 Admins inherit all member permissions:
 
 ```python
-# Model defines: member or admin can execute
-# So admins automatically get member permissions
+## Model defines: member or admin can execute
+## So admins automatically get member permissions
 
-# Alice is admin
+## Alice is admin
 await client.write_tuples([{
     "user": "user:alice",
     "relation": "admin",
     "object": "organization:acme"
 }])
 
-# Check member permission
+## Check member permission
 allowed = await client.check_permission(
     user="user:alice",
     relation="member",
     object="organization:acme"
 )
-# Returns: True (admin implies member)
-```
-
-### Document Access Control
+## Returns: True (admin implies member)
+```text
+#### Document Access Control
 
 Fine-grained document permissions:
 
 ```python
-# Document ownership
+## Document ownership
 await client.write_tuples([{
     "user": "user:alice",
     "relation": "owner",
     "object": "document:report-q4"
 }])
 
-# Share with editor
+## Share with editor
 await client.write_tuples([{
     "user": "user:bob",
     "relation": "editor",
     "object": "document:report-q4"
 }])
 
-# Share with viewer
+## Share with viewer
 await client.write_tuples([{
     "user": "user:charlie",
     "relation": "viewer",
     "object": "document:report-q4"
 }])
-```
-
-## Keycloak Integration 🆕
+```text
+### Keycloak Integration 🆕
 
 **NEW in v2.1.0**: Automatic role synchronization from Keycloak to OpenFGA.
 
-### Automatic Sync
+#### Automatic Sync
 
 When users authenticate via Keycloak, their roles and groups are synced to OpenFGA:
 
 ```python
 from mcp_server_langgraph.auth.keycloak import sync_user_to_openfga
 
-# Authenticate user
+## Authenticate user
 user_info = await keycloak.authenticate(username, password)
 
-# Sync roles to OpenFGA
+## Sync roles to OpenFGA
 await sync_user_to_openfga(
     user_id=user_info['sub'],
     username=user_info['preferred_username'],
     roles=user_info['roles'],
     groups=user_info['groups']
 )
-```
-
-### Role Mapping
+```text
+#### Role Mapping
 
 Configure role mapping in `config/role_mappings.yaml`:
 
@@ -311,16 +304,15 @@ conditional_mappings:
       operator: ==
       value: true
     relation: member
-```
-
+```text
 See the [Keycloak SSO Guide](/guides/keycloak-sso) for details.
 
-## API Operations
+### API Operations
 
-### Check Permission
+#### Check Permission
 
 ```python
-# Check if user can perform action
+## Check if user can perform action
 allowed = await client.check_permission(
     user="user:alice",
     relation="executor",
@@ -332,74 +324,69 @@ if allowed:
     result = await agent.execute("chat", query)
 else:
     raise PermissionError("Access denied")
-```
-
-### Grant Permission
+```text
+#### Grant Permission
 
 ```python
-# Single tuple
+## Single tuple
 await client.write_tuples([{
     "user": "user:alice",
     "relation": "executor",
     "object": "tool:search"
 }])
 
-# Multiple tuples (atomic)
+## Multiple tuples (atomic)
 await client.write_tuples([
     {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
-```
-
-### Revoke Permission
+```text
+#### Revoke Permission
 
 ```python
-# Delete specific tuple
+## Delete specific tuple
 await client.delete_tuples([{
     "user": "user:bob",
     "relation": "executor",
     "object": "tool:chat"
 }])
 
-# Revoke all user permissions for an object
+## Revoke all user permissions for an object
 tuples = await client.read_tuples(object="tool:chat")
 await client.delete_tuples([t for t in tuples if t['user'] == 'user:bob'])
-```
-
-### List User Permissions
+```text
+#### List User Permissions
 
 ```python
-# What can user access?
+## What can user access?
 objects = await client.list_objects(
     user="user:alice",
     relation="executor",
     object_type="tool"
 )
 print(f"Alice can execute: {objects}")
-# Output: ['tool:chat', 'tool:search']
+## Output: ['tool:chat', 'tool:search']
 
-# Who can access this object?
+## Who can access this object?
 users = await client.list_users(
     relation="executor",
     object="tool:chat"
 )
 print(f"Can execute chat: {users}")
-```
+```text
+### Monitoring & Debugging
 
-## Monitoring & Debugging
-
-### Enable Authorization Logging
+#### Enable Authorization Logging
 
 ```bash
-# .env
+## .env
 LOG_LEVEL=DEBUG
 
-# Kubernetes
+## Kubernetes
 kubectl set env deployment/mcp-server-langgraph LOG_LEVEL=DEBUG
-```
-
-### View Authorization Decisions
+```text
+#### View Authorization Decisions
 
 Check application logs for authorization events:
 
@@ -414,24 +401,22 @@ Check application logs for authorization events:
   "allowed": true,
   "latency_ms": 15
 }
-```
-
-### OpenFGA Metrics
+```text
+#### OpenFGA Metrics
 
 Monitor authorization performance:
 
 ```promql
-# Authorization check rate
+## Authorization check rate
 rate(openfga_check_total[5m])
 
-# Authorization latency (p95)
+## Authorization latency (p95)
 histogram_quantile(0.95, openfga_check_duration_seconds_bucket)
 
-# Authorization failures
+## Authorization failures
 rate(openfga_check_total{allowed="false"}[5m])
-```
-
-## Production Best Practices
+```text
+### Production Best Practices
 
 <AccordionGroup>
   <Accordion title="Use PostgreSQL Backend" icon="database">
@@ -443,8 +428,7 @@ rate(openfga_check_total{allowed="false"}[5m])
       datastore:
         engine: postgres
         uri: "postgres://openfga:password@postgres:5432/openfga?sslmode=require"
-    ```
-
+    ```text
     Deploy PostgreSQL with:
     - Replication for high availability
     - Regular backups
@@ -463,8 +447,7 @@ rate(openfga_check_total{allowed="false"}[5m])
 
     # Production
     OPENFGA_STORE_ID=01HPRD...
-    ```
-
+    ```text
     Prevents accidental permission changes across environments.
   </Accordion>
 
@@ -479,8 +462,7 @@ rate(openfga_check_total{allowed="false"}[5m])
       audit:
         enabled: true
         backend: postgres  # Store audit logs
-    ```
-
+    ```text
     Monitor for:
     - Unexpected permission grants
     - Failed authorization attempts
@@ -496,8 +478,7 @@ rate(openfga_check_total{allowed="false"}[5m])
 
     # Fail-closed (deny on error) - Production
     FF_OPENFGA_STRICT_MODE=true
-    ```
-
+    ```text
     In production, **always fail-closed** to prevent unauthorized access.
   </Accordion>
 
@@ -513,8 +494,7 @@ rate(openfga_check_total{allowed="false"}[5m])
         cache_backend="redis",
         cache_ttl=300
     )
-    ```
-
+    ```text
     Balance security (fresh decisions) vs performance (cached).
   </Accordion>
 
@@ -533,13 +513,12 @@ rate(openfga_check_total{allowed="false"}[5m])
     # - Orphaned permissions (deleted users)
     # - Over-privileged users
     # - Unused permissions
-    ```
-
+    ```text
     Run monthly or after major changes.
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Connection refused to OpenFGA">
@@ -554,7 +533,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     # Check logs
     docker compose logs openfga
     kubectl logs -l app=openfga
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Authorization always fails">
@@ -570,7 +549,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     tuples = await client.read_tuples()
     for t in tuples:
         print(t)
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Slow authorization checks">
@@ -584,7 +563,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     ```bash
     # Check latency
     curl http://localhost:9090/api/v1/query?query=openfga_check_duration_seconds
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Store or model not found">
@@ -604,7 +583,7 @@ rate(openfga_check_total{allowed="false"}[5m])
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Permission Model" icon="sitemap" href="/guides/permission-model">

@@ -4,7 +4,7 @@ description: 'Deploy MCP Server with LangGraph on Kubernetes'
 icon: 'dharmachakra'
 ---
 
-## Overview
+### Overview
 
 Deploy the MCP Server with LangGraph on Kubernetes for production-grade reliability, scalability, and high availability. This guide covers deployment with Keycloak SSO, Redis sessions, OpenFGA authorization, and observability.
 
@@ -12,7 +12,7 @@ Deploy the MCP Server with LangGraph on Kubernetes for production-grade reliabil
 **v2.4.0** includes updated infrastructure (OpenFGA v1.10.2, Keycloak 26.4.0, PostgreSQL 16), production-ready Kubernetes manifests with Keycloak, Redis, and comprehensive security configurations.
 </Info>
 
-## Architecture
+### Architecture
 
 ```mermaid
 graph TB
@@ -94,9 +94,8 @@ graph TB
     class PG dataStyle
     class Jaeger tracingStyle
     class Prometheus metricsStyle
-```
-
-## Prerequisites
+```text
+### Prerequisites
 
 <Steps>
   <Step title="Kubernetes Cluster">
@@ -122,8 +121,7 @@ graph TB
 
     # Push to registry
     docker push gcr.io/your-project/mcp-server-langgraph:v2.4.0
-    ```
-
+    ```sql
     Update `deployments/kubernetes/base/deployment.yaml`:
     ```yaml
     spec:
@@ -132,7 +130,7 @@ graph TB
           containers:
           - name: mcp-server-langgraph
             image: gcr.io/your-project/mcp-server-langgraph:v2.4.0
-    ```
+    ```xml
   </Step>
 
   <Step title="Install Tools">
@@ -147,18 +145,18 @@ graph TB
 
     # helm (for dependencies)
     curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Quick Deploy
+### Quick Deploy
 
 <CodeGroup>
 ```bash Complete Deployment
-# 1. Create namespace
+## 1. Create namespace
 kubectl apply -f deployments/kubernetes/base/namespace.yaml
 
-# 2. Create secrets
+## 2. Create secrets
 kubectl create secret generic mcp-server-langgraph-secrets \
   --namespace=mcp-server-langgraph \
   --from-literal=anthropic-api-key="${ANTHROPIC_API_KEY}" \
@@ -169,47 +167,46 @@ kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=openfga-store-id="${OPENFGA_STORE_ID}" \
   --from-literal=openfga-model-id="${OPENFGA_MODEL_ID}"
 
-# 3. Deploy dependencies (Keycloak, Redis, OpenFGA)
+## 3. Deploy dependencies (Keycloak, Redis, OpenFGA)
 kubectl apply -f deployments/kubernetes/base/keycloak-deployment.yaml
 kubectl apply -f deployments/kubernetes/base/keycloak-service.yaml
 kubectl apply -f deployments/kubernetes/base/redis-session-deployment.yaml
 kubectl apply -f deployments/kubernetes/base/redis-session-service.yaml
-# Note: OpenFGA deployment not shown - use Helm chart or manifest
+## Note: OpenFGA deployment not shown - use Helm chart or manifest
 
-# 4. Wait for dependencies
+## 4. Wait for dependencies
 kubectl wait --for=condition=available --timeout=300s \
   deployment/keycloak -n mcp-server-langgraph
 kubectl wait --for=condition=available --timeout=300s \
   deployment/redis-session -n mcp-server-langgraph
 
-# 5. Deploy application
+## 5. Deploy application
 kubectl apply -f deployments/kubernetes/base/
 
-# 6. Wait for rollout
+## 6. Wait for rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
-# 7. Verify
+## 7. Verify
 kubectl get pods -n mcp-server-langgraph
 kubectl logs -l app=mcp-server-langgraph -n mcp-server-langgraph --tail=50
-```
-
+```text
 ```bash Using Kustomize
-# Deploy with kustomize overlays
+## Deploy with kustomize overlays
 kubectl apply -k deployments/kubernetes/overlays/production
 
-# Or specific cloud provider
+## Or specific cloud provider
 kubectl apply -k deployments/kubernetes/overlays/gke
 kubectl apply -k deployments/kubernetes/overlays/eks
 kubectl apply -k deployments/kubernetes/overlays/aks
-```
+```xml
 </CodeGroup>
 
-## Step-by-Step Deployment
+### Step-by-Step Deployment
 
-### 1. Namespace and RBAC
+#### 1. Namespace and RBAC
 
 ```bash
-# Create namespace
+## Create namespace
 kubectl apply -f - << 'EOF'
 apiVersion: v1
 kind: Namespace
@@ -220,18 +217,16 @@ metadata:
     environment: production
 EOF
 
-# Create service account
+## Create service account
 kubectl apply -f deployments/kubernetes/base/serviceaccount.yaml
-```
-
-### 2. Configuration
+```text
+#### 2. Configuration
 
 **ConfigMap** for application configuration:
 
 ```bash
 kubectl apply -f deployments/kubernetes/base/configmap.yaml
-```
-
+```xml
 <Accordion title="View configmap.yaml" icon="file">
 ```yaml
 apiVersion: v1
@@ -265,17 +260,17 @@ data:
 
   # OpenFGA
   openfga_api_url: "http://openfga:8080"
-```
+```xml
 </Accordion>
 
 **Secrets** for sensitive data:
 
 ```bash
-# Generate secrets
+## Generate secrets
 export JWT_SECRET=$(openssl rand -base64 32)
 export REDIS_PASSWORD=$(openssl rand -base64 32)
 
-# Create secret
+## Create secret
 kubectl create secret generic mcp-server-langgraph-secrets \
   --namespace=mcp-server-langgraph \
   --from-literal=anthropic-api-key="${ANTHROPIC_API_KEY}" \
@@ -286,16 +281,15 @@ kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=redis-password="${REDIS_PASSWORD}" \
   --from-literal=openfga-store-id="${OPENFGA_STORE_ID}" \
   --from-literal=openfga-model-id="${OPENFGA_MODEL_ID}"
-```
-
+```xml
 <Warning>
 **Never commit secrets to Git!** Use external secret managers (see [Infisical Setup](/guides/infisical-setup)) or cloud-native solutions (GCP Secret Manager, AWS Secrets Manager, Azure Key Vault).
 </Warning>
 
-### 3. Deploy Keycloak
+#### 3. Deploy Keycloak
 
 ```bash
-# Deploy Keycloak with PostgreSQL
+## Deploy Keycloak with PostgreSQL
 helm install keycloak bitnami/keycloak \
   --namespace mcp-server-langgraph \
   --set auth.adminUser=admin \
@@ -306,25 +300,24 @@ helm install keycloak bitnami/keycloak \
   --set ingress.enabled=true \
   --set ingress.hostname=sso.yourdomain.com
 
-# Wait for deployment
+## Wait for deployment
 kubectl wait --for=condition=available --timeout=300s \
   deployment/keycloak -n mcp-server-langgraph
 
-# Initialize Keycloak
+## Initialize Keycloak
 python scripts/setup/setup_keycloak.py
 
-# Save client secret to Kubernetes secret
+## Save client secret to Kubernetes secret
 kubectl patch secret mcp-server-langgraph-secrets \
   -n mcp-server-langgraph \
   --patch "{\"data\":{\"keycloak-client-secret\":\"$(echo -n $CLIENT_SECRET | base64)\"}}"
-```
-
+```text
 See [Keycloak SSO Guide](/guides/keycloak-sso) for detailed setup.
 
-### 4. Deploy Redis
+#### 4. Deploy Redis
 
 ```bash
-# Deploy Redis with replication
+## Deploy Redis with replication
 helm install redis-session bitnami/redis \
   --namespace mcp-server-langgraph \
   --set auth.password="${REDIS_PASSWORD}" \
@@ -334,26 +327,25 @@ helm install redis-session bitnami/redis \
   --set replica.persistence.enabled=true \
   --set sentinel.enabled=true
 
-# Wait for deployment
+## Wait for deployment
 kubectl wait --for=condition=ready pod \
   -l app.kubernetes.io/name=redis \
   -n mcp-server-langgraph \
   --timeout=300s
 
-# Test connection
+## Test connection
 kubectl run redis-test --rm -i --tty \
   --image redis:7-alpine \
   --namespace mcp-server-langgraph \
   -- redis-cli -h redis-session -a $REDIS_PASSWORD ping
-# Expected: PONG
-```
-
+## Expected: PONG
+```text
 See [Redis Sessions Guide](/guides/redis-sessions) for details.
 
-### 5. Deploy OpenFGA
+#### 5. Deploy OpenFGA
 
 ```bash
-# Deploy OpenFGA with PostgreSQL
+## Deploy OpenFGA with PostgreSQL
 kubectl apply -f - << 'EOF'
 apiVersion: apps/v1
 kind: Deployment
@@ -403,28 +395,26 @@ spec:
     targetPort: 8081
 EOF
 
-# Initialize OpenFGA
+## Initialize OpenFGA
 python scripts/setup/setup_openfga.py
-```
-
-### 6. Deploy Application
+```text
+#### 6. Deploy Application
 
 ```bash
-# Deploy all manifests
+## Deploy all manifests
 kubectl apply -f deployments/kubernetes/base/deployment.yaml
 kubectl apply -f deployments/kubernetes/base/service.yaml
 kubectl apply -f deployments/kubernetes/base/hpa.yaml
 kubectl apply -f deployments/kubernetes/base/pdb.yaml
 kubectl apply -f deployments/kubernetes/base/ingress-http.yaml
 
-# Wait for rollout
+## Wait for rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
-# Check pods
+## Check pods
 kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
-```
-
-### 7. Configure Ingress
+```text
+#### 7. Configure Ingress
 
 <Tabs>
   <Tab title="NGINX Ingress">
@@ -455,11 +445,10 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
                 name: mcp-server-langgraph
                 port:
                   number: 8000
-    ```
-
+    ```text
     ```bash
     kubectl apply -f ingress.yaml
-    ```
+    ```xml
   </Tab>
 
   <Tab title="GKE Ingress">
@@ -494,7 +483,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
     spec:
       domains:
       - api.yourdomain.com
-    ```
+    ```xml
   </Tab>
 
   <Tab title="AWS ALB">
@@ -522,16 +511,16 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
                 name: mcp-server-langgraph
                 port:
                   number: 8000
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## High Availability
+### High Availability
 
-### Horizontal Pod Autoscaling
+#### Horizontal Pod Autoscaling
 
 ```yaml
-# deployments/kubernetes/base/hpa.yaml
+## deployments/kubernetes/base/hpa.yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -570,12 +559,11 @@ spec:
       - type: Percent
         value: 100
         periodSeconds: 60
-```
-
-### Pod Disruption Budget
+```text
+#### Pod Disruption Budget
 
 ```yaml
-# deployments/kubernetes/base/pdb.yaml
+## deployments/kubernetes/base/pdb.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -586,9 +574,8 @@ spec:
   selector:
     matchLabels:
       app: mcp-server-langgraph
-```
-
-### Pod Anti-Affinity
+```text
+#### Pod Anti-Affinity
 
 Spread pods across availability zones:
 
@@ -605,14 +592,13 @@ affinity:
             values:
             - mcp-server-langgraph
         topologyKey: topology.kubernetes.io/zone
-```
+```text
+### Security
 
-## Security
-
-### Network Policies
+#### Network Policies
 
 ```yaml
-# deployments/kubernetes/base/networkpolicy.yaml
+## deployments/kubernetes/base/networkpolicy.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -660,9 +646,8 @@ spec:
     ports:
     - protocol: TCP
       port: 443  # HTTPS for LLM APIs
-```
-
-### Pod Security Standards
+```text
+#### Pod Security Standards
 
 ```yaml
 apiVersion: v1
@@ -673,9 +658,8 @@ metadata:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
-```
-
-### Security Context
+```text
+#### Security Context
 
 ```yaml
 securityContext:
@@ -689,27 +673,24 @@ securityContext:
     - ALL
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
-```
+```text
+### Observability
 
-## Observability
-
-### Prometheus Metrics
+#### Prometheus Metrics
 
 ```yaml
-# Pod annotations for Prometheus scraping
+## Pod annotations for Prometheus scraping
 annotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "8000"
   prometheus.io/path: "/metrics/prometheus"
-```
-
+```text
 Deploy Prometheus:
 ```bash
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace observability --create-namespace
-```
-
-### OpenTelemetry
+```text
+#### OpenTelemetry
 
 Deploy OpenTelemetry Collector:
 
@@ -718,9 +699,8 @@ helm install opentelemetry-collector open-telemetry/opentelemetry-collector \
   --namespace observability \
   --set mode=deployment \
   --set config.exporters.otlp.endpoint=jaeger:4317
-```
-
-### Jaeger Tracing
+```text
+#### Jaeger Tracing
 
 ```bash
 helm install jaeger jaegertracing/jaeger \
@@ -728,15 +708,13 @@ helm install jaeger jaegertracing/jaeger \
   --set provisionDataStore.cassandra=false \
   --set allInOne.enabled=true \
   --set storage.type=memory
-```
-
+```text
 Access Jaeger UI:
 ```bash
 kubectl port-forward svc/jaeger-query 16686:16686 -n observability
-# Open: http://localhost:16686
-```
-
-## Health Checks
+## Open: http://localhost:16686
+```text
+### Health Checks
 
 The deployment includes comprehensive health checks:
 
@@ -762,15 +740,13 @@ readinessProbe:
     port: 8000
   periodSeconds: 5
   failureThreshold: 3
-```
-
+```text
 Check health:
 ```bash
 kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   curl http://localhost:8000/health
-```
-
-## Troubleshooting
+```text
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Pods not starting">
@@ -786,7 +762,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
 
     # Check events
     kubectl get events -n mcp-server-langgraph --sort-by='.lastTimestamp'
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Init containers failing">
@@ -801,7 +777,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
     nc -zv keycloak 8080
     nc -zv redis-session 6379
     nc -zv openfga 8080
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Health checks failing">
@@ -815,7 +791,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
 
     # Check dependencies
     kubectl logs deploy/mcp-server-langgraph -n mcp-server-langgraph | grep -i error
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="High memory usage">
@@ -834,7 +810,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Helm Deployment" icon="helm" href="/deployment/helm">

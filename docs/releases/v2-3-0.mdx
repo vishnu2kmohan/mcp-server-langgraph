@@ -9,13 +9,13 @@ icon: 'tag'
   **Breaking Changes**: None (Pydantic V2 backward compatible)
 </Note>
 
-## Overview
+### Overview
 
 Version 2.3.0 completes the compliance storage backend infrastructure, migrates to Pydantic V2, and significantly enhances type safety across the codebase.
 
-## Key Features
+### Key Features
 
-### 🗄️ Compliance Storage Backend
+#### 🗄️ Compliance Storage Backend
 
 Complete pluggable storage architecture with 5 abstract interfaces and in-memory implementations.
 
@@ -35,7 +35,7 @@ Complete pluggable storage architecture with 5 abstract interfaces and in-memory
 - Type safety with Pydantic models
 - GDPR compliant
 
-### 🔒 Enhanced Type Safety
+#### 🔒 Enhanced Type Safety
 
 **Coverage Increase**: 27% → 64%
 
@@ -48,7 +48,7 @@ Complete pluggable storage architecture with 5 abstract interfaces and in-memory
 
 **Impact**: Catches type errors at development time, prevents runtime bugs
 
-### 📋 Pydantic V2 Migration
+#### 📋 Pydantic V2 Migration
 
 **Fixed Deprecations**:
 - Replaced `class Config` with `model_config = ConfigDict(...)`
@@ -60,7 +60,7 @@ Complete pluggable storage architecture with 5 abstract interfaces and in-memory
 
 **Impact**: Eliminates 5 Pydantic deprecation warnings, future-proofs for Pydantic V3
 
-### 📚 Error Handling Strategy Documentation
+#### 📚 Error Handling Strategy Documentation
 
 Created `docs/architecture/adr-0006-error-handling-strategy` (600+ lines):
 - 5 error categories (Client 4xx, Server 5xx)
@@ -70,7 +70,7 @@ Created `docs/architecture/adr-0006-error-handling-strategy` (600+ lines):
 - 40+ standardized error codes
 - OpenTelemetry integration
 
-## Files Modified
+### Files Modified
 
 <AccordionGroup>
   <Accordion title="Compliance Module (4 files)" icon="database">
@@ -103,9 +103,9 @@ Created `docs/architecture/adr-0006-error-handling-strategy` (600+ lines):
   </Accordion>
 </AccordionGroup>
 
-## Dependency Management
+### Dependency Management
 
-### New Documentation
+#### New Documentation
 - `docs/DEPENDENCY_MANAGEMENT.md` (580 lines)
 - `scripts/dependency-audit.sh` (320 lines)
 
@@ -121,46 +121,46 @@ Created `docs/architecture/adr-0006-error-handling-strategy` (600+ lines):
 - License compliance (pip-licenses)
 - Dependency conflict detection
 
-## Upgrade Guide
+### Upgrade Guide
 
-### From v2.2.0
+#### From v2.2.0
 
 ```bash
-# 1. Update dependencies
+## 1. Update dependencies
 git pull origin main
 uv sync
 
-# 2. Verify Pydantic V2
+## 2. Verify Pydantic V2
 python -c "import pydantic; print(pydantic.__version__)"
-# Expected: 2.x
+## Expected: 2.x
 
-# 3. Run type checks
+## 3. Run type checks
 mypy src/
-# Should pass with new strict typing
+## Should pass with new strict typing
 
-# 4. Test compliance storage
+## 4. Test compliance storage
 pytest tests/test_storage.py -v
 ```
 
-### For Custom Extensions
+#### For Custom Extensions
 
 If you've extended Pydantic models:
 ```python
-# Before (v1.x)
+## Before (v1.x)
 class MyModel(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-# After (v2.x)
+## After (v2.x)
 from pydantic import ConfigDict
 
 class MyModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 ```
 
-## What's Next
+### What's Next
 
-### v2.4.0
+#### v2.4.0
 - LangGraph 0.6.10 upgrade
 - 100% test pass rate
 - 21 comprehensive ADRs

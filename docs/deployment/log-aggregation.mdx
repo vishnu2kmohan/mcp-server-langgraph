@@ -9,11 +9,11 @@ icon: 'database'
   [View Release Notes →](/releases/v2-5-0)
 </Note>
 
-## Overview
+### Overview
 
 Production-grade **structured JSON logging** with **OpenTelemetry trace injection** and support for 6 major log aggregation platforms.
 
-### Supported Platforms
+#### Supported Platforms
 
 <CardGroup cols={3}>
   <Card title="AWS CloudWatch" icon="aws">
@@ -38,9 +38,9 @@ Production-grade **structured JSON logging** with **OpenTelemetry trace injectio
 
 ---
 
-## Structured JSON Logging
+### Structured JSON Logging
 
-### Features
+#### Features
 
 - ✅ **Automatic trace injection** - trace_id and span_id in every log
 - ✅ **ISO 8601 timestamps** with millisecond precision
@@ -48,7 +48,7 @@ Production-grade **structured JSON logging** with **OpenTelemetry trace injectio
 - ✅ **Custom fields** via logging.extra parameter
 - ✅ **Backward compatible** - Can use text format with `LOG_FORMAT=text`
 
-### Example Output
+#### Example Output
 
 ```json
 {
@@ -71,32 +71,30 @@ Production-grade **structured JSON logging** with **OpenTelemetry trace injectio
     "function": "login"
   }
 }
-```
-
-### Configuration
+```text
+#### Configuration
 
 ```bash
-# .env
+## .env
 LOG_FORMAT=json              # "json" or "text" (default: json)
 LOG_JSON_INDENT=null         # null (compact) or 2 (pretty-print)
-```
-
+```text
 ---
 
-## AWS CloudWatch
+### AWS CloudWatch
 
-### Overview
+#### Overview
 
 Export logs to **CloudWatch Logs**, metrics to **CloudWatch Metrics** (via EMF), and traces to **X-Ray**.
 
-### Prerequisites
+#### Prerequisites
 
 - AWS Account with CloudWatch and X-Ray enabled
 - IAM role with permissions (recommended) or access keys
 
-### Setup
+#### Setup
 
-#### 1. Create IAM Policy
+##### 1. Create IAM Policy
 
 ```json
 {
@@ -122,32 +120,29 @@ Export logs to **CloudWatch Logs**, metrics to **CloudWatch Metrics** (via EMF),
     }
   ]
 }
-```
-
-#### 2. Configure Environment
+```text
+##### 2. Configure Environment
 
 ```bash
-# .env
+## .env
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key      # Or use IAM role
 AWS_SECRET_ACCESS_KEY=your-secret-key  # Or use IAM role
 ENVIRONMENT=production
-```
-
-#### 3. Docker Compose
+```text
+##### 3. Docker Compose
 
 ```bash
-# Switch to AWS CloudWatch
+## Switch to AWS CloudWatch
 ./scripts/switch-log-exporter.sh aws
 
-# Start services
+## Start services
 docker compose restart otel-collector
-```
-
-#### 4. Kubernetes (EKS)
+```text
+##### 4. Kubernetes (EKS)
 
 ```bash
-# Create IAM role for service account (IRSA)
+## Create IAM role for service account (IRSA)
 eksctl create iamserviceaccount \
   --name otel-collector \
   --namespace mcp-server-langgraph \
@@ -155,55 +150,53 @@ eksctl create iamserviceaccount \
   --attach-policy-arn arn:aws:iam::ACCOUNT_ID:policy/OTELCollectorPolicy \
   --approve
 
-# Deploy
+## Deploy
 kubectl apply -k deployments/kubernetes/overlays/aws
-```
-
-### Configuration Details
+```text
+#### Configuration Details
 
 **Log Groups**: `/aws/mcp-server-langgraph/${ENVIRONMENT}`
 **Log Streams**: `{service.name}/{hostname}`
 **Metrics Namespace**: `MCPServer/${ENVIRONMENT}`
 **Retention**: Configure via AWS Console (default: Never expire)
 
-### Verification
+#### Verification
 
 ```bash
-# View logs
+## View logs
 aws logs tail /aws/mcp-server-langgraph/production --follow
 
-# Query logs with CloudWatch Insights
+## Query logs with CloudWatch Insights
 aws logs start-query \
   --log-group-name /aws/mcp-server-langgraph/production \
   --start-time $(date -u -d '1 hour ago' +%s) \
   --end-time $(date -u +%s) \
   --query-string 'fields @timestamp, level, message, trace_id | filter level = "ERROR"'
-```
-
+```text
 ---
 
-## GCP Cloud Logging
+### GCP Cloud Logging
 
-### Overview
+#### Overview
 
 Export logs to **Cloud Logging**, metrics to **Cloud Monitoring**, and traces to **Cloud Trace** (unified exporter).
 
-### Prerequisites
+#### Prerequisites
 
 - GCP Project with Logging and Trace APIs enabled
 - Service Account with permissions or Workload Identity
 
-### Setup
+#### Setup
 
-#### 1. Create Service Account
+##### 1. Create Service Account
 
 ```bash
-# Create service account
+## Create service account
 gcloud iam service-accounts create otel-collector \
   --display-name="OTEL Collector" \
   --project=YOUR_PROJECT_ID
 
-# Grant permissions
+## Grant permissions
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:otel-collector@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/logging.logWriter"
@@ -216,138 +209,129 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:otel-collector@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/monitoring.metricWriter"
 
-# Create key (for Docker Compose)
+## Create key (for Docker Compose)
 gcloud iam service-accounts keys create sa-key.json \
   --iam-account=otel-collector@YOUR_PROJECT_ID.iam.gserviceaccount.com
-```
-
-#### 2. Configure Environment
+```text
+##### 2. Configure Environment
 
 ```bash
-# .env
+## .env
 GCP_PROJECT_ID=your-project-id
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa-key.json
 ENVIRONMENT=production
-```
-
-#### 3. Docker Compose
+```text
+##### 3. Docker Compose
 
 ```bash
-# Switch to GCP
+## Switch to GCP
 ./scripts/switch-log-exporter.sh gcp
 
-# Mount service account key
+## Mount service account key
 docker compose restart otel-collector
-```
-
-#### 4. Kubernetes (GKE with Workload Identity)
+```text
+##### 4. Kubernetes (GKE with Workload Identity)
 
 ```bash
-# Bind Kubernetes SA to GCP SA
+## Bind Kubernetes SA to GCP SA
 gcloud iam service-accounts add-iam-policy-binding \
   otel-collector@YOUR_PROJECT_ID.iam.gserviceaccount.com \
   --role roles/iam.workloadIdentityUser \
   --member "serviceAccount:YOUR_PROJECT_ID.svc.id.goog[mcp-server-langgraph/otel-collector]"
 
-# Annotate Kubernetes service account
+## Annotate Kubernetes service account
 kubectl annotate serviceaccount otel-collector \
   --namespace mcp-server-langgraph \
   iam.gke.io/gcp-service-account=otel-collector@YOUR_PROJECT_ID.iam.gserviceaccount.com
 
-# Deploy (create GCP overlay first)
+## Deploy (create GCP overlay first)
 kubectl apply -k deployments/kubernetes/overlays/gcp
-```
-
-### Configuration Details
+```text
+#### Configuration Details
 
 **Log Name**: `mcp-server-langgraph`
 **Metric Prefix**: `custom.googleapis.com/mcp-server/`
 **Resource Detection**: Automatic (GKE, GCE, Cloud Run)
 
-### Verification
+#### Verification
 
 ```bash
-# View logs
+## View logs
 gcloud logging read "resource.type=k8s_container AND logName:mcp-server-langgraph" \
   --limit 50 \
   --format json
 
-# Query with Log Explorer (via Console)
-# https://console.cloud.google.com/logs/query
-```
-
+## Query with Log Explorer (via Console)
+## https://console.cloud.google.com/logs/query
+```text
 ---
 
-## Azure Monitor
+### Azure Monitor
 
-### Overview
+#### Overview
 
 Export logs, metrics, and traces to **Application Insights** (unified).
 
-### Prerequisites
+#### Prerequisites
 
 - Azure subscription
 - Application Insights resource created
 
-### Setup
+#### Setup
 
-#### 1. Create Application Insights
+##### 1. Create Application Insights
 
 ```bash
-# Create resource group
+## Create resource group
 az group create --name mcp-server-rg --location eastus
 
-# Create Application Insights
+## Create Application Insights
 az monitor app-insights component create \
   --app mcp-server-insights \
   --location eastus \
   --resource-group mcp-server-rg \
   --application-type web
 
-# Get connection string
+## Get connection string
 az monitor app-insights component show \
   --app mcp-server-insights \
   --resource-group mcp-server-rg \
   --query connectionString -o tsv
-```
-
-#### 2. Configure Environment
+```text
+##### 2. Configure Environment
 
 ```bash
-# .env
+## .env
 AZURE_MONITOR_CONNECTION_STRING="InstrumentationKey=...;IngestionEndpoint=https://..."
 ENVIRONMENT=production
-```
-
-#### 3. Docker Compose
+```text
+##### 3. Docker Compose
 
 ```bash
-# Switch to Azure
+## Switch to Azure
 ./scripts/switch-log-exporter.sh azure
 
-# Start services
+## Start services
 docker compose restart otel-collector
-```
-
-#### 4. Kubernetes (AKS)
+```text
+##### 4. Kubernetes (AKS)
 
 ```bash
-# Create secret with connection string
+## Create secret with connection string
 kubectl create secret generic otel-collector-secrets \
   --namespace mcp-server-langgraph \
   --from-literal=azure-connection-string="InstrumentationKey=..."
 
-# Deploy (create Azure overlay first)
+## Deploy (create Azure overlay first)
 kubectl apply -k deployments/kubernetes/overlays/azure
-```
-
-### Configuration Details
+```text
+#### Configuration Details
 
 **Application Map**: Automatic service topology
 **Live Metrics**: Real-time monitoring
 **Smart Detection**: Anomaly detection enabled
 
-### Verification
+#### Verification
 
 Access Azure Portal:
 - **Logs**: https://portal.azure.com → Application Insights → Logs
@@ -356,65 +340,63 @@ Access Azure Portal:
 
 ---
 
-## Elasticsearch
+### Elasticsearch
 
-### Overview
+#### Overview
 
 Export logs and traces to **Elasticsearch** with daily index rotation and **Kibana** visualization.
 
-### Prerequisites
+#### Prerequisites
 
 - Elasticsearch cluster (self-hosted or Elastic Cloud)
 - Kibana for visualization
 
-### Setup
+#### Setup
 
-#### 1. Configure Environment
+##### 1. Configure Environment
 
 ```bash
-# .env
+## .env
 ELASTICSEARCH_ENDPOINT=https://elasticsearch:9200
 ELASTICSEARCH_USERNAME=elastic
 ELASTICSEARCH_PASSWORD=changeme
 ENVIRONMENT=production
 
-# Or use API Key
+## Or use API Key
 ELASTICSEARCH_API_KEY=your-api-key
 
-# Or use Elastic Cloud ID
+## Or use Elastic Cloud ID
 ELASTICSEARCH_CLOUD_ID=cluster-name:dXMtY2VudHJhbDE...
-```
-
-#### 2. Docker Compose
+```text
+##### 2. Docker Compose
 
 ```bash
-# Switch to Elasticsearch
+## Switch to Elasticsearch
 ./scripts/switch-log-exporter.sh elasticsearch
 
-# Start services
+## Start services
 docker compose restart otel-collector
-```
-
-#### 3. Index Patterns
+```text
+##### 3. Index Patterns
 
 Logs are stored in daily indices:
 - **Logs**: `mcp-server-langgraph-logs-2025.10.15`
 - **Traces**: `mcp-server-langgraph-traces-2025.10.15`
 
-### Configuration Details
+#### Configuration Details
 
 **Index Lifecycle Management**: Configure retention policies
 **Mapping**: Elastic Common Schema (ECS)
 **Compression**: gzip enabled
 **Flush Interval**: 30s, 5MB
 
-### Verification
+#### Verification
 
 ```bash
-# Check indices
+## Check indices
 curl -u elastic:changeme http://localhost:9200/_cat/indices/mcp-server*
 
-# Query logs
+## Query logs
 curl -u elastic:changeme -X GET "http://localhost:9200/mcp-server-langgraph-logs-*/_search" \
   -H 'Content-Type: application/json' -d'
 {
@@ -424,64 +406,60 @@ curl -u elastic:changeme -X GET "http://localhost:9200/mcp-server-langgraph-logs
     }
   }
 }'
-```
-
+```text
 Access Kibana: http://localhost:5601
 
 ---
 
-## Datadog
+### Datadog
 
-### Overview
+#### Overview
 
 Unified observability with **APM**, **Log Management**, and **Infrastructure** monitoring.
 
-### Prerequisites
+#### Prerequisites
 
 - Datadog account
 - API key from https://app.datadoghq.com/organization-settings/api-keys
 
-### Setup
+#### Setup
 
-#### 1. Configure Environment
+##### 1. Configure Environment
 
 ```bash
-# .env
+## .env
 DATADOG_API_KEY=your-api-key
 DATADOG_SITE=datadoghq.com  # or datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com
 ENVIRONMENT=production
-```
-
-#### 2. Docker Compose
+```text
+##### 2. Docker Compose
 
 ```bash
-# Switch to Datadog
+## Switch to Datadog
 ./scripts/switch-log-exporter.sh datadog
 
-# Start services
+## Start services
 docker compose restart otel-collector
-```
-
-#### 3. Kubernetes
+```text
+##### 3. Kubernetes
 
 ```bash
-# Create secret with API key
+## Create secret with API key
 kubectl create secret generic otel-collector-secrets \
   --namespace mcp-server-langgraph \
   --from-literal=datadog-api-key=your-api-key \
   --from-literal=datadog-site=datadoghq.com
 
-# Deploy
+## Deploy
 kubectl apply -k deployments/kubernetes/overlays/datadog
-```
-
-### Configuration Details
+```text
+#### Configuration Details
 
 **Service Map**: Automatic distributed tracing
 **Watchdog**: Anomaly detection enabled
 **Host Metadata**: Auto-tagged with environment, service, version
 
-### Verification
+#### Verification
 
 Access Datadog:
 - **Logs**: https://app.datadoghq.com/logs
@@ -490,20 +468,20 @@ Access Datadog:
 
 ---
 
-## Splunk
+### Splunk
 
-### Overview
+#### Overview
 
 Export logs to **Splunk Enterprise** (via HEC) or **Splunk Observability Cloud** (via SAPM/SignalFx).
 
-### Prerequisites
+#### Prerequisites
 
 - Splunk Enterprise or Splunk Observability Cloud account
 - HEC token created
 
-### Setup (Splunk Enterprise)
+#### Setup (Splunk Enterprise)
 
-#### 1. Create HEC Token
+##### 1. Create HEC Token
 
 In Splunk Web:
 1. Settings → Data Inputs → HTTP Event Collector
@@ -513,51 +491,47 @@ In Splunk Web:
 5. Index: `main`
 6. Save and copy token
 
-#### 2. Configure Environment
+##### 2. Configure Environment
 
 ```bash
-# .env
+## .env
 SPLUNK_HEC_TOKEN=your-hec-token
 SPLUNK_HEC_ENDPOINT=https://splunk:8088
 ENVIRONMENT=production
-```
-
-#### 3. Docker Compose
+```text
+##### 3. Docker Compose
 
 ```bash
-# Switch to Splunk
+## Switch to Splunk
 ./scripts/switch-log-exporter.sh splunk
 
-# Start services
+## Start services
 docker compose restart otel-collector
-```
-
-### Setup (Splunk Observability Cloud)
+```text
+#### Setup (Splunk Observability Cloud)
 
 ```bash
-# .env
+## .env
 SPLUNK_ACCESS_TOKEN=your-access-token
 SPLUNK_REALM=us0  # or us1, eu0, jp0, au0
 ENVIRONMENT=production
-```
-
-### Configuration Details
+```text
+#### Configuration Details
 
 **HEC Endpoint**: `${SPLUNK_HEC_ENDPOINT}/services/collector`
 **Source**: `mcp-server-langgraph`
 **Sourcetype**: `_json` (logs), `metric` (metrics)
 **Compression**: gzip enabled
 
-### Verification
+#### Verification
 
 Access Splunk and run:
 ```spl
 index=main source="mcp-server-langgraph" | head 100
-```
-
+```text
 ---
 
-## Platform Comparison
+### Platform Comparison
 
 | Feature | AWS | GCP | Azure | Elasticsearch | Datadog | Splunk |
 |---------|-----|-----|-------|---------------|---------|--------|
@@ -571,29 +545,26 @@ index=main source="mcp-server-langgraph" | head 100
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
-### Logs Not Appearing
+#### Logs Not Appearing
 
 **Check OTLP collector status**:
 ```bash
 docker compose logs otel-collector
 kubectl logs -n mcp-server-langgraph -l app=otel-collector
-```
-
+```text
 **Verify configuration**:
 ```bash
-# Test OTLP endpoint
+## Test OTLP endpoint
 curl -v http://localhost:13133/
-```
-
+```text
 **Check credentials**:
 ```bash
-# Verify environment variables are set
+## Verify environment variables are set
 docker compose exec otel-collector env | grep -E '(AWS|GCP|AZURE|DATADOG|ELASTICSEARCH|SPLUNK)'
-```
-
-### Authentication Failures
+```text
+#### Authentication Failures
 
 **AWS**: Verify IAM permissions
 **GCP**: Check service account roles
@@ -602,48 +573,45 @@ docker compose exec otel-collector env | grep -E '(AWS|GCP|AZURE|DATADOG|ELASTIC
 **Elasticsearch**: Test basic auth credentials
 **Splunk**: Verify HEC token
 
-### High Cardinality
+#### High Cardinality
 
 **Reduce log volume**:
 ```bash
-# .env
+## .env
 LOG_LEVEL=WARNING  # Instead of INFO or DEBUG
-```
-
+```text
 **Enable sampling** (edit otel-collector config):
 ```yaml
 processors:
   probabilistic_sampler:
     sampling_percentage: 10  # Sample 10% of logs
-```
-
+```text
 ---
 
-## Best Practices
+### Best Practices
 
-### 1. Use Structured Fields
+#### 1. Use Structured Fields
 
 ```python
-# Good
+## Good
 logger.info("User action", extra={
     "user_id": "alice",
     "action": "login",
     "ip": "192.168.1.100"
 })
 
-# Bad
+## Bad
 logger.info(f"User alice performed login from 192.168.1.100")
-```
-
-### 2. Include Trace Context
+```text
+#### 2. Include Trace Context
 
 Trace context is automatically injected. Ensure OpenTelemetry tracing is enabled:
 ```bash
-# .env
+## .env
 ENABLE_TRACING=true
 ```
 
-### 3. Set Appropriate Log Levels
+#### 3. Set Appropriate Log Levels
 
 - **DEBUG**: Development only
 - **INFO**: General events (default)
@@ -651,14 +619,14 @@ ENABLE_TRACING=true
 - **ERROR**: Errors that need attention
 - **CRITICAL**: System failures
 
-### 4. Configure Retention
+#### 4. Configure Retention
 
 Set retention policies based on compliance requirements:
 - **Audit logs**: 7 years
 - **Application logs**: 30-90 days
 - **Debug logs**: 7 days
 
-### 5. Monitor Costs
+#### 5. Monitor Costs
 
 - **AWS CloudWatch**: ~$0.50/GB ingested
 - **GCP Cloud Logging**: ~$0.50/GB ingested
@@ -669,7 +637,7 @@ Set retention policies based on compliance requirements:
 
 ---
 
-## Next Steps
+### Next Steps
 
 - [Log Query Examples](/guides/log-queries) - Platform-specific query examples
 - [Observability Guide](/guides/observability) - Complete observability setup

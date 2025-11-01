@@ -5,15 +5,13 @@ icon: 'rocket'
 ---
 
 
-# GDPR Storage Backend Configuration
-
-## Overview
+### Overview
 
 The GDPR compliance endpoints (`/api/v1/users/me/*`) require persistent storage to meet data subject rights requirements under GDPR Articles 15, 16, 17, 20, and 21.
 
 **CRITICAL**: In-memory storage is **NOT production-ready** and will cause data loss on server restart, violating GDPR compliance requirements.
 
-## GDPR Data Subject Rights Flow
+### GDPR Data Subject Rights Flow
 
 ```mermaid
 sequenceDiagram
@@ -87,34 +85,31 @@ sequenceDiagram
     Storage-->>API: Recorded
     API->>Audit: Log consent change<br/>analytics: true→false, marketing: true→false
     API-->>User: 200 OK<br/>{consent_status}
-```
+```text
+### Environment Variables
 
-## Environment Variables
-
-### Required Configuration
+#### Required Configuration
 
 Set these environment variables in your production deployment:
 
 ```bash
-# Required: Set environment to production
+## Required: Set environment to production
 ENVIRONMENT=production
 
-# Required: Choose persistent backend (postgres or redis)
+## Required: Choose persistent backend (postgres or redis)
 GDPR_STORAGE_BACKEND=postgres  # or "redis"
-```
-
-### Development/Testing
+```text
+#### Development/Testing
 
 For local development and testing only:
 
 ```bash
 ENVIRONMENT=development
 GDPR_STORAGE_BACKEND=memory
-```
+```text
+### Storage Backend Options
 
-## Storage Backend Options
-
-### Option 1: PostgreSQL (Recommended)
+#### Option 1: PostgreSQL (Recommended)
 
 PostgreSQL provides ACID compliance and is ideal for GDPR data subject rights.
 
@@ -123,8 +118,7 @@ PostgreSQL provides ACID compliance and is ideal for GDPR data subject rights.
 ```bash
 GDPR_STORAGE_BACKEND=postgres
 GDPR_POSTGRES_URL=postgresql://user:pass@localhost:5432/gdpr_db
-```
-
+```text
 **Implementation Required:**
 
 Currently, PostgreSQL integration is not yet implemented. To add support:
@@ -158,9 +152,8 @@ CREATE TABLE consent_records (
 );
 
 CREATE INDEX idx_consent_user_id ON consent_records(user_id);
-```
-
-### Option 2: Redis
+```text
+#### Option 2: Redis
 
 Redis provides fast, persistent key-value storage suitable for consent management.
 
@@ -169,8 +162,7 @@ Redis provides fast, persistent key-value storage suitable for consent managemen
 ```bash
 GDPR_STORAGE_BACKEND=redis
 GDPR_REDIS_URL=redis://localhost:6379/2  # Use separate DB from sessions
-```
-
+```text
 **Implementation Required:**
 
 1. Create `RedisConsentStore` class
@@ -196,16 +188,14 @@ class RedisConsentStore:
         key = f"user:consents:{user_id}"
         consents = self.redis.hgetall(key)
         return {k.decode(): json.loads(v) for k, v in consents.items()}
-```
-
-## Production Guard
+```text
+### Production Guard
 
 The application includes a runtime guard that **prevents startup** if:
 
 ```
 ENVIRONMENT=production AND GDPR_STORAGE_BACKEND=memory
-```
-
+```text
 **Error Message:**
 
 ```
@@ -213,9 +203,8 @@ RuntimeError: CRITICAL: GDPR endpoints cannot use in-memory storage in productio
 Set GDPR_STORAGE_BACKEND=postgres or GDPR_STORAGE_BACKEND=redis,
 or set ENVIRONMENT=development for testing.
 Data subject rights (GDPR compliance) require persistent storage.
-```
-
-## Migration Checklist
+```sql
+### Migration Checklist
 
 Before deploying GDPR endpoints to production:
 
@@ -230,19 +219,18 @@ Before deploying GDPR endpoints to production:
 - [ ] Document data retention periods
 - [ ] Update privacy policy with GDPR rights
 
-## GDPR Compliance Requirements
+### GDPR Compliance Requirements
 
-### Data Retention
+#### Data Retention
 
 Configure retention policies based on your legal requirements:
 
 ```python
-# Example: 90-day retention for consent records
+## Example: 90-day retention for consent records
 CONSENT_RETENTION_DAYS=90
 PROFILE_RETENTION_DAYS=365
-```
-
-### Audit Trail
+```text
+#### Audit Trail
 
 All GDPR operations are logged with:
 
@@ -262,9 +250,8 @@ All GDPR operations are logged with:
   "gdpr_article": "21",
   "timestamp": "2025-10-18T12:34:56Z"
 }
-```
-
-### Data Deletion (Article 17)
+```text
+#### Data Deletion (Article 17)
 
 When users exercise right to erasure:
 
@@ -282,43 +269,40 @@ Some data may be retained for legal/compliance reasons:
 - Aggregated analytics (no PII)
 - Financial records (tax law requirements)
 
-## Testing
+### Testing
 
-### Unit Tests
+#### Unit Tests
 
 ```bash
 pytest tests/integration/test_gdpr_endpoints.py -v
-```
-
-### Integration Tests
+```text
+#### Integration Tests
 
 Test with real database:
 
 ```bash
-# Start PostgreSQL
+## Start PostgreSQL
 docker-compose up -d postgres
 
-# Run integration tests
+## Run integration tests
 GDPR_STORAGE_BACKEND=postgres \
 GDPR_POSTGRES_URL=postgresql://test:test@localhost:5432/test_db \
 pytest tests/integration/test_gdpr_endpoints.py
-```
-
-### Production Guard Test
+```text
+#### Production Guard Test
 
 Verify production guard:
 
 ```bash
-# Should fail
+## Should fail
 ENVIRONMENT=production GDPR_STORAGE_BACKEND=memory python -c "import mcp_server_langgraph.api.gdpr"
 
-# Should succeed
+## Should succeed
 ENVIRONMENT=production GDPR_STORAGE_BACKEND=postgres python -c "import mcp_server_langgraph.api.gdpr"
-```
+```text
+### Deployment Examples
 
-## Deployment Examples
-
-### Docker Compose
+#### Docker Compose
 
 ```yaml
 services:
@@ -342,9 +326,8 @@ services:
 
 volumes:
   postgres_data:
-```
-
-### Kubernetes
+```text
+#### Kubernetes
 
 ```yaml
 apiVersion: v1
@@ -363,11 +346,10 @@ metadata:
 type: Opaque
 stringData:
   GDPR_POSTGRES_URL: "postgresql://gdpr:password@postgres-service:5432/gdpr_db"
-```
+```text
+### Troubleshooting
 
-## Troubleshooting
-
-### Error: "GDPR endpoints use in-memory storage"
+#### Error: "GDPR endpoints use in-memory storage"
 
 **Cause:** GDPR_STORAGE_BACKEND not set or set to "memory"
 
@@ -376,29 +358,28 @@ stringData:
 ```bash
 export GDPR_STORAGE_BACKEND=postgres
 export GDPR_POSTGRES_URL=postgresql://...
-```
-
-### Error: "RuntimeError: CRITICAL: GDPR endpoints cannot use in-memory storage"
+```text
+#### Error: "RuntimeError: CRITICAL: GDPR endpoints cannot use in-memory storage"
 
 **Cause:** Running in production with memory backend
 
 **Solution:** Change backend or environment:
 
 ```bash
-# Option 1: Use persistent backend
+## Option 1: Use persistent backend
 export GDPR_STORAGE_BACKEND=postgres
 
-# Option 2: Switch to development (NOT for production!)
+## Option 2: Switch to development (NOT for production!)
 export ENVIRONMENT=development
 ```
 
-### Data Loss on Restart
+#### Data Loss on Restart
 
 **Cause:** Using in-memory storage in non-development environment
 
 **Solution:** Migrate to PostgreSQL or Redis immediately
 
-## References
+### References
 
 - [GDPR Article 15: Right to Access](https://gdpr-info.eu/art-15-gdpr/)
 - [GDPR Article 16: Right to Rectification](https://gdpr-info.eu/art-16-gdpr/)
@@ -406,7 +387,7 @@ export ENVIRONMENT=development
 - [GDPR Article 20: Right to Data Portability](https://gdpr-info.eu/art-20-gdpr/)
 - [GDPR Article 21: Right to Object](https://gdpr-info.eu/art-21-gdpr/)
 
-## Support
+### Support
 
 For implementation assistance:
 

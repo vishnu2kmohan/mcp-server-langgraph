@@ -4,11 +4,11 @@ description: 'Customize OpenFGA authorization models for your use case'
 icon: 'sitemap'
 ---
 
-## Overview
+### Overview
 
 Create custom authorization models in OpenFGA to match your application's permission requirements. This guide covers model design, testing, and best practices.
 
-## Authorization Model Language
+### Authorization Model Language
 
 OpenFGA models are defined in a simple DSL:
 
@@ -22,9 +22,8 @@ type organization
   relations
     define admin: [user]
     define member: [user] or admin
-```
-
-### Key Concepts
+```text
+#### Key Concepts
 
 <CardGroup cols={3}>
   <Card title="Types" icon="cube">
@@ -38,7 +37,7 @@ type organization
   </Card>
 </CardGroup>
 
-## Default Model
+### Default Model
 
 The MCP Server includes this model:
 
@@ -75,17 +74,16 @@ type document
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner
-```
-
+```text
 **Supported Patterns**:
 - Hierarchical roles (admin → member → viewer)
 - Organization-based access (organization#member)
 - Resource ownership
 - Delegated permissions
 
-## Custom Models
+### Custom Models
 
-### Example: Project Management
+#### Example: Project Management
 
 ```typescript
 model
@@ -109,26 +107,24 @@ type task
     define project: [project]
     define assignee: [user]
     define viewer: [user] from project
-```
-
+```text
 **Usage**:
 ```python
-# Team lead creates project
+## Team lead creates project
 await client.write_tuples([
     {"user": "user:alice", "relation": "lead", "object": "team:engineering"},
     {"user": "team:engineering#lead", "relation": "owner", "object": "project:webapp"}
 ])
 
-# Alice can view project (via team lead)
+## Alice can view project (via team lead)
 allowed = await client.check_permission(
     user="user:alice",
     relation="viewer",
     object="project:webapp"
 )
-# Returns: True
-```
-
-### Example: Multi-Tenant SaaS
+## Returns: True
+```text
+#### Example: Multi-Tenant SaaS
 
 ```typescript
 model
@@ -153,26 +149,24 @@ type resource
     define owner: [user]
     define editor: [user, workspace#member]
     define viewer: [user] or editor
-```
-
+```text
 **Isolation**:
 ```python
-# Tenant A admin
+## Tenant A admin
 await client.write_tuples([
     {"user": "user:alice", "relation": "admin", "object": "tenant:company_a"},
     {"user": "tenant:company_a", "relation": "tenant", "object": "workspace:ws1"}
 ])
 
-# Alice can access workspace (via tenant admin)
+## Alice can access workspace (via tenant admin)
 allowed = await client.check_permission(
     user="user:alice",
     relation="admin",
     object="workspace:ws1"
 )
-# Returns: True
-```
-
-### Example: Content Management
+## Returns: True
+```text
+#### Example: Content Management
 
 ```typescript
 model
@@ -193,68 +187,61 @@ type file
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner or viewer from parent
-```
-
+```text
 **Inheritance**:
 ```python
-# Set folder permissions
+## Set folder permissions
 await client.write_tuples([
     {"user": "user:alice", "relation": "owner", "object": "folder:docs"},
     {"user": "folder:docs", "relation": "parent", "object": "file:report.pdf"}
 ])
 
-# Alice can view file (inherited from folder)
+## Alice can view file (inherited from folder)
 allowed = await client.check_permission(
     user="user:alice",
     relation="viewer",
     object="file:report.pdf"
 )
-# Returns: True
-```
+## Returns: True
+```text
+### Relation Operators
 
-## Relation Operators
-
-### Direct Assignment
+#### Direct Assignment
 
 ```typescript
 define admin: [user]
-```
-
+```text
 Users directly assigned admin relation.
 
-### Union (OR)
+#### Union (OR)
 
 ```typescript
 define member: [user] or admin
-```
-
+```text
 User is member OR admin.
 
-### Intersection (AND)
+#### Intersection (AND)
 
 ```typescript
 define can_delete: admin and owner
-```
-
+```text
 User must be admin AND owner.
 
-### Exclusion (BUT NOT)
+#### Exclusion (BUT NOT)
 
 ```typescript
 define active_member: member but not suspended
-```
-
+```text
 User is member but not suspended.
 
-### Computed Relations
+#### Computed Relations
 
 ```typescript
 define viewer: [user] or viewer from parent
-```
-
+```text
 User is viewer OR inherits from parent.
 
-## Conditional Permissions
+### Conditional Permissions
 
 Add context-based rules:
 
@@ -272,11 +259,10 @@ type document
 condition time_limited_access(current_time: timestamp, expiry: timestamp) {
   current_time < expiry
 }
-```
-
+```text
 **Usage**:
 ```python
-# Check with context
+## Check with context
 allowed = await client.check_permission(
     user="user:bob",
     relation="viewer",
@@ -286,22 +272,20 @@ allowed = await client.check_permission(
         "expiry": "2025-10-13T10:00:00Z"
     }
 )
-```
+```text
+### Testing Models
 
-## Testing Models
-
-### Model Validation
+#### Model Validation
 
 ```bash
-# Use OpenFGA CLI
+## Use OpenFGA CLI
 fga model validate --file model.fga
 
-# Or via API
+## Or via API
 curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
   -d @model.json
-```
-
-### Test Assertions
+```text
+#### Test Assertions
 
 ```python
 test_cases = [
@@ -326,11 +310,10 @@ for test in test_cases:
         object=test["object"]
     )
     assert result == test["expected"], f"Test failed: {test}"
-```
+```sql
+### Deploying Models
 
-## Deploying Models
-
-### Via Setup Script
+#### Via Setup Script
 
 Update `scripts/setup/setup_openfga.py`:
 
@@ -358,12 +341,11 @@ AUTHORIZATION_MODEL = {
     ]
 }
 
-# Write model
+## Write model
 response = await client.write_authorization_model(AUTHORIZATION_MODEL)
 model_id = response["authorization_model_id"]
-```
-
-### Via API
+```text
+#### Via API
 
 ```bash
 curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
@@ -372,9 +354,8 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     "schema_version": "1.1",
     "type_definitions": [...]
   }'
-```
-
-## Best Practices
+```text
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Start Simple" icon="seedling">
@@ -386,8 +367,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
       relations
         define owner: [user]
         define viewer: [user]
-    ```
-
+    ```text
     **Too Complex**:
     ```typescript
     type document
@@ -395,7 +375,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
         define owner: [user]
         define editor: [user, group#member, team#lead]
         define viewer: [user] or editor or viewer from parent or viewer from workspace
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Hierarchies" icon="layer-group">
@@ -407,7 +387,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
         define admin: [user]
         define member: [user] or admin  # Admins are members
         define viewer: [user] or member # Members are viewers
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Limit Indirection" icon="arrows-turn-right">
@@ -416,12 +396,11 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     **Good** (2 hops):
     ```typescript
     define viewer: [user] or viewer from parent
-    ```
-
+    ```text
     **Bad** (5+ hops):
     ```typescript
     define viewer: [user] or viewer from parent from grandparent from workspace from tenant
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Name Consistently" icon="tag">
@@ -447,13 +426,13 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     # 2. Verify v1 tuples still work
     # 3. Add v2 tuples
     # 4. Switch to v2
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Performance Optimization
+### Performance Optimization
 
-### Reduce Tuple Count
+#### Reduce Tuple Count
 
 Use group/organization relations instead of per-user tuples:
 
@@ -465,8 +444,7 @@ for user_id in range(100):
         "relation": "viewer",
         "object": "document:report"
     }])
-```
-
+```text
 **Good** (1 tuple):
 ```python
 await client.write_tuples([{
@@ -474,40 +452,38 @@ await client.write_tuples([{
     "relation": "viewer",
     "object": "document:report"
 }])
-```
-
-### Add Indexes
+```text
+#### Add Indexes
 
 For PostgreSQL backend, add indexes on frequently queried fields.
 
-### Enable Caching
+#### Enable Caching
 
 ```python
 client = OpenFGAClient(
     cache_ttl=300,  # 5 minutes
     cache_backend="redis"
 )
-```
+```text
+### Migration Guide
 
-## Migration Guide
-
-### Adding New Types
+#### Adding New Types
 
 1. Create new model with added type
 2. Write new model to OpenFGA
 3. No data migration needed
 
-### Modifying Relations
+#### Modifying Relations
 
 1. Create new model
 2. Write new model
 3. Migrate existing tuples if needed
 
 ```python
-# Old: "can_read" relation
+## Old: "can_read" relation
 old_tuples = await client.read_tuples(relation="can_read")
 
-# New: "viewer" relation
+## New: "viewer" relation
 new_tuples = [{
     "user": t["user"],
     "relation": "viewer",  # Changed
@@ -518,7 +494,7 @@ await client.write_tuples(new_tuples)
 await client.delete_tuples(old_tuples)
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="OpenFGA Setup" icon="shield-check" href="/guides/openfga-setup">

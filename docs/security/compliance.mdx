@@ -9,7 +9,7 @@ icon: 'scale-balanced'
   [View Release Notes →](/releases/v2-2-0)
 </Note>
 
-## Overview
+### Overview
 
 Compliance with data protection regulations and industry standards is essential for enterprise deployments. This guide covers implementing controls for GDPR, SOC 2, HIPAA, and other compliance frameworks.
 
@@ -17,7 +17,7 @@ Compliance with data protection regulations and industry standards is essential 
 This guide provides technical implementation guidance. Always consult with legal counsel and compliance experts for your specific regulatory requirements.
 </Warning>
 
-## Compliance Frameworks
+### Compliance Frameworks
 
 <CardGroup cols={2}>
   <Card title="GDPR" icon="shield-halved">
@@ -53,9 +53,9 @@ This guide provides technical implementation guidance. Always consult with legal
   </Card>
 </CardGroup>
 
-## GDPR Compliance
+### GDPR Compliance
 
-### Data Protection Principles
+#### Data Protection Principles
 
 <AccordionGroup>
   <Accordion title="Right to Access" icon="eye">
@@ -369,46 +369,46 @@ This guide provides technical implementation guidance. Always consult with legal
   </Accordion>
 </AccordionGroup>
 
-### GDPR Checklist
+#### GDPR Checklist
 
 ```markdown
-## GDPR Compliance Checklist
+### GDPR Compliance Checklist
 
-### Lawful Basis
+#### Lawful Basis
 - [ ] Consent mechanism implemented
 - [ ] Consent records stored with metadata
 - [ ] Easy consent withdrawal
 
-### Data Subject Rights
+#### Data Subject Rights
 - [ ] Right to access (data export)
 - [ ] Right to rectification (profile updates)
 - [ ] Right to erasure (account deletion)
 - [ ] Right to data portability (JSON/CSV export)
 - [ ] Right to object (opt-out mechanisms)
 
-### Data Protection
+#### Data Protection
 - [ ] Data minimization practiced
 - [ ] Purpose limitation enforced
 - [ ] Storage limitation (retention policy)
 - [ ] Encryption at rest and in transit
 - [ ] Pseudonymization where applicable
 
-### Accountability
+#### Accountability
 - [ ] Privacy policy published
 - [ ] Data Processing Agreement (DPA) available
 - [ ] Privacy impact assessment completed
 - [ ] Data breach notification process
 - [ ] DPO appointed (if required)
 
-### Cross-Border Transfers
+#### Cross-Border Transfers
 - [ ] Standard Contractual Clauses (SCCs)
 - [ ] Adequacy decision verified
 - [ ] Data localization requirements met
 ```
 
-## SOC 2 Compliance
+### SOC 2 Compliance
 
-### Trust Services Criteria
+#### Trust Services Criteria
 
 <AccordionGroup>
   <Accordion title="Security (CC)" icon="shield">
@@ -716,19 +716,19 @@ This guide provides technical implementation guidance. Always consult with legal
   </Accordion>
 </AccordionGroup>
 
-### SOC 2 Checklist
+#### SOC 2 Checklist
 
 ```markdown
-## SOC 2 Type II Readiness
+### SOC 2 Type II Readiness
 
-### Organizational Controls
+#### Organizational Controls
 - [ ] Security policies documented
 - [ ] Risk assessment completed
 - [ ] Vendor management program
 - [ ] Background checks for employees
 - [ ] Security training program
 
-### Technical Controls
+#### Technical Controls
 - [ ] Multi-factor authentication
 - [ ] Encryption at rest and in transit
 - [ ] Network segmentation
@@ -738,7 +738,7 @@ This guide provides technical implementation guidance. Always consult with legal
 - [ ] Backup and recovery
 - [ ] Incident response plan
 
-### Monitoring Controls
+#### Monitoring Controls
 - [ ] Security event logging
 - [ ] Log retention (1 year minimum)
 - [ ] Security monitoring 24/7
@@ -746,7 +746,7 @@ This guide provides technical implementation guidance. Always consult with legal
 - [ ] Uptime monitoring
 - [ ] Alert management
 
-### Evidence Collection
+#### Evidence Collection
 - [ ] Automated evidence gathering
 - [ ] Quarterly access reviews
 - [ ] Annual penetration testing
@@ -754,16 +754,16 @@ This guide provides technical implementation guidance. Always consult with legal
 - [ ] Change management logs
 - [ ] Incident reports
 
-### Audit Preparation
+#### Audit Preparation
 - [ ] Control documentation
 - [ ] Evidence repository
 - [ ] Auditor access provisioned
 - [ ] Pre-audit assessment
 ```
 
-## HIPAA Compliance
+### HIPAA Compliance
 
-### Technical Safeguards
+#### Technical Safeguards
 
 <AccordionGroup>
   <Accordion title="Access Control" icon="key">
@@ -983,12 +983,12 @@ This guide provides technical implementation guidance. Always consult with legal
   </Accordion>
 </AccordionGroup>
 
-### HIPAA Checklist
+#### HIPAA Checklist
 
 ```markdown
-## HIPAA Compliance Checklist
+### HIPAA Compliance Checklist
 
-### Administrative Safeguards
+#### Administrative Safeguards
 - [ ] Security officer designated
 - [ ] Workforce security training
 - [ ] Access authorization process
@@ -996,13 +996,13 @@ This guide provides technical implementation guidance. Always consult with legal
 - [ ] Termination procedures
 - [ ] Business Associate Agreements (BAAs)
 
-### Physical Safeguards
+#### Physical Safeguards
 - [ ] Facility access controls
 - [ ] Workstation security
 - [ ] Device and media controls
 - [ ] Disposal procedures
 
-### Technical Safeguards
+#### Technical Safeguards
 - [ ] Unique user identification (Required)
 - [ ] Emergency access procedure (Required)
 - [ ] Automatic logoff (Addressable)
@@ -1012,23 +1012,23 @@ This guide provides technical implementation guidance. Always consult with legal
 - [ ] Integrity controls (Required)
 - [ ] Authentication (Required)
 
-### Breach Notification
+#### Breach Notification
 - [ ] Breach detection procedures
 - [ ] Notification within 60 days
 - [ ] Breach log maintained
 - [ ] Risk assessment process
 ```
 
-## Continuous Compliance
+### Continuous Compliance
 
-### Automated Compliance Monitoring
+#### Automated Compliance Monitoring
 
 ```python
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 scheduler = AsyncIOScheduler()
 
-# Daily compliance checks
+## Daily compliance checks
 @scheduler.scheduled_job('cron', hour=6)
 async def daily_compliance_check():
     """Run daily compliance checks"""
@@ -1055,7 +1055,7 @@ async def daily_compliance_check():
             details=report
         )
 
-# Weekly access review
+## Weekly access review
 @scheduler.scheduled_job('cron', day_of_week='mon', hour=9)
 async def weekly_access_review():
     """Review user access weekly"""
@@ -1068,7 +1068,7 @@ async def weekly_access_review():
         attachment=review
     )
 
-# Monthly compliance report
+## Monthly compliance report
 @scheduler.scheduled_job('cron', day=1, hour=9)
 async def monthly_compliance_report():
     """Generate monthly compliance report"""
@@ -1082,7 +1082,7 @@ async def monthly_compliance_report():
     await send_compliance_report(report)
 ```
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Documentation" icon="book">
@@ -1118,7 +1118,7 @@ async def monthly_compliance_report():
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Audit Checklist" icon="clipboard-check" href="/security/audit-checklist">

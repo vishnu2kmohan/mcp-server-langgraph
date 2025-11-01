@@ -9,7 +9,7 @@ icon: 'tag'
   **Breaking Changes**: None (fully backward compatible)
 </Note>
 
-## Overview
+### Overview
 
 Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-action-verify-repeat capabilities, achieving **reference-quality AI agent implementation**:
 
@@ -18,9 +18,9 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 3. 🧠 **Advanced Enhancements (ADR-0025)** - Just-in-time context loading, parallel execution, enhanced note-taking
 4. ⚡ **Lazy Observability (ADR-0026)** - Container-friendly initialization with explicit control
 
-## What's New
+### What's New
 
-### 🔄 Agentic Loop Implementation (ADR-0024)
+#### 🔄 Agentic Loop Implementation (ADR-0024)
 
 **Full gather-action-verify-repeat cycle** following Anthropic's best practices for autonomous agents.
 
@@ -134,7 +134,7 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 
 ---
 
-### 🎯 Anthropic Tool Design Best Practices (ADR-0023)
+#### 🎯 Anthropic Tool Design Best Practices (ADR-0023)
 
 **Tool improvements** following Anthropic's published best practices for writing tools for AI agents.
 
@@ -259,7 +259,7 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 
 ---
 
-### 🧠 Advanced Enhancements (ADR-0025)
+#### 🧠 Advanced Enhancements (ADR-0025)
 
 **Comprehensive implementation** of Anthropic's advanced best practices achieving 9.8/10 adherence score.
 
@@ -370,7 +370,7 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 
 ---
 
-### ⚡ Lazy Observability Initialization (ADR-0026)
+#### ⚡ Lazy Observability Initialization (ADR-0026)
 
 **Container-friendly observability** with explicit initialization control.
 
@@ -439,9 +439,9 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 
 ---
 
-## Performance Impact
+### Performance Impact
 
-### Latency Changes
+#### Latency Changes
 
 | Component | Overhead | Frequency | Impact |
 |-----------|----------|-----------|--------|
@@ -453,7 +453,7 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 
 **Overall**: +1-2s average latency for 30% fewer errors and 23% quality improvement
 
-### Token Savings
+#### Token Savings
 
 | Feature | Reduction | Example |
 |---------|-----------|---------|
@@ -465,12 +465,12 @@ Version 2.7.0 implements **Anthropic's complete agentic loop** with gather-actio
 
 ---
 
-## Configuration Examples
+### Configuration Examples
 
-### Development (Speed Priority)
+#### Development (Speed Priority)
 
 ```bash
-# Disable features for fast iteration
+## Disable features for fast iteration
 ENABLE_CONTEXT_COMPACTION=false
 ENABLE_VERIFICATION=false
 ENABLE_DYNAMIC_CONTEXT_LOADING=false
@@ -479,10 +479,10 @@ ENABLE_LLM_EXTRACTION=false
 ENABLE_FILE_LOGGING=false
 ```
 
-### Staging (Balanced)
+#### Staging (Balanced)
 
 ```bash
-# Enable with lenient thresholds
+## Enable with lenient thresholds
 ENABLE_CONTEXT_COMPACTION=true
 COMPACTION_THRESHOLD=10000
 
@@ -495,10 +495,10 @@ ENABLE_PARALLEL_EXECUTION=true
 ENABLE_FILE_LOGGING=false
 ```
 
-### Production (Quality Priority)
+#### Production (Quality Priority)
 
 ```bash
-# Full quality assurance
+## Full quality assurance
 ENABLE_CONTEXT_COMPACTION=true
 COMPACTION_THRESHOLD=6000
 
@@ -515,9 +515,9 @@ ENABLE_FILE_LOGGING=true
 
 ---
 
-## Testing
+### Testing
 
-### New Test Coverage
+#### New Test Coverage
 
 | Component | Tests | Coverage |
 |-----------|-------|----------|
@@ -529,25 +529,25 @@ ENABLE_FILE_LOGGING=true
 
 **Overall**: 65+ new tests, 80%+ coverage maintained
 
-### Running Tests
+#### Running Tests
 
 ```bash
-# Unit tests for agentic loop
+## Unit tests for agentic loop
 pytest tests/test_context_manager.py -v
 pytest tests/test_verifier.py -v
 
-# Integration tests
+## Integration tests
 pytest tests/test_agentic_loop_integration.py -v
 
-# All quality tests
+## All quality tests
 make test-all-quality
 ```
 
 ---
 
-## Migration Guide
+### Migration Guide
 
-### From v2.6.0
+#### From v2.6.0
 
 <Steps>
   <Step title="Update Dependencies">
@@ -601,23 +601,23 @@ make test-all-quality
 
 ---
 
-## Upgrading
+### Upgrading
 
-### pip/uv
+#### pip/uv
 
 ```bash
 pip install mcp-server-langgraph==2.7.0
-# OR
+## OR
 uv pip install mcp-server-langgraph==2.7.0
 ```
 
-### Docker
+#### Docker
 
 ```bash
 docker pull your-registry/mcp-server-langgraph:2.7.0
 ```
 
-### Kubernetes
+#### Kubernetes
 
 ```bash
 helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
@@ -626,13 +626,13 @@ helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
 
 ---
 
-## Full Changelog
+### Full Changelog
 
 See [CHANGELOG.md](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHANGELOG.md#270---2025-10-17) for complete details.
 
 ---
 
-## Contributors
+### Contributors
 
 Special thanks to:
 - Anthropic team for publishing excellent best practices documentation
@@ -641,9 +641,9 @@ Special thanks to:
 
 ---
 
-## What's Next?
+### What's Next?
 
-### Planned for v2.8.0
+#### Planned for v2.8.0
 
 - Authentication provider factory pattern
 - Token-based authentication enforcement

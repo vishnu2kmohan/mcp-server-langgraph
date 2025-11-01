@@ -4,7 +4,7 @@ description: 'Deploy Kong Gateway for advanced API management, rate limiting, an
 icon: 'shield-halved'
 ---
 
-## Overview
+### Overview
 
 Kong Gateway provides enterprise-grade API management with advanced features including rate limiting, authentication, request transformation, caching, and observability. This guide covers deploying Kong as the API gateway for your MCP Server.
 
@@ -12,7 +12,7 @@ Kong Gateway provides enterprise-grade API management with advanced features inc
 Kong Gateway sits between clients and your MCP Server, handling cross-cutting concerns like authentication, rate limiting, and monitoring.
 </Info>
 
-## Architecture
+### Architecture
 
 ```mermaid
 graph LR
@@ -51,9 +51,8 @@ graph LR
     class LB lbStyle
     class App1,App2,App3 appStyle
     class Metrics,Logs obsStyle
-```
-
-## Features
+```text
+### Features
 
 <CardGroup cols={2}>
   <Card title="Authentication" icon="key">
@@ -89,7 +88,7 @@ graph LR
   </Card>
 </CardGroup>
 
-## Quick Start
+### Quick Start
 
 <Tabs>
   <Tab title="Docker Compose">
@@ -158,8 +157,7 @@ graph LR
 
     volumes:
       kong-db-data:
-    ```
-
+    ```text
     **Start services**:
     ```bash
     docker compose up -d
@@ -169,7 +167,7 @@ graph LR
 
     # Access Kong Manager (GUI)
     open http://localhost:8002
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Kubernetes (Helm)">
@@ -196,8 +194,7 @@ graph LR
     # Check status
     kubectl get pods -n kong
     kubectl get svc -n kong
-    ```
-
+    ```text
     **Access Kong**:
     ```bash
     # Port forward Kong admin API
@@ -205,7 +202,7 @@ graph LR
 
     # Test
     curl http://localhost:8001/
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Cloud (AWS)">
@@ -240,21 +237,21 @@ graph LR
       username             = "kong"
       password             = var.db_password
     }
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Configuration
+### Configuration
 
-### Create Service
+#### Create Service
 
 ```bash
-# Add MCP Server as a service
+## Add MCP Server as a service
 curl -X POST http://localhost:8001/services \
   --data name=mcp-server-langgraph \
   --data url=http://mcp-server-langgraph:8000
 
-# Or using decK (declarative config)
+## Or using decK (declarative config)
 cat > kong.yaml << 'EOF'
 _format_version: "3.0"
 
@@ -269,22 +266,21 @@ services:
 EOF
 
 deck sync -s kong.yaml
-```
-
-### Create Routes
+```text
+#### Create Routes
 
 ```bash
-# Create route for /message endpoint
+## Create route for /message endpoint
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/routes \
   --data paths[]=/message \
   --data methods[]=POST
 
-# Create route for /auth
+## Create route for /auth
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/routes \
   --data paths[]=/auth \
   --data methods[]=POST
 
-# Using decK
+## Using decK
 cat >> kong.yaml << 'EOF'
   routes:
   - name: message
@@ -310,43 +306,41 @@ cat >> kong.yaml << 'EOF'
 EOF
 
 deck sync -s kong.yaml
-```
+```text
+### Plugins
 
-## Plugins
-
-### JWT Authentication
+#### JWT Authentication
 
 ```bash
-# Enable JWT plugin
+## Enable JWT plugin
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=jwt \
   --data config.claims_to_verify=exp \
   --data config.key_claim_name=kid \
   --data config.secret_is_base64=false
 
-# Create consumer
+## Create consumer
 curl -X POST http://localhost:8001/consumers \
   --data username=api-client
 
-# Add JWT credentials
+## Add JWT credentials
 curl -X POST http://localhost:8001/consumers/api-client/jwt \
   --data key=my-key-id \
   --data algorithm=HS256 \
   --data secret=my-secret-key
 
-# Test
+## Test
 TOKEN=$(echo -n '{"kid":"my-key-id","alg":"HS256","typ":"JWT"}' | base64 -w0).$(echo -n '{"iss":"api-client","exp":9999999999}' | base64 -w0)
 SIGNATURE=$(echo -n "$TOKEN" | openssl dgst -sha256 -hmac "my-secret-key" -binary | base64 -w0)
 
 curl http://localhost:8000/message \
   -H "Authorization: Bearer ${TOKEN}.${SIGNATURE}" \
   -d '{"query":"Hello"}'
-```
-
-### Rate Limiting
+```text
+#### Rate Limiting
 
 ```bash
-# Global rate limiting
+## Global rate limiting
 curl -X POST http://localhost:8001/plugins \
   --data name=rate-limiting \
   --data config.minute=100 \
@@ -355,7 +349,7 @@ curl -X POST http://localhost:8001/plugins \
   --data config.redis.host=redis \
   --data config.redis.port=6379
 
-# Per-consumer rate limiting
+## Per-consumer rate limiting
 curl -X POST http://localhost:8001/plugins \
   --data name=rate-limiting-advanced \
   --data config.limit[]=100 \
@@ -366,7 +360,7 @@ curl -X POST http://localhost:8001/plugins \
   --data config.strategy=redis \
   --data config.redis.host=redis
 
-# Using decK
+## Using decK
 cat >> kong.yaml << 'EOF'
 plugins:
 - name: rate-limiting
@@ -378,12 +372,11 @@ plugins:
       host: redis
       port: 6379
 EOF
-```
-
-### CORS
+```text
+#### CORS
 
 ```bash
-# Enable CORS
+## Enable CORS
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=cors \
   --data config.origins=https://yourdomain.com \
@@ -393,7 +386,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data config.credentials=true \
   --data config.max_age=3600
 
-# Using decK
+## Using decK
 cat >> kong.yaml << 'EOF'
   plugins:
   - name: cors
@@ -406,12 +399,11 @@ cat >> kong.yaml << 'EOF'
       credentials: true
       max_age: 3600
 EOF
-```
-
-### Response Caching
+```text
+#### Response Caching
 
 ```bash
-# Enable proxy cache
+## Enable proxy cache
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=proxy-cache \
   --data config.response_code[]=200 \
@@ -423,30 +415,28 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data config.strategy=redis \
   --data config.redis.host=redis
 
-# Vary cache by header
+## Vary cache by header
   --data config.vary_headers[]=Authorization
-```
-
-### Request Transformation
+```text
+#### Request Transformation
 
 ```bash
-# Add/modify request headers
+## Add/modify request headers
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-transformer \
   --data config.add.headers[]=X-API-Version:2.0 \
   --data config.add.headers[]=X-Gateway:Kong \
   --data config.remove.headers[]=X-Sensitive-Header
 
-# Transform request body
+## Transform request body
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-transformer-advanced \
   --data config.add.body[]=source:kong-gateway
-```
-
-### Logging
+```text
+#### Logging
 
 ```bash
-# HTTP log
+## HTTP log
 curl -X POST http://localhost:8001/plugins \
   --data name=http-log \
   --data config.http_endpoint=http://logstash:8080/logs \
@@ -454,12 +444,12 @@ curl -X POST http://localhost:8001/plugins \
   --data config.timeout=1000 \
   --data config.keepalive=60000
 
-# File log
+## File log
 curl -X POST http://localhost:8001/plugins \
   --data name=file-log \
   --data config.path=/tmp/kong.log
 
-# Datadog
+## Datadog
 curl -X POST http://localhost:8001/plugins \
   --data name=datadog \
   --data config.host=datadog-agent \
@@ -468,14 +458,13 @@ curl -X POST http://localhost:8001/plugins \
   --data config.metrics[]=latency \
   --data config.metrics[]=request_size \
   --data config.metrics[]=response_size
-```
+```text
+### Advanced Features
 
-## Advanced Features
-
-### Load Balancing
+#### Load Balancing
 
 ```yaml
-# kong.yaml
+## kong.yaml
 upstreams:
 - name: langgraph-upstream
   algorithm: round-robin
@@ -510,12 +499,11 @@ services:
 - name: mcp-server-langgraph
   host: langgraph-upstream
   protocol: http
-```
-
-### Circuit Breaker
+```text
+#### Circuit Breaker
 
 ```bash
-# Enable circuit breaker
+## Enable circuit breaker
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=circuit-breaker \
   --data config.error_threshold=50 \
@@ -524,22 +512,20 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data config.window_size=60 \
   --data config.half_open_requests=5 \
   --data config.retry_after=30
-```
-
-### Request Validation
+```text
+#### Request Validation
 
 ```bash
-# JSON Schema validation
+## JSON Schema validation
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-validator \
   --data config.version=draft4 \
   --data config.body_schema='{"type":"object","properties":{"query":{"type":"string","minLength":1,"maxLength":10000}},"required":["query"]}'
-```
-
-### Canary Deployment
+```text
+#### Canary Deployment
 
 ```yaml
-# kong.yaml
+## kong.yaml
 services:
 - name: langgraph-stable
   url: http://langgraph-v1:8000
@@ -563,37 +549,34 @@ services:
         start: 0.1  # 10% traffic to canary
         duration: 3600  # Ramp up over 1 hour
         steps: 10
-```
+```text
+### Monitoring
 
-## Monitoring
-
-### Prometheus Plugin
+#### Prometheus Plugin
 
 ```bash
-# Enable Prometheus plugin
+## Enable Prometheus plugin
 curl -X POST http://localhost:8001/plugins \
   --data name=prometheus
 
-# Scrape metrics
+## Scrape metrics
 curl http://localhost:8001/metrics
 
-# Example metrics:
-# kong_http_requests_total{service="mcp-server-langgraph",route="message",code="200"} 1234
-# kong_latency_ms{type="request",service="mcp-server-langgraph"} 45.2
-# kong_bandwidth_bytes{type="ingress",service="mcp-server-langgraph"} 1024000
-```
-
+## Example metrics:
+## kong_http_requests_total{service="mcp-server-langgraph",route="message",code="200"} 1234
+## kong_latency_ms{type="request",service="mcp-server-langgraph"} 45.2
+## kong_bandwidth_bytes{type="ingress",service="mcp-server-langgraph"} 1024000
+```text
 **Prometheus config**:
 ```yaml
-# prometheus.yml
+## prometheus.yml
 scrape_configs:
 - job_name: 'kong'
   static_configs:
   - targets: ['kong:8001']
   metrics_path: /metrics
-```
-
-### Grafana Dashboard
+```text
+#### Grafana Dashboard
 
 ```json
 {
@@ -621,68 +604,63 @@ scrape_configs:
     ]
   }
 }
-```
-
-### Distributed Tracing
+```text
+#### Distributed Tracing
 
 ```bash
-# Enable Zipkin tracing
+## Enable Zipkin tracing
 curl -X POST http://localhost:8001/plugins \
   --data name=zipkin \
   --data config.http_endpoint=http://zipkin:9411/api/v2/spans \
   --data config.sample_ratio=1.0
 
-# Or Jaeger
+## Or Jaeger
 curl -X POST http://localhost:8001/plugins \
   --data name=opentelemetry \
   --data config.endpoint=http://jaeger:4318/v1/traces \
   --data config.resource_attributes.service.name=kong-gateway
-```
+```text
+### Security
 
-## Security
-
-### IP Restriction
+#### IP Restriction
 
 ```bash
-# Whitelist IPs
+## Whitelist IPs
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=ip-restriction \
   --data config.allow[]=10.0.0.0/8 \
   --data config.allow[]=172.16.0.0/12 \
   --data config.allow[]=192.168.1.100
 
-# Blacklist IPs
+## Blacklist IPs
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=ip-restriction \
   --data config.deny[]=1.2.3.4
-```
-
-### Bot Detection
+```text
+#### Bot Detection
 
 ```bash
-# Enable bot detection
+## Enable bot detection
 curl -X POST http://localhost:8001/plugins \
   --data name=bot-detection \
   --data config.allow[]=googlebot \
   --data config.allow[]=bingbot \
   --data config.deny[]=malicious-bot
-```
-
-### Request Size Limiting
+```text
+#### Request Size Limiting
 
 ```bash
-# Limit request body size
+## Limit request body size
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-size-limiting \
   --data config.allowed_payload_size=10  # MB
-```
+```text
+### Production Deployment
 
-## Production Deployment
-
-### High Availability
+#### High Availability
 
 ```yaml
-# Kubernetes deployment
+## Kubernetes deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -732,12 +710,11 @@ spec:
             port: 8001
           initialDelaySeconds: 30
           periodSeconds: 10
-```
-
-### Database HA
+```text
+#### Database HA
 
 ```yaml
-# PostgreSQL with replication
+## PostgreSQL with replication
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -766,9 +743,8 @@ spec:
         secretAccessKey:
           name: aws-creds
           key: SECRET_ACCESS_KEY
-```
-
-## Troubleshooting
+```text
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Kong not starting">
@@ -784,8 +760,7 @@ spec:
     # 1. Database connection failed
     # 2. Migrations not run
     # 3. Port conflicts
-    ```
-
+    ```text
     **Fix**:
     ```bash
     # Re-run migrations
@@ -793,7 +768,7 @@ spec:
 
     # Or in Kubernetes
     kubectl exec -it kong-0 -n kong -- kong migrations bootstrap
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="502 Bad Gateway">
@@ -807,8 +782,7 @@ spec:
 
     # Test upstream directly
     curl http://mcp-server-langgraph:8000/health
-    ```
-
+    ```text
     **Fix**:
     ```bash
     # Update service URL
@@ -817,7 +791,7 @@ spec:
 
     # Check network connectivity
     kubectl exec -it kong-0 -n kong -- curl http://mcp-server-langgraph:8000/health
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Rate limit not working">
@@ -838,7 +812,7 @@ spec:
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">

@@ -4,7 +4,7 @@ description: 'Model Context Protocol (MCP) HTTP endpoints for server communicati
 icon: 'server'
 ---
 
-## Overview
+### Overview
 
 The MCP Server exposes HTTP endpoints that implement the Model Context Protocol for server-to-server communication. These endpoints enable clients to interact with the LLM-powered agent through a standardized protocol.
 
@@ -12,15 +12,15 @@ The MCP Server exposes HTTP endpoints that implement the Model Context Protocol 
 MCP (Model Context Protocol) is a standard protocol for connecting AI applications with data sources and tools. Learn more at https://modelcontextprotocol.io
 </Info>
 
-## Base URL
+### Base URL
 
 ```
 http://localhost:8000/mcp
 ```
 
-## Endpoints
+### Endpoints
 
-### Initialize Connection
+#### Initialize Connection
 
 <ParamField path="POST /mcp/initialize" type="endpoint">
   Initialize a new MCP session and retrieve server capabilities.
@@ -86,7 +86,7 @@ async with httpx.AsyncClient() as client:
     print(f"Connected to: {server_info['serverInfo']['name']}")
 ```
 
-### List Tools
+#### List Tools
 
 <ParamField path="POST /mcp/tools/list" type="endpoint">
   Retrieve all available tools the server can execute.
@@ -154,7 +154,7 @@ async def list_available_tools():
         print(f"  Description: {tool['description']}")
 ```
 
-### Call Tool
+#### Call Tool
 
 <ParamField path="POST /mcp/tools/call" type="endpoint">
   Execute a specific tool with provided arguments.
@@ -209,7 +209,7 @@ async def call_chat_tool(query: str):
         raise Exception(f"Tool error: {result['content']}")
 ```
 
-### List Resources
+#### List Resources
 
 <ParamField path="POST /mcp/resources/list" type="endpoint">
   Retrieve available resources (data sources, knowledge bases, etc.).
@@ -242,7 +242,7 @@ async def call_chat_tool(query: str):
 }
 ```
 
-### Read Resource
+#### Read Resource
 
 <ParamField path="POST /mcp/resources/read" type="endpoint">
   Read the contents of a specific resource.
@@ -271,7 +271,7 @@ async def call_chat_tool(query: str):
 }
 ```
 
-### List Prompts
+#### List Prompts
 
 <ParamField path="POST /mcp/prompts/list" type="endpoint">
   Retrieve available prompt templates.
@@ -308,7 +308,7 @@ async def call_chat_tool(query: str):
 }
 ```
 
-### Get Prompt
+#### Get Prompt
 
 <ParamField path="POST /mcp/prompts/get" type="endpoint">
   Retrieve a specific prompt template with arguments filled in.
@@ -344,7 +344,7 @@ async def call_chat_tool(query: str):
 }
 ```
 
-### Send Message
+#### Send Message
 
 <ParamField path="POST /mcp/message" type="endpoint">
   Send a message to the agent (streaming or non-streaming).
@@ -405,7 +405,7 @@ async def stream_message(query: str):
                         print(data["delta"], end="", flush=True)
 ```
 
-### Logging
+#### Logging
 
 <ParamField path="POST /mcp/logging/setLevel" type="endpoint">
   Set the logging level for the server.
@@ -428,7 +428,7 @@ async def stream_message(query: str):
 }
 ```
 
-## Authentication
+### Authentication
 
 All MCP endpoints require authentication. Include a valid JWT token in the `Authorization` header:
 
@@ -438,7 +438,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 
 See [Authentication API](/api-reference/authentication) for obtaining tokens.
 
-## Error Responses
+### Error Responses
 
 MCP endpoints return standard HTTP status codes:
 
@@ -504,29 +504,29 @@ MCP endpoints return standard HTTP status codes:
   ```
 </ResponseField>
 
-## SDK Examples
+### SDK Examples
 
-### Python
+#### Python
 
 ```python
 from mcp_client import MCPClient
 
-# Initialize client
+## Initialize client
 client = MCPClient(
     base_url="http://localhost:8000/mcp",
     auth_token=token
 )
 
-# Initialize connection
+## Initialize connection
 await client.initialize({
     "protocolVersion": "2024-11-05",
     "clientInfo": {"name": "my-app", "version": "1.0.0"}
 })
 
-# List tools
+## List tools
 tools = await client.list_tools()
 
-# Call tool
+## Call tool
 response = await client.call_tool("chat", {
     "query": "What is machine learning?"
 })
@@ -534,7 +534,7 @@ response = await client.call_tool("chat", {
 print(response.content[0].text)
 ```
 
-### JavaScript/TypeScript
+#### JavaScript/TypeScript
 
 ```typescript
 import { MCPClient } from '@modelcontextprotocol/sdk';
@@ -558,10 +558,10 @@ const response = await client.callTool('chat', {
 console.log(response.content[0].text);
 ```
 
-### cURL
+#### cURL
 
 ```bash
-# Initialize
+## Initialize
 curl -X POST http://localhost:8000/mcp/initialize \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -570,13 +570,13 @@ curl -X POST http://localhost:8000/mcp/initialize \
     "clientInfo": {"name": "curl-client", "version": "1.0.0"}
   }'
 
-# List tools
+## List tools
 curl -X POST http://localhost:8000/mcp/tools/list \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"method": "tools/list"}'
 
-# Call tool
+## Call tool
 curl -X POST http://localhost:8000/mcp/tools/call \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -589,7 +589,7 @@ curl -X POST http://localhost:8000/mcp/tools/call \
   }'
 ```
 
-## Rate Limiting
+### Rate Limiting
 
 MCP endpoints are subject to rate limiting:
 
@@ -605,7 +605,7 @@ X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1699999999
 ```
 
-## WebSocket Support
+### WebSocket Support
 
 For real-time bidirectional communication, use the WebSocket endpoint:
 
@@ -647,7 +647,7 @@ async with websockets.connect(
     print(json.loads(response))
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="MCP Messages" icon="message" href="/api-reference/mcp/messages">

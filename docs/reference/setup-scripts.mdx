@@ -1,0 +1,619 @@
+---
+title: Setup Scripts Reference
+description: 'Comprehensive guide to all setup and configuration scripts for Keycloak and identity management'
+icon: 'file-code'
+---
+
+### Overview
+
+The MCP Server with LangGraph provides automated setup scripts for configuring Keycloak, identity federation, and JWT management. These scripts streamline deployment and ensure consistent configuration across environments.
+
+<Info>
+  All setup scripts are located in the `/scripts/setup/` directory and require appropriate environment variables to be configured.
+</Info>
+
+### setup_keycloak.py
+
+Initializes Keycloak with realm, clients, users, and OpenFGA synchronization.
+
+#### Purpose
+
+Automates the initial Keycloak setup for the MCP Server with LangGraph, including:
+- Realm creation (`langgraph-agent`)
+- Client configuration with service accounts enabled
+- Default test users (alice, bob, admin)
+- Role mappings (admin, premium, user)
+- Optional OpenFGA tuple synchronization
+
+#### Usage
+
+```bash
+python scripts/setup/setup_keycloak.py
+```
+
+#### Environment Variables
+
+<AccordionGroup>
+  <Accordion title="Required Variables">
+    | Variable | Default | Description |
+    |----------|---------|-------------|
+    | `KEYCLOAK_SERVER_URL` | `http://localhost:8080` | Keycloak server URL |
+    | `KEYCLOAK_ADMIN_USERNAME` | `admin` | Keycloak admin username |
+    | `KEYCLOAK_ADMIN_PASSWORD` | `admin` | Keycloak admin password |
+    | `KEYCLOAK_REALM` | `langgraph-agent` | Realm name to create/configure |
+  </Accordion>
+
+  <Accordion title="Optional Variables">
+    | Variable | Default | Description |
+    |----------|---------|-------------|
+    | `KEYCLOAK_CLIENT_ID` | `langgraph-client` | OAuth2/OIDC client ID |
+    | `KEYCLOAK_CLIENT_SECRET` | (generated) | Client secret (auto-generated if not provided) |
+    | `SYNC_TO_OPENFGA` | `false` | Enable automatic OpenFGA tuple creation |
+    | `OPENFGA_API_URL` | - | OpenFGA API endpoint (if syncing) |
+  </Accordion>
+</AccordionGroup>
+
+#### What It Creates
+
+<Steps>
+  <Step title="Realm Setup">
+    Creates the `langgraph-agent` realm with:
+    - Access token lifespan: 15 minutes (900s)
+    - Refresh token lifespan: 30 minutes (1800s)
+    - Service account refresh token: 30 days (2592000s)
+    - Login and registration enabled
+  </Step>
+
+  <Step title="Client Configuration">
+    Creates OAuth2/OIDC client with:
+    - Client ID: `langgraph-client`
+    - Service accounts enabled (for service principals)
+    - Direct access grants enabled
+    - Standard flow enabled
+    - Client credentials flow enabled
+  </Step>
+
+  <Step title="Default Users">
+    Creates test users:
+    - **alice** (password: `alice123`) - Premium user
+    - **bob** (password: `bob123`) - Standard user
+    - **admin** (password: `admin123`) - Administrator
+  </Step>
+
+  <Step title="Role Definitions">
+    Creates client roles:
+    - `admin` - Full administrative access
+    - `premium` - Premium tier features
+    - `user` - Standard user access
+  </Step>
+</Steps>
+
+#### Example
+
+```bash
+export KEYCLOAK_SERVER_URL=https://keycloak.example.com
+export KEYCLOAK_ADMIN_USERNAME=admin
+export KEYCLOAK_ADMIN_PASSWORD=secure_password
+export SYNC_TO_OPENFGA=true
+export OPENFGA_API_URL=http://openfga:8080
+
+python scripts/setup/setup_keycloak.py
+```
+
+#### Related ADRs
+
+- [ADR-0031: Keycloak as Authoritative Identity](/architecture/adr-0031-keycloak-authoritative-identity)
+- [ADR-0032: JWT Standardization](/architecture/adr-0032-jwt-standardization)
+
+---
+
+### setup_ldap_federation.py
+
+Configures Keycloak to federate users from LDAP or Active Directory.
+
+#### Purpose
+
+Enables enterprise LDAP/Active Directory integration where users authenticate against their existing directory service, and Keycloak issues JWTs. This allows centralized identity management without duplicating user databases.
+
+#### Usage
+
+```bash
+python scripts/setup/setup_ldap_federation.py
+```
+
+#### Environment Variables
+
+<AccordionGroup>
+  <Accordion title="Keycloak Connection">
+    | Variable | Default | Description |
+    |----------|---------|-------------|
+    | `KEYCLOAK_SERVER_URL` | `http://localhost:8080` | Keycloak server URL |
+    | `KEYCLOAK_ADMIN_USERNAME` | `admin` | Admin username |
+    | `KEYCLOAK_ADMIN_PASSWORD` | `admin` | Admin password |
+    | `KEYCLOAK_REALM` | `langgraph-agent` | Target realm |
+  </Accordion>
+
+  <Accordion title="LDAP Connection (Required)">
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `LDAP_CONNECTION_URL` | ✅ | LDAP server URL (e.g., `ldap://ad.example.com:389`) |
+    | `LDAP_BIND_DN` | ✅ | Service account DN for binding |
+    | `LDAP_BIND_PASSWORD` | ✅ | Service account password |
+    | `LDAP_USERS_DN` | ✅ | Base DN for user search |
+  </Accordion>
+
+  <Accordion title="LDAP Configuration (Optional)">
+    | Variable | Default (AD) | Default (LDAP) | Description |
+    |----------|--------------|----------------|-------------|
+    | `LDAP_USERNAME_ATTRIBUTE` | `sAMAccountName` | `uid` | Username attribute |
+    | `LDAP_USER_OBJECT_CLASSES` | `person,organizationalPerson,user` | `inetOrgPerson,organizationalPerson` | User object classes |
+    | `LDAP_VENDOR` | `ad` | `other` | LDAP vendor (ad/other) |
+  </Accordion>
+</AccordionGroup>
+
+#### What It Configures
+
+<CardGroup cols={2}>
+  <Card title="User Federation" icon="users">
+    - LDAP user provider configuration
+    - Attribute mapping (email, name, phone, etc.)
+    - Username and UUID mapping
+    - Read-only federation (users managed in LDAP)
+  </Card>
+
+  <Card title="Group Synchronization" icon="object-group">
+    - LDAP group mapper
+    - Group hierarchy preservation
+    - Automatic role assignment
+    - Periodic sync (hourly changed, daily full)
+  </Card>
+
+  <Card title="Attribute Mappers" icon="link">
+    - Standard attributes (email, firstName, lastName)
+    - Extended attributes (department, title, phone)
+    - Custom mappings from `/config/ldap_mappers.yaml`
+  </Card>
+
+  <Card title="Sync Schedule" icon="clock">
+    - Full sync: Every 24 hours
+    - Changed sync: Every hour
+    - Batch size: 1000 users
+    - Connection pooling enabled
+  </Card>
+</CardGroup>
+
+#### Active Directory Example
+
+```bash
+export KEYCLOAK_SERVER_URL=https://keycloak.example.com
+export KEYCLOAK_ADMIN_USERNAME=admin
+export KEYCLOAK_ADMIN_PASSWORD=admin_password
+
+## Active Directory Configuration
+export LDAP_CONNECTION_URL='ldap://ad.example.com:389'
+export LDAP_BIND_DN='CN=svc_keycloak,OU=Service Accounts,DC=example,DC=com'
+export LDAP_BIND_PASSWORD='service_account_password'
+export LDAP_USERS_DN='OU=Users,DC=example,DC=com'
+export LDAP_VENDOR=ad
+
+python scripts/setup/setup_ldap_federation.py
+```
+
+#### Generic LDAP Example
+
+```bash
+export LDAP_CONNECTION_URL='ldap://ldap.example.com:389'
+export LDAP_BIND_DN='cn=admin,dc=example,dc=com'
+export LDAP_BIND_PASSWORD='ldap_password'
+export LDAP_USERS_DN='ou=people,dc=example,dc=com'
+export LDAP_USERNAME_ATTRIBUTE=uid
+export LDAP_VENDOR=other
+
+python scripts/setup/setup_ldap_federation.py
+```
+
+#### Configuration File
+
+The script uses `/config/ldap_mappers.yaml` for attribute mapping configuration. See [Configuration Files Reference](/reference/configuration-files) for details.
+
+#### Related ADRs
+
+- [ADR-0037: Identity Federation](/architecture/adr-0037-identity-federation)
+
+---
+
+### setup_saml_idp.py
+
+Configures SAML 2.0 identity provider integration (e.g., ADFS, Okta, Azure AD).
+
+#### Purpose
+
+Enables SAML-based Single Sign-On (SSO) from enterprise identity providers. Users authenticate via their corporate SSO portal, and Keycloak issues JWTs for MCP Server access.
+
+#### Usage
+
+```bash
+python scripts/setup/setup_saml_idp.py
+```
+
+#### Environment Variables
+
+<AccordionGroup>
+  <Accordion title="Keycloak Connection">
+    | Variable | Default | Description |
+    |----------|---------|-------------|
+    | `KEYCLOAK_SERVER_URL` | `http://localhost:8080` | Keycloak server URL |
+    | `KEYCLOAK_ADMIN_USERNAME` | `admin` | Admin username |
+    | `KEYCLOAK_ADMIN_PASSWORD` | `admin` | Admin password |
+    | `KEYCLOAK_REALM` | `langgraph-agent` | Target realm |
+  </Accordion>
+
+  <Accordion title="SAML Configuration (Required)">
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `SAML_ALIAS` | ✅ | Identity provider alias (e.g., `adfs`, `okta`) |
+    | `SAML_SSO_URL` | ✅ | SAML SSO endpoint URL |
+    | `SAML_ENTITY_ID` | ✅ | Identity provider entity ID |
+    | `SAML_CERTIFICATE` | ✅ | X.509 certificate (PEM format) |
+  </Accordion>
+
+  <Accordion title="Optional Settings">
+    | Variable | Default | Description |
+    |----------|---------|-------------|
+    | `SAML_NAME_ID_FORMAT` | `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress` | Name ID format |
+    | `SAML_WANT_ASSERTIONS_SIGNED` | `true` | Require signed assertions |
+    | `SAML_FORCE_AUTHN` | `false` | Force re-authentication |
+  </Accordion>
+</AccordionGroup>
+
+#### Supported Providers
+
+<Tabs>
+  <Tab title="ADFS">
+    ```bash
+    export SAML_ALIAS=adfs
+    export SAML_SSO_URL='https://adfs.example.com/adfs/ls/'
+    export SAML_ENTITY_ID='https://adfs.example.com/adfs/services/trust'
+    export SAML_CERTIFICATE='-----BEGIN CERTIFICATE-----
+    MIIDXTCCAkWgAwIBAgIJAK...
+    -----END CERTIFICATE-----'
+
+    python scripts/setup/setup_saml_idp.py
+    ```
+  </Tab>
+
+  <Tab title="Okta">
+    ```bash
+    export SAML_ALIAS=okta
+    export SAML_SSO_URL='https://example.okta.com/app/example/exk.../sso/saml'
+    export SAML_ENTITY_ID='http://www.okta.com/exk...'
+    export SAML_CERTIFICATE='...'
+
+    python scripts/setup/setup_saml_idp.py
+    ```
+  </Tab>
+
+  <Tab title="Azure AD">
+    ```bash
+    export SAML_ALIAS=azure
+    export SAML_SSO_URL='https://login.microsoftonline.com/.../saml2'
+    export SAML_ENTITY_ID='https://sts.windows.net/.../'
+    export SAML_CERTIFICATE='...'
+
+    python scripts/setup/setup_saml_idp.py
+    ```
+  </Tab>
+</Tabs>
+
+#### What It Creates
+
+- SAML identity provider configuration in Keycloak
+- Attribute mappers (email, firstName, lastName, roles)
+- SP metadata for configuration in external IdP
+- Trust relationship between Keycloak and SAML IdP
+
+#### Testing
+
+After configuration, test SAML authentication:
+
+```bash
+## Get Keycloak SP metadata for configuring external IdP
+curl https://keycloak.example.com/realms/langgraph-agent/protocol/saml/descriptor
+```
+
+#### Related ADRs
+
+- [ADR-0037: Identity Federation](/architecture/adr-0037-identity-federation)
+
+---
+
+### setup_oidc_idp.py
+
+Configures OpenID Connect identity provider integration (Google, GitHub, custom OIDC providers).
+
+#### Purpose
+
+Enables OAuth 2.0 / OpenID Connect based authentication from social providers (Google, GitHub) or enterprise OIDC providers (Auth0, Keycloak).
+
+#### Usage
+
+```bash
+python scripts/setup/setup_oidc_idp.py --provider google
+python scripts/setup/setup_oidc_idp.py --provider github
+python scripts/setup/setup_oidc_idp.py --provider custom
+```
+
+#### Environment Variables
+
+<AccordionGroup>
+  <Accordion title="Keycloak Connection">
+    | Variable | Default | Description |
+    |----------|---------|-------------|
+    | `KEYCLOAK_SERVER_URL` | `http://localhost:8080` | Keycloak server URL |
+    | `KEYCLOAK_ADMIN_USERNAME` | `admin` | Admin username |
+    | `KEYCLOAK_ADMIN_PASSWORD` | `admin` | Admin password |
+    | `KEYCLOAK_REALM` | `langgraph-agent` | Target realm |
+  </Accordion>
+
+  <Accordion title="Provider-Specific Variables">
+    **Google:**
+    ```bash
+    GOOGLE_CLIENT_ID=<oauth-client-id>
+    GOOGLE_CLIENT_SECRET=<oauth-client-secret>
+    ```
+
+    **GitHub:**
+    ```bash
+    GITHUB_CLIENT_ID=<oauth-app-id>
+    GITHUB_CLIENT_SECRET=<oauth-app-secret>
+    ```
+
+    **Custom OIDC:**
+    ```bash
+    OIDC_ALIAS=custom-idp
+    OIDC_AUTHORIZATION_URL=https://idp.example.com/oauth/authorize
+    OIDC_TOKEN_URL=https://idp.example.com/oauth/token
+    OIDC_USERINFO_URL=https://idp.example.com/userinfo
+    OIDC_JWKS_URL=https://idp.example.com/.well-known/jwks.json
+    OIDC_CLIENT_ID=<client-id>
+    OIDC_CLIENT_SECRET=<client-secret>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+#### Provider Examples
+
+<CardGroup cols={3}>
+  <Card title="Google" icon="google">
+    ```bash
+    export GOOGLE_CLIENT_ID='123456.apps.googleusercontent.com'
+    export GOOGLE_CLIENT_SECRET='GOCSPX-...'
+
+    python scripts/setup/setup_oidc_idp.py --provider google
+    ```
+  </Card>
+
+  <Card title="GitHub" icon="github">
+    ```bash
+    export GITHUB_CLIENT_ID='Iv1.a1b2c3d4e5f6g7h8'
+    export GITHUB_CLIENT_SECRET='ghp_...'
+
+    python scripts/setup/setup_oidc_idp.py --provider github
+    ```
+  </Card>
+
+  <Card title="Custom" icon="link">
+    ```bash
+    export OIDC_ALIAS=auth0
+    export OIDC_AUTHORIZATION_URL='https://example.auth0.com/authorize'
+    export OIDC_TOKEN_URL='https://example.auth0.com/oauth/token'
+    export OIDC_CLIENT_ID='...'
+    export OIDC_CLIENT_SECRET='...'
+
+    python scripts/setup/setup_oidc_idp.py --provider custom
+    ```
+  </Card>
+</CardGroup>
+
+#### Configuration File
+
+The script can use `/config/oidc_providers.yaml` for managing multiple OIDC providers. See [Configuration Files Reference](/reference/configuration-files).
+
+#### Related ADRs
+
+- [ADR-0037: Identity Federation](/architecture/adr-0037-identity-federation)
+
+---
+
+### update_kong_jwks.py
+
+Updates Kong Gateway with the latest Keycloak JWKS (JSON Web Key Set) for JWT validation.
+
+#### Purpose
+
+Synchronizes Keycloak's public keys with Kong Gateway to enable JWT validation. This script is typically run as a Kubernetes CronJob to automatically rotate keys.
+
+#### Usage
+
+```bash
+## Manual execution
+python scripts/update_kong_jwks.py
+
+## Kubernetes CronJob (recommended)
+kubectl apply -f deployments/kubernetes/kong/kong-jwks-updater-cronjob.yaml
+```
+
+#### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `KEYCLOAK_SERVER_URL` | `http://keycloak:8080` | Keycloak server URL |
+| `KEYCLOAK_REALM` | `langgraph-agent` | Realm name |
+| `KONG_ADMIN_URL` | `http://kong-admin:8001` | Kong Admin API URL |
+| `KONG_CONSUMER_NAME` | `jwt-consumer` | Kong consumer for JWT plugin |
+
+#### What It Does
+
+<Steps>
+  <Step title="Fetch JWKS">
+    Retrieves the current JSON Web Key Set from Keycloak's OIDC discovery endpoint:
+    ```
+    GET /realms/{realm}/protocol/openid-connect/certs
+    ```
+  </Step>
+
+  <Step title="Convert to PEM">
+    Converts JWK format to PEM format required by Kong's JWT plugin.
+  </Step>
+
+  <Step title="Update Kong Consumer">
+    Updates the Kong consumer's public key via Admin API:
+    ```
+    PATCH /consumers/{consumer}/jwt
+    ```
+  </Step>
+
+  <Step title="Verify">
+    Tests JWT validation to ensure the update was successful.
+  </Step>
+</Steps>
+
+#### Automated Updates
+
+Deploy as a Kubernetes CronJob for automatic key rotation:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: kong-jwks-updater
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: jwks-updater
+            image: mcp-server-langgraph:latest
+            command: ["python", "scripts/update_kong_jwks.py"]
+            env:
+            - name: KEYCLOAK_SERVER_URL
+              value: "http://keycloak:8080"
+            - name: KONG_ADMIN_URL
+              value: "http://kong-admin:8001"
+```
+
+#### Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection Refused">
+    Ensure Keycloak and Kong are accessible from the script's execution environment. Check service names and ports in Kubernetes.
+  </Accordion>
+
+  <Accordion title="Invalid Key Format">
+    Verify Keycloak is returning valid JWKs:
+    ```bash
+    curl http://keycloak:8080/realms/langgraph-agent/protocol/openid-connect/certs | jq
+    ```
+  </Accordion>
+
+  <Accordion title="Kong Consumer Not Found">
+    Create the Kong consumer first:
+    ```bash
+    kubectl apply -f deployments/kubernetes/kong/kong-consumers.yaml
+    ```
+  </Accordion>
+</AccordionGroup>
+
+#### Related ADRs
+
+- [ADR-0032: JWT Standardization](/architecture/adr-0032-jwt-standardization)
+- [ADR-0035: Kong JWT Validation](/architecture/adr-0035-kong-jwt-validation)
+
+---
+
+### Common Patterns
+
+#### Prerequisites Check
+
+All scripts include health checks for dependencies:
+
+```bash
+## Wait for Keycloak to be ready (max 30 retries, 2s delay)
+./scripts/setup/setup_keycloak.py
+## ✓ Keycloak is ready!
+```
+
+#### Idempotent Execution
+
+Scripts can be run multiple times safely:
+- Existing resources are updated, not duplicated
+- Configuration changes are applied incrementally
+- No data loss on re-runs
+
+#### Error Handling
+
+All scripts provide detailed error messages:
+
+```bash
+✗ Error: LDAP_CONNECTION_URL is required but not set
+  Set the environment variable and try again.
+```
+
+#### Dry Run Mode
+
+Some scripts support dry-run for validation:
+
+```bash
+## Preview changes without applying
+DRY_RUN=true python scripts/setup/setup_keycloak.py
+```
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Environment Files" icon="file-code">
+    ```bash
+    # .env.keycloak
+    KEYCLOAK_SERVER_URL=https://...
+    KEYCLOAK_ADMIN_USERNAME=admin
+    KEYCLOAK_ADMIN_PASSWORD=...
+
+    # Load and run
+    source .env.keycloak
+    python scripts/setup/setup_keycloak.py
+    ```
+  </Card>
+
+  <Card title="Secrets Management" icon="key">
+    Never commit credentials to git. Use:
+    - Kubernetes Secrets
+    - External Secrets Operator
+    - Infisical
+    - Vault
+  </Card>
+
+  <Card title="Script Chaining" icon="link">
+    ```bash
+    # Complete setup pipeline
+    python scripts/setup/setup_keycloak.py && \
+    python scripts/setup/setup_ldap_federation.py && \
+    python scripts/update_kong_jwks.py
+    ```
+  </Card>
+
+  <Card title="Version Control" icon="code-branch">
+    Track configuration files in git:
+    - `/config/ldap_mappers.yaml`
+    - `/config/oidc_providers.yaml`
+    - `/config/role_mappings.yaml`
+  </Card>
+</CardGroup>
+
+### See Also
+
+- [Configuration Files Reference](/reference/configuration-files)
+- [API Endpoints Reference](/reference/api-endpoints)
+- [Keycloak JWT Deployment Guide](/deployment/keycloak-jwt-deployment)
+- [Identity Federation Quick Start](/guides/identity-federation-quickstart)

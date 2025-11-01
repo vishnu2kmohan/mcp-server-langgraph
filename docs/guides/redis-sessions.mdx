@@ -8,7 +8,7 @@ icon: 'database'
 **NEW in v2.1.0** - Enterprise session management with Redis for stateful authentication and concurrent session control.
 </Note>
 
-## Overview
+### Overview
 
 Redis provides production-grade session storage with:
 
@@ -19,7 +19,7 @@ Redis provides production-grade session storage with:
 - **Instant Revocation** - Immediate logout across all devices
 - **Session Analytics** - Track active users and session patterns
 
-## Why Redis Sessions?
+### Why Redis Sessions?
 
 <CardGroup cols={2}>
   <Card title="Token-based (Stateless)" icon="ticket">
@@ -41,7 +41,7 @@ Redis provides production-grade session storage with:
   </Card>
 </CardGroup>
 
-## Quick Start
+### Quick Start
 
 <Steps>
   <Step title="Deploy Redis">
@@ -68,8 +68,7 @@ Redis provides production-grade session storage with:
 
         volumes:
           redis-session-data:
-        ```
-
+        ```text
         ```bash
         # Start Redis
         export REDIS_PASSWORD=$(openssl rand -base64 32)
@@ -78,7 +77,7 @@ Redis provides production-grade session storage with:
         # Test connection
         docker compose exec redis-session redis-cli -a $REDIS_PASSWORD ping
         # Expected: PONG
-        ```
+        ```xml
       </Tab>
 
       <Tab title="Kubernetes">
@@ -103,7 +102,7 @@ Redis provides production-grade session storage with:
         kubectl get secret redis-session \
           -n mcp-server-langgraph \
           -o jsonpath='{.data.redis-password}' | base64 -d
-        ```
+        ```xml
       </Tab>
 
       <Tab title="Cloud Managed">
@@ -120,8 +119,7 @@ Redis provides production-grade session storage with:
         gcloud redis instances describe sessions \
           --region=us-central1 \
           --format="get(host,port,authString)"
-        ```
-
+        ```text
         **AWS ElastiCache**:
         ```bash
         aws elasticache create-replication-group \
@@ -131,8 +129,7 @@ Redis provides production-grade session storage with:
           --cache-node-type cache.t3.medium \
           --num-cache-clusters 2 \
           --auth-token "$(openssl rand -base64 32)"
-        ```
-
+        ```text
         **Azure Cache for Redis**:
         ```bash
         az redis create \
@@ -142,7 +139,7 @@ Redis provides production-grade session storage with:
           --sku Standard \
           --vm-size c1 \
           --enable-non-ssl-port false
-        ```
+        ```xml
       </Tab>
     </Tabs>
   </Step>
@@ -163,8 +160,7 @@ Redis provides production-grade session storage with:
     SESSION_SLIDING_WINDOW=true  # Extend on activity
     SESSION_MAX_CONCURRENT=5  # Per user
     SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
-    ```
-
+    ```xml
     <Warning>
     **Always use SSL/TLS in production**: Set `REDIS_SSL=true` and use `rediss://` URL scheme.
     </Warning>
@@ -196,7 +192,7 @@ Redis provides production-grade session storage with:
 
     # Revoke session
     await session_mgr.revoke_session(session.session_id)
-    ```
+    ```xml
   </Step>
 
   <Step title="Verify in Redis">
@@ -212,11 +208,11 @@ Redis provides production-grade session storage with:
 
     # Check session TTL
     TTL session:abc123...
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Session Lifecycle
+### Session Lifecycle
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
@@ -242,44 +238,41 @@ sequenceDiagram
     User->>App: Logout
     App->>Redis: Delete session
     App-->>User: Clear cookie
-```
+```text
+### Session Configuration
 
-## Session Configuration
-
-### Session TTL
+#### Session TTL
 
 ```python
-# Fixed TTL (no extension)
+## Fixed TTL (no extension)
 SESSION_TTL_SECONDS=3600  # 1 hour
 SESSION_SLIDING_WINDOW=false
 
-# Sliding window (extends on activity)
+## Sliding window (extends on activity)
 SESSION_TTL_SECONDS=86400  # 24 hours
 SESSION_SLIDING_WINDOW=true
 SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
-```
-
+```text
 **Fixed TTL**: Session expires exactly after TTL, regardless of activity.
 
 **Sliding Window**: Session extends on each request, up to max TTL.
 
-### Concurrent Sessions
+#### Concurrent Sessions
 
 ```python
-# Limit concurrent sessions per user
+## Limit concurrent sessions per user
 SESSION_MAX_CONCURRENT=5
 
-# Behavior when limit exceeded:
-# - Oldest session is automatically revoked
-# - User notified of revoked session
-```
-
+## Behavior when limit exceeded:
+## - Oldest session is automatically revoked
+## - User notified of revoked session
+```text
 Use cases:
 - **1 session**: Single device login (revokes other devices)
 - **3-5 sessions**: Normal multi-device usage
 - **Unlimited**: Set to 0 or omit
 
-### Session Metadata
+#### Session Metadata
 
 Store additional context with sessions:
 
@@ -294,44 +287,41 @@ session = await session_mgr.create_session(
         "created_at": "2025-10-12T10:00:00Z"
     }
 )
-```
-
+```text
 Access metadata:
 ```python
 session = await session_mgr.get_session(session_id)
 print(f"Device: {session.metadata['device_id']}")
 print(f"Location: {session.metadata['location']}")
-```
+```text
+### API Operations
 
-## API Operations
-
-### Create Session
+#### Create Session
 
 ```python
 from mcp_server_langgraph.auth.session import SessionManager
 
 session_mgr = SessionManager()
 
-# Simple session
+## Simple session
 session = await session_mgr.create_session(user_id="alice")
 
-# With metadata
+## With metadata
 session = await session_mgr.create_session(
     user_id="alice",
     metadata={"ip": "192.168.1.1", "device": "mobile"}
 )
 
-# Custom TTL
+## Custom TTL
 session = await session_mgr.create_session(
     user_id="alice",
     ttl_seconds=7200  # 2 hours (overrides default)
 )
-```
-
-### Get Session
+```text
+#### Get Session
 
 ```python
-# Get by session ID
+## Get by session ID
 session = await session_mgr.get_session(session_id)
 
 if session and session.is_active:
@@ -339,58 +329,54 @@ if session and session.is_active:
 else:
     print("Session expired or invalid")
 
-# Get all user sessions
+## Get all user sessions
 sessions = await session_mgr.get_user_sessions(user_id="alice")
 for s in sessions:
     print(f"{s.session_id}: {s.created_at}")
-```
-
-### Refresh Session
+```text
+#### Refresh Session
 
 ```python
-# Manual refresh
+## Manual refresh
 session = await session_mgr.refresh_session(session_id)
 print(f"Extended until: {session.expires_at}")
 
-# Automatic refresh (if sliding window enabled)
-# Happens automatically on get_session() calls
-```
-
-### Revoke Session
+## Automatic refresh (if sliding window enabled)
+## Happens automatically on get_session() calls
+```text
+#### Revoke Session
 
 ```python
-# Revoke single session
+## Revoke single session
 await session_mgr.revoke_session(session_id)
 
-# Revoke all user sessions (logout from all devices)
+## Revoke all user sessions (logout from all devices)
 await session_mgr.revoke_user_sessions(user_id="alice")
 
-# Revoke with reason
+## Revoke with reason
 await session_mgr.revoke_session(
     session_id,
     reason="Password changed"
 )
-```
-
-### Session Analytics
+```text
+#### Session Analytics
 
 ```python
-# Count active sessions
+## Count active sessions
 total = await session_mgr.count_active_sessions()
 print(f"Active sessions: {total}")
 
-# Count user sessions
+## Count user sessions
 user_count = await session_mgr.count_user_sessions("alice")
 print(f"Alice has {user_count} active sessions")
 
-# List all active users
+## List all active users
 users = await session_mgr.list_active_users()
 print(f"Active users: {users}")
-```
+```text
+### Integration with Authentication
 
-## Integration with Authentication
-
-### Keycloak + Redis Sessions
+#### Keycloak + Redis Sessions
 
 ```python
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
@@ -399,7 +385,7 @@ from mcp_server_langgraph.auth.session import SessionManager
 keycloak = KeycloakClient()
 session_mgr = SessionManager()
 
-# Login flow
+## Login flow
 async def login(username: str, password: str):
     # Authenticate with Keycloak
     tokens = await keycloak.authenticate(username, password)
@@ -416,7 +402,7 @@ async def login(username: str, password: str):
 
     return session.session_id
 
-# API request flow
+## API request flow
 async def authenticate_request(session_id: str):
     # Get session
     session = await session_mgr.get_session(session_id)
@@ -433,7 +419,7 @@ async def authenticate_request(session_id: str):
 
     return user_info
 
-# Logout flow
+## Logout flow
 async def logout(session_id: str):
     session = await session_mgr.get_session(session_id)
 
@@ -442,16 +428,15 @@ async def logout(session_id: str):
 
     # Delete session
     await session_mgr.revoke_session(session_id)
-```
+```text
+### Production Deployment
 
-## Production Deployment
-
-### High Availability
+#### High Availability
 
 Deploy Redis with replication:
 
 ```yaml
-# Kubernetes with Helm
+## Kubernetes with Helm
 helm install redis-session bitnami/redis \
   --set architecture=replication \
   --set master.persistence.enabled=true \
@@ -460,102 +445,95 @@ helm install redis-session bitnami/redis \
   --set replica.persistence.enabled=true \
   --set sentinel.enabled=true
 
-# Application connects to sentinel
+## Application connects to sentinel
 REDIS_URL=redis-sentinel://redis-session:26379/mymaster
-```
-
+```yaml
 Benefits:
 - **Automatic failover** - Sentinel promotes replica on master failure
 - **Zero downtime** - Sessions preserved during failover
 - **Read scaling** - Read from replicas
 
-### Persistence
+#### Persistence
 
 Configure Redis persistence:
 
 ```conf
-# redis.conf
+## redis.conf
 save 900 1       # Save after 900s if >= 1 key changed
 save 300 10      # Save after 300s if >= 10 keys changed
 save 60 10000    # Save after 60s if >= 10000 keys changed
 
-# AOF (append-only file) for durability
+## AOF (append-only file) for durability
 appendonly yes
 appendfsync everysec
-```
-
+```text
 Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cache).
 
-### Security
+#### Security
 
 **Authentication**:
 ```bash
-# Always use password
+## Always use password
 REDIS_PASSWORD=strong-random-password
 requirepass strong-random-password
-```
-
+```text
 **Encryption**:
 ```bash
-# TLS/SSL in production
+## TLS/SSL in production
 REDIS_SSL=true
 REDIS_URL=rediss://redis-session:6380/0
 
-# Redis 6+ with ACL
+## Redis 6+ with ACL
 REDIS_USERNAME=sessions
 REDIS_PASSWORD=password
-```
-
+```text
 **Network isolation**:
 - Private VPC/subnet
 - Firewall rules (allow only app servers)
 - No public IP exposure
 
-### Memory Management
+#### Memory Management
 
 ```conf
-# redis.conf
+## redis.conf
 maxmemory 2gb
 maxmemory-policy allkeys-lru  # Evict least recently used
 
-# Or volatile-lru (evict only keys with TTL)
+## Or volatile-lru (evict only keys with TTL)
 maxmemory-policy volatile-lru
-```
-
+```text
 Monitor memory usage:
 ```bash
 redis-cli INFO memory
-```
-
-### Monitoring
+```text
+#### Monitoring
 
 **Key metrics to track**:
 
 ```promql
-# Active sessions
+## Active sessions
 redis_db_keys{db="db0"}
 
-# Memory usage
+## Memory usage
 redis_memory_used_bytes / redis_memory_max_bytes
 
-# Commands per second
+## Commands per second
 rate(redis_commands_processed_total[1m])
 
-# Hit ratio
+## Hit ratio
 rate(redis_keyspace_hits_total[5m]) /
   (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))
 
-# Evicted keys (should be low)
+## Evicted keys (should be low)
 rate(redis_evicted_keys_total[5m])
-```
-
+```text
 **Alerts**:
 - Memory usage > 80%
 - Evicted keys > 0
 - Hit ratio < 90%
 - Replication lag > 5s
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Connection refused">
@@ -570,7 +548,7 @@ rate(redis_evicted_keys_total[5m])
     # Check logs
     docker compose logs redis-session
     kubectl logs -l app.kubernetes.io/name=redis
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Authentication failed">
@@ -597,7 +575,7 @@ rate(redis_evicted_keys_total[5m])
     exists = r.exists(f"session:{session_id}")
     ttl = r.ttl(f"session:{session_id}")
     print(f"Exists: {exists}, TTL: {ttl}")
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="High memory usage">
@@ -611,7 +589,7 @@ rate(redis_evicted_keys_total[5m])
     ```bash
     redis-cli INFO memory | grep used_memory_human
     redis-cli DBSIZE
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Slow session operations">
@@ -625,11 +603,11 @@ rate(redis_evicted_keys_total[5m])
     # Enable slow log
     CONFIG SET slowlog-log-slower-than 10000  # 10ms
     SLOWLOG GET 10
-    ```
+    ```sql
   </Accordion>
 </AccordionGroup>
 
-## Migration from Token-based
+### Migration from Token-based
 
 Switching from stateless tokens to Redis sessions:
 
@@ -647,7 +625,7 @@ Switching from stateless tokens to Redis sessions:
     # Add Redis config
     REDIS_URL=redis://redis-session:6379/0
     REDIS_PASSWORD=...
-    ```
+    ```xml
   </Step>
 
   <Step title="Dual Mode Support (Optional)">
@@ -668,7 +646,7 @@ Switching from stateless tokens to Redis sessions:
         user = session.user_id
     else:
         raise Unauthorized()
-    ```
+    ```sql
   </Step>
 
   <Step title="Update Client Applications">
@@ -680,15 +658,14 @@ Switching from stateless tokens to Redis sessions:
     fetch('/api/message', {
       headers: {'Authorization': `Bearer ${token}`}
     });
-    ```
-
+    ```text
     **After** (Session):
     ```javascript
     // Session cookie sent automatically
     fetch('/api/message', {
       credentials: 'include'  // Send cookies
     });
-    ```
+    ```xml
   </Step>
 
   <Step title="Deprecate Token Support">
@@ -702,7 +679,7 @@ Switching from stateless tokens to Redis sessions:
   </Step>
 </Steps>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Authentication" icon="key" href="/getting-started/authentication">

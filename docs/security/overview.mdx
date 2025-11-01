@@ -4,7 +4,7 @@ description: 'Comprehensive security architecture and threat model'
 icon: 'shield'
 ---
 
-## Overview
+### Overview
 
 The MCP Server with LangGraph implements **defense-in-depth** security with multiple layers of protection. This guide covers the security architecture, threat model, and mitigation strategies.
 
@@ -12,7 +12,7 @@ The MCP Server with LangGraph implements **defense-in-depth** security with mult
 Security is **everyone's responsibility**. Follow all security best practices and stay informed about vulnerabilities.
 </Warning>
 
-## Security Architecture
+### Security Architecture
 
 ```mermaid
 graph TB
@@ -72,7 +72,7 @@ graph TB
     class PG,Redis,Secrets dataStyle
 ```
 
-## Defense-in-Depth Layers
+### Defense-in-Depth Layers
 
 <Tabs>
   <Tab title="Layer 1: Network">
@@ -207,9 +207,9 @@ graph TB
   </Tab>
 </Tabs>
 
-## Threat Model
+### Threat Model
 
-### STRIDE Analysis
+#### STRIDE Analysis
 
 <CardGroup cols={2}>
   <Card title="Spoofing" icon="user-secret">
@@ -291,9 +291,9 @@ graph TB
   </Card>
 </CardGroup>
 
-## Authentication Security
+### Authentication Security
 
-### JWT Security
+#### JWT Security
 
 **Token Structure**:
 ```json
@@ -322,10 +322,10 @@ graph TB
 - Issuer validation
 - Key rotation (monthly)
 
-### Session Security
+#### Session Security
 
 ```python
-# Secure session configuration
+## Secure session configuration
 SESSION_COOKIE_SECURE = True      # HTTPS only
 SESSION_COOKIE_HTTPONLY = True    # No JavaScript access
 SESSION_COOKIE_SAMESITE = "Strict"  # CSRF protection
@@ -336,7 +336,7 @@ SESSION_MAX_CONCURRENT = 3        # Limit sessions per user
 
 **Session Fixation Protection**:
 ```python
-# Regenerate session ID on login
+## Regenerate session ID on login
 async def login(username: str, password: str):
     user = await authenticate(username, password)
 
@@ -352,13 +352,13 @@ async def login(username: str, password: str):
     return session
 ```
 
-## Authorization Security
+### Authorization Security
 
-### Principle of Least Privilege
+#### Principle of Least Privilege
 
 **Default Deny**:
 ```python
-# Deny by default, explicit allow
+## Deny by default, explicit allow
 async def check_access(user_id: str, resource: str, action: str):
     # Check explicit permission
     allowed = await openfga_client.check_permission(
@@ -384,10 +384,10 @@ type organization
     define viewer: [user] or member   // Members are viewers
 ```
 
-### Permission Boundaries
+#### Permission Boundaries
 
 ```python
-# Enforce organization boundaries
+## Enforce organization boundaries
 async def check_org_access(user_id: str, resource_id: str):
     # Get user's organization
     user_orgs = await openfga_client.list_objects(
@@ -404,13 +404,13 @@ async def check_org_access(user_id: str, resource_id: str):
         raise PermissionError("Cross-organization access denied")
 ```
 
-## Data Security
+### Data Security
 
-### Encryption at Rest
+#### Encryption at Rest
 
 **Database Encryption**:
 ```yaml
-# PostgreSQL with encryption
+## PostgreSQL with encryption
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -440,16 +440,16 @@ class EncryptedField:
     def decrypt(self, value: str) -> str:
         return self.cipher.decrypt(value.encode()).decode()
 
-# Usage
+## Usage
 cipher = EncryptedField(settings.encryption_key)
 user.email = cipher.encrypt("alice@example.com")
 ```
 
-### Encryption in Transit
+#### Encryption in Transit
 
 **TLS Configuration**:
 ```yaml
-# Ingress with TLS
+## Ingress with TLS
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -478,7 +478,7 @@ spec:
 
 **mTLS Between Services**:
 ```yaml
-# Service mesh (Istio)
+## Service mesh (Istio)
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
@@ -488,20 +488,20 @@ spec:
     mode: STRICT
 ```
 
-### Secret Management
+#### Secret Management
 
 **Infisical Integration**:
 ```python
 from mcp_server_langgraph.core.config import settings
 
-# Secrets automatically loaded from Infisical
+## Secrets automatically loaded from Infisical
 api_key = settings.anthropic_api_key  # Never hardcoded
 db_password = settings.redis_password  # Never in Git
 ```
 
 **Kubernetes Secrets**:
 ```yaml
-# External Secrets Operator
+## External Secrets Operator
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
@@ -519,9 +519,9 @@ spec:
       key: ANTHROPIC_API_KEY
 ```
 
-## Application Security
+### Application Security
 
-### Input Validation
+#### Input Validation
 
 ```python
 from pydantic import BaseModel, validator, constr
@@ -545,18 +545,18 @@ class MessageRequest(BaseModel):
         return v
 ```
 
-### SQL Injection Prevention
+#### SQL Injection Prevention
 
 ```python
-# NEVER do this
+## NEVER do this
 query = f"SELECT * FROM users WHERE username = '{username}'"  # VULNERABLE
 
-# Always use parameterized queries
+## Always use parameterized queries
 query = "SELECT * FROM users WHERE username = %s"
 cursor.execute(query, (username,))  # SAFE
 ```
 
-### XSS Prevention
+#### XSS Prevention
 
 ```python
 from html import escape
@@ -565,16 +565,16 @@ def sanitize_output(text: str) -> str:
     """Escape HTML to prevent XSS"""
     return escape(text)
 
-# Output encoding
+## Output encoding
 response = {
     "message": sanitize_output(user_input)
 }
 ```
 
-### CSRF Protection
+#### CSRF Protection
 
 ```python
-# CSRF token validation
+## CSRF token validation
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 
@@ -591,7 +591,7 @@ async def verify_csrf(
         raise HTTPException(403, "CSRF token invalid")
 ```
 
-### Rate Limiting
+#### Rate Limiting
 
 ```python
 from slowapi import Limiter
@@ -606,7 +606,7 @@ async def send_message(request: Request):
     pass
 ```
 
-## Security Headers
+### Security Headers
 
 ```python
 from fastapi.middleware.cors import CORSMiddleware
@@ -614,7 +614,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 app = FastAPI()
 
-# CORS
+## CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://yourdomain.com"],
@@ -623,13 +623,13 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-# Trusted hosts
+## Trusted hosts
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["yourdomain.com", "*.yourdomain.com"]
 )
 
-# Security headers
+## Security headers
 @app.middleware("http")
 async def add_security_headers(request, call_next):
     response = await call_next(request)
@@ -643,9 +643,9 @@ async def add_security_headers(request, call_next):
     return response
 ```
 
-## Audit Logging
+### Audit Logging
 
-### What to Log
+#### What to Log
 
 <AccordionGroup>
   <Accordion title="Authentication Events" icon="key">
@@ -721,15 +721,15 @@ async def add_security_headers(request, call_next):
   </Accordion>
 </AccordionGroup>
 
-### Secure Logging
+#### Secure Logging
 
 ```python
 import structlog
 
-# Structured logging
+## Structured logging
 logger = structlog.get_logger()
 
-# Mask sensitive data
+## Mask sensitive data
 def mask_sensitive(data: dict) -> dict:
     masked = data.copy()
     for key in ['password', 'token', 'api_key', 'secret']:
@@ -737,7 +737,7 @@ def mask_sensitive(data: dict) -> dict:
             masked[key] = '***REDACTED***'
     return masked
 
-# Log with context
+## Log with context
 logger.info(
     "api_request",
     **mask_sensitive({
@@ -748,12 +748,12 @@ logger.info(
 )
 ```
 
-## Compliance
+### Compliance
 
-### GDPR Compliance
+#### GDPR Compliance
 
 ```python
-# Right to erasure
+## Right to erasure
 async def delete_user_data(user_id: str):
     """Permanently delete all user data"""
 
@@ -772,7 +772,7 @@ async def delete_user_data(user_id: str):
     logger.audit("gdpr_data_deletion", user_id=user_id)
 ```
 
-### SOC 2 Controls
+#### SOC 2 Controls
 
 - Access controls (AC)
 - Change management (CM)
@@ -782,7 +782,7 @@ async def delete_user_data(user_id: str):
 
 **Evidence Collection**:
 ```python
-# Automated evidence collection
+## Automated evidence collection
 async def collect_compliance_evidence():
     evidence = {
         "access_reviews": await get_access_reviews(),
@@ -795,12 +795,12 @@ async def collect_compliance_evidence():
     await store_evidence(evidence)
 ```
 
-## Vulnerability Management
+### Vulnerability Management
 
-### Dependency Scanning
+#### Dependency Scanning
 
 ```yaml
-# .github/workflows/security-scan.yml
+## .github/workflows/security-scan.yml
 name: Security Scan
 on: [push, pull_request]
 
@@ -828,20 +828,20 @@ jobs:
         safety check --json
 ```
 
-### Container Scanning
+#### Container Scanning
 
 ```bash
-# Scan Docker images
+## Scan Docker images
 trivy image openfga/openfga:latest
 trivy image bitnami/keycloak:latest
 
-# Scan for vulnerabilities
+## Scan for vulnerabilities
 grype mcp-server-langgraph:latest
 ```
 
-## Incident Response
+### Incident Response
 
-### Incident Response Plan
+#### Incident Response Plan
 
 <Steps>
   <Step title="Detection">
@@ -881,10 +881,10 @@ grype mcp-server-langgraph:latest
   </Step>
 </Steps>
 
-### Security Contacts
+#### Security Contacts
 
 ```yaml
-# security-contacts.yaml
+## security-contacts.yaml
 security_team:
   email: security@company.com
   pagerduty: security-team
@@ -896,7 +896,7 @@ escalation:
   level_3: ciso
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Security Best Practices" icon="shield-check" href="/security/best-practices">

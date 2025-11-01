@@ -4,28 +4,26 @@ description: 'Get your agent deployed to LangGraph Platform in 2 minutes'
 icon: 'rocket'
 ---
 
-## Deploy in 3 Steps
+### Deploy in 3 Steps
 
 <Steps>
   <Step title="Install CLI">
     ```bash
     pip install langgraph-cli
-    ```
+    ```xml
   </Step>
 
   <Step title="Login to LangChain">
     ```bash
     langgraph login
-    ```
-
+    ```text
     This will prompt for your LangSmith API key. Get it from [smith.langchain.com/settings](https://smith.langchain.com/settings).
   </Step>
 
   <Step title="Deploy">
     ```bash
     langgraph deploy
-    ```
-
+    ```text
     Your agent is now live on LangGraph Platform!
   </Step>
 </Steps>
@@ -34,7 +32,7 @@ icon: 'rocket'
   **Deployment complete!** Your agent is now running on LangGraph Platform with automatic scaling and built-in LangSmith tracing.
 </Check>
 
-## What Happens During Deployment
+### What Happens During Deployment
 
 When you run `langgraph deploy`, the CLI:
 
@@ -44,16 +42,15 @@ When you run `langgraph deploy`, the CLI:
 4. **Deploys your graph** - Makes your agent available via API
 5. **Returns endpoint URL** - Gives you the deployment URL
 
-## Test Your Deployment
+### Test Your Deployment
 
-### Via CLI
+#### Via CLI
 
 ```bash
 langgraph deployment invoke my-agent \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
-```
-
-### Via HTTP
+```text
+#### Via HTTP
 
 ```bash
 curl -X POST https://your-deployment.langchain.com/invoke \
@@ -64,9 +61,8 @@ curl -X POST https://your-deployment.langchain.com/invoke \
       "messages": [{"role": "user", "content": "Hello!"}]
     }
   }'
-```
-
-### Via Python SDK
+```text
+#### Via Python SDK
 
 ```python
 from langgraph_sdk import get_client
@@ -79,9 +75,8 @@ response = client.runs.stream(
 
 for chunk in response:
     print(chunk)
-```
-
-## View Traces in LangSmith
+```sql
+### View Traces in LangSmith
 
 All invocations are automatically traced in LangSmith:
 
@@ -89,60 +84,59 @@ All invocations are automatically traced in LangSmith:
 2. Select your project
 3. See all traces with full LLM details
 
-## Local Testing First
+### Local Testing First
 
 Test locally before deploying:
 
 ```bash
-# Start local dev server
+## Start local dev server
 langgraph dev
 
-# In another terminal, test
+## In another terminal, test
 langgraph deployment invoke --local \
   --input '{"messages": [{"role": "user", "content": "Test"}]}'
-```
-
-## Deployment Commands
+```text
+### Deployment Commands
 
 <AccordionGroup>
   <Accordion title="Deploy with custom name">
     ```bash
     langgraph deploy my-agent-prod
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Deploy with tag">
     ```bash
     langgraph deploy my-agent-prod --tag v1.0.0
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="List deployments">
     ```bash
     langgraph deployment list
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="View logs">
     ```bash
     langgraph deployment logs my-agent-prod --follow
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Rollback">
     ```bash
     langgraph deployment rollback my-agent-prod --revision 3
-    ```
+    ```sql
   </Accordion>
 
   <Accordion title="Delete deployment">
     ```bash
     langgraph deployment delete my-agent-prod
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Configuration" icon="gear" href="/deployment/platform/configuration">
@@ -159,7 +153,7 @@ langgraph deployment invoke --local \
   </Card>
 </CardGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Login fails">
@@ -169,7 +163,7 @@ langgraph deployment invoke --local \
     # Re-login
     langgraph logout
     langgraph login
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Deployment fails">

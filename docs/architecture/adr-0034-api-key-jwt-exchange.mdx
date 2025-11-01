@@ -5,15 +5,13 @@ icon: 'file-lines'
 ---
 
 
-# 34. API Key to JWT Exchange Pattern
-
 Date: 2025-01-28
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 Legacy systems and simple integrations use API keys for authentication due to simplicity and stateless nature. However, our architecture standardizes on JWTs (ADR-0032) for consistent authentication and authorization. This creates tension between legacy support and JWT standardization.
 
@@ -23,18 +21,18 @@ Current challenges:
 - API keys don't integrate with OpenFGA authorization
 - Cannot enforce same permission model as user JWTs
 
-## Decision
+### Decision
 
 We will implement an **API Key to JWT Exchange Pattern** where API keys are stored in Keycloak and exchanged for short-lived JWTs on each request.
 
-### Architecture
+#### Architecture
 
-```
+```text
 Client (API Key) → Kong (custom plugin) → Keycloak (validate & exchange)
   → JWT → Replace header → MCP Server (validates JWT normally)
 ```
 
-### API Key to JWT Exchange Flow
+#### API Key to JWT Exchange Flow
 
 ```mermaid
 sequenceDiagram
@@ -81,8 +79,7 @@ sequenceDiagram
 
     Note over Client: Client only sees standard HTTP response
 
-```
-
+```text
 **Subsequent Requests (Cached)**:
 ```mermaid
 sequenceDiagram
@@ -103,9 +100,8 @@ sequenceDiagram
 
     Note over Kong,Cache: ~5ms latency (vs 20-50ms without cache)
 
-```
-
-### Core Principles
+```text
+#### Core Principles
 
 1. **Exchange, Not Replace**: API keys exchanged for JWTs, not standalone auth
 2. **Keycloak Storage**: API keys stored in Keycloak user/client attributes
@@ -114,7 +110,7 @@ sequenceDiagram
 5. **Standard Validation**: JWT validation applies same rules
 6. **Rotation Support**: Keys can be rotated without changing client code
 
-### API Key Storage in Keycloak
+#### API Key Storage in Keycloak
 
 **User Attributes**:
 ```json
@@ -126,9 +122,8 @@ sequenceDiagram
     "apiKey_abc123_expiresAt": "2026-01-28T00:00:00Z"
   }
 }
-```
-
-### Exchange Flow
+```text
+#### Exchange Flow
 
 1. Client → Kong: `Authorization: ApiKey sk_live_abc123xyz`
 2. Kong Plugin: Extract key, hash with bcrypt, query Keycloak for match
@@ -136,7 +131,7 @@ sequenceDiagram
 4. Replace header: `Authorization: Bearer <JWT>`
 5. Kong → MCP Server: Standard JWT validation
 
-### Configuration
+#### Configuration
 
 ```bash
 API_KEY_ENABLED=true
@@ -145,33 +140,32 @@ API_KEY_HASH_ALGORITHM=bcrypt
 API_KEY_PREFIX=sk_live_
 API_KEY_MAX_PER_USER=5
 API_KEY_EXCHANGE_CACHE_TTL=300  # 5 min cache
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive Consequences
+#### Positive Consequences
 - JWT standardization maintained, consistent authorization
 - User attribution, centralized management in Keycloak
 - Audit trail, rotation support, expiration support
 
-### Negative Consequences
+#### Negative Consequences
 - Custom Kong plugin (Lua development)
 - Exchange latency (20-50ms Keycloak call)
 - Cache complexity, migration required
 
-### Mitigation Strategies
+#### Mitigation Strategies
 - Cache key→user mappings (5-min TTL, >90% hit rate target)
 - Connection pooling to Keycloak
 - Gradual migration with fallback period
 
-## Alternatives Considered
+### Alternatives Considered
 
 1. **Standalone API Keys**: Rejected - violates JWT standardization
 2. **Kong-Only Storage**: Rejected - inconsistent with Keycloak authority
 3. **No API Keys**: Rejected - too disruptive for legacy integrations
 4. **Long-Lived JWTs**: Rejected - cannot revoke, security risk
 
-## Implementation
+### Implementation
 
 **APIKeyManager** (`src/mcp_server_langgraph/auth/api_keys.py`):
 ```python
@@ -180,8 +174,7 @@ class APIKeyManager:
         api_key = self.generate_api_key()  # sk_live_...
         key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt())
         # Store in Keycloak user attributes
-```
-
+```text
 **Kong Plugin** (`deployments/kong/custom-plugins/kong-apikey-jwt-exchange.lua`):
 ```lua
 -- Extract API key, validate with Keycloak, cache JWT, replace header
@@ -193,7 +186,7 @@ class APIKeyManager:
 - GET `/api/v1/api-keys` - List
 - DELETE `/api/v1/api-keys/{key_id}` - Revoke
 
-## References
+### References
 
 - Related ADRs: [ADR-0031](/architecture/adr-0031-keycloak-authoritative-identity), [ADR-0032](/architecture/adr-0032-jwt-standardization), [ADR-0035](/architecture/adr-0035-kong-jwt-validation)
 - External: [API Key Best Practices](https://cloud.google.com/endpoints/docs/openapi/when-why-api-key), [bcrypt](https://en.wikipedia.org/wiki/Bcrypt)

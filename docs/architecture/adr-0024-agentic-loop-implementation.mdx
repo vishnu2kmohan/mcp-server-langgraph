@@ -4,46 +4,44 @@ description: 'Architecture Decision Record: 24. Agentic Loop Implementation Foll
 icon: 'file-lines'
 ---
 
-# 24. Agentic Loop Implementation Following Anthropic Best Practices
-
 Date: 2025-10-17
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 Our MCP server previously implemented a basic agent workflow (route → act → respond), but lacked the full agentic loop described in Anthropic's engineering guides. To build truly autonomous agents capable of multi-step tasks with quality assurance, we need to implement the complete gather-action-verify-repeat cycle.
 
-### Gaps in Previous Implementation
+#### Gaps in Previous Implementation
 
 1. **No Context Management**: Conversations could grow indefinitely, hitting context limits
 2. **No Work Verification**: Responses were sent without quality checks
 3. **No Self-Correction**: No mechanism to refine outputs based on feedback
 4. **Single-Pass Execution**: No iterative improvement loop
 
-### Requirements from Anthropic's Guides
+#### Requirements from Anthropic's Guides
 
 From **"Building Agents with the Claude Agent SDK"**, the recommended agent loop is:
 
-```
+```sql
 1. Gather Context → Agents fetch and update their own information
 2. Take Action → Execute tasks using available tools
 3. Verify Work → Evaluate and improve outputs
 4. Repeat → Iterate until goals are achieved
 ```
 
-## Decision
+### Decision
 
 We will implement the **full agentic loop** in our LangGraph agent with the following components:
 
-### 1. Gather Context (Context Management)
+#### 1. Gather Context (Context Management)
 
 **Implementation**: `ContextManager` class with conversation compaction
 
 ```python
-# src/mcp_server_langgraph/core/context_manager.py
+## src/mcp_server_langgraph/core/context_manager.py
 
 class ContextManager:
     """
@@ -54,8 +52,7 @@ class ContextManager:
     - Structured note-taking: Preserve key decisions and facts
     - Progressive disclosure: Keep recent messages, summarize older ones
     """
-```
-
+```python
 **Features**:
 - Automatic token counting using tiktoken
 - Compaction triggered at 8,000 tokens (configurable)
@@ -69,19 +66,19 @@ class ContextManager:
 - ✅ Reduces token usage by 40-60% on average
 - ✅ Follows Anthropic's "Compaction" technique
 
-### 2. Take Action (Routing & Execution)
+#### 2. Take Action (Routing & Execution)
 
 **No changes** - Existing implementation already solid:
 - Pydantic AI for type-safe routing
 - Tool execution framework
 - LLM fallback mechanisms
 
-### 3. Verify Work (LLM-as-Judge Pattern)
+#### 3. Verify Work (LLM-as-Judge Pattern)
 
 **Implementation**: `OutputVerifier` class with quality evaluation
 
 ```python
-# src/mcp_server_langgraph/llm/verifier.py
+## src/mcp_server_langgraph/llm/verifier.py
 
 class OutputVerifier:
     """
@@ -95,8 +92,7 @@ class OutputVerifier:
     - Safety: Is it appropriate?
     - Sources: Are sources cited?
     """
-```
-
+```text
 **Features**:
 - LLM-as-judge evaluation with structured prompts (XML format)
 - Multi-criterion scoring (0.0-1.0 for each criterion)
@@ -110,18 +106,17 @@ class OutputVerifier:
 - ✅ Provides specific guidance for refinement
 - ✅ Supports both LLM and rules-based verification
 
-### 4. Repeat (Iterative Refinement)
+#### 4. Repeat (Iterative Refinement)
 
 **Implementation**: Refinement loop in agent graph
 
 ```python
-# Workflow: respond → verify → (if failed) → refine → respond
+## Workflow: respond → verify → (if failed) → refine → respond
 workflow.add_edge("respond", "verify")
 workflow.add_edge("verify", END)  # if passed
 workflow.add_edge("verify", "refine")  # if failed
 workflow.add_edge("refine", "respond")  # loop back
-```
-
+```text
 **Features**:
 - Maximum 3 refinement attempts (configurable)
 - Feedback injection via SystemMessage
@@ -134,15 +129,14 @@ workflow.add_edge("refine", "respond")  # loop back
 - ✅ Bounded execution (prevents runaway loops)
 - ✅ Transparent refinement tracking
 
-## Updated Agent Graph
+### Updated Agent Graph
 
-### Before (Simple Flow)
+#### Before (Simple Flow)
 
 ```
 START → router → [use_tools | respond] → END
-```
-
-### After (Full Agentic Loop)
+```text
+#### After (Full Agentic Loop)
 
 ```
 START
@@ -152,9 +146,8 @@ START
   → verify (Verify Work)
   → [END | refine] (Repeat if needed)
   → (if refine) → respond
-```
-
-## Agent State Enhancements
+```text
+### Agent State Enhancements
 
 Extended `AgentState` to track all agentic loop components:
 
@@ -178,31 +171,29 @@ class AgentState(TypedDict):
     verification_feedback: str | None
     refinement_attempts: int | None
     user_request: str | None
-```
-
-## Configuration
+```text
+### Configuration
 
 Added feature flags and configuration options:
 
 ```python
-# .env or config.py
+## .env or config.py
 
-# Context Management
+## Context Management
 ENABLE_CONTEXT_COMPACTION=true
 COMPACTION_THRESHOLD=8000
 TARGET_AFTER_COMPACTION=4000
 RECENT_MESSAGE_COUNT=5
 
-# Work Verification
+## Work Verification
 ENABLE_VERIFICATION=true
 VERIFICATION_QUALITY_THRESHOLD=0.7
 MAX_REFINEMENT_ATTEMPTS=3
 VERIFICATION_MODE=standard  # strict, standard, lenient
-```
+```text
+### Implementation Files
 
-## Implementation Files
-
-### New Files Created
+#### New Files Created
 
 1. **`src/mcp_server_langgraph/core/context_manager.py`** (400+ lines)
    - ContextManager class
@@ -216,7 +207,7 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
    - VerificationCriterion enum
    - LLM-as-judge and rules-based verification
 
-### Modified Files
+#### Modified Files
 
 3. **`src/mcp_server_langgraph/core/agent.py`** (significant changes)
    - Added compact_context node
@@ -230,9 +221,9 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
    - Context management settings
    - Verification settings
 
-## Performance Characteristics
+### Performance Characteristics
 
-### Context Compaction
+#### Context Compaction
 
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
@@ -240,7 +231,7 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
 | Latency overhead | 0ms | 150-300ms | +150-300ms (one-time) |
 | Context limit reached | After 25 messages | Never (with compaction) | Unlimited conversations |
 
-### Verification Loop
+#### Verification Loop
 
 | Metric | Value | Notes |
 |--------|-------|-------|
@@ -249,9 +240,9 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
 | Quality improvement | +25% | LLM-as-judge scores |
 | Max iterations | 3 | Prevents infinite loops |
 
-## Consequences
+### Consequences
 
-### Positive
+#### Positive
 
 1. **Autonomous Quality Control**
    - Agents self-correct before showing responses to users
@@ -278,7 +269,7 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
    - Adjustable quality thresholds
    - Flexible refinement limits
 
-### Negative
+#### Negative
 
 1. **Increased Latency**
    - Compaction: +150-300ms (when triggered)
@@ -303,38 +294,35 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
    - Mock LLM responses for deterministic tests
    - Property-based testing for edge cases
 
-### Neutral
+#### Neutral
 
 - Feature flags allow gradual rollout
 - Backward compatible (both features can be disabled)
 - No breaking changes to existing API
 
-## Migration Strategy
+### Migration Strategy
 
-### Phase 1: Development Testing (Current)
+#### Phase 1: Development Testing (Current)
 ```bash
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true  # Test with verification enabled
-```
-
-### Phase 2: Canary Deployment
+```text
+#### Phase 2: Canary Deployment
 ```bash
-# Deploy to 10% of users
+## Deploy to 10% of users
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
 VERIFICATION_MODE=lenient  # Lower threshold initially
-```
-
-### Phase 3: Full Rollout
+```text
+#### Phase 3: Full Rollout
 ```bash
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
 VERIFICATION_MODE=standard
-```
+```text
+### Success Metrics
 
-## Success Metrics
-
-### Key Performance Indicators
+#### Key Performance Indicators
 
 1. **Context Management**
    - `context.compaction.triggered_total`: How often compaction runs
@@ -351,36 +339,34 @@ VERIFICATION_MODE=standard
    - `user.satisfaction`: Should increase
    - `conversation.length`: Should increase (longer successful conversations)
 
-## Testing Strategy
+### Testing Strategy
 
-### Unit Tests
+#### Unit Tests
 
 ```python
-# tests/test_context_manager.py
+## tests/test_context_manager.py
 def test_compaction_preserves_recent_messages()
 def test_summarization_captures_key_info()
 def test_token_counting_accuracy()
 
-# tests/test_verifier.py
+## tests/test_verifier.py
 def test_llm_as_judge_scoring()
 def test_rules_based_validation()
 def test_verification_feedback_quality()
-```
-
-### Integration Tests
+```text
+#### Integration Tests
 
 ```python
-# tests/test_agentic_loop.py
+## tests/test_agentic_loop.py
 def test_full_loop_with_refinement()
 def test_compaction_triggers_correctly()
 def test_verification_prevents_bad_responses()
 def test_max_refinement_attempts_respected()
-```
-
-### Property-Based Tests
+```text
+#### Property-Based Tests
 
 ```python
-# tests/property/test_agentic_properties.py
+## tests/property/test_agentic_properties.py
 @given(conversation=st.lists(st.text()))
 def test_compaction_is_idempotent(conversation)
 
@@ -388,33 +374,33 @@ def test_compaction_is_idempotent(conversation)
 def test_verification_threshold_consistency(response, threshold)
 ```
 
-## Alternatives Considered
+### Alternatives Considered
 
-### 1. No Verification (Rely on Model Quality)
+#### 1. No Verification (Rely on Model Quality)
 
 **Pros**: Faster, simpler
 **Cons**: No quality control, errors reach users
 **Why Rejected**: Quality is critical for production agents
 
-### 2. Rules-Based Verification Only
+#### 2. Rules-Based Verification Only
 
 **Pros**: Deterministic, fast
 **Cons**: Can't catch semantic issues, limited coverage
 **Why Rejected**: Need LLM-based evaluation for complex quality checks
 
-### 3. Manual Context Management (Truncation)
+#### 3. Manual Context Management (Truncation)
 
 **Pros**: Simple to implement
 **Cons**: Loses important context, degrades quality
 **Why Rejected**: Anthropic recommends summarization over truncation
 
-### 4. Single Refinement Attempt
+#### 4. Single Refinement Attempt
 
 **Pros**: Faster than multiple attempts
 **Cons**: May not be enough for complex corrections
 **Why Rejected**: 3 attempts provides better quality/latency balance
 
-## Future Enhancements
+### Future Enhancements
 
 1. **Sub-Agent Orchestration** (Phase 1.3)
    - Delegate subtasks to specialized agents
@@ -436,7 +422,7 @@ def test_verification_threshold_consistency(response, threshold)
    - Image-based verification
    - Iterative visual refinement
 
-## References
+### References
 
 - **Anthropic**: [Building Agents with the Claude Agent SDK](https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk)
 - **Anthropic**: [Effective Context Engineering for AI Agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
@@ -448,7 +434,7 @@ def test_verification_threshold_consistency(response, threshold)
   - [ADR-0022](/architecture/adr-0022-distributed-conversation-checkpointing) - Checkpointing
   - [ADR-0023](/architecture/adr-0023-anthropic-tool-design-best-practices) - Tool design
 
-## Implementation Checklist
+### Implementation Checklist
 
 - [x] Create ContextManager with compaction logic
 - [x] Create OutputVerifier with LLM-as-judge pattern

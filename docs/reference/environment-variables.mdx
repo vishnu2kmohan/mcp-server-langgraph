@@ -5,13 +5,11 @@ icon: 'file'
 ---
 
 
-# Environment Variables Reference
-
 This document lists all environment variables used by the MCP Server LangGraph application.
 
-## Required Environment Variables
+### Required Environment Variables
 
-### Core Application
+#### Core Application
 
 - **`JWT_SECRET_KEY`** (REQUIRED)
   - Purpose: Secret key for JWT token signing and validation
@@ -20,7 +18,7 @@ This document lists all environment variables used by the MCP Server LangGraph a
   - Used by: Authentication, Authorization, OpenAPI validation
   - Security: ⚠️ **CRITICAL** - Must be kept secret and never committed to version control
 
-### LLM API Keys
+#### LLM API Keys
 
 At least one LLM provider API key is required for the agent to function:
 
@@ -39,7 +37,7 @@ At least one LLM provider API key is required for the agent to function:
   - Provider: Google
   - Example: `export GOOGLE_API_KEY="AIza..."`
 
-### Authentication & Authorization
+#### Authentication & Authorization
 
 - **`KEYCLOAK_CLIENT_SECRET`**
   - Purpose: OAuth client secret for Keycloak SSO integration
@@ -59,7 +57,7 @@ At least one LLM provider API key is required for the agent to function:
   - Example: `export OPENFGA_MODEL_ID="01H..."`
   - Setup: Run `make setup-openfga` to generate
 
-### HIPAA Compliance (Optional)
+#### HIPAA Compliance (Optional)
 
 - **`HIPAA_INTEGRITY_SECRET`**
   - Purpose: HMAC secret for data integrity checksums (HIPAA 164.312(c)(1))
@@ -67,9 +65,9 @@ At least one LLM provider API key is required for the agent to function:
   - Required: Only if processing Protected Health Information (PHI)
   - Example: `export HIPAA_INTEGRITY_SECRET="your-secure-hipaa-secret"`
 
-## Optional Environment Variables
+### Optional Environment Variables
 
-### Observability & Monitoring
+#### Observability & Monitoring
 
 - **`LANGSMITH_API_KEY`**
   - Purpose: LangSmith tracing and observability
@@ -92,9 +90,9 @@ At least one LLM provider API key is required for the agent to function:
   - Default: None (compact JSON)
   - Example: `export LOG_JSON_INDENT=2`
 
-### Cloud Provider Integration
+#### Cloud Provider Integration
 
-#### AWS
+##### AWS
 
 - **`AWS_REGION`**
   - Purpose: AWS region for services
@@ -104,7 +102,7 @@ At least one LLM provider API key is required for the agent to function:
   - Purpose: AWS credentials
   - Example: `export AWS_ACCESS_KEY_ID="AKIA..."`
 
-#### Google Cloud Platform
+##### Google Cloud Platform
 
 - **`GCP_PROJECT_ID`**
   - Purpose: GCP project identifier
@@ -114,7 +112,7 @@ At least one LLM provider API key is required for the agent to function:
   - Purpose: Path to GCP service account key file
   - Example: `export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"`
 
-#### Azure
+##### Azure
 
 - **`AZURE_MONITOR_CONNECTION_STRING`**
   - Purpose: Azure Monitor connection string
@@ -124,9 +122,9 @@ At least one LLM provider API key is required for the agent to function:
   - Purpose: Azure Monitor instrumentation key
   - Example: `export AZURE_MONITOR_INSTRUMENTATION_KEY="..."`
 
-### External Services
+#### External Services
 
-#### Elasticsearch
+##### Elasticsearch
 
 - **`ELASTICSEARCH_USERNAME`** & **`ELASTICSEARCH_PASSWORD`**
   - Purpose: Elasticsearch authentication
@@ -136,13 +134,13 @@ At least one LLM provider API key is required for the agent to function:
   - Purpose: Elasticsearch API key authentication
   - Example: `export ELASTICSEARCH_API_KEY="..."`
 
-#### Datadog
+##### Datadog
 
 - **`DATADOG_API_KEY`**
   - Purpose: Datadog monitoring integration
   - Example: `export DATADOG_API_KEY="..."`
 
-#### Splunk
+##### Splunk
 
 - **`SPLUNK_HEC_TOKEN`** & **`SPLUNK_HEC_ENDPOINT`**
   - Purpose: Splunk HTTP Event Collector
@@ -152,7 +150,7 @@ At least one LLM provider API key is required for the agent to function:
   - Purpose: Splunk Observability Cloud
   - Example: `export SPLUNK_REALM="us0"`
 
-### Secrets Management
+#### Secrets Management
 
 - **`INFISICAL_TOKEN`**
   - Purpose: Infisical secrets management authentication
@@ -160,32 +158,32 @@ At least one LLM provider API key is required for the agent to function:
   - Example: `export INFISICAL_TOKEN="st.xxx.yyy.zzz"`
   - Note: Application works without Infisical (uses .env fallback)
 
-## Environment Configuration Files
+### Environment Configuration Files
 
-### Development (.env)
+#### Development (.env)
 
 Create a `.env` file in the project root for local development:
 
 ```bash
-# Core (Required)
+## Core (Required)
 JWT_SECRET_KEY=development-secret-key-change-in-production
 
-# LLM Provider (at least one required)
+## LLM Provider (at least one required)
 ANTHROPIC_API_KEY=sk-ant-your-key-here
-# OPENAI_API_KEY=sk-your-key-here
-# GOOGLE_API_KEY=your-key-here
+## OPENAI_API_KEY=sk-your-key-here
+## GOOGLE_API_KEY=your-key-here
 
-# Authentication (Optional)
-# KEYCLOAK_CLIENT_SECRET=keycloak-secret
-# OPENFGA_STORE_ID=01H...
-# OPENFGA_MODEL_ID=01H...
+## Authentication (Optional)
+## KEYCLOAK_CLIENT_SECRET=keycloak-secret
+## OPENFGA_STORE_ID=01H...
+## OPENFGA_MODEL_ID=01H...
 
-# Observability (Optional)
-# LANGSMITH_API_KEY=ls__your-key
+## Observability (Optional)
+## LANGSMITH_API_KEY=ls__your-key
 LOG_JSON_INDENT=2
 ```
 
-### Production
+#### Production
 
 **⚠️ Security Warning**: Never commit `.env` files to version control!
 
@@ -195,7 +193,7 @@ Use one of these approaches for production:
 3. **Kubernetes Secrets** - For Kubernetes deployments
 4. **Cloud provider secrets** - AWS Secrets Manager, GCP Secret Manager, Azure Key Vault
 
-## OpenAPI Schema Validation
+### OpenAPI Schema Validation
 
 To run OpenAPI schema validation locally, you must set:
 
@@ -222,7 +220,7 @@ CRITICAL: JWT secret key not configured. Set JWT_SECRET_KEY environment variable
 or configure via Infisical. The service cannot start without a secure secret key.
 ```
 
-## CI/CD Configuration
+### CI/CD Configuration
 
 GitHub Actions workflows automatically inject required secrets from repository secrets:
 
@@ -235,67 +233,67 @@ Required repository secrets:
 - `ANTHROPIC_API_KEY` (for production deployment)
 - `KUBECONFIG_PROD` (for Kubernetes deployment)
 
-## Quick Setup
+### Quick Setup
 
-### Minimal Setup (Development)
+#### Minimal Setup (Development)
 
 ```bash
-# 1. Copy environment template
+## 1. Copy environment template
 cp .env.example .env
 
-# 2. Set required variables
+## 2. Set required variables
 export JWT_SECRET_KEY="development-secret-$(openssl rand -hex 16)"
 export ANTHROPIC_API_KEY="your-anthropic-key"
 
-# 3. Verify configuration
+## 3. Verify configuration
 make test-unit
 ```
 
-### Full Setup (with Infrastructure)
+#### Full Setup (with Infrastructure)
 
 ```bash
-# 1. Set core variables
+## 1. Set core variables
 export JWT_SECRET_KEY="$(openssl rand -hex 32)"
 export ANTHROPIC_API_KEY="your-anthropic-key"
 
-# 2. Start infrastructure
+## 2. Start infrastructure
 make dev-setup
 
-# 3. Get OpenFGA IDs from setup output
+## 3. Get OpenFGA IDs from setup output
 export OPENFGA_STORE_ID="from-setup-output"
 export OPENFGA_MODEL_ID="from-setup-output"
 
-# 4. Run tests
+## 4. Run tests
 make test
 ```
 
-## Troubleshooting
+### Troubleshooting
 
-### "JWT_SECRET_KEY not configured" error
+#### "JWT_SECRET_KEY not configured" error
 
 **Solution**: Set the JWT secret key:
 ```bash
 export JWT_SECRET_KEY="$(openssl rand -hex 32)"
 ```
 
-### "HIPAA_INTEGRITY_SECRET not configured" error
+#### "HIPAA_INTEGRITY_SECRET not configured" error
 
 **Solution**: Either:
 1. Set the secret: `export HIPAA_INTEGRITY_SECRET="$(openssl rand -hex 32)"`
 2. Skip HIPAA tests: `pytest -m "not hipaa"`
 
-### "No LLM API key found" error
+#### "No LLM API key found" error
 
 **Solution**: Set at least one LLM provider API key:
 ```bash
 export ANTHROPIC_API_KEY="your-key"
-# or
+## or
 export OPENAI_API_KEY="your-key"
-# or
+## or
 export GOOGLE_API_KEY="your-key"
 ```
 
-## Security Best Practices
+### Security Best Practices
 
 1. ✅ **Never commit secrets to version control**
 2. ✅ **Use different secrets for dev/staging/prod**
@@ -305,7 +303,7 @@ export GOOGLE_API_KEY="your-key"
 6. ✅ **Monitor secret usage** (audit logs)
 7. ✅ **Use secrets management tools** (Infisical, Vault, cloud providers)
 
-## References
+### References
 
 - [Infisical Documentation](https://infisical.com/docs)
 - [OpenFGA Setup Guide](/guides/openfga-setup)

@@ -1,0 +1,953 @@
+---
+title: "Terraform Modules for GCP"
+description: "Production-ready Terraform modules for deploying MCP Server LangGraph infrastructure on Google Cloud Platform"
+icon: "terraform"
+---
+
+### Overview
+
+We provide **6 production-ready Terraform modules** for deploying complete GCP infrastructure with best practices built-in. These modules enable infrastructure-as-code deployments with high availability, security, and cost optimization.
+
+<CardGroup cols={3}>
+  <Card title="6 Modules" icon="cubes">
+    VPC, GKE, Cloud SQL, Redis, Workload Identity, Backend
+  </Card>
+  <Card title="3 Environments" icon="layer-group">
+    Dev, Staging, Production configurations
+  </Card>
+  <Card title="9,000+ Lines" icon="code">
+    Production-grade infrastructure code
+  </Card>
+</CardGroup>
+
+---
+
+### Module Architecture
+
+```mermaid
+graph TB
+    Backend[Backend Setup<br/>GCS State Storage]
+
+    subgraph Infrastructure[Infrastructure Modules]
+        VPC[GCP VPC Module<br/>Networking, NAT, Firewall]
+        GKE[GKE Autopilot Module<br/>Kubernetes Cluster]
+        SQL[Cloud SQL Module<br/>PostgreSQL with HA]
+        Redis[Memorystore Module<br/>Redis with HA]
+        WI[Workload Identity Module<br/>IAM Bindings]
+    end
+
+    subgraph Environments[Environment Configurations]
+        Dev[Development<br/>Cost-optimized]
+        Staging[Staging<br/>Production-like]
+        Prod[Production<br/>Enterprise-grade]
+    end
+
+    Backend --> Infrastructure
+    Infrastructure --> Environments
+```text
+---
+
+### Quick Start
+
+#### 1. Setup Terraform Backend
+
+```bash
+cd terraform/backend-setup-gcp
+
+cat > terraform.tfvars <<EOF
+project_id    = "your-gcp-project-id"
+region        = "us-central1"
+bucket_prefix = "mcp-langgraph"
+EOF
+
+terraform init
+terraform apply
+```xml
+<Info>
+  This creates a GCS bucket for Terraform state with versioning, encryption, and logging.
+  See [Backend Setup Guide](/deployment/infrastructure/backend-setup) for details.
+</Info>
+
+#### 2. Deploy Environment
+
+<Tabs>
+  <Tab title="Production">
+    ```bash
+    cd terraform/environments/gcp-prod
+
+    # Configure
+    cp terraform.tfvars.example terraform.tfvars
+    # Edit terraform.tfvars with your settings
+
+    # Deploy
+    terraform init
+    terraform plan -out=tfplan
+    terraform apply tfplan
+    ```text
+    **Duration**: ~25 minutes
+    **Cost**: $880-1,275/month
+  </Tab>
+
+  <Tab title="Staging">
+    ```bash
+    cd terraform/environments/gcp-staging
+
+    cp terraform.tfvars.example terraform.tfvars
+    terraform init
+    terraform apply
+    ```text
+    **Duration**: ~20 minutes
+    **Cost**: $250-350/month
+  </Tab>
+
+  <Tab title="Development">
+    ```bash
+    cd terraform/environments/gcp-dev
+
+    cp terraform.tfvars.example terraform.tfvars
+    terraform init
+    terraform apply
+    ```text
+    **Duration**: ~15 minutes
+    **Cost**: $100-150/month
+  </Tab>
+</Tabs>
+
+---
+
+### Module Reference
+
+#### 1. GCP VPC Module
+
+**Location**: `terraform/modules/gcp-vpc/`
+
+Creates VPC network optimized for GKE with:
+- VPC-native networking (secondary IP ranges for pods/services)
+- Cloud NAT with dynamic port allocation
+- Cloud Router with BGP
+- Firewall rules (internal, IAP SSH, health checks)
+- Private Service Connection for Cloud SQL/Memorystore
+- VPC Flow Logs with sampling
+- Optional Cloud Armor for DDoS protection
+
+<CodeGroup>
+```hcl Basic Usage
+module "vpc" {
+  source = "../../modules/gcp-vpc"
+
+  project_id   = "my-project"
+  name_prefix  = "mcp-prod"
+  region       = "us-central1"
+  cluster_name = "mcp-prod-gke"
+
+  nodes_cidr    = "10.0.0.0/20"   # 4096 IPs
+  pods_cidr     = "10.4.0.0/14"   # 262k IPs
+  services_cidr = "10.8.0.0/20"   # 4096 IPs
+}
+```text
+```hcl Production
+module "vpc" {
+  source = "../../modules/gcp-vpc"
+
+  project_id   = var.project_id
+  name_prefix  = "mcp-prod"
+  region       = "us-central1"
+  cluster_name = "mcp-prod-gke"
+
+  # Network configuration
+  nodes_cidr    = "10.0.0.0/20"
+  pods_cidr     = "10.4.0.0/14"
+  services_cidr = "10.8.0.0/20"
+
+  # Production features
+  nat_ip_allocate_option = "MANUAL_ONLY"
+  nat_ip_count           = 2
+  enable_cloud_armor     = true
+  enable_flow_logs       = true
+  flow_logs_sampling     = 0.1
+
+  labels = {
+    environment = "production"
+    managed_by  = "terraform"
+  }
+}
+```xml
+</CodeGroup>
+
+**Outputs**: Network ID, subnet names, NAT IPs, firewall rule IDs
+
+<Card title="Complete VPC Module Documentation" icon="network-wired" href="https://github.com/vishnu2kmohan/mcp-server-langgraph/tree/main/terraform/modules/gcp-vpc">
+  1,088-line README with examples, best practices, and troubleshooting
+</Card>
+
+---
+
+#### 2. GKE Autopilot Module
+
+**Location**: `terraform/modules/gke-autopilot/`
+
+Creates fully managed GKE Autopilot cluster with:
+- Regional or zonal deployment
+- Workload Identity enabled by default
+- Binary Authorization support
+- GKE Security Posture Dashboard
+- Dataplane V2 (eBPF networking)
+- Network Policy enforcement
+- Managed Prometheus
+- Automated backups (GKE Backup)
+- Fleet registration (Anthos)
+
+<CodeGroup>
+```hcl Basic
+module "gke" {
+  source = "../../modules/gke-autopilot"
+
+  project_id   = var.project_id
+  cluster_name = "mcp-prod-gke"
+  region       = "us-central1"
+
+  # Network from VPC module
+  network_name        = module.vpc.network_name
+  subnet_name         = module.vpc.nodes_subnet_name
+  pods_range_name     = module.vpc.pods_range_name
+  services_range_name = module.vpc.services_range_name
+
+  regional_cluster = true
+  release_channel  = "STABLE"
+}
+```text
+```hcl Production
+module "gke" {
+  source = "../../modules/gke-autopilot"
+
+  project_id   = var.project_id
+  cluster_name = "mcp-prod-gke"
+  region       = "us-central1"
+
+  # Network configuration
+  network_name        = module.vpc.network_name
+  subnet_name         = module.vpc.nodes_subnet_name
+  pods_range_name     = module.vpc.pods_range_name
+  services_range_name = module.vpc.services_range_name
+
+  # High availability
+  regional_cluster = true
+
+  # Security
+  enable_private_nodes        = true
+  enable_binary_authorization = true
+  enable_security_posture     = true
+  security_posture_mode       = "ENTERPRISE"
+
+  # Networking
+  enable_dataplane_v2   = true
+  enable_network_policy = true
+
+  # Observability
+  enable_managed_prometheus = true
+  monitoring_enabled_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
+
+  # Backup
+  enable_backup_plan     = true
+  backup_schedule_cron   = "0 2 * * *"
+  backup_retain_days     = 30
+
+  # Release channel
+  release_channel = "STABLE"
+
+  labels = {
+    environment = "production"
+  }
+}
+```xml
+</CodeGroup>
+
+**Key Features**:
+- **Pay-per-pod pricing**: 40-60% cost savings vs. Standard GKE
+- **Fully managed**: Google handles nodes, upgrades, scaling
+- **Security hardened**: CIS benchmark compliance out-of-box
+- **Auto-scaling**: VPA, HPA, cluster autoscaler included
+
+<Card title="Complete GKE Module Documentation" icon="dharmachakra" href="https://github.com/vishnu2kmohan/mcp-server-langgraph/tree/main/terraform/modules/gke-autopilot">
+  900-line README with Autopilot vs. Standard comparison, best practices, examples
+</Card>
+
+---
+
+#### 3. Cloud SQL PostgreSQL Module
+
+**Location**: `terraform/modules/cloudsql/`
+
+Creates highly available PostgreSQL database with:
+- Regional HA with automatic failover
+- Automated backups + point-in-time recovery (PITR)
+- Read replicas (cross-region support)
+- Query Insights (Performance Insights)
+- Private IP only (VPC integration)
+- Customer-managed encryption (CMEK) support
+- Pre-configured monitoring alerts
+
+```hcl
+module "cloudsql" {
+  source = "../../modules/cloudsql"
+
+  project_id  = var.project_id
+  name_prefix = "mcp-prod"
+  region      = "us-central1"
+
+  # PostgreSQL version
+  postgres_major_version = 15
+
+  # High availability
+  tier              = "db-custom-4-15360"  # 4 vCPU, 15 GB RAM
+  high_availability = true
+
+  # Storage
+  disk_type               = "PD_SSD"
+  disk_size_gb            = 100
+  enable_disk_autoresize  = true
+
+  # Network (private IP only)
+  vpc_network_self_link = module.vpc.network_self_link
+  enable_public_ip      = false
+  require_ssl           = true
+
+  # Backups
+  enable_backups                 = true
+  enable_point_in_time_recovery  = true
+  transaction_log_retention_days = 7
+  backup_retention_count         = 30
+
+  # Read replicas
+  read_replica_count   = 1
+  read_replica_regions = ["us-east1"]
+}
+```text
+**Supports PostgreSQL**: 11, 12, 13, 14, 15, 16
+
+---
+
+#### 4. Memorystore Redis Module
+
+**Location**: `terraform/modules/memorystore/`
+
+Creates highly available Redis cache with:
+- STANDARD_HA tier with automatic failover
+- Read replicas (up to 5)
+- RDB or AOF persistence
+- TLS encryption in transit
+- Redis AUTH password authentication
+- Cross-region replicas for DR
+
+```hcl
+module "memorystore" {
+  source = "../../modules/memorystore"
+
+  project_id  = var.project_id
+  name_prefix = "mcp-prod"
+  region      = "us-central1"
+
+  # High availability
+  tier           = "STANDARD_HA"
+  memory_size_gb = 5
+  redis_version  = "REDIS_7_0"
+
+  # Replicas
+  replica_count      = 1
+  read_replicas_mode = "READ_REPLICAS_ENABLED"
+
+  # Network
+  vpc_network_id = module.vpc.network_id
+
+  # Security
+  enable_transit_encryption = true
+  enable_auth               = true
+
+  # Persistence
+  enable_persistence  = true
+  persistence_mode    = "RDB"
+  rdb_snapshot_period = "TWELVE_HOURS"
+}
+```text
+**Memory Sizes**: 1-300 GB
+**Redis Versions**: 4.0, 5.0, 6.X, 7.0, 7.2
+
+---
+
+#### 5. Workload Identity Module
+
+**Location**: `terraform/modules/gke-workload-identity/`
+
+Creates IAM bindings for Kubernetes pods to use GCP service accounts securely (no credential files needed).
+
+```hcl
+module "workload_identity" {
+  source = "../../modules/gke-workload-identity"
+
+  project_id = var.project_id
+  namespace  = "mcp-production"
+
+  service_accounts = {
+    "mcp-server-sa" = {
+      gcp_sa_name  = "mcp-prod-app-sa"
+      display_name = "MCP Server Application SA"
+      roles = [
+        "roles/logging.logWriter",
+        "roles/monitoring.metricWriter",
+        "roles/cloudtrace.agent",
+      ]
+      cloudsql_access = true
+      secret_ids = [
+        "projects/PROJECT_ID/secrets/api-keys"
+      ]
+    }
+  }
+}
+```text
+**Features**:
+- Replaces service account key files (more secure)
+- Pod-level IAM permissions
+- Resource-specific access control
+- Auto-generated Kubernetes SA manifests
+
+---
+
+#### 6. Backend Setup Module
+
+**Location**: `terraform/backend-setup-gcp/`
+
+Creates GCS bucket for Terraform state management with:
+- Versioning enabled (10 versions retained)
+- Access logging to separate bucket
+- Encryption at rest
+- Lifecycle policies
+- Public access prevention
+
+```bash
+cd terraform/backend-setup-gcp
+
+cat > terraform.tfvars <<EOF
+project_id    = "your-project-id"
+region        = "us-central1"
+bucket_prefix = "mcp-langgraph"
+EOF
+
+terraform init
+terraform apply
+```text
+**One-time setup** per GCP project. Provides centralized state management with locking.
+
+---
+
+### Module Composition Example
+
+Here's how modules work together in a complete environment:
+
+```hcl
+## terraform/environments/gcp-prod/main.tf
+
+terraform {
+  backend "gcs" {
+    bucket = "mcp-langgraph-terraform-state-us-central1-abc123"
+    prefix = "env/prod"
+  }
+}
+
+## VPC Module
+module "vpc" {
+  source = "../../modules/gcp-vpc"
+
+  project_id   = var.project_id
+  name_prefix  = "mcp-prod"
+  region       = "us-central1"
+  cluster_name = "mcp-prod-gke"
+
+  nodes_cidr    = "10.0.0.0/20"
+  pods_cidr     = "10.4.0.0/14"
+  services_cidr = "10.8.0.0/20"
+
+  enable_private_service_connection = true
+}
+
+## GKE Module
+module "gke" {
+  source = "../../modules/gke-autopilot"
+
+  project_id   = var.project_id
+  cluster_name = "mcp-prod-gke"
+  region       = "us-central1"
+
+  # Use VPC outputs
+  network_name        = module.vpc.network_name
+  subnet_name         = module.vpc.nodes_subnet_name
+  pods_range_name     = module.vpc.pods_range_name
+  services_range_name = module.vpc.services_range_name
+
+  regional_cluster        = true
+  enable_private_nodes    = true
+  enable_security_posture = true
+  enable_dataplane_v2     = true
+}
+
+## Cloud SQL Module
+module "cloudsql" {
+  source = "../../modules/cloudsql"
+
+  project_id  = var.project_id
+  name_prefix = "mcp-prod"
+  region      = "us-central1"
+
+  tier              = "db-custom-4-15360"
+  high_availability = true
+
+  vpc_network_self_link = module.vpc.network_self_link
+  enable_public_ip      = false
+
+  depends_on = [module.vpc]
+}
+
+## Memorystore Module
+module "memorystore" {
+  source = "../../modules/memorystore"
+
+  project_id  = var.project_id
+  name_prefix = "mcp-prod"
+  region      = "us-central1"
+
+  tier           = "STANDARD_HA"
+  memory_size_gb = 5
+
+  vpc_network_id = module.vpc.network_id
+
+  depends_on = [module.vpc]
+}
+
+## Workload Identity Module
+module "workload_identity" {
+  source = "../../modules/gke-workload-identity"
+
+  project_id = var.project_id
+  namespace  = "mcp-production"
+
+  service_accounts = {
+    "mcp-server-sa" = {
+      gcp_sa_name     = "mcp-prod-app-sa"
+      roles           = ["roles/logging.logWriter"]
+      cloudsql_access = true
+    }
+  }
+
+  depends_on = [module.gke]
+}
+```text
+---
+
+### Environment Configurations
+
+#### Development (Cost-Optimized)
+
+**Location**: `terraform/environments/gcp-dev/`
+
+<CardGroup cols={2}>
+  <Card title="Configuration">
+    - **Cluster**: Zonal (single zone)
+    - **Cloud SQL**: db-custom-1-3840, no HA
+    - **Redis**: 1 GB BASIC tier
+    - **NAT**: Auto-allocated IPs
+    - **Flow Logs**: 10% sampling
+  </Card>
+  <Card title="Cost">
+    **$100-150/month**
+
+    50% cheaper than staging
+  </Card>
+</CardGroup>
+
+**Use case**: Feature development, testing, experimentation
+
+```bash
+cd terraform/environments/gcp-dev
+terraform init
+terraform apply
+```text
+---
+
+#### Staging (Production-Like)
+
+**Location**: `terraform/environments/gcp-staging/`
+
+<CardGroup cols={2}>
+  <Card title="Configuration">
+    - **Cluster**: Regional (3 zones)
+    - **Cloud SQL**: db-custom-2-7680, HA
+    - **Redis**: 3 GB STANDARD_HA
+    - **NAT**: Auto-allocated IPs
+    - **Monitoring**: Full alerts
+  </Card>
+  <Card title="Cost">
+    **$250-350/month**
+
+    Production-like for pre-release testing
+  </Card>
+</CardGroup>
+
+**Use case**: QA, integration testing, pre-production validation
+
+---
+
+#### Production (Enterprise-Grade)
+
+**Location**: `terraform/environments/gcp-prod/`
+
+<CardGroup cols={2}>
+  <Card title="Configuration">
+    - **Cluster**: Regional (3 zones), deletion protection
+    - **Cloud SQL**: db-custom-4-15360, HA + read replica
+    - **Redis**: 5 GB STANDARD_HA + replicas
+    - **NAT**: 2 static IPs (whitelisting)
+    - **Binary Auth**: Ready to enable
+    - **Backups**: Daily (30-day retention)
+  </Card>
+  <Card title="Cost">
+    **$880-1,275/month**
+
+    Enterprise HA with full observability
+
+    **With 3-year CUD**: $466/month (66% savings)
+  </Card>
+</CardGroup>
+
+**Use case**: Production traffic, customer-facing services
+
+<Accordion title="High Availability Features">
+  - 99.95% SLA from GKE regional cluster
+  - Automatic failover for Cloud SQL (2-3 min RTO)
+  - Automatic failover for Redis (1-2 min RTO)
+  - 3 pod replicas minimum (Pod Disruption Budget)
+  - Topology spread across zones
+  - Automated backups with 7-day PITR
+</Accordion>
+
+---
+
+### Module Features
+
+#### Variable Validation
+
+All modules include comprehensive input validation:
+
+```hcl
+variable "region" {
+  description = "GCP region"
+  type        = string
+
+  validation {
+    condition = contains([
+      "us-central1", "us-east1", "europe-west1", "asia-southeast1"
+    ], var.region)
+    error_message = "Region must be a valid GCP region."
+  }
+}
+```text
+#### Detailed Outputs
+
+Every module exports useful outputs for module composition:
+
+```hcl
+output "gke_network_config" {
+  value = {
+    network_name         = google_compute_network.main.name
+    subnet_name          = google_compute_subnetwork.nodes.name
+    pods_range_name      = "pods"
+    services_range_name  = "services"
+  }
+}
+```text
+#### Built-in Monitoring
+
+Modules include pre-configured Cloud Monitoring alerts:
+
+- GKE: Cluster upgrade available, high CPU
+- Cloud SQL: High CPU/memory/disk usage
+- Redis: High memory, high connections, instance down
+
+#### Security by Default
+
+All modules implement security best practices:
+- Private IPs only (no public access)
+- Encryption at rest and in transit
+- Customer-managed encryption key (CMEK) support
+- Network policies and firewall rules
+- Workload Identity integration
+
+---
+
+### Best Practices
+
+#### 1. Use Modules, Don't Fork
+
+<Warning>
+  **Don't copy module code**. Reference modules from a central location and customize via variables.
+</Warning>
+
+```hcl
+## ✅ Good - Reference module
+module "vpc" {
+  source = "../../modules/gcp-vpc"
+  # ... configuration
+}
+
+## ❌ Bad - Copying module code
+## (creates maintenance burden)
+```text
+#### 2. Pin Module Versions
+
+For stability, consider pinning to specific versions:
+
+```hcl
+module "vpc" {
+  source = "git::https://github.com/yourorg/terraform-modules.git//gcp-vpc?ref=v1.2.0"
+}
+```text
+#### 3. Use terraform.tfvars for Secrets
+
+Never commit sensitive values to Git:
+
+```hcl
+## terraform.tfvars (in .gitignore)
+project_id = "my-project"
+cloudsql_additional_users = {
+  "app_user" = {
+    password = "generated-password"
+  }
+}
+```text
+#### 4. Remote State for Teams
+
+Use GCS backend for collaboration:
+
+```hcl
+terraform {
+  backend "gcs" {
+    bucket = "team-terraform-state"
+    prefix = "mcp-server/prod"
+  }
+}
+```text
+#### 5. Module Dependencies
+
+Use `depends_on` when modules have dependencies:
+
+```hcl
+module "cloudsql" {
+  source = "../../modules/cloudsql"
+  # ...
+  vpc_network_self_link = module.vpc.network_self_link
+
+  # Ensure VPC is created first
+  depends_on = [module.vpc]
+}
+```text
+---
+
+### Common Tasks
+
+#### View Outputs
+
+```bash
+## All outputs
+terraform output
+
+## Specific output
+terraform output -raw cluster_name
+terraform output -json > outputs.json
+```sql
+#### Update Infrastructure
+
+```bash
+## Make changes to terraform.tfvars or variables
+
+## Preview changes
+terraform plan
+
+## Apply changes
+terraform apply
+```text
+#### Import Existing Resources
+
+```bash
+terraform import module.gke.google_container_cluster.autopilot \
+  projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_NAME
+```text
+#### Destroy Environment
+
+<Warning>
+  **Caution**: This destroys all infrastructure. Use only for dev/test environments.
+</Warning>
+
+```bash
+## Disable deletion protection first
+## Edit terraform.tfvars:
+## enable_deletion_protection = false
+
+terraform apply  # Remove protection
+terraform destroy
+```text
+---
+
+### Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: Quota Exceeded">
+    **Issue**: GCP project quota limits exceeded
+
+    **Solution**:
+    ```bash
+    # Check quotas
+    gcloud compute project-info describe \
+      --project=PROJECT_ID \
+      --format="table(quotas:format='table(metric,limit,usage)')"
+
+    # Request quota increase via Console or:
+    gcloud alpha compute regions describe REGION \
+      --format="yaml(quotas)"
+    ```text
+    Common quotas to increase:
+    - CPUs: 100+
+    - In-use IP addresses: 50+
+    - Persistent disk SSD: 1000 GB+
+  </Accordion>
+
+  <Accordion title="Error: API Not Enabled">
+    **Issue**: Required API not enabled
+
+    **Solution**:
+    ```bash
+    # Enable all required APIs
+    gcloud services enable \
+      container.googleapis.com \
+      compute.googleapis.com \
+      sqladmin.googleapis.com \
+      redis.googleapis.com \
+      --project=PROJECT_ID
+    ```xml
+  </Accordion>
+
+  <Accordion title="State Lock Errors">
+    **Issue**: Terraform state locked
+
+    **Solution**:
+    GCS provides automatic state locking. If stuck:
+    ```bash
+    # Check for running Terraform processes
+    ps aux | grep terraform
+
+    # Force unlock (use with caution)
+    terraform force-unlock LOCK_ID
+    ```xml
+  </Accordion>
+
+  <Accordion title="Module Not Found">
+    **Issue**: `Module not found` error
+
+    **Solution**:
+    Ensure module paths are correct. Modules use relative paths:
+    ```hcl
+    module "vpc" {
+      source = "../../modules/gcp-vpc"  # Two levels up from environments/
+    }
+    ```xml
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### Module Development
+
+Want to create custom modules or extend existing ones?
+
+#### Module Structure
+
+```
+terraform/modules/my-module/
+├── main.tf          # Resources
+├── variables.tf     # Input variables with validation
+├── outputs.tf       # Output values
+├── versions.tf      # Provider requirements
+└── README.md        # Documentation with examples
+```text
+#### Module Template
+
+```hcl
+## main.tf
+locals {
+  common_labels = merge(
+    var.labels,
+    {
+      managed_by = "terraform"
+      module     = "my-module"
+    }
+  )
+}
+
+resource "google_resource" "main" {
+  name    = var.name
+  project = var.project_id
+  region  = var.region
+
+  labels = local.common_labels
+}
+
+## variables.tf
+variable "project_id" {
+  description = "GCP project ID"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]$", var.project_id))
+    error_message = "Invalid project ID format."
+  }
+}
+
+## outputs.tf
+output "resource_id" {
+  description = "ID of the created resource"
+  value       = google_resource.main.id
+}
+```
+
+---
+
+### Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Backend Setup" icon="database" href="/deployment/infrastructure/backend-setup">
+    Terraform state backend configuration
+  </Card>
+  <Card title="Multi-Environment Strategy" icon="layer-group" href="/deployment/infrastructure/multi-environment">
+    Dev, staging, production workflows
+  </Card>
+  <Card title="GKE Production Deployment" icon="rocket" href="/deployment/kubernetes/gke-production">
+    Complete production deployment guide
+  </Card>
+  <Card title="Operations Runbooks" icon="book" href="/deployment/operations/gke-runbooks">
+    Day-2 operations and troubleshooting
+  </Card>
+</CardGroup>
+
+---
+
+### Additional Resources
+
+<Card title="Comprehensive Module Documentation" icon="book-open">
+  Each module includes a detailed README (500-1,000+ lines) with:
+  - Complete variable reference
+  - Output documentation
+  - Usage examples
+  - Best practices
+  - Troubleshooting guides
+
+  See: [terraform/modules/](https://github.com/vishnu2kmohan/mcp-server-langgraph/tree/main/terraform/modules)
+</Card>
+
+For questions or issues, consult the module READMEs or [open an issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues).

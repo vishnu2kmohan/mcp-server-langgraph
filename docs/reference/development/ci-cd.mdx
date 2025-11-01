@@ -5,11 +5,9 @@ icon: 'code'
 ---
 
 
-# CI/CD Pipeline Documentation
-
 This document describes the continuous integration and continuous deployment (CI/CD) pipeline for the LangGraph MCP Agent project.
 
-## Table of Contents
+### Table of Contents
 
 - [Overview](#overview)
 - [Pipeline Architecture](#pipeline-architecture)
@@ -22,7 +20,7 @@ This document describes the continuous integration and continuous deployment (CI
 - [Secrets Management](#secrets-management)
 - [Troubleshooting](#troubleshooting)
 
-## Overview
+### Overview
 
 The CI/CD pipeline is implemented using GitHub Actions and provides:
 
@@ -33,7 +31,7 @@ The CI/CD pipeline is implemented using GitHub Actions and provides:
 - **Automated Deployments**: Environment-specific deployment workflows
 - **Rollback Capability**: Quick rollback to previous versions
 
-### Pipeline Workflow
+#### Pipeline Workflow
 
 ```mermaid
 flowchart TB
@@ -56,13 +54,13 @@ flowchart TB
     style parallel fill:#2d3748,stroke:#4a5568
 ```
 
-## Pipeline Architecture
+### Pipeline Architecture
 
-### GitHub Actions Workflow File
+#### GitHub Actions Workflow File
 
 **Location**: `.github/workflows/ci.yaml`
 
-### Jobs
+#### Jobs
 
 1. **test**: Runs pytest with unit tests
 2. **lint**: Runs flake8 and mypy
@@ -71,9 +69,9 @@ flowchart TB
 5. **build-and-push**: Builds and pushes Docker images
 6. **deploy**: Deploys to target environment (main branch only)
 
-## GitHub Actions Workflows
+### GitHub Actions Workflows
 
-### Main CI Workflow
+#### Main CI Workflow
 
 ```yaml
 name: CI/CD Pipeline
@@ -89,7 +87,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 ```
 
-#### Test Job
+##### Test Job
 
 ```yaml
 test:
@@ -123,7 +121,7 @@ test:
 - `ENABLE_METRICS=false`: Disables metrics collection
 - `ENABLE_CONSOLE_EXPORT=false`: Disables console export
 
-#### Lint Job
+##### Lint Job
 
 ```yaml
 lint:
@@ -155,7 +153,7 @@ lint:
 - `flake8`: Python syntax errors and undefined names
 - `mypy`: Type checking (non-blocking)
 
-#### Security Check Job
+##### Security Check Job
 
 ```yaml
 security-check:
@@ -179,9 +177,9 @@ security-check:
 
 **Scanner**: Bandit with low-low severity threshold
 
-## Deployment Validation
+### Deployment Validation
 
-### Validate Deployments Job
+#### Validate Deployments Job
 
 ```yaml
 validate-deployments:
@@ -236,7 +234,7 @@ validate-deployments:
 3. **Helm Chart**: Linting and template rendering
 4. **Kustomize Overlays**: Validation for dev, staging, and production
 
-### Validation Script
+#### Validation Script
 
 **Location**: `scripts/validation/validate_deployments.py`
 
@@ -264,9 +262,9 @@ python3 scripts/validation/validate_deployments.py
 All validations passed!
 ```
 
-## Build and Push
+### Build and Push
 
-### Docker Image Build
+#### Docker Image Build
 
 ```yaml
 build-and-push:
@@ -326,7 +324,7 @@ build-and-push:
 - `v2.1.0`: Semantic version tags
 - `sha-abc1234`: Commit SHA tags
 
-## Software Bill of Materials (SBOM)
+### Software Bill of Materials (SBOM)
 
 Every release automatically generates an SBOM for supply chain security:
 
@@ -336,10 +334,10 @@ Every release automatically generates an SBOM for supply chain security:
 
 **Usage:**
 ```bash
-# Download SBOM from latest release
+## Download SBOM from latest release
 gh release download v2.1.0 --pattern 'sbom-*.spdx.json'
 
-# Analyze with tools
+## Analyze with tools
 grype sbom:sbom-linux-amd64.spdx.json
 syft sbom-linux-amd64.spdx.json -o table
 ```
@@ -350,9 +348,9 @@ syft sbom-linux-amd64.spdx.json -o table
 - License compliance
 - Security audits
 
-## Testing Strategy
+### Testing Strategy
 
-### Test Pyramid
+#### Test Pyramid
 
 ```mermaid
 flowchart BT
@@ -368,39 +366,39 @@ flowchart BT
     style C fill:#ed8936,stroke:#c05621,stroke-width:1px
 ```
 
-### Test Execution
+#### Test Execution
 
 **Local Testing**:
 ```bash
-# Unit tests only
+## Unit tests only
 make test-unit
 
-# All automated tests
+## All automated tests
 make test
 
-# With coverage
+## With coverage
 make test-coverage
 
-# Property-based tests
+## Property-based tests
 make test-property
 
-# Benchmark tests
+## Benchmark tests
 pytest -m benchmark -v --benchmark-only
 
-# Mutation tests (slow!)
+## Mutation tests (slow!)
 make test-mutation
 ```
 
 **CI Testing**:
 ```bash
-# Exact CI command
+## Exact CI command
 ENABLE_TRACING=false \
 ENABLE_METRICS=false \
 ENABLE_CONSOLE_EXPORT=false \
 pytest -m unit --tb=line -q
 ```
 
-### Test Markers
+#### Test Markers
 
 - `unit`: Fast, isolated unit tests
 - `integration`: Tests requiring external services
@@ -410,7 +408,7 @@ pytest -m unit --tb=line -q
 - `benchmark`: Performance benchmarks
 - `mutation`: Mutation testing (weekly schedule)
 
-### Mutation Testing
+#### Mutation Testing
 
 **Purpose:** Measure test effectiveness
 
@@ -418,10 +416,10 @@ pytest -m unit --tb=line -q
 
 **Command:**
 ```bash
-# Local execution
+## Local execution
 make test-mutation
 
-# Or directly
+## Or directly
 mutmut run --paths-to-mutate=src/mcp_server_langgraph/
 mutmut results
 mutmut html  # Open html/index.html
@@ -429,7 +427,7 @@ mutmut html  # Open html/index.html
 
 **Target Score:** 80%+ mutation kills
 
-### Benchmark Testing
+#### Benchmark Testing
 
 **Purpose:** Track performance regressions
 
@@ -444,16 +442,16 @@ mutmut html  # Open html/index.html
 
 **Baseline Tracking:**
 ```bash
-# Run benchmarks
+## Run benchmarks
 pytest -m benchmark -v --benchmark-only --benchmark-autosave
 
-# Compare against baseline
+## Compare against baseline
 pytest -m benchmark --benchmark-compare
 ```
 
-## Deployment Procedures
+### Deployment Procedures
 
-### Environment Strategy
+#### Environment Strategy
 
 ```
 Development → Staging → Production
@@ -462,7 +460,7 @@ Development → Staging → Production
    (dev)     (staging)  (release)
 ```
 
-### Development Deployment
+#### Development Deployment
 
 **Trigger**: Automatic on push to `develop` branch (manual gate)
 
@@ -479,7 +477,7 @@ make deploy-dev
 - Replicas: 1
 - Resources: Low limits
 
-### Staging Deployment
+#### Staging Deployment
 
 **Trigger**: Manual deployment after dev validation
 
@@ -497,7 +495,7 @@ make deploy-staging
 - Resources: Medium limits
 - Full observability enabled
 
-### Production Deployment
+#### Production Deployment
 
 **Trigger**: Manual deployment with confirmation
 
@@ -521,9 +519,9 @@ make deploy-production
 - Rolling update strategy
 - Pod disruption budgets
 
-## Rollback Procedures
+### Rollback Procedures
 
-### Quick Rollback Commands
+#### Quick Rollback Commands
 
 **Development**:
 ```bash
@@ -540,38 +538,38 @@ make deploy-rollback-staging
 make deploy-rollback-production
 ```
 
-### Manual Rollback
+#### Manual Rollback
 
 **Kubernetes Deployment**:
 ```bash
-# List rollout history
+## List rollout history
 kubectl rollout history deployment/mcp-server-langgraph -n mcp-server-langgraph
 
-# Rollback to previous version
+## Rollback to previous version
 kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
 
-# Rollback to specific revision
+## Rollback to specific revision
 kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph --to-revision=3
 
-# Monitor rollback
+## Monitor rollback
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 
 **Helm Rollback**:
 ```bash
-# List release history
+## List release history
 helm history mcp-server-langgraph -n mcp-server-langgraph
 
-# Rollback to previous release
+## Rollback to previous release
 helm rollback mcp-server-langgraph -n mcp-server-langgraph
 
-# Rollback to specific revision
+## Rollback to specific revision
 helm rollback mcp-server-langgraph 2 -n mcp-server-langgraph
 ```
 
-## Secrets Management
+### Secrets Management
 
-### GitHub Secrets
+#### GitHub Secrets
 
 Required secrets for CI/CD:
 
@@ -580,7 +578,7 @@ Required secrets for CI/CD:
 | `GITHUB_TOKEN` | Container registry authentication | build-and-push |
 | `KUBECONFIG` | Kubernetes cluster access | deploy |
 
-### Kubernetes Secrets
+#### Kubernetes Secrets
 
 Created manually or via secrets operator:
 
@@ -597,7 +595,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
   -n mcp-server-langgraph
 ```
 
-### Secret Rotation
+#### Secret Rotation
 
 1. Update secret in Kubernetes
 2. Trigger rolling restart:
@@ -605,9 +603,9 @@ kubectl create secret generic mcp-server-langgraph-secrets \
    kubectl rollout restart deployment/mcp-server-langgraph -n mcp-server-langgraph
    ```
 
-## Troubleshooting
+### Troubleshooting
 
-### Build Failures
+#### Build Failures
 
 **Issue**: Docker build fails
 
@@ -617,7 +615,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 3. Check dependency installation
 4. Review build logs in GitHub Actions
 
-### Test Failures
+#### Test Failures
 
 **Issue**: Tests fail in CI but pass locally
 
@@ -627,7 +625,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 3. Verify test isolation
 4. Review CI logs for specific errors
 
-### Deployment Validation Failures
+#### Deployment Validation Failures
 
 **Issue**: Validation script reports errors
 
@@ -644,7 +642,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
    kubectl kustomize deployments/kustomize/overlays/dev
    ```
 
-### Deployment Failures
+#### Deployment Failures
 
 **Issue**: Deployment fails or pods crash
 
@@ -668,7 +666,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
    kubectl top pods -n mcp-server-langgraph
    ```
 
-### Rollback Issues
+#### Rollback Issues
 
 **Issue**: Rollback doesn't restore service
 
@@ -681,7 +679,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 3. Verify configuration compatibility
 4. Review pod events for errors
 
-## Best Practices
+### Best Practices
 
 1. **Always test locally before pushing**: Run `make test` and `make validate-all`
 2. **Use feature branches**: Never commit directly to `main`
@@ -702,7 +700,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 17. **Track benchmarks**: Monitor performance trends over time
 18. **Leverage concurrency controls**: Prevent duplicate workflow runs
 
-## References
+### References
 
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [Docker Build Documentation](https://docs.docker.com/engine/reference/commandline/build/)

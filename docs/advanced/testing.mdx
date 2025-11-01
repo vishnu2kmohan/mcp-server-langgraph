@@ -4,7 +4,7 @@ description: 'Comprehensive testing guide for the MCP Server with LangGraph'
 icon: 'vial'
 ---
 
-## Overview
+### Overview
 
 Comprehensive testing ensures reliability, maintainability, and confidence in deployments. This guide covers unit testing, integration testing, property-based testing, load testing, and security testing.
 
@@ -12,7 +12,7 @@ Comprehensive testing ensures reliability, maintainability, and confidence in de
 We aim for **>80% code coverage** with a multi-layered testing approach including unit, integration, property-based, and end-to-end tests.
 </Info>
 
-## Testing Pyramid
+### Testing Pyramid
 
 ```mermaid
 graph BT
@@ -51,9 +51,9 @@ graph BT
   </Card>
 </CardGroup>
 
-## Test Organization
+### Test Organization
 
-### Directory Structure
+#### Directory Structure
 
 ```
 tests/
@@ -91,10 +91,10 @@ tests/
 └── conftest.py           # Shared fixtures
 ```
 
-### Test Markers
+#### Test Markers
 
 ```python
-# conftest.py
+## conftest.py
 import pytest
 
 def pytest_configure(config):
@@ -108,25 +108,25 @@ def pytest_configure(config):
 
 **Usage**:
 ```bash
-# Run unit tests only
+## Run unit tests only
 pytest -m unit
 
-# Run integration tests
+## Run integration tests
 pytest -m integration
 
-# Run all except slow tests
+## Run all except slow tests
 pytest -m "not slow"
 
-# Run security tests
+## Run security tests
 pytest -m security
 ```
 
-## Unit Testing
+### Unit Testing
 
-### Writing Unit Tests
+#### Writing Unit Tests
 
 ```python
-# tests/unit/test_auth.py
+## tests/unit/test_auth.py
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from src.auth.middleware import AuthMiddleware
@@ -191,10 +191,10 @@ async def test_multiple_users(auth_middleware, user_id, expires_in):
     assert verified == user_id
 ```
 
-### Mocking Dependencies
+#### Mocking Dependencies
 
 ```python
-# tests/unit/test_agent.py
+## tests/unit/test_agent.py
 import pytest
 from unittest.mock import AsyncMock, patch
 from src.agent.langgraph_agent import LangGraphAgent
@@ -248,10 +248,10 @@ async def test_agent_with_authorization(mock_openfga_class, mock_llm):
     mock_openfga.check_permission.assert_called_once()
 ```
 
-### Testing Async Code
+#### Testing Async Code
 
 ```python
-# tests/unit/test_session.py
+## tests/unit/test_session.py
 import pytest
 from src.session.redis_session import RedisSessionStore
 from unittest.mock import AsyncMock
@@ -309,12 +309,12 @@ async def test_session_delete(mock_redis):
     mock_redis.delete.assert_called_once_with("session:session_123")
 ```
 
-## Integration Testing
+### Integration Testing
 
-### Setup Test Environment
+#### Setup Test Environment
 
 ```python
-# tests/conftest.py
+## tests/conftest.py
 import pytest
 import asyncpg
 from redis.asyncio import Redis
@@ -356,10 +356,10 @@ async def redis_client(redis_container):
         await client.close()
 ```
 
-### Integration Tests
+#### Integration Tests
 
 ```python
-# tests/integration/test_database.py
+## tests/integration/test_database.py
 import pytest
 
 
@@ -403,10 +403,10 @@ async def test_redis_operations(redis_client):
     assert value is None
 ```
 
-### API Integration Tests
+#### API Integration Tests
 
 ```python
-# tests/integration/test_api.py
+## tests/integration/test_api.py
 import pytest
 from httpx import AsyncClient
 from src.main import app
@@ -451,12 +451,12 @@ async def test_chat_endpoint(client):
     assert isinstance(data["response"], str)
 ```
 
-## Property-Based Testing
+### Property-Based Testing
 
-### Using Hypothesis
+#### Using Hypothesis
 
 ```python
-# tests/property/test_auth_properties.py
+## tests/property/test_auth_properties.py
 import pytest
 from hypothesis import given, strategies as st
 from src.auth.middleware import AuthMiddleware
@@ -492,7 +492,7 @@ async def test_token_with_various_expirations(user_id, expires_in):
     assert verified == user_id
 
 
-# tests/property/test_llm_properties.py
+## tests/property/test_llm_properties.py
 from hypothesis import given, strategies as st
 from src.llm.factory import LLMFactory
 
@@ -515,12 +515,12 @@ def test_llm_factory_properties(provider, temperature, max_tokens):
     assert hasattr(llm, 'ainvoke')
 ```
 
-## Load Testing
+### Load Testing
 
-### Using Locust
+#### Using Locust
 
 ```python
-# tests/load/locustfile.py
+## tests/load/locustfile.py
 from locust import HttpUser, task, between
 import random
 
@@ -569,21 +569,21 @@ class MCPServerUser(HttpUser):
 
 **Run load test**:
 ```bash
-# Install Locust
+## Install Locust
 pip install locust
 
-# Run test
+## Run test
 locust -f tests/load/locustfile.py \
   --host=http://localhost:8000 \
   --users=100 \
   --spawn-rate=10 \
   --run-time=5m
 
-# Open web UI
+## Open web UI
 open http://localhost:8089
 ```
 
-### Using k6
+#### Using k6
 
 ```javascript
 // tests/load/k6_script.js
@@ -640,22 +640,22 @@ export default function () {
 
 **Run k6 test**:
 ```bash
-# Install k6
+## Install k6
 brew install k6
 
-# Run test
+## Run test
 k6 run tests/load/k6_script.js
 
-# Run with cloud output
+## Run with cloud output
 k6 run --out cloud tests/load/k6_script.js
 ```
 
-## Security Testing
+### Security Testing
 
-### SQL Injection Tests
+#### SQL Injection Tests
 
 ```python
-# tests/security/test_injection.py
+## tests/security/test_injection.py
 import pytest
 from httpx import AsyncClient
 
@@ -698,10 +698,10 @@ async def test_xss_protection(client, token, xss_input):
     assert "onerror=" not in response.text
 ```
 
-### Authentication Tests
+#### Authentication Tests
 
 ```python
-# tests/security/test_auth_security.py
+## tests/security/test_auth_security.py
 import pytest
 
 
@@ -738,12 +738,12 @@ async def test_expired_token_rejected(client):
     assert response.status_code == 401
 ```
 
-## Continuous Integration
+### Continuous Integration
 
-### GitHub Actions Workflow
+#### GitHub Actions Workflow
 
 ```yaml
-# .github/workflows/test.yml
+## .github/workflows/test.yml
 name: Tests
 
 on:
@@ -852,28 +852,28 @@ jobs:
           output: 'trivy-results.sarif'
 ```
 
-## Test Coverage
+### Test Coverage
 
-### Measuring Coverage
+#### Measuring Coverage
 
 ```bash
-# Run with coverage
+## Run with coverage
 pytest --cov=src --cov-report=html --cov-report=term
 
-# View HTML report
+## View HTML report
 open htmlcov/index.html
 
-# Coverage by file
+## Coverage by file
 pytest --cov=src --cov-report=term-missing
 
-# Fail if coverage < 80%
+## Fail if coverage < 80%
 pytest --cov=src --cov-fail-under=80
 ```
 
-### Coverage Configuration
+#### Coverage Configuration
 
 ```ini
-# .coveragerc
+## .coveragerc
 [run]
 source = src
 omit =
@@ -895,7 +895,7 @@ precision = 2
 show_missing = True
 ```
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Test Naming" icon="signature">
@@ -963,7 +963,7 @@ show_missing = True
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Development Setup" icon="code" href="/advanced/development-setup">

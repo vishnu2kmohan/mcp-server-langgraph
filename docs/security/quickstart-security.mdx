@@ -5,30 +5,28 @@ icon: 'shield'
 ---
 
 
-# Security Remediation - Quick Reference
+### 🚨 CRITICAL: Required Before Production
 
-## 🚨 CRITICAL: Required Before Production
-
-### 1. Set JWT Secret (REQUIRED)
+#### 1. Set JWT Secret (REQUIRED)
 ```bash
 export JWT_SECRET_KEY="$(openssl rand -base64 32)"
 ```
 **Without this:** Service will NOT start (fail-closed security)
 
-### 2. Set HIPAA Secret (if using HIPAA controls)
+#### 2. Set HIPAA Secret (if using HIPAA controls)
 ```bash
 export HIPAA_INTEGRITY_SECRET="$(openssl rand -base64 32)"
 ```
 
-### 3. Set Encryption Key (if enabling encryption)
+#### 3. Set Encryption Key (if enabling encryption)
 ```bash
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-# Copy output to CONTEXT_ENCRYPTION_KEY
+## Copy output to CONTEXT_ENCRYPTION_KEY
 ```
 
 ---
 
-## 💰 Cost Optimization (OPTIONAL)
+### 💰 Cost Optimization (OPTIONAL)
 
 Add to `.env` or `config.py`:
 ```bash
@@ -46,7 +44,7 @@ verification_model_max_tokens=1000
 
 ---
 
-## 🔒 Data Security (OPTIONAL - for regulated workloads)
+### 🔒 Data Security (OPTIONAL - for regulated workloads)
 
 ```bash
 enable_context_encryption=true
@@ -56,19 +54,19 @@ enable_auto_deletion=true
 
 ---
 
-## ✅ Quick Test
+### ✅ Quick Test
 
 ```bash
-# Should start successfully
+## Should start successfully
 python -m mcp_server_langgraph.mcp.server_stdio
 
-# Should FAIL with clear error
+## Should FAIL with clear error
 unset JWT_SECRET_KEY && python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
 ---
 
-## 📊 What Changed
+### 📊 What Changed
 
 | Priority | Issue | Fixed | Impact |
 |----------|-------|-------|--------|
@@ -79,7 +77,7 @@ unset JWT_SECRET_KEY && python -m mcp_server_langgraph.mcp.server_stdio
 
 ---
 
-## 🆘 Emergency Contacts
+### 🆘 Emergency Contacts
 
 - Full Guide: `SECURITY_REMEDIATION.md`
 - Config Reference: `src/mcp_server_langgraph/core/config.py`

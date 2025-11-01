@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 6. Pluggable Session Storage Archite
 icon: 'file-lines'
 ---
 
-# 6. Pluggable Session Storage Architecture
-
 Date: 2025-10-13
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 Production authentication systems require stateful session management to track user sessions, enable session revocation, and provide sliding expiration windows. However, different deployment environments have different requirements:
 
@@ -33,14 +31,14 @@ Additionally, production session management requires:
 - **Sliding Expiration**: Extend session on activity (UX improvement)
 - **Bulk Operations**: Revoke all user sessions (security incident response)
 
-## Decision
+### Decision
 
 We will implement a **pluggable session storage architecture** with an abstract base class and multiple concrete implementations.
 
-### Architecture
+#### Architecture
 
 ```python
-# Abstract interface
+## Abstract interface
 class SessionStore(ABC):
     @abstractmethod
     async def create_session(self, user_id: str, ...) -> SessionData: ...
@@ -53,34 +51,31 @@ class SessionStore(ABC):
     @abstractmethod
     async def get_user_sessions(self, user_id: str) -> List[SessionData]: ...
 
-# Implementations
+## Implementations
 class InMemorySessionStore(SessionStore):  # Development, testing
 class RedisSessionStore(SessionStore):      # Production
-```
-
-### Factory Pattern
+```text
+#### Factory Pattern
 
 ```python
 def create_session_store(backend: Literal["memory", "redis"]) -> SessionStore:
     if backend == "redis":
         return RedisSessionStore(...)
     return InMemorySessionStore()
-```
-
-### Configuration
+```text
+#### Configuration
 
 ```python
-# Environment variables
+## Environment variables
 SESSION_BACKEND=redis  # or "memory"
 REDIS_URL=redis://localhost:6379/0
 SESSION_TTL_SECONDS=3600
 SESSION_SLIDING_WINDOW=true
 SESSION_MAX_CONCURRENT=5
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive Consequences
+#### Positive Consequences
 
 - **Flexibility**: Easy to switch backends via configuration
 - **Development Speed**: No Redis dependency for local development
@@ -89,21 +84,21 @@ SESSION_MAX_CONCURRENT=5
 - **Extensibility**: New backends (PostgreSQL, DynamoDB) add easily
 - **No Vendor Lock-in**: Abstract interface prevents Redis coupling
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Complexity**: Multiple implementations to maintain
 - **Testing Burden**: Each backend requires separate test coverage
 - **Feature Parity**: Must ensure features work across all backends
 - **Interface Leakage**: Backend-specific features may not fit abstraction
 
-### Neutral Consequences
+#### Neutral Consequences
 
 - **Performance Variance**: InMemory faster than Redis (acceptable trade-off)
 - **Learning Curve**: Developers must understand factory pattern
 
-## Alternatives Considered
+### Alternatives Considered
 
-### 1. Redis Only (Direct Integration)
+#### 1. Redis Only (Direct Integration)
 
 **Description**: Require Redis for all environments, use redis-py directly
 
@@ -120,7 +115,7 @@ SESSION_MAX_CONCURRENT=5
 
 **Why Rejected**: Development friction and testability concerns outweigh simplicity benefits
 
-### 2. JWT-Only Stateless Sessions
+#### 2. JWT-Only Stateless Sessions
 
 **Description**: Store all session data in JWT token, no server-side storage
 
@@ -137,7 +132,7 @@ SESSION_MAX_CONCURRENT=5
 
 **Why Rejected**: Security requirements (revocation, limits) mandate server-side sessions
 
-### 3. Database-Backed Sessions (PostgreSQL)
+#### 3. Database-Backed Sessions (PostgreSQL)
 
 **Description**: Store sessions in existing PostgreSQL database
 
@@ -154,7 +149,7 @@ SESSION_MAX_CONCURRENT=5
 
 **Why Rejected**: Performance concerns for high-frequency session operations
 
-### 4. Filesystem-Based Sessions
+#### 4. Filesystem-Based Sessions
 
 **Description**: Store sessions as files on disk
 
@@ -171,9 +166,9 @@ SESSION_MAX_CONCURRENT=5
 
 **Why Rejected**: Does not support horizontal scaling (production requirement)
 
-## Implementation Details
+### Implementation Details
 
-### InMemorySessionStore
+#### InMemorySessionStore
 
 ```python
 class InMemorySessionStore(SessionStore):
@@ -187,8 +182,7 @@ class InMemorySessionStore(SessionStore):
         self._sessions[session.session_id] = session
         self._user_sessions[user_id].add(session.session_id)
         return session
-```
-
+```text
 **Features**:
 - Dictionary-based storage (O(1) lookups)
 - Background cleanup thread for expired sessions
@@ -197,7 +191,7 @@ class InMemorySessionStore(SessionStore):
 
 **Use Cases**: Development, unit tests, single-instance deployments
 
-### RedisSessionStore
+#### RedisSessionStore
 
 ```python
 class RedisSessionStore(SessionStore):
@@ -214,8 +208,7 @@ class RedisSessionStore(SessionStore):
         )
         await self._redis.sadd(f"user_sessions:{user_id}", session.session_id)
         return session
-```
-
+```text
 **Features**:
 - Automatic expiration with Redis TTL
 - Distributed (multiple instances share state)
@@ -225,7 +218,7 @@ class RedisSessionStore(SessionStore):
 
 **Use Cases**: Production multi-instance deployments
 
-### Concurrent Session Limit Enforcement
+#### Concurrent Session Limit Enforcement
 
 ```python
 async def create_session(self, user_id: str, max_concurrent: int = 5) -> SessionData:
@@ -237,9 +230,8 @@ async def create_session(self, user_id: str, max_concurrent: int = 5) -> Session
 
     # Create new session
     return await self._create_session_internal(user_id)
-```
-
-### Sliding Expiration Window
+```text
+#### Sliding Expiration Window
 
 ```python
 async def get_session(self, session_id: str, sliding_window: bool = True) -> SessionData:
@@ -253,9 +245,8 @@ async def get_session(self, session_id: str, sliding_window: bool = True) -> Ses
         await self._redis.expire(f"session:{session_id}", ttl_seconds)
 
     return session
-```
-
-## Performance Characteristics
+```sql
+### Performance Characteristics
 
 | Operation | InMemory | Redis (Local) | Redis (Network) |
 |-----------|----------|---------------|-----------------|
@@ -267,7 +258,7 @@ async def get_session(self, session_id: str, sliding_window: bool = True) -> Ses
 
 **Acceptable Trade-off**: Redis network latency (5-20ms) vs scalability and persistence benefits
 
-## Integration Points
+### Integration Points
 
 **AuthMiddleware** (`src/mcp_server_langgraph/auth/middleware.py`):
 - Accepts `session_store: SessionStore` parameter
@@ -292,7 +283,7 @@ def create_session_store(backend: str = "memory") -> SessionStore:
     return InMemorySessionStore()
 ```
 
-## Testing Strategy
+### Testing Strategy
 
 **Unit Tests** (`tests/test_session.py`):
 - InMemorySessionStore: 17/17 tests passing (100%)
@@ -304,7 +295,7 @@ def create_session_store(backend: str = "memory") -> SessionStore:
 - Concurrent session limit enforcement
 - Sliding window expiration
 
-## Migration Path
+### Migration Path
 
 **Existing deployments**: No migration required (defaults to InMemory)
 
@@ -314,14 +305,14 @@ def create_session_store(backend: str = "memory") -> SessionStore:
 3. Configure Redis connection settings
 4. Restart application (existing InMemory sessions lost - acceptable)
 
-## Future Enhancements
+### Future Enhancements
 
 - PostgreSQL session backend (for applications already using PostgreSQL)
 - DynamoDB backend (for AWS serverless deployments)
 - Session encryption at rest (PII protection)
 - Session analytics (login patterns, security monitoring)
 
-## References
+### References
 
 - Implementation: `src/mcp_server_langgraph/auth/session.py:1-731`
 - Tests: `tests/test_session.py:1-687`

@@ -4,7 +4,7 @@ description: 'Send your first message to the MCP agent'
 icon: 'paper-plane'
 ---
 
-## Overview
+### Overview
 
 Let's send your first message to the MCP Server with LangGraph! This guide walks you through authentication, making a request, and understanding the response.
 
@@ -12,27 +12,26 @@ Let's send your first message to the MCP Server with LangGraph! This guide walks
 **Before you start**: Make sure you've completed the [Quick Start](/getting-started/quickstart) and have the services running.
 </Info>
 
-## Prerequisites
+### Prerequisites
 
 Verify services are running:
 
 ```bash
-# Check agent health
+## Check agent health
 curl http://localhost:8000/health
 
-# Expected response
+## Expected response
 {
   "status": "healthy",
   "service": "mcp-server-langgraph",
   "version": "2.1.0"
 }
-```
-
+```xml
 <Check>
 All services healthy? Let's make your first request!
 </Check>
 
-## Step-by-Step Tutorial
+### Step-by-Step Tutorial
 
 <Steps>
   <Step title="Get an Authentication Token">
@@ -47,7 +46,7 @@ All services healthy? Let's make your first request!
         # Get token for user 'alice'
         token = auth.create_token("alice", expires_in=3600)
         print(f"Token: {token}")
-        ```
+        ```xml
       </Tab>
 
       <Tab title="cURL">
@@ -56,7 +55,7 @@ All services healthy? Let's make your first request!
         TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
 
         echo "Token: $TOKEN"
-        ```
+        ```xml
       </Tab>
 
       <Tab title="JavaScript">
@@ -64,7 +63,7 @@ All services healthy? Let's make your first request!
         // In production, get token from your auth endpoint
         // For development, use a pre-generated token
         const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...";
-        ```
+        ```xml
       </Tab>
     </Tabs>
 
@@ -96,7 +95,7 @@ All services healthy? Let's make your first request!
         # Send request
         response = httpx.post(url, headers=headers, json=data)
         print(response.json())
-        ```
+        ```xml
       </Tab>
 
       <Tab title="cURL">
@@ -107,7 +106,7 @@ All services healthy? Let's make your first request!
           -d '{
             "query": "Hello! What can you help me with today?"
           }'
-        ```
+        ```xml
       </Tab>
 
       <Tab title="JavaScript">
@@ -125,7 +124,7 @@ All services healthy? Let's make your first request!
 
         const data = await response.json();
         console.log(data);
-        ```
+        ```xml
       </Tab>
     </Tabs>
   </Step>
@@ -146,8 +145,7 @@ All services healthy? Let's make your first request!
       "trace_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "authorized": true
     }
-    ```
-
+    ```sql
     <ResponseField name="content" type="string">
       The agent's response text
     </ResponseField>
@@ -195,7 +193,7 @@ All services healthy? Let's make your first request!
   </Step>
 </Steps>
 
-## Complete Example
+### Complete Example
 
 Here's a full working example:
 
@@ -232,15 +230,14 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
-
+```text
 ```bash complete_example.sh
 #!/bin/bash
 
-# Get token
+## Get token
 TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
 
-# Send request
+## Send request
 RESPONSE=$(curl -s -X POST http://localhost:8000/message \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -248,31 +245,30 @@ RESPONSE=$(curl -s -X POST http://localhost:8000/message \
     "query": "What is the capital of France?"
   }')
 
-# Parse response
+## Parse response
 echo "$RESPONSE" | python -m json.tool
 
-# Extract trace ID
+## Extract trace ID
 TRACE_ID=$(echo "$RESPONSE" | python -c "import sys, json; print(json.load(sys.stdin)['trace_id'])")
 echo ""
 echo "View trace: http://localhost:16686/trace/$TRACE_ID"
-```
+```xml
 </CodeGroup>
 
-## Common Use Cases
+### Common Use Cases
 
-### Simple Q&A
+#### Simple Q&A
 
 ```python
-# Ask a question
+## Ask a question
 response = httpx.post(url, headers=headers, json={
     "query": "Explain quantum computing in simple terms"
 })
-```
-
-### Multi-Turn Conversation
+```text
+#### Multi-Turn Conversation
 
 ```python
-# Conversation with context
+## Conversation with context
 conversation = [
     {"role": "user", "content": "I'm learning Python"},
     {"role": "assistant", "content": "Great! What would you like to know?"},
@@ -282,22 +278,20 @@ conversation = [
 response = httpx.post(url, headers=headers, json={
     "messages": conversation
 })
-```
-
-### Tool Usage
+```text
+#### Tool Usage
 
 ```python
-# Agent can use tools automatically
+## Agent can use tools automatically
 response = httpx.post(url, headers=headers, json={
     "query": "Search for the latest news about AI"
 })
-# Agent will invoke search tool and return results
-```
-
-### Streaming Responses
+## Agent will invoke search tool and return results
+```text
+#### Streaming Responses
 
 ```python
-# Get streaming response (SSE)
+## Get streaming response (SSE)
 async with httpx.AsyncClient() as client:
     async with client.stream(
         'POST',
@@ -307,61 +301,56 @@ async with httpx.AsyncClient() as client:
     ) as response:
         async for chunk in response.aiter_text():
             print(chunk, end='', flush=True)
-```
+```text
+### Error Handling
 
-## Error Handling
-
-### Authentication Errors
+#### Authentication Errors
 
 ```python
-# 401 Unauthorized
+## 401 Unauthorized
 {
   "error": "unauthorized",
   "message": "Invalid or expired token"
 }
-```
-
+```text
 **Solution**: Get a new token or check token expiration.
 
-### Authorization Errors
+#### Authorization Errors
 
 ```python
-# 403 Forbidden
+## 403 Forbidden
 {
   "error": "forbidden",
   "message": "User 'bob' is not authorized to execute 'tool:chat'"
 }
-```
-
+```text
 **Solution**: Check OpenFGA permissions. See [Authorization Guide](/getting-started/authorization).
 
-### Rate Limiting
+#### Rate Limiting
 
 ```python
-# 429 Too Many Requests
+## 429 Too Many Requests
 {
   "error": "rate_limit_exceeded",
   "message": "Rate limit exceeded. Try again in 60 seconds.",
   "retry_after": 60
 }
-```
-
+```text
 **Solution**: Implement exponential backoff or reduce request rate.
 
-### Server Errors
+#### Server Errors
 
 ```python
-# 500 Internal Server Error
+## 500 Internal Server Error
 {
   "error": "internal_error",
   "message": "LLM provider error: quota exceeded",
   "trace_id": "abc123..."
 }
-```
-
+```text
 **Solution**: Check trace in Jaeger, verify LLM API keys and quotas.
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Always Include Authorization" icon="lock">
@@ -371,7 +360,7 @@ async with httpx.AsyncClient() as client:
 
     # ❌ Bad: Missing authentication
     headers = {}
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Handle Errors Gracefully" icon="triangle-exclamation">
@@ -385,7 +374,7 @@ async with httpx.AsyncClient() as client:
         print(f"Details: {e.response.json()}")
     except httpx.RequestError as e:
         print(f"Request failed: {e}")
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Set Timeouts" icon="clock">
@@ -397,7 +386,7 @@ async with httpx.AsyncClient() as client:
         json=data,
         timeout=30.0  # 30 second timeout
     )
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Track Token Usage" icon="chart-line">
@@ -408,7 +397,7 @@ async with httpx.AsyncClient() as client:
         total_tokens += response['usage']['total_tokens']
 
     print(f"Total tokens used: {total_tokens}")
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Trace IDs for Debugging" icon="bug">
@@ -421,13 +410,13 @@ async with httpx.AsyncClient() as client:
         user="alice",
         tokens=result['usage']['total_tokens']
     )
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Testing Your Integration
+### Testing Your Integration
 
-### Unit Tests
+#### Unit Tests
 
 ```python
 import pytest
@@ -445,9 +434,8 @@ def test_agent_request():
         # Test your code
         result = send_agent_request("Hello")
         assert result['content'] == "Test response"
-```
-
-### Integration Tests
+```text
+#### Integration Tests
 
 ```python
 def test_agent_integration():
@@ -468,7 +456,7 @@ def test_agent_integration():
     assert result['authorized'] is True
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Authentication" icon="key" href="/getting-started/authentication">

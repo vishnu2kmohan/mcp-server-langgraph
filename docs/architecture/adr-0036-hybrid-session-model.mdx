@@ -5,15 +5,13 @@ icon: 'file-lines'
 ---
 
 
-# 36. Hybrid Session Model for Long-Running Tasks
-
 Date: 2025-01-28
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 JWT-based authentication (ADR-0032) uses short-lived access tokens (15 minutes) for security, but this conflicts with long-running tasks:
 - Batch ETL jobs running 6-12 hours
@@ -30,11 +28,11 @@ Challenges:
 
 Current system: Stateless JWTs only (no server-side sessions).
 
-## Decision
+### Decision
 
 Implement a **Hybrid Session Model** where standard users use stateless JWTs with client-side refresh, while service principals optionally use server-side sessions with automatic token refresh for long-running tasks.
 
-### Architecture
+#### Architecture
 
 **Mode 1: Stateless JWT (Default for Users)**:
 - 15-minute access tokens
@@ -48,7 +46,7 @@ Implement a **Hybrid Session Model** where standard users use stateless JWTs wit
 - Server-side automatic refresh before expiration
 - Session TTL: 30 days with sliding window
 
-### Hybrid Session Architecture Comparison
+#### Hybrid Session Architecture Comparison
 
 ```mermaid
 graph TB
@@ -93,9 +91,8 @@ graph TB
     style NoSession1 fill:#f0f0f0,stroke:#999,stroke-dasharray: 5 5
     style JWT1 fill:#ffffb3,stroke:#f39c12,stroke-width:2px
     style JWT2 fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-```
-
-### Session Lifecycle Flow
+```text
+#### Session Lifecycle Flow
 
 ```mermaid
 sequenceDiagram
@@ -141,9 +138,8 @@ sequenceDiagram
 
     Note over Redis: Automatic cleanup after 30 days of inactivity
 
-```
-
-### Core Principles
+```text
+#### Core Principles
 
 1. **JWT First**: Always use JWTs for authentication (not opaque session IDs)
 2. **Selective Sessions**: Only service principals use server-side sessions
@@ -152,54 +148,53 @@ sequenceDiagram
 5. **Instant Revocation**: Server-side sessions can be revoked immediately
 6. **Redis Storage**: Distributed session store for multi-replica support
 
-### Configuration
+#### Configuration
 
 ```bash
-# Session Mode
+## Session Mode
 AUTH_MODE=hybrid  # stateless for users, session for service principals
 SESSION_BACKEND=redis
 REDIS_URL=redis://localhost:6379/0
 
-# Service Principal Sessions
+## Service Principal Sessions
 SERVICE_PRINCIPAL_SESSION_ENABLED=true
 SERVICE_PRINCIPAL_SESSION_TTL=2592000  # 30 days
 SERVICE_PRINCIPAL_AUTO_REFRESH=true
 SESSION_SLIDING_WINDOW=true
 SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in <5 min
 
-# User Sessions (optional)
+## User Sessions (optional)
 USER_SESSION_TTL=86400  # 24 hours if enabled
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive Consequences
+#### Positive Consequences
 - Long-running task support (30-day sessions)
 - Automatic refresh (no client complexity)
 - Instant revocation capability
 - Security maintained (still use short-lived access tokens)
 - Audit trail (session activity logged)
 
-### Negative Consequences
+#### Negative Consequences
 - Redis dependency (infrastructure overhead)
 - Complexity (two modes to maintain)
 - Storage cost (session data in Redis)
 - Potential session leakage if not cleaned up
 
-### Mitigation Strategies
+#### Mitigation Strategies
 - Redis HA setup (cluster mode), automatic TTL expiration
 - Clear documentation on when to use each mode
 - Monitoring: session count, memory usage, refresh failures
 - Cleanup job for orphaned sessions
 
-## Alternatives Considered
+### Alternatives Considered
 
 1. **Long-Lived JWTs**: Rejected - cannot revoke, security risk
 2. **Sessions for All**: Rejected - stateless architecture preferred for users
 3. **Stateless Only**: Rejected - inadequate for long-running tasks
 4. **Token Exchange**: Rejected - complex, requires admin credentials
 
-## Implementation
+### Implementation
 
 **Session Data Structure**:
 ```python
@@ -213,8 +208,7 @@ class ServicePrincipalSession:
     last_accessed: str
     expires_at: str  # 30 days from last activity
     metadata: Dict[str, Any]
-```
-
+```text
 **Session Manager** (`src/mcp_server_langgraph/auth/session.py`):
 ```python
 class RedisSessionStore:
@@ -233,8 +227,7 @@ class RedisSessionStore:
             session.access_token = new_tokens["access_token"]
             session.refresh_token = new_tokens["refresh_token"]
             await self.update_session(session)
-```
-
+```text
 **Middleware** (`src/mcp_server_langgraph/auth/middleware.py`):
 ```python
 async def get_current_user(request: Request):
@@ -253,7 +246,7 @@ async def get_current_user(request: Request):
     return payload
 ```
 
-## References
+### References
 
 - Session Store: `src/mcp_server_langgraph/auth/session.py` (existing, to be enhanced)
 - Middleware: `src/mcp_server_langgraph/auth/middleware.py` (to be updated)

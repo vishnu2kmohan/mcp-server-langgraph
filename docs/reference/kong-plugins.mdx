@@ -1,0 +1,923 @@
+---
+title: Kong Gateway Plugins Reference
+description: 'Complete reference for Kong Gateway plugins used in MCP Server including rate limiting, authentication, CORS, and custom plugins'
+icon: 'plug-circle-bolt'
+---
+
+## Overview
+
+Kong Gateway acts as an API gateway providing authentication, rate limiting, traffic control, and observability for the MCP Server with LangGraph. This reference documents all Kong plugins used in the deployment.
+
+<CardGroup cols={3}>
+  <Card title="Authentication" icon="lock">
+    JWT, API Key, and custom authentication plugins
+  </Card>
+  <Card title="Rate Limiting" icon="gauge">
+    Tiered rate limiting for fair usage and DDoS protection
+  </Card>
+  <Card title="Traffic Control" icon="traffic-light">
+    CORS, request transformation, and size limiting
+  </Card>
+</CardGroup>
+
+---
+
+## Authentication Plugins
+
+### JWT Authentication
+
+Validates JSON Web Tokens issued by Keycloak for secure API access.
+
+**Plugin:** `jwt`
+**Resource:** `jwt-auth`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: jwt-auth
+  namespace: mcp-server-langgraph
+spec:
+  plugin: jwt
+  config:
+    uri_param_names:
+      - jwt
+    cookie_names:
+      - jwt
+    claims_to_verify:
+      - exp
+    maximum_expiration: 86400
+    key_claim_name: iss
+```
+
+**Configuration:**
+- **uri_param_names**: Accept JWT from `?jwt=...` query parameter
+- **cookie_names**: Accept JWT from `jwt` cookie
+- **claims_to_verify**: Verify `exp` (expiration) claim
+- **maximum_expiration**: Maximum token lifetime (24 hours)
+- **key_claim_name**: Use `iss` (issuer) claim to identify key
+
+**Usage:**
+```bash
+curl https://api.example.com/message \
+  -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIs..."
+```
+
+**Token Validation:**
+1. Verifies signature using Keycloak's public key (JWKS)
+2. Checks expiration claim (`exp`)
+3. Validates issuer matches configured realm
+4. Extracts user identity from `sub` claim
+
+---
+
+### API Key Authentication
+
+Legacy authentication method using long-lived API keys.
+
+**Plugin:** `key-auth`
+**Resource:** `api-key-auth`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: api-key-auth
+  namespace: mcp-server-langgraph
+spec:
+  plugin: key-auth
+  config:
+    key_names:
+      - apikey
+      - x-api-key
+    key_in_body: false
+    hide_credentials: true
+```
+
+**Configuration:**
+- **key_names**: Accept keys from `apikey` or `x-api-key` headers
+- **key_in_body**: Don't accept keys in request body
+- **hide_credentials**: Remove key header before proxying to backend
+
+**Usage:**
+```bash
+curl https://api.example.com/message \
+  -H "apikey: mcpkey_live_EXAMPLE1234567890..."
+```
+
+<Note>
+  This plugin is typically used with the [API Key JWT Exchange](#api-key-jwt-exchange-custom-plugin) custom plugin to convert API keys to JWTs.
+</Note>
+
+---
+
+### API Key JWT Exchange (Custom Plugin)
+
+Custom Kong plugin that exchanges API keys for JWTs, enabling legacy authentication while maintaining JWT standardization.
+
+**Plugin:** `kong-apikey-jwt-exchange` (custom)
+**Resource:** `apikey-jwt-exchange`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: apikey-jwt-exchange
+  namespace: mcp-server-langgraph
+spec:
+  plugin: kong-apikey-jwt-exchange
+  config:
+    mcp_server_url: "http://mcp-server-langgraph:80"
+    cache_ttl: 300  # 5 minutes
+    timeout: 5000  # 5 seconds
+    api_key_headers:
+      - "apikey"
+      - "x-api-key"
+```
+
+**Configuration:**
+- **mcp_server_url**: MCP Server endpoint for API key validation
+- **cache_ttl**: JWT cache duration (5 minutes recommended)
+- **timeout**: Request timeout for key validation
+- **api_key_headers**: Headers to check for API keys
+
+**Flow:**
+<Steps>
+  <Step title="Client sends API key">
+    Request includes `apikey` header with API key
+  </Step>
+  <Step title="Plugin validates key">
+    Kong plugin sends key to MCP Server for validation
+  </Step>
+  <Step title="MCP Server returns JWT">
+    If valid, MCP Server returns a JWT token
+  </Step>
+  <Step title="Plugin caches JWT">
+    JWT is cached for `cache_ttl` seconds
+  </Step>
+  <Step title="Plugin forwards request">
+    Request is forwarded to backend with `Authorization: Bearer JWT` header
+  </Step>
+</Steps>
+
+**Benefits:**
+- Maintains JWT standardization across all requests
+- Backward compatibility for legacy API key clients
+- Caching reduces load on MCP Server
+- Transparent to backend services
+
+**Related ADR:**
+- [ADR-0034: API Key to JWT Exchange](/architecture/adr-0034-api-key-jwt-exchange)
+- [ADR-0035: Kong JWT Validation](/architecture/adr-0035-kong-jwt-validation)
+
+---
+
+## Rate Limiting Plugins
+
+### Basic Rate Limiting
+
+Default rate limiting for all users with local policy (no Redis required).
+
+**Plugin:** `rate-limiting`
+**Resource:** `rate-limit-basic`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-basic
+  namespace: mcp-server-langgraph
+spec:
+  plugin: rate-limiting
+  config:
+    minute: 60
+    hour: 1000
+    policy: local
+    fault_tolerant: true
+    hide_client_headers: false
+```
+
+**Limits:**
+- **Per minute**: 60 requests
+- **Per hour**: 1,000 requests
+- **Policy**: Local (in-memory, no shared state)
+- **Fault tolerant**: Allow requests if counter fails
+
+**Response Headers:**
+```http
+X-RateLimit-Limit-Minute: 60
+X-RateLimit-Remaining-Minute: 45
+X-RateLimit-Limit-Hour: 1000
+X-RateLimit-Remaining-Hour: 955
+```
+
+---
+
+### Premium Tier Rate Limiting
+
+Higher limits for premium users with Redis-backed synchronization across Kong instances.
+
+**Plugin:** `rate-limiting`
+**Resource:** `rate-limit-premium`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-premium
+  namespace: mcp-server-langgraph
+spec:
+  plugin: rate-limiting
+  config:
+    minute: 300
+    hour: 10000
+    policy: redis
+    fault_tolerant: true
+    redis_host: redis
+    redis_port: 6379
+    redis_database: 0
+```
+
+**Limits:**
+- **Per minute**: 300 requests
+- **Per hour**: 10,000 requests
+- **Policy**: Redis (shared across Kong instances)
+- **Fault tolerant**: Allow if Redis unavailable
+
+---
+
+### Enterprise Tier Rate Limiting
+
+Very high limits for enterprise customers.
+
+**Plugin:** `rate-limiting`
+**Resource:** `rate-limit-enterprise`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-enterprise
+  namespace: mcp-server-langgraph
+spec:
+  plugin: rate-limiting
+  config:
+    minute: 1000
+    hour: 100000
+    policy: redis
+    fault_tolerant: true
+    redis_host: redis
+    redis_port: 6379
+    redis_database: 0
+```
+
+**Limits:**
+- **Per minute**: 1,000 requests
+- **Per hour**: 100,000 requests
+
+---
+
+### Advanced Rate Limiting
+
+Consumer group-based rate limiting with sliding windows.
+
+**Plugin:** `rate-limiting-advanced` (Kong Enterprise)
+**Resource:** `rate-limit-advanced`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-advanced
+  namespace: mcp-server-langgraph
+spec:
+  plugin: rate-limiting-advanced
+  config:
+    limit:
+      - 100
+    window_size:
+      - 60
+    sync_rate: 10
+    namespace: mcp-server-langgraph-rate-limit
+    strategy: redis
+    redis:
+      host: redis
+      port: 6379
+      database: 0
+      timeout: 2000
+    consumer_groups:
+      - free_tier
+      - premium_tier
+      - enterprise_tier
+    consumer_groups_limits:
+      free_tier:
+        - 10
+      premium_tier:
+        - 100
+      enterprise_tier:
+        - 1000
+```
+
+**Features:**
+- **Sliding window**: More accurate rate limiting than fixed windows
+- **Consumer groups**: Different limits per user tier
+- **Sync rate**: Synchronize counters across instances every 10 seconds
+- **Redis strategy**: Distributed rate limiting
+
+**Consumer Group Limits:**
+| Tier | Requests/Minute |
+|------|-----------------|
+| Free | 10 |
+| Premium | 100 |
+| Enterprise | 1,000 |
+
+<Note>
+  Requires Kong Enterprise. Use standard `rate-limiting` plugin for open-source Kong.
+</Note>
+
+---
+
+### Response Rate Limiting
+
+Limits based on response tokens/data for streaming endpoints.
+
+**Plugin:** `response-ratelimiting`
+**Resource:** `response-ratelimit`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: response-ratelimit
+  namespace: mcp-server-langgraph
+spec:
+  plugin: response-ratelimiting
+  config:
+    limits:
+      tokens:
+        minute: 50000
+        hour: 1000000
+```
+
+**Limits:**
+- **Tokens per minute**: 50,000
+- **Tokens per hour**: 1,000,000
+
+**Use Case:**
+Prevent excessive LLM token usage by limiting based on actual tokens returned in responses rather than request count.
+
+**Backend Header:**
+The MCP Server must return:
+```http
+X-RateLimit-tokens: 1523
+```
+
+Kong accumulates these values and enforces limits.
+
+---
+
+## Traffic Control Plugins
+
+### CORS (Cross-Origin Resource Sharing)
+
+Enables cross-origin requests from web applications.
+
+**Plugin:** `cors`
+**Resource:** `cors`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: cors
+  namespace: mcp-server-langgraph
+spec:
+  plugin: cors
+  config:
+    origins:
+      - "*"
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    headers:
+      - Accept
+      - Accept-Version
+      - Content-Length
+      - Content-Type
+      - Date
+      - Authorization
+      - X-Auth-Token
+    exposed_headers:
+      - X-Auth-Token
+      - X-RateLimit-Limit
+      - X-RateLimit-Remaining
+      - X-RateLimit-Reset
+    credentials: true
+    max_age: 3600
+```
+
+**Configuration:**
+- **origins**: Allow all origins (`*`). Restrict in production (e.g., `https://app.example.com`)
+- **methods**: Allowed HTTP methods
+- **headers**: Allowed request headers
+- **exposed_headers**: Headers visible to JavaScript
+- **credentials**: Allow cookies and authentication
+- **max_age**: Cache preflight response for 1 hour
+
+**Preflight Response:**
+```http
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://app.example.com
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Allow-Credentials: true
+Access-Control-Max-Age: 3600
+```
+
+<Warning>
+  Using `origins: ["*"]` with `credentials: true` is a security risk. Always specify explicit origins in production.
+</Warning>
+
+---
+
+### Request Size Limiting
+
+Prevents oversized payloads that could cause memory issues or DDoS.
+
+**Plugin:** `request-size-limiting`
+**Resource:** `request-size-limit`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-size-limit
+  namespace: mcp-server-langgraph
+spec:
+  plugin: request-size-limiting
+  config:
+    allowed_payload_size: 10
+    size_unit: megabytes
+    require_content_length: false
+```
+
+**Configuration:**
+- **allowed_payload_size**: 10 MB maximum
+- **size_unit**: megabytes (or kilobytes, bytes)
+- **require_content_length**: Allow streaming uploads without `Content-Length`
+
+**Error Response:**
+```http
+HTTP/1.1 413 Payload Too Large
+{
+  "message": "Request size limit exceeded"
+}
+```
+
+---
+
+### Request Transformer
+
+Adds, modifies, or removes headers and query parameters.
+
+**Plugin:** `request-transformer`
+**Resource:** `request-transformer`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-transformer
+  namespace: mcp-server-langgraph
+spec:
+  plugin: request-transformer
+  config:
+    add:
+      headers:
+        - X-Kong-Request-Id:$(uuid)
+        - X-Forwarded-Proto:https
+    remove:
+      headers:
+        - X-Legacy-Header
+```
+
+**Operations:**
+- **Add headers**: Inject request ID and protocol
+- **Remove headers**: Strip legacy headers
+
+**Variables:**
+- `$(uuid)`: Generate UUID
+- `$(upstream_uri)`: Upstream request URI
+- `$(consumer_username)`: Authenticated consumer username
+
+**Example Use Cases:**
+- Add correlation IDs for distributed tracing
+- Inject environment/version headers
+- Remove sensitive headers before proxying
+- Add authentication context headers
+
+---
+
+## Security Plugins
+
+### IP Restriction
+
+Whitelist or blacklist IP addresses/ranges.
+
+**Plugin:** `ip-restriction`
+**Resource:** `ip-restriction`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: ip-restriction
+  namespace: mcp-server-langgraph
+spec:
+  plugin: ip-restriction
+  config:
+    # Whitelist (allow only these IPs)
+    allow:
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 192.168.0.0/16
+
+    # Blacklist (deny these IPs)
+    # deny:
+    #   - 192.168.1.100
+```
+
+**Configuration:**
+- **allow**: Whitelist mode - only these IPs allowed
+- **deny**: Blacklist mode - these IPs blocked
+
+<Warning>
+  Cannot use both `allow` and `deny` simultaneously. Choose one mode.
+</Warning>
+
+**Use Cases:**
+- Restrict admin endpoints to VPN/office IPs
+- Block abusive IP addresses
+- Geo-restriction (with GeoIP database)
+- Corporate network-only access
+
+---
+
+### Bot Detection
+
+Detects and blocks automated bots and scrapers.
+
+**Plugin:** `bot-detection`
+**Resource:** `bot-detection`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: bot-detection
+  namespace: mcp-server-langgraph
+spec:
+  plugin: bot-detection
+  config:
+    allow:
+      - googlebot
+      - bingbot
+    deny:
+      - scrapy
+      - curl
+```
+
+**Configuration:**
+- **allow**: Whitelist specific bots (SEO crawlers)
+- **deny**: Block specific user agents
+
+**Detection Method:**
+Examines `User-Agent` header for known bot patterns.
+
+**Blocked Response:**
+```http
+HTTP/1.1 403 Forbidden
+{
+  "message": "Bot detected"
+}
+```
+
+<Note>
+  Sophisticated bots can spoof User-Agent headers. Consider additional protection like CAPTCHA or rate limiting.
+</Note>
+
+---
+
+### Request Termination
+
+Circuit breaker for maintenance mode or emergency shutdowns.
+
+**Plugin:** `request-termination`
+**Resource:** `request-termination`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-termination
+  namespace: mcp-server-langgraph
+spec:
+  plugin: request-termination
+  config:
+    status_code: 503
+    message: "Service temporarily unavailable"
+  disabled: true  # Enable during maintenance
+```
+
+**Configuration:**
+- **status_code**: HTTP status to return (503 Service Unavailable)
+- **message**: Custom error message
+- **disabled**: Plugin disabled by default
+
+**Enable for Maintenance:**
+```bash
+kubectl patch kongplugin request-termination \
+  -n mcp-server-langgraph \
+  --type='json' \
+  -p='[{"op": "replace", "path": "/disabled", "value": false}]'
+```
+
+**Disable After Maintenance:**
+```bash
+kubectl patch kongplugin request-termination \
+  -n mcp-server-langgraph \
+  --type='json' \
+  -p='[{"op": "replace", "path": "/disabled", "value": true}]'
+```
+
+---
+
+## Observability Plugins
+
+### Prometheus Metrics
+
+Exports metrics for Prometheus scraping.
+
+**Plugin:** `prometheus`
+**Resource:** `prometheus`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: prometheus
+  namespace: mcp-server-langgraph
+spec:
+  plugin: prometheus
+  config:
+    per_consumer: true
+```
+
+**Metrics Endpoint:**
+```
+http://kong:8001/metrics
+```
+
+**Exported Metrics:**
+- `kong_http_requests_total`: Total HTTP requests
+- `kong_latency_ms`: Request latency histogram
+- `kong_bandwidth_bytes`: Bandwidth usage
+- `kong_datastore_reachable`: Datastore health
+- `kong_nginx_connections_*`: NGINX connection stats
+
+**per_consumer: true**:
+Breaks down metrics by authenticated consumer:
+```
+kong_http_requests_total{consumer="user:alice"} 1523
+kong_http_requests_total{consumer="user:bob"} 842
+```
+
+**Prometheus Scrape Config:**
+```yaml
+scrape_configs:
+  - job_name: kong
+    static_configs:
+      - targets:
+          - kong:8001
+    metrics_path: /metrics
+```
+
+---
+
+### HTTP Log
+
+Sends request/response logs to external endpoint (e.g., Logstash, Elasticsearch).
+
+**Plugin:** `http-log`
+**Resource:** `http-log`
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: http-log
+  namespace: mcp-server-langgraph
+spec:
+  plugin: http-log
+  config:
+    http_endpoint: http://logstash:8080/kong
+    method: POST
+    timeout: 10000
+    keepalive: 60000
+    flush_timeout: 2
+    retry_count: 10
+    queue_size: 1000
+```
+
+**Configuration:**
+- **http_endpoint**: Logstash/Elasticsearch endpoint
+- **method**: HTTP method (POST recommended)
+- **timeout**: Request timeout (10s)
+- **flush_timeout**: Batch logs every 2 seconds
+- **retry_count**: Retry failed sends 10 times
+- **queue_size**: Buffer 1000 log entries
+
+**Log Format:**
+```json
+{
+  "request": {
+    "method": "POST",
+    "uri": "/message",
+    "url": "https://api.example.com/message",
+    "size": "1234",
+    "headers": {
+      "authorization": "Bearer ***",
+      "content-type": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "size": "5678",
+    "headers": {
+      "content-type": "application/json"
+    }
+  },
+  "latencies": {
+    "request": 123,
+    "kong": 5,
+    "proxy": 118
+  },
+  "client_ip": "203.0.113.42",
+  "started_at": 1643370000
+}
+```
+
+---
+
+## Plugin Chaining
+
+Plugins are executed in a specific order. Understanding the order is crucial for correct behavior.
+
+### Execution Order
+
+<Steps>
+  <Step title="1. Certificate (TLS Handshake)">
+    SSL/TLS termination
+  </Step>
+  <Step title="2. Rewrite">
+    Request transformer, IP restriction
+  </Step>
+  <Step title="3. Access (Before Authentication)">
+    Bot detection, CORS (preflight)
+  </Step>
+  <Step title="4. Authentication">
+    JWT, API key, API key→JWT exchange
+  </Step>
+  <Step title="5. Access (After Authentication)">
+    Rate limiting, request size limiting
+  </Step>
+  <Step title="6. Header Filter">
+    Add/remove headers
+  </Step>
+  <Step title="7. Response">
+    Response transformer
+  </Step>
+  <Step title="8. Log">
+    Prometheus, HTTP log
+  </Step>
+</Steps>
+
+### Example Plugin Chain
+
+For a typical authenticated API request:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-api
+  annotations:
+    konghq.com/plugins: |
+      cors,
+      jwt-auth,
+      rate-limit-premium,
+      request-size-limit,
+      request-transformer,
+      prometheus,
+      http-log
+```
+
+**Execution:**
+1. **CORS**: Handle OPTIONS preflight
+2. **jwt-auth**: Validate JWT token
+3. **rate-limit-premium**: Check rate limits
+4. **request-size-limit**: Validate payload size
+5. **request-transformer**: Add correlation ID
+6. **[Proxy to backend]**
+7. **prometheus**: Record metrics
+8. **http-log**: Send audit log
+
+---
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Rate Limiting" icon="gauge">
+    - Use Redis-backed policies for multi-instance deployments
+    - Set `fault_tolerant: true` to allow requests if Redis fails
+    - Don't hide rate limit headers - clients need them
+    - Monitor rate limit violations in Prometheus
+  </Card>
+
+  <Card title="Authentication" icon="lock">
+    - Always use HTTPS in production
+    - Rotate JWKS keys regularly (Kong JWKS updater CronJob)
+    - Cache JWT validation results to reduce latency
+    - Use API key→JWT exchange for backward compatibility
+  </Card>
+
+  <Card title="CORS" icon="globe">
+    - Never use `origins: ["*"]` with `credentials: true`
+    - Specify explicit allowed origins in production
+    - Keep `max_age` high (1 hour) to reduce preflight requests
+    - Expose only necessary headers
+  </Card>
+
+  <Card title="Observability" icon="chart-line">
+    - Enable Prometheus for all routes
+    - Use HTTP log for audit trails
+    - Include `per_consumer: true` for user-level metrics
+    - Monitor Kong's own metrics (`/status` endpoint)
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="JWT Validation Failing">
+    **Symptoms:** `401 Unauthorized` with JWT error
+
+    **Solutions:**
+    - Verify JWKS is up-to-date: `kubectl logs job/kong-jwks-updater`
+    - Check token expiration: Decode JWT at [jwt.io](https://jwt.io)
+    - Verify issuer matches: Token `iss` must match Kong consumer config
+    - Run manual JWKS update: `kubectl create job --from=cronjob/kong-jwks-updater manual`
+  </Accordion>
+
+  <Accordion title="Rate Limiting Not Working">
+    **Symptoms:** No rate limit headers or limits not enforced
+
+    **Solutions:**
+    - Check Redis connectivity: `kubectl exec -it redis -- redis-cli ping`
+    - Verify plugin is applied: `kubectl get kongplugin -n mcp-server-langgraph`
+    - Check Ingress annotations: `kubectl describe ingress mcp-api`
+    - Review Kong logs: `kubectl logs -n kong deployment/kong-gateway`
+  </Accordion>
+
+  <Accordion title="CORS Errors in Browser">
+    **Symptoms:** `Access-Control-Allow-Origin` errors in console
+
+    **Solutions:**
+    - Add actual origin to `origins` list (not `*` with credentials)
+    - Verify `credentials: true` if using cookies/auth
+    - Check `exposed_headers` includes needed headers
+    - Ensure OPTIONS method is in `methods` list
+  </Accordion>
+
+  <Accordion title="Custom Plugin Not Loading">
+    **Symptoms:** Kong returns 500 error or plugin not found
+
+    **Solutions:**
+    - Verify plugin is installed in Kong image
+    - Check `KONG_PLUGINS` env includes custom plugin name
+    - Review plugin syntax: `kubectl logs kong-gateway | grep "plugin"`
+    - Ensure plugin is in correct directory: `/usr/local/share/lua/5.1/kong/plugins/`
+  </Accordion>
+</AccordionGroup>
+
+## See Also
+
+- [Keycloak JWT Deployment Guide](/deployment/keycloak-jwt-deployment)
+- [Setup Scripts Reference](/reference/setup-scripts)
+- [API Endpoints Reference](/reference/api-endpoints)
+- [ADR-0035: Kong JWT Validation](/architecture/adr-0035-kong-jwt-validation)
+- [ADR-0034: API Key to JWT Exchange](/architecture/adr-0034-api-key-jwt-exchange)
+- [Kong Gateway Documentation](https://docs.konghq.com/)

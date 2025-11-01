@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 17. Error Handling Strategy'
 icon: 'file-lines'
 ---
 
-# 17. Error Handling Strategy
-
 Date: 2025-10-13
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 The MCP Server with LangGraph needs a consistent, production-grade error handling strategy that:
 - Provides clear error messages to users
@@ -22,28 +20,28 @@ The MCP Server with LangGraph needs a consistent, production-grade error handlin
 - Handles failures gracefully with appropriate fallback mechanisms
 - Complies with enterprise SLAs and uptime requirements
 
-## Decision
+### Decision
 
 We will implement a **layered error handling strategy** with the following principles:
 
-### 1. Error Categories
+#### 1. Error Categories
 
 We categorize all errors into five types:
 
-#### Client Errors (4xx)
+##### Client Errors (4xx)
 - **Authentication Errors** (401): Invalid or expired credentials
 - **Authorization Errors** (403): Insufficient permissions
 - **Validation Errors** (400): Invalid input data
 - **Not Found Errors** (404): Resource doesn't exist
 
-#### Server Errors (5xx)
+##### Server Errors (5xx)
 - **Internal Errors** (500): Unexpected server failures
 - **Service Unavailable** (503): Temporary service disruption
 - **Timeout Errors** (504): Operation exceeded time limit
 
-### 2. Error Propagation Pattern
+#### 2. Error Propagation Pattern
 
-```
+```text
 Layer 1: Infrastructure (Database, External APIs)
    ↓
 Layer 2: Service Layer (Business Logic)
@@ -59,7 +57,7 @@ Layer 4: Client (User-facing error messages)
 - **Transform sensitive errors**: Never expose infrastructure details to clients
 - **Log once**: Log at the layer where you handle the error, not at every layer
 
-### 3. Error Response Format
+#### 3. Error Response Format
 
 All API errors return a consistent JSON structure:
 
@@ -76,8 +74,7 @@ All API errors return a consistent JSON structure:
     "request_id": "req_xyz"
   }
 }
-```
-
+```text
 **Fields**:
 - `code`: Machine-readable error code (uppercase snake_case)
 - `message`: Human-readable error message
@@ -85,30 +82,29 @@ All API errors return a consistent JSON structure:
 - `trace_id`: OpenTelemetry trace ID for debugging
 - `request_id`: Request identifier
 
-### 4. Retry Strategy
+#### 4. Retry Strategy
 
-#### Automatic Retries
+##### Automatic Retries
 - **LLM API Calls**: 3 retries with exponential backoff (1s, 2s, 4s)
 - **OpenFGA Checks**: 2 retries with 500ms backoff
 - **Redis Operations**: 2 retries with 100ms backoff
 
-#### No Retries
+##### No Retries
 - Authentication failures (permanent failures)
 - Validation errors (requires user correction)
 - Resource not found (won't exist on retry)
 
-### 5. Fallback Mechanisms
+#### 5. Fallback Mechanisms
 
-#### LLM Fallback
+##### LLM Fallback
 When primary model fails:
 ```
 1. Try fallback model #1 (gemini-2.5-pro)
 2. Try fallback model #2 (claude-3-5-sonnet)
 3. Try fallback model #3 (gpt-4o)
 4. Return error if all fail
-```
-
-#### Authorization Fallback
+```text
+##### Authorization Fallback
 When OpenFGA is unavailable:
 ```python
 if openfga_strict_mode:
@@ -117,17 +113,15 @@ if openfga_strict_mode:
 else:
     # Fail-open: use role-based fallback
     return check_fallback_authorization(user, resource)
-```
-
-#### Session Storage Fallback
+```text
+##### Session Storage Fallback
 When Redis is unavailable:
 ```
 Redis (primary) → InMemory (fallback) → Error
-```
+```text
+#### 6. Logging Strategy
 
-### 6. Logging Strategy
-
-#### Error Logging Levels
+##### Error Logging Levels
 
 - **ERROR**: Unexpected failures requiring investigation
   - Database connection failures
@@ -144,7 +138,7 @@ Redis (primary) → InMemory (fallback) → Error
   - Retry attempts
   - Circuit breaker state changes
 
-#### Log Structure
+##### Log Structure
 
 ```python
 logger.error(
@@ -159,9 +153,8 @@ logger.error(
     },
     exc_info=True  # Include stack trace
 )
-```
-
-### 7. OpenTelemetry Integration
+```text
+#### 7. OpenTelemetry Integration
 
 All errors are captured in distributed traces:
 
@@ -174,17 +167,16 @@ with tracer.start_as_current_span("llm.call") as span:
         span.set_status(StatusCode.ERROR, str(e))
         span.record_exception(e)
         raise
-```
-
+```python
 **Span Attributes**:
 - `error.type`: Exception class name
 - `error.message`: Error message
 - `error.stack`: Stack trace (truncated)
 - `error.recoverable`: Whether error is recoverable
 
-### 8. Error Codes
+#### 8. Error Codes
 
-#### Authentication/Authorization (AUTH_*)
+##### Authentication/Authorization (AUTH_*)
 - `AUTH_INVALID_CREDENTIALS`: Invalid username/password
 - `AUTH_TOKEN_EXPIRED`: JWT token expired
 - `AUTH_TOKEN_INVALID`: Malformed or invalid token
@@ -192,36 +184,36 @@ with tracer.start_as_current_span("llm.call") as span:
 - `AUTH_SESSION_EXPIRED`: Session no longer valid
 - `AUTH_MFA_REQUIRED`: Multi-factor authentication required
 
-#### Validation (VALIDATION_*)
+##### Validation (VALIDATION_*)
 - `VALIDATION_REQUIRED_FIELD`: Required field missing
 - `VALIDATION_INVALID_FORMAT`: Field format incorrect
 - `VALIDATION_OUT_OF_RANGE`: Value outside allowed range
 - `VALIDATION_CONSTRAINT_VIOLATION`: Business rule violated
 
-#### Resource (RESOURCE_*)
+##### Resource (RESOURCE_*)
 - `RESOURCE_NOT_FOUND`: Requested resource doesn't exist
 - `RESOURCE_ALREADY_EXISTS`: Resource already exists (conflict)
 - `RESOURCE_LOCKED`: Resource is locked by another process
 - `RESOURCE_QUOTA_EXCEEDED`: Resource quota limit reached
 
-#### Infrastructure (INFRA_*)
+##### Infrastructure (INFRA_*)
 - `INFRA_DATABASE_ERROR`: Database connection/query failure
 - `INFRA_REDIS_ERROR`: Redis connection/operation failure
 - `INFRA_OPENFGA_ERROR`: OpenFGA service error
 - `INFRA_NETWORK_ERROR`: Network connectivity issue
 
-#### External Service (EXT_*)
+##### External Service (EXT_*)
 - `EXT_LLM_API_ERROR`: LLM provider API error
 - `EXT_LLM_RATE_LIMIT`: LLM rate limit exceeded
 - `EXT_KEYCLOAK_ERROR`: Keycloak authentication error
 - `EXT_INFISICAL_ERROR`: Infisical secrets retrieval error
 
-#### Internal (INTERNAL_*)
+##### Internal (INTERNAL_*)
 - `INTERNAL_UNEXPECTED_ERROR`: Unhandled exception
 - `INTERNAL_TIMEOUT`: Operation timeout
 - `INTERNAL_CIRCUIT_BREAKER_OPEN`: Circuit breaker protecting service
 
-### 9. Error Metrics
+#### 9. Error Metrics
 
 Track error rates with Prometheus:
 
@@ -237,9 +229,8 @@ error_duration = Histogram(
     "Time spent handling errors",
     ["error_code"]
 )
-```
-
-### 10. Security Considerations
+```text
+#### 10. Security Considerations
 
 **Never expose**:
 - Database connection strings
@@ -254,12 +245,12 @@ error_duration = Histogram(
 - File paths (show relative, not absolute)
 - Email addresses (show partial: a***@acme.com)
 
-## Implementation Examples
+### Implementation Examples
 
-### Example 1: Authentication Error
+#### Example 1: Authentication Error
 
 ```python
-# auth/middleware.py
+## auth/middleware.py
 async def verify_token(self, token: str) -> TokenVerification:
     """Verify JWT token with proper error handling"""
 
@@ -302,12 +293,11 @@ async def verify_token(self, token: str) -> TokenVerification:
                 error_code="AUTH_TOKEN_INVALID",
                 error_message="Invalid authentication token"
             )
-```
-
-### Example 2: LLM Fallback
+```text
+#### Example 2: LLM Fallback
 
 ```python
-# llm/factory.py
+## llm/factory.py
 async def create_llm_with_fallback(
     self,
     model: str,
@@ -361,12 +351,11 @@ async def create_llm_with_fallback(
                     error_code="EXT_LLM_API_ERROR",
                     models_tried=models_to_try
                 )
-```
-
-### Example 3: Service Layer Error
+```text
+#### Example 3: Service Layer Error
 
 ```python
-# core/compliance/data_export.py
+## core/compliance/data_export.py
 async def export_user_data(
     self,
     user_id: str,
@@ -415,31 +404,31 @@ async def export_user_data(
             ) from e
 ```
 
-## Consequences
+### Consequences
 
-### Positive
+#### Positive
 - **Consistency**: All errors follow the same structure and patterns
 - **Debuggability**: Trace IDs link errors to distributed traces
 - **Reliability**: Fallback mechanisms prevent single points of failure
 - **Observability**: Comprehensive metrics and logging
 - **Security**: No sensitive information leaked in error messages
 
-### Negative
+#### Negative
 - **Complexity**: Developers must understand error categorization
 - **Overhead**: Additional logging and tracing adds latency (minimal)
 - **Maintenance**: Error codes must be documented and maintained
 
-### Mitigation
+#### Mitigation
 - Provide error handling templates and examples
 - Create linting rules to enforce patterns
 - Document all error codes in centralized registry
 - Monitor error handling overhead in production
 
-## Related ADRs
+### Related ADRs
 - [0003: Dual Observability Strategy](/architecture/adr-0003-dual-observability)
 - [0001: Multi-Provider LLM Support](/architecture/adr-0001-llm-multi-provider)
 
-## References
+### References
 - [Google SRE: Error Handling](https://sre.google/sre-book/handling-overload/)
 - [12 Factor App: Logs](https://12factor.net/logs)
 - [OpenTelemetry Error Handling](https://opentelemetry.io/docs/instrumentation/python/manual/#errors)

@@ -4,7 +4,7 @@ description: 'Pre-deployment verification for production environments'
 icon: 'clipboard-check'
 ---
 
-## Overview
+### Overview
 
 Comprehensive checklist to ensure your MCP Server with LangGraph deployment is production-ready. This checklist covers security, performance, reliability, observability, and operational readiness for v2.1.0.
 
@@ -12,9 +12,9 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 **Complete all critical items** before going to production. Optional items enhance production quality but are not required for launch.
 </Warning>
 
-## Security
+### Security
 
-### Authentication & Authorization
+#### Authentication & Authorization
 
 <AccordionGroup>
   <Accordion title="Keycloak SSO" icon="key" defaultOpen={true}>
@@ -43,7 +43,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Test authentication
     python scripts/setup/test_keycloak.py
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="JWT & Sessions" icon="ticket">
@@ -68,7 +68,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Test session creation
     python scripts/setup/test_sessions.py
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="OpenFGA Authorization" icon="shield">
@@ -94,11 +94,11 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify authorization
     python examples/test_authorization.py
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-### Network Security
+#### Network Security
 
 <AccordionGroup>
   <Accordion title="TLS/SSL" icon="lock">
@@ -123,7 +123,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     # Check certificate expiration
     echo | openssl s_client -connect api.yourdomain.com:443 2>/dev/null | \
       openssl x509 -noout -dates
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Network Policies" icon="network-wired">
@@ -146,11 +146,11 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Test connectivity
     kubectl run test --rm -it --image=busybox -- nc -zv openfga 8080
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-### Secrets Management
+#### Secrets Management
 
 <AccordionGroup>
   <Accordion title="API Keys & Secrets" icon="key">
@@ -174,13 +174,13 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check secret manager
     kubectl get secrets -n mcp-server-langgraph
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Infrastructure
+### Infrastructure
 
-### Kubernetes Cluster
+#### Kubernetes Cluster
 
 <AccordionGroup>
   <Accordion title="Cluster Configuration" icon="dharmachakra">
@@ -206,7 +206,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check resource availability
     kubectl describe nodes | grep -A 5 "Allocated resources"
-    ```
+    ```sql
   </Accordion>
 
   <Accordion title="High Availability" icon="shield-check">
@@ -235,11 +235,11 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check PDB
     kubectl get pdb -n mcp-server-langgraph
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-### Data Persistence
+#### Data Persistence
 
 <AccordionGroup>
   <Accordion title="Databases" icon="database">
@@ -267,7 +267,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify restore procedure
     ./scripts/backup/test_restore.sh
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Redis Sessions" icon="server">
@@ -291,13 +291,13 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check replication
     kubectl exec -it deploy/redis-session -- redis-cli -a $REDIS_PASSWORD info replication
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Observability
+### Observability
 
-### Monitoring
+#### Monitoring
 
 <AccordionGroup>
   <Accordion title="Metrics Collection" icon="chart-line">
@@ -328,7 +328,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Query Prometheus
     curl 'http://prometheus:9090/api/v1/query?query=up{job="mcp-server-langgraph"}'
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Tracing" icon="route">
@@ -353,7 +353,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify trace export
     kubectl logs -l app=otel-collector -n observability
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Logging" icon="file-lines">
@@ -377,11 +377,11 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify no secrets in logs
     kubectl logs -l app=mcp-server-langgraph | grep -i "password\|secret\|key"
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-### Alerting
+#### Alerting
 
 <AccordionGroup>
   <Accordion title="Critical Alerts" icon="bell">
@@ -412,13 +412,13 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check alert manager
     curl http://alertmanager:9093/api/v2/alerts
-    ```
+    ```python
   </Accordion>
 </AccordionGroup>
 
-## Performance
+### Performance
 
-### Resource Configuration
+#### Resource Configuration
 
 <AccordionGroup>
   <Accordion title="Resource Limits" icon="gauge">
@@ -453,7 +453,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
       limits:
         cpu: 2000m
         memory: 2Gi
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Auto-Scaling" icon="arrows-up-down">
@@ -480,11 +480,11 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Watch scaling
     kubectl get hpa -n mcp-server-langgraph --watch
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-### LLM Configuration
+#### LLM Configuration
 
 <AccordionGroup>
   <Accordion title="Provider Setup" icon="robot">
@@ -508,13 +508,13 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check quota
     python scripts/setup/check_quota.py
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Operational Readiness
+### Operational Readiness
 
-### Documentation
+#### Documentation
 
 <AccordionGroup>
   <Accordion title="Runbooks" icon="book">
@@ -557,11 +557,11 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Chaos test
     kubectl delete pod -l app=mcp-server-langgraph --random
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-### Deployment
+#### Deployment
 
 <AccordionGroup>
   <Accordion title="Pre-Deployment" icon="rocket">
@@ -601,7 +601,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
   </Accordion>
 </AccordionGroup>
 
-## Compliance & Governance
+### Compliance & Governance
 
 <AccordionGroup>
   <Accordion title="Data Privacy" icon="user-lock">
@@ -634,53 +634,52 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
   </Accordion>
 </AccordionGroup>
 
-## Final Validation
+### Final Validation
 
-### Pre-Launch Checklist
+#### Pre-Launch Checklist
 
 ```bash
-# Run comprehensive validation
+## Run comprehensive validation
 ./scripts/validation/pre-launch-check.sh
 
-# Expected output:
-# ✓ Kubernetes cluster healthy
-# ✓ All pods running
-# ✓ Health checks passing
-# ✓ Authentication working
-# ✓ Authorization working
-# ✓ Observability configured
-# ✓ Backups configured
-# ✓ Alerts configured
-# ✓ No secrets in Git
-# ✓ TLS/SSL enabled
-# ✓ Ready for production!
-```
-
-### Smoke Tests
+## Expected output:
+## ✓ Kubernetes cluster healthy
+## ✓ All pods running
+## ✓ Health checks passing
+## ✓ Authentication working
+## ✓ Authorization working
+## ✓ Observability configured
+## ✓ Backups configured
+## ✓ Alerts configured
+## ✓ No secrets in Git
+## ✓ TLS/SSL enabled
+## ✓ Ready for production!
+```text
+#### Smoke Tests
 
 ```bash
-# 1. Health check
+## 1. Health check
 curl https://api.yourdomain.com/health
-# Expected: {"status": "healthy"}
+## Expected: {"status": "healthy"}
 
-# 2. Authentication
+## 2. Authentication
 python scripts/smoke-tests/test_auth.py
-# Expected: User authenticated successfully
+## Expected: User authenticated successfully
 
-# 3. Authorization
+## 3. Authorization
 python scripts/smoke-tests/test_authz.py
-# Expected: Permission check passed
+## Expected: Permission check passed
 
-# 4. End-to-end
+## 4. End-to-end
 python scripts/smoke-tests/test_e2e.py
-# Expected: Agent response received
+## Expected: Agent response received
 
-# 5. Observability
+## 5. Observability
 python scripts/smoke-tests/test_tracing.py
-# Expected: Trace ID returned
+## Expected: Trace ID returned
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">

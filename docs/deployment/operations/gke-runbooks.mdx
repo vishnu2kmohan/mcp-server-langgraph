@@ -1,0 +1,718 @@
+---
+title: "GKE Operational Runbooks"
+description: "Day-2 operations, incident response, and maintenance procedures for MCP Server on GKE Autopilot"
+icon: "book-medical"
+---
+
+### Overview
+
+This guide provides operational procedures for managing MCP Server LangGraph on GKE Autopilot in production, including incident response, maintenance tasks, and troubleshooting.
+
+<Card title="For Complete Technical Details" icon="file-lines">
+  See the full operational runbook: [GKE_OPERATIONAL_RUNBOOKS.md](/deployments/GKE_OPERATIONAL_RUNBOOKS.md) (600+ lines)
+</Card>
+
+---
+
+### Daily Health Check (5 minutes)
+
+Run this every morning to ensure system health:
+
+<Steps>
+  <Step title="Check Cluster Status">
+    ```bash
+    gcloud container clusters describe mcp-prod-gke \
+      --region=us-central1 \
+      --format="value(status)"
+    ```xml
+    <Check>Should return: `RUNNING`</Check>
+  </Step>
+
+  <Step title="Check Pod Health">
+    ```bash
+    kubectl get pods -n mcp-production
+
+    # Check for failed pods
+    kubectl get pods -n mcp-production \
+      --field-selector=status.phase!=Running,status.phase!=Succeeded
+    ```xml
+    <Check>All pods should show `Running` status with 0-1 restarts</Check>
+  </Step>
+
+  <Step title="Review Recent Events">
+    ```bash
+    kubectl get events -n mcp-production \
+      --sort-by='.lastTimestamp' \
+      --field-selector=type!=Normal \
+      | tail -10
+    ```xml
+    <Check>No ERROR or WARNING events in last hour</Check>
+  </Step>
+
+  <Step title="Check Database Status">
+    ```bash
+    gcloud sql instances describe mcp-prod-postgres \
+      --format="table(name,state,ipAddresses[0].ipAddress)"
+    ```xml
+    <Check>State should be: `RUNNABLE`</Check>
+  </Step>
+
+  <Step title="View Recent Errors">
+    ```bash
+    gcloud logging read \
+      'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production" AND severity>=ERROR' \
+      --limit=10 \
+      --format="table(timestamp,jsonPayload.message)"
+    ```xml
+    <Check>No critical errors in last hour</Check>
+  </Step>
+</Steps>
+
+---
+
+### Incident Response
+
+#### P0: Service Down (Complete Outage)
+
+<Warning>
+  **Symptoms**: All pods crashing, health checks failing, users cannot access service
+</Warning>
+
+**Response Time**: 5-10 minutes
+
+<Steps>
+  <Step title="Immediate Assessment">
+    ```bash
+    # Check pod status
+    kubectl get pods -n mcp-production
+
+    # Get pod logs
+    kubectl logs -n mcp-production -l app=mcp-server-langgraph --tail=100
+
+    # Describe failing pods
+    kubectl describe pod POD_NAME -n mcp-production
+    ```xml
+  </Step>
+
+  <Step title="Quick Fixes">
+    <Tabs>
+      <Tab title="Restart Deployment">
+        ```bash
+        kubectl rollout restart deployment/production-mcp-server-langgraph \
+          -n mcp-production
+        ```xml
+      </Tab>
+
+      <Tab title="Rollback">
+        ```bash
+        kubectl rollout undo deployment/production-mcp-server-langgraph \
+          -n mcp-production
+
+        kubectl rollout status deployment/production-mcp-server-langgraph \
+          -n mcp-production
+        ```xml
+      </Tab>
+
+      <Tab title="Scale Up">
+        ```bash
+        kubectl scale deployment production-mcp-server-langgraph \
+          -n mcp-production \
+          --replicas=6
+        ```xml
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Verify Recovery">
+    ```bash
+    kubectl get pods -n mcp-production
+    kubectl exec -it -n mcp-production POD_NAME -- curl http://localhost:8000/health/live
+    ```xml
+  </Step>
+
+  <Step title="Post-Incident Analysis">
+    ```bash
+    # Export logs for analysis
+    gcloud logging read \
+      'resource.type="k8s_container" AND severity>=ERROR' \
+      --limit=50 \
+      --format=json \
+      > incident-logs.json
+    ```xml
+  </Step>
+</Steps>
+
+**Escalation**: If not resolved in 10 minutes, escalate to on-call architect
+
+---
+
+#### P1: Performance Degradation
+
+<Warning>
+  **Symptoms**: Slow response times, high CPU/memory, increased error rates
+</Warning>
+
+<Steps>
+  <Step title="Check Resource Usage">
+    ```bash
+    kubectl top pods -n mcp-production
+    kubectl top nodes
+    ```xml
+  </Step>
+
+  <Step title="Check HPA Status">
+    ```bash
+    kubectl get hpa -n mcp-production -o yaml
+    ```xml
+  </Step>
+
+  <Step title="Review Database Performance">
+    ```bash
+    gcloud sql operations list \
+      --instance=mcp-prod-postgres \
+      --filter="startTime>=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S).000000Z"
+    ```xml
+  </Step>
+
+  <Step title="Temporary Scale Up">
+    ```bash
+    kubectl scale deployment production-mcp-server-langgraph \
+      -n mcp-production \
+      --replicas=10
+
+    # Monitor improvement
+    watch -n 5 'kubectl top pods -n mcp-production'
+    ```xml
+  </Step>
+</Steps>
+
+**Permanent Fix**: Adjust resource requests/limits based on actual usage
+
+---
+
+#### P2: Database Connection Issues
+
+<AccordionGroup>
+  <Accordion title="Connection Refused">
+    **Check Cloud SQL Proxy**:
+    ```bash
+    kubectl logs -n mcp-production POD_NAME -c cloud-sql-proxy --tail=50
+    ```text
+    **Verify Instance Running**:
+    ```bash
+    gcloud sql instances describe mcp-prod-postgres --format="value(state)"
+    ```text
+    **Restart Proxy**:
+    ```bash
+    kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
+    ```xml
+  </Accordion>
+
+  <Accordion title="Too Many Connections">
+    **Check Connection Count**:
+    ```bash
+    kubectl port-forward -n mcp-production svc/production-mcp-server-langgraph 5432:5432 &
+    psql "host=localhost user=postgres" -c "SELECT count(*) FROM pg_stat_activity;"
+    ```text
+    **Kill Idle Connections**:
+    ```bash
+    psql -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle' AND state_change < NOW() - INTERVAL '10 minutes';"
+    ```text
+    **Increase Max Connections** (via Terraform):
+    ```hcl
+    database_flags = {
+      "max_connections" = "200"
+    }
+    ```xml
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### Deployment Operations
+
+#### Standard Deployment (via CI/CD)
+
+<Info>
+  **Recommended**: Use the automated GitHub Actions workflow for production deployments.
+</Info>
+
+<Steps>
+  <Step title="Create Release">
+    ```bash
+    gh release create v1.1.0 \
+      --title "Release 1.1.0" \
+      --notes "Release notes here"
+    ```xml
+  </Step>
+
+  <Step title="Monitor CI/CD">
+    The workflow automatically:
+    - Builds and scans image
+    - Requests manual approval
+    - Deploys to production
+    - Runs validation tests
+    - Rolls back on failure
+
+    Monitor at: `https://github.com/USER/REPO/actions`
+  </Step>
+
+  <Step title="Verify Deployment">
+    ```bash
+    kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-production
+    kubectl get pods -n mcp-production
+    ```xml
+  </Step>
+</Steps>
+
+#### Manual Deployment (Emergency)
+
+<Warning>
+  **Use only for emergencies**. Bypasses automated testing and approval gates.
+</Warning>
+
+```bash
+cd deployments/overlays/production-gke
+
+## Update image tag
+kustomize edit set image mcp-server-langgraph=REGISTRY/IMAGE:NEW_TAG
+
+## Dry run
+kubectl apply -k . --dry-run=server
+
+## Apply
+kubectl apply -k .
+
+## Monitor
+kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-production
+```text
+#### Rollback Deployment
+
+<Tabs>
+  <Tab title="Quick Rollback">
+    ```bash
+    # Rollback to previous revision
+    kubectl rollout undo deployment/production-mcp-server-langgraph \
+      -n mcp-production
+
+    # Monitor
+    kubectl rollout status deployment/production-mcp-server-langgraph \
+      -n mcp-production
+    ```xml
+  </Tab>
+
+  <Tab title="Specific Revision">
+    ```bash
+    # List revisions
+    kubectl rollout history deployment/production-mcp-server-langgraph \
+      -n mcp-production
+
+    # Rollback to specific revision
+    kubectl rollout undo deployment/production-mcp-server-langgraph \
+      -n mcp-production \
+      --to-revision=5
+    ```xml
+  </Tab>
+</Tabs>
+
+---
+
+### Database Operations
+
+#### Manual Backup
+
+```bash
+gcloud sql backups create \
+  --instance=mcp-prod-postgres \
+  --description="Manual backup before major change" \
+  --project=PROJECT_ID
+
+## List backups
+gcloud sql backups list --instance=mcp-prod-postgres
+```text
+#### Restore from Backup
+
+<Warning>
+  **Caution**: Restoring to the same instance is destructive. Restore to a new instance first for safety.
+</Warning>
+
+<Tabs>
+  <Tab title="Restore to New Instance">
+    ```bash
+    # Clone to new instance
+    gcloud sql instances clone mcp-prod-postgres mcp-prod-postgres-restored \
+      --backup-id=BACKUP_ID \
+      --project=PROJECT_ID
+    ```text
+    **Recommended**: Test on new instance, then switch connection if successful
+  </Tab>
+
+  <Tab title="Point-in-Time Recovery">
+    ```bash
+    # Restore to specific timestamp
+    gcloud sql instances clone mcp-prod-postgres mcp-prod-postgres-pitr \
+      --point-in-time='2025-11-01T12:00:00.000Z' \
+      --project=PROJECT_ID
+    ```text
+    **PITR Window**: 7 days (configurable)
+  </Tab>
+</Tabs>
+
+#### Database Maintenance
+
+**Check Maintenance Window**:
+```bash
+gcloud sql instances describe mcp-prod-postgres \
+  --format="value(settings.maintenanceWindow)"
+```text
+**Reschedule Maintenance**:
+```bash
+gcloud sql instances patch mcp-prod-postgres \
+  --maintenance-window-day=1 \
+  --maintenance-window-hour=3 \
+  --project=PROJECT_ID
+```text
+---
+
+### Scaling Operations
+
+#### Manual Scaling
+
+<CodeGroup>
+```bash Scale Deployment
+kubectl scale deployment production-mcp-server-langgraph \
+  -n mcp-production \
+  --replicas=10
+```text
+```bash Update HPA
+kubectl patch hpa production-mcp-server-langgraph \
+  -n mcp-production \
+  --patch '{"spec":{"minReplicas":5,"maxReplicas":30}}'
+```text
+```bash Update Cluster Limits
+## Via Terraform
+cd terraform/environments/gcp-prod
+
+## Edit terraform.tfvars:
+## max_cluster_cpu    = 2000
+## max_cluster_memory = 20000
+
+terraform apply
+```xml
+</CodeGroup>
+
+#### Cluster Resource Monitoring
+
+```bash
+## View resource usage
+kubectl top pods -n mcp-production
+kubectl top nodes
+
+## Cloud Monitoring query
+gcloud monitoring time-series list \
+  --filter='metric.type="kubernetes.io/container/cpu/core_usage_time"' \
+  --project=PROJECT_ID
+```text
+---
+
+### Security Operations
+
+#### Rotate Secrets
+
+<Steps>
+  <Step title="Generate New Secrets">
+    ```bash
+    NEW_JWT_SECRET=$(openssl rand -base64 32)
+    NEW_API_KEY=$(openssl rand -base64 32)
+    ```sql
+  </Step>
+
+  <Step title="Update Secret Manager">
+    ```bash
+    # Update secret version
+    gcloud secrets versions add mcp-production-secrets \
+      --data-file=<(jq --arg jwt "$NEW_JWT_SECRET" '.jwt_secret = $jwt' secrets.json) \
+      --project=PROJECT_ID
+    ```xml
+  </Step>
+
+  <Step title="Pods Auto-Restart">
+    External Secrets Operator automatically syncs secrets and Reloader restarts pods.
+
+    Monitor:
+    ```bash
+    kubectl get pods -n mcp-production -w
+    ```xml
+  </Step>
+</Steps>
+
+#### Audit Access Logs
+
+```bash
+## View cluster access
+gcloud logging read \
+  'protoPayload.serviceName="container.googleapis.com" AND protoPayload.methodName="io.k8s.core.v1.pods.exec"' \
+  --limit=50
+
+## View kubectl commands
+gcloud logging read \
+  'protoPayload.serviceName="container.googleapis.com"' \
+  --limit=20
+```text
+#### Review Binary Authorization Denials
+
+```bash
+gcloud logging read \
+  'protoPayload.serviceName="binaryauthorization.googleapis.com" AND protoPayload.response.allow=false' \
+  --limit=20
+```text
+---
+
+### Common Tasks
+
+<AccordionGroup>
+  <Accordion title="View Application Logs">
+    <CodeGroup>
+    ```bash Real-time
+    kubectl logs -f -n mcp-production \
+      -l app=mcp-server-langgraph \
+      --max-log-requests=10
+    ```text
+    ```bash Cloud Logging
+    gcloud logging read \
+      'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production"' \
+      --limit=100 \
+      --format=json
+    ```text
+    ```bash Specific Container
+    kubectl logs POD_NAME -n mcp-production -c mcp-server-langgraph
+    kubectl logs POD_NAME -n mcp-production -c cloud-sql-proxy
+    ```sql
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Update Configuration">
+    ```bash
+    # Edit ConfigMap
+    kubectl edit configmap production-mcp-server-langgraph-config \
+      -n mcp-production
+
+    # Restart to pick up changes (Reloader does this automatically)
+    kubectl rollout restart deployment/production-mcp-server-langgraph \
+      -n mcp-production
+    ```xml
+  </Accordion>
+
+  <Accordion title="Connect to Database">
+    <Tabs>
+      <Tab title="Cloud SQL Proxy">
+        ```bash
+        cloud-sql-proxy PROJECT_ID:us-central1:mcp-prod-postgres &
+        psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph"
+        ```xml
+      </Tab>
+
+      <Tab title="kubectl Port Forward">
+        ```bash
+        kubectl port-forward -n mcp-production \
+          svc/production-mcp-server-langgraph 5432:5432 &
+
+        psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph"
+        ```xml
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="Export Metrics">
+    ```bash
+    # Export to JSON for analysis
+    gcloud monitoring time-series list \
+      --filter='resource.type="k8s_container"' \
+      --format=json \
+      > metrics-$(date +%Y%m%d).json
+    ```xml
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### Maintenance Windows
+
+#### Cluster Upgrades
+
+GKE Autopilot upgrades automatically based on release channel (STABLE for production).
+
+<Info>
+  **Release Channels**:
+  - **RAPID**: Weekly (for testing)
+  - **REGULAR**: Monthly (for general use)
+  - **STABLE**: Quarterly (for production) ✅
+</Info>
+
+**Check upgrade status**:
+```bash
+gcloud container clusters describe mcp-prod-gke \
+  --region=us-central1 \
+  --format="yaml(currentMasterVersion,releaseChannel)"
+```text
+**Manual upgrade** (if needed):
+```bash
+## Check available versions
+gcloud container get-server-config --region=us-central1
+
+## Upgrade
+gcloud container clusters upgrade mcp-prod-gke \
+  --region=us-central1 \
+  --cluster-version=VERSION
+```text
+#### Database Maintenance
+
+Scheduled maintenance: **Sunday 3 AM UTC** (configured in Terraform)
+
+**Reschedule**:
+```bash
+gcloud sql instances patch mcp-prod-postgres \
+  --maintenance-window-day=1 \  # Monday
+  --maintenance-window-hour=3 \  # 3 AM UTC
+  --project=PROJECT_ID
+```text
+**Defer one-time**:
+```bash
+gcloud sql instances reschedule-maintenance mcp-prod-postgres \
+  --reschedule-type=NEXT_AVAILABLE_WINDOW
+```text
+---
+
+### Monitoring & Alerting
+
+#### Active Alerts
+
+```bash
+## List firing alerts
+gcloud alpha monitoring policies list \
+  --filter="enabled=true" \
+  --project=PROJECT_ID
+
+## Get alert details
+gcloud alpha monitoring policies describe POLICY_ID
+```text
+#### Create Custom Alert
+
+```bash
+gcloud alpha monitoring policies create \
+  --notification-channels=CHANNEL_ID \
+  --display-name="High Error Rate" \
+  --condition-threshold-value=0.05 \
+  --condition-threshold-duration=300s
+```text
+#### View Metrics
+
+Access Cloud Monitoring dashboards:
+
+<CardGroup cols={2}>
+  <Card title="GKE Dashboard" icon="chart-line" href="https://console.cloud.google.com/kubernetes">
+    Pod metrics, cluster health, node status
+  </Card>
+  <Card title="Custom Dashboard" icon="chart-mixed" href="https://console.cloud.google.com/monitoring/dashboards">
+    Custom metrics created by setup script
+  </Card>
+</CardGroup>
+
+---
+
+### Disaster Recovery
+
+#### Cloud SQL Failover
+
+**Manual Failover** (for testing):
+```bash
+gcloud sql instances failover mcp-prod-postgres --project=PROJECT_ID
+
+## Monitor
+watch -n 5 'gcloud sql instances describe mcp-prod-postgres --format="value(state)"'
+```text
+**Recovery Time**: 2-3 minutes for automatic failover
+
+#### Full DR Procedure
+
+For complete disaster recovery automation:
+
+```bash
+./deployments/disaster-recovery/gcp-dr-automation.sh PROJECT_ID us-east1 us-central1 full
+```xml
+<Card title="Complete DR Guide" icon="life-ring" href="/deployment/disaster-recovery">
+  Multi-region failover, backup restoration, RTO/RPO targets
+</Card>
+
+---
+
+### Emergency Procedures
+
+#### Emergency Stop
+
+<Warning>
+  **This stops all traffic**. Use only in critical situations (security breach, data corruption).
+</Warning>
+
+```bash
+## Scale to zero
+kubectl scale deployment production-mcp-server-langgraph \
+  -n mcp-production \
+  --replicas=0
+
+## Resume
+kubectl scale deployment production-mcp-server-langgraph \
+  -n mcp-production \
+  --replicas=3
+```text
+#### Emergency Maintenance Mode
+
+```yaml
+## Apply maintenance page
+apiVersion: v1
+kind: Service
+metadata:
+  name: maintenance-page
+spec:
+  selector:
+    app: maintenance
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+---
+
+### Contacts & Escalation
+
+<Card title="On-Call Rotation" icon="phone">
+  Configure in PagerDuty/Opsgenie
+
+  **Escalation Path**:
+  1. P0/P1: On-call engineer (immediate)
+  2. P2: Engineering team lead (within 4 hours)
+  3. P3: Ticket for next sprint
+
+  **Communication**: #production-incidents (Slack)
+</Card>
+
+---
+
+### Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Troubleshooting Guide" icon="screwdriver-wrench" href="/deployment/operations/troubleshooting">
+    Detailed debugging procedures
+  </Card>
+  <Card title="Security Hardening" icon="shield" href="/security/gcp-security-hardening">
+    Security operations and auditing
+  </Card>
+  <Card title="Cost Optimization" icon="money-bill-trend-up" href="/deployment/cost-optimization">
+    Resource rightsizing and cost controls
+  </Card>
+  <Card title="Deployment Guide" icon="rocket" href="/deployment/kubernetes/gke-production">
+    Production deployment procedures
+  </Card>
+</CardGroup>
+
+For complete technical runbooks, see: [GKE_OPERATIONAL_RUNBOOKS.md](/deployments/GKE_OPERATIONAL_RUNBOOKS.md)

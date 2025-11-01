@@ -5,15 +5,13 @@ icon: 'file-lines'
 ---
 
 
-# 39. OpenFGA Permission Inheritance for Service Principals
-
 Date: 2025-01-28
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 Service principals (ADR-0033) need to act on behalf of users for scenarios like:
 - Scheduled reports generated for specific users
@@ -25,13 +23,13 @@ Challenge: Service principals have their own identity (`service:batch-job`) but 
 
 Current OpenFGA model supports direct user→object permissions but not delegation/inheritance.
 
-## Decision
+### Decision
 
 Extend OpenFGA authorization model with **`acts_as` relation** enabling service principals to inherit permissions from associated user principals while maintaining distinct identities.
 
-### Architecture
+#### Architecture
 
-```
+```text
 OpenFGA Authorization Model:
   service_principal (new type)
     - acts_as: [user]  ← Permission inheritance relation
@@ -45,7 +43,7 @@ Permission Check Flow:
   5. If yes: Permission granted (inherited)
 ```
 
-### Permission Inheritance Model
+#### Permission Inheritance Model
 
 ```mermaid
 graph TB
@@ -92,8 +90,7 @@ graph TB
     style Conv fill:#ffffb3,stroke:#f39c12,stroke-width:2px
     style Tool fill:#ffffb3,stroke:#f39c12,stroke-width:2px
     style Org fill:#80b1d3,stroke:#3498db,stroke-width:2px
-```
-
+```text
 **Permission Check Flow with Inheritance**:
 ```mermaid
 sequenceDiagram
@@ -124,9 +121,8 @@ sequenceDiagram
 
     App->>App: Log action<br/>Actor: service:batch-etl-job<br/>Effective User: user:alice<br/>Action: view conversation:thread1
 
-```
-
-### Core Principles
+```text
+#### Core Principles
 
 1. **Explicit Association**: `acts_as` tuples created deliberately (not automatic)
 2. **Transitive Permissions**: Service inherits all user permissions
@@ -135,7 +131,7 @@ sequenceDiagram
 5. **Revocable**: Disabling user revokes service permissions
 6. **Ownership Tracking**: Services have owners for management
 
-### OpenFGA Model Extension
+#### OpenFGA Model Extension
 
 **New Type**:
 ```typescript
@@ -145,8 +141,7 @@ type service_principal
     define acts_as: [user]
     define viewer: owner
     define editor: owner
-```
-
+```text
 **Relationship Tuples**:
 ```python
 [
@@ -169,9 +164,8 @@ type service_principal
         "object": "conversation:thread1"
     }
 ]
-```
-
-### Permission Check Implementation
+```text
+#### Permission Check Implementation
 
 **Enhanced Authorization** (`src/mcp_server_langgraph/auth/openfga.py`):
 ```python
@@ -207,46 +201,44 @@ async def check_permission(
                 return True
 
     return False
-```
-
-### Configuration
+```text
+#### Configuration
 
 ```bash
-# OpenFGA Permission Inheritance
+## OpenFGA Permission Inheritance
 OPENFGA_PERMISSION_INHERITANCE_ENABLED=true
 OPENFGA_LOG_INHERITED_ACCESS=true  # Log when service uses inherited permissions
 OPENFGA_CACHE_ACTS_AS_RELATIONS=true  # Cache acts_as lookups (5 min TTL)
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive Consequences
+#### Positive Consequences
 - Service principals can act on behalf of users (no password sharing)
 - Clear audit trail (service identity + associated user)
 - Flexible permissions (service can act as multiple users)
 - Revocation propagates (disable user → service loses permissions)
 - Standard ReBAC model (no custom authorization logic)
 
-### Negative Consequences
+#### Negative Consequences
 - Additional authorization complexity (extra tuple lookups)
 - Performance impact (two permission checks instead of one)
 - Potential permission confusion (non-obvious inheritance)
 - Authorization model more complex (additional relation types)
 
-### Mitigation Strategies
+#### Mitigation Strategies
 - Cache `acts_as` relationships (5-min TTL, high hit rate)
 - Clear logging of inherited access
 - UI showing effective permissions for service principals
 - Documentation with clear examples
 
-## Alternatives Considered
+### Alternatives Considered
 
 1. **Token Impersonation**: Rejected - complex OAuth2 token exchange, admin credentials required
 2. **Shared Credentials**: Rejected - security risk, poor audit trail
 3. **Copy Permissions**: Rejected - sync overhead, permission drift
 4. **Service-Specific Permissions**: Rejected - doesn't support user context
 
-## Implementation
+### Implementation
 
 **OpenFGA Model Update** (`src/mcp_server_langgraph/auth/openfga.py:287-377`):
 ```python
@@ -266,8 +258,7 @@ def get_model_definition() -> dict:
             }
         ]
     }
-```
-
+```text
 **Tuple Creation** (in ServicePrincipalManager):
 ```python
 async def associate_with_user(
@@ -279,21 +270,20 @@ async def associate_with_user(
             "relation": "acts_as",
             "object": user_id
         }])
-```
-
+```text
 **Authorization Check Enhancement**:
 ```python
-# In middleware or route handlers
+## In middleware or route handlers
 allowed = await check_permission(
     user_id="service:batch-job",
     relation="viewer",
     object="conversation:thread1",
     openfga_client=openfga_client
 )
-# Returns True if service:batch-job acts_as user who has viewer permission
+## Returns True if service:batch-job acts_as user who has viewer permission
 ```
 
-## References
+### References
 
 - OpenFGA Integration: `src/mcp_server_langgraph/auth/openfga.py`
 - Service Principal Manager: `src/mcp_server_langgraph/auth/service_principal.py` (to be created)

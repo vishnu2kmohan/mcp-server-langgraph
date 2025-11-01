@@ -4,7 +4,7 @@ description: 'Configure horizontal and vertical scaling for production workloads
 icon: 'arrow-up-right-dots'
 ---
 
-## Overview
+### Overview
 
 Scale your MCP Server horizontally (more replicas) and vertically (more resources) to handle varying loads efficiently. This guide covers Kubernetes HPA, VPA, cluster autoscaling, and performance tuning.
 
@@ -17,8 +17,7 @@ Scale your MCP Server horizontally (more replicas) and vertically (more resource
   # .env or Kubernetes ConfigMap
   CHECKPOINT_BACKEND=redis
   CHECKPOINT_REDIS_URL=redis://redis-service:6379/1
-  ```
-
+  ```text
   Without Redis, conversation state is stored in pod memory and **will be lost** during:
   - Pod restarts
   - Scale-up events (new pods have no history)
@@ -28,9 +27,9 @@ Scale your MCP Server horizontally (more replicas) and vertically (more resource
   See [ADR-0022: Distributed Conversation Checkpointing](/architecture/adr-0022-distributed-conversation-checkpointing) for details.
 </Note>
 
-## Horizontal Pod Autoscaling (HPA)
+### Horizontal Pod Autoscaling (HPA)
 
-### Basic Configuration
+#### Basic Configuration
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -58,20 +57,18 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```
-
+```text
 **Deploy**:
 ```bash
 kubectl apply -f hpa.yaml
 
-# Check HPA status
+## Check HPA status
 kubectl get hpa -n mcp-server-langgraph
 
-# Watch scaling
+## Watch scaling
 kubectl get hpa -n mcp-server-langgraph --watch
-```
-
-### Advanced HPA
+```text
+#### Advanced HPA
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -133,17 +130,15 @@ spec:
         value: 4    # Or add 4 pods
         periodSeconds: 30
       selectPolicy: Max  # Use most aggressive
-```
-
-### Custom Metrics
+```text
+#### Custom Metrics
 
 **Install Prometheus Adapter**:
 ```bash
 helm install prometheus-adapter prometheus-community/prometheus-adapter \
   --namespace monitoring \
   --set prometheus.url=http://prometheus:9090
-```
-
+```text
 **Configure custom metrics**:
 ```yaml
 apiVersion: v1
@@ -160,19 +155,17 @@ data:
         matches: "^(.*)_total"
         as: "${1}_per_second"
       metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[2m])'
-```
+```text
+### Vertical Pod Autoscaling (VPA)
 
-## Vertical Pod Autoscaling (VPA)
-
-### Install VPA
+#### Install VPA
 
 ```bash
 git clone https://github.com/kubernetes/autoscaler.git
 cd autoscaler/vertical-pod-autoscaler
 ./hack/vpa-up.sh
-```
-
-### VPA Configuration
+```text
+#### VPA Configuration
 
 ```yaml
 apiVersion: autoscaling.k8s.io/v1
@@ -199,16 +192,14 @@ spec:
       controlledResources:
       - cpu
       - memory
-```
-
+```text
 **Check recommendations**:
 ```bash
 kubectl describe vpa mcp-server-langgraph-vpa -n mcp-server-langgraph
-```
+```text
+### Cluster Autoscaling
 
-## Cluster Autoscaling
-
-### GKE
+#### GKE
 
 ```bash
 gcloud container clusters update langgraph-cluster \
@@ -216,9 +207,8 @@ gcloud container clusters update langgraph-cluster \
   --min-nodes=3 \
   --max-nodes=10 \
   --zone=us-central1-a
-```
-
-### EKS
+```text
+#### EKS
 
 ```yaml
 apiVersion: eksctl.io/v1alpha5
@@ -238,9 +228,8 @@ nodeGroups:
     iam:
       withAddonPolicies:
         autoScaler: true
-```
-
-### AKS
+```text
+#### AKS
 
 ```bash
 az aks update \
@@ -249,18 +238,17 @@ az aks update \
   --enable-cluster-autoscaler \
   --min-count 3 \
   --max-count 10
-```
+```text
+### Load Testing
 
-## Load Testing
-
-### Generate Load
+#### Generate Load
 
 ```bash
-# Install k6
+## Install k6
 brew install k6  # macOS
-# or download from https://k6.io
+## or download from https://k6.io
 
-# Load test script
+## Load test script
 cat > load-test.js <<'EOF'
 import http from 'k6/http';
 import { check, sleep } from 'k6';
@@ -297,28 +285,26 @@ export default function () {
 }
 EOF
 
-# Run test
+## Run test
 export AUTH_TOKEN="your-token"
 k6 run load-test.js
-```
-
-### Monitor Scaling
+```text
+#### Monitor Scaling
 
 ```bash
-# Watch pods scaling
+## Watch pods scaling
 watch kubectl get pods -n mcp-server-langgraph
 
-# Watch HPA
+## Watch HPA
 watch kubectl get hpa -n mcp-server-langgraph
 
-# View metrics
+## View metrics
 kubectl top pods -n mcp-server-langgraph
 kubectl top nodes
-```
+```text
+### Resource Limits
 
-## Resource Limits
-
-### Right-Sizing
+#### Right-Sizing
 
 ```yaml
 resources:
@@ -328,18 +314,17 @@ resources:
   limits:
     cpu: 4000m      # Max CPU
     memory: 4Gi     # Max memory
-```
-
+```text
 **Guidelines**:
 - **Requests**: Set to average usage (p50)
 - **Limits**: Set to peak usage (p95-p99)
 - **CPU**: Start with 1 core, adjust based on load
 - **Memory**: 1-2GB for typical workloads
 
-### Quality of Service (QoS)
+#### Quality of Service (QoS)
 
 ```yaml
-# Guaranteed QoS (best)
+## Guaranteed QoS (best)
 resources:
   requests:
     cpu: 2000m
@@ -348,7 +333,7 @@ resources:
     cpu: 2000m    # Same as request
     memory: 2Gi   # Same as request
 
-# Burstable QoS (good)
+## Burstable QoS (good)
 resources:
   requests:
     cpu: 1000m
@@ -357,37 +342,35 @@ resources:
     cpu: 4000m    # Higher than request
     memory: 4Gi
 
-# Best Effort QoS (avoid in production)
+## Best Effort QoS (avoid in production)
 resources: {}  # No requests or limits
-```
+```text
+### Performance Tuning
 
-## Performance Tuning
-
-### Application-Level
+#### Application-Level
 
 ```python
-# config.py
+## config.py
 
-# LLM settings
+## LLM settings
 MODEL_TIMEOUT = 60  # Seconds
 MODEL_MAX_TOKENS = 4096
 
-# Connection pooling
+## Connection pooling
 DATABASE_POOL_SIZE = 20
 DATABASE_MAX_OVERFLOW = 10
 
-# Caching
+## Caching
 ENABLE_CACHE = True
 CACHE_TTL = 300  # 5 minutes
 
-# Rate limiting
+## Rate limiting
 RATE_LIMIT_PER_MINUTE = 1000
-```
-
-### Kubernetes-Level
+```text
+#### Kubernetes-Level
 
 ```yaml
-# Deployment optimizations
+## Deployment optimizations
 spec:
   replicas: 3
 
@@ -412,23 +395,21 @@ spec:
       # Readiness gates
       readinessGates:
       - conditionType: "example.com/feature-1"
-```
-
-### Database Tuning
+```text
+#### Database Tuning
 
 **Redis**:
 ```conf
-# redis.conf
+## redis.conf
 maxmemory 2gb
 maxmemory-policy allkeys-lru
 save 900 1
 save 300 10
 save 60 10000
-```
-
+```text
 **PostgreSQL**:
 ```conf
-# postgresql.conf
+## postgresql.conf
 max_connections = 200
 shared_buffers = 256MB
 effective_cache_size = 1GB
@@ -437,24 +418,22 @@ checkpoint_completion_target = 0.9
 wal_buffers = 16MB
 default_statistics_target = 100
 random_page_cost = 1.1
-```
+```text
+### Cost Optimization
 
-## Cost Optimization
-
-### Right-Size Instances
+#### Right-Size Instances
 
 ```bash
-# Use VPA recommendations
+## Use VPA recommendations
 kubectl get vpa mcp-server-langgraph-vpa -o yaml
 
-# Adjust based on actual usage
+## Adjust based on actual usage
 resources:
   requests:
     cpu: 800m     # Reduced from 1000m
     memory: 1.5Gi # Reduced from 2Gi
-```
-
-### Spot/Preemptible Instances
+```text
+#### Spot/Preemptible Instances
 
 **GKE**:
 ```bash
@@ -465,8 +444,7 @@ gcloud container node-pools create spot-pool \
   --enable-autoscaling \
   --min-nodes=0 \
   --max-nodes=10
-```
-
+```text
 **EKS**:
 ```yaml
 nodeGroups:
@@ -478,12 +456,11 @@ nodeGroups:
       spotAllocationStrategy: "capacity-optimized"
     minSize: 0
     maxSize: 10
-```
-
-### Scheduled Scaling
+```text
+#### Scheduled Scaling
 
 ```yaml
-# Scale down at night
+## Scale down at night
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -503,7 +480,7 @@ spec:
             - kubectl scale deployment mcp-server-langgraph --replicas=1
           restartPolicy: OnFailure
 
-# Scale up in morning
+## Scale up in morning
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -523,30 +500,28 @@ spec:
             - -c
             - kubectl scale deployment mcp-server-langgraph --replicas=5
           restartPolicy: OnFailure
-```
+```text
+### Monitoring Scaling
 
-## Monitoring Scaling
-
-### Key Metrics
+#### Key Metrics
 
 ```promql
-# Replica count
+## Replica count
 count(kube_pod_info{namespace="mcp-server-langgraph", pod=~"mcp-server-langgraph.*"})
 
-# CPU utilization
+## CPU utilization
 rate(container_cpu_usage_seconds_total{namespace="mcp-server-langgraph"}[5m])
 
-# Memory utilization
+## Memory utilization
 container_memory_working_set_bytes{namespace="mcp-server-langgraph"}
 
-# Request rate
+## Request rate
 rate(http_requests_total{namespace="mcp-server-langgraph"}[5m])
 
-# HPA desired replicas
+## HPA desired replicas
 kube_horizontalpodautoscaler_status_desired_replicas{namespace="mcp-server-langgraph"}
-```
-
-### Alerts
+```text
+#### Alerts
 
 ```yaml
 groups:
@@ -576,9 +551,8 @@ groups:
     for: 2m
     annotations:
       summary: "High memory utilization"
-```
-
-## Best Practices
+```text
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Start Conservative" icon="gauge">
@@ -598,7 +572,7 @@ groups:
     k6 run --vus 10 --duration 5m load-test.js
     k6 run --vus 50 --duration 10m load-test.js
     k6 run --vus 100 --duration 15m load-test.js
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Monitor Closely" icon="chart-line">
@@ -624,11 +598,11 @@ groups:
       selector:
         matchLabels:
           app: mcp-server-langgraph
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="HPA not scaling">
@@ -641,7 +615,7 @@ groups:
 
     # View current metrics
     kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/mcp-server-langgraph/pods
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Pods evicted">
@@ -666,7 +640,7 @@ groups:
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">

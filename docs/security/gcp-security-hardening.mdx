@@ -1,0 +1,432 @@
+---
+title: "GCP Security Hardening"
+description: "Enterprise-grade security hardening for MCP Server on GKE with 67 security controls and defense-in-depth"
+icon: "shield-halved"
+---
+
+### Overview
+
+Implement defense-in-depth security for MCP Server on GKE with **67 security controls** achieving CIS GKE Benchmark compliance and SOC 2 readiness.
+
+<CardGroup cols={2}>
+  <Card title="Security Controls" icon="shield-check">
+    67 controls across 7 layers
+  </Card>
+  <Card title="Compliance" icon="certificate">
+    CIS, SOC 2, HIPAA-ready
+  </Card>
+  <Card title="Zero Trust" icon="lock">
+    Network policies, mTLS, Workload Identity
+  </Card>
+  <Card title="Automated Scanning" icon="magnifying-glass">
+    Daily compliance checks
+  </Card>
+</CardGroup>
+
+---
+
+### 7-Layer Security Architecture
+
+<Steps>
+  <Step title="Layer 1: Infrastructure">
+    - VPC isolation
+    - IAM boundaries
+    - GKE Security Posture Dashboard
+    - Audit logging
+  </Step>
+
+  <Step title="Layer 2: Compute (Shielded Nodes)">
+    - Secure Boot (verify boot integrity)
+    - vTPM (hardware-based key storage)
+    - Integrity monitoring (detect tampering)
+
+    <Check>Automatic in GKE Autopilot</Check>
+  </Step>
+
+  <Step title="Layer 3: Network">
+    - Private nodes (no public IPs)
+    - VPC-native networking
+    - Network policies (zero-trust)
+    - Cloud Armor (DDoS protection)
+  </Step>
+
+  <Step title="Layer 4: Data">
+    - Encryption at rest (Google-managed or CMEK)
+    - Encryption in transit (TLS required)
+    - Secret Manager (no secrets in Git)
+  </Step>
+
+  <Step title="Layer 5: Identity">
+    - Workload Identity (no SA keys)
+    - IAM least privilege
+    - Master authorized networks
+  </Step>
+
+  <Step title="Layer 6: Application">
+    - Binary Authorization (image signing)
+    - Container vulnerability scanning
+    - Pod Security Standards (restricted)
+  </Step>
+
+  <Step title="Layer 7: Compliance">
+    - Audit logging
+    - Policy enforcement (OPA/Gatekeeper)
+    - Automated compliance scanning
+  </Step>
+</Steps>
+
+---
+
+### Quick Security Setup
+
+#### 1. Enable Binary Authorization
+
+<Steps>
+  <Step title="Run Setup Script">
+    ```bash
+    ./deployments/security/binary-authorization/setup-binary-auth.sh PROJECT_ID production
+    ```
+  </Step>
+
+  <Step title="Sign Images">
+    ```bash
+    ./deployments/security/binary-authorization/sign-image.sh \
+      PROJECT_ID production IMAGE_URL
+    ```
+  </Step>
+
+  <Step title="Enable in Cluster">
+    ```hcl
+    # terraform.tfvars
+    enable_binary_authorization = true
+    ```
+
+    ```bash
+    terraform apply
+    ```
+  </Step>
+</Steps>
+
+#### 2. Configure Private Cluster
+
+<Tabs>
+  <Tab title="Private Nodes Only">
+    ```hcl
+    enable_private_nodes = true     # ✅ Already configured
+    enable_private_endpoint = false # Public control plane access
+    ```
+
+    **Use case**: Production with external access needed
+  </Tab>
+
+  <Tab title="Fully Private">
+    ```hcl
+    enable_private_nodes = true
+    enable_private_endpoint = true  # Private control plane
+    ```
+
+    **Access**: Only via VPC (bastion, VPN, Cloud Shell)
+    **Use case**: Maximum security environments
+  </Tab>
+</Tabs>
+
+#### 3. Restrict Control Plane Access
+
+```hcl
+enable_master_authorized_networks = true
+master_authorized_networks_cidrs = [
+  {
+    cidr_block   = "10.0.0.0/8"
+    display_name = "Internal VPC"
+  },
+  {
+    cidr_block   = "203.0.113.0/24"
+    display_name = "Office Network"
+  }
+]
+```
+
+#### 4. Enable Security Posture Dashboard
+
+```hcl
+enable_security_posture             = true
+security_posture_mode               = "ENTERPRISE"
+security_posture_vulnerability_mode = "VULNERABILITY_ENTERPRISE"
+```
+
+**View Dashboard**:
+```bash
+## Console: Kubernetes → Security
+## https://console.cloud.google.com/kubernetes/security?project=PROJECT_ID
+```
+
+---
+
+### Security Checklist
+
+#### Infrastructure ✅
+
+- [x] GKE Security Posture enabled
+- [x] Audit logging enabled
+- [x] Shielded nodes (automatic in Autopilot)
+- [x] Workload Identity enabled
+- [ ] VPC Service Controls (optional, high-security)
+
+#### Network ✅
+
+- [x] Private nodes (no public IPs)
+- [x] VPC-native networking
+- [x] Network policies enforced
+- [x] Cloud NAT for egress
+- [ ] Private endpoint (optional)
+- [ ] Cloud Armor (enable via variable)
+
+#### Application ✅
+
+- [x] Binary Authorization ready
+- [x] Container scanning (Trivy in CI/CD)
+- [x] Pod security standards (restricted)
+- [x] Non-root containers
+- [x] Read-only root filesystem
+- [x] Capabilities dropped (ALL)
+
+#### Data ✅
+
+- [x] Encryption at rest (Google-managed)
+- [ ] CMEK (optional, compliance)
+- [x] Encryption in transit (TLS)
+- [x] Secrets in Secret Manager
+- [x] No secrets in Git/ConfigMaps
+- [x] No service account keys
+
+#### Identity ✅
+
+- [x] Workload Identity (no SA keys)
+- [x] IAM least privilege
+- [x] Per-workload service accounts
+- [x] RBAC policies
+- [ ] SA key creation disabled (org policy)
+
+---
+
+### Security Testing
+
+#### Automated Scans
+
+Run daily compliance scans:
+
+```bash
+## Trigger manually
+gh workflow run gcp-compliance-scan.yaml
+
+## View results
+gh run list --workflow=gcp-compliance-scan.yaml
+```
+
+**Scans include**:
+- Terraform security (Trivy, tfsec, Checkov)
+- Kubernetes manifests (Trivy, kube-score)
+- CIS GKE Benchmark (kube-bench)
+- Secret scanning (Gitleaks, TruffleHog)
+
+#### Manual Security Review
+
+<AccordionGroup>
+  <Accordion title="Check for Privileged Containers">
+    ```bash
+    kubectl get pods -A -o json \
+      | jq '[.items[] | select(.spec.containers[].securityContext.privileged==true)] | length'
+    ```
+
+    <Check>Should return: 0</Check>
+  </Accordion>
+
+  <Accordion title="Verify Network Policies">
+    ```bash
+    kubectl get networkpolicies -n mcp-production
+    ```
+
+    <Check>At least 2 policies should exist</Check>
+  </Accordion>
+
+  <Accordion title="Audit Workload Identity">
+    ```bash
+    kubectl get sa -A -o json \
+      | jq '.items[] | select(.metadata.annotations["iam.gke.io/gcp-service-account"]) | {namespace: .metadata.namespace, name: .metadata.name, gcp_sa: .metadata.annotations["iam.gke.io/gcp-service-account"]}'
+    ```
+  </Accordion>
+
+  <Accordion title="Review IAM Bindings">
+    ```bash
+    gcloud projects get-iam-policy PROJECT_ID \
+      --flatten="bindings[].members" \
+      --filter="bindings.members:serviceAccount"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+### Compliance Frameworks
+
+#### CIS GKE Benchmark
+
+<Info>
+  GKE Autopilot is **pre-configured** to meet CIS Benchmark requirements.
+</Info>
+
+**Key controls** (auto-compliant):
+- ✅ 4.1.1 Workload Identity enabled
+- ✅ 4.2.1 Network Policy enabled
+- ✅ 4.3.1 Private cluster enabled
+- ✅ 4.5.1 Audit Logging enabled
+
+**Validate with kube-bench**:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job-gke.yaml
+kubectl logs job/kube-bench
+```
+
+#### SOC 2 Type II
+
+**Required controls** (all implemented):
+- ✅ Access control (Workload Identity + RBAC)
+- ✅ Encryption (at rest + in transit)
+- ✅ Audit logging (all access logged)
+- ✅ Change management (Terraform + GitOps)
+- ✅ Monitoring & alerting (Cloud Operations)
+- ✅ Incident response (runbooks documented)
+
+#### HIPAA Compliance
+
+**Requirements**:
+- ✅ Encryption at rest (enable CMEK recommended)
+- ✅ Encryption in transit (TLS required)
+- ✅ Audit logs (configure 6+ year retention)
+- ✅ Access controls (IAM + RBAC)
+- ✅ Business Associate Agreement (sign with Google)
+
+**Additional steps**:
+```hcl
+## Enable CMEK
+kms_key_name = "projects/PROJECT/locations/REGION/keyRings/RING/cryptoKeys/KEY"
+
+## Extended audit log retention
+## Configure via Cloud Console: Logging → Log Router → Sinks
+```
+
+---
+
+### Security Monitoring
+
+#### Critical Metrics
+
+<Tabs>
+  <Tab title="Unauthorized Access">
+    ```bash
+    gcloud logging read \
+      'protoPayload.status.code!=0 AND protoPayload.authenticationInfo.principalEmail!=""' \
+      --limit=50
+    ```
+  </Tab>
+
+  <Tab title="Binary Auth Denials">
+    ```bash
+    gcloud logging read \
+      'protoPayload.serviceName="binaryauthorization.googleapis.com" AND protoPayload.response.allow=false' \
+      --limit=20
+    ```
+  </Tab>
+
+  <Tab title="Privileged Pods">
+    ```bash
+    kubectl get pods -A -o json \
+      | jq '[.items[] | select(.spec.containers[].securityContext.privileged==true)]'
+    ```
+
+    <Check>Should be empty array: []</Check>
+  </Tab>
+
+  <Tab title="Network Policy Violations">
+    ```bash
+    gcloud logging read \
+      'resource.type="k8s_pod" AND protoPayload.request.spec.containers[].securityContext.privileged=true' \
+      --limit=10
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+### Incident Response
+
+#### Security Incident Runbook
+
+<Steps>
+  <Step title="Detection">
+    - Security alert fires
+    - Unusual activity in audit logs
+    - Binary Authorization denial surge
+  </Step>
+
+  <Step title="Containment">
+    ```bash
+    # Isolate affected pods
+    kubectl label pod SUSPICIOUS_POD quarantine=true -n mcp-production
+
+    # Network policy to isolate
+    kubectl apply -f - <<EOF
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: isolate-suspicious-pod
+      namespace: mcp-production
+    spec:
+      podSelector:
+        matchLabels:
+          quarantine: "true"
+      policyTypes:
+      - Ingress
+      - Egress
+    EOF
+    ```
+  </Step>
+
+  <Step title="Investigation">
+    ```bash
+    # Export logs
+    kubectl logs POD_NAME -n mcp-production --all-containers > incident-logs.txt
+
+    # Audit trail
+    gcloud logging read \
+      'resource.type="k8s_cluster" AND protoPayload.resourceName=~"pods/SUSPICIOUS_POD"' \
+      --format=json > audit-trail.json
+    ```
+  </Step>
+
+  <Step title="Remediation">
+    - Delete compromised pods
+    - Rotate all secrets
+    - Review and tighten IAM policies
+    - Deploy patched version
+  </Step>
+</Steps>
+
+---
+
+### Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Binary Authorization" icon="file-signature" href="/deployment/binary-authorization">
+    Image signing and policy enforcement
+  </Card>
+  <Card title="Operations Runbooks" icon="book-medical" href="/deployment/operations/gke-runbooks">
+    Security operations and incident response
+  </Card>
+  <Card title="Compliance Scanning" icon="magnifying-glass" href="https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/.github/workflows/gcp-compliance-scan.yaml">
+    Automated security and compliance scanning
+  </Card>
+  <Card title="Complete Security Guide" icon="book" href="/GCP_SECURITY_HARDENING_GUIDE.md">
+    600+ line comprehensive security hardening guide
+  </Card>
+</CardGroup>

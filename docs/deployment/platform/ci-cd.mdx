@@ -4,7 +4,7 @@ description: 'Automate LangGraph Platform deployments with CI/CD pipelines'
 icon: 'infinity'
 ---
 
-## Overview
+### Overview
 
 Automate your LangGraph Platform deployments with continuous integration and deployment pipelines. Deploy on every commit, with automated testing and rollback capabilities.
 
@@ -12,9 +12,9 @@ Automate your LangGraph Platform deployments with continuous integration and dep
   **Automated Deployments**: Push to main → CI/CD tests → Auto-deploy to production
 </Info>
 
-## GitHub Actions
+### GitHub Actions
 
-### Quick Setup
+#### Quick Setup
 
 <Steps>
   <Step title="Add LangSmith API Key">
@@ -28,7 +28,7 @@ Automate your LangGraph Platform deployments with continuous integration and dep
     ```bash
     mkdir -p .github/workflows
     cp .github/workflows/deploy-langgraph-platform.yml .github/workflows/
-    ```
+    ```xml
   </Step>
 
   <Step title="Push to GitHub">
@@ -36,11 +36,11 @@ Automate your LangGraph Platform deployments with continuous integration and dep
     git add .github/workflows/deploy-langgraph-platform.yml
     git commit -m "Add LangGraph Platform CI/CD"
     git push
-    ```
+    ```xml
   </Step>
 </Steps>
 
-### Full Workflow
+#### Full Workflow
 
 ```yaml .github/workflows/deploy-langgraph-platform.yml
 name: Deploy to LangGraph Platform
@@ -130,9 +130,8 @@ jobs:
         run: |
           langgraph deployment invoke mcp-server-langgraph-prod \
             --input '{"messages": [{"role": "user", "content": "Hello"}]}'
-```
-
-### Environment Protection Rules
+```text
+#### Environment Protection Rules
 
 Set up deployment approvals in GitHub:
 
@@ -155,7 +154,7 @@ Set up deployment approvals in GitHub:
   </Step>
 </Steps>
 
-## GitLab CI/CD
+### GitLab CI/CD
 
 ```yaml .gitlab-ci.yml
 stages:
@@ -202,9 +201,8 @@ deploy-production:
     - langgraph deployment get mcp-server-langgraph-prod
   only:
     - main
-```
-
-## CircleCI
+```text
+### CircleCI
 
 ```yaml .circleci/config.yml
 version: 2.1
@@ -274,9 +272,8 @@ workflows:
       - deploy-production:
           requires:
             - hold-production
-```
-
-## Best Practices
+```text
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Always Test Before Deploy">
@@ -287,7 +284,7 @@ workflows:
 
       deploy:
         needs: test  # Only deploy if tests pass
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Staging Environment">
@@ -298,7 +295,7 @@ workflows:
 
     deploy-production:
       needs: deploy-staging  # Only deploy to prod if staging succeeds
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Tag Deployments">
@@ -311,7 +308,7 @@ workflows:
 
     # Tag with timestamp
     langgraph deploy my-agent-prod --tag "deploy-$(date +%Y%m%d-%H%M%S)"
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Require Approvals for Production">
@@ -321,7 +318,7 @@ workflows:
     deploy-production:
       environment: production  # Requires approval
       when: manual
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Run Smoke Tests">
@@ -330,7 +327,7 @@ workflows:
     langgraph deployment invoke my-agent-prod \
       --input '{"messages": [{"role": "user", "content": "health check"}]}' \
       --timeout 30
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Notify on Deployment">
@@ -345,13 +342,13 @@ workflows:
           }
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Rollback Strategy
+### Rollback Strategy
 
-### Automatic Rollback on Failure
+#### Automatic Rollback on Failure
 
 ```yaml
 - name: Deploy to Production
@@ -371,22 +368,20 @@ workflows:
     PREV_REVISION=$(langgraph deployment list | grep my-agent-prod | awk 'NR==2 {print $2}')
     # Rollback
     langgraph deployment rollback my-agent-prod --revision $PREV_REVISION
-```
-
-### Manual Rollback
+```text
+#### Manual Rollback
 
 ```bash
-# List revisions
+## List revisions
 langgraph deployment list my-agent-prod
 
-# Rollback to specific revision
+## Rollback to specific revision
 langgraph deployment rollback my-agent-prod --revision 42
 
-# Or rollback to previous
+## Or rollback to previous
 langgraph deployment rollback my-agent-prod
-```
-
-## Multi-Environment Strategy
+```text
+### Multi-Environment Strategy
 
 <Tabs>
   <Tab title="Development">
@@ -396,7 +391,7 @@ langgraph deployment rollback my-agent-prod
     deploy-dev:
       if: github.ref == 'refs/heads/develop'
       run: langgraph deploy my-agent-dev --tag development
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Staging">
@@ -406,7 +401,7 @@ langgraph deployment rollback my-agent-prod
     deploy-staging:
       if: github.ref == 'refs/heads/main'
       run: langgraph deploy my-agent-staging --tag staging
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Production">
@@ -417,26 +412,26 @@ langgraph deployment rollback my-agent-prod
       if: startsWith(github.ref, 'refs/tags/v')
       environment: production
       run: langgraph deploy my-agent-prod --tag ${{ github.ref_name }}
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Monitoring Deployments
+### Monitoring Deployments
 
 View deployment status:
 
 ```bash
-# Get deployment info
+## Get deployment info
 langgraph deployment get my-agent-prod
 
-# Stream logs
+## Stream logs
 langgraph deployment logs my-agent-prod --follow
 
-# View in LangSmith
-# https://smith.langchain.com → Select project → View traces
+## View in LangSmith
+## https://smith.langchain.com → Select project → View traces
 ```
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Authentication failed">
@@ -464,7 +459,7 @@ langgraph deployment logs my-agent-prod --follow
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/deployment/platform/quickstart">

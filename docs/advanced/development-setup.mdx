@@ -4,7 +4,7 @@ description: 'Complete development environment setup guide'
 icon: 'code'
 ---
 
-## Overview
+### Overview
 
 This guide provides step-by-step instructions for setting up a complete development environment for the MCP Server with LangGraph project. Whether you're on macOS, Linux, or Windows, this guide will get you up and running.
 
@@ -12,100 +12,100 @@ This guide provides step-by-step instructions for setting up a complete developm
 This setup is optimized for productivity with hot reload, debugging support, code formatting, and comprehensive testing tools.
 </Info>
 
-## System Requirements
+### System Requirements
 
-### Minimum Requirements
+#### Minimum Requirements
 
 - **CPU**: 2 cores
 - **RAM**: 8 GB
 - **Disk**: 20 GB free space
 - **OS**: macOS 11+, Ubuntu 20.04+, Windows 10+ with WSL2
 
-### Recommended Requirements
+#### Recommended Requirements
 
 - **CPU**: 4+ cores
 - **RAM**: 16 GB
 - **Disk**: 50 GB SSD
 - **OS**: macOS 12+, Ubuntu 22.04+
 
-## Prerequisites
+### Prerequisites
 
-### Install Core Tools
+#### Install Core Tools
 
 **macOS**:
 ```bash
-# Install Homebrew
+## Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install core tools
+## Install core tools
 brew install python@3.12 git docker docker compose # Install uv (fast Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 **Ubuntu/Debian**:
 ```bash
-# Update package list
+## Update package list
 sudo apt update
 
-# Install Python 3.12
+## Install Python 3.12
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt install python3.12 python3.12-venv python3.12-dev
 
-# Install Git
+## Install Git
 sudo apt install git
 
-# Install Docker
+## Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
-# Install uv
+## Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 **Windows (WSL2)**:
 ```powershell
-# Install WSL2
+## Install WSL2
 wsl --install -d Ubuntu-22.04
 
-# Inside WSL2, follow Ubuntu instructions above
+## Inside WSL2, follow Ubuntu instructions above
 ```
 
-### Verify Installation
+#### Verify Installation
 
 ```bash
-# Check Python version
+## Check Python version
 python3.12 --version  # Should be 3.12.x
 
-# Check Git
+## Check Git
 git --version
 
-# Check Docker
+## Check Docker
 docker --version
 docker compose --version
 
-# Check uv
+## Check uv
 uv --version
 ```
 
-## Clone Repository
+### Clone Repository
 
 ```bash
-# Fork the repository (on GitHub)
-# Then clone your fork
+## Fork the repository (on GitHub)
+## Then clone your fork
 git clone https://github.com/YOUR_USERNAME/mcp-server-langgraph.git
 cd mcp-server-langgraph
 
-# Add upstream remote
+## Add upstream remote
 git remote add upstream https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 
-# Verify remotes
+## Verify remotes
 git remote -v
 ```
 
-## Python Environment
+### Python Environment
 
-### Create Virtual Environment and Install Dependencies
+#### Create Virtual Environment and Install Dependencies
 
 <Note>
 **With uv, virtual environment creation and dependency installation happen in one command!**
@@ -117,16 +117,16 @@ git remote -v
 </Note>
 
 ```bash
-# Install ALL dependencies (recommended for development)
+## Install ALL dependencies (recommended for development)
 uv sync
 
-# Or use the Makefile
+## Or use the Makefile
 make install-dev  # Same as: uv sync
 
-# Install production dependencies only
+## Install production dependencies only
 make install      # Same as: uv sync --frozen --no-dev
 
-# Verify installation
+## Verify installation
 uv run python -c "import fastapi, langchain, anthropic; print('All imports successful')"
 ```
 
@@ -135,26 +135,26 @@ No need to manually create or activate virtual environments with `uv`!
 Use `uv run <command>` to run commands in the virtual environment.
 </Tip>
 
-### Manual Virtual Environment (Optional)
+#### Manual Virtual Environment (Optional)
 
 If you prefer manual control:
 
 ```bash
-# Create venv manually
+## Create venv manually
 uv venv --python 3.12
 
-# Activate it (only if needed)
-# macOS/Linux
+## Activate it (only if needed)
+## macOS/Linux
 source .venv/bin/activate
 
-# Windows (Git Bash)
+## Windows (Git Bash)
 source .venv/Scripts/activate
 
-# Then install
+## Then install
 uv sync
 ```
 
-### Development Dependencies
+#### Development Dependencies
 
 The `pyproject.toml` `[dependency-groups]` section includes:
 
@@ -178,9 +178,9 @@ dev = [
 
 All development dependencies are managed through `pyproject.toml` and installed via `uv sync --group dev`.
 
-## IDE Setup
+### IDE Setup
 
-### Visual Studio Code
+#### Visual Studio Code
 
 **Install Extensions**:
 ```bash
@@ -267,7 +267,7 @@ code --install-extension charliermarsh.ruff
 }
 ```
 
-### PyCharm
+#### PyCharm
 
 **Configure Interpreter**:
 1. File → Settings → Project → Python Interpreter
@@ -284,101 +284,101 @@ code --install-extension charliermarsh.ruff
 2. Set line length to 100
 3. Enable "Reformat code" on save
 
-## Environment Configuration
+### Environment Configuration
 
-### Create .env File
+#### Create .env File
 
 ```bash
-# Copy example
+## Copy example
 cp .env.example .env
 
-# Edit with your values
+## Edit with your values
 vim .env  # or use your preferred editor
 ```
 
-### Development .env
+#### Development .env
 
 ```bash
-# Environment
+## Environment
 ENV=development
 DEBUG=true
 LOG_LEVEL=debug
 
-# Server
+## Server
 HOST=0.0.0.0
 PORT=8000
 WORKERS=1
 
-# Authentication
+## Authentication
 AUTH_PROVIDER=inmemory
 JWT_SECRET=dev-secret-change-in-production
 JWT_ALGORITHM=HS256
 JWT_EXPIRATION=3600
 
-# Session
+## Session
 SESSION_PROVIDER=memory
 SESSION_SECRET=dev-session-secret
 SESSION_TTL=3600
 
-# Authorization (optional for development)
+## Authorization (optional for development)
 OPENFGA_ENABLED=false
 OPENFGA_URL=http://localhost:8080
 
-# LLM Configuration
+## LLM Configuration
 LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=sk-ant-your-dev-key
 LLM_MODEL_NAME=claude-3-5-sonnet-20241022
 LLM_TEMPERATURE=1.0
 LLM_MAX_TOKENS=8192
 
-# Observability (disabled for development)
+## Observability (disabled for development)
 ENABLE_TRACING=false
 ENABLE_METRICS=false
 LANGSMITH_ENABLED=false
 
-# Optional: Enable if needed
-# ENABLE_TRACING=true
-# JAEGER_URL=http://localhost:4318
-# LANGSMITH_API_KEY=your-langsmith-key
-# LANGSMITH_PROJECT=langgraph-dev
+## Optional: Enable if needed
+## ENABLE_TRACING=true
+## JAEGER_URL=http://localhost:4318
+## LANGSMITH_API_KEY=your-langsmith-key
+## LANGSMITH_PROJECT=langgraph-dev
 ```
 
-### Using direnv (Optional but Recommended)
+#### Using direnv (Optional but Recommended)
 
 ```bash
-# Install direnv
+## Install direnv
 brew install direnv  # macOS
 sudo apt install direnv  # Ubuntu
 
-# Setup shell hook (add to ~/.bashrc or ~/.zshrc)
+## Setup shell hook (add to ~/.bashrc or ~/.zshrc)
 eval "$(direnv hook bash)"  # for bash
 eval "$(direnv hook zsh)"   # for zsh
 
-# Create .envrc
+## Create .envrc
 echo "dotenv" > .envrc
 
-# Allow direnv
+## Allow direnv
 direnv allow
 
-# Now .env loads automatically when you cd into project
+## Now .env loads automatically when you cd into project
 ```
 
-## Pre-commit Hooks
+### Pre-commit Hooks
 
-### Install Pre-commit
+#### Install Pre-commit
 
 ```bash
-# Install pre-commit
+## Install pre-commit
 pip install pre-commit
 
-# Install hooks
+## Install hooks
 pre-commit install
 
-# Run manually on all files
+## Run manually on all files
 pre-commit run --all-files
 ```
 
-### Pre-commit Configuration
+#### Pre-commit Configuration
 
 Already configured in `.pre-commit-config.yaml`:
 
@@ -424,28 +424,28 @@ repos:
       - id: check-merge-conflict
 ```
 
-## Docker Development
+### Docker Development
 
-### Start Services
+#### Start Services
 
 ```bash
-# Start all development services
+## Start all development services
 docker compose -f docker-compose.dev.yml up -d
 
-# View logs
+## View logs
 docker compose logs -f
 
-# Check status
+## Check status
 docker compose ps
 
-# Stop services
+## Stop services
 docker compose down
 
-# Clean up (including volumes)
+## Clean up (including volumes)
 docker compose down -v
 ```
 
-### Docker Compose for Development
+#### Docker Compose for Development
 
 **docker-compose.dev.yml**:
 ```yaml
@@ -520,183 +520,183 @@ volumes:
   redis-data:
 ```
 
-## Running the Application
+### Running the Application
 
-### Development Server
+#### Development Server
 
 ```bash
-# Activate virtualenv
+## Activate virtualenv
 source .venv/bin/activate
 
-# Run with hot reload
+## Run with hot reload
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
-# Or use the Makefile
+## Or use the Makefile
 make dev
 
-# Check it's running
+## Check it's running
 curl http://localhost:8000/health/live
 ```
 
-### Run with Docker
+#### Run with Docker
 
 ```bash
-# Build image
+## Build image
 docker build -t mcp-server-langgraph:dev .
 
-# Run container
+## Run container
 docker run -p 8000:8000 \
   --env-file .env \
   mcp-server-langgraph:dev
 
-# Or use docker compose docker compose up
+## Or use docker compose docker compose up
 ```
 
-## Testing
+### Testing
 
-### Run Tests
+#### Run Tests
 
 ```bash
-# Run unit tests
+## Run unit tests
 pytest -m unit
 
-# Run with coverage
+## Run with coverage
 pytest -m unit --cov=src --cov-report=html
 
-# Run integration tests (requires services)
+## Run integration tests (requires services)
 docker compose -f docker-compose.dev.yml up -d
 pytest -m integration
 
-# Run specific test file
+## Run specific test file
 pytest tests/unit/test_auth.py
 
-# Run specific test
+## Run specific test
 pytest tests/unit/test_auth.py::test_create_token
 
-# Run with verbose output
+## Run with verbose output
 pytest -v --tb=short
 
-# Watch mode (requires pytest-watch)
+## Watch mode (requires pytest-watch)
 pytest-watch
 ```
 
-### Debugging Tests
+#### Debugging Tests
 
 ```bash
-# Run with pdb debugger
+## Run with pdb debugger
 pytest --pdb
 
-# Drop into debugger on failure
+## Drop into debugger on failure
 pytest --pdb --maxfail=1
 
-# Use ipdb for better debugging
+## Use ipdb for better debugging
 pip install ipdb
 pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb
 ```
 
-## Code Quality
+### Code Quality
 
-### Format Code
+#### Format Code
 
 ```bash
-# Format with black
+## Format with black
 black src/ tests/
 
-# Sort imports
+## Sort imports
 isort src/ tests/
 
-# Or use make command
+## Or use make command
 make format
 ```
 
-### Lint Code
+#### Lint Code
 
 ```bash
-# Run flake8
+## Run flake8
 flake8 src/ tests/
 
-# Type check with mypy
+## Type check with mypy
 mypy src/
 
-# Security scan
+## Security scan
 bandit -r src/
 
-# Or run all checks
+## Or run all checks
 make lint
 ```
 
-### Auto-fix Issues
+#### Auto-fix Issues
 
 ```bash
-# Fix import sorting
+## Fix import sorting
 isort --fix src/
 
-# Auto-format
+## Auto-format
 black src/
 
-# Fix common issues
+## Fix common issues
 autopep8 --in-place --aggressive --aggressive src/
 ```
 
-## Database Migrations
+### Database Migrations
 
-### Using Alembic
+#### Using Alembic
 
 ```bash
-# Install Alembic
+## Install Alembic
 pip install alembic
 
-# Initialize (if not already done)
+## Initialize (if not already done)
 alembic init migrations
 
-# Create migration
+## Create migration
 alembic revision --autogenerate -m "Add users table"
 
-# Run migrations
+## Run migrations
 alembic upgrade head
 
-# Rollback
+## Rollback
 alembic downgrade -1
 
-# Show current version
+## Show current version
 alembic current
 
-# Show migration history
+## Show migration history
 alembic history
 ```
 
-## Debugging
+### Debugging
 
-### Debug with VSCode
+#### Debug with VSCode
 
 1. Set breakpoint in code (click left margin)
 2. Press F5 or Run → Start Debugging
 3. Select "Python: FastAPI" configuration
 4. Debug controls appear at top
 
-### Debug with ipdb
+#### Debug with ipdb
 
 ```python
-# Add this line where you want to break
+## Add this line where you want to break
 import ipdb; ipdb.set_trace()
 
-# Or use breakpoint() (Python 3.7+)
+## Or use breakpoint() (Python 3.7+)
 breakpoint()
 ```
 
-### Remote Debugging
+#### Remote Debugging
 
 ```python
-# Install debugpy
+## Install debugpy
 pip install debugpy
 
-# Add to your code
+## Add to your code
 import debugpy
 debugpy.listen(("0.0.0.0", 5678))
 debugpy.wait_for_client()
 
-# Connect from VSCode
-# Add to launch.json:
+## Connect from VSCode
+## Add to launch.json:
 {
   "name": "Python: Remote Attach",
   "type": "python",
@@ -708,12 +708,12 @@ debugpy.wait_for_client()
 }
 ```
 
-## Makefile Commands
+### Makefile Commands
 
-### Common Commands
+#### Common Commands
 
 ```makefile
-# Makefile
+## Makefile
 .PHONY: help install dev test lint format clean
 
 help:  ## Show this help
@@ -772,29 +772,29 @@ services-logs:  ## View service logs
 
 **Usage**:
 ```bash
-# Show all commands
+## Show all commands
 make help
 
-# Install dependencies
+## Install dependencies
 make install
 
-# Run dev server
+## Run dev server
 make dev
 
-# Run tests
+## Run tests
 make test
 
-# Format and lint
+## Format and lint
 make format
 make lint
 
-# Start services
+## Start services
 make services-up
 ```
 
-## Troubleshooting
+### Troubleshooting
 
-### Common Issues
+#### Common Issues
 
 <AccordionGroup>
   <Accordion title="Port Already in Use" icon="network-wired">
@@ -859,26 +859,26 @@ make services-up
   </Accordion>
 </AccordionGroup>
 
-## Performance Tips
+### Performance Tips
 
-### Speed Up Development
+#### Speed Up Development
 
 ```bash
-# Use uv instead of pip (10-100x faster)
+## Use uv instead of pip (10-100x faster)
 uv pip install package-name
 
-# Use pytest-xdist for parallel tests
+## Use pytest-xdist for parallel tests
 pip install pytest-xdist
 pytest -n auto  # Use all CPU cores
 
-# Use pytest-sugar for better output
+## Use pytest-sugar for better output
 pip install pytest-sugar
 
-# Cache Docker layers
+## Cache Docker layers
 docker build --cache-from mcp-server-langgraph:latest .
 ```
 
-### Optimize VSCode
+#### Optimize VSCode
 
 ```json
 {
@@ -896,7 +896,7 @@ docker build --cache-from mcp-server-langgraph:latest .
 }
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Contributing" icon="code-pull-request" href="/advanced/contributing">

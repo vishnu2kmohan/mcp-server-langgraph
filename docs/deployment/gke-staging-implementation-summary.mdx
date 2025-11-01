@@ -4,17 +4,15 @@ description: 'Complete summary of the GKE staging environment implementation for
 icon: 'dharmachakra'
 ---
 
-# GKE Staging Implementation Summary
-
-## Overview
+### Overview
 
 This document summarizes the complete GKE staging environment implementation for the MCP Server LangGraph project.
 
 **Project ID**: `vishnu-sandbox-20250310`
 
-## What Was Implemented
+### What Was Implemented
 
-### 1. Infrastructure Setup Script
+#### 1. Infrastructure Setup Script
 **File**: `scripts/gcp/setup-staging-infrastructure.sh`
 
 **Creates**:
@@ -38,7 +36,7 @@ This document summarizes the complete GKE staging environment implementation for
 - Audit logging enabled
 - Least privilege IAM roles
 
-### 2. Kubernetes Manifests
+#### 2. Kubernetes Manifests
 **Directory**: `deployments/overlays/staging-gke/`
 
 **Files Created**:
@@ -60,7 +58,7 @@ This document summarizes the complete GKE staging environment implementation for
 7. **external-secrets.yaml** - Secret Manager integration
 8. **otel-collector-config.yaml** - GCP Cloud Logging/Monitoring
 
-### 3. GitHub Actions Workflow
+#### 3. GitHub Actions Workflow
 **File**: `.github/workflows/deploy-staging-gke.yaml`
 
 **Features**:
@@ -83,7 +81,7 @@ This document summarizes the complete GKE staging environment implementation for
 7. Check Cloud Logging
 8. Rollback on any failure
 
-### 4. Smoke Tests
+#### 4. Smoke Tests
 **File**: `scripts/gcp/staging-smoke-tests.sh`
 
 **Tests** (11 total):
@@ -99,7 +97,7 @@ This document summarizes the complete GKE staging environment implementation for
 10. Cloud SQL proxy running
 11. External Secrets synced
 
-### 5. Documentation
+#### 5. Documentation
 
 **Created**:
 1. **docs/deployment/kubernetes/gke-staging.mdx** - Complete deployment guide
@@ -117,29 +115,29 @@ This document summarizes the complete GKE staging environment implementation for
 
 3. **README.md** - Updated with GKE staging section
 
-## Security Best Practices Implemented
+### Security Best Practices Implemented
 
-### Network Security
+#### Network Security
 ✅ Separate VPC from production
 ✅ Private GKE nodes (no public IPs)
 ✅ Network policies (default deny + allow list)
 ✅ VPC flow logs enabled
 ✅ Metadata service blocked (169.254.169.254)
 
-### Identity & Access
+#### Identity & Access
 ✅ Workload Identity (no service account keys)
 ✅ GitHub Workload Identity Federation (keyless CI/CD)
 ✅ Least privilege IAM roles
 ✅ Service account per component
 
-### Data Protection
+#### Data Protection
 ✅ Secret Manager for all secrets
 ✅ External Secrets Operator (Kubernetes sync)
 ✅ Encrypted at rest (GKE default)
 ✅ Private IP for Cloud SQL and Redis
 ✅ TLS for all connections
 
-### Container Security
+#### Container Security
 ✅ Distroless base images
 ✅ Run as non-root
 ✅ Drop all capabilities
@@ -147,21 +145,21 @@ This document summarizes the complete GKE staging environment implementation for
 ✅ Security contexts enforced
 ✅ Binary Authorization (signed images only)
 
-### Observability
+#### Observability
 ✅ Cloud Logging integration
 ✅ Cloud Monitoring metrics
 ✅ Cloud Trace distributed tracing
 ✅ Structured JSON logs
 ✅ OpenTelemetry collector
 
-### Deployment Security
+#### Deployment Security
 ✅ GitHub Environment protection rules
 ✅ Approval gates (1 reviewer + 5min wait)
 ✅ Automated smoke tests
 ✅ Automatic rollback on failure
 ✅ Deployment audit trail
 
-## Cost Estimate
+### Cost Estimate
 
 | Resource | Configuration | Monthly Cost |
 |----------|--------------|--------------|
@@ -171,42 +169,37 @@ This document summarizes the complete GKE staging environment implementation for
 | Networking | VPC, egress | ~$20 |
 | **Total** | | **~$210/month** |
 
-## Deployment Workflow
+### Deployment Workflow
 
-### First-Time Setup (Manual)
+#### First-Time Setup (Manual)
 
 1. **Run infrastructure setup**:
    ```bash
    export GCP_PROJECT_ID=vishnu-sandbox-20250310
    ./scripts/gcp/setup-staging-infrastructure.sh
-   ```
-
+   ```sql
 2. **Update API keys**:
    ```bash
    echo -n "sk-ant-YOUR_KEY" | gcloud secrets versions add staging-anthropic-api-key --data-file=-
    echo -n "YOUR_KEY" | gcloud secrets versions add staging-google-api-key --data-file=-
-   ```
-
+   ```text
 3. **Install External Secrets Operator**:
    ```bash
    helm repo add external-secrets https://charts.external-secrets.io
    helm install external-secrets external-secrets/external-secrets \
      --namespace external-secrets-system \
      --create-namespace
-   ```
-
+   ```text
 4. **Deploy application**:
    ```bash
    gcloud container clusters get-credentials mcp-staging-cluster --region=us-central1
    kubectl apply -k deployments/overlays/staging-gke
-   ```
-
+   ```text
 5. **Run smoke tests**:
    ```bash
    ./scripts/gcp/staging-smoke-tests.sh
-   ```
-
-### GitHub Actions Setup
+   ```sql
+#### GitHub Actions Setup
 
 1. **Create GitHub Environment**:
    - Go to Settings → Environments → New environment
@@ -224,7 +217,7 @@ This document summarizes the complete GKE staging environment implementation for
    - Create pre-release
    - Manual workflow dispatch
 
-## Automated Deployments
+### Automated Deployments
 
 Once GitHub Actions is configured, deployments are fully automated:
 
@@ -241,30 +234,29 @@ Once GitHub Actions is configured, deployments are fully automated:
    - Checks Cloud Logging
 5. **Success** or **auto-rollback**
 
-## Monitoring & Observability
+### Monitoring & Observability
 
-### Cloud Console Dashboards
+#### Cloud Console Dashboards
 
 - [GKE Workloads](https://console.cloud.google.com/kubernetes/workload?project=vishnu-sandbox-20250310)
 - [Cloud Logging](https://console.cloud.google.com/logs?project=vishnu-sandbox-20250310)
 - [Cloud Monitoring](https://console.cloud.google.com/monitoring?project=vishnu-sandbox-20250310)
 - [Cloud Trace](https://console.cloud.google.com/traces?project=vishnu-sandbox-20250310)
 
-### View Logs
+#### View Logs
 
 ```bash
-# Cloud Logging
+## Cloud Logging
 gcloud logging read \
   "resource.type=k8s_container
    resource.labels.cluster_name=mcp-staging-cluster
    resource.labels.namespace_name=mcp-staging" \
   --limit=50
 
-# Kubectl
+## Kubectl
 kubectl logs -n mcp-staging -l app=mcp-server-langgraph --tail=100
-```
-
-### Metrics
+```text
+#### Metrics
 
 Key metrics in Cloud Monitoring:
 - `kubernetes.io/container/cpu/core_usage_time`
@@ -272,54 +264,49 @@ Key metrics in Cloud Monitoring:
 - `kubernetes.io/pod/network/received_bytes_count`
 - `custom.googleapis.com/mcp-staging/*` (application metrics)
 
-## Security Validation
+### Security Validation
 
 Run the security checklist:
 
 ```bash
-# Review docs/security/gke-staging-checklist.md
-# Execute verification commands
-# Track completion (~80 checks total)
-```
-
+## Review docs/security/gke-staging-checklist.md
+## Execute verification commands
+## Track completion (~80 checks total)
+```text
 **Target**: 90%+ completion for production-ready staging
 
-## Troubleshooting
+### Troubleshooting
 
-### Common Issues
+#### Common Issues
 
 1. **Pods not starting**:
    ```bash
    kubectl describe pod <pod-name> -n mcp-staging
    kubectl logs <pod-name> -n mcp-staging
-   ```
-
+   ```text
 2. **External Secrets not syncing**:
    ```bash
    kubectl describe externalsecret mcp-staging-secrets -n mcp-staging
-   ```
-
+   ```text
 3. **Cloud SQL connection fails**:
    ```bash
    kubectl logs <pod-name> -n mcp-staging -c cloud-sql-proxy
-   ```
-
+   ```text
 4. **Network policies blocking traffic**:
    ```bash
    kubectl get networkpolicies -n mcp-staging
    # Temporarily delete to test
-   ```
+   ```text
+### Rollback Procedures
 
-## Rollback Procedures
-
-### Manual Rollback
+#### Manual Rollback
 
 ```bash
 kubectl rollout undo deployment/staging-mcp-server-langgraph -n mcp-staging
 kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
 ```
 
-### Automatic Rollback
+#### Automatic Rollback
 
 GitHub Actions automatically rolls back on:
 - Deployment failure
@@ -327,9 +314,9 @@ GitHub Actions automatically rolls back on:
 - Security validation failure
 - Performance degradation
 
-## Next Steps
+### Next Steps
 
-### Immediate
+#### Immediate
 1. ✅ Run infrastructure setup script
 2. ✅ Update API keys in Secret Manager
 3. ✅ Install External Secrets Operator
@@ -338,7 +325,7 @@ GitHub Actions automatically rolls back on:
 6. ✅ Configure GitHub Environment
 7. ✅ Test automated deployment
 
-### Future
+#### Future
 - [ ] Set up Cloud Monitoring alerts
 - [ ] Create Grafana dashboards
 - [ ] Configure log-based metrics
@@ -346,13 +333,13 @@ GitHub Actions automatically rolls back on:
 - [ ] Implement SLOs/SLIs
 - [ ] Schedule security audits
 
-## Files Created
+### Files Created
 
-### Scripts
+#### Scripts
 - `scripts/gcp/setup-staging-infrastructure.sh` (infrastructure automation)
 - `scripts/gcp/staging-smoke-tests.sh` (deployment validation)
 
-### Kubernetes Manifests
+#### Kubernetes Manifests
 - `deployments/overlays/staging-gke/kustomization.yaml`
 - `deployments/overlays/staging-gke/namespace.yaml`
 - `deployments/overlays/staging-gke/deployment-patch.yaml`
@@ -362,18 +349,18 @@ GitHub Actions automatically rolls back on:
 - `deployments/overlays/staging-gke/external-secrets.yaml`
 - `deployments/overlays/staging-gke/otel-collector-config.yaml`
 
-### CI/CD
+#### CI/CD
 - `.github/workflows/deploy-staging-gke.yaml` (deployment workflow)
 
-### Documentation
+#### Documentation
 - `docs/deployment/kubernetes/gke-staging.mdx` (deployment guide)
 - `docs/security/gke-staging-checklist.md` (security checklist)
 - `docs/deployment/GKE_STAGING_IMPLEMENTATION_SUMMARY.md` (this file)
 
-### Updates
+#### Updates
 - `README.md` (added GKE staging section)
 
-## Estimated Implementation Time
+### Estimated Implementation Time
 
 - **Infrastructure setup**: 30-45 minutes (mostly automated)
 - **GitHub configuration**: 15 minutes
@@ -381,7 +368,7 @@ GitHub Actions automatically rolls back on:
 - **Testing & validation**: 30 minutes
 - **Total**: **~2 hours** for complete setup
 
-## Success Criteria
+### Success Criteria
 
 ✅ Infrastructure created successfully
 ✅ All 11 smoke tests pass

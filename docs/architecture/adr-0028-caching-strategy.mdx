@@ -4,7 +4,7 @@ description: 'Three-layer caching architecture for performance optimization and 
 icon: 'file-lines'
 ---
 
-# ADR-0028: Multi-Layer Caching Strategy
+## ADR-0028: Multi-Layer Caching Strategy
 
 <Note>
 **Status**: Accepted
@@ -12,7 +12,7 @@ icon: 'file-lines'
 **Deciders**: Engineering Team
 </Note>
 
-## Context
+### Context
 
 The MCP server makes expensive operations that could benefit from caching:
 
@@ -22,24 +22,24 @@ The MCP server makes expensive operations that could benefit from caching:
 - **Embedding generation**: 200-500ms per text chunk
 - **Knowledge base searches**: 500ms-2s per query
 
-### Current State
+#### Current State
 
 - No caching layer implemented
 - Every request hits external services
 - Repeated identical requests waste resources
 - High latency and cost
 
-### Performance Targets
+#### Performance Targets
 
 - **30% latency reduction**
 - **20% cost savings**
 - **P95 latency < 500ms**
 
-## Decision
+### Decision
 
 Implement a **multi-layer caching strategy** with three distinct layers:
 
-### Cache Architecture
+#### Cache Architecture
 
 ```mermaid
 graph TB
@@ -64,9 +64,8 @@ graph TB
     class L2 l2Style
     class L3 l3Style
     class External externalStyle
-```
-
-### Multi-Layer Caching Flow
+```text
+#### Multi-Layer Caching Flow
 
 ```mermaid
 graph TB
@@ -96,8 +95,7 @@ graph TB
     style L2Hit fill:#fff3cd,stroke:#ffc107,stroke-width:2px
     style L3Hit fill:#f8d7da,stroke:#dc3545,stroke-width:2px
     style Response fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-```
-
+```text
 **Cache Lookup Sequence with Fallback**:
 ```mermaid
 sequenceDiagram
@@ -150,9 +148,8 @@ sequenceDiagram
 
     App-->>Client: Response (5ms) ✓<br/>400x faster
 
-```
-
-### Layer 1: In-Memory LRU Cache
+```text
+#### Layer 1: In-Memory LRU Cache
 
 **Use Case**: Frequently accessed, small data (< 1MB per entry)
 
@@ -163,8 +160,7 @@ sequenceDiagram
 L1_CACHE_SIZE = 1000        # Max entries
 L1_CACHE_TTL = 60           # 1 minute
 L1_CACHE_MAXSIZE_MB = 100   # Max memory usage
-```
-
+```text
 **What to Cache**:
 - OpenFGA authorization results
 - User profile lookups
@@ -178,9 +174,8 @@ from functools import lru_cache
 @lru_cache(maxsize=1000)
 def check_permission_cached(user: str, resource: str, action: str) -> bool:
     return openfga_client.check(user, resource, action)
-```
-
-### Layer 2: Redis Distributed Cache
+```text
+#### Layer 2: Redis Distributed Cache
 
 **Use Case**: Shared across instances, larger data, longer TTL
 
@@ -191,8 +186,7 @@ def check_permission_cached(user: str, resource: str, action: str) -> bool:
 L2_CACHE_REDIS_URL = "redis://localhost:6379/2"  # DB 2 for cache
 L2_CACHE_DEFAULT_TTL = 300   # 5 minutes
 L2_CACHE_MAX_SIZE_MB = 1000  # 1GB cache limit
-```
-
+```text
 **What to Cache**:
 - LLM responses (with semantic similarity)
 - Embedding vectors
@@ -211,13 +205,12 @@ async def get_llm_response_cached(prompt: str) -> str:
     response = await llm_client.generate(prompt)
     cache_set(cache_key, response, ttl=300)
     return response
-```
-
-### Layer 3: Provider-Native Caching
+```text
+#### Layer 3: Provider-Native Caching
 
 **Use Case**: Leverage provider-specific caching features
 
-#### Anthropic Claude Prompt Caching
+##### Anthropic Claude Prompt Caching
 
 ```python
 response = anthropic.messages.create(
@@ -230,10 +223,9 @@ response = anthropic.messages.create(
     }],
     messages=[...]
 )
-# Saves 90% on input tokens for repeated system prompts
-```
-
-#### Google Gemini Caching
+## Saves 90% on input tokens for repeated system prompts
+```text
+##### Google Gemini Caching
 
 ```python
 from google.generativeai import caching
@@ -243,37 +235,34 @@ cached_content = caching.CachedContent.create(
     system_instruction="You are an AI assistant...",
     ttl=datetime.timedelta(minutes=5)
 )
-```
+```text
+### Cache Key Design
 
-## Cache Key Design
-
-### Hierarchical Format
+#### Hierarchical Format
 
 ```
 <namespace>:<entity>:<identifier>:<version>
-```
-
-### Examples
+```text
+#### Examples
 
 ```python
-# Authorization cache
+## Authorization cache
 "auth:permission:user:alice:resource:doc123:action:read:v1"
 
-# LLM response cache
+## LLM response cache
 "llm:response:model:claude-3-5:hash:abc123def:v1"
 
-# Embedding cache
+## Embedding cache
 "embedding:text:hash:xyz789:model:all-minilm-l6-v2:v1"
-```
-
-### Best Practices
+```text
+#### Best Practices
 
 <Check>Include version suffix (`:v1`) for cache invalidation</Check>
 <Check>Use hashing for long identifiers (< 250 chars)</Check>
 <Check>Namespace by feature area to avoid collisions</Check>
 <Check>Include all parameters that affect output</Check>
 
-## TTL Strategy
+### TTL Strategy
 
 | Cache Type | TTL | Rationale |
 |------------|-----|-----------|
@@ -285,15 +274,15 @@ cached_content = caching.CachedContent.create(
 | **Embeddings** | 24 hours | Deterministic transformation |
 | **Knowledge Base Search** | 30 min | Periodic index updates |
 
-## Cache Invalidation
+### Cache Invalidation
 
-### Strategies
+#### Strategies
 
 1. **Time-based (TTL)**: Automatic expiration
 2. **Event-based**: Invalidate on data changes
 3. **Version-based**: Change key version to invalidate all
 
-### Event-Based Example
+#### Event-Based Example
 
 ```python
 async def update_user_profile(user_id: str, updates: dict):
@@ -307,12 +296,11 @@ async def update_user_profile(user_id: str, updates: dict):
     ]
     for key in cache_keys:
         redis_client.delete(key)
-```
-
-### Cache Stampede Prevention
+```text
+#### Cache Stampede Prevention
 
 ```python
-# Lock-based cache refresh (prevent thundering herd)
+## Lock-based cache refresh (prevent thundering herd)
 async def get_with_lock(key: str, fetcher: Callable, ttl: int):
     if cached := cache_get(key):
         return cached
@@ -326,11 +314,10 @@ async def get_with_lock(key: str, fetcher: Callable, ttl: int):
         value = await fetcher()
         cache_set(key, value, ttl)
         return value
-```
+```text
+### Implementation
 
-## Implementation
-
-### New Module: `core/cache.py`
+#### New Module: `core/cache.py`
 
 ```python
 from typing import Any, Optional
@@ -362,9 +349,8 @@ class CacheService:
                 return value
 
         return None
-```
-
-### Usage with Decorator
+```text
+#### Usage with Decorator
 
 ```python
 from mcp_server_langgraph.core.cache import cached
@@ -372,46 +358,44 @@ from mcp_server_langgraph.core.cache import cached
 @cached(key_prefix="llm:response", ttl=3600)
 async def get_llm_response(prompt: str) -> str:
     return await llm_client.generate(prompt)
-```
+```text
+### Configuration
 
-## Configuration
-
-### Environment Variables
+#### Environment Variables
 
 ```bash
-# Cache Configuration
+## Cache Configuration
 CACHE_L1_SIZE=1000
 CACHE_L1_TTL=60
 CACHE_L2_REDIS_URL=redis://localhost:6379/2
 CACHE_L2_DEFAULT_TTL=300
 CACHE_L2_MAX_SIZE_MB=1000
 
-# Provider Caching
+## Provider Caching
 ANTHROPIC_ENABLE_PROMPT_CACHING=true
 GEMINI_ENABLE_CONTEXT_CACHING=true
-```
+```text
+### Metrics & Observability
 
-## Metrics & Observability
-
-### New Metrics
+#### New Metrics
 
 ```python
-# Cache hit/miss rates
+## Cache hit/miss rates
 cache_hits_total{layer, namespace}
 cache_misses_total{layer, namespace}
 cache_hit_rate{layer, namespace}  # Calculated
 
-# Cache performance
+## Cache performance
 cache_latency_seconds{layer, namespace}
 cache_size_bytes{layer}
 cache_evictions_total{layer, reason}
 
-# Provider caching
+## Provider caching
 prompt_cache_read_tokens_total{provider}
 prompt_cache_write_tokens_total{provider}
 ```
 
-### Grafana Dashboard
+#### Grafana Dashboard
 
 **Panel: Cache Performance**
 - Hit rate by layer (L1, L2) - line chart
@@ -419,32 +403,32 @@ prompt_cache_write_tokens_total{provider}
 - Cache size over time - area chart
 - Top cache keys by access count - table
 
-## Consequences
+### Consequences
 
-### Positive
+#### Positive
 
 <Check>**30% Latency Reduction** - Faster response times</Check>
 <Check>**20% Cost Savings** - Reduced LLM API calls</Check>
 <Check>**Improved Scalability** - Less external API load</Check>
 <Check>**Better User Experience** - Faster responses</Check>
 
-### Negative
+#### Negative
 
 <Warning>**Stale Data Risk** - Cache may serve outdated data</Warning>
 <Warning>**Memory Usage** - L1 cache consumes RAM</Warning>
 <Warning>**Complexity** - Additional component to manage</Warning>
 <Warning>**Cache Invalidation** - Hard problem in distributed systems</Warning>
 
-### Mitigations
+#### Mitigations
 
 1. **Conservative TTLs**: Start with shorter TTLs, increase gradually
 2. **Monitoring**: Track cache hit rates and staleness
 3. **Circuit Breaker**: Disable caching if Redis is unavailable
 4. **Clear Documentation**: Document cache behavior for each endpoint
 
-## Performance Impact
+### Performance Impact
 
-### Latency Improvements
+#### Latency Improvements
 
 | Operation | Without Cache | With Cache | Improvement |
 |-----------|---------------|------------|-------------|
@@ -453,13 +437,13 @@ prompt_cache_write_tokens_total{provider}
 | Embedding Generation | 300ms | 10ms | **96.7%** |
 | Prometheus Query | 200ms | 20ms | **90%** |
 
-### Cost Savings
+#### Cost Savings
 
 - **LLM API calls**: 40% reduction (cache hit rate: 40%)
 - **Monthly savings**: ~$500-1000 (based on usage)
 - **ROI**: Redis hosting cost < $50/month
 
-## Related
+### Related
 
 - [ADR-0026: Resilience Patterns](/architecture/adr-0030-resilience-patterns)
 - [Performance Optimization](/deployment/scaling)

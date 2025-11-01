@@ -4,11 +4,11 @@ description: 'Complete API reference for MCP Server with LangGraph'
 icon: 'book-open'
 ---
 
-## Overview
+### Overview
 
 The MCP Server with LangGraph exposes a RESTful API following the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) specification with additional custom endpoints for health checks and metrics.
 
-## Base URL
+### Base URL
 
 <CodeGroup>
 ```bash Local Development
@@ -24,11 +24,11 @@ http://mcp-server-langgraph.mcp-server-langgraph.svc.cluster.local:8000
 ```
 </CodeGroup>
 
-## Authentication
+### Authentication
 
 All API requests require JWT authentication.
 
-### Getting a Token
+#### Getting a Token
 
 <CodeGroup>
 ```python Python
@@ -58,7 +58,7 @@ const { token } = await response.json();
 ```
 </CodeGroup>
 
-### Using the Token
+#### Using the Token
 
 Include the token in the `Authorization` header:
 
@@ -66,7 +66,7 @@ Include the token in the `Authorization` header:
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-## Rate Limiting
+### Rate Limiting
 
 <Info>
   Rate limits are enforced via Kong API Gateway when enabled.
@@ -88,7 +88,7 @@ When rate limited, you'll receive a `429 Too Many Requests` response:
 }
 ```
 
-## Response Format
+### Response Format
 
 All successful responses follow this structure:
 
@@ -107,7 +107,7 @@ All successful responses follow this structure:
 }
 ```
 
-## Error Handling
+### Error Handling
 
 Error responses include detailed information:
 
@@ -120,7 +120,7 @@ Error responses include detailed information:
 }
 ```
 
-### HTTP Status Codes
+#### HTTP Status Codes
 
 | Code | Meaning | Description |
 |------|---------|-------------|
@@ -133,7 +133,7 @@ Error responses include detailed information:
 | `500` | Internal Server Error | Server error |
 | `503` | Service Unavailable | Service temporarily unavailable |
 
-## API Endpoints
+### API Endpoints
 
 <CardGroup cols={2}>
   <Card title="MCP Endpoints" icon="message" href="/api-reference/mcp-endpoints">
@@ -150,7 +150,7 @@ Error responses include detailed information:
   </Card>
 </CardGroup>
 
-## SDK Libraries
+### SDK Libraries
 
 <Tabs>
   <Tab title="Python">
@@ -204,7 +204,7 @@ Error responses include detailed information:
   </Tab>
 </Tabs>
 
-## OpenAPI Specification
+### OpenAPI Specification
 
 Access the OpenAPI spec interactively:
 
@@ -218,7 +218,7 @@ http://localhost:8000/redoc
 ```
 </CodeGroup>
 
-## Versioning
+### Versioning
 
 The API uses URL versioning:
 
@@ -234,9 +234,9 @@ Current version: **v1**
   Version 1 is stable and production-ready. Breaking changes will increment the version number.
 </Note>
 
-## Common Patterns
+### Common Patterns
 
-### Streaming Responses
+#### Streaming Responses
 
 ```python
 async with client.stream_message("Tell me a long story") as stream:
@@ -244,7 +244,7 @@ async with client.stream_message("Tell me a long story") as stream:
         print(chunk.content, end='', flush=True)
 ```
 
-### Batch Requests
+#### Batch Requests
 
 ```python
 messages = [
@@ -256,10 +256,10 @@ messages = [
 responses = await client.batch_send(messages)
 ```
 
-### Context Management
+#### Context Management
 
 ```python
-# Maintain conversation context
+## Maintain conversation context
 context = {}
 
 response1 = await client.send_message(
@@ -272,10 +272,10 @@ response2 = await client.send_message(
     "What's my name?",
     context=context
 )
-# Response: "Your name is Alice"
+## Response: "Your name is Alice"
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="MCP Endpoints" icon="code" href="/api-reference/mcp-endpoints">

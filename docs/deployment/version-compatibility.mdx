@@ -5,15 +5,13 @@ icon: 'rocket'
 ---
 
 
-# Version Compatibility Matrix
-
 Last Updated: 2025-10-14
 
 This document tracks all infrastructure component versions across deployment methods and provides upgrade guidance.
 
-## Current Versions
+### Current Versions
 
-### Application Dependencies
+#### Application Dependencies
 
 | Component | Version | Source | Notes |
 |-----------|---------|--------|-------|
@@ -25,7 +23,7 @@ This document tracks all infrastructure component versions across deployment met
 | Pydantic | 2.12.0 | requirements-pinned.txt | Data validation |
 | OpenTelemetry SDK | 1.37.0 | requirements-pinned.txt | Observability |
 
-### Infrastructure Components (Docker Compose)
+#### Infrastructure Components (Docker Compose)
 
 | Service | Image | Current Version | Previous Version | Updated |
 |---------|-------|-----------------|------------------|---------|
@@ -41,7 +39,7 @@ This document tracks all infrastructure component versions across deployment met
 | Prometheus | `prom/prometheus` | **v3.2.1** | v2.48.0 | 2025-10-14 |
 | Grafana | `grafana/grafana` | **11.5.1** | 10.2.3 | 2025-10-14 |
 
-### Kubernetes Base Manifests
+#### Kubernetes Base Manifests
 
 | Component | Image | Current Version | Notes |
 |-----------|-------|-----------------|-------|
@@ -51,7 +49,7 @@ This document tracks all infrastructure component versions across deployment met
 | PostgreSQL | `postgres` | **16-alpine** | New deployment |
 | OpenFGA | `openfga/openfga` | **v1.10.2** | New deployment |
 
-### Helm Chart Dependencies
+#### Helm Chart Dependencies
 
 | Chart | Repository | Version | App Version | Notes |
 |-------|------------|---------|-------------|-------|
@@ -60,9 +58,9 @@ This document tracks all infrastructure component versions across deployment met
 | Redis | charts.bitnami.com | **20.6.2** | 7.x | Updated 2025-10-14 |
 | Keycloak | charts.bitnami.com | **24.2.2** | 26.x | Updated 2025-10-14 |
 
-## Upgrade Summary (2025-10-14)
+### Upgrade Summary (2025-10-14)
 
-### Critical Updates
+#### Critical Updates
 
 1. **OpenFGA: v1.5.0 → v1.10.2** (5 minor versions)
    - Risk: Medium
@@ -81,7 +79,7 @@ This document tracks all infrastructure component versions across deployment met
    - Breaking Changes: Multiple config schema changes
    - Action: Review otel-collector.yaml configuration compatibility
 
-### Major Updates
+#### Major Updates
 
 4. **Jaeger: 1.53.0 → 1.74.0** (21 versions)
    - Risk: Medium
@@ -104,7 +102,7 @@ This document tracks all infrastructure component versions across deployment met
    - Features: Enhanced alerting, new visualizations
    - Action: Test dashboards, review plugin compatibility
 
-### New Components
+#### New Components
 
 8. **PostgreSQL StatefulSet** (New)
    - Now deployed as StatefulSet with persistent storage
@@ -116,9 +114,9 @@ This document tracks all infrastructure component versions across deployment met
    - Uses PostgreSQL backend (previously memory only)
    - Proper health checks and resource limits
 
-## Breaking Changes
+### Breaking Changes
 
-### Keycloak 23.0 → 26.4.0
+#### Keycloak 23.0 → 26.4.0
 
 **Potential Issues:**
 - Deprecated features from 23.x may be removed in 26.x
@@ -131,7 +129,7 @@ This document tracks all infrastructure component versions across deployment met
 3. Test authentication flows in staging environment
 4. Update client configurations if needed
 
-### OpenTelemetry Collector 0.91.0 → 0.137.0
+#### OpenTelemetry Collector 0.91.0 → 0.137.0
 
 **Configuration Changes:**
 - Review `monitoring/otel-collector/otel-collector.yaml`
@@ -144,7 +142,7 @@ This document tracks all infrastructure component versions across deployment met
 3. Test metric export to Prometheus
 4. Test trace export to Jaeger
 
-### Prometheus v2 → v3
+#### Prometheus v2 → v3
 
 **Breaking Changes:**
 - Native histogram format changes
@@ -157,9 +155,9 @@ This document tracks all infrastructure component versions across deployment met
 3. Backup Prometheus data: `kubectl cp prometheus-xxx:/prometheus ./prometheus-backup`
 4. Consider running v2 and v3 in parallel initially
 
-## Compatibility Testing Checklist
+### Compatibility Testing Checklist
 
-### Before Deploying
+#### Before Deploying
 
 - [ ] Review all release notes and changelogs
 - [ ] Backup all databases (PostgreSQL, Redis if persistent)
@@ -167,13 +165,13 @@ This document tracks all infrastructure component versions across deployment met
 - [ ] Export Grafana dashboards
 - [ ] Document current OpenFGA authorization model
 
-### After Deploying (Docker Compose)
+#### After Deploying (Docker Compose)
 
 ```bash
-# Start all services
+## Start all services
 docker compose up -d
 
-# Check service health
+## Check service health
 docker compose ps
 docker compose logs openfga
 docker compose logs keycloak
@@ -182,55 +180,53 @@ docker compose logs prometheus
 docker compose logs jaeger
 docker compose logs grafana
 
-# Test OpenFGA
+## Test OpenFGA
 curl http://localhost:8080/healthz
 
-# Test Keycloak
+## Test Keycloak
 curl http://localhost:8180/health/ready
 
-# Test OTEL Collector
+## Test OTEL Collector
 curl http://localhost:13133
 
-# Test Prometheus
+## Test Prometheus
 curl http://localhost:9090/-/healthy
 
-# Test Jaeger
+## Test Jaeger
 curl http://localhost:16686/api/services
 
-# Test Grafana
+## Test Grafana
 curl http://localhost:3000/api/health
-```
-
-### After Deploying (Kubernetes)
+```text
+#### After Deploying (Kubernetes)
 
 ```bash
-# Deploy with Kustomize
+## Deploy with Kustomize
 kubectl apply -k deployments/kustomize/overlays/staging
 
-# Check all pods
+## Check all pods
 kubectl get pods -n mcp-server-langgraph
 
-# Check service endpoints
+## Check service endpoints
 kubectl get svc -n mcp-server-langgraph
 
-# Test PostgreSQL
+## Test PostgreSQL
 kubectl exec -it postgres-0 -n mcp-server-langgraph -- psql -U postgres -c "SELECT version();"
 
-# Test OpenFGA
+## Test OpenFGA
 kubectl run curl-test --rm -it --restart=Never --image=curlimages/curl -- \
   curl -f http://openfga.mcp-server-langgraph:8080/healthz
 
-# Test Keycloak
+## Test Keycloak
 kubectl run curl-test --rm -it --restart=Never --image=curlimages/curl -- \
   curl -f http://keycloak.mcp-server-langgraph:8080/health/ready
 
-# Check logs
+## Check logs
 kubectl logs -n mcp-server-langgraph -l app=mcp-server-langgraph --tail=50
 kubectl logs -n mcp-server-langgraph -l app=openfga --tail=50
 kubectl logs -n mcp-server-langgraph -l app=keycloak --tail=50
-```
-
-### Integration Tests
+```sql
+#### Integration Tests
 
 - [ ] Test user authentication (Keycloak)
 - [ ] Test authorization checks (OpenFGA)
@@ -243,9 +239,9 @@ kubectl logs -n mcp-server-langgraph -l app=keycloak --tail=50
 - [ ] Verify database connectivity
 - [ ] Test graceful shutdown/restart
 
-## Version Update Policy
+### Version Update Policy
 
-### Semantic Versioning
+#### Semantic Versioning
 
 We follow this upgrade cadence:
 
@@ -253,49 +249,48 @@ We follow this upgrade cadence:
 - **Minor versions** (x.Y.z): Test in staging for 1 week before production
 - **Major versions** (X.y.z): Extended testing (2-4 weeks), create rollback plan
 
-### Update Frequency
+#### Update Frequency
 
 - **Security patches**: Within 48 hours
 - **Minor updates**: Monthly
 - **Major updates**: Quarterly or as needed
 - **Dependency updates**: Bi-weekly (automated via Dependabot)
 
-## Rollback Procedures
+### Rollback Procedures
 
-### Docker Compose Rollback
+#### Docker Compose Rollback
 
 ```bash
-# Stop current services
+## Stop current services
 docker compose down
 
-# Restore previous docker-compose.yml from git
+## Restore previous docker-compose.yml from git
 git checkout HEAD~1 docker-compose.yml
 
-# Restore data if needed
+## Restore data if needed
 docker volume restore prometheus-data
 docker volume restore grafana-data
 docker volume restore postgres-data
 
-# Start previous versions
+## Start previous versions
 docker compose up -d
-```
-
-### Kubernetes Rollback
+```text
+#### Kubernetes Rollback
 
 ```bash
-# Rollback specific deployment
+## Rollback specific deployment
 kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
 kubectl rollout undo deployment/keycloak -n mcp-server-langgraph
 kubectl rollout undo deployment/openfga -n mcp-server-langgraph
 
-# Check rollout status
+## Check rollout status
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
-# Helm rollback (if using Helm)
+## Helm rollback (if using Helm)
 helm rollback mcp-server-langgraph 1 --namespace mcp-server-langgraph
 ```
 
-## References
+### References
 
 - [OpenFGA Releases](https://github.com/openfga/openfga/releases)
 - [Keycloak Releases](https://github.com/keycloak/keycloak/releases)
@@ -305,7 +300,7 @@ helm rollback mcp-server-langgraph 1 --namespace mcp-server-langgraph
 - [Prometheus Releases](https://github.com/prometheus/prometheus/releases)
 - [Grafana Releases](https://github.com/grafana/grafana/releases)
 
-## Support Matrix
+### Support Matrix
 
 | Component | Minimum Version | Recommended | Maximum Tested |
 |-----------|----------------|-------------|----------------|
@@ -314,27 +309,27 @@ helm rollback mcp-server-langgraph 1 --namespace mcp-server-langgraph
 | Docker | 20.10 | 24.0+ | 28.2 |
 | Python | 3.10 | 3.12 | 3.12 |
 
-## Known Issues
+### Known Issues
 
-### Keycloak 26.4.0
+#### Keycloak 26.4.0
 
 - Some older themes may need updates
 - Check realm import/export compatibility
 - Review custom extensions for API changes
 
-### OpenTelemetry Collector 0.137.0
+#### OpenTelemetry Collector 0.137.0
 
 - Configuration validation may be stricter
 - Some deprecated processors removed
 - Review pipeline configurations for new best practices
 
-### Prometheus 3.2.1
+#### Prometheus 3.2.1
 
 - Native histograms enabled by default (can disable)
 - TSDB compaction behavior changed
 - Some legacy recording rules may need updates
 
-## Change Log
+### Change Log
 
 | Date | Component | From | To | Notes |
 |------|-----------|------|-----|-------|

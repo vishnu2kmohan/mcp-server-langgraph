@@ -4,7 +4,7 @@ description: 'Deploy MCP Server with LangGraph on Azure Kubernetes Service (AKS)
 icon: 'microsoft'
 ---
 
-## Overview
+### Overview
 
 Azure Kubernetes Service (AKS) is Microsoft's managed Kubernetes offering that integrates with Azure services like Azure Database for PostgreSQL, Azure Cache for Redis, Azure Key Vault, and Azure Active Directory.
 
@@ -12,47 +12,45 @@ Azure Kubernetes Service (AKS) is Microsoft's managed Kubernetes offering that i
 This guide covers deploying to AKS with production-ready configuration including Azure AD Pod Identity, Azure Database for PostgreSQL, Azure Cache for Redis, and Azure Key Vault integration.
 </Info>
 
-## Prerequisites
+### Prerequisites
 
 - Azure subscription
 - Azure CLI (`az`) installed and configured
 - `kubectl` installed
 - `helm` installed
 
-## Install Prerequisites
+### Install Prerequisites
 
 ```bash
-# Install Azure CLI
+## Install Azure CLI
 brew install azure-cli
 
-# Login to Azure
+## Login to Azure
 az login
 
-# Set subscription
+## Set subscription
 az account set --subscription "your-subscription-id"
 
-# Install kubectl
+## Install kubectl
 az aks install-cli
-```
-
-## Create Resource Group
+```text
+### Create Resource Group
 
 ```bash
-# Create resource group
+## Create resource group
 az group create \
   --name langgraph-rg \
   --location eastus
 
-# Set default resource group
+## Set default resource group
 az configure --defaults group=langgraph-rg location=eastus
-```
+```text
+### Create AKS Cluster
 
-## Create AKS Cluster
-
-### Using Azure CLI
+#### Using Azure CLI
 
 ```bash
-# Create AKS cluster
+## Create AKS cluster
 az aks create \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
@@ -72,19 +70,18 @@ az aks create \
   --kubernetes-version 1.28.0 \
   --zones 1 2 3
 
-# Get credentials
+## Get credentials
 az aks get-credentials \
   --name langgraph-cluster \
   --resource-group langgraph-rg
 
-# Verify
+## Verify
 kubectl get nodes
-```
-
-### Advanced Configuration
+```text
+#### Advanced Configuration
 
 ```bash
-# Create with custom networking
+## Create with custom networking
 az aks create \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
@@ -113,38 +110,36 @@ az aks create \
   --load-balancer-sku standard \
   --outbound-type loadBalancer \
   --attach-acr /subscriptions/xxx/resourceGroups/langgraph-rg/providers/Microsoft.ContainerRegistry/registries/langgraphacr
-```
+```text
+### Azure AD Workload Identity
 
-## Azure AD Workload Identity
-
-### Enable Workload Identity
+#### Enable Workload Identity
 
 ```bash
-# Enable OIDC issuer
+## Enable OIDC issuer
 az aks update \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
   --enable-oidc-issuer \
   --enable-workload-identity
 
-# Get OIDC issuer URL
+## Get OIDC issuer URL
 export AKS_OIDC_ISSUER=$(az aks show \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
   --query "oidcIssuerProfile.issuerUrl" \
   --output tsv)
-```
-
-### Create Managed Identity
+```text
+#### Create Managed Identity
 
 ```bash
-# Create user-assigned managed identity
+## Create user-assigned managed identity
 az identity create \
   --name mcp-server-langgraph-identity \
   --resource-group langgraph-rg \
   --location eastus
 
-# Get identity details
+## Get identity details
 export IDENTITY_CLIENT_ID=$(az identity show \
   --name mcp-server-langgraph-identity \
   --resource-group langgraph-rg \
@@ -156,12 +151,11 @@ export IDENTITY_OBJECT_ID=$(az identity show \
   --resource-group langgraph-rg \
   --query 'principalId' \
   --output tsv)
-```
-
-### Create Federated Credentials
+```text
+#### Create Federated Credentials
 
 ```bash
-# Create federated credential
+## Create federated credential
 az identity federated-credential create \
   --name mcp-server-langgraph-federated-credential \
   --identity-name mcp-server-langgraph-identity \
@@ -169,9 +163,8 @@ az identity federated-credential create \
   --issuer $AKS_OIDC_ISSUER \
   --subject system:serviceaccount:mcp-server-langgraph:mcp-server-langgraph \
   --audience api://AzureADTokenExchange
-```
-
-### Create Kubernetes Service Account
+```text
+#### Create Kubernetes Service Account
 
 ```yaml
 apiVersion: v1
@@ -183,14 +176,13 @@ metadata:
     azure.workload.identity/client-id: "${IDENTITY_CLIENT_ID}"
   labels:
     azure.workload.identity/use: "true"
-```
+```text
+### Azure Database for PostgreSQL
 
-## Azure Database for PostgreSQL
-
-### Create PostgreSQL Server
+#### Create PostgreSQL Server
 
 ```bash
-# Create PostgreSQL flexible server
+## Create PostgreSQL flexible server
 az postgres flexible-server create \
   --name langgraph-postgres \
   --resource-group langgraph-rg \
@@ -209,7 +201,7 @@ az postgres flexible-server create \
   --vnet langgraph-vnet \
   --subnet postgres-subnet
 
-# Create databases
+## Create databases
 az postgres flexible-server db create \
   --resource-group langgraph-rg \
   --server-name langgraph-postgres \
@@ -220,7 +212,7 @@ az postgres flexible-server db create \
   --server-name langgraph-postgres \
   --database-name openfga
 
-# Create firewall rule for AKS
+## Create firewall rule for AKS
 az postgres flexible-server firewall-rule create \
   --resource-group langgraph-rg \
   --name langgraph-postgres \
@@ -228,18 +220,17 @@ az postgres flexible-server firewall-rule create \
   --start-ip-address 10.0.0.0 \
   --end-ip-address 10.0.255.255
 
-# Get connection string
+## Get connection string
 POSTGRES_HOST=$(az postgres flexible-server show \
   --resource-group langgraph-rg \
   --name langgraph-postgres \
   --query fullyQualifiedDomainName \
   --output tsv)
-```
-
-### Configure Private Endpoint
+```text
+#### Configure Private Endpoint
 
 ```bash
-# Create private endpoint
+## Create private endpoint
 az network private-endpoint create \
   --name postgres-private-endpoint \
   --resource-group langgraph-rg \
@@ -253,26 +244,25 @@ az network private-endpoint create \
   --group-id postgresqlServer \
   --connection-name postgres-connection
 
-# Create private DNS zone
+## Create private DNS zone
 az network private-dns zone create \
   --resource-group langgraph-rg \
   --name privatelink.postgres.database.azure.com
 
-# Link DNS zone to VNet
+## Link DNS zone to VNet
 az network private-dns link vnet create \
   --resource-group langgraph-rg \
   --zone-name privatelink.postgres.database.azure.com \
   --name postgres-dns-link \
   --virtual-network langgraph-vnet \
   --registration-enabled false
-```
+```text
+### Azure Cache for Redis
 
-## Azure Cache for Redis
-
-### Create Redis Cache
+#### Create Redis Cache
 
 ```bash
-# Create Redis cache
+## Create Redis cache
 az redis create \
   --name langgraph-redis \
   --resource-group langgraph-rg \
@@ -285,7 +275,7 @@ az redis create \
   --zones 1 2 \
   --subnet-id /subscriptions/xxx/resourceGroups/langgraph-rg/providers/Microsoft.Network/virtualNetworks/langgraph-vnet/subnets/redis-subnet
 
-# Get Redis connection details
+## Get Redis connection details
 REDIS_HOST=$(az redis show \
   --name langgraph-redis \
   --resource-group langgraph-rg \
@@ -298,19 +288,18 @@ REDIS_KEY=$(az redis list-keys \
   --query primaryKey \
   --output tsv)
 
-# Configure Redis for persistence
+## Configure Redis for persistence
 az redis patch-schedule set \
   --name langgraph-redis \
   --resource-group langgraph-rg \
   --schedule-entries '[{"dayOfWeek":"Sunday","startHourUtc":3,"maintenanceWindow":"PT5H"}]'
-```
+```text
+### Azure Key Vault
 
-## Azure Key Vault
-
-### Create Key Vault
+#### Create Key Vault
 
 ```bash
-# Create Key Vault
+## Create Key Vault
 az keyvault create \
   --name langgraph-keyvault \
   --resource-group langgraph-rg \
@@ -319,7 +308,7 @@ az keyvault create \
   --enable-purge-protection true \
   --retention-days 90
 
-# Assign permissions to managed identity
+## Assign permissions to managed identity
 az role assignment create \
   --role "Key Vault Secrets User" \
   --assignee $IDENTITY_OBJECT_ID \
@@ -328,12 +317,11 @@ az role assignment create \
     --resource-group langgraph-rg \
     --query id \
     --output tsv)
-```
-
-### Store Secrets
+```text
+#### Store Secrets
 
 ```bash
-# Store secrets
+## Store secrets
 az keyvault secret set \
   --vault-name langgraph-keyvault \
   --name anthropic-api-key \
@@ -353,19 +341,18 @@ az keyvault secret set \
   --vault-name langgraph-keyvault \
   --name postgres-password \
   --value "your-postgres-password"
-```
-
-### CSI Driver Integration
+```text
+#### CSI Driver Integration
 
 ```bash
-# Enable Key Vault addon
+## Enable Key Vault addon
 az aks enable-addons \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
   --addons azure-keyvault-secrets-provider \
   --enable-secret-rotation
 
-# Create SecretProviderClass
+## Create SecretProviderClass
 cat << 'EOF' | kubectl apply -f -
 apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
@@ -406,9 +393,8 @@ spec:
     - objectName: redis-password
       key: REDIS_PASSWORD
 EOF
-```
-
-### Use Secrets in Deployment
+```text
+#### Use Secrets in Deployment
 
 ```yaml
 apiVersion: apps/v1
@@ -437,14 +423,13 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "azure-keyvault"
-```
+```text
+### Azure Container Registry (ACR)
 
-## Azure Container Registry (ACR)
-
-### Create ACR
+#### Create ACR
 
 ```bash
-# Create container registry
+## Create container registry
 az acr create \
   --name langgraphacr \
   --resource-group langgraph-rg \
@@ -452,37 +437,35 @@ az acr create \
   --location eastus \
   --admin-enabled false
 
-# Attach ACR to AKS
+## Attach ACR to AKS
 az aks update \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
   --attach-acr langgraphacr
 
-# Login to ACR
+## Login to ACR
 az acr login --name langgraphacr
-```
-
-### Build and Push Images
+```text
+#### Build and Push Images
 
 ```bash
-# Build in ACR (no local Docker needed)
+## Build in ACR (no local Docker needed)
 az acr build \
   --registry langgraphacr \
   --image langgraph/agent:latest \
   --file Dockerfile .
 
-# Or build locally and push
+## Or build locally and push
 docker build -t mcp-server-langgraph:latest .
 docker tag mcp-server-langgraph:latest langgraphacr.azurecr.io/langgraph/agent:latest
 docker push langgraphacr.azurecr.io/langgraph/agent:latest
-```
+```text
+### Application Gateway Ingress Controller
 
-## Application Gateway Ingress Controller
-
-### Install AGIC
+#### Install AGIC
 
 ```bash
-# Create Application Gateway
+## Create Application Gateway
 az network application-gateway create \
   --name langgraph-appgw \
   --resource-group langgraph-rg \
@@ -493,7 +476,7 @@ az network application-gateway create \
   --subnet appgw-subnet \
   --public-ip-address langgraph-appgw-pip
 
-# Install AGIC addon
+## Install AGIC addon
 az aks enable-addons \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
@@ -503,9 +486,8 @@ az aks enable-addons \
     --resource-group langgraph-rg \
     --query id \
     --output tsv)
-```
-
-### Configure Ingress
+```text
+#### Configure Ingress
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -537,14 +519,13 @@ spec:
             name: mcp-server-langgraph
             port:
               number: 8000
-```
+```text
+### Azure Monitor Integration
 
-## Azure Monitor Integration
-
-### Enable Container Insights
+#### Enable Container Insights
 
 ```bash
-# Enable monitoring
+## Enable monitoring
 az aks enable-addons \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
@@ -554,29 +535,27 @@ az aks enable-addons \
     --workspace-name langgraph-logs \
     --query id \
     --output tsv)
-```
-
-### Custom Metrics
+```text
+#### Custom Metrics
 
 ```python
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry import trace
 
-# Configure Azure Monitor
+## Configure Azure Monitor
 configure_azure_monitor(
     connection_string="InstrumentationKey=xxx;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/"
 )
 
 tracer = trace.get_tracer(__name__)
 
-# Create spans
+## Create spans
 with tracer.start_as_current_span("llm_request") as span:
     span.set_attribute("provider", "anthropic")
     span.set_attribute("model", "claude-3-5-sonnet")
     # Your code here
-```
-
-## Complete Deployment
+```text
+### Complete Deployment
 
 ```yaml
 apiVersion: apps/v1
@@ -669,36 +648,33 @@ spec:
   - name: metrics
     port: 9090
     targetPort: 9090
-```
-
+```text
 **Deploy**:
 ```bash
-# Create namespace
+## Create namespace
 kubectl create namespace mcp-server-langgraph
 
-# Apply deployment
+## Apply deployment
 kubectl apply -f deployment.yaml
 
-# Verify
+## Verify
 kubectl get pods -n mcp-server-langgraph
 kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
+```text
+### Auto-Scaling
 
-## Auto-Scaling
-
-### Cluster Autoscaler
+#### Cluster Autoscaler
 
 ```bash
-# Enable cluster autoscaler
+## Enable cluster autoscaler
 az aks update \
   --name langgraph-cluster \
   --resource-group langgraph-rg \
   --enable-cluster-autoscaler \
   --min-count 3 \
   --max-count 20
-```
-
-### Horizontal Pod Autoscaler
+```text
+#### Horizontal Pod Autoscaler
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -726,9 +702,8 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```
-
-## Cost Optimization
+```text
+### Cost Optimization
 
 <AccordionGroup>
   <Accordion title="Use Spot Node Pools" icon="dollar-sign">
@@ -744,7 +719,7 @@ spec:
       --min-count 0 \
       --max-count 10 \
       --node-vm-size Standard_D4s_v3
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Azure Reservations" icon="piggy-bank">
@@ -759,11 +734,11 @@ spec:
     az advisor recommendation list \
       --category Cost \
       --output table
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Security Best Practices
+### Security Best Practices
 
 <AccordionGroup>
   <Accordion title="Enable Azure Policy" icon="shield">
@@ -772,7 +747,7 @@ spec:
       --name langgraph-cluster \
       --resource-group langgraph-rg \
       --addons azure-policy
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Azure Defender" icon="shield-check">
@@ -780,7 +755,7 @@ spec:
     az security pricing create \
       --name KubernetesService \
       --tier standard
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Network Policies" icon="network-wired">
@@ -809,7 +784,7 @@ spec:
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Monitoring" icon="chart-line" href="/deployment/monitoring">

@@ -5,37 +5,35 @@ icon: 'book-open'
 ---
 
 
-# Migration Guide: pip → uv
-
 **Last Updated**: 2025-10-20
 **Applies to**: v2.7.0+
 
 ---
 
-## Overview
+### Overview
 
 This guide helps you migrate from pip-based dependency management to uv. The migration is **backward compatible** - both methods work, but uv is now the recommended approach.
 
-## Why Migrate?
+### Why Migrate?
 
-### Performance
+#### Performance
 - ⚡ **10-100x faster** dependency resolution
 - 🚀 **Parallel downloads** and installations
 - 📦 **Efficient caching** with automatic deduplication
 
-### Reliability
+#### Reliability
 - 🔒 **Reproducible builds** via `uv.lock` lockfile
 - 🛡️ **Better conflict resolution** than pip
 - ✅ **Deterministic** dependency trees
 
-### Developer Experience
+#### Developer Experience
 - 🎯 **Single command**: `uv sync` replaces multiple pip commands
 - 🔧 **Automatic venv management** - no manual activation
 - 📝 **Single source of truth** - pyproject.toml only
 
-## Quick Migration
+### Quick Migration
 
-### For Developers
+#### For Developers
 
 **Before (pip)**:
 ```bash
@@ -43,14 +41,12 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -r requirements-test.txt
-```
-
+```text
 **After (uv)**:
 ```bash
 uv sync  # That's it! Creates venv + installs everything
-```
-
-### For CI/CD
+```text
+#### For CI/CD
 
 **Before (pip)**:
 ```yaml
@@ -58,8 +54,7 @@ uv sync  # That's it! Creates venv + installs everything
   run: |
     pip install --upgrade pip
     pip install -r requirements.txt
-```
-
+```text
 **After (uv)**:
 ```yaml
 - name: Install uv
@@ -67,62 +62,58 @@ uv sync  # That's it! Creates venv + installs everything
 
 - name: Install dependencies
   run: uv sync --frozen
-```
+```text
+### Detailed Migration Steps
 
-## Detailed Migration Steps
-
-### Step 1: Install uv
+#### Step 1: Install uv
 
 <Tabs>
 <Tab title="macOS/Linux">
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
+```xml
 </Tab>
 
 <Tab title="Windows">
 ```powershell
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
+```xml
 </Tab>
 
 <Tab title="Via pip">
 ```bash
 pip install uv
-```
+```xml
 </Tab>
 </Tabs>
 
 **Verify installation**:
 ```bash
 uv --version
-# Expected: uv 0.5.x or higher
-```
-
-### Step 2: Remove Old Virtual Environment (Optional)
+## Expected: uv 0.5.x or higher
+```text
+#### Step 2: Remove Old Virtual Environment (Optional)
 
 ```bash
-# Optional: Start fresh
+## Optional: Start fresh
 rm -rf .venv
-```
-
-### Step 3: Install Dependencies with uv
+```text
+#### Step 3: Install Dependencies with uv
 
 ```bash
-# Install all dependencies (development mode)
+## Install all dependencies (development mode)
 uv sync
 
-# Or install production dependencies only
+## Or install production dependencies only
 uv sync --frozen --no-dev
-```
-
+```sql
 **What happens**:
 1. ✅ Creates `.venv` if it doesn't exist
 2. ✅ Reads `pyproject.toml` for dependencies
 3. ✅ Uses `uv.lock` for exact versions
 4. ✅ Installs everything in one fast operation
 
-### Step 4: Update Your Workflow
+#### Step 4: Update Your Workflow
 
 Replace old commands with new ones:
 
@@ -134,83 +125,76 @@ Replace old commands with new ones:
 | `pytest` | `uv run pytest` | No activation needed |
 | `pip install black` | `uv tool install black` | For standalone tools |
 
-### Step 5: Update Scripts & Makefiles
+#### Step 5: Update Scripts & Makefiles
 
 **Before**:
 ```makefile
 install:
     pip install -r requirements.txt
-```
-
+```text
 **After**:
 ```makefile
 install:
     uv sync --frozen --no-dev
-```
+```text
+### Common Workflows
 
-## Common Workflows
-
-### Development Workflow
+#### Development Workflow
 
 ```bash
-# Initial setup
+## Initial setup
 uv sync
 
-# Run tests
+## Run tests
 uv run pytest
 
-# Run linters
+## Run linters
 uv run flake8 src/
 uv run black src/
 
-# Run your application
+## Run your application
 uv run python -m mcp_server_langgraph.mcp.server_streamable
-```
-
-### Adding New Dependencies
+```text
+#### Adding New Dependencies
 
 **Before (pip)**:
 ```bash
 pip install new-package
 pip freeze > requirements.txt
-```
-
+```text
 **After (uv)**:
 ```bash
-# Add to pyproject.toml [project.dependencies]
+## Add to pyproject.toml [project.dependencies]
 uv add new-package
 
-# Or manually edit pyproject.toml, then:
+## Or manually edit pyproject.toml, then:
 uv sync
-```
-
-### Updating Dependencies
+```text
+#### Updating Dependencies
 
 ```bash
-# Update all dependencies
+## Update all dependencies
 uv sync
 
-# Update and refresh lockfile
+## Update and refresh lockfile
 uv lock --upgrade
 uv sync
-```
-
-### Installing Optional Dependencies
+```text
+#### Installing Optional Dependencies
 
 ```bash
-# Install with secrets support
+## Install with secrets support
 uv sync --extra secrets
 
-# Install with embeddings support
+## Install with embeddings support
 uv sync --extra embeddings
 
-# Install all optional features
+## Install all optional features
 uv sync --all-extras
-```
+```text
+### CI/CD Migration
 
-## CI/CD Migration
-
-### GitHub Actions
+#### GitHub Actions
 
 **Before**:
 ```yaml
@@ -225,8 +209,7 @@ uv sync --all-extras
     pip install --upgrade pip
     pip install -r requirements.txt
     pip install -r requirements-test.txt
-```
-
+```text
 **After**:
 ```yaml
 - name: Set up Python
@@ -247,123 +230,113 @@ uv sync --all-extras
 
 - name: Install dependencies
   run: uv sync --frozen
-```
-
-### Docker
+```text
+#### Docker
 
 **Current approach (still works)**:
 ```dockerfile
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-```
-
+```text
 **Future approach (optional)**:
 ```dockerfile
-# Install uv
+## Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy dependency files
+## Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies
+## Install dependencies
 RUN uv sync --frozen --no-dev
-```
+```text
+### Troubleshooting
 
-## Troubleshooting
-
-### Issue: "uv: command not found"
+#### Issue: "uv: command not found"
 
 **Solution**:
 ```bash
-# Add uv to PATH
+## Add uv to PATH
 export PATH="$HOME/.cargo/bin:$PATH"
 
-# Or reinstall uv
+## Or reinstall uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-### Issue: Dependencies not found
+```text
+#### Issue: Dependencies not found
 
 **Solution**:
 ```bash
-# Regenerate lockfile
+## Regenerate lockfile
 uv lock
 
-# Then sync
+## Then sync
 uv sync
-```
-
-### Issue: Version conflicts
+```text
+#### Issue: Version conflicts
 
 **Solution**:
 ```bash
-# Check what's causing the conflict
+## Check what's causing the conflict
 uv sync --verbose
 
-# Force refresh
+## Force refresh
 rm uv.lock
 uv lock
 uv sync
-```
-
-### Issue: "No module named X" when running code
+```text
+#### Issue: "No module named X" when running code
 
 **Solution**:
 ```bash
-# Always use 'uv run' or activate venv
+## Always use 'uv run' or activate venv
 uv run python script.py
 
-# Or activate venv manually
+## Or activate venv manually
 source .venv/bin/activate
 python script.py
-```
-
-### Issue: CI/CD cache issues
+```text
+#### Issue: CI/CD cache issues
 
 **Solution**:
 ```yaml
-# Update cache key to include uv.lock
+## Update cache key to include uv.lock
 - uses: actions/cache@v4
   with:
     path: ~/.cache/uv
     key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock', 'pyproject.toml') }}
-```
+```sql
+### FAQ
 
-## FAQ
-
-### Do I need to delete requirements.txt files?
+#### Do I need to delete requirements.txt files?
 
 **No**. They're kept for backward compatibility and will be removed in a future release.
 
-### Can I still use pip?
+#### Can I still use pip?
 
 **Yes**. You can still run `pip install -e .` if needed, but uv is recommended.
 
-### What about requirements-pinned.txt?
+#### What about requirements-pinned.txt?
 
 **uv.lock replaces it**. The lockfile provides the same guarantees with better performance.
 
-### How do I know which Python version to use?
+#### How do I know which Python version to use?
 
 Check `.python-version` file:
 ```bash
 cat .python-version
-# Output: 3.12
-```
-
-### Can I use uv with existing venv?
+## Output: 3.12
+```text
+#### Can I use uv with existing venv?
 
 **Yes**, but starting fresh is recommended:
 ```bash
 rm -rf .venv
 uv sync
-```
-
-### Does uv work on Windows?
+```text
+#### Does uv work on Windows?
 
 **Yes**. uv supports Windows, macOS, and Linux.
 
-### What if I need a specific version?
+#### What if I need a specific version?
 
 Edit `pyproject.toml`:
 ```toml
@@ -371,14 +344,12 @@ dependencies = [
     "requests>=2.31.0,<3.0.0",  # Version range
     "black==24.3.0",             # Exact version
 ]
-```
-
+```text
 Then run:
 ```bash
 uv sync
-```
-
-## Migration Checklist
+```sql
+### Migration Checklist
 
 - [ ] Install uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - [ ] Verify uv works (`uv --version`)
@@ -390,37 +361,37 @@ uv sync
 - [ ] Update documentation (if applicable)
 - [ ] Delete old `.venv` if you want a fresh start
 
-## Getting Help
+### Getting Help
 
-### Documentation
+#### Documentation
 - **uv docs**: https://github.com/astral-sh/uv
 - **This project's docs**: [Installation Guide](/getting-started/installation)
 
-### Issues
+#### Issues
 - **uv issues**: https://github.com/astral-sh/uv/issues
 - **Project issues**: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues
 
-### Community
+#### Community
 - **Discussions**: https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions
 
-## Rollback Plan
+### Rollback Plan
 
 If you need to revert to pip:
 
 ```bash
-# Delete uv venv
+## Delete uv venv
 rm -rf .venv
 
-# Create pip venv
+## Create pip venv
 python -m venv .venv
 source .venv/bin/activate
 
-# Install with pip
+## Install with pip
 pip install -r requirements.txt
 pip install -r requirements-test.txt
 ```
 
-## Benefits Recap
+### Benefits Recap
 
 ✅ **10-100x faster** dependency resolution
 ✅ **Reproducible builds** with lockfile

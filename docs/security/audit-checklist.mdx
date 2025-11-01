@@ -4,7 +4,7 @@ description: 'Comprehensive security audit checklist for production deployments'
 icon: 'clipboard-check'
 ---
 
-## Overview
+### Overview
 
 This checklist covers all critical security areas that should be audited before and during production deployment. Use this as a systematic guide to ensure your MCP Server deployment meets security best practices.
 
@@ -12,9 +12,9 @@ This checklist covers all critical security areas that should be audited before 
 **Do not deploy to production until all critical items are addressed.** High and critical items must be resolved; medium items should be planned for resolution.
 </Warning>
 
-## Authentication & Authorization
+### Authentication & Authorization
 
-### Keycloak Configuration
+#### Keycloak Configuration
 
 <AccordionGroup>
   <Accordion title="✅ Keycloak Setup" icon="key">
@@ -107,9 +107,9 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Secrets Management
+### Secrets Management
 
-### Infrastructure Secrets
+#### Infrastructure Secrets
 
 <AccordionGroup>
   <Accordion title="✅ Secret Storage" icon="vault">
@@ -188,9 +188,9 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Network Security
+### Network Security
 
-### Network Configuration
+#### Network Configuration
 
 <AccordionGroup>
   <Accordion title="✅ TLS/SSL" icon="lock">
@@ -271,9 +271,9 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Application Security
+### Application Security
 
-### Code Security
+#### Code Security
 
 <AccordionGroup>
   <Accordion title="✅ Dependencies" icon="cube">
@@ -351,9 +351,9 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Container Security
+### Container Security
 
-### Image Security
+#### Image Security
 
 <AccordionGroup>
   <Accordion title="✅ Container Images" icon="box">
@@ -409,9 +409,9 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Data Protection
+### Data Protection
 
-### Data Security
+#### Data Security
 
 <AccordionGroup>
   <Accordion title="✅ Encryption" icon="lock">
@@ -492,9 +492,9 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Kubernetes Security
+### Kubernetes Security
 
-### Cluster Security
+#### Cluster Security
 
 <AccordionGroup>
   <Accordion title="✅ RBAC" icon="users-gear">
@@ -574,9 +574,9 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Compliance & Governance
+### Compliance & Governance
 
-### Compliance
+#### Compliance
 
 <AccordionGroup>
   <Accordion title="✅ Security Policies" icon="file-shield">
@@ -623,12 +623,12 @@ This checklist covers all critical security areas that should be audited before 
   </Accordion>
 </AccordionGroup>
 
-## Pre-Production Checklist
+### Pre-Production Checklist
 
 Use this before deploying to production:
 
 ```markdown
-## Critical Items (Must Fix)
+### Critical Items (Must Fix)
 - [ ] All authentication endpoints use HTTPS
 - [ ] No default passwords in use
 - [ ] All secrets in secret management system
@@ -640,7 +640,7 @@ Use this before deploying to production:
 - [ ] Audit logging enabled
 - [ ] RBAC properly configured
 
-## High Priority (Should Fix)
+### High Priority (Should Fix)
 - [ ] MFA enabled for admin accounts
 - [ ] Secret rotation configured
 - [ ] API rate limiting enabled
@@ -650,7 +650,7 @@ Use this before deploying to production:
 - [ ] Monitoring and alerting set up
 - [ ] Incident response plan documented
 
-## Medium Priority (Plan to Fix)
+### Medium Priority (Plan to Fix)
 - [ ] Automated security testing
 - [ ] Regular penetration testing
 - [ ] Security training completed
@@ -658,10 +658,10 @@ Use this before deploying to production:
 - [ ] Bug bounty program
 ```
 
-## Automated Security Scanning
+### Automated Security Scanning
 
 ```bash
-# Run security scan suite
+## Run security scan suite
 ./scripts/security-audit.sh
 ```
 
@@ -672,38 +672,38 @@ set -e
 
 echo "=== Running Security Audit ==="
 
-# 1. Check for secrets in code
+## 1. Check for secrets in code
 echo "Checking for hardcoded secrets..."
 git secrets --scan || true
 
-# 2. Scan dependencies
+## 2. Scan dependencies
 echo "Scanning Python dependencies..."
 pip-audit
 
-# 3. Scan container images
+## 3. Scan container images
 echo "Scanning container images..."
 trivy image mcp-server-langgraph:latest
 
-# 4. Check Kubernetes configuration
+## 4. Check Kubernetes configuration
 echo "Checking Kubernetes configs..."
 kubectl kustomize overlays/production | kubesec scan -
 
-# 5. Network policy check
+## 5. Network policy check
 echo "Verifying network policies..."
 kubectl get networkpolicies -A
 
-# 6. RBAC audit
+## 6. RBAC audit
 echo "Auditing RBAC..."
 kubectl auth can-i --list --as=system:serviceaccount:mcp-server-langgraph:mcp-server-langgraph
 
-# 7. Check for exposed secrets
+## 7. Check for exposed secrets
 echo "Checking for exposed secrets..."
 kubectl get secrets -A -o json | grep -i "password\|token\|key" || true
 
 echo "=== Security Audit Complete ==="
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Compliance Guide" icon="scale-balanced" href="/security/compliance">

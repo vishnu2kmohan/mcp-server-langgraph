@@ -5,13 +5,11 @@ icon: 'book-open'
 ---
 
 
-# SCIM 2.0 Provisioning Guide
-
 Automate user provisioning and deprovisioning from external identity management systems using SCIM 2.0.
 
 See [ADR-0038](/architecture/adr-0038-scim-implementation) for implementation details.
 
-## Overview
+### Overview
 
 SCIM (System for Cross-domain Identity Management) enables:
 - **Automated User Provisioning**: Create users from Azure AD, Okta, Google Workspace
@@ -20,9 +18,9 @@ SCIM (System for Cross-domain Identity Management) enables:
 - **Group Management**: Sync group memberships
 - **Bulk Operations**: Provision hundreds of users at once
 
-## Supported Endpoints
+### Supported Endpoints
 
-### Users
+#### Users
 - `POST /scim/v2/Users` - Create user
 - `GET /scim/v2/Users/{id}` - Get user
 - `PUT /scim/v2/Users/{id}` - Replace user
@@ -30,23 +28,22 @@ SCIM (System for Cross-domain Identity Management) enables:
 - `DELETE /scim/v2/Users/{id}` - Deactivate user
 - `GET /scim/v2/Users?filter=...` - Search users
 
-### Groups
+#### Groups
 - `POST /scim/v2/Groups` - Create group
 - `GET /scim/v2/Groups/{id}` - Get group
 - `PATCH /scim/v2/Groups/{id}` - Update group membership
 
-## Quick Start
+### Quick Start
 
-### 1. Enable SCIM
+#### 1. Enable SCIM
 
 ```bash
-# .env
+## .env
 SCIM_ENABLED=true
 SCIM_BASE_URL=https://api.example.com/scim/v2
 SCIM_AUTHENTICATION=jwt
-```
-
-### 2. Create Service Principal for SCIM
+```text
+#### 2. Create Service Principal for SCIM
 
 ```bash
 curl -X POST https://api.example.com/api/v1/service-principals \
@@ -57,10 +54,9 @@ curl -X POST https://api.example.com/api/v1/service-principals \
     "authentication_mode": "client_credentials"
   }'
 
-# Save the client_secret returned
-```
-
-### 3. Configure External System
+## Save the client_secret returned
+```text
+#### 3. Configure External System
 
 Configure your identity provider to use SCIM:
 
@@ -77,9 +73,9 @@ Configure your identity provider to use SCIM:
 3. Set Authentication: OAuth2 Client Credentials
 4. Set Client ID/Secret from service principal
 
-## SCIM Examples
+### SCIM Examples
 
-### Create User
+#### Create User
 
 ```bash
 curl -X POST https://api.example.com/scim/v2/Users \
@@ -98,8 +94,7 @@ curl -X POST https://api.example.com/scim/v2/Users \
     }],
     "active": true
   }'
-```
-
+```text
 **Response**:
 ```json
 {
@@ -121,9 +116,8 @@ curl -X POST https://api.example.com/scim/v2/Users \
     "lastModified": "2025-01-28T00:00:00Z"
   }
 }
-```
-
-### Update User (PATCH)
+```sql
+#### Update User (PATCH)
 
 ```bash
 curl -X PATCH https://api.example.com/scim/v2/Users/user-uuid-123 \
@@ -139,23 +133,20 @@ curl -X PATCH https://api.example.com/scim/v2/Users/user-uuid-123 \
       }
     ]
   }'
-```
-
-### Deactivate User (DELETE)
+```text
+#### Deactivate User (DELETE)
 
 ```bash
 curl -X DELETE https://api.example.com/scim/v2/Users/user-uuid-123 \
   -H "Authorization: Bearer JWT_TOKEN"
-```
-
-### Search Users
+```text
+#### Search Users
 
 ```bash
 curl -X GET 'https://api.example.com/scim/v2/Users?filter=userName eq "alice@example.com"' \
   -H "Authorization: Bearer JWT_TOKEN"
-```
-
-### Create Group
+```text
+#### Create Group
 
 ```bash
 curl -X POST https://api.example.com/scim/v2/Groups \
@@ -168,9 +159,8 @@ curl -X POST https://api.example.com/scim/v2/Groups \
       {"value": "user-uuid-123", "display": "Alice Smith"}
     ]
   }'
-```
-
-## Enterprise User Extension
+```text
+### Enterprise User Extension
 
 SCIM supports enterprise-specific attributes:
 
@@ -194,46 +184,42 @@ SCIM supports enterprise-specific attributes:
     }
   }
 }
-```
-
+```text
 These map to Keycloak user attributes:
 - `employeeNumber` → `employeeNumber`
 - `department` → `department`
 - `organization` → `organization`
 
-## OpenFGA Synchronization
+### OpenFGA Synchronization
 
 When users are provisioned via SCIM, roles are automatically synced to OpenFGA:
 
 ```
 SCIM Create User → Keycloak User Created → Event Listener
   → sync_user_to_openfga() → OpenFGA Tuples
-```
-
+```text
 Default roles assigned: `["user"]`
 
 Configure in `.env`:
 ```bash
 SCIM_AUTO_SYNC_TO_OPENFGA=true
 SCIM_DEFAULT_ROLES=user,premium  # Comma-separated
-```
+```text
+### Monitoring
 
-## Monitoring
-
-### Prometheus Metrics
+#### Prometheus Metrics
 
 ```promql
-# SCIM operations rate
+## SCIM operations rate
 rate(scim_operations_total{operation="create"}[5m])
 
-# SCIM errors
+## SCIM errors
 rate(scim_operations_errors_total[5m])
 
-# Provisioning latency
+## Provisioning latency
 histogram_quantile(0.95, scim_operation_duration_seconds_bucket)
-```
-
-### Audit Logs
+```text
+#### Audit Logs
 
 All SCIM operations are logged:
 
@@ -248,9 +234,9 @@ All SCIM operations are logged:
 }
 ```
 
-## Troubleshooting
+### Troubleshooting
 
-### 401 Unauthorized
+#### 401 Unauthorized
 
 **Issue**: SCIM client cannot authenticate
 
@@ -259,7 +245,7 @@ All SCIM operations are logged:
 - Check service principal credentials
 - Ensure token not expired (refresh if needed)
 
-### 409 Conflict (User Exists)
+#### 409 Conflict (User Exists)
 
 **Issue**: User already exists in Keycloak
 
@@ -268,7 +254,7 @@ All SCIM operations are logged:
 - Check userName field (must be unique)
 - Query before creating: `GET /scim/v2/Users?filter=userName eq "alice@example.com"`
 
-### Attribute Not Mapped
+#### Attribute Not Mapped
 
 **Issue**: Enterprise attributes not appearing in Keycloak
 
@@ -277,9 +263,9 @@ All SCIM operations are logged:
 - Verify attribute mapping in `user_to_keycloak()`
 - Check Keycloak user attributes in Admin Console
 
-## References
+### References
 
 - ADR: [ADR-0038: SCIM Implementation](/architecture/adr-0038-scim-implementation)
-- API Reference: [SCIM API](/api/scim)
+- API Reference: [SCIM 2.0 API](/reference/api-endpoints#scim-20-api)
 - RFC 7643: [SCIM Core Schema](https://datatracker.ietf.org/doc/html/rfc7643)
 - RFC 7644: [SCIM Protocol](https://datatracker.ietf.org/doc/html/rfc7644)

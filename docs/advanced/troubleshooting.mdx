@@ -4,7 +4,7 @@ description: 'Common issues, debugging techniques, and solutions'
 icon: 'wrench'
 ---
 
-## Overview
+### Overview
 
 Comprehensive troubleshooting guide for the MCP Server with LangGraph. This guide covers common issues, diagnostic techniques, and step-by-step solutions.
 
@@ -12,36 +12,36 @@ Comprehensive troubleshooting guide for the MCP Server with LangGraph. This guid
 Always check logs first: `kubectl logs -f <pod-name>` or `docker compose logs -f`
 </Tip>
 
-## Quick Diagnostic Commands
+### Quick Diagnostic Commands
 
 ```bash
-# Check overall health
+## Check overall health
 curl http://localhost:8000/health
 
-# Check pod status
+## Check pod status
 kubectl get pods -n mcp-server-langgraph
 
-# View recent logs
+## View recent logs
 kubectl logs --tail=100 -n mcp-server-langgraph deployment/mcp-server-langgraph
 
-# Check resource usage
+## Check resource usage
 kubectl top pods -n mcp-server-langgraph
 kubectl top nodes
 
-# Test database connectivity
+## Test database connectivity
 kubectl exec -it postgres-0 -- psql -U postgres -c "SELECT 1"
 
-# Test Redis connectivity
+## Test Redis connectivity
 kubectl exec -it redis-master-0 -- redis-cli ping
 
-# Check OpenFGA
+## Check OpenFGA
 curl http://localhost:8080/healthz
 
-# Check Keycloak
+## Check Keycloak
 curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 ```
 
-## Authentication Issues
+### Authentication Issues
 
 <AccordionGroup>
   <Accordion title="401 Unauthorized - Invalid token">
@@ -199,7 +199,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
   </Accordion>
 </AccordionGroup>
 
-## Authorization Issues
+### Authorization Issues
 
 <AccordionGroup>
   <Accordion title="Permission denied despite valid role">
@@ -340,7 +340,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
   </Accordion>
 </AccordionGroup>
 
-## Database Issues
+### Database Issues
 
 <AccordionGroup>
   <Accordion title="PostgreSQL connection refused">
@@ -480,7 +480,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
   </Accordion>
 </AccordionGroup>
 
-## LLM Issues
+### LLM Issues
 
 <AccordionGroup>
   <Accordion title="API rate limit exceeded">
@@ -619,7 +619,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
   </Accordion>
 </AccordionGroup>
 
-## Performance Issues
+### Performance Issues
 
 <AccordionGroup>
   <Accordion title="Slow API responses">
@@ -812,7 +812,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
   </Accordion>
 </AccordionGroup>
 
-## Kubernetes Issues
+### Kubernetes Issues
 
 <AccordionGroup>
   <Accordion title="Pods crashing (CrashLoopBackOff)">
@@ -936,15 +936,15 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
   </Accordion>
 </AccordionGroup>
 
-## Observability & Debugging
+### Observability & Debugging
 
-### Enable Debug Logging
+#### Enable Debug Logging
 
 ```python
-# config.py
+## config.py
 import logging
 
-# Set log level
+## Set log level
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 logging.basicConfig(
@@ -952,10 +952,10 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-# Enable debug logging
+## Enable debug logging
 export LOG_LEVEL=DEBUG
 
-# Structured logging
+## Structured logging
 import structlog
 
 structlog.configure(
@@ -971,16 +971,16 @@ logger = structlog.get_logger()
 logger.debug("debug_message", user_id="alice", action="login")
 ```
 
-### Distributed Tracing
+#### Distributed Tracing
 
 ```python
-# Enable OpenTelemetry tracing
+## Enable OpenTelemetry tracing
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-# Configure tracer
+## Configure tracer
 trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
 
@@ -993,7 +993,7 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(jaeger_exporter)
 )
 
-# Add tracing to requests
+## Add tracing to requests
 @app.post("/message")
 async def send_message(request: Request):
     with tracer.start_as_current_span("send_message") as span:
@@ -1005,14 +1005,14 @@ async def send_message(request: Request):
         span.set_attribute("response_length", len(result))
         return result
 
-# View traces in Jaeger
-# http://localhost:16686
+## View traces in Jaeger
+## http://localhost:16686
 ```
 
-### Health Checks
+#### Health Checks
 
 ```python
-# Detailed health check
+## Detailed health check
 from fastapi import status
 
 @app.get("/health/detailed")
@@ -1059,49 +1059,49 @@ async def health_detailed():
     )
 ```
 
-## Getting Help
+### Getting Help
 
-### Collect Debug Information
+#### Collect Debug Information
 
 ```bash
 #!/bin/bash
-# collect-debug-info.sh
+## collect-debug-info.sh
 
 NAMESPACE="mcp-server-langgraph"
 OUTPUT_DIR="debug-$(date +%Y%m%d-%H%M%S)"
 mkdir -p $OUTPUT_DIR
 
-# Pod status
+## Pod status
 kubectl get pods -n $NAMESPACE > $OUTPUT_DIR/pods.txt
 
-# Pod logs
+## Pod logs
 for pod in $(kubectl get pods -n $NAMESPACE -o name); do
     kubectl logs -n $NAMESPACE $pod > "$OUTPUT_DIR/$(basename $pod).log" 2>&1
     kubectl logs -n $NAMESPACE $pod --previous > "$OUTPUT_DIR/$(basename $pod)-previous.log" 2>&1 || true
 done
 
-# Describe pods
+## Describe pods
 for pod in $(kubectl get pods -n $NAMESPACE -o name); do
     kubectl describe -n $NAMESPACE $pod > "$OUTPUT_DIR/$(basename $pod)-describe.txt"
 done
 
-# Events
+## Events
 kubectl get events -n $NAMESPACE --sort-by='.metadata.creationTimestamp' > $OUTPUT_DIR/events.txt
 
-# ConfigMaps and Secrets (names only)
+## ConfigMaps and Secrets (names only)
 kubectl get configmaps -n $NAMESPACE -o yaml > $OUTPUT_DIR/configmaps.yaml
 kubectl get secrets -n $NAMESPACE -o yaml | sed 's/data:.*/data: REDACTED/' > $OUTPUT_DIR/secrets.yaml
 
-# Services and Ingress
+## Services and Ingress
 kubectl get svc,ingress -n $NAMESPACE -o yaml > $OUTPUT_DIR/network.yaml
 
-# Create archive
+## Create archive
 tar -czf $OUTPUT_DIR.tar.gz $OUTPUT_DIR
 
 echo "Debug information collected in $OUTPUT_DIR.tar.gz"
 ```
 
-### Community Support
+#### Community Support
 
 - **GitHub Issues**: https://github.com/your-repo/issues
 - **Discord**: https://discord.gg/your-server
@@ -1114,7 +1114,7 @@ echo "Debug information collected in $OUTPUT_DIR.tar.gz"
 4. Steps to reproduce
 5. Expected vs actual behavior
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Architecture" icon="diagram-project" href="/getting-started/architecture">

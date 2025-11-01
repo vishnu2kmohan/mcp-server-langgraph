@@ -4,7 +4,7 @@ description: 'OpenTelemetry tracing, metrics, and LangSmith integration'
 icon: 'chart-line'
 ---
 
-## Overview
+### Overview
 
 Comprehensive observability with **dual backends** - OpenTelemetry for distributed tracing and metrics, plus LangSmith for LLM-specific insights. Track every request from ingress to LLM response with full context correlation.
 
@@ -12,7 +12,7 @@ Comprehensive observability with **dual backends** - OpenTelemetry for distribut
 **Dual observability** provides both infrastructure monitoring (OpenTelemetry) and AI-specific insights (LangSmith) in a unified platform.
 </Info>
 
-## Architecture
+### Architecture
 
 ```mermaid
 graph TB
@@ -43,9 +43,8 @@ graph TB
     class Exporter,Collector collectorStyle
     class Jaeger,Prometheus,LSCloud backendStyle
     class Grafana,Dashboard1,Dashboard2 dashStyle
-```
-
-## Quick Start
+```text
+### Quick Start
 
 <Steps>
   <Step title="Deploy Observability Stack">
@@ -57,7 +56,7 @@ graph TB
     curl http://localhost:16686  # Jaeger UI
     curl http://localhost:9090   # Prometheus
     curl http://localhost:3000   # Grafana
-    ```
+    ```xml
   </Step>
 
   <Step title="Configure Application">
@@ -71,7 +70,7 @@ graph TB
     LANGSMITH_TRACING=true
     LANGSMITH_API_KEY=your-key-here
     LANGSMITH_PROJECT=mcp-server-langgraph
-    ```
+    ```xml
   </Step>
 
   <Step title="Generate Traces">
@@ -87,7 +86,7 @@ graph TB
       "content": "Hello! How can I help you?",
       "trace_id": "abc123def456..."
     }
-    ```
+    ```sql
   </Step>
 
   <Step title="View in Jaeger">
@@ -98,9 +97,9 @@ graph TB
   </Step>
 </Steps>
 
-## OpenTelemetry Tracing
+### OpenTelemetry Tracing
 
-### Trace Structure
+#### Trace Structure
 
 Every request creates a trace with multiple spans:
 
@@ -117,9 +116,8 @@ Trace: POST /message
 │  │  │  └─ Span: litellm_completion
 │  │  └─ Span: tool_execution
 │  └─ Span: refresh_session
-```
-
-### Trace Attributes
+```text
+#### Trace Attributes
 
 Each span includes rich metadata:
 
@@ -135,7 +133,7 @@ Each span includes rich metadata:
       "trace_id": "abc123...",
       "span_id": "def456..."
     }
-    ```
+    ```xml
   </Tab>
 
   <Tab title="LLM Spans">
@@ -150,7 +148,7 @@ Each span includes rich metadata:
       "llm.total_tokens": 212,
       "llm.latency_ms": 1245
     }
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Auth Spans">
@@ -164,11 +162,11 @@ Each span includes rich metadata:
       "authz.allowed": true,
       "authz.latency_ms": 15
     }
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-### Custom Instrumentation
+#### Custom Instrumentation
 
 Add custom spans to your code:
 
@@ -183,11 +181,10 @@ def my_function():
         result = do_work()
         span.set_attribute("result.count", len(result))
         return result
-```
+```text
+### Metrics
 
-## Metrics
-
-### Available Metrics
+#### Available Metrics
 
 <AccordionGroup>
   <Accordion title="Request Metrics" defaultOpen>
@@ -206,7 +203,7 @@ def my_function():
 
     # Error rate
     rate(http_requests_total{status=~"5.."}[5m])
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Authentication Metrics">
@@ -227,7 +224,7 @@ def my_function():
 
     # Failed logins
     increase(auth_attempts_total{result="failure"}[1h])
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Authorization Metrics">
@@ -247,7 +244,7 @@ def my_function():
     # Cache hit rate
     rate(authz_cache_hits_total[5m]) /
       rate(authz_check_total[5m])
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="LLM Metrics">
@@ -269,18 +266,18 @@ def my_function():
     # Cost estimation (approximate)
     rate(llm_tokens_total{type="prompt"}[1h]) * 0.000003 +
     rate(llm_tokens_total{type="completion"}[1h]) * 0.000015
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-### Custom Metrics
+#### Custom Metrics
 
 Create custom metrics:
 
 ```python
 from mcp_server_langgraph.observability.telemetry import meter
 
-# Counter
+## Counter
 request_counter = meter.create_counter(
     "custom_requests_total",
     description="Total custom requests",
@@ -288,7 +285,7 @@ request_counter = meter.create_counter(
 )
 request_counter.add(1, {"type": "custom"})
 
-# Histogram
+## Histogram
 latency_histogram = meter.create_histogram(
     "custom_duration_seconds",
     description="Custom operation duration",
@@ -296,35 +293,33 @@ latency_histogram = meter.create_histogram(
 )
 latency_histogram.record(0.123, {"operation": "custom"})
 
-# Gauge
+## Gauge
 active_gauge = meter.create_up_down_counter(
     "custom_active",
     description="Active custom operations",
     unit="1"
 )
 active_gauge.add(1)
-```
+```text
+### Prometheus Configuration
 
-## Prometheus Configuration
-
-### Scraping
+#### Scraping
 
 Add scraping configuration:
 
 ```yaml
-# prometheus.yml
+## prometheus.yml
 scrape_configs:
   - job_name: 'mcp-server-langgraph'
     scrape_interval: 15s
     static_configs:
       - targets: ['mcp-server-langgraph:8000']
     metrics_path: '/metrics/prometheus'
-```
-
-### Alerting Rules
+```text
+#### Alerting Rules
 
 ```yaml
-# alerts.yml
+## alerts.yml
 groups:
   - name: langgraph_agent
     interval: 30s
@@ -353,25 +348,23 @@ groups:
         for: 1m
         annotations:
           summary: "Authentication failure spike"
-```
+```text
+### Grafana Dashboards
 
-## Grafana Dashboards
-
-### Import Dashboards
+#### Import Dashboards
 
 ```bash
-# Import pre-built dashboards
+## Import pre-built dashboards
 kubectl create configmap grafana-dashboards \
   --from-file=dashboards/ \
   --namespace=observability
 
-# Label for auto-discovery
+## Label for auto-discovery
 kubectl label configmap grafana-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
-```
-
-### Key Panels
+```text
+#### Key Panels
 
 <Tabs>
   <Tab title="Overview">
@@ -406,9 +399,9 @@ kubectl label configmap grafana-dashboards \
   </Tab>
 </Tabs>
 
-## LangSmith Integration
+### LangSmith Integration
 
-### Setup
+#### Setup
 
 <Steps>
   <Step title="Create Account">
@@ -426,7 +419,7 @@ kubectl label configmap grafana-dashboards \
     LANGSMITH_API_KEY=ls_api_key_...
     LANGSMITH_PROJECT=mcp-server-langgraph
     LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-    ```
+    ```xml
   </Step>
 
   <Step title="Verify">
@@ -434,7 +427,7 @@ kubectl label configmap grafana-dashboards \
   </Step>
 </Steps>
 
-### Features
+#### Features
 
 <AccordionGroup>
   <Accordion title="Prompt Tracking" icon="message">
@@ -471,7 +464,7 @@ kubectl label configmap grafana-dashboards \
   </Accordion>
 </AccordionGroup>
 
-### Custom Annotations
+#### Custom Annotations
 
 ```python
 from langsmith import trace
@@ -481,11 +474,10 @@ def custom_function(input_data):
     # Automatically traced to LangSmith
     result = process(input_data)
     return result
-```
+```text
+### Logging
 
-## Logging
-
-### Structured Logging
+#### Structured Logging
 
 All logs are JSON-formatted with trace context:
 
@@ -504,9 +496,8 @@ All logs are JSON-formatted with trace context:
   "latency_ms": 1245,
   "status": "success"
 }
-```
-
-### Log Aggregation
+```text
+#### Log Aggregation
 
 <Tabs>
   <Tab title="Loki">
@@ -521,7 +512,7 @@ All logs are JSON-formatted with trace context:
           - role: pod
             namespaces:
               names: [mcp-server-langgraph]
-    ```
+    ```xml
   </Tab>
 
   <Tab title="ELK Stack">
@@ -534,7 +525,7 @@ All logs are JSON-formatted with trace context:
 
     output.elasticsearch:
       hosts: ["elasticsearch:9200"]
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Cloud Logging">
@@ -547,16 +538,16 @@ All logs are JSON-formatted with trace context:
     # AWS CloudWatch
     import watchtower
     logger.addHandler(watchtower.CloudWatchLogHandler())
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Production Setup
+### Production Setup
 
-### Kubernetes
+#### Kubernetes
 
 ```yaml
-# Sidecar for OpenTelemetry Collector
+## Sidecar for OpenTelemetry Collector
 - name: otel-collector
   image: otel/opentelemetry-collector:latest
   args:
@@ -564,37 +555,34 @@ All logs are JSON-formatted with trace context:
   volumeMounts:
     - name: otel-config
       mountPath: /conf
-```
-
-### Sampling
+```text
+#### Sampling
 
 Configure trace sampling for high-traffic:
 
 ```python
-# config.py
+## config.py
 TRACE_SAMPLE_RATE = 0.1  # Sample 10% of traces
 
-# telemetry.py
+## telemetry.py
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
-```
-
-### Data Retention
+```text
+#### Data Retention
 
 ```yaml
-# Jaeger retention
+## Jaeger retention
 --span-storage.type=elasticsearch
 --es.index-prefix=jaeger
 --es.tags-as-fields.all=true
 --es.num-shards=5
 --es.num-replicas=1
 
-# Prometheus retention
+## Prometheus retention
 --storage.tsdb.retention.time=30d
 --storage.tsdb.retention.size=50GB
-```
-
-## Troubleshooting
+```text
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="No traces appearing">
@@ -610,7 +598,7 @@ sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
 
     # Test trace export
     python scripts/test_tracing.py
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="High cardinality metrics">
@@ -632,7 +620,7 @@ sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Monitoring Guide" icon="chart-line" href="/deployment/platform/monitoring">

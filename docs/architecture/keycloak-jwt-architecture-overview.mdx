@@ -4,11 +4,9 @@ description: 'Complete enterprise-grade authentication and identity management a
 icon: 'shield-keyhole'
 ---
 
-# Keycloak JWT Authentication Architecture - Overview
-
 Complete enterprise-grade authentication and identity management architecture with Keycloak as the authoritative identity provider.
 
-## Executive Summary
+### Executive Summary
 
 This implementation provides a **production-ready authentication system** with:
 
@@ -22,7 +20,7 @@ This implementation provides a **production-ready authentication system** with:
 - ✅ **OpenFGA Permission Inheritance** - Service principals inherit user permissions
 - ✅ **Hybrid Session Model** - Stateless users + stateful services
 
-## Architecture Diagram
+### Architecture Diagram
 
 ```mermaid
 graph TB
@@ -86,16 +84,16 @@ graph TB
     style OpenFGA fill:#fff5e1
 ```
 
-## Quick Links
+### Quick Links
 
-### Documentation
+#### Documentation
 - [Deployment Guide](/deployment/keycloak-jwt-deployment)
 - [Service Principals Guide](/guides/service-principals)
 - [API Key Management](/guides/api-key-management)
 - [Identity Federation](/guides/identity-federation-quickstart)
 - [SCIM Provisioning](/guides/scim-provisioning)
 
-### Architecture Decision Records
+#### Architecture Decision Records
 - [ADR-0031: Keycloak as Authoritative Identity](/architecture/adr-0031-keycloak-authoritative-identity)
 - [ADR-0032: JWT Standardization](/architecture/adr-0032-jwt-standardization)
 - [ADR-0033: Service Principal Design](/architecture/adr-0033-service-principal-design)
@@ -106,7 +104,7 @@ graph TB
 - [ADR-0038: SCIM Implementation](/architecture/adr-0038-scim-implementation)
 - [ADR-0039: OpenFGA Permission Inheritance](/architecture/adr-0039-openfga-permission-inheritance)
 
-## Key Design Decisions
+### Key Design Decisions
 
 | Decision | ADR | Rationale |
 |----------|-----|-----------|
@@ -120,7 +118,7 @@ graph TB
 | SCIM implementation | ADR-0038 | Automated provisioning |
 | Permission inheritance | ADR-0039 | Service acting as user |
 
-## Getting Started
+### Getting Started
 
 1. Review [ADR-0031](/architecture/adr-0031-keycloak-authoritative-identity) through [ADR-0039](/architecture/adr-0039-openfga-permission-inheritance)
 2. Follow [Deployment Guide](/deployment/keycloak-jwt-deployment)
@@ -128,7 +126,7 @@ graph TB
 4. Create service principals per [Service Principals Guide](/guides/service-principals)
 5. Generate API keys per [API Key Guide](/guides/api-key-management)
 
-## Support
+### Support
 
 - GitHub Issues: [Report bugs](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
 - Discussions: [Ask questions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)

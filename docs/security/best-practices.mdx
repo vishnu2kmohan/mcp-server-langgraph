@@ -4,7 +4,7 @@ description: 'Production security hardening and operational guidelines'
 icon: 'shield-check'
 ---
 
-## Overview
+### Overview
 
 Implement these security best practices to harden your MCP Server deployment for production. This guide covers configuration, deployment, and operational security.
 
@@ -12,9 +12,9 @@ Implement these security best practices to harden your MCP Server deployment for
 Security is an **ongoing process**, not a one-time setup. Regularly review and update your security posture.
 </Warning>
 
-## Authentication Best Practices
+### Authentication Best Practices
 
-### Use Strong Authentication
+#### Use Strong Authentication
 
 <AccordionGroup>
   <Accordion title="Enforce MFA" icon="mobile">
@@ -153,18 +153,18 @@ Security is an **ongoing process**, not a one-time setup. Regularly review and u
   </Accordion>
 </AccordionGroup>
 
-## Authorization Best Practices
+### Authorization Best Practices
 
-### Principle of Least Privilege
+#### Principle of Least Privilege
 
 ```python
-# Default deny, explicit allow
+## Default deny, explicit allow
 DEFAULT_PERMISSIONS = {
     "user": ["viewer"],  # Minimal by default
     "admin": ["admin", "member", "viewer"]
 }
 
-# Grant minimum required permissions
+## Grant minimum required permissions
 async def onboard_user(user_id: str, role: str = "user"):
     """Add user with minimal permissions"""
 
@@ -181,11 +181,11 @@ async def onboard_user(user_id: str, role: str = "user"):
         await request_admin_approval(user_id)
 ```
 
-### Regular Permission Audits
+#### Regular Permission Audits
 
 ```python
 #!/usr/bin/env python3
-# audit-permissions.py
+## audit-permissions.py
 
 async def audit_permissions():
     """Monthly permission audit"""
@@ -219,10 +219,10 @@ async def audit_permissions():
                 logger.warning(f"Too many owners for {tuple['object']}: {owners}")
 ```
 
-### Resource Isolation
+#### Resource Isolation
 
 ```python
-# Enforce organization boundaries
+## Enforce organization boundaries
 async def check_resource_access(
     user_id: str,
     resource_id: str,
@@ -264,9 +264,9 @@ async def check_resource_access(
     return True
 ```
 
-## Data Security Best Practices
+### Data Security Best Practices
 
-### Encryption
+#### Encryption
 
 <Tabs>
   <Tab title="At Rest">
@@ -392,15 +392,15 @@ async def check_resource_access(
   </Tab>
 </Tabs>
 
-### Data Minimization
+#### Data Minimization
 
 ```python
-# Only collect necessary data
+## Only collect necessary data
 class MessageRequest(BaseModel):
     query: str  # Required
     # Don't collect: IP, user agent, etc. unless needed
 
-# Automatic PII removal
+## Automatic PII removal
 def sanitize_logs(log_data: dict) -> dict:
     """Remove PII from logs"""
     pii_fields = ['email', 'phone', 'ssn', 'credit_card']
@@ -412,7 +412,7 @@ def sanitize_logs(log_data: dict) -> dict:
 
     return sanitized
 
-# Data retention policies
+## Data retention policies
 async def enforce_retention_policy():
     """Delete old data according to policy"""
 
@@ -425,7 +425,7 @@ async def enforce_retention_policy():
     await db.anonymize_audit_logs(older_than=log_cutoff)
 ```
 
-### Secure Data Deletion
+#### Secure Data Deletion
 
 ```python
 async def secure_delete_user(user_id: str):
@@ -457,12 +457,12 @@ async def secure_delete_user(user_id: str):
     await db.execute("VACUUM FULL users")
 ```
 
-## Network Security Best Practices
+### Network Security Best Practices
 
-### Network Policies
+#### Network Policies
 
 ```yaml
-# Deny all by default
+## Deny all by default
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -475,7 +475,7 @@ spec:
   - Egress
 
 ---
-# Allow only necessary traffic
+## Allow only necessary traffic
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -547,14 +547,14 @@ spec:
       port: 443
 ```
 
-### Rate Limiting
+#### Rate Limiting
 
 ```python
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-# Initialize limiter
+## Initialize limiter
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["100/minute"],
@@ -564,7 +564,7 @@ limiter = Limiter(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Per-endpoint limits
+## Per-endpoint limits
 @app.post("/message")
 @limiter.limit("30/minute")  # More restrictive for expensive operations
 async def send_message(request: Request):
@@ -575,17 +575,17 @@ async def send_message(request: Request):
 async def login(request: Request):
     pass
 
-# Per-user limits
+## Per-user limits
 @app.post("/message")
 @limiter.limit("100/minute", key_func=lambda: get_current_user().id)
 async def send_message(user: User = Depends(get_current_user)):
     pass
 ```
 
-### DDoS Protection
+#### DDoS Protection
 
 ```yaml
-# CloudFlare / AWS WAF rules
+## CloudFlare / AWS WAF rules
 waf_rules:
   - name: rate_limit_api
     priority: 1
@@ -618,18 +618,18 @@ waf_rules:
         sensitivity: high
 ```
 
-## Container Security Best Practices
+### Container Security Best Practices
 
-### Secure Base Images
+#### Secure Base Images
 
 ```dockerfile
-# Use minimal, verified base images
+## Use minimal, verified base images
 FROM python:3.12-slim-bookworm AS base
 
-# Run as non-root
+## Run as non-root
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
-# Install security updates
+## Install security updates
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
@@ -638,25 +638,25 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy application
+## Copy application
 WORKDIR /app
 COPY --chown=appuser:appuser . .
 
-# Install dependencies
+## Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Switch to non-root user
+## Switch to non-root user
 USER appuser
 
-# Health check
+## Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health')"
 
-# Run application
+## Run application
 CMD ["python", "-m", "uvicorn", "mcp_server_langgraph.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-### Security Context
+#### Security Context
 
 ```yaml
 apiVersion: apps/v1
@@ -711,10 +711,10 @@ spec:
         emptyDir: {}
 ```
 
-### Image Scanning
+#### Image Scanning
 
 ```yaml
-# .github/workflows/security.yml
+## .github/workflows/security.yml
 name: Security Scan
 on: [push, pull_request]
 
@@ -748,12 +748,12 @@ jobs:
         severity: 'CRITICAL'
 ```
 
-## Secret Management Best Practices
+### Secret Management Best Practices
 
-### Never Commit Secrets
+#### Never Commit Secrets
 
 ```bash
-# .gitignore
+## .gitignore
 .env
 .env.*
 *.pem
@@ -762,33 +762,33 @@ credentials.json
 secrets.yaml
 config/secrets/
 
-# Use git-secrets to prevent accidental commits
+## Use git-secrets to prevent accidental commits
 git secrets --install
 git secrets --register-aws
 git secrets --add 'sk-[a-zA-Z0-9]{48}'  # OpenAI keys
 git secrets --add 'xoxb-[0-9]{12}-[0-9]{12}-[a-zA-Z0-9]{24}'  # Slack tokens
 ```
 
-### Use Secret Managers
+#### Use Secret Managers
 
 ```python
-# Use Infisical, not environment variables
+## Use Infisical, not environment variables
 from mcp_server_langgraph.core.config import settings
 
-# BAD - hardcoded
+## BAD - hardcoded
 API_KEY = "sk-1234567890abcdef"
 
-# BAD - environment variable (better but not ideal)
+## BAD - environment variable (better but not ideal)
 API_KEY = os.getenv("API_KEY")
 
-# GOOD - secret manager
+## GOOD - secret manager
 API_KEY = settings.anthropic_api_key  # Loaded from Infisical
 ```
 
-### Rotate Secrets Regularly
+#### Rotate Secrets Regularly
 
 ```python
-# Automated secret rotation
+## Automated secret rotation
 async def rotate_jwt_secret():
     """Rotate JWT signing key monthly"""
 
@@ -812,32 +812,32 @@ async def rotate_jwt_secret():
     # Keep old key for 24h for token validation
     await schedule_key_deletion(old_key_id, delay_hours=24)
 
-# Schedule rotation
+## Schedule rotation
 schedule.every().month.do(rotate_jwt_secret)
 ```
 
-## Monitoring & Alerting
+### Monitoring & Alerting
 
-### Security Metrics
+#### Security Metrics
 
 ```promql
-# Failed authentication attempts
+## Failed authentication attempts
 rate(auth_failed_attempts_total[5m]) > 10
 
-# Permission denials
+## Permission denials
 rate(authorization_denied_total[5m]) > 50
 
-# Suspicious activity
+## Suspicious activity
 sum(rate(http_requests_total{status=~"4..|5.."}[5m])) > 100
 
-# Token validation failures
+## Token validation failures
 rate(jwt_validation_failed_total[1m]) > 5
 ```
 
-### Security Alerts
+#### Security Alerts
 
 ```yaml
-# prometheus-alerts.yaml
+## prometheus-alerts.yaml
 groups:
 - name: security_alerts
   rules:
@@ -867,7 +867,7 @@ groups:
       summary: "Token validation failures detected"
 ```
 
-## Compliance Checklist
+### Compliance Checklist
 
 <AccordionGroup>
   <Accordion title="GDPR" icon="globe">
@@ -917,31 +917,31 @@ groups:
   </Accordion>
 </AccordionGroup>
 
-## Security Testing
+### Security Testing
 
-### Penetration Testing
+#### Penetration Testing
 
 ```bash
-# OWASP ZAP automated scan
+## OWASP ZAP automated scan
 docker run -t owasp/zap2docker-stable zap-baseline.py \
   -t https://api.yourdomain.com \
   -r zap-report.html
 
-# Manual testing checklist
-# 1. Authentication bypass
-# 2. Authorization flaws
-# 3. SQL injection
-# 4. XSS
-# 5. CSRF
-# 6. API abuse
-# 7. Session management
-# 8. Cryptography issues
+## Manual testing checklist
+## 1. Authentication bypass
+## 2. Authorization flaws
+## 3. SQL injection
+## 4. XSS
+## 5. CSRF
+## 6. API abuse
+## 7. Session management
+## 8. Cryptography issues
 ```
 
-### Security Code Review
+#### Security Code Review
 
 ```yaml
-# .github/workflows/security-review.yml
+## .github/workflows/security-review.yml
 name: Security Code Review
 on: [pull_request]
 
@@ -967,7 +967,7 @@ jobs:
         semgrep --config=auto --json -o semgrep-report.json
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Security Overview" icon="shield" href="/security/overview">

@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 10. LangGraph Functional API over Ob
 icon: 'file-lines'
 ---
 
-# 10. LangGraph Functional API over Object-Oriented Approach
-
 Date: 2025-10-13
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 LangGraph offers two approaches for defining agent workflows:
 1. **Functional API**: Define nodes as pure functions, compose with StateGraph
@@ -24,11 +22,11 @@ Agent systems require:
 - Graph visualization for debugging
 - Testability (unit test individual nodes)
 
-## Decision
+### Decision
 
 Use **LangGraph's Functional API** with StateGraph for agent implementation.
 
-### Architecture
+#### Architecture
 
 ```python
 class AgentState(TypedDict):
@@ -49,27 +47,27 @@ graph.add_edge(START, "route")
 graph.add_conditional_edges("route", should_use_tools)
 ```
 
-## Consequences
+### Consequences
 
-### Positive Consequences
+#### Positive Consequences
 
 - **Declarative**: Graph structure visible, easy to visualize
 - **Testable**: Pure functions, easy unit tests
 - **Composable**: Nodes reusable across graphs
 - **Debuggable**: Clear state transitions
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Verbose**: More boilerplate than class-based
 - **Learning Curve**: Requires understanding StateGraph concepts
 
-## Alternatives Considered
+### Alternatives Considered
 
 1. **Class-Based Agents**: Less transparent, harder to visualize
 2. **Direct LangChain**: No graph structure, harder to debug
 3. **Custom State Machine**: Reinventing the wheel
 
-## References
+### References
 
 - Implementation: `src/mcp_server_langgraph/core/agent.py:50-200`
 - Related ADRs: [ADR-0015](/architecture/adr-0015-memory-checkpointing), [ADR-0005](/architecture/adr-0005-pydantic-ai-integration)

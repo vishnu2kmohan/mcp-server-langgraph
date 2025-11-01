@@ -4,7 +4,7 @@ description: 'Resource types and access patterns in the Model Context Protocol'
 icon: 'database'
 ---
 
-## Overview
+### Overview
 
 MCP resources represent data sources, knowledge bases, and contextual information that the AI agent can access. Resources provide a standardized way to expose data through URIs with defined schemas.
 
@@ -12,7 +12,7 @@ MCP resources represent data sources, knowledge bases, and contextual informatio
 Resources enable AI agents to access conversation history, documents, databases, APIs, and other data sources in a consistent manner.
 </Info>
 
-## Resource URIs
+### Resource URIs
 
 Resources are identified by URIs following this pattern:
 
@@ -26,9 +26,9 @@ Resources are identified by URIs following this pattern:
 - `http://api.example.com/data` - HTTP endpoint
 - `knowledge://product-docs` - Knowledge base
 
-## Resource Types
+### Resource Types
 
-### Conversation Resources
+#### Conversation Resources
 
 Access conversation history and context.
 
@@ -36,7 +36,7 @@ Access conversation history and context.
 
 **Example**:
 ```python
-# Read conversation
+## Read conversation
 resource = await client.read_resource("conversation://conv_123")
 
 content = json.loads(resource.contents[0].text)
@@ -59,7 +59,7 @@ for msg in messages:
 }
 ```
 
-### File Resources
+#### File Resources
 
 Access local or remote files.
 
@@ -67,7 +67,7 @@ Access local or remote files.
 
 **Example**:
 ```python
-# Read file
+## Read file
 resource = await client.read_resource("file:///docs/manual.pdf")
 
 print(f"MIME Type: {resource.contents[0].mimeType}")
@@ -87,7 +87,7 @@ print(f"Size: {len(resource.contents[0].text)} bytes")
 }
 ```
 
-### Knowledge Base Resources
+#### Knowledge Base Resources
 
 Access curated knowledge bases and documentation.
 
@@ -95,7 +95,7 @@ Access curated knowledge bases and documentation.
 
 **Example**:
 ```python
-# Search knowledge base
+## Search knowledge base
 resource = await client.read_resource(
     "knowledge://product-docs",
     params={"query": "installation guide"}
@@ -120,7 +120,7 @@ for doc in results["documents"]:
 }
 ```
 
-### HTTP Resources
+#### HTTP Resources
 
 Access external HTTP/HTTPS endpoints.
 
@@ -128,7 +128,7 @@ Access external HTTP/HTTPS endpoints.
 
 **Example**:
 ```python
-# Fetch HTTP resource
+## Fetch HTTP resource
 resource = await client.read_resource(
     "https://api.example.com/users/123"
 )
@@ -150,7 +150,7 @@ print(f"User: {user_data['name']}")
 }
 ```
 
-### Database Resources
+#### Database Resources
 
 Access database tables and queries.
 
@@ -158,7 +158,7 @@ Access database tables and queries.
 
 **Example**:
 ```python
-# Read table data
+## Read table data
 resource = await client.read_resource(
     "db://analytics/events",
     params={"limit": 10, "where": "type='click'"}
@@ -181,14 +181,14 @@ print(f"Found {len(events['rows'])} events")
 }
 ```
 
-## Resource Operations
+### Resource Operations
 
-### List Resources
+#### List Resources
 
 Discover available resources:
 
 ```python
-# List all resources
+## List all resources
 resources = await client.list_resources()
 
 for resource in resources:
@@ -218,12 +218,12 @@ for resource in resources:
 }
 ```
 
-### Read Resource
+#### Read Resource
 
 Access resource content:
 
 ```python
-# Read resource
+## Read resource
 resource = await client.read_resource("conversation://conv_123")
 
 for content in resource.contents:
@@ -234,7 +234,7 @@ for content in resource.contents:
 
 **With Parameters**:
 ```python
-# Read with parameters
+## Read with parameters
 resource = await client.read_resource(
     "knowledge://product-docs",
     params={
@@ -244,15 +244,15 @@ resource = await client.read_resource(
 )
 ```
 
-### Subscribe to Resources
+#### Subscribe to Resources
 
 Get notifications when resources change:
 
 ```python
-# Subscribe to resource updates
+## Subscribe to resource updates
 await client.subscribe_resource("conversation://conv_123")
 
-# Handle notifications
+## Handle notifications
 async def on_resource_updated(uri: str):
     print(f"Resource updated: {uri}")
     # Reload resource
@@ -273,21 +273,21 @@ client.on("resource_updated", on_resource_updated)
 }
 ```
 
-### Unsubscribe from Resources
+#### Unsubscribe from Resources
 
 Stop receiving updates:
 
 ```python
-# Unsubscribe
+## Unsubscribe
 await client.unsubscribe_resource("conversation://conv_123")
 ```
 
-## Resource Templates
+### Resource Templates
 
 Define reusable resource patterns:
 
 ```python
-# Define template
+## Define template
 template = {
     "uriTemplate": "conversation://{conversation_id}",
     "name": "Conversation",
@@ -295,17 +295,17 @@ template = {
     "mimeType": "application/json"
 }
 
-# Use template
+## Use template
 uri = template["uriTemplate"].format(conversation_id="conv_456")
 resource = await client.read_resource(uri)
 ```
 
-## Resource Permissions
+### Resource Permissions
 
 Resources respect authorization rules:
 
 ```python
-# Check access
+## Check access
 allowed = await openfga_client.check_permission(
     user=f"user:{user_id}",
     relation="viewer",
@@ -315,13 +315,13 @@ allowed = await openfga_client.check_permission(
 if not allowed:
     raise PermissionError("Cannot access conversation")
 
-# Read if allowed
+## Read if allowed
 resource = await client.read_resource("conversation://conv_123")
 ```
 
 **Grant access**:
 ```python
-# Grant user view access to conversation
+## Grant user view access to conversation
 await openfga_client.write_tuples([{
     "user": f"user:{user_id}",
     "relation": "viewer",
@@ -329,9 +329,9 @@ await openfga_client.write_tuples([{
 }])
 ```
 
-## Resource Schemas
+### Resource Schemas
 
-### Conversation Schema
+#### Conversation Schema
 
 ```typescript
 {
@@ -353,7 +353,7 @@ await openfga_client.write_tuples([{
 }
 ```
 
-### Knowledge Base Schema
+#### Knowledge Base Schema
 
 ```typescript
 {
@@ -372,7 +372,7 @@ await openfga_client.write_tuples([{
 }
 ```
 
-### File Schema
+#### File Schema
 
 ```typescript
 {
@@ -386,7 +386,7 @@ await openfga_client.write_tuples([{
 }
 ```
 
-## MIME Types
+### MIME Types
 
 Supported MIME types for resources:
 
@@ -401,7 +401,7 @@ Supported MIME types for resources:
 | `image/jpeg` | JPEG images | Photos |
 | `application/octet-stream` | Binary data | Generic files |
 
-## Custom Resources
+### Custom Resources
 
 Create custom resource providers:
 
@@ -445,13 +445,13 @@ class CustomDatabaseResource(ResourceProvider):
             }]
         }
 
-# Register custom resource
+## Register custom resource
 from mcp_server_langgraph.resources import register_resource_provider
 
 register_resource_provider("db", CustomDatabaseResource(db_connection))
 ```
 
-## Resource Caching
+### Resource Caching
 
 Cache frequently accessed resources:
 
@@ -463,7 +463,7 @@ async def cached_read_resource(uri: str):
     """Read resource with caching"""
     return await client.read_resource(uri)
 
-# Use cached version
+## Use cached version
 resource = await cached_read_resource("conversation://conv_123")
 ```
 
@@ -489,7 +489,7 @@ async def read_resource_with_cache(uri: str):
     return resource
 ```
 
-## Resource Monitoring
+### Resource Monitoring
 
 Track resource access:
 
@@ -508,7 +508,7 @@ resource_read_duration = Histogram(
     ['resource_type']
 )
 
-# Track metrics
+## Track metrics
 import time
 
 async def tracked_read_resource(uri: str):
@@ -535,7 +535,7 @@ async def tracked_read_resource(uri: str):
         ).observe(duration)
 ```
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Use Appropriate URIs" icon="link">
@@ -604,7 +604,7 @@ async def tracked_read_resource(uri: str):
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Resource not found">
@@ -662,7 +662,7 @@ async def tracked_read_resource(uri: str):
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="MCP Tools" icon="wrench" href="/api-reference/mcp/tools">

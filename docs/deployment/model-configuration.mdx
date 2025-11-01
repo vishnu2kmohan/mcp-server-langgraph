@@ -5,11 +5,9 @@ icon: 'rocket'
 ---
 
 
-# Model Configuration Strategy
-
 This document explains the LLM model configuration strategy across different deployment environments.
 
-## Overview
+### Overview
 
 The codebase supports multiple LLM providers through LiteLLM, including:
 - **Google** (Gemini models)
@@ -23,9 +21,9 @@ Different environments are configured with different default models based on cos
 
 ---
 
-## Environment-Specific Defaults
+### Environment-Specific Defaults
 
-### Development (Docker Compose, Local)
+#### Development (Docker Compose, Local)
 
 **Default Configuration**:
 ```bash
@@ -35,8 +33,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=8192
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```
-
+```text
 **Rationale**:
 - **Fast Iterations**: Gemini Flash has low latency (~1-2s response time)
 - **Low Cost**: ~$0.075 per 1M input tokens, ~$0.30 per 1M output tokens
@@ -51,7 +48,7 @@ ENABLE_FALLBACK=true
 
 ---
 
-### Staging (Kubernetes Staging)
+#### Staging (Kubernetes Staging)
 
 **Default Configuration**:
 ```bash
@@ -61,8 +58,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=4096
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```
-
+```text
 **Rationale**:
 - **Production Parity**: Same model as production
 - **Quality Validation**: Test with production-grade model
@@ -77,7 +73,7 @@ ENABLE_FALLBACK=true
 
 ---
 
-### Production (Kubernetes Production, Helm)
+#### Production (Kubernetes Production, Helm)
 
 **Default Configuration**:
 ```bash
@@ -87,8 +83,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=4096
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```
-
+```text
 **Rationale**:
 - **Highest Quality**: Claude 3.5 Sonnet offers superior reasoning
 - **Reliability**: Anthropic's enterprise SLA and uptime
@@ -109,25 +104,24 @@ ENABLE_FALLBACK=true
 
 ---
 
-## Overriding Default Configuration
+### Overriding Default Configuration
 
-### Method 1: Environment Variables
+#### Method 1: Environment Variables
 
 Override for a specific deployment:
 
 ```bash
-# Use OpenAI GPT-4
+## Use OpenAI GPT-4
 export LLM_PROVIDER=openai
 export MODEL_NAME=gpt-4o
 export OPENAI_API_KEY=sk-...
 
-# Use Google Gemini Pro
+## Use Google Gemini Pro
 export LLM_PROVIDER=google
 export MODEL_NAME=gemini-2.5-pro
 export GOOGLE_API_KEY=...
-```
-
-### Method 2: Helm Values Override
+```text
+#### Method 2: Helm Values Override
 
 For production Helm deployments:
 
@@ -136,14 +130,13 @@ helm upgrade --install mcp-server-langgraph ./deployments/helm/mcp-server-langgr
   --set config.llmProvider=openai \
   --set config.modelName=gpt-4o \
   --set secrets.openaiApiKey=$OPENAI_API_KEY
-```
-
-### Method 3: Kustomize Patch
+```text
+#### Method 3: Kustomize Patch
 
 For Kustomize deployments, create a patch file:
 
 ```yaml
-# deployments/kustomize/overlays/custom/configmap-patch.yaml
+## deployments/kustomize/overlays/custom/configmap-patch.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -153,22 +146,20 @@ data:
   model_name: "gpt-4o"
   model_temperature: "0.8"
   model_max_tokens: "8192"
-```
-
-### Method 4: .env File (Local Development)
+```text
+#### Method 4: .env File (Local Development)
 
 ```bash
-# .env
+## .env
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1:70b
 OLLAMA_BASE_URL=http://localhost:11434
-```
-
+```text
 ---
 
-## Fallback Configuration
+### Fallback Configuration
 
-### Default Fallback Chain
+#### Default Fallback Chain
 
 When `ENABLE_FALLBACK=true`, the system attempts models in this order:
 
@@ -177,27 +168,25 @@ When `ENABLE_FALLBACK=true`, the system attempts models in this order:
 3. **Fallback 2**: `claude-3-5-sonnet-20241022` (Anthropic)
 4. **Fallback 3**: `gpt-4o` (OpenAI)
 
-### Custom Fallback Chain
+#### Custom Fallback Chain
 
 Override via environment variable:
 
 ```bash
 FALLBACK_MODELS='["claude-3-5-sonnet-20241022","gpt-4o","gemini-2.5-pro"]'
-```
-
-### Disabling Fallback
+```text
+#### Disabling Fallback
 
 ```bash
 ENABLE_FALLBACK=false
-```
-
+```text
 **Warning**: Disabling fallback means service failures if primary model is unavailable.
 
 ---
 
-## Cost Comparison
+### Cost Comparison
 
-### Input Tokens (per 1M tokens)
+#### Input Tokens (per 1M tokens)
 
 | Provider | Model | Cost | Relative |
 |----------|-------|------|----------|
@@ -206,7 +195,7 @@ ENABLE_FALLBACK=false
 | Anthropic | claude-3-5-sonnet-20241022 | $3.00 | 40x |
 | OpenAI | gpt-4o | $2.50 | 33x |
 
-### Output Tokens (per 1M tokens)
+#### Output Tokens (per 1M tokens)
 
 | Provider | Model | Cost | Relative |
 |----------|-------|------|----------|
@@ -215,7 +204,7 @@ ENABLE_FALLBACK=false
 | Anthropic | claude-3-5-sonnet-20241022 | $15.00 | 50x |
 | OpenAI | gpt-4o | $10.00 | 33x |
 
-### Typical Request Cost (1000 input + 500 output tokens)
+#### Typical Request Cost (1000 input + 500 output tokens)
 
 | Model | Total Cost | Monthly (100K requests) |
 |-------|-----------|------------------------|
@@ -228,9 +217,9 @@ ENABLE_FALLBACK=false
 
 ---
 
-## Performance Characteristics
+### Performance Characteristics
 
-### Latency (p95, typical request)
+#### Latency (p95, typical request)
 
 | Model | Latency | Use Case |
 |-------|---------|----------|
@@ -239,7 +228,7 @@ ENABLE_FALLBACK=false
 | claude-3-5-sonnet-20241022 | ~4s | Quality-critical tasks |
 | gpt-4o | ~3.5s | Balanced performance |
 
-### Quality (Subjective, 1-10 scale)
+#### Quality (Subjective, 1-10 scale)
 
 | Model | Reasoning | Creativity | Code Gen | Safety |
 |-------|-----------|------------|----------|--------|
@@ -250,35 +239,35 @@ ENABLE_FALLBACK=false
 
 ---
 
-## Model Selection Guidelines
+### Model Selection Guidelines
 
-### Choose Gemini Flash When:
+#### Choose Gemini Flash When:
 - ✅ Cost is a primary concern
 - ✅ Need fast response times (&lt;2s)
 - ✅ Development/testing environment
 - ✅ High request volume expected
 - ✅ Quality requirements are moderate
 
-### Choose Gemini Pro When:
+#### Choose Gemini Pro When:
 - ✅ Need better reasoning than Flash
 - ✅ Can tolerate slightly higher cost
 - ✅ Prefer Google's ecosystem
 - ✅ Need strong multilingual support
 
-### Choose Claude 3.5 Sonnet When:
+#### Choose Claude 3.5 Sonnet When:
 - ✅ **Quality is paramount** ⭐
 - ✅ Complex reasoning required
 - ✅ Code generation is primary use case
 - ✅ Safety/content moderation critical
 - ✅ Production customer-facing deployment
 
-### Choose GPT-4o When:
+#### Choose GPT-4o When:
 - ✅ Need creative content generation
 - ✅ Existing OpenAI integration
 - ✅ Require vision capabilities
 - ✅ Balance of cost and quality
 
-### Choose Ollama (Local) When:
+#### Choose Ollama (Local) When:
 - ✅ Data privacy is critical (on-premise)
 - ✅ No internet connectivity
 - ✅ Zero API costs desired
@@ -287,9 +276,9 @@ ENABLE_FALLBACK=false
 
 ---
 
-## Monitoring and Optimization
+### Monitoring and Optimization
 
-### Metrics to Track
+#### Metrics to Track
 
 1. **Cost Metrics**:
    - Total API spend per day/month
@@ -307,7 +296,7 @@ ENABLE_FALLBACK=false
    - Retry/regeneration rate
    - Error rate per model
 
-### Cost Optimization Strategies
+#### Cost Optimization Strategies
 
 1. **Prompt Optimization**:
    - Reduce unnecessary context
@@ -331,9 +320,9 @@ ENABLE_FALLBACK=false
 
 ---
 
-## Security Considerations
+### Security Considerations
 
-### API Key Management
+#### API Key Management
 
 **❌ Never**:
 - Commit API keys to git
@@ -347,41 +336,39 @@ ENABLE_FALLBACK=false
 - Use separate keys per environment
 - Monitor for key exposure in logs
 
-### Rate Limiting
+#### Rate Limiting
 
 Configure rate limits per environment:
 
 ```yaml
-# Development
+## Development
 LLM_RATE_LIMIT_RPM: 60  # 60 requests per minute
 
-# Staging
+## Staging
 LLM_RATE_LIMIT_RPM: 300
 
-# Production
+## Production
 LLM_RATE_LIMIT_RPM: 1000
-```
-
+```text
 ---
 
-## Troubleshooting
+### Troubleshooting
 
-### Model Returns 401 Unauthorized
+#### Model Returns 401 Unauthorized
 
 **Cause**: Invalid or expired API key
 
 **Solution**:
 ```bash
-# Verify API key is set
+## Verify API key is set
 echo $ANTHROPIC_API_KEY | head -c 10
 
-# Test with curl
+## Test with curl
 curl https://api.anthropic.com/v1/messages \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
   -H "anthropic-version: 2023-06-01"
-```
-
-### Fallback Chain Not Working
+```text
+#### Fallback Chain Not Working
 
 **Cause**: Missing API keys for fallback models
 
@@ -392,7 +379,7 @@ export OPENAI_API_KEY=sk-...
 export GOOGLE_API_KEY=...
 ```
 
-### High Latency / Timeouts
+#### High Latency / Timeouts
 
 **Cause**: Model is overloaded or timeout too short
 
@@ -404,7 +391,7 @@ export GOOGLE_API_KEY=...
 
 ---
 
-## References
+### References
 
 - [LiteLLM Documentation](https://docs.litellm.ai/)
 - [Google Gemini Pricing](https://ai.google.dev/pricing)

@@ -9,7 +9,7 @@ icon: 'tag'
   **Breaking Changes**: None (fully backward compatible)
 </Note>
 
-## Overview
+### Overview
 
 Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentation improvements** with enhanced deployment reliability:
 
@@ -18,9 +18,9 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
 3. ✅ **Improved Test Stability** - Enhanced testing infrastructure and CI/CD reliability
 4. 📖 **ADR-0025 Added** - Anthropic Best Practices Advanced Enhancements
 
-## What's New
+### What's New
 
-### 🔧 Fixed CI/CD Deployment Issues
+#### 🔧 Fixed CI/CD Deployment Issues
 
 **Kustomize deployment failures in GitHub Actions CI/CD pipeline** - Comprehensive fix for production deployment reliability.
 
@@ -97,7 +97,7 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
 
 ---
 
-### 📚 Documentation Audit and Remediation
+#### 📚 Documentation Audit and Remediation
 
 **Comprehensive documentation cleanup** - Fixed broken links, updated counts, and improved organization.
 
@@ -147,7 +147,7 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
 
 ---
 
-### ✅ Testing and CI/CD Improvements
+#### ✅ Testing and CI/CD Improvements
 
 **Enhanced test stability and CI/CD reliability** - Resolved compatibility issues and improved consistency.
 
@@ -182,7 +182,7 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
 
 ---
 
-### 📖 ADR-0025: Anthropic Best Practices - Advanced Enhancements
+#### 📖 ADR-0025: Anthropic Best Practices - Advanced Enhancements
 
 **NEW ADR documenting advanced features** - Complete documentation for just-in-time context loading, parallel tool execution, and enhanced note-taking.
 
@@ -227,9 +227,9 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
 
 ---
 
-## Files Modified
+### Files Modified
 
-### Deployment Files
+#### Deployment Files
 1. **deployments/kustomize/base/kustomization.yaml**
    - Resource paths updated to local files
    - Deprecated field syntax fixed
@@ -240,7 +240,7 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
    - Deprecated fields removed
    - ConfigMap merge conflicts resolved
 
-### Documentation Files
+#### Documentation Files
 3. **README.md**
    - CI status badges added (lines 3-8)
    - ADR count updated to 25
@@ -256,28 +256,28 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
    - 414 lines
    - Full Mintlify format
 
-### Configuration Files
+#### Configuration Files
 6. **.github/workflows/ci.yaml**
    - Deployment validation enhanced
    - Test consistency improved
 
 ---
 
-## Benefits
+### Benefits
 
-### For Operations
+#### For Operations
 - ✅ **Reliable Deployments**: Kustomize builds succeed in CI/CD
 - ✅ **Zero Downtime**: No breaking changes to existing deployments
 - ✅ **Clear Documentation**: All links work, counts accurate
 - ✅ **Production Ready**: Deployment configurations validated
 
-### For Developers
+#### For Developers
 - ✅ **Better Navigation**: All ADRs accessible in Mintlify
 - ✅ **Accurate References**: Consistent ADR counts (25)
 - ✅ **Working Links**: No more 404s in documentation
 - ✅ **Complete Context**: ADR-0025 fully documented
 
-### For Contributors
+#### For Contributors
 - ✅ **Clear Architecture**: All 25 ADRs available
 - ✅ **Latest Practices**: Anthropic best practices documented
 - ✅ **Easy Onboarding**: Working links and complete guides
@@ -285,9 +285,9 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
 
 ---
 
-## Upgrade Guide
+### Upgrade Guide
 
-### From v2.5.0
+#### From v2.5.0
 
 **Step 1: Pull latest changes**
 ```bash
@@ -301,7 +301,7 @@ uv sync
 
 **Step 3: Validate deployment configs**
 ```bash
-# Validate Kustomize overlays
+## Validate Kustomize overlays
 kubectl kustomize deployments/kustomize/overlays/dev
 kubectl kustomize deployments/kustomize/overlays/staging
 kubectl kustomize deployments/kustomize/overlays/production
@@ -312,33 +312,33 @@ kubectl kustomize deployments/kustomize/overlays/production
 make test
 ```
 
-### Testing the Upgrade
+#### Testing the Upgrade
 
 ```bash
-# 1. Run all tests
+## 1. Run all tests
 make test
 
-# 2. Validate Kustomize configs
+## 2. Validate Kustomize configs
 make validate-kustomize
 
-# 3. Check documentation links
-# (All links should work - 26+ broken links fixed!)
+## 3. Check documentation links
+## (All links should work - 26+ broken links fixed!)
 
-# 4. Verify Mintlify navigation
-# (All 25 ADRs should be accessible)
+## 4. Verify Mintlify navigation
+## (All 25 ADRs should be accessible)
 ```
 
 ---
 
-## What's Next?
+### What's Next?
 
-### Planned for v2.7.0
+#### Planned for v2.7.0
 - Full test coverage for advanced enhancements (ADR-0025)
 - Production monitoring dashboards for new features
 - Performance benchmarking suite
 - Load testing with Locust
 
-### Future Enhancements
+#### Future Enhancements
 - Automated remediation workflows
 - Multi-region failover testing
 - Chaos engineering tests
@@ -346,7 +346,7 @@ make validate-kustomize
 
 ---
 
-## Related Documentation
+### Related Documentation
 
 <CardGroup cols={2}>
   <Card title="Kustomize Deployment" icon="gear" href="/deployment/kubernetes/kustomize">

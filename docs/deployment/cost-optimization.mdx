@@ -1,0 +1,338 @@
+---
+title: "Cost Optimization"
+description: "Achieve 40-60% cost savings for MCP Server deployments on GCP and AWS with proven optimization strategies"
+icon: "money-bill-trend-up"
+---
+
+### Overview
+
+Optimize infrastructure costs while maintaining performance, security, and reliability. This guide provides actionable strategies achieving **30-66% cost reduction**.
+
+<CardGroup cols={3}>
+  <Card title="GKE Autopilot" icon="google">
+    40-60% savings vs. Standard GKE
+  </Card>
+  <Card title="Committed Use" icon="calendar-check">
+    25-52% additional discounts
+  </Card>
+  <Card title="Right-sizing" icon="gauge-high">
+    10-30% from resource optimization
+  </Card>
+</CardGroup>
+
+---
+
+### GCP Cost Optimization
+
+#### Current vs. Optimized
+
+<Tabs>
+  <Tab title="Production">
+    | Approach | Monthly Cost | Annual Cost | Savings |
+    |----------|--------------|-------------|---------|
+    | **Baseline GKE** | $1,290 | $15,480 | - |
+    | **Autopilot** | $970 | $11,640 | 25% |
+    | **+ 1yr CUD** | $728 | $8,736 | 43% |
+    | **+ 3yr CUD** | $466 | $5,592 | 66% |
+
+    **Maximum Savings**: $9,888/year (66%)
+  </Tab>
+
+  <Tab title="All Environments">
+    | Environment | Baseline | Optimized | Savings |
+    |-------------|----------|-----------|---------|
+    | Production | $1,290 | $970 | $320 |
+    | Staging | $480 | $310 | $170 |
+    | Development | $200 | $100 | $100 |
+    | **Total** | **$1,970** | **$1,380** | **$590** |
+
+    **30% overall savings** without commitments
+  </Tab>
+</Tabs>
+
+#### Strategy 1: GKE Autopilot
+
+**Pay-per-pod pricing** eliminates idle node costs:
+
+<Accordion title="How Autopilot Saves Money">
+  **Traditional GKE Standard**:
+  - Pay for entire nodes (even when idle)
+  - Typical utilization: 50-70%
+  - Waste: 30-50% of spend
+
+  **GKE Autopilot**:
+  - Pay only for pod resources used
+  - No idle costs
+  - Automatic bin-packing
+
+  **Savings**: 40-60%
+</Accordion>
+
+**Right-size Pod Resources**:
+
+<CodeGroup>
+```yaml Before (Over-provisioned)
+resources:
+  requests:
+    cpu: 1000m      # $35/month
+    memory: 2Gi     # $8/month
+## Per pod: $43/month
+```text
+```yaml After (Optimized)
+resources:
+  requests:
+    cpu: 250m       # $9/month
+    memory: 512Mi   # $2/month
+## Per pod: $11/month (74% savings!)
+```xml
+</CodeGroup>
+
+**Action**:
+```bash
+## Profile actual usage
+kubectl top pods -n mcp-production --containers
+
+## Update deployment
+kubectl patch deployment production-mcp-server-langgraph \
+  -n mcp-production \
+  --type='json' \
+  -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
+```sql
+#### Strategy 2: Committed Use Discounts (CUDs)
+
+Commit to 1-year or 3-year usage for significant discounts:
+
+| Resource | 1-Year | 3-Year |
+|----------|--------|--------|
+| GKE Autopilot | 25% | 52% |
+| Cloud SQL | 25% | 52% |
+| Memorystore | 25% | 52% |
+
+**Purchase via Console**:
+1. Go to: Billing → Commitments → Purchase Commitment
+2. Select resources and term
+3. Enable auto-renew
+
+**ROI**: Pays for itself in first month
+
+<Card title="Complete Cost Guide" icon="book-open" href="/GCP_COST_OPTIMIZATION_PLAYBOOK.md">
+  Detailed playbook with 8 cost reduction strategies (500+ lines)
+</Card>
+
+#### Strategy 3: Development Cost Controls
+
+**Auto-shutdown dev clusters** after hours:
+
+```bash
+## Cloud Scheduler: Scale down at 6 PM weekdays
+gcloud scheduler jobs create http scale-down-dev \
+  --schedule="0 18 * * 1-5" \
+  --uri="https://container.googleapis.com/v1/projects/PROJECT_ID/zones/ZONE/clusters/mcp-dev-gke" \
+  --http-method=PATCH \
+  --message-body='{"desiredNodeCount":0}'
+
+## Scale up at 6 AM weekdays
+gcloud scheduler jobs create http scale-up-dev \
+  --schedule="0 6 * * 1-5" \
+  --message-body='{"desiredNodeCount":3}'
+```text
+**Savings**: ~$50-70/month per dev environment
+
+#### Strategy 4: Database Optimization
+
+<AccordionGroup>
+  <Accordion title="Right-size Cloud SQL">
+    **Analyze CPU usage**:
+    ```bash
+    gcloud sql instances describe mcp-prod-postgres \
+      --format="yaml(settings.tier)"
+    ```text
+    **If CPU < 50% consistently**, downgrade:
+    - db-custom-4-15360 → db-custom-2-7680
+    - **Savings**: $140/month (50%)
+  </Accordion>
+
+  <Accordion title="Evaluate Read Replicas">
+    **Question**: Do you use the read replica?
+
+    **Check connections**:
+    ```bash
+    gcloud sql instances describe mcp-prod-postgres-replica-1
+    ```text
+    **If unused**, remove:
+    ```hcl
+    cloudsql_read_replica_count = 0
+    ```text
+    **Savings**: $140/month
+  </Accordion>
+
+  <Accordion title="Optimize Backups">
+    Reduce retention if compliance allows:
+    ```hcl
+    backup_retention_count         = 14  # vs. 30
+    transaction_log_retention_days = 3   # vs. 7
+    ```text
+    **Savings**: $5-10/month
+  </Accordion>
+</AccordionGroup>
+
+#### Strategy 5: Redis Optimization
+
+**Right-size memory**:
+```bash
+## Check usage
+gcloud monitoring time-series list \
+  --filter='metric.type="redis.googleapis.com/stats/memory/usage_ratio"'
+```text
+**If usage < 60%**, downgrade:
+- 5 GB → 3 GB: **Save $88/month** (40%)
+
+**For non-critical caching**:
+- STANDARD_HA → BASIC: **Save $110/month** (50%)
+
+<Warning>
+  BASIC tier has no SLA and no auto-failover. Only use for non-critical workloads.
+</Warning>
+
+---
+
+### Cost Monitoring
+
+#### Set Up Budget Alerts
+
+```bash
+gcloud billing budgets create \
+  --billing-account=BILLING_ACCOUNT_ID \
+  --display-name="MCP Production Monthly Budget" \
+  --budget-amount=1200USD \
+  --threshold-rule=percent=50 \
+  --threshold-rule=percent=90 \
+  --threshold-rule=percent=100
+```xml
+<Check>Alerts fire at 50%, 90%, and 100% of budget</Check>
+
+#### Cost Allocation Labels
+
+Already configured in Terraform:
+
+```hcl
+labels = {
+  environment = "production"
+  team        = "platform"
+  cost_center = "engineering"
+  application = "mcp-server"
+}
+```text
+**View costs by label** in BigQuery:
+```sql
+SELECT
+  labels.value AS team,
+  SUM(cost) AS total_cost
+FROM
+  `PROJECT_ID.billing_dataset.gcp_billing_export_*`
+WHERE
+  labels.key = 'team'
+GROUP BY team
+ORDER BY total_cost DESC
+```text
+---
+
+### Quick Wins Checklist
+
+<Steps>
+  <Step title="Use GKE Autopilot">
+    ✅ Already configured
+
+    **Savings**: $200-400/month vs. Standard GKE
+  </Step>
+
+  <Step title="Right-size Pod Resources">
+    ```bash
+    kubectl top pods -n mcp-production --containers
+    # Adjust requests based on actual usage
+    ```text
+    **Savings**: $50-150/month
+  </Step>
+
+  <Step title="Purchase 1-year CUD">
+    Console → Billing → Commitments
+
+    **Savings**: $242/month (25%)
+  </Step>
+
+  <Step title="Optimize Dev/Staging">
+    - Use zonal clusters (not regional)
+    - Smaller instances
+    - Auto-shutdown after hours
+
+    **Savings**: $100-200/month
+  </Step>
+
+  <Step title="Enable VPA">
+    Vertical Pod Autoscaler automatically optimizes requests:
+
+    ```yaml
+    apiVersion: autoscaling.k8s.io/v1
+    kind: VerticalPodAutoscaler
+    metadata:
+      name: production-mcp-server-vpa
+    spec:
+      targetRef:
+        kind: Deployment
+        name: production-mcp-server-langgraph
+      updatePolicy:
+        updateMode: Auto
+    ```
+
+    **Savings**: 10-30%
+  </Step>
+</Steps>
+
+---
+
+### Cost Optimization Roadmap
+
+#### Month 1: Quick Wins ($150-250/month)
+
+- [x] GKE Autopilot (vs. Standard): $200 saved
+- [ ] Right-size pod resources: $96 saved
+- [ ] Reduce dev/staging usage: $50 saved
+- [ ] Optimize log retention: $15 saved
+
+**Total**: $361/month savings
+
+#### Month 2: Commitments ($200-300/month)
+
+- [ ] Purchase 1-year CUD: $242/month saved
+- [ ] Right-size Cloud SQL: $140 saved (if applicable)
+- [ ] Optimize Redis tier: $88 saved (if non-critical)
+
+**Total**: $470/month additional savings
+
+#### Month 3-6: Advanced ($50-100/month)
+
+- [ ] Implement autoscaling schedules
+- [ ] Optimize network egress
+- [ ] Cleanup unused resources
+- [ ] FinOps automation
+
+**Total Potential**: $580/month savings (60% of baseline)
+
+---
+
+### Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Infrastructure Setup" icon="server" href="/deployment/infrastructure/terraform-gcp">
+    Terraform modules with cost-optimized defaults
+  </Card>
+  <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
+    Dev/staging cost optimization strategies
+  </Card>
+  <Card title="GKE Production" icon="google" href="/deployment/kubernetes/gke-production">
+    Production deployment with cost estimates
+  </Card>
+  <Card title="Complete Playbook" icon="book" href="/GCP_COST_OPTIMIZATION_PLAYBOOK.md">
+    500+ line detailed cost optimization playbook
+  </Card>
+</CardGroup>

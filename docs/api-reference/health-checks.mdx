@@ -4,13 +4,13 @@ description: 'Endpoints for service health and readiness monitoring'
 icon: 'heart-pulse'
 ---
 
-## Overview
+### Overview
 
 Health check endpoints provide real-time service health status for monitoring, load balancers, and orchestration systems. Designed for Kubernetes, Cloud Run, and other cloud platforms.
 
-## Endpoints
+### Endpoints
 
-### GET /health
+#### GET /health
 
 **Primary health check** - Returns overall service health.
 
@@ -94,7 +94,7 @@ curl https://api.yourdomain.com/health
 
 ---
 
-### GET /health/ready
+#### GET /health/ready
 
 **Readiness probe** - Indicates if service is ready to accept traffic.
 
@@ -173,7 +173,7 @@ readinessProbe:
 
 ---
 
-### GET /health/live
+#### GET /health/live
 
 **Liveness probe** - Indicates if service is alive and not deadlocked.
 
@@ -239,7 +239,7 @@ livenessProbe:
 
 ---
 
-### GET /health/startup
+#### GET /health/startup
 
 **Startup probe** - Indicates if service has completed initialization.
 
@@ -317,7 +317,7 @@ startupProbe:
 
 ---
 
-### GET /health/dependencies
+#### GET /health/dependencies
 
 **Detailed dependency status** - Shows health of all external dependencies.
 
@@ -388,9 +388,9 @@ curl https://api.yourdomain.com/health/dependencies
 
 ---
 
-## Health Check Responses
+### Health Check Responses
 
-### Status Values
+#### Status Values
 
 <ResponseField name="healthy" type="string">
   Component is functioning normally
@@ -408,7 +408,7 @@ curl https://api.yourdomain.com/health/dependencies
   Component status cannot be determined
 </ResponseField>
 
-### Component Checks
+#### Component Checks
 
 <Tabs>
   <Tab title="LLM Provider">
@@ -470,37 +470,37 @@ curl https://api.yourdomain.com/health/dependencies
 
 ---
 
-## Monitoring Integration
+### Monitoring Integration
 
-### Prometheus
+#### Prometheus
 
 Expose health check metrics:
 
 ```promql
-# Service health status (1 = healthy, 0 = unhealthy)
+## Service health status (1 = healthy, 0 = unhealthy)
 health_status{service="mcp-server-langgraph"} 1
 
-# Dependency health
+## Dependency health
 dependency_status{dependency="llm_provider"} 1
 dependency_status{dependency="openfga"} 1
 dependency_status{dependency="keycloak"} 1
 dependency_status{dependency="redis"} 1
 
-# Health check response time
+## Health check response time
 health_check_duration_seconds{endpoint="/health"} 0.015
 ```
 
 **Example Alerts**:
 
 ```yaml
-# Alert on unhealthy service
+## Alert on unhealthy service
 - alert: ServiceUnhealthy
   expr: health_status == 0
   for: 2m
   annotations:
     summary: "Service {{ $labels.service }} is unhealthy"
 
-# Alert on dependency failure
+## Alert on dependency failure
 - alert: DependencyDown
   expr: dependency_status == 0
   for: 1m
@@ -508,7 +508,7 @@ health_check_duration_seconds{endpoint="/health"} 0.015
     summary: "Dependency {{ $labels.dependency }} is down"
 ```
 
-### Kubernetes
+#### Kubernetes
 
 **Complete Probe Configuration**:
 
@@ -557,7 +557,7 @@ spec:
           failureThreshold: 3  # Remove after 15s
 ```
 
-### Cloud Run
+#### Cloud Run
 
 ```yaml
 apiVersion: serving.knative.dev/v1
@@ -589,7 +589,7 @@ spec:
 
 ---
 
-## Debugging Health Issues
+### Debugging Health Issues
 
 <AccordionGroup>
   <Accordion title="Service Shows Unhealthy" icon="triangle-exclamation">
@@ -662,7 +662,7 @@ spec:
 
 ---
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Probe Configuration" icon="sliders">
@@ -701,7 +701,7 @@ spec:
 
 ---
 
-## Related Documentation
+### Related Documentation
 
 <CardGroup cols={2}>
   <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">

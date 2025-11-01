@@ -4,7 +4,7 @@ description: 'Migration guide for upgrading authentication from v2.7.0 to v2.8.0
 icon: 'arrow-right'
 ---
 
-# Authentication Migration Guide v2.7.0 → v2.8.0
+## Authentication Migration Guide v2.7.0 → v2.8.0
 
 <Note type="info">
 **Current Documentation**: This guide is for v2.8.0 (latest release, 2025-10-22).
@@ -14,37 +14,35 @@ icon: 'arrow-right'
 **Breaking Change**: Token-based authentication will be required for all tool calls in v2.8.0.
 </Warning>
 
-## Summary of Changes
+### Summary of Changes
 
-### What Changed?
+#### What Changed?
 
 **Before (v2.7.0 and earlier)**:
 ```python
-# Tools accepted bare user_id without credentials
+## Tools accepted bare user_id without credentials
 result = await call_tool("agent_chat", {
     "message": "Hello!",
     "user_id": "user:alice"  # ❌ No authentication
 })
-```
-
+```text
 **After (v2.8.0+)**:
 ```python
-# 1. First, obtain a token via login
+## 1. First, obtain a token via login
 login_response = await client.post("/auth/login", json={
     "username": "alice",
     "password": "alice123"
 })
 token = login_response.json()["access_token"]
 
-# 2. Include token in all tool calls
+## 2. Include token in all tool calls
 result = await call_tool("agent_chat", {
     "message": "Hello!",
     "token": token,  # ✅ Required JWT token
     "user_id": "user:alice"
 })
-```
-
-### Why This Change?
+```text
+#### Why This Change?
 
 The previous implementation had a **critical security vulnerability**:
 - Tools accepted bare `user_id` without verifying credentials
@@ -55,11 +53,11 @@ The previous implementation had a **critical security vulnerability**:
 
 ---
 
-## Migration Steps
+### Migration Steps
 
-### For HTTP/StreamableHTTP Clients
+#### For HTTP/StreamableHTTP Clients
 
-#### Step 1: Add Login Flow
+##### Step 1: Add Login Flow
 
 ```python
 import httpx
@@ -76,15 +74,14 @@ async def get_auth_token(base_url: str, username: str, password: str) -> str:
         data = response.json()
         return data["access_token"]
 
-# Usage
+## Usage
 token = await get_auth_token(
     "http://localhost:8000",
     username="alice",
     password="alice123"
 )
-```
-
-#### Step 2: Update Tool Call Requests
+```sql
+##### Step 2: Update Tool Call Requests
 
 **Before**:
 ```python
@@ -99,8 +96,7 @@ request = {
         }
     }
 }
-```
-
+```text
 **After**:
 ```python
 request = {
@@ -115,9 +111,8 @@ request = {
         }
     }
 }
-```
-
-#### Step 3: Handle Token Expiration
+```text
+##### Step 3: Handle Token Expiration
 
 ```python
 class MCPAuthClient:
@@ -181,30 +176,29 @@ class MCPAuthClient:
             response.raise_for_status()
             return response.json()
 
-# Usage
+## Usage
 client = MCPAuthClient(
     "http://localhost:8000",
     username="alice",
     password="alice123"
 )
 
-# Token is automatically managed
+## Token is automatically managed
 result = await client.call_tool("agent_chat", {
     "message": "Hello!",
     "user_id": "user:alice"
 })
-```
-
+```text
 ---
 
-### For stdio Clients
+#### For stdio Clients
 
 stdio clients cannot use HTTP endpoints, so tokens must be obtained out-of-band:
 
-#### Option 1: Use HTTP endpoint separately
+##### Option 1: Use HTTP endpoint separately
 
 ```python
-# 1. Get token via HTTP
+## 1. Get token via HTTP
 import requests
 response = requests.post("http://localhost:8000/auth/login", json={
     "username": "alice",
@@ -212,7 +206,7 @@ response = requests.post("http://localhost:8000/auth/login", json={
 })
 token = response.json()["access_token"]
 
-# 2. Use token with stdio client
+## 2. Use token with stdio client
 async with stdio_client(server_params) as (read, write):
     async with ClientSession(read, write) as session:
         await session.initialize()
@@ -222,33 +216,31 @@ async with stdio_client(server_params) as (read, write):
             "token": token,
             "user_id": "user:alice"
         })
-```
-
-#### Option 2: Create token programmatically (dev/test only)
+```text
+##### Option 2: Create token programmatically (dev/test only)
 
 ```python
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.core.config import settings
 
-# Create auth middleware
+## Create auth middleware
 auth = create_auth_middleware(settings, openfga_client=None)
 
-# Create token programmatically
+## Create token programmatically
 token = auth.create_token("alice", expires_in=3600)
 
-# Use token with stdio client
+## Use token with stdio client
 result = await session.call_tool("agent_chat", arguments={
     "message": "Hello!",
     "token": token,
     "user_id": "user:alice"
 })
-```
-
+```text
 ---
 
-## Updated Tool Schemas
+### Updated Tool Schemas
 
-### agent_chat
+#### agent_chat
 
 ```typescript
 {
@@ -258,9 +250,8 @@ result = await session.call_tool("agent_chat", arguments={
   "thread_id"?: string,     // Optional: Thread ID
   "response_format"?: "concise" | "detailed"  // Optional: Response format
 }
-```
-
-### conversation_get
+```text
+#### conversation_get
 
 ```typescript
 {
@@ -268,9 +259,8 @@ result = await session.call_tool("agent_chat", arguments={
   "token": string,          // ✅ NEW: Required JWT token
   "user_id": string         // Required: User identifier
 }
-```
-
-### conversation_search
+```text
+#### conversation_search
 
 ```typescript
 {
@@ -279,11 +269,10 @@ result = await session.call_tool("agent_chat", arguments={
   "user_id": string,        // Required: User identifier
   "limit"?: number          // Optional: Max results (default: 10)
 }
-```
-
+```text
 ---
 
-## Default Credentials (Development Only)
+### Default Credentials (Development Only)
 
 For development and testing, the InMemoryUserProvider has these default users:
 
@@ -301,9 +290,9 @@ For development and testing, the InMemoryUserProvider has these default users:
 
 ---
 
-## Production Deployment
+### Production Deployment
 
-### Using Keycloak (Recommended)
+#### Using Keycloak (Recommended)
 
 1. **Configure Keycloak**:
    ```bash
@@ -313,19 +302,17 @@ For development and testing, the InMemoryUserProvider has these default users:
    export KEYCLOAK_REALM=production
    export KEYCLOAK_CLIENT_ID=mcp-server
    export KEYCLOAK_CLIENT_SECRET=<secret>
-   ```
-
+   ```text
 2. **Obtain Tokens from Keycloak**:
    ```python
    # Clients obtain tokens from Keycloak directly
    # Tokens are validated by the MCP server
 
    # The server will verify Keycloak JWT tokens automatically
-   ```
-
+   ```text
 3. **No code changes needed** - the auth factory automatically uses KeycloakUserProvider
 
-### Custom Authentication Provider
+#### Custom Authentication Provider
 
 Implement the `UserProvider` interface:
 
@@ -347,8 +334,7 @@ class CustomUserProvider(UserProvider):
         pass
 
     # Implement other required methods...
-```
-
+```text
 Register your provider in `auth/factory.py`:
 
 ```python
@@ -358,13 +344,12 @@ def create_user_provider(settings, openfga_client):
     if provider_type == "custom":
         return CustomUserProvider(config=settings.custom_config)
     # ... existing providers
-```
-
+```sql
 ---
 
-## Testing Migration
+### Testing Migration
 
-### Update Unit Tests
+#### Update Unit Tests
 
 ```python
 @pytest.fixture
@@ -384,9 +369,8 @@ def test_tool_call_with_token(auth_token):
         "user_id": "user:alice"
     })
     assert response.status_code == 200
-```
-
-### Integration Tests
+```text
+#### Integration Tests
 
 ```python
 class TestAuthMigration:
@@ -438,27 +422,25 @@ class TestAuthMigration:
 
         assert response.status_code == 200
         assert "result" in response.json()
-```
-
+```text
 ---
 
-## Troubleshooting
+### Troubleshooting
 
-### Error: "Authentication token required"
+#### Error: "Authentication token required"
 
 **Cause**: Tool call missing `token` field
 
 **Fix**: Add `token` parameter to tool call arguments
 
 ```python
-# ❌ Wrong
+## ❌ Wrong
 arguments = {"message": "Hello!", "user_id": "alice"}
 
-# ✅ Correct
+## ✅ Correct
 arguments = {"message": "Hello!", "token": token, "user_id": "alice"}
-```
-
-### Error: "Invalid authentication token"
+```text
+#### Error: "Invalid authentication token"
 
 **Causes**:
 1. Token expired
@@ -470,14 +452,14 @@ arguments = {"message": "Hello!", "token": token, "user_id": "alice"}
 2. Ensure `JWT_SECRET_KEY` matches between token creation and verification
 3. Check token format (should be `eyJ...`)
 
-### Error: "Invalid token: missing user identifier"
+#### Error: "Invalid token: missing user identifier"
 
 **Cause**: Token payload missing `sub` claim
 
 **Fix**: Ensure token was created correctly:
 
 ```python
-# Token must include 'sub' claim
+## Token must include 'sub' claim
 payload = {
     "sub": "user:alice",  # ✅ Required
     "username": "alice",
@@ -486,33 +468,30 @@ payload = {
     "exp": expiration_time,
     "iat": issued_at_time
 }
-```
-
-### Error: "Password required for InMemoryUserProvider"
+```text
+#### Error: "Password required for InMemoryUserProvider"
 
 **Cause**: Trying to authenticate without password
 
 **Fix**: InMemoryUserProvider now requires passwords:
 
 ```python
-# ❌ Wrong
+## ❌ Wrong
 auth_result = await auth.authenticate("alice")  # No password
 
-# ✅ Correct
+## ✅ Correct
 auth_result = await auth.authenticate("alice", "alice123")
-```
-
+```text
 ---
 
-## Rollback Plan
+### Rollback Plan
 
 If you need to temporarily rollback to the old behavior (NOT RECOMMENDED):
 
 1. **Checkout previous version**:
    ```bash
    git checkout v2.7.0
-   ```
-
+   ```text
 2. **Or apply this patch** (INSECURE - development only):
    ```python
    # In server_stdio.py and server_streamable.py
@@ -538,7 +517,7 @@ If you need to temporarily rollback to the old behavior (NOT RECOMMENDED):
 
 ---
 
-## Support
+### Support
 
 Need help with migration?
 
@@ -548,9 +527,9 @@ Need help with migration?
 
 ---
 
-## Changelog
+### Changelog
 
-### v2.8.0 (Current)
+#### v2.8.0 (Current)
 
 **Breaking Changes**:
 - ✅ JWT token required for all tool calls
@@ -569,7 +548,7 @@ Need help with migration?
 - 📖 See examples in `/examples` directory
 - 📖 See this migration guide for complete details
 
-### v2.7.0 (Previous)
+#### v2.7.0 (Previous)
 
 - ❌ **VULNERABLE**: Bare `user_id` authentication without credentials
 - ❌ **INSECURE**: InMemoryUserProvider grants access without password

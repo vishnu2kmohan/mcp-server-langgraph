@@ -4,7 +4,7 @@ description: 'Detailed installation guide for all environments'
 icon: 'download'
 ---
 
-## System Requirements
+### System Requirements
 
 <CardGroup cols={2}>
   <Card title="Minimum" icon="computer">
@@ -21,7 +21,7 @@ icon: 'download'
   </Card>
 </CardGroup>
 
-## Installation Methods
+### Installation Methods
 
 Choose the installation method that best fits your use case:
 
@@ -37,8 +37,7 @@ Choose the installation method that best fits your use case:
 
         ```bash
         python --version  # Should show 3.10+
-        ```
-
+        ```text
         If not installed:
         - **macOS**: `brew install python@3.11`
         - **Ubuntu**: `sudo apt install python3.11`
@@ -56,14 +55,14 @@ Choose the installation method that best fits your use case:
         ```bash
         docker --version
         docker compose version
-        ```
+        ```xml
       </Step>
 
       <Step title="Clone Repository">
         ```bash
         git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
         cd mcp_server_langgraph
-        ```
+        ```xml
       </Step>
 
       <Step title="Install uv Package Manager">
@@ -78,8 +77,7 @@ Choose the installation method that best fits your use case:
 
         # Verify installation
         uv --version
-        ```
-
+        ```xml
         <Tip>
           uv is 10-100x faster than pip and handles virtual environments automatically!
         </Tip>
@@ -97,14 +95,12 @@ Choose the installation method that best fits your use case:
         uv sync --extra secrets      # With Infisical support
         uv sync --extra embeddings   # With self-hosted embeddings
         uv sync --all-extras         # All optional features
-        ```
-
+        ```text
         Or use the Makefile:
         ```bash
         make install     # Production only (from lockfile)
         make install-dev # Development with all tools
-        ```
-
+        ```xml
         <Note>
           **requirements*.txt files are deprecated.** All dependencies are managed via
           `pyproject.toml` and locked in `uv.lock` for reproducible builds.
@@ -122,14 +118,14 @@ Choose the installation method that best fits your use case:
       <Step title="Build Image">
         ```bash
         docker build -t mcp-server-langgraph:latest .
-        ```
+        ```xml
       </Step>
 
       <Step title="Create Environment File">
         ```bash
         cp .env.example .env
         # Edit .env with your configuration
-        ```
+        ```xml
       </Step>
 
       <Step title="Run with Docker Compose">
@@ -142,7 +138,7 @@ Choose the installation method that best fits your use case:
 
         # Stop services
         docker compose down
-        ```
+        ```xml
       </Step>
     </Steps>
 
@@ -173,7 +169,7 @@ Choose the installation method that best fits your use case:
       grafana:          # Visualization
         ports:
           - "3000:3000"
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Kubernetes">
@@ -189,7 +185,7 @@ Choose the installation method that best fits your use case:
 
     # Using Helm
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph
-    ```
+    ```xml
   </Tab>
 
   <Tab title="pip Install">
@@ -205,47 +201,43 @@ Choose the installation method that best fits your use case:
 
     # Or install locally
     pip install -e .
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Post-Installation Setup
+### Post-Installation Setup
 
-### 1. Start Infrastructure Services
+#### 1. Start Infrastructure Services
 
 ```bash
 docker compose up -d
-```
-
+```xml
 <Check>
   **Verify services are running:**
   ```bash
   docker compose ps
-  ```
-
+  ```text
   All services should show "Up" status.
 </Check>
 
-### 2. Setup OpenFGA
+#### 2. Setup OpenFGA
 
 Initialize the authorization system:
 
 ```bash
 python scripts/setup/setup_openfga.py
-```
-
+```text
 Save the output values:
 - `OPENFGA_STORE_ID`
 - `OPENFGA_MODEL_ID`
 
-### 3. Configure Environment
+#### 3. Configure Environment
 
 Create `.env` from the example:
 
 ```bash
 cp .env.example .env
-```
-
+```text
 Edit `.env` with your values:
 
 <CodeGroup>
@@ -253,28 +245,25 @@ Edit `.env` with your values:
 LLM_PROVIDER=google
 MODEL_NAME=gemini-2.5-flash-002
 GOOGLE_API_KEY=your-api-key-here
-```
-
+```text
 ```bash Anthropic Claude
 LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ANTHROPIC_API_KEY=sk-ant-your-key-here
-```
-
+```text
 ```bash OpenAI GPT
 LLM_PROVIDER=openai
 MODEL_NAME=gpt-4
 OPENAI_API_KEY=sk-your-key-here
-```
-
+```text
 ```bash Local (Ollama)
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1
 OLLAMA_BASE_URL=http://localhost:11434
-```
+```xml
 </CodeGroup>
 
-### 4. Add OpenFGA IDs
+#### 4. Add OpenFGA IDs
 
 Add to `.env`:
 
@@ -282,61 +271,55 @@ Add to `.env`:
 OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
 OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYY
 JWT_SECRET_KEY=your-secret-key-change-in-production
-```
-
-### 5. Test Installation
+```text
+#### 5. Test Installation
 
 ```bash
 python examples/client_stdio.py
-```
-
+```text
 You should see successful responses from the agent!
 
-## Verification
+### Verification
 
 Run the full test suite to verify everything is working:
 
 <CodeGroup>
 ```bash Unit Tests
 pytest -m unit -v
-```
-
+```text
 ```bash All Tests
 pytest -v
-```
-
+```text
 ```bash With Coverage
 pytest --cov=. --cov-report=term-missing
-```
+```xml
 </CodeGroup>
 
-## Optional: Development Tools
+### Optional: Development Tools
 
 Install additional tools for development:
 
 <CodeGroup>
 ```bash Pre-commit Hooks
-# Install as a tool (recommended)
+## Install as a tool (recommended)
 uv tool install pre-commit
 pre-commit install
 pre-commit run --all-files
 
-# Or use the Makefile
+## Or use the Makefile
 make pre-commit-setup
-```
-
+```text
 ```bash Code Quality Tools
-# Already included in dev dependencies!
-# Just run: uv sync
-# This installs: black, isort, flake8, mypy, bandit, pytest, etc.
-```
-
+## Already included in dev dependencies!
+## Just run: uv sync
+## This installs: black, isort, flake8, mypy, bandit, pytest, etc.
+```text
 ```bash Kubernetes Tools
 brew install kubectl helm kustomize  # macOS
-```
+```xml
 </CodeGroup>
 
-## Platform-Specific Notes
+### Platform-Specific Notes
 
 <AccordionGroup>
   <Accordion title="macOS">
@@ -355,7 +338,7 @@ brew install kubectl helm kustomize  # macOS
 
     # Start Docker Desktop
     open /Applications/Docker.app
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Ubuntu/Debian">
@@ -376,7 +359,7 @@ brew install kubectl helm kustomize  # macOS
 
     # Install Git
     sudo apt install git
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Windows">
@@ -408,15 +391,14 @@ brew install kubectl helm kustomize  # macOS
 
     # Python packages have ARM64 wheels
     pip install -r requirements.txt
-    ```
-
+    ```xml
     <Tip>
       On Apple Silicon Macs, use native Python, not Rosetta!
     </Tip>
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Dependency installation fails">
@@ -437,8 +419,7 @@ brew install kubectl helm kustomize  # macOS
     # If still failing, install build tools:
     # Ubuntu: sudo apt install build-essential python3-dev
     # macOS: xcode-select --install
-    ```
-
+    ```xml
     <Tip>
       uv handles most dependency resolution issues automatically and is much faster than pip!
     </Tip>
@@ -463,7 +444,7 @@ brew install kubectl helm kustomize  # macOS
     newgrp docker  # Or log out and back in
 
     # macOS/Windows: Start Docker Desktop
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Port already in use">
@@ -480,7 +461,7 @@ brew install kubectl helm kustomize  # macOS
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="First Request" icon="paper-plane" href="/getting-started/first-request">

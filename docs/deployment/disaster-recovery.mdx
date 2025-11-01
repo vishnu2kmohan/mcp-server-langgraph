@@ -4,7 +4,7 @@ description: 'Backup, restore, and failover strategies for production resilience
 icon: 'life-ring'
 ---
 
-## Overview
+### Overview
 
 Implement comprehensive disaster recovery (DR) to protect against data loss, service disruption, and regional failures. This guide covers backup strategies, restore procedures, and multi-region failover.
 
@@ -12,7 +12,7 @@ Implement comprehensive disaster recovery (DR) to protect against data loss, ser
 **RTO vs RPO**: Recovery Time Objective (RTO) is how quickly you can restore service. Recovery Point Objective (RPO) is how much data you can afford to lose. Balance both based on business requirements.
 </Info>
 
-## Disaster Recovery Flow
+### Disaster Recovery Flow
 
 ```mermaid
 graph TB
@@ -104,8 +104,7 @@ graph TB
     style RedisDR fill:#d4edda,stroke:#28a745,stroke-width:2px
     style Verify fill:#fff3cd,stroke:#ffc107,stroke-width:2px
     style Switch fill:#fff3cd,stroke:#ffc107,stroke-width:2px
-```
-
+```text
 **Backup and Restore Timeline**:
 ```mermaid
 sequenceDiagram
@@ -178,11 +177,10 @@ sequenceDiagram
     DR->>Monitor: Send health metrics<br/>Normal operation
     Monitor->>Ops: Alert: DR ACTIVE<br/>RTO: 45 minutes ✓
 
-```
+```text
+### Backup Strategy
 
-## Backup Strategy
-
-### What to Backup
+#### What to Backup
 
 <CardGroup cols={2}>
   <Card title="PostgreSQL Databases" icon="database">
@@ -211,7 +209,7 @@ sequenceDiagram
   </Card>
 </CardGroup>
 
-### Backup Schedule
+#### Backup Schedule
 
 | Component | Frequency | Retention | RPO | RTO |
 |-----------|-----------|-----------|-----|-----|
@@ -221,9 +219,9 @@ sequenceDiagram
 | Kubernetes | Daily | 7 days | 24h | 2h |
 | Secrets | Weekly | 90 days | 7d | 4h |
 
-## PostgreSQL Backup
+### PostgreSQL Backup
 
-### Automated Backups
+#### Automated Backups
 
 <Tabs>
   <Tab title="pg_dump">
@@ -255,13 +253,12 @@ sequenceDiagram
 
     # Clean up local files older than 7 days
     find ${BACKUP_DIR} -name "*.dump.gz" -mtime +7 -delete
-    ```
-
+    ```text
     **Schedule with cron**:
     ```bash
     # Daily full backup at 2 AM
     0 2 * * * /scripts/backup-postgres.sh
-    ```
+    ```xml
   </Tab>
 
   <Tab title="CronJob (Kubernetes)">
@@ -313,7 +310,7 @@ sequenceDiagram
               - name: backup-storage
                 persistentVolumeClaim:
                   claimName: backup-pvc
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Cloud-Managed">
@@ -329,8 +326,7 @@ sequenceDiagram
     gcloud sql instances patch keycloak-db \
       --enable-point-in-time-recovery \
       --retained-transaction-log-days=7
-    ```
-
+    ```text
     **AWS RDS**:
     ```bash
     # Enable automated backups
@@ -339,8 +335,7 @@ sequenceDiagram
       --backup-retention-period 30 \
       --preferred-backup-window 02:00-03:00 \
       --enable-iam-database-authentication
-    ```
-
+    ```text
     **Azure Database**:
     ```bash
     az postgres server update \
@@ -348,97 +343,92 @@ sequenceDiagram
       --name keycloak-db \
       --backup-retention 30 \
       --geo-redundant-backup Enabled
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-### Point-in-Time Recovery
+#### Point-in-Time Recovery
 
 ```bash
-# Restore to specific timestamp
+## Restore to specific timestamp
 pg_restore -U keycloak -h postgres-keycloak \
   -d keycloak_recovery \
   -c -v \
   /backups/keycloak_20251012_020000.dump.gz
 
-# Verify data
+## Verify data
 psql -U keycloak -h postgres-keycloak -d keycloak_recovery -c "SELECT COUNT(*) FROM users;"
 
-# Switch to recovered database
+## Switch to recovered database
 kubectl exec -it postgres-keycloak-0 -- psql -U postgres -c "ALTER DATABASE keycloak RENAME TO keycloak_old;"
 kubectl exec -it postgres-keycloak-0 -- psql -U postgres -c "ALTER DATABASE keycloak_recovery RENAME TO keycloak;"
-```
-
-### Continuous Archiving (WAL)
+```text
+#### Continuous Archiving (WAL)
 
 ```bash
-# postgresql.conf
+## postgresql.conf
 wal_level = replica
 archive_mode = on
 archive_command = 'aws s3 cp %p s3://my-backups/postgres-wal/%f'
 archive_timeout = 300  # 5 minutes
 
-# Restore from WAL
+## Restore from WAL
 restore_command = 'aws s3 cp s3://my-backups/postgres-wal/%f %p'
 recovery_target_time = '2025-10-12 10:00:00'
-```
+```text
+### Redis Backup
 
-## Redis Backup
-
-### RDB Snapshots
+#### RDB Snapshots
 
 ```conf
-# redis.conf
+## redis.conf
 save 900 1      # Save if 1 key changed in 15 min
 save 300 10     # Save if 10 keys changed in 5 min
 save 60 10000   # Save if 10000 keys changed in 1 min
 
 dir /data
 dbfilename dump.rdb
-```
-
+```text
 **Backup Script**:
 ```bash
 #!/bin/bash
-# backup-redis.sh
+## backup-redis.sh
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/backups/redis"
 
-# Trigger save
+## Trigger save
 redis-cli -h redis-master BGSAVE
 
-# Wait for save to complete
+## Wait for save to complete
 while [ $(redis-cli -h redis-master LASTSAVE) -eq $LAST_SAVE ]; do
   sleep 1
 done
 
-# Copy RDB file
+## Copy RDB file
 kubectl cp redis-master-0:/data/dump.rdb \
   "${BACKUP_DIR}/dump_${TIMESTAMP}.rdb"
 
-# Upload to S3
+## Upload to S3
 aws s3 cp "${BACKUP_DIR}/dump_${TIMESTAMP}.rdb" \
   s3://my-backups/redis/
-```
-
-### AOF (Append-Only File)
+```text
+#### AOF (Append-Only File)
 
 ```conf
-# redis.conf
+## redis.conf
 appendonly yes
 appendfilename "appendonly.aof"
 appendfsync everysec  # Balance durability/performance
 
-# Rewrite AOF when it grows 100% and is at least 64mb
+## Rewrite AOF when it grows 100% and is at least 64mb
 auto-aof-rewrite-percentage 100
 auto-aof-rewrite-min-size 64mb
-```
-
-### Redis Replication
+```text
+#### Redis Replication
 
 ```yaml
-# Redis Sentinel for HA
+## Redis Sentinel for HA
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -449,18 +439,17 @@ data:
     sentinel down-after-milliseconds mymaster 5000
     sentinel parallel-syncs mymaster 1
     sentinel failover-timeout mymaster 10000
-```
+```text
+### Kubernetes Resource Backup
 
-## Kubernetes Resource Backup
-
-### Velero
+#### Velero
 
 **Install Velero**:
 ```bash
-# Install CLI
+## Install CLI
 brew install velero
 
-# Install in cluster (AWS)
+## Install in cluster (AWS)
 velero install \
   --provider aws \
   --plugins velero/velero-plugin-for-aws:v1.9.0 \
@@ -469,10 +458,9 @@ velero install \
   --snapshot-location-config region=us-east-1 \
   --secret-file ./credentials-velero
 
-# Verify installation
+## Verify installation
 velero version
-```
-
+```text
 **Create Backup Schedule**:
 ```yaml
 apiVersion: velero.io/v1
@@ -490,56 +478,53 @@ spec:
     - events.events.k8s.io
     storageLocation: default
     ttl: 720h0m0s  # 30 days
-```
-
+```text
 **Manual Backup**:
 ```bash
-# Backup entire namespace
+## Backup entire namespace
 velero backup create langgraph-backup \
   --include-namespaces mcp-server-langgraph
 
-# Backup specific resources
+## Backup specific resources
 velero backup create langgraph-deployments \
   --include-namespaces mcp-server-langgraph \
   --include-resources deployments,services,configmaps,secrets
 
-# Check backup status
+## Check backup status
 velero backup get
 velero backup describe langgraph-backup
 
-# Download backup
+## Download backup
 velero backup download langgraph-backup
-```
-
-### kubectl Export
+```text
+#### kubectl Export
 
 ```bash
 #!/bin/bash
-# export-k8s-resources.sh
+## export-k8s-resources.sh
 
 NAMESPACE="mcp-server-langgraph"
 BACKUP_DIR="/backups/k8s/$(date +%Y%m%d)"
 mkdir -p ${BACKUP_DIR}
 
-# Export all resource types
+## Export all resource types
 for resource in deployment service configmap secret ingress pvc; do
   kubectl get ${resource} -n ${NAMESPACE} -o yaml > \
     "${BACKUP_DIR}/${resource}.yaml"
 done
 
-# Create archive
+## Create archive
 tar -czf "${BACKUP_DIR}.tar.gz" -C /backups/k8s "$(date +%Y%m%d)"
 
-# Upload to S3
+## Upload to S3
 aws s3 cp "${BACKUP_DIR}.tar.gz" s3://my-backups/k8s/
-```
+```text
+### Secrets Backup
 
-## Secrets Backup
-
-### Infisical Backup
+#### Infisical Backup
 
 ```python
-# backup-secrets.py
+## backup-secrets.py
 from infisical import InfisicalClient
 import json
 from datetime import datetime
@@ -549,13 +534,13 @@ client = InfisicalClient(
     client_secret=os.getenv("INFISICAL_CLIENT_SECRET")
 )
 
-# Export all secrets
+## Export all secrets
 secrets = client.get_all_secrets(
     project_id=os.getenv("INFISICAL_PROJECT_ID"),
     environment="production"
 )
 
-# Save to file
+## Save to file
 backup_file = f"secrets-backup-{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 with open(backup_file, 'w') as f:
     json.dump([{
@@ -563,31 +548,29 @@ with open(backup_file, 'w') as f:
         'value': s.secret_value
     } for s in secrets], f, indent=2)
 
-# Encrypt backup
+## Encrypt backup
 os.system(f"gpg --encrypt --recipient admin@company.com {backup_file}")
 
-# Upload encrypted backup
+## Upload encrypted backup
 os.system(f"aws s3 cp {backup_file}.gpg s3://my-backups/secrets/")
-```
-
-### Kubernetes Secrets
+```text
+#### Kubernetes Secrets
 
 ```bash
-# Export all secrets (base64 encoded)
+## Export all secrets (base64 encoded)
 kubectl get secrets -n mcp-server-langgraph -o yaml > secrets-backup.yaml
 
-# Encrypt with SOPS
+## Encrypt with SOPS
 sops --encrypt --kms "arn:aws:kms:us-east-1:123456789:key/abc-123" \
   secrets-backup.yaml > secrets-backup.enc.yaml
 
-# Store encrypted file in Git
+## Store encrypted file in Git
 git add secrets-backup.enc.yaml
 git commit -m "Backup secrets $(date +%Y-%m-%d)"
-```
+```text
+### Restore Procedures
 
-## Restore Procedures
-
-### Full System Restore
+#### Full System Restore
 
 <Steps>
   <Step title="Restore Infrastructure">
@@ -599,7 +582,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
     helm install openfga ./charts/openfga
     helm install redis ./charts/redis
     helm install keycloak ./charts/keycloak
-    ```
+    ```xml
   </Step>
 
   <Step title="Restore Databases">
@@ -612,7 +595,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
     pg_restore -U openfga -h postgres-openfga \
       -d openfga -c -v \
       /backups/openfga_20251012_020000.dump
-    ```
+    ```xml
   </Step>
 
   <Step title="Restore Redis">
@@ -626,7 +609,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
 
     # Start Redis
     kubectl scale statefulset redis-master --replicas=1
-    ```
+    ```xml
   </Step>
 
   <Step title="Restore Kubernetes Resources">
@@ -638,7 +621,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
     # Monitor restore
     velero restore get
     velero restore describe langgraph-restore --details
-    ```
+    ```xml
   </Step>
 
   <Step title="Restore Secrets">
@@ -648,7 +631,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
 
     # Or restore to Infisical
     python restore-secrets.py secrets-backup-20251012.json
-    ```
+    ```xml
   </Step>
 
   <Step title="Verify System">
@@ -665,84 +648,81 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
 
     # Verify data integrity
     psql -U keycloak -d keycloak -c "SELECT COUNT(*) FROM users;"
-    ```
+    ```xml
   </Step>
 </Steps>
 
-### Partial Restore
+#### Partial Restore
 
 **Restore Single Database**:
 ```bash
-# Create new database
+## Create new database
 createdb -U postgres keycloak_restored
 
-# Restore from backup
+## Restore from backup
 pg_restore -U keycloak \
   -d keycloak_restored \
   -v /backups/keycloak_20251012.dump
 
-# Verify
+## Verify
 psql -U keycloak -d keycloak_restored -c "\dt"
-```
-
+```text
 **Restore Specific Kubernetes Resource**:
 ```bash
-# Restore from backup file
+## Restore from backup file
 kubectl apply -f /backups/k8s/20251012/deployment.yaml
 
-# Or using Velero
+## Or using Velero
 velero restore create deployment-restore \
   --from-backup langgraph-backup \
   --include-resources deployments \
   --selector app=mcp-server-langgraph
-```
+```text
+### Disaster Recovery Testing
 
-## Disaster Recovery Testing
-
-### DR Drill Procedure
+#### DR Drill Procedure
 
 **Monthly DR Test**:
 ```bash
 #!/bin/bash
-# dr-drill.sh
+## dr-drill.sh
 
 set -e
 
 echo "=== Starting DR Drill ==="
 
-# 1. Create test namespace
+## 1. Create test namespace
 kubectl create namespace langgraph-dr-test
 
-# 2. Restore latest backup
+## 2. Restore latest backup
 LATEST_BACKUP=$(velero backup get --output json | jq -r '.items[0].metadata.name')
 velero restore create dr-test-restore \
   --from-backup ${LATEST_BACKUP} \
   --namespace-mappings mcp-server-langgraph:langgraph-dr-test
 
-# 3. Wait for restore
+## 3. Wait for restore
 velero restore wait dr-test-restore
 
-# 4. Run smoke tests
+## 4. Run smoke tests
 pytest tests/smoke/ --namespace=langgraph-dr-test
 
-# 5. Measure RTO
+## 5. Measure RTO
 START_TIME=$(date -d "$(velero backup get ${LATEST_BACKUP} -o json | jq -r '.status.completionTimestamp')" +%s)
 END_TIME=$(date +%s)
 RTO=$((END_TIME - START_TIME))
 echo "RTO: ${RTO} seconds"
 
-# 6. Cleanup
+## 6. Cleanup
 kubectl delete namespace langgraph-dr-test
 velero restore delete dr-test-restore
 
 echo "=== DR Drill Complete ==="
 echo "RTO: ${RTO}s (Target: 3600s)"
-```
-
-### Automated Testing
+```text
+#### Automated Testing
 
 ```yaml
-# .github/workflows/dr-test.yml
+## .github/workflows/dr-test.yml
 name: DR Testing
 on:
   schedule:
@@ -768,14 +748,13 @@ jobs:
         status: ${{ job.status }}
         text: 'DR test failed!'
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-```
+```text
+### Multi-Region Failover
 
-## Multi-Region Failover
-
-### Active-Passive Setup
+#### Active-Passive Setup
 
 ```yaml
-# Primary region (us-east-1)
+## Primary region (us-east-1)
 primary:
   region: us-east-1
   postgres:
@@ -785,38 +764,36 @@ primary:
   redis:
     replication: async
 
-# Secondary region (us-west-2)
+## Secondary region (us-west-2)
 secondary:
   region: us-west-2
   postgres:
     mode: read-replica
   redis:
     mode: standby
-```
-
+```text
 **Failover Procedure**:
 ```bash
-# 1. Promote secondary database
+## 1. Promote secondary database
 aws rds promote-read-replica \
   --db-instance-identifier keycloak-db-west
 
-# 2. Update DNS
+## 2. Update DNS
 aws route53 change-resource-record-sets \
   --hosted-zone-id Z123 \
   --change-batch file://failover-dns.json
 
-# 3. Scale up secondary region
+## 3. Scale up secondary region
 kubectl config use-context us-west-2
 kubectl scale deployment mcp-server-langgraph --replicas=10
 
-# 4. Verify traffic shift
+## 4. Verify traffic shift
 watch -n 5 'kubectl top pods'
-```
-
-### Active-Active Setup
+```text
+#### Active-Active Setup
 
 ```yaml
-# Global load balancer
+## Global load balancer
 apiVersion: networking.gke.io/v1
 kind: MultiClusterIngress
 metadata:
@@ -833,11 +810,10 @@ spec:
           - backend:
               serviceName: mcp-server-langgraph
               servicePort: 80
-```
-
+```text
 **Database Synchronization**:
 ```yaml
-# CockroachDB for multi-region
+## CockroachDB for multi-region
 cockroachdb:
   replicas: 9
   regions:
@@ -845,23 +821,21 @@ cockroachdb:
     - us-west-2 (3 nodes)
     - eu-west-1 (3 nodes)
   survivability: region
-```
+```text
+### Monitoring & Alerting
 
-## Monitoring & Alerting
-
-### Backup Monitoring
+#### Backup Monitoring
 
 ```promql
-# Backup age
+## Backup age
 time() - backup_last_success_timestamp_seconds > 86400
 
-# Backup failures
+## Backup failures
 rate(backup_failures_total[1h]) > 0
 
-# Backup size
+## Backup size
 backup_size_bytes{backup_type="postgres"} < 1e9
-```
-
+```text
 **Alerts**:
 ```yaml
 groups:
@@ -878,9 +852,8 @@ groups:
     for: 30m
     annotations:
       summary: "Backup metrics missing"
-```
-
-### Recovery Testing Dashboard
+```text
+#### Recovery Testing Dashboard
 
 ```json
 {
@@ -908,9 +881,8 @@ groups:
     ]
   }
 }
-```
-
-## Best Practices
+```text
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Test Restores Regularly" icon="vial">
@@ -936,7 +908,7 @@ groups:
     Copy 1: Daily snapshots (same region)
     Copy 2: S3 backups (different region)
     Copy 3: Glacier archive (off-site)
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Encrypt Backups" icon="lock">
@@ -950,7 +922,7 @@ groups:
     aws s3 cp backup.sql s3://backups/ \
       --sse aws:kms \
       --sse-kms-key-id arn:aws:kms:...
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Document Everything" icon="book">
@@ -977,16 +949,16 @@ groups:
     - Application deployment
     - Configuration management
     - Secret restoration
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Compliance & Audit
+### Compliance & Audit
 
-### Backup Retention Policies
+#### Backup Retention Policies
 
 ```yaml
-# retention-policy.yaml
+## retention-policy.yaml
 policies:
   daily_backups:
     retention_days: 7
@@ -1003,22 +975,21 @@ policies:
   yearly_backups:
     retention_days: 2555  # 7 years
     backup_day: "Jan 1"
-```
-
-### Audit Trail
+```text
+#### Audit Trail
 
 ```bash
-# Log all backup/restore operations
+## Log all backup/restore operations
 logger -t backup "Started PostgreSQL backup"
 
-# Send to centralized logging
+## Send to centralized logging
 echo "$(date): Backup completed" | \
   aws logs put-log-events \
     --log-group-name /aws/backup \
     --log-stream-name postgres
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">

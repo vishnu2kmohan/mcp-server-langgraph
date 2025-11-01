@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 9. Feature Flag System for Gradual R
 icon: 'file-lines'
 ---
 
-# 9. Feature Flag System for Gradual Rollouts
-
 Date: 2025-10-13
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 Production systems need safe feature deployment mechanisms:
 - **Gradual Rollouts**: Enable features for subset of users
@@ -27,11 +25,11 @@ Hardcoded feature switches create problems:
 - No runtime configuration
 - Requires redeployment for feature changes
 
-## Decision
+### Decision
 
 Implement environment-based feature flag system using **Pydantic settings with validation**.
 
-### Architecture
+#### Architecture
 
 ```python
 class FeatureFlags(BaseSettings):
@@ -59,9 +57,8 @@ class FeatureFlags(BaseSettings):
         env_prefix="FF_",  # FF_ENABLE_PYDANTIC_AI_ROUTING=false
         env_file=".env",
     )
-```
-
-### Usage
+```text
+#### Usage
 
 ```python
 from mcp_server_langgraph.core.feature_flags import feature_flags
@@ -72,9 +69,9 @@ else:
     decision = keyword_based_routing(message)
 ```
 
-## Consequences
+### Consequences
 
-### Positive Consequences
+#### Positive Consequences
 
 - **Safe Rollouts**: Enable features incrementally
 - **Environment-Specific**: Different flags per environment
@@ -82,13 +79,13 @@ else:
 - **Type Safety**: Pydantic validation prevents invalid values
 - **Documentation**: Flags self-document with descriptions
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Code Complexity**: if/else checks throughout codebase
 - **Testing Burden**: Must test with flags on/off
 - **Configuration Sprawl**: Many environment variables
 
-## Alternatives Considered
+### Alternatives Considered
 
 1. **LaunchDarkly**: Third-party service, cost, complexity
 2. **Code-Based Toggles**: No runtime config, requires deployment
@@ -96,7 +93,7 @@ else:
 
 **Why Rejected**: Environment variables simplest for our needs
 
-## Implementation
+### Implementation
 
 30+ feature flags across categories:
 - Pydantic AI (3 flags)
@@ -108,7 +105,7 @@ else:
 - Security (4 flags)
 - Experimental (3 flags)
 
-## References
+### References
 
 - Implementation: `src/mcp_server_langgraph/core/feature_flags.py:1-281`
 - Related ADRs: [ADR-0005](/architecture/adr-0005-pydantic-ai-integration)

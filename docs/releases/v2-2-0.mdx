@@ -10,13 +10,13 @@ icon: 'tag'
   **Major Features**: 🔐 GDPR + 📊 SOC2 + 🏥 HIPAA + 📈 SLA
 </Note>
 
-## Overview
+### Overview
 
 Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive enterprise compliance features including GDPR data subject rights, SOC 2 audit automation, HIPAA technical safeguards, SLA monitoring, and real-time observability dashboards.
 
-## GDPR Compliance
+### GDPR Compliance
 
-### ✅ Data Subject Rights (Articles 15-21)
+#### ✅ Data Subject Rights (Articles 15-21)
 
 **5 REST API Endpoints** (`src/mcp_server_langgraph/api/gdpr.py` - 430 lines):
 
@@ -46,9 +46,9 @@ Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive e
 - Audit log anonymization
 - Comprehensive test suite (30+ tests)
 
-## SOC 2 Automation
+### SOC 2 Automation
 
-### ✅ Evidence Collection
+#### ✅ Evidence Collection
 
 **7 Trust Services Criteria** covered:
 
@@ -72,9 +72,9 @@ Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive e
 - Compliance score calculation
 - 36 comprehensive tests (97% pass rate)
 
-## HIPAA Safeguards
+### HIPAA Safeguards
 
-### ✅ Technical Controls
+#### ✅ Technical Controls
 
 **4 Major Controls** (`src/mcp_server_langgraph/auth/hipaa.py` - 400 lines):
 
@@ -99,9 +99,9 @@ Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive e
    - 15-minute default timeout
    - Session middleware
 
-## SLA Monitoring
+### SLA Monitoring
 
-### ✅ 99.9% Uptime Tracking
+#### ✅ 99.9% Uptime Tracking
 
 **3 SLA Targets**:
 - Uptime: 99.9% (43.2 min downtime/month)
@@ -120,9 +120,9 @@ Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive e
 - Error rate by status code
 - Throughput vs capacity
 
-## Grafana Dashboards
+### Grafana Dashboards
 
-### ✅ 2 New Dashboards (900 lines)
+#### ✅ 2 New Dashboards (900 lines)
 
 **1. SLA Monitoring Dashboard** (23 panels):
 - Overall SLA compliance score
@@ -143,9 +143,9 @@ Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive e
 
 **Auto-refresh**: 30s (SLA), 1m (SOC2)
 
-## Data Retention
+### Data Retention
 
-### ✅ Automated Cleanup
+#### ✅ Automated Cleanup
 
 **Retention Policy** (`config/retention_policies.yaml`):
 
@@ -163,7 +163,7 @@ Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive e
 - Dry-run support
 - Email/Slack notifications
 
-## Files Added
+### Files Added
 
 <AccordionGroup>
   <Accordion title="GDPR (3 files, ~1,100 lines)" icon="scale-balanced">
@@ -198,74 +198,74 @@ Version 2.2.0 is a **Compliance & Observability Release** adding comprehensive e
   </Accordion>
 </AccordionGroup>
 
-## Upgrade Guide
+### Upgrade Guide
 
-### From v2.1.0
+#### From v2.1.0
 
 ```bash
-# 1. Update code
+## 1. Update code
 git pull origin main
 uv sync
 
-# 2. Configure compliance settings in .env
+## 2. Configure compliance settings in .env
 cat >> .env <<EOF
-# GDPR
+## GDPR
 GDPR_ENABLED=true
 DATA_RETENTION_DAYS=365
 
-# SOC2
+## SOC2
 SOC2_ENABLED=true
 EVIDENCE_DIR=./evidence
 
-# HIPAA
+## HIPAA
 HIPAA_ENABLED=true
 SESSION_TIMEOUT_MINUTES=15
 
-# SLA
+## SLA
 SLA_UPTIME_TARGET=99.9
 SLA_RESPONSE_TIME_P95=500
 SLA_ERROR_RATE_TARGET=1.0
 EOF
 
-# 3. Import Grafana dashboards
-# Navigate to Grafana UI and import:
-# - monitoring/grafana/dashboards/sla-monitoring.json
-# - monitoring/grafana/dashboards/soc2-compliance.json
+## 3. Import Grafana dashboards
+## Navigate to Grafana UI and import:
+## - monitoring/grafana/dashboards/sla-monitoring.json
+## - monitoring/grafana/dashboards/soc2-compliance.json
 
-# 4. Configure Prometheus alerts
+## 4. Configure Prometheus alerts
 kubectl apply -f monitoring/prometheus/alerts/sla.yaml
 
-# 5. Set up data retention
+## 5. Set up data retention
 cp config/retention_policies.yaml config/retention_policies.local.yaml
-# Edit retention_policies.local.yaml as needed
+## Edit retention_policies.local.yaml as needed
 
-# 6. Start compliance scheduler
-# Automatically starts with application
-# Or manually: python -m mcp_server_langgraph.schedulers.compliance
+## 6. Start compliance scheduler
+## Automatically starts with application
+## Or manually: python -m mcp_server_langgraph.schedulers.compliance
 ```
 
-### Testing
+#### Testing
 
 ```bash
-# GDPR endpoints
+## GDPR endpoints
 pytest tests/test_gdpr.py -v
 
-# SOC2 automation
+## SOC2 automation
 pytest tests/test_soc2_evidence.py -v
 
-# HIPAA controls
+## HIPAA controls
 pytest tests/test_hipaa.py -v
 
-# SLA monitoring
+## SLA monitoring
 pytest tests/test_sla_monitoring.py -v
 
-# Data retention
+## Data retention
 pytest tests/test_retention.py -v
 ```
 
-## What's Next
+### What's Next
 
-### v2.3.0
+#### v2.3.0
 - Compliance storage backend
 - Pydantic V2 migration
 - Enhanced type safety (27% → 64%)

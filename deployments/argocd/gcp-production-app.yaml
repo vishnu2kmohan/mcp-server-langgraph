@@ -1,0 +1,95 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcp-server-production-gke
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    environment: production
+    cloud: gcp
+    platform: gke
+spec:
+  project: default
+
+  # Source repository
+  source:
+    repoURL: https://github.com/vishnu2kmohan/mcp-server-langgraph
+    targetRevision: main
+    path: deployments/overlays/production-gke
+
+  # Destination cluster
+  destination:
+    server: https://kubernetes.default.svc  # In-cluster deployment
+    namespace: mcp-production
+
+  # Sync policy
+  syncPolicy:
+    automated:
+      prune: true      # Delete resources not in Git
+      selfHeal: true   # Sync if manual changes detected
+      allowEmpty: false
+
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+
+    # Retry configuration
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Health assessment
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas  # Ignore HPA-managed replicas
+
+  # Notifications
+  # Configure via argocd-notifications ConfigMap
+
+# ArgoCD Notifications Configuration
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  service.slack: |
+    token: $slack-token
+
+  trigger.on-deployed: |
+    - when: app.status.operationState.phase in ['Succeeded']
+      send: [app-deployed]
+
+  trigger.on-health-degraded: |
+    - when: app.status.health.status == 'Degraded'
+      send: [app-health-degraded]
+
+  trigger.on-sync-failed: |
+    - when: app.status.operationState.phase in ['Error', 'Failed']
+      send: [app-sync-failed]
+
+  template.app-deployed: |
+    message: |
+      ✅ Application {{.app.metadata.name}} deployed successfully
+      Revision: {{.app.status.sync.revision}}
+      Environment: {{.app.metadata.labels.environment}}
+
+  template.app-health-degraded: |
+    message: |
+      ⚠️ Application {{.app.metadata.name}} health degraded
+      Status: {{.app.status.health.status}}
+      Message: {{.app.status.health.message}}
+
+  template.app-sync-failed: |
+    message: |
+      ❌ Application {{.app.metadata.name}} sync failed
+      Phase: {{.app.status.operationState.phase}}
+      Message: {{.app.status.operationState.message}}

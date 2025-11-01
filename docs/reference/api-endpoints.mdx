@@ -1,0 +1,963 @@
+---
+title: API Endpoints Reference
+description: 'Complete API reference for service principals, API key management, and SCIM 2.0 provisioning endpoints'
+icon: 'plug'
+---
+
+## Overview
+
+The MCP Server with LangGraph exposes RESTful API endpoints for identity management, authentication, and user provisioning. All endpoints require authentication and follow RESTful conventions.
+
+<CardGroup cols={3}>
+  <Card title="Service Principals" icon="robot">
+    Machine-to-machine authentication for automated workflows
+  </Card>
+  <Card title="API Keys" icon="key">
+    Long-lived authentication for CLI tools and legacy integrations
+  </Card>
+  <Card title="SCIM 2.0" icon="users">
+    Automated user provisioning from identity providers
+  </Card>
+</CardGroup>
+
+---
+
+## Service Principals API
+
+Service principals enable machine-to-machine authentication for batch jobs, streaming tasks, and background processes.
+
+### Base Path
+
+```
+/api/v1/service-principals
+```
+
+### Authentication
+
+All endpoints require Bearer token authentication:
+
+```bash
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+### Create Service Principal
+
+Creates a new service principal for machine-to-machine authentication.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `POST /api/v1/service-principals`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    Content-Type: application/json
+    ```
+
+    **Body:**
+    ```json
+    {
+      "name": "Batch ETL Job",
+      "description": "Nightly data processing",
+      "authentication_mode": "client_credentials",
+      "associated_user_id": "user:alice",
+      "inherit_permissions": true,
+      "refresh_token_lifespan": 2592000
+    }
+    ```
+
+    **Parameters:**
+    - `name` (required): Human-readable name for the service principal
+    - `description` (optional): Description of purpose
+    - `authentication_mode` (required): `client_credentials` or `service_account`
+    - `associated_user_id` (optional): User ID to inherit permissions from
+    - `inherit_permissions` (optional): Enable permission inheritance (default: false)
+    - `refresh_token_lifespan` (optional): Refresh token lifetime in seconds (default: 2592000 = 30 days)
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `201 Created`
+
+    **Body:**
+    ```json
+    {
+      "service_id": "batch-etl-job",
+      "name": "Batch ETL Job",
+      "description": "Nightly data processing",
+      "authentication_mode": "client_credentials",
+      "client_secret": "abc123xyz789...",
+      "created_at": "2025-01-28T00:00:00Z",
+      "associated_user_id": "user:alice",
+      "inherit_permissions": true,
+      "message": "Save the client_secret securely. It will not be shown again."
+    }
+    ```
+
+    <Warning>
+      **Save the `client_secret` immediately!** It cannot be retrieved later. Store it in a secrets manager (Infisical, Vault, etc.).
+    </Warning>
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X POST https://api.example.com/api/v1/service-principals \
+      -H "Authorization: Bearer YOUR_JWT" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "Batch ETL Job",
+        "description": "Nightly data processing",
+        "authentication_mode": "client_credentials",
+        "associated_user_id": "user:alice",
+        "inherit_permissions": true
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+### List Service Principals
+
+Retrieves all service principals for the authenticated user.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `GET /api/v1/service-principals`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    ```
+
+    **Query Parameters:**
+    - `page` (optional): Page number (default: 1)
+    - `page_size` (optional): Items per page (default: 20, max: 100)
+    - `authentication_mode` (optional): Filter by mode (`client_credentials` or `service_account`)
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `200 OK`
+
+    **Body:**
+    ```json
+    {
+      "service_principals": [
+        {
+          "service_id": "batch-etl-job",
+          "name": "Batch ETL Job",
+          "description": "Nightly data processing",
+          "authentication_mode": "client_credentials",
+          "created_at": "2025-01-28T00:00:00Z",
+          "last_used": "2025-01-29T02:15:00Z",
+          "associated_user_id": "user:alice",
+          "inherit_permissions": true,
+          "status": "active"
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "page_size": 20
+    }
+    ```
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X GET https://api.example.com/api/v1/service-principals \
+      -H "Authorization: Bearer YOUR_JWT"
+    ```
+  </Tab>
+</Tabs>
+
+### Get Service Principal
+
+Retrieves details of a specific service principal.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `GET /api/v1/service-principals/{service_id}`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    ```
+
+    **Path Parameters:**
+    - `service_id`: Service principal ID
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `200 OK`
+
+    **Body:**
+    ```json
+    {
+      "service_id": "batch-etl-job",
+      "name": "Batch ETL Job",
+      "description": "Nightly data processing",
+      "authentication_mode": "client_credentials",
+      "created_at": "2025-01-28T00:00:00Z",
+      "last_used": "2025-01-29T02:15:00Z",
+      "associated_user_id": "user:alice",
+      "inherit_permissions": true,
+      "status": "active",
+      "refresh_token_lifespan": 2592000
+    }
+    ```
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X GET https://api.example.com/api/v1/service-principals/batch-etl-job \
+      -H "Authorization: Bearer YOUR_JWT"
+    ```
+  </Tab>
+</Tabs>
+
+### Delete Service Principal
+
+Deletes a service principal and revokes all its credentials.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `DELETE /api/v1/service-principals/{service_id}`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    ```
+
+    **Path Parameters:**
+    - `service_id`: Service principal ID to delete
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `204 No Content`
+
+    <Note>
+      Deletion is immediate and irreversible. All active tokens for this service principal will be invalidated.
+    </Note>
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X DELETE https://api.example.com/api/v1/service-principals/batch-etl-job \
+      -H "Authorization: Bearer YOUR_JWT"
+    ```
+  </Tab>
+</Tabs>
+
+### Rotate Secret
+
+Rotates the client secret for a service principal.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `POST /api/v1/service-principals/{service_id}/rotate-secret`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    Content-Type: application/json
+    ```
+
+    **Body:**
+    ```json
+    {
+      "grace_period_hours": 24
+    }
+    ```
+
+    **Parameters:**
+    - `grace_period_hours` (optional): Hours to keep old secret valid (default: 24)
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `200 OK`
+
+    **Body:**
+    ```json
+    {
+      "service_id": "batch-etl-job",
+      "new_client_secret": "xyz789abc123...",
+      "old_secret_expires_at": "2025-01-30T00:00:00Z",
+      "message": "Save the new client_secret securely. Old secret will be revoked in 24 hours."
+    }
+    ```
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X POST https://api.example.com/api/v1/service-principals/batch-etl-job/rotate-secret \
+      -H "Authorization: Bearer YOUR_JWT" \
+      -H "Content-Type: application/json" \
+      -d '{"grace_period_hours": 24}'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## API Keys API
+
+API keys provide simple, long-lived authentication for CLI tools, webhooks, and legacy integrations.
+
+### Base Path
+
+```
+/api/v1/api-keys
+```
+
+### Authentication
+
+All endpoints require Bearer token authentication:
+
+```bash
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+### Create API Key
+
+Creates a new API key for the authenticated user.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `POST /api/v1/api-keys`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    Content-Type: application/json
+    ```
+
+    **Body:**
+    ```json
+    {
+      "name": "Production API Key",
+      "expires_days": 365
+    }
+    ```
+
+    **Parameters:**
+    - `name` (required): Descriptive name for the API key
+    - `expires_days` (optional): Days until expiration (default: 365, max: 730)
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `201 Created`
+
+    **Body:**
+    ```json
+    {
+      "key_id": "abc123",
+      "api_key": "mcpkey_live_EXAMPLE1234567890abcdefghijklmnopqrstuvwxyz",
+      "name": "Production API Key",
+      "created": "2025-01-28T00:00:00Z",
+      "expires_at": "2026-01-28T00:00:00Z",
+      "message": "Save this API key securely. It will not be shown again."
+    }
+    ```
+
+    <Warning>
+      **Save the `api_key` value immediately!** It cannot be retrieved later. Store it in your `.env` file or secrets manager.
+    </Warning>
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X POST https://api.example.com/api/v1/api-keys \
+      -H "Authorization: Bearer YOUR_JWT" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "Production API Key",
+        "expires_days": 365
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+### List API Keys
+
+Retrieves all API keys for the authenticated user.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `GET /api/v1/api-keys`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    ```
+
+    **Query Parameters:**
+    - `include_expired` (optional): Include expired keys (default: false)
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `200 OK`
+
+    **Body:**
+    ```json
+    {
+      "api_keys": [
+        {
+          "key_id": "abc123",
+          "name": "Production API Key",
+          "created": "2025-01-28T00:00:00Z",
+          "expires_at": "2026-01-28T00:00:00Z",
+          "last_used": "2025-01-29T10:30:00Z",
+          "status": "active"
+        },
+        {
+          "key_id": "def456",
+          "name": "Development Key",
+          "created": "2025-01-15T00:00:00Z",
+          "expires_at": "2025-04-15T00:00:00Z",
+          "last_used": "2025-01-20T15:45:00Z",
+          "status": "active"
+        }
+      ],
+      "total": 2,
+      "max_keys_per_user": 5
+    }
+    ```
+
+    <Info>
+      The actual API key value is never returned after creation for security reasons.
+    </Info>
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X GET https://api.example.com/api/v1/api-keys \
+      -H "Authorization: Bearer YOUR_JWT"
+    ```
+  </Tab>
+</Tabs>
+
+### Revoke API Key
+
+Revokes an API key, making it invalid immediately.
+
+<Tabs>
+  <Tab title="Request">
+    **Endpoint:** `DELETE /api/v1/api-keys/{key_id}`
+
+    **Headers:**
+    ```http
+    Authorization: Bearer YOUR_JWT
+    ```
+
+    **Path Parameters:**
+    - `key_id`: API key ID to revoke
+  </Tab>
+
+  <Tab title="Response">
+    **Status:** `204 No Content`
+
+    <Note>
+      Revocation is immediate. Any requests using this API key will be rejected with `401 Unauthorized`.
+    </Note>
+  </Tab>
+
+  <Tab title="Example">
+    ```bash
+    curl -X DELETE https://api.example.com/api/v1/api-keys/abc123 \
+      -H "Authorization: Bearer YOUR_JWT"
+    ```
+  </Tab>
+</Tabs>
+
+### Using API Keys
+
+API keys are used in the `apikey` header:
+
+```bash
+curl -X POST https://api.example.com/message \
+  -H "apikey: mcpkey_live_EXAMPLE1234567890abcdefghijklmnopqrstuvwxyz" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Hello, world!"}'
+```
+
+**Key Format:**
+- Prefix: `mcpkey_`
+- Environment: `live_` (production) or `test_` (development)
+- Token: 48-character random string (base62)
+
+**Internally:**
+The API key is exchanged for a JWT token via Kong Gateway's custom plugin, then validated like any other JWT.
+
+---
+
+## SCIM 2.0 API
+
+SCIM (System for Cross-domain Identity Management) enables automated user provisioning from identity providers.
+
+### Base Path
+
+```
+/scim/v2
+```
+
+### Authentication
+
+SCIM endpoints support two authentication methods:
+
+**Option 1: Bearer Token (Recommended)**
+```http
+Authorization: Bearer JWT_TOKEN
+```
+
+**Option 2: OAuth 2.0 Client Credentials**
+```http
+Authorization: Bearer ACCESS_TOKEN
+```
+(obtained via service principal client credentials flow)
+
+### Supported Schemas
+
+- `urn:ietf:params:scim:schemas:core:2.0:User`
+- `urn:ietf:params:scim:schemas:core:2.0:Group`
+- `urn:ietf:params:scim:api:messages:2.0:ListResponse`
+- `urn:ietf:params:scim:api:messages:2.0:PatchOp`
+
+### User Endpoints
+
+<AccordionGroup>
+  <Accordion title="Create User">
+    **Endpoint:** `POST /scim/v2/Users`
+
+    **Request:**
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      "userName": "alice@example.com",
+      "name": {
+        "givenName": "Alice",
+        "familyName": "Smith"
+      },
+      "emails": [{
+        "value": "alice@example.com",
+        "primary": true
+      }],
+      "active": true
+    }
+    ```
+
+    **Response:** `201 Created`
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      "id": "user:alice",
+      "userName": "alice@example.com",
+      "name": {
+        "givenName": "Alice",
+        "familyName": "Smith"
+      },
+      "emails": [{
+        "value": "alice@example.com",
+        "primary": true
+      }],
+      "active": true,
+      "meta": {
+        "resourceType": "User",
+        "created": "2025-01-28T00:00:00Z",
+        "lastModified": "2025-01-28T00:00:00Z",
+        "location": "/scim/v2/Users/user:alice"
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Get User">
+    **Endpoint:** `GET /scim/v2/Users/{id}`
+
+    **Response:** `200 OK`
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      "id": "user:alice",
+      "userName": "alice@example.com",
+      "name": {
+        "givenName": "Alice",
+        "familyName": "Smith"
+      },
+      "emails": [{
+        "value": "alice@example.com",
+        "primary": true
+      }],
+      "active": true,
+      "groups": [],
+      "meta": {
+        "resourceType": "User",
+        "created": "2025-01-28T00:00:00Z",
+        "lastModified": "2025-01-28T00:00:00Z"
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Update User (PUT)">
+    **Endpoint:** `PUT /scim/v2/Users/{id}`
+
+    **Request:**
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      "userName": "alice@example.com",
+      "name": {
+        "givenName": "Alice",
+        "familyName": "Johnson"
+      },
+      "emails": [{
+        "value": "alice@example.com",
+        "primary": true
+      }],
+      "active": true
+    }
+    ```
+
+    **Response:** `200 OK` (updated user object)
+  </Accordion>
+
+  <Accordion title="Update User (PATCH)">
+    **Endpoint:** `PATCH /scim/v2/Users/{id}`
+
+    **Request:**
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+      "Operations": [
+        {
+          "op": "replace",
+          "path": "active",
+          "value": false
+        },
+        {
+          "op": "replace",
+          "path": "name.familyName",
+          "value": "Johnson"
+        }
+      ]
+    }
+    ```
+
+    **Supported Operations:**
+    - `add`: Add attribute value
+    - `replace`: Replace attribute value
+    - `remove`: Remove attribute
+
+    **Response:** `200 OK` (updated user object)
+  </Accordion>
+
+  <Accordion title="Deactivate User">
+    **Endpoint:** `DELETE /scim/v2/Users/{id}`
+
+    **Response:** `204 No Content`
+
+    <Note>
+      This sets `active: false` on the user but doesn't delete the account. The user can be reactivated via PATCH.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Search Users">
+    **Endpoint:** `GET /scim/v2/Users?filter={filter}`
+
+    **Query Parameters:**
+    - `filter`: SCIM filter expression
+    - `startIndex`: Pagination start (default: 1)
+    - `count`: Results per page (default: 20)
+
+    **Example Filter:**
+    ```
+    userName eq "alice@example.com"
+    active eq true
+    emails.value co "@example.com"
+    name.familyName sw "Sm"
+    ```
+
+    **Response:** `200 OK`
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+      "totalResults": 1,
+      "startIndex": 1,
+      "itemsPerPage": 20,
+      "Resources": [
+        {
+          "id": "user:alice",
+          "userName": "alice@example.com",
+          "active": true
+        }
+      ]
+    }
+    ```
+
+    **Supported Filter Operators:**
+    - `eq`: Equal
+    - `ne`: Not equal
+    - `co`: Contains
+    - `sw`: Starts with
+    - `ew`: Ends with
+    - `pr`: Present (attribute exists)
+  </Accordion>
+</AccordionGroup>
+
+### Group Endpoints
+
+<AccordionGroup>
+  <Accordion title="Create Group">
+    **Endpoint:** `POST /scim/v2/Groups`
+
+    **Request:**
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+      "displayName": "Engineering",
+      "members": [
+        {
+          "value": "user:alice",
+          "display": "Alice Smith"
+        }
+      ]
+    }
+    ```
+
+    **Response:** `201 Created`
+  </Accordion>
+
+  <Accordion title="Get Group">
+    **Endpoint:** `GET /scim/v2/Groups/{id}`
+
+    **Response:** `200 OK`
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+      "id": "group:engineering",
+      "displayName": "Engineering",
+      "members": [
+        {
+          "value": "user:alice",
+          "display": "Alice Smith",
+          "$ref": "/scim/v2/Users/user:alice"
+        }
+      ],
+      "meta": {
+        "resourceType": "Group",
+        "created": "2025-01-28T00:00:00Z",
+        "lastModified": "2025-01-28T00:00:00Z"
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Update Group Membership">
+    **Endpoint:** `PATCH /scim/v2/Groups/{id}`
+
+    **Request:**
+    ```json
+    {
+      "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+      "Operations": [
+        {
+          "op": "add",
+          "path": "members",
+          "value": [
+            {
+              "value": "user:bob",
+              "display": "Bob Jones"
+            }
+          ]
+        }
+      ]
+    }
+    ```
+
+    **Response:** `200 OK`
+  </Accordion>
+</AccordionGroup>
+
+### Bulk Operations
+
+**Endpoint:** `POST /scim/v2/Bulk`
+
+Create, update, or delete multiple resources in a single request.
+
+```json
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
+  "Operations": [
+    {
+      "method": "POST",
+      "path": "/Users",
+      "bulkId": "user1",
+      "data": {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        "userName": "user1@example.com",
+        "name": {
+          "givenName": "User",
+          "familyName": "One"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/Users",
+      "bulkId": "user2",
+      "data": {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        "userName": "user2@example.com",
+        "name": {
+          "givenName": "User",
+          "familyName": "Two"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkResponse"],
+  "Operations": [
+    {
+      "bulkId": "user1",
+      "method": "POST",
+      "status": "201",
+      "location": "/scim/v2/Users/user:user1"
+    },
+    {
+      "bulkId": "user2",
+      "method": "POST",
+      "status": "201",
+      "location": "/scim/v2/Users/user:user2"
+    }
+  ]
+}
+```
+
+### Error Responses
+
+All SCIM endpoints return errors in SCIM format:
+
+```json
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+  "status": "400",
+  "scimType": "invalidValue",
+  "detail": "userName is required"
+}
+```
+
+**SCIM Error Types:**
+- `invalidValue`: Invalid attribute value
+- `tooMany`: Too many results
+- `uniqueness`: Uniqueness constraint violated
+- `mutability`: Immutable attribute modification attempted
+- `invalidSyntax`: Invalid filter syntax
+- `invalidFilter`: Invalid filter
+- `invalidPath`: Invalid path expression
+
+---
+
+## Rate Limiting
+
+All API endpoints are rate-limited to prevent abuse:
+
+| Endpoint Category | Rate Limit | Window |
+|------------------|------------|---------|
+| Service Principals | 10 requests/minute | Per user |
+| API Keys | 20 requests/minute | Per user |
+| SCIM User Operations | 100 requests/minute | Per client |
+| SCIM Bulk Operations | 10 requests/minute | Per client |
+
+**Rate Limit Headers:**
+```http
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1643370000
+```
+
+**Rate Limit Exceeded Response:**
+```json
+{
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests. Please try again later.",
+  "retry_after": 60
+}
+```
+
+---
+
+## Error Handling
+
+### Common HTTP Status Codes
+
+| Status | Meaning | When Used |
+|--------|---------|-----------|
+| `200 OK` | Success | GET, PUT, PATCH requests |
+| `201 Created` | Resource created | POST requests |
+| `204 No Content` | Success, no body | DELETE requests |
+| `400 Bad Request` | Invalid request | Validation errors |
+| `401 Unauthorized` | Auth required/invalid | Missing or invalid token |
+| `403 Forbidden` | Insufficient permissions | Authorization failure |
+| `404 Not Found` | Resource not found | Invalid ID |
+| `409 Conflict` | Resource conflict | Duplicate username, key limit exceeded |
+| `429 Too Many Requests` | Rate limited | Exceeded rate limit |
+| `500 Internal Server Error` | Server error | Unexpected errors |
+
+### Error Response Format
+
+```json
+{
+  "error": "validation_error",
+  "message": "Invalid request parameters",
+  "details": {
+    "name": "name is required",
+    "authentication_mode": "must be 'client_credentials' or 'service_account'"
+  },
+  "request_id": "abc123"
+}
+```
+
+---
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Secure Credentials" icon="lock">
+    - Store API keys and client secrets in secrets managers
+    - Never commit credentials to version control
+    - Rotate credentials regularly (90 days recommended)
+    - Use different credentials per environment
+  </Card>
+
+  <Card title="Error Handling" icon="triangle-exclamation">
+    - Implement exponential backoff for retries
+    - Handle rate limiting gracefully
+    - Log request IDs for debugging
+    - Validate responses before processing
+  </Card>
+
+  <Card title="Performance" icon="gauge">
+    - Cache JWT tokens until expiration
+    - Use bulk SCIM operations for multiple users
+    - Implement request pooling/batching
+    - Monitor rate limit headers
+  </Card>
+
+  <Card title="Security" icon="shield">
+    - Use HTTPS for all API calls
+    - Validate SSL certificates in production
+    - Implement request signing for SCIM (optional)
+    - Monitor for unusual API usage patterns
+  </Card>
+</CardGroup>
+
+## See Also
+
+- [Service Principals Guide](/guides/service-principals)
+- [API Key Management Guide](/guides/api-key-management)
+- [SCIM Provisioning Guide](/guides/scim-provisioning)
+- [Authentication & Authorization](/getting-started/authentication)
+- [Keycloak JWT Deployment](/deployment/keycloak-jwt-deployment)

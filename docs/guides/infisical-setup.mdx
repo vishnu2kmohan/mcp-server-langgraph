@@ -4,7 +4,7 @@ description: 'Centralized secrets management with Infisical'
 icon: 'vault'
 ---
 
-## Overview
+### Overview
 
 Infisical provides **end-to-end encrypted secrets management** for your MCP Server. Store API keys, credentials, and configuration securely with automatic injection and rotation.
 
@@ -12,7 +12,7 @@ Infisical provides **end-to-end encrypted secrets management** for your MCP Serv
 Infisical is an open-source alternative to HashiCorp Vault with a focus on developer experience and end-to-end encryption.
 </Info>
 
-## Why Infisical?
+### Why Infisical?
 
 <CardGroup cols={2}>
   <Card title="Security" icon="lock">
@@ -44,7 +44,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
   </Card>
 </CardGroup>
 
-## Quick Start
+### Quick Start
 
 <Steps>
   <Step title="Sign Up">
@@ -71,7 +71,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
     INFISICAL_CLIENT_SECRET=your-client-secret
     INFISICAL_PROJECT_ID=your-project-id
     INFISICAL_ENVIRONMENT=production  # dev, staging, production
-    ```
+    ```sql
   </Step>
 
   <Step title="Add Secrets to Infisical">
@@ -93,11 +93,11 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
     # Secrets automatically loaded from Infisical
     print(f"LLM Provider: {settings.llm_provider}")
     print(f"Has API Key: {bool(settings.anthropic_api_key)}")
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Self-Hosted Deployment
+### Self-Hosted Deployment
 
 <Tabs>
   <Tab title="Docker Compose">
@@ -125,8 +125,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
       image: redis:7-alpine
       volumes:
         - redis-data:/data
-    ```
-
+    ```text
     ```bash
     # Generate secrets
     export ENCRYPTION_KEY=$(openssl rand -hex 32)
@@ -134,7 +133,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
 
     # Start Infisical
     docker compose up -d infisical
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Kubernetes">
@@ -147,26 +146,25 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
       --set redis.enabled=true \
       --set ingress.enabled=true \
       --set ingress.hostname=secrets.yourdomain.com
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Usage Patterns
+### Usage Patterns
 
-### Automatic Secret Loading
+#### Automatic Secret Loading
 
 Secrets are automatically loaded on application startup:
 
 ```python
 from mcp_server_langgraph.core.config import settings
 
-# All secrets loaded from Infisical
+## All secrets loaded from Infisical
 api_key = settings.anthropic_api_key
 db_password = settings.redis_password
 jwt_secret = settings.jwt_secret_key
-```
-
-### Manual Secret Retrieval
+```text
+#### Manual Secret Retrieval
 
 ```python
 from infisical import InfisicalClient
@@ -176,7 +174,7 @@ client = InfisicalClient(
     client_secret=os.getenv("INFISICAL_CLIENT_SECRET")
 )
 
-# Get single secret
+## Get single secret
 secret = client.get_secret(
     secret_name="ANTHROPIC_API_KEY",
     project_id=os.getenv("INFISICAL_PROJECT_ID"),
@@ -184,7 +182,7 @@ secret = client.get_secret(
 )
 print(secret.secret_value)
 
-# Get all secrets
+## Get all secrets
 secrets = client.get_all_secrets(
     project_id=os.getenv("INFISICAL_PROJECT_ID"),
     environment="production"
@@ -192,29 +190,27 @@ secrets = client.get_all_secrets(
 
 for secret in secrets:
     print(f"{secret.secret_name}: {secret.secret_value}")
-```
-
-### Environment-Specific Secrets
+```text
+#### Environment-Specific Secrets
 
 ```python
-# Load secrets based on environment
+## Load secrets based on environment
 environment = os.getenv("ENVIRONMENT", "development")
 
 secrets = client.get_all_secrets(
     project_id=project_id,
     environment=environment  # dev, staging, production
 )
-```
+```text
+### Kubernetes Integration
 
-## Kubernetes Integration
-
-### Infisical Operator
+#### Infisical Operator
 
 ```yaml
-# Install operator
+## Install operator
 kubectl apply -f https://raw.githubusercontent.com/Infisical/infisical/main/k8s-operator/operator.yaml
 
-# Create secret sync
+## Create secret sync
 apiVersion: secrets.infisical.com/v1alpha1
 kind: InfisicalSecret
 metadata:
@@ -231,9 +227,8 @@ spec:
   managedSecretReference:
     secretName: mcp-server-langgraph-secrets
     secretNamespace: mcp-server-langgraph
-```
-
-### Service Account Credentials
+```text
+#### Service Account Credentials
 
 ```yaml
 apiVersion: v1
@@ -245,9 +240,8 @@ type: Opaque
 stringData:
   clientId: your-client-id
   clientSecret: your-client-secret
-```
-
-### Auto-Inject Secrets
+```text
+#### Auto-Inject Secrets
 
 ```yaml
 apiVersion: apps/v1
@@ -262,11 +256,10 @@ spec:
         envFrom:
         - secretRef:
             name: mcp-server-langgraph-secrets  # Auto-synced from Infisical
-```
+```text
+### Secret Organization
 
-## Secret Organization
-
-### Folder Structure
+#### Folder Structure
 
 ```
 mcp-server-langgraph/
@@ -285,9 +278,8 @@ mcp-server-langgraph/
 │   └── ...
 └── development/
     └── ...
-```
-
-### Naming Conventions
+```text
+#### Naming Conventions
 
 **Good**:
 - `ANTHROPIC_API_KEY` (service + type)
@@ -299,30 +291,29 @@ mcp-server-langgraph/
 - `secret` (not descriptive)
 - `temp_api_key` (indicates temporary usage)
 
-## Access Control
+### Access Control
 
-### Role-Based Access
+#### Role-Based Access
 
 ```python
-# Read-only for application
+## Read-only for application
 service_account_read = client.create_service_account(
     name="langgraph-prod-readonly",
     permissions=["read"]
 )
 
-# Write access for CI/CD
+## Write access for CI/CD
 service_account_write = client.create_service_account(
     name="cicd-deploy",
     permissions=["read", "write"]
 )
-```
-
-### Audit Logging
+```text
+#### Audit Logging
 
 Enable audit logs to track secret access:
 
 ```python
-# View audit logs
+## View audit logs
 logs = client.get_audit_logs(
     project_id=project_id,
     start_date="2025-10-01",
@@ -331,14 +322,13 @@ logs = client.get_audit_logs(
 
 for log in logs:
     print(f"{log.timestamp}: {log.user} {log.action} {log.secret_name}")
-```
+```text
+### Secret Rotation
 
-## Secret Rotation
-
-### Manual Rotation
+#### Manual Rotation
 
 ```python
-# Update secret value
+## Update secret value
 client.update_secret(
     secret_name="ANTHROPIC_API_KEY",
     secret_value="new-api-key",
@@ -346,10 +336,9 @@ client.update_secret(
     environment="production"
 )
 
-# Application automatically picks up new value on next fetch
-```
-
-### Automatic Rotation
+## Application automatically picks up new value on next fetch
+```text
+#### Automatic Rotation
 
 ```python
 import schedule
@@ -368,18 +357,17 @@ def rotate_jwt_secret():
 
     print(f"Rotated JWT secret at {datetime.now()}")
 
-# Schedule weekly rotation
+## Schedule weekly rotation
 schedule.every().sunday.at("02:00").do(rotate_jwt_secret)
 
 while True:
     schedule.run_pending()
     time.sleep(3600)
-```
-
-### Zero-Downtime Rotation
+```text
+#### Zero-Downtime Rotation
 
 ```python
-# 1. Add new secret with version suffix
+## 1. Add new secret with version suffix
 client.create_secret(
     secret_name="ANTHROPIC_API_KEY_V2",
     secret_value="new-key",
@@ -387,17 +375,16 @@ client.create_secret(
     environment="production"
 )
 
-# 2. Deploy application using new secret
+## 2. Deploy application using new secret
 
-# 3. Delete old secret
+## 3. Delete old secret
 client.delete_secret(
     secret_name="ANTHROPIC_API_KEY_V1",
     project_id=project_id,
     environment="production"
 )
-```
-
-## Best Practices
+```text
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Never Commit Secrets" icon="ban">
@@ -412,7 +399,7 @@ client.delete_secret(
 
     # Scan for leaked secrets
     git secrets --scan
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Service Accounts" icon="robot">
@@ -439,7 +426,7 @@ client.delete_secret(
         name="ops",
         permissions=["read", "write"]
     )
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Rotate Regularly" icon="rotate">
@@ -465,18 +452,18 @@ client.delete_secret(
     for log in logs:
         if log.action == "delete" or log.failed_attempts > 3:
             send_alert(log)
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Migration from .env Files
+### Migration from .env Files
 
 <Steps>
   <Step title="Export Secrets">
     ```bash
     # Extract from .env
     grep -v '^#' .env | grep -v '^$' > secrets.txt
-    ```
+    ```xml
   </Step>
 
   <Step title="Import to Infisical">
@@ -491,7 +478,7 @@ client.delete_secret(
                 project_id=project_id,
                 environment="production"
             )
-    ```
+    ```sql
   </Step>
 
   <Step title="Update Application">
@@ -503,18 +490,18 @@ client.delete_secret(
     echo "INFISICAL_CLIENT_ID=..." > .env
     echo "INFISICAL_CLIENT_SECRET=..." >> .env
     echo "INFISICAL_PROJECT_ID=..." >> .env
-    ```
+    ```xml
   </Step>
 
   <Step title="Verify">
     ```bash
     # Test application loads secrets
     python -c "from mcp_server_langgraph.config import settings; print(settings.anthropic_api_key[:10])"
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Authentication failed">
@@ -527,7 +514,7 @@ client.delete_secret(
     curl -X POST https://app.infisical.com/api/v1/auth/universal-auth/login \
       -H "Content-Type: application/json" \
       -d "{\"clientId\":\"$INFISICAL_CLIENT_ID\",\"clientSecret\":\"$INFISICAL_CLIENT_SECRET\"}"
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Secret not found">
@@ -544,7 +531,7 @@ client.delete_secret(
         environment="production"
     )
     print([s.secret_name for s in secrets])
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Slow secret loading">
@@ -567,7 +554,7 @@ client.delete_secret(
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">

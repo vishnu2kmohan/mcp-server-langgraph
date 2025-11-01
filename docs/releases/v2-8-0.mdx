@@ -10,7 +10,7 @@ icon: 'tag'
   This is the current production release with significant test coverage improvements and enhanced infrastructure.
 </Info>
 
-## Overview
+### Overview
 
 Version 2.8.0 delivers **massive test coverage improvements** and **production-ready test infrastructure**, increasing overall coverage from **50% to 85%+** with 61 new comprehensive test cases:
 
@@ -19,9 +19,9 @@ Version 2.8.0 delivers **massive test coverage improvements** and **production-r
 3. ✅ **61 New Tests** - Complete coverage of search tools, agents, and server
 4. 📚 **25 Tests Enabled** - Previously-skipped tests now functional
 
-## What's New
+### What's New
 
-### 🧪 Test Coverage Improvements
+#### 🧪 Test Coverage Improvements
 
 **Overall improvement**: 50% → 85%+ coverage with 61 new comprehensive tests
 
@@ -102,7 +102,7 @@ Version 2.8.0 delivers **massive test coverage improvements** and **production-r
   </Accordion>
 </AccordionGroup>
 
-### 🏗️ Test Infrastructure
+#### 🏗️ Test Infrastructure
 
 <AccordionGroup>
   <Accordion title="Docker Compose Test Environment" icon="docker">
@@ -196,7 +196,7 @@ Version 2.8.0 delivers **massive test coverage improvements** and **production-r
   </Accordion>
 </AccordionGroup>
 
-### 📚 Documentation
+#### 📚 Documentation
 
 <AccordionGroup>
   <Accordion title="TESTING_QUICK_START.md (NEW)" icon="book">
@@ -255,9 +255,9 @@ Version 2.8.0 delivers **massive test coverage improvements** and **production-r
   </Accordion>
 </AccordionGroup>
 
-## 📊 Metrics & Impact
+### 📊 Metrics & Impact
 
-### Test Coverage Summary
+#### Test Coverage Summary
 
 | Module | Before | After | Improvement | Tests Added |
 |--------|--------|-------|-------------|-------------|
@@ -266,7 +266,7 @@ Version 2.8.0 delivers **massive test coverage improvements** and **production-r
 | server_streamable.py | 41% | ~80% | **+39%** | 40 |
 | **Overall** | ~75% | ~85% | **+10%** | **61** |
 
-### Tests Status
+#### Tests Status
 
 - **Previously Skipped**: 31 tests
 - **Now Enabled**: 25 tests (81%)
@@ -274,16 +274,16 @@ Version 2.8.0 delivers **massive test coverage improvements** and **production-r
 - **New Tests**: 61 comprehensive tests
 - **Total Active Tests**: 498+ (437 + 61)
 
-### Code Quality
+#### Code Quality
 
 - ✅ **100% test pass rate** maintained
 - ✅ **Zero regressions** introduced
 - ✅ **CI/CD integration** complete
 - ✅ **Coverage threshold**: 80% enforced
 
-## 🚀 Migration Guide
+### 🚀 Migration Guide
 
-### Upgrading from v2.7.0
+#### Upgrading from v2.7.0
 
 **No breaking changes** - fully backward compatible. This release focuses on testing infrastructure improvements.
 
@@ -326,9 +326,9 @@ Version 2.8.0 delivers **massive test coverage improvements** and **production-r
   </Step>
 </Steps>
 
-## 🔧 Technical Details
+### 🔧 Technical Details
 
-### Test Infrastructure Architecture
+#### Test Infrastructure Architecture
 
 ```mermaid
 graph TB
@@ -360,25 +360,25 @@ graph TB
     class I,J,K serviceStyle
 ```
 
-### Coverage Thresholds
+#### Coverage Thresholds
 
 ```bash
-# pytest.ini configuration
+## pytest.ini configuration
 [pytest]
 addopts =
     --cov=src/mcp_server_langgraph
     --cov-report=term-missing
     --cov-fail-under=80
 
-# Coverage targets
+## Coverage targets
 - Critical modules: 85%+
 - Overall project: 80%+
 - New code: 90%+
 ```
 
-## 🎯 Future Improvements
+### 🎯 Future Improvements
 
-### Planned for v2.9.0
+#### Planned for v2.9.0
 
 1. **GDPR Endpoint Testing**
    - Mock external compliance services
@@ -395,13 +395,13 @@ addopts =
    - Improve test quality
    - Target: 80%+ mutation score
 
-## 📖 Related Documentation
+### 📖 Related Documentation
 
 - [Testing Guide](/advanced/testing)
 - [Integration Testing](/development/integration-testing)
 - [Property-Based Testing Strategy](/architecture/adr-0016-property-based-testing-strategy)
 
-## 🔗 References
+### 🔗 References
 
 - [GitHub Release v2.8.0](https://github.com/vishnu2kmohan/mcp-server-langgraph/releases/tag/v2.8.0)
 - [Full Changelog](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHANGELOG.md#280---2025-10-20)

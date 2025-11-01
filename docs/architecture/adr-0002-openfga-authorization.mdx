@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 2. Fine-Grained Authorization with O
 icon: 'file-lines'
 ---
 
-# 2. Fine-Grained Authorization with OpenFGA
-
 Date: 2025-10-11
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 The MCP server needs enterprise-grade authorization to control who can:
 - Execute specific tools
@@ -32,7 +30,7 @@ Traditional RBAC (Role-Based Access Control) is too coarse-grained. We need to e
 - "User Alice is a viewer of Conversation Z"
 - "Admins of Org A inherit all permissions"
 
-## Decision
+### Decision
 
 We will use **OpenFGA** (Zanzibar-inspired authorization) for fine-grained access control.
 
@@ -49,9 +47,9 @@ Implementation in `openfga_client.py`:
 - Relations: member, admin, executor, viewer, editor, owner
 - Integration with AuthMiddleware
 
-## Consequences
+### Consequences
 
-### Positive Consequences
+#### Positive Consequences
 
 - **Fine-Grained Control**: Express complex permissions easily
 - **Scalability**: Proven to handle Google-scale workloads
@@ -60,7 +58,7 @@ Implementation in `openfga_client.py`:
 - **Audit Trail**: All authorization decisions logged
 - **Industry Standard**: Based on proven Zanzibar architecture
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Complexity**: Requires understanding relationship-based authz
 - **Infrastructure**: Needs OpenFGA server running
@@ -69,14 +67,14 @@ Implementation in `openfga_client.py`:
 - **Setup Overhead**: Initial model configuration required
 - **Latency**: External API call for each check (mitigated with caching)
 
-### Neutral Consequences
+#### Neutral Consequences
 
 - **Fallback Mode**: System works without OpenFGA (degraded permissions)
 - **Migration**: Moving from simple to complex permissions is gradual
 
-## Alternatives Considered
+### Alternatives Considered
 
-### 1. Simple RBAC (Role-Based Access Control)
+#### 1. Simple RBAC (Role-Based Access Control)
 
 **Description**: Assign roles to users, roles have permissions
 
@@ -84,8 +82,7 @@ Implementation in `openfga_client.py`:
 ```python
 if user.has_role('admin') or user.has_role('premium'):
     allow_tool_execution()
-```
-
+```text
 **Pros**:
 - Simple to understand
 - No external dependencies
@@ -100,7 +97,7 @@ if user.has_role('admin') or user.has_role('premium'):
 
 **Why Rejected**: Insufficient for production requirements
 
-### 2. ABAC (Attribute-Based Access Control)
+#### 2. ABAC (Attribute-Based Access Control)
 
 **Description**: Define policies based on attributes (user.department == resource.department)
 
@@ -117,7 +114,7 @@ if user.has_role('admin') or user.has_role('premium'):
 
 **Why Rejected**: More complex without clear benefits over OpenFGA
 
-### 3. Casbin
+#### 3. Casbin
 
 **Description**: Another relationship-based authorization framework
 
@@ -134,7 +131,7 @@ if user.has_role('admin') or user.has_role('premium'):
 
 **Why Rejected**: OpenFGA has stronger industry backing
 
-### 4. Cloud Provider IAM (AWS IAM, Google Cloud IAM)
+#### 4. Cloud Provider IAM (AWS IAM, Google Cloud IAM)
 
 **Description**: Use cloud provider's built-in IAM
 
@@ -151,7 +148,7 @@ if user.has_role('admin') or user.has_role('premium'):
 
 **Why Rejected**: Too cloud-specific, not portable
 
-### 5. Custom Authorization Logic
+#### 5. Custom Authorization Logic
 
 **Description**: Build permission checks in application code
 
@@ -169,9 +166,9 @@ if user.has_role('admin') or user.has_role('premium'):
 
 **Why Rejected**: Not sustainable for complex permissions
 
-## Implementation Details
+### Implementation Details
 
-### Authorization Model
+#### Authorization Model
 
 ```yaml
 model
@@ -195,32 +192,31 @@ type conversation
     define owner: [user]
     define viewer: [user, user:*] or owner
     define editor: [user] or owner
-```
-
-### Usage
+```text
+#### Usage
 
 ```python
-# Check permission
+## Check permission
 authorized = await auth.authorize(
     user_id="user:alice",
     relation="executor",
     resource="tool:chat"
 )
 
-# Write relationship
+## Write relationship
 await openfga.write_tuples([
     {"user": "user:alice", "relation": "admin", "object": "organization:acme"}
 ])
 ```
 
-### Fallback Strategy
+#### Fallback Strategy
 
 When OpenFGA unavailable:
 - Fail-open (default): Allow with warning
 - Fail-closed (strict mode): Deny all access
 - Configurable via `openfga_strict_mode` feature flag
 
-## References
+### References
 
 - [OpenFGA Documentation](https://openfga.dev/)
 - [Google Zanzibar Paper](https://research.google/pubs/pub48190/)

@@ -5,15 +5,13 @@ icon: 'file-lines'
 ---
 
 
-# 38. SCIM 2.0 Implementation Approach
-
 Date: 2025-01-28
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 External identity management systems (Azure AD, Okta, Google Workspace, OneLogin) need to programmatically provision/deprovision users and groups. Industry standard is SCIM 2.0 (System for Cross-domain Identity Management), but Keycloak does not have native SCIM 2.0 server support.
 
@@ -26,19 +24,19 @@ Requirements:
 
 Keycloak gap: No built-in SCIM 2.0 server endpoints.
 
-## Decision
+### Decision
 
 Implement **FastAPI SCIM 2.0 endpoints** that bridge to Keycloak Admin API, providing standard SCIM interface while maintaining Keycloak as authoritative identity store.
 
-### Architecture
+#### Architecture
 
-```
+```text
 External System (SCIM Client) → MCP Server SCIM Endpoints
   → Keycloak Admin API → Keycloak (User Storage)
   → Sync to OpenFGA (via existing sync_user_to_openfga)
 ```
 
-### SCIM 2.0 Provisioning Flow
+#### SCIM 2.0 Provisioning Flow
 
 ```mermaid
 sequenceDiagram
@@ -101,8 +99,7 @@ sequenceDiagram
 
     Note over IDP: User no longer has access
 
-```
-
+```text
 **Bulk Provisioning (Initial Sync)**:
 ```mermaid
 sequenceDiagram
@@ -126,9 +123,8 @@ sequenceDiagram
 
     Note over SCIM: Idempotent - safe to retry
 
-```
-
-### Core Principles
+```sql
+#### Core Principles
 
 1. **SCIM 2.0 Compliance**: Implement RFC 7643/7644 endpoints
 2. **Keycloak Bridge**: All operations proxy to Keycloak Admin API
@@ -137,7 +133,7 @@ sequenceDiagram
 5. **Idempotent Operations**: Multiple creates/updates safe
 6. **Event-Driven**: User events trigger webhooks/notifications
 
-### SCIM Endpoints
+#### SCIM Endpoints
 
 **Users**:
 - POST `/scim/v2/Users` - Create user
@@ -152,7 +148,7 @@ sequenceDiagram
 - GET `/scim/v2/Groups/{id}` - Get group
 - PATCH `/scim/v2/Groups/{id}` - Update group membership
 
-### SCIM Schema
+#### SCIM Schema
 
 **Core User Schema**:
 ```json
@@ -164,8 +160,7 @@ sequenceDiagram
   "active": true,
   "groups": [{"value": "engineering", "display": "Engineering"}]
 }
-```
-
+```text
 **Enterprise Extension**:
 ```json
 {
@@ -178,51 +173,49 @@ sequenceDiagram
     "manager": {"value": "user:bob"}
   }
 }
-```
-
-### Configuration
+```text
+#### Configuration
 
 ```bash
-# SCIM Server
+## SCIM Server
 SCIM_ENABLED=true
 SCIM_BASE_URL=https://api.example.com/scim/v2
 SCIM_AUTHENTICATION=jwt  # Require JWT tokens
 
-# Provisioning
+## Provisioning
 SCIM_AUTO_SYNC_TO_OPENFGA=true
 SCIM_DEFAULT_ROLES=["user"]  # Default roles for new users
 SCIM_SEND_WELCOME_EMAIL=false
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive Consequences
+#### Positive Consequences
 - Standard SCIM 2.0 interface (works with all SCIM clients)
 - Keycloak remains authoritative (no duplicate identity stores)
 - Automatic OpenFGA synchronization
 - Audit trail (all changes via Keycloak Admin API)
 - Deprovisioning support (disable users)
 
-### Negative Consequences
+#### Negative Consequences
 - Custom implementation (not standard Keycloak feature)
 - Maintenance burden (SCIM spec changes)
 - Keycloak Admin API dependency (performance)
 - No built-in bulk operations (must implement)
 
-### Mitigation Strategies
+#### Mitigation Strategies
 - Use FastAPI OpenAPI for auto-documentation
 - Comprehensive test suite with SCIM client simulation
 - Asynchronous provisioning (queue bulk operations)
 - Monitor Keycloak Admin API latency
 
-## Alternatives Considered
+### Alternatives Considered
 
 1. **Keycloak SCIM Extension**: Rejected - community extensions unmaintained
 2. **External SCIM Bridge Service**: Rejected - additional microservice overhead
 3. **Direct Keycloak Admin API**: Rejected - not SCIM standard, client compatibility
 4. **Manual Provisioning**: Rejected - doesn't scale for large orgs
 
-## Implementation
+### Implementation
 
 **SCIM Endpoints** (`src/mcp_server_langgraph/api/scim.py`):
 ```python
@@ -277,8 +270,7 @@ async def deprovision_user(user_id: str, keycloak: KeycloakClient = Depends(...)
     await openfga_client.delete_tuples_for_user(f"user:{user_id}")
 
     return {"status": "deprovisioned"}
-```
-
+```text
 **SCIM Schema Validation** (`src/mcp_server_langgraph/scim/schema.py`):
 ```python
 def validate_scim_user(data: dict) -> bool:
@@ -288,7 +280,7 @@ def validate_scim_user(data: dict) -> bool:
     # Additional validation...
 ```
 
-## References
+### References
 
 - SCIM API: `src/mcp_server_langgraph/api/scim.py` (to be created)
 - Schema: `src/mcp_server_langgraph/scim/schema.py` (to be created)

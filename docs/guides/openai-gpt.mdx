@@ -4,7 +4,7 @@ description: 'Configure OpenAI GPT models including GPT-4o, GPT-4 Turbo, and GPT
 icon: 'robot'
 ---
 
-## Overview
+### Overview
 
 OpenAI provides industry-leading language models including GPT-4o (multimodal), GPT-4 Turbo, and GPT-3.5 Turbo. This guide covers setup, configuration, and best practices for using OpenAI models with the MCP Server.
 
@@ -12,7 +12,7 @@ OpenAI provides industry-leading language models including GPT-4o (multimodal), 
 GPT-4o combines GPT-4-level intelligence with multimodal capabilities (text, vision, audio) at half the price of GPT-4 Turbo.
 </Info>
 
-## Available Models
+### Available Models
 
 | Model | Context Window | Use Case | Pricing (per 1M tokens) |
 |-------|---------------|----------|-------------------------|
@@ -24,7 +24,7 @@ GPT-4o combines GPT-4-level intelligence with multimodal capabilities (text, vis
 
 **Recommended**: `gpt-4o` for production (best performance/cost ratio)
 
-## Quick Start
+### Quick Start
 
 <Steps>
   <Step title="Get API Key">
@@ -44,15 +44,14 @@ GPT-4o combines GPT-4-level intelligence with multimodal capabilities (text, vis
     INFISICAL_PROJECT_ID=your-project-id
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-client-secret
-    ```
-
+    ```text
     **Using Environment Variables** (Development only):
     ```bash
     # .env
     LLM_PROVIDER=openai
     OPENAI_API_KEY=sk-...your-key
     LLM_MODEL_NAME=gpt-4o
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -66,13 +65,13 @@ GPT-4o combines GPT-4-level intelligence with multimodal capabilities (text, vis
 
     response = await llm.ainvoke("Explain machine learning in simple terms")
     print(response.content)
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Configuration Options
+### Configuration Options
 
-### Basic Configuration
+#### Basic Configuration
 
 ```python
 from mcp_server_langgraph.llm.factory import LLMFactory
@@ -85,12 +84,11 @@ llm = LLMFactory(
     timeout=60
 )
 
-# Invoke
+## Invoke
 response = await llm.ainvoke("What is quantum computing?")
 print(response.content)
-```
-
-### Advanced Configuration
+```text
+#### Advanced Configuration
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -121,9 +119,8 @@ llm = ChatOpenAI(
         "OpenAI-Beta": "assistants=v2"
     }
 )
-```
-
-### Model Selection Strategy
+```text
+#### Model Selection Strategy
 
 ```python
 def select_openai_model(task_type: str, complexity: str) -> str:
@@ -148,16 +145,15 @@ def select_openai_model(task_type: str, complexity: str) -> str:
     # Default
     return "gpt-4o"
 
-# Use dynamically
+## Use dynamically
 llm = LLMFactory(
     provider="openai",
     model_name=select_openai_model(task_type="chat", complexity="medium")
 )
-```
+```text
+### Features
 
-## Features
-
-### Function Calling (Tools)
+#### Function Calling (Tools)
 
 ```python
 from langchain_core.tools import tool
@@ -184,7 +180,7 @@ def search_web(query: str) -> str:
     # Implementation
     return f"Search results for: {query}"
 
-# Create agent with tools
+## Create agent with tools
 llm_with_tools = llm.bind_tools([get_current_weather, search_web])
 
 agent = create_react_agent(
@@ -192,25 +188,24 @@ agent = create_react_agent(
     tools=[get_current_weather, search_web]
 )
 
-# Run agent
+## Run agent
 result = await agent.ainvoke({
     "messages": [("user", "What's the weather in Tokyo and search for recent AI news")]
 })
 
 print(result["messages"][-1].content)
-```
-
-### Vision (GPT-4o, GPT-4 Turbo)
+```text
+#### Vision (GPT-4o, GPT-4 Turbo)
 
 ```python
 import base64
 from langchain_core.messages import HumanMessage
 
-# Load image
+## Load image
 with open("chart.png", "rb") as f:
     image_data = base64.b64encode(f.read()).decode()
 
-# Create vision message
+## Create vision message
 message = HumanMessage(
     content=[
         {
@@ -229,9 +224,8 @@ message = HumanMessage(
 
 response = await llm.ainvoke([message])
 print(response.content)
-```
-
-### Structured Output (JSON Mode)
+```text
+#### Structured Output (JSON Mode)
 
 ```python
 from pydantic import BaseModel, Field
@@ -243,7 +237,7 @@ class SentimentAnalysis(BaseModel):
     confidence: float = Field(description="Confidence score 0-1")
     key_phrases: List[str] = Field(description="Key phrases that influenced the sentiment")
 
-# Force structured output
+## Force structured output
 structured_llm = llm.with_structured_output(SentimentAnalysis)
 
 text = "I absolutely love this product! It exceeded all my expectations."
@@ -253,24 +247,23 @@ response = await structured_llm.ainvoke(
 )
 
 print(response.model_dump_json(indent=2))
-# Output:
-# {
-#   "sentiment": "positive",
-#   "confidence": 0.95,
-#   "key_phrases": ["absolutely love", "exceeded expectations"]
-# }
-```
-
-### Streaming
+## Output:
+## {
+## "sentiment": "positive",
+## "confidence": 0.95,
+## "key_phrases": ["absolutely love", "exceeded expectations"]
+## }
+```text
+#### Streaming
 
 ```python
-# Stream token-by-token
+## Stream token-by-token
 async def stream_response(query: str):
     async for chunk in llm.astream(query):
         print(chunk.content, end="", flush=True)
         yield chunk.content
 
-# Use in API
+## Use in API
 from fastapi.responses import StreamingResponse
 
 @app.post("/message/stream")
@@ -279,14 +272,13 @@ async def stream_message(request: MessageRequest):
         stream_response(request.query),
         media_type="text/event-stream"
     )
-```
-
-### System Prompts
+```text
+#### System Prompts
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 
-# Define system prompt
+## Define system prompt
 prompt = ChatPromptTemplate.from_messages([
     ("system", """You are a helpful AI assistant specializing in {domain}.
 
@@ -300,12 +292,12 @@ Current date: {current_date}"""),
     ("user", "{query}")
 ])
 
-# Create chain
+## Create chain
 from datetime import datetime
 
 chain = prompt | llm
 
-# Run
+## Run
 response = await chain.ainvoke({
     "domain": "software engineering",
     "style": "technical but accessible",
@@ -314,12 +306,11 @@ response = await chain.ainvoke({
 })
 
 print(response.content)
-```
-
-### Response Format (JSON Mode)
+```text
+#### Response Format (JSON Mode)
 
 ```python
-# Force JSON output
+## Force JSON output
 llm_json = ChatOpenAI(
     model="gpt-4o",
     model_kwargs={"response_format": {"type": "json_object"}}
@@ -332,12 +323,11 @@ response = await llm_json.ainvoke(
 import json
 data = json.loads(response.content)
 print(data)
-# Output: {"name": "John Smith", "age": 35, "occupation": "software engineer"}
-```
+## Output: {"name": "John Smith", "age": 35, "occupation": "software engineer"}
+```text
+### Production Deployment
 
-## Production Deployment
-
-### Kubernetes Configuration
+#### Kubernetes Configuration
 
 ```yaml
 apiVersion: apps/v1
@@ -385,9 +375,8 @@ spec:
           limits:
             cpu: 4000m
             memory: 4Gi
-```
-
-### Rate Limiting
+```text
+#### Rate Limiting
 
 ```python
 from slowapi import Limiter
@@ -395,10 +384,10 @@ from slowapi.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
 
-# OpenAI rate limits (varies by tier):
-# Free tier: 3 RPM, 40K TPM
-# Tier 1: 500 RPM, 200K TPM
-# Tier 2: 5000 RPM, 2M TPM
+## OpenAI rate limits (varies by tier):
+## Free tier: 3 RPM, 40K TPM
+## Tier 1: 500 RPM, 200K TPM
+## Tier 2: 5000 RPM, 2M TPM
 
 @app.post("/message")
 @limiter.limit("100/minute")  # Conservative
@@ -406,13 +395,12 @@ async def send_message(request: Request):
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
 
-# Per-user rate limiting
+## Per-user rate limiting
 @limiter.limit("200/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```
-
-### Error Handling
+```text
+#### Error Handling
 
 ```python
 from openai import (
@@ -453,7 +441,7 @@ async def call_openai_with_retry(query: str):
         else:
             return None  # Client error, don't retry
 
-# Use with fallback
+## Use with fallback
 async def call_with_fallback(query: str):
     try:
         return await call_openai_with_retry(query)
@@ -463,14 +451,13 @@ async def call_with_fallback(query: str):
         # Fallback to another provider
         fallback_llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
         return await fallback_llm.ainvoke(query)
-```
+```text
+### Performance Optimization
 
-## Performance Optimization
-
-### Batching
+#### Batching
 
 ```python
-# Process multiple requests efficiently
+## Process multiple requests efficiently
 import asyncio
 
 queries = [
@@ -479,7 +466,7 @@ queries = [
     "What is FastAPI?"
 ]
 
-# Concurrent processing
+## Concurrent processing
 async def process_batch(queries: List[str]):
     tasks = [llm.ainvoke(q) for q in queries]
     responses = await asyncio.gather(*tasks)
@@ -488,20 +475,19 @@ async def process_batch(queries: List[str]):
 results = await process_batch(queries)
 for query, response in zip(queries, results):
     print(f"Q: {query}\nA: {response.content}\n")
-```
-
-### Token Management
+```text
+#### Token Management
 
 ```python
 import tiktoken
 
-# Count tokens (accurate for OpenAI)
+## Count tokens (accurate for OpenAI)
 def count_tokens(text: str, model: str = "gpt-4o") -> int:
     """Count tokens using tiktoken"""
     encoding = tiktoken.encoding_for_model(model)
     return len(encoding.encode(text))
 
-# Truncate to fit context
+## Truncate to fit context
 def truncate_to_tokens(text: str, max_tokens: int, model: str = "gpt-4o") -> str:
     """Truncate text to fit token limit"""
     encoding = tiktoken.encoding_for_model(model)
@@ -514,23 +500,22 @@ def truncate_to_tokens(text: str, max_tokens: int, model: str = "gpt-4o") -> str
     truncated_tokens = tokens[:max_tokens]
     return encoding.decode(truncated_tokens)
 
-# Use before sending
+## Use before sending
 query = truncate_to_tokens(long_query, max_tokens=120000)  # Leave room for response
 response = await llm.ainvoke(query)
-```
-
-### Caching
+```text
+#### Caching
 
 ```python
 from functools import lru_cache
 
-# Cache responses for identical queries
+## Cache responses for identical queries
 @lru_cache(maxsize=1000)
 async def cached_llm_call(query: str) -> str:
     response = await llm.ainvoke(query)
     return response.content
 
-# Or use Redis for distributed caching
+## Or use Redis for distributed caching
 import hashlib
 import json
 
@@ -550,14 +535,13 @@ async def call_with_redis_cache(query: str):
     await redis.setex(cache_key, 3600, json.dumps(response.content))
 
     return response.content
-```
+```text
+### Cost Optimization
 
-## Cost Optimization
-
-### Model Selection
+#### Model Selection
 
 ```python
-# Use cheaper model for simple tasks
+## Use cheaper model for simple tasks
 def get_optimal_model(complexity: str) -> str:
     if complexity == "simple":
         return "gpt-4o-mini"  # $0.15/$0.60 per 1M tokens
@@ -570,14 +554,13 @@ llm = LLMFactory(
     provider="openai",
     model_name=get_optimal_model(analyze_complexity(query))
 )
-```
-
-### Usage Tracking
+```text
+#### Usage Tracking
 
 ```python
 from langchain.callbacks import get_openai_callback
 
-# Track usage and costs
+## Track usage and costs
 with get_openai_callback() as cb:
     response = await llm.ainvoke(query)
 
@@ -586,7 +569,7 @@ with get_openai_callback() as cb:
     print(f"Completion tokens: {cb.completion_tokens}")
     print(f"Total cost: ${cb.total_cost}")
 
-# Store metrics
+## Store metrics
 await store_usage_metrics({
     "model": "gpt-4o",
     "tokens": cb.total_tokens,
@@ -594,12 +577,11 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```
-
-### Budget Limits
+```text
+#### Budget Limits
 
 ```python
-# Enforce per-user budgets
+## Enforce per-user budgets
 async def check_budget(user_id: str, estimated_cost: float):
     """Check if user has budget remaining"""
     usage = await get_user_usage(user_id)
@@ -609,7 +591,7 @@ async def check_budget(user_id: str, estimated_cost: float):
             f"Budget exceeded: ${usage.total_cost:.2f} / ${usage.budget_limit:.2f}"
         )
 
-# Use before API call
+## Use before API call
 @app.post("/message")
 async def send_message(
     request: MessageRequest,
@@ -625,32 +607,30 @@ async def send_message(
     # Call LLM
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
-```
+```text
+### Monitoring
 
-## Monitoring
-
-### LangSmith Integration
+#### LangSmith Integration
 
 ```python
-# Automatic tracking with LangSmith
+## Automatic tracking with LangSmith
 import os
 
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "langgraph-openai"
 os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 
-# All LLM calls automatically tracked
+## All LLM calls automatically tracked
 response = await llm.ainvoke(query)
 
-# View traces at https://smith.langchain.com
-```
-
-### Custom Metrics
+## View traces at https://smith.langchain.com
+```text
+#### Custom Metrics
 
 ```python
 from prometheus_client import Counter, Histogram
 
-# Define metrics
+## Define metrics
 openai_requests = Counter(
     'openai_requests_total',
     'Total OpenAI API requests',
@@ -669,7 +649,7 @@ openai_tokens = Counter(
     ['model', 'type']  # type: input or output
 )
 
-# Track metrics
+## Track metrics
 import time
 
 async def call_openai_with_metrics(query: str):
@@ -707,9 +687,8 @@ async def call_openai_with_metrics(query: str):
     finally:
         duration = time.time() - start_time
         openai_latency.labels(model="gpt-4o").observe(duration)
-```
-
-## Troubleshooting
+```text
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Invalid API key">
@@ -730,7 +709,7 @@ async def call_openai_with_metrics(query: str):
     # 2. Revoke old key
     # 3. Create new key
     # 4. Update in Infisical
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Rate limit exceeded">
@@ -755,7 +734,7 @@ async def call_openai_with_metrics(query: str):
 
     # Request tier upgrade
     # https://platform.openai.com/account/billing/limits
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Context length exceeded">
@@ -773,7 +752,7 @@ async def call_openai_with_metrics(query: str):
 
     # Then use summary
     response = await llm.ainvoke(f"Analyze this summary:\n\n{summary}")
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Timeout errors">
@@ -801,7 +780,7 @@ async def call_openai_with_metrics(query: str):
   </Accordion>
 </AccordionGroup>
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Security" icon="shield">
@@ -841,7 +820,7 @@ async def call_openai_with_metrics(query: str):
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Multi-LLM Setup" icon="layer-group" href="/guides/multi-llm-setup">

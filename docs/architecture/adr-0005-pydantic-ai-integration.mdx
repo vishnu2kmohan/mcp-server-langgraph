@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 5. Type-Safe Agent Responses with Py
 icon: 'file-lines'
 ---
 
-# 5. Type-Safe Agent Responses with Pydantic AI
-
 Date: 2025-10-11
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 LLM agents face a fundamental challenge: **unstructured outputs**. LLMs return free-form text, but applications need:
 - Structured data (not raw strings)
@@ -28,21 +26,18 @@ Traditional approaches have limitations:
    response = llm.invoke("Route this message")
    if "search" in response.lower():
        action = "use_tools"  # Fragile!
-   ```
-
+   ```text
 2. **JSON Output Parsing**
    ```python
    response = llm.invoke("Return JSON: {action: ...}")
    data = json.loads(response)  # May fail!
-   ```
-
+   ```text
 3. **Function Calling** (Provider-specific)
    ```python
    # Only works with some providers
    tools = [{"name": "route", "schema": ...}]
    response = llm.invoke(messages, tools=tools)
-   ```
-
+   ```yaml
 Problems:
 - No type safety (strings everywhere)
 - Manual validation required
@@ -57,7 +52,7 @@ For a production agent, we need:
 - **Graceful fallback**: Degrade to keyword matching if AI fails
 - **Structured responses**: Pydantic models, not strings
 
-## Decision
+### Decision
 
 We will use **Pydantic AI** for type-safe agent routing and response generation.
 
@@ -75,9 +70,9 @@ Implementation:
 - `llm_validators.py`: Generic validation framework
 - `mcp_streaming.py`: Type-safe streaming
 
-## Consequences
+### Consequences
 
-### Positive Consequences
+#### Positive Consequences
 
 - **Type Safety**: Compile-time checking of LLM outputs
 - **Confidence Tracking**: Know when AI is uncertain
@@ -87,7 +82,7 @@ Implementation:
 - **Structured Data**: Pydantic models instead of strings
 - **Testing**: Easier to mock and test structured outputs
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Latency**: +50-200ms for LLM-based routing vs keywords
 - **Complexity**: Additional abstraction layer
@@ -95,22 +90,21 @@ Implementation:
 - **Token Cost**: Extra tokens for structured outputs
 - **Learning Curve**: Team must understand Pydantic AI
 
-### Neutral Consequences
+#### Neutral Consequences
 
 - **Fallback Required**: Must implement keyword fallback
 - **Provider Compatibility**: Works with most providers, not all
 
-## Alternatives Considered
+### Alternatives Considered
 
-### 1. Keyword-Based Routing Only
+#### 1. Keyword-Based Routing Only
 
 **Description**: Simple string matching for routing
 
 ```python
 if "search" in message.lower():
     action = "use_tools"
-```
-
+```javascript
 **Pros**:
 - Instant (no LLM call)
 - Free (no tokens)
@@ -124,7 +118,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Too simplistic for production quality
 
-### 2. LangChain Structured Output
+#### 2. LangChain Structured Output
 
 **Description**: Use LangChain's with_structured_output
 
@@ -141,7 +135,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Pydantic AI more powerful and flexible
 
-### 3. OpenAI Function Calling
+#### 3. OpenAI Function Calling
 
 **Description**: Use native function calling APIs
 
@@ -158,7 +152,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Not compatible with multi-provider strategy
 
-### 4. Instructor Library
+#### 4. Instructor Library
 
 **Description**: Use Instructor for structured outputs
 
@@ -175,7 +169,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Pydantic AI has better features
 
-### 5. Manual JSON + Pydantic Validation
+#### 5. Manual JSON + Pydantic Validation
 
 **Description**: Ask LLM for JSON, validate with Pydantic
 
@@ -191,18 +185,17 @@ if "search" in message.lower():
 
 **Why Rejected**: Pydantic AI automates this better
 
-## Implementation Details
+### Implementation Details
 
-### Routing Decision Model
+#### Routing Decision Model
 
 ```python
 class RoutingDecision(BaseModel):
     action: Literal["use_tools", "respond", "end"]
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning: str
-```
-
-### Response Model
+```text
+#### Response Model
 
 ```python
 class AgentResponse(BaseModel):
@@ -210,19 +203,17 @@ class AgentResponse(BaseModel):
     confidence: float
     requires_clarification: bool
     sources: List[str]
-```
-
-### Usage in Agent
+```text
+#### Usage in Agent
 
 ```python
-# src/mcp_server_langgraph/core/agent.py
+## src/mcp_server_langgraph/core/agent.py
 decision = await pydantic_agent.route_message(message)
-# decision.action: "use_tools" (typed!)
-# decision.confidence: 0.92
-# decision.reasoning: "User explicitly requested search"
-```
-
-### Fallback Logic
+## decision.action: "use_tools" (typed!)
+## decision.confidence: 0.92
+## decision.reasoning: "User explicitly requested search"
+```text
+#### Fallback Logic
 
 ```python
 try:
@@ -231,22 +222,21 @@ except Exception:
     # Fallback to keyword matching
     decision = keyword_based_routing(message)
     decision.confidence = 0.5
-```
-
-### Confidence Threshold
+```text
+#### Confidence Threshold
 
 ```python
-# feature_flags.py
+## feature_flags.py
 pydantic_ai_confidence_threshold: float = 0.7
 
-# Only trust high-confidence decisions
+## Only trust high-confidence decisions
 if decision.confidence >= threshold:
     use_pydantic_ai_decision()
 else:
     use_fallback()
 ```
 
-## Performance Impact
+### Performance Impact
 
 Benchmarks on routing latency:
 
@@ -263,7 +253,7 @@ Benchmarks on routing latency:
 - Use confidence threshold to skip uncertain routes
 - Async processing (doesn't block user)
 
-## References
+### References
 
 - [Pydantic AI Documentation](https://ai.pydantic.dev/)
 - [Type Safety Guide](/architecture/adr-0014-pydantic-type-safety)

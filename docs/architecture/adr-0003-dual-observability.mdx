@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 3. Dual Observability: OpenTelemetry
 icon: 'file-lines'
 ---
 
-# 3. Dual Observability: OpenTelemetry + LangSmith
-
 Date: 2025-10-11
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 Production systems require comprehensive observability to:
 - Debug issues quickly
@@ -38,7 +36,7 @@ For an LLM-powered MCP server, we have two distinct observability needs:
 
 No single tool excels at both. Using only one would sacrifice critical visibility in the other domain.
 
-## Decision
+### Decision
 
 We will implement a **dual observability strategy**:
 
@@ -60,9 +58,9 @@ Users can enable one or both based on their needs:
 - `OBSERVABILITY_BACKEND=langsmith`
 - `OBSERVABILITY_BACKEND=both` (production recommended)
 
-## Consequences
+### Consequences
 
-### Positive Consequences
+#### Positive Consequences
 
 - **Best of Both Worlds**: Infrastructure + AI observability
 - **Complete Visibility**: No blind spots in production
@@ -72,7 +70,7 @@ Users can enable one or both based on their needs:
 - **LLM Optimization**: LangSmith enables prompt engineering
 - **Cost Tracking**: Detailed token usage visibility
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Increased Complexity**: Two systems to configure and maintain
 - **Higher Infrastructure Cost**: Running both Jaeger and LangSmith
@@ -80,15 +78,15 @@ Users can enable one or both based on their needs:
 - **Data Duplication**: Some overlap in traced data
 - **Configuration Overhead**: Separate config for each system
 
-### Neutral Consequences
+#### Neutral Consequences
 
 - **Performance**: Minimal overhead (~1-2% with both enabled)
 - **Storage**: Increased log/trace storage requirements
 - **Vendor Risk**: LangSmith is commercial (OpenTelemetry is free)
 
-## Alternatives Considered
+### Alternatives Considered
 
-### 1. OpenTelemetry Only
+#### 1. OpenTelemetry Only
 
 **Description**: Use only OpenTelemetry for all observability
 
@@ -106,7 +104,7 @@ Users can enable one or both based on their needs:
 
 **Why Rejected**: Insufficient for LLM observability needs
 
-### 2. LangSmith Only
+#### 2. LangSmith Only
 
 **Description**: Use only LangSmith for all observability
 
@@ -124,7 +122,7 @@ Users can enable one or both based on their needs:
 
 **Why Rejected**: Insufficient for infrastructure observability
 
-### 3. Datadog or New Relic
+#### 3. Datadog or New Relic
 
 **Description**: Use commercial APM solution
 
@@ -141,7 +139,7 @@ Users can enable one or both based on their needs:
 
 **Why Rejected**: High cost, less specialized for LLMs
 
-### 4. Prometheus + Grafana Only
+#### 4. Prometheus + Grafana Only
 
 **Description**: Use metrics-focused stack
 
@@ -157,7 +155,7 @@ Users can enable one or both based on their needs:
 
 **Why Rejected**: Missing tracing and LLM insights
 
-### 5. Custom Logging Solution
+#### 5. Custom Logging Solution
 
 **Description**: Build custom observability
 
@@ -173,42 +171,39 @@ Users can enable one or both based on their needs:
 
 **Why Rejected**: Not feasible to replicate existing tools
 
-## Implementation Details
+### Implementation Details
 
-### OpenTelemetry Stack
+#### OpenTelemetry Stack
 
 ```python
-# observability.py
+## observability.py
 - Tracer: Distributed tracing
 - Meter: Metrics collection
 - Logger: Structured logging with trace context
 
-# Exporters:
+## Exporters:
 - OTLP → Jaeger (traces)
 - OTLP → Prometheus (metrics)
 - Console (development)
-```
-
-### LangSmith Integration
+```text
+#### LangSmith Integration
 
 ```python
-# langsmith_src/mcp_server_langgraph/core/config.py
+## langsmith_src/mcp_server_langgraph/core/config.py
 - Conditional initialization
 - Automatic trace context
 - Token usage tracking
 - Run metadata tagging
-```
-
-### Configuration
+```text
+#### Configuration
 
 ```python
-# src/mcp_server_langgraph/core/config.py
+## src/mcp_server_langgraph/core/config.py
 observability_backend: str = "both"  # opentelemetry, langsmith, both
 langsmith_api_key: Optional[str] = None
 langsmith_tracing: bool = False
-```
-
-### Docker Compose Stack
+```text
+#### Docker Compose Stack
 
 ```yaml
 services:
@@ -216,20 +211,19 @@ services:
   jaeger:          # Trace visualization
   prometheus:      # Metrics storage
   grafana:         # Unified dashboard
-```
-
-### Usage
+```text
+#### Usage
 
 ```python
-# Both systems instrumented automatically
+## Both systems instrumented automatically
 with tracer.start_as_current_span("agent.chat") as span:
     response = await llm.ainvoke(messages)
     # → Traced in both Jaeger and LangSmith
 ```
 
-## Metrics Tracked
+### Metrics Tracked
 
-### OpenTelemetry Metrics
+#### OpenTelemetry Metrics
 - `agent.tool.calls` - Tool invocation count
 - `agent.calls.successful` - Success rate
 - `agent.calls.failed` - Error rate
@@ -237,14 +231,14 @@ with tracer.start_as_current_span("agent.chat") as span:
 - `auth.failures` - Auth errors
 - `authz.failures` - Authorization denials
 
-### LangSmith Metrics
+#### LangSmith Metrics
 - Token usage per model
 - Cost per request
 - Prompt templates used
 - Model performance comparison
 - Chain execution paths
 
-## References
+### References
 
 - [OpenTelemetry Documentation](https://opentelemetry.io/)
 - [LangSmith Documentation](https://docs.smith.langchain.com/)

@@ -1,0 +1,945 @@
+---
+title: Configuration Files Reference
+description: 'Complete reference for all configuration files including LDAP mappers, OIDC providers, role mappings, and environment variables'
+icon: 'file-lines'
+---
+
+### Overview
+
+The MCP Server with LangGraph uses YAML configuration files and environment variables for flexible, declarative configuration. This reference documents all configuration files and their options.
+
+<CardGroup cols={2}>
+  <Card title=".env.example" icon="gear">
+    Complete environment variable template for service configuration
+  </Card>
+  <Card title="ldap_mappers.yaml" icon="sitemap">
+    LDAP/AD attribute mapping configuration
+  </Card>
+  <Card title="oidc_providers.yaml" icon="id-card">
+    OpenID Connect provider definitions
+  </Card>
+  <Card title="role_mappings.yaml" icon="shield">
+    Keycloak to OpenFGA role mapping rules
+  </Card>
+</CardGroup>
+
+---
+
+### .env.example
+
+Complete environment variable template for configuring the MCP Server with LangGraph.
+
+#### Location
+
+```
+/.env.example
+```
+
+#### Usage
+
+```bash
+## Copy template and customize
+cp .env.example .env
+
+## Edit values (NEVER commit .env to git)
+nano .env
+
+## Load for local development
+source .env
+python -m mcp_server_langgraph
+```
+
+#### Configuration Sections
+
+<AccordionGroup>
+  <Accordion title="Service Configuration">
+    ```bash
+    SERVICE_NAME=mcp-server-langgraph
+    SERVICE_VERSION=2.8.0
+    ENVIRONMENT=development  # development, staging, production
+    ```
+  </Accordion>
+
+  <Accordion title="LLM Provider Configuration">
+    ```bash
+    # Primary provider: google, anthropic, openai, azure, bedrock, ollama
+    LLM_PROVIDER=google
+
+    # Model settings
+    MODEL_NAME=gemini-2.5-flash
+    MODEL_TEMPERATURE=0.7
+    MODEL_MAX_TOKENS=8192
+    MODEL_TIMEOUT=60
+
+    # Fallback models (tries in order if primary fails)
+    ENABLE_FALLBACK=true
+    # FALLBACK_MODELS=["claude-haiku-4-5-20251001","gpt-4o"]
+    ```
+
+    **Supported Providers:**
+    - **google**: Gemini (AI Studio or Vertex AI)
+    - **anthropic**: Claude models
+    - **openai**: GPT-4, GPT-3.5
+    - **azure**: Azure OpenAI
+    - **bedrock**: AWS Bedrock
+    - **ollama**: Local models
+  </Accordion>
+
+  <Accordion title="API Keys (Provider-Specific)">
+    <Tabs>
+      <Tab title="Google Gemini">
+        ```bash
+        # Option 1: AI Studio (development)
+        GOOGLE_API_KEY=your-key-here
+        # Get from: https://aistudio.google.com/apikey
+
+        # Option 2: Vertex AI (production)
+        VERTEX_PROJECT=your-gcp-project-id
+        VERTEX_LOCATION=us-central1
+
+        # On GKE: Use Workload Identity (no credentials needed)
+        # Locally: Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
+        ```
+      </Tab>
+
+      <Tab title="Anthropic">
+        ```bash
+        ANTHROPIC_API_KEY=sk-ant-your-key-here
+        # Get from: https://console.anthropic.com/
+        ```
+      </Tab>
+
+      <Tab title="OpenAI">
+        ```bash
+        OPENAI_API_KEY=sk-your-key-here
+        # Get from: https://platform.openai.com/
+        ```
+      </Tab>
+
+      <Tab title="Azure OpenAI">
+        ```bash
+        AZURE_API_KEY=your-key-here
+        AZURE_API_BASE=https://your-resource.openai.azure.com
+        AZURE_DEPLOYMENT_NAME=gpt-4
+        ```
+      </Tab>
+
+      <Tab title="AWS Bedrock">
+        ```bash
+        AWS_ACCESS_KEY_ID=your-access-key
+        AWS_SECRET_ACCESS_KEY=your-secret-key
+        AWS_REGION=us-east-1
+        ```
+      </Tab>
+
+      <Tab title="Ollama">
+        ```bash
+        OLLAMA_BASE_URL=http://localhost:11434
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="Authentication & Authorization">
+    ```bash
+    # Auth Provider: inmemory, keycloak
+    AUTH_PROVIDER=inmemory
+
+    # Auth Mode: token (JWT), session
+    AUTH_MODE=token
+
+    # JWT Configuration
+    # ⚠️ PRODUCTION: Generate with: openssl rand -base64 32
+    JWT_SECRET_KEY=your-secret-key-change-in-production
+    JWT_ALGORITHM=HS256
+    JWT_EXPIRATION_SECONDS=3600
+
+    # OpenFGA (run setup_openfga.py to get IDs)
+    OPENFGA_API_URL=http://localhost:8080
+    OPENFGA_STORE_ID=
+    OPENFGA_MODEL_ID=
+    ```
+  </Accordion>
+
+  <Accordion title="Keycloak Configuration">
+    ```bash
+    # When AUTH_PROVIDER=keycloak
+    KEYCLOAK_SERVER_URL=http://localhost:8080
+    KEYCLOAK_REALM=langgraph-agent
+    KEYCLOAK_CLIENT_ID=langgraph-client
+    KEYCLOAK_CLIENT_SECRET=your-client-secret-here
+    KEYCLOAK_VERIFY_SSL=true
+    KEYCLOAK_TIMEOUT=30
+    KEYCLOAK_HOSTNAME=localhost  # Public hostname for token validation
+    ```
+  </Accordion>
+
+  <Accordion title="Session Management">
+    ```bash
+    # Session Backend: memory, redis
+    SESSION_BACKEND=memory
+    SESSION_TTL_SECONDS=86400  # 24 hours
+
+    # Redis (when SESSION_BACKEND=redis)
+    REDIS_URL=redis://localhost:6379/0
+    REDIS_MAX_CONNECTIONS=10
+    REDIS_SOCKET_CONNECT_TIMEOUT=5
+    REDIS_HEALTH_CHECK_INTERVAL=30
+    ```
+  </Accordion>
+
+  <Accordion title="Secrets Management (Infisical)">
+    ```bash
+    # Infisical Integration
+    INFISICAL_ENABLED=false
+    INFISICAL_CLIENT_ID=your-client-id
+    INFISICAL_CLIENT_SECRET=your-client-secret
+    INFISICAL_PROJECT_ID=your-project-id
+    INFISICAL_ENVIRONMENT=dev  # dev, staging, prod
+    INFISICAL_API_URL=https://app.infisical.com/api
+    ```
+  </Accordion>
+
+  <Accordion title="Observability">
+    ```bash
+    # Logging
+    LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    LOG_FORMAT=json  # json, text
+    LOG_FILE=  # Optional file path
+
+    # OpenTelemetry
+    OTEL_ENABLED=false
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+    OTEL_SERVICE_NAME=mcp-server-langgraph
+    OTEL_TRACES_SAMPLER=always_on  # always_on, always_off, parentbased_always_on
+
+    # LangSmith Tracing
+    LANGCHAIN_TRACING_V2=false
+    LANGCHAIN_API_KEY=your-langsmith-key
+    LANGCHAIN_PROJECT=mcp-server-langgraph
+
+    # Prometheus Metrics
+    METRICS_ENABLED=true
+    METRICS_PORT=9090
+    ```
+  </Accordion>
+
+  <Accordion title="LangGraph Configuration">
+    ```bash
+    # Checkpointing (persistence)
+    CHECKPOINT_ENABLED=true
+    CHECKPOINT_BACKEND=redis  # memory, redis, postgres
+
+    # PostgreSQL Checkpointer
+    # POSTGRES_URL=postgresql://user:pass@localhost:5432/langgraph
+
+    # Graph Settings
+    MAX_ITERATIONS=100
+    RECURSION_LIMIT=50
+    ENABLE_HUMAN_IN_LOOP=true
+    ```
+  </Accordion>
+</AccordionGroup>
+
+#### Security Best Practices
+
+<Warning>
+  **NEVER commit `.env` files to version control!** Always use `.env.example` as a template and add `.env` to `.gitignore`.
+</Warning>
+
+<Steps>
+  <Step title="Generate Strong Secrets">
+    ```bash
+    # JWT secret
+    openssl rand -base64 32
+
+    # Session secret
+    openssl rand -base64 64
+    ```
+  </Step>
+
+  <Step title="Use Secrets Management">
+    Production deployments should use:
+    - **Kubernetes Secrets**
+    - **External Secrets Operator**
+    - **Infisical** (integrated)
+    - **HashiCorp Vault**
+    - **AWS Secrets Manager**
+  </Step>
+
+  <Step title="Environment-Specific Files">
+    ```bash
+    .env.development
+    .env.staging
+    .env.production
+
+    # Load based on environment
+    source .env.${ENVIRONMENT}
+    ```
+  </Step>
+</Steps>
+
+---
+
+### config/ldap_mappers.yaml
+
+Defines how LDAP/Active Directory attributes map to Keycloak user attributes.
+
+#### Location
+
+```
+/config/ldap_mappers.yaml
+```
+
+#### Used By
+
+- [setup_ldap_federation.py](/reference/setup-scripts#setup_ldap_federation-py)
+
+#### Structure
+
+<AccordionGroup>
+  <Accordion title="Attribute Mappers">
+    Maps LDAP attributes to Keycloak user attributes.
+
+    ```yaml
+    attribute_mappers:
+      - name: email
+        ldap_attribute: mail  # AD attribute
+        keycloak_attribute: email  # Keycloak attribute
+        read_only: true
+        always_read_from_ldap: true
+        mandatory: false
+
+      - name: firstName
+        ldap_attribute: givenName
+        keycloak_attribute: firstName
+        read_only: true
+        always_read_from_ldap: true
+        mandatory: false
+
+      - name: lastName
+        ldap_attribute: sn
+        keycloak_attribute: lastName
+        read_only: true
+        always_read_from_ldap: true
+        mandatory: false
+    ```
+
+    **Standard Mappings:**
+    - `mail` → `email`
+    - `givenName` → `firstName`
+    - `sn` → `lastName`
+    - `displayName` → `displayName`
+    - `department` → `department`
+    - `title` → `title`
+    - `telephoneNumber` → `phoneNumber`
+    - `mobile` → `mobilePhone`
+    - `employeeNumber` → `employeeNumber`
+    - `manager` → `manager`
+  </Accordion>
+
+  <Accordion title="Group Mapper">
+    Synchronizes LDAP groups to Keycloak groups.
+
+    ```yaml
+    group_mapper:
+      enabled: true
+      groups_dn: OU=Groups,DC=example,DC=com
+      group_name_attribute: cn
+      group_object_classes: group
+      membership_attribute: member
+      membership_type: DN
+      preserve_inheritance: true
+      user_attribute: distinguishedName
+      groups_path: /
+      mode: READ_ONLY
+    ```
+
+    **Parameters:**
+    - `groups_dn`: Base DN for group search
+    - `group_name_attribute`: Attribute containing group name (usually `cn`)
+    - `membership_attribute`: Attribute listing group members (AD: `member`)
+    - `preserve_inheritance`: Maintain group hierarchy
+    - `mode`: `READ_ONLY` (groups managed in LDAP only)
+  </Accordion>
+
+  <Accordion title="Sync Settings">
+    Controls synchronization schedule and behavior.
+
+    ```yaml
+    sync_settings:
+      full_sync_period: 86400  # Daily (24 hours)
+      changed_sync_period: 3600  # Hourly
+      batch_size: 1000
+      connection_timeout: 10000  # 10 seconds
+      read_timeout: 30000  # 30 seconds
+      connection_pooling: true
+      pagination: true
+    ```
+
+    **Sync Types:**
+    - **Full sync**: Complete LDAP directory scan
+    - **Changed sync**: Only changed users (requires USN changed attribute)
+  </Accordion>
+
+  <Accordion title="Role Mappings">
+    Maps LDAP groups to Keycloak roles.
+
+    ```yaml
+    role_mappings:
+      - ldap_group: CN=Administrators,OU=Groups,DC=example,DC=com
+        keycloak_role: admin
+
+      - ldap_group: CN=Premium Users,OU=Groups,DC=example,DC=com
+        keycloak_role: premium
+
+      - ldap_group: CN=Engineers,OU=Groups,DC=example,DC=com
+        keycloak_role: engineer
+    ```
+
+    Users in the LDAP group automatically get assigned the corresponding Keycloak role.
+  </Accordion>
+</AccordionGroup>
+
+#### Customization
+
+<Tabs>
+  <Tab title="Active Directory">
+    Default configuration works with AD. Common AD attributes:
+    - `sAMAccountName`: Username
+    - `userPrincipalName`: UPN (email-like)
+    - `distinguishedName`: DN
+    - `memberOf`: Group memberships
+  </Tab>
+
+  <Tab title="Generic LDAP">
+    For OpenLDAP or other LDAP servers:
+    ```yaml
+    attribute_mappers:
+      - name: email
+        ldap_attribute: mail
+        keycloak_attribute: email
+        # ...
+
+      - name: username
+        ldap_attribute: uid  # not sAMAccountName
+        keycloak_attribute: username
+    ```
+  </Tab>
+
+  <Tab title="Custom Attributes">
+    Add custom attribute mappings:
+    ```yaml
+    attribute_mappers:
+      - name: employeeCostCenter
+        ldap_attribute: extensionAttribute1
+        keycloak_attribute: costCenter
+        read_only: true
+        always_read_from_ldap: false
+        mandatory: false
+    ```
+  </Tab>
+</Tabs>
+
+#### Related ADRs
+
+- [ADR-0037: Identity Federation](/architecture/adr-0037-identity-federation)
+
+---
+
+### config/oidc_providers.yaml
+
+Defines OpenID Connect identity provider configurations for federation.
+
+#### Location
+
+```
+/config/oidc_providers.yaml
+```
+
+#### Used By
+
+- [setup_oidc_idp.py](/reference/setup-scripts#setup_oidc_idp-py)
+
+#### Structure
+
+<AccordionGroup>
+  <Accordion title="Provider Configuration">
+    Each provider has:
+    - Basic settings (alias, display name, enabled)
+    - OIDC endpoints and credentials
+    - Attribute mappers (claims → user attributes)
+
+    ```yaml
+    providers:
+      google:
+        alias: google
+        display_name: Google
+        provider_id: google  # Keycloak built-in provider
+        enabled: true
+        trust_email: true
+        config:
+          client_id: ${GOOGLE_CLIENT_ID}
+          client_secret: ${GOOGLE_CLIENT_SECRET}
+          default_scope: "openid profile email"
+          hosted_domain: ${GOOGLE_HOSTED_DOMAIN:-}
+
+        mappers:
+          - name: email
+            claim: email
+            user_attribute: email
+          - name: firstName
+            claim: given_name
+            user_attribute: firstName
+    ```
+  </Accordion>
+
+  <Accordion title="Built-in Providers">
+    Keycloak has built-in support for:
+
+    <Tabs>
+      <Tab title="Google">
+        ```yaml
+        google:
+          alias: google
+          display_name: Google
+          provider_id: google
+          config:
+            client_id: ${GOOGLE_CLIENT_ID}
+            client_secret: ${GOOGLE_CLIENT_SECRET}
+            default_scope: "openid profile email"
+            hosted_domain: ""  # Optional: restrict to domain
+        ```
+
+        Get credentials from [Google Cloud Console](https://console.cloud.google.com/)
+      </Tab>
+
+      <Tab title="Microsoft">
+        ```yaml
+        microsoft:
+          alias: microsoft
+          display_name: Microsoft
+          provider_id: microsoft
+          config:
+            client_id: ${MICROSOFT_CLIENT_ID}
+            client_secret: ${MICROSOFT_CLIENT_SECRET}
+            default_scope: "openid profile email"
+            tenant_id: ${MICROSOFT_TENANT_ID:-common}
+        ```
+
+        Get credentials from [Azure Portal](https://portal.azure.com/)
+      </Tab>
+
+      <Tab title="GitHub">
+        ```yaml
+        github:
+          alias: github
+          display_name: GitHub
+          provider_id: github
+          config:
+            client_id: ${GITHUB_CLIENT_ID}
+            client_secret: ${GITHUB_CLIENT_SECRET}
+            default_scope: "user:email"
+        ```
+
+        Create OAuth App at [GitHub Settings](https://github.com/settings/developers)
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="Custom OIDC Providers">
+    For Okta, Auth0, OneLogin, or custom OIDC providers:
+
+    <Tabs>
+      <Tab title="Okta">
+        ```yaml
+        okta:
+          alias: okta
+          display_name: Okta
+          provider_id: oidc  # Generic OIDC
+          config:
+            client_id: ${OKTA_CLIENT_ID}
+            client_secret: ${OKTA_CLIENT_SECRET}
+            default_scope: "openid profile email groups"
+            authorization_url: https://${OKTA_DOMAIN}/oauth2/v1/authorize
+            token_url: https://${OKTA_DOMAIN}/oauth2/v1/token
+            user_info_url: https://${OKTA_DOMAIN}/oauth2/v1/userinfo
+            jwks_url: https://${OKTA_DOMAIN}/oauth2/v1/keys
+            issuer: https://${OKTA_DOMAIN}
+            validate_signature: true
+            use_jwks_url: true
+        ```
+      </Tab>
+
+      <Tab title="Auth0">
+        ```yaml
+        auth0:
+          alias: auth0
+          display_name: Auth0
+          provider_id: oidc
+          config:
+            client_id: ${AUTH0_CLIENT_ID}
+            client_secret: ${AUTH0_CLIENT_SECRET}
+            default_scope: "openid profile email"
+            authorization_url: https://${AUTH0_DOMAIN}/authorize
+            token_url: https://${AUTH0_DOMAIN}/oauth/token
+            user_info_url: https://${AUTH0_DOMAIN}/userinfo
+            jwks_url: https://${AUTH0_DOMAIN}/.well-known/jwks.json
+            issuer: https://${AUTH0_DOMAIN}/
+            validate_signature: true
+            use_jwks_url: true
+        ```
+      </Tab>
+
+      <Tab title="Generic Template">
+        ```yaml
+        custom:
+          alias: custom-oidc
+          display_name: Custom OIDC Provider
+          provider_id: oidc
+          config:
+            client_id: ${CUSTOM_OIDC_CLIENT_ID}
+            client_secret: ${CUSTOM_OIDC_CLIENT_SECRET}
+            default_scope: "openid profile email"
+            authorization_url: ${CUSTOM_OIDC_AUTHORIZATION_URL}
+            token_url: ${CUSTOM_OIDC_TOKEN_URL}
+            user_info_url: ${CUSTOM_OIDC_USERINFO_URL}
+            jwks_url: ${CUSTOM_OIDC_JWKS_URL}
+            issuer: ${CUSTOM_OIDC_ISSUER}
+            validate_signature: true
+            use_jwks_url: true
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="Attribute Mappers">
+    Maps OIDC claims to Keycloak user attributes:
+
+    ```yaml
+    mappers:
+      - name: email
+        claim: email  # OIDC claim
+        user_attribute: email  # Keycloak attribute
+
+      - name: firstName
+        claim: given_name
+        user_attribute: firstName
+
+      - name: lastName
+        claim: family_name
+        user_attribute: lastName
+
+      - name: groups
+        claim: groups  # Provider-specific
+        user_attribute: oktaGroups
+    ```
+
+    **Standard OIDC Claims:**
+    - `sub`: Subject (unique ID)
+    - `email`: Email address
+    - `given_name`: First name
+    - `family_name`: Last name
+    - `preferred_username`: Username
+    - `picture`: Profile picture URL
+  </Accordion>
+
+  <Accordion title="Global Settings">
+    ```yaml
+    global_settings:
+      # Account linking strategy
+      account_linking_strategy: AUTO  # AUTO, PROMPT, DISABLED
+
+      # First broker login flow
+      first_broker_login_flow: first broker login
+
+      # Token exchange
+      store_token: false  # Don't store IdP tokens
+      add_read_token_role: false
+
+      # Sync mode
+      sync_mode: IMPORT  # IMPORT, FORCE, LEGACY
+    ```
+
+    **Account Linking:**
+    - `AUTO`: Automatically link to existing Keycloak account with same email
+    - `PROMPT`: Ask user to confirm account linking
+    - `DISABLED`: Always create new account
+
+    **Sync Mode:**
+    - `IMPORT`: Import on first login
+    - `FORCE`: Always update from IdP
+    - `LEGACY`: Legacy behavior
+  </Accordion>
+</AccordionGroup>
+
+#### Related ADRs
+
+- [ADR-0037: Identity Federation](/architecture/adr-0037-identity-federation)
+
+---
+
+### config/role_mappings.yaml
+
+Defines how Keycloak roles, groups, and attributes map to OpenFGA tuples.
+
+#### Location
+
+```
+/config/role_mappings.yaml
+```
+
+#### Purpose
+
+Enables flexible, declarative authorization without code changes. Automatically creates OpenFGA tuples based on Keycloak user data.
+
+#### Structure
+
+<AccordionGroup>
+  <Accordion title="Simple Role Mappings">
+    Direct 1:1 mapping from Keycloak roles to OpenFGA relations:
+
+    ```yaml
+    simple_mappings:
+      # Admin role grants system-wide admin access
+      - keycloak_role: admin
+        realm: true  # Realm role (vs client role)
+        openfga_relation: admin
+        openfga_object: system:global
+
+      # Premium role for paid users
+      - keycloak_role: premium
+        realm: true
+        openfga_relation: assignee
+        openfga_object: role:premium
+
+      # Client-specific roles
+      - keycloak_role: executor
+        realm: false  # Client role
+        openfga_relation: executor
+        openfga_object: tool:all
+    ```
+
+    **Creates OpenFGA tuple:**
+    ```
+    user:{user_id}, admin, system:global
+    ```
+  </Accordion>
+
+  <Accordion title="Group-Based Mappings">
+    Maps Keycloak group hierarchy to organizations/teams using regex:
+
+    ```yaml
+    group_mappings:
+      # Top-level groups → Organizations
+      # Pattern: /acme → organization:acme
+      - pattern: "^/([^/]+)$"
+        openfga_relation: member
+        openfga_object_template: "organization:{group_name}"
+
+      # Nested groups → Teams
+      # Pattern: /acme/engineering → team:engineering
+      - pattern: "^/([^/]+)/([^/]+)$"
+        openfga_relation: member
+        openfga_object_template: "team:{group_name}"
+
+      # Department-specific groups
+      - pattern: "^/departments/([^/]+)$"
+        openfga_relation: member
+        openfga_object_template: "department:{group_name}"
+    ```
+
+    **Example:**
+    - User in `/acme/engineering` creates:
+      - `user:{id}, member, organization:acme`
+      - `user:{id}, member, team:engineering`
+  </Accordion>
+
+  <Accordion title="Conditional Mappings">
+    Grants permissions based on user attributes:
+
+    ```yaml
+    conditional_mappings:
+      # Finance department gets access to financial reports
+      - condition:
+          attribute: department
+          operator: "=="
+          value: finance
+        openfga_tuples:
+          - relation: viewer
+            object: resource:financial-reports
+          - relation: viewer
+            object: resource:audit-logs
+
+      # High security clearance
+      - condition:
+          attribute: security_clearance
+          operator: ">="
+          value: 3
+        openfga_tuples:
+          - relation: viewer
+            object: resource:classified
+
+      # Manager role
+      - condition:
+          attribute: job_title
+          operator: "in"
+          value: [Manager, Director, VP, CEO]
+        openfga_tuples:
+          - relation: admin
+            object: resource:team-reports
+
+      # Region-specific access
+      - condition:
+          attribute: region
+          operator: "=="
+          value: EMEA
+        openfga_tuples:
+          - relation: viewer
+            object: resource:emea-data
+    ```
+
+    **Supported Operators:**
+    - `==`: Equals
+    - `!=`: Not equals
+    - `in`: Value in list
+    - `>=`: Greater than or equal
+    - `<=`: Less than or equal
+  </Accordion>
+
+  <Accordion title="Role Hierarchies">
+    Defines role inheritance:
+
+    ```yaml
+    hierarchies:
+      # Admin inherits all permissions
+      admin:
+        - premium
+        - user
+
+      # Premium inherits user permissions
+      premium:
+        - user
+
+      # Manager inherits contributor permissions
+      manager:
+        - contributor
+        - user
+
+      # Contributor inherits user permissions
+      contributor:
+        - user
+    ```
+
+    Roles inherit all permissions from their children. Applied after all other mappings.
+  </Accordion>
+</AccordionGroup>
+
+#### Application Order
+
+Rules are applied in this order:
+
+<Steps>
+  <Step title="Simple Mappings">
+    Process all simple role mappings first
+  </Step>
+  <Step title="Group Mappings">
+    Apply group-based mappings with regex matching
+  </Step>
+  <Step title="Conditional Mappings">
+    Evaluate conditions and create tuples
+  </Step>
+  <Step title="Hierarchies">
+    Apply role inheritance
+  </Step>
+  <Step title="Deduplication">
+    Remove duplicate tuples automatically
+  </Step>
+</Steps>
+
+#### Examples
+
+<Tabs>
+  <Tab title="User with Admin Role">
+    **Keycloak:**
+    - Role: `admin` (realm role)
+
+    **Creates OpenFGA Tuples:**
+    ```
+    user:alice, admin, system:global
+    user:alice, assignee, role:premium  (from hierarchy)
+    user:alice, assignee, role:user     (from hierarchy)
+    ```
+  </Tab>
+
+  <Tab title="User in Engineering Group">
+    **Keycloak:**
+    - Group: `/acme/engineering`
+
+    **Creates OpenFGA Tuples:**
+    ```
+    user:bob, member, organization:acme
+    user:bob, member, team:engineering
+    ```
+  </Tab>
+
+  <Tab title="Finance Manager">
+    **Keycloak:**
+    - Attribute: `department=finance`
+    - Attribute: `job_title=Manager`
+
+    **Creates OpenFGA Tuples:**
+    ```
+    user:carol, viewer, resource:financial-reports
+    user:carol, viewer, resource:audit-logs
+    user:carol, admin, resource:team-reports
+    user:carol, viewer, resource:hr-data
+    ```
+  </Tab>
+</Tabs>
+
+#### Related ADRs
+
+- [ADR-0031: Keycloak as Authoritative Identity](/architecture/adr-0031-keycloak-authoritative-identity)
+- [ADR-0039: OpenFGA Permission Inheritance](/architecture/adr-0039-openfga-permission-inheritance)
+
+---
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Version Control" icon="code-branch">
+    - Commit `.yaml` config files to git
+    - NEVER commit `.env` files
+    - Use `.env.example` as template
+    - Document custom configurations
+  </Card>
+
+  <Card title="Secrets Management" icon="key">
+    - Use Infisical or Vault for production
+    - Rotate secrets regularly
+    - Use Kubernetes Secrets for deployment
+    - Audit secret access
+  </Card>
+
+  <Card title="Environment Separation" icon="layer-group">
+    - Separate configs per environment
+    - Different secrets per environment
+    - Test config changes in staging
+    - Use CI/CD for config deployment
+  </Card>
+
+  <Card title="Validation" icon="check">
+    - Validate YAML syntax
+    - Test regex patterns
+    - Verify OIDC endpoints
+    - Check LDAP connectivity
+  </Card>
+</CardGroup>
+
+### See Also
+
+- [Setup Scripts Reference](/reference/setup-scripts)
+- [Environment Variables Reference](/reference/environment-variables)
+- [Keycloak JWT Deployment Guide](/deployment/keycloak-jwt-deployment)
+- [Identity Federation Quick Start](/guides/identity-federation-quickstart)

@@ -4,7 +4,7 @@ description: 'Deploy MCP Server with LangGraph on Amazon Elastic Kubernetes Serv
 icon: 'aws'
 ---
 
-## Overview
+### Overview
 
 Amazon Elastic Kubernetes Service (EKS) is a managed Kubernetes service that integrates with AWS services like RDS, ElastiCache, Secrets Manager, and IAM for a complete production deployment.
 
@@ -12,7 +12,7 @@ Amazon Elastic Kubernetes Service (EKS) is a managed Kubernetes service that int
 This guide covers deploying to EKS with production-ready configuration including IRSA (IAM Roles for Service Accounts), RDS for PostgreSQL, ElastiCache for Redis, and AWS Load Balancer Controller.
 </Info>
 
-## Prerequisites
+### Prerequisites
 
 - AWS account with appropriate permissions
 - AWS CLI installed and configured
@@ -20,22 +20,21 @@ This guide covers deploying to EKS with production-ready configuration including
 - `kubectl` installed
 - `helm` installed
 
-## Install Prerequisites
+### Install Prerequisites
 
 ```bash
-# Install eksctl
+## Install eksctl
 brew install eksctl
 
-# Configure AWS CLI
+## Configure AWS CLI
 aws configure
 
-# Verify credentials
+## Verify credentials
 aws sts get-caller-identity
-```
+```text
+### Create EKS Cluster
 
-## Create EKS Cluster
-
-### Using eksctl (Recommended)
+#### Using eksctl (Recommended)
 
 **cluster.yaml**:
 ```yaml
@@ -47,17 +46,17 @@ metadata:
   region: us-east-1
   version: "1.28"
 
-# VPC configuration
+## VPC configuration
 vpc:
   cidr: 10.0.0.0/16
   nat:
     gateway: HighlyAvailable
 
-# IAM OIDC provider for IRSA
+## IAM OIDC provider for IRSA
 iam:
   withOIDC: true
 
-# Managed node groups
+## Managed node groups
 managedNodeGroups:
   - name: general
     instanceType: m5.xlarge
@@ -80,7 +79,7 @@ managedNodeGroups:
         albIngress: true
         cloudWatch: true
 
-# CloudWatch logging
+## CloudWatch logging
 cloudWatch:
   clusterLogging:
     enableTypes:
@@ -90,7 +89,7 @@ cloudWatch:
       - controllerManager
       - scheduler
 
-# Addons
+## Addons
 addons:
   - name: vpc-cni
     version: latest
@@ -100,34 +99,32 @@ addons:
     version: latest
   - name: aws-ebs-csi-driver
     version: latest
-```
-
+```text
 **Create cluster**:
 ```bash
-# Create cluster
+## Create cluster
 eksctl create cluster -f cluster.yaml
 
-# Get credentials
+## Get credentials
 aws eks update-kubeconfig --name langgraph-cluster --region us-east-1
 
-# Verify
+## Verify
 kubectl get nodes
-```
-
-### Using AWS CLI
+```text
+#### Using AWS CLI
 
 ```bash
-# Create cluster (control plane only)
+## Create cluster (control plane only)
 aws eks create-cluster \
   --name langgraph-cluster \
   --role-arn arn:aws:iam::ACCOUNT_ID:role/EKSClusterRole \
   --resources-vpc-config subnetIds=subnet-xxx,subnet-yyy,securityGroupIds=sg-xxx \
   --region us-east-1
 
-# Wait for cluster to be active
+## Wait for cluster to be active
 aws eks wait cluster-active --name langgraph-cluster --region us-east-1
 
-# Create node group
+## Create node group
 aws eks create-nodegroup \
   --cluster-name langgraph-cluster \
   --nodegroup-name general \
@@ -136,14 +133,13 @@ aws eks create-nodegroup \
   --instance-types m5.xlarge \
   --scaling-config minSize=3,maxSize=10,desiredSize=3 \
   --region us-east-1
-```
+```text
+### IAM Roles for Service Accounts (IRSA)
 
-## IAM Roles for Service Accounts (IRSA)
-
-### Create IAM Policy
+#### Create IAM Policy
 
 ```bash
-# Create policy for Secrets Manager access
+## Create policy for Secrets Manager access
 cat > secrets-policy.json << 'EOF'
 {
   "Version": "2012-10-17",
@@ -163,12 +159,11 @@ EOF
 aws iam create-policy \
   --policy-name LangGraphSecretsAccess \
   --policy-document file://secrets-policy.json
-```
-
-### Create Service Account with IRSA
+```text
+#### Create Service Account with IRSA
 
 ```bash
-# Create service account with IAM role
+## Create service account with IAM role
 eksctl create iamserviceaccount \
   --name mcp-server-langgraph \
   --namespace mcp-server-langgraph \
@@ -178,23 +173,22 @@ eksctl create iamserviceaccount \
   --approve \
   --override-existing-serviceaccounts
 
-# Verify
+## Verify
 kubectl describe sa mcp-server-langgraph -n mcp-server-langgraph
-```
+```text
+### RDS for PostgreSQL
 
-## RDS for PostgreSQL
-
-### Create RDS Instance
+#### Create RDS Instance
 
 ```bash
-# Create DB subnet group
+## Create DB subnet group
 aws rds create-db-subnet-group \
   --db-subnet-group-name langgraph-db-subnet \
   --db-subnet-group-description "Subnet group for LangGraph databases" \
   --subnet-ids subnet-xxx subnet-yyy \
   --region us-east-1
 
-# Create security group
+## Create security group
 VPC_ID=$(aws eks describe-cluster \
   --name langgraph-cluster \
   --query "cluster.resourcesVpcConfig.vpcId" \
@@ -207,7 +201,7 @@ aws ec2 create-security-group \
   --vpc-id $VPC_ID \
   --region us-east-1
 
-# Allow PostgreSQL access from EKS cluster
+## Allow PostgreSQL access from EKS cluster
 CLUSTER_SG=$(aws eks describe-cluster \
   --name langgraph-cluster \
   --query "cluster.resourcesVpcConfig.clusterSecurityGroupId" \
@@ -221,7 +215,7 @@ aws ec2 authorize-security-group-ingress \
   --source-group $CLUSTER_SG \
   --region us-east-1
 
-# Create RDS instance
+## Create RDS instance
 aws rds create-db-instance \
   --db-instance-identifier langgraph-postgres \
   --db-instance-class db.m5.large \
@@ -240,23 +234,22 @@ aws rds create-db-instance \
   --no-publicly-accessible \
   --region us-east-1
 
-# Wait for RDS to be available
+## Wait for RDS to be available
 aws rds wait db-instance-available \
   --db-instance-identifier langgraph-postgres \
   --region us-east-1
 
-# Get endpoint
+## Get endpoint
 RDS_ENDPOINT=$(aws rds describe-db-instances \
   --db-instance-identifier langgraph-postgres \
   --query "DBInstances[0].Endpoint.Address" \
   --output text \
   --region us-east-1)
-```
-
-### Create Databases
+```text
+#### Create Databases
 
 ```bash
-# Connect to RDS
+## Connect to RDS
 PGPASSWORD=your-master-password psql \
   -h $RDS_ENDPOINT \
   -U postgres \
@@ -267,7 +260,7 @@ PGPASSWORD=your-master-password psql \
   -U postgres \
   -c "CREATE DATABASE openfga;"
 
-# Create users
+## Create users
 PGPASSWORD=your-master-password psql \
   -h $RDS_ENDPOINT \
   -U postgres \
@@ -277,28 +270,27 @@ PGPASSWORD=your-master-password psql \
   -h $RDS_ENDPOINT \
   -U postgres \
   -c "GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;"
-```
+```text
+### ElastiCache for Redis
 
-## ElastiCache for Redis
-
-### Create Redis Cluster
+#### Create Redis Cluster
 
 ```bash
-# Create subnet group
+## Create subnet group
 aws elasticache create-cache-subnet-group \
   --cache-subnet-group-name langgraph-redis-subnet \
   --cache-subnet-group-description "Subnet group for LangGraph Redis" \
   --subnet-ids subnet-xxx subnet-yyy \
   --region us-east-1
 
-# Create security group
+## Create security group
 aws ec2 create-security-group \
   --group-name langgraph-redis-sg \
   --description "Security group for LangGraph Redis" \
   --vpc-id $VPC_ID \
   --region us-east-1
 
-# Allow Redis access
+## Allow Redis access
 aws ec2 authorize-security-group-ingress \
   --group-id $REDIS_SG_ID \
   --protocol tcp \
@@ -306,7 +298,7 @@ aws ec2 authorize-security-group-ingress \
   --source-group $CLUSTER_SG \
   --region us-east-1
 
-# Create Redis replication group
+## Create Redis replication group
 aws elasticache create-replication-group \
   --replication-group-id langgraph-redis \
   --replication-group-description "Redis cluster for LangGraph sessions" \
@@ -325,48 +317,46 @@ aws elasticache create-replication-group \
   --preferred-maintenance-window "sun:05:00-sun:07:00" \
   --region us-east-1
 
-# Get Redis endpoint
+## Get Redis endpoint
 REDIS_ENDPOINT=$(aws elasticache describe-replication-groups \
   --replication-group-id langgraph-redis \
   --query "ReplicationGroups[0].NodeGroups[0].PrimaryEndpoint.Address" \
   --output text \
   --region us-east-1)
-```
+```text
+### AWS Secrets Manager
 
-## AWS Secrets Manager
-
-### Store Secrets
+#### Store Secrets
 
 ```bash
-# Store Anthropic API key
+## Store Anthropic API key
 aws secretsmanager create-secret \
   --name langgraph/anthropic-api-key \
   --secret-string "sk-ant-your-key" \
   --region us-east-1
 
-# Store JWT secret
+## Store JWT secret
 aws secretsmanager create-secret \
   --name langgraph/jwt-secret \
   --secret-string $(openssl rand -base64 32) \
   --region us-east-1
 
-# Store Redis auth token
+## Store Redis auth token
 aws secretsmanager create-secret \
   --name langgraph/redis-password \
   --secret-string "your-redis-auth-token" \
   --region us-east-1
 
-# Store RDS password
+## Store RDS password
 aws secretsmanager create-secret \
   --name langgraph/rds-password \
   --secret-string "your-rds-password" \
   --region us-east-1
-```
-
-### Use External Secrets Operator
+```text
+#### Use External Secrets Operator
 
 ```bash
-# Install External Secrets Operator
+## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
 
@@ -375,7 +365,7 @@ helm install external-secrets \
   --namespace external-secrets-system \
   --create-namespace
 
-# Create SecretStore
+## Create SecretStore
 cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
@@ -393,7 +383,7 @@ spec:
             name: mcp-server-langgraph
 EOF
 
-# Create ExternalSecret
+## Create ExternalSecret
 cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
@@ -422,21 +412,20 @@ spec:
     remoteRef:
       key: langgraph/rds-password
 EOF
-```
+```text
+### AWS Load Balancer Controller
 
-## AWS Load Balancer Controller
-
-### Install Load Balancer Controller
+#### Install Load Balancer Controller
 
 ```bash
-# Create IAM policy
+## Create IAM policy
 curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
 
 aws iam create-policy \
   --policy-name AWSLoadBalancerControllerIAMPolicy \
   --policy-document file://iam-policy.json
 
-# Create service account
+## Create service account
 eksctl create iamserviceaccount \
   --cluster=langgraph-cluster \
   --namespace=kube-system \
@@ -445,7 +434,7 @@ eksctl create iamserviceaccount \
   --approve \
   --region us-east-1
 
-# Install controller
+## Install controller
 helm repo add eks https://aws.github.io/eks-charts
 helm repo update
 
@@ -456,9 +445,8 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set serviceAccount.name=aws-load-balancer-controller \
   --set region=us-east-1 \
   --set vpcId=$VPC_ID
-```
-
-### Configure Ingress
+```text
+#### Configure Ingress
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -490,35 +478,33 @@ spec:
             name: mcp-server-langgraph
             port:
               number: 8000
-```
+```text
+### ECR for Container Images
 
-## ECR for Container Images
-
-### Create ECR Repository
+#### Create ECR Repository
 
 ```bash
-# Create repository
+## Create repository
 aws ecr create-repository \
   --repository-name langgraph/agent \
   --image-scanning-configuration scanOnPush=true \
   --encryption-configuration encryptionType=AES256 \
   --region us-east-1
 
-# Login to ECR
+## Login to ECR
 aws ecr get-login-password --region us-east-1 | \
   docker login --username AWS --password-stdin \
   ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
 
-# Build and push
+## Build and push
 docker build -t mcp-server-langgraph:latest .
 
 docker tag mcp-server-langgraph:latest \
   ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
 
 docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
-```
-
-### Use in Kubernetes
+```text
+#### Use in Kubernetes
 
 ```yaml
 apiVersion: apps/v1
@@ -533,14 +519,13 @@ spec:
       - name: agent
         image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
         imagePullPolicy: Always
-```
+```text
+### EBS CSI Driver for Persistent Volumes
 
-## EBS CSI Driver for Persistent Volumes
-
-### Install EBS CSI Driver
+#### Install EBS CSI Driver
 
 ```bash
-# Create IAM policy
+## Create IAM policy
 eksctl create iamserviceaccount \
   --name ebs-csi-controller-sa \
   --namespace kube-system \
@@ -550,15 +535,14 @@ eksctl create iamserviceaccount \
   --role-only \
   --region us-east-1
 
-# Install EBS CSI driver
+## Install EBS CSI driver
 eksctl create addon \
   --name aws-ebs-csi-driver \
   --cluster langgraph-cluster \
   --service-account-role-arn arn:aws:iam::ACCOUNT_ID:role/AmazonEKS_EBS_CSI_DriverRole \
   --region us-east-1
-```
-
-### Create Storage Class
+```text
+#### Create Storage Class
 
 ```yaml
 apiVersion: storage.k8s.io/v1
@@ -574,14 +558,13 @@ parameters:
   encrypted: "true"
   kmsKeyId: arn:aws:kms:us-east-1:ACCOUNT_ID:key/xxx
 allowVolumeExpansion: true
-```
+```text
+### CloudWatch Monitoring
 
-## CloudWatch Monitoring
-
-### Container Insights
+#### Container Insights
 
 ```bash
-# Install CloudWatch agent
+## Install CloudWatch agent
 eksctl create iamserviceaccount \
   --cluster langgraph-cluster \
   --namespace amazon-cloudwatch \
@@ -590,11 +573,10 @@ eksctl create iamserviceaccount \
   --approve \
   --region us-east-1
 
-# Deploy Container Insights
+## Deploy Container Insights
 kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluentd-quickstart.yaml
-```
-
-### Custom Metrics
+```text
+#### Custom Metrics
 
 ```python
 import boto3
@@ -602,7 +584,7 @@ from datetime import datetime
 
 cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
 
-# Put custom metric
+## Put custom metric
 cloudwatch.put_metric_data(
     Namespace='LangGraph/Agent',
     MetricData=[
@@ -618,12 +600,11 @@ cloudwatch.put_metric_data(
         }
     ]
 )
-```
-
-## Complete Deployment
+```text
+### Complete Deployment
 
 ```yaml
-# deployment.yaml
+## deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -690,45 +671,42 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-```
-
+```text
 **Deploy**:
 ```bash
-# Create namespace
+## Create namespace
 kubectl create namespace mcp-server-langgraph
 
-# Deploy
+## Deploy
 kubectl apply -f deployment.yaml
 
-# Verify
+## Verify
 kubectl get pods -n mcp-server-langgraph
 kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
+```text
+### Auto-Scaling
 
-## Auto-Scaling
-
-### Cluster Autoscaler
+#### Cluster Autoscaler
 
 ```bash
-# Install Cluster Autoscaler
+## Install Cluster Autoscaler
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml
 
-# Annotate deployment
+## Annotate deployment
 kubectl -n kube-system annotate deployment.apps/cluster-autoscaler \
   cluster-autoscaler.kubernetes.io/safe-to-evict="false"
 
-# Set cluster name
+## Set cluster name
 kubectl -n kube-system set image deployment.apps/cluster-autoscaler \
   cluster-autoscaler=k8s.gcr.io/autoscaling/cluster-autoscaler:v1.28.0
 
 kubectl -n kube-system edit deployment.apps/cluster-autoscaler
-# Add: --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/langgraph-cluster
-```
-
-### Karpenter (Alternative)
+## Add: --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/langgraph-cluster
+```text
+#### Karpenter (Alternative)
 
 ```bash
-# Install Karpenter
+## Install Karpenter
 helm repo add karpenter https://charts.karpenter.sh
 helm repo update
 
@@ -739,9 +717,8 @@ helm install karpenter karpenter/karpenter \
   --set settings.aws.clusterName=langgraph-cluster \
   --set settings.aws.defaultInstanceProfile=KarpenterNodeInstanceProfile \
   --set settings.aws.interruptionQueueName=langgraph-cluster
-```
-
-## Cost Optimization
+```text
+### Cost Optimization
 
 <AccordionGroup>
   <Accordion title="Use Spot Instances" icon="dollar-sign">
@@ -756,7 +733,7 @@ helm install karpenter karpenter/karpenter \
         minSize: 0
         maxSize: 20
         desiredCapacity: 3
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Savings Plans" icon="piggy-bank">
@@ -776,7 +753,7 @@ helm install karpenter karpenter/karpenter \
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="AKS Deployment" icon="microsoft" href="/deployment/kubernetes/aks">

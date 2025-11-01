@@ -4,7 +4,7 @@ description: 'Secure your MCP server with JWT and Keycloak SSO'
 icon: 'key'
 ---
 
-## Overview
+### Overview
 
 MCP Server with LangGraph supports **pluggable authentication** with two built-in providers:
 
@@ -21,18 +21,17 @@ MCP Server with LangGraph supports **pluggable authentication** with two built-i
   </Card>
 </CardGroup>
 
-## Quick Start
+### Quick Start
 
-### InMemory Authentication (Development)
+#### InMemory Authentication (Development)
 
 Perfect for local development and testing:
 
 ```bash
-# .env configuration
+## .env configuration
 AUTH_PROVIDER=inmemory
 AUTH_MODE=token  # JWT tokens
-```
-
+```text
 **Pre-defined users**:
 - `alice` - Premium user, admin of organization:acme
 - `bob` - Standard user, member of organization:acme
@@ -45,29 +44,28 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware
 auth = AuthMiddleware()
 token = auth.create_token("alice", expires_in=3600)
 print(f"Token: {token}")
-```
-
+```text
 ```bash cURL
-# Get token (development only!)
+## Get token (development only!)
 TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
 
-# Use token
+## Use token
 curl -X POST http://localhost:8000/message \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "Hello!"}'
-```
+```xml
 </CodeGroup>
 
 <Warning>
 **Never use InMemory provider in production!** It has hard-coded credentials and no real authentication.
 </Warning>
 
-## Keycloak SSO (Production) 🆕
+### Keycloak SSO (Production) 🆕
 
 **NEW in v2.1.0**: Enterprise-grade authentication with Keycloak.
 
-### Features
+#### Features
 
 <AccordionGroup>
   <Accordion title="OpenID Connect / OAuth2" icon="lock">
@@ -91,7 +89,7 @@ curl -X POST http://localhost:8000/message \
   </Accordion>
 </AccordionGroup>
 
-### Setup
+#### Setup
 
 <Steps>
   <Step title="Deploy Keycloak">
@@ -104,8 +102,7 @@ curl -X POST http://localhost:8000/message \
       --namespace mcp-server-langgraph \
       --set replicaCount=2 \
       --set postgresql.enabled=true
-    ```
-
+    ```text
     Access Keycloak admin console:
     - **Docker**: http://localhost:8080/admin (admin/admin)
     - **Kubernetes**: Port-forward and access
@@ -116,8 +113,7 @@ curl -X POST http://localhost:8000/message \
 
     ```bash
     python scripts/setup/setup_keycloak.py
-    ```
-
+    ```text
     This creates:
     - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
@@ -137,7 +133,7 @@ curl -X POST http://localhost:8000/message \
     KEYCLOAK_CLIENT_ID=langgraph-client
     KEYCLOAK_CLIENT_SECRET=your-client-secret-here
     KEYCLOAK_VERIFY_SSL=true  # Required for production
-    ```
+    ```xml
   </Step>
 
   <Step title="Test Authentication">
@@ -154,13 +150,13 @@ curl -X POST http://localhost:8000/message \
     # Verify token
     user_info = await client.get_user_info(result['access_token'])
     print(f"User: {user_info}")
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Authentication Modes
+### Authentication Modes
 
-### Token Mode (Stateless)
+#### Token Mode (Stateless)
 
 <Tabs>
   <Tab title="Overview">
@@ -183,14 +179,13 @@ curl -X POST http://localhost:8000/message \
     AUTH_MODE=token
     JWT_SECRET_KEY=your-secret-key-here
     JWT_EXPIRATION_SECONDS=3600  # 1 hour
-    ```
-
+    ```text
     With Keycloak:
     ```bash
     AUTH_PROVIDER=keycloak
     AUTH_MODE=token
     # Tokens validated via Keycloak JWKS
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Usage">
@@ -204,11 +199,11 @@ curl -X POST http://localhost:8000/message \
 
     # Token refresh (Keycloak only)
     new_tokens = await keycloak.refresh_token(refresh_token)
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-### Session Mode (Stateful) 🆕
+#### Session Mode (Stateful) 🆕
 
 <Tabs>
   <Tab title="Overview">
@@ -241,7 +236,7 @@ curl -X POST http://localhost:8000/message \
     SESSION_TTL_SECONDS=86400  # 24 hours
     SESSION_SLIDING_WINDOW=true  # Extend on activity
     SESSION_MAX_CONCURRENT=5  # Per user
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Usage">
@@ -264,11 +259,11 @@ curl -X POST http://localhost:8000/message \
 
     # Revoke all user sessions
     await auth.revoke_user_sessions("alice")
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Security Best Practices
+### Security Best Practices
 
 <AccordionGroup>
   <Accordion title="Production Checklist" icon="clipboard-check">
@@ -322,7 +317,7 @@ curl -X POST http://localhost:8000/message \
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Invalid credentials">
@@ -339,7 +334,7 @@ curl -X POST http://localhost:8000/message \
     # Check environment variables
     env | grep AUTH
     env | grep KEYCLOAK
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Token expired">
@@ -382,7 +377,7 @@ curl -X POST http://localhost:8000/message \
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Authorization" icon="shield" href="/getting-started/authorization">

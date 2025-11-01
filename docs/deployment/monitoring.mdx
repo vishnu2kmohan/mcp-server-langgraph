@@ -4,7 +4,7 @@ description: 'Comprehensive monitoring, metrics, and observability setup'
 icon: 'chart-line'
 ---
 
-## Overview
+### Overview
 
 Production-grade monitoring and observability are essential for maintaining reliability, performance, and security. This guide covers the complete observability stack including metrics, traces, logs, and alerts.
 
@@ -12,7 +12,7 @@ Production-grade monitoring and observability are essential for maintaining reli
 The MCP Server uses a dual observability stack: **OpenTelemetry** for infrastructure metrics and traces, plus **LangSmith** for LLM-specific observability.
 </Info>
 
-## Observability Stack
+### Observability Stack
 
 <CardGroup cols={2}>
   <Card title="Metrics" icon="chart-bar">
@@ -48,23 +48,22 @@ The MCP Server uses a dual observability stack: **OpenTelemetry** for infrastruc
   </Card>
 </CardGroup>
 
-## Metrics with Prometheus
+### Metrics with Prometheus
 
-### Install Prometheus
+#### Install Prometheus
 
 **Kubernetes**:
 ```bash
-# Add Prometheus Helm repo
+## Add Prometheus Helm repo
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-# Install Prometheus stack
+## Install Prometheus stack
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
   --create-namespace \
   --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
-```
-
+```text
 **Docker Compose**:
 ```yaml
 services:
@@ -81,9 +80,8 @@ services:
 
 volumes:
   prometheus-data:
-```
-
-### Prometheus Configuration
+```text
+#### Prometheus Configuration
 
 **prometheus.yml**:
 ```yaml
@@ -118,9 +116,8 @@ scrape_configs:
   - job_name: 'node'
     static_configs:
       - targets: ['node-exporter:9100']
-```
-
-### Application Metrics
+```text
+#### Application Metrics
 
 **Instrument FastAPI with Prometheus**:
 
@@ -131,7 +128,7 @@ import time
 
 app = FastAPI()
 
-# Define metrics
+## Define metrics
 http_requests_total = Counter(
     'http_requests_total',
     'Total HTTP requests',
@@ -167,7 +164,7 @@ openfga_checks_total = Counter(
     ['result']
 )
 
-# Middleware to track metrics
+## Middleware to track metrics
 @app.middleware("http")
 async def track_metrics(request: Request, call_next):
     start_time = time.time()
@@ -191,21 +188,20 @@ async def track_metrics(request: Request, call_next):
 
     return response
 
-# Metrics endpoint
+## Metrics endpoint
 @app.get("/metrics")
 async def metrics():
     return Response(
         content=generate_latest(),
         media_type="text/plain"
     )
-```
-
-### Custom Business Metrics
+```text
+#### Custom Business Metrics
 
 ```python
 from prometheus_client import Counter, Gauge
 
-# User metrics
+## User metrics
 user_registrations_total = Counter(
     'user_registrations_total',
     'Total user registrations'
@@ -217,7 +213,7 @@ user_logins_total = Counter(
     ['provider']
 )
 
-# Conversation metrics
+## Conversation metrics
 conversations_created_total = Counter(
     'conversations_created_total',
     'Total conversations created'
@@ -234,7 +230,7 @@ active_conversations = Gauge(
     'Number of active conversations'
 )
 
-# Tool usage metrics
+## Tool usage metrics
 tool_executions_total = Counter(
     'tool_executions_total',
     'Total tool executions',
@@ -247,7 +243,7 @@ tool_execution_duration = Histogram(
     ['tool_name']
 )
 
-# Usage in code
+## Usage in code
 @app.post("/auth/register")
 async def register(user_data: UserCreate):
     # ... registration logic ...
@@ -286,19 +282,18 @@ async def chat(query: str):
     messages_sent_total.labels(role="assistant").inc()
 
     return response
-```
+```text
+### Distributed Tracing with Jaeger
 
-## Distributed Tracing with Jaeger
-
-### Install Jaeger
+#### Install Jaeger
 
 **Kubernetes**:
 ```bash
-# Install Jaeger operator
+## Install Jaeger operator
 kubectl create namespace observability
 kubectl create -f https://github.com/jaegertracing/jaeger-operator/releases/download/v1.51.0/jaeger-operator.yaml -n observability
 
-# Deploy Jaeger instance
+## Deploy Jaeger instance
 cat << 'EOF' | kubectl apply -f -
 apiVersion: jaegertracing.io/v1
 kind: Jaeger
@@ -313,8 +308,7 @@ spec:
       es:
         server-urls: http://elasticsearch:9200
 EOF
-```
-
+```text
 **Docker Compose**:
 ```yaml
 services:
@@ -326,9 +320,8 @@ services:
       - "4317:4317"    # OTLP gRPC
     environment:
       - COLLECTOR_OTLP_ENABLED=true
-```
-
-### OpenTelemetry Configuration
+```text
+#### OpenTelemetry Configuration
 
 **Install dependencies**:
 ```bash
@@ -336,8 +329,7 @@ pip install opentelemetry-api \
             opentelemetry-sdk \
             opentelemetry-instrumentation-fastapi \
             opentelemetry-exporter-otlp
-```
-
+```text
 **Instrument FastAPI**:
 ```python
 from opentelemetry import trace
@@ -347,11 +339,11 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
-# Setup tracing
+## Setup tracing
 trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
 
-# Configure OTLP exporter
+## Configure OTLP exporter
 otlp_exporter = OTLPSpanExporter(
     endpoint="http://jaeger:4318/v1/traces"
 )
@@ -360,11 +352,11 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(otlp_exporter)
 )
 
-# Auto-instrument FastAPI
+## Auto-instrument FastAPI
 FastAPIInstrumentor.instrument_app(app)
 HTTPXClientInstrumentor().instrument()
 
-# Manual instrumentation
+## Manual instrumentation
 @app.post("/chat")
 async def chat(query: str):
     with tracer.start_as_current_span("chat") as span:
@@ -392,16 +384,15 @@ async def chat(query: str):
         span.set_attribute("response_length", len(response.content))
 
         return response
-```
-
-### Trace Context Propagation
+```text
+#### Trace Context Propagation
 
 ```python
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 propagator = TraceContextTextMapPropagator()
 
-# Inject trace context into HTTP headers
+## Inject trace context into HTTP headers
 async def call_external_service():
     headers = {}
     propagator.inject(headers)
@@ -413,18 +404,17 @@ async def call_external_service():
         )
 
     return response
-```
+```text
+### Structured Logging
 
-## Structured Logging
-
-### Configure Structured JSON Logging
+#### Configure Structured JSON Logging
 
 ```python
 import structlog
 from structlog.stdlib import BoundLogger
 import logging
 
-# Configure structlog
+## Configure structlog
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
@@ -442,7 +432,7 @@ structlog.configure(
 
 logger = structlog.get_logger()
 
-# Usage
+## Usage
 @app.post("/chat")
 async def chat(query: str, user_id: str):
     logger.info(
@@ -475,9 +465,8 @@ async def chat(query: str, user_id: str):
             exc_info=True
         )
         raise
-```
-
-### Correlation IDs
+```text
+#### Correlation IDs
 
 Track requests across services:
 
@@ -503,25 +492,24 @@ async def add_correlation_id(request: Request, call_next):
     response.headers["X-Request-ID"] = request_id
 
     return response
-```
+```text
+### LangSmith Integration
 
-## LangSmith Integration
-
-### Setup LangSmith
+#### Setup LangSmith
 
 ```python
 import os
 from langsmith import Client
 
-# Configure LangSmith
+## Configure LangSmith
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 os.environ["LANGCHAIN_PROJECT"] = "mcp-agent-production"
 
-# Initialize client
+## Initialize client
 langsmith_client = Client()
 
-# LangSmith will automatically trace LangChain calls
+## LangSmith will automatically trace LangChain calls
 from langchain_anthropic import ChatAnthropic
 
 llm = ChatAnthropic(
@@ -529,11 +517,10 @@ llm = ChatAnthropic(
     anthropic_api_key=settings.anthropic_api_key
 )
 
-# This call is automatically traced
+## This call is automatically traced
 response = await llm.ainvoke("Hello!")
-```
-
-### Custom LangSmith Runs
+```text
+#### Custom LangSmith Runs
 
 ```python
 from langsmith import traceable
@@ -553,18 +540,17 @@ async def chat_with_auth(query: str, user_id: str):
 
     return response
 
-# Call function
+## Call function
 result = await chat_with_auth("What is AI?", user_id="alice")
-```
-
-### Feedback Collection
+```text
+#### Feedback Collection
 
 ```python
 from langsmith import Client
 
 client = Client()
 
-# Collect user feedback
+## Collect user feedback
 @app.post("/feedback")
 async def submit_feedback(
     run_id: str,
@@ -581,25 +567,23 @@ async def submit_feedback(
     )
 
     return {"status": "feedback_recorded"}
-```
+```text
+### Grafana Dashboards
 
-## Grafana Dashboards
-
-### Install Grafana
+#### Install Grafana
 
 ```bash
-# Add Grafana repo
+## Add Grafana repo
 helm repo add grafana https://grafana.github.io/helm-charts
 
-# Install Grafana
+## Install Grafana
 helm install grafana grafana/grafana \
   --namespace monitoring \
   --set persistence.enabled=true \
   --set persistence.size=10Gi \
   --set adminPassword=admin123
-```
-
-### Application Dashboard
+```text
+#### Application Dashboard
 
 **Import this JSON dashboard**:
 
@@ -653,9 +637,8 @@ helm install grafana grafana/grafana \
     ]
   }
 }
-```
-
-### LLM Observability Dashboard
+```text
+#### LLM Observability Dashboard
 
 ```json
 {
@@ -693,9 +676,8 @@ helm install grafana grafana/grafana \
     ]
   }
 }
-```
-
-### Production-Ready Dashboards (v2.1.0)
+```sql
+#### Production-Ready Dashboards (v2.1.0)
 
 <Note>
 **NEW in v2.1.0** - 7 production-ready Grafana dashboards covering authentication, authorization, LLM performance, and infrastructure metrics.
@@ -775,7 +757,7 @@ The repository includes pre-built Grafana dashboards optimized for production mo
   </Card>
 </CardGroup>
 
-#### Import Dashboards
+##### Import Dashboards
 
 <Tabs>
   <Tab title="Grafana UI">
@@ -821,7 +803,7 @@ The repository includes pre-built Grafana dashboards optimized for production mo
             configMap:
               name: grafana-dashboards
     '
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Helm Values">
@@ -858,11 +840,11 @@ The repository includes pre-built Grafana dashboards optimized for production mo
             file: monitoring/grafana/dashboards/keycloak.json
           redis-sessions:
             file: monitoring/grafana/dashboards/redis-sessions.json
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-#### Dashboard Features
+##### Dashboard Features
 
 All production dashboards include:
 
@@ -873,7 +855,7 @@ All production dashboards include:
 - **Legend tables** - Current, max, and mean values
 - **Panel descriptions** - Hover tooltips explaining metrics
 
-#### Required Metrics
+##### Required Metrics
 
 Ensure these metrics are exposed by the application:
 
@@ -890,8 +872,7 @@ token_refreshed_total
 session_active_count
 jwks_cache_hits_total
 jwks_cache_misses_total
-```
-
+```text
 **OpenFGA (openfga.json)**:
 ```promql
 up{job="openfga"}
@@ -904,17 +885,15 @@ openfga_tuples_written_total
 openfga_tuples_deleted_total
 openfga_sync_operations_total
 openfga_sync_duration_bucket
-```
-
+```text
 **LLM Performance (llm-performance.json)**:
 ```promql
 agent_calls_successful_total
 agent_calls_failed_total
 agent_response_duration_bucket
 agent_tool_calls_total
-# With labels: model, operation, tool
-```
-
+## With labels: model, operation, tool
+```text
 **Keycloak & Redis**:
 ```promql
 up{job="keycloak"}
@@ -924,30 +903,28 @@ keycloak_login_attempts_total
 redis_memory_used_bytes
 redis_db_keys
 redis_commands_processed_total
-```
-
-## Service Level Objectives (SLOs)
+```text
+### Service Level Objectives (SLOs)
 
 <Info>
 **NEW in v2.1.0** - Pre-computed SLO metrics via Prometheus recording rules for efficient monitoring and alerting.
 </Info>
 
-### SLO Recording Rules
+#### SLO Recording Rules
 
 The `monitoring/prometheus/rules/slo-recording-rules.yaml` file contains 40+ recording rules that pre-compute Service Level Indicators (SLIs) for fast querying in Grafana.
 
 **Load recording rules**:
 ```bash
-# Kubernetes with Prometheus Operator
+## Kubernetes with Prometheus Operator
 kubectl apply -f monitoring/prometheus/rules/slo-recording-rules.yaml
 
-# Docker Compose
-# Add to prometheus.yml:
+## Docker Compose
+## Add to prometheus.yml:
 rule_files:
   - /etc/prometheus/rules/slo-recording-rules.yaml
-```
-
-### Available SLO Metrics
+```text
+#### Available SLO Metrics
 
 <Tabs>
   <Tab title="Availability">
@@ -961,8 +938,7 @@ rule_files:
     job:up:avg:keycloak      # Target: 99.5%
     job:up:avg:openfga       # Target: 99.5%
     job:up:avg:redis_session # Target: 99.9%
-    ```
-
+    ```text
     **Usage in Grafana**:
     ```promql
     # Current availability
@@ -970,7 +946,7 @@ rule_files:
 
     # Downtime minutes per month
     (1 - job:up:avg) * 43200
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Latency">
@@ -989,13 +965,12 @@ rule_files:
 
     # Keycloak latency
     job:keycloak_request_duration:p95 # Target: 1000ms
-    ```
-
+    ```text
     **Usage in Grafana**:
     ```promql
     # P95 latency vs target
     job:agent_response_duration:p95 / 2000 * 100
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Error Rate">
@@ -1016,8 +991,7 @@ rule_files:
 
     # LLM fallback rate
     job:llm_fallback:rate             # Target: 0.10 (10%)
-    ```
-
+    ```text
     **Usage in Grafana**:
     ```promql
     # Error rate as percentage
@@ -1025,7 +999,7 @@ rule_files:
 
     # Success rate
     (1 - job:agent_calls:error_rate) * 100
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Saturation">
@@ -1043,8 +1017,7 @@ rule_files:
 
     # Redis connection pool
     job:redis_pool:saturation         # Target: 0.95 (95%)
-    ```
-
+    ```text
     **Usage in Grafana**:
     ```promql
     # Memory pressure
@@ -1052,7 +1025,7 @@ rule_files:
 
     # Available memory
     (1 - job:memory:saturation) * 100
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Error Budget">
@@ -1067,8 +1040,7 @@ rule_files:
 
     # Slow burn (3 day window)
     job:error_budget:burn_rate_3d
-    ```
-
+    ```text
     **Interpretation**:
     - Burn rate = 1.0: Consuming error budget at expected rate
     - Burn rate > 1.0: Consuming faster (alert!)
@@ -1081,7 +1053,7 @@ rule_files:
       for: 5m
       annotations:
         summary: "Error budget burning 14.4x faster than sustainable"
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Compliance">
@@ -1096,17 +1068,16 @@ rule_files:
 
     # Error rate compliance (success rate)
     job:slo_compliance:error_rate_30d    # Target: 99%
-    ```
-
+    ```text
     **Usage in Grafana**:
     ```promql
     # Monthly SLO report
     job:slo_compliance:availability_30d * 100
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-### SLO Dashboard Example
+#### SLO Dashboard Example
 
 Create an SLO summary dashboard:
 
@@ -1167,9 +1138,8 @@ Create an SLO summary dashboard:
     ]
   }
 }
-```
-
-### Benefits of SLO Recording Rules
+```text
+#### Benefits of SLO Recording Rules
 
 1. **Performance** - Pre-computed metrics query 10-100x faster
 2. **Consistency** - Same calculation across all dashboards
@@ -1177,9 +1147,9 @@ Create an SLO summary dashboard:
 4. **Reporting** - Historical SLO compliance tracking
 5. **Error Budgets** - Multi-window burn rate detection
 
-## Alerting with Alertmanager
+### Alerting with Alertmanager
 
-### Configure Alerts
+#### Configure Alerts
 
 **prometheus-rules.yaml**:
 ```yaml
@@ -1245,9 +1215,8 @@ groups:
     annotations:
       summary: "No active sessions"
       description: "No users have active sessions for 30 minutes"
-```
-
-### Alertmanager Configuration
+```text
+#### Alertmanager Configuration
 
 ```yaml
 global:
@@ -1275,11 +1244,10 @@ receivers:
 - name: 'pagerduty'
   pagerduty_configs:
   - service_key: 'YOUR_PAGERDUTY_KEY'
-```
+```text
+### Health Checks
 
-## Health Checks
-
-### Kubernetes Probes
+#### Kubernetes Probes
 
 ```yaml
 apiVersion: apps/v1
@@ -1312,9 +1280,8 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 5
           failureThreshold: 30
-```
-
-### Health Check Implementation
+```text
+#### Health Check Implementation
 
 ```python
 from fastapi import FastAPI, status
@@ -1371,9 +1338,8 @@ async def startup():
         )
 
     return {"status": "started"}
-```
-
-## Best Practices
+```text
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Use Structured Logging" icon="brackets-curly">
@@ -1390,7 +1356,7 @@ async def startup():
 
     # Bad
     logger.info(f"User {user_id} authenticated via keycloak in {duration}ms")
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Track Business Metrics" icon="chart-mixed">
@@ -1428,7 +1394,7 @@ async def startup():
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Scaling" icon="arrow-up-right-dots" href="/deployment/scaling">

@@ -4,13 +4,11 @@ description: 'Comprehensive security checklist to verify that your GKE staging e
 icon: 'clipboard-check'
 ---
 
-# GKE Staging Security Checklist
-
 This checklist helps verify that your GKE staging environment follows security best practices.
 
-## Network Security
+### Network Security
 
-### VPC Isolation
+#### VPC Isolation
 - [ ] Staging uses a separate VPC from production
 - [ ] VPC has custom subnets (not default VPC)
 - [ ] VPC flow logs are enabled
@@ -18,16 +16,16 @@ This checklist helps verify that your GKE staging environment follows security b
 
 **Verification:**
 ```bash
-# List VPCs
+## List VPCs
 gcloud compute networks list
 
-# Check subnet configuration
+## Check subnet configuration
 gcloud compute networks subnets describe staging-gke-subnet \
   --region=us-central1 \
   --format=yaml
 ```
 
-### GKE Cluster Security
+#### GKE Cluster Security
 - [ ] Private nodes are enabled (no public IPs)
 - [ ] Master authorized networks configured (if needed)
 - [ ] Control plane is on a private endpoint OR restricted public endpoint
@@ -37,28 +35,28 @@ gcloud compute networks subnets describe staging-gke-subnet \
 
 **Verification:**
 ```bash
-# Check cluster configuration
+## Check cluster configuration
 gcloud container clusters describe mcp-staging-cluster \
   --region=us-central1 \
   --format=yaml
 
-# Verify private nodes
+## Verify private nodes
 gcloud container clusters describe mcp-staging-cluster \
   --region=us-central1 \
   --format='value(privateClusterConfig.enablePrivateNodes)'
 
-# Verify Workload Identity
+## Verify Workload Identity
 gcloud container clusters describe mcp-staging-cluster \
   --region=us-central1 \
   --format='value(workloadIdentityConfig.workloadPool)'
 
-# Verify Binary Authorization
+## Verify Binary Authorization
 gcloud container clusters describe mcp-staging-cluster \
   --region=us-central1 \
   --format='value(binaryAuthorization.evaluationMode)'
 ```
 
-### Network Policies
+#### Network Policies
 - [ ] Default deny-all ingress policy exists
 - [ ] Egress policies restrict outbound traffic
 - [ ] Pod-to-pod communication is restricted
@@ -66,28 +64,28 @@ gcloud container clusters describe mcp-staging-cluster \
 
 **Verification:**
 ```bash
-# List network policies
+## List network policies
 kubectl get networkpolicies -n mcp-staging
 
-# Check specific policies
+## Check specific policies
 kubectl describe networkpolicy default-deny-ingress -n mcp-staging
 kubectl describe networkpolicy allow-egress -n mcp-staging
 ```
 
-### Firewall Rules
+#### Firewall Rules
 - [ ] VPC firewall rules follow least privilege
 - [ ] No overly permissive rules (0.0.0.0/0)
 - [ ] SSH access restricted to IAP (35.235.240.0/20)
 
 **Verification:**
 ```bash
-# List firewall rules for staging VPC
+## List firewall rules for staging VPC
 gcloud compute firewall-rules list --filter="network:staging-vpc"
 ```
 
-## Identity & Access Management (IAM)
+### Identity & Access Management (IAM)
 
-### Service Accounts
+#### Service Accounts
 - [ ] Pods use Workload Identity (not service account keys)
 - [ ] Each component has its own service account
 - [ ] Service accounts follow least privilege principle
@@ -95,26 +93,26 @@ gcloud compute firewall-rules list --filter="network:staging-vpc"
 
 **Verification:**
 ```bash
-# Check service account IAM bindings
+## Check service account IAM bindings
 gcloud iam service-accounts get-iam-policy \
   mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
 
-# Verify no keys exist
+## Verify no keys exist
 gcloud iam service-accounts keys list \
   --iam-account=mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
 ```
 
-### Workload Identity
+#### Workload Identity
 - [ ] Kubernetes service account is annotated with GCP SA
 - [ ] GCP service account has workloadIdentityUser binding
 - [ ] Pods successfully authenticate without keys
 
 **Verification:**
 ```bash
-# Check K8s service account annotation
+## Check K8s service account annotation
 kubectl describe sa mcp-server-langgraph -n mcp-staging | grep iam.gke.io
 
-# Test Workload Identity from pod
+## Test Workload Identity from pod
 kubectl run -it --rm test \
   --image=google/cloud-sdk:slim \
   --serviceaccount=mcp-server-langgraph \
@@ -122,7 +120,7 @@ kubectl run -it --rm test \
   -- gcloud auth list
 ```
 
-### GitHub Actions Workload Identity Federation
+#### GitHub Actions Workload Identity Federation
 - [ ] Workload Identity Pool created
 - [ ] OIDC provider configured for GitHub
 - [ ] No service account keys in GitHub Secrets
@@ -130,19 +128,19 @@ kubectl run -it --rm test \
 
 **Verification:**
 ```bash
-# Check Workload Identity Pool
+## Check Workload Identity Pool
 gcloud iam workload-identity-pools describe github-actions-pool \
   --location=global
 
-# Check provider configuration
+## Check provider configuration
 gcloud iam workload-identity-pools providers describe github-provider \
   --location=global \
   --workload-identity-pool=github-actions-pool
 ```
 
-## Secrets Management
+### Secrets Management
 
-### Secret Manager
+#### Secret Manager
 - [ ] All secrets stored in Secret Manager (not Kubernetes secrets)
 - [ ] Secrets have automatic replication
 - [ ] Service account has only secretAccessor role
@@ -150,14 +148,14 @@ gcloud iam workload-identity-pools providers describe github-provider \
 
 **Verification:**
 ```bash
-# List staging secrets
+## List staging secrets
 gcloud secrets list --filter="name:staging-*"
 
-# Verify permissions
+## Verify permissions
 gcloud secrets get-iam-policy staging-jwt-secret
 ```
 
-### External Secrets Operator
+#### External Secrets Operator
 - [ ] External Secrets Operator installed
 - [ ] SecretStore configured with Workload Identity
 - [ ] ExternalSecret syncing successfully
@@ -165,19 +163,19 @@ gcloud secrets get-iam-policy staging-jwt-secret
 
 **Verification:**
 ```bash
-# Check ESO is running
+## Check ESO is running
 kubectl get pods -n external-secrets-system
 
-# Check ExternalSecret status
+## Check ExternalSecret status
 kubectl get externalsecret mcp-staging-secrets -n mcp-staging
 
-# Verify secrets are synced
+## Verify secrets are synced
 kubectl get secret mcp-staging-secrets -n mcp-staging
 ```
 
-## Container Security
+### Container Security
 
-### Image Security
+#### Image Security
 - [ ] Images are signed/attested
 - [ ] Binary Authorization policy enforces signed images
 - [ ] Images come from trusted registry (Artifact Registry)
@@ -185,15 +183,15 @@ kubectl get secret mcp-staging-secrets -n mcp-staging
 
 **Verification:**
 ```bash
-# Check image source
+## Check image source
 kubectl get deployment staging-mcp-server-langgraph -n mcp-staging \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
 
-# Check Binary Authorization policy
+## Check Binary Authorization policy
 gcloud container binauthz policy export
 ```
 
-### Pod Security
+#### Pod Security
 - [ ] Pods run as non-root
 - [ ] readOnlyRootFilesystem enabled (where possible)
 - [ ] No privileged containers
@@ -202,16 +200,16 @@ gcloud container binauthz policy export
 
 **Verification:**
 ```bash
-# Check pod security context
+## Check pod security context
 kubectl get pod -n mcp-staging -o json | \
   jq '.items[].spec.securityContext'
 
-# Check for privileged containers
+## Check for privileged containers
 kubectl get pods -n mcp-staging -o json | \
   jq '.items[].spec.containers[] | select(.securityContext.privileged == true)'
 ```
 
-### Cloud SQL Proxy Sidecar
+#### Cloud SQL Proxy Sidecar
 - [ ] Cloud SQL proxy runs as non-root user
 - [ ] Proxy uses private IP connection
 - [ ] Proxy container has resource limits
@@ -219,14 +217,14 @@ kubectl get pods -n mcp-staging -o json | \
 
 **Verification:**
 ```bash
-# Check Cloud SQL proxy container
+## Check Cloud SQL proxy container
 kubectl get pod -n mcp-staging -o json | \
   jq '.items[].spec.containers[] | select(.name == "cloud-sql-proxy")'
 ```
 
-## Data Security
+### Data Security
 
-### Encryption
+#### Encryption
 - [ ] Data at rest encryption enabled (GKE default)
 - [ ] Secrets encrypted in etcd
 - [ ] Cloud SQL uses encrypted connections
@@ -234,15 +232,15 @@ kubectl get pod -n mcp-staging -o json | \
 
 **Verification:**
 ```bash
-# GKE encryption is automatic, verify cluster exists
+## GKE encryption is automatic, verify cluster exists
 kubectl cluster-info
 
-# Check Cloud SQL instance encryption
+## Check Cloud SQL instance encryption
 gcloud sql instances describe mcp-staging-postgres \
   --format='value(diskEncryptionStatus.kmsKeyName)'
 ```
 
-### Database Security
+#### Database Security
 - [ ] Cloud SQL uses private IP (not public)
 - [ ] Database passwords are in Secret Manager
 - [ ] Database users follow least privilege
@@ -250,16 +248,16 @@ gcloud sql instances describe mcp-staging-postgres \
 
 **Verification:**
 ```bash
-# Check Cloud SQL IP configuration
+## Check Cloud SQL IP configuration
 gcloud sql instances describe mcp-staging-postgres \
   --format='value(ipAddresses[])'
 
-# Check backup configuration
+## Check backup configuration
 gcloud sql instances describe mcp-staging-postgres \
   --format='value(settings.backupConfiguration)'
 ```
 
-### Redis Security
+#### Redis Security
 - [ ] Redis uses private IP
 - [ ] AUTH is enabled
 - [ ] Redis password is in Secret Manager
@@ -267,19 +265,19 @@ gcloud sql instances describe mcp-staging-postgres \
 
 **Verification:**
 ```bash
-# Check Redis configuration
+## Check Redis configuration
 gcloud redis instances describe mcp-staging-redis \
   --region=us-central1
 
-# Verify AUTH is enabled
+## Verify AUTH is enabled
 gcloud redis instances describe mcp-staging-redis \
   --region=us-central1 \
   --format='value(authEnabled)'
 ```
 
-## Monitoring & Logging
+### Monitoring & Logging
 
-### Cloud Logging
+#### Cloud Logging
 - [ ] Container logs sent to Cloud Logging
 - [ ] Audit logs enabled
 - [ ] Log retention configured
@@ -287,18 +285,18 @@ gcloud redis instances describe mcp-staging-redis \
 
 **Verification:**
 ```bash
-# Check recent logs
+## Check recent logs
 gcloud logging read \
   "resource.type=k8s_container
    resource.labels.cluster_name=mcp-staging-cluster" \
   --limit=10 \
   --format=json
 
-# Check audit logs are enabled
+## Check audit logs are enabled
 gcloud logging logs list --filter="logName:cloudaudit.googleapis.com"
 ```
 
-### Cloud Monitoring
+#### Cloud Monitoring
 - [ ] Metrics are being collected
 - [ ] Alert policies configured
 - [ ] Uptime checks configured
@@ -306,45 +304,45 @@ gcloud logging logs list --filter="logName:cloudaudit.googleapis.com"
 
 **Verification:**
 ```bash
-# List metrics
+## List metrics
 gcloud monitoring metrics-descriptors list \
   --filter="metric.type:kubernetes.io/container/*" \
   --limit=10
 
-# List alert policies
+## List alert policies
 gcloud alpha monitoring policies list
 ```
 
-### Cloud Trace
+#### Cloud Trace
 - [ ] Distributed tracing enabled
 - [ ] Traces sent to Cloud Trace
 - [ ] Sampling rate configured
 
 **Verification:**
 ```bash
-# This is configured in OTel collector, check collector logs
+## This is configured in OTel collector, check collector logs
 kubectl logs -n mcp-staging -l app=otel-collector
 ```
 
-## Compliance & Governance
+### Compliance & Governance
 
-### Resource Labeling
+#### Resource Labeling
 - [ ] All resources have environment label
 - [ ] Cost allocation labels applied
 - [ ] Owner/team labels present
 
 **Verification:**
 ```bash
-# Check GKE cluster labels
+## Check GKE cluster labels
 gcloud container clusters describe mcp-staging-cluster \
   --region=us-central1 \
   --format='value(resourceLabels)'
 
-# Check pods have labels
+## Check pods have labels
 kubectl get pods -n mcp-staging --show-labels
 ```
 
-### Resource Limits
+#### Resource Limits
 - [ ] All containers have resource requests
 - [ ] All containers have resource limits
 - [ ] Namespace has ResourceQuota
@@ -352,18 +350,18 @@ kubectl get pods -n mcp-staging --show-labels
 
 **Verification:**
 ```bash
-# Check container resources
+## Check container resources
 kubectl get pods -n mcp-staging -o json | \
   jq '.items[].spec.containers[] | {name: .name, resources: .resources}'
 
-# Check ResourceQuota
+## Check ResourceQuota
 kubectl get resourcequota -n mcp-staging
 
-# Check LimitRange
+## Check LimitRange
 kubectl get limitrange -n mcp-staging
 ```
 
-### Backup & Disaster Recovery
+#### Backup & Disaster Recovery
 - [ ] Cloud SQL automated backups enabled
 - [ ] Kubernetes manifests in version control
 - [ ] Secrets can be recovered from Secret Manager
@@ -371,17 +369,17 @@ kubectl get limitrange -n mcp-staging
 
 **Verification:**
 ```bash
-# Check backup configuration
+## Check backup configuration
 gcloud sql instances describe mcp-staging-postgres \
   --format='value(settings.backupConfiguration.enabled)'
 
-# List backups
+## List backups
 gcloud sql backups list --instance=mcp-staging-postgres
 ```
 
-## GitHub Actions Security
+### GitHub Actions Security
 
-### Workflow Security
+#### Workflow Security
 - [ ] Workload Identity Federation used (no keys)
 - [ ] Workflows use specific versions (not @latest)
 - [ ] GitHub Environment protection rules configured
@@ -392,7 +390,7 @@ gcloud sql backups list --instance=mcp-staging-postgres
 - Review `.github/workflows/deploy-staging-gke.yaml`
 - Check GitHub repository settings → Environments → staging
 
-### Deployment Validation
+#### Deployment Validation
 - [ ] Smoke tests run post-deployment
 - [ ] Health checks pass before marking success
 - [ ] Automatic rollback on failure
@@ -400,14 +398,14 @@ gcloud sql backups list --instance=mcp-staging-postgres
 
 **Verification:**
 ```bash
-# Check recent deployments in Cloud Console
+## Check recent deployments in Cloud Console
 gcloud container clusters get-credentials mcp-staging-cluster --region=us-central1
 kubectl rollout history deployment/staging-mcp-server-langgraph -n mcp-staging
 ```
 
-## Security Scanning
+### Security Scanning
 
-### Vulnerability Scanning
+#### Vulnerability Scanning
 - [ ] Container images scanned for vulnerabilities
 - [ ] No HIGH or CRITICAL vulnerabilities
 - [ ] Scanning integrated into CI/CD
@@ -415,42 +413,42 @@ kubectl rollout history deployment/staging-mcp-server-langgraph -n mcp-staging
 
 **Verification:**
 ```bash
-# Enable Container Analysis API if not already
+## Enable Container Analysis API if not already
 gcloud services enable containeranalysis.googleapis.com
 
-# Scan image
+## Scan image
 gcloud artifacts docker images scan \
   us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:staging-latest
 ```
 
-### Security Auditing
+#### Security Auditing
 - [ ] Regular security audits scheduled
 - [ ] Audit findings tracked and remediated
 - [ ] Compliance requirements documented
 
-## Incident Response
+### Incident Response
 
-### Monitoring & Alerting
+#### Monitoring & Alerting
 - [ ] Alert policies configured for security events
 - [ ] On-call rotation defined
 - [ ] Incident response playbook exists
 - [ ] Runbooks for common issues
 
-### Rollback Procedures
+#### Rollback Procedures
 - [ ] Documented rollback procedure
 - [ ] Rollback tested in staging
 - [ ] Automatic rollback configured in CI/CD
 
 **Test Rollback:**
 ```bash
-# Manual rollback test
+## Manual rollback test
 kubectl rollout undo deployment/staging-mcp-server-langgraph -n mcp-staging
 kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
 ```
 
 ---
 
-## Scoring
+### Scoring
 
 **Total Checklist Items**: ~80
 
@@ -460,7 +458,7 @@ kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
 - **70-79% complete**: Fair - Significant gaps exist
 - **&lt;70% complete**: Poor - Not ready for production-like staging
 
-## Next Steps
+### Next Steps
 
 After completing this checklist:
 
@@ -469,7 +467,7 @@ After completing this checklist:
 3. **Schedule regular reviews**: Re-run this checklist quarterly
 4. **Automate checks**: Convert manual checks to automated tests where possible
 
-## Resources
+### Resources
 
 - [GKE Security Best Practices](https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster)
 - [Google Cloud Security Checklist](https://cloud.google.com/security/best-practices)

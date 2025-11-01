@@ -5,11 +5,9 @@ icon: 'code'
 ---
 
 
-# Integration Testing with Docker
-
 Complete guide for running integration tests in containerized environments.
 
-## Overview
+### Overview
 
 Integration tests verify that the MCP Server works correctly with real external services (PostgreSQL, OpenFGA, Redis, etc.). All integration tests run in isolated Docker containers, ensuring:
 
@@ -21,55 +19,55 @@ Integration tests verify that the MCP Server works correctly with real external 
 
 ---
 
-## Quick Start
+### Quick Start
 
 ```bash
-# Run all integration tests (simplest way)
+## Run all integration tests (simplest way)
 make test-integration
 
-# That's it! Docker handles everything:
-# - Starts PostgreSQL, OpenFGA, Redis
-# - Waits for services to be healthy
-# - Runs pytest -m integration
-# - Cleans up containers
+## That's it! Docker handles everything:
+## - Starts PostgreSQL, OpenFGA, Redis
+## - Waits for services to be healthy
+## - Runs pytest -m integration
+## - Cleans up containers
 ```
 
 ---
 
-## Commands
+### Commands
 
-### Basic Usage
+#### Basic Usage
 
 ```bash
-# Run integration tests in Docker (recommended)
+## Run integration tests in Docker (recommended)
 make test-integration
 
-# Run locally (requires services already running)
+## Run locally (requires services already running)
 make test-integration-local
 
-# Rebuild Docker image and test
+## Rebuild Docker image and test
 make test-integration-build
 
-# Keep containers running for debugging
+## Keep containers running for debugging
 make test-integration-debug
 
-# Start services only (no tests)
+## Start services only (no tests)
 make test-integration-services
 
-# Clean up all test containers
+## Clean up all test containers
 make test-integration-cleanup
 ```
 
-### Advanced Usage
+#### Advanced Usage
 
 ```bash
-# Using the script directly with options
+## Using the script directly with options
 ./scripts/test-integration.sh --build     # Force rebuild
 ./scripts/test-integration.sh --keep      # Keep containers after tests
 ./scripts/test-integration.sh --verbose   # Show Docker output
 ./scripts/test-integration.sh --services  # Start services only
 
-# Run specific integration tests
+## Run specific integration tests
 docker compose -f docker/docker-compose.test.yml up -d
 pytest -m integration tests/test_openfga_client.py -v
 docker compose -f docker/docker-compose.test.yml down -v
@@ -77,9 +75,9 @@ docker compose -f docker/docker-compose.test.yml down -v
 
 ---
 
-## Architecture
+### Architecture
 
-### Services
+#### Services
 
 Integration tests use these containerized services:
 
@@ -88,14 +86,14 @@ Integration tests use these containerized services:
 3. **redis-test** - Redis (no persistence)
 4. **test-runner** - Python container running pytest
 
-### Network Isolation
+#### Network Isolation
 
 All services run in an isolated Docker network (`test-network`):
 - No port conflicts with local development
 - Services communicate via service names (e.g., `postgres-test:5432`)
 - No ports exposed to host (unless debugging)
 
-### Environment Variables
+#### Environment Variables
 
 The test runner automatically sets:
 - `TESTING=true` - Enables integration test mode
@@ -106,9 +104,9 @@ The test runner automatically sets:
 
 ---
 
-## Writing Integration Tests
+### Writing Integration Tests
 
-### Test Markers
+#### Test Markers
 
 Mark integration tests with `@pytest.mark.integration`:
 
@@ -123,7 +121,7 @@ async def test_openfga_authorization():
     pass
 ```
 
-### Using Real Services
+#### Using Real Services
 
 Integration test fixtures connect to real services:
 
@@ -155,7 +153,7 @@ async def test_openfga_check(openfga_client_real):
     assert isinstance(allowed, bool)
 ```
 
-### Available Fixtures
+#### Available Fixtures
 
 From `tests/conftest.py`:
 
@@ -171,70 +169,70 @@ All fixtures automatically:
 
 ---
 
-## Debugging
+### Debugging
 
-### View Service Logs
+#### View Service Logs
 
 ```bash
-# While tests are running
+## While tests are running
 docker compose -f docker/docker-compose.test.yml logs test-runner
 docker compose -f docker/docker-compose.test.yml logs postgres-test
 docker compose -f docker/docker-compose.test.yml logs openfga-test
 
-# Or use helper script
+## Or use helper script
 ./scripts/test-integration.sh --verbose
 ```
 
-### Keep Containers Running
+#### Keep Containers Running
 
 ```bash
-# Run tests and keep containers for inspection
+## Run tests and keep containers for inspection
 ./scripts/test-integration.sh --keep
 
-# Inspect services
+## Inspect services
 docker compose -f docker/docker-compose.test.yml ps
 docker compose -f docker/docker-compose.test.yml logs
 
-# Connect to postgres
+## Connect to postgres
 docker compose -f docker/docker-compose.test.yml exec postgres-test psql -U postgres testdb
 
-# Connect to redis
+## Connect to redis
 docker compose -f docker/docker-compose.test.yml exec redis-test redis-cli
 
-# Clean up when done
+## Clean up when done
 docker compose -f docker/docker-compose.test.yml down -v
 ```
 
-### Run Single Test
+#### Run Single Test
 
 ```bash
-# Start services
+## Start services
 docker compose -f docker/docker-compose.test.yml up -d postgres-test openfga-test redis-test
 
-# Wait for health
+## Wait for health
 ./scripts/wait-for-services.sh
 
-# Run specific test locally
+## Run specific test locally
 TESTING=true \
 OPENFGA_API_URL=http://localhost:8080 \
 POSTGRES_HOST=localhost \
 REDIS_HOST=localhost \
 pytest -m integration tests/test_openfga_client.py::test_check_permission -xvs
 
-# Cleanup
+## Cleanup
 docker compose -f docker/docker-compose.test.yml down -v
 ```
 
 ---
 
-## CI/CD Integration
+### CI/CD Integration
 
-### GitHub Actions
+#### GitHub Actions
 
 Integration tests run automatically in CI:
 
 ```yaml
-# .github/workflows/ci.yaml
+## .github/workflows/ci.yaml
 - name: Set up Docker Buildx
   uses: docker/setup-buildx-action@v3
 
@@ -251,9 +249,9 @@ Integration tests run automatically in CI:
 
 ---
 
-## Performance
+### Performance
 
-### Timing
+#### Timing
 
 | Phase | Duration |
 |-------|----------|
@@ -265,7 +263,7 @@ Integration tests run automatically in CI:
 | **Total (first run)** | **~100s** |
 | **Total (cached)** | **~50s** |
 
-### Optimization Tips
+#### Optimization Tips
 
 1. **Use BuildKit caching** (already enabled)
 2. **Keep containers for re-runs** during development
@@ -274,88 +272,88 @@ Integration tests run automatically in CI:
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
-### Tests Time Out
+#### Tests Time Out
 
 ```bash
-# Increase health check timeout
+## Increase health check timeout
 TIMEOUT=300 ./scripts/wait-for-services.sh
 ```
 
-### Services Won't Start
+#### Services Won't Start
 
 ```bash
-# Check service logs
+## Check service logs
 docker compose -f docker/docker-compose.test.yml logs postgres-test
 
-# Verify Docker resources (need 2GB RAM minimum)
+## Verify Docker resources (need 2GB RAM minimum)
 docker system info
 ```
 
-### Port Conflicts
+#### Port Conflicts
 
 Integration tests use isolated network with no exposed ports. If you see port conflicts:
 
 ```bash
-# Stop other containers
+## Stop other containers
 docker ps
 docker stop <conflicting-container>
 
-# Or use different compose file
+## Or use different compose file
 docker compose -f docker/docker-compose.yml down
 ```
 
-### Permission Errors
+#### Permission Errors
 
 ```bash
-# Make scripts executable
+## Make scripts executable
 chmod +x scripts/test-integration.sh
 chmod +x scripts/wait-for-services.sh
 
-# Check Docker permissions
+## Check Docker permissions
 docker ps  # Should work without sudo
 ```
 
 ---
 
-## Local Development Workflow
+### Local Development Workflow
 
-### Recommended Flow
+#### Recommended Flow
 
 ```bash
-# 1. Write code
+## 1. Write code
 vim src/mcp_server_langgraph/auth/openfga.py
 
-# 2. Run unit tests (fast)
+## 2. Run unit tests (fast)
 pytest -m unit tests/test_openfga_client.py -v
 
-# 3. Run integration tests
+## 3. Run integration tests
 make test-integration
 
-# 4. Fix failures, repeat
+## 4. Fix failures, repeat
 ```
 
-### Alternative: Keep Services Running
+#### Alternative: Keep Services Running
 
 ```bash
-# Start services once
+## Start services once
 make test-integration-services
 
-# Run tests many times (fast)
+## Run tests many times (fast)
 pytest -m integration -v
 pytest -m integration -v
 pytest -m integration -v
 
-# Clean up when done
+## Clean up when done
 make test-integration-cleanup
 ```
 
 ---
 
-## Configuration
+### Configuration
 
-### docker-compose.test.yml
+#### docker-compose.test.yml
 
 Test services configuration:
 - In-memory databases (fast, ephemeral)
@@ -363,7 +361,7 @@ Test services configuration:
 - No volumes (clean state every run)
 - Isolated network
 
-### Dockerfile.test
+#### Dockerfile.test
 
 Test runner image:
 - Python 3.12
@@ -371,7 +369,7 @@ Test runner image:
 - Environment pre-configured
 - Fast builds with caching
 
-### Test Environment Variables
+#### Test Environment Variables
 
 Set in `docker-compose.test.yml`:
 - `TESTING=true` - Enables test mode
@@ -380,7 +378,7 @@ Set in `docker-compose.test.yml`:
 
 ---
 
-## Best Practices
+### Best Practices
 
 1. **Use Docker for CI/CD**: Always `make test-integration` in workflows
 2. **Keep tests fast**: Use unit tests for logic, integration for service interaction
@@ -391,7 +389,7 @@ Set in `docker-compose.test.yml`:
 
 ---
 
-## Related Documentation
+### Related Documentation
 
 - [Testing Guide](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/tests/README.md) - Overview of all test types
 - [Docker Deployment](/deployment/docker) - Docker best practices

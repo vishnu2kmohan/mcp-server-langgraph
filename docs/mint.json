@@ -178,11 +178,18 @@
       "group": "Kubernetes",
       "pages": [
         "deployment/kubernetes/gke",
+        "deployment/kubernetes/gke-production",
         "deployment/kubernetes/gke-staging",
         "deployment/kubernetes/eks",
         "deployment/kubernetes/aks",
         "deployment/kubernetes/kustomize",
         "deployment/vmware-resource-estimation"
+      ]
+    },
+    {
+      "group": "Infrastructure as Code",
+      "pages": [
+        "deployment/infrastructure/terraform-gcp"
       ]
     },
     {
@@ -194,7 +201,11 @@
         "deployment/monitoring",
         "deployment/log-aggregation",
         "deployment/scaling",
-        "deployment/disaster-recovery"
+        "deployment/cost-optimization",
+        "deployment/disaster-recovery",
+        "deployment/gitops-argocd",
+        "deployment/binary-authorization",
+        "deployment/service-mesh"
       ]
     },
     {
@@ -203,6 +214,7 @@
         "security/overview",
         "security/quickstart-security",
         "security/best-practices",
+        "security/gcp-security-hardening",
         "security/audit-checklist",
         "security/gke-staging-checklist",
         "security/compliance"
@@ -222,6 +234,10 @@
       "group": "Reference",
       "pages": [
         "reference/environment-variables",
+        "reference/setup-scripts",
+        "reference/configuration-files",
+        "reference/api-endpoints",
+        "reference/kong-plugins",
         "reference/development/ide-setup",
         "reference/development/github-actions",
         "reference/development/build-verification",
@@ -232,6 +248,7 @@
     {
       "group": "Operations",
       "pages": [
+        "deployment/operations/gke-runbooks",
         "deployment/version-pinning",
         "deployment/version-compatibility",
         "deployment/release-process",
@@ -286,7 +303,7 @@
       ]
     },
     {
-      "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30)",
+      "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40)",
       "pages": [
         "architecture/adr-0008-infisical-secrets-management",
         "architecture/adr-0009-feature-flag-system",
@@ -295,7 +312,8 @@
         "architecture/adr-0021-cicd-pipeline-strategy",
         "architecture/adr-0027-rate-limiting-strategy",
         "architecture/adr-0028-caching-strategy",
-        "architecture/adr-0030-resilience-patterns"
+        "architecture/adr-0030-resilience-patterns",
+        "architecture/adr-0040-gcp-gke-autopilot-deployment"
       ]
     },
     {

@@ -5,11 +5,9 @@ icon: 'diagram-project'
 ---
 
 
-# System Architecture Diagram
-
 This file contains Mermaid diagrams for the MCP Server LangGraph system architecture.
 
-## High-Level System Architecture
+### High-Level System Architecture
 
 ```mermaid
 graph TD
@@ -118,7 +116,7 @@ graph TD
     class OTEL,Jaeger,Prometheus,Grafana,LangSmith obs
 ```
 
-## Authentication Flow
+### Authentication Flow
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
@@ -157,7 +155,7 @@ sequenceDiagram
     Note over Auth,OpenFGA: Fine-grained access control<br/>per tool, conversation, resource
 ```
 
-## Agentic Loop Workflow
+### Agentic Loop Workflow
 
 ```mermaid
 flowchart TD
@@ -198,7 +196,7 @@ flowchart TD
     style Refine fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
 ```
 
-## Deployment Architecture (Kubernetes)
+### Deployment Architecture (Kubernetes)
 
 ```mermaid
 graph TB
@@ -301,7 +299,7 @@ graph TB
     style QdrantPod fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
 ```
 
-## Data Flow - MCP Tool Execution
+### Data Flow - MCP Tool Execution
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
@@ -359,7 +357,7 @@ sequenceDiagram
     Note over Context,Verify: Full Agentic Loop<br/>Gather-Action-Verify-Repeat
 ```
 
-## Parallel Tool Execution
+### Parallel Tool Execution
 
 ```mermaid
 graph LR
@@ -404,7 +402,7 @@ graph LR
     style Tool3 fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
 ```
 
-## Context Loading Strategy
+### Context Loading Strategy
 
 ```mermaid
 flowchart TD
@@ -446,7 +444,7 @@ flowchart TD
     LoadCache -.-> Note2
 ```
 
-## Session Management Architecture
+### Session Management Architecture
 
 ```mermaid
 graph TD
@@ -510,7 +508,7 @@ graph TD
     style Tracking fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
 ```
 
-## LLM Provider Fallback Chain
+### LLM Provider Fallback Chain
 
 ```mermaid
 flowchart LR
@@ -547,7 +545,7 @@ flowchart LR
     style Response fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
 ```
 
-## Observability Data Flow
+### Observability Data Flow
 
 ```mermaid
 graph TB
@@ -621,34 +619,34 @@ graph TB
 
 ---
 
-## Usage
+### Usage
 
-### In Mintlify Documentation
+#### In Mintlify Documentation
 
 To use these diagrams in Mintlify `.mdx` files, copy any of the diagram blocks above and paste them into your documentation. The diagrams will render automatically in Mintlify.
 
-### Viewing Locally
+#### Viewing Locally
 
 1. **VS Code**: Install "Markdown Preview Mermaid Support" extension
 2. **GitHub**: Mermaid renders automatically in markdown preview
 3. **Mermaid Live Editor**: https://mermaid.live/
 
-### Exporting to Images
+#### Exporting to Images
 
 ```bash
-# Install mermaid-cli
+## Install mermaid-cli
 npm install -g @mermaid-js/mermaid-cli
 
-# Export to PNG
+## Export to PNG
 mmdc -i docs/diagrams/system-architecture.md -o docs/diagrams/system-architecture.png
 
-# Export to SVG
+## Export to SVG
 mmdc -i docs/diagrams/system-architecture.md -o docs/diagrams/system-architecture.svg
 ```
 
 ---
 
-## Diagram Maintenance
+### Diagram Maintenance
 
 **Last Updated**: 2025-10-22
 **Update Frequency**: After major architectural changes

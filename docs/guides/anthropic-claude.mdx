@@ -4,7 +4,7 @@ description: 'Configure Claude models for advanced reasoning and extended contex
 icon: 'message-bot'
 ---
 
-## Overview
+### Overview
 
 Anthropic Claude provides industry-leading AI models with exceptional reasoning capabilities, extended context windows (up to 200K tokens), and strong safety guardrails. This guide covers setup, configuration, and best practices for using Claude with the MCP Server.
 
@@ -12,7 +12,7 @@ Anthropic Claude provides industry-leading AI models with exceptional reasoning 
 Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at twice the speed of Claude 3.5 Sonnet.
 </Info>
 
-## Available Models
+### Available Models
 
 | Model | Context Window | Use Case | Pricing (per 1M tokens) |
 |-------|---------------|----------|-------------------------|
@@ -24,7 +24,7 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
 
 **Recommended**: `claude-3-5-sonnet-20241022` for production (best performance/cost ratio)
 
-## Quick Start
+### Quick Start
 
 <Steps>
   <Step title="Get API Key">
@@ -44,15 +44,14 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
     INFISICAL_PROJECT_ID=your-project-id
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-client-secret
-    ```
-
+    ```text
     **Using Environment Variables** (Development only):
     ```bash
     # .env
     LLM_PROVIDER=anthropic
     ANTHROPIC_API_KEY=sk-ant-api03-...your-key
     LLM_MODEL_NAME=claude-3-5-sonnet-20241022
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -66,13 +65,13 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
 
     response = await llm.ainvoke("Explain quantum entanglement in simple terms")
     print(response.content)
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Configuration Options
+### Configuration Options
 
-### Basic Configuration
+#### Basic Configuration
 
 ```python
 from mcp_server_langgraph.llm.factory import LLMFactory
@@ -85,12 +84,11 @@ llm = LLMFactory(
     timeout=60
 )
 
-# Invoke
+## Invoke
 response = await llm.ainvoke("What is machine learning?")
 print(response.content)
-```
-
-### Advanced Configuration
+```text
+#### Advanced Configuration
 
 ```python
 from langchain_anthropic import ChatAnthropic
@@ -117,9 +115,8 @@ llm = ChatAnthropic(
         "anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"
     }
 )
-```
-
-### Model Selection Strategy
+```text
+#### Model Selection Strategy
 
 ```python
 def select_claude_model(task_type: str, complexity: str) -> str:
@@ -140,19 +137,18 @@ def select_claude_model(task_type: str, complexity: str) -> str:
     # Default
     return "claude-3-5-sonnet-20241022"
 
-# Use dynamically
+## Use dynamically
 llm = LLMFactory(
     provider="anthropic",
     model_name=select_claude_model(task_type="code", complexity="high")
 )
-```
+```text
+### Features
 
-## Features
-
-### Extended Context (200K tokens)
+#### Extended Context (200K tokens)
 
 ```python
-# Process long documents
+## Process long documents
 with open("long_document.txt", "r") as f:
     document = f.read()  # 150K tokens
 
@@ -168,9 +164,8 @@ Document:
 
 response = await llm.ainvoke(prompt)
 print(response.content)
-```
-
-### Tool Use (Function Calling)
+```text
+#### Tool Use (Function Calling)
 
 ```python
 from langchain_core.tools import tool
@@ -197,7 +192,7 @@ def search_web(query: str) -> str:
     # Implementation
     return f"Search results for: {query}"
 
-# Create agent with tools
+## Create agent with tools
 llm_with_tools = llm.bind_tools([get_weather, search_web])
 
 agent = create_react_agent(
@@ -205,25 +200,24 @@ agent = create_react_agent(
     tools=[get_weather, search_web]
 )
 
-# Run agent
+## Run agent
 result = await agent.ainvoke({
     "messages": [("user", "What's the weather in Tokyo and find recent news about AI")]
 })
 
 print(result["messages"][-1].content)
-```
-
-### Vision (Claude 3.5 Sonnet)
+```text
+#### Vision (Claude 3.5 Sonnet)
 
 ```python
 import base64
 from langchain_core.messages import HumanMessage
 
-# Load image
+## Load image
 with open("diagram.png", "rb") as f:
     image_data = base64.b64encode(f.read()).decode()
 
-# Create vision message
+## Create vision message
 message = HumanMessage(
     content=[
         {
@@ -243,9 +237,8 @@ message = HumanMessage(
 
 response = await llm.ainvoke([message])
 print(response.content)
-```
-
-### Structured Output
+```text
+#### Structured Output
 
 ```python
 from pydantic import BaseModel, Field
@@ -258,7 +251,7 @@ class CodeReview(BaseModel):
     suggestions: List[str] = Field(description="Improvement suggestions")
     rating: int = Field(description="Code quality rating 1-10")
 
-# Force structured output
+## Force structured output
 structured_llm = llm.with_structured_output(CodeReview)
 
 code = """
@@ -271,25 +264,24 @@ response = await structured_llm.ainvoke(
 )
 
 print(response.model_dump_json(indent=2))
-# Output:
-# {
-#   "summary": "Simple addition function",
-#   "issues": ["No type hints", "No docstring"],
-#   "suggestions": ["Add type hints", "Add documentation"],
-#   "rating": 6
-# }
-```
-
-### Streaming
+## Output:
+## {
+## "summary": "Simple addition function",
+## "issues": ["No type hints", "No docstring"],
+## "suggestions": ["Add type hints", "Add documentation"],
+## "rating": 6
+## }
+```text
+#### Streaming
 
 ```python
-# Stream token-by-token
+## Stream token-by-token
 async def stream_response(query: str):
     async for chunk in llm.astream(query):
         print(chunk.content, end="", flush=True)
         yield chunk.content
 
-# Use in API
+## Use in API
 from fastapi.responses import StreamingResponse
 
 @app.post("/message/stream")
@@ -298,14 +290,13 @@ async def stream_message(request: MessageRequest):
         stream_response(request.query),
         media_type="text/event-stream"
     )
-```
-
-### System Prompts
+```text
+#### System Prompts
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate
 
-# Define system prompt
+## Define system prompt
 system_template = """You are a helpful AI assistant specializing in {domain}.
 
 Guidelines:
@@ -317,13 +308,13 @@ Guidelines:
 Current date: {current_date}
 """
 
-# Create prompt template
+## Create prompt template
 prompt = ChatPromptTemplate.from_messages([
     SystemMessagePromptTemplate.from_template(system_template),
     ("user", "{query}")
 ])
 
-# Create chain
+## Create chain
 from langchain_core.runnables import RunnablePassthrough
 
 chain = (
@@ -334,7 +325,7 @@ chain = (
     | llm
 )
 
-# Run
+## Run
 response = await chain.ainvoke({
     "domain": "software engineering",
     "style": "technical but accessible",
@@ -342,11 +333,10 @@ response = await chain.ainvoke({
 })
 
 print(response.content)
-```
+```text
+### Production Deployment
 
-## Production Deployment
-
-### Kubernetes Configuration
+#### Kubernetes Configuration
 
 ```yaml
 apiVersion: apps/v1
@@ -390,9 +380,8 @@ spec:
           limits:
             cpu: 4000m
             memory: 4Gi
-```
-
-### Rate Limiting
+```text
+#### Rate Limiting
 
 ```python
 from slowapi import Limiter
@@ -400,10 +389,10 @@ from slowapi.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
 
-# Claude rate limits (as of Oct 2024):
-# - Tier 1: 50 requests/min, 40K tokens/min
-# - Tier 2: 1000 requests/min, 400K tokens/min
-# - Tier 3: 2000 requests/min, 1M tokens/min
+## Claude rate limits (as of Oct 2024):
+## - Tier 1: 50 requests/min, 40K tokens/min
+## - Tier 2: 1000 requests/min, 400K tokens/min
+## - Tier 3: 2000 requests/min, 1M tokens/min
 
 @app.post("/message")
 @limiter.limit("40/minute")  # Conservative for Tier 1
@@ -411,13 +400,12 @@ async def send_message(request: Request):
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
 
-# Per-user rate limiting
+## Per-user rate limiting
 @limiter.limit("100/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```
-
-### Error Handling
+```text
+#### Error Handling
 
 ```python
 from anthropic import (
@@ -458,7 +446,7 @@ async def call_claude_with_retry(query: str):
         logger.error(f"API error: {e}")
         return None
 
-# Use with fallback
+## Use with fallback
 async def call_with_fallback(query: str):
     try:
         return await call_claude_with_retry(query)
@@ -468,21 +456,20 @@ async def call_with_fallback(query: str):
         # Fallback to another provider
         fallback_llm = LLMFactory(provider="google", model_name="gemini-2.5-flash")
         return await fallback_llm.ainvoke(query)
-```
+```text
+### Performance Optimization
 
-## Performance Optimization
-
-### Prompt Caching
+#### Prompt Caching
 
 ```python
-# Enable prompt caching for repeated context
-# (saves on input tokens for cached content)
+## Enable prompt caching for repeated context
+## (saves on input tokens for cached content)
 
 from anthropic import Anthropic
 
 client = Anthropic(api_key=settings.anthropic_api_key)
 
-# Mark content for caching
+## Mark content for caching
 response = client.messages.create(
     model="claude-3-5-sonnet-20241022",
     max_tokens=1024,
@@ -502,14 +489,13 @@ response = client.messages.create(
     ]
 )
 
-# Subsequent requests reuse cached content
-# (only charged for cache read, not full input tokens)
-```
-
-### Batching
+## Subsequent requests reuse cached content
+## (only charged for cache read, not full input tokens)
+```text
+#### Batching
 
 ```python
-# Process multiple requests efficiently
+## Process multiple requests efficiently
 import asyncio
 
 queries = [
@@ -518,7 +504,7 @@ queries = [
     "What is FastAPI?"
 ]
 
-# Concurrent processing
+## Concurrent processing
 async def process_batch(queries: List[str]):
     tasks = [llm.ainvoke(q) for q in queries]
     responses = await asyncio.gather(*tasks)
@@ -527,20 +513,19 @@ async def process_batch(queries: List[str]):
 results = await process_batch(queries)
 for query, response in zip(queries, results):
     print(f"Q: {query}\nA: {response.content}\n")
-```
-
-### Token Management
+```text
+#### Token Management
 
 ```python
 import tiktoken
 
-# Estimate tokens (approximate for Claude)
+## Estimate tokens (approximate for Claude)
 def count_tokens(text: str) -> int:
     """Estimate tokens using tiktoken"""
     encoding = tiktoken.get_encoding("cl100k_base")
     return len(encoding.encode(text))
 
-# Truncate to fit context
+## Truncate to fit context
 def truncate_to_tokens(text: str, max_tokens: int) -> str:
     """Truncate text to fit token limit"""
     encoding = tiktoken.get_encoding("cl100k_base")
@@ -553,17 +538,16 @@ def truncate_to_tokens(text: str, max_tokens: int) -> str:
     truncated_tokens = tokens[:max_tokens]
     return encoding.decode(truncated_tokens)
 
-# Use before sending
+## Use before sending
 query = truncate_to_tokens(long_query, max_tokens=190000)  # Leave room for response
 response = await llm.ainvoke(query)
-```
+```text
+### Cost Optimization
 
-## Cost Optimization
-
-### Model Selection
+#### Model Selection
 
 ```python
-# Use cheaper model for simple tasks
+## Use cheaper model for simple tasks
 def get_optimal_model(complexity: str) -> str:
     if complexity == "simple":
         return "claude-3-5-haiku-20241022"  # $1/$5 per 1M tokens
@@ -576,14 +560,13 @@ llm = LLMFactory(
     provider="anthropic",
     model_name=get_optimal_model(analyze_complexity(query))
 )
-```
-
-### Usage Tracking
+```text
+#### Usage Tracking
 
 ```python
 from langchain.callbacks import get_openai_callback
 
-# Track usage and costs
+## Track usage and costs
 with get_openai_callback() as cb:
     response = await llm.ainvoke(query)
 
@@ -592,7 +575,7 @@ with get_openai_callback() as cb:
     print(f"Completion tokens: {cb.completion_tokens}")
     print(f"Estimated cost: ${cb.total_cost}")
 
-# Store metrics
+## Store metrics
 await store_usage_metrics({
     "model": "claude-3-5-sonnet-20241022",
     "tokens": cb.total_tokens,
@@ -600,12 +583,11 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```
-
-### Budget Limits
+```text
+#### Budget Limits
 
 ```python
-# Enforce per-user budgets
+## Enforce per-user budgets
 async def check_budget(user_id: str, estimated_cost: float):
     """Check if user has budget remaining"""
     usage = await get_user_usage(user_id)
@@ -615,7 +597,7 @@ async def check_budget(user_id: str, estimated_cost: float):
             f"Budget exceeded: ${usage.total_cost:.2f} / ${usage.budget_limit:.2f}"
         )
 
-# Use before API call
+## Use before API call
 @app.post("/message")
 async def send_message(
     request: MessageRequest,
@@ -631,32 +613,30 @@ async def send_message(
     # Call LLM
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
-```
+```text
+### Monitoring
 
-## Monitoring
-
-### LangSmith Integration
+#### LangSmith Integration
 
 ```python
-# Automatic tracking with LangSmith
+## Automatic tracking with LangSmith
 import os
 
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "langgraph-claude"
 os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 
-# All LLM calls automatically tracked
+## All LLM calls automatically tracked
 response = await llm.ainvoke(query)
 
-# View traces at https://smith.langchain.com
-```
-
-### Custom Metrics
+## View traces at https://smith.langchain.com
+```text
+#### Custom Metrics
 
 ```python
 from prometheus_client import Counter, Histogram
 
-# Define metrics
+## Define metrics
 claude_requests = Counter(
     'claude_requests_total',
     'Total Claude API requests',
@@ -675,7 +655,7 @@ claude_tokens = Counter(
     ['model', 'type']  # type: input or output
 )
 
-# Track metrics
+## Track metrics
 import time
 
 async def call_claude_with_metrics(query: str):
@@ -715,9 +695,8 @@ async def call_claude_with_metrics(query: str):
         claude_latency.labels(
             model="claude-3-5-sonnet-20241022"
         ).observe(duration)
-```
-
-## Troubleshooting
+```text
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Invalid API key">
@@ -741,7 +720,7 @@ async def call_claude_with_metrics(query: str):
     # 2. Delete compromised key
     # 3. Create new key
     # 4. Update in Infisical
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Rate limit exceeded">
@@ -767,7 +746,7 @@ async def call_claude_with_metrics(query: str):
 
     # Request tier upgrade
     # https://console.anthropic.com/settings/limits
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Timeout errors">
@@ -791,7 +770,7 @@ async def call_claude_with_metrics(query: str):
     # Use streaming for long responses
     async for chunk in llm.astream(query):
         yield chunk
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Content too long">
@@ -813,7 +792,7 @@ async def call_claude_with_metrics(query: str):
   </Accordion>
 </AccordionGroup>
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Security" icon="shield">
@@ -853,7 +832,7 @@ async def call_claude_with_metrics(query: str):
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Multi-LLM Setup" icon="layer-group" href="/guides/multi-llm-setup">

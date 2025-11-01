@@ -4,7 +4,7 @@ description: 'Hybrid rate limiting strategy for API protection using slowapi and
 icon: 'file-lines'
 ---
 
-# ADR-0027: Rate Limiting Strategy for API Protection
+## ADR-0027: Rate Limiting Strategy for API Protection
 
 <Note>
 **Status**: Accepted
@@ -12,7 +12,7 @@ icon: 'file-lines'
 **Deciders**: Engineering Team, Security Team
 </Note>
 
-## Context
+### Context
 
 The MCP server exposes HTTP endpoints without rate limiting, creating vulnerabilities:
 
@@ -22,23 +22,23 @@ The MCP server exposes HTTP endpoints without rate limiting, creating vulnerabil
 - **Brute force attacks**: Unlimited authentication attempts
 - **Data scraping**: Automated extraction of sensitive data
 
-### Risk Assessment
+#### Risk Assessment
 
 - **Likelihood**: HIGH (public API)
 - **Impact**: CRITICAL (service unavailability, financial loss)
 - **CVSS Score**: 7.5 (High) - DoS vulnerability
 
-### Compliance Requirements
+#### Compliance Requirements
 
 - **SOC 2**: Access controls and abuse prevention
 - **GDPR**: Prevent excessive data processing
 - **OWASP Top 10**: A05:2021 - Security Misconfiguration
 
-## Decision
+### Decision
 
 Implement a **hybrid rate limiting strategy** with two layers:
 
-### Rate Limiting Architecture
+#### Rate Limiting Architecture
 
 ```mermaid
 graph TB
@@ -75,8 +75,7 @@ graph TB
     style Kong429 fill:#d35400,stroke:#c0392b,stroke-width:2px
     style App429 fill:#d35400,stroke:#c0392b,stroke-width:2px
     style Handler fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-```
-
+```text
 **Rate Limiting Flow with Token Bucket**:
 ```mermaid
 sequenceDiagram
@@ -122,9 +121,8 @@ sequenceDiagram
         end
     end
 
-```
-
-### Layer 1: Application-Level Rate Limiting (Immediate)
+```text
+#### Layer 1: Application-Level Rate Limiting (Immediate)
 
 **Implementation**: FastAPI middleware using `slowapi` library.
 
@@ -135,7 +133,7 @@ sequenceDiagram
 - Customizable response codes and headers
 - IP address and user-based limiting
 
-#### Tiered Rate Limits
+##### Tiered Rate Limits
 
 | Tier | Requests/Min | Requests/Hour | Requests/Day | Use Case |
 |------|--------------|---------------|--------------|----------|
@@ -145,16 +143,15 @@ sequenceDiagram
 | **Premium** | 1,000 | 20,000 | 200,000 | Paid tier 2 |
 | **Enterprise** | Unlimited | Unlimited | Unlimited | Enterprise contracts |
 
-#### Response Headers
+##### Response Headers
 
 ```http
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1697654400
 Retry-After: 30
-```
-
-#### Rate Limit Exceeded Response
+```text
+##### Rate Limit Exceeded Response
 
 ```json
 {
@@ -166,9 +163,8 @@ Retry-After: 30
     "retry_after": 30
   }
 }
-```
-
-### Layer 2: Kong API Gateway (Production)
+```text
+#### Layer 2: Kong API Gateway (Production)
 
 **Implementation**: Deploy Kong gateway in front of MCP server.
 
@@ -191,19 +187,17 @@ plugins:
       redis_port: 6379
       fault_tolerant: true
       hide_client_headers: false
-```
+```text
+### Architecture
 
-## Architecture
-
-### New Module Structure
+#### New Module Structure
 
 ```
 src/mcp_server_langgraph/
 └── middleware/
     └── rate_limiter.py  # Rate limiting middleware
-```
-
-### FastAPI Integration
+```text
+#### FastAPI Integration
 
 ```python
 from slowapi import Limiter
@@ -221,9 +215,8 @@ async def agent_chat(request: Request, message: str):
 @limiter.exempt  # No rate limit for health checks
 async def health_check():
     return {"status": "healthy"}
-```
-
-### Endpoint-Specific Limits
+```text
+#### Endpoint-Specific Limits
 
 ```python
 RATE_LIMITS = {
@@ -232,54 +225,50 @@ RATE_LIMITS = {
     "search": "100/minute",   # Search endpoints
     "read": "200/minute",     # Read-only endpoints
 }
-```
+```text
+### Configuration
 
-## Configuration
-
-### Environment Variables
+#### Environment Variables
 
 ```bash
-# Rate Limiting
+## Rate Limiting
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_STORAGE_URI=redis://localhost:6379
 RATE_LIMIT_STRATEGY=fixed-window
 
-# Tier Limits (requests per minute)
+## Tier Limits (requests per minute)
 RATE_LIMIT_ANONYMOUS=10
 RATE_LIMIT_FREE=60
 RATE_LIMIT_STANDARD=300
 RATE_LIMIT_PREMIUM=1000
 RATE_LIMIT_ENTERPRISE=999999
 
-# Advanced
+## Advanced
 RATE_LIMIT_FAIL_OPEN=true  # Allow if Redis is down
-```
-
-### Feature Flags
+```text
+#### Feature Flags
 
 ```python
 FF_ENABLE_RATE_LIMITING=true
 FF_RATE_LIMIT_ENFORCEMENT_MODE=enforce  # enforce, log_only, disabled
-```
+```text
+### Metrics & Observability
 
-## Metrics & Observability
-
-### New Metrics
+#### New Metrics
 
 ```python
-# Rate limit violations
+## Rate limit violations
 rate_limit_exceeded_total{tier, endpoint, limit_type}
 rate_limit_remaining{tier, endpoint}
 
-# Redis health
+## Redis health
 rate_limiter_redis_errors_total
 rate_limiter_redis_latency_seconds
 
-# Abuse detection
+## Abuse detection
 suspicious_activity_total{ip, user_id, reason}
-```
-
-### Prometheus Alerts
+```text
+#### Prometheus Alerts
 
 ```yaml
 - alert: HighRateLimitViolations
@@ -289,11 +278,10 @@ suspicious_activity_total{ip, user_id, reason}
 - alert: PossibleDoSAttack
   expr: rate(rate_limit_exceeded_total{tier="anonymous"}[1m]) > 100
   for: 1m
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive
+#### Positive
 
 <Check>**DoS Protection** - Prevent resource exhaustion from malicious actors</Check>
 <Check>**Cost Control** - Cap LLM API usage per user</Check>
@@ -301,13 +289,13 @@ suspicious_activity_total{ip, user_id, reason}
 <Check>**Compliance** - Meet SOC 2 access control requirements</Check>
 <Check>**Monetization** - Enable tiered pricing (free, standard, premium)</Check>
 
-### Negative
+#### Negative
 
 <Warning>**Legitimate Users Blocked** - Burst traffic may hit limits</Warning>
 <Warning>**Configuration Complexity** - Need to tune limits per endpoint</Warning>
 <Warning>**Performance Overhead** - Redis lookup on every request (~1-2ms)</Warning>
 
-### Mitigations
+#### Mitigations
 
 1. **Start Conservative**: High initial limits, lower based on usage
 2. **Burst Allowance**: Allow short bursts above limit
@@ -315,38 +303,38 @@ suspicious_activity_total{ip, user_id, reason}
 4. **Clear Communication**: Display limits in API docs
 5. **Graceful Degradation**: Fall back to in-memory if Redis down
 
-## Alternatives Considered
+### Alternatives Considered
 
-### Alternative 1: NGINX Rate Limiting
+#### Alternative 1: NGINX Rate Limiting
 - **Pros**: High performance, battle-tested
 - **Cons**: Limited to IP-based, no user-tier support
 - **Decision**: Use for infrastructure layer, slowapi for application logic
 
-### Alternative 2: Cloudflare Rate Limiting
+#### Alternative 2: Cloudflare Rate Limiting
 - **Pros**: DDoS protection, global edge network
 - **Cons**: Vendor lock-in, cost, limited customization
 - **Decision**: Keep as option for enterprise deployments
 
-### Alternative 3: Token Bucket Algorithm (Custom)
+#### Alternative 3: Token Bucket Algorithm (Custom)
 - **Pros**: Full control, optimal for burst traffic
 - **Cons**: Complex implementation, testing overhead
 - **Decision**: Use slowapi (proven library) instead
 
-## Implementation Status
+### Implementation Status
 
-### Dependencies
+#### Dependencies
 
 ```bash
 pip install slowapi
 ```
 
-### Files Created
+#### Files Created
 
 - `src/mcp_server_langgraph/middleware/rate_limiter.py` - Rate limiting middleware
 - `monitoring/prometheus/alerts/rate_limiting.yaml` - Prometheus alerts
 - `monitoring/grafana/dashboards/rate-limiting.json` - Grafana dashboard
 
-## Success Metrics
+### Success Metrics
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
@@ -355,7 +343,7 @@ pip install slowapi
 | **User Experience** | < 1% false positives | rate_limit_exceeded / http_requests < 0.01 |
 | **Cost Control** | LLM costs capped | Daily cost tracking per user ID |
 
-## Related
+### Related
 
 - [ADR-0026: Resilience Patterns](/architecture/adr-0030-resilience-patterns)
 - [Kong Gateway Integration](/deployment/kong-gateway)

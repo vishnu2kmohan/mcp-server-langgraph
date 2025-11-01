@@ -4,7 +4,7 @@ description: 'Configure Google Gemini models with Vertex AI and API access'
 icon: 'google'
 ---
 
-## Overview
+### Overview
 
 Google Gemini provides state-of-the-art multimodal AI models through two access methods: **Google AI Studio** (direct API) and **Vertex AI** (enterprise platform). This guide covers both approaches with the MCP Server.
 
@@ -12,7 +12,7 @@ Google Gemini provides state-of-the-art multimodal AI models through two access 
 **Gemini 2.5 Flash** and **Gemini 2.5 Pro** are production-grade models recommended for enterprise deployments. Both offer enhanced capabilities including native tool use, multimodal understanding, and improved reasoning.
 </Info>
 
-## Available Models
+### Available Models
 
 The following models are **production-ready** and suitable for enterprise use:
 
@@ -21,7 +21,7 @@ The following models are **production-ready** and suitable for enterprise use:
 | gemini-2.5-flash | 1M tokens | Fast responses, chat | $0.15 input / $0.60 output | ✅ Production |
 | gemini-2.5-pro | 2M tokens | Complex reasoning | $1.25 input / $10.00 output | ✅ Production |
 
-## Quick Start
+### Quick Start
 
 <Tabs>
   <Tab title="Google AI Studio">
@@ -40,8 +40,7 @@ The following models are **production-ready** and suitable for enterprise use:
         LLM_PROVIDER=google
         GOOGLE_API_KEY=AIzaSy...your-key
         LLM_MODEL_NAME=gemini-2.5-flash
-        ```
-
+        ```text
         Or use Infisical:
         ```bash
         # Add to Infisical
@@ -49,7 +48,7 @@ The following models are **production-ready** and suitable for enterprise use:
 
         # In .env, reference Infisical
         INFISICAL_PROJECT_ID=your-project-id
-        ```
+        ```xml
       </Step>
 
       <Step title="Test">
@@ -64,7 +63,7 @@ The following models are **production-ready** and suitable for enterprise use:
         response = await llm.ainvoke("What is the capital of France?")
         print(response.content)
         # Output: "The capital of France is Paris."
-        ```
+        ```xml
       </Step>
     </Steps>
   </Tab>
@@ -84,7 +83,7 @@ The following models are **production-ready** and suitable for enterprise use:
 
         # Enable Vertex AI API
         gcloud services enable aiplatform.googleapis.com
-        ```
+        ```xml
       </Step>
 
       <Step title="Create Service Account">
@@ -105,7 +104,7 @@ The following models are **production-ready** and suitable for enterprise use:
         # Store in Infisical
         cat vertex-key.json | jq -c > vertex-key-compact.json
         # Upload vertex-key-compact.json to Infisical as GOOGLE_APPLICATION_CREDENTIALS
-        ```
+        ```xml
       </Step>
 
       <Step title="Configure">
@@ -116,7 +115,7 @@ The following models are **production-ready** and suitable for enterprise use:
         VERTEX_AI_PROJECT=YOUR_PROJECT_ID
         VERTEX_AI_LOCATION=us-central1
         LLM_MODEL_NAME=gemini-2.5-flash
-        ```
+        ```xml
       </Step>
 
       <Step title="Test">
@@ -130,20 +129,20 @@ The following models are **production-ready** and suitable for enterprise use:
 
         response = await llm.ainvoke("Explain quantum computing")
         print(response.content)
-        ```
+        ```xml
       </Step>
     </Steps>
   </Tab>
 </Tabs>
 
-## Configuration Options
+### Configuration Options
 
-### Basic Configuration
+#### Basic Configuration
 
 ```python
 from mcp_server_langgraph.llm.factory import LLMFactory
 
-# Google AI Studio
+## Google AI Studio
 llm = LLMFactory(
     provider="google",
     model_name="gemini-2.5-flash",
@@ -153,7 +152,7 @@ llm = LLMFactory(
     top_k=40
 )
 
-# Vertex AI
+## Vertex AI
 llm = LLMFactory(
     provider="vertex_ai",
     model_name="gemini-2.5-flash",
@@ -161,12 +160,11 @@ llm = LLMFactory(
     location="us-central1",
     temperature=0.7
 )
-```
-
-### Advanced Configuration
+```text
+#### Advanced Configuration
 
 ```python
-# Multimodal with vision
+## Multimodal with vision
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm = ChatGoogleGenerativeAI(
@@ -192,11 +190,10 @@ llm = ChatGoogleGenerativeAI(
         "max_output_tokens": 8192,
     }
 )
-```
+```text
+### Features
 
-## Features
-
-### Multimodal Capabilities
+#### Multimodal Capabilities
 
 <Tabs>
   <Tab title="Text + Images">
@@ -221,7 +218,7 @@ llm = ChatGoogleGenerativeAI(
 
     response = await llm.ainvoke([message])
     print(response.content)
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Text + Video">
@@ -248,7 +245,7 @@ llm = ChatGoogleGenerativeAI(
         "Summarize this video"
     ])
     print(response.text)
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Text + Audio">
@@ -272,11 +269,11 @@ llm = ChatGoogleGenerativeAI(
 
     response = await llm.ainvoke([message])
     print(response.content)
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-### Function Calling
+#### Function Calling
 
 ```python
 from langchain_core.tools import tool
@@ -293,10 +290,10 @@ def search_web(query: str) -> str:
     # Implementation
     return f"Search results for: {query}"
 
-# Bind tools to LLM
+## Bind tools to LLM
 llm_with_tools = llm.bind_tools([get_weather, search_web])
 
-# Use with agent
+## Use with agent
 from langgraph.prebuilt import create_react_agent
 
 agent = create_react_agent(
@@ -304,14 +301,13 @@ agent = create_react_agent(
     tools=[get_weather, search_web]
 )
 
-# Run agent
+## Run agent
 response = await agent.ainvoke({
     "messages": [("user", "What's the weather in Paris?")]
 })
 print(response["messages"][-1].content)
-```
-
-### Structured Output
+```text
+#### Structured Output
 
 ```python
 from pydantic import BaseModel, Field
@@ -321,7 +317,7 @@ class Person(BaseModel):
     age: int = Field(description="Person's age in years")
     occupation: str = Field(description="Person's job title")
 
-# Force structured output
+## Force structured output
 structured_llm = llm.with_structured_output(Person)
 
 response = await structured_llm.ainvoke(
@@ -329,12 +325,11 @@ response = await structured_llm.ainvoke(
 )
 
 print(response.model_dump())
-# Output: {'name': 'John Smith', 'age': 35, 'occupation': 'software engineer'}
-```
+## Output: {'name': 'John Smith', 'age': 35, 'occupation': 'software engineer'}
+```text
+### Production Deployment
 
-## Production Deployment
-
-### Kubernetes with Vertex AI
+#### Kubernetes with Vertex AI
 
 ```yaml
 apiVersion: apps/v1
@@ -371,36 +366,34 @@ spec:
       - name: gcp-credentials
         secret:
           secretName: gcp-service-account
-```
-
+```text
 **Create secret**:
 ```bash
 kubectl create secret generic gcp-service-account \
   --from-file=key.json=vertex-key.json \
   --from-literal=project_id=YOUR_PROJECT_ID
-```
-
-### Workload Identity (GKE)
+```text
+#### Workload Identity (GKE)
 
 ```bash
-# Enable Workload Identity on cluster
+## Enable Workload Identity on cluster
 gcloud container clusters update CLUSTER_NAME \
   --workload-pool=PROJECT_ID.svc.id.goog
 
-# Create Kubernetes service account
+## Create Kubernetes service account
 kubectl create serviceaccount mcp-server-langgraph
 
-# Bind to GCP service account
+## Bind to GCP service account
 gcloud iam service-accounts add-iam-policy-binding \
   vertex-ai-agent@PROJECT_ID.iam.gserviceaccount.com \
   --role roles/iam.workloadIdentityUser \
   --member "serviceAccount:PROJECT_ID.svc.id.goog[mcp-server-langgraph/mcp-server-langgraph]"
 
-# Annotate K8s service account
+## Annotate K8s service account
 kubectl annotate serviceaccount mcp-server-langgraph \
   iam.gke.io/gcp-service-account=vertex-ai-agent@PROJECT_ID.iam.gserviceaccount.com
 
-# Use in deployment
+## Use in deployment
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -412,14 +405,13 @@ spec:
         env:
         - name: LLM_PROVIDER
           value: "vertex_ai"
-```
+```text
+### Performance Optimization
 
-## Performance Optimization
-
-### Caching
+#### Caching
 
 ```python
-# Enable prompt caching (Gemini 2.5 Pro only)
+## Enable prompt caching (Gemini 2.5 Pro only)
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm = ChatGoogleGenerativeAI(
@@ -428,17 +420,16 @@ llm = ChatGoogleGenerativeAI(
     cache_content=True  # Enable caching
 )
 
-# First call - full cost
+## First call - full cost
 response1 = await llm.ainvoke("Analyze this long document...")
 
-# Second call with similar prompt - cached, cheaper
+## Second call with similar prompt - cached, cheaper
 response2 = await llm.ainvoke("What are the key points in the document?")
-```
-
-### Batching
+```text
+#### Batching
 
 ```python
-# Process multiple requests in parallel
+## Process multiple requests in parallel
 import asyncio
 
 queries = [
@@ -447,25 +438,24 @@ queries = [
     "Define deep learning"
 ]
 
-# Concurrent processing
+## Concurrent processing
 responses = await asyncio.gather(*[
     llm.ainvoke(query) for query in queries
 ])
 
 for query, response in zip(queries, responses):
     print(f"Q: {query}\nA: {response.content}\n")
-```
-
-### Streaming
+```text
+#### Streaming
 
 ```python
-# Stream responses for better UX
+## Stream responses for better UX
 async def stream_response(query: str):
     async for chunk in llm.astream(query):
         yield chunk.content
         # Send to client incrementally
 
-# Use in FastAPI
+## Use in FastAPI
 from fastapi.responses import StreamingResponse
 
 @app.post("/message/stream")
@@ -476,14 +466,13 @@ async def stream_message(request: Request):
         stream_response(query),
         media_type="text/event-stream"
     )
-```
+```text
+### Cost Optimization
 
-## Cost Optimization
-
-### Model Selection
+#### Model Selection
 
 ```python
-# Use cheaper model for simple tasks
+## Use cheaper model for simple tasks
 def select_model(task_complexity: str) -> str:
     if task_complexity == "simple":
         return "gemini-2.5-flash"  # Free
@@ -492,19 +481,18 @@ def select_model(task_complexity: str) -> str:
     else:
         return "gemini-2.5-pro"  # $1.25/1M
 
-# Dynamic selection
+## Dynamic selection
 llm = LLMFactory(
     provider="google",
     model_name=select_model(analyze_complexity(query))
 )
-```
-
-### Token Usage Tracking
+```text
+#### Token Usage Tracking
 
 ```python
 from langchain.callbacks import get_openai_callback
 
-# Track tokens
+## Track tokens
 with get_openai_callback() as cb:
     response = await llm.ainvoke(query)
 
@@ -513,35 +501,33 @@ with get_openai_callback() as cb:
     print(f"Completion tokens: {cb.completion_tokens}")
     print(f"Total cost: ${cb.total_cost}")
 
-# Set budget limits
+## Set budget limits
 MAX_TOKENS_PER_REQUEST = 10000
 
 if cb.total_tokens > MAX_TOKENS_PER_REQUEST:
     raise ValueError("Token limit exceeded")
-```
-
-### Quota Management
+```text
+#### Quota Management
 
 ```bash
-# Check quota usage (Vertex AI)
+## Check quota usage (Vertex AI)
 gcloud alpha monitoring time-series list \
   --filter='metric.type="aiplatform.googleapis.com/quota/online_prediction_requests/usage"'
 
-# Set quota alerts
+## Set quota alerts
 gcloud alpha monitoring policies create \
   --notification-channels=CHANNEL_ID \
   --display-name="Vertex AI Quota Alert" \
   --condition-display-name="80% quota usage" \
   --condition-threshold-value=0.8 \
   --condition-threshold-duration=300s
-```
-
-## Safety & Content Filtering
+```text
+### Safety & Content Filtering
 
 ```python
 from langchain_google_genai import HarmBlockThreshold, HarmCategory
 
-# Configure safety settings
+## Configure safety settings
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     safety_settings={
@@ -552,7 +538,7 @@ llm = ChatGoogleGenerativeAI(
     }
 )
 
-# Handle safety blocks
+## Handle safety blocks
 try:
     response = await llm.ainvoke(query)
 except Exception as e:
@@ -560,29 +546,27 @@ except Exception as e:
         logger.warning(f"Content blocked by safety filters: {query}")
         return "I cannot provide a response to that query due to safety concerns."
     raise
-```
+```text
+### Monitoring
 
-## Monitoring
-
-### LangSmith Integration
+#### LangSmith Integration
 
 ```python
-# Track Gemini usage in LangSmith
+## Track Gemini usage in LangSmith
 import os
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "langgraph-gemini"
 
-# Calls automatically tracked
+## Calls automatically tracked
 response = await llm.ainvoke(query)
-# View in https://smith.langchain.com
-```
-
-### Custom Metrics
+## View in https://smith.langchain.com
+```text
+#### Custom Metrics
 
 ```python
 from prometheus_client import Counter, Histogram
 
-# Define metrics
+## Define metrics
 gemini_requests = Counter(
     'gemini_requests_total',
     'Total Gemini API requests',
@@ -595,7 +579,7 @@ gemini_latency = Histogram(
     ['model']
 )
 
-# Track usage
+## Track usage
 import time
 
 @gemini_latency.labels(model="gemini-2.5-flash").time()
@@ -607,9 +591,8 @@ async def call_gemini(query: str):
     except Exception as e:
         gemini_requests.labels(model="gemini-2.5-flash", status="error").inc()
         raise
-```
-
-## Troubleshooting
+```text
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="API key invalid">
@@ -629,7 +612,7 @@ async def call_gemini(query: str):
     # 2. Delete old key
     # 3. Create new key
     # 4. Update in Infisical/config
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Vertex AI authentication failed">
@@ -650,7 +633,7 @@ async def call_gemini(query: str):
       --filter="bindings.members:serviceAccount:vertex-ai-agent@YOUR_PROJECT_ID.iam.gserviceaccount.com"
 
     # Should include: roles/aiplatform.user
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Rate limit exceeded">
@@ -675,7 +658,7 @@ async def call_gemini(query: str):
         enable_fallback=True,
         fallback_models=["claude-3-5-sonnet-20241022"]
     )
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Content blocked by safety filters">
@@ -699,7 +682,7 @@ async def call_gemini(query: str):
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Multi-LLM Setup" icon="layer-group" href="/guides/multi-llm-setup">

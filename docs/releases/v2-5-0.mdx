@@ -9,7 +9,7 @@ icon: 'tag'
   **Breaking Changes**: None (fully backward compatible)
 </Note>
 
-## Overview
+### Overview
 
 Version 2.5.0 delivers **enterprise-grade observability** and **developer experience** improvements with three major enhancements:
 1. 📊 **Structured JSON Logging** with OpenTelemetry trace injection
@@ -17,9 +17,9 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 3. 🐳 **Containerized Integration Testing** with zero-config Docker setup
 4. 🔧 **Multi-Track Infisical Installation** for flexible deployment
 
-## What's New
+### What's New
 
-### 📊 Structured JSON Logging & Multi-Platform Log Aggregation
+#### 📊 Structured JSON Logging & Multi-Platform Log Aggregation
 
 **Production-grade structured logging with OpenTelemetry trace injection** - automatically correlate logs with distributed traces across 6 cloud platforms.
 
@@ -132,7 +132,7 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 
 ---
 
-### 🐳 Containerized Integration Test Environment
+#### 🐳 Containerized Integration Test Environment
 
 **One command runs all integration tests** - zero manual setup required.
 
@@ -227,7 +227,7 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 
 ---
 
-### 🔧 Infisical Docker-Based Build Solution
+#### 🔧 Infisical Docker-Based Build Solution
 
 **Multi-track dependency strategy** - Choose what works best for your environment.
 
@@ -331,9 +331,9 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 
 ---
 
-## Files Modified
+### Files Modified
 
-### Configuration Files
+#### Configuration Files
 1. **pyproject.toml**
    - Moved `infisical-python` from core to optional dependencies
    - Added `[secrets]` and `[all]` extras
@@ -341,7 +341,7 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 2. **requirements-pinned.txt**
    - Enhanced with 48-line installation guide
 
-### Docker Files
+#### Docker Files
 3. **docker/Dockerfile**
    - Added BuildKit syntax directive
    - Implemented cache mounts (5-10x faster)
@@ -349,35 +349,35 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 4. **docker-compose.yml**
    - Fixed volume mounts for package structure
 
-### CI/CD
+#### CI/CD
 5. **.github/workflows/ci.yaml**
    - Added Docker Buildx setup
    - Integration tests now run in containers
    - **Removed** `continue-on-error: true`
 
-### Build System
+#### Build System
 6. **Makefile**
    - Added 6 new integration test targets
 
 ---
 
-## Benefits
+### Benefits
 
-### For Developers
+#### For Developers
 - ✅ **One command** - `make test-integration` does everything
 - ✅ **Zero setup** - No manual service configuration
 - ✅ **Perfect isolation** - Tests don't affect local dev
 - ✅ **Fast cleanup** - `docker compose down -v` removes everything
 - ✅ **Debugging** - `--keep` flag preserves containers
 
-### For CI/CD
+#### For CI/CD
 - ✅ **100% reliable** - No more allowed failures
 - ✅ **Reproducible** - Same environment locally and in CI
 - ✅ **Fast** - ~50s with caching
 - ✅ **No secrets** - Everything runs in containers
 - ✅ **Parallel** - Can run multiple jobs simultaneously
 
-### For Operations
+#### For Operations
 - ✅ **Reduced build times** - 5-10x faster with cache
 - ✅ **Smaller cache footprint** - Shared mounts
 - ✅ **Reusable wheel artifacts** - For faster deployments
@@ -385,9 +385,9 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 
 ---
 
-## Upgrade Guide
+### Upgrade Guide
 
-### From v2.4.0
+#### From v2.4.0
 
 **Step 1: Pull latest changes**
 ```bash
@@ -396,14 +396,14 @@ git pull origin main
 
 **Step 2: (Optional) Choose Infisical installation method**
 ```bash
-# Option 1: Docker (automatic)
+## Option 1: Docker (automatic)
 docker compose up -d
 
-# Option 2: pip extras
+## Option 2: pip extras
 pip install -e ".[secrets]"
 
-# Option 3: Skip Infisical (use .env)
-# No action needed - just use environment variables
+## Option 3: Skip Infisical (use .env)
+## No action needed - just use environment variables
 ```
 
 **Step 3: Run integration tests**
@@ -413,37 +413,37 @@ make test-integration
 
 **Step 4: Update CI/CD**
 ```yaml
-# Remove this line from .github/workflows/ci.yaml
-# continue-on-error: true  # ← DELETE THIS
+## Remove this line from .github/workflows/ci.yaml
+## continue-on-error: true  # ← DELETE THIS
 ```
 
-### Testing the Upgrade
+#### Testing the Upgrade
 
 ```bash
-# 1. Run all tests
+## 1. Run all tests
 make test
 
-# 2. Run integration tests in Docker
+## 2. Run integration tests in Docker
 make test-integration
 
-# 3. Verify Infisical (if using)
+## 3. Verify Infisical (if using)
 python -c "import infisical_python; print('✓ Infisical installed')"
 
-# 4. Check observability
+## 4. Check observability
 make health-check
 ```
 
 ---
 
-## What's Next?
+### What's Next?
 
-### Planned for v2.6.0
+#### Planned for v2.6.0
 - Performance benchmarking suite
 - Load testing with Locust
 - API rate limiting
 - Request throttling
 
-### Future Enhancements
+#### Future Enhancements
 - Chaos engineering tests
 - Multi-region failover testing
 - Automated performance regression detection
@@ -451,7 +451,7 @@ make health-check
 
 ---
 
-## Related Documentation
+### Related Documentation
 
 <CardGroup cols={2}>
   <Card title="Integration Testing Guide" icon="flask" href="/advanced/testing">

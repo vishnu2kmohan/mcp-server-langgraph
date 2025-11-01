@@ -5,19 +5,17 @@ icon: 'code'
 ---
 
 
-# IDE Setup Guide
-
 This document provides setup instructions for various IDEs and AI coding assistants when working on the MCP Server with LangGraph project.
 
-## General Notes
+### General Notes
 
 **IDE-Specific Configuration Files**: As of v2.0.0, IDE-specific configuration directories (`.ai/`, `.openai/`, `.cursor/`, `.claude/`, `.vscode/`) are gitignored to prevent merge conflicts and keep the repository clean. You'll need to create these directories locally based on your preferences.
 
 ---
 
-## Visual Studio Code
+### Visual Studio Code
 
-### Recommended Extensions
+#### Recommended Extensions
 
 Create `.vscode/extensions.json`:
 ```json
@@ -37,7 +35,7 @@ Create `.vscode/extensions.json`:
 }
 ```
 
-### Python Settings
+#### Python Settings
 
 Create `.vscode/settings.json`:
 ```json
@@ -67,7 +65,7 @@ Create `.vscode/settings.json`:
 }
 ```
 
-### Debug Configurations
+#### Debug Configurations
 
 Create `.vscode/launch.json`:
 ```json
@@ -112,7 +110,7 @@ Create `.vscode/launch.json`:
 }
 ```
 
-### Tasks
+#### Tasks
 
 Create `.vscode/tasks.json`:
 ```json
@@ -158,9 +156,9 @@ Create `.vscode/tasks.json`:
 
 ---
 
-## Claude Code / Claude Desktop
+### Claude Code / Claude Desktop
 
-### Configuration
+#### Configuration
 
 Create `.claude/settings.local.json`:
 ```json
@@ -174,7 +172,7 @@ Create `.claude/settings.local.json`:
 }
 ```
 
-### Guidance Files
+#### Guidance Files
 
 The project includes comprehensive AI assistant guidance:
 - **`.github/CLAUDE.md`** - Complete guide for Claude Code
@@ -189,9 +187,9 @@ These files are version-controlled and provide:
 
 ---
 
-## Cursor
+### Cursor
 
-### MCP Configuration
+#### MCP Configuration
 
 Create `.cursor/mcp.json` (Cursor supports `${workspaceFolder}` variables):
 ```json
@@ -227,7 +225,7 @@ Create `.cursor/mcp.json` (Cursor supports `${workspaceFolder}` variables):
 
 **Note**: The `.cursor/` directory is gitignored, so you need to create this configuration locally.
 
-### Settings
+#### Settings
 
 Cursor will use the VS Code settings above, but you can override:
 
@@ -241,13 +239,13 @@ Create `.cursor/settings.json`:
 
 ---
 
-## GitHub Copilot Workspace
+### GitHub Copilot Workspace
 
-### Instructions
+#### Instructions
 
 Create `.github/copilot-instructions.md`:
 ```markdown
-# GitHub Copilot Instructions
+## GitHub Copilot Instructions
 
 This project uses:
 - Python 3.10-3.12
@@ -268,17 +266,17 @@ See `.github/AGENTS.md` for complete guidance.
 
 ---
 
-## AI Coding Assistants (.ai/)
+### AI Coding Assistants (.ai/)
 
-### General AI Tools Configuration
+#### General AI Tools Configuration
 
 Create `.../../README.md`:
 ```markdown
-# AI Coding Assistant Configuration
+## AI Coding Assistant Configuration
 
 This directory contains configuration for AI coding assistants.
 
-## Setup
+### Setup
 
 See the appropriate section in `docs/development/ide-setup.md`:
 - Claude Code/Desktop
@@ -287,7 +285,7 @@ See the appropriate section in `docs/development/ide-setup.md`:
 - Codeium
 - Tabnine
 
-## Guidance Files
+### Guidance Files
 
 The project provides comprehensive AI assistant guidance in version control:
 - `.github/CLAUDE.md` - For Claude-based assistants
@@ -306,9 +304,9 @@ Create `.ai/prompts.md` with your custom prompts for reuse.
 
 ---
 
-## OpenAI Codex
+### OpenAI Codex
 
-### Configuration
+#### Configuration
 
 Create `.openai/code-completion-config.json`:
 ```json
@@ -330,32 +328,32 @@ Create `.openai/codex-instructions.md` referencing `.github/AGENTS.md` for detai
 
 ---
 
-## MCP Server Configuration
+### MCP Server Configuration
 
 All MCP-compatible IDEs can use the MCP server configuration.
 
-### MCP Manifest
+#### MCP Manifest
 
 The project includes `.mcp/manifest.json` and `.mcp/registry.json` for MCP registry publication. These are version-controlled.
 
-### Client Configuration
+#### Client Configuration
 
-#### Quick Setup
+##### Quick Setup
 
 The project includes `.mcp.json.example` as a template. To set it up:
 
 ```bash
-# Copy the example file
+## Copy the example file
 cp .mcp.json.example .mcp.json
 
-# Edit with your absolute paths
-# Replace /absolute/path/to/mcp-server-langgraph with your actual project path
+## Edit with your absolute paths
+## Replace /absolute/path/to/mcp-server-langgraph with your actual project path
 nano .mcp.json  # or use your preferred editor
 ```
 
 **Note**: `.mcp.json` is gitignored (user-specific configuration). Each developer needs to create their own based on where they cloned the repository.
 
-#### Manual Configuration
+##### Manual Configuration
 
 For Claude Desktop or other MCP clients, add to your client config:
 
@@ -396,28 +394,28 @@ For Claude Desktop or other MCP clients, add to your client config:
 
 ---
 
-## PyCharm / IntelliJ IDEA
+### PyCharm / IntelliJ IDEA
 
-### Project Interpreter
+#### Project Interpreter
 
 1. File → Settings → Project → Python Interpreter
 2. Click gear → Add → Existing Environment
 3. Select `.venv/bin/python`
 
-### Code Style
+#### Code Style
 
 1. File → Settings → Editor → Code Style → Python
 2. Set "Hard wrap at" to 127
 3. Import `pyproject.toml` settings if supported (PyCharm 2023.3+)
 
-### Run Configurations
+#### Run Configurations
 
 Create run configurations for:
 - **pytest (unit)**: Target = `tests/`, Additional args = `-m unit -v`
 - **pytest (all)**: Target = `tests/`, Additional args = `-v`
 - **MCP Server**: Script path = `src/mcp_server_langgraph/mcp/server_stdio.py`
 
-### External Tools
+#### External Tools
 
 Add Make commands as external tools:
 - File → Settings → Tools → External Tools
@@ -425,9 +423,9 @@ Add Make commands as external tools:
 
 ---
 
-## General Best Practices
+### General Best Practices
 
-### Virtual Environment
+#### Virtual Environment
 
 Always activate the virtual environment:
 ```bash
@@ -441,17 +439,17 @@ uv run pytest -m unit -v
 uv run python -m mcp_server_langgraph.mcp.server_stdio
 ```
 
-### Environment Variables
+#### Environment Variables
 
 Copy `.env.example` to `.env` and configure:
 ```bash
 cp .env.example .env
-# Edit .env with your API keys
+## Edit .env with your API keys
 ```
 
 **Never commit `.env`** - it's gitignored for security.
 
-### Pre-commit Hooks
+#### Pre-commit Hooks
 
 Install pre-commit hooks:
 ```bash
@@ -466,9 +464,9 @@ This ensures:
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
-### Import Errors
+#### Import Errors
 
 If imports fail:
 1. Ensure virtual environment is activated
@@ -481,13 +479,13 @@ If imports fail:
    uv pip install -e .
    ```
 
-### IDE Not Finding Modules
+#### IDE Not Finding Modules
 
 - **VS Code**: Set `python.defaultInterpreterPath` to `.venv/bin/python`
 - **PyCharm**: Configure project interpreter to `.venv/bin/python`
 - **All IDEs**: Mark `src/` as sources root
 
-### Tests Not Running
+#### Tests Not Running
 
 1. Ensure pytest is installed: `uv pip install -r requirements-test.txt`
 2. Check test markers are registered: `pytest --markers`
@@ -495,7 +493,7 @@ If imports fail:
 
 ---
 
-## Contributing
+### Contributing
 
 When adding IDE configurations:
 1. **Do NOT commit** user-specific settings to `.vscode/`, `.cursor/`, etc.
@@ -507,7 +505,7 @@ See `../../.github/CONTRIBUTING.md` for contribution guidelines.
 
 ---
 
-## References
+### References
 
 - **Project Documentation**: `do../../README.md`
 - **AI Assistant Guidance**: `.github/CLAUDE.md`, `.github/AGENTS.md`

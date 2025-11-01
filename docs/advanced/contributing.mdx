@@ -4,7 +4,7 @@ description: 'Guidelines for contributing to the MCP Server with LangGraph proje
 icon: 'code-pull-request'
 ---
 
-## Overview
+### Overview
 
 We welcome contributions to the MCP Server with LangGraph project! This guide will help you get started with contributing code, documentation, bug reports, and feature requests.
 
@@ -12,82 +12,82 @@ We welcome contributions to the MCP Server with LangGraph project! This guide wi
 By contributing to this project, you agree to abide by our [Code of Conduct](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CODE_OF_CONDUCT.md) and license terms.
 </Info>
 
-## Quick Start
+### Quick Start
 
 ```bash
-# 1. Fork the repository
+## 1. Fork the repository
 gh repo fork vishnu2kmohan/mcp-server-langgraph
 
-# 2. Clone your fork
+## 2. Clone your fork
 git clone https://github.com/YOUR_USERNAME/mcp-server-langgraph.git
 cd mcp-server-langgraph
 
-# 3. Add upstream remote
+## 3. Add upstream remote
 git remote add upstream https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 
-# 4. Create a branch
+## 4. Create a branch
 git checkout -b feature/my-awesome-feature
 
-# 5. Make your changes
-# ... edit files ...
+## 5. Make your changes
+## ... edit files ...
 
-# 6. Run tests
+## 6. Run tests
 uv run pytest -m unit
 
-# 7. Commit and push
+## 7. Commit and push
 git add .
 git commit -m "feat: add awesome new feature"
 git push origin feature/my-awesome-feature
 
-# 8. Create pull request
+## 8. Create pull request
 gh pr create --title "feat: add awesome new feature" --body "Description of changes"
 ```
 
-## Development Setup
+### Development Setup
 
-### Prerequisites
+#### Prerequisites
 
 ```bash
-# Required
+## Required
 - Python 3.12+
 - Docker & Docker Compose
 - Git
 
-# Recommended
+## Recommended
 - uv (Python package manager)
 - Pre-commit
 - direnv (for environment variables)
 ```
 
-### Local Environment
+#### Local Environment
 
 ```bash
-# Install uv
+## Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Create virtual environment
+## Create virtual environment
 uv venv
 
-# Activate virtual environment
+## Activate virtual environment
 source .venv/bin/activate  # Linux/macOS
-# or
+## or
 .venv\Scripts\activate  # Windows
 
-# Install dependencies
+## Install dependencies
 uv pip install -r requirements.txt
 uv pip install -r requirements-dev.txt
 
-# Install pre-commit hooks
+## Install pre-commit hooks
 pre-commit install
 ```
 
-### Environment Variables
+#### Environment Variables
 
 ```bash
-# Copy example environment file
+## Copy example environment file
 cp .env.example .env
 
-# Edit .env with your values
+## Edit .env with your values
 vim .env
 ```
 
@@ -107,34 +107,34 @@ ENABLE_TRACING=false
 ENABLE_METRICS=false
 ```
 
-### Start Development Services
+#### Start Development Services
 
 ```bash
-# Start all services
+## Start all services
 docker compose -f docker-compose.dev.yml up -d
 
-# Check service health
+## Check service health
 docker compose ps
 
-# View logs
+## View logs
 docker compose logs -f
 
-# Stop services
+## Stop services
 docker compose down
 ```
 
-## Code Style
+### Code Style
 
-### Python Style Guide
+#### Python Style Guide
 
 We follow **PEP 8** with some modifications:
 
 ```python
-# Line length: 100 characters (not 79)
-# String quotes: Double quotes preferred
-# Imports: Organized with isort
+## Line length: 100 characters (not 79)
+## String quotes: Double quotes preferred
+## Imports: Organized with isort
 
-# Good example
+## Good example
 from typing import Optional, List
 
 from fastapi import FastAPI, Depends
@@ -172,33 +172,33 @@ async def get_user_profile(
     pass
 ```
 
-### Code Formatting
+#### Code Formatting
 
 We use automated formatters:
 
 ```bash
-# Format code with black
+## Format code with black
 black src/ tests/
 
-# Sort imports with isort
+## Sort imports with isort
 isort src/ tests/
 
-# Check types with mypy
+## Check types with mypy
 mypy src/
 
-# Lint with flake8
+## Lint with flake8
 flake8 src/ tests/
 
-# Or run all at once
+## Or run all at once
 make lint
 ```
 
-### Pre-commit Hooks
+#### Pre-commit Hooks
 
 Pre-commit hooks automatically run formatters and linters:
 
 ```yaml
-# .pre-commit-config.yaml
+## .pre-commit-config.yaml
 repos:
   - repo: https://github.com/psf/black
     rev: 24.1.1
@@ -236,9 +236,9 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-## Testing
+### Testing
 
-### Test Structure
+#### Test Structure
 
 ```
 tests/
@@ -257,10 +257,10 @@ tests/
 └── conftest.py        # Shared fixtures
 ```
 
-### Writing Tests
+#### Writing Tests
 
 ```python
-# tests/unit/test_auth.py
+## tests/unit/test_auth.py
 import pytest
 from src.auth.middleware import AuthMiddleware
 
@@ -311,50 +311,50 @@ async def test_multiple_users(auth_middleware, user_id, expected):
     assert verified == expected
 ```
 
-### Running Tests
+#### Running Tests
 
 ```bash
-# Run all unit tests
+## Run all unit tests
 uv run pytest -m unit
 
-# Run specific test file
+## Run specific test file
 uv run pytest tests/unit/test_auth.py
 
-# Run specific test
+## Run specific test
 uv run pytest tests/unit/test_auth.py::test_create_token
 
-# Run with coverage
+## Run with coverage
 uv run pytest -m unit --cov=src --cov-report=html
 
-# Run with verbose output
+## Run with verbose output
 uv run pytest -m unit -v --tb=short
 
-# Run integration tests (requires services)
+## Run integration tests (requires services)
 docker compose up -d
 uv run pytest -m integration
 
-# Run all tests
+## Run all tests
 uv run pytest
 ```
 
-### Test Coverage
+#### Test Coverage
 
 We aim for **>80% code coverage**:
 
 ```bash
-# Generate coverage report
+## Generate coverage report
 uv run pytest --cov=src --cov-report=html --cov-report=term
 
-# View HTML report
+## View HTML report
 open htmlcov/index.html
 
-# Check coverage threshold
+## Check coverage threshold
 uv run pytest --cov=src --cov-fail-under=80
 ```
 
-## Commit Messages
+### Commit Messages
 
-### Conventional Commits
+#### Conventional Commits
 
 We use the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
@@ -381,21 +381,21 @@ We use the [Conventional Commits](https://www.conventionalcommits.org/) specific
 **Examples**:
 
 ```bash
-# Feature
+## Feature
 git commit -m "feat(auth): add Keycloak SSO support"
 
-# Bug fix
+## Bug fix
 git commit -m "fix(llm): handle rate limit errors gracefully"
 
-# Documentation
+## Documentation
 git commit -m "docs(readme): update installation instructions"
 
-# Breaking change
+## Breaking change
 git commit -m "feat(api)!: change authentication endpoint
 
 BREAKING CHANGE: /auth/login now requires client_id parameter"
 
-# Multiple changes
+## Multiple changes
 git commit -m "feat(auth): add MFA support
 
 - Implement TOTP authentication
@@ -405,7 +405,7 @@ git commit -m "feat(auth): add MFA support
 Closes #123"
 ```
 
-### Commit Best Practices
+#### Commit Best Practices
 
 <AccordionGroup>
   <Accordion title="Write Clear Messages" icon="message">
@@ -434,9 +434,9 @@ Closes #123"
   </Accordion>
 </AccordionGroup>
 
-## Pull Requests
+### Pull Requests
 
-### PR Process
+#### PR Process
 
 1. **Create Issue First** (for significant changes)
    - Discuss the change
@@ -486,34 +486,34 @@ Closes #123"
    - Manually tested with..."
    ```
 
-### PR Template
+#### PR Template
 
 ```markdown
-## Description
+### Description
 <!-- Describe your changes -->
 
 Fixes #(issue number)
 
-## Type of Change
+### Type of Change
 <!-- Mark with [x] -->
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 
-## Changes Made
+### Changes Made
 <!-- List the changes -->
 -
 -
 -
 
-## Testing
+### Testing
 <!-- Describe the tests you ran -->
 - [ ] Unit tests pass
 - [ ] Integration tests pass
 - [ ] Manual testing completed
 
-## Checklist
+### Checklist
 - [ ] My code follows the style guidelines
 - [ ] I have performed a self-review
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -524,7 +524,7 @@ Fixes #(issue number)
 - [ ] Any dependent changes have been merged and published
 ```
 
-### PR Review Process
+#### PR Review Process
 
 **For Contributors**:
 - Respond to feedback promptly
@@ -538,24 +538,24 @@ Fixes #(issue number)
 - Suggest, don't demand
 - Approve when ready
 
-## Documentation
+### Documentation
 
-### Writing Documentation
+#### Writing Documentation
 
 We use **Mintlify** for documentation:
 
 ```bash
-# Install Mintlify CLI
+## Install Mintlify CLI
 npm install -g mintlify
 
-# Preview documentation locally
+## Preview documentation locally
 cd docs
 mintlify dev
 
-# Open http://localhost:3000
+## Open http://localhost:3000
 ```
 
-### Documentation Style
+#### Documentation Style
 
 ```markdown
 ---
@@ -564,7 +564,7 @@ description: 'Brief description of the feature'
 icon: 'icon-name'
 ---
 
-## Overview
+### Overview
 
 Brief introduction to the feature.
 
@@ -572,31 +572,31 @@ Brief introduction to the feature.
 Important information for users.
 </Info>
 
-## Quick Start
+### Quick Start
 
 \`\`\`bash
-# Example command
+## Example command
 npm install awesome-package
 \`\`\`
 
-## Detailed Guide
+### Detailed Guide
 
-### Section 1
+#### Section 1
 
 Detailed explanation with code examples:
 
 \`\`\`python
 from awesome import feature
 
-# Use the feature
+## Use the feature
 result = feature.do_something()
 \`\`\`
 
-### Section 2
+#### Section 2
 
 More details...
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Practice 1" icon="check">
@@ -604,11 +604,11 @@ More details...
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 Common issues and solutions...
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Related Feature" href="/path/to/feature">
@@ -617,9 +617,9 @@ Common issues and solutions...
 </CardGroup>
 ```
 
-## Release Process
+### Release Process
 
-### Versioning
+#### Versioning
 
 We use **Semantic Versioning** (SemVer):
 
@@ -631,68 +631,68 @@ MAJOR.MINOR.PATCH
 1.1.0 → 2.0.0 (major: breaking change)
 ```
 
-### Creating a Release
+#### Creating a Release
 
 ```bash
-# 1. Update version
+## 1. Update version
 vim pyproject.toml  # Update version = "1.2.0"
 
-# 2. Update CHANGELOG.md
+## 2. Update CHANGELOG.md
 vim CHANGELOG.md
 
-# 3. Commit version bump
+## 3. Commit version bump
 git add pyproject.toml CHANGELOG.md
 git commit -m "chore: bump version to 1.2.0"
 
-# 4. Create tag
+## 4. Create tag
 git tag -a v1.2.0 -m "Release v1.2.0"
 
-# 5. Push tag
+## 5. Push tag
 git push origin v1.2.0
 
-# 6. GitHub Actions will create the release
+## 6. GitHub Actions will create the release
 ```
 
-### Changelog Format
+#### Changelog Format
 
 ```markdown
-# Changelog
+## Changelog
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0] - 2024-01-15
+### [1.2.0] - 2024-01-15
 
-### Added
+#### Added
 - Keycloak SSO integration (#123)
 - Redis session store support (#124)
 - OpenFGA authorization (#125)
 
-### Changed
+#### Changed
 - Improved error handling in LLM calls (#126)
 - Updated dependencies (#127)
 
-### Fixed
+#### Fixed
 - Fixed session timeout issue (#128)
 - Resolved memory leak in agent (#129)
 
-### Security
+#### Security
 - Updated vulnerable dependencies (#130)
 
-## [1.1.0] - 2023-12-01
+### [1.1.0] - 2023-12-01
 
 ...
 ```
 
-## Community
+### Community
 
-### Communication Channels
+#### Communication Channels
 
 - **GitHub Issues**: Bug reports, feature requests
 - **GitHub Discussions**: Questions, ideas, general discussion
 - **Discord**: Real-time chat (coming soon)
 - **Email**: security@yourdomain.com (security issues only)
 
-### Getting Help
+#### Getting Help
 
 1. **Check documentation** first
 2. **Search existing issues**
@@ -700,59 +700,59 @@ All notable changes to this project will be documented in this file.
 4. **Be specific** about your problem
 5. **Provide context** (OS, Python version, etc.)
 
-### Reporting Bugs
+#### Reporting Bugs
 
 Use this template:
 
 ```markdown
-## Bug Description
+### Bug Description
 <!-- Clear and concise description -->
 
-## Steps to Reproduce
+### Steps to Reproduce
 1. Go to '...'
 2. Click on '...'
 3. See error
 
-## Expected Behavior
+### Expected Behavior
 <!-- What you expected to happen -->
 
-## Actual Behavior
+### Actual Behavior
 <!-- What actually happened -->
 
-## Environment
+### Environment
 - OS: [e.g., Ubuntu 22.04]
 - Python: [e.g., 3.12.1]
 - Version: [e.g., 2.0.0]
 
-## Additional Context
+### Additional Context
 <!-- Screenshots, logs, etc. -->
 ```
 
-### Feature Requests
+#### Feature Requests
 
 Use this template:
 
 ```markdown
-## Problem Statement
+### Problem Statement
 <!-- What problem does this solve? -->
 
-## Proposed Solution
+### Proposed Solution
 <!-- How should it work? -->
 
-## Alternatives Considered
+### Alternatives Considered
 <!-- What other solutions did you consider? -->
 
-## Additional Context
+### Additional Context
 <!-- Any other relevant information -->
 ```
 
-## Code of Conduct
+### Code of Conduct
 
-### Our Pledge
+#### Our Pledge
 
 We are committed to providing a welcoming and inspiring community for all.
 
-### Standards
+#### Standards
 
 **Positive behavior**:
 - Be respectful and inclusive
@@ -766,15 +766,15 @@ We are committed to providing a welcoming and inspiring community for all.
 - Public or private harassment
 - Publishing others' private information
 
-### Enforcement
+#### Enforcement
 
 Violations can be reported to: conduct@yourdomain.com
 
-## License
+### License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
 
-## Recognition
+### Recognition
 
 Contributors are recognized in:
 - CONTRIBUTORS.md file
@@ -783,7 +783,7 @@ Contributors are recognized in:
 
 Thank you for contributing! 🎉
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Development Setup" icon="code" href="/advanced/development-setup">

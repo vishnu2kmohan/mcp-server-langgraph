@@ -4,7 +4,7 @@ description: 'Configure multiple LLM providers with automatic fallback'
 icon: 'shuffle'
 ---
 
-## Overview
+### Overview
 
 Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balancing, and cost optimization. Supports cloud providers (Anthropic, OpenAI, Google) and open-source models (Llama, Mistral, Qwen via Ollama).
 
@@ -12,7 +12,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
 **LiteLLM** provides a unified interface to all major LLM providers with automatic retries, fallback, and intelligent routing.
 </Info>
 
-## Supported Providers
+### Supported Providers
 
 <CardGroup cols={3}>
   <Card title="Anthropic" icon="robot">
@@ -53,9 +53,9 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
   </Card>
 </CardGroup>
 
-## Quick Start
+### Quick Start
 
-### Anthropic Claude
+#### Anthropic Claude
 
 <Steps>
   <Step title="Get API Key">
@@ -72,7 +72,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ANTHROPIC_API_KEY=sk-ant-api03-...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -88,13 +88,13 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
         {"role": "user", "content": "Hello!"}
     ])
     print(response.content)
-    ```
+    ```xml
   </Step>
 </Steps>
 
 ---
 
-### OpenAI GPT
+#### OpenAI GPT
 
 <Steps>
   <Step title="Get API Key">
@@ -111,7 +111,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     OPENAI_API_KEY=sk-proj-...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -124,13 +124,13 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     response = llm.invoke([
         {"role": "user", "content": "What is AI?"}
     ])
-    ```
+    ```xml
   </Step>
 </Steps>
 
 ---
 
-### Google Gemini
+#### Google Gemini
 
 <Steps>
   <Step title="Get API Key">
@@ -147,7 +147,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     GOOGLE_API_KEY=AIza...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=8192
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -160,13 +160,13 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     response = llm.invoke([
         {"role": "user", "content": "Explain quantum computing"}
     ])
-    ```
+    ```xml
   </Step>
 </Steps>
 
 ---
 
-### Azure OpenAI
+#### Azure OpenAI
 
 <Steps>
   <Step title="Setup Azure">
@@ -184,7 +184,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     AZURE_API_BASE=https://your-resource.openai.azure.com
     AZURE_API_VERSION=2024-02-15-preview
     AZURE_DEPLOYMENT_NAME=gpt-4
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -195,13 +195,13 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
         api_base=os.getenv("AZURE_API_BASE"),
         api_version=os.getenv("AZURE_API_VERSION")
     )
-    ```
+    ```xml
   </Step>
 </Steps>
 
 ---
 
-### AWS Bedrock
+#### AWS Bedrock
 
 <Steps>
   <Step title="Setup AWS">
@@ -218,7 +218,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     AWS_ACCESS_KEY_ID=AKIA...
     AWS_SECRET_ACCESS_KEY=...
     AWS_REGION_NAME=us-east-1
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -227,13 +227,13 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
         provider="bedrock",
         model_name="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0"
     )
-    ```
+    ```xml
   </Step>
 </Steps>
 
 ---
 
-### Ollama (Local Models)
+#### Ollama (Local Models)
 
 <Steps>
   <Step title="Install Ollama">
@@ -242,7 +242,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     curl -fsSL https://ollama.com/install.sh | sh
 
     # Or download from https://ollama.com/download
-    ```
+    ```xml
   </Step>
 
   <Step title="Pull Model">
@@ -258,7 +258,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
 
     # List models
     ollama list
-    ```
+    ```xml
   </Step>
 
   <Step title="Configure">
@@ -269,7 +269,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     OLLAMA_API_BASE=http://localhost:11434
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
-    ```
+    ```xml
   </Step>
 
   <Step title="Test">
@@ -283,24 +283,23 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     response = llm.invoke([
         {"role": "user", "content": "Hello!"}
     ])
-    ```
+    ```xml
   </Step>
 </Steps>
 
 ---
 
-## Automatic Fallback
+### Automatic Fallback
 
 Configure automatic fallback when primary model fails:
 
 ```bash
-# .env
+## .env
 LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ENABLE_FALLBACK=true
 FALLBACK_MODELS=gemini-2.5-flash-002,gpt-4o,ollama/llama3.1:8b
-```
-
+```text
 **Fallback Flow**:
 
 ```mermaid
@@ -325,8 +324,7 @@ graph TD
     style Fallback3 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
     style Response fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
     style Error fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-```
-
+```text
 **Configuration**:
 
 ```python
@@ -343,10 +341,9 @@ llm = LLMFactory(
     ]
 )
 
-# Automatically falls back on error
+## Automatically falls back on error
 response = llm.invoke(messages)
-```
-
+```text
 **Common Failure Scenarios**:
 - API quota exceeded
 - Rate limiting
@@ -356,7 +353,7 @@ response = llm.invoke(messages)
 
 ---
 
-## Model Comparison
+### Model Comparison
 
 <Tabs>
   <Tab title="Performance">
@@ -390,9 +387,9 @@ response = llm.invoke(messages)
 
 ---
 
-## Advanced Configuration
+### Advanced Configuration
 
-### Load Balancing
+#### Load Balancing
 
 Distribute requests across multiple providers:
 
@@ -423,9 +420,8 @@ response = await router.acompletion(
     model="claude-3-5-sonnet",
     messages=[{"role": "user", "content": "Hello"}]
 )
-```
-
-### Rate Limiting
+```text
+#### Rate Limiting
 
 Prevent quota exhaustion:
 
@@ -439,9 +435,8 @@ router = Router(
     rpm=1000,  # Requests per minute
     tpm=100000  # Tokens per minute
 )
-```
-
-### Cost Tracking
+```text
+#### Cost Tracking
 
 Monitor LLM costs:
 
@@ -450,7 +445,7 @@ from litellm import completion_cost
 
 response = llm.invoke(messages)
 
-# Calculate cost
+## Calculate cost
 cost = completion_cost(
     model=model_name,
     prompt_tokens=response.usage.prompt_tokens,
@@ -458,9 +453,8 @@ cost = completion_cost(
 )
 
 print(f"Cost: ${cost:.4f}")
-```
-
-### Caching
+```text
+#### Caching
 
 Cache responses to reduce costs:
 
@@ -474,36 +468,35 @@ cache = Cache(
     ttl=3600  # 1 hour
 )
 
-# Cached completion
+## Cached completion
 response = completion(
     model="claude-3-5-sonnet-20241022",
     messages=messages,
     cache=cache
 )
-```
-
+```text
 ---
 
-## Configuration Reference
+### Configuration Reference
 
-### Environment Variables
+#### Environment Variables
 
 ```bash
-# Provider Selection
+## Provider Selection
 LLM_PROVIDER=anthropic|openai|google|azure|bedrock|ollama
 MODEL_NAME=model-identifier
 
-# Model Parameters
+## Model Parameters
 MODEL_TEMPERATURE=0.0-2.0  # Default: 0.7
 MODEL_MAX_TOKENS=1-32000   # Default: 4096
 MODEL_TIMEOUT=10-300       # Seconds, Default: 60
 MODEL_TOP_P=0.0-1.0        # Default: 1.0
 
-# Fallback
+## Fallback
 ENABLE_FALLBACK=true|false  # Default: false
 FALLBACK_MODELS=model1,model2,model3
 
-# Provider API Keys
+## Provider API Keys
 ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-proj-...
 GOOGLE_API_KEY=AIza...
@@ -511,15 +504,14 @@ AZURE_API_KEY=...
 AWS_ACCESS_KEY_ID=AKIA...
 AWS_SECRET_ACCESS_KEY=...
 
-# Provider-Specific
+## Provider-Specific
 AZURE_API_BASE=https://your-resource.openai.azure.com
 AZURE_API_VERSION=2024-02-15-preview
 AZURE_DEPLOYMENT_NAME=gpt-4
 AWS_REGION_NAME=us-east-1
 OLLAMA_API_BASE=http://localhost:11434
-```
-
-### Model IDs
+```text
+#### Model IDs
 
 <Tabs>
   <Tab title="Anthropic">
@@ -527,7 +519,7 @@ OLLAMA_API_BASE=http://localhost:11434
     claude-3-5-sonnet-20241022    # Latest Sonnet
     claude-3-opus-20240229        # Opus
     claude-3-haiku-20240307       # Haiku (fast)
-    ```
+    ```xml
   </Tab>
 
   <Tab title="OpenAI">
@@ -536,21 +528,21 @@ OLLAMA_API_BASE=http://localhost:11434
     gpt-4-turbo                   # GPT-4 Turbo
     gpt-4                         # GPT-4
     gpt-3.5-turbo                 # GPT-3.5 (fast)
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Google">
     ```bash
     gemini-2.5-flash              # Gemini 2.5 Flash
     gemini-2.5-pro                # Gemini 2.5 Pro
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Azure">
     ```bash
     azure/gpt-4                   # Requires deployment name
     azure/gpt-35-turbo
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Bedrock">
@@ -558,7 +550,7 @@ OLLAMA_API_BASE=http://localhost:11434
     bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
     bedrock/meta.llama3-1-70b-instruct-v1:0
     bedrock/amazon.titan-text-express-v1
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Ollama">
@@ -568,13 +560,13 @@ OLLAMA_API_BASE=http://localhost:11434
     ollama/mistral:7b             # Mistral 7B
     ollama/qwen2.5:7b             # Qwen 2.5 7B
     ollama/deepseek-coder:6.7b    # DeepSeek Coder
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="API key not working">
@@ -589,7 +581,7 @@ OLLAMA_API_BASE=http://localhost:11434
     # Check environment
     echo $ANTHROPIC_API_KEY
     env | grep API_KEY
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Rate limit errors">
@@ -606,7 +598,7 @@ OLLAMA_API_BASE=http://localhost:11434
         fallback_models=["gemini-2.5-flash-002"],
         timeout=120  # Longer timeout
     )
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Ollama connection failed">
@@ -622,7 +614,7 @@ OLLAMA_API_BASE=http://localhost:11434
 
     # Set correct endpoint
     OLLAMA_API_BASE=http://localhost:11434
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Slow responses">
@@ -644,7 +636,7 @@ OLLAMA_API_BASE=http://localhost:11434
 
 ---
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Observability" icon="chart-line" href="/guides/observability">

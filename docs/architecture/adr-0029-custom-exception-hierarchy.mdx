@@ -4,7 +4,7 @@ description: 'Comprehensive custom exception hierarchy for improved error handli
 icon: 'file-lines'
 ---
 
-# ADR-0029: Custom Exception Hierarchy
+## ADR-0029: Custom Exception Hierarchy
 
 <Note>
 **Status**: Accepted
@@ -12,11 +12,11 @@ icon: 'file-lines'
 **Deciders**: Engineering Team
 </Note>
 
-## Context
+### Context
 
 The MCP server currently uses generic Python exceptions (`Exception`, `ValueError`, `RuntimeError`) throughout the codebase.
 
-### Current Problems
+#### Current Problems
 
 <Warning>
 1. **Poor Error Handling**: Cannot distinguish between different error types
@@ -27,27 +27,26 @@ The MCP server currently uses generic Python exceptions (`Exception`, `ValueErro
 6. **Inconsistent HTTP Status**: Same exception → different status codes
 </Warning>
 
-### Analysis
+#### Analysis
 
 ```bash
-# Current state: No custom exceptions
+## Current state: No custom exceptions
 $ grep -r "class.*Exception" src/ | wc -l
 0
 
-# Examples of generic exceptions:
+## Examples of generic exceptions:
 src/auth/middleware.py:    raise Exception("JWT verification failed")
 src/llm/factory.py:         raise ValueError(f"Unsupported model")
 src/auth/openfga.py:        raise RuntimeError("OpenFGA check failed")
-```
-
-### Impact
+```text
+#### Impact
 
 - Error handling is reactive, not proactive
 - Difficult to implement proper retry logic
 - Metrics are generic (all errors lumped together)
 - User-facing errors lack clarity
 
-## Decision
+### Decision
 
 Implement a **comprehensive custom exception hierarchy** that:
 
@@ -57,7 +56,7 @@ Implement a **comprehensive custom exception hierarchy** that:
 <Check>Enables fine-grained error handling</Check>
 <Check>Improves observability and debugging</Check>
 
-## Exception Hierarchy
+### Exception Hierarchy
 
 ```
 MCPServerException (base)
@@ -117,11 +116,10 @@ MCPServerException (base)
 └── InternalServerError (500)
     ├── UnexpectedError
     └── NotImplementedError
-```
+```text
+### Base Exception Class
 
-## Base Exception Class
-
-### Features
+#### Features
 
 ```python
 class MCPServerException(Exception):
@@ -138,9 +136,8 @@ class MCPServerException(Exception):
         trace_id: OpenTelemetry trace ID for correlation
         user_message: User-friendly message (safe to display)
     """
-```
-
-### Error Categories
+```text
+#### Error Categories
 
 ```python
 class ErrorCategory(str, Enum):
@@ -149,23 +146,21 @@ class ErrorCategory(str, Enum):
     EXTERNAL_ERROR = "external_error"  # External service
     RATE_LIMIT = "rate_limit"          # 429 errors
     AUTH_ERROR = "auth_error"          # 401/403 errors
-```
-
-### Retry Policy
+```text
+#### Retry Policy
 
 ```python
 class RetryPolicy(str, Enum):
     NEVER = "never"          # Never retry (client errors)
     ALWAYS = "always"        # Always retry (transient)
     CONDITIONAL = "conditional"  # Retry if idempotent
-```
+```text
+### Usage Examples
 
-## Usage Examples
-
-### Raising Exceptions
+#### Raising Exceptions
 
 ```python
-# Authentication error with context
+## Authentication error with context
 raise TokenExpiredError(
     message="JWT token expired at 2025-10-20T10:30:00Z",
     metadata={
@@ -175,7 +170,7 @@ raise TokenExpiredError(
     }
 )
 
-# External service error
+## External service error
 raise LLMProviderError(
     message="Anthropic API returned 503",
     metadata={
@@ -186,7 +181,7 @@ raise LLMProviderError(
     retry_policy=RetryPolicy.ALWAYS
 )
 
-# Validation error
+## Validation error
 raise InputValidationError(
     message="Email format is invalid",
     metadata={
@@ -195,9 +190,8 @@ raise InputValidationError(
         "constraint": "email_format"
     }
 )
-```
-
-### Handling Exceptions
+```text
+#### Handling Exceptions
 
 ```python
 from mcp_server_langgraph.core.exceptions import (
@@ -231,9 +225,8 @@ except AuthenticationError as e:
         status_code=e.status_code,
         content=e.to_dict()
     )
-```
-
-### JSON Response Format
+```text
+#### JSON Response Format
 
 ```json
 {
@@ -248,11 +241,10 @@ except AuthenticationError as e:
     }
   }
 }
-```
+```text
+### FastAPI Integration
 
-## FastAPI Integration
-
-### Exception Handlers
+#### Exception Handlers
 
 ```python
 from fastapi import FastAPI, Request
@@ -288,23 +280,22 @@ async def mcp_exception_handler(
         status_code=exc.status_code,
         content=exc.to_dict()
     )
-```
+```text
+### Observability Integration
 
-## Observability Integration
-
-### Metrics
+#### Metrics
 
 ```python
 from prometheus_client import Counter
 
-# Error counter by type
+## Error counter by type
 error_counter = Counter(
     "mcp_errors_total",
     "Total errors by type",
     labelnames=["error_code", "category", "retry_policy"]
 )
 
-# Track errors
+## Track errors
 try:
     result = await some_operation()
 except MCPServerException as e:
@@ -314,9 +305,8 @@ except MCPServerException as e:
         retry_policy=e.retry_policy.value
     ).inc()
     raise
-```
-
-### Logging
+```text
+#### Logging
 
 ```python
 import structlog
@@ -334,67 +324,63 @@ except MCPServerException as e:
         metadata=e.metadata,
         exc_info=True  # Include stack trace
     )
-```
+```python
+### Migration Strategy
 
-## Migration Strategy
-
-### Phase 1: Create Exception Hierarchy
+#### Phase 1: Create Exception Hierarchy
 
 <Check>Define all exception classes in `core/exceptions.py`</Check>
 <Check>Add base class with rich context</Check>
 <Check>Create error categories and retry policies</Check>
 
-### Phase 2: Replace Generic Exceptions
+#### Phase 2: Replace Generic Exceptions
 
 **Before**:
 ```python
 raise Exception("JWT verification failed")
-```
-
+```text
 **After**:
 ```python
 raise TokenInvalidError(
     message="JWT signature verification failed",
     metadata={"algorithm": "RS256", "issuer": issuer}
 )
-```
-
-### Phase 3: Add Exception Handlers
+```sql
+#### Phase 3: Add Exception Handlers
 
 <Check>Add FastAPI exception handlers</Check>
 <Check>Integrate with metrics and logging</Check>
 <Check>Test error responses</Check>
 
-### Phase 4: Update Tests
+#### Phase 4: Update Tests
 
 ```python
-# Old test
+## Old test
 with pytest.raises(Exception):
     verify_token(invalid_token)
 
-# New test
+## New test
 with pytest.raises(TokenInvalidError) as exc_info:
     verify_token(invalid_token)
 
 assert exc_info.value.error_code == "auth.token_invalid"
 assert exc_info.value.status_code == 401
 assert exc_info.value.retry_policy == RetryPolicy.NEVER
-```
+```text
+### Configuration
 
-## Configuration
-
-### Environment Variables
+#### Environment Variables
 
 ```bash
-# Exception Handling
+## Exception Handling
 EXCEPTION_INCLUDE_TRACEBACK=false  # Don't expose in prod
 EXCEPTION_DETAILED_ERRORS=false    # Sanitize error messages
 EXCEPTION_LOG_LEVEL=ERROR          # Minimum level to log
 ```
 
-## Consequences
+### Consequences
 
-### Positive
+#### Positive
 
 <Check>**Clear Error Semantics** - Explicit exception types</Check>
 <Check>**Better Debugging** - Rich context in every error</Check>
@@ -403,26 +389,26 @@ EXCEPTION_LOG_LEVEL=ERROR          # Minimum level to log
 <Check>**Retry Logic** - Built-in retry policy guidance</Check>
 <Check>**User-Friendly** - Safe messages for end users</Check>
 
-### Negative
+#### Negative
 
 <Warning>**More Code** - Need to define many exception classes</Warning>
 <Warning>**Learning Curve** - Developers need to know hierarchy</Warning>
 <Warning>**Migration Effort** - Replace all generic exceptions</Warning>
 
-### Mitigations
+#### Mitigations
 
 1. **Auto-complete**: IDE will suggest correct exception type
 2. **Documentation**: Clear examples for each exception
 3. **Linting**: Add rules to detect generic exceptions
 4. **Templates**: Provide exception templates for common cases
 
-## Performance Impact
+### Performance Impact
 
 - **Minimal overhead**: Exception creation ~1-2μs
 - **No runtime impact**: Only affects error paths
 - **Improved debugging**: Saves hours of troubleshooting
 
-## Related
+### Related
 
 - [ADR-0017: Error Handling Strategy](/architecture/adr-0017-error-handling-strategy)
 - [ADR-0026: Resilience Patterns](/architecture/adr-0030-resilience-patterns)

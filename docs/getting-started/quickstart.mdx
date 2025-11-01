@@ -4,7 +4,7 @@ description: 'Get MCP Server with LangGraph running in 5 minutes'
 icon: 'bolt'
 ---
 
-## Prerequisites
+### Prerequisites
 
 Before you begin, ensure you have:
 
@@ -17,32 +17,31 @@ Before you begin, ensure you have:
   We recommend [Google Gemini](https://aistudio.google.com/apikey) for getting started - it's free and has generous limits!
 </Tip>
 
-## Installation
+### Installation
 
 <Steps>
   <Step title="Clone the Repository">
     ```bash
     git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
     cd mcp_server_langgraph
-    ```
+    ```xml
   </Step>
 
   <Step title="Create Virtual Environment">
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
+    ```xml
   </Step>
 
   <Step title="Install Dependencies">
     ```bash
     pip install -r requirements.txt
-    ```
-
+    ```text
     Or use the Makefile:
     ```bash
     make install
-    ```
+    ```xml
   </Step>
 
   <Step title="Start Infrastructure">
@@ -50,12 +49,11 @@ Before you begin, ensure you have:
 
     ```bash
     docker compose up -d
-    ```
-
+    ```text
     Verify services are running:
     ```bash
     docker compose ps
-    ```
+    ```xml
   </Step>
 
   <Step title="Setup OpenFGA">
@@ -63,16 +61,14 @@ Before you begin, ensure you have:
 
     ```bash
     python scripts/setup/setup_openfga.py
-    ```
-
+    ```text
     Save the output `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID` - you'll need them next.
   </Step>
 
   <Step title="Configure Environment">
     ```bash
     cp .env.example .env
-    ```
-
+    ```text
     Edit `.env` with your values:
     ```bash
     # Get free API key from https://aistudio.google.com/apikey
@@ -84,7 +80,7 @@ Before you begin, ensure you have:
 
     # JWT secret (change in production!)
     JWT_SECRET_KEY=your-secret-key-change-in-production
-    ```
+    ```xml
   </Step>
 
   <Step title="Test the Installation">
@@ -92,35 +88,31 @@ Before you begin, ensure you have:
 
     ```bash
     python examples/client_stdio.py
-    ```
-
+    ```text
     You should see the agent responding to queries! 🎉
   </Step>
 </Steps>
 
-## Verify Installation
+### Verify Installation
 
 Check that all services are accessible:
 
 <CodeGroup>
 ```bash Health Check
 curl http://localhost:8080/healthz  # OpenFGA
-```
-
+```text
 ```bash Jaeger UI
 open http://localhost:16686
-```
-
+```text
 ```bash Prometheus
 open http://localhost:9090
-```
-
+```text
 ```bash Grafana
 open http://localhost:3000  # admin/admin
-```
+```xml
 </CodeGroup>
 
-## Your First Request
+### Your First Request
 
 Let's send a message to the agent:
 
@@ -151,21 +143,19 @@ async def test_agent():
             )
             print(response)
 
-# Run the test
+## Run the test
 asyncio.run(test_agent())
-```
-
+```text
 ```bash cURL
-# First, get a JWT token (in production, use proper auth)
+## First, get a JWT token (in production, use proper auth)
 TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; from mcp_server_langgraph.core.config import settings; auth = AuthMiddleware(secret_key=settings.jwt_secret_key); print(auth.create_token('alice'))")
 
-# Send a message
+## Send a message
 curl -X POST http://localhost:8000/message \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "Hello! What can you help me with?"}'
-```
-
+```text
 ```javascript JavaScript
 const axios = require('axios');
 
@@ -183,10 +173,10 @@ const response = await axios.post('http://localhost:8000/message', {
 });
 
 console.log(response.data);
-```
+```xml
 </CodeGroup>
 
-## Understanding the Response
+### Understanding the Response
 
 The agent returns a structured response:
 
@@ -203,8 +193,7 @@ The agent returns a structured response:
   "trace_id": "abc123...",
   "authorized": true
 }
-```
-
+```xml
 <ResponseField name="content" type="string">
   The agent's response text
 </ResponseField>
@@ -225,7 +214,7 @@ The agent returns a structured response:
   OpenTelemetry trace ID for debugging
 </ResponseField>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Configure Authentication" icon="key" href="/getting-started/authentication">
@@ -242,7 +231,7 @@ The agent returns a structured response:
   </Card>
 </CardGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Port already in use">
@@ -258,7 +247,7 @@ The agent returns a structured response:
 
     # Restart
     docker compose up -d
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="OpenFGA connection refused">
@@ -270,7 +259,7 @@ The agent returns a structured response:
 
     # Restart if needed
     docker compose restart openfga
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="API key invalid">
@@ -282,8 +271,7 @@ The agent returns a structured response:
 
     # Test directly
     curl https://generativelanguage.googleapis.com/v1/models?key=YOUR_KEY
-    ```
-
+    ```text
     Get a new key from [Google AI Studio](https://aistudio.google.com/apikey)
   </Accordion>
 
@@ -307,7 +295,7 @@ The agent returns a structured response:
   **Need more help?** Check the [Development Setup](/advanced/development-setup) guide or ask in [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions).
 </Note>
 
-## What's Next?
+### What's Next?
 
 Now that you have the agent running:
 

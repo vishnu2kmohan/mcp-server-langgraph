@@ -4,7 +4,7 @@ description: 'Deploy MCP Server with LangGraph to production'
 icon: 'rocket'
 ---
 
-## Deployment Options
+### Deployment Options
 
 Choose the deployment method that best fits your needs:
 
@@ -58,7 +58,7 @@ Choose the deployment method that best fits your needs:
   </Card>
 </CardGroup>
 
-## Platform Comparison
+### Platform Comparison
 
 | Feature | LangGraph Platform | Cloud Run | Kubernetes | Docker |
 |---------|-------------------|-----------|------------|--------|
@@ -74,7 +74,7 @@ Choose the deployment method that best fits your needs:
   **Recommendation**: Start with **LangGraph Platform** for fastest time-to-production, or **Cloud Run** if you're already on GCP. Use **Kubernetes** for enterprise self-hosted deployments.
 </Note>
 
-## Architecture
+### Architecture
 
 ```mermaid
 graph TB
@@ -117,9 +117,8 @@ graph TB
     class Jaeger tracingStyle
     class Prom metricsStyle
     class Grafana dashStyle
-```
-
-## Supported Platforms
+```text
+### Supported Platforms
 
 <Tabs>
   <Tab title="Google Cloud">
@@ -182,7 +181,7 @@ graph TB
   </Tab>
 </Tabs>
 
-## Pre-Deployment Checklist
+### Pre-Deployment Checklist
 
 <Steps>
   <Step title="Review Security Audit">
@@ -190,8 +189,7 @@ graph TB
 
     ```bash
     python scripts/validate_production.py --strict
-    ```
-
+    ```text
     Ensure all checks pass before deploying.
   </Step>
 
@@ -209,8 +207,7 @@ graph TB
     ```bash
     docker build -t your-registry/mcp-server-langgraph:1.0.0 .
     docker push your-registry/mcp-server-langgraph:1.0.0
-    ```
-
+    ```sql
     Or use GitHub Actions for automated builds.
   </Step>
 
@@ -232,47 +229,45 @@ graph TB
   </Step>
 </Steps>
 
-## Quick Deploy (Docker)
+### Quick Deploy (Docker)
 
 For a quick test deployment:
 
 ```bash
-# 1. Configure environment
+## 1. Configure environment
 cp .env.example .env.production
-# Edit .env.production with your values
+## Edit .env.production with your values
 
-# 2. Start services
+## 2. Start services
 docker compose -f docker-compose.yml up -d
 
-# 3. Verify
+## 3. Verify
 curl http://localhost:8000/health
-```
-
-## Production Deploy (Kubernetes)
+```text
+### Production Deploy (Kubernetes)
 
 For production deployment:
 
 ```bash
-# 1. Create namespace
+## 1. Create namespace
 kubectl create namespace mcp-server-langgraph
 
-# 2. Create secrets
+## 2. Create secrets
 kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=jwt-secret-key="$(openssl rand -base64 32)" \
   --from-literal=google-api-key="YOUR_KEY" \
   -n mcp-server-langgraph
 
-# 3. Deploy with Helm
+## 3. Deploy with Helm
 helm upgrade --install mcp-server-langgraph ./helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --values values-production.yaml \
   --wait
 
-# 4. Verify deployment
+## 4. Verify deployment
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
-
-## Environment Configuration
+```text
+### Environment Configuration
 
 <Tabs>
   <Tab title="Development">
@@ -285,7 +280,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
       limits:
         cpu: 500m
         memory: 512Mi
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Staging">
@@ -300,7 +295,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
       limits:
         cpu: 1000m
         memory: 1Gi
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Production">
@@ -318,35 +313,34 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
     podDisruptionBudget:
       enabled: true
       minAvailable: 2
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Monitoring & Observability
+### Monitoring & Observability
 
 Deploy the monitoring stack:
 
 ```bash
-# Prometheus + Grafana
+## Prometheus + Grafana
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace monitoring --create-namespace
 
-# Jaeger
+## Jaeger
 helm install jaeger jaegertracing/jaeger \
   --namespace monitoring
 
-# OpenTelemetry Collector
+## OpenTelemetry Collector
 kubectl apply -f kubernetes/otel-collector/
-```
-
+```text
 Access dashboards:
 - **Grafana**: http://grafana.yourdomain.com (admin/admin)
 - **Jaeger**: http://jaeger.yourdomain.com
 - **Prometheus**: http://prometheus.yourdomain.com
 
-## Scaling
+### Scaling
 
-### Horizontal Pod Autoscaling
+#### Horizontal Pod Autoscaling
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -373,15 +367,14 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```
-
-### Vertical Pod Autoscaling
+```text
+#### Vertical Pod Autoscaling
 
 ```bash
 kubectl apply -f kubernetes/vpa/
 ```
 
-## High Availability
+### High Availability
 
 Ensure high availability with:
 
@@ -392,7 +385,7 @@ Ensure high availability with:
 5. **Graceful Shutdown**: Handle SIGTERM properly
 6. **Circuit Breakers**: Fail fast with timeouts
 
-## Disaster Recovery
+### Disaster Recovery
 
 <Steps>
   <Step title="Backup Strategy">
@@ -414,7 +407,7 @@ Ensure high availability with:
   </Step>
 </Steps>
 
-## Security Hardening
+### Security Hardening
 
 Production security checklist:
 
@@ -429,7 +422,7 @@ Production security checklist:
 
 See [Security Best Practices](/security/best-practices)
 
-## Cost Optimization
+### Cost Optimization
 
 <Tabs>
   <Tab title="GKE">
@@ -457,7 +450,7 @@ See [Security Best Practices](/security/best-practices)
   </Tab>
 </Tabs>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Docker Deployment" icon="docker" href="/deployment/docker">

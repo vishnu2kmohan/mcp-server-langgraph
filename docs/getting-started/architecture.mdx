@@ -4,11 +4,11 @@ description: 'System architecture and component overview'
 icon: 'sitemap'
 ---
 
-## Overview
+### Overview
 
 MCP Server with LangGraph is a production-ready, multi-layered architecture designed for enterprise AI applications. It combines stateful AI agents, enterprise authentication, fine-grained authorization, and comprehensive observability.
 
-## High-Level Architecture
+### High-Level Architecture
 
 ```mermaid
 graph TB
@@ -128,11 +128,10 @@ graph TB
     class OTel obsStyle
     class Jaeger,Prometheus obsStyle
     class LangSmith langsmithStyle
-```
+```text
+### Core Components
 
-## Core Components
-
-### MCP Server
+#### MCP Server
 
 **Model Context Protocol server** - Exposes AI agents as standard tools.
 
@@ -162,19 +161,18 @@ graph TB
 
 ---
 
-### LangGraph Agent
+#### LangGraph Agent
 
 **Stateful AI agent** with functional API and conditional routing.
 
 ```python
-# Agent graph structure
+## Agent graph structure
 START → authenticate → authorize → execute_tool → END
                 ↓           ↓            ↓
           unauthorized  forbidden   tool_error
                 ↓           ↓            ↓
                END         END       retry/END
-```
-
+```text
 **Components**:
 
 <Tabs>
@@ -188,8 +186,7 @@ START → authenticate → authorize → execute_tool → END
         authorized: bool
         context: Dict[str, Any]
         tool_results: List[Any]
-    ```
-
+    ```text
     **Features**:
     - Immutable state transitions
     - Type validation
@@ -205,8 +202,7 @@ START → authenticate → authorize → execute_tool → END
         "search": search_tool,
         # Add custom tools
     }
-    ```
-
+    ```text
     **Authorization**:
     - Per-tool permission checks
     - OpenFGA relationship validation
@@ -227,7 +223,7 @@ START → authenticate → authorize → execute_tool → END
 
 ---
 
-### Authentication Layer
+#### Authentication Layer
 
 **Pluggable authentication** with multiple provider support.
 
@@ -248,8 +244,7 @@ sequenceDiagram
     AuthMiddleware->>SessionStore: create_session()
     SessionStore-->>AuthMiddleware: Session ID
     AuthMiddleware-->>Client: Set-Cookie: session_id
-```
-
+```text
 **Providers**:
 
 <AccordionGroup>
@@ -266,7 +261,7 @@ sequenceDiagram
         "alice": User(username="alice", roles=["admin"]),
         "bob": User(username="bob", roles=["user"])
     }
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="KeycloakUserProvider" icon="shield">
@@ -283,7 +278,7 @@ sequenceDiagram
         realm="mcp-server-langgraph",
         client_id="langgraph-client"
     )
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Custom Providers" icon="code">
@@ -300,7 +295,7 @@ sequenceDiagram
         async def verify_token(self, token):
             # Custom verification
             return TokenVerification(...)
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
@@ -308,7 +303,7 @@ sequenceDiagram
 
 ---
 
-### Authorization Layer
+#### Authorization Layer
 
 **Fine-grained, relationship-based** access control with OpenFGA.
 
@@ -324,8 +319,7 @@ graph LR
     style Org fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
     style Tool1 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
     style Tool2 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-```
-
+```text
 **Authorization Model**:
 
 ```typescript
@@ -341,8 +335,7 @@ type tool
     define owner: [user]
     define executor: [user, organization#member]
     define viewer: [user, organization#member]
-```
-
+```text
 **Features**:
 - Relationship-based permissions
 - Hierarchical roles (admin → member → viewer)
@@ -354,7 +347,7 @@ type tool
 
 ---
 
-### Session Management
+#### Session Management
 
 **Flexible session storage** with Redis or in-memory backends.
 
@@ -379,7 +372,7 @@ type tool
         class Memory storeStyle
         class Redis redisStyle
         class Master,Replica redisStyle
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Features">
@@ -407,7 +400,7 @@ type tool
 
     # In-memory backend
     SESSION_BACKEND=memory
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
@@ -415,7 +408,7 @@ type tool
 
 ---
 
-### LLM Integration
+#### LLM Integration
 
 **Multi-LLM routing** via LiteLLM with automatic fallback.
 
@@ -446,8 +439,7 @@ graph TB
     class LLMFactory,LiteLLM routerStyle
     class Primary,Claude primaryStyle
     class Fallback1,Gemini,Fallback2,GPT fallbackStyle
-```
-
+```text
 **Supported Providers** (100+):
 - **Cloud**: Anthropic, OpenAI, Google, Azure, AWS Bedrock
 - **Open Source**: Ollama (Llama, Mistral, Qwen, DeepSeek)
@@ -466,13 +458,12 @@ LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ENABLE_FALLBACK=true
 FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
-```
-
+```text
 **Code Location**: `src/mcp_server_langgraph/llm_factory.py`
 
 ---
 
-### Observability
+#### Observability
 
 **Dual observability stack** - OpenTelemetry + LangSmith.
 
@@ -498,8 +489,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
         class Exporter exporterStyle
         class Collector collectorStyle
         class Jaeger,Prometheus,Grafana backendStyle
-    ```
-
+    ```text
     **Traces**:
     - End-to-end request flow
     - LLM call timing
@@ -528,7 +518,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     LANGSMITH_TRACING=true
     LANGSMITH_API_KEY=your-key
     LANGSMITH_PROJECT=mcp-server-langgraph
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Structured Logging">
@@ -547,7 +537,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
       "authorized": true,
       "duration_ms": 15
     }
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
@@ -555,7 +545,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
 
 ---
 
-### Secrets Management
+#### Secrets Management
 
 **Secure secret storage** with Infisical or cloud-native solutions.
 
@@ -573,7 +563,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-secret
     INFISICAL_PROJECT_ID=project-id
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Cloud Providers">
@@ -595,8 +585,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     ANTHROPIC_API_KEY=sk-ant-...
     GOOGLE_API_KEY=AIza...
     JWT_SECRET_KEY=$(openssl rand -base64 32)
-    ```
-
+    ```xml
     <Warning>
     Never commit `.env` files to Git!
     </Warning>
@@ -607,9 +596,9 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
 
 ---
 
-## Data Flow
+### Data Flow
 
-### Request Flow (Authenticated Request)
+#### Request Flow (Authenticated Request)
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
@@ -641,9 +630,8 @@ sequenceDiagram
     MCP->>Auth: Refresh session (if sliding)
     MCP->>OTel: End trace
     MCP-->>Client: Response + trace_id
-```
-
-### Authentication Flow (Keycloak SSO)
+```text
+#### Authentication Flow (Keycloak SSO)
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
@@ -666,13 +654,12 @@ sequenceDiagram
     App->>FGA: Sync roles to OpenFGA
     App->>Redis: Create session
     App-->>User: Set session cookie
-```
-
+```text
 ---
 
-## Deployment Architectures
+### Deployment Architectures
 
-### Development (Docker Compose)
+#### Development (Docker Compose)
 
 ```mermaid
 graph TB
@@ -710,13 +697,12 @@ graph TB
     class PG dataStyle
     class Jaeger tracingStyle
     class Prom metricsStyle
-```
-
+```text
 **Command**: `docker compose up`
 
 ---
 
-### Production (Kubernetes)
+#### Production (Kubernetes)
 
 ```mermaid
 graph TB
@@ -797,7 +783,7 @@ graph TB
 
 ---
 
-## Design Principles
+### Design Principles
 
 <AccordionGroup>
   <Accordion title="Modularity" icon="cubes">
@@ -839,7 +825,7 @@ graph TB
 
 ---
 
-## Technology Stack
+### Technology Stack
 
 <Tabs>
   <Tab title="Core">
@@ -879,7 +865,7 @@ graph TB
 
 ---
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Quick Start" icon="rocket" href="/getting-started/quickstart">

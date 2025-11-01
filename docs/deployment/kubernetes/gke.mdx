@@ -4,7 +4,7 @@ description: 'Deploy MCP Server with LangGraph on Google Kubernetes Engine (GKE)
 icon: 'google'
 ---
 
-## Overview
+### Overview
 
 Google Kubernetes Engine (GKE) is a managed Kubernetes service that provides enterprise-grade features including Autopilot mode, Workload Identity, and tight integration with Google Cloud services.
 
@@ -12,21 +12,21 @@ Google Kubernetes Engine (GKE) is a managed Kubernetes service that provides ent
 This guide covers deploying to GKE with production-ready configuration including Workload Identity for secure service authentication, Cloud SQL for PostgreSQL, and Memorystore for Redis.
 </Info>
 
-## Prerequisites
+### Prerequisites
 
 - Google Cloud account with billing enabled
 - `gcloud` CLI installed and configured
 - `kubectl` installed
 - Project with required APIs enabled
 
-## Enable Required APIs
+### Enable Required APIs
 
 ```bash
-# Set project
+## Set project
 export PROJECT_ID=your-project-id
 gcloud config set project $PROJECT_ID
 
-# Enable APIs
+## Enable APIs
 gcloud services enable \
   container.googleapis.com \
   compute.googleapis.com \
@@ -35,16 +35,15 @@ gcloud services enable \
   secretmanager.googleapis.com \
   cloudkms.googleapis.com \
   servicenetworking.googleapis.com
-```
+```text
+### Create GKE Cluster
 
-## Create GKE Cluster
-
-### Autopilot Cluster (Recommended)
+#### Autopilot Cluster (Recommended)
 
 GKE Autopilot manages the cluster infrastructure for you:
 
 ```bash
-# Create Autopilot cluster
+## Create Autopilot cluster
 gcloud container clusters create-auto langgraph-cluster \
   --region=us-central1 \
   --release-channel=regular \
@@ -52,17 +51,16 @@ gcloud container clusters create-auto langgraph-cluster \
   --enable-cloud-monitoring \
   --workload-pool=$PROJECT_ID.svc.id.goog
 
-# Get credentials
+## Get credentials
 gcloud container clusters get-credentials langgraph-cluster \
   --region=us-central1
-```
-
-### Standard Cluster
+```text
+#### Standard Cluster
 
 For more control over node configuration:
 
 ```bash
-# Create standard cluster
+## Create standard cluster
 gcloud container clusters create langgraph-cluster \
   --region=us-central1 \
   --num-nodes=3 \
@@ -82,21 +80,20 @@ gcloud container clusters create langgraph-cluster \
   --enable-cloud-logging \
   --enable-cloud-monitoring
 
-# Get credentials
+## Get credentials
 gcloud container clusters get-credentials langgraph-cluster \
   --region=us-central1
-```
-
-## Setup Workload Identity
+```text
+### Setup Workload Identity
 
 Workload Identity allows pods to authenticate as Google Cloud service accounts:
 
 ```bash
-# Create Google Service Account
+## Create Google Service Account
 gcloud iam service-accounts create mcp-server-langgraph \
   --display-name="LangGraph Agent Service Account"
 
-# Grant permissions
+## Grant permissions
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
@@ -105,13 +102,13 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudsql.client"
 
-# Create Kubernetes service account
+## Create Kubernetes service account
 kubectl create namespace mcp-server-langgraph
 
 kubectl create serviceaccount mcp-server-langgraph \
   --namespace mcp-server-langgraph
 
-# Bind Kubernetes SA to Google SA
+## Bind Kubernetes SA to Google SA
 gcloud iam service-accounts add-iam-policy-binding \
   mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com \
   --role roles/iam.workloadIdentityUser \
@@ -120,14 +117,13 @@ gcloud iam service-accounts add-iam-policy-binding \
 kubectl annotate serviceaccount mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   iam.gke.io/gcp-service-account=mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com
-```
+```text
+### Cloud SQL for PostgreSQL
 
-## Cloud SQL for PostgreSQL
-
-### Create Cloud SQL Instance
+#### Create Cloud SQL Instance
 
 ```bash
-# Create Cloud SQL instance
+## Create Cloud SQL instance
 gcloud sql instances create langgraph-postgres \
   --database-version=POSTGRES_15 \
   --tier=db-custom-2-8192 \
@@ -140,20 +136,19 @@ gcloud sql instances create langgraph-postgres \
   --maintenance-window-hour=4 \
   --database-flags=max_connections=200
 
-# Create database
+## Create database
 gcloud sql databases create keycloak \
   --instance=langgraph-postgres
 
 gcloud sql databases create openfga \
   --instance=langgraph-postgres
 
-# Create user
+## Create user
 gcloud sql users create keycloak \
   --instance=langgraph-postgres \
   --password=$(openssl rand -base64 32)
-```
-
-### Configure Cloud SQL Proxy
+```text
+#### Configure Cloud SQL Proxy
 
 **Option 1: Cloud SQL Auth Proxy Sidecar**
 
@@ -202,30 +197,28 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-```
-
+```text
 **Option 2: Private IP (Recommended for Production)**
 
 ```bash
-# Enable private IP for Cloud SQL
+## Enable private IP for Cloud SQL
 gcloud sql instances patch langgraph-postgres \
   --network=projects/$PROJECT_ID/global/networks/default \
   --enable-google-private-path
 
-# Get private IP
+## Get private IP
 CLOUDSQL_PRIVATE_IP=$(gcloud sql instances describe langgraph-postgres \
   --format='get(ipAddresses[0].ipAddress)')
 
-# Use private IP directly
+## Use private IP directly
 KC_DB_URL=jdbc:postgresql://$CLOUDSQL_PRIVATE_IP:5432/keycloak
-```
+```text
+### Memorystore for Redis
 
-## Memorystore for Redis
-
-### Create Redis Instance
+#### Create Redis Instance
 
 ```bash
-# Create Redis instance
+## Create Redis instance
 gcloud redis instances create langgraph-redis \
   --size=5 \
   --region=us-central1 \
@@ -235,7 +228,7 @@ gcloud redis instances create langgraph-redis \
   --connect-mode=private-service-access \
   --enable-auth
 
-# Get Redis host and auth string
+## Get Redis host and auth string
 REDIS_HOST=$(gcloud redis instances describe langgraph-redis \
   --region=us-central1 \
   --format='get(host)')
@@ -243,14 +236,13 @@ REDIS_HOST=$(gcloud redis instances describe langgraph-redis \
 REDIS_AUTH=$(gcloud redis instances get-auth-string langgraph-redis \
   --region=us-central1)
 
-# Create secret
+## Create secret
 kubectl create secret generic redis-credentials \
   --namespace=mcp-server-langgraph \
   --from-literal=host=$REDIS_HOST \
   --from-literal=password=$REDIS_AUTH
-```
-
-### Configure Application
+```text
+#### Configure Application
 
 ```yaml
 apiVersion: apps/v1
@@ -275,14 +267,13 @@ spec:
             secretKeyRef:
               name: redis-credentials
               key: password
-```
+```text
+### Secret Manager Integration
 
-## Secret Manager Integration
-
-### Store Secrets in Secret Manager
+#### Store Secrets in Secret Manager
 
 ```bash
-# Create secrets
+## Create secrets
 echo -n "sk-ant-your-key" | gcloud secrets create anthropic-api-key \
   --data-file=- \
   --replication-policy=automatic
@@ -291,16 +282,15 @@ echo -n "your-jwt-secret" | gcloud secrets create jwt-secret \
   --data-file=- \
   --replication-policy=automatic
 
-# Grant access to service account
+## Grant access to service account
 gcloud secrets add-iam-policy-binding anthropic-api-key \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
-```
-
-### Use External Secrets Operator
+```text
+#### Use External Secrets Operator
 
 ```bash
-# Install External Secrets Operator
+## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
 
@@ -309,7 +299,7 @@ helm install external-secrets \
   --namespace external-secrets-system \
   --create-namespace
 
-# Create SecretStore
+## Create SecretStore
 cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
@@ -328,7 +318,7 @@ spec:
             name: mcp-server-langgraph
 EOF
 
-# Create ExternalSecret
+## Create ExternalSecret
 cat << 'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
@@ -351,23 +341,22 @@ spec:
     remoteRef:
       key: jwt-secret
 EOF
-```
+```text
+### Google Container Registry (GCR)
 
-## Google Container Registry (GCR)
-
-### Build and Push Images
+#### Build and Push Images
 
 ```bash
-# Configure Docker for GCR
+## Configure Docker for GCR
 gcloud auth configure-docker
 
-# Build image
+## Build image
 docker build -t gcr.io/$PROJECT_ID/mcp-server-langgraph:latest .
 
-# Push to GCR
+## Push to GCR
 docker push gcr.io/$PROJECT_ID/mcp-server-langgraph:latest
 
-# Use in Kubernetes
+## Use in Kubernetes
 cat << 'EOF' | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
@@ -382,31 +371,29 @@ spec:
         image: gcr.io/$PROJECT_ID/mcp-server-langgraph:latest
         imagePullPolicy: Always
 EOF
-```
-
-### Artifact Registry (Recommended)
+```text
+#### Artifact Registry (Recommended)
 
 ```bash
-# Create Artifact Registry repository
+## Create Artifact Registry repository
 gcloud artifacts repositories create langgraph \
   --repository-format=docker \
   --location=us-central1 \
   --description="LangGraph Agent images"
 
-# Configure Docker
+## Configure Docker
 gcloud auth configure-docker us-central1-docker.pkg.dev
 
-# Build and push
+## Build and push
 docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest .
 docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
-```
+```text
+### Load Balancer and Ingress
 
-## Load Balancer and Ingress
-
-### Install NGINX Ingress Controller
+#### Install NGINX Ingress Controller
 
 ```bash
-# Install NGINX Ingress
+## Install NGINX Ingress
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
@@ -414,9 +401,8 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
   --create-namespace \
   --set controller.service.type=LoadBalancer
-```
-
-### Configure Ingress
+```text
+#### Configure Ingress
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -445,9 +431,8 @@ spec:
             name: mcp-server-langgraph
             port:
               number: 8000
-```
-
-### Google Cloud Load Balancer
+```text
+#### Google Cloud Load Balancer
 
 For GCP-native load balancing:
 
@@ -486,20 +471,18 @@ spec:
     drainingTimeoutSec: 60
   cdn:
     enabled: false
-```
+```text
+### Monitoring with Cloud Operations
 
-## Monitoring with Cloud Operations
-
-### Enable Google Cloud Monitoring
+#### Enable Google Cloud Monitoring
 
 ```bash
-# Install Google Cloud Ops agent
+## Install Google Cloud Ops agent
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
 
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/operator.yaml
-```
-
-### Configure Pod Monitoring
+```text
+#### Configure Pod Monitoring
 
 ```yaml
 apiVersion: monitoring.googleapis.com/v1
@@ -514,24 +497,23 @@ spec:
   endpoints:
   - port: metrics
     interval: 30s
-```
-
-### Cloud Logging
+```text
+#### Cloud Logging
 
 Configure structured logging to Cloud Logging:
 
 ```python
-# Install dependencies
+## Install dependencies
 pip install google-cloud-logging
 
-# Configure logging
+## Configure logging
 import google.cloud.logging
 from google.cloud.logging.handlers import CloudLoggingHandler
 
 client = google.cloud.logging.Client()
 handler = CloudLoggingHandler(client)
 
-# Use with structlog
+## Use with structlog
 import structlog
 
 structlog.configure(
@@ -541,11 +523,10 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     logger_factory=structlog.stdlib.LoggerFactory(),
 )
-```
+```text
+### Auto-Scaling
 
-## Auto-Scaling
-
-### Horizontal Pod Autoscaler
+#### Horizontal Pod Autoscaler
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -590,36 +571,34 @@ spec:
         value: 5
         periodSeconds: 60
       selectPolicy: Max
-```
-
-### Cluster Autoscaler
+```text
+#### Cluster Autoscaler
 
 GKE Autopilot handles node scaling automatically. For Standard clusters:
 
 ```bash
-# Enable cluster autoscaling
+## Enable cluster autoscaling
 gcloud container clusters update langgraph-cluster \
   --enable-autoscaling \
   --min-nodes=3 \
   --max-nodes=20 \
   --region=us-central1
-```
-
-## Complete Deployment
+```text
+### Complete Deployment
 
 ```bash
-# Clone repository
+## Clone repository
 git clone https://github.com/vishnu2kmohan/mcp-server-langgraph
 cd mcp-server-langgraph
 
-# Build and push image
+## Build and push image
 docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:v1.0.0 .
 docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:v1.0.0
 
-# Create namespace
+## Create namespace
 kubectl create namespace mcp-server-langgraph
 
-# Deploy with Helm
+## Deploy with Helm
 helm install mcp-server-langgraph ./helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --set image.repository=us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent \
@@ -629,13 +608,12 @@ helm install mcp-server-langgraph ./helm/mcp-server-langgraph \
   --set cloudsql.instance=$PROJECT_ID:us-central1:langgraph-postgres \
   --set redis.host=$REDIS_HOST
 
-# Verify deployment
+## Verify deployment
 kubectl get pods -n mcp-server-langgraph
 kubectl get svc -n mcp-server-langgraph
 kubectl get ingress -n mcp-server-langgraph
-```
-
-## Cost Optimization
+```text
+### Cost Optimization
 
 <AccordionGroup>
   <Accordion title="Use Autopilot Mode" icon="wand-magic-sparkles">
@@ -657,8 +635,7 @@ kubectl get ingress -n mcp-server-langgraph
       --preemptible \
       --num-nodes=3 \
       --machine-type=n2-standard-4
-    ```
-
+    ```text
     Use node affinity to schedule on preemptible nodes:
     ```yaml
     affinity:
@@ -671,7 +648,7 @@ kubectl get ingress -n mcp-server-langgraph
               operator: In
               values:
               - "true"
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Right-Size Resources" icon="gauge">
@@ -684,7 +661,7 @@ kubectl get ingress -n mcp-server-langgraph
       --enable-network-egress-metering \
       --enable-resource-consumption-metering \
       --region=us-central1
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Committed Use Discounts" icon="percent">
@@ -698,11 +675,11 @@ kubectl get ingress -n mcp-server-langgraph
       --plan=12-month \
       --resources=vcpu=100,memory=400GB \
       --region=us-central1
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Security Best Practices
+### Security Best Practices
 
 <AccordionGroup>
   <Accordion title="Enable Shielded Nodes" icon="shield">
@@ -710,7 +687,7 @@ kubectl get ingress -n mcp-server-langgraph
     gcloud container clusters update langgraph-cluster \
       --enable-shielded-nodes \
       --region=us-central1
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Use Binary Authorization" icon="shield-check">
@@ -721,7 +698,7 @@ kubectl get ingress -n mcp-server-langgraph
     gcloud container clusters update langgraph-cluster \
       --enable-binauthz \
       --region=us-central1
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Network Policies" icon="network-wired">
@@ -752,11 +729,11 @@ kubectl get ingress -n mcp-server-langgraph
         ports:
         - protocol: TCP
           port: 8080
-    ```
+    ```xml
   </Accordion>
 </AccordionGroup>
 
-## Troubleshooting
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Cloud SQL connection fails">
@@ -767,7 +744,7 @@ kubectl get ingress -n mcp-server-langgraph
       --image=gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest \
       --restart=Never \
       -- $PROJECT_ID:us-central1:langgraph-postgres
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Workload Identity not working">
@@ -786,7 +763,7 @@ kubectl get ingress -n mcp-server-langgraph
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="EKS Deployment" icon="aws" href="/deployment/kubernetes/eks">

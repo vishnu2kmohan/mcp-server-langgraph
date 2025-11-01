@@ -4,11 +4,11 @@ description: 'Manage OpenFGA relationship tuples programmatically'
 icon: 'link'
 ---
 
-## Overview
+### Overview
 
 Relationship tuples are the core data in OpenFGA - they define **who** can do **what** to **which resource**. This guide shows how to create, query, update, and delete tuples effectively.
 
-## Tuple Structure
+### Tuple Structure
 
 A tuple has three parts:
 
@@ -18,91 +18,85 @@ A tuple has three parts:
     "relation": "executor",       # Relation (what)
     "object": "tool:chat"        # Object (which resource)
 }
-```
-
-### User Field
+```text
+#### User Field
 
 The **subject** of the relationship:
 
 ```python
-# Direct users
+## Direct users
 "user:alice"
 "user:bob"
 
-# Users from organization
+## Users from organization
 "organization:acme#member"   # All acme members
 "organization:acme#admin"    # All acme admins
 
-# Specific roles
+## Specific roles
 "role:premium#assignee"      # All premium role holders
-```
-
-### Relation Field
+```text
+#### Relation Field
 
 The **type** of relationship:
 
 ```python
-# Common relations
+## Common relations
 "owner"      # Resource ownership
 "admin"      # Administrative access
 "member"     # Standard membership
 "executor"   # Can execute/use
 "editor"     # Can modify
 "viewer"     # Can view/read
-```
-
-### Object Field
+```text
+#### Object Field
 
 The **resource** being accessed:
 
 ```python
-# Tools
+## Tools
 "tool:chat"
 "tool:search"
 
-# Organizations
+## Organizations
 "organization:acme"
 "organization:contoso"
 
-# Conversations
+## Conversations
 "conversation:thread_123"
 
-# Documents
+## Documents
 "document:report_q4"
-```
+```text
+### Creating Tuples
 
-## Creating Tuples
-
-### Single Tuple
+#### Single Tuple
 
 ```python
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 client = OpenFGAClient()
 
-# Grant alice admin access to organization
+## Grant alice admin access to organization
 await client.write_tuples([{
     "user": "user:alice",
     "relation": "admin",
     "object": "organization:acme"
 }])
-```
-
-### Multiple Tuples (Atomic)
+```text
+#### Multiple Tuples (Atomic)
 
 ```python
-# Grant multiple permissions at once
+## Grant multiple permissions at once
 await client.write_tuples([
     {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "user:charlie", "relation": "viewer", "object": "organization:acme"},
 ])
-```
-
-### Organization-Wide Access
+```text
+#### Organization-Wide Access
 
 ```python
-# Grant all organization members access to tool
+## Grant all organization members access to tool
 await client.write_tuples([
     # First, make alice an admin
     {"user": "user:alice", "relation": "admin", "object": "organization:acme"},
@@ -111,120 +105,111 @@ await client.write_tuples([
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
 
-# Now alice can execute tool:chat (via org membership)
-```
-
-### Resource Ownership
+## Now alice can execute tool:chat (via org membership)
+```text
+#### Resource Ownership
 
 ```python
-# Alice owns a conversation
+## Alice owns a conversation
 await client.write_tuples([{
     "user": "user:alice",
     "relation": "owner",
     "object": "conversation:thread_123"
 }])
 
-# Share conversation with bob as viewer
+## Share conversation with bob as viewer
 await client.write_tuples([{
     "user": "user:bob",
     "relation": "viewer",
     "object": "conversation:thread_123"
 }])
-```
+```text
+### Querying Tuples
 
-## Querying Tuples
-
-### List All Tuples
+#### List All Tuples
 
 ```python
-# Get all relationship tuples
+## Get all relationship tuples
 all_tuples = await client.read_tuples()
 
 for tuple in all_tuples:
     print(f"{tuple['user']} → {tuple['relation']} → {tuple['object']}")
-```
-
-### Filter by User
+```text
+#### Filter by User
 
 ```python
-# Get all tuples for alice
+## Get all tuples for alice
 alice_tuples = await client.read_tuples(user="user:alice")
 
-# What can alice access?
+## What can alice access?
 for tuple in alice_tuples:
     print(f"Alice can {tuple['relation']} {tuple['object']}")
-```
-
-### Filter by Object
+```text
+#### Filter by Object
 
 ```python
-# Who can access tool:chat?
+## Who can access tool:chat?
 chat_tuples = await client.read_tuples(object="tool:chat")
 
 for tuple in chat_tuples:
     print(f"{tuple['user']} can {tuple['relation']} chat")
-```
-
-### Filter by Relation
+```text
+#### Filter by Relation
 
 ```python
-# All admin relationships
+## All admin relationships
 admin_tuples = await client.read_tuples(relation="admin")
 
 for tuple in admin_tuples:
     print(f"{tuple['user']} is admin of {tuple['object']}")
-```
-
-### List User's Accessible Objects
+```text
+#### List User's Accessible Objects
 
 ```python
-# What tools can alice execute?
+## What tools can alice execute?
 tools = await client.list_objects(
     user="user:alice",
     relation="executor",
     object_type="tool"
 )
 print(f"Alice can execute: {tools}")
-# Output: ['tool:chat', 'tool:search']
-```
-
-### List Users with Access
+## Output: ['tool:chat', 'tool:search']
+```text
+#### List Users with Access
 
 ```python
-# Who can execute tool:chat?
+## Who can execute tool:chat?
 users = await client.list_users(
     relation="executor",
     object="tool:chat"
 )
 print(f"Can execute chat: {users}")
-# Output: ['user:alice', 'user:bob', 'organization:acme#member']
-```
+## Output: ['user:alice', 'user:bob', 'organization:acme#member']
+```text
+### Updating Tuples
 
-## Updating Tuples
-
-### Replace Relation
+#### Replace Relation
 
 ```python
-# Change bob from viewer to editor
-# 1. Delete old relation
+## Change bob from viewer to editor
+## 1. Delete old relation
 await client.delete_tuples([{
     "user": "user:bob",
     "relation": "viewer",
     "object": "conversation:thread_123"
 }])
 
-# 2. Add new relation
+## 2. Add new relation
 await client.write_tuples([{
     "user": "user:bob",
     "relation": "editor",
     "object": "conversation:thread_123"
 }])
-```
-
-### Transfer Ownership
+```text
+#### Transfer Ownership
 
 ```python
-# Transfer document from alice to bob
+## Transfer document from alice to bob
 await client.delete_tuples([{
     "user": "user:alice",
     "relation": "owner",
@@ -236,51 +221,46 @@ await client.write_tuples([{
     "relation": "owner",
     "object": "document:report"
 }])
-```
+```sql
+### Deleting Tuples
 
-## Deleting Tuples
-
-### Delete Specific Tuple
+#### Delete Specific Tuple
 
 ```python
-# Revoke bob's access to tool
+## Revoke bob's access to tool
 await client.delete_tuples([{
     "user": "user:bob",
     "relation": "executor",
     "object": "tool:chat"
 }])
-```
-
-### Delete All User Access to Object
+```sql
+#### Delete All User Access to Object
 
 ```python
-# Remove all bob's permissions for conversation
+## Remove all bob's permissions for conversation
 tuples = await client.read_tuples(
     user="user:bob",
     object="conversation:thread_123"
 )
 await client.delete_tuples(tuples)
-```
-
-### Delete All Object Permissions
+```sql
+#### Delete All Object Permissions
 
 ```python
-# Delete conversation and all access
+## Delete conversation and all access
 tuples = await client.read_tuples(object="conversation:thread_123")
 await client.delete_tuples(tuples)
-```
-
-### Bulk Delete
+```text
+#### Bulk Delete
 
 ```python
-# Remove all viewer permissions
+## Remove all viewer permissions
 viewer_tuples = await client.read_tuples(relation="viewer")
 await client.delete_tuples(viewer_tuples)
-```
+```text
+### Common Patterns
 
-## Common Patterns
-
-### User Onboarding
+#### User Onboarding
 
 ```python
 async def onboard_user(user_id: str, organization_id: str, role: str = "member"):
@@ -293,9 +273,8 @@ async def onboard_user(user_id: str, organization_id: str, role: str = "member")
             "object": f"organization:{organization_id}"
         }
     ])
-```
-
-### Resource Sharing
+```text
+#### Resource Sharing
 
 ```python
 async def share_resource(resource_type: str, resource_id: str,
@@ -307,11 +286,10 @@ async def share_resource(resource_type: str, resource_id: str,
         "object": f"{resource_type}:{resource_id}"
     }])
 
-# Usage
+## Usage
 await share_resource("document", "report", "bob", "editor")
-```
-
-### Group Access
+```text
+#### Group Access
 
 ```python
 async def grant_group_access(group_type: str, group_id: str,
@@ -324,11 +302,10 @@ async def grant_group_access(group_type: str, group_id: str,
         "object": f"{resource_type}:{resource_id}"
     }])
 
-# Grant all acme members access to chat
+## Grant all acme members access to chat
 await grant_group_access("organization", "acme", "tool", "chat", "executor")
-```
-
-### Permission Inheritance
+```text
+#### Permission Inheritance
 
 ```python
 async def create_folder_hierarchy(parent_id: str, child_id: str):
@@ -342,12 +319,11 @@ async def create_folder_hierarchy(parent_id: str, child_id: str):
         }
     ])
 
-# Permissions automatically inherited via model definition
-```
+## Permissions automatically inherited via model definition
+```text
+### Bulk Operations
 
-## Bulk Operations
-
-### Import from CSV
+#### Import from CSV
 
 ```python
 import csv
@@ -370,13 +346,12 @@ async def import_tuples_from_csv(filename: str):
         batch = tuples[i:i+batch_size]
         await client.write_tuples(batch)
 
-# CSV format:
-# user,relation,object
-# user:alice,admin,organization:acme
-# user:bob,member,organization:acme
-```
-
-### Export to JSON
+## CSV format:
+## user,relation,object
+## user:alice,admin,organization:acme
+## user:bob,member,organization:acme
+```text
+#### Export to JSON
 
 ```python
 import json
@@ -387,9 +362,8 @@ async def export_tuples_to_json(filename: str):
 
     with open(filename, 'w') as f:
         json.dump(tuples, f, indent=2)
-```
-
-### Sync from External System
+```text
+#### Sync from External System
 
 ```python
 async def sync_permissions_from_keycloak():
@@ -421,11 +395,10 @@ async def sync_permissions_from_keycloak():
                 })
 
     await client.write_tuples(tuples)
-```
+```text
+### Validation
 
-## Validation
-
-### Check Tuple Exists
+#### Check Tuple Exists
 
 ```python
 async def tuple_exists(user: str, relation: str, object: str) -> bool:
@@ -437,11 +410,10 @@ async def tuple_exists(user: str, relation: str, object: str) -> bool:
     )
     return len(tuples) > 0
 
-# Usage
+## Usage
 exists = await tuple_exists("user:alice", "admin", "organization:acme")
-```
-
-### Validate Before Write
+```text
+#### Validate Before Write
 
 ```python
 async def safe_write_tuple(tuple: dict):
@@ -466,11 +438,10 @@ async def safe_write_tuple(tuple: dict):
         return
 
     await client.write_tuples([tuple])
-```
+```text
+### Debugging
 
-## Debugging
-
-### Trace Permission Path
+#### Trace Permission Path
 
 ```python
 async def debug_permission(user: str, relation: str, object: str):
@@ -499,16 +470,15 @@ async def debug_permission(user: str, relation: str, object: str):
             if "organization:" in t['object']:
                 print(f"  Organization: {t}")
 
-# Usage
+## Usage
 await debug_permission("user:alice", "executor", "tool:chat")
-```
+```text
+### Performance Tips
 
-## Performance Tips
-
-### Batch Operations
+#### Batch Operations
 
 ```python
-# Bad: Multiple API calls
+## Bad: Multiple API calls
 for user_id in range(100):
     await client.write_tuples([{
         "user": f"user:{user_id}",
@@ -516,7 +486,7 @@ for user_id in range(100):
         "object": "document:report"
     }])
 
-# Good: Single API call
+## Good: Single API call
 tuples = [{
     "user": f"user:{user_id}",
     "relation": "viewer",
@@ -524,12 +494,11 @@ tuples = [{
 } for user_id in range(100)]
 
 await client.write_tuples(tuples)
-```
-
-### Use Group Relations
+```text
+#### Use Group Relations
 
 ```python
-# Bad: 1000 individual tuples
+## Bad: 1000 individual tuples
 for user_id in range(1000):
     await client.write_tuples([{
         "user": f"user:{user_id}",
@@ -537,18 +506,17 @@ for user_id in range(1000):
         "object": "document:report"
     }])
 
-# Good: 1 group tuple
+## Good: 1 group tuple
 await client.write_tuples([{
     "user": "organization:company#member",
     "relation": "viewer",
     "object": "document:report"
 }])
-```
-
-### Cache Queries
+```text
+#### Cache Queries
 
 ```python
-# Cache frequently accessed tuples
+## Cache frequently accessed tuples
 from functools import lru_cache
 
 @lru_cache(maxsize=1000)
@@ -558,7 +526,7 @@ async def get_user_organizations(user_id: str):
     return [t['object'] for t in tuples if t['object'].startswith('organization:')]
 ```
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Permission Model" icon="sitemap" href="/guides/permission-model">

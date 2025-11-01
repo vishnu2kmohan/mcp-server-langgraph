@@ -4,7 +4,7 @@ description: 'Deploy MCP Server using Helm charts for simplified management'
 icon: 'cubes'
 ---
 
-## Overview
+### Overview
 
 Deploy the MCP Server with LangGraph using Helm for simplified Kubernetes deployment management. The Helm chart includes all dependencies (Keycloak, Redis, OpenFGA, PostgreSQL) with production-ready defaults.
 
@@ -12,17 +12,17 @@ Deploy the MCP Server with LangGraph using Helm for simplified Kubernetes deploy
 **v2.1.0** Helm chart includes Keycloak SSO, Redis sessions, OpenFGA authorization, and comprehensive observability.
 </Info>
 
-## Quick Start
+### Quick Start
 
 ```bash
-# Add Helm repository (future - when published)
-# helm repo add langgraph https://your-org.github.io/helm-charts
-# helm repo update
+## Add Helm repository (future - when published)
+## helm repo add langgraph https://your-org.github.io/helm-charts
+## helm repo update
 
-# For now, use local chart
+## For now, use local chart
 cd deployments/helm
 
-# Install with default values
+## Install with default values
 helm install mcp-server-langgraph ./mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --create-namespace \
@@ -30,14 +30,13 @@ helm install mcp-server-langgraph ./mcp-server-langgraph \
   --set image.tag=v2.1.0 \
   --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}"
 
-# Check deployment status
+## Check deployment status
 helm status mcp-server-langgraph -n mcp-server-langgraph
 
-# Get service URL
+## Get service URL
 kubectl get ingress -n mcp-server-langgraph
-```
-
-## Prerequisites
+```text
+### Prerequisites
 
 <Steps>
   <Step title="Install Helm">
@@ -47,7 +46,7 @@ kubectl get ingress -n mcp-server-langgraph
 
     # Verify installation
     helm version
-    ```
+    ```xml
   </Step>
 
   <Step title="Kubernetes Cluster">
@@ -63,7 +62,7 @@ kubectl get ingress -n mcp-server-langgraph
     ```bash
     docker build -t gcr.io/your-project/mcp-server-langgraph:v2.1.0 .
     docker push gcr.io/your-project/mcp-server-langgraph:v2.1.0
-    ```
+    ```xml
   </Step>
 
   <Step title="Dependencies (Optional)">
@@ -77,11 +76,11 @@ kubectl get ingress -n mcp-server-langgraph
     helm repo add openfga https://openfga.github.io/helm-charts
 
     helm repo update
-    ```
+    ```xml
   </Step>
 </Steps>
 
-## Chart Structure
+### Chart Structure
 
 ```
 deployments/helm/mcp-server-langgraph/
@@ -99,11 +98,10 @@ deployments/helm/mcp-server-langgraph/
 │   ├── pdb.yaml            # Pod disruption budget
 │   └── _helpers.tpl        # Template helpers
 └── README.md
-```
+```text
+### Installation
 
-## Installation
-
-### Basic Installation
+#### Basic Installation
 
 ```bash
 helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
@@ -115,9 +113,8 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=api.yourdomain.com
-```
-
-### With Custom Values File
+```text
+#### With Custom Values File
 
 <Tabs>
   <Tab title="Create values-production.yaml">
@@ -207,7 +204,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         persistence:
           enabled: true
           size: 50Gi
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Install">
@@ -220,11 +217,11 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
       --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
       --set secrets.redisPassword="$(openssl rand -base64 32)"
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-### Cloud-Specific Installations
+#### Cloud-Specific Installations
 
 <Tabs>
   <Tab title="Google Cloud (GKE)">
@@ -258,8 +255,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "standard-rwo"
-    ```
-
+    ```text
     ```bash
     # Create static IP
     gcloud compute addresses create mcp-server-langgraph-ip --global
@@ -268,7 +264,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-gke.yaml
-    ```
+    ```xml
   </Tab>
 
   <Tab title="AWS (EKS)">
@@ -300,13 +296,12 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "gp3"
-    ```
-
+    ```text
     ```bash
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-eks.yaml
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Azure (AKS)">
@@ -335,22 +330,21 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "managed-premium"
-    ```
-
+    ```text
     ```bash
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-aks.yaml
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Configuration
+### Configuration
 
-### Application Configuration
+#### Application Configuration
 
 ```yaml
-# In values.yaml
+## In values.yaml
 config:
   # Service
   environment: "production"
@@ -392,16 +386,15 @@ config:
   enableMetrics: true
   observabilityBackend: "opentelemetry"
   otlpEndpoint: "http://otel-collector:4317"
-```
-
-### Secrets Configuration
+```text
+#### Secrets Configuration
 
 <Warning>
 **Never commit secrets to Git!** Use `--set` flags, external secret managers, or Kubernetes secrets.
 </Warning>
 
 ```yaml
-# In values.yaml (DO NOT commit actual values!)
+## In values.yaml (DO NOT commit actual values!)
 secrets:
   # LLM API Keys
   anthropicApiKey: ""
@@ -426,8 +419,7 @@ secrets:
   infisicalClientId: ""
   infisicalClientSecret: ""
   infisicalProjectId: ""
-```
-
+```text
 Set secrets via command line:
 ```bash
 helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
@@ -436,9 +428,8 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
   --set secrets.keycloakClientSecret="${KEYCLOAK_CLIENT_SECRET}" \
   --set secrets.redisPassword="$(openssl rand -base64 32)"
-```
-
-### Dependencies Configuration
+```text
+#### Dependencies Configuration
 
 <Tabs>
   <Tab title="Keycloak">
@@ -471,7 +462,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         limits:
           cpu: 2000m
           memory: 2Gi
-    ```
+    ```xml
   </Tab>
 
   <Tab title="Redis">
@@ -502,7 +493,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         enabled: true
         serviceMonitor:
           enabled: true
-    ```
+    ```xml
   </Tab>
 
   <Tab title="OpenFGA">
@@ -522,7 +513,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         limits:
           cpu: 1000m
           memory: 1Gi
-    ```
+    ```xml
   </Tab>
 
   <Tab title="PostgreSQL">
@@ -552,85 +543,81 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         enabled: true
         serviceMonitor:
           enabled: true
-    ```
+    ```xml
   </Tab>
 </Tabs>
 
-## Upgrading
+### Upgrading
 
-### Minor Version Upgrade
+#### Minor Version Upgrade
 
 ```bash
-# Update values if needed
+## Update values if needed
 vim values-production.yaml
 
-# Upgrade release
+## Upgrade release
 helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --values values-production.yaml \
   --set image.tag=v2.1.1
 
-# Check rollout
+## Check rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
-
-### Major Version Upgrade
+```text
+#### Major Version Upgrade
 
 ```bash
-# Check for breaking changes
+## Check for breaking changes
 helm show notes ./deployments/helm/mcp-server-langgraph
 
-# Backup current values
+## Backup current values
 helm get values mcp-server-langgraph -n mcp-server-langgraph > current-values.yaml
 
-# Perform upgrade
+## Perform upgrade
 helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --values current-values.yaml \
   --set image.tag=v3.0.0 \
   --reuse-values
 
-# Verify
+## Verify
 helm list -n mcp-server-langgraph
 kubectl get pods -n mcp-server-langgraph
-```
-
-### Rollback
+```text
+#### Rollback
 
 ```bash
-# List release history
+## List release history
 helm history mcp-server-langgraph -n mcp-server-langgraph
 
-# Rollback to previous version
+## Rollback to previous version
 helm rollback mcp-server-langgraph -n mcp-server-langgraph
 
-# Or rollback to specific revision
+## Or rollback to specific revision
 helm rollback mcp-server-langgraph 3 -n mcp-server-langgraph
-```
-
-## Uninstallation
+```text
+### Uninstallation
 
 ```bash
-# Uninstall release
+## Uninstall release
 helm uninstall mcp-server-langgraph -n mcp-server-langgraph
 
-# Delete namespace (if desired)
+## Delete namespace (if desired)
 kubectl delete namespace mcp-server-langgraph
 
-# Note: PVCs are not deleted by default
-# List PVCs
+## Note: PVCs are not deleted by default
+## List PVCs
 kubectl get pvc -n mcp-server-langgraph
 
-# Delete PVCs (WARNING: Deletes data!)
+## Delete PVCs (WARNING: Deletes data!)
 kubectl delete pvc --all -n mcp-server-langgraph
-```
+```text
+### Customization
 
-## Customization
-
-### Custom Init Containers
+#### Custom Init Containers
 
 ```yaml
-# values.yaml
+## values.yaml
 initContainers:
   - name: wait-for-database
     image: busybox:1.36
@@ -641,12 +628,11 @@ initContainers:
           echo "Waiting for PostgreSQL..."
           sleep 2
         done
-```
-
-### Custom Sidecars
+```text
+#### Custom Sidecars
 
 ```yaml
-# values.yaml
+## values.yaml
 sidecars:
   - name: cloud-sql-proxy
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
@@ -660,12 +646,11 @@ sidecars:
       requests:
         memory: "256Mi"
         cpu: "100m"
-```
-
-### Custom Volumes
+```text
+#### Custom Volumes
 
 ```yaml
-# values.yaml
+## values.yaml
 extraVolumes:
   - name: model-cache
     persistentVolumeClaim:
@@ -674,12 +659,11 @@ extraVolumes:
 extraVolumeMounts:
   - name: model-cache
     mountPath: /app/.cache/models
-```
-
-### Environment Variables
+```text
+#### Environment Variables
 
 ```yaml
-# values.yaml
+## values.yaml
 extraEnv:
   - name: CUSTOM_VAR
     value: "custom-value"
@@ -688,14 +672,13 @@ extraEnv:
       secretKeyRef:
         name: external-secret
         key: secret-key
-```
+```text
+### Monitoring
 
-## Monitoring
-
-### Prometheus Integration
+#### Prometheus Integration
 
 ```yaml
-# values.yaml
+## values.yaml
 metrics:
   enabled: true
   serviceMonitor:
@@ -708,23 +691,21 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "8000"
   prometheus.io/path: "/metrics/prometheus"
-```
-
-### Grafana Dashboards
+```text
+#### Grafana Dashboards
 
 ```bash
-# Import dashboards from configmap
+## Import dashboards from configmap
 kubectl create configmap langgraph-dashboards \
   --from-file=dashboards/ \
   --namespace=observability
 
-# Label for Grafana sidecar
+## Label for Grafana sidecar
 kubectl label configmap langgraph-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
-```
-
-## Troubleshooting
+```text
+### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Helm install fails">
@@ -739,7 +720,7 @@ kubectl label configmap langgraph-dashboards \
 
     # Check dependencies
     helm dependency update ./deployments/helm/mcp-server-langgraph
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Dependencies not deploying">
@@ -756,7 +737,7 @@ kubectl label configmap langgraph-dashboards \
       --set keycloak.enabled=true \
       --set redis.enabled=true \
       --set openfga.enabled=true
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Values not applying">
@@ -771,7 +752,7 @@ kubectl label configmap langgraph-dashboards \
     helm template mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --values values-production.yaml \
       --debug
-    ```
+    ```xml
   </Accordion>
 
   <Accordion title="Upgrade fails">
@@ -793,7 +774,7 @@ kubectl label configmap langgraph-dashboards \
   </Accordion>
 </AccordionGroup>
 
-## Best Practices
+### Best Practices
 
 <AccordionGroup>
   <Accordion title="Version Control" icon="git">
@@ -826,7 +807,7 @@ kubectl label configmap langgraph-dashboards \
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+### Next Steps
 
 <CardGroup cols={2}>
   <Card title="Kubernetes Deployment" icon="dharmachakra" href="/deployment/kubernetes">

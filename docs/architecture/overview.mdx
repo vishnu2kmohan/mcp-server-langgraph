@@ -4,7 +4,7 @@ description: 'Comprehensive guide to the architectural decisions and design patt
 icon: 'sitemap'
 ---
 
-## Introduction
+### Introduction
 
 This section documents the architectural decisions made throughout the development of MCP Server with LangGraph. Each Architecture Decision Record (ADR) captures the context, decision, consequences, and alternatives considered for significant technical choices.
 
@@ -12,7 +12,7 @@ This section documents the architectural decisions made throughout the developme
   **What is an ADR?** Architecture Decision Records document important architectural decisions along with their context and consequences, providing historical insight for current and future maintainers.
 </Info>
 
-## Architecture Decision Records
+### Architecture Decision Records
 
 We maintain **40 ADRs** organized into seven categories:
 
@@ -20,7 +20,7 @@ We maintain **40 ADRs** organized into seven categories:
   **New in v3.0**: 10 new ADRs (ADRs 31-39) document our enterprise authentication architecture with Keycloak, service principals, API keys, identity federation, and SCIM provisioning. See [Keycloak JWT Architecture Overview](/architecture/keycloak-jwt-architecture-overview) for details.
 </Note>
 
-### Core Architecture (ADRs 1-5)
+#### Core Architecture (ADRs 1-5)
 
 These foundational decisions shape the entire system:
 
@@ -42,7 +42,7 @@ These foundational decisions shape the entire system:
   </Card>
 </CardGroup>
 
-### Authentication & Sessions (ADRs 6-7)
+#### Authentication & Sessions (ADRs 6-7)
 
 Security and session management patterns:
 
@@ -55,7 +55,7 @@ Security and session management patterns:
   </Card>
 </CardGroup>
 
-### Infrastructure & Deployment (ADRs 8-9, 13, 20-21, 27-28, 30)
+#### Infrastructure & Deployment (ADRs 8-9, 13, 20-21, 27-28, 30)
 
 Infrastructure, deployment, and operational decisions:
 
@@ -86,7 +86,7 @@ Infrastructure, deployment, and operational decisions:
   </Card>
 </CardGroup>
 
-### Development & Quality (ADRs 10, 14-19, 22-26, 29)
+#### Development & Quality (ADRs 10, 14-19, 22-26, 29)
 
 Code quality, testing, and development practices:
 
@@ -132,7 +132,7 @@ Code quality, testing, and development practices:
   </Card>
 </CardGroup>
 
-### Compliance & Templates (ADRs 11-12)
+#### Compliance & Templates (ADRs 11-12)
 
 Compliance frameworks and project templating:
 
@@ -145,7 +145,7 @@ Compliance frameworks and project templating:
   </Card>
 </CardGroup>
 
-## ADR Index
+### ADR Index
 
 Quick reference table of all architectural decisions:
 
@@ -182,7 +182,7 @@ Quick reference table of all architectural decisions:
 | [0029](/architecture/adr-0029-custom-exception-hierarchy) | Custom Exception Hierarchy | Development | Accepted | 2025-10-20 |
 | [0030](/architecture/adr-0030-resilience-patterns) | Resilience Patterns for Production Systems | Infrastructure | Accepted | 2025-10-20 |
 
-## Design Principles
+### Design Principles
 
 Based on our ADRs, these principles guide our architecture:
 
@@ -220,7 +220,7 @@ Based on our ADRs, these principles guide our architecture:
   </Accordion>
 </AccordionGroup>
 
-## System Architecture
+### System Architecture
 
 ```mermaid
 graph TB
@@ -289,9 +289,8 @@ graph TB
     class Router,Agent,Tools agentStyle
     class LiteLLM,Primary,Fallback llmStyle
     class OTEL,Jaeger,Prom,LangSmith obsStyle
-```
-
-## When to Create an ADR
+```text
+### When to Create an ADR
 
 Create a new ADR when making decisions about:
 
@@ -302,51 +301,51 @@ Create a new ADR when making decisions about:
 - **Deployment Approaches**: Infrastructure and deployment methodologies
 - **Quality Practices**: Testing strategies, code quality standards
 
-## ADR Template
+### ADR Template
 
 When creating a new ADR, use this structure:
 
 ```markdown
-# [Number]. [Title]
+## [Number]. [Title]
 
 Date: YYYY-MM-DD
 
-## Status
+### Status
 
 [Proposed | Accepted | Deprecated | Superseded]
 
-## Context
+### Context
 
 What problem are we solving? What constraints exist?
 
-## Decision
+### Decision
 
 What solution did we choose and why?
 
-## Consequences
+### Consequences
 
-### Positive Consequences
+#### Positive Consequences
 - Benefits of this decision
 
-### Negative Consequences
+#### Negative Consequences
 - Drawbacks and limitations
 
-### Neutral Consequences
+#### Neutral Consequences
 - Trade-offs
 
-## Alternatives Considered
+### Alternatives Considered
 
 1. **Alternative 1**
    - Description
    - Why rejected
 
-## References
+### References
 
 - Related documentation
 - External resources
 ```
 
-## Related Documentation
+### Related Documentation
 
 <CardGroup cols={2}>
   <Card title="Development Guide" icon="code" href="/advanced/development-setup">

@@ -5,11 +5,9 @@ icon: 'code'
 ---
 
 
-# Developer Setup Guide
-
 Complete guide for setting up your local development environment.
 
-## Table of Contents
+### Table of Contents
 
 - [Quick Start](#quick-start)
 - [Detailed Setup](#detailed-setup)
@@ -20,44 +18,44 @@ Complete guide for setting up your local development environment.
 
 ---
 
-## Quick Start
+### Quick Start
 
 Get up and running in 5 minutes:
 
 ```bash
-# 1. Clone the repository
+## 1. Clone the repository
 git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
 
-# 2. Create virtual environment
+## 2. Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 3. Install dependencies
+## 3. Install dependencies
 pip install -r requirements.txt
 pip install -r requirements-test.txt
 
-# 4. Copy environment file
+## 4. Copy environment file
 cp .env.example .env
 
-# 5. Get an API key (choose one)
-# - Google Gemini: https://aistudio.google.com/apikey (FREE)
-# - Anthropic: https://console.anthropic.com/
-# - OpenAI: https://platform.openai.com/
+## 5. Get an API key (choose one)
+## - Google Gemini: https://aistudio.google.com/apikey (FREE)
+## - Anthropic: https://console.anthropic.com/
+## - OpenAI: https://platform.openai.com/
 
-# 6. Edit .env and add your API key
+## 6. Edit .env and add your API key
 echo "GOOGLE_API_KEY=your-api-key-here" >> .env
 
-# 7. Start infrastructure
+## 7. Start infrastructure
 docker compose up -d
 
-# 8. Setup OpenFGA
+## 8. Setup OpenFGA
 python scripts/setup_openfga.py
 
-# 9. Run tests
+## 9. Run tests
 pytest -m unit -v
 
-# 10. Test the agent
+## 10. Test the agent
 python examples/client_stdio.py
 ```
 
@@ -65,11 +63,11 @@ python examples/client_stdio.py
 
 ---
 
-## Detailed Setup
+### Detailed Setup
 
-### Prerequisites
+#### Prerequisites
 
-#### Required
+##### Required
 
 - **Python 3.10+** (3.11+ recommended)
   - Check: `python --version`
@@ -83,7 +81,7 @@ python examples/client_stdio.py
   - Check: `docker --version && docker-compose --version`
   - Install: [docker.com](https://www.docker.com/get-started)
 
-#### Optional (for advanced features)
+##### Optional (for advanced features)
 
 - **kubectl** - For Kubernetes development
   - Install: [kubernetes.io](https://kubernetes.io/docs/tasks/tools/)
@@ -95,56 +93,56 @@ python examples/client_stdio.py
   - Linux/Mac: Usually pre-installed
   - Windows: Install via [Chocolatey](https://chocolatey.org/) or use Git Bash
 
-### Installation Steps
+#### Installation Steps
 
-#### 1. Fork and Clone
+##### 1. Fork and Clone
 
 ```bash
-# Fork the repository on GitHub first, then:
+## Fork the repository on GitHub first, then:
 git clone https://github.com/YOUR_USERNAME/mcp_server_langgraph.git
 cd mcp_server_langgraph
 
-# Add upstream remote
+## Add upstream remote
 git remote add upstream https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 
-# Verify remotes
+## Verify remotes
 git remote -v
 ```
 
-#### 2. Create Virtual Environment
+##### 2. Create Virtual Environment
 
 ```bash
-# Create virtual environment
+## Create virtual environment
 python -m venv venv
 
-# Activate it
-# Linux/Mac:
+## Activate it
+## Linux/Mac:
 source venv/bin/activate
 
-# Windows (PowerShell):
+## Windows (PowerShell):
 venv\Scripts\Activate.ps1
 
-# Windows (CMD):
+## Windows (CMD):
 venv\Scripts\activate.bat
 
-# Verify activation (should show venv path)
+## Verify activation (should show venv path)
 which python  # Linux/Mac
 where python  # Windows
 ```
 
-#### 3. Install Dependencies
+##### 3. Install Dependencies
 
 ```bash
-# Upgrade pip
+## Upgrade pip
 pip install --upgrade pip
 
-# Install runtime dependencies
+## Install runtime dependencies
 pip install -r requirements.txt
 
-# Install development dependencies
+## Install development dependencies
 pip install -r requirements-test.txt
 
-# Verify installation
+## Verify installation
 pip list | grep langgraph
 pip list | grep mcp
 ```
@@ -152,15 +150,15 @@ pip list | grep mcp
 **Using Make (recommended):**
 
 ```bash
-# Install all dependencies
+## Install all dependencies
 make install-dev
 
-# This runs:
-# - pip install -r requirements-pinned.txt
-# - pip install -r requirements-test.txt
+## This runs:
+## - pip install -r requirements-pinned.txt
+## - pip install -r requirements-test.txt
 ```
 
-#### 4. Get LLM API Key
+##### 4. Get LLM API Key
 
 You need at least one LLM provider API key. Choose the one that works best for you:
 
@@ -188,159 +186,159 @@ You need at least one LLM provider API key. Choose the one that works best for y
 **Option 4: Local Models (Ollama)**
 
 ```bash
-# Install Ollama
+## Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
 
-# Pull a model
+## Pull a model
 ollama pull llama3.1
 
-# No API key needed, runs locally!
+## No API key needed, runs locally!
 ```
 
-#### 5. Configure Environment
+##### 5. Configure Environment
 
 ```bash
-# Copy example environment
+## Copy example environment
 cp .env.example .env
 
-# Edit with your preferred editor
+## Edit with your preferred editor
 vim .env
-# or
+## or
 nano .env
-# or
+## or
 code .env  # VS Code
 ```
 
 **Minimal .env configuration:**
 
 ```bash
-# Choose your LLM provider
+## Choose your LLM provider
 LLM_PROVIDER=google  # or anthropic, openai, ollama
 
-# Add corresponding API key
+## Add corresponding API key
 GOOGLE_API_KEY=your-key-here
-# or
+## or
 ANTHROPIC_API_KEY=your-key-here
-# or
+## or
 OPENAI_API_KEY=your-key-here
 
-# For Ollama (local), no key needed
+## For Ollama (local), no key needed
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1
 
-# JWT secret (for development)
+## JWT secret (for development)
 JWT_SECRET_KEY=dev-secret-change-in-production
 ```
 
-#### 6. Start Infrastructure Services
+##### 6. Start Infrastructure Services
 
 ```bash
-# Start all services (OpenFGA, Jaeger, Prometheus, Grafana)
+## Start all services (OpenFGA, Jaeger, Prometheus, Grafana)
 docker compose up -d
 
-# Verify services are running
+## Verify services are running
 docker compose ps
 
-# Should see:
-# - openfga (port 8080)
-# - postgres (port 5432)
-# - jaeger (port 16686)
-# - prometheus (port 9090)
-# - grafana (port 3000)
+## Should see:
+## - openfga (port 8080)
+## - postgres (port 5432)
+## - jaeger (port 16686)
+## - prometheus (port 9090)
+## - grafana (port 3000)
 ```
 
 **Check service health:**
 
 ```bash
-# OpenFGA
+## OpenFGA
 curl http://localhost:8080/healthz
 
-# Jaeger UI
+## Jaeger UI
 open http://localhost:16686
 
-# Prometheus
+## Prometheus
 open http://localhost:9090
 
-# Grafana (admin/admin)
+## Grafana (admin/admin)
 open http://localhost:3000
 ```
 
-#### 7. Setup OpenFGA Authorization
+##### 7. Setup OpenFGA Authorization
 
 ```bash
-# Run setup script
+## Run setup script
 python scripts/setup_openfga.py
 
-# This will output:
-# ✓ Created OpenFGA store: 01HXXXXXXXXX
-# ✓ Created authorization model: 01HYYYYYYYY
-# ✓ Wrote test tuples
+## This will output:
+## ✓ Created OpenFGA store: 01HXXXXXXXXX
+## ✓ Created authorization model: 01HYYYYYYYY
+## ✓ Wrote test tuples
 
-# Copy the Store ID and Model ID to your .env
+## Copy the Store ID and Model ID to your .env
 echo "OPENFGA_STORE_ID=01HXXXXXXXXX" >> .env
 echo "OPENFGA_MODEL_ID=01HYYYYYYYY" >> .env
 ```
 
-#### 8. Verify Installation
+##### 8. Verify Installation
 
 ```bash
-# Run unit tests
+## Run unit tests
 pytest -m unit -v
 
-# Should see all tests passing
-# ===== X passed in Y.YYs =====
+## Should see all tests passing
+## ===== X passed in Y.YYs =====
 
-# Test the MCP server
+## Test the MCP server
 python examples/client_stdio.py
 
-# Should see agent responses
+## Should see agent responses
 ```
 
 ---
 
-## Development Workflow
+### Development Workflow
 
-### Daily Development Cycle
+#### Daily Development Cycle
 
 ```bash
-# 1. Start your day - update from upstream
+## 1. Start your day - update from upstream
 git fetch upstream
 git checkout main
 git merge upstream/main
 
-# 2. Create feature branch
+## 2. Create feature branch
 git checkout -b feat/your-feature
 
-# 3. Start infrastructure
+## 3. Start infrastructure
 docker compose up -d
 
-# 4. Make your changes
-# ... edit code ...
+## 4. Make your changes
+## ... edit code ...
 
-# 5. Run tests frequently
+## 5. Run tests frequently
 pytest -m unit -v
 
-# 6. Format and lint before committing
+## 6. Format and lint before committing
 make format
 make lint
 
-# 7. Commit your changes
+## 7. Commit your changes
 git add .
 git commit -m "feat: add new feature"
 
-# 8. Push to your fork
+## 8. Push to your fork
 git push origin feat/your-feature
 
-# 9. Create Pull Request on GitHub
+## 9. Create Pull Request on GitHub
 ```
 
-### Using Make Commands
+#### Using Make Commands
 
 ```bash
-# See all available commands
+## See all available commands
 make help
 
-# Common commands:
+## Common commands:
 make install-dev       # Install dependencies
 make test              # Run all tests
 make test-unit         # Run unit tests only
@@ -352,9 +350,9 @@ make setup-infra       # Start Docker services
 make clean             # Clean up generated files
 ```
 
-### IDE Setup
+#### IDE Setup
 
-#### VS Code
+##### VS Code
 
 Create `.vscode/settings.json`:
 
@@ -377,7 +375,7 @@ Create `.vscode/settings.json`:
 }
 ```
 
-#### PyCharm
+##### PyCharm
 
 1. File → Settings → Project → Python Interpreter
 2. Add Interpreter → Virtualenv Environment → Existing
@@ -386,39 +384,39 @@ Create `.vscode/settings.json`:
 
 ---
 
-## Testing
+### Testing
 
-### Running Tests
+#### Running Tests
 
 ```bash
-# All tests
+## All tests
 pytest
 
-# Unit tests only (fast)
+## Unit tests only (fast)
 pytest -m unit -v
 
-# Integration tests (requires services)
+## Integration tests (requires services)
 pytest -m integration -v
 
-# Specific test file
+## Specific test file
 pytest tests/test_auth.py -v
 
-# Specific test function
+## Specific test function
 pytest tests/test_auth.py::test_create_token -v
 
-# With coverage
+## With coverage
 pytest --cov=. --cov-report=html
 
-# Open coverage report
+## Open coverage report
 open htmlcov/index.html
 ```
 
-### Writing Tests
+#### Writing Tests
 
 Create test files in `tests/` directory:
 
 ```python
-# tests/test_my_feature.py
+## tests/test_my_feature.py
 import pytest
 from my_module import my_function
 
@@ -435,7 +433,7 @@ async def test_my_integration():
     pass
 ```
 
-### Test Markers
+#### Test Markers
 
 - `@pytest.mark.unit` - Unit tests (no external deps)
 - `@pytest.mark.integration` - Integration tests
@@ -444,131 +442,131 @@ async def test_my_integration():
 
 ---
 
-## Debugging
+### Debugging
 
-### Debug MCP Server
+#### Debug MCP Server
 
 ```bash
-# Run with debug logging
+## Run with debug logging
 LOG_LEVEL=DEBUG python -m mcp_server_langgraph.mcp.server_stdio
 
-# Or set in .env
+## Or set in .env
 echo "LOG_LEVEL=DEBUG" >> .env
 ```
 
-### Debug with Python Debugger
+#### Debug with Python Debugger
 
 ```python
-# Add breakpoint in code
+## Add breakpoint in code
 import pdb; pdb.set_trace()
 
-# Or use built-in (Python 3.7+)
+## Or use built-in (Python 3.7+)
 breakpoint()
 ```
 
-### Debug Tests
+#### Debug Tests
 
 ```bash
-# Run pytest with debugger
+## Run pytest with debugger
 pytest --pdb
 
-# Stop at first failure
+## Stop at first failure
 pytest -x --pdb
 ```
 
-### View Traces
+#### View Traces
 
 ```bash
-# Open Jaeger UI
+## Open Jaeger UI
 open http://localhost:16686
 
-# Select service: mcp-server-langgraph
-# View traces with full context
+## Select service: mcp-server-langgraph
+## View traces with full context
 ```
 
-### Check Logs
+#### Check Logs
 
 ```bash
-# Docker service logs
+## Docker service logs
 docker compose logs -f
 
-# Specific service
+## Specific service
 docker compose logs -f openfga
 
-# Application logs (if LOG_FILE set)
+## Application logs (if LOG_FILE set)
 tail -f mcp-server-langgraph.log
 ```
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
-### Common Issues
+#### Common Issues
 
-#### "ModuleNotFoundError"
+##### "ModuleNotFoundError"
 
 ```bash
-# Ensure virtual environment is activated
+## Ensure virtual environment is activated
 which python  # Should show venv path
 
-# Reinstall dependencies
+## Reinstall dependencies
 pip install -r requirements.txt
 ```
 
-#### "Port already in use"
+##### "Port already in use"
 
 ```bash
-# Check what's using the port
+## Check what's using the port
 lsof -i :8080  # Mac/Linux
 netstat -ano | findstr :8080  # Windows
 
-# Stop Docker services
+## Stop Docker services
 docker compose down
 
-# Restart
+## Restart
 docker compose up -d
 ```
 
-#### "OpenFGA connection refused"
+##### "OpenFGA connection refused"
 
 ```bash
-# Check if OpenFGA is running
+## Check if OpenFGA is running
 docker compose ps
 
-# Check logs
+## Check logs
 docker compose logs openfga
 
-# Restart service
+## Restart service
 docker compose restart openfga
 ```
 
-#### "API key invalid"
+##### "API key invalid"
 
 ```bash
-# Verify key is set
+## Verify key is set
 echo $GOOGLE_API_KEY  # Linux/Mac
 echo %GOOGLE_API_KEY%  # Windows
 
-# Check .env file
+## Check .env file
 cat .env | grep API_KEY
 
-# Regenerate key from provider dashboard
+## Regenerate key from provider dashboard
 ```
 
-#### Tests failing
+##### Tests failing
 
 ```bash
-# Update dependencies
+## Update dependencies
 pip install -r requirements-pinned.txt
 
-# Clear pytest cache
+## Clear pytest cache
 pytest --cache-clear
 
-# Run specific failing test
+## Run specific failing test
 pytest tests/test_name.py::test_function -v
 ```
 
-### Getting Help
+#### Getting Help
 
 1. **Check Documentation**
    - [../README.md](../README.md)
@@ -588,7 +586,7 @@ pytest tests/test_name.py::test_function -v
 
 ---
 
-## Next Steps
+### Next Steps
 
 - Read [CONTRIBUTING.md](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CODE_OF_CONDUCT.md) for contribution guidelines
 - Check [Good First Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/good%20first%20issue)

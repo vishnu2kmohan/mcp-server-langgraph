@@ -4,15 +4,13 @@ description: 'Architecture Decision Record: 20. Dual MCP Transport Protocol (STD
 icon: 'file-lines'
 ---
 
-# 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)
-
 Date: 2025-10-13
 
-## Status
+### Status
 
 Accepted
 
-## Context
+### Context
 
 The Model Context Protocol (MCP) is Anthropic's standard for exposing AI agents and tools. MCP enables:
 - **Tool Discovery**: Clients discover available tools via standardized protocol
@@ -22,7 +20,7 @@ The Model Context Protocol (MCP) is Anthropic's standard for exposing AI agents 
 
 However, different deployment environments have different transport requirements:
 
-### Deployment Scenarios
+#### Deployment Scenarios
 
 1. **Local Development** (Claude Desktop, IDEs)
    - Requirement: Simple local process communication
@@ -44,7 +42,7 @@ However, different deployment environments have different transport requirements
    - Constraint: WebSocket or HTTP streaming support
    - User: End users accessing via web UI
 
-### Transport Protocol Trade-offs
+#### Transport Protocol Trade-offs
 
 | Transport | Pros | Cons | Use Case |
 |-----------|------|------|----------|
@@ -55,7 +53,7 @@ However, different deployment environments have different transport requirements
 
 **Problem**: No single transport protocol satisfies all deployment scenarios.
 
-## Decision
+### Decision
 
 We will implement **dual MCP transport support**:
 
@@ -64,7 +62,7 @@ We will implement **dual MCP transport support**:
 
 Both share the same underlying agent logic, differing only in transport layer.
 
-### Architecture
+#### Architecture
 
 ```mermaid
 graph TD
@@ -83,14 +81,13 @@ graph TD
     class Agent agentStyle
     class STDIO,HTTP transportStyle
     class Desktop,Cloud clientStyle
-```
-
-### Transport 1: STDIO (Standard Input/Output)
+```text
+#### Transport 1: STDIO (Standard Input/Output)
 
 **Protocol**: JSON-RPC over stdin/stdout
 
 ```python
-# src/mcp_server_langgraph/mcp/server_stdio.py
+## src/mcp_server_langgraph/mcp/server_stdio.py
 
 from mcp import Server, stdio_server
 
@@ -108,12 +105,11 @@ async def call_tool(name: str, arguments: dict):
     # Delegate to core agent
     return await agent_graph.ainvoke(arguments)
 
-# Main entry point
+## Main entry point
 async def main():
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream)
-```
-
+```text
 **Communication Flow**:
 ```
 Client (Claude Desktop)
@@ -125,27 +121,24 @@ Server (MCP STDIO)
     {"jsonrpc": "2.0", "result": [...], "id": 1}
     ↓
 Client receives tool list
-```
-
+```text
 **Entry Point**:
 ```toml
-# pyproject.toml
+## pyproject.toml
 [project.scripts]
 mcp-server-langgraph = "mcp_server_langgraph.mcp.server_stdio:main"
-```
-
+```text
 **Usage**:
 ```bash
-# Run as MCP server for Claude Desktop
+## Run as MCP server for Claude Desktop
 mcp-server-langgraph
-```
-
-### Transport 2: StreamableHTTP
+```text
+#### Transport 2: StreamableHTTP
 
 **Protocol**: HTTP with Server-Sent Events (SSE) for streaming
 
 ```python
-# src/mcp_server_langgraph/mcp/server_streamable.py
+## src/mcp_server_langgraph/mcp/server_streamable.py
 
 from fastapi import FastAPI
 from mcp import StreamableHTTPTransport
@@ -170,8 +163,7 @@ async def call_tool(request: ToolCallRequest):
             yield f"data: {json.dumps(chunk)}\n\n"
 
     return StreamingResponse(stream_result(), media_type="text/event-stream")
-```
-
+```text
 **Communication Flow**:
 ```
 Client (Web App)
@@ -184,24 +176,21 @@ Server (MCP HTTP)
     data: {"chunk": 2, "content": " there!"}
     ↓
 Client renders streamed response
-```
-
+```text
 **Entry Point**:
 ```toml
-# pyproject.toml
+## pyproject.toml
 [project.scripts]
 mcp-server-langgraph-http = "mcp_server_langgraph.mcp.server_streamable:main"
-```
-
+```text
 **Usage**:
 ```bash
-# Run as HTTP server
+## Run as HTTP server
 mcp-server-langgraph-http --host 0.0.0.0 --port 8000
-```
+```text
+### Consequences
 
-## Consequences
-
-### Positive Consequences
+#### Positive Consequences
 
 - **Flexibility**: Support both local and cloud deployments
 - **Developer Experience**: Easy local testing with STDIO, production deployment via HTTP
@@ -209,26 +198,26 @@ mcp-server-langgraph-http --host 0.0.0.0 --port 8000
 - **Compatibility**: STDIO works with existing MCP clients (Claude Desktop)
 - **No Lock-in**: Can switch transports without changing agent logic
 
-### Negative Consequences
+#### Negative Consequences
 
 - **Maintenance Burden**: Two codepaths to maintain and test
 - **Documentation Overhead**: Must document both transports
 - **Complexity**: Developers must choose correct transport for their use case
 - **Testing**: Must test both transports independently
 
-### Neutral Consequences
+#### Neutral Consequences
 
 - **Separate Entry Points**: Two different commands to start server
 - **Configuration**: Different env vars for each transport (e.g., HTTP port)
 
-## Implementation Details
+### Implementation Details
 
-### Shared Agent Logic
+#### Shared Agent Logic
 
 Both transports use the same core agent:
 
 ```python
-# src/mcp_server_langgraph/core/agent.py
+## src/mcp_server_langgraph/core/agent.py
 
 from langgraph.graph import StateGraph
 
@@ -244,18 +233,17 @@ def call_llm(state: AgentState) -> AgentState:
     # LLM invocation
     pass
 
-# Build graph (shared by both transports)
+## Build graph (shared by both transports)
 graph = StateGraph(AgentState)
 graph.add_node("route", route_input)
 graph.add_node("llm", call_llm)
 graph.add_edge("route", "llm")
 
 agent_graph = graph.compile()
-```
-
+```text
 **Benefit**: Agent logic defined once, used by both transports
 
-### STDIO Transport Details
+#### STDIO Transport Details
 
 **File**: `src/mcp_server_langgraph/mcp/server_stdio.py` (200+ lines)
 
@@ -267,10 +255,9 @@ agent_graph = graph.compile()
 
 **Configuration**:
 ```bash
-# No environment variables needed (uses stdin/stdout)
-# Works with default config
-```
-
+## No environment variables needed (uses stdin/stdout)
+## Works with default config
+```text
 **Claude Desktop Integration**:
 ```json
 // claude_desktop_config.json
@@ -284,9 +271,8 @@ agent_graph = graph.compile()
     }
   }
 }
-```
-
-### StreamableHTTP Transport Details
+```text
+#### StreamableHTTP Transport Details
 
 **File**: `src/mcp_server_langgraph/mcp/server_streamable.py` (300+ lines)
 
@@ -303,17 +289,15 @@ GET  /mcp/info              # Server info
 GET  /mcp/tools/list        # List available tools
 POST /mcp/tools/call        # Execute tool (with streaming)
 GET  /mcp/health            # Health check
-```
-
+```text
 **Configuration**:
 ```bash
-# Environment variables
+## Environment variables
 export MCP_HTTP_HOST=0.0.0.0
 export MCP_HTTP_PORT=8000
 export MCP_ENABLE_CORS=true
 export MCP_AUTH_ENABLED=true
-```
-
+```text
 **Streaming Example**:
 ```python
 @app.post("/mcp/tools/call")
@@ -327,8 +311,7 @@ async def call_tool(request: ToolCallRequest):
             yield f"data: {json.dumps(event)}\n\n"
 
     return StreamingResponse(stream(), media_type="text/event-stream")
-```
-
+```text
 **Client Usage** (JavaScript):
 ```javascript
 const eventSource = new EventSource('/mcp/tools/call');
@@ -336,9 +319,8 @@ eventSource.onmessage = (event) => {
     const data = JSON.parse(event.data);
     console.log('Received:', data);
 };
-```
-
-### Configuration Matrix
+```text
+#### Configuration Matrix
 
 | Feature | STDIO | StreamableHTTP |
 |---------|-------|----------------|
@@ -349,9 +331,9 @@ eventSource.onmessage = (event) => {
 | **CORS** | N/A | Yes (configurable) |
 | **TLS/SSL** | N/A | Yes (via reverse proxy) |
 
-## Alternatives Considered
+### Alternatives Considered
 
-### 1. STDIO Only
+#### 1. STDIO Only
 
 **Description**: Support only STDIO transport
 
@@ -367,7 +349,7 @@ eventSource.onmessage = (event) => {
 
 **Why Rejected**: Cloud deployments are critical for production use
 
-### 2. HTTP Only
+#### 2. HTTP Only
 
 **Description**: Support only HTTP transport
 
@@ -383,7 +365,7 @@ eventSource.onmessage = (event) => {
 
 **Why Rejected**: Local development experience is critical for adoption
 
-### 3. WebSocket Only
+#### 3. WebSocket Only
 
 **Description**: Use WebSocket for bidirectional streaming
 
@@ -400,7 +382,7 @@ eventSource.onmessage = (event) => {
 
 **Why Rejected**: SSE (Server-Sent Events) sufficient for streaming, simpler than WebSocket
 
-### 4. gRPC
+#### 4. gRPC
 
 **Description**: Use gRPC for efficient binary protocol
 
@@ -417,7 +399,7 @@ eventSource.onmessage = (event) => {
 
 **Why Rejected**: HTTP/SSE is simpler and sufficient for MCP protocol
 
-### 5. Single Transport with Adapters
+#### 5. Single Transport with Adapters
 
 **Description**: Single MCP server with pluggable transport adapters
 
@@ -432,12 +414,12 @@ eventSource.onmessage = (event) => {
 
 **Why Rejected**: Two explicit implementations are simpler for current needs
 
-## Deployment Examples
+### Deployment Examples
 
-### Local Development (STDIO)
+#### Local Development (STDIO)
 
 ```bash
-# 1. Add to Claude Desktop config
+## 1. Add to Claude Desktop config
 cat > ~/.config/claude/claude_desktop_config.json <<EOF
 {
   "mcpServers": {
@@ -448,14 +430,13 @@ cat > ~/.config/claude/claude_desktop_config.json <<EOF
 }
 EOF
 
-# 2. Restart Claude Desktop
-# 3. Agent appears as available MCP server
-```
-
-### Kubernetes (StreamableHTTP)
+## 2. Restart Claude Desktop
+## 3. Agent appears as available MCP server
+```text
+#### Kubernetes (StreamableHTTP)
 
 ```yaml
-# deployment.yaml
+## deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -486,12 +467,11 @@ spec:
   ports:
   - port: 80
     targetPort: 8000
-```
-
-### Docker Compose (StreamableHTTP)
+```text
+#### Docker Compose (StreamableHTTP)
 
 ```yaml
-# docker-compose.yml
+## docker-compose.yml
 version: '3.8'
 
 services:
@@ -505,23 +485,21 @@ services:
       MCP_HTTP_PORT: "8000"
       MCP_ENABLE_CORS: "true"
       ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
-```
-
-### Cloud Run (StreamableHTTP)
+```text
+#### Cloud Run (StreamableHTTP)
 
 ```bash
-# Deploy to Google Cloud Run
+## Deploy to Google Cloud Run
 gcloud run deploy mcp-server \
   --image ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0 \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
   --set-env-vars="MCP_HTTP_PORT=8080,MCP_ENABLE_CORS=true"
-```
+```text
+### Performance Characteristics
 
-## Performance Characteristics
-
-### STDIO Transport
+#### STDIO Transport
 
 | Metric | Value | Notes |
 |--------|-------|-------|
@@ -532,7 +510,7 @@ gcloud run deploy mcp-server \
 
 **Use Case**: Low-frequency, interactive CLI usage
 
-### StreamableHTTP Transport
+#### StreamableHTTP Transport
 
 | Metric | Value | Notes |
 |--------|-------|-------|
@@ -543,12 +521,12 @@ gcloud run deploy mcp-server \
 
 **Use Case**: High-frequency, production API usage
 
-## Testing Strategy
+### Testing Strategy
 
-### STDIO Transport Tests
+#### STDIO Transport Tests
 
 ```python
-# tests/test_mcp_stdio.py
+## tests/test_mcp_stdio.py
 import pytest
 import subprocess
 
@@ -571,12 +549,11 @@ def test_stdio_list_tools():
     assert "tools" in response
 
     proc.terminate()
-```
-
-### StreamableHTTP Transport Tests
+```text
+#### StreamableHTTP Transport Tests
 
 ```python
-# tests/test_mcp_http.py
+## tests/test_mcp_http.py
 import pytest
 from httpx import AsyncClient
 
@@ -588,14 +565,14 @@ async def test_http_list_tools():
         assert "tools" in response.json()
 ```
 
-## Future Enhancements
+### Future Enhancements
 
 - **WebSocket Transport**: For real-time bidirectional communication
 - **gRPC Transport**: For microservice integrations
 - **HTTP/2 Support**: For multiplexed streaming
 - **Transport Auto-Detection**: Server detects transport from request
 
-## References
+### References
 
 - **MCP Specification**: https://modelcontextprotocol.io/
 - **STDIO Implementation**: `src/mcp_server_langgraph/mcp/server_stdio.py`
