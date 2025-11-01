@@ -162,6 +162,23 @@ flowchart TB
     GKE --> Data
     GKE -.-> Observability
     Data -.-> Observability
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef externalStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef ingressStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef networkStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef clusterStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef dataStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef obsStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+
+    class Internet externalStyle
+    class LB ingressStyle
+    class VPC networkStyle
+    class GKE,ZoneA,ZoneB,ZoneC clusterStyle
+    class WI,GCPSA authStyle
+    class Data,SQL,Redis dataStyle
+    class Observability,Monitor,Logging,Trace,Profiler obsStyle
 ```
 ---
 

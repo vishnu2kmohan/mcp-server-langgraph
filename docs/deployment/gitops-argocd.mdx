@@ -102,6 +102,17 @@ flowchart TB
     B --> J
     C --> I
     D --> H
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef gitStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef argocdStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef clusterStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef registryStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class A,B,C,D gitStyle
+    class E,F,G argocdStyle
+    class H,I,J clusterStyle
+    class K registryStyle
 ```
 
 **Flow**:
@@ -481,6 +492,15 @@ Automatically update container image tags when new versions are pushed to Artifa
 ### Workflow
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69',
+  'fontSize':'14px'
+}}}%%
 sequenceDiagram
     participant Dev as Developer
     participant GH as GitHub Actions

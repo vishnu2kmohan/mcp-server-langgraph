@@ -13,7 +13,6 @@ Choosing the right agent framework depends on your team, requirements, and const
 Use this interactive decision tree to find the best framework for your needs:
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#fb8500','primaryTextColor':'#000','primaryBorderColor':'#023047','lineColor':'#8ecae6','secondaryColor':'#219ebc','tertiaryColor':'#ffb703'}}}%%
 flowchart TD
     Start([Start: Choose Framework]) --> DevQ{Developer or<br/>Non-Developer?}
 
@@ -34,11 +33,12 @@ flowchart TD
     CloudQ -->|Microsoft Azure<br/>.NET/C#| MSAgent[Microsoft Agent Framework<br/>✓ Azure integration<br/>✓ Dynamic collaboration]
     CloudQ -->|AWS<br/>Amazon| AWSChoice[MCP Server with LangGraph<br/>✓ EKS support<br/>✓ AWS Bedrock ready]
 
-    classDef mcpStyle fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
-    classDef alternativeStyle fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
-    classDef competitorStyle fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000
-    classDef decisionStyle fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
-    classDef startStyle fill:#00BCD4,stroke:#00838F,stroke-width:3px,color:#fff
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef mcpStyle fill:#b3de69,stroke:#7cb342,stroke-width:3px,color:#333
+    classDef alternativeStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef competitorStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:3px,color:#333
 
     class MCPServer,AWSChoice mcpStyle
     class LGCloud,GoogleADK,MSAgent alternativeStyle

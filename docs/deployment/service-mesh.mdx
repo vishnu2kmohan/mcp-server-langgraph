@@ -123,6 +123,17 @@ flowchart TB
     C1 -.Metrics.-> M
 
     A1 -.Traces.-> T
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef controlPlaneStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#fff
+    classDef appPodStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef sidecarStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef monitoringStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+
+    class CP controlPlaneStyle
+    class A,B,C appPodStyle
+    class A1,B1,C1 sidecarStyle
+    class M,T monitoringStyle
 ```
 
 **Components**:

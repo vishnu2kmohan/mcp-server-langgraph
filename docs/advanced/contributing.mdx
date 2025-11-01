@@ -617,6 +617,51 @@ Common issues and solutions...
 </CardGroup>
 ```
 
+#### Mermaid Diagrams
+
+<Warning>
+**MANDATORY REQUIREMENTS for all new Mermaid diagrams:**
+
+1. ✅ Use **modern syntax** (`flowchart TD/TB/LR/BT` instead of `graph TB`)
+2. ✅ Apply **ColorBrewer2 Set3 palette** styling with semantic color assignments
+3. ✅ Include standard comment: `%% ColorBrewer2 Set3 palette - each component type uniquely colored`
+4. ✅ Use proper classDef statements (not inline styles)
+5. ✅ Ensure WCAG AA accessibility (contrast ratios 4.5:1+)
+</Warning>
+
+**See Full Guide:** [Mermaid Standards & Style Guide](../.mintlify/MERMAID_OPTIMIZATION_GUIDE.md)
+
+**Quick Template - Flowchart:**
+```mermaid
+flowchart TD
+    Start[Start Node] --> Process[Processing]
+    Process --> End[End]
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startEndStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef processStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Start,End startEndStyle
+    class Process processStyle
+```
+
+**Quick Template - Sequence Diagram:**
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69'
+}}}%%
+sequenceDiagram
+    participant A as Client
+    participant B as Server
+    A->>B: Request
+    B-->>A: Response
+```
+
 ### Release Process
 
 #### Versioning

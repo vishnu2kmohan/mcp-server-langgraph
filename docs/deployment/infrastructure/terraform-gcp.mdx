@@ -44,6 +44,21 @@ flowchart TB
 
     Backend --> Infrastructure
     Infrastructure --> Environments
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef backendStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#fff
+    classDef networkStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef clusterStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef dataStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef envStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class Backend backendStyle
+    class VPC networkStyle
+    class GKE clusterStyle
+    class SQL,Redis dataStyle
+    class WI authStyle
+    class Dev,Staging,Prod envStyle
 ```
 ---
 

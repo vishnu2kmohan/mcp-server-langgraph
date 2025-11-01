@@ -78,10 +78,18 @@ flowchart TB
     SPManager --> OpenFGA
     AuthMiddleware --> Redis
 
-    style Keycloak fill:#e1f5ff
-    style Kong fill:#ffe1e1
-    style MCP fill:#e1ffe1
-    style OpenFGA fill:#fff5e1
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef externalStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+    classDef keycloakStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef kongStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef mcpStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class LDAP,ADFS,Azure,Google,Okta,SCIM externalStyle
+    class UserStorage,Federation,JWTIssuer,AdminAPI keycloakStyle
+    class JWTValidation,APIKeyExchange,RateLimiting kongStyle
+    class AuthMiddleware,SPManager,APIKeyManager,SCIMEndpoints mcpStyle
+    class OpenFGA,Redis storageStyle
 ```
 
 ### Quick Links

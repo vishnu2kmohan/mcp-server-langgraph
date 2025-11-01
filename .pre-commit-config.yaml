@@ -97,3 +97,11 @@ repos:
         files: \.mdx$
         pass_filenames: false
         always_run: false
+
+      - id: check-mermaid-styling
+        name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
+        entry: python3 scripts/check_mermaid_styling.py
+        language: system
+        files: ^docs/.*\.mdx$
+        pass_filenames: true
+        always_run: false

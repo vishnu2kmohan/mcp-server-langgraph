@@ -53,20 +53,21 @@ flowchart TB
     ExtSec --> SecretMgr
     GHA --> ArtifactReg
 
-    classDef githubStyle fill:#24292e,stroke:#f0f6fc,stroke-width:2px,color:#fff
-    classDef gcpStyle fill:#4285f4,stroke:#1967d2,stroke-width:2px,color:#fff
-    classDef vpcStyle fill:#aecbfa,stroke:#4285f4,stroke-width:2px,color:#000
-    classDef gkeStyle fill:#669df6,stroke:#1a73e8,stroke-width:2px,color:#fff
-    classDef podStyle fill:#34a853,stroke:#188038,stroke-width:2px,color:#fff
-    classDef dbStyle fill:#fbbc04,stroke:#f29900,stroke-width:2px,color:#000
-    classDef secretStyle fill:#ea4335,stroke:#c5221f,stroke-width:2px,color:#fff
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef cicdStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef cloudStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef networkStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef clusterStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef dataStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef secretStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#fff
 
-    class GHA githubStyle
-    class GCP gcpStyle
-    class VPC vpcStyle
-    class GKE,GKE_Features gkeStyle
-    class Pods,NetPol,ExtSec podStyle
-    class CloudSQL,Redis dbStyle
+    class GHA cicdStyle
+    class GCP cloudStyle
+    class VPC networkStyle
+    class GKE,GKE_Features clusterStyle
+    class Pods,NetPol,ExtSec appStyle
+    class CloudSQL,Redis dataStyle
     class SecretMgr,ArtifactReg secretStyle
 ```
 ### Prerequisites

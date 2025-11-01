@@ -1,21 +1,37 @@
-# Mermaid Diagram Optimization Guide
+# Mermaid Diagram Standards & Style Guide
 
-**Last Updated**: 2025-10-31
+**Last Updated**: 2025-11-01
 **Mermaid Version**: 11.4.1+
-**Total Diagrams**: 54 across 29 files
+**Total Diagrams**: 58+ across 50+ files
+
+## 🎨 MANDATORY REQUIREMENTS
+
+<Warning>
+**All new Mermaid diagrams MUST:**
+
+1. ✅ Use **modern syntax** (`flowchart TD/TB/LR/BT` instead of `graph TB`)
+2. ✅ Apply **ColorBrewer2 Set3 palette** styling
+3. ✅ Include **standard comment**: `%% ColorBrewer2 Set3 palette - each component type uniquely colored`
+4. ✅ Use **semantic color assignments** (see palette guide below)
+5. ✅ Follow **accessibility guidelines** (WCAG AA contrast ratios)
+
+These requirements apply to ALL user-facing documentation (docs/*.mdx).
+Internal documentation (docs-internal/, reports/) is recommended but not required.
+</Warning>
 
 ## Current State
 
-### Quality Metrics
-- **Total diagrams**: 54 (all syntactically valid ✓)
-- **Theme coverage**: 95% (sequence diagrams)
-- **ColorBrewer2 usage**: 66%
-- **Styled diagrams**: ~30%
+### Quality Metrics (as of 2025-11-01)
+- **Total diagrams**: 58+ across 50+ files
+- **ColorBrewer2 Set3 styled**: 95%+ (48+ files)
+- **Modern syntax usage**: 100% (all flowcharts use modern syntax)
+- **Sequence diagrams themed**: 100%
 - **Average complexity**: 34.0/100 (healthy)
 
 ### Validation Status
-✅ All 54 diagrams pass `mmdc` CLI validation
+✅ All diagrams pass `mmdc` CLI validation
 ✅ All sequence diagrams have ColorBrewer2 themes
+✅ All user-facing flowcharts have ColorBrewer2 Set3 palette styling
 ✅ No syntax errors
 
 ---
@@ -76,25 +92,43 @@ flowchart TB
 
 ---
 
-### 3. ColorBrewer2 Palette Standardization
+### 3. ColorBrewer2 Set3 Palette (MANDATORY)
 
-**Recommended Standard Palettes**:
+**REQUIRED for All User-Facing Diagrams**
+
+#### Complete ColorBrewer2 Set3 Palette with Semantic Assignments
+
+| Color | Hex Code | Stroke Color | Semantic Usage |
+|-------|----------|--------------|----------------|
+| **Cyan** | #8dd3c7 | #2a9d8f | External/clients/start nodes |
+| **Orange** | #fdb462 | #e67e22 | Ingress/processing/middleware |
+| **Green** | #b3de69 | #7cb342 | Application/execution/success |
+| **Red** | #fb8072 | #e74c3c | LLM/critical paths/errors |
+| **Blue** | #80b1d3 | #3498db | Data/storage/services |
+| **Yellow** | #ffffb3 | #f1c40f | Decisions/observability |
+| **Purple** | #bc80bd | #8e44ad | Secrets/special features |
+| **Lavender** | #bebada | #7e5eb0 | Auth/security/clusters |
+| **Pink** | #fccde5 | #ec7ab8 | External services/monitoring |
+| **Light Green** | #ccebc5 | #82c99a | Results/dashboards |
+| **Gray** | #d9d9d9 | #95a5a6 | Neutral/generic |
 
 #### For Flowcharts/Graphs (ColorBrewer2 Set3)
-```
-Primary:    #8dd3c7 (teal)
-Secondary:  #fb8072 (coral)
-Tertiary:   #fdb462 (orange)
-Quaternary: #b3de69 (green)
-Data:       #80b1d3 (blue)
-Service:    #bebada (purple)
-Warning:    #ffffb3 (yellow)
-Error:      #fccde5 (pink)
+
+**Mandatory Pattern:**
+```mermaid
+flowchart TD
+    [your diagram content]
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef styleNameStyle fill:#HEXCOLOR,stroke:#STROKECOLOR,stroke-width:2px,color:#333
+
+    class NodeNames styleNameStyle
 ```
 
-#### For Sequence Diagrams
-Already standardized via theme initialization:
-```javascript
+#### For Sequence Diagrams (ColorBrewer2 Set3 Theme)
+
+**Mandatory Pattern:**
+```mermaid
 %%{init: {'theme':'base', 'themeVariables': {
   'primaryColor':'#8dd3c7',
   'primaryTextColor':'#333',
@@ -103,10 +137,39 @@ Already standardized via theme initialization:
   'secondaryColor':'#fdb462',
   'tertiaryColor':'#b3de69'
 }}}%%
+sequenceDiagram
+    [your sequence diagram content]
 ```
 
-**Benefit**: Visual brand consistency across all documentation
-**Effort**: 1-2 hours (find and replace)
+**Benefit**: Visual brand consistency, professional appearance, accessibility compliance
+
+---
+
+## Modern Mermaid Syntax (MANDATORY)
+
+### Flowchart Syntax
+
+✅ **ALWAYS USE** modern flowchart syntax:
+```mermaid
+flowchart TD   # Top to bottom
+flowchart TB   # Top to bottom (same as TD)
+flowchart LR   # Left to right
+flowchart BT   # Bottom to top
+```
+
+❌ **NEVER USE** deprecated graph syntax:
+```mermaid
+graph TB      # DEPRECATED - use flowchart TB instead
+graph LR      # DEPRECATED - use flowchart LR instead
+```
+
+**Why**: Modern syntax supports more features, better styling, and is actively maintained.
+
+### Syntax Version Requirements
+
+- **Mermaid Version**: 11.4.1+ (modern syntax required)
+- **Mintlify Support**: Latest version supports all modern syntax
+- **Browser Compatibility**: All modern browsers supported
 
 ---
 

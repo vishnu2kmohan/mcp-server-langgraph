@@ -318,6 +318,18 @@ flowchart TD
     Fallback3 -->|✓ Success| Response
     Fallback3 -->|✗ Final Error| Error[Error Response]
 
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef primaryStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef fallbackStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+
+    class Request startStyle
+    class Primary primaryStyle
+    class Fallback1,Fallback2,Fallback3 fallbackStyle
+    class Response successStyle
+    class Error errorStyle
 ```
 **Configuration**:
 
