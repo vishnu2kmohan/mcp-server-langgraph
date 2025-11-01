@@ -36,9 +36,12 @@
             "group": "Framework Comparisons",
             "pages": [
               "comparisons/choosing-framework",
-              "comparisons/vs-crewai",
+              "comparisons/vs-openai-agentkit",
               "comparisons/vs-langgraph-cloud",
-              "comparisons/vs-openai-agentkit"
+              "comparisons/vs-crewai",
+              "comparisons/vs-google-adk",
+              "comparisons/vs-claude-agent-sdk",
+              "comparisons/vs-microsoft-agent-framework"
             ]
           },
           {
