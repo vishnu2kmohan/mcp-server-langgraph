@@ -22,7 +22,8 @@
       "WebSearch",
       "WebFetch(domain:www.anthropic.com)",
       "WebFetch(domain:www.mintlify.com)",
-      "WebFetch(domain:mermaid.js.org)"
+      "WebFetch(domain:mermaid.js.org)",
+      "WebFetch(domain:www.langchain.com)"
     ],
     "defaultMode": "acceptEdits"
   },
