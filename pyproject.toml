@@ -105,6 +105,29 @@ secrets = [
     "infisical-python>=2.1.7,<=2.3.6",
 ]
 
+cli = [
+    # CLI scaffolding tools
+    "click>=8.1.0",  # Command-line interface framework
+    "jinja2>=3.1.0",  # Template engine for code generation
+    "rich>=13.0.0",  # Rich text and beautiful formatting in the terminal
+]
+
+playground = [
+    # Web playground dependencies
+    "fastapi>=0.120.3",  # Already in core deps, listed for clarity
+    "uvicorn[standard]>=0.38.0",  # Already in core deps
+    "websockets>=12.0",  # WebSocket support for streaming
+    "jinja2>=3.1.0",  # Template rendering
+]
+
+builder = [
+    # Visual workflow builder dependencies
+    "fastapi>=0.120.3",  # Already in core deps
+    "jinja2>=3.1.0",  # Code generation templates
+    "black>=25.9.0",  # Code formatting for generated code
+    "ast-comments>=1.2.0",  # AST manipulation for code import
+]
+
 # ==============================================================================
 # EMBEDDING OPTIONS - Choose based on deployment strategy
 # ==============================================================================
@@ -177,6 +200,7 @@ all-full = [
 [project.scripts]
 mcp-server-langgraph = "mcp_server_langgraph.mcp.server_stdio:main"
 mcp-server-langgraph-http = "mcp_server_langgraph.mcp.server_streamable:main"
+mcpserver = "mcp_server_langgraph.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/vishnu2kmohan/mcp-server-langgraph"
