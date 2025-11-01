@@ -89,21 +89,26 @@ flowchart TB
     AppDR --> Verify[Verification<br/>Health checks + Smoke tests]
     Verify --> Switch[DNS Failover<br/>Traffic to DR cluster]
 
-    style Regional fill:#f8d7da,stroke:#dc3545,stroke-width:2px
-    style Data fill:#f8d7da,stroke:#dc3545,stroke-width:2px
-    style Security fill:#f8d7da,stroke:#dc3545,stroke-width:2px
-    style App fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    style PG fill:#80b1d3,stroke:#3498db,stroke-width:2px
-    style Redis fill:#fb8072,stroke:#c0392b,stroke-width:2px
-    style K8s fill:#bebada,stroke:#8e44ad,stroke-width:2px
-    style GCS fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-    style S3 fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-    style Vault fill:#bc80bd,stroke:#8e44ad,stroke-width:2px
-    style AppDR fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style PGDR fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style RedisDR fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Verify fill:#fff3cd,stroke:#ffc107,stroke-width:2px
-    style Switch fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+    %% ColorBrewer2 + semantic color palette styling
+    classDef failureStyle fill:#f8d7da,stroke:#dc3545,stroke-width:2px,color:#333
+    classDef activeStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef dataStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef cacheStyle fill:#fb8072,stroke:#c0392b,stroke-width:2px,color:#333
+    classDef infraStyle fill:#bebada,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef storageStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px,color:#333
+    classDef secretStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef recoveryStyle fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#333
+    classDef verifyStyle fill:#fff3cd,stroke:#ffc107,stroke-width:2px,color:#333
+
+    class Regional,Data,Security failureStyle
+    class App activeStyle
+    class PG dataStyle
+    class Redis cacheStyle
+    class K8s infraStyle
+    class GCS,S3 storageStyle
+    class Vault secretStyle
+    class AppDR,PGDR,RedisDR recoveryStyle
+    class Verify,Switch verifyStyle
 ```
 **Backup and Restore Timeline**:
 ```mermaid

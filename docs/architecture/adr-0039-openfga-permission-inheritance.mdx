@@ -81,15 +81,15 @@ flowchart TB
     User -->|member of| Org
     SP -.->|inherited| Org
 
-    style User fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    style SP fill:#fdb462,stroke:#e67e22,stroke-width:2px
-    style Owner fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
-    style Tuple1 fill:#fb8072,stroke:#c0392b,stroke-width:2px,stroke-dasharray: 5 5
-    style Tuple2 fill:#bebada,stroke:#8e44ad,stroke-width:2px
-    style Tuple3 fill:#b3de69,stroke:#7cb342,stroke-width:2px
-    style Conv fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-    style Tool fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-    style Org fill:#80b1d3,stroke:#3498db,stroke-width:2px
+    %% ColorBrewer2 + semantic color palette styling
+    classDef style1 fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef style2 fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef style3 fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+
+    class User,SP,Owner style1
+    class Tuple1,Tuple2,Tuple3 style2
+    class Conv,Tool,Org style3
+
 ```
 **Permission Check Flow with Inheritance**:
 ```mermaid

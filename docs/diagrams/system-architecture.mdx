@@ -185,15 +185,6 @@ flowchart TD
     ExtractNotes --> SaveState[Save to Checkpoint<br/>Memory/PostgreSQL]
     SaveState --> End
 
-    style LoadContext fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    style Compact fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    style Route fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    style ExecuteTools fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style GenerateResp fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style Verify fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-    style ExtractNotes fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
-    style Quality fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    style Refine fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
 ```
 
 ### Deployment Architecture (Kubernetes)
@@ -294,9 +285,6 @@ flowchart TB
     OTELCol --> PrometheusPod
     PrometheusPod --> GrafanaPod
 
-    style PostgresDB fill:#80b1d3,stroke:#3498db,stroke-width:3px,color:#333
-    style RedisPod fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-    style QdrantPod fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
 ```
 
 ### Data Flow - MCP Tool Execution
@@ -394,12 +382,6 @@ flowchart LR
 
     Tool3 --> Results[Aggregated Results]
 
-    style Tool1A fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style Tool1B fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style Tool1C fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style Tool2A fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    style Tool2B fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    style Tool3 fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
 ```
 
 ### Context Loading Strategy
@@ -430,11 +412,6 @@ flowchart TD
     StopLoading --> InjectMsg
 
     InjectMsg --> AgentInvoke[Agent Invoke<br/>with Context]
-
-    style CheckCache fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    style Search fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    style Progressive fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    style CacheResults fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
 
     %% Annotations
     Note1[60% Token Reduction<br/>vs Loading All Contexts]
@@ -500,12 +477,6 @@ flowchart TD
     Redis --> BulkRevoke
     Redis --> Tracking
 
-    style InMemory fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style Redis fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-    style Sliding fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    style ConcurrentLimit fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    style BulkRevoke fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    style Tracking fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
 ```
 
 ### LLM Provider Fallback Chain
@@ -537,12 +508,6 @@ flowchart LR
     Alert -->|No| End([End])
     Notify --> End
 
-    style Primary fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    style Fallback1 fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    style Fallback2 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    style Fallback3 fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style Error fill:#fb8072,stroke:#e74c3c,stroke-width:3px,color:#333
-    style Response fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
 ```
 
 ### Observability Data Flow
@@ -608,13 +573,6 @@ flowchart TB
     Prometheus --> Grafana
     LangSmith --> LangSmithUI
 
-    style Agent fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style Auth fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-    style Tools fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    style LLM fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-    style Grafana fill:#ffffb3,stroke:#f1c40f,stroke-width:3px,color:#333
-    style JaegerUI fill:#ffffb3,stroke:#f1c40f,stroke-width:3px,color:#333
-    style LangSmithUI fill:#ffffb3,stroke:#f1c40f,stroke-width:3px,color:#333
 ```
 
 ---
