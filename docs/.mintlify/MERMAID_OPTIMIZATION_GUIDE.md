@@ -56,14 +56,14 @@
 **Example refactoring**:
 ```mermaid
 # Before (inline)
-graph TB
+flowchart TB
     A[Node A]
     B[Node B]
     style A fill:#8dd3c7,stroke:#2a9d8f
     style B fill:#8dd3c7,stroke:#2a9d8f
 
 # After (classDef - reusable)
-graph TB
+flowchart TB
     A[Node A]
     B[Node B]
 
@@ -129,7 +129,7 @@ sequenceDiagram
 
 ✅ **USE** classDef for reusable styles:
 ```mermaid
-graph TB
+flowchart TB
     A[Node]
 
     classDef primaryStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
@@ -138,7 +138,7 @@ graph TB
 
 ❌ **AVOID** inline styles (hard to maintain):
 ```mermaid
-graph TB
+flowchart TB
     A[Node]
     style A fill:#8dd3c7,stroke:#2a9d8f
 ```
@@ -267,7 +267,7 @@ mmdc -i test.mmd -o test.svg
 ### Template 1: Basic Flowchart with Styling
 
 ```mermaid
-graph TB
+flowchart TB
     Start[Start] --> Process[Process]
     Process --> Decision{Decision?}
     Decision -->|Yes| Success[Success]
@@ -308,7 +308,7 @@ sequenceDiagram
 ### Template 3: Deployment Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph External["External"]
         Client[Clients]
     end

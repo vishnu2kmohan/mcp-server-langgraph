@@ -55,7 +55,7 @@ We will adopt **Anthropic's best practices for writing tools for agents** as out
 class SearchConversationsInput(BaseModel):
     query: str = Field(description="Search query to filter conversations")
     limit: int = Field(default=10, ge=1, le=50)
-```text
+```
 **Benefits**:
 - Prevents context overflow with large conversation lists
 - Forces agents to be specific in requests
@@ -79,7 +79,7 @@ class ChatInput(BaseModel):
             "'detailed' returns ~2000 tokens (comprehensive, more context)."
         )
     )
-```text
+```
 **Benefits**:
 - Balances token efficiency with information needs
 - Agents can optimize for speed vs comprehensiveness
@@ -101,7 +101,7 @@ formatted_response = format_response(
     response_text,
     format_type=response_format_type
 )
-```text
+```
 **Benefits**:
 - Prevents context overflow
 - Predictable response sizes
@@ -115,7 +115,7 @@ formatted_response = format_response(
 **Before**:
 ```python
 description="Chat with the AI agent. The agent can help with questions, research, and problem-solving."
-```text
+```
 **After**:
 ```python
 description=(
@@ -125,7 +125,7 @@ description=(
     "For specialized tasks like code execution or web search, use dedicated tools instead. "
     "Rate limit: 60 requests/minute per user."
 )
-```text
+```
 **Benefits**:
 - Clear expectations on performance
 - Guidance on tool selection
@@ -151,14 +151,14 @@ description=(
 **Before**:
 ```python
 raise PermissionError(f"Not authorized to edit conversation {thread_id}")
-```text
+```
 **After**:
 ```python
 raise PermissionError(
     f"Not authorized to edit conversation '{thread_id}'. "
     f"Request access from conversation owner or use a different thread_id."
 )
-```text
+```
 **Benefits**:
 - Clear next steps for agents
 - Reduces retry failures
@@ -177,7 +177,7 @@ src/mcp_server_langgraph/
 ├── mcp/
 │   ├── server_stdio.py             # Updated: All tool improvements
 │   └── server_streamable.py        # Updated: All tool improvements
-```text
+```
 #### Key Components
 
 ##### ResponseOptimizer Class
@@ -190,7 +190,7 @@ class ResponseOptimizer:
     def truncate_response(self, content: str, max_tokens: int) -> tuple[str, bool]
     def format_response(self, content: str, format_type: Literal["concise", "detailed"]) -> str
     def extract_high_signal(self, data: dict) -> dict
-```text
+```
 ##### Updated Tool Schemas
 
 ```python
@@ -202,7 +202,7 @@ Tool(name="conversation_get", inputSchema={...})
 
 ## Conversation search
 Tool(name="conversation_search", inputSchema=SearchConversationsInput.model_json_schema())
-```text
+```
 #### Backward Compatibility
 
 All old tool names are supported via routing:
@@ -305,12 +305,12 @@ Track the following to measure success:
 1. **Add Response Format Control**:
    ```python
    response_format: Literal["concise", "detailed"] = Field(default="concise")
-   ```text
+```
 2. **Apply Response Formatting**:
    ```python
    from mcp_server_langgraph.utils.response_optimizer import format_response
    formatted = format_response(text, format_type=response_format_type)
-   ```text
+```
 3. **Use Search-Focused Patterns**:
    - Add `query` and `limit` parameters
    - Filter before returning
@@ -328,7 +328,7 @@ Old code continues to work:
 ```python
 ## Still works (backward compatible)
 result = await client.call_tool("chat", {"message": "Hello"})
-```text
+```
 New features available:
 ```python
 ## Recommended: Use new names and features

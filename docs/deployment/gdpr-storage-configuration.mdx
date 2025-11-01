@@ -85,7 +85,7 @@ sequenceDiagram
     Storage-->>API: Recorded
     API->>Audit: Log consent change<br/>analytics: true→false, marketing: true→false
     API-->>User: 200 OK<br/>{consent_status}
-```text
+```
 ### Environment Variables
 
 #### Required Configuration
@@ -98,7 +98,7 @@ ENVIRONMENT=production
 
 ## Required: Choose persistent backend (postgres or redis)
 GDPR_STORAGE_BACKEND=postgres  # or "redis"
-```text
+```
 #### Development/Testing
 
 For local development and testing only:
@@ -106,7 +106,7 @@ For local development and testing only:
 ```bash
 ENVIRONMENT=development
 GDPR_STORAGE_BACKEND=memory
-```text
+```
 ### Storage Backend Options
 
 #### Option 1: PostgreSQL (Recommended)
@@ -118,7 +118,7 @@ PostgreSQL provides ACID compliance and is ideal for GDPR data subject rights.
 ```bash
 GDPR_STORAGE_BACKEND=postgres
 GDPR_POSTGRES_URL=postgresql://user:pass@localhost:5432/gdpr_db
-```text
+```
 **Implementation Required:**
 
 Currently, PostgreSQL integration is not yet implemented. To add support:
@@ -152,7 +152,7 @@ CREATE TABLE consent_records (
 );
 
 CREATE INDEX idx_consent_user_id ON consent_records(user_id);
-```text
+```
 #### Option 2: Redis
 
 Redis provides fast, persistent key-value storage suitable for consent management.
@@ -162,7 +162,7 @@ Redis provides fast, persistent key-value storage suitable for consent managemen
 ```bash
 GDPR_STORAGE_BACKEND=redis
 GDPR_REDIS_URL=redis://localhost:6379/2  # Use separate DB from sessions
-```text
+```
 **Implementation Required:**
 
 1. Create `RedisConsentStore` class
@@ -188,14 +188,14 @@ class RedisConsentStore:
         key = f"user:consents:{user_id}"
         consents = self.redis.hgetall(key)
         return {k.decode(): json.loads(v) for k, v in consents.items()}
-```text
+```
 ### Production Guard
 
 The application includes a runtime guard that **prevents startup** if:
 
 ```
 ENVIRONMENT=production AND GDPR_STORAGE_BACKEND=memory
-```text
+```
 **Error Message:**
 
 ```
@@ -229,7 +229,7 @@ Configure retention policies based on your legal requirements:
 ## Example: 90-day retention for consent records
 CONSENT_RETENTION_DAYS=90
 PROFILE_RETENTION_DAYS=365
-```text
+```
 #### Audit Trail
 
 All GDPR operations are logged with:
@@ -250,7 +250,7 @@ All GDPR operations are logged with:
   "gdpr_article": "21",
   "timestamp": "2025-10-18T12:34:56Z"
 }
-```text
+```
 #### Data Deletion (Article 17)
 
 When users exercise right to erasure:
@@ -275,7 +275,7 @@ Some data may be retained for legal/compliance reasons:
 
 ```bash
 pytest tests/integration/test_gdpr_endpoints.py -v
-```text
+```
 #### Integration Tests
 
 Test with real database:
@@ -288,7 +288,7 @@ docker-compose up -d postgres
 GDPR_STORAGE_BACKEND=postgres \
 GDPR_POSTGRES_URL=postgresql://test:test@localhost:5432/test_db \
 pytest tests/integration/test_gdpr_endpoints.py
-```text
+```
 #### Production Guard Test
 
 Verify production guard:
@@ -299,7 +299,7 @@ ENVIRONMENT=production GDPR_STORAGE_BACKEND=memory python -c "import mcp_server_
 
 ## Should succeed
 ENVIRONMENT=production GDPR_STORAGE_BACKEND=postgres python -c "import mcp_server_langgraph.api.gdpr"
-```text
+```
 ### Deployment Examples
 
 #### Docker Compose
@@ -326,7 +326,7 @@ services:
 
 volumes:
   postgres_data:
-```text
+```
 #### Kubernetes
 
 ```yaml
@@ -346,7 +346,7 @@ metadata:
 type: Opaque
 stringData:
   GDPR_POSTGRES_URL: "postgresql://gdpr:password@postgres-service:5432/gdpr_db"
-```text
+```
 ### Troubleshooting
 
 #### Error: "GDPR endpoints use in-memory storage"
@@ -358,7 +358,7 @@ stringData:
 ```bash
 export GDPR_STORAGE_BACKEND=postgres
 export GDPR_POSTGRES_URL=postgresql://...
-```text
+```
 #### Error: "RuntimeError: CRITICAL: GDPR endpoints cannot use in-memory storage"
 
 **Cause:** Running in production with memory backend

@@ -63,7 +63,7 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
   --create-namespace \
   --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
-```text
+```
 **Docker Compose**:
 ```yaml
 services:
@@ -80,7 +80,7 @@ services:
 
 volumes:
   prometheus-data:
-```text
+```
 #### Prometheus Configuration
 
 **prometheus.yml**:
@@ -116,7 +116,7 @@ scrape_configs:
   - job_name: 'node'
     static_configs:
       - targets: ['node-exporter:9100']
-```text
+```
 #### Application Metrics
 
 **Instrument FastAPI with Prometheus**:
@@ -195,7 +195,7 @@ async def metrics():
         content=generate_latest(),
         media_type="text/plain"
     )
-```text
+```
 #### Custom Business Metrics
 
 ```python
@@ -282,7 +282,7 @@ async def chat(query: str):
     messages_sent_total.labels(role="assistant").inc()
 
     return response
-```text
+```
 ### Distributed Tracing with Jaeger
 
 #### Install Jaeger
@@ -308,7 +308,7 @@ spec:
       es:
         server-urls: http://elasticsearch:9200
 EOF
-```text
+```
 **Docker Compose**:
 ```yaml
 services:
@@ -320,7 +320,7 @@ services:
       - "4317:4317"    # OTLP gRPC
     environment:
       - COLLECTOR_OTLP_ENABLED=true
-```text
+```
 #### OpenTelemetry Configuration
 
 **Install dependencies**:
@@ -329,7 +329,7 @@ pip install opentelemetry-api \
             opentelemetry-sdk \
             opentelemetry-instrumentation-fastapi \
             opentelemetry-exporter-otlp
-```text
+```
 **Instrument FastAPI**:
 ```python
 from opentelemetry import trace
@@ -384,7 +384,7 @@ async def chat(query: str):
         span.set_attribute("response_length", len(response.content))
 
         return response
-```text
+```
 #### Trace Context Propagation
 
 ```python
@@ -404,7 +404,7 @@ async def call_external_service():
         )
 
     return response
-```text
+```
 ### Structured Logging
 
 #### Configure Structured JSON Logging
@@ -465,7 +465,7 @@ async def chat(query: str, user_id: str):
             exc_info=True
         )
         raise
-```text
+```
 #### Correlation IDs
 
 Track requests across services:
@@ -492,7 +492,7 @@ async def add_correlation_id(request: Request, call_next):
     response.headers["X-Request-ID"] = request_id
 
     return response
-```text
+```
 ### LangSmith Integration
 
 #### Setup LangSmith
@@ -519,7 +519,7 @@ llm = ChatAnthropic(
 
 ## This call is automatically traced
 response = await llm.ainvoke("Hello!")
-```text
+```
 #### Custom LangSmith Runs
 
 ```python
@@ -542,7 +542,7 @@ async def chat_with_auth(query: str, user_id: str):
 
 ## Call function
 result = await chat_with_auth("What is AI?", user_id="alice")
-```text
+```
 #### Feedback Collection
 
 ```python
@@ -567,7 +567,7 @@ async def submit_feedback(
     )
 
     return {"status": "feedback_recorded"}
-```text
+```
 ### Grafana Dashboards
 
 #### Install Grafana
@@ -582,7 +582,7 @@ helm install grafana grafana/grafana \
   --set persistence.enabled=true \
   --set persistence.size=10Gi \
   --set adminPassword=admin123
-```text
+```
 #### Application Dashboard
 
 **Import this JSON dashboard**:
@@ -637,7 +637,7 @@ helm install grafana grafana/grafana \
     ]
   }
 }
-```text
+```
 #### LLM Observability Dashboard
 
 ```json
@@ -872,7 +872,7 @@ token_refreshed_total
 session_active_count
 jwks_cache_hits_total
 jwks_cache_misses_total
-```text
+```
 **OpenFGA (openfga.json)**:
 ```promql
 up{job="openfga"}
@@ -885,7 +885,7 @@ openfga_tuples_written_total
 openfga_tuples_deleted_total
 openfga_sync_operations_total
 openfga_sync_duration_bucket
-```text
+```
 **LLM Performance (llm-performance.json)**:
 ```promql
 agent_calls_successful_total
@@ -893,7 +893,7 @@ agent_calls_failed_total
 agent_response_duration_bucket
 agent_tool_calls_total
 ## With labels: model, operation, tool
-```text
+```
 **Keycloak & Redis**:
 ```promql
 up{job="keycloak"}
@@ -903,7 +903,7 @@ keycloak_login_attempts_total
 redis_memory_used_bytes
 redis_db_keys
 redis_commands_processed_total
-```text
+```
 ### Service Level Objectives (SLOs)
 
 <Info>
@@ -923,7 +923,7 @@ kubectl apply -f monitoring/prometheus/rules/slo-recording-rules.yaml
 ## Add to prometheus.yml:
 rule_files:
   - /etc/prometheus/rules/slo-recording-rules.yaml
-```text
+```
 #### Available SLO Metrics
 
 <Tabs>
@@ -938,7 +938,7 @@ rule_files:
     job:up:avg:keycloak      # Target: 99.5%
     job:up:avg:openfga       # Target: 99.5%
     job:up:avg:redis_session # Target: 99.9%
-    ```text
+```
     **Usage in Grafana**:
     ```promql
     # Current availability
@@ -965,7 +965,7 @@ rule_files:
 
     # Keycloak latency
     job:keycloak_request_duration:p95 # Target: 1000ms
-    ```text
+```
     **Usage in Grafana**:
     ```promql
     # P95 latency vs target
@@ -991,7 +991,7 @@ rule_files:
 
     # LLM fallback rate
     job:llm_fallback:rate             # Target: 0.10 (10%)
-    ```text
+```
     **Usage in Grafana**:
     ```promql
     # Error rate as percentage
@@ -1017,7 +1017,7 @@ rule_files:
 
     # Redis connection pool
     job:redis_pool:saturation         # Target: 0.95 (95%)
-    ```text
+```
     **Usage in Grafana**:
     ```promql
     # Memory pressure
@@ -1040,7 +1040,7 @@ rule_files:
 
     # Slow burn (3 day window)
     job:error_budget:burn_rate_3d
-    ```text
+```
     **Interpretation**:
     - Burn rate = 1.0: Consuming error budget at expected rate
     - Burn rate > 1.0: Consuming faster (alert!)
@@ -1068,7 +1068,7 @@ rule_files:
 
     # Error rate compliance (success rate)
     job:slo_compliance:error_rate_30d    # Target: 99%
-    ```text
+```
     **Usage in Grafana**:
     ```promql
     # Monthly SLO report
@@ -1138,7 +1138,7 @@ Create an SLO summary dashboard:
     ]
   }
 }
-```text
+```
 #### Benefits of SLO Recording Rules
 
 1. **Performance** - Pre-computed metrics query 10-100x faster
@@ -1215,7 +1215,7 @@ groups:
     annotations:
       summary: "No active sessions"
       description: "No users have active sessions for 30 minutes"
-```text
+```
 #### Alertmanager Configuration
 
 ```yaml
@@ -1244,7 +1244,7 @@ receivers:
 - name: 'pagerduty'
   pagerduty_configs:
   - service_key: 'YOUR_PAGERDUTY_KEY'
-```text
+```
 ### Health Checks
 
 #### Kubernetes Probes
@@ -1280,7 +1280,7 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 5
           failureThreshold: 30
-```text
+```
 #### Health Check Implementation
 
 ```python
@@ -1338,7 +1338,7 @@ async def startup():
         )
 
     return {"status": "started"}
-```text
+```
 ### Best Practices
 
 <AccordionGroup>

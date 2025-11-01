@@ -42,7 +42,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
     "associated_user_id": "user:alice",
     "inherit_permissions": true
   }'
-```text
+```
 **Response**:
 ```json
 {
@@ -52,7 +52,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
   "client_secret": "abc123xyz...",
   "message": "Save the client_secret securely. It will not be shown again."
 }
-```text
+```
 **Authentication**:
 ```python
 import httpx
@@ -77,7 +77,7 @@ response = await httpx.post(
     headers={"Authorization": f"Bearer {access_token}"},
     json={"query": "Process data"}
 )
-```text
+```
 #### Mode 2: Service Account User
 
 Special user account marked as service principal.
@@ -96,7 +96,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
     "description": "Legacy system connector",
     "authentication_mode": "service_account_user"
   }'
-```text
+```
 **Authentication**:
 ```python
 ## Use Resource Owner Password Credentials (ROPC)
@@ -109,7 +109,7 @@ response = await httpx.post(
         "password": "service-password",
     }
 )
-```text
+```
 ### Permission Inheritance
 
 Service principals can inherit permissions from user principals via the `acts_as` relationship.
@@ -127,12 +127,12 @@ curl -X POST /api/v1/service-principals \
     "associated_user_id": "user:alice",
     "inherit_permissions": true
   }'
-```text
+```
 **OpenFGA Tuples Created**:
 ```
 service:scheduled-reports acts_as user:alice
 user:alice owner conversation:thread1
-```text
+```
 **Permission Check**:
 ```
 Can service:scheduled-reports view conversation:thread1?
@@ -140,7 +140,7 @@ Can service:scheduled-reports view conversation:thread1?
 → acts_as check: service:scheduled-reports acts_as user:alice
 → Can user:alice view conversation:thread1? → Yes (owner)
 → Result: ✓ Permission granted (inherited)
-```text
+```
 ### Long-Lived Sessions
 
 Service principals support 30-day refresh tokens for persistent authentication.
@@ -152,7 +152,7 @@ Service principals support 30-day refresh tokens for persistent authentication.
 SERVICE_PRINCIPAL_REFRESH_TOKEN_LIFESPAN=2592000  # 30 days
 SERVICE_PRINCIPAL_SESSION_ENABLED=true
 SERVICE_PRINCIPAL_AUTO_REFRESH=true
-```text
+```
 #### Client Implementation
 
 ```python
@@ -209,7 +209,7 @@ class ServicePrincipalClient:
         self.access_token = data["access_token"]
         self.refresh_token = data.get("refresh_token", self.refresh_token)
         self.expires_at = time.time() + data["expires_in"]
-```text
+```
 ### Management Operations
 
 #### List Service Principals
@@ -217,7 +217,7 @@ class ServicePrincipalClient:
 ```bash
 curl -X GET https://api.example.com/api/v1/service-principals \
   -H "Authorization: Bearer YOUR_JWT"
-```text
+```
 #### Rotate Secret
 
 ```bash

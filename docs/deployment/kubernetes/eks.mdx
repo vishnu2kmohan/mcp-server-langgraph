@@ -31,7 +31,7 @@ aws configure
 
 ## Verify credentials
 aws sts get-caller-identity
-```text
+```
 ### Create EKS Cluster
 
 #### Using eksctl (Recommended)
@@ -99,7 +99,7 @@ addons:
     version: latest
   - name: aws-ebs-csi-driver
     version: latest
-```text
+```
 **Create cluster**:
 ```bash
 ## Create cluster
@@ -110,7 +110,7 @@ aws eks update-kubeconfig --name langgraph-cluster --region us-east-1
 
 ## Verify
 kubectl get nodes
-```text
+```
 #### Using AWS CLI
 
 ```bash
@@ -133,7 +133,7 @@ aws eks create-nodegroup \
   --instance-types m5.xlarge \
   --scaling-config minSize=3,maxSize=10,desiredSize=3 \
   --region us-east-1
-```text
+```
 ### IAM Roles for Service Accounts (IRSA)
 
 #### Create IAM Policy
@@ -159,7 +159,7 @@ EOF
 aws iam create-policy \
   --policy-name LangGraphSecretsAccess \
   --policy-document file://secrets-policy.json
-```text
+```
 #### Create Service Account with IRSA
 
 ```bash
@@ -175,7 +175,7 @@ eksctl create iamserviceaccount \
 
 ## Verify
 kubectl describe sa mcp-server-langgraph -n mcp-server-langgraph
-```text
+```
 ### RDS for PostgreSQL
 
 #### Create RDS Instance
@@ -245,7 +245,7 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
   --query "DBInstances[0].Endpoint.Address" \
   --output text \
   --region us-east-1)
-```text
+```
 #### Create Databases
 
 ```bash
@@ -270,7 +270,7 @@ PGPASSWORD=your-master-password psql \
   -h $RDS_ENDPOINT \
   -U postgres \
   -c "GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;"
-```text
+```
 ### ElastiCache for Redis
 
 #### Create Redis Cluster
@@ -323,7 +323,7 @@ REDIS_ENDPOINT=$(aws elasticache describe-replication-groups \
   --query "ReplicationGroups[0].NodeGroups[0].PrimaryEndpoint.Address" \
   --output text \
   --region us-east-1)
-```text
+```
 ### AWS Secrets Manager
 
 #### Store Secrets
@@ -352,7 +352,7 @@ aws secretsmanager create-secret \
   --name langgraph/rds-password \
   --secret-string "your-rds-password" \
   --region us-east-1
-```text
+```
 #### Use External Secrets Operator
 
 ```bash
@@ -412,7 +412,7 @@ spec:
     remoteRef:
       key: langgraph/rds-password
 EOF
-```text
+```
 ### AWS Load Balancer Controller
 
 #### Install Load Balancer Controller
@@ -445,7 +445,7 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set serviceAccount.name=aws-load-balancer-controller \
   --set region=us-east-1 \
   --set vpcId=$VPC_ID
-```text
+```
 #### Configure Ingress
 
 ```yaml
@@ -478,7 +478,7 @@ spec:
             name: mcp-server-langgraph
             port:
               number: 8000
-```text
+```
 ### ECR for Container Images
 
 #### Create ECR Repository
@@ -503,7 +503,7 @@ docker tag mcp-server-langgraph:latest \
   ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
 
 docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
-```text
+```
 #### Use in Kubernetes
 
 ```yaml
@@ -519,7 +519,7 @@ spec:
       - name: agent
         image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
         imagePullPolicy: Always
-```text
+```
 ### EBS CSI Driver for Persistent Volumes
 
 #### Install EBS CSI Driver
@@ -541,7 +541,7 @@ eksctl create addon \
   --cluster langgraph-cluster \
   --service-account-role-arn arn:aws:iam::ACCOUNT_ID:role/AmazonEKS_EBS_CSI_DriverRole \
   --region us-east-1
-```text
+```
 #### Create Storage Class
 
 ```yaml
@@ -558,7 +558,7 @@ parameters:
   encrypted: "true"
   kmsKeyId: arn:aws:kms:us-east-1:ACCOUNT_ID:key/xxx
 allowVolumeExpansion: true
-```text
+```
 ### CloudWatch Monitoring
 
 #### Container Insights
@@ -575,7 +575,7 @@ eksctl create iamserviceaccount \
 
 ## Deploy Container Insights
 kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluentd-quickstart.yaml
-```text
+```
 #### Custom Metrics
 
 ```python
@@ -600,7 +600,7 @@ cloudwatch.put_metric_data(
         }
     ]
 )
-```text
+```
 ### Complete Deployment
 
 ```yaml
@@ -671,7 +671,7 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-```text
+```
 **Deploy**:
 ```bash
 ## Create namespace
@@ -683,7 +683,7 @@ kubectl apply -f deployment.yaml
 ## Verify
 kubectl get pods -n mcp-server-langgraph
 kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
-```text
+```
 ### Auto-Scaling
 
 #### Cluster Autoscaler
@@ -702,7 +702,7 @@ kubectl -n kube-system set image deployment.apps/cluster-autoscaler \
 
 kubectl -n kube-system edit deployment.apps/cluster-autoscaler
 ## Add: --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/langgraph-cluster
-```text
+```
 #### Karpenter (Alternative)
 
 ```bash
@@ -717,7 +717,7 @@ helm install karpenter karpenter/karpenter \
   --set settings.aws.clusterName=langgraph-cluster \
   --set settings.aws.defaultInstanceProfile=KarpenterNodeInstanceProfile \
   --set settings.aws.interruptionQueueName=langgraph-cluster
-```text
+```
 ### Cost Optimization
 
 <AccordionGroup>

@@ -65,7 +65,7 @@ LANGSMITH_PROJECT=mcp-server-langgraph
 
 ## Enable dual observability
 OBSERVABILITY_BACKEND=both  # OpenTelemetry + LangSmith
-```text
+```
 #### 3. Start Tracing
 
 That's it! All agent invocations are now automatically traced:
@@ -79,7 +79,7 @@ result = agent_graph.invoke({
     "user_id": "alice",
     "request_id": "req123"
 })
-```text
+```
 #### 4. View Traces
 
 Visit [smith.langchain.com](https://smith.langchain.com/) to see your traces in real-time!
@@ -179,7 +179,7 @@ results = client.run_on_dataset(
     llm_or_chain_factory=lambda: agent_graph,
     project_name="eval-gpt4-vs-claude"
 )
-```text
+```
 View results in LangSmith UI to see:
 - **Latency comparison**: Which model is faster?
 - **Cost analysis**: Which is more cost-effective?
@@ -342,7 +342,7 @@ result = agent_graph.invoke({
     "messages": [{"role": "user", "content": "Hello"}],
     "user_id": "alice"
 })
-```text
+```
 ```python Advanced metadata
 from langsmith_config import langsmith_config
 
@@ -354,7 +354,7 @@ config = langsmith_config.create_run_config(
 )
 
 result = agent_graph.invoke(inputs, config=config)
-```text
+```
 ```python Feedback collection
 from langsmith import Client
 

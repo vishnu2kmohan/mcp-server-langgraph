@@ -57,7 +57,7 @@ class DynamicContextLoader:
     - Progressive discovery patterns
     - Token-aware batch loading
     - LRU caching for performance
-```text
+```
 **Integration**:
 - New `load_context` node in agent graph (before compaction)
 - Flow: START → load_context → compact → router → ...
@@ -87,7 +87,7 @@ class ParallelToolExecutor:
     - Concurrent execution with asyncio.Semaphore
     - Configurable parallelism limits
     - Result aggregation
-```text
+```
 **Features**:
 - Automatic dependency detection
 - Level-based parallel execution
@@ -112,7 +112,7 @@ async def extract_key_information_llm(messages):
     - 6-category extraction
     - LLM-based analysis
     - Fallback to keyword-based
-```text
+```
 **Categories**:
 1. Decisions: Choices made, agreements
 2. Requirements: Needs, constraints
@@ -170,16 +170,16 @@ DYNAMIC_CONTEXT_MAX_TOKENS=2000
 DYNAMIC_CONTEXT_TOP_K=3
 EMBEDDING_MODEL=all-MiniLM-L6-v2
 CONTEXT_CACHE_SIZE=100
-```text
+```
 **Parallel Execution**:
 ```bash
 ENABLE_PARALLEL_EXECUTION=false  # Default off
 MAX_PARALLEL_TOOLS=5
-```text
+```
 **Enhanced Note-Taking**:
 ```bash
 ENABLE_LLM_EXTRACTION=false  # Default off
-```text
+```
 #### Dependencies
 
 **New Dependencies** (added to `pyproject.toml`):
@@ -310,19 +310,19 @@ Use threads instead of asyncio for parallel execution.
 - context.load.cache_hit_rate
 - context.load.token_savings_total
 - context.load.contexts_loaded_per_request
-```text
+```
 **Parallel Execution**:
 ```python
 - parallel.tools.concurrent_total
 - parallel.tools.latency_reduction_ms
 - parallel.tools.dependency_levels_avg
-```text
+```
 **LLM Extraction**:
 ```python
 - extraction.llm.success_rate
 - extraction.llm.fallback_rate
 - extraction.categories.items_per_category
-```text
+```
 #### Alerts
 
 1. **Qdrant Health**: Alert if unavailable > 5 minutes
@@ -351,13 +351,13 @@ await loader.index_context(
     ref_type="document",
     summary="Brief summary"
 )
-```text
+```
 **Enabling Parallel Execution**:
 ```bash
 ## Enable in .env
 ENABLE_PARALLEL_EXECUTION=true
 MAX_PARALLEL_TOOLS=5
-```text
+```
 **Enabling LLM Extraction**:
 ```bash
 ## Enable in .env

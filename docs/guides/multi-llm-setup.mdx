@@ -299,11 +299,11 @@ LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ENABLE_FALLBACK=true
 FALLBACK_MODELS=gemini-2.5-flash-002,gpt-4o,ollama/llama3.1:8b
-```text
+```
 **Fallback Flow**:
 
 ```mermaid
-graph TD
+flowchart TD
     Request[User Request] --> Primary[Primary Model<br/>Claude 3.5 Sonnet]
 
     Primary -->|✓ Success| Response[Return Response]
@@ -324,7 +324,7 @@ graph TD
     style Fallback3 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
     style Response fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
     style Error fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
-```text
+```
 **Configuration**:
 
 ```python
@@ -343,7 +343,7 @@ llm = LLMFactory(
 
 ## Automatically falls back on error
 response = llm.invoke(messages)
-```text
+```
 **Common Failure Scenarios**:
 - API quota exceeded
 - Rate limiting
@@ -420,7 +420,7 @@ response = await router.acompletion(
     model="claude-3-5-sonnet",
     messages=[{"role": "user", "content": "Hello"}]
 )
-```text
+```
 #### Rate Limiting
 
 Prevent quota exhaustion:
@@ -435,7 +435,7 @@ router = Router(
     rpm=1000,  # Requests per minute
     tpm=100000  # Tokens per minute
 )
-```text
+```
 #### Cost Tracking
 
 Monitor LLM costs:
@@ -453,7 +453,7 @@ cost = completion_cost(
 )
 
 print(f"Cost: ${cost:.4f}")
-```text
+```
 #### Caching
 
 Cache responses to reduce costs:
@@ -474,7 +474,7 @@ response = completion(
     messages=messages,
     cache=cache
 )
-```text
+```
 ---
 
 ### Configuration Reference
@@ -510,7 +510,7 @@ AZURE_API_VERSION=2024-02-15-preview
 AZURE_DEPLOYMENT_NAME=gpt-4
 AWS_REGION_NAME=us-east-1
 OLLAMA_API_BASE=http://localhost:11434
-```text
+```
 #### Model IDs
 
 <Tabs>

@@ -31,7 +31,7 @@ Use **Kong's standard JWT plugin with RS256 and periodic JWKS updates** via auto
 
 #### Architecture
 
-```text
+```
 Client (JWT) → Kong JWT Plugin (RS256 validation with Keycloak public key)
   → MCP Server (optional double-check or trust Kong)
 ```
@@ -59,7 +59,7 @@ spec:
     cookie_names: []
     claims_to_verify: [exp, nbf]
     key_claim_name: iss
-```text
+```
 **Kong Consumer with Keycloak Public Key**:
 ```yaml
 apiVersion: configuration.konghq.com/v1
@@ -75,7 +75,7 @@ config:
     -----BEGIN PUBLIC KEY-----
     [Keycloak public key from JWKS]
     -----END PUBLIC KEY-----
-```text
+```
 **JWKS Updater CronJob**:
 ```yaml
 apiVersion: batch/v1
@@ -92,7 +92,7 @@ spec:
           - name: updater
             image: python:3.11
             command: ["python", "/scripts/update_kong_jwks.py"]
-```text
+```
 #### Hybrid Route Configuration
 
 **API Route** (JWT required):
@@ -100,19 +100,19 @@ spec:
 metadata:
   annotations:
     konghq.com/plugins: jwt-keycloak-rs256,rate-limit-premium
-```text
+```
 **Browser Route** (No Kong auth, MCP validates):
 ```yaml
 metadata:
   annotations:
     konghq.com/plugins: cors,rate-limit-basic
-```text
+```
 **Legacy Route** (API key→JWT exchange):
 ```yaml
 metadata:
   annotations:
     konghq.com/plugins: apikey-jwt-exchange,rate-limit-basic
-```text
+```
 ### Consequences
 
 #### Positive Consequences

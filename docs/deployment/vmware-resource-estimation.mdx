@@ -431,7 +431,7 @@ Based on the Kubernetes manifests and Docker configurations, here are the resour
 Create resource pools for workload isolation:
 
 ```mermaid
-graph TD
+flowchart TD
     Root[Cluster Root] --> Prod[Production]
     Root --> Dev[Development<br/>expandable reservation]
 
@@ -468,7 +468,7 @@ graph TD
     class MCP,KC,OFG appStyle
     class PG,Redis dataStyle
     class Prom,Graf,Jaeg obsPoolStyle
-```text
+```
 #### 4. Monitoring and Alerts
 
 ##### vSphere Metrics to Monitor
@@ -505,7 +505,7 @@ rate(node_disk_writes_completed_total[5m])
 ## Network Traffic
 rate(container_network_receive_bytes_total[5m])
 rate(container_network_transmit_bytes_total[5m])
-```text
+```
 ##### Grafana Dashboards
 - **Infrastructure Dashboard:** VM resources, storage, network
 - **Application Dashboard:** MCP Server, LLM calls, agent performance
@@ -534,7 +534,7 @@ for: 5m
 alert: HighDatabaseConnections
 expr: pg_stat_database_numbackends > 80
 for: 5m
-```text
+```
 ---
 
 ### Scaling Considerations
@@ -549,7 +549,7 @@ minReplicas: 3
 maxReplicas: 10
 targetCPUUtilization: 70%
 targetMemoryUtilization: 80%
-```text
+```
 **Scaling Triggers:**
 - CPU > 70% for 30 seconds → scale up (max 4 pods or 100% increase)
 - CPU < 40% for 5 minutes → scale down (max 2 pods or 50% decrease)
@@ -564,7 +564,7 @@ minReplicas: 2
 maxReplicas: 10
 targetCPUUtilization: 70%
 targetMemoryUtilization: 80%
-```text
+```
 **Scaling Triggers:**
 - Scales with observability data volume
 - 1 collector can handle ~1000 req/sec trace data

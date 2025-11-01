@@ -185,7 +185,7 @@ Users can enable one or both based on their needs:
 - OTLP → Jaeger (traces)
 - OTLP → Prometheus (metrics)
 - Console (development)
-```text
+```
 #### LangSmith Integration
 
 ```python
@@ -194,7 +194,7 @@ Users can enable one or both based on their needs:
 - Automatic trace context
 - Token usage tracking
 - Run metadata tagging
-```text
+```
 #### Configuration
 
 ```python
@@ -202,7 +202,7 @@ Users can enable one or both based on their needs:
 observability_backend: str = "both"  # opentelemetry, langsmith, both
 langsmith_api_key: Optional[str] = None
 langsmith_tracing: bool = False
-```text
+```
 #### Docker Compose Stack
 
 ```yaml
@@ -211,7 +211,7 @@ services:
   jaeger:          # Trace visualization
   prometheus:      # Metrics storage
   grafana:         # Unified dashboard
-```text
+```
 #### Usage
 
 ```python

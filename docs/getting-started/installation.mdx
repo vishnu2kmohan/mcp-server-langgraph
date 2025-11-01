@@ -37,7 +37,7 @@ Choose the installation method that best fits your use case:
 
         ```bash
         python --version  # Should show 3.10+
-        ```text
+```
         If not installed:
         - **macOS**: `brew install python@3.11`
         - **Ubuntu**: `sudo apt install python3.11`
@@ -95,7 +95,7 @@ Choose the installation method that best fits your use case:
         uv sync --extra secrets      # With Infisical support
         uv sync --extra embeddings   # With self-hosted embeddings
         uv sync --all-extras         # All optional features
-        ```text
+```
         Or use the Makefile:
         ```bash
         make install     # Production only (from lockfile)
@@ -216,7 +216,7 @@ docker compose up -d
   **Verify services are running:**
   ```bash
   docker compose ps
-  ```text
+```
   All services should show "Up" status.
 </Check>
 
@@ -226,7 +226,7 @@ Initialize the authorization system:
 
 ```bash
 python scripts/setup/setup_openfga.py
-```text
+```
 Save the output values:
 - `OPENFGA_STORE_ID`
 - `OPENFGA_MODEL_ID`
@@ -237,7 +237,7 @@ Create `.env` from the example:
 
 ```bash
 cp .env.example .env
-```text
+```
 Edit `.env` with your values:
 
 <CodeGroup>
@@ -245,17 +245,17 @@ Edit `.env` with your values:
 LLM_PROVIDER=google
 MODEL_NAME=gemini-2.5-flash-002
 GOOGLE_API_KEY=your-api-key-here
-```text
+```
 ```bash Anthropic Claude
 LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ANTHROPIC_API_KEY=sk-ant-your-key-here
-```text
+```
 ```bash OpenAI GPT
 LLM_PROVIDER=openai
 MODEL_NAME=gpt-4
 OPENAI_API_KEY=sk-your-key-here
-```text
+```
 ```bash Local (Ollama)
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1
@@ -271,12 +271,12 @@ Add to `.env`:
 OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
 OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYY
 JWT_SECRET_KEY=your-secret-key-change-in-production
-```text
+```
 #### 5. Test Installation
 
 ```bash
 python examples/client_stdio.py
-```text
+```
 You should see successful responses from the agent!
 
 ### Verification
@@ -286,10 +286,10 @@ Run the full test suite to verify everything is working:
 <CodeGroup>
 ```bash Unit Tests
 pytest -m unit -v
-```text
+```
 ```bash All Tests
 pytest -v
-```text
+```
 ```bash With Coverage
 pytest --cov=. --cov-report=term-missing
 ```xml
@@ -308,12 +308,12 @@ pre-commit run --all-files
 
 ## Or use the Makefile
 make pre-commit-setup
-```text
+```
 ```bash Code Quality Tools
 ## Already included in dev dependencies!
 ## Just run: uv sync
 ## This installs: black, isort, flake8, mypy, bandit, pytest, etc.
-```text
+```
 ```bash Kubernetes Tools
 brew install kubectl helm kustomize  # macOS
 ```xml

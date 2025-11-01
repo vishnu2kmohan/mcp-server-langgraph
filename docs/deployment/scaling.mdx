@@ -17,7 +17,7 @@ Scale your MCP Server horizontally (more replicas) and vertically (more resource
   # .env or Kubernetes ConfigMap
   CHECKPOINT_BACKEND=redis
   CHECKPOINT_REDIS_URL=redis://redis-service:6379/1
-  ```text
+```
   Without Redis, conversation state is stored in pod memory and **will be lost** during:
   - Pod restarts
   - Scale-up events (new pods have no history)
@@ -57,7 +57,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```text
+```
 **Deploy**:
 ```bash
 kubectl apply -f hpa.yaml
@@ -67,7 +67,7 @@ kubectl get hpa -n mcp-server-langgraph
 
 ## Watch scaling
 kubectl get hpa -n mcp-server-langgraph --watch
-```text
+```
 #### Advanced HPA
 
 ```yaml
@@ -130,7 +130,7 @@ spec:
         value: 4    # Or add 4 pods
         periodSeconds: 30
       selectPolicy: Max  # Use most aggressive
-```text
+```
 #### Custom Metrics
 
 **Install Prometheus Adapter**:
@@ -138,7 +138,7 @@ spec:
 helm install prometheus-adapter prometheus-community/prometheus-adapter \
   --namespace monitoring \
   --set prometheus.url=http://prometheus:9090
-```text
+```
 **Configure custom metrics**:
 ```yaml
 apiVersion: v1
@@ -155,7 +155,7 @@ data:
         matches: "^(.*)_total"
         as: "${1}_per_second"
       metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[2m])'
-```text
+```
 ### Vertical Pod Autoscaling (VPA)
 
 #### Install VPA
@@ -164,7 +164,7 @@ data:
 git clone https://github.com/kubernetes/autoscaler.git
 cd autoscaler/vertical-pod-autoscaler
 ./hack/vpa-up.sh
-```text
+```
 #### VPA Configuration
 
 ```yaml
@@ -192,11 +192,11 @@ spec:
       controlledResources:
       - cpu
       - memory
-```text
+```
 **Check recommendations**:
 ```bash
 kubectl describe vpa mcp-server-langgraph-vpa -n mcp-server-langgraph
-```text
+```
 ### Cluster Autoscaling
 
 #### GKE
@@ -207,7 +207,7 @@ gcloud container clusters update langgraph-cluster \
   --min-nodes=3 \
   --max-nodes=10 \
   --zone=us-central1-a
-```text
+```
 #### EKS
 
 ```yaml
@@ -228,7 +228,7 @@ nodeGroups:
     iam:
       withAddonPolicies:
         autoScaler: true
-```text
+```
 #### AKS
 
 ```bash
@@ -238,7 +238,7 @@ az aks update \
   --enable-cluster-autoscaler \
   --min-count 3 \
   --max-count 10
-```text
+```
 ### Load Testing
 
 #### Generate Load
@@ -288,7 +288,7 @@ EOF
 ## Run test
 export AUTH_TOKEN="your-token"
 k6 run load-test.js
-```text
+```
 #### Monitor Scaling
 
 ```bash
@@ -301,7 +301,7 @@ watch kubectl get hpa -n mcp-server-langgraph
 ## View metrics
 kubectl top pods -n mcp-server-langgraph
 kubectl top nodes
-```text
+```
 ### Resource Limits
 
 #### Right-Sizing
@@ -314,7 +314,7 @@ resources:
   limits:
     cpu: 4000m      # Max CPU
     memory: 4Gi     # Max memory
-```text
+```
 **Guidelines**:
 - **Requests**: Set to average usage (p50)
 - **Limits**: Set to peak usage (p95-p99)
@@ -344,7 +344,7 @@ resources:
 
 ## Best Effort QoS (avoid in production)
 resources: {}  # No requests or limits
-```text
+```
 ### Performance Tuning
 
 #### Application-Level
@@ -366,7 +366,7 @@ CACHE_TTL = 300  # 5 minutes
 
 ## Rate limiting
 RATE_LIMIT_PER_MINUTE = 1000
-```text
+```
 #### Kubernetes-Level
 
 ```yaml
@@ -395,7 +395,7 @@ spec:
       # Readiness gates
       readinessGates:
       - conditionType: "example.com/feature-1"
-```text
+```
 #### Database Tuning
 
 **Redis**:
@@ -406,7 +406,7 @@ maxmemory-policy allkeys-lru
 save 900 1
 save 300 10
 save 60 10000
-```text
+```
 **PostgreSQL**:
 ```conf
 ## postgresql.conf
@@ -418,7 +418,7 @@ checkpoint_completion_target = 0.9
 wal_buffers = 16MB
 default_statistics_target = 100
 random_page_cost = 1.1
-```text
+```
 ### Cost Optimization
 
 #### Right-Size Instances
@@ -432,7 +432,7 @@ resources:
   requests:
     cpu: 800m     # Reduced from 1000m
     memory: 1.5Gi # Reduced from 2Gi
-```text
+```
 #### Spot/Preemptible Instances
 
 **GKE**:
@@ -444,7 +444,7 @@ gcloud container node-pools create spot-pool \
   --enable-autoscaling \
   --min-nodes=0 \
   --max-nodes=10
-```text
+```
 **EKS**:
 ```yaml
 nodeGroups:
@@ -456,7 +456,7 @@ nodeGroups:
       spotAllocationStrategy: "capacity-optimized"
     minSize: 0
     maxSize: 10
-```text
+```
 #### Scheduled Scaling
 
 ```yaml
@@ -500,7 +500,7 @@ spec:
             - -c
             - kubectl scale deployment mcp-server-langgraph --replicas=5
           restartPolicy: OnFailure
-```text
+```
 ### Monitoring Scaling
 
 #### Key Metrics
@@ -520,7 +520,7 @@ rate(http_requests_total{namespace="mcp-server-langgraph"}[5m])
 
 ## HPA desired replicas
 kube_horizontalpodautoscaler_status_desired_replicas{namespace="mcp-server-langgraph"}
-```text
+```
 #### Alerts
 
 ```yaml
@@ -551,7 +551,7 @@ groups:
     for: 2m
     annotations:
       summary: "High memory utilization"
-```text
+```
 ### Best Practices
 
 <AccordionGroup>

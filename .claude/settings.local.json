@@ -20,7 +20,9 @@
       "WebFetch(domain:mintlify.com)",
       "WebFetch(domain:lucide.dev)",
       "WebSearch",
-      "WebFetch(domain:www.anthropic.com)"
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:www.mintlify.com)",
+      "WebFetch(domain:mermaid.js.org)"
     ],
     "defaultMode": "acceptEdits"
   },

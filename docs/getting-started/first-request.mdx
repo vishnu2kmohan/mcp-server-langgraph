@@ -230,7 +230,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-```text
+```
 ```bash complete_example.sh
 #!/bin/bash
 
@@ -264,7 +264,7 @@ echo "View trace: http://localhost:16686/trace/$TRACE_ID"
 response = httpx.post(url, headers=headers, json={
     "query": "Explain quantum computing in simple terms"
 })
-```text
+```
 #### Multi-Turn Conversation
 
 ```python
@@ -278,7 +278,7 @@ conversation = [
 response = httpx.post(url, headers=headers, json={
     "messages": conversation
 })
-```text
+```
 #### Tool Usage
 
 ```python
@@ -287,7 +287,7 @@ response = httpx.post(url, headers=headers, json={
     "query": "Search for the latest news about AI"
 })
 ## Agent will invoke search tool and return results
-```text
+```
 #### Streaming Responses
 
 ```python
@@ -301,7 +301,7 @@ async with httpx.AsyncClient() as client:
     ) as response:
         async for chunk in response.aiter_text():
             print(chunk, end='', flush=True)
-```text
+```
 ### Error Handling
 
 #### Authentication Errors
@@ -312,7 +312,7 @@ async with httpx.AsyncClient() as client:
   "error": "unauthorized",
   "message": "Invalid or expired token"
 }
-```text
+```
 **Solution**: Get a new token or check token expiration.
 
 #### Authorization Errors
@@ -323,7 +323,7 @@ async with httpx.AsyncClient() as client:
   "error": "forbidden",
   "message": "User 'bob' is not authorized to execute 'tool:chat'"
 }
-```text
+```
 **Solution**: Check OpenFGA permissions. See [Authorization Guide](/getting-started/authorization).
 
 #### Rate Limiting
@@ -335,7 +335,7 @@ async with httpx.AsyncClient() as client:
   "message": "Rate limit exceeded. Try again in 60 seconds.",
   "retry_after": 60
 }
-```text
+```
 **Solution**: Implement exponential backoff or reduce request rate.
 
 #### Server Errors
@@ -347,7 +347,7 @@ async with httpx.AsyncClient() as client:
   "message": "LLM provider error: quota exceeded",
   "trace_id": "abc123..."
 }
-```text
+```
 **Solution**: Check trace in Jaeger, verify LLM API keys and quotas.
 
 ### Best Practices
@@ -434,7 +434,7 @@ def test_agent_request():
         # Test your code
         result = send_agent_request("Hello")
         assert result['content'] == "Test response"
-```text
+```
 #### Integration Tests
 
 ```python

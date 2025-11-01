@@ -44,7 +44,7 @@ GPT-4o combines GPT-4-level intelligence with multimodal capabilities (text, vis
     INFISICAL_PROJECT_ID=your-project-id
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-client-secret
-    ```text
+```
     **Using Environment Variables** (Development only):
     ```bash
     # .env
@@ -87,7 +87,7 @@ llm = LLMFactory(
 ## Invoke
 response = await llm.ainvoke("What is quantum computing?")
 print(response.content)
-```text
+```
 #### Advanced Configuration
 
 ```python
@@ -119,7 +119,7 @@ llm = ChatOpenAI(
         "OpenAI-Beta": "assistants=v2"
     }
 )
-```text
+```
 #### Model Selection Strategy
 
 ```python
@@ -150,7 +150,7 @@ llm = LLMFactory(
     provider="openai",
     model_name=select_openai_model(task_type="chat", complexity="medium")
 )
-```text
+```
 ### Features
 
 #### Function Calling (Tools)
@@ -194,7 +194,7 @@ result = await agent.ainvoke({
 })
 
 print(result["messages"][-1].content)
-```text
+```
 #### Vision (GPT-4o, GPT-4 Turbo)
 
 ```python
@@ -224,7 +224,7 @@ message = HumanMessage(
 
 response = await llm.ainvoke([message])
 print(response.content)
-```text
+```
 #### Structured Output (JSON Mode)
 
 ```python
@@ -253,7 +253,7 @@ print(response.model_dump_json(indent=2))
 ## "confidence": 0.95,
 ## "key_phrases": ["absolutely love", "exceeded expectations"]
 ## }
-```text
+```
 #### Streaming
 
 ```python
@@ -272,7 +272,7 @@ async def stream_message(request: MessageRequest):
         stream_response(request.query),
         media_type="text/event-stream"
     )
-```text
+```
 #### System Prompts
 
 ```python
@@ -306,7 +306,7 @@ response = await chain.ainvoke({
 })
 
 print(response.content)
-```text
+```
 #### Response Format (JSON Mode)
 
 ```python
@@ -324,7 +324,7 @@ import json
 data = json.loads(response.content)
 print(data)
 ## Output: {"name": "John Smith", "age": 35, "occupation": "software engineer"}
-```text
+```
 ### Production Deployment
 
 #### Kubernetes Configuration
@@ -375,7 +375,7 @@ spec:
           limits:
             cpu: 4000m
             memory: 4Gi
-```text
+```
 #### Rate Limiting
 
 ```python
@@ -399,7 +399,7 @@ async def send_message(request: Request):
 @limiter.limit("200/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```text
+```
 #### Error Handling
 
 ```python
@@ -451,7 +451,7 @@ async def call_with_fallback(query: str):
         # Fallback to another provider
         fallback_llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
         return await fallback_llm.ainvoke(query)
-```text
+```
 ### Performance Optimization
 
 #### Batching
@@ -475,7 +475,7 @@ async def process_batch(queries: List[str]):
 results = await process_batch(queries)
 for query, response in zip(queries, results):
     print(f"Q: {query}\nA: {response.content}\n")
-```text
+```
 #### Token Management
 
 ```python
@@ -503,7 +503,7 @@ def truncate_to_tokens(text: str, max_tokens: int, model: str = "gpt-4o") -> str
 ## Use before sending
 query = truncate_to_tokens(long_query, max_tokens=120000)  # Leave room for response
 response = await llm.ainvoke(query)
-```text
+```
 #### Caching
 
 ```python
@@ -535,7 +535,7 @@ async def call_with_redis_cache(query: str):
     await redis.setex(cache_key, 3600, json.dumps(response.content))
 
     return response.content
-```text
+```
 ### Cost Optimization
 
 #### Model Selection
@@ -554,7 +554,7 @@ llm = LLMFactory(
     provider="openai",
     model_name=get_optimal_model(analyze_complexity(query))
 )
-```text
+```
 #### Usage Tracking
 
 ```python
@@ -577,7 +577,7 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```text
+```
 #### Budget Limits
 
 ```python
@@ -607,7 +607,7 @@ async def send_message(
     # Call LLM
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
-```text
+```
 ### Monitoring
 
 #### LangSmith Integration
@@ -624,7 +624,7 @@ os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 response = await llm.ainvoke(query)
 
 ## View traces at https://smith.langchain.com
-```text
+```
 #### Custom Metrics
 
 ```python
@@ -687,7 +687,7 @@ async def call_openai_with_metrics(query: str):
     finally:
         duration = time.time() - start_time
         openai_latency.labels(model="gpt-4o").observe(duration)
-```text
+```
 ### Troubleshooting
 
 <AccordionGroup>

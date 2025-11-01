@@ -92,7 +92,7 @@ class OutputVerifier:
     - Safety: Is it appropriate?
     - Sources: Are sources cited?
     """
-```text
+```
 **Features**:
 - LLM-as-judge evaluation with structured prompts (XML format)
 - Multi-criterion scoring (0.0-1.0 for each criterion)
@@ -116,7 +116,7 @@ workflow.add_edge("respond", "verify")
 workflow.add_edge("verify", END)  # if passed
 workflow.add_edge("verify", "refine")  # if failed
 workflow.add_edge("refine", "respond")  # loop back
-```text
+```
 **Features**:
 - Maximum 3 refinement attempts (configurable)
 - Feedback injection via SystemMessage
@@ -135,7 +135,7 @@ workflow.add_edge("refine", "respond")  # loop back
 
 ```
 START → router → [use_tools | respond] → END
-```text
+```
 #### After (Full Agentic Loop)
 
 ```
@@ -146,7 +146,7 @@ START
   → verify (Verify Work)
   → [END | refine] (Repeat if needed)
   → (if refine) → respond
-```text
+```
 ### Agent State Enhancements
 
 Extended `AgentState` to track all agentic loop components:
@@ -171,7 +171,7 @@ class AgentState(TypedDict):
     verification_feedback: str | None
     refinement_attempts: int | None
     user_request: str | None
-```text
+```
 ### Configuration
 
 Added feature flags and configuration options:
@@ -190,7 +190,7 @@ ENABLE_VERIFICATION=true
 VERIFICATION_QUALITY_THRESHOLD=0.7
 MAX_REFINEMENT_ATTEMPTS=3
 VERIFICATION_MODE=standard  # strict, standard, lenient
-```text
+```
 ### Implementation Files
 
 #### New Files Created
@@ -306,20 +306,20 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
 ```bash
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true  # Test with verification enabled
-```text
+```
 #### Phase 2: Canary Deployment
 ```bash
 ## Deploy to 10% of users
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
 VERIFICATION_MODE=lenient  # Lower threshold initially
-```text
+```
 #### Phase 3: Full Rollout
 ```bash
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
 VERIFICATION_MODE=standard
-```text
+```
 ### Success Metrics
 
 #### Key Performance Indicators
@@ -353,7 +353,7 @@ def test_token_counting_accuracy()
 def test_llm_as_judge_scoring()
 def test_rules_based_validation()
 def test_verification_feedback_quality()
-```text
+```
 #### Integration Tests
 
 ```python
@@ -362,7 +362,7 @@ def test_full_loop_with_refinement()
 def test_compaction_triggers_correctly()
 def test_verification_prevents_bad_responses()
 def test_max_refinement_attempts_respected()
-```text
+```
 #### Property-Based Tests
 
 ```python

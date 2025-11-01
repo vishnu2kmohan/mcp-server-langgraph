@@ -15,7 +15,7 @@ OpenFGA provides Google Zanzibar-style relationship-based authorization for fine
 ### Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     App[MCP Server] --> Client[OpenFGA Client SDK]
     Client --> API[OpenFGA API Server]
     API --> Store[(Authorization Store)]
@@ -43,7 +43,7 @@ graph TB
     class API serverStyle
     class Store,PG dataStyle
     class Model,Relations,Tuples modelStyle
-```text
+```
 ### Quick Start
 
 <Steps>
@@ -73,7 +73,7 @@ graph TB
             POSTGRES_DB: openfga
           volumes:
             - openfga-data:/var/lib/postgresql/data
-        ```text
+```
         ```bash
         docker compose up -d openfga postgres
         ```xml
@@ -130,7 +130,7 @@ graph TB
     ```bash
     # Initialize store and model
     python scripts/setup/setup_openfga.py
-    ```text
+```
     **Output**:
     ```
     ============================================================
@@ -229,7 +229,7 @@ type document
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner
-```text
+```
 #### Type Definitions
 
 <Tabs>
@@ -238,7 +238,7 @@ type document
 
     ```typescript
     type user
-    ```text
+```
     No relations defined - users are leaf nodes in the authorization graph.
   </Tab>
 
@@ -251,7 +251,7 @@ type document
         define admin: [user]
         define member: [user] or admin
         define viewer: [user] or member
-    ```text
+```
     **Hierarchy**: admin → member → viewer
 
     Admin users automatically have member and viewer permissions.
@@ -266,7 +266,7 @@ type document
         define owner: [user]
         define executor: [user, organization#member]
         define viewer: [user, organization#member]
-    ```text
+```
     **executor**: Can execute the tool
     **viewer**: Can see tool metadata
     **organization#member**: All org members can execute
@@ -281,7 +281,7 @@ type document
         define owner: [user]
         define editor: [user]
         define viewer: [user] or editor or owner
-    ```text
+```
     **Hierarchy**: owner → editor → viewer
 
     Owners can edit, editors can view and modify.
@@ -307,7 +307,7 @@ OPENFGA_API_SCHEME=https               # http or https
 ## Optional: Performance
 OPENFGA_MAX_RETRIES=3                  # Retry failed requests
 OPENFGA_TIMEOUT=30                     # Request timeout (seconds)
-```text
+```
 #### Client Configuration
 
 ```python
@@ -333,7 +333,7 @@ client = OpenFGAClient(
     cache_ttl=300,  # 5 minutes
     cache_backend="redis"
 )
-```text
+```
 ---
 
 ### Managing Relationship Tuples
@@ -361,7 +361,7 @@ await client.write_tuples([
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
-```text
+```
 #### Checking Permissions
 
 ```python
@@ -378,7 +378,7 @@ if allowed:
     result = await execute_tool("chat", query)
 else:
     raise PermissionError("Access denied")
-```text
+```
 #### Listing Permissions
 
 ```python
@@ -398,7 +398,7 @@ users = await client.list_users(
 )
 print(f"Can execute chat: {users}")
 ## Output: ['user:alice', 'user:bob']
-```text
+```
 #### Deleting Relationships
 
 ```python
@@ -413,7 +413,7 @@ await client.delete_tuples([{
 tuples = await client.read_tuples(object="tool:chat")
 user_tuples = [t for t in tuples if t['user'] == 'user:bob']
 await client.delete_tuples(user_tuples)
-```text
+```
 ---
 
 ### Production Deployment
@@ -458,7 +458,7 @@ spec:
           limits:
             cpu: 1000m
             memory: 1Gi
-```text
+```
 #### PostgreSQL Backend
 
 **Always use PostgreSQL in production** (not in-memory):
@@ -471,7 +471,7 @@ OPENFGA_DATASTORE_URI=postgres://openfga:password@postgres:5432/openfga?sslmode=
 OPENFGA_DATASTORE_MAX_OPEN_CONNS=25
 OPENFGA_DATASTORE_MAX_IDLE_CONNS=10
 OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME=60s
-```text
+```
 **PostgreSQL Configuration**:
 ```sql
 -- Create database
@@ -484,7 +484,7 @@ GRANT ALL PRIVILEGES ON DATABASE openfga TO openfga;
 -- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-```text
+```
 #### Performance Tuning
 
 ```bash
@@ -500,7 +500,7 @@ OPENFGA_MAX_AUTHORIZATION_MODEL_SIZE_IN_BYTES=262144
 ## Logging
 OPENFGA_LOG_LEVEL=info  # debug, info, warn, error
 OPENFGA_LOG_FORMAT=json
-```text
+```
 #### Monitoring
 
 ```yaml
@@ -516,7 +516,7 @@ spec:
   endpoints:
   - port: http
     path: /metrics
-```text
+```
 **Key Metrics**:
 ```promql
 ## Check rate
@@ -530,7 +530,7 @@ rate(openfga_check_total{allowed="error"}[5m])
 
 ## Tuple count
 openfga_tuple_count
-```text
+```
 ---
 
 ### Backup & Recovery
@@ -544,7 +544,7 @@ tuples = await client.read_tuples()
 import json
 with open('openfga-backup.json', 'w') as f:
     json.dump(tuples, f, indent=2)
-```text
+```
 #### Restore Tuples
 
 ```python
@@ -554,7 +554,7 @@ with open('openfga-backup.json', 'r') as f:
     tuples = json.load(f)
 
 await client.write_tuples(tuples)
-```text
+```
 #### Database Backup
 
 ```bash
@@ -563,7 +563,7 @@ pg_dump -U openfga openfga > openfga-backup.sql
 
 ## Restore
 psql -U openfga openfga < openfga-backup.sql
-```text
+```
 ---
 
 ### Troubleshooting

@@ -37,7 +37,7 @@ Before you begin, ensure you have:
   <Step title="Install Dependencies">
     ```bash
     pip install -r requirements.txt
-    ```text
+```
     Or use the Makefile:
     ```bash
     make install
@@ -49,7 +49,7 @@ Before you begin, ensure you have:
 
     ```bash
     docker compose up -d
-    ```text
+```
     Verify services are running:
     ```bash
     docker compose ps
@@ -61,14 +61,14 @@ Before you begin, ensure you have:
 
     ```bash
     python scripts/setup/setup_openfga.py
-    ```text
+```
     Save the output `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID` - you'll need them next.
   </Step>
 
   <Step title="Configure Environment">
     ```bash
     cp .env.example .env
-    ```text
+```
     Edit `.env` with your values:
     ```bash
     # Get free API key from https://aistudio.google.com/apikey
@@ -88,7 +88,7 @@ Before you begin, ensure you have:
 
     ```bash
     python examples/client_stdio.py
-    ```text
+```
     You should see the agent responding to queries! 🎉
   </Step>
 </Steps>
@@ -100,13 +100,13 @@ Check that all services are accessible:
 <CodeGroup>
 ```bash Health Check
 curl http://localhost:8080/healthz  # OpenFGA
-```text
+```
 ```bash Jaeger UI
 open http://localhost:16686
-```text
+```
 ```bash Prometheus
 open http://localhost:9090
-```text
+```
 ```bash Grafana
 open http://localhost:3000  # admin/admin
 ```xml
@@ -145,7 +145,7 @@ async def test_agent():
 
 ## Run the test
 asyncio.run(test_agent())
-```text
+```
 ```bash cURL
 ## First, get a JWT token (in production, use proper auth)
 TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; from mcp_server_langgraph.core.config import settings; auth = AuthMiddleware(secret_key=settings.jwt_secret_key); print(auth.create_token('alice'))")
@@ -155,7 +155,7 @@ curl -X POST http://localhost:8000/message \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "Hello! What can you help me with?"}'
-```text
+```
 ```javascript JavaScript
 const axios = require('axios');
 
@@ -271,7 +271,7 @@ The agent returns a structured response:
 
     # Test directly
     curl https://generativelanguage.googleapis.com/v1/models?key=YOUR_KEY
-    ```text
+```
     Get a new key from [Google AI Studio](https://aistudio.google.com/apikey)
   </Accordion>
 

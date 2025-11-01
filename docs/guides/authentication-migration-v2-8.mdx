@@ -25,7 +25,7 @@ result = await call_tool("agent_chat", {
     "message": "Hello!",
     "user_id": "user:alice"  # ❌ No authentication
 })
-```text
+```
 **After (v2.8.0+)**:
 ```python
 ## 1. First, obtain a token via login
@@ -41,7 +41,7 @@ result = await call_tool("agent_chat", {
     "token": token,  # ✅ Required JWT token
     "user_id": "user:alice"
 })
-```text
+```
 #### Why This Change?
 
 The previous implementation had a **critical security vulnerability**:
@@ -96,7 +96,7 @@ request = {
         }
     }
 }
-```text
+```
 **After**:
 ```python
 request = {
@@ -111,7 +111,7 @@ request = {
         }
     }
 }
-```text
+```
 ##### Step 3: Handle Token Expiration
 
 ```python
@@ -188,7 +188,7 @@ result = await client.call_tool("agent_chat", {
     "message": "Hello!",
     "user_id": "user:alice"
 })
-```text
+```
 ---
 
 #### For stdio Clients
@@ -216,7 +216,7 @@ async with stdio_client(server_params) as (read, write):
             "token": token,
             "user_id": "user:alice"
         })
-```text
+```
 ##### Option 2: Create token programmatically (dev/test only)
 
 ```python
@@ -235,7 +235,7 @@ result = await session.call_tool("agent_chat", arguments={
     "token": token,
     "user_id": "user:alice"
 })
-```text
+```
 ---
 
 ### Updated Tool Schemas
@@ -250,7 +250,7 @@ result = await session.call_tool("agent_chat", arguments={
   "thread_id"?: string,     // Optional: Thread ID
   "response_format"?: "concise" | "detailed"  // Optional: Response format
 }
-```text
+```
 #### conversation_get
 
 ```typescript
@@ -259,7 +259,7 @@ result = await session.call_tool("agent_chat", arguments={
   "token": string,          // ✅ NEW: Required JWT token
   "user_id": string         // Required: User identifier
 }
-```text
+```
 #### conversation_search
 
 ```typescript
@@ -269,7 +269,7 @@ result = await session.call_tool("agent_chat", arguments={
   "user_id": string,        // Required: User identifier
   "limit"?: number          // Optional: Max results (default: 10)
 }
-```text
+```
 ---
 
 ### Default Credentials (Development Only)
@@ -302,14 +302,14 @@ For development and testing, the InMemoryUserProvider has these default users:
    export KEYCLOAK_REALM=production
    export KEYCLOAK_CLIENT_ID=mcp-server
    export KEYCLOAK_CLIENT_SECRET=<secret>
-   ```text
+```
 2. **Obtain Tokens from Keycloak**:
    ```python
    # Clients obtain tokens from Keycloak directly
    # Tokens are validated by the MCP server
 
    # The server will verify Keycloak JWT tokens automatically
-   ```text
+```
 3. **No code changes needed** - the auth factory automatically uses KeycloakUserProvider
 
 #### Custom Authentication Provider
@@ -334,7 +334,7 @@ class CustomUserProvider(UserProvider):
         pass
 
     # Implement other required methods...
-```text
+```
 Register your provider in `auth/factory.py`:
 
 ```python
@@ -369,7 +369,7 @@ def test_tool_call_with_token(auth_token):
         "user_id": "user:alice"
     })
     assert response.status_code == 200
-```text
+```
 #### Integration Tests
 
 ```python
@@ -422,7 +422,7 @@ class TestAuthMigration:
 
         assert response.status_code == 200
         assert "result" in response.json()
-```text
+```
 ---
 
 ### Troubleshooting
@@ -439,7 +439,7 @@ arguments = {"message": "Hello!", "user_id": "alice"}
 
 ## ✅ Correct
 arguments = {"message": "Hello!", "token": token, "user_id": "alice"}
-```text
+```
 #### Error: "Invalid authentication token"
 
 **Causes**:
@@ -468,7 +468,7 @@ payload = {
     "exp": expiration_time,
     "iat": issued_at_time
 }
-```text
+```
 #### Error: "Password required for InMemoryUserProvider"
 
 **Cause**: Trying to authenticate without password
@@ -481,7 +481,7 @@ auth_result = await auth.authenticate("alice")  # No password
 
 ## ✅ Correct
 auth_result = await auth.authenticate("alice", "alice123")
-```text
+```
 ---
 
 ### Rollback Plan
@@ -491,7 +491,7 @@ If you need to temporarily rollback to the old behavior (NOT RECOMMENDED):
 1. **Checkout previous version**:
    ```bash
    git checkout v2.7.0
-   ```text
+```
 2. **Or apply this patch** (INSECURE - development only):
    ```python
    # In server_stdio.py and server_streamable.py

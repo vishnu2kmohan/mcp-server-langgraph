@@ -41,19 +41,19 @@ LangGraph Platform is LangChain's fully managed hosting service for LangGraph ap
 
 ```bash
 pip install langgraph-cli
-```text
+```
 #### 2. Login to LangChain
 
 ```bash
 langgraph login
-```text
+```
 This will prompt for your LangSmith API key (get it from [smith.langchain.com/settings](https://smith.langchain.com/settings)).
 
 #### 3. Deploy
 
 ```bash
 langgraph deploy
-```text
+```
 That's it! Your agent is now live on LangGraph Platform.
 
 <Check>
@@ -128,7 +128,7 @@ langgraph deploy my-agent-prod
 
 ## Deploy with environment tag
 langgraph deploy my-agent-prod --tag production
-```text
+```
 #### Test Locally First
 
 ```bash
@@ -138,7 +138,7 @@ langgraph dev
 ## Test in another terminal
 langgraph deployment invoke --local \
   --input '{"messages": [{"role": "user", "content": "test"}]}'
-```text
+```
 #### Invoke Deployed Graph
 
 ```bash
@@ -155,7 +155,7 @@ langgraph deployment invoke my-agent-prod \
 langgraph deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "Story"}]}' \
   --stream
-```text
+```
 #### Manage Deployments
 
 ```bash
@@ -173,7 +173,7 @@ langgraph deployment rollback my-agent-prod --revision 4
 
 ## Delete deployment
 langgraph deployment delete my-agent-prod
-```text
+```
 ### Environment Management
 
 #### Multiple Environments
@@ -186,7 +186,7 @@ langgraph deploy my-agent-staging --tag staging
 
 ## Production
 langgraph deploy my-agent-prod --tag production
-```text
+```
 #### Environment Variables
 
 Set environment-specific variables:
@@ -264,7 +264,7 @@ jobs:
         env:
           LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
         run: langgraph deploy my-agent-prod --tag production
-```text
+```
 See complete workflow in `.github/workflows/deploy-langgraph-platform.yml`.
 
 #### GitLab CI
@@ -278,7 +278,7 @@ deploy:
     - langgraph deploy my-agent-prod --tag production
   only:
     - main
-```text
+```
 ### Best Practices
 
 <AccordionGroup>
@@ -326,7 +326,7 @@ deploy:
 
     ```bash
     langgraph deployment logs my-agent-prod --follow
-    ```text
+```
     Check LangSmith for errors and latency spikes.
   </Accordion>
 

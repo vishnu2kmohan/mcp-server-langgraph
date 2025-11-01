@@ -72,7 +72,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 ## Disable production features
 ENABLE_TRACING=false
 ENABLE_METRICS=false
-```text
+```
 **Characteristics**:
 - Fast feedback loops
 - Verbose logging
@@ -110,7 +110,7 @@ ENABLE_TRACING=true
 JAEGER_URL=http://staging-jaeger:4318
 ENABLE_METRICS=true
 PROMETHEUS_PORT=9090
-```text
+```
 **Characteristics**:
 - Production-like configuration
 - Real backing services
@@ -161,7 +161,7 @@ OTLP_ENDPOINT=https://telemetry.example.com
 ENABLE_METRICS=true
 LANGSMITH_ENABLED=true
 LANGSMITH_PROJECT=production-agent
-```text
+```
 **Characteristics**:
 - Maximum security
 - High availability
@@ -215,21 +215,21 @@ KEYCLOAK_URL=https://auth.example.com
 KEYCLOAK_REALM=mcp-agent
 KEYCLOAK_CLIENT_ID=mcp-server-langgraph
 KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_SECRET}
-```text
+```
 **Redis**:
 ```bash
 REDIS_URL=redis://redis-master:6379
 REDIS_PASSWORD=${REDIS_PASSWORD}
 REDIS_DB=0
 REDIS_MAX_CONNECTIONS=50
-```text
+```
 **OpenFGA**:
 ```bash
 OPENFGA_ENABLED=true
 OPENFGA_URL=http://openfga:8080
 OPENFGA_STORE_ID=${OPENFGA_STORE_ID}
 OPENFGA_MODEL_ID=${OPENFGA_MODEL_ID}
-```text
+```
 **LLM Providers**:
 ```bash
 ## Anthropic
@@ -244,7 +244,7 @@ GOOGLE_CLOUD_PROJECT=${GCP_PROJECT}
 
 ## Ollama
 OLLAMA_BASE_URL=http://ollama:11434
-```text
+```
 ### Configuration Files
 
 #### .env File Structure
@@ -302,7 +302,7 @@ LLM_MAX_TOKENS=8192
 ENABLE_TRACING=false
 ENABLE_METRICS=false
 LANGSMITH_ENABLED=false
-```text
+```
 #### .env.example Template
 
 Create a template for new developers:
@@ -331,7 +331,7 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 ## Optional: Enable observability
 ENABLE_TRACING=false
 LANGSMITH_ENABLED=false
-```text
+```
 #### .gitignore
 
 **CRITICAL**: Never commit secrets to git:
@@ -344,7 +344,7 @@ LANGSMITH_ENABLED=false
 secrets/
 *.key
 *.pem
-```text
+```
 ### Infisical Integration
 
 #### Centralized Secret Management
@@ -370,7 +370,7 @@ secrets = client.get_all_secrets(
 ## Set environment variables
 for secret in secrets:
     os.environ[secret.secret_name] = secret.secret_value
-```text
+```
 #### Environment-Specific Secrets
 
 **Development**:
@@ -379,7 +379,7 @@ for secret in secrets:
 ANTHROPIC_API_KEY=sk-ant-dev-...
 REDIS_URL=redis://localhost:6379
 KEYCLOAK_URL=http://localhost:8080
-```text
+```
 **Production**:
 ```bash
 ## Infisical: production environment
@@ -388,7 +388,7 @@ REDIS_URL=redis://prod-redis-master:6379
 KEYCLOAK_URL=https://auth.example.com
 REDIS_PASSWORD=<secure-password>
 KEYCLOAK_CLIENT_SECRET=<secure-secret>
-```text
+```
 ### Docker Configuration
 
 #### docker-compose.yml
@@ -443,7 +443,7 @@ volumes:
 networks:
   agent-network:
     driver: bridge
-```text
+```
 #### Multi-Stage Dockerfile
 
 Build once, configure at runtime:
@@ -479,7 +479,7 @@ EXPOSE $PORT
 
 ## Run application
 CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers $WORKERS"]
-```text
+```
 ### Kubernetes Configuration
 
 #### ConfigMaps
@@ -505,7 +505,7 @@ data:
   KEYCLOAK_URL: "http://keycloak:8080"
   REDIS_URL: "redis://redis-master:6379"
   OPENFGA_URL: "http://openfga:8080"
-```text
+```
 #### Secrets
 
 Store sensitive data in Kubernetes Secrets:
@@ -523,7 +523,7 @@ stringData:
   SESSION_SECRET: "your-session-secret"
   REDIS_PASSWORD: "redis-password"
   KEYCLOAK_CLIENT_SECRET: "keycloak-secret"
-```text
+```
 #### External Secrets Operator
 
 Sync from Infisical automatically:
@@ -557,7 +557,7 @@ spec:
   - secretKey: KEYCLOAK_CLIENT_SECRET
     remoteRef:
       key: KEYCLOAK_CLIENT_SECRET
-```text
+```
 #### Deployment with Environment Config
 
 ```yaml
@@ -595,7 +595,7 @@ spec:
         ports:
         - containerPort: 8000
           name: http
-```text
+```
 ### Configuration Validation
 
 #### Pydantic Settings
@@ -667,7 +667,7 @@ class Settings(BaseSettings):
 
 ## Load and validate settings
 settings = Settings()
-```text
+```
 #### Startup Validation
 
 Validate configuration on application startup:
@@ -714,7 +714,7 @@ async def validate_startup_config():
         sys.exit(1)
 
     print("✅ Configuration validated successfully")
-```text
+```
 ### Environment-Specific Features
 
 #### Feature Flags
@@ -759,7 +759,7 @@ features = FeatureFlags(settings.env)
 if features.enable_caching:
     # Use Redis cache
     cache = RedisCache(settings.redis_url)
-```text
+```
 ### Best Practices
 
 <AccordionGroup>
@@ -775,7 +775,7 @@ if features.enable_caching:
     *.key
     *.pem
     config/secrets.yml
-    ```text
+```
     **Use secret scanning**:
     ```bash
     # Install git-secrets

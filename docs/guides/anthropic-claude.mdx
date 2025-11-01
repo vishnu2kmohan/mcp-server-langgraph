@@ -44,7 +44,7 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
     INFISICAL_PROJECT_ID=your-project-id
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-client-secret
-    ```text
+```
     **Using Environment Variables** (Development only):
     ```bash
     # .env
@@ -87,7 +87,7 @@ llm = LLMFactory(
 ## Invoke
 response = await llm.ainvoke("What is machine learning?")
 print(response.content)
-```text
+```
 #### Advanced Configuration
 
 ```python
@@ -115,7 +115,7 @@ llm = ChatAnthropic(
         "anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"
     }
 )
-```text
+```
 #### Model Selection Strategy
 
 ```python
@@ -142,7 +142,7 @@ llm = LLMFactory(
     provider="anthropic",
     model_name=select_claude_model(task_type="code", complexity="high")
 )
-```text
+```
 ### Features
 
 #### Extended Context (200K tokens)
@@ -164,7 +164,7 @@ Document:
 
 response = await llm.ainvoke(prompt)
 print(response.content)
-```text
+```
 #### Tool Use (Function Calling)
 
 ```python
@@ -206,7 +206,7 @@ result = await agent.ainvoke({
 })
 
 print(result["messages"][-1].content)
-```text
+```
 #### Vision (Claude 3.5 Sonnet)
 
 ```python
@@ -237,7 +237,7 @@ message = HumanMessage(
 
 response = await llm.ainvoke([message])
 print(response.content)
-```text
+```
 #### Structured Output
 
 ```python
@@ -271,7 +271,7 @@ print(response.model_dump_json(indent=2))
 ## "suggestions": ["Add type hints", "Add documentation"],
 ## "rating": 6
 ## }
-```text
+```
 #### Streaming
 
 ```python
@@ -290,7 +290,7 @@ async def stream_message(request: MessageRequest):
         stream_response(request.query),
         media_type="text/event-stream"
     )
-```text
+```
 #### System Prompts
 
 ```python
@@ -333,7 +333,7 @@ response = await chain.ainvoke({
 })
 
 print(response.content)
-```text
+```
 ### Production Deployment
 
 #### Kubernetes Configuration
@@ -380,7 +380,7 @@ spec:
           limits:
             cpu: 4000m
             memory: 4Gi
-```text
+```
 #### Rate Limiting
 
 ```python
@@ -404,7 +404,7 @@ async def send_message(request: Request):
 @limiter.limit("100/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```text
+```
 #### Error Handling
 
 ```python
@@ -456,7 +456,7 @@ async def call_with_fallback(query: str):
         # Fallback to another provider
         fallback_llm = LLMFactory(provider="google", model_name="gemini-2.5-flash")
         return await fallback_llm.ainvoke(query)
-```text
+```
 ### Performance Optimization
 
 #### Prompt Caching
@@ -491,7 +491,7 @@ response = client.messages.create(
 
 ## Subsequent requests reuse cached content
 ## (only charged for cache read, not full input tokens)
-```text
+```
 #### Batching
 
 ```python
@@ -513,7 +513,7 @@ async def process_batch(queries: List[str]):
 results = await process_batch(queries)
 for query, response in zip(queries, results):
     print(f"Q: {query}\nA: {response.content}\n")
-```text
+```
 #### Token Management
 
 ```python
@@ -541,7 +541,7 @@ def truncate_to_tokens(text: str, max_tokens: int) -> str:
 ## Use before sending
 query = truncate_to_tokens(long_query, max_tokens=190000)  # Leave room for response
 response = await llm.ainvoke(query)
-```text
+```
 ### Cost Optimization
 
 #### Model Selection
@@ -560,7 +560,7 @@ llm = LLMFactory(
     provider="anthropic",
     model_name=get_optimal_model(analyze_complexity(query))
 )
-```text
+```
 #### Usage Tracking
 
 ```python
@@ -583,7 +583,7 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```text
+```
 #### Budget Limits
 
 ```python
@@ -613,7 +613,7 @@ async def send_message(
     # Call LLM
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
-```text
+```
 ### Monitoring
 
 #### LangSmith Integration
@@ -630,7 +630,7 @@ os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 response = await llm.ainvoke(query)
 
 ## View traces at https://smith.langchain.com
-```text
+```
 #### Custom Metrics
 
 ```python
@@ -695,7 +695,7 @@ async def call_claude_with_metrics(query: str):
         claude_latency.labels(
             model="claude-3-5-sonnet-20241022"
         ).observe(duration)
-```text
+```
 ### Troubleshooting
 
 <AccordionGroup>

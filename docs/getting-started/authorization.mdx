@@ -42,7 +42,7 @@ The default model supports:
 - Tools (agent tools like chat, search)
 - Organizations (multi-tenant support)
 - Documents (context resources)
-```text
+```
 ### Quick Start
 
 <Steps>
@@ -59,7 +59,7 @@ The default model supports:
   <Step title="Initialize Authorization Model">
     ```bash
     python scripts/setup/setup_openfga.py
-    ```text
+```
     This creates:
     - OpenFGA store
     - Authorization model with types and relations
@@ -125,7 +125,7 @@ type document
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor
-```text
+```
 #### Relationship Examples
 
 <Tabs>
@@ -207,7 +207,7 @@ allowed = await client.check_permission(
     object="tool:chat"
 )
 ## Returns: True (alice is admin → member → can execute)
-```text
+```
 #### Hierarchical Permissions
 
 Admins inherit all member permissions:
@@ -230,7 +230,7 @@ allowed = await client.check_permission(
     object="organization:acme"
 )
 ## Returns: True (admin implies member)
-```text
+```
 #### Document Access Control
 
 Fine-grained document permissions:
@@ -256,7 +256,7 @@ await client.write_tuples([{
     "relation": "viewer",
     "object": "document:report-q4"
 }])
-```text
+```
 ### Keycloak Integration 🆕
 
 **NEW in v2.1.0**: Automatic role synchronization from Keycloak to OpenFGA.
@@ -278,7 +278,7 @@ await sync_user_to_openfga(
     roles=user_info['roles'],
     groups=user_info['groups']
 )
-```text
+```
 #### Role Mapping
 
 Configure role mapping in `config/role_mappings.yaml`:
@@ -304,7 +304,7 @@ conditional_mappings:
       operator: ==
       value: true
     relation: member
-```text
+```
 See the [Keycloak SSO Guide](/guides/keycloak-sso) for details.
 
 ### API Operations
@@ -324,7 +324,7 @@ if allowed:
     result = await agent.execute("chat", query)
 else:
     raise PermissionError("Access denied")
-```text
+```
 #### Grant Permission
 
 ```python
@@ -341,7 +341,7 @@ await client.write_tuples([
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
-```text
+```
 #### Revoke Permission
 
 ```python
@@ -355,7 +355,7 @@ await client.delete_tuples([{
 ## Revoke all user permissions for an object
 tuples = await client.read_tuples(object="tool:chat")
 await client.delete_tuples([t for t in tuples if t['user'] == 'user:bob'])
-```text
+```
 #### List User Permissions
 
 ```python
@@ -374,7 +374,7 @@ users = await client.list_users(
     object="tool:chat"
 )
 print(f"Can execute chat: {users}")
-```text
+```
 ### Monitoring & Debugging
 
 #### Enable Authorization Logging
@@ -385,7 +385,7 @@ LOG_LEVEL=DEBUG
 
 ## Kubernetes
 kubectl set env deployment/mcp-server-langgraph LOG_LEVEL=DEBUG
-```text
+```
 #### View Authorization Decisions
 
 Check application logs for authorization events:
@@ -401,7 +401,7 @@ Check application logs for authorization events:
   "allowed": true,
   "latency_ms": 15
 }
-```text
+```
 #### OpenFGA Metrics
 
 Monitor authorization performance:
@@ -415,7 +415,7 @@ histogram_quantile(0.95, openfga_check_duration_seconds_bucket)
 
 ## Authorization failures
 rate(openfga_check_total{allowed="false"}[5m])
-```text
+```
 ### Production Best Practices
 
 <AccordionGroup>
@@ -428,7 +428,7 @@ rate(openfga_check_total{allowed="false"}[5m])
       datastore:
         engine: postgres
         uri: "postgres://openfga:password@postgres:5432/openfga?sslmode=require"
-    ```text
+```
     Deploy PostgreSQL with:
     - Replication for high availability
     - Regular backups
@@ -447,7 +447,7 @@ rate(openfga_check_total{allowed="false"}[5m])
 
     # Production
     OPENFGA_STORE_ID=01HPRD...
-    ```text
+```
     Prevents accidental permission changes across environments.
   </Accordion>
 
@@ -462,7 +462,7 @@ rate(openfga_check_total{allowed="false"}[5m])
       audit:
         enabled: true
         backend: postgres  # Store audit logs
-    ```text
+```
     Monitor for:
     - Unexpected permission grants
     - Failed authorization attempts
@@ -478,7 +478,7 @@ rate(openfga_check_total{allowed="false"}[5m])
 
     # Fail-closed (deny on error) - Production
     FF_OPENFGA_STRICT_MODE=true
-    ```text
+```
     In production, **always fail-closed** to prevent unauthorized access.
   </Accordion>
 
@@ -494,7 +494,7 @@ rate(openfga_check_total{allowed="false"}[5m])
         cache_backend="redis",
         cache_ttl=300
     )
-    ```text
+```
     Balance security (fresh decisions) vs performance (cached).
   </Accordion>
 
@@ -513,7 +513,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     # - Orphaned permissions (deleted users)
     # - Over-privileged users
     # - Unused permissions
-    ```text
+```
     Run monthly or after major changes.
   </Accordion>
 </AccordionGroup>

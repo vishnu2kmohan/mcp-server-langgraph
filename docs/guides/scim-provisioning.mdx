@@ -42,7 +42,7 @@ SCIM (System for Cross-domain Identity Management) enables:
 SCIM_ENABLED=true
 SCIM_BASE_URL=https://api.example.com/scim/v2
 SCIM_AUTHENTICATION=jwt
-```text
+```
 #### 2. Create Service Principal for SCIM
 
 ```bash
@@ -55,7 +55,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
   }'
 
 ## Save the client_secret returned
-```text
+```
 #### 3. Configure External System
 
 Configure your identity provider to use SCIM:
@@ -94,7 +94,7 @@ curl -X POST https://api.example.com/scim/v2/Users \
     }],
     "active": true
   }'
-```text
+```
 **Response**:
 ```json
 {
@@ -133,19 +133,19 @@ curl -X PATCH https://api.example.com/scim/v2/Users/user-uuid-123 \
       }
     ]
   }'
-```text
+```
 #### Deactivate User (DELETE)
 
 ```bash
 curl -X DELETE https://api.example.com/scim/v2/Users/user-uuid-123 \
   -H "Authorization: Bearer JWT_TOKEN"
-```text
+```
 #### Search Users
 
 ```bash
 curl -X GET 'https://api.example.com/scim/v2/Users?filter=userName eq "alice@example.com"' \
   -H "Authorization: Bearer JWT_TOKEN"
-```text
+```
 #### Create Group
 
 ```bash
@@ -159,7 +159,7 @@ curl -X POST https://api.example.com/scim/v2/Groups \
       {"value": "user-uuid-123", "display": "Alice Smith"}
     ]
   }'
-```text
+```
 ### Enterprise User Extension
 
 SCIM supports enterprise-specific attributes:
@@ -184,7 +184,7 @@ SCIM supports enterprise-specific attributes:
     }
   }
 }
-```text
+```
 These map to Keycloak user attributes:
 - `employeeNumber` → `employeeNumber`
 - `department` → `department`
@@ -197,14 +197,14 @@ When users are provisioned via SCIM, roles are automatically synced to OpenFGA:
 ```
 SCIM Create User → Keycloak User Created → Event Listener
   → sync_user_to_openfga() → OpenFGA Tuples
-```text
+```
 Default roles assigned: `["user"]`
 
 Configure in `.env`:
 ```bash
 SCIM_AUTO_SYNC_TO_OPENFGA=true
 SCIM_DEFAULT_ROLES=user,premium  # Comma-separated
-```text
+```
 ### Monitoring
 
 #### Prometheus Metrics
@@ -218,7 +218,7 @@ rate(scim_operations_errors_total[5m])
 
 ## Provisioning latency
 histogram_quantile(0.95, scim_operation_duration_seconds_bucket)
-```text
+```
 #### Audit Logs
 
 All SCIM operations are logged:

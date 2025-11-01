@@ -77,7 +77,7 @@ resources:
     cpu: 1000m      # $35/month
     memory: 2Gi     # $8/month
 ## Per pod: $43/month
-```text
+```
 ```yaml After (Optimized)
 resources:
   requests:
@@ -135,7 +135,7 @@ gcloud scheduler jobs create http scale-down-dev \
 gcloud scheduler jobs create http scale-up-dev \
   --schedule="0 6 * * 1-5" \
   --message-body='{"desiredNodeCount":3}'
-```text
+```
 **Savings**: ~$50-70/month per dev environment
 
 #### Strategy 4: Database Optimization
@@ -146,7 +146,7 @@ gcloud scheduler jobs create http scale-up-dev \
     ```bash
     gcloud sql instances describe mcp-prod-postgres \
       --format="yaml(settings.tier)"
-    ```text
+```
     **If CPU < 50% consistently**, downgrade:
     - db-custom-4-15360 → db-custom-2-7680
     - **Savings**: $140/month (50%)
@@ -158,11 +158,11 @@ gcloud scheduler jobs create http scale-up-dev \
     **Check connections**:
     ```bash
     gcloud sql instances describe mcp-prod-postgres-replica-1
-    ```text
+```
     **If unused**, remove:
     ```hcl
     cloudsql_read_replica_count = 0
-    ```text
+```
     **Savings**: $140/month
   </Accordion>
 
@@ -171,7 +171,7 @@ gcloud scheduler jobs create http scale-up-dev \
     ```hcl
     backup_retention_count         = 14  # vs. 30
     transaction_log_retention_days = 3   # vs. 7
-    ```text
+```
     **Savings**: $5-10/month
   </Accordion>
 </AccordionGroup>
@@ -183,7 +183,7 @@ gcloud scheduler jobs create http scale-up-dev \
 ## Check usage
 gcloud monitoring time-series list \
   --filter='metric.type="redis.googleapis.com/stats/memory/usage_ratio"'
-```text
+```
 **If usage < 60%**, downgrade:
 - 5 GB → 3 GB: **Save $88/month** (40%)
 
@@ -222,7 +222,7 @@ labels = {
   cost_center = "engineering"
   application = "mcp-server"
 }
-```text
+```
 **View costs by label** in BigQuery:
 ```sql
 SELECT
@@ -234,7 +234,7 @@ WHERE
   labels.key = 'team'
 GROUP BY team
 ORDER BY total_cost DESC
-```text
+```
 ---
 
 ### Quick Wins Checklist
@@ -250,7 +250,7 @@ ORDER BY total_cost DESC
     ```bash
     kubectl top pods -n mcp-production --containers
     # Adjust requests based on actual usage
-    ```text
+```
     **Savings**: $50-150/month
   </Step>
 

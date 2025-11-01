@@ -19,7 +19,7 @@ This approach caused several operational and ergonomic issues:
 #### 1. Circular Import Dependency
 
 **Problem**: The import chain created a circular dependency:
-```text
+```
 config.py (line 9)
   → imports secrets/manager.py
       → imports observability/telemetry.py (line 17)
@@ -103,7 +103,7 @@ logger = type('LazyLogger', (), {
 tracer = type('LazyTracer', (), {
     '__getattr__': lambda self, name: getattr(get_tracer(), name)
 })()
-```text
+```
 **Benefits**:
 - Import statements remain unchanged: `from ... import logger`
 - Type checkers see correct types
@@ -122,7 +122,7 @@ def _get_logger():
     except (ImportError, RuntimeError):
         pass
     return logging.getLogger(__name__)  # stdlib fallback
-```text
+```
 **Benefits**:
 - Breaks circular dependency
 - Works during early initialization
@@ -138,7 +138,7 @@ def _setup_logging(self, enable_file_logging: bool = False):
         handlers.extend([rotating_handler, daily_handler, error_handler])
 
     logging.basicConfig(handlers=handlers)
-```text
+```
 **Benefits**:
 - Works in read-only filesystems by default
 - Users opt-in via `enable_file_logging=True`
@@ -201,7 +201,7 @@ from mcp_server_langgraph.observability.telemetry import (
     config,    # Lazy proxy
     metrics,   # Lazy proxy (alias for config)
 )
-```text
+```
 #### Usage Pattern
 
 ```python

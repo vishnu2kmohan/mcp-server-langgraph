@@ -22,7 +22,7 @@ The `langgraph.json` file in your project root defines your deployment configura
   },
   "python_version": "3.11"
 }
-```text
+```
 ### Configuration Options
 
 <ParamField path="dependencies" type="array" required>
@@ -41,7 +41,7 @@ The `langgraph.json` file in your project root defines your deployment configura
     "agent": "./langgraph/agent.py:graph",
     "assistant": "./langgraph/assistant.py:assistant_graph"
   }
-  ```text
+```
   The variable name (after `:`) must be a compiled LangGraph graph.
 </ParamField>
 
@@ -120,7 +120,7 @@ Set environment variables in two ways:
 ## Set secrets (recommended for API keys)
 langsmith secret set ANTHROPIC_API_KEY "your-key"
 langsmith secret set OPENAI_API_KEY "your-key"
-```text
+```
 #### Available at Runtime
 
 Access environment variables in your code:
@@ -130,7 +130,7 @@ import os
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
 model_name = os.environ.get("MODEL_NAME", "claude-3-5-sonnet-20241022")
-```text
+```
 ### Multiple Environments
 
 Create separate deployments for each environment:
@@ -180,7 +180,7 @@ Add custom build commands:
     "RUN pip install --no-cache-dir torch torchvision"
   ]
 }
-```text
+```
 #### Multiple Graphs
 
 Deploy multiple graphs in one deployment:
@@ -193,7 +193,7 @@ Deploy multiple graphs in one deployment:
     "summary": "./langgraph/summary.py:summary_graph"
   }
 }
-```text
+```
 Access via different endpoints:
 - `POST /chat/invoke`
 - `POST /analysis/invoke`
@@ -209,7 +209,7 @@ langgraph dev
 
 ## Verify graph can be imported
 python -c "from langgraph.agent import graph; print(graph)"
-```text
+```
 ### Next Steps
 
 <CardGroup cols={2}>

@@ -46,7 +46,7 @@ Kustomize is built into `kubectl` (version 1.14+), making it a native Kubernetes
 
 ### Directory Structure
 
-```text
+```
 k8s/
 ├── base/                      # Base configurations
 │   ├── kustomization.yaml
@@ -210,7 +210,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mcp-server-langgraph
-```text
+```
 ### Development Overlay
 
 #### overlays/development/kustomization.yaml
@@ -276,7 +276,7 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "250m"
-```text
+```
 ### Staging Overlay
 
 #### overlays/staging/kustomization.yaml
@@ -364,7 +364,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
-```text
+```
 ### Production Overlay
 
 #### overlays/production/kustomization.yaml
@@ -526,7 +526,7 @@ spec:
       port: 53
     - protocol: UDP
       port: 53
-```text
+```
 ### Advanced Techniques
 
 #### JSON Patches
@@ -545,7 +545,7 @@ patchesJson6902:
         value:
           name: CUSTOM_ENV
           value: "production-value"
-```text
+```
 #### Strategic Merge Patch
 
 ```yaml
@@ -564,7 +564,7 @@ spec:
           - "--structured-logs"
           - "--port=5432"
           - "project:region:instance"
-```text
+```
 #### Transformers
 
 ```yaml
@@ -579,14 +579,14 @@ transformers:
     suffix: -v1
     fieldSpecs:
       - path: metadata/name
-```text
+```
 #### Generators
 
 ```yaml
 ## overlays/production/kustomization.yaml
 generators:
   - secret-generator.yaml
-```text
+```
 **secret-generator.yaml**:
 ```yaml
 apiVersion: builtin
@@ -597,7 +597,7 @@ literals:
   - username=admin
   - password=changeme
 type: Opaque
-```text
+```
 ### Multi-Environment Workflow
 
 #### Build and Preview
@@ -611,7 +611,7 @@ kubectl kustomize overlays/staging
 
 ## Production
 kubectl kustomize overlays/production
-```text
+```
 #### Deploy
 
 ```bash
@@ -623,13 +623,13 @@ kubectl apply -k overlays/staging
 
 ## Production
 kubectl apply -k overlays/production
-```text
+```
 #### Delete
 
 ```bash
 ## Delete environment
 kubectl delete -k overlays/staging
-```text
+```
 ### CI/CD Integration
 
 #### GitHub Actions
@@ -662,7 +662,7 @@ jobs:
       - name: Verify deployment
         run: |
           kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```text
+```
 #### GitLab CI
 
 ```yaml
@@ -674,7 +674,7 @@ deploy:production:
     - kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
   only:
     - main
-```text
+```
 ### GitOps with ArgoCD
 
 #### Create Application
@@ -710,7 +710,7 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
-```text
+```
 #### Deploy with ArgoCD
 
 ```bash
@@ -723,7 +723,7 @@ kubectl apply -f argocd-application.yaml
 
 ## Sync application
 argocd app sync mcp-server-langgraph-production
-```text
+```
 ### Best Practices
 
 <AccordionGroup>
@@ -783,7 +783,7 @@ argocd app sync mcp-server-langgraph-production
     ```yaml
     generatorOptions:
       disableNameSuffixHash: false  # Default
-    ```text
+```
     This adds hash suffix to ConfigMap names, triggering pod restarts.
   </Accordion>
 </AccordionGroup>
@@ -832,7 +832,7 @@ argocd app sync mcp-server-langgraph-production
     ```yaml
     generatorOptions:
       disableNameSuffixHash: false
-    ```text
+```
     Or use Reloader:
     ```bash
     helm install reloader stakater/reloader

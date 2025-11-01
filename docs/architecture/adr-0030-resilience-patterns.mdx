@@ -54,7 +54,7 @@ Implement a **comprehensive resilience layer** using four core patterns:
 ```python
 CIRCUIT_BREAKER_FAIL_MAX = 5          # Open after 5 failures
 CIRCUIT_BREAKER_TIMEOUT_DURATION = 60  # Stay open for 60s
-```text
+```
 **Services Protected**:
 - LLM API calls
 - OpenFGA authorization
@@ -112,7 +112,7 @@ stateDiagram-v2
     class Closed closedState
     class Open openState
     class HalfOpen halfOpenState
-```text
+```
 **Circuit Breaker in Action**:
 ```mermaid
 sequenceDiagram
@@ -162,7 +162,7 @@ sequenceDiagram
         CB-->>App: Response
     end
 
-```text
+```
 #### 2. Retry Logic with Exponential Backoff
 
 **Implementation**: Use `tenacity` library for declarative retry policies.
@@ -172,7 +172,7 @@ sequenceDiagram
 RETRY_STOP_AFTER_ATTEMPT = 3
 RETRY_WAIT_EXPONENTIAL_MULTIPLIER = 1  # 1s, 2s, 4s
 RETRY_WAIT_EXPONENTIAL_MAX = 10        # Cap at 10s
-```text
+```
 **Retry Policies**:
 - **Idempotent reads**: Retry up to 3 times (GET, queries)
 - **Idempotent writes**: Retry with idempotency key
@@ -192,7 +192,7 @@ LLM_TIMEOUT = 60      # LLM generation
 AUTH_TIMEOUT = 5      # Auth operations
 DB_TIMEOUT = 10       # Database queries
 HTTP_TIMEOUT = 15     # External HTTP
-```text
+```
 #### 4. Bulkhead Isolation
 
 **Implementation**: Use `asyncio.Semaphore` for resource pool limits.
@@ -203,7 +203,7 @@ LLM_CONCURRENCY_LIMIT = 10      # Max 10 concurrent LLM calls
 OPENFGA_CONCURRENCY_LIMIT = 50  # Max 50 concurrent auth checks
 REDIS_CONCURRENCY_LIMIT = 100   # Max 100 concurrent Redis ops
 DB_CONCURRENCY_LIMIT = 20       # Max 20 concurrent DB queries
-```text
+```
 **Benefits**:
 - Prevent resource exhaustion
 - Isolate failures (LLM slowdown doesn't block auth)
@@ -233,7 +233,7 @@ resilience/
 ├── fallback.py                    # Fallback strategies
 ├── metrics.py                     # Resilience metrics
 └── config.py                      # Configuration
-```text
+```
 #### Decorator-Based API
 
 ```python
@@ -253,7 +253,7 @@ async def check_permission(user: str, resource: str) -> bool:
     async with httpx.AsyncClient() as client:
         response = await client.post(...)
         return response.json()["allowed"]
-```text
+```
 ### Metrics & Observability
 
 #### New Metrics (30+)

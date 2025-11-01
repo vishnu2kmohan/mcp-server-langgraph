@@ -19,7 +19,7 @@ Deploy the MCP Server with LangGraph to Google Cloud Run for fully managed, serv
 ```bash
 cd cloudrun
 ./deploy.sh --setup
-```text
+```
 This automated script will:
 1. Enable required GCP APIs
 2. Create service account
@@ -36,7 +36,7 @@ gcloud run deploy mcp-server-langgraph \
   --source . \
   --region us-central1 \
   --allow-unauthenticated
-```text
+```
 ### Benefits
 
 <CardGroup cols={2}>
@@ -76,7 +76,7 @@ Store API keys securely:
 ## Run interactive setup
 cd cloudrun
 ./setup-secrets.sh
-```text
+```
 Or manually:
 
 ```bash
@@ -84,7 +84,7 @@ Or manually:
 echo -n "your-jwt-secret" | gcloud secrets create jwt-secret-key --data-file=-
 echo -n "sk-ant-..." | gcloud secrets create anthropic-api-key --data-file=-
 echo -n "sk-..." | gcloud secrets create openai-api-key --data-file=-
-```text
+```
 #### Service Configuration
 
 Edit `cloudrun/service.yaml`:
@@ -102,7 +102,7 @@ spec:
           limits:
             cpu: '2'
             memory: 2Gi
-```text
+```
 ### Deployment
 
 #### Initial Deployment
@@ -128,7 +128,7 @@ cd cloudrun
 
 ## Or
 gcloud run deploy mcp-server-langgraph --source .
-```text
+```
 #### Rollback
 
 ```bash
@@ -138,7 +138,7 @@ gcloud run revisions list --service mcp-server-langgraph
 ## Rollback to previous revision
 gcloud run services update-traffic mcp-server-langgraph \
   --to-revisions REVISION_NAME=100
-```text
+```
 ### Monitoring
 
 #### View Logs
@@ -149,7 +149,7 @@ gcloud run services logs tail mcp-server-langgraph --follow
 
 ## View recent logs
 gcloud run services logs read mcp-server-langgraph --limit 100
-```text
+```
 #### Cloud Console
 
 Access metrics in Cloud Console:
@@ -167,7 +167,7 @@ gcloud run services update mcp-server-langgraph \
   --min-instances 1 \
   --max-instances 100 \
   --concurrency 80
-```text
+```
 **Strategies**:
 
 <AccordionGroup>
@@ -175,7 +175,7 @@ gcloud run services update mcp-server-langgraph \
     ```bash
     --min-instances 0
     --cpu-throttling
-    ```text
+```
     - **Pros**: Lowest cost
     - **Cons**: 1-2s cold start
     - **Use**: Dev, low-traffic apps
@@ -185,7 +185,7 @@ gcloud run services update mcp-server-langgraph \
     ```bash
     --min-instances 3
     --no-cpu-throttling
-    ```text
+```
     - **Pros**: No cold starts
     - **Cons**: Higher baseline cost
     - **Use**: Production, latency-sensitive
@@ -195,7 +195,7 @@ gcloud run services update mcp-server-langgraph \
     ```bash
     --min-instances 1
     --max-instances 50
-    ```text
+```
     - **Pros**: Balance cost and latency
     - **Cons**: Some cold starts during spikes
     - **Use**: Most production workloads
@@ -214,7 +214,7 @@ gcloud run services update mcp-server-langgraph \
 ## Or allow only from load balancer
 gcloud run services update mcp-server-langgraph \
   --ingress internal-and-cloud-load-balancing
-```text
+```
 #### VPC Access
 
 Connect to private resources:
@@ -230,7 +230,7 @@ gcloud compute networks vpc-access connectors create mcp-connector \
 gcloud run services update mcp-server-langgraph \
   --vpc-connector mcp-connector \
   --vpc-egress private-ranges-only
-```text
+```
 #### Authentication
 
 ```bash
@@ -242,7 +242,7 @@ gcloud run services update mcp-server-langgraph \
 gcloud run services add-iam-policy-binding mcp-server-langgraph \
   --member="user:alice@example.com" \
   --role="roles/run.invoker"
-```text
+```
 ### Cost Optimization
 
 <Tip>

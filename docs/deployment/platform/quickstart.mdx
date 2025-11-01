@@ -16,14 +16,14 @@ icon: 'rocket'
   <Step title="Login to LangChain">
     ```bash
     langgraph login
-    ```text
+```
     This will prompt for your LangSmith API key. Get it from [smith.langchain.com/settings](https://smith.langchain.com/settings).
   </Step>
 
   <Step title="Deploy">
     ```bash
     langgraph deploy
-    ```text
+```
     Your agent is now live on LangGraph Platform!
   </Step>
 </Steps>
@@ -49,7 +49,7 @@ When you run `langgraph deploy`, the CLI:
 ```bash
 langgraph deployment invoke my-agent \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
-```text
+```
 #### Via HTTP
 
 ```bash
@@ -61,7 +61,7 @@ curl -X POST https://your-deployment.langchain.com/invoke \
       "messages": [{"role": "user", "content": "Hello!"}]
     }
   }'
-```text
+```
 #### Via Python SDK
 
 ```python
@@ -95,7 +95,7 @@ langgraph dev
 ## In another terminal, test
 langgraph deployment invoke --local \
   --input '{"messages": [{"role": "user", "content": "Test"}]}'
-```text
+```
 ### Deployment Commands
 
 <AccordionGroup>

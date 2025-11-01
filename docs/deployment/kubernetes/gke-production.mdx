@@ -128,7 +128,7 @@ This guide provides step-by-step instructions for deploying MCP Server LangGraph
 The production deployment creates a fully managed, highly available infrastructure:
 
 ```mermaid
-graph TB
+flowchart TB
     Internet[Internet Users/APIs]
     LB[Cloud Load Balancer<br/>with Cloud Armor]
     VPC[VPC Network<br/>us-central1]
@@ -162,7 +162,7 @@ graph TB
     GKE --> Data
     GKE -.-> Observability
     Data -.-> Observability
-```text
+```
 ---
 
 ### Phase 1: Infrastructure Setup (30 minutes)
@@ -225,7 +225,7 @@ sed -i "s/bucket = \"mcp-langgraph-terraform-state-us-central1-XXXXX\"/bucket = 
 
 ## Create terraform.tfvars
 cp terraform.tfvars.example terraform.tfvars
-```text
+```
 Edit `terraform.tfvars` with your configuration:
 
 ```hcl
@@ -339,7 +339,7 @@ gcloud secrets versions add mcp-production-secrets \
 
 ## Cleanup
 rm -f /tmp/secrets.json
-```text
+```
 #### Step 2: Install External Secrets Operator
 
 ```bash
@@ -356,7 +356,7 @@ kubectl wait --for=condition=ready pod \
   -l app.kubernetes.io/name=external-secrets \
   -n external-secrets-system \
   --timeout=120s
-```text
+```
 #### Step 3: Deploy Application
 
 ```bash
@@ -395,7 +395,7 @@ Enable image signing to ensure only trusted container images run in your cluster
     ./deployments/security/binary-authorization/setup-binary-auth.sh \
       PROJECT_ID \
       production
-    ```text
+```
     This creates:
     - KMS key for signing
     - Binary Authorization attestor
@@ -438,7 +438,7 @@ Enable image signing to ensure only trusted container images run in your cluster
 ```bash
 ## Create dashboards and alerts
 ./monitoring/gcp/setup-monitoring.sh PROJECT_ID
-```text
+```
 This configures:
 - Custom Cloud Monitoring dashboard
 - Alert policies (CPU, memory, errors, latency)
@@ -478,7 +478,7 @@ kubectl port-forward -n mcp-production \
 curl http://localhost:8000/health/live
 curl http://localhost:8000/health/ready
 curl http://localhost:8000/health/startup
-```text
+```
 ```bash Load Balancer
 SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph \
   -n mcp-production \
@@ -520,7 +520,7 @@ kubectl get sa production-mcp-server-langgraph \
     **Diagnosis**:
     ```bash
     kubectl describe pod POD_NAME -n mcp-production
-    ```text
+```
     **Common causes**:
     1. Resource requests too high (Autopilot provisions automatically but has limits)
     2. Image pull errors (check Workload Identity permissions)
@@ -536,7 +536,7 @@ kubectl get sa production-mcp-server-langgraph \
     **Diagnosis**:
     ```bash
     kubectl logs -n mcp-production POD_NAME -c cloud-sql-proxy
-    ```text
+```
     **Solution**:
     1. Verify private service connection exists
     2. Check Cloud SQL instance is running

@@ -24,7 +24,7 @@ CloudWatch Insights uses a SQL-like query language with piped commands.
 ### Common Queries
 
 #### Find All Errors
-```text
+```
 fields @timestamp, level, message, trace_id, user_id
 | filter level = "ERROR"
 | sort @timestamp desc
@@ -32,7 +32,7 @@ fields @timestamp, level, message, trace_id, user_id
 ```
 
 #### Errors by User
-```text
+```
 fields @timestamp, message, user_id, trace_id
 | filter level = "ERROR"
 | stats count() by user_id
@@ -40,14 +40,14 @@ fields @timestamp, message, user_id, trace_id
 ```
 
 #### Trace-Specific Logs
-```text
+```
 fields @timestamp, level, message, span_id
 | filter trace_id = "0af7651916cd43dd8448eb211c80319c"
 | sort @timestamp asc
 ```
 
 #### Slow Requests (Performance)
-```text
+```
 fields @timestamp, message, duration_ms
 | filter message like /request completed/
 | filter duration_ms > 1000
@@ -55,14 +55,14 @@ fields @timestamp, message, duration_ms
 ```
 
 #### Error Rate Over Time
-```text
+```
 fields @timestamp, level
 | filter level = "ERROR"
 | stats count() as error_count by bin(5m)
 ```
 
 #### Top Error Messages
-```text
+```
 fields message
 | filter level = "ERROR"
 | stats count() as occurrence by message
@@ -81,40 +81,40 @@ GCP uses a custom query language with filters and boolean logic.
 ### Common Queries
 
 #### Find All Errors
-```text
+```
 resource.type="k8s_container"
 logName="projects/YOUR_PROJECT/logs/mcp-server-langgraph"
 severity="ERROR"
 ```
 
 #### Trace-Specific Logs
-```text
+```
 resource.type="k8s_container"
 jsonPayload.trace_id="0af7651916cd43dd8448eb211c80319c"
 ```
 
 #### Errors in Last Hour
-```text
+```
 resource.type="k8s_container"
 severity="ERROR"
 timestamp>="2025-10-15T13:00:00Z"
 ```
 
 #### Search by User ID
-```text
+```
 resource.type="k8s_container"
 jsonPayload.user_id="alice"
 ```
 
 #### Authentication Failures
-```text
+```
 resource.type="k8s_container"
 jsonPayload.message=~"authentication failed"
 severity="WARNING" OR severity="ERROR"
 ```
 
 #### High Memory Usage
-```text
+```
 resource.type="k8s_container"
 jsonPayload.message=~"memory.*exceeded"
 ```
@@ -136,21 +136,21 @@ traces
 | project timestamp, message, customDimensions.trace_id, customDimensions.user_id
 | order by timestamp desc
 | take 100
-```text
+```
 #### Errors by Service
 ```kql
 traces
 | where severityLevel >= 3
 | summarize count() by tostring(customDimensions.service)
 | order by count_ desc
-```text
+```
 #### Trace-Specific Logs
 ```kql
 traces
 | where customDimensions.trace_id == "0af7651916cd43dd8448eb211c80319c"
 | project timestamp, severityLevel, message
 | order by timestamp asc
-```text
+```
 #### Request Duration Analysis
 ```kql
 traces
@@ -158,14 +158,14 @@ traces
 | extend duration_ms = todouble(customDimensions.duration_ms)
 | summarize avg(duration_ms), percentile(duration_ms, 95), percentile(duration_ms, 99) by bin(timestamp, 5m)
 | render timechart
-```text
+```
 #### User Activity Timeline
 ```kql
 traces
 | where customDimensions.user_id == "alice"
 | project timestamp, message, customDimensions.action
 | order by timestamp desc
-```text
+```
 #### Error Rate Trend
 ```kql
 traces
@@ -175,7 +175,7 @@ traces
     by bin(timestamp, 5m)
 | extend error_rate = (errors * 100.0) / total
 | render timechart
-```text
+```
 ---
 
 ## Elasticsearch (Kibana)
@@ -201,7 +201,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
   ],
   "size": 100
 }
-```text
+```
 #### Trace-Specific Logs
 ```json
 {
@@ -214,7 +214,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
     { "timestamp": { "order": "asc" } }
   ]
 }
-```text
+```
 #### Time Range + Level Filter
 ```json
 {
@@ -234,7 +234,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
     }
   }
 }
-```text
+```
 #### Aggregation: Errors by User
 ```json
 {
@@ -251,17 +251,17 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
     }
   }
 }
-```text
+```
 #### Kibana KQL (Discover Tab)
 ```
 level: "ERROR" AND timestamp > now-1h
-```text
+```
 ```
 trace_id: "0af7651916cd43dd8448eb211c80319c"
-```text
+```
 ```
 message: "authentication failed" AND user_id: "alice"
-```text
+```
 ---
 
 ## Datadog
@@ -275,49 +275,49 @@ Datadog uses a custom query syntax with filters and facets.
 #### Find All Errors
 ```
 status:error
-```text
+```
 #### Trace-Specific Logs
 ```
 @trace_id:0af7651916cd43dd8448eb211c80319c
-```text
+```
 #### Errors by Service
 ```
 status:error service:mcp-server-langgraph
-```text
+```
 #### User-Specific Logs
 ```
 @user_id:alice
-```text
+```
 #### Time Range + Error Filter
 ```
 status:error @timestamp:[now-1h TO now]
-```text
+```
 #### Authentication Failures
 ```
 @message:"authentication failed" (status:error OR status:warn)
-```text
+```
 #### High Latency Requests
 ```
 @duration_ms:>1000 @message:"request completed"
-```text
+```
 #### Errors with Stack Traces
 ```
 status:error @exception.stacktrace:*
-```text
+```
 ### Datadog Analytics
 
 #### Error Count by User
 ```
 status:error | count by @user_id
-```text
+```
 #### P95 Request Duration
 ```
 @message:"request completed" | p95(@duration_ms) by @http.route
-```text
+```
 #### Error Rate Over Time
 ```
 status:error | timeseries count()
-```text
+```
 ---
 
 ## Splunk (SPL)
@@ -334,48 +334,48 @@ index=main source="mcp-server-langgraph" level="ERROR"
 | table _time, message, trace_id, user_id
 | sort -_time
 | head 100
-```text
+```
 #### Trace-Specific Logs
 ```spl
 index=main source="mcp-server-langgraph" trace_id="0af7651916cd43dd8448eb211c80319c"
 | sort _time
-```text
+```
 #### Errors by User
 ```spl
 index=main source="mcp-server-langgraph" level="ERROR"
 | stats count by user_id
 | sort -count
-```text
+```
 #### Time Range + Level Filter
 ```spl
 index=main source="mcp-server-langgraph" earliest=-1h level="ERROR"
 | table _time, message, user_id
-```text
+```
 #### Error Rate Over Time
 ```spl
 index=main source="mcp-server-langgraph"
 | timechart span=5m count(eval(level="ERROR")) as errors, count as total
 | eval error_rate=(errors/total)*100
-```text
+```
 #### Top Error Messages
 ```spl
 index=main source="mcp-server-langgraph" level="ERROR"
 | stats count by message
 | sort -count
 | head 10
-```text
+```
 #### Request Duration Statistics
 ```spl
 index=main source="mcp-server-langgraph" message="request completed"
 | stats avg(duration_ms) as avg_duration, p95(duration_ms) as p95_duration, max(duration_ms) as max_duration by http_route
 | sort -p95_duration
-```text
+```
 #### User Activity Timeline
 ```spl
 index=main source="mcp-server-langgraph" user_id="alice"
 | table _time, message, action
 | sort _time
-```text
+```
 ---
 
 ## Common Use Cases
@@ -437,7 +437,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
   <Tab title="GCP">
     ```
     severity="ERROR"
-    ```text
+```
     Then use "Group by" feature in console.
   </Tab>
   <Tab title="Azure">
@@ -573,7 +573,7 @@ fields @timestamp, level, message, trace_id
 | filter @timestamp >= 1697385600000
 | filter @timestamp <= 1697472000000
 | sort @timestamp desc
-```text
+```
 #### Azure (KQL)
 ```kql
 traces
@@ -581,11 +581,11 @@ traces
 | where severityLevel >= 3
 | where timestamp between(datetime(2025-10-15T00:00:00) .. datetime(2025-10-16T00:00:00))
 | project timestamp, message, customDimensions.trace_id
-```text
+```
 #### Datadog
 ```
 @user_id:alice status:error @timestamp:[2025-10-15T00:00:00 TO 2025-10-16T00:00:00]
-```text
+```
 ### Statistical Analysis
 
 **Calculate P95, P99 latency**:
@@ -595,7 +595,7 @@ traces
 fields duration_ms
 | filter message like /request completed/
 | stats avg(duration_ms) as avg, pct(duration_ms, 95) as p95, pct(duration_ms, 99) as p99
-```text
+```
 #### Azure (KQL)
 ```kql
 traces
@@ -605,12 +605,12 @@ traces
     avg(duration),
     percentile(duration, 95),
     percentile(duration, 99)
-```text
+```
 #### Splunk
 ```spl
 message="request completed"
 | stats avg(duration_ms) as avg, p95(duration_ms) as p95, p99(duration_ms) as p99
-```text
+```
 ---
 
 ## Best Practices
@@ -622,7 +622,7 @@ Always query on structured fields (not text search on message):
 ```
 ✅ user_id = "alice"
 ❌ message like /user alice/
-```text
+```
 ### 2. Limit Time Ranges
 
 Always specify time ranges for better performance:
@@ -630,7 +630,7 @@ Always specify time ranges for better performance:
 ```
 ✅ timestamp:[now-1h TO now]
 ❌ No time filter (searches all data)
-```text
+```
 ### 3. Use Trace IDs
 
 For request debugging, always use trace_id:
@@ -638,7 +638,7 @@ For request debugging, always use trace_id:
 ```
 ✅ trace_id = "0af7651916cd43dd..."
 ❌ Searching multiple unrelated fields
-```text
+```
 ### 4. Aggregate When Possible
 
 Use aggregations instead of returning all results:

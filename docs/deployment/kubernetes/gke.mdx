@@ -35,7 +35,7 @@ gcloud services enable \
   secretmanager.googleapis.com \
   cloudkms.googleapis.com \
   servicenetworking.googleapis.com
-```text
+```
 ### Create GKE Cluster
 
 #### Autopilot Cluster (Recommended)
@@ -54,7 +54,7 @@ gcloud container clusters create-auto langgraph-cluster \
 ## Get credentials
 gcloud container clusters get-credentials langgraph-cluster \
   --region=us-central1
-```text
+```
 #### Standard Cluster
 
 For more control over node configuration:
@@ -83,7 +83,7 @@ gcloud container clusters create langgraph-cluster \
 ## Get credentials
 gcloud container clusters get-credentials langgraph-cluster \
   --region=us-central1
-```text
+```
 ### Setup Workload Identity
 
 Workload Identity allows pods to authenticate as Google Cloud service accounts:
@@ -117,7 +117,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 kubectl annotate serviceaccount mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   iam.gke.io/gcp-service-account=mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com
-```text
+```
 ### Cloud SQL for PostgreSQL
 
 #### Create Cloud SQL Instance
@@ -147,7 +147,7 @@ gcloud sql databases create openfga \
 gcloud sql users create keycloak \
   --instance=langgraph-postgres \
   --password=$(openssl rand -base64 32)
-```text
+```
 #### Configure Cloud SQL Proxy
 
 **Option 1: Cloud SQL Auth Proxy Sidecar**
@@ -197,7 +197,7 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-```text
+```
 **Option 2: Private IP (Recommended for Production)**
 
 ```bash
@@ -212,7 +212,7 @@ CLOUDSQL_PRIVATE_IP=$(gcloud sql instances describe langgraph-postgres \
 
 ## Use private IP directly
 KC_DB_URL=jdbc:postgresql://$CLOUDSQL_PRIVATE_IP:5432/keycloak
-```text
+```
 ### Memorystore for Redis
 
 #### Create Redis Instance
@@ -241,7 +241,7 @@ kubectl create secret generic redis-credentials \
   --namespace=mcp-server-langgraph \
   --from-literal=host=$REDIS_HOST \
   --from-literal=password=$REDIS_AUTH
-```text
+```
 #### Configure Application
 
 ```yaml
@@ -267,7 +267,7 @@ spec:
             secretKeyRef:
               name: redis-credentials
               key: password
-```text
+```
 ### Secret Manager Integration
 
 #### Store Secrets in Secret Manager
@@ -286,7 +286,7 @@ echo -n "your-jwt-secret" | gcloud secrets create jwt-secret \
 gcloud secrets add-iam-policy-binding anthropic-api-key \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
-```text
+```
 #### Use External Secrets Operator
 
 ```bash
@@ -341,7 +341,7 @@ spec:
     remoteRef:
       key: jwt-secret
 EOF
-```text
+```
 ### Google Container Registry (GCR)
 
 #### Build and Push Images
@@ -371,7 +371,7 @@ spec:
         image: gcr.io/$PROJECT_ID/mcp-server-langgraph:latest
         imagePullPolicy: Always
 EOF
-```text
+```
 #### Artifact Registry (Recommended)
 
 ```bash
@@ -387,7 +387,7 @@ gcloud auth configure-docker us-central1-docker.pkg.dev
 ## Build and push
 docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest .
 docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
-```text
+```
 ### Load Balancer and Ingress
 
 #### Install NGINX Ingress Controller
@@ -401,7 +401,7 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
   --create-namespace \
   --set controller.service.type=LoadBalancer
-```text
+```
 #### Configure Ingress
 
 ```yaml
@@ -431,7 +431,7 @@ spec:
             name: mcp-server-langgraph
             port:
               number: 8000
-```text
+```
 #### Google Cloud Load Balancer
 
 For GCP-native load balancing:
@@ -471,7 +471,7 @@ spec:
     drainingTimeoutSec: 60
   cdn:
     enabled: false
-```text
+```
 ### Monitoring with Cloud Operations
 
 #### Enable Google Cloud Monitoring
@@ -481,7 +481,7 @@ spec:
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
 
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/operator.yaml
-```text
+```
 #### Configure Pod Monitoring
 
 ```yaml
@@ -497,7 +497,7 @@ spec:
   endpoints:
   - port: metrics
     interval: 30s
-```text
+```
 #### Cloud Logging
 
 Configure structured logging to Cloud Logging:
@@ -523,7 +523,7 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     logger_factory=structlog.stdlib.LoggerFactory(),
 )
-```text
+```
 ### Auto-Scaling
 
 #### Horizontal Pod Autoscaler
@@ -571,7 +571,7 @@ spec:
         value: 5
         periodSeconds: 60
       selectPolicy: Max
-```text
+```
 #### Cluster Autoscaler
 
 GKE Autopilot handles node scaling automatically. For Standard clusters:
@@ -583,7 +583,7 @@ gcloud container clusters update langgraph-cluster \
   --min-nodes=3 \
   --max-nodes=20 \
   --region=us-central1
-```text
+```
 ### Complete Deployment
 
 ```bash
@@ -612,7 +612,7 @@ helm install mcp-server-langgraph ./helm/mcp-server-langgraph \
 kubectl get pods -n mcp-server-langgraph
 kubectl get svc -n mcp-server-langgraph
 kubectl get ingress -n mcp-server-langgraph
-```text
+```
 ### Cost Optimization
 
 <AccordionGroup>
@@ -635,7 +635,7 @@ kubectl get ingress -n mcp-server-langgraph
       --preemptible \
       --num-nodes=3 \
       --machine-type=n2-standard-4
-    ```text
+```
     Use node affinity to schedule on preemptible nodes:
     ```yaml
     affinity:

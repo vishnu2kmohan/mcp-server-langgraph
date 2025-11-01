@@ -11,7 +11,7 @@ MCP Server with LangGraph is a production-ready, multi-layered architecture desi
 ### High-Level Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph Client_Layer["Client Layer"]
         WebApp[Web Application]
         CLI[CLI Tools]
@@ -128,7 +128,7 @@ graph TB
     class OTel obsStyle
     class Jaeger,Prometheus obsStyle
     class LangSmith langsmithStyle
-```text
+```
 ### Core Components
 
 #### MCP Server
@@ -172,7 +172,7 @@ START → authenticate → authorize → execute_tool → END
           unauthorized  forbidden   tool_error
                 ↓           ↓            ↓
                END         END       retry/END
-```text
+```
 **Components**:
 
 <Tabs>
@@ -186,7 +186,7 @@ START → authenticate → authorize → execute_tool → END
         authorized: bool
         context: Dict[str, Any]
         tool_results: List[Any]
-    ```text
+```
     **Features**:
     - Immutable state transitions
     - Type validation
@@ -202,7 +202,7 @@ START → authenticate → authorize → execute_tool → END
         "search": search_tool,
         # Add custom tools
     }
-    ```text
+```
     **Authorization**:
     - Per-tool permission checks
     - OpenFGA relationship validation
@@ -244,7 +244,7 @@ sequenceDiagram
     AuthMiddleware->>SessionStore: create_session()
     SessionStore-->>AuthMiddleware: Session ID
     AuthMiddleware-->>Client: Set-Cookie: session_id
-```text
+```
 **Providers**:
 
 <AccordionGroup>
@@ -308,7 +308,7 @@ sequenceDiagram
 **Fine-grained, relationship-based** access control with OpenFGA.
 
 ```mermaid
-graph LR
+flowchart LR
     User[User: alice] -->|admin| Org[Org: acme]
     Org -->|member| Tool1[Tool: chat]
     Org -->|member| Tool2[Tool: search]
@@ -319,7 +319,7 @@ graph LR
     style Org fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
     style Tool1 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
     style Tool2 fill:#bebada,stroke:#8e7cc3,stroke-width:2px,color:#333
-```text
+```
 **Authorization Model**:
 
 ```typescript
@@ -335,7 +335,7 @@ type tool
     define owner: [user]
     define executor: [user, organization#member]
     define viewer: [user, organization#member]
-```text
+```
 **Features**:
 - Relationship-based permissions
 - Hierarchical roles (admin → member → viewer)
@@ -354,7 +354,7 @@ type tool
 <Tabs>
   <Tab title="Architecture">
     ```mermaid
-    graph LR
+    flowchart LR
         App[Application] --> SM[SessionManager]
         SM --> Memory[InMemory Store]
         SM --> Redis[Redis Store]
@@ -372,7 +372,7 @@ type tool
         class Memory storeStyle
         class Redis redisStyle
         class Master,Replica redisStyle
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Features">
@@ -413,7 +413,7 @@ type tool
 **Multi-LLM routing** via LiteLLM with automatic fallback.
 
 ```mermaid
-graph TB
+flowchart TB
     Agent[LangGraph Agent] --> LLMFactory[LLM Factory]
     LLMFactory --> LiteLLM[LiteLLM Router]
 
@@ -439,7 +439,7 @@ graph TB
     class LLMFactory,LiteLLM routerStyle
     class Primary,Claude primaryStyle
     class Fallback1,Gemini,Fallback2,GPT fallbackStyle
-```text
+```
 **Supported Providers** (100+):
 - **Cloud**: Anthropic, OpenAI, Google, Azure, AWS Bedrock
 - **Open Source**: Ollama (Llama, Mistral, Qwen, DeepSeek)
@@ -458,7 +458,7 @@ LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ENABLE_FALLBACK=true
 FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
-```text
+```
 **Code Location**: `src/mcp_server_langgraph/llm_factory.py`
 
 ---
@@ -472,7 +472,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     **Distributed tracing and metrics**
 
     ```mermaid
-    graph LR
+    flowchart LR
         App[Application] --> Exporter[OTLP Exporter]
         Exporter --> Collector[OTel Collector]
         Collector --> Jaeger[Jaeger UI]
@@ -489,7 +489,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
         class Exporter exporterStyle
         class Collector collectorStyle
         class Jaeger,Prometheus,Grafana backendStyle
-    ```text
+```
     **Traces**:
     - End-to-end request flow
     - LLM call timing
@@ -630,7 +630,7 @@ sequenceDiagram
     MCP->>Auth: Refresh session (if sliding)
     MCP->>OTel: End trace
     MCP-->>Client: Response + trace_id
-```text
+```
 #### Authentication Flow (Keycloak SSO)
 
 ```mermaid
@@ -654,7 +654,7 @@ sequenceDiagram
     App->>FGA: Sync roles to OpenFGA
     App->>Redis: Create session
     App-->>User: Set session cookie
-```text
+```
 ---
 
 ### Deployment Architectures
@@ -662,7 +662,7 @@ sequenceDiagram
 #### Development (Docker Compose)
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph Docker_Host["Docker Host"]
         Agent[Agent Container]
         KC[Keycloak Container]
@@ -697,7 +697,7 @@ graph TB
     class PG dataStyle
     class Jaeger tracingStyle
     class Prom metricsStyle
-```text
+```
 **Command**: `docker compose up`
 
 ---
@@ -705,7 +705,7 @@ graph TB
 #### Production (Kubernetes)
 
 ```mermaid
-graph TB
+flowchart TB
     Internet[Internet]
 
     subgraph Kubernetes_Cluster["Kubernetes Cluster"]

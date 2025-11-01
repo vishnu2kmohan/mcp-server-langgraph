@@ -37,7 +37,7 @@ sequenceDiagram
     App->>FGA: Sync roles/groups
     FGA-->>App: Permissions stored
     App-->>User: Authenticated response
-```text
+```
 ### Quick Start
 
 <Steps>
@@ -58,10 +58,10 @@ sequenceDiagram
           ports:
             - "8080:8080"
           command: start-dev
-        ```text
+```
         ```bash
         docker compose up -d keycloak
-        ```text
+```
         Access: http://localhost:8080/admin (admin/admin)
       </Tab>
 
@@ -81,7 +81,7 @@ sequenceDiagram
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
           deployment/keycloak -n mcp-server-langgraph
-        ```text
+```
         Access via ingress or port-forward:
         ```bash
         kubectl port-forward svc/keycloak 8080:80 -n mcp-server-langgraph
@@ -106,7 +106,7 @@ sequenceDiagram
 
     # Save the client secret from output
     KEYCLOAK_CLIENT_SECRET=abc123...
-    ```text
+```
     This script creates:
     - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
@@ -248,7 +248,7 @@ const tokens = await fetch('https://sso.yourdomain.com/realms/mcp-server-langgra
 });
 
 const { access_token, refresh_token, expires_in } = await tokens.json();
-```text
+```
 #### Direct Grant Flow (Testing Only)
 
 For testing or CLI applications:
@@ -281,7 +281,7 @@ new_tokens = await client.refresh_token(refresh_token)
 
 new_access_token = new_tokens['access_token']
 new_refresh_token = new_tokens['refresh_token']  # Rotated!
-```text
+```
 ### Role Mapping to OpenFGA
 
 **NEW v2.1.0**: Automatic synchronization of Keycloak roles/groups to OpenFGA.
@@ -318,7 +318,7 @@ hierarchies:
     children: [member, viewer]
   - parent: member
     children: [viewer]
-```text
+```
 #### Automatic Sync
 
 When user authenticates, roles are synced to OpenFGA:
@@ -337,7 +337,7 @@ await sync_user_to_openfga(
     groups=user_info.get('groups', []),
     email_verified=user_info.get('email_verified', False)
 )
-```text
+```
 #### Manual Sync
 
 Trigger sync for existing users:
@@ -360,7 +360,7 @@ for user in users:
         roles=user.get('roles', []),
         groups=user.get('groups', [])
     )
-```text
+```
 ### Production Deployment
 
 #### High Availability
@@ -391,7 +391,7 @@ postgresql:
     persistence:
       enabled: true
       size: 10Gi
-```text
+```
 #### SSL/TLS
 
 **Always use HTTPS in production:**
@@ -411,12 +411,12 @@ ingress:
     - secretName: keycloak-tls
       hosts:
         - sso.yourdomain.com
-```text
+```
 Configure app:
 ```bash
 KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
 KEYCLOAK_VERIFY_SSL=true  # REQUIRED!
-```text
+```
 #### Performance Tuning
 
 ```yaml
@@ -444,7 +444,7 @@ postgresql:
     extendedConfiguration: |
       max_connections = 200
       shared_buffers = 256MB
-```text
+```
 #### Backup & Recovery
 
 ```bash
@@ -457,7 +457,7 @@ kubectl exec -n mcp-server-langgraph \
 kubectl exec -i -n mcp-server-langgraph \
   $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U keycloak keycloak < keycloak-backup.sql
-```text
+```
 ### Monitoring
 
 #### Health Checks
@@ -471,7 +471,7 @@ curl https://sso.yourdomain.com/health/ready
 
 ## Liveness
 curl https://sso.yourdomain.com/health/live
-```text
+```
 #### Metrics
 
 Keycloak exposes Prometheus metrics:
@@ -489,7 +489,7 @@ spec:
   endpoints:
     - port: http
       path: /metrics
-```text
+```
 Key metrics:
 ```promql
 ## Login rate
@@ -503,7 +503,7 @@ rate(keycloak_tokens_created_total[5m])
 
 ## Active sessions
 keycloak_sessions_active
-```text
+```
 #### Logging
 
 Configure structured logging:
@@ -514,7 +514,7 @@ extraEnv:
     value: "info"
   - name: KC_LOG_CONSOLE_FORMAT
     value: "json"
-```text
+```
 ### Troubleshooting
 
 <AccordionGroup>

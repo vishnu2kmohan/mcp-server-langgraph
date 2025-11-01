@@ -42,7 +42,7 @@ Implement a **multi-layer caching strategy** with three distinct layers:
 #### Cache Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     Request[API Request] --> L1[L1: In-Memory LRU Cache<br/>~10ms<br/>local, per-instance]
     L1 -->|Cache miss| L2[L2: Redis Distributed Cache<br/>~50ms<br/>shared, cross-instance]
     L2 -->|Cache miss| L3[L3: Provider-Native Cache<br/>~200ms<br/>Anthropic, Gemini prompts]
@@ -64,11 +64,11 @@ graph TB
     class L2 l2Style
     class L3 l3Style
     class External externalStyle
-```text
+```
 #### Multi-Layer Caching Flow
 
 ```mermaid
-graph TB
+flowchart TB
     Request[API Request] --> L1{L1: In-Memory<br/>LRU Cache}
 
     L1 -->|Hit ~5ms| L1Hit[Return from L1<br/>Authorization results<br/>User profiles]
@@ -95,7 +95,7 @@ graph TB
     style L2Hit fill:#fff3cd,stroke:#ffc107,stroke-width:2px
     style L3Hit fill:#f8d7da,stroke:#dc3545,stroke-width:2px
     style Response fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-```text
+```
 **Cache Lookup Sequence with Fallback**:
 ```mermaid
 sequenceDiagram
@@ -148,7 +148,7 @@ sequenceDiagram
 
     App-->>Client: Response (5ms) ✓<br/>400x faster
 
-```text
+```
 #### Layer 1: In-Memory LRU Cache
 
 **Use Case**: Frequently accessed, small data (< 1MB per entry)
@@ -160,7 +160,7 @@ sequenceDiagram
 L1_CACHE_SIZE = 1000        # Max entries
 L1_CACHE_TTL = 60           # 1 minute
 L1_CACHE_MAXSIZE_MB = 100   # Max memory usage
-```text
+```
 **What to Cache**:
 - OpenFGA authorization results
 - User profile lookups
@@ -174,7 +174,7 @@ from functools import lru_cache
 @lru_cache(maxsize=1000)
 def check_permission_cached(user: str, resource: str, action: str) -> bool:
     return openfga_client.check(user, resource, action)
-```text
+```
 #### Layer 2: Redis Distributed Cache
 
 **Use Case**: Shared across instances, larger data, longer TTL
@@ -186,7 +186,7 @@ def check_permission_cached(user: str, resource: str, action: str) -> bool:
 L2_CACHE_REDIS_URL = "redis://localhost:6379/2"  # DB 2 for cache
 L2_CACHE_DEFAULT_TTL = 300   # 5 minutes
 L2_CACHE_MAX_SIZE_MB = 1000  # 1GB cache limit
-```text
+```
 **What to Cache**:
 - LLM responses (with semantic similarity)
 - Embedding vectors
@@ -205,7 +205,7 @@ async def get_llm_response_cached(prompt: str) -> str:
     response = await llm_client.generate(prompt)
     cache_set(cache_key, response, ttl=300)
     return response
-```text
+```
 #### Layer 3: Provider-Native Caching
 
 **Use Case**: Leverage provider-specific caching features
@@ -224,7 +224,7 @@ response = anthropic.messages.create(
     messages=[...]
 )
 ## Saves 90% on input tokens for repeated system prompts
-```text
+```
 ##### Google Gemini Caching
 
 ```python
@@ -235,14 +235,14 @@ cached_content = caching.CachedContent.create(
     system_instruction="You are an AI assistant...",
     ttl=datetime.timedelta(minutes=5)
 )
-```text
+```
 ### Cache Key Design
 
 #### Hierarchical Format
 
 ```
 <namespace>:<entity>:<identifier>:<version>
-```text
+```
 #### Examples
 
 ```python
@@ -254,7 +254,7 @@ cached_content = caching.CachedContent.create(
 
 ## Embedding cache
 "embedding:text:hash:xyz789:model:all-minilm-l6-v2:v1"
-```text
+```
 #### Best Practices
 
 <Check>Include version suffix (`:v1`) for cache invalidation</Check>
@@ -296,7 +296,7 @@ async def update_user_profile(user_id: str, updates: dict):
     ]
     for key in cache_keys:
         redis_client.delete(key)
-```text
+```
 #### Cache Stampede Prevention
 
 ```python
@@ -314,7 +314,7 @@ async def get_with_lock(key: str, fetcher: Callable, ttl: int):
         value = await fetcher()
         cache_set(key, value, ttl)
         return value
-```text
+```
 ### Implementation
 
 #### New Module: `core/cache.py`
@@ -349,7 +349,7 @@ class CacheService:
                 return value
 
         return None
-```text
+```
 #### Usage with Decorator
 
 ```python
@@ -358,7 +358,7 @@ from mcp_server_langgraph.core.cache import cached
 @cached(key_prefix="llm:response", ttl=3600)
 async def get_llm_response(prompt: str) -> str:
     return await llm_client.generate(prompt)
-```text
+```
 ### Configuration
 
 #### Environment Variables
@@ -374,7 +374,7 @@ CACHE_L2_MAX_SIZE_MB=1000
 ## Provider Caching
 ANTHROPIC_ENABLE_PROMPT_CACHING=true
 GEMINI_ENABLE_CONTEXT_CACHING=true
-```text
+```
 ### Metrics & Observability
 
 #### New Metrics

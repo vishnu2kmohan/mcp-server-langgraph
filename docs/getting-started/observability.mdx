@@ -15,7 +15,7 @@ Comprehensive observability with **dual backends** - OpenTelemetry for distribut
 ### Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     App[MCP Server] --> OTel[OpenTelemetry SDK]
     App --> LS[LangSmith SDK]
 
@@ -43,7 +43,7 @@ graph TB
     class Exporter,Collector collectorStyle
     class Jaeger,Prometheus,LSCloud backendStyle
     class Grafana,Dashboard1,Dashboard2 dashStyle
-```text
+```
 ### Quick Start
 
 <Steps>
@@ -116,7 +116,7 @@ Trace: POST /message
 │  │  │  └─ Span: litellm_completion
 │  │  └─ Span: tool_execution
 │  └─ Span: refresh_session
-```text
+```
 #### Trace Attributes
 
 Each span includes rich metadata:
@@ -181,7 +181,7 @@ def my_function():
         result = do_work()
         span.set_attribute("result.count", len(result))
         return result
-```text
+```
 ### Metrics
 
 #### Available Metrics
@@ -300,7 +300,7 @@ active_gauge = meter.create_up_down_counter(
     unit="1"
 )
 active_gauge.add(1)
-```text
+```
 ### Prometheus Configuration
 
 #### Scraping
@@ -315,7 +315,7 @@ scrape_configs:
     static_configs:
       - targets: ['mcp-server-langgraph:8000']
     metrics_path: '/metrics/prometheus'
-```text
+```
 #### Alerting Rules
 
 ```yaml
@@ -348,7 +348,7 @@ groups:
         for: 1m
         annotations:
           summary: "Authentication failure spike"
-```text
+```
 ### Grafana Dashboards
 
 #### Import Dashboards
@@ -363,7 +363,7 @@ kubectl create configmap grafana-dashboards \
 kubectl label configmap grafana-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
-```text
+```
 #### Key Panels
 
 <Tabs>
@@ -474,7 +474,7 @@ def custom_function(input_data):
     # Automatically traced to LangSmith
     result = process(input_data)
     return result
-```text
+```
 ### Logging
 
 #### Structured Logging
@@ -496,7 +496,7 @@ All logs are JSON-formatted with trace context:
   "latency_ms": 1245,
   "status": "success"
 }
-```text
+```
 #### Log Aggregation
 
 <Tabs>
@@ -555,7 +555,7 @@ All logs are JSON-formatted with trace context:
   volumeMounts:
     - name: otel-config
       mountPath: /conf
-```text
+```
 #### Sampling
 
 Configure trace sampling for high-traffic:
@@ -567,7 +567,7 @@ TRACE_SAMPLE_RATE = 0.1  # Sample 10% of traces
 ## telemetry.py
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
-```text
+```
 #### Data Retention
 
 ```yaml
@@ -581,7 +581,7 @@ sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
 ## Prometheus retention
 --storage.tsdb.retention.time=30d
 --storage.tsdb.retention.size=50GB
-```text
+```
 ### Troubleshooting
 
 <AccordionGroup>

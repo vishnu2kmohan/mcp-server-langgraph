@@ -49,7 +49,7 @@ Implement a **Hybrid Session Model** where standard users use stateless JWTs wit
 #### Hybrid Session Architecture Comparison
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph "Mode 1: Stateless JWT (Interactive Users)"
         U1[User: alice] --> KC1[Keycloak Login]
         KC1 --> JWT1[Access Token: 15 min<br/>Refresh Token: 30 min]
@@ -91,7 +91,7 @@ graph TB
     style NoSession1 fill:#f0f0f0,stroke:#999,stroke-dasharray: 5 5
     style JWT1 fill:#ffffb3,stroke:#f39c12,stroke-width:2px
     style JWT2 fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-```text
+```
 #### Session Lifecycle Flow
 
 ```mermaid
@@ -138,7 +138,7 @@ sequenceDiagram
 
     Note over Redis: Automatic cleanup after 30 days of inactivity
 
-```text
+```
 #### Core Principles
 
 1. **JWT First**: Always use JWTs for authentication (not opaque session IDs)
@@ -165,7 +165,7 @@ SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in <5 min
 
 ## User Sessions (optional)
 USER_SESSION_TTL=86400  # 24 hours if enabled
-```text
+```
 ### Consequences
 
 #### Positive Consequences
@@ -208,7 +208,7 @@ class ServicePrincipalSession:
     last_accessed: str
     expires_at: str  # 30 days from last activity
     metadata: Dict[str, Any]
-```text
+```
 **Session Manager** (`src/mcp_server_langgraph/auth/session.py`):
 ```python
 class RedisSessionStore:
@@ -227,7 +227,7 @@ class RedisSessionStore:
             session.access_token = new_tokens["access_token"]
             session.refresh_token = new_tokens["refresh_token"]
             await self.update_session(session)
-```text
+```
 **Middleware** (`src/mcp_server_langgraph/auth/middleware.py`):
 ```python
 async def get_current_user(request: Request):

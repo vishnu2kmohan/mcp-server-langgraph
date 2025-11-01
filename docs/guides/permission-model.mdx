@@ -22,7 +22,7 @@ type organization
   relations
     define admin: [user]
     define member: [user] or admin
-```text
+```
 #### Key Concepts
 
 <CardGroup cols={3}>
@@ -74,7 +74,7 @@ type document
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner
-```text
+```
 **Supported Patterns**:
 - Hierarchical roles (admin → member → viewer)
 - Organization-based access (organization#member)
@@ -107,7 +107,7 @@ type task
     define project: [project]
     define assignee: [user]
     define viewer: [user] from project
-```text
+```
 **Usage**:
 ```python
 ## Team lead creates project
@@ -123,7 +123,7 @@ allowed = await client.check_permission(
     object="project:webapp"
 )
 ## Returns: True
-```text
+```
 #### Example: Multi-Tenant SaaS
 
 ```typescript
@@ -149,7 +149,7 @@ type resource
     define owner: [user]
     define editor: [user, workspace#member]
     define viewer: [user] or editor
-```text
+```
 **Isolation**:
 ```python
 ## Tenant A admin
@@ -165,7 +165,7 @@ allowed = await client.check_permission(
     object="workspace:ws1"
 )
 ## Returns: True
-```text
+```
 #### Example: Content Management
 
 ```typescript
@@ -187,7 +187,7 @@ type file
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner or viewer from parent
-```text
+```
 **Inheritance**:
 ```python
 ## Set folder permissions
@@ -203,42 +203,42 @@ allowed = await client.check_permission(
     object="file:report.pdf"
 )
 ## Returns: True
-```text
+```
 ### Relation Operators
 
 #### Direct Assignment
 
 ```typescript
 define admin: [user]
-```text
+```
 Users directly assigned admin relation.
 
 #### Union (OR)
 
 ```typescript
 define member: [user] or admin
-```text
+```
 User is member OR admin.
 
 #### Intersection (AND)
 
 ```typescript
 define can_delete: admin and owner
-```text
+```
 User must be admin AND owner.
 
 #### Exclusion (BUT NOT)
 
 ```typescript
 define active_member: member but not suspended
-```text
+```
 User is member but not suspended.
 
 #### Computed Relations
 
 ```typescript
 define viewer: [user] or viewer from parent
-```text
+```
 User is viewer OR inherits from parent.
 
 ### Conditional Permissions
@@ -259,7 +259,7 @@ type document
 condition time_limited_access(current_time: timestamp, expiry: timestamp) {
   current_time < expiry
 }
-```text
+```
 **Usage**:
 ```python
 ## Check with context
@@ -272,7 +272,7 @@ allowed = await client.check_permission(
         "expiry": "2025-10-13T10:00:00Z"
     }
 )
-```text
+```
 ### Testing Models
 
 #### Model Validation
@@ -284,7 +284,7 @@ fga model validate --file model.fga
 ## Or via API
 curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
   -d @model.json
-```text
+```
 #### Test Assertions
 
 ```python
@@ -344,7 +344,7 @@ AUTHORIZATION_MODEL = {
 ## Write model
 response = await client.write_authorization_model(AUTHORIZATION_MODEL)
 model_id = response["authorization_model_id"]
-```text
+```
 #### Via API
 
 ```bash
@@ -354,7 +354,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     "schema_version": "1.1",
     "type_definitions": [...]
   }'
-```text
+```
 ### Best Practices
 
 <AccordionGroup>
@@ -367,7 +367,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
       relations
         define owner: [user]
         define viewer: [user]
-    ```text
+```
     **Too Complex**:
     ```typescript
     type document
@@ -396,7 +396,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     **Good** (2 hops):
     ```typescript
     define viewer: [user] or viewer from parent
-    ```text
+```
     **Bad** (5+ hops):
     ```typescript
     define viewer: [user] or viewer from parent from grandparent from workspace from tenant
@@ -444,7 +444,7 @@ for user_id in range(100):
         "relation": "viewer",
         "object": "document:report"
     }])
-```text
+```
 **Good** (1 tuple):
 ```python
 await client.write_tuples([{
@@ -452,7 +452,7 @@ await client.write_tuples([{
     "relation": "viewer",
     "object": "document:report"
 }])
-```text
+```
 #### Add Indexes
 
 For PostgreSQL backend, add indexes on frequently queried fields.
@@ -464,7 +464,7 @@ client = OpenFGAClient(
     cache_ttl=300,  # 5 minutes
     cache_backend="redis"
 )
-```text
+```
 ### Migration Guide
 
 #### Adding New Types

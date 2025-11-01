@@ -41,7 +41,7 @@ We will implement a **multi-stage CI/CD pipeline** using GitHub Actions with the
 #### Pipeline Architecture
 
 ```mermaid
-graph TD
+flowchart TD
     PR[PR Checks<br/>on pull_request<br/><br/>• Lint Black, isort, flake8<br/>• Type Check mypy<br/>• Unit Tests pytest]
 
     PR -->|PR approved + merged| CI[CI Pipeline<br/>on push to main<br/><br/>• Lint & Type Check<br/>• Unit Tests all markers<br/>• Integration Tests<br/>• Property Tests Hypothesis<br/>• Contract Tests MCP schema<br/>• Build Docker Image<br/>• Deployment Validation]
@@ -63,7 +63,7 @@ graph TD
     class Quality qualityStyle
     class Security securityStyle
     class Release releaseStyle
-```text
+```
 ### Consequences
 
 #### Positive Consequences
@@ -127,7 +127,7 @@ jobs:
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3
-```text
+```
 **Duration**: ~5 minutes
 
 **Fail Fast**: Yes (blocks PR merge if fails)
@@ -175,7 +175,7 @@ jobs:
 
       - name: Validate Kustomize overlays
         run: kustomize build deployments/kustomize/overlays/production
-```text
+```
 **Duration**: ~15 minutes
 
 **Artifacts**: Docker image (tagged with git SHA)
@@ -226,7 +226,7 @@ jobs:
 
       - name: Detect breaking changes
         run: oasdiff breaking openapi-previous.json openapi.json
-```text
+```
 **Duration**: ~60-90 minutes (mutation testing is slow)
 
 **Frequency**: Nightly (1:00 AM UTC)
@@ -275,7 +275,7 @@ jobs:
           image-ref: test-image
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
-```text
+```
 **Duration**: ~10 minutes
 
 **Frequency**: Daily (2:00 AM UTC)
@@ -319,7 +319,7 @@ jobs:
             --title "Release ${{ env.VERSION }}" \
             --notes-file RELEASE_NOTES.md \
             --verify-tag
-```text
+```
 **Duration**: ~8 minutes
 
 **Artifacts**:
@@ -343,7 +343,7 @@ jobs:
           stale-issue-message: 'This issue is stale. Please update or it will be closed.'
           days-before-stale: 60
           days-before-close: 14
-```text
+```
 ### Testing Strategy Matrix
 
 | Test Type | Frequency | Duration | Coverage | Purpose |
@@ -381,7 +381,7 @@ done
 kind create cluster --name test-cluster
 kubectl apply -f deployments/kubernetes/
 kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
-```text
+```
 #### Docker Build Validation
 
 ```yaml
@@ -398,7 +398,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
   run: |
     docker run --rm test-image:latest mcp-server-langgraph --version
     docker run --rm test-image:latest mcp-server-langgraph-http --help
-```text
+```
 ### Alternatives Considered
 
 #### 1. Jenkins
@@ -514,7 +514,7 @@ jobs:
     runs-on: ubuntu-latest
   unit-tests:
     needs: lint  # Only run tests if lint passes
-```text
+```
 #### 2. Matrix Testing
 ```yaml
 ## Test multiple Python versions
@@ -522,7 +522,7 @@ strategy:
   matrix:
     python-version: ['3.10', '3.11', '3.12']
     os: [ubuntu-latest, macos-latest]
-```text
+```
 #### 3. Caching
 ```yaml
 ## Cache dependencies to speed up runs
@@ -530,7 +530,7 @@ strategy:
   with:
     path: ~/.cache/pip
     key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
-```text
+```
 #### 4. Conditional Workflows
 ```yaml
 ## Skip expensive tests on docs-only changes
@@ -539,7 +539,7 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-```text
+```
 #### 5. Secure Secrets
 ```yaml
 ## Use GitHub Secrets for sensitive data

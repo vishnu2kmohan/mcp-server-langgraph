@@ -41,7 +41,7 @@ Implement a **hybrid rate limiting strategy** with two layers:
 #### Rate Limiting Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     Client[Client Request] --> Kong[Kong Gateway<br/>Layer 2: Gateway Rate Limiting]
 
     subgraph "Kong Rate Limiting"
@@ -75,7 +75,7 @@ graph TB
     style Kong429 fill:#d35400,stroke:#c0392b,stroke-width:2px
     style App429 fill:#d35400,stroke:#c0392b,stroke-width:2px
     style Handler fill:#ffffb3,stroke:#f39c12,stroke-width:2px
-```text
+```
 **Rate Limiting Flow with Token Bucket**:
 ```mermaid
 sequenceDiagram
@@ -121,7 +121,7 @@ sequenceDiagram
         end
     end
 
-```text
+```
 #### Layer 1: Application-Level Rate Limiting (Immediate)
 
 **Implementation**: FastAPI middleware using `slowapi` library.
@@ -150,7 +150,7 @@ X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1697654400
 Retry-After: 30
-```text
+```
 ##### Rate Limit Exceeded Response
 
 ```json
@@ -163,7 +163,7 @@ Retry-After: 30
     "retry_after": 30
   }
 }
-```text
+```
 #### Layer 2: Kong API Gateway (Production)
 
 **Implementation**: Deploy Kong gateway in front of MCP server.
@@ -187,7 +187,7 @@ plugins:
       redis_port: 6379
       fault_tolerant: true
       hide_client_headers: false
-```text
+```
 ### Architecture
 
 #### New Module Structure
@@ -196,7 +196,7 @@ plugins:
 src/mcp_server_langgraph/
 └── middleware/
     └── rate_limiter.py  # Rate limiting middleware
-```text
+```
 #### FastAPI Integration
 
 ```python
@@ -215,7 +215,7 @@ async def agent_chat(request: Request, message: str):
 @limiter.exempt  # No rate limit for health checks
 async def health_check():
     return {"status": "healthy"}
-```text
+```
 #### Endpoint-Specific Limits
 
 ```python
@@ -225,7 +225,7 @@ RATE_LIMITS = {
     "search": "100/minute",   # Search endpoints
     "read": "200/minute",     # Read-only endpoints
 }
-```text
+```
 ### Configuration
 
 #### Environment Variables
@@ -245,13 +245,13 @@ RATE_LIMIT_ENTERPRISE=999999
 
 ## Advanced
 RATE_LIMIT_FAIL_OPEN=true  # Allow if Redis is down
-```text
+```
 #### Feature Flags
 
 ```python
 FF_ENABLE_RATE_LIMITING=true
 FF_RATE_LIMIT_ENFORCEMENT_MODE=enforce  # enforce, log_only, disabled
-```text
+```
 ### Metrics & Observability
 
 #### New Metrics
@@ -267,7 +267,7 @@ rate_limiter_redis_latency_seconds
 
 ## Abuse detection
 suspicious_activity_total{ip, user_id, reason}
-```text
+```
 #### Prometheus Alerts
 
 ```yaml
@@ -278,7 +278,7 @@ suspicious_activity_total{ip, user_id, reason}
 - alert: PossibleDoSAttack
   expr: rate(rate_limit_exceeded_total{tier="anonymous"}[1m]) > 100
   for: 1m
-```text
+```
 ### Consequences
 
 #### Positive

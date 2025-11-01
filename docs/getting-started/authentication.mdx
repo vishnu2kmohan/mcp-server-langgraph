@@ -31,7 +31,7 @@ Perfect for local development and testing:
 ## .env configuration
 AUTH_PROVIDER=inmemory
 AUTH_MODE=token  # JWT tokens
-```text
+```
 **Pre-defined users**:
 - `alice` - Premium user, admin of organization:acme
 - `bob` - Standard user, member of organization:acme
@@ -44,7 +44,7 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware
 auth = AuthMiddleware()
 token = auth.create_token("alice", expires_in=3600)
 print(f"Token: {token}")
-```text
+```
 ```bash cURL
 ## Get token (development only!)
 TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
@@ -102,7 +102,7 @@ curl -X POST http://localhost:8000/message \
       --namespace mcp-server-langgraph \
       --set replicaCount=2 \
       --set postgresql.enabled=true
-    ```text
+```
     Access Keycloak admin console:
     - **Docker**: http://localhost:8080/admin (admin/admin)
     - **Kubernetes**: Port-forward and access
@@ -113,7 +113,7 @@ curl -X POST http://localhost:8000/message \
 
     ```bash
     python scripts/setup/setup_keycloak.py
-    ```text
+```
     This creates:
     - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
@@ -179,7 +179,7 @@ curl -X POST http://localhost:8000/message \
     AUTH_MODE=token
     JWT_SECRET_KEY=your-secret-key-here
     JWT_EXPIRATION_SECONDS=3600  # 1 hour
-    ```text
+```
     With Keycloak:
     ```bash
     AUTH_PROVIDER=keycloak

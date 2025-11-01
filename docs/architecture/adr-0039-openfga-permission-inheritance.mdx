@@ -29,7 +29,7 @@ Extend OpenFGA authorization model with **`acts_as` relation** enabling service 
 
 #### Architecture
 
-```text
+```
 OpenFGA Authorization Model:
   service_principal (new type)
     - acts_as: [user]  ← Permission inheritance relation
@@ -46,7 +46,7 @@ Permission Check Flow:
 #### Permission Inheritance Model
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph "Identity Layer"
         User[User: alice<br/>user:alice]
         SP[Service Principal<br/>service:batch-etl-job]
@@ -90,7 +90,7 @@ graph TB
     style Conv fill:#ffffb3,stroke:#f39c12,stroke-width:2px
     style Tool fill:#ffffb3,stroke:#f39c12,stroke-width:2px
     style Org fill:#80b1d3,stroke:#3498db,stroke-width:2px
-```text
+```
 **Permission Check Flow with Inheritance**:
 ```mermaid
 sequenceDiagram
@@ -121,7 +121,7 @@ sequenceDiagram
 
     App->>App: Log action<br/>Actor: service:batch-etl-job<br/>Effective User: user:alice<br/>Action: view conversation:thread1
 
-```text
+```
 #### Core Principles
 
 1. **Explicit Association**: `acts_as` tuples created deliberately (not automatic)
@@ -141,7 +141,7 @@ type service_principal
     define acts_as: [user]
     define viewer: owner
     define editor: owner
-```text
+```
 **Relationship Tuples**:
 ```python
 [
@@ -164,7 +164,7 @@ type service_principal
         "object": "conversation:thread1"
     }
 ]
-```text
+```
 #### Permission Check Implementation
 
 **Enhanced Authorization** (`src/mcp_server_langgraph/auth/openfga.py`):
@@ -201,7 +201,7 @@ async def check_permission(
                 return True
 
     return False
-```text
+```
 #### Configuration
 
 ```bash
@@ -209,7 +209,7 @@ async def check_permission(
 OPENFGA_PERMISSION_INHERITANCE_ENABLED=true
 OPENFGA_LOG_INHERITED_ACCESS=true  # Log when service uses inherited permissions
 OPENFGA_CACHE_ACTS_AS_RELATIONS=true  # Cache acts_as lookups (5 min TTL)
-```text
+```
 ### Consequences
 
 #### Positive Consequences
@@ -258,7 +258,7 @@ def get_model_definition() -> dict:
             }
         ]
     }
-```text
+```
 **Tuple Creation** (in ServicePrincipalManager):
 ```python
 async def associate_with_user(
@@ -270,7 +270,7 @@ async def associate_with_user(
             "relation": "acts_as",
             "object": user_id
         }])
-```text
+```
 **Authorization Check Enhancement**:
 ```python
 ## In middleware or route handlers

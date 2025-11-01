@@ -18,7 +18,7 @@ Run the complete MCP Server with LangGraph stack locally with Docker Compose for
 
 ```bash
 ./scripts/docker-compose-quickstart.sh
-```text
+```
 This script will:
 1. Check prerequisites (Docker, Docker Compose)
 2. Create `.env` from template if needed
@@ -37,7 +37,7 @@ This script will:
   <Step title="Create .env file">
     ```bash
     cp .env.example .env
-    ```text
+```
     Edit `.env` and add your API keys:
     ```bash
     # At minimum, add one LLM API key
@@ -52,14 +52,14 @@ This script will:
   <Step title="Start services">
     ```bash
     docker compose up -d
-    ```text
+```
     First build takes 2-3 minutes. Subsequent starts are under 30 seconds.
   </Step>
 
   <Step title="Verify health">
     ```bash
     curl http://localhost:8000/health
-    ```text
+```
     Expected response:
     ```json
     {
@@ -129,7 +129,7 @@ Use development mode for hot reload and debugging:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up
-```text
+```
 **Development features**:
 - 🔄 **Hot reload** - Code changes restart server automatically
 - 🐛 **Debug logging** - LOG_LEVEL=DEBUG
@@ -148,7 +148,7 @@ vim agent.py
 ## Save file - server automatically reloads!
 ## Check logs to see reload
 docker compose logs -f agent
-```text
+```
 ### Testing
 
 #### Run Tests
@@ -168,7 +168,7 @@ pytest tests/
 
 ## Stop services
 docker compose down
-```text
+```
 #### Test Agent Endpoint
 
 ```bash
@@ -195,7 +195,7 @@ curl -X POST http://localhost:8000/messages \
       "content": "Hello!"
     }]
   }'
-```text
+```
 ### Configuration
 
 #### Environment Variables
@@ -214,7 +214,7 @@ JWT_SECRET_KEY=your-secret-key
 ## Observability
 OBSERVABILITY_BACKEND=both  # opentelemetry, langsmith, both
 LANGSMITH_TRACING=false  # Enable for LangSmith
-```text
+```
 #### Service URLs (Docker Compose)
 
 Services communicate via Docker network:
@@ -223,7 +223,7 @@ Services communicate via Docker network:
 ## In docker-compose.yml, agent uses internal URLs:
 OPENFGA_API_URL=http://openfga:8080
 OTLP_ENDPOINT=http://otel-collector:4317
-```text
+```
 #### Custom Configuration
 
 Override settings with environment variables:
@@ -280,7 +280,7 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 
 ## LLM token usage
 sum(llm_tokens_total) by (model)
-```text
+```
 #### Grafana Dashboards
 
 Access at [http://localhost:3000](http://localhost:3000) (admin/admin):
@@ -315,7 +315,7 @@ python scripts/setup_openfga.py
 
 ## Restart agent to use new IDs
 docker compose restart agent
-```text
+```
 ### Common Commands
 
 <AccordionGroup>
@@ -407,7 +407,7 @@ docker compose restart agent
     **Check logs**:
     ```bash
     docker compose logs agent
-    ```text
+```
     **Common causes**:
     - Missing API key in `.env`
     - Invalid API key
@@ -449,7 +449,7 @@ docker compose restart agent
 
     # Verify service names resolve
     docker compose exec agent ping openfga
-    ```text
+```
     **Solution**: Ensure all services use `networks: [observability]`
   </Accordion>
 

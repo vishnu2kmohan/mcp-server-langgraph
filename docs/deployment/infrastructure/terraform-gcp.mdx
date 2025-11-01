@@ -25,7 +25,7 @@ We provide **6 production-ready Terraform modules** for deploying complete GCP i
 ### Module Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     Backend[Backend Setup<br/>GCS State Storage]
 
     subgraph Infrastructure[Infrastructure Modules]
@@ -44,7 +44,7 @@ graph TB
 
     Backend --> Infrastructure
     Infrastructure --> Environments
-```text
+```
 ---
 
 ### Quick Start
@@ -83,7 +83,7 @@ terraform apply
     terraform init
     terraform plan -out=tfplan
     terraform apply tfplan
-    ```text
+```
     **Duration**: ~25 minutes
     **Cost**: $880-1,275/month
   </Tab>
@@ -95,7 +95,7 @@ terraform apply
     cp terraform.tfvars.example terraform.tfvars
     terraform init
     terraform apply
-    ```text
+```
     **Duration**: ~20 minutes
     **Cost**: $250-350/month
   </Tab>
@@ -107,7 +107,7 @@ terraform apply
     cp terraform.tfvars.example terraform.tfvars
     terraform init
     terraform apply
-    ```text
+```
     **Duration**: ~15 minutes
     **Cost**: $100-150/month
   </Tab>
@@ -144,7 +144,7 @@ module "vpc" {
   pods_cidr     = "10.4.0.0/14"   # 262k IPs
   services_cidr = "10.8.0.0/20"   # 4096 IPs
 }
-```text
+```
 ```hcl Production
 module "vpc" {
   source = "../../modules/gcp-vpc"
@@ -215,7 +215,7 @@ module "gke" {
   regional_cluster = true
   release_channel  = "STABLE"
 }
-```text
+```
 ```hcl Production
 module "gke" {
   source = "../../modules/gke-autopilot"
@@ -322,7 +322,7 @@ module "cloudsql" {
   read_replica_count   = 1
   read_replica_regions = ["us-east1"]
 }
-```text
+```
 **Supports PostgreSQL**: 11, 12, 13, 14, 15, 16
 
 ---
@@ -368,7 +368,7 @@ module "memorystore" {
   persistence_mode    = "RDB"
   rdb_snapshot_period = "TWELVE_HOURS"
 }
-```text
+```
 **Memory Sizes**: 1-300 GB
 **Redis Versions**: 4.0, 5.0, 6.X, 7.0, 7.2
 
@@ -403,7 +403,7 @@ module "workload_identity" {
     }
   }
 }
-```text
+```
 **Features**:
 - Replaces service account key files (more secure)
 - Pod-level IAM permissions
@@ -434,7 +434,7 @@ EOF
 
 terraform init
 terraform apply
-```text
+```
 **One-time setup** per GCP project. Provides centralized state management with locking.
 
 ---
@@ -539,7 +539,7 @@ module "workload_identity" {
 
   depends_on = [module.gke]
 }
-```text
+```
 ---
 
 ### Environment Configurations
@@ -569,7 +569,7 @@ module "workload_identity" {
 cd terraform/environments/gcp-dev
 terraform init
 terraform apply
-```text
+```
 ---
 
 #### Staging (Production-Like)
@@ -648,7 +648,7 @@ variable "region" {
     error_message = "Region must be a valid GCP region."
   }
 }
-```text
+```
 #### Detailed Outputs
 
 Every module exports useful outputs for module composition:
@@ -662,7 +662,7 @@ output "gke_network_config" {
     services_range_name  = "services"
   }
 }
-```text
+```
 #### Built-in Monitoring
 
 Modules include pre-configured Cloud Monitoring alerts:
@@ -699,7 +699,7 @@ module "vpc" {
 
 ## ❌ Bad - Copying module code
 ## (creates maintenance burden)
-```text
+```
 #### 2. Pin Module Versions
 
 For stability, consider pinning to specific versions:
@@ -708,7 +708,7 @@ For stability, consider pinning to specific versions:
 module "vpc" {
   source = "git::https://github.com/yourorg/terraform-modules.git//gcp-vpc?ref=v1.2.0"
 }
-```text
+```
 #### 3. Use terraform.tfvars for Secrets
 
 Never commit sensitive values to Git:
@@ -721,7 +721,7 @@ cloudsql_additional_users = {
     password = "generated-password"
   }
 }
-```text
+```
 #### 4. Remote State for Teams
 
 Use GCS backend for collaboration:
@@ -733,7 +733,7 @@ terraform {
     prefix = "mcp-server/prod"
   }
 }
-```text
+```
 #### 5. Module Dependencies
 
 Use `depends_on` when modules have dependencies:
@@ -747,7 +747,7 @@ module "cloudsql" {
   # Ensure VPC is created first
   depends_on = [module.vpc]
 }
-```text
+```
 ---
 
 ### Common Tasks
@@ -772,13 +772,13 @@ terraform plan
 
 ## Apply changes
 terraform apply
-```text
+```
 #### Import Existing Resources
 
 ```bash
 terraform import module.gke.google_container_cluster.autopilot \
   projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_NAME
-```text
+```
 #### Destroy Environment
 
 <Warning>
@@ -792,7 +792,7 @@ terraform import module.gke.google_container_cluster.autopilot \
 
 terraform apply  # Remove protection
 terraform destroy
-```text
+```
 ---
 
 ### Troubleshooting
@@ -811,7 +811,7 @@ terraform destroy
     # Request quota increase via Console or:
     gcloud alpha compute regions describe REGION \
       --format="yaml(quotas)"
-    ```text
+```
     Common quotas to increase:
     - CPUs: 100+
     - In-use IP addresses: 50+
@@ -875,7 +875,7 @@ terraform/modules/my-module/
 ├── outputs.tf       # Output values
 ├── versions.tf      # Provider requirements
 └── README.md        # Documentation with examples
-```text
+```
 #### Module Template
 
 ```hcl

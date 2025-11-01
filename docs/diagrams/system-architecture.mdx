@@ -10,7 +10,7 @@ This file contains Mermaid diagrams for the MCP Server LangGraph system architec
 ### High-Level System Architecture
 
 ```mermaid
-graph TD
+flowchart TD
     %% MCP Clients
     Client[MCP Client<br/>Claude Desktop, Custom Apps]
 
@@ -199,7 +199,7 @@ flowchart TD
 ### Deployment Architecture (Kubernetes)
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph Internet
         Users[Users/Clients]
     end
@@ -360,7 +360,7 @@ sequenceDiagram
 ### Parallel Tool Execution
 
 ```mermaid
-graph LR
+flowchart LR
     Request[Tool Execution Request] --> Analyzer[Dependency Analyzer]
     Analyzer --> Graph[Build Dependency Graph]
     Graph --> Topo[Topological Sort]
@@ -447,7 +447,7 @@ flowchart TD
 ### Session Management Architecture
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph Client_Layer["Client Layer"]
         User[User/Application]
     end
@@ -548,7 +548,7 @@ flowchart LR
 ### Observability Data Flow
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph Application["Application Components"]
         Agent[LangGraph Agent]
         Auth[Auth Middleware]

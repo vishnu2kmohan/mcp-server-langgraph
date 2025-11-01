@@ -27,7 +27,7 @@ Implement **Identity Federation via Keycloak** as identity broker, federating al
 
 #### Architecture
 
-```text
+```
 External IdPs (LDAP, SAML, OIDC) → Keycloak (Broker + Normalizer)
   → Keycloak-issued JWT → Kong → MCP Server → OpenFGA
 ```
@@ -35,7 +35,7 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Broker + Normalizer)
 #### Identity Federation Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph "External Identity Providers"
         LDAP[LDAP / Active Directory<br/>Corporate Directory]
         SAML[SAML 2.0 Providers<br/>Azure AD, ADFS, Ping]
@@ -90,7 +90,7 @@ graph TB
     style Kong fill:#fdb462,stroke:#e67e22,stroke-width:2px
     style App fill:#b3de69,stroke:#7cb342,stroke-width:2px
     style FGA fill:#fb8072,stroke:#c0392b,stroke-width:2px
-```text
+```
 **Authentication Flows by Provider Type**:
 ```mermaid
 sequenceDiagram
@@ -131,7 +131,7 @@ sequenceDiagram
     KC->>KC: Validate ID Token<br/>Extract claims<br/>Normalize to Keycloak user
     KC-->>User: JWT (sub: user:alice)
 
-```text
+```
 #### Federation Strategies
 
 ##### 1. LDAP/Active Directory (User Storage Provider)
@@ -150,7 +150,7 @@ sequenceDiagram
     "vendor": "ad"
   }
 }
-```text
+```
 **Flow**: User logs in → Keycloak binds to LDAP → LDAP validates → Keycloak issues JWT
 
 ##### 2. SAML 2.0 (Identity Broker)
@@ -167,7 +167,7 @@ sequenceDiagram
     "validateSignature": "true"
   }
 }
-```text
+```
 **Flow**: User → Keycloak → Redirect to ADFS → SAML assertion → Keycloak → JWT
 
 ##### 3. OIDC (Identity Broker)
@@ -187,7 +187,7 @@ sequenceDiagram
     "hostedDomain": "example.com"
   }
 }
-```text
+```
 **Flow**: User → Keycloak → Redirect to Google → OIDC auth → Keycloak → JWT
 
 #### Attribute Mapping
@@ -200,7 +200,7 @@ sequenceDiagram
   {"ldap": "sn", "keycloak": "lastName"},
   {"ldap": "department", "keycloak": "department"}
 ]
-```text
+```
 **SAML → Keycloak**:
 ```python
 [
@@ -209,7 +209,7 @@ sequenceDiagram
   {"saml": "http://schemas.xmlsoap.org/claims/Group",
    "keycloak": "groups"}
 ]
-```text
+```
 **OIDC → Keycloak**:
 ```python
 [
@@ -217,7 +217,7 @@ sequenceDiagram
   {"oidc": "given_name", "keycloak": "firstName"},
   {"oidc": "family_name", "keycloak": "lastName"}
 ]
-```text
+```
 #### Configuration
 
 ```bash

@@ -107,34 +107,34 @@ View key metrics in LangSmith:
 
 #### By Status
 
-```text
+```
 status:error
 status:success
 ```
 
 #### By Latency
 
-```text
+```
 latency > 5s
 latency < 1s
 ```
 
 #### By User
 
-```text
+```
 metadata.user_id:"alice@example.com"
 ```
 
 #### By Tags
 
-```text
+```
 tags:"production"
 tags:"high-priority"
 ```
 
 #### By Date
 
-```text
+```
 timestamp > 2025-10-01
 timestamp < 2025-10-10
 ```
@@ -278,7 +278,7 @@ results = client.run_on_dataset(
     llm_or_chain_factory=lambda: graph,
     project_name="eval-claude-vs-gpt4"
 )
-```text
+```
 View results in LangSmith to compare:
 - Latency
 - Token usage
@@ -298,7 +298,7 @@ langgraph deployment logs my-agent-prod --limit 100
 
 ## Filter by level
 langgraph deployment logs my-agent-prod --level ERROR
-```text
+```
 #### Via LangSmith UI
 
 Logs are included in each trace - expand trace to see full logs.

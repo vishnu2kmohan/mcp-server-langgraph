@@ -38,7 +38,7 @@ $ grep -r "class.*Exception" src/ | wc -l
 src/auth/middleware.py:    raise Exception("JWT verification failed")
 src/llm/factory.py:         raise ValueError(f"Unsupported model")
 src/auth/openfga.py:        raise RuntimeError("OpenFGA check failed")
-```text
+```
 #### Impact
 
 - Error handling is reactive, not proactive
@@ -116,7 +116,7 @@ MCPServerException (base)
 └── InternalServerError (500)
     ├── UnexpectedError
     └── NotImplementedError
-```text
+```
 ### Base Exception Class
 
 #### Features
@@ -136,7 +136,7 @@ class MCPServerException(Exception):
         trace_id: OpenTelemetry trace ID for correlation
         user_message: User-friendly message (safe to display)
     """
-```text
+```
 #### Error Categories
 
 ```python
@@ -146,7 +146,7 @@ class ErrorCategory(str, Enum):
     EXTERNAL_ERROR = "external_error"  # External service
     RATE_LIMIT = "rate_limit"          # 429 errors
     AUTH_ERROR = "auth_error"          # 401/403 errors
-```text
+```
 #### Retry Policy
 
 ```python
@@ -154,7 +154,7 @@ class RetryPolicy(str, Enum):
     NEVER = "never"          # Never retry (client errors)
     ALWAYS = "always"        # Always retry (transient)
     CONDITIONAL = "conditional"  # Retry if idempotent
-```text
+```
 ### Usage Examples
 
 #### Raising Exceptions
@@ -190,7 +190,7 @@ raise InputValidationError(
         "constraint": "email_format"
     }
 )
-```text
+```
 #### Handling Exceptions
 
 ```python
@@ -225,7 +225,7 @@ except AuthenticationError as e:
         status_code=e.status_code,
         content=e.to_dict()
     )
-```text
+```
 #### JSON Response Format
 
 ```json
@@ -241,7 +241,7 @@ except AuthenticationError as e:
     }
   }
 }
-```text
+```
 ### FastAPI Integration
 
 #### Exception Handlers
@@ -280,7 +280,7 @@ async def mcp_exception_handler(
         status_code=exc.status_code,
         content=exc.to_dict()
     )
-```text
+```
 ### Observability Integration
 
 #### Metrics
@@ -305,7 +305,7 @@ except MCPServerException as e:
         retry_policy=e.retry_policy.value
     ).inc()
     raise
-```text
+```
 #### Logging
 
 ```python
@@ -338,7 +338,7 @@ except MCPServerException as e:
 **Before**:
 ```python
 raise Exception("JWT verification failed")
-```text
+```
 **After**:
 ```python
 raise TokenInvalidError(
@@ -366,7 +366,7 @@ with pytest.raises(TokenInvalidError) as exc_info:
 assert exc_info.value.error_code == "auth.token_invalid"
 assert exc_info.value.status_code == 401
 assert exc_info.value.retry_policy == RetryPolicy.NEVER
-```text
+```
 ### Configuration
 
 #### Environment Variables

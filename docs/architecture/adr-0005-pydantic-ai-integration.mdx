@@ -26,12 +26,12 @@ Traditional approaches have limitations:
    response = llm.invoke("Route this message")
    if "search" in response.lower():
        action = "use_tools"  # Fragile!
-   ```text
+```
 2. **JSON Output Parsing**
    ```python
    response = llm.invoke("Return JSON: {action: ...}")
    data = json.loads(response)  # May fail!
-   ```text
+```
 3. **Function Calling** (Provider-specific)
    ```python
    # Only works with some providers
@@ -194,7 +194,7 @@ class RoutingDecision(BaseModel):
     action: Literal["use_tools", "respond", "end"]
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning: str
-```text
+```
 #### Response Model
 
 ```python
@@ -203,7 +203,7 @@ class AgentResponse(BaseModel):
     confidence: float
     requires_clarification: bool
     sources: List[str]
-```text
+```
 #### Usage in Agent
 
 ```python
@@ -212,7 +212,7 @@ decision = await pydantic_agent.route_message(message)
 ## decision.action: "use_tools" (typed!)
 ## decision.confidence: 0.92
 ## decision.reasoning: "User explicitly requested search"
-```text
+```
 #### Fallback Logic
 
 ```python
@@ -222,7 +222,7 @@ except Exception:
     # Fallback to keyword matching
     decision = keyword_based_routing(message)
     decision.confidence = 0.5
-```text
+```
 #### Confidence Threshold
 
 ```python

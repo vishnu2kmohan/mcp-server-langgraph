@@ -130,7 +130,7 @@ jobs:
         run: |
           langgraph deployment invoke mcp-server-langgraph-prod \
             --input '{"messages": [{"role": "user", "content": "Hello"}]}'
-```text
+```
 #### Environment Protection Rules
 
 Set up deployment approvals in GitHub:
@@ -201,7 +201,7 @@ deploy-production:
     - langgraph deployment get mcp-server-langgraph-prod
   only:
     - main
-```text
+```
 ### CircleCI
 
 ```yaml .circleci/config.yml
@@ -272,7 +272,7 @@ workflows:
       - deploy-production:
           requires:
             - hold-production
-```text
+```
 ### Best Practices
 
 <AccordionGroup>
@@ -368,7 +368,7 @@ workflows:
     PREV_REVISION=$(langgraph deployment list | grep my-agent-prod | awk 'NR==2 {print $2}')
     # Rollback
     langgraph deployment rollback my-agent-prod --revision $PREV_REVISION
-```text
+```
 #### Manual Rollback
 
 ```bash
@@ -380,7 +380,7 @@ langgraph deployment rollback my-agent-prod --revision 42
 
 ## Or rollback to previous
 langgraph deployment rollback my-agent-prod
-```text
+```
 ### Multi-Environment Strategy
 
 <Tabs>

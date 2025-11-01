@@ -23,7 +23,7 @@ export LDAP_GROUPS_DN='OU=Groups,DC=example,DC=com'
 
 ## Run setup script
 python scripts/setup/setup_ldap_federation.py
-```text
+```
 See [setup_ldap_federation.py](/reference/setup-scripts#setup_ldap_federation-py) for full documentation.
 
 #### Google Workspace
@@ -36,7 +36,7 @@ export GOOGLE_HOSTED_DOMAIN='example.com'  # Optional
 
 ## Run setup
 python scripts/setup/setup_oidc_idp.py --provider google
-```text
+```
 See [setup_oidc_idp.py](/reference/setup-scripts#setup_oidc_idp-py) for full documentation.
 
 #### Microsoft 365 / Azure AD
@@ -47,7 +47,7 @@ export MICROSOFT_CLIENT_SECRET='your-secret'
 export MICROSOFT_TENANT_ID='common'  # or specific tenant
 
 python scripts/setup/setup_oidc_idp.py --provider microsoft
-```text
+```
 #### GitHub
 
 ```bash
@@ -55,7 +55,7 @@ export GITHUB_CLIENT_ID='your-oauth-app-id'
 export GITHUB_CLIENT_SECRET='your-secret'
 
 python scripts/setup/setup_oidc_idp.py --provider github
-```text
+```
 #### Okta
 
 ```bash
@@ -64,7 +64,7 @@ export OKTA_CLIENT_SECRET='your-secret'
 export OKTA_DOMAIN='example.okta.com'
 
 python scripts/setup/setup_oidc_idp.py --provider okta
-```text
+```
 #### ADFS (SAML)
 
 ```bash
@@ -73,7 +73,7 @@ export SAML_SSO_URL='https://adfs.example.com/adfs/ls/'
 export SAML_LOGOUT_URL='https://adfs.example.com/adfs/ls/'
 
 python scripts/setup/setup_saml_idp.py
-```text
+```
 See [setup_saml_idp.py](/reference/setup-scripts#setup_saml_idp-py) for full documentation.
 
 ### Authentication Flow
@@ -90,7 +90,7 @@ See [setup_saml_idp.py](/reference/setup-scripts#setup_saml_idp-py) for full doc
 7. Keycloak maps attributes and issues JWT
 8. Client receives Keycloak JWT
 9. Client uses JWT for API calls (standard flow)
-```text
+```
 #### What Users See
 
 All federated users receive standard Keycloak JWTs:
@@ -106,7 +106,7 @@ All federated users receive standard Keycloak JWTs:
     "roles": ["admin", "premium", "user"]
   }
 }
-```text
+```
 ### Configuration Details
 
 #### LDAP Attribute Mapping
@@ -121,7 +121,7 @@ attribute_mappers:
   - name: department
     ldap_attribute: department
     keycloak_attribute: department
-```text
+```
 #### OIDC Provider Configuration
 
 Edit `config/oidc_providers.yaml` ([reference](/reference/configuration-files#config-oidc_providers-yaml)):
@@ -133,7 +133,7 @@ providers:
     config:
       client_id: ${GOOGLE_CLIENT_ID}
       hosted_domain: ${GOOGLE_HOSTED_DOMAIN}
-```text
+```
 ### Testing
 
 #### Test LDAP Connection
@@ -143,7 +143,7 @@ providers:
 ## User Federation → ldap → Test connection
 ## User Federation → ldap → Test authentication
 ## User Federation → ldap → Synchronize all users
-```text
+```
 #### Test OIDC Login
 
 ```bash
@@ -153,7 +153,7 @@ https://keycloak.example.com/realms/langgraph-agent/account
 ## Click "Sign in with Google" (or other provider)
 ## Complete OAuth2 flow
 ## Verify user is created in Keycloak
-```text
+```
 #### Verify JWT Issuance
 
 ```bash

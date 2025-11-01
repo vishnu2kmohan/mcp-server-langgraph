@@ -81,7 +81,7 @@ git push origin v2.5.0
 ## Then create the release on GitHub UI
 ## Or use GitHub CLI
 gh release create v2.5.0 --generate-notes
-```text
+```
 ##### Option 3: GitHub CLI
 
 ```bash
@@ -93,7 +93,7 @@ gh release create v2.5.0 --notes "Release notes here"
 
 ## Create pre-release
 gh release create v2.5.0-beta.1 --prerelease --notes "Beta release"
-```text
+```
 #### Version Format
 
 Follow [Semantic Versioning 2.0.0](https://semver.org/):
@@ -175,7 +175,7 @@ docker compose up -d
 
 ## Verify version
 docker compose exec agent python -c "from mcp_server_langgraph import __version__; print(__version__)"
-```text
+```
 #### Kubernetes (kubectl)
 
 ```bash
@@ -189,7 +189,7 @@ kubectl apply -f deployments/kubernetes/base/
 
 ## Verify rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```text
+```
 #### Helm
 
 ```bash
@@ -204,7 +204,7 @@ helm upgrade --install mcp-server-langgraph \
   oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts/mcp-server-langgraph \
   --version 2.5.0 \
   --namespace mcp-server-langgraph
-```text
+```
 #### Kustomize
 
 ```bash
@@ -287,7 +287,7 @@ docker buildx build \
   --platform linux/amd64,linux/arm64 \
   -t ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.5.0 \
   --push .
-```text
+```
 #### Helm Chart Publication Failed
 
 1. Check Helm packaging in workflow logs
@@ -303,7 +303,7 @@ helm package deployments/helm/mcp-server-langgraph --version 2.5.0
 ## Push to OCI registry
 helm push mcp-server-langgraph-2.5.0.tgz \
   oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts
-```text
+```
 #### Version Mismatch
 
 If deployment versions don't match the release:
@@ -322,7 +322,7 @@ bash scripts/deployment/bump-versions.sh 2.5.0
 git add -A
 git commit -m "fix: synchronize deployment versions to 2.5.0"
 git push origin main
-```text
+```
 ### Rollback
 
 If you need to rollback a release:
@@ -349,7 +349,7 @@ gh release delete v2.5.0
 ## Delete tag (if needed)
 git tag -d v2.5.0
 git push origin :refs/tags/v2.5.0
-```text
+```
 #### Revert Version Bump
 
 ```bash
@@ -359,7 +359,7 @@ git log --oneline | grep "bump deployment versions"
 ## Revert the commit
 git revert <commit-hash>
 git push origin main
-```text
+```
 ### Continuous Deployment
 
 For automated deployments to staging/production:

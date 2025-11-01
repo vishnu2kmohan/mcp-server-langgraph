@@ -33,7 +33,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=8192
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```text
+```
 **Rationale**:
 - **Fast Iterations**: Gemini Flash has low latency (~1-2s response time)
 - **Low Cost**: ~$0.075 per 1M input tokens, ~$0.30 per 1M output tokens
@@ -58,7 +58,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=4096
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```text
+```
 **Rationale**:
 - **Production Parity**: Same model as production
 - **Quality Validation**: Test with production-grade model
@@ -83,7 +83,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=4096
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```text
+```
 **Rationale**:
 - **Highest Quality**: Claude 3.5 Sonnet offers superior reasoning
 - **Reliability**: Anthropic's enterprise SLA and uptime
@@ -120,7 +120,7 @@ export OPENAI_API_KEY=sk-...
 export LLM_PROVIDER=google
 export MODEL_NAME=gemini-2.5-pro
 export GOOGLE_API_KEY=...
-```text
+```
 #### Method 2: Helm Values Override
 
 For production Helm deployments:
@@ -130,7 +130,7 @@ helm upgrade --install mcp-server-langgraph ./deployments/helm/mcp-server-langgr
   --set config.llmProvider=openai \
   --set config.modelName=gpt-4o \
   --set secrets.openaiApiKey=$OPENAI_API_KEY
-```text
+```
 #### Method 3: Kustomize Patch
 
 For Kustomize deployments, create a patch file:
@@ -146,7 +146,7 @@ data:
   model_name: "gpt-4o"
   model_temperature: "0.8"
   model_max_tokens: "8192"
-```text
+```
 #### Method 4: .env File (Local Development)
 
 ```bash
@@ -154,7 +154,7 @@ data:
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1:70b
 OLLAMA_BASE_URL=http://localhost:11434
-```text
+```
 ---
 
 ### Fallback Configuration
@@ -174,12 +174,12 @@ Override via environment variable:
 
 ```bash
 FALLBACK_MODELS='["claude-3-5-sonnet-20241022","gpt-4o","gemini-2.5-pro"]'
-```text
+```
 #### Disabling Fallback
 
 ```bash
 ENABLE_FALLBACK=false
-```text
+```
 **Warning**: Disabling fallback means service failures if primary model is unavailable.
 
 ---
@@ -349,7 +349,7 @@ LLM_RATE_LIMIT_RPM: 300
 
 ## Production
 LLM_RATE_LIMIT_RPM: 1000
-```text
+```
 ---
 
 ### Troubleshooting
@@ -367,7 +367,7 @@ echo $ANTHROPIC_API_KEY | head -c 10
 curl https://api.anthropic.com/v1/messages \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
   -H "anthropic-version: 2023-06-01"
-```text
+```
 #### Fallback Chain Not Working
 
 **Cause**: Missing API keys for fallback models

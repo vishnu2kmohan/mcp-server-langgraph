@@ -90,7 +90,7 @@ mcp-server-xxxx          1/1     Running   0          2m
 ### Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     Client[Clients] --> LB[Load Balancer]
     LB --> App[MCP Server]
     App --> DB[(Database)]

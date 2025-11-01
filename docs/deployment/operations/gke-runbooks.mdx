@@ -197,11 +197,11 @@ Run this every morning to ensure system health:
     **Check Cloud SQL Proxy**:
     ```bash
     kubectl logs -n mcp-production POD_NAME -c cloud-sql-proxy --tail=50
-    ```text
+```
     **Verify Instance Running**:
     ```bash
     gcloud sql instances describe mcp-prod-postgres --format="value(state)"
-    ```text
+```
     **Restart Proxy**:
     ```bash
     kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
@@ -213,11 +213,11 @@ Run this every morning to ensure system health:
     ```bash
     kubectl port-forward -n mcp-production svc/production-mcp-server-langgraph 5432:5432 &
     psql "host=localhost user=postgres" -c "SELECT count(*) FROM pg_stat_activity;"
-    ```text
+```
     **Kill Idle Connections**:
     ```bash
     psql -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle' AND state_change < NOW() - INTERVAL '10 minutes';"
-    ```text
+```
     **Increase Max Connections** (via Terraform):
     ```hcl
     database_flags = {
@@ -285,7 +285,7 @@ kubectl apply -k .
 
 ## Monitor
 kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-production
-```text
+```
 #### Rollback Deployment
 
 <Tabs>
@@ -329,7 +329,7 @@ gcloud sql backups create \
 
 ## List backups
 gcloud sql backups list --instance=mcp-prod-postgres
-```text
+```
 #### Restore from Backup
 
 <Warning>
@@ -343,7 +343,7 @@ gcloud sql backups list --instance=mcp-prod-postgres
     gcloud sql instances clone mcp-prod-postgres mcp-prod-postgres-restored \
       --backup-id=BACKUP_ID \
       --project=PROJECT_ID
-    ```text
+```
     **Recommended**: Test on new instance, then switch connection if successful
   </Tab>
 
@@ -353,7 +353,7 @@ gcloud sql backups list --instance=mcp-prod-postgres
     gcloud sql instances clone mcp-prod-postgres mcp-prod-postgres-pitr \
       --point-in-time='2025-11-01T12:00:00.000Z' \
       --project=PROJECT_ID
-    ```text
+```
     **PITR Window**: 7 days (configurable)
   </Tab>
 </Tabs>
@@ -364,14 +364,14 @@ gcloud sql backups list --instance=mcp-prod-postgres
 ```bash
 gcloud sql instances describe mcp-prod-postgres \
   --format="value(settings.maintenanceWindow)"
-```text
+```
 **Reschedule Maintenance**:
 ```bash
 gcloud sql instances patch mcp-prod-postgres \
   --maintenance-window-day=1 \
   --maintenance-window-hour=3 \
   --project=PROJECT_ID
-```text
+```
 ---
 
 ### Scaling Operations
@@ -383,12 +383,12 @@ gcloud sql instances patch mcp-prod-postgres \
 kubectl scale deployment production-mcp-server-langgraph \
   -n mcp-production \
   --replicas=10
-```text
+```
 ```bash Update HPA
 kubectl patch hpa production-mcp-server-langgraph \
   -n mcp-production \
   --patch '{"spec":{"minReplicas":5,"maxReplicas":30}}'
-```text
+```
 ```bash Update Cluster Limits
 ## Via Terraform
 cd terraform/environments/gcp-prod
@@ -412,7 +412,7 @@ kubectl top nodes
 gcloud monitoring time-series list \
   --filter='metric.type="kubernetes.io/container/cpu/core_usage_time"' \
   --project=PROJECT_ID
-```text
+```
 ---
 
 ### Security Operations
@@ -458,14 +458,14 @@ gcloud logging read \
 gcloud logging read \
   'protoPayload.serviceName="container.googleapis.com"' \
   --limit=20
-```text
+```
 #### Review Binary Authorization Denials
 
 ```bash
 gcloud logging read \
   'protoPayload.serviceName="binaryauthorization.googleapis.com" AND protoPayload.response.allow=false' \
   --limit=20
-```text
+```
 ---
 
 ### Common Tasks
@@ -477,13 +477,13 @@ gcloud logging read \
     kubectl logs -f -n mcp-production \
       -l app=mcp-server-langgraph \
       --max-log-requests=10
-    ```text
+```
     ```bash Cloud Logging
     gcloud logging read \
       'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production"' \
       --limit=100 \
       --format=json
-    ```text
+```
     ```bash Specific Container
     kubectl logs POD_NAME -n mcp-production -c mcp-server-langgraph
     kubectl logs POD_NAME -n mcp-production -c cloud-sql-proxy
@@ -554,7 +554,7 @@ GKE Autopilot upgrades automatically based on release channel (STABLE for produc
 gcloud container clusters describe mcp-prod-gke \
   --region=us-central1 \
   --format="yaml(currentMasterVersion,releaseChannel)"
-```text
+```
 **Manual upgrade** (if needed):
 ```bash
 ## Check available versions
@@ -564,7 +564,7 @@ gcloud container get-server-config --region=us-central1
 gcloud container clusters upgrade mcp-prod-gke \
   --region=us-central1 \
   --cluster-version=VERSION
-```text
+```
 #### Database Maintenance
 
 Scheduled maintenance: **Sunday 3 AM UTC** (configured in Terraform)
@@ -575,12 +575,12 @@ gcloud sql instances patch mcp-prod-postgres \
   --maintenance-window-day=1 \  # Monday
   --maintenance-window-hour=3 \  # 3 AM UTC
   --project=PROJECT_ID
-```text
+```
 **Defer one-time**:
 ```bash
 gcloud sql instances reschedule-maintenance mcp-prod-postgres \
   --reschedule-type=NEXT_AVAILABLE_WINDOW
-```text
+```
 ---
 
 ### Monitoring & Alerting
@@ -595,7 +595,7 @@ gcloud alpha monitoring policies list \
 
 ## Get alert details
 gcloud alpha monitoring policies describe POLICY_ID
-```text
+```
 #### Create Custom Alert
 
 ```bash
@@ -604,7 +604,7 @@ gcloud alpha monitoring policies create \
   --display-name="High Error Rate" \
   --condition-threshold-value=0.05 \
   --condition-threshold-duration=300s
-```text
+```
 #### View Metrics
 
 Access Cloud Monitoring dashboards:
@@ -630,7 +630,7 @@ gcloud sql instances failover mcp-prod-postgres --project=PROJECT_ID
 
 ## Monitor
 watch -n 5 'gcloud sql instances describe mcp-prod-postgres --format="value(state)"'
-```text
+```
 **Recovery Time**: 2-3 minutes for automatic failover
 
 #### Full DR Procedure
@@ -664,7 +664,7 @@ kubectl scale deployment production-mcp-server-langgraph \
 kubectl scale deployment production-mcp-server-langgraph \
   -n mcp-production \
   --replicas=3
-```text
+```
 #### Emergency Maintenance Mode
 
 ```yaml

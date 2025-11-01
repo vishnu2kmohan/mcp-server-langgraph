@@ -65,7 +65,7 @@ Both share the same underlying agent logic, differing only in transport layer.
 #### Architecture
 
 ```mermaid
-graph TD
+flowchart TD
     Agent[Core Agent Logic<br/>agent.py, tools]
 
     Agent --> STDIO[STDIO Transport<br/>server_stdio.py<br/>JSON-RPC over stdin/stdout]
@@ -81,7 +81,7 @@ graph TD
     class Agent agentStyle
     class STDIO,HTTP transportStyle
     class Desktop,Cloud clientStyle
-```text
+```
 #### Transport 1: STDIO (Standard Input/Output)
 
 **Protocol**: JSON-RPC over stdin/stdout
@@ -109,7 +109,7 @@ async def call_tool(name: str, arguments: dict):
 async def main():
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream)
-```text
+```
 **Communication Flow**:
 ```
 Client (Claude Desktop)
@@ -121,18 +121,18 @@ Server (MCP STDIO)
     {"jsonrpc": "2.0", "result": [...], "id": 1}
     ↓
 Client receives tool list
-```text
+```
 **Entry Point**:
 ```toml
 ## pyproject.toml
 [project.scripts]
 mcp-server-langgraph = "mcp_server_langgraph.mcp.server_stdio:main"
-```text
+```
 **Usage**:
 ```bash
 ## Run as MCP server for Claude Desktop
 mcp-server-langgraph
-```text
+```
 #### Transport 2: StreamableHTTP
 
 **Protocol**: HTTP with Server-Sent Events (SSE) for streaming
@@ -163,7 +163,7 @@ async def call_tool(request: ToolCallRequest):
             yield f"data: {json.dumps(chunk)}\n\n"
 
     return StreamingResponse(stream_result(), media_type="text/event-stream")
-```text
+```
 **Communication Flow**:
 ```
 Client (Web App)
@@ -176,18 +176,18 @@ Server (MCP HTTP)
     data: {"chunk": 2, "content": " there!"}
     ↓
 Client renders streamed response
-```text
+```
 **Entry Point**:
 ```toml
 ## pyproject.toml
 [project.scripts]
 mcp-server-langgraph-http = "mcp_server_langgraph.mcp.server_streamable:main"
-```text
+```
 **Usage**:
 ```bash
 ## Run as HTTP server
 mcp-server-langgraph-http --host 0.0.0.0 --port 8000
-```text
+```
 ### Consequences
 
 #### Positive Consequences
@@ -240,7 +240,7 @@ graph.add_node("llm", call_llm)
 graph.add_edge("route", "llm")
 
 agent_graph = graph.compile()
-```text
+```
 **Benefit**: Agent logic defined once, used by both transports
 
 #### STDIO Transport Details
@@ -257,7 +257,7 @@ agent_graph = graph.compile()
 ```bash
 ## No environment variables needed (uses stdin/stdout)
 ## Works with default config
-```text
+```
 **Claude Desktop Integration**:
 ```json
 // claude_desktop_config.json
@@ -271,7 +271,7 @@ agent_graph = graph.compile()
     }
   }
 }
-```text
+```
 #### StreamableHTTP Transport Details
 
 **File**: `src/mcp_server_langgraph/mcp/server_streamable.py` (300+ lines)
@@ -289,7 +289,7 @@ GET  /mcp/info              # Server info
 GET  /mcp/tools/list        # List available tools
 POST /mcp/tools/call        # Execute tool (with streaming)
 GET  /mcp/health            # Health check
-```text
+```
 **Configuration**:
 ```bash
 ## Environment variables
@@ -297,7 +297,7 @@ export MCP_HTTP_HOST=0.0.0.0
 export MCP_HTTP_PORT=8000
 export MCP_ENABLE_CORS=true
 export MCP_AUTH_ENABLED=true
-```text
+```
 **Streaming Example**:
 ```python
 @app.post("/mcp/tools/call")
@@ -311,7 +311,7 @@ async def call_tool(request: ToolCallRequest):
             yield f"data: {json.dumps(event)}\n\n"
 
     return StreamingResponse(stream(), media_type="text/event-stream")
-```text
+```
 **Client Usage** (JavaScript):
 ```javascript
 const eventSource = new EventSource('/mcp/tools/call');
@@ -319,7 +319,7 @@ eventSource.onmessage = (event) => {
     const data = JSON.parse(event.data);
     console.log('Received:', data);
 };
-```text
+```
 #### Configuration Matrix
 
 | Feature | STDIO | StreamableHTTP |
@@ -432,7 +432,7 @@ EOF
 
 ## 2. Restart Claude Desktop
 ## 3. Agent appears as available MCP server
-```text
+```
 #### Kubernetes (StreamableHTTP)
 
 ```yaml
@@ -467,7 +467,7 @@ spec:
   ports:
   - port: 80
     targetPort: 8000
-```text
+```
 #### Docker Compose (StreamableHTTP)
 
 ```yaml
@@ -485,7 +485,7 @@ services:
       MCP_HTTP_PORT: "8000"
       MCP_ENABLE_CORS: "true"
       ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
-```text
+```
 #### Cloud Run (StreamableHTTP)
 
 ```bash
@@ -496,7 +496,7 @@ gcloud run deploy mcp-server \
   --region us-central1 \
   --allow-unauthenticated \
   --set-env-vars="MCP_HTTP_PORT=8080,MCP_ENABLE_CORS=true"
-```text
+```
 ### Performance Characteristics
 
 #### STDIO Transport
@@ -549,7 +549,7 @@ def test_stdio_list_tools():
     assert "tools" in response
 
     proc.terminate()
-```text
+```
 #### StreamableHTTP Transport Tests
 
 ```python

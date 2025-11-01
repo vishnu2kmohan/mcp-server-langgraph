@@ -30,7 +30,7 @@ Implement **FastAPI SCIM 2.0 endpoints** that bridge to Keycloak Admin API, prov
 
 #### Architecture
 
-```text
+```
 External System (SCIM Client) → MCP Server SCIM Endpoints
   → Keycloak Admin API → Keycloak (User Storage)
   → Sync to OpenFGA (via existing sync_user_to_openfga)
@@ -99,7 +99,7 @@ sequenceDiagram
 
     Note over IDP: User no longer has access
 
-```text
+```
 **Bulk Provisioning (Initial Sync)**:
 ```mermaid
 sequenceDiagram
@@ -123,7 +123,7 @@ sequenceDiagram
 
     Note over SCIM: Idempotent - safe to retry
 
-```sql
+```
 #### Core Principles
 
 1. **SCIM 2.0 Compliance**: Implement RFC 7643/7644 endpoints
@@ -160,7 +160,7 @@ sequenceDiagram
   "active": true,
   "groups": [{"value": "engineering", "display": "Engineering"}]
 }
-```text
+```
 **Enterprise Extension**:
 ```json
 {
@@ -173,7 +173,7 @@ sequenceDiagram
     "manager": {"value": "user:bob"}
   }
 }
-```text
+```
 #### Configuration
 
 ```bash
@@ -186,7 +186,7 @@ SCIM_AUTHENTICATION=jwt  # Require JWT tokens
 SCIM_AUTO_SYNC_TO_OPENFGA=true
 SCIM_DEFAULT_ROLES=["user"]  # Default roles for new users
 SCIM_SEND_WELCOME_EMAIL=false
-```text
+```
 ### Consequences
 
 #### Positive Consequences
@@ -270,7 +270,7 @@ async def deprovision_user(user_id: str, keycloak: KeycloakClient = Depends(...)
     await openfga_client.delete_tuples_for_user(f"user:{user_id}")
 
     return {"status": "deprovisioned"}
-```text
+```
 **SCIM Schema Validation** (`src/mcp_server_langgraph/scim/schema.py`):
 ```python
 def validate_scim_user(data: dict) -> bool:

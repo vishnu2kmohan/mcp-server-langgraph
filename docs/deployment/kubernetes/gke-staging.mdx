@@ -21,7 +21,7 @@ This is a production-ready staging environment suitable for pre-production testi
 ### Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph GitHub["GitHub Actions (Deployment)"]
         GHA["CI/CD Pipeline<br/>- Workload Identity Federation<br/>- Build & Push to Artifact Registry<br/>- Deploy to GKE"]
     end
@@ -68,7 +68,7 @@ graph TB
     class Pods,NetPol,ExtSec podStyle
     class CloudSQL,Redis dbStyle
     class SecretMgr,ArtifactReg secretStyle
-```text
+```
 ### Prerequisites
 
 - **GCP Project**: `vishnu-sandbox-20250310` (or your project ID)
@@ -88,7 +88,7 @@ export GCP_PROJECT_ID=vishnu-sandbox-20250310
 
 ## Run the setup script
 ./scripts/gcp/setup-staging-infrastructure.sh
-```text
+```
 This script will create:
 - ✅ Staging VPC network (10.1.0.0/20)
 - ✅ GKE Autopilot cluster with security hardening
@@ -119,7 +119,7 @@ gcloud compute networks subnets create staging-gke-subnet \
   --secondary-range pods=10.2.0.0/16,services=10.3.0.0/16 \
   --enable-flow-logs \
   --enable-private-ip-google-access
-```text
+```
 #### 1.2 Create GKE Cluster
 
 ```bash
@@ -132,7 +132,7 @@ gcloud container clusters create-auto mcp-staging-cluster \
   --enable-shielded-nodes \
   --shielded-secure-boot \
   --binauthz-evaluation-mode=PROJECT_SINGLETON_POLICY_ENFORCE
-```text
+```
 #### 1.3 Create Managed Services
 
 See the [full setup script](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/scripts/gcp/setup-staging-infrastructure.sh) for complete Cloud SQL and Redis setup.
@@ -171,7 +171,7 @@ echo -n "sk-ant-YOUR_REAL_KEY" | gcloud secrets versions add staging-anthropic-a
 
 ## Update Google API key
 echo -n "YOUR_REAL_GOOGLE_KEY" | gcloud secrets versions add staging-google-api-key --data-file=-
-```text
+```
 ### Step 3: Install External Secrets Operator
 
 External Secrets Operator syncs secrets from GCP Secret Manager to Kubernetes:
@@ -186,7 +186,7 @@ helm install external-secrets \
   --namespace external-secrets-system \
   --create-namespace \
   --set installCRDs=true
-```text
+```
 Verify installation:
 
 ```bash
@@ -217,7 +217,7 @@ gcloud projects describe vishnu-sandbox-20250310 --format="value(projectNumber)"
 
 ## Update these lines in the workflow:
 workload_identity_provider: 'projects/YOUR_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-```text
+```
 ### Step 5: Deploy Application
 
 #### First-Time Deployment (Manual)
@@ -240,7 +240,7 @@ kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
 
 ## Verify pods
 kubectl get pods -n mcp-staging
-```text
+```
 #### Automated Deployments (GitHub Actions)
 
 Once manual deployment succeeds, GitHub Actions will handle future deployments:
@@ -264,7 +264,7 @@ Once manual deployment succeeds, GitHub Actions will handle future deployments:
 
 ```bash
 ./scripts/gcp/staging-smoke-tests.sh
-```text
+```
 Expected output:
 
 ```
@@ -277,7 +277,7 @@ Passed:       11
 Failed:       0
 
 ✓ All smoke tests passed!
-```text
+```
 #### Check Health Endpoints
 
 ```bash
@@ -288,7 +288,7 @@ kubectl port-forward -n mcp-staging svc/staging-mcp-server-langgraph 8080:80
 curl http://localhost:8080/health
 curl http://localhost:8080/health/ready
 curl http://localhost:8080/health/live
-```text
+```
 #### View Logs
 
 **Cloud Logging** (recommended):
@@ -300,12 +300,12 @@ gcloud logging read \
    resource.labels.namespace_name=mcp-staging" \
   --limit=50 \
   --format=json
-```text
+```
 **Kubectl logs**:
 
 ```bash
 kubectl logs -n mcp-staging -l app=mcp-server-langgraph --tail=100
-```text
+```
 ### Security Features
 
 #### Network Isolation
@@ -318,7 +318,7 @@ Verify network policies:
 
 ```bash
 kubectl get networkpolicies -n mcp-staging
-```text
+```
 #### Workload Identity
 
 Pods authenticate as GCP service accounts without keys:
@@ -333,7 +333,7 @@ kubectl run -it --rm test \
   --serviceaccount=mcp-server-langgraph \
   --namespace=mcp-staging \
   -- gcloud auth list
-```text
+```
 #### Binary Authorization
 
 Only signed/approved images can be deployed:
@@ -343,7 +343,7 @@ Only signed/approved images can be deployed:
 gcloud container clusters describe mcp-staging-cluster \
   --region=us-central1 \
   --format='value(binaryAuthorization)'
-```text
+```
 #### Secret Management
 
 Secrets are stored in GCP Secret Manager and synced via External Secrets:
@@ -354,7 +354,7 @@ gcloud secrets list --filter="name:staging-*"
 
 ## View External Secrets sync status
 kubectl get externalsecrets -n mcp-staging
-```text
+```
 ### Monitoring & Observability
 
 #### Cloud Console Dashboards
@@ -383,7 +383,7 @@ Create alert policies for:
 ## Pod restart count > 5
 ## Deployment replica mismatch
 ## Cloud SQL connection failures
-```text
+```
 ### Troubleshooting
 
 <AccordionGroup>
@@ -391,7 +391,7 @@ Create alert policies for:
     **Check pod status:**
     ```bash
     kubectl describe pod <pod-name> -n mcp-staging
-    ```text
+```
     **Common issues:**
     - Image pull errors: Check Artifact Registry permissions
     - Cloud SQL proxy fails: Verify service account has `cloudsql.client` role
@@ -402,7 +402,7 @@ Create alert policies for:
     **Check ExternalSecret status:**
     ```bash
     kubectl describe externalsecret mcp-staging-secrets -n mcp-staging
-    ```text
+```
     **Common fixes:**
     - Verify Workload Identity binding
     - Check secret exists in Secret Manager
@@ -413,7 +413,7 @@ Create alert policies for:
     **Check Cloud SQL proxy logs:**
     ```bash
     kubectl logs -n mcp-staging <pod-name> -c cloud-sql-proxy
-    ```text
+```
     **Verify connection:**
     ```bash
     # From inside pod
@@ -426,7 +426,7 @@ Create alert policies for:
     **List network policies:**
     ```bash
     kubectl get networkpolicies -n mcp-staging
-    ```text
+```
     **Temporarily disable for testing:**
     ```bash
     kubectl delete networkpolicy <policy-name> -n mcp-staging
@@ -453,7 +453,7 @@ kubectl rollout undo deployment/staging-mcp-server-langgraph -n mcp-staging --to
 
 ## Verify rollback
 kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
-```text
+```
 ### Cost Optimization
 
 #### Current Costs (Estimated)

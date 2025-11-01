@@ -177,7 +177,7 @@ async def handle_mcp_request(request: Request):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-```text
+```
 #### stdio Server
 
 ```python
@@ -187,13 +187,13 @@ async def main():
     # stdio transport
     async with stdio_server() as streams:
         await server.run(streams[0], streams[1])
-```text
+```
 #### Docker Configuration
 
 ```dockerfile
 ## Dockerfile
 CMD ["python", "src/mcp_server_langgraph/mcp/server_streamable.py"]  # Default to StreamableHTTP
-```text
+```
 #### Usage Examples
 
 ```bash
@@ -204,7 +204,7 @@ python -m mcp_server_langgraph.mcp.server_streamable
 ## Claude Desktop: stdio
 python -m mcp_server_langgraph.mcp.server_stdio
 ## → stdio communication
-```text
+```
 #### Client Configuration
 
 ```json

@@ -27,7 +27,7 @@ We will implement an **API Key to JWT Exchange Pattern** where API keys are stor
 
 #### Architecture
 
-```text
+```
 Client (API Key) → Kong (custom plugin) → Keycloak (validate & exchange)
   → JWT → Replace header → MCP Server (validates JWT normally)
 ```
@@ -79,7 +79,7 @@ sequenceDiagram
 
     Note over Client: Client only sees standard HTTP response
 
-```text
+```
 **Subsequent Requests (Cached)**:
 ```mermaid
 sequenceDiagram
@@ -100,7 +100,7 @@ sequenceDiagram
 
     Note over Kong,Cache: ~5ms latency (vs 20-50ms without cache)
 
-```text
+```
 #### Core Principles
 
 1. **Exchange, Not Replace**: API keys exchanged for JWTs, not standalone auth
@@ -122,7 +122,7 @@ sequenceDiagram
     "apiKey_abc123_expiresAt": "2026-01-28T00:00:00Z"
   }
 }
-```text
+```
 #### Exchange Flow
 
 1. Client → Kong: `Authorization: ApiKey sk_live_abc123xyz`
@@ -140,7 +140,7 @@ API_KEY_HASH_ALGORITHM=bcrypt
 API_KEY_PREFIX=sk_live_
 API_KEY_MAX_PER_USER=5
 API_KEY_EXCHANGE_CACHE_TTL=300  # 5 min cache
-```text
+```
 ### Consequences
 
 #### Positive Consequences
@@ -174,7 +174,7 @@ class APIKeyManager:
         api_key = self.generate_api_key()  # sk_live_...
         key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt())
         # Store in Keycloak user attributes
-```text
+```
 **Kong Plugin** (`deployments/kong/custom-plugins/kong-apikey-jwt-exchange.lua`):
 ```lua
 -- Extract API key, validate with Keycloak, cache JWT, replace header

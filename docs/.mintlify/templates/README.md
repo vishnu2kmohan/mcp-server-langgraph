@@ -241,7 +241,7 @@ All templates support Mermaid diagrams for visualizations. **Always use ColorBre
 
 ````mdx
 ```mermaid
-graph TB
+flowchart TB
     A[Start] --> B[Process]
     B --> C[End]
 

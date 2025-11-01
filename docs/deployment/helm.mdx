@@ -35,7 +35,7 @@ helm status mcp-server-langgraph -n mcp-server-langgraph
 
 ## Get service URL
 kubectl get ingress -n mcp-server-langgraph
-```text
+```
 ### Prerequisites
 
 <Steps>
@@ -98,7 +98,7 @@ deployments/helm/mcp-server-langgraph/
 │   ├── pdb.yaml            # Pod disruption budget
 │   └── _helpers.tpl        # Template helpers
 └── README.md
-```text
+```
 ### Installation
 
 #### Basic Installation
@@ -113,7 +113,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=api.yourdomain.com
-```text
+```
 #### With Custom Values File
 
 <Tabs>
@@ -255,7 +255,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "standard-rwo"
-    ```text
+```
     ```bash
     # Create static IP
     gcloud compute addresses create mcp-server-langgraph-ip --global
@@ -296,7 +296,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "gp3"
-    ```text
+```
     ```bash
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
@@ -330,7 +330,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "managed-premium"
-    ```text
+```
     ```bash
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
@@ -386,7 +386,7 @@ config:
   enableMetrics: true
   observabilityBackend: "opentelemetry"
   otlpEndpoint: "http://otel-collector:4317"
-```text
+```
 #### Secrets Configuration
 
 <Warning>
@@ -419,7 +419,7 @@ secrets:
   infisicalClientId: ""
   infisicalClientSecret: ""
   infisicalProjectId: ""
-```text
+```
 Set secrets via command line:
 ```bash
 helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
@@ -428,7 +428,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
   --set secrets.keycloakClientSecret="${KEYCLOAK_CLIENT_SECRET}" \
   --set secrets.redisPassword="$(openssl rand -base64 32)"
-```text
+```
 #### Dependencies Configuration
 
 <Tabs>
@@ -563,7 +563,7 @@ helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
 ## Check rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```text
+```
 #### Major Version Upgrade
 
 ```bash
@@ -583,7 +583,7 @@ helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 ## Verify
 helm list -n mcp-server-langgraph
 kubectl get pods -n mcp-server-langgraph
-```text
+```
 #### Rollback
 
 ```bash
@@ -595,7 +595,7 @@ helm rollback mcp-server-langgraph -n mcp-server-langgraph
 
 ## Or rollback to specific revision
 helm rollback mcp-server-langgraph 3 -n mcp-server-langgraph
-```text
+```
 ### Uninstallation
 
 ```bash
@@ -611,7 +611,7 @@ kubectl get pvc -n mcp-server-langgraph
 
 ## Delete PVCs (WARNING: Deletes data!)
 kubectl delete pvc --all -n mcp-server-langgraph
-```text
+```
 ### Customization
 
 #### Custom Init Containers
@@ -628,7 +628,7 @@ initContainers:
           echo "Waiting for PostgreSQL..."
           sleep 2
         done
-```text
+```
 #### Custom Sidecars
 
 ```yaml
@@ -646,7 +646,7 @@ sidecars:
       requests:
         memory: "256Mi"
         cpu: "100m"
-```text
+```
 #### Custom Volumes
 
 ```yaml
@@ -659,7 +659,7 @@ extraVolumes:
 extraVolumeMounts:
   - name: model-cache
     mountPath: /app/.cache/models
-```text
+```
 #### Environment Variables
 
 ```yaml
@@ -672,7 +672,7 @@ extraEnv:
       secretKeyRef:
         name: external-secret
         key: secret-key
-```text
+```
 ### Monitoring
 
 #### Prometheus Integration
@@ -691,7 +691,7 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "8000"
   prometheus.io/path: "/metrics/prometheus"
-```text
+```
 #### Grafana Dashboards
 
 ```bash
@@ -704,7 +704,7 @@ kubectl create configmap langgraph-dashboards \
 kubectl label configmap langgraph-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
-```text
+```
 ### Troubleshooting
 
 <AccordionGroup>

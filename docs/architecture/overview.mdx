@@ -223,7 +223,7 @@ Based on our ADRs, these principles guide our architecture:
 ### System Architecture
 
 ```mermaid
-graph TB
+flowchart TB
     subgraph Client_Layer["Client Layer"]
         Client[MCP Client]
     end
@@ -289,7 +289,7 @@ graph TB
     class Router,Agent,Tools agentStyle
     class LiteLLM,Primary,Fallback llmStyle
     class OTEL,Jaeger,Prom,LangSmith obsStyle
-```text
+```
 ### When to Create an ADR
 
 Create a new ADR when making decisions about:
