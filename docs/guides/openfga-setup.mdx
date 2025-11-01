@@ -76,7 +76,7 @@ flowchart TB
 ```
         ```bash
         docker compose up -d openfga postgres
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Kubernetes">
@@ -92,7 +92,7 @@ flowchart TB
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
           deployment/openfga -n mcp-server-langgraph
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Cloud Services">
@@ -106,7 +106,7 @@ flowchart TB
         OPENFGA_STORE_ID=your-store-id
         OPENFGA_MODEL_ID=your-model-id
         OPENFGA_API_TOKEN=your-api-token  # If using cloud
-        ```xml
+        ```
       </Tab>
     </Tabs>
   </Step>
@@ -123,7 +123,7 @@ flowchart TB
     curl http://localhost:8080/
 
     # Expected: OpenFGA version info
-    ```xml
+    ```
   </Step>
 
   <Step title="Run Setup Script">
@@ -164,12 +164,13 @@ flowchart TB
   </Step>
 
   <Step title="Update Configuration">
-    ```bash
+    ```
+
     # .env
     OPENFGA_API_URL=http://localhost:8080
     OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
     OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
-    ```xml
+    ```
   </Step>
 
   <Step title="Test Authorization">
@@ -186,7 +187,7 @@ flowchart TB
     )
     print(f"Alice can execute chat: {allowed}")
     # Output: True
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -581,7 +582,7 @@ psql -U openfga openfga < openfga-backup.sql
     # Check logs
     docker compose logs openfga
     kubectl logs -l app=openfga
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Store not found">
@@ -598,7 +599,7 @@ psql -U openfga openfga < openfga-backup.sql
       -d '{"name": "mcp-server-langgraph"}'
 
     # Update OPENFGA_STORE_ID in .env
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Model not found">
@@ -611,7 +612,7 @@ psql -U openfga openfga < openfga-backup.sql
 
     # Or create model via API
     # See: https://openfga.dev/docs/modeling
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Slow authorization checks">
@@ -626,7 +627,7 @@ psql -U openfga openfga < openfga-backup.sql
     # Enable caching
     OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
     OPENFGA_CHECK_QUERY_CACHE_TTL=10s
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Permission check returns false unexpectedly">

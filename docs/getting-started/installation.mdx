@@ -55,14 +55,14 @@ Choose the installation method that best fits your use case:
         ```bash
         docker --version
         docker compose version
-        ```xml
+        ```
       </Step>
 
       <Step title="Clone Repository">
         ```bash
         git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
         cd mcp_server_langgraph
-        ```xml
+        ```
       </Step>
 
       <Step title="Install uv Package Manager">
@@ -77,7 +77,7 @@ Choose the installation method that best fits your use case:
 
         # Verify installation
         uv --version
-        ```xml
+        ```
         <Tip>
           uv is 10-100x faster than pip and handles virtual environments automatically!
         </Tip>
@@ -100,7 +100,7 @@ Choose the installation method that best fits your use case:
         ```bash
         make install     # Production only (from lockfile)
         make install-dev # Development with all tools
-        ```xml
+        ```
         <Note>
           **requirements*.txt files are deprecated.** All dependencies are managed via
           `pyproject.toml` and locked in `uv.lock` for reproducible builds.
@@ -118,14 +118,14 @@ Choose the installation method that best fits your use case:
       <Step title="Build Image">
         ```bash
         docker build -t mcp-server-langgraph:latest .
-        ```xml
+        ```
       </Step>
 
       <Step title="Create Environment File">
         ```bash
         cp .env.example .env
         # Edit .env with your configuration
-        ```xml
+        ```
       </Step>
 
       <Step title="Run with Docker Compose">
@@ -138,7 +138,7 @@ Choose the installation method that best fits your use case:
 
         # Stop services
         docker compose down
-        ```xml
+        ```
       </Step>
     </Steps>
 
@@ -169,7 +169,7 @@ Choose the installation method that best fits your use case:
       grafana:          # Visualization
         ports:
           - "3000:3000"
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Kubernetes">
@@ -185,7 +185,7 @@ Choose the installation method that best fits your use case:
 
     # Using Helm
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph
-    ```xml
+    ```
   </Tab>
 
   <Tab title="pip Install">
@@ -201,7 +201,7 @@ Choose the installation method that best fits your use case:
 
     # Or install locally
     pip install -e .
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -211,7 +211,7 @@ Choose the installation method that best fits your use case:
 
 ```bash
 docker compose up -d
-```xml
+```
 <Check>
   **Verify services are running:**
   ```bash
@@ -260,7 +260,7 @@ OPENAI_API_KEY=sk-your-key-here
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1
 OLLAMA_BASE_URL=http://localhost:11434
-```xml
+```
 </CodeGroup>
 
 #### 4. Add OpenFGA IDs
@@ -292,7 +292,7 @@ pytest -v
 ```
 ```bash With Coverage
 pytest --cov=. --cov-report=term-missing
-```xml
+```
 </CodeGroup>
 
 ### Optional: Development Tools
@@ -316,7 +316,7 @@ make pre-commit-setup
 ```
 ```bash Kubernetes Tools
 brew install kubectl helm kustomize  # macOS
-```xml
+```
 </CodeGroup>
 
 ### Platform-Specific Notes
@@ -338,7 +338,7 @@ brew install kubectl helm kustomize  # macOS
 
     # Start Docker Desktop
     open /Applications/Docker.app
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Ubuntu/Debian">
@@ -359,7 +359,7 @@ brew install kubectl helm kustomize  # macOS
 
     # Install Git
     sudo apt install git
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Windows">
@@ -391,7 +391,7 @@ brew install kubectl helm kustomize  # macOS
 
     # Python packages have ARM64 wheels
     pip install -r requirements.txt
-    ```xml
+    ```
     <Tip>
       On Apple Silicon Macs, use native Python, not Rosetta!
     </Tip>
@@ -419,7 +419,7 @@ brew install kubectl helm kustomize  # macOS
     # If still failing, install build tools:
     # Ubuntu: sudo apt install build-essential python3-dev
     # macOS: xcode-select --install
-    ```xml
+    ```
     <Tip>
       uv handles most dependency resolution issues automatically and is much faster than pip!
     </Tip>
@@ -444,7 +444,7 @@ brew install kubectl helm kustomize  # macOS
     newgrp docker  # Or log out and back in
 
     # macOS/Windows: Start Docker Desktop
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Port already in use">

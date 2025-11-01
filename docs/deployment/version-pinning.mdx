@@ -135,7 +135,8 @@ MAJOR.MINOR.PATCH
 
 #### 1. Update Source of Truth
 
-```bash
+```
+
 ## Update pyproject.toml
 [project]
 version = "2.5.0"  # New version
@@ -148,7 +149,8 @@ git commit -m "chore: bump version to 2.5.0"
 
 Run the version sync script:
 
-```bash
+```
+
 ## Automated version sync (recommended)
 ./scripts/sync-versions.sh 2.5.0
 
@@ -422,7 +424,8 @@ if [ -n "$LATEST_TAGS" ]; then
 fi
 
 echo "✅ No :latest tags found in production configurations"
-```sql
+```
+
 ---
 
 ### Infrastructure Image Versions

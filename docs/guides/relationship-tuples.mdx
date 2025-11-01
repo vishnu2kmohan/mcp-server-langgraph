@@ -221,7 +221,8 @@ await client.write_tuples([{
     "relation": "owner",
     "object": "document:report"
 }])
-```sql
+```
+
 ### Deleting Tuples
 
 #### Delete Specific Tuple
@@ -233,7 +234,8 @@ await client.delete_tuples([{
     "relation": "executor",
     "object": "tool:chat"
 }])
-```sql
+```
+
 #### Delete All User Access to Object
 
 ```python
@@ -243,7 +245,8 @@ tuples = await client.read_tuples(
     object="conversation:thread_123"
 )
 await client.delete_tuples(tuples)
-```sql
+```
+
 #### Delete All Object Permissions
 
 ```python

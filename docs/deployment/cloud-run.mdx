@@ -118,7 +118,8 @@ gcloud run deploy mcp-server-langgraph \
   --region us-central1 \
   --platform managed \
   --allow-unauthenticated
-```sql
+```
+
 #### Update Deployment
 
 ```bash
@@ -271,7 +272,7 @@ gcloud run services add-iam-policy-binding mcp-server-langgraph \
     gcloud run services update mcp-server-langgraph \
       --timeout 600 \
       --memory 4Gi
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Secret Access Denied">

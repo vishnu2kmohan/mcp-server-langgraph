@@ -165,7 +165,8 @@ Security Features Enabled:
 
 Update the placeholder secrets with real API keys:
 
-```bash
+```
+
 ## Update Anthropic API key
 echo -n "sk-ant-YOUR_REAL_KEY" | gcloud secrets versions add staging-anthropic-api-key --data-file=-
 
@@ -191,7 +192,8 @@ Verify installation:
 
 ```bash
 kubectl get pods -n external-secrets-system
-```sql
+```
+
 ### Step 4: Configure GitHub Environment
 
 #### 4.1 Create GitHub Environment
@@ -419,7 +421,7 @@ Create alert policies for:
     # From inside pod
     kubectl exec -it <pod-name> -n mcp-staging -- \
       nc -zv 127.0.0.1 5432
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Network policies blocking traffic" icon="network-wired">
@@ -431,7 +433,7 @@ Create alert policies for:
     ```bash
     kubectl delete networkpolicy <policy-name> -n mcp-staging
     # Re-apply when done testing
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

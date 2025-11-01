@@ -648,7 +648,7 @@ kubectl get ingress -n mcp-server-langgraph
               operator: In
               values:
               - "true"
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Right-Size Resources" icon="gauge">
@@ -661,7 +661,7 @@ kubectl get ingress -n mcp-server-langgraph
       --enable-network-egress-metering \
       --enable-resource-consumption-metering \
       --region=us-central1
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Use Committed Use Discounts" icon="percent">
@@ -675,7 +675,7 @@ kubectl get ingress -n mcp-server-langgraph
       --plan=12-month \
       --resources=vcpu=100,memory=400GB \
       --region=us-central1
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -687,7 +687,7 @@ kubectl get ingress -n mcp-server-langgraph
     gcloud container clusters update langgraph-cluster \
       --enable-shielded-nodes \
       --region=us-central1
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Use Binary Authorization" icon="shield-check">
@@ -698,7 +698,7 @@ kubectl get ingress -n mcp-server-langgraph
     gcloud container clusters update langgraph-cluster \
       --enable-binauthz \
       --region=us-central1
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Network Policies" icon="network-wired">
@@ -729,7 +729,7 @@ kubectl get ingress -n mcp-server-langgraph
         ports:
         - protocol: TCP
           port: 8080
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -744,7 +744,7 @@ kubectl get ingress -n mcp-server-langgraph
       --image=gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest \
       --restart=Never \
       -- $PROJECT_ID:us-central1:langgraph-postgres
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Workload Identity not working">

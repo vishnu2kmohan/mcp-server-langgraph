@@ -310,7 +310,8 @@ for test in test_cases:
         object=test["object"]
     )
     assert result == test["expected"], f"Test failed: {test}"
-```sql
+```
+
 ### Deploying Models
 
 #### Via Setup Script
@@ -375,7 +376,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
         define owner: [user]
         define editor: [user, group#member, team#lead]
         define viewer: [user] or editor or viewer from parent or viewer from workspace
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Use Hierarchies" icon="layer-group">
@@ -387,7 +388,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
         define admin: [user]
         define member: [user] or admin  # Admins are members
         define viewer: [user] or member # Members are viewers
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Limit Indirection" icon="arrows-turn-right">
@@ -400,7 +401,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     **Bad** (5+ hops):
     ```typescript
     define viewer: [user] or viewer from parent from grandparent from workspace from tenant
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Name Consistently" icon="tag">
@@ -426,7 +427,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     # 2. Verify v1 tuples still work
     # 3. Add v2 tuples
     # 4. Switch to v2
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

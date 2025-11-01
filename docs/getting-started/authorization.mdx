@@ -53,7 +53,7 @@ The default model supports:
 
     # Kubernetes (production)
     kubectl apply -f deployments/kubernetes/base/openfga-deployment.yaml
-    ```xml
+    ```
   </Step>
 
   <Step title="Initialize Authorization Model">
@@ -69,7 +69,7 @@ The default model supports:
     ```bash
     OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
     OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
-    ```xml
+    ```
   </Step>
 
   <Step title="Configure Environment">
@@ -78,7 +78,7 @@ The default model supports:
     OPENFGA_API_URL=http://localhost:8080
     OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
     OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
-    ```xml
+    ```
   </Step>
 
   <Step title="Test Authorization">
@@ -94,7 +94,7 @@ The default model supports:
         object="tool:chat"
     )
     print(f"Alice can execute chat tool: {allowed}")
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -146,7 +146,7 @@ type document
         "relation": "viewer",
         "object": "tool:search"
     }])
-    ```xml
+    ```
   </Tab>
 
   <Tab title="User → Organization">
@@ -166,7 +166,7 @@ type document
         "relation": "member",
         "object": "organization:acme"
     }])
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Organization → Tool">
@@ -181,7 +181,7 @@ type document
     }])
 
     # Now both alice and bob can use chat!
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -533,7 +533,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     # Check logs
     docker compose logs openfga
     kubectl logs -l app=openfga
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Authorization always fails">
@@ -549,7 +549,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     tuples = await client.read_tuples()
     for t in tuples:
         print(t)
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Slow authorization checks">
@@ -563,7 +563,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     ```bash
     # Check latency
     curl http://localhost:9090/api/v1/query?query=openfga_check_duration_seconds
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Store or model not found">

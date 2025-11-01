@@ -784,7 +784,7 @@ if features.enable_caching:
     # Setup hooks
     git secrets --install
     git secrets --register-aws
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Environment Parity" icon="equals">
@@ -814,7 +814,7 @@ if features.enable_caching:
         if settings.env == "production":
             assert not settings.debug, "DEBUG must be false"
             assert settings.auth_provider == "keycloak"
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Use Infisical/Vault" icon="vault">
@@ -837,7 +837,7 @@ if features.enable_caching:
 
     # Inject secrets
     infisical run -- python main.py
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -859,7 +859,7 @@ if features.enable_caching:
 
     # Check specific variable
     print(f"ANTHROPIC_API_KEY: {os.getenv('ANTHROPIC_API_KEY', 'NOT SET')}")
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Configuration validation fails">
@@ -876,7 +876,7 @@ if features.enable_caching:
     # Test individually
     export ANTHROPIC_API_KEY=test
     python -c "from src.config import settings"
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Kubernetes ConfigMap not updating">

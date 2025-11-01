@@ -175,7 +175,7 @@ flowchart TD
     GenerateResp --> Verify[Verify Output<br/>LLM-as-Judge]
 
     Verify --> Quality{Quality<br/>Score ≥ 0.7?}
-    Quality -->|Yes| ExtractNotes[Extract Notes<br/>6-Category LLM Extraction]
+    Quality -->|Yes| ExtractNotes[Extract Notes<br/&gt;6-Category LLM Extraction]
     Quality -->|No| Refine{Attempts<br/>< 3?}
 
     Refine -->|Yes| RefineResp[Refine Response<br/>With Feedback]
@@ -205,7 +205,7 @@ flowchart TB
             AgentPod1[Agent Pod 1<br/>mcp-server-langgraph]
             AgentPod2[Agent Pod 2<br/>mcp-server-langgraph]
             AgentPod3[Agent Pod 3<br/>mcp-server-langgraph]
-            HPA[Horizontal Pod Autoscaler<br/>2-10 replicas]
+            HPA[Horizontal Pod Autoscaler<br/&gt;2-10 replicas]
         end
 
         subgraph Auth_Layer["Authentication Layer"]
@@ -541,7 +541,7 @@ flowchart TB
     end
 
     subgraph Visualization["Visualization"]
-        Grafana[Grafana Dashboards<br/>4 dashboards, 100+ panels]
+        Grafana[Grafana Dashboards<br/&gt;4 dashboards, 100+ panels]
         JaegerUI[Jaeger UI<br/>Trace Explorer]
         LangSmithUI[LangSmith UI<br/>LLM Debugging]
     end

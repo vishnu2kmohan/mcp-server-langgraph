@@ -121,7 +121,7 @@ kubectl annotate serviceaccount mcp-server-langgraph \
   -n mcp-staging \
   iam.gke.io/gcp-service-account=vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com \
   --overwrite
-```xml
+```
 </Accordion>
 
 ### Configuration
@@ -270,7 +270,7 @@ EOF
     4. Restart pods to pick up new annotation:
        ```bash
        kubectl rollout restart deployment/mcp-server-langgraph -n mcp-staging
-       ```xml
+       ```
   </Accordion>
 
   <Accordion title="Permission denied errors" icon="shield-exclamation">
@@ -294,7 +294,7 @@ EOF
        gcloud projects add-iam-policy-binding vishnu-sandbox-20250310 \
          --member="serviceAccount:vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com" \
          --role="roles/aiplatform.developer"
-       ```xml
+       ```
   </Accordion>
 
   <Accordion title="Model not found errors" icon="circle-question">
@@ -336,7 +336,7 @@ EOF
     3. Verify namespace has Workload Identity enabled:
        ```bash
        kubectl get namespace mcp-staging -o yaml | grep workload-identity
-       ```xml
+       ```
   </Accordion>
 </AccordionGroup>
 
@@ -423,7 +423,7 @@ gcloud logging read \
    AND jsonPayload.request_response_time > 0" \
   --limit=50 \
   --format=json
-```sql
+```
 ### Migration from Google AI Studio
 
 If you're currently using Google AI Studio API keys, here's how to migrate:
@@ -433,6 +433,7 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
     Change from API key to Vertex AI configuration:
 
     **Before** (Google AI Studio):
+
     ```yaml
     env:
       - name: LLM_PROVIDER
@@ -442,8 +443,10 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
           secretKeyRef:
             name: secrets
             key: google-api-key
-```
+    ```
+
     **After** (Vertex AI):
+
     ```yaml
     env:
       - name: LLM_PROVIDER
@@ -453,19 +456,19 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
       - name: VERTEX_LOCATION
         value: "us-central1"
       # No API key needed!
-    ```xml
+    ```
   </Step>
 
   <Step title="Run Setup Script">
     ```bash
     ./scripts/gcp/setup-vertex-ai-staging.sh
-    ```xml
+    ```
   </Step>
 
   <Step title="Deploy Updated Configuration">
     ```bash
     kubectl apply -k deployments/overlays/staging-gke
-    ```xml
+    ```
   </Step>
 
   <Step title="Verify Migration">

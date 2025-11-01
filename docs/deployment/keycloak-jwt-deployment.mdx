@@ -61,7 +61,8 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Authoritative)
 #### Phase 2: OpenFGA Update (Week 1)
 
 - [ ] **2.1 Deploy New Authorization Model**
-  ```bash
+  ```
+
   # Model includes service_principal type with acts_as relation
   python scripts/setup/setup_openfga.py
 ```
@@ -84,7 +85,8 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Authoritative)
 
   # Convert to PEM (or run update_kong_jwks.py once)
   python scripts/update_kong_jwks.py
-  ```sql
+  ```
+
   See [update_kong_jwks.py](/reference/setup-scripts#update_kong_jwks-py) for details.
 
 - [ ] **3.2 Update Kong JWT Plugin**
@@ -107,7 +109,8 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Authoritative)
 - [ ] **3.5 Configure Hybrid Routes**
   ```bash
   kubectl apply -f deployments/kubernetes/kong/kong-hybrid-ingress.yaml
-  ```sql
+  ```
+
 #### Phase 4: MCP Server Deployment (Week 2)
 
 - [ ] **4.1 Update Configuration**
@@ -176,7 +179,8 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Authoritative)
   ```bash
   # Load test with 1000 concurrent JWT validations
   k6 run tests/load/jwt_validation.js
-  ```sql
+  ```
+
 - [ ] **6.3 Security Audit**
   - Token tampering test
   - Expired token rejection

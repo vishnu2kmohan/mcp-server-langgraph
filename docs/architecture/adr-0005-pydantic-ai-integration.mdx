@@ -37,7 +37,8 @@ Traditional approaches have limitations:
    # Only works with some providers
    tools = [{"name": "route", "schema": ...}]
    response = llm.invoke(messages, tools=tools)
-   ```yaml
+   ```
+
 Problems:
 - No type safety (strings everywhere)
 - Manual validation required
@@ -104,7 +105,8 @@ Implementation:
 ```python
 if "search" in message.lower():
     action = "use_tools"
-```javascript
+```
+
 **Pros**:
 - Instant (no LLM call)
 - Free (no tokens)

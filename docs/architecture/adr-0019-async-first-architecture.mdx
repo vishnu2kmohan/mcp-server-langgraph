@@ -186,7 +186,8 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
 ## 451 async functions across codebase
 $ grep -r "async def" src/ --include="*.py" | wc -l
 451
-```python
+```
+
 **Key Async Components**:
 - **LLM Factory** (`llm/factory.py`): `async def acall()`
 - **Session Management** (`auth/session.py`): All methods async

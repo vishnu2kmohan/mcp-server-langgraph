@@ -59,7 +59,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
         # Start Ollama service
         ollama serve
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Linux">
@@ -73,7 +73,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
         # Verify
         ollama --version
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Docker">
@@ -94,7 +94,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 ```
         ```bash
         docker compose up -d ollama
-        ```xml
+        ```
       </Tab>
     </Tabs>
   </Step>
@@ -112,7 +112,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
     # Model info
     ollama show llama3.2:3b
-    ```xml
+    ```
   </Step>
 
   <Step title="Configure MCP Server">
@@ -121,7 +121,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
     LLM_PROVIDER=ollama
     OLLAMA_BASE_URL=http://localhost:11434
     LLM_MODEL_NAME=llama3.2:3b
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -136,7 +136,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
     response = await llm.ainvoke("What is machine learning?")
     print(response.content)
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -184,7 +184,7 @@ llm = Ollama(
 
     # Or with Docker
     docker pull vllm/vllm-openai:latest
-    ```xml
+    ```
   </Step>
 
   <Step title="Start vLLM Server">
@@ -201,7 +201,7 @@ llm = Ollama(
       -p 8000:8000 \
       vllm/vllm-openai:latest \
       --model meta-llama/Llama-3.2-3B-Instruct
-    ```xml
+    ```
   </Step>
 
   <Step title="Configure MCP Server">
@@ -211,7 +211,7 @@ llm = Ollama(
     OPENAI_API_BASE=http://localhost:8000/v1
     OPENAI_API_KEY=EMPTY
     LLM_MODEL_NAME=meta-llama/Llama-3.2-3B-Instruct
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -226,7 +226,7 @@ llm = Ollama(
 
     response = await llm.ainvoke("Explain quantum computing")
     print(response.content)
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -248,7 +248,8 @@ python -m vllm.entrypoints.openai.api_server \
 python -m vllm.entrypoints.openai.api_server \
   --model meta-llama/Llama-3.2-3B-Instruct \
   --quantization awq  # or gptq, bitsandbytes
-```sql
+```
+
 ### LM Studio
 
 **Best for**: Desktop GUI, beginners, Windows users
@@ -281,7 +282,7 @@ python -m vllm.entrypoints.openai.api_server \
     OPENAI_API_BASE=http://localhost:1234/v1
     OPENAI_API_KEY=lm-studio
     LLM_MODEL_NAME=local-model
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -450,9 +451,9 @@ def select_model_by_hardware():
     # Check GPU
     try:
         gpus = GPUtil.getGPUs()
-        if gpus and gpus[0].memoryTotal > 16000:  # >16GB VRAM
+        if gpus and gpus[0].memoryTotal > 16000:  # &gt;16GB VRAM
             return "qwen2.5:14b"
-        elif gpus and gpus[0].memoryTotal > 8000:  # >8GB VRAM
+        elif gpus and gpus[0].memoryTotal > 8000:  # &gt;8GB VRAM
             return "mistral:7b"
     except:
         pass
@@ -680,7 +681,7 @@ async def call_local_llm(query: str):
 
     # Clear GPU memory
     docker restart ollama
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Slow inference">
@@ -699,7 +700,7 @@ async def call_local_llm(query: str):
 
     # Optimize parameters
     PARAMETER num_thread 8  # More CPU threads
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Model not found">
@@ -715,7 +716,7 @@ async def call_local_llm(query: str):
 
     # Verify model name (case-sensitive)
     ollama show llama3.2:3b
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Connection refused">

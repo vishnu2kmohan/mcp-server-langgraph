@@ -31,27 +31,27 @@ Complete security hardening framework for AWS EKS deployments with 50+ security 
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'primaryColor':'#8dd3c7','primaryTextColor':'#000','primaryBorderColor':'#555','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#bebada'}}}%%
 flowchart LR
     subgraph "Identity"
-        IRSA[IRSA<br/>100%]
-        IAM[IAM Policies<br/>95%]
-        MFA[MFA<br/>100%]
+        IRSA[IRSA<br/&gt;100%]
+        IAM[IAM Policies<br/&gt;95%]
+        MFA[MFA<br/&gt;100%]
     end
 
     subgraph "Network"
-        VPC[VPC Isolation<br/>100%]
-        SG[Security Groups<br/>95%]
-        NP[Network Policies<br/>90%]
+        VPC[VPC Isolation<br/&gt;100%]
+        SG[Security Groups<br/&gt;95%]
+        NP[Network Policies<br/&gt;90%]
     end
 
     subgraph "Data"
-        KMS[KMS Encryption<br/>100%]
-        TLS[TLS Everywhere<br/>100%]
-        SM[Secrets Manager<br/>95%]
+        KMS[KMS Encryption<br/&gt;100%]
+        TLS[TLS Everywhere<br/&gt;100%]
+        SM[Secrets Manager<br/&gt;95%]
     end
 
     subgraph "Workload"
-        PSS[Pod Security<br/>100%]
-        Scan[Image Scanning<br/>85%]
-        RBAC[RBAC<br/>95%]
+        PSS[Pod Security<br/&gt;100%]
+        Scan[Image Scanning<br/&gt;85%]
+        RBAC[RBAC<br/&gt;95%]
     end
 
     classDef excellent fill:#8dd3c7,stroke:#555,color:#000

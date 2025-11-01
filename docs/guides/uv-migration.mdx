@@ -71,19 +71,19 @@ uv sync  # That's it! Creates venv + installs everything
 <Tab title="macOS/Linux">
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```xml
+```
 </Tab>
 
 <Tab title="Windows">
 ```powershell
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```xml
+```
 </Tab>
 
 <Tab title="Via pip">
 ```bash
 pip install uv
-```xml
+```
 </Tab>
 </Tabs>
 
@@ -106,7 +106,8 @@ uv sync
 
 ## Or install production dependencies only
 uv sync --frozen --no-dev
-```sql
+```
+
 **What happens**:
 1. ✅ Creates `.venv` if it doesn't exist
 2. ✅ Reads `pyproject.toml` for dependencies
@@ -303,7 +304,8 @@ python script.py
   with:
     path: ~/.cache/uv
     key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock', 'pyproject.toml') }}
-```sql
+```
+
 ### FAQ
 
 #### Do I need to delete requirements.txt files?
@@ -341,14 +343,15 @@ uv sync
 Edit `pyproject.toml`:
 ```toml
 dependencies = [
-    "requests>=2.31.0,<3.0.0",  # Version range
+    "requests>=2.31.0,&lt;3.0.0",  # Version range
     "black==24.3.0",             # Exact version
 ]
 ```
 Then run:
 ```bash
 uv sync
-```sql
+```
+
 ### Migration Checklist
 
 - [ ] Install uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`)

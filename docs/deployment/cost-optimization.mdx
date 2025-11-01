@@ -84,7 +84,7 @@ resources:
     cpu: 250m       # $9/month
     memory: 512Mi   # $2/month
 ## Per pod: $11/month (74% savings!)
-```xml
+```
 </CodeGroup>
 
 **Action**:
@@ -97,7 +97,8 @@ kubectl patch deployment production-mcp-server-langgraph \
   -n mcp-production \
   --type='json' \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
-```sql
+```
+
 #### Strategy 2: Committed Use Discounts (CUDs)
 
 Commit to 1-year or 3-year usage for significant discounts:
@@ -115,8 +116,8 @@ Commit to 1-year or 3-year usage for significant discounts:
 
 **ROI**: Pays for itself in first month
 
-<Card title="Complete Cost Guide" icon="book-open" href="/GCP_COST_OPTIMIZATION_PLAYBOOK.md">
-  Detailed playbook with 8 cost reduction strategies (500+ lines)
+<Card title="Complete Cost Guide" icon="book-open" href="/deployment/cost-optimization">
+  Comprehensive guide with 8 cost reduction strategies
 </Card>
 
 #### Strategy 3: Development Cost Controls
@@ -208,7 +209,7 @@ gcloud billing budgets create \
   --threshold-rule=percent=50 \
   --threshold-rule=percent=90 \
   --threshold-rule=percent=100
-```xml
+```
 <Check>Alerts fire at 50%, 90%, and 100% of budget</Check>
 
 #### Cost Allocation Labels
@@ -662,7 +663,7 @@ tags = {
   <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
     Dev/staging cost optimization strategies
   </Card>
-  <Card title="Complete Playbook" icon="book" href="/GCP_COST_OPTIMIZATION_PLAYBOOK.md">
-    500+ line detailed GCP cost optimization playbook
+  <Card title="Complete Guide" icon="book" href="/deployment/cost-optimization">
+    Detailed GCP cost optimization strategies
   </Card>
 </CardGroup>

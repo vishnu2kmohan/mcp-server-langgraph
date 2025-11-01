@@ -43,7 +43,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Test authentication
     python scripts/setup/test_keycloak.py
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="JWT & Sessions" icon="ticket">
@@ -68,7 +68,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Test session creation
     python scripts/setup/test_sessions.py
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="OpenFGA Authorization" icon="shield">
@@ -94,7 +94,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify authorization
     python examples/test_authorization.py
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -123,7 +123,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
     # Check certificate expiration
     echo | openssl s_client -connect api.yourdomain.com:443 2>/dev/null | \
       openssl x509 -noout -dates
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Network Policies" icon="network-wired">
@@ -146,7 +146,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Test connectivity
     kubectl run test --rm -it --image=busybox -- nc -zv openfga 8080
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -174,7 +174,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check secret manager
     kubectl get secrets -n mcp-server-langgraph
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -206,7 +206,8 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check resource availability
     kubectl describe nodes | grep -A 5 "Allocated resources"
-    ```sql
+    ```
+
   </Accordion>
 
   <Accordion title="High Availability" icon="shield-check">
@@ -235,7 +236,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check PDB
     kubectl get pdb -n mcp-server-langgraph
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -267,7 +268,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify restore procedure
     ./scripts/backup/test_restore.sh
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Redis Sessions" icon="server">
@@ -291,7 +292,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check replication
     kubectl exec -it deploy/redis-session -- redis-cli -a $REDIS_PASSWORD info replication
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -328,7 +329,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Query Prometheus
     curl 'http://prometheus:9090/api/v1/query?query=up{job="mcp-server-langgraph"}'
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Tracing" icon="route">
@@ -353,7 +354,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify trace export
     kubectl logs -l app=otel-collector -n observability
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Logging" icon="file-lines">
@@ -377,7 +378,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Verify no secrets in logs
     kubectl logs -l app=mcp-server-langgraph | grep -i "password\|secret\|key"
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -412,7 +413,8 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check alert manager
     curl http://alertmanager:9093/api/v2/alerts
-    ```python
+    ```
+
   </Accordion>
 </AccordionGroup>
 
@@ -453,7 +455,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
       limits:
         cpu: 2000m
         memory: 2Gi
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Auto-Scaling" icon="arrows-up-down">
@@ -480,7 +482,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Watch scaling
     kubectl get hpa -n mcp-server-langgraph --watch
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -508,7 +510,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Check quota
     python scripts/setup/check_quota.py
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -557,7 +559,7 @@ Comprehensive checklist to ensure your MCP Server with LangGraph deployment is p
 
     # Chaos test
     kubectl delete pod -l app=mcp-server-langgraph --random
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

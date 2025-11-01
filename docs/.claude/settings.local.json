@@ -1,0 +1,6 @@
+{
+  "disabledMcpjsonServers": [
+    "langgraph-agent",
+    "langgraph-agent-streamable"
+  ]
+}

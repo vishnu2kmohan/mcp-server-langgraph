@@ -388,7 +388,7 @@ Based on the Kubernetes manifests and Docker configurations, here are the resour
 - **vCPU Allocation:** 1:2 to 1:4 overcommitment ratio
 - **CPU Reservation:** Reserve 50% for production VMs
 - **CPU Shares:** High priority for database and application VMs
-- **NUMA Optimization:** Enable vNUMA for VMs with >8 vCPUs
+- **NUMA Optimization:** Enable vNUMA for VMs with &gt;8 vCPUs
 - **CPU Hot-Add:** Enable for application VMs (not recommended for DB)
 
 ##### Memory Configuration
@@ -435,9 +435,9 @@ flowchart TD
     Root[Cluster Root] --> Prod[Production]
     Root --> Dev[Development<br/>expandable reservation]
 
-    Prod --> Apps[Applications<br/>50% CPU, 60% Memory]
-    Prod --> DB[Databases<br/>30% CPU, 30% Memory]
-    Prod --> Obs[Observability<br/>20% CPU, 10% Memory]
+    Prod --> Apps[Applications<br/&gt;50% CPU, 60% Memory]
+    Prod --> DB[Databases<br/&gt;30% CPU, 30% Memory]
+    Prod --> Obs[Observability<br/&gt;20% CPU, 10% Memory]
 
     Apps --> MCP[MCP-Server<br/>shares: high]
     Apps --> KC[Keycloak<br/>shares: high]

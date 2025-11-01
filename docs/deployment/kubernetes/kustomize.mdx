@@ -132,7 +132,8 @@ images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: latest
-```bash
+```
+
 #### base/deployment.yaml
 
 ```yaml
@@ -183,7 +184,8 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
-```bash
+```
+
 #### base/service.yaml
 
 ```yaml
@@ -202,7 +204,8 @@ spec:
   - name: metrics
     port: 9090
     targetPort: 9090
-```bash
+```
+
 #### base/serviceaccount.yaml
 
 ```yaml
@@ -255,7 +258,8 @@ images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: dev
-```bash
+```
+
 #### overlays/development/deployment-patch.yaml
 
 ```yaml
@@ -321,7 +325,8 @@ images:
   - name: mcp-server-langgraph
     newName: gcr.io/project-id/mcp-server-langgraph
     newTag: staging
-```bash
+```
+
 #### overlays/staging/deployment-patch.yaml
 
 ```yaml
@@ -342,7 +347,8 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
-```bash
+```
+
 #### overlays/staging/hpa.yaml
 
 ```yaml
@@ -420,7 +426,8 @@ images:
 replicas:
   - name: mcp-server-langgraph
     count: 3
-```bash
+```
+
 #### overlays/production/deployment-patch.yaml
 
 ```yaml
@@ -461,7 +468,8 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-```bash
+```
+
 #### overlays/production/pdb.yaml
 
 ```yaml
@@ -474,7 +482,8 @@ spec:
   selector:
     matchLabels:
       app: mcp-server-langgraph
-```bash
+```
+
 #### overlays/production/network-policy.yaml
 
 ```yaml
@@ -740,7 +749,7 @@ argocd app sync mcp-server-langgraph-production
     # Bad - don't commit static ConfigMaps
     resources:
       - configmap.yaml  # Contains hardcoded values
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Keep Base Minimal" icon="minimize">
@@ -759,7 +768,7 @@ argocd app sync mcp-server-langgraph-production
     images:
       - name: mcp-server-langgraph
         newTag: v1.2.3  # Not 'latest'
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Validate Before Applying" icon="check">
@@ -774,7 +783,7 @@ argocd app sync mcp-server-langgraph-production
 
     # Then apply
     kubectl apply -k overlays/production
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Use Name Suffixes for ConfigMaps" icon="fingerprint">
@@ -804,7 +813,7 @@ argocd app sync mcp-server-langgraph-production
 
     # Validate overlay
     kubectl kustomize k8s/overlays/production
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Patch not applying">
@@ -822,7 +831,7 @@ argocd app sync mcp-server-langgraph-production
           - op: replace
             path: /spec/replicas
             value: 5
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="ConfigMap not updating pods">
@@ -836,7 +845,7 @@ argocd app sync mcp-server-langgraph-production
     Or use Reloader:
     ```bash
     helm install reloader stakater/reloader
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

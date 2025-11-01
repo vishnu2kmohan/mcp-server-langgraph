@@ -26,7 +26,7 @@ curl http://localhost:8000/health
   "service": "mcp-server-langgraph",
   "version": "2.1.0"
 }
-```xml
+```
 <Check>
 All services healthy? Let's make your first request!
 </Check>
@@ -46,7 +46,7 @@ All services healthy? Let's make your first request!
         # Get token for user 'alice'
         token = auth.create_token("alice", expires_in=3600)
         print(f"Token: {token}")
-        ```xml
+        ```
       </Tab>
 
       <Tab title="cURL">
@@ -55,7 +55,7 @@ All services healthy? Let's make your first request!
         TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")
 
         echo "Token: $TOKEN"
-        ```xml
+        ```
       </Tab>
 
       <Tab title="JavaScript">
@@ -63,7 +63,7 @@ All services healthy? Let's make your first request!
         // In production, get token from your auth endpoint
         // For development, use a pre-generated token
         const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...";
-        ```xml
+        ```
       </Tab>
     </Tabs>
 
@@ -95,7 +95,7 @@ All services healthy? Let's make your first request!
         # Send request
         response = httpx.post(url, headers=headers, json=data)
         print(response.json())
-        ```xml
+        ```
       </Tab>
 
       <Tab title="cURL">
@@ -106,7 +106,7 @@ All services healthy? Let's make your first request!
           -d '{
             "query": "Hello! What can you help me with today?"
           }'
-        ```xml
+        ```
       </Tab>
 
       <Tab title="JavaScript">
@@ -124,7 +124,7 @@ All services healthy? Let's make your first request!
 
         const data = await response.json();
         console.log(data);
-        ```xml
+        ```
       </Tab>
     </Tabs>
   </Step>
@@ -145,7 +145,7 @@ All services healthy? Let's make your first request!
       "trace_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "authorized": true
     }
-    ```sql
+    ```
     <ResponseField name="content" type="string">
       The agent's response text
     </ResponseField>
@@ -252,7 +252,7 @@ echo "$RESPONSE" | python -m json.tool
 TRACE_ID=$(echo "$RESPONSE" | python -c "import sys, json; print(json.load(sys.stdin)['trace_id'])")
 echo ""
 echo "View trace: http://localhost:16686/trace/$TRACE_ID"
-```xml
+```
 </CodeGroup>
 
 ### Common Use Cases
@@ -360,7 +360,7 @@ async with httpx.AsyncClient() as client:
 
     # ❌ Bad: Missing authentication
     headers = {}
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Handle Errors Gracefully" icon="triangle-exclamation">
@@ -374,7 +374,7 @@ async with httpx.AsyncClient() as client:
         print(f"Details: {e.response.json()}")
     except httpx.RequestError as e:
         print(f"Request failed: {e}")
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Set Timeouts" icon="clock">
@@ -386,7 +386,7 @@ async with httpx.AsyncClient() as client:
         json=data,
         timeout=30.0  # 30 second timeout
     )
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Track Token Usage" icon="chart-line">
@@ -397,7 +397,7 @@ async with httpx.AsyncClient() as client:
         total_tokens += response['usage']['total_tokens']
 
     print(f"Total tokens used: {total_tokens}")
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Use Trace IDs for Debugging" icon="bug">
@@ -410,7 +410,7 @@ async with httpx.AsyncClient() as client:
         user="alice",
         tokens=result['usage']['total_tokens']
     )
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

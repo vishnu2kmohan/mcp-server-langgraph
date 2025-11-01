@@ -142,7 +142,7 @@ config = langsmith_config.create_run_config(
 
 ## Use in invocation
 result = agent_graph.invoke(inputs, config=config)
-```sql
+```
 Now you can filter traces by:
 - **User tier**: Find all premium user interactions
 - **Department**: Analyze usage by cost center
@@ -202,7 +202,7 @@ client.create_feedback(
     comment="Very helpful response!",
     source_info={"user_id": "alice"}
 )
-```sql
+```
 <Tip>
   Integrate feedback collection into your UI to gather real user sentiment on responses.
 </Tip>
@@ -267,7 +267,7 @@ Compare successful vs. failed traces side-by-side:
     ```bash
     # Set project per environment
     LANGSMITH_PROJECT=my-agent-prod
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Tagging Strategy">
@@ -295,7 +295,7 @@ Compare successful vs. failed traces side-by-side:
     # Trace 10% of requests
     if random.random() < 0.1:
         config = RunnableConfig(tags=["sampled"])
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Privacy Compliance">
@@ -307,7 +307,7 @@ Compare successful vs. failed traces side-by-side:
         text = re.sub(r'\b[\w.-]+@[\w.-]+\.\w+\b', '[EMAIL]', text)
         text = re.sub(r'\b\d{3}-\d{3}-\d{4}\b', '[PHONE]', text)
         return text
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

@@ -261,7 +261,7 @@ sequenceDiagram
         "alice": User(username="alice", roles=["admin"]),
         "bob": User(username="bob", roles=["user"])
     }
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="KeycloakUserProvider" icon="shield">
@@ -278,7 +278,7 @@ sequenceDiagram
         realm="mcp-server-langgraph",
         client_id="langgraph-client"
     )
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Custom Providers" icon="code">
@@ -295,7 +295,7 @@ sequenceDiagram
         async def verify_token(self, token):
             # Custom verification
             return TokenVerification(...)
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -395,7 +395,7 @@ type tool
 
     # In-memory backend
     SESSION_BACKEND=memory
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -513,7 +513,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     LANGSMITH_TRACING=true
     LANGSMITH_API_KEY=your-key
     LANGSMITH_PROJECT=mcp-server-langgraph
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Structured Logging">
@@ -532,7 +532,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
       "authorized": true,
       "duration_ms": 15
     }
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -558,7 +558,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-secret
     INFISICAL_PROJECT_ID=project-id
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Cloud Providers">
@@ -580,7 +580,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-4o"]
     ANTHROPIC_API_KEY=sk-ant-...
     GOOGLE_API_KEY=AIza...
     JWT_SECRET_KEY=$(openssl rand -base64 32)
-    ```xml
+    ```
     <Warning>
     Never commit `.env` files to Git!
     </Warning>

@@ -245,7 +245,8 @@ async def get_session(self, session_id: str, sliding_window: bool = True) -> Ses
         await self._redis.expire(f"session:{session_id}", ttl_seconds)
 
     return session
-```sql
+```
+
 ### Performance Characteristics
 
 | Operation | InMemory | Redis (Local) | Redis (Network) |

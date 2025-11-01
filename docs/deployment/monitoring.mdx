@@ -676,7 +676,8 @@ helm install grafana grafana/grafana \
     ]
   }
 }
-```sql
+```
+
 #### Production-Ready Dashboards (v2.1.0)
 
 <Note>
@@ -759,90 +760,64 @@ The repository includes pre-built Grafana dashboards optimized for production mo
 
 ##### Import Dashboards
 
-<Tabs>
-  <Tab title="Grafana UI">
-    **Manual import via web interface:**
+**Option 1: Grafana UI (Manual)**
 
-    1. Open Grafana (http://localhost:3000)
-    2. Navigate to **Dashboards** → **Import**
-    3. Click **Upload JSON file**
-    4. Select dashboard file from `monitoring/grafana/dashboards/`
-    5. Select **Prometheus** datasource
-    6. Click **Import**
+1. Open Grafana at http://localhost:3000
+2. Navigate to **Dashboards** → **Import**
+3. Click **Upload JSON file**
+4. Select dashboard file from `monitoring/grafana/dashboards/`
+5. Select **Prometheus** datasource
+6. Click **Import**
 
-    Repeat for each dashboard you want to use.
-  </Tab>
+Repeat for each dashboard you want to use.
 
-  <Tab title="Kubernetes ConfigMap">
-    **Provision all dashboards automatically:**
+**Option 2: Kubernetes ConfigMap (Automated)**
 
-    ```bash
-    # Create ConfigMap with all v2.1.0 dashboards
-    kubectl create configmap grafana-dashboards \
-      --from-file=monitoring/grafana/dashboards/authentication.json \
-      --from-file=monitoring/grafana/dashboards/openfga.json \
-      --from-file=monitoring/grafana/dashboards/llm-performance.json \
-      --from-file=monitoring/grafana/dashboards/mcp-server-langgraph.json \
-      --from-file=monitoring/grafana/dashboards/security.json \
-      --from-file=monitoring/grafana/dashboards/keycloak.json \
-      --from-file=monitoring/grafana/dashboards/redis-sessions.json \
-      -n monitoring
+```bash
+# Create ConfigMap from dashboard files
+kubectl create configmap grafana-dashboards \
+  --from-file=monitoring/grafana/dashboards/ \
+  -n monitoring
+```
 
-    # Update Grafana deployment
-    kubectl patch deployment grafana -n monitoring --patch '
-    spec:
-      template:
-        spec:
-          containers:
-          - name: grafana
-            volumeMounts:
-            - name: dashboards
-              mountPath: /var/lib/grafana/dashboards
-          volumes:
-          - name: dashboards
-            configMap:
-              name: grafana-dashboards
-    '
-    ```xml
-  </Tab>
+Then mount the ConfigMap in your Grafana deployment by adding volumeMounts and volumes to the deployment manifest.
 
-  <Tab title="Helm Values">
-    **Configure in Helm values.yaml:**
+**Option 3: Helm Chart Configuration**
 
-    ```yaml
-    grafana:
-      dashboardProviders:
-        dashboardproviders.yaml:
-          apiVersion: 1
-          providers:
-          - name: 'mcp-server-langgraph'
-            orgId: 1
-            folder: 'MCP Server with LangGraph'
-            type: file
-            disableDeletion: false
-            editable: true
-            options:
-              path: /var/lib/grafana/dashboards/langgraph
+Configure dashboards in `values.yaml`:
 
-      dashboards:
-        mcp-server-langgraph:
-          authentication:
-            file: monitoring/grafana/dashboards/authentication.json
-          openfga:
-            file: monitoring/grafana/dashboards/openfga.json
-          llm-performance:
-            file: monitoring/grafana/dashboards/llm-performance.json
-          overview:
-            file: monitoring/grafana/dashboards/mcp-server-langgraph.json
-          security:
-            file: monitoring/grafana/dashboards/security.json
-          keycloak:
-            file: monitoring/grafana/dashboards/keycloak.json
-          redis-sessions:
-            file: monitoring/grafana/dashboards/redis-sessions.json
-    ```xml
-  </Tab>
-</Tabs>
+```yaml
+grafana:
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'mcp-server-langgraph'
+        orgId: 1
+        folder: 'MCP Server with LangGraph'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/langgraph
+
+  dashboards:
+    mcp-server-langgraph:
+      authentication:
+        file: monitoring/grafana/dashboards/authentication.json
+      openfga:
+        file: monitoring/grafana/dashboards/openfga.json
+      llm-performance:
+        file: monitoring/grafana/dashboards/llm-performance.json
+      overview:
+        file: monitoring/grafana/dashboards/mcp-server-langgraph.json
+      security:
+        file: monitoring/grafana/dashboards/security.json
+      keycloak:
+        file: monitoring/grafana/dashboards/keycloak.json
+      redis-sessions:
+        file: monitoring/grafana/dashboards/redis-sessions.json
+```
 
 ##### Dashboard Features
 
@@ -946,7 +921,7 @@ rule_files:
 
     # Downtime minutes per month
     (1 - job:up:avg) * 43200
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Latency">
@@ -970,7 +945,7 @@ rule_files:
     ```promql
     # P95 latency vs target
     job:agent_response_duration:p95 / 2000 * 100
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Error Rate">
@@ -999,7 +974,7 @@ rule_files:
 
     # Success rate
     (1 - job:agent_calls:error_rate) * 100
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Saturation">
@@ -1025,7 +1000,7 @@ rule_files:
 
     # Available memory
     (1 - job:memory:saturation) * 100
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Error Budget">
@@ -1053,7 +1028,7 @@ rule_files:
       for: 5m
       annotations:
         summary: "Error budget burning 14.4x faster than sustainable"
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Compliance">
@@ -1073,7 +1048,7 @@ rule_files:
     ```promql
     # Monthly SLO report
     job:slo_compliance:availability_30d * 100
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -1356,7 +1331,7 @@ async def startup():
 
     # Bad
     logger.info(f"User {user_id} authenticated via keycloak in {duration}ms")
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Track Business Metrics" icon="chart-mixed">

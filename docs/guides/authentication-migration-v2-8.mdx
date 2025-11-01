@@ -80,7 +80,8 @@ token = await get_auth_token(
     username="alice",
     password="alice123"
 )
-```sql
+```
+
 ##### Step 2: Update Tool Call Requests
 
 **Before**:
@@ -344,7 +345,8 @@ def create_user_provider(settings, openfga_client):
     if provider_type == "custom":
         return CustomUserProvider(config=settings.custom_config)
     # ... existing providers
-```sql
+```
+
 ---
 
 ### Testing Migration

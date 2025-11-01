@@ -281,7 +281,8 @@ curl http://kong-admin:8001/consumers/USER/key-auth
 curl -X POST /api/v1/api-keys \
   -H "Authorization: Bearer USER_JWT" \
   -d '{"name": "Migrated Key"}'
-```sql
+```
+
 #### Step 3: Update Clients
 
 Provide new API keys to clients (gradual rollout).

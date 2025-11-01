@@ -10,7 +10,7 @@ icon: 'rocket'
   <Step title="Install CLI">
     ```bash
     pip install langgraph-cli
-    ```xml
+    ```
   </Step>
 
   <Step title="Login to LangChain">
@@ -75,7 +75,8 @@ response = client.runs.stream(
 
 for chunk in response:
     print(chunk)
-```sql
+```
+
 ### View Traces in LangSmith
 
 All invocations are automatically traced in LangSmith:
@@ -102,37 +103,38 @@ langgraph deployment invoke --local \
   <Accordion title="Deploy with custom name">
     ```bash
     langgraph deploy my-agent-prod
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Deploy with tag">
     ```bash
     langgraph deploy my-agent-prod --tag v1.0.0
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="List deployments">
     ```bash
     langgraph deployment list
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="View logs">
     ```bash
     langgraph deployment logs my-agent-prod --follow
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Rollback">
     ```bash
     langgraph deployment rollback my-agent-prod --revision 3
-    ```sql
+    ```
+
   </Accordion>
 
   <Accordion title="Delete deployment">
     ```bash
     langgraph deployment delete my-agent-prod
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -163,7 +165,7 @@ langgraph deployment invoke --local \
     # Re-login
     langgraph logout
     langgraph login
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Deployment fails">

@@ -51,7 +51,7 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
     LLM_PROVIDER=anthropic
     ANTHROPIC_API_KEY=sk-ant-api03-...your-key
     LLM_MODEL_NAME=claude-3-5-sonnet-20241022
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -65,7 +65,7 @@ Claude 3.5 Sonnet (new) released October 2024 delivers frontier intelligence at 
 
     response = await llm.ainvoke("Explain quantum entanglement in simple terms")
     print(response.content)
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -720,7 +720,7 @@ async def call_claude_with_metrics(query: str):
     # 2. Delete compromised key
     # 3. Create new key
     # 4. Update in Infisical
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Rate limit exceeded">
@@ -746,7 +746,7 @@ async def call_claude_with_metrics(query: str):
 
     # Request tier upgrade
     # https://console.anthropic.com/settings/limits
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Timeout errors">
@@ -770,7 +770,7 @@ async def call_claude_with_metrics(query: str):
     # Use streaming for long responses
     async for chunk in llm.astream(query):
         yield chunk
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Content too long">

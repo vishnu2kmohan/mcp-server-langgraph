@@ -177,7 +177,8 @@ This document summarizes the complete GKE staging environment implementation for
    ```bash
    export GCP_PROJECT_ID=vishnu-sandbox-20250310
    ./scripts/gcp/setup-staging-infrastructure.sh
-   ```sql
+   ```
+
 2. **Update API keys**:
    ```bash
    echo -n "sk-ant-YOUR_KEY" | gcloud secrets versions add staging-anthropic-api-key --data-file=-
@@ -198,7 +199,8 @@ This document summarizes the complete GKE staging environment implementation for
 5. **Run smoke tests**:
    ```bash
    ./scripts/gcp/staging-smoke-tests.sh
-   ```sql
+   ```
+
 #### GitHub Actions Setup
 
 1. **Create GitHub Environment**:

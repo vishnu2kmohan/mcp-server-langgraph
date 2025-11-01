@@ -30,7 +30,7 @@ The `langgraph.json` file in your project root defines your deployment configura
 
   ```json
   "dependencies": [".", "../shared-libs"]
-  ```xml
+  ```
 </ParamField>
 
 <ParamField path="graphs" type="object" required>
@@ -53,7 +53,7 @@ The `langgraph.json` file in your project root defines your deployment configura
     "MODEL_NAME": "claude-3-5-sonnet-20241022",
     "LANGSMITH_TRACING": "true"
   }
-  ```xml
+  ```
 </ParamField>
 
 <ParamField path="python_version" type="string">
@@ -68,7 +68,7 @@ The `langgraph.json` file in your project root defines your deployment configura
     "RUN apt-get update && apt-get install -y curl",
     "RUN pip install custom-package"
   ]
-  ```xml
+  ```
 </ParamField>
 
 ### Graph Definition
@@ -87,7 +87,7 @@ workflow.add_edge("agent", END)
 
 ## IMPORTANT: Export as 'graph' variable
 graph = workflow.compile(checkpointer=MemorySaver())
-```xml
+```
 <Warning>
   The variable name in `langgraph.json` must match the exported variable name in your Python file.
 </Warning>
@@ -102,7 +102,7 @@ langchain-core>=0.3.0
 langchain-anthropic>=0.2.0
 langchain-openai>=0.2.0
 langsmith>=0.1.0
-```xml
+```
 <Tip>
   Keep dependencies minimal for faster builds and lower cold start times.
 </Tip>
@@ -143,7 +143,7 @@ Create separate deployments for each environment:
 
     # Use dev-specific secrets
     langsmith secret set ANTHROPIC_API_KEY "dev-key" --deployment my-agent-dev
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Staging">
@@ -153,7 +153,7 @@ Create separate deployments for each environment:
 
     # Use staging-specific LangSmith project
     LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Production">
@@ -163,7 +163,7 @@ Create separate deployments for each environment:
 
     # Use production secrets
     langsmith secret set ANTHROPIC_API_KEY "prod-key" --deployment my-agent-prod
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -246,7 +246,7 @@ python -c "from langgraph.agent import graph; print(graph)"
       "python_version": "3.11",
       "dockerfile_lines": []
     }
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Example graph export">

@@ -263,7 +263,7 @@ sequenceDiagram
     ```bash
     # Daily full backup at 2 AM
     0 2 * * * /scripts/backup-postgres.sh
-    ```xml
+    ```
   </Tab>
 
   <Tab title="CronJob (Kubernetes)">
@@ -315,7 +315,7 @@ sequenceDiagram
               - name: backup-storage
                 persistentVolumeClaim:
                   claimName: backup-pvc
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Cloud-Managed">
@@ -348,7 +348,7 @@ sequenceDiagram
       --name keycloak-db \
       --backup-retention 30 \
       --geo-redundant-backup Enabled
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -587,7 +587,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
     helm install openfga ./charts/openfga
     helm install redis ./charts/redis
     helm install keycloak ./charts/keycloak
-    ```xml
+    ```
   </Step>
 
   <Step title="Restore Databases">
@@ -600,7 +600,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
     pg_restore -U openfga -h postgres-openfga \
       -d openfga -c -v \
       /backups/openfga_20251012_020000.dump
-    ```xml
+    ```
   </Step>
 
   <Step title="Restore Redis">
@@ -614,7 +614,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
 
     # Start Redis
     kubectl scale statefulset redis-master --replicas=1
-    ```xml
+    ```
   </Step>
 
   <Step title="Restore Kubernetes Resources">
@@ -626,7 +626,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
     # Monitor restore
     velero restore get
     velero restore describe langgraph-restore --details
-    ```xml
+    ```
   </Step>
 
   <Step title="Restore Secrets">
@@ -636,7 +636,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
 
     # Or restore to Infisical
     python restore-secrets.py secrets-backup-20251012.json
-    ```xml
+    ```
   </Step>
 
   <Step title="Verify System">
@@ -653,7 +653,7 @@ git commit -m "Backup secrets $(date +%Y-%m-%d)"
 
     # Verify data integrity
     psql -U keycloak -d keycloak -c "SELECT COUNT(*) FROM users;"
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -913,7 +913,7 @@ groups:
     Copy 1: Daily snapshots (same region)
     Copy 2: S3 backups (different region)
     Copy 3: Glacier archive (off-site)
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Encrypt Backups" icon="lock">
@@ -927,7 +927,7 @@ groups:
     aws s3 cp backup.sql s3://backups/ \
       --sse aws:kms \
       --sse-kms-key-id arn:aws:kms:...
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Document Everything" icon="book">
@@ -954,7 +954,7 @@ groups:
     - Application deployment
     - Configuration management
     - Secret restoration
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

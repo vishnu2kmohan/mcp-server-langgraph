@@ -48,7 +48,7 @@ The following models are **production-ready** and suitable for enterprise use:
 
         # In .env, reference Infisical
         INFISICAL_PROJECT_ID=your-project-id
-        ```xml
+        ```
       </Step>
 
       <Step title="Test">
@@ -63,7 +63,7 @@ The following models are **production-ready** and suitable for enterprise use:
         response = await llm.ainvoke("What is the capital of France?")
         print(response.content)
         # Output: "The capital of France is Paris."
-        ```xml
+        ```
       </Step>
     </Steps>
   </Tab>
@@ -83,7 +83,7 @@ The following models are **production-ready** and suitable for enterprise use:
 
         # Enable Vertex AI API
         gcloud services enable aiplatform.googleapis.com
-        ```xml
+        ```
       </Step>
 
       <Step title="Create Service Account">
@@ -104,7 +104,7 @@ The following models are **production-ready** and suitable for enterprise use:
         # Store in Infisical
         cat vertex-key.json | jq -c > vertex-key-compact.json
         # Upload vertex-key-compact.json to Infisical as GOOGLE_APPLICATION_CREDENTIALS
-        ```xml
+        ```
       </Step>
 
       <Step title="Configure">
@@ -115,7 +115,7 @@ The following models are **production-ready** and suitable for enterprise use:
         VERTEX_AI_PROJECT=YOUR_PROJECT_ID
         VERTEX_AI_LOCATION=us-central1
         LLM_MODEL_NAME=gemini-2.5-flash
-        ```xml
+        ```
       </Step>
 
       <Step title="Test">
@@ -129,7 +129,7 @@ The following models are **production-ready** and suitable for enterprise use:
 
         response = await llm.ainvoke("Explain quantum computing")
         print(response.content)
-        ```xml
+        ```
       </Step>
     </Steps>
   </Tab>
@@ -218,7 +218,7 @@ llm = ChatGoogleGenerativeAI(
 
     response = await llm.ainvoke([message])
     print(response.content)
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Text + Video">
@@ -245,7 +245,7 @@ llm = ChatGoogleGenerativeAI(
         "Summarize this video"
     ])
     print(response.text)
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Text + Audio">
@@ -269,7 +269,7 @@ llm = ChatGoogleGenerativeAI(
 
     response = await llm.ainvoke([message])
     print(response.content)
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -612,7 +612,7 @@ async def call_gemini(query: str):
     # 2. Delete old key
     # 3. Create new key
     # 4. Update in Infisical/config
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Vertex AI authentication failed">
@@ -633,7 +633,7 @@ async def call_gemini(query: str):
       --filter="bindings.members:serviceAccount:vertex-ai-agent@YOUR_PROJECT_ID.iam.gserviceaccount.com"
 
     # Should include: roles/aiplatform.user
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Rate limit exceeded">
@@ -658,7 +658,7 @@ async def call_gemini(query: str):
         enable_fallback=True,
         fallback_models=["claude-3-5-sonnet-20241022"]
     )
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Content blocked by safety filters">

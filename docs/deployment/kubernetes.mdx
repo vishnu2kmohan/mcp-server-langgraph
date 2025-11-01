@@ -121,7 +121,8 @@ flowchart TB
 
     # Push to registry
     docker push gcr.io/your-project/mcp-server-langgraph:v2.4.0
-    ```sql
+    ```
+
     Update `deployments/kubernetes/base/deployment.yaml`:
     ```yaml
     spec:
@@ -130,7 +131,7 @@ flowchart TB
           containers:
           - name: mcp-server-langgraph
             image: gcr.io/your-project/mcp-server-langgraph:v2.4.0
-    ```xml
+    ```
   </Step>
 
   <Step title="Install Tools">
@@ -145,7 +146,7 @@ flowchart TB
 
     # helm (for dependencies)
     curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -198,7 +199,7 @@ kubectl apply -k deployments/kubernetes/overlays/production
 kubectl apply -k deployments/kubernetes/overlays/gke
 kubectl apply -k deployments/kubernetes/overlays/eks
 kubectl apply -k deployments/kubernetes/overlays/aks
-```xml
+```
 </CodeGroup>
 
 ### Step-by-Step Deployment
@@ -226,7 +227,7 @@ kubectl apply -f deployments/kubernetes/base/serviceaccount.yaml
 
 ```bash
 kubectl apply -f deployments/kubernetes/base/configmap.yaml
-```xml
+```
 <Accordion title="View configmap.yaml" icon="file">
 ```yaml
 apiVersion: v1
@@ -260,7 +261,7 @@ data:
 
   # OpenFGA
   openfga_api_url: "http://openfga:8080"
-```xml
+```
 </Accordion>
 
 **Secrets** for sensitive data:
@@ -281,7 +282,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=redis-password="${REDIS_PASSWORD}" \
   --from-literal=openfga-store-id="${OPENFGA_STORE_ID}" \
   --from-literal=openfga-model-id="${OPENFGA_MODEL_ID}"
-```xml
+```
 <Warning>
 **Never commit secrets to Git!** Use external secret managers (see [Infisical Setup](/guides/infisical-setup)) or cloud-native solutions (GCP Secret Manager, AWS Secrets Manager, Azure Key Vault).
 </Warning>
@@ -448,7 +449,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
 ```
     ```bash
     kubectl apply -f ingress.yaml
-    ```xml
+    ```
   </Tab>
 
   <Tab title="GKE Ingress">
@@ -483,7 +484,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
     spec:
       domains:
       - api.yourdomain.com
-    ```xml
+    ```
   </Tab>
 
   <Tab title="AWS ALB">
@@ -511,7 +512,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
                 name: mcp-server-langgraph
                 port:
                   number: 8000
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -762,7 +763,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
 
     # Check events
     kubectl get events -n mcp-server-langgraph --sort-by='.lastTimestamp'
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Init containers failing">
@@ -777,7 +778,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
     nc -zv keycloak 8080
     nc -zv redis-session 6379
     nc -zv openfga 8080
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Health checks failing">
@@ -791,7 +792,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
 
     # Check dependencies
     kubectl logs deploy/mcp-server-langgraph -n mcp-server-langgraph | grep -i error
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="High memory usage">

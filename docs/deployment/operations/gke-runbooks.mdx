@@ -8,9 +8,9 @@ icon: "book-medical"
 
 This guide provides operational procedures for managing MCP Server LangGraph on GKE Autopilot in production, including incident response, maintenance tasks, and troubleshooting.
 
-<Card title="For Complete Technical Details" icon="file-lines">
-  See the full operational runbook: [GKE_OPERATIONAL_RUNBOOKS.md](/deployments/GKE_OPERATIONAL_RUNBOOKS.md) (600+ lines)
-</Card>
+<Note>
+  This guide provides essential operational procedures for managing GKE Autopilot deployments in production.
+</Note>
 
 ---
 
@@ -24,7 +24,7 @@ Run this every morning to ensure system health:
     gcloud container clusters describe mcp-prod-gke \
       --region=us-central1 \
       --format="value(status)"
-    ```xml
+    ```
     <Check>Should return: `RUNNING`</Check>
   </Step>
 
@@ -35,7 +35,7 @@ Run this every morning to ensure system health:
     # Check for failed pods
     kubectl get pods -n mcp-production \
       --field-selector=status.phase!=Running,status.phase!=Succeeded
-    ```xml
+    ```
     <Check>All pods should show `Running` status with 0-1 restarts</Check>
   </Step>
 
@@ -45,7 +45,7 @@ Run this every morning to ensure system health:
       --sort-by='.lastTimestamp' \
       --field-selector=type!=Normal \
       | tail -10
-    ```xml
+    ```
     <Check>No ERROR or WARNING events in last hour</Check>
   </Step>
 
@@ -53,7 +53,7 @@ Run this every morning to ensure system health:
     ```bash
     gcloud sql instances describe mcp-prod-postgres \
       --format="table(name,state,ipAddresses[0].ipAddress)"
-    ```xml
+    ```
     <Check>State should be: `RUNNABLE`</Check>
   </Step>
 
@@ -63,7 +63,7 @@ Run this every morning to ensure system health:
       'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production" AND severity>=ERROR' \
       --limit=10 \
       --format="table(timestamp,jsonPayload.message)"
-    ```xml
+    ```
     <Check>No critical errors in last hour</Check>
   </Step>
 </Steps>
@@ -91,7 +91,7 @@ Run this every morning to ensure system health:
 
     # Describe failing pods
     kubectl describe pod POD_NAME -n mcp-production
-    ```xml
+    ```
   </Step>
 
   <Step title="Quick Fixes">
@@ -100,7 +100,7 @@ Run this every morning to ensure system health:
         ```bash
         kubectl rollout restart deployment/production-mcp-server-langgraph \
           -n mcp-production
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Rollback">
@@ -110,7 +110,7 @@ Run this every morning to ensure system health:
 
         kubectl rollout status deployment/production-mcp-server-langgraph \
           -n mcp-production
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Scale Up">
@@ -118,7 +118,7 @@ Run this every morning to ensure system health:
         kubectl scale deployment production-mcp-server-langgraph \
           -n mcp-production \
           --replicas=6
-        ```xml
+        ```
       </Tab>
     </Tabs>
   </Step>
@@ -127,7 +127,7 @@ Run this every morning to ensure system health:
     ```bash
     kubectl get pods -n mcp-production
     kubectl exec -it -n mcp-production POD_NAME -- curl http://localhost:8000/health/live
-    ```xml
+    ```
   </Step>
 
   <Step title="Post-Incident Analysis">
@@ -138,7 +138,7 @@ Run this every morning to ensure system health:
       --limit=50 \
       --format=json \
       > incident-logs.json
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -157,13 +157,13 @@ Run this every morning to ensure system health:
     ```bash
     kubectl top pods -n mcp-production
     kubectl top nodes
-    ```xml
+    ```
   </Step>
 
   <Step title="Check HPA Status">
     ```bash
     kubectl get hpa -n mcp-production -o yaml
-    ```xml
+    ```
   </Step>
 
   <Step title="Review Database Performance">
@@ -171,7 +171,7 @@ Run this every morning to ensure system health:
     gcloud sql operations list \
       --instance=mcp-prod-postgres \
       --filter="startTime>=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S).000000Z"
-    ```xml
+    ```
   </Step>
 
   <Step title="Temporary Scale Up">
@@ -182,7 +182,7 @@ Run this every morning to ensure system health:
 
     # Monitor improvement
     watch -n 5 'kubectl top pods -n mcp-production'
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -205,7 +205,7 @@ Run this every morning to ensure system health:
     **Restart Proxy**:
     ```bash
     kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Too Many Connections">
@@ -223,7 +223,7 @@ Run this every morning to ensure system health:
     database_flags = {
       "max_connections" = "200"
     }
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -243,7 +243,7 @@ Run this every morning to ensure system health:
     gh release create v1.1.0 \
       --title "Release 1.1.0" \
       --notes "Release notes here"
-    ```xml
+    ```
   </Step>
 
   <Step title="Monitor CI/CD">
@@ -261,7 +261,7 @@ Run this every morning to ensure system health:
     ```bash
     kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-production
     kubectl get pods -n mcp-production
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -298,7 +298,7 @@ kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-product
     # Monitor
     kubectl rollout status deployment/production-mcp-server-langgraph \
       -n mcp-production
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Specific Revision">
@@ -311,7 +311,7 @@ kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-product
     kubectl rollout undo deployment/production-mcp-server-langgraph \
       -n mcp-production \
       --to-revision=5
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -398,7 +398,7 @@ cd terraform/environments/gcp-prod
 ## max_cluster_memory = 20000
 
 terraform apply
-```xml
+```
 </CodeGroup>
 
 #### Cluster Resource Monitoring
@@ -424,7 +424,8 @@ gcloud monitoring time-series list \
     ```bash
     NEW_JWT_SECRET=$(openssl rand -base64 32)
     NEW_API_KEY=$(openssl rand -base64 32)
-    ```sql
+    ```
+
   </Step>
 
   <Step title="Update Secret Manager">
@@ -433,7 +434,7 @@ gcloud monitoring time-series list \
     gcloud secrets versions add mcp-production-secrets \
       --data-file=<(jq --arg jwt "$NEW_JWT_SECRET" '.jwt_secret = $jwt' secrets.json) \
       --project=PROJECT_ID
-    ```xml
+    ```
   </Step>
 
   <Step title="Pods Auto-Restart">
@@ -442,7 +443,7 @@ gcloud monitoring time-series list \
     Monitor:
     ```bash
     kubectl get pods -n mcp-production -w
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -473,21 +474,25 @@ gcloud logging read \
 <AccordionGroup>
   <Accordion title="View Application Logs">
     <CodeGroup>
+
     ```bash Real-time
     kubectl logs -f -n mcp-production \
       -l app=mcp-server-langgraph \
       --max-log-requests=10
-```
+    ```
+
     ```bash Cloud Logging
     gcloud logging read \
       'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production"' \
       --limit=100 \
       --format=json
-```
+    ```
+
     ```bash Specific Container
     kubectl logs POD_NAME -n mcp-production -c mcp-server-langgraph
     kubectl logs POD_NAME -n mcp-production -c cloud-sql-proxy
-    ```sql
+    ```
+
     </CodeGroup>
   </Accordion>
 
@@ -500,7 +505,7 @@ gcloud logging read \
     # Restart to pick up changes (Reloader does this automatically)
     kubectl rollout restart deployment/production-mcp-server-langgraph \
       -n mcp-production
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Connect to Database">
@@ -509,7 +514,7 @@ gcloud logging read \
         ```bash
         cloud-sql-proxy PROJECT_ID:us-central1:mcp-prod-postgres &
         psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph"
-        ```xml
+        ```
       </Tab>
 
       <Tab title="kubectl Port Forward">
@@ -518,7 +523,7 @@ gcloud logging read \
           svc/production-mcp-server-langgraph 5432:5432 &
 
         psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph"
-        ```xml
+        ```
       </Tab>
     </Tabs>
   </Accordion>
@@ -530,7 +535,7 @@ gcloud logging read \
       --filter='resource.type="k8s_container"' \
       --format=json \
       > metrics-$(date +%Y%m%d).json
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -639,7 +644,7 @@ For complete disaster recovery automation:
 
 ```bash
 ./deployments/disaster-recovery/gcp-dr-automation.sh PROJECT_ID us-east1 us-central1 full
-```xml
+```
 <Card title="Complete DR Guide" icon="life-ring" href="/deployment/disaster-recovery">
   Multi-region failover, backup restoration, RTO/RPO targets
 </Card>
@@ -701,7 +706,7 @@ spec:
 ### Related Documentation
 
 <CardGroup cols={2}>
-  <Card title="Troubleshooting Guide" icon="screwdriver-wrench" href="/deployment/operations/troubleshooting">
+  <Card title="Troubleshooting Guide" icon="screwdriver-wrench" href="/advanced/troubleshooting">
     Detailed debugging procedures
   </Card>
   <Card title="Security Hardening" icon="shield" href="/security/gcp-security-hardening">
@@ -714,5 +719,3 @@ spec:
     Production deployment procedures
   </Card>
 </CardGroup>
-
-For complete technical runbooks, see: [GKE_OPERATIONAL_RUNBOOKS.md](/deployments/GKE_OPERATIONAL_RUNBOOKS.md)

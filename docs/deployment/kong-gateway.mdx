@@ -167,7 +167,7 @@ flowchart LR
 
     # Access Kong Manager (GUI)
     open http://localhost:8002
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Kubernetes (Helm)">
@@ -202,7 +202,7 @@ flowchart LR
 
     # Test
     curl http://localhost:8001/
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Cloud (AWS)">
@@ -237,7 +237,7 @@ flowchart LR
       username             = "kong"
       password             = var.db_password
     }
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -768,7 +768,7 @@ spec:
 
     # Or in Kubernetes
     kubectl exec -it kong-0 -n kong -- kong migrations bootstrap
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="502 Bad Gateway">
@@ -791,7 +791,7 @@ spec:
 
     # Check network connectivity
     kubectl exec -it kong-0 -n kong -- curl http://mcp-server-langgraph:8000/health
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Rate limit not working">

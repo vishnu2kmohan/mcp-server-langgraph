@@ -56,7 +56,7 @@ flowchart TB
     curl http://localhost:16686  # Jaeger UI
     curl http://localhost:9090   # Prometheus
     curl http://localhost:3000   # Grafana
-    ```xml
+    ```
   </Step>
 
   <Step title="Configure Application">
@@ -70,7 +70,7 @@ flowchart TB
     LANGSMITH_TRACING=true
     LANGSMITH_API_KEY=your-key-here
     LANGSMITH_PROJECT=mcp-server-langgraph
-    ```xml
+    ```
   </Step>
 
   <Step title="Generate Traces">
@@ -86,7 +86,7 @@ flowchart TB
       "content": "Hello! How can I help you?",
       "trace_id": "abc123def456..."
     }
-    ```sql
+    ```
   </Step>
 
   <Step title="View in Jaeger">
@@ -133,7 +133,7 @@ Each span includes rich metadata:
       "trace_id": "abc123...",
       "span_id": "def456..."
     }
-    ```xml
+    ```
   </Tab>
 
   <Tab title="LLM Spans">
@@ -148,7 +148,7 @@ Each span includes rich metadata:
       "llm.total_tokens": 212,
       "llm.latency_ms": 1245
     }
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Auth Spans">
@@ -162,7 +162,7 @@ Each span includes rich metadata:
       "authz.allowed": true,
       "authz.latency_ms": 15
     }
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -203,7 +203,7 @@ def my_function():
 
     # Error rate
     rate(http_requests_total{status=~"5.."}[5m])
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Authentication Metrics">
@@ -224,7 +224,7 @@ def my_function():
 
     # Failed logins
     increase(auth_attempts_total{result="failure"}[1h])
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Authorization Metrics">
@@ -244,7 +244,7 @@ def my_function():
     # Cache hit rate
     rate(authz_cache_hits_total[5m]) /
       rate(authz_check_total[5m])
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="LLM Metrics">
@@ -266,7 +266,7 @@ def my_function():
     # Cost estimation (approximate)
     rate(llm_tokens_total{type="prompt"}[1h]) * 0.000003 +
     rate(llm_tokens_total{type="completion"}[1h]) * 0.000015
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -419,7 +419,7 @@ kubectl label configmap grafana-dashboards \
     LANGSMITH_API_KEY=ls_api_key_...
     LANGSMITH_PROJECT=mcp-server-langgraph
     LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-    ```xml
+    ```
   </Step>
 
   <Step title="Verify">
@@ -512,7 +512,7 @@ All logs are JSON-formatted with trace context:
           - role: pod
             namespaces:
               names: [mcp-server-langgraph]
-    ```xml
+    ```
   </Tab>
 
   <Tab title="ELK Stack">
@@ -525,7 +525,7 @@ All logs are JSON-formatted with trace context:
 
     output.elasticsearch:
       hosts: ["elasticsearch:9200"]
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Cloud Logging">
@@ -538,7 +538,7 @@ All logs are JSON-formatted with trace context:
     # AWS CloudWatch
     import watchtower
     logger.addHandler(watchtower.CloudWatchLogHandler())
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -598,7 +598,7 @@ sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
 
     # Test trace export
     python scripts/test_tracing.py
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="High cardinality metrics">

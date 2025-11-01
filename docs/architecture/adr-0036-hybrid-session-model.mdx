@@ -73,7 +73,7 @@ flowchart TB
         SP1 --> API2[API Request<br/>+ Session ID]
         API2 --> Check[Check Session]
         Check --> Redis
-        Redis --> AutoRefresh{Expires in <5 min?}
+        Redis --> AutoRefresh{Expires in &lt;5 min?}
         AutoRefresh -->|Yes| ServerRefresh[Server auto-refreshes<br/>via Keycloak]
         ServerRefresh --> UpdateSession[Update session tokens]
         UpdateSession --> Redis
@@ -110,7 +110,7 @@ sequenceDiagram
         App->>Redis: GET session:abc123
         Redis-->>App: Session data + tokens
 
-        alt Access token expires in <5 min
+        alt Access token expires in less than 5 min
             App->>App: Auto-refresh needed
             App->>KC: POST /token<br/>grant_type=refresh_token
             KC-->>App: New access token (15 min)<br/>New refresh token (30 days)
@@ -154,7 +154,7 @@ SERVICE_PRINCIPAL_SESSION_ENABLED=true
 SERVICE_PRINCIPAL_SESSION_TTL=2592000  # 30 days
 SERVICE_PRINCIPAL_AUTO_REFRESH=true
 SESSION_SLIDING_WINDOW=true
-SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in <5 min
+SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in &lt;5 min
 
 ## User Sessions (optional)
 USER_SESSION_TTL=86400  # 24 hours if enabled
@@ -215,7 +215,7 @@ class RedisSessionStore:
 
     async def refresh_if_needed(self, session_id):
         session = await self.get_session(session_id)
-        if session.expires_in < 300:  # <5 minutes
+        if session.expires_in < 300:  # &lt;5 minutes
             new_tokens = await keycloak.refresh_token(session.refresh_token)
             session.access_token = new_tokens["access_token"]
             session.refresh_token = new_tokens["refresh_token"]

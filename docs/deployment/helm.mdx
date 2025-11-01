@@ -46,7 +46,7 @@ kubectl get ingress -n mcp-server-langgraph
 
     # Verify installation
     helm version
-    ```xml
+    ```
   </Step>
 
   <Step title="Kubernetes Cluster">
@@ -62,7 +62,7 @@ kubectl get ingress -n mcp-server-langgraph
     ```bash
     docker build -t gcr.io/your-project/mcp-server-langgraph:v2.1.0 .
     docker push gcr.io/your-project/mcp-server-langgraph:v2.1.0
-    ```xml
+    ```
   </Step>
 
   <Step title="Dependencies (Optional)">
@@ -76,7 +76,7 @@ kubectl get ingress -n mcp-server-langgraph
     helm repo add openfga https://openfga.github.io/helm-charts
 
     helm repo update
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -204,7 +204,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         persistence:
           enabled: true
           size: 50Gi
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Install">
@@ -217,7 +217,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
       --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
       --set secrets.redisPassword="$(openssl rand -base64 32)"
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -264,7 +264,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-gke.yaml
-    ```xml
+    ```
   </Tab>
 
   <Tab title="AWS (EKS)">
@@ -301,7 +301,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-eks.yaml
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Azure (AKS)">
@@ -335,7 +335,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-aks.yaml
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -462,7 +462,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         limits:
           cpu: 2000m
           memory: 2Gi
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Redis">
@@ -493,7 +493,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         enabled: true
         serviceMonitor:
           enabled: true
-    ```xml
+    ```
   </Tab>
 
   <Tab title="OpenFGA">
@@ -513,7 +513,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         limits:
           cpu: 1000m
           memory: 1Gi
-    ```xml
+    ```
   </Tab>
 
   <Tab title="PostgreSQL">
@@ -543,7 +543,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         enabled: true
         serviceMonitor:
           enabled: true
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -720,7 +720,7 @@ kubectl label configmap langgraph-dashboards \
 
     # Check dependencies
     helm dependency update ./deployments/helm/mcp-server-langgraph
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Dependencies not deploying">
@@ -737,7 +737,7 @@ kubectl label configmap langgraph-dashboards \
       --set keycloak.enabled=true \
       --set redis.enabled=true \
       --set openfga.enabled=true
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Values not applying">
@@ -752,7 +752,7 @@ kubectl label configmap langgraph-dashboards \
     helm template mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --values values-production.yaml \
       --debug
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Upgrade fails">

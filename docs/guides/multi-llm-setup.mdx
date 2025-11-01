@@ -72,7 +72,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     ANTHROPIC_API_KEY=sk-ant-api03-...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -88,7 +88,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
         {"role": "user", "content": "Hello!"}
     ])
     print(response.content)
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -111,7 +111,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     OPENAI_API_KEY=sk-proj-...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -124,7 +124,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     response = llm.invoke([
         {"role": "user", "content": "What is AI?"}
     ])
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -147,7 +147,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     GOOGLE_API_KEY=AIza...
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=8192
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -160,7 +160,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     response = llm.invoke([
         {"role": "user", "content": "Explain quantum computing"}
     ])
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -184,7 +184,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     AZURE_API_BASE=https://your-resource.openai.azure.com
     AZURE_API_VERSION=2024-02-15-preview
     AZURE_DEPLOYMENT_NAME=gpt-4
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -195,7 +195,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
         api_base=os.getenv("AZURE_API_BASE"),
         api_version=os.getenv("AZURE_API_VERSION")
     )
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -218,7 +218,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     AWS_ACCESS_KEY_ID=AKIA...
     AWS_SECRET_ACCESS_KEY=...
     AWS_REGION_NAME=us-east-1
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -227,7 +227,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
         provider="bedrock",
         model_name="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0"
     )
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -242,7 +242,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     curl -fsSL https://ollama.com/install.sh | sh
 
     # Or download from https://ollama.com/download
-    ```xml
+    ```
   </Step>
 
   <Step title="Pull Model">
@@ -258,7 +258,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
 
     # List models
     ollama list
-    ```xml
+    ```
   </Step>
 
   <Step title="Configure">
@@ -269,7 +269,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     OLLAMA_API_BASE=http://localhost:11434
     MODEL_TEMPERATURE=0.7
     MODEL_MAX_TOKENS=4096
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -283,7 +283,7 @@ Configure **100+ LLM providers** via LiteLLM with automatic fallback, load balan
     response = llm.invoke([
         {"role": "user", "content": "Hello!"}
     ])
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -513,7 +513,7 @@ OLLAMA_API_BASE=http://localhost:11434
     claude-3-5-sonnet-20241022    # Latest Sonnet
     claude-3-opus-20240229        # Opus
     claude-3-haiku-20240307       # Haiku (fast)
-    ```xml
+    ```
   </Tab>
 
   <Tab title="OpenAI">
@@ -522,21 +522,21 @@ OLLAMA_API_BASE=http://localhost:11434
     gpt-4-turbo                   # GPT-4 Turbo
     gpt-4                         # GPT-4
     gpt-3.5-turbo                 # GPT-3.5 (fast)
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Google">
     ```bash
     gemini-2.5-flash              # Gemini 2.5 Flash
     gemini-2.5-pro                # Gemini 2.5 Pro
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Azure">
     ```bash
     azure/gpt-4                   # Requires deployment name
     azure/gpt-35-turbo
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Bedrock">
@@ -544,7 +544,7 @@ OLLAMA_API_BASE=http://localhost:11434
     bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
     bedrock/meta.llama3-1-70b-instruct-v1:0
     bedrock/amazon.titan-text-express-v1
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Ollama">
@@ -554,7 +554,7 @@ OLLAMA_API_BASE=http://localhost:11434
     ollama/mistral:7b             # Mistral 7B
     ollama/qwen2.5:7b             # Qwen 2.5 7B
     ollama/deepseek-coder:6.7b    # DeepSeek Coder
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -575,7 +575,7 @@ OLLAMA_API_BASE=http://localhost:11434
     # Check environment
     echo $ANTHROPIC_API_KEY
     env | grep API_KEY
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Rate limit errors">
@@ -592,7 +592,7 @@ OLLAMA_API_BASE=http://localhost:11434
         fallback_models=["gemini-2.5-flash-002"],
         timeout=120  # Longer timeout
     )
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Ollama connection failed">
@@ -608,7 +608,7 @@ OLLAMA_API_BASE=http://localhost:11434
 
     # Set correct endpoint
     OLLAMA_API_BASE=http://localhost:11434
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Slow responses">

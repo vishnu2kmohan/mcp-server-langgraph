@@ -62,7 +62,7 @@ EOF
 
 terraform init
 terraform apply
-```xml
+```
 <Info>
   This creates a GCS bucket for Terraform state with versioning, encryption, and logging.
   See [Backend Setup Guide](/deployment/infrastructure/backend-setup) for details.
@@ -171,7 +171,7 @@ module "vpc" {
     managed_by  = "terraform"
   }
 }
-```xml
+```
 </CodeGroup>
 
 **Outputs**: Network ID, subnet names, NAT IPs, firewall rule IDs
@@ -259,7 +259,7 @@ module "gke" {
     environment = "production"
   }
 }
-```xml
+```
 </CodeGroup>
 
 **Key Features**:
@@ -761,7 +761,8 @@ terraform output
 ## Specific output
 terraform output -raw cluster_name
 terraform output -json > outputs.json
-```sql
+```
+
 #### Update Infrastructure
 
 ```bash
@@ -830,7 +831,7 @@ terraform destroy
       sqladmin.googleapis.com \
       redis.googleapis.com \
       --project=PROJECT_ID
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="State Lock Errors">
@@ -844,7 +845,7 @@ terraform destroy
 
     # Force unlock (use with caution)
     terraform force-unlock LOCK_ID
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Module Not Found">
@@ -856,7 +857,7 @@ terraform destroy
     module "vpc" {
       source = "../../modules/gcp-vpc"  # Two levels up from environments/
     }
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 

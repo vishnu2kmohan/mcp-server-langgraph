@@ -67,7 +67,7 @@ This guide provides step-by-step instructions for deploying MCP Server LangGraph
 
     # Set active project
     gcloud config set project PROJECT_ID
-    ```xml
+    ```
   </Step>
 
   <Step title="Install Required Tools">
@@ -84,7 +84,7 @@ This guide provides step-by-step instructions for deploying MCP Server LangGraph
     terraform version
     kubectl version --client
     kustomize version
-    ```xml
+    ```
   </Step>
 
   <Step title="Enable Required APIs">
@@ -107,7 +107,7 @@ This guide provides step-by-step instructions for deploying MCP Server LangGraph
         secretmanager.googleapis.com \
         artifactregistry.googleapis.com \
         --project=PROJECT_ID
-    ```xml
+    ```
   </Step>
 
   <Step title="Configure IAM Permissions">
@@ -187,7 +187,7 @@ flowchart TB
 
     # Save bucket name
     export TF_STATE_BUCKET=$(terraform output -raw terraform_state_bucket)
-    ```xml
+    ```
   </Tab>
 
   <Tab title="With Options">
@@ -209,7 +209,7 @@ flowchart TB
 
     terraform init
     terraform apply
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -245,7 +245,7 @@ master_authorized_networks_cidrs = [
     display_name = "My IP"
   }
 ]
-```xml
+```
 <Warning>
   **Important**: Replace `YOUR_PROJECT_ID` with your actual GCP project ID throughout the configuration.
 </Warning>
@@ -260,7 +260,7 @@ master_authorized_networks_cidrs = [
 cd terraform/environments/gcp-prod
 terraform init
 terraform plan -out=tfplan
-```xml
+```
 <Check>
 Review the plan. It should create:
 - 1 VPC network with 3 subnets
@@ -278,7 +278,7 @@ Review the plan. It should create:
 
 ```bash
 terraform apply tfplan
-```xml
+```
 <Info>
   **Duration**: 20-25 minutes. Cloud SQL takes 10-12 minutes, GKE takes 8-10 minutes.
 </Info>
@@ -293,7 +293,7 @@ eval $(terraform output -raw kubectl_config_command)
 kubectl cluster-info
 kubectl get nodes
 kubectl get namespaces
-```xml
+```
 <Check>
 Expected output:
 ```
@@ -301,7 +301,7 @@ Kubernetes control plane is running at https://X.X.X.X
 NAME              STATUS   AGE
 default           Active   5m
 kube-system       Active   5m
-```xml
+```
 </Check>
 
 ---
@@ -372,13 +372,13 @@ kubectl apply -k .
 kubectl rollout status deployment/production-mcp-server-langgraph \
   -n mcp-production \
   --timeout=10m
-```xml
+```
 <Check>
 Verify deployment:
 ```bash
 kubectl get pods -n mcp-production
 kubectl logs -n mcp-production -l app=mcp-server-langgraph --tail=50
-```xml
+```
 </Check>
 
 ---
@@ -410,18 +410,19 @@ Enable image signing to ensure only trusted container images run in your cluster
       PROJECT_ID \
       production \
       "$IMAGE"
-    ```xml
+    ```
   </Step>
 
   <Step title="Enable in Cluster">
     Edit `terraform.tfvars`:
     ```hcl
     enable_binary_authorization = true
-    ```yaml
+    ```
+
     Apply:
     ```bash
     terraform apply -auto-approve
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -485,7 +486,7 @@ SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
 curl http://$SERVICE_IP:8000/health/live
-```xml
+```
 </CodeGroup>
 
 <Check>All health checks should return HTTP 200</Check>
@@ -497,7 +498,7 @@ kubectl exec -it -n mcp-production \
   $(kubectl get pod -n mcp-production -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
   -c cloud-sql-proxy \
   -- wget -qO- http://localhost:9801/readiness
-```xml
+```
 <Check>Should return: `ok`</Check>
 
 #### Workload Identity
@@ -508,7 +509,7 @@ Verify service account annotation:
 kubectl get sa production-mcp-server-langgraph \
   -n mcp-production \
   -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
-```xml
+```
 <Check>Should show: `mcp-prod-app-sa@PROJECT_ID.iam.gserviceaccount.com`</Check>
 
 ---

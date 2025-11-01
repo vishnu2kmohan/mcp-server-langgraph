@@ -46,7 +46,7 @@ This script will:
     ANTHROPIC_API_KEY=sk-ant-your-key
     # or
     OPENAI_API_KEY=sk-your-key
-    ```xml
+    ```
   </Step>
 
   <Step title="Start services">
@@ -67,7 +67,7 @@ This script will:
       "service": "mcp-server-langgraph",
       "version": "1.0.0"
     }
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -237,7 +237,8 @@ LOG_LEVEL=DEBUG docker compose up
 
 ## Use OpenAI instead of Google
 LLM_PROVIDER=openai MODEL_NAME=gpt-4o docker compose up
-```sql
+```
+
 ### Observability
 
 #### View Traces in Jaeger
@@ -332,7 +333,7 @@ docker compose restart agent
 
     # Start specific service
     docker compose up -d agent
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="View logs">
@@ -348,7 +349,7 @@ docker compose restart agent
 
     # Since timestamp
     docker compose logs --since 2025-10-10T10:00:00
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Stop services">
@@ -361,7 +362,7 @@ docker compose restart agent
 
     # Stop specific service
     docker compose stop agent
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Debug service">
@@ -377,7 +378,7 @@ docker compose restart agent
 
     # Run Python script
     docker compose exec agent python -c "import sys; print(sys.version)"
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Restart service">
@@ -387,7 +388,7 @@ docker compose restart agent
 
     # Rebuild and restart
     docker compose up -d --build agent
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Scale services">
@@ -396,7 +397,7 @@ docker compose restart agent
     docker compose up -d --scale agent=3
 
     # Note: Need to configure load balancer for multiple replicas
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -425,7 +426,7 @@ docker compose restart agent
     # Restart with fresh build
     docker compose down
     docker compose up -d --build
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Port conflicts">
@@ -436,7 +437,7 @@ docker compose restart agent
     agent:
       ports:
         - "8001:8000"  # Map 8001 external to 8000 internal
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Services can't communicate">

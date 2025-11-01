@@ -24,14 +24,14 @@ Before you begin, ensure you have:
     ```bash
     git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
     cd mcp_server_langgraph
-    ```xml
+    ```
   </Step>
 
   <Step title="Create Virtual Environment">
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```xml
+    ```
   </Step>
 
   <Step title="Install Dependencies">
@@ -41,7 +41,7 @@ Before you begin, ensure you have:
     Or use the Makefile:
     ```bash
     make install
-    ```xml
+    ```
   </Step>
 
   <Step title="Start Infrastructure">
@@ -53,7 +53,7 @@ Before you begin, ensure you have:
     Verify services are running:
     ```bash
     docker compose ps
-    ```xml
+    ```
   </Step>
 
   <Step title="Setup OpenFGA">
@@ -80,7 +80,7 @@ Before you begin, ensure you have:
 
     # JWT secret (change in production!)
     JWT_SECRET_KEY=your-secret-key-change-in-production
-    ```xml
+    ```
   </Step>
 
   <Step title="Test the Installation">
@@ -109,7 +109,7 @@ open http://localhost:9090
 ```
 ```bash Grafana
 open http://localhost:3000  # admin/admin
-```xml
+```
 </CodeGroup>
 
 ### Your First Request
@@ -173,7 +173,7 @@ const response = await axios.post('http://localhost:8000/message', {
 });
 
 console.log(response.data);
-```xml
+```
 </CodeGroup>
 
 ### Understanding the Response
@@ -193,7 +193,7 @@ The agent returns a structured response:
   "trace_id": "abc123...",
   "authorized": true
 }
-```xml
+```
 <ResponseField name="content" type="string">
   The agent's response text
 </ResponseField>
@@ -247,7 +247,7 @@ The agent returns a structured response:
 
     # Restart
     docker compose up -d
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="OpenFGA connection refused">
@@ -259,7 +259,7 @@ The agent returns a structured response:
 
     # Restart if needed
     docker compose restart openfga
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="API key invalid">

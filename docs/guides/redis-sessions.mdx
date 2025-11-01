@@ -77,7 +77,7 @@ Redis provides production-grade session storage with:
         # Test connection
         docker compose exec redis-session redis-cli -a $REDIS_PASSWORD ping
         # Expected: PONG
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Kubernetes">
@@ -102,7 +102,7 @@ Redis provides production-grade session storage with:
         kubectl get secret redis-session \
           -n mcp-server-langgraph \
           -o jsonpath='{.data.redis-password}' | base64 -d
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Cloud Managed">
@@ -139,7 +139,7 @@ Redis provides production-grade session storage with:
           --sku Standard \
           --vm-size c1 \
           --enable-non-ssl-port false
-        ```xml
+        ```
       </Tab>
     </Tabs>
   </Step>
@@ -160,7 +160,7 @@ Redis provides production-grade session storage with:
     SESSION_SLIDING_WINDOW=true  # Extend on activity
     SESSION_MAX_CONCURRENT=5  # Per user
     SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
-    ```xml
+    ```
     <Warning>
     **Always use SSL/TLS in production**: Set `REDIS_SSL=true` and use `rediss://` URL scheme.
     </Warning>
@@ -192,7 +192,7 @@ Redis provides production-grade session storage with:
 
     # Revoke session
     await session_mgr.revoke_session(session.session_id)
-    ```xml
+    ```
   </Step>
 
   <Step title="Verify in Redis">
@@ -208,7 +208,7 @@ Redis provides production-grade session storage with:
 
     # Check session TTL
     TTL session:abc123...
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -548,7 +548,7 @@ rate(redis_evicted_keys_total[5m])
     # Check logs
     docker compose logs redis-session
     kubectl logs -l app.kubernetes.io/name=redis
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Authentication failed">
@@ -575,7 +575,7 @@ rate(redis_evicted_keys_total[5m])
     exists = r.exists(f"session:{session_id}")
     ttl = r.ttl(f"session:{session_id}")
     print(f"Exists: {exists}, TTL: {ttl}")
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="High memory usage">
@@ -589,7 +589,7 @@ rate(redis_evicted_keys_total[5m])
     ```bash
     redis-cli INFO memory | grep used_memory_human
     redis-cli DBSIZE
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Slow session operations">
@@ -603,7 +603,8 @@ rate(redis_evicted_keys_total[5m])
     # Enable slow log
     CONFIG SET slowlog-log-slower-than 10000  # 10ms
     SLOWLOG GET 10
-    ```sql
+    ```
+
   </Accordion>
 </AccordionGroup>
 
@@ -625,7 +626,7 @@ Switching from stateless tokens to Redis sessions:
     # Add Redis config
     REDIS_URL=redis://redis-session:6379/0
     REDIS_PASSWORD=...
-    ```xml
+    ```
   </Step>
 
   <Step title="Dual Mode Support (Optional)">
@@ -646,7 +647,8 @@ Switching from stateless tokens to Redis sessions:
         user = session.user_id
     else:
         raise Unauthorized()
-    ```sql
+    ```
+
   </Step>
 
   <Step title="Update Client Applications">
@@ -665,7 +667,7 @@ Switching from stateless tokens to Redis sessions:
     fetch('/api/message', {
       credentials: 'include'  // Send cookies
     });
-    ```xml
+    ```
   </Step>
 
   <Step title="Deprecate Token Support">

@@ -54,7 +54,7 @@ curl -X POST http://localhost:8000/message \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "Hello!"}'
-```xml
+```
 </CodeGroup>
 
 <Warning>
@@ -133,7 +133,7 @@ curl -X POST http://localhost:8000/message \
     KEYCLOAK_CLIENT_ID=langgraph-client
     KEYCLOAK_CLIENT_SECRET=your-client-secret-here
     KEYCLOAK_VERIFY_SSL=true  # Required for production
-    ```xml
+    ```
   </Step>
 
   <Step title="Test Authentication">
@@ -150,7 +150,7 @@ curl -X POST http://localhost:8000/message \
     # Verify token
     user_info = await client.get_user_info(result['access_token'])
     print(f"User: {user_info}")
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -185,7 +185,7 @@ curl -X POST http://localhost:8000/message \
     AUTH_PROVIDER=keycloak
     AUTH_MODE=token
     # Tokens validated via Keycloak JWKS
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Usage">
@@ -199,7 +199,7 @@ curl -X POST http://localhost:8000/message \
 
     # Token refresh (Keycloak only)
     new_tokens = await keycloak.refresh_token(refresh_token)
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -236,7 +236,7 @@ curl -X POST http://localhost:8000/message \
     SESSION_TTL_SECONDS=86400  # 24 hours
     SESSION_SLIDING_WINDOW=true  # Extend on activity
     SESSION_MAX_CONCURRENT=5  # Per user
-    ```xml
+    ```
   </Tab>
 
   <Tab title="Usage">
@@ -259,7 +259,7 @@ curl -X POST http://localhost:8000/message \
 
     # Revoke all user sessions
     await auth.revoke_user_sessions("alice")
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -334,7 +334,7 @@ curl -X POST http://localhost:8000/message \
     # Check environment variables
     env | grep AUTH
     env | grep KEYCLOAK
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Token expired">

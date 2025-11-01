@@ -225,7 +225,8 @@ kubectl run curl-test --rm -it --restart=Never --image=curlimages/curl -- \
 kubectl logs -n mcp-server-langgraph -l app=mcp-server-langgraph --tail=50
 kubectl logs -n mcp-server-langgraph -l app=openfga --tail=50
 kubectl logs -n mcp-server-langgraph -l app=keycloak --tail=50
-```sql
+```
+
 #### Integration Tests
 
 - [ ] Test user authentication (Keycloak)

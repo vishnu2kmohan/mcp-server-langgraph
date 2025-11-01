@@ -162,7 +162,7 @@ timestamp < 2025-10-10
     Fix issue in code and redeploy:
     ```bash
     langgraph deploy
-    ```xml
+    ```
   </Step>
 
   <Step title="Verify Fix">
@@ -239,7 +239,8 @@ config = RunnableConfig(
 )
 
 result = await graph.ainvoke(input, config=config)
-```sql
+```
+
 Now filter in LangSmith:
 - `tags:"premium-user"`
 - `metadata.cost_center:"sales"`
@@ -313,7 +314,7 @@ Logs are included in each trace - expand trace to see full logs.
 
     # Bad: Inconsistent tags
     tags=["prod", "Premium User", "CHAT"]
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Add Business Context">
@@ -325,7 +326,7 @@ Logs are included in each trace - expand trace to see full logs.
         "session_id": "sess_123",
         "request_source": "mobile_app"
     }
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Monitor Key Metrics Daily">

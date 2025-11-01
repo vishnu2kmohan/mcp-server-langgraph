@@ -78,7 +78,7 @@ flowchart TB
     L2 -->|Miss| L3{L3: Provider Cache<br/>Anthropic/Gemini}
 
     L3 -->|Hit ~100ms| L3Hit[Return from L3<br/>Update L2 + L1]
-    L3 -->|Miss| External[External Service<br/>LLM API Call<br/>2000ms+]
+    L3 -->|Miss| External[External Service<br/>LLM API Call<br/&gt;2000ms+]
 
     External --> Update[Update All Layers<br/>L3 → L2 → L1]
     Update --> Response[Response]

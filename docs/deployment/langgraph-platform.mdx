@@ -79,7 +79,7 @@ The `langgraph.json` file configures your deployment:
   },
   "python_version": "3.11"
 }
-```xml
+```
 <ParamField path="dependencies" type="array">
   List of dependency sources. `["."]` means current directory.
 </ParamField>
@@ -110,7 +110,7 @@ langsmith secret set JWT_SECRET_KEY "your-secret"
 
 ## View secrets
 langsmith secret list
-```xml
+```
 <Warning>
   **Never** hardcode API keys in code or commit them to git. Always use LangSmith secrets.
 </Warning>
@@ -197,7 +197,8 @@ LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
 
 ## Production
 LANGSMITH_PROJECT=my-agent-prod langgraph deploy my-agent-prod
-```sql
+```
+
 ### Monitoring
 
 #### LangSmith Integration
@@ -231,8 +232,8 @@ Configure alerts in LangSmith:
 
 1. Go to Project Settings → Alerts
 2. Create alert rules:
-   - High error rate (>5%)
-   - High latency (P95 >5s)
+   - High error rate (&gt;5%)
+   - High latency (P95 &gt;5s)
    - Budget exceeded
 
 ### CI/CD Integration
@@ -292,7 +293,7 @@ deploy:
     # Test thoroughly
     # Then deploy
     langgraph deploy
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Use Staging Environment">
@@ -307,7 +308,7 @@ deploy:
 
     # If good, deploy to production
     langgraph deploy my-agent-prod
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Version Your Deployments">
@@ -318,7 +319,7 @@ deploy:
 
     # Or use git commit
     langgraph deploy my-agent-prod --tag "$(git rev-parse --short HEAD)"
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Monitor After Deploy">
@@ -339,7 +340,7 @@ deploy:
 
     # Bad: In langgraph.json
     # "env": {"ANTHROPIC_API_KEY": "sk-ant-..."}  ❌
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -360,7 +361,7 @@ deploy:
         "agent": "./langgraph/agent.py:graph"  // ✅ Correct
       }
     }
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Authentication Errors">
@@ -374,7 +375,7 @@ deploy:
 
     # Verify
     langgraph whoami
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Missing Dependencies">

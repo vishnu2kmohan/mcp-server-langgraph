@@ -85,7 +85,7 @@ sequenceDiagram
         Access via ingress or port-forward:
         ```bash
         kubectl port-forward svc/keycloak 8080:80 -n mcp-server-langgraph
-        ```xml
+        ```
       </Tab>
 
       <Tab title="Cloud Run">
@@ -127,7 +127,7 @@ sequenceDiagram
     KEYCLOAK_VERIFY_SSL=true
     KEYCLOAK_TIMEOUT=30
     KEYCLOAK_HOSTNAME=mcp-server-langgraph.yourdomain.com
-    ```xml
+    ```
   </Step>
 
   <Step title="Test Authentication">
@@ -145,7 +145,7 @@ sequenceDiagram
     print(f"Access Token: {result['access_token']}")
     print(f"Refresh Token: {result['refresh_token']}")
     print(f"Expires In: {result['expires_in']} seconds")
-    ```sql
+    ```
   </Step>
 </Steps>
 
@@ -266,7 +266,7 @@ result = await client.authenticate(
 
 access_token = result['access_token']
 refresh_token = result['refresh_token']
-```xml
+```
 <Warning>
 **Never use Direct Grant in production!** Use Authorization Code flow with PKCE for web/mobile apps.
 </Warning>
@@ -526,7 +526,7 @@ extraEnv:
 
     # Test connectivity
     curl http://keycloak:8080/health
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Invalid client secret">
@@ -537,7 +537,7 @@ extraEnv:
     # Or via CLI
     kubectl get secret keycloak-client-secret \
       -o jsonpath='{.data.client-secret}' | base64 -d
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Token verification failed">
@@ -552,7 +552,7 @@ extraEnv:
     import jwt
     decoded = jwt.decode(token, options={"verify_signature": False})
     print(decoded)
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="SSL verification errors">

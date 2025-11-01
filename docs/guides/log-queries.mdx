@@ -298,7 +298,7 @@ status:error @timestamp:[now-1h TO now]
 ```
 #### High Latency Requests
 ```
-@duration_ms:>1000 @message:"request completed"
+@duration_ms:&gt;1000 @message:"request completed"
 ```
 #### Errors with Stack Traces
 ```
@@ -390,34 +390,34 @@ index=main source="mcp-server-langgraph" user_id="alice"
     fields @timestamp, level, message, span_id
     | filter trace_id = "YOUR_TRACE_ID"
     | sort @timestamp asc
-    ```xml
+    ```
   </Tab>
   <Tab title="GCP">
     ```
     jsonPayload.trace_id="YOUR_TRACE_ID"
-    ```xml
+    ```
   </Tab>
   <Tab title="Azure">
     ```kql
     traces
     | where customDimensions.trace_id == "YOUR_TRACE_ID"
     | order by timestamp asc
-    ```xml
+    ```
   </Tab>
   <Tab title="Elasticsearch">
     ```
     trace_id: "YOUR_TRACE_ID"
-    ```xml
+    ```
   </Tab>
   <Tab title="Datadog">
     ```
     @trace_id:YOUR_TRACE_ID
-    ```xml
+    ```
   </Tab>
   <Tab title="Splunk">
     ```spl
     trace_id="YOUR_TRACE_ID" | sort _time
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
@@ -432,7 +432,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
     | filter level = "ERROR"
     | stats count() by message
     | sort count desc
-    ```xml
+    ```
   </Tab>
   <Tab title="GCP">
     ```
@@ -446,7 +446,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
     | where severityLevel >= 3
     | summarize count() by message
     | order by count_ desc
-    ```xml
+    ```
   </Tab>
   <Tab title="Elasticsearch">
     ```json
@@ -458,23 +458,23 @@ index=main source="mcp-server-langgraph" user_id="alice"
         }
       }
     }
-    ```xml
+    ```
   </Tab>
   <Tab title="Datadog">
     ```
     status:error | count by @message
-    ```xml
+    ```
   </Tab>
   <Tab title="Splunk">
     ```spl
     level="ERROR" | stats count by message | sort -count
-    ```xml
+    ```
   </Tab>
 </Tabs>
 
 ### 3. Performance Analysis
 
-**Find slow requests (>1s)**:
+**Find slow requests (&gt;1s)**:
 
 <Tabs>
   <Tab title="CloudWatch">
@@ -482,12 +482,12 @@ index=main source="mcp-server-langgraph" user_id="alice"
     fields @timestamp, http_route, duration_ms
     | filter duration_ms > 1000
     | sort duration_ms desc
-    ```xml
+    ```
   </Tab>
   <Tab title="GCP">
     ```
-    jsonPayload.duration_ms>1000
-    ```xml
+    jsonPayload.duration_ms&gt;1000
+    ```
   </Tab>
   <Tab title="Azure">
     ```kql
@@ -496,22 +496,22 @@ index=main source="mcp-server-langgraph" user_id="alice"
     | where duration > 1000
     | project timestamp, customDimensions.http_route, duration
     | order by duration desc
-    ```xml
+    ```
   </Tab>
   <Tab title="Elasticsearch">
     ```
-    duration_ms:>1000
-    ```xml
+    duration_ms:&gt;1000
+    ```
   </Tab>
   <Tab title="Datadog">
     ```
-    @duration_ms:>1000
-    ```xml
+    @duration_ms:&gt;1000
+    ```
   </Tab>
   <Tab title="Splunk">
     ```spl
-    duration_ms>1000 | sort -duration_ms
-    ```xml
+    duration_ms&gt;1000 | sort -duration_ms
+    ```
   </Tab>
 </Tabs>
 
@@ -525,35 +525,35 @@ index=main source="mcp-server-langgraph" user_id="alice"
     fields @timestamp, user_id, ip_address, message
     | filter message like /authentication failed/
     | sort @timestamp desc
-    ```xml
+    ```
   </Tab>
   <Tab title="GCP">
     ```
     jsonPayload.message=~"authentication failed"
     severity>="WARNING"
-    ```xml
+    ```
   </Tab>
   <Tab title="Azure">
     ```kql
     traces
     | where message contains "authentication failed"
     | project timestamp, customDimensions.user_id, customDimensions.ip_address
-    ```xml
+    ```
   </Tab>
   <Tab title="Elasticsearch">
     ```
     message: "authentication failed" AND level: ("WARNING" OR "ERROR")
-    ```xml
+    ```
   </Tab>
   <Tab title="Datadog">
     ```
     @message:"authentication failed" (status:warn OR status:error)
-    ```xml
+    ```
   </Tab>
   <Tab title="Splunk">
     ```spl
     message="*authentication failed*" (level="WARNING" OR level="ERROR")
-    ```xml
+    ```
   </Tab>
 </Tabs>
 

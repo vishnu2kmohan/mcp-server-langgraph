@@ -572,7 +572,7 @@ groups:
     k6 run --vus 10 --duration 5m load-test.js
     k6 run --vus 50 --duration 10m load-test.js
     k6 run --vus 100 --duration 15m load-test.js
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Monitor Closely" icon="chart-line">
@@ -598,7 +598,7 @@ groups:
       selector:
         matchLabels:
           app: mcp-server-langgraph
-    ```xml
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -615,7 +615,7 @@ groups:
 
     # View current metrics
     kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/mcp-server-langgraph/pods
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Pods evicted">

@@ -51,7 +51,7 @@ GPT-4o combines GPT-4-level intelligence with multimodal capabilities (text, vis
     LLM_PROVIDER=openai
     OPENAI_API_KEY=sk-...your-key
     LLM_MODEL_NAME=gpt-4o
-    ```xml
+    ```
   </Step>
 
   <Step title="Test">
@@ -65,7 +65,7 @@ GPT-4o combines GPT-4-level intelligence with multimodal capabilities (text, vis
 
     response = await llm.ainvoke("Explain machine learning in simple terms")
     print(response.content)
-    ```xml
+    ```
   </Step>
 </Steps>
 
@@ -709,7 +709,7 @@ async def call_openai_with_metrics(query: str):
     # 2. Revoke old key
     # 3. Create new key
     # 4. Update in Infisical
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Rate limit exceeded">
@@ -734,7 +734,7 @@ async def call_openai_with_metrics(query: str):
 
     # Request tier upgrade
     # https://platform.openai.com/account/billing/limits
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Context length exceeded">
@@ -752,7 +752,7 @@ async def call_openai_with_metrics(query: str):
 
     # Then use summary
     response = await llm.ainvoke(f"Analyze this summary:\n\n{summary}")
-    ```xml
+    ```
   </Accordion>
 
   <Accordion title="Timeout errors">
