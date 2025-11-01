@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762025479807,
+  "lastUpdate": 1762025584429,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -18520,6 +18520,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017673381059023218",
             "extra": "mean: 58.149350546052816 usec\nrounds: 5403"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "49760d5ace32c8d6e506b38b36f8f054847b3a91",
+          "message": "docs: remove generic prototype framework comparisons\n\nRemove unfair strawman comparisons against generic \"Prototype Frameworks\"\nand replace with factual statements about our specific capabilities and\nresearched framework comparisons.\n\nChanges:\n- Remove Production-Ready vs Prototype Frameworks table from choosing-framework.mdx\n- Replace with statement listing the 6 frameworks we've actually researched\n- Update introduction.mdx Note to focus on our strengths without generic dismissals\n- Maintain fair, research-based comparisons with named frameworks only\n\nThis ensures we only compare ourselves to frameworks we've thoroughly\nresearched (CrewAI, OpenAI AgentKit, Google ADK, Claude Agent SDK,\nLangGraph Cloud, Microsoft Agent Framework) rather than generic strawmen.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-01T15:31:42-04:00",
+          "tree_id": "4191e32f315d9e8acab1b0c01587694a7887135c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/49760d5ace32c8d6e506b38b36f8f054847b3a91"
+        },
+        "date": 1762025583809,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51552.34464795797,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002022016049090966",
+            "extra": "mean: 19.397759827003537 usec\nrounds: 8777"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54935.107674017454,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022749334371512272",
+            "extra": "mean: 18.203295530682432 usec\nrounds: 13244"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51481.86683025487,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002152768868810268",
+            "extra": "mean: 19.424315036927137 usec\nrounds: 20769"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.07314722501508,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017725145278358927",
+            "extra": "mean: 5.2335977845299295 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.38286814399827,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000088017516421857",
+            "extra": "mean: 51.59195184999703 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.957013957707119,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042682993827732914",
+            "extra": "mean: 100.43171620001203 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2707003.8719411027,
+            "unit": "iter/sec",
+            "range": "stddev: 4.436799686911059e-8",
+            "extra": "mean: 369.4121055257055 nsec\nrounds: 188324"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5298.585287055499,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001272182293023673",
+            "extra": "mean: 188.72962230937583 usec\nrounds: 2555"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2998.059940938604,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009604807890464456",
+            "extra": "mean: 333.5490349425534 usec\nrounds: 2776"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2925.982161599869,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000541626150208552",
+            "extra": "mean: 341.76558323691887 usec\nrounds: 1766"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59161.91374933852,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002024522117356831",
+            "extra": "mean: 16.902766266772105 usec\nrounds: 13002"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17318.92626414696,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001844407163950175",
+            "extra": "mean: 57.740300105680646 usec\nrounds: 5648"
           }
         ]
       }
