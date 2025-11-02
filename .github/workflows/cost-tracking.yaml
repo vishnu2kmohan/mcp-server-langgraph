@@ -261,7 +261,7 @@ jobs:
         echo "budget_remaining=$budget_remaining" >> $GITHUB_OUTPUT
 
     - name: Upload report
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5
       with:
         name: cost-report-${{ steps.fetch.outputs.period }}days
         path: |
@@ -271,7 +271,7 @@ jobs:
 
     - name: Create issue if over budget
       if: steps.analyze.outputs.budget_pct > 100
-      uses: actions/github-script@v7.1.0
+      uses: actions/github-script@v8
       with:
         script: |
           const fs = require('fs');
