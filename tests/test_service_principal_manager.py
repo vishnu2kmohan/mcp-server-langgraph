@@ -10,14 +10,12 @@ Tests cover:
 - OpenFGA tuple synchronization
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
-from mcp_server_langgraph.auth.service_principal import (
-    ServicePrincipal,
-    ServicePrincipalManager,
-)
+import pytest
+
+from mcp_server_langgraph.auth.service_principal import ServicePrincipal, ServicePrincipalManager
 
 
 @pytest.fixture
@@ -52,6 +50,7 @@ def service_principal_manager(mock_keycloak_client, mock_openfga_client):
     )
 
 
+@pytest.mark.unit
 class TestServicePrincipalCreation:
     """Test service principal creation with different authentication modes"""
 
@@ -94,16 +93,12 @@ class TestServicePrincipalCreation:
         mock_openfga_client.write_tuples.assert_called_once()
         tuples = mock_openfga_client.write_tuples.call_args[0][0]
         assert any(
-            t["user"] == owner_user_id
-            and t["relation"] == "owner"
-            and t["object"] == f"service_principal:{service_id}"
+            t["user"] == owner_user_id and t["relation"] == "owner" and t["object"] == f"service_principal:{service_id}"
             for t in tuples
         )
 
     @pytest.mark.asyncio
-    async def test_create_service_principal_service_account_user_mode(
-        self, service_principal_manager, mock_keycloak_client
-    ):
+    async def test_create_service_principal_service_account_user_mode(self, service_principal_manager, mock_keycloak_client):
         """Test creating service principal using service account user mode"""
         # Arrange
         service_id = "legacy-integration"
@@ -130,9 +125,7 @@ class TestServicePrincipalCreation:
         assert call_args["realmRoles"] == ["service-principal"]
 
     @pytest.mark.asyncio
-    async def test_create_service_principal_with_user_association(
-        self, service_principal_manager, mock_openfga_client
-    ):
+    async def test_create_service_principal_with_user_association(self, service_principal_manager, mock_openfga_client):
         """Test creating service principal associated with user for permission inheritance"""
         # Arrange
         service_id = "scheduled-reports"
@@ -155,16 +148,12 @@ class TestServicePrincipalCreation:
         # Verify OpenFGA acts_as tuple was created
         tuples = mock_openfga_client.write_tuples.call_args[0][0]
         assert any(
-            t["user"] == f"service:{service_id}"
-            and t["relation"] == "acts_as"
-            and t["object"] == associated_user_id
+            t["user"] == f"service:{service_id}" and t["relation"] == "acts_as" and t["object"] == associated_user_id
             for t in tuples
         )
 
     @pytest.mark.asyncio
-    async def test_create_service_principal_invalid_mode_raises_error(
-        self, service_principal_manager
-    ):
+    async def test_create_service_principal_invalid_mode_raises_error(self, service_principal_manager):
         """Test that invalid authentication mode raises ValueError"""
         with pytest.raises(ValueError, match="Invalid authentication mode"):
             await service_principal_manager.create_service_principal(
@@ -175,13 +164,12 @@ class TestServicePrincipalCreation:
             )
 
 
+@pytest.mark.unit
 class TestServicePrincipalUserAssociation:
     """Test associating service principals with users"""
 
     @pytest.mark.asyncio
-    async def test_associate_with_user(
-        self, service_principal_manager, mock_keycloak_client, mock_openfga_client
-    ):
+    async def test_associate_with_user(self, service_principal_manager, mock_keycloak_client, mock_openfga_client):
         """Test associating existing service principal with user"""
         # Arrange
         service_id = "batch-job"
@@ -229,13 +217,12 @@ class TestServicePrincipalUserAssociation:
         mock_openfga_client.write_tuples.assert_not_called()
 
 
+@pytest.mark.unit
 class TestServicePrincipalSecretRotation:
     """Test secret rotation for service principals"""
 
     @pytest.mark.asyncio
-    async def test_rotate_secret(
-        self, service_principal_manager, mock_keycloak_client
-    ):
+    async def test_rotate_secret(self, service_principal_manager, mock_keycloak_client):
         """Test rotating service principal secret"""
         # Arrange
         service_id = "api-integration"
@@ -248,14 +235,10 @@ class TestServicePrincipalSecretRotation:
         assert len(new_secret) >= 32
 
         # Verify Keycloak secret was updated
-        mock_keycloak_client.update_client_secret.assert_called_once_with(
-            service_id, new_secret
-        )
+        mock_keycloak_client.update_client_secret.assert_called_once_with(service_id, new_secret)
 
     @pytest.mark.asyncio
-    async def test_rotate_secret_generates_different_secret(
-        self, service_principal_manager
-    ):
+    async def test_rotate_secret_generates_different_secret(self, service_principal_manager):
         """Test that rotation generates cryptographically unique secrets"""
         # Act
         secret1 = await service_principal_manager.rotate_secret("service1")
@@ -265,13 +248,12 @@ class TestServicePrincipalSecretRotation:
         assert secret1 != secret2
 
 
+@pytest.mark.unit
 class TestServicePrincipalListing:
     """Test listing service principals"""
 
     @pytest.mark.asyncio
-    async def test_list_all_service_principals(
-        self, service_principal_manager, mock_keycloak_client
-    ):
+    async def test_list_all_service_principals(self, service_principal_manager, mock_keycloak_client):
         """Test listing all service principals"""
         # Arrange
         mock_keycloak_client.get_clients.return_value = [
@@ -304,9 +286,7 @@ class TestServicePrincipalListing:
         assert sp.inherit_permissions is True
 
     @pytest.mark.asyncio
-    async def test_list_service_principals_filtered_by_owner(
-        self, service_principal_manager, mock_keycloak_client
-    ):
+    async def test_list_service_principals_filtered_by_owner(self, service_principal_manager, mock_keycloak_client):
         """Test listing service principals filtered by owner"""
         # Arrange
         owner = "user:alice"
@@ -326,22 +306,19 @@ class TestServicePrincipalListing:
         ]
 
         # Act
-        service_principals = await service_principal_manager.list_service_principals(
-            owner_user_id=owner
-        )
+        service_principals = await service_principal_manager.list_service_principals(owner_user_id=owner)
 
         # Assert
         assert len(service_principals) == 1
         assert service_principals[0].service_id == "service1"
 
 
+@pytest.mark.unit
 class TestServicePrincipalDeletion:
     """Test deleting service principals"""
 
     @pytest.mark.asyncio
-    async def test_delete_service_principal(
-        self, service_principal_manager, mock_keycloak_client, mock_openfga_client
-    ):
+    async def test_delete_service_principal(self, service_principal_manager, mock_keycloak_client, mock_openfga_client):
         """Test deleting service principal removes from Keycloak and OpenFGA"""
         # Arrange
         service_id = "deprecated-service"
@@ -354,11 +331,10 @@ class TestServicePrincipalDeletion:
         mock_keycloak_client.delete_client.assert_called_once_with(service_id)
 
         # Verify OpenFGA tuples deleted
-        mock_openfga_client.delete_tuples_for_object.assert_called_once_with(
-            f"service_principal:{service_id}"
-        )
+        mock_openfga_client.delete_tuples_for_object.assert_called_once_with(f"service_principal:{service_id}")
 
 
+@pytest.mark.unit
 class TestServicePrincipalDataModel:
     """Test ServicePrincipal data model"""
 
