@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762100569646,
+  "lastUpdate": 1762101277226,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -19830,6 +19830,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002457420704498052",
             "extra": "mean: 59.95079852301993 usec\nrounds: 5281"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "fbdbf6f25102e1ed6583a321d0e4f2f1e3029afe",
+          "message": "fix: resolve act schema validation errors and configure gh CLI authentication\n\n## Changes\n\n### Workflow Fixes\n- **release.yaml**: Convert `secrets` context to `env` for act compatibility\n  - Move SLACK_WEBHOOK to job-level env variable\n  - Change step `if` condition from `secrets.SLACK_WEBHOOK` to `env.SLACK_WEBHOOK`\n- **security-scan.yaml**: Apply same fix for SLACK_SECURITY_WEBHOOK\n  - Resolves act schema validation error: \"Unknown Variable Access secrets\"\n\n### Act Configuration\n- **`.actrc`**: Create optimized act configuration\n  - Use medium-sized Ubuntu image (catthehacker/ubuntu:act-latest ~5.5GB)\n  - Enable Docker-in-Docker with socket binding\n  - Configure artifact storage in /tmp/act-artifacts\n  - Enable container reuse for faster runs\n  - Enable verbose output for debugging\n  - Configure default event file\n\n- **`.github/act-event.json`**: Create event payload for push simulation\n  - Simulates push to main branch\n  - Includes repository metadata\n\n- **`.secrets`**: Create template for optional secrets\n  - GITHUB_TOKEN injected via gh CLI (not stored in file)\n  - Optional: SLACK_WEBHOOK, SLACK_SECURITY_WEBHOOK, PYPI_TOKEN, MCP_REGISTRY_TOKEN\n  - Gitignored for security\n\n### Documentation\n- **`.github/ACT_USAGE.md`**: Comprehensive 530+ line guide\n  - Installation and setup instructions\n  - GitHub CLI (gh) authentication integration\n  - Shell alias examples for convenience\n  - Workflow compatibility matrix\n  - Common use cases and examples\n  - Troubleshooting guide\n  - Best practices\n\n- **`.github/ACT_QUICKSTART.md`**: Quick reference card\n  - One-time setup steps\n  - Common commands\n  - Shell alias examples\n  - Troubleshooting\n\n### Gitignore\n- Add `.secrets` to prevent accidental token commits\n- Add `/tmp/act-artifacts/` for act artifact storage\n- Add `.act/` directory\n\n## Benefits\n\n- ✅ **Security**: No tokens stored in files, uses gh CLI authentication\n- ✅ **Validation**: `act push --list` now passes schema validation\n- ✅ **Convenience**: Shell alias pattern for easier usage\n- ✅ **Documentation**: Comprehensive guides for local workflow testing\n\n## Verification\n\n```bash\n# Schema validation passes\nact -s GITHUB_TOKEN=\"\\$(gh auth token)\" push --list\n# Shows 40+ jobs across 12 workflows\n\n# Dry run succeeds\nact -s GITHUB_TOKEN=\"\\$(gh auth token)\" push -W .github/workflows/build-hygiene.yaml --dryrun\n```\n\n## Usage\n\n```bash\n# Direct usage\nact -s GITHUB_TOKEN=\"\\$(gh auth token)\" push --list\n\n# Or with shell alias (recommended)\nact-gh() { act -s GITHUB_TOKEN=\"\\$(gh auth token)\" \"\\$@\"; }\nact-gh push --list\n```\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T11:33:31-05:00",
+          "tree_id": "a9728149d90040078093bbe65927826e53d0051a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/fbdbf6f25102e1ed6583a321d0e4f2f1e3029afe"
+        },
+        "date": 1762101275672,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 165.0059984173989,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008537635128715273",
+            "extra": "mean: 6.060385741071071 msec\nrounds: 112"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 165.8094590037813,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012866846564567523",
+            "extra": "mean: 6.031019014284311 msec\nrounds: 140"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 57422.14490024232,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001214037837088853",
+            "extra": "mean: 17.414884131153034 usec\nrounds: 9295"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 58630.35593846572,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015121407421537344",
+            "extra": "mean: 17.05601107128753 usec\nrounds: 11923"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 54727.57786871832,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013679567011813167",
+            "extra": "mean: 18.27232336864645 usec\nrounds: 17562"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.6053140893162,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001678324134916501",
+            "extra": "mean: 5.219061928177281 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.505603579059493,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012493706491128356",
+            "extra": "mean: 51.26731895000489 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.935750360998627,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00024034384572962008",
+            "extra": "mean: 100.64665109998714 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2692067.897287422,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2001123422968965e-8",
+            "extra": "mean: 371.461656300578 nsec\nrounds: 133816"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6534.353022469502,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002006843362997628",
+            "extra": "mean: 153.0373392073136 usec\nrounds: 2724"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2945.090890744501,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005746418094017396",
+            "extra": "mean: 339.5480944722919 usec\nrounds: 2424"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3195.527288599567,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004146179038228023",
+            "extra": "mean: 312.9373995858592 usec\nrounds: 483"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 68325.23661120367,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010440865338628522",
+            "extra": "mean: 14.635880526698747 usec\nrounds: 12011"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20842.677562084846,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000201087164714516",
+            "extra": "mean: 47.978480548924836 usec\nrounds: 4807"
           }
         ]
       }
