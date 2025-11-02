@@ -346,7 +346,8 @@ create_cloud_sql() {
     fi
 
     # Create instance (smaller tier for staging)
-    # Note: shared_buffers is in 8KB pages, 32768 = 256MB
+    # Note: shared_buffers is in 8KB pages, 65536 = 512MB (good default for 4GB RAM)
+    # Cloud SQL requires shared_buffers between 52428-314572 for 4GB RAM instances
     gcloud sql instances create "$INSTANCE_NAME" \
         --database-version=POSTGRES_15 \
         --tier=db-custom-1-4096 \
@@ -358,7 +359,7 @@ create_cloud_sql() {
         --backup-location=us \
         --maintenance-window-day=SUN \
         --maintenance-window-hour=4 \
-        --database-flags=max_connections=100,shared_buffers=32768 \
+        --database-flags=max_connections=100,shared_buffers=65536 \
         --deletion-protection
 
     # Create databases
