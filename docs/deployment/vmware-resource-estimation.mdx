@@ -2,6 +2,10 @@
 title: VMware VM Resource Estimation for MCP Server LangGraph
 description: 'Target Platform: VMware vSphere / ESXi 1. [Executive Summary](#executive-summary) 2. [Component Resource Requirements](#component-resource-requirem...'
 icon: 'rocket'
+seoTitle: "VMware VM Resource Estimation for MCP Server LangG - Deployment Guide"
+seoDescription: "Deploy MCP Server: Target Platform: VMware vSphere / ESXi 1. [Executive Summary](#executive-summary) 2. [Component Resource Requirements](#component-resou"
+keywords: ["deployment", "cloud deployment", "MCP Server", "production deployment"]
+contentType: "how-to"
 ---
 
 
@@ -431,6 +435,7 @@ Based on the Kubernetes manifests and Docker configurations, here are the resour
 Create resource pools for workload isolation:
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TD
     Root[Cluster Root] --> Prod[Production]
     Root --> Dev[Development<br/>expandable reservation]

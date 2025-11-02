@@ -2,6 +2,10 @@
 title: System Architecture Diagram
 description: 'This file contains Mermaid diagrams for the MCP Server LangGraph system architecture. Client[MCP Client<br/>Claude Desktop, Custom Apps]'
 icon: 'diagram-project'
+seoTitle: "System Architecture Diagram - System Diagrams"
+seoDescription: "Visual architecture: This file contains Mermaid diagrams for the MCP Server LangGraph system architecture. Client[MCP Client<br/>Claude Desktop, Custom Apps"
+keywords: ["architecture diagram", "system design", "visual guide", "MCP architecture"]
+contentType: "explanation"
 ---
 
 
@@ -10,6 +14,7 @@ This file contains Mermaid diagrams for the MCP Server LangGraph system architec
 ### High-Level System Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TD
     %% MCP Clients
     Client[MCP Client<br/>Claude Desktop, Custom Apps]
@@ -119,6 +124,7 @@ flowchart TD
 ### Authentication Flow
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
 sequenceDiagram
     participant Client as MCP Client
@@ -158,6 +164,7 @@ sequenceDiagram
 ### Agentic Loop Workflow
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TD
     Start([User Request]) --> LoadContext[Load Context<br/>Just-in-Time Semantic Search]
 
@@ -206,6 +213,7 @@ flowchart TD
 ### Deployment Architecture (Kubernetes)
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph Internet
         Users[Users/Clients]
@@ -322,6 +330,7 @@ flowchart TB
 ### Data Flow - MCP Tool Execution
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
 sequenceDiagram
     participant Client as MCP Client
@@ -380,6 +389,7 @@ sequenceDiagram
 ### Parallel Tool Execution
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart LR
     Request[Tool Execution Request] --> Analyzer[Dependency Analyzer]
     Analyzer --> Graph[Build Dependency Graph]
@@ -435,6 +445,7 @@ flowchart LR
 ### Context Loading Strategy
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TD
     UserQuery[User Query] --> CheckCache{Context<br/>Cached?}
 
@@ -489,6 +500,7 @@ flowchart TD
 ### Session Management Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TD
     subgraph Client_Layer["Client Layer"]
         User[User/Application]
@@ -559,6 +571,7 @@ flowchart TD
 ### LLM Provider Fallback Chain
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart LR
     Request[LLM Request] --> Primary{Primary Model<br/>Available?}
 
@@ -604,6 +617,7 @@ flowchart LR
 ### Observability Data Flow
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph Application["Application Components"]
         Agent[LangGraph Agent]

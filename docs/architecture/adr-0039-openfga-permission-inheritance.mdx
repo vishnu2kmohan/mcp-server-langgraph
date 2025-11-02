@@ -2,6 +2,10 @@
 title: 39. OpenFGA Permission Inheritance for Service Principals
 description: 'Service principals (ADR-0033) need to act on behalf of users for scenarios like: - Scheduled reports generated for specific users'
 icon: 'file-lines'
+seoTitle: "ADR-0039: 39. OpenFGA Permission Inheritance for Service Pri"
+seoDescription: "Architecture Decision Record 0039: Service principals (ADR-0033) need to act on behalf of users for scenarios like: - Scheduled reports generated for specific users"
+keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "39."]
+contentType: "explanation"
 ---
 
 
@@ -46,6 +50,7 @@ Permission Check Flow:
 #### Permission Inheritance Model
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph "Identity Layer"
         User[User: alice<br/>user:alice]
@@ -93,6 +98,7 @@ flowchart TB
 ```
 **Permission Check Flow with Inheritance**:
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 sequenceDiagram
     %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
     participant App as MCP Server

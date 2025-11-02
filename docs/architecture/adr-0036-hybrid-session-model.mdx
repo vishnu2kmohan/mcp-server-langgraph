@@ -2,6 +2,10 @@
 title: 36. Hybrid Session Model for Long-Running Tasks
 description: 'JWT-based authentication (ADR-0032) uses short-lived access tokens (15 minutes) for security, but this conflicts with long-running tasks:'
 icon: 'file-lines'
+seoTitle: "ADR-0036: 36. Hybrid Session Model for Long-Running Tasks"
+seoDescription: "Architecture Decision Record 0036: JWT-based authentication (ADR-0032) uses short-lived access tokens (15 minutes) for security, but this conflicts with long-running tasks:"
+keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "36."]
+contentType: "explanation"
 ---
 
 
@@ -49,6 +53,7 @@ Implement a **Hybrid Session Model** where standard users use stateless JWTs wit
 #### Hybrid Session Architecture Comparison
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph "Mode 1: Stateless JWT (Interactive Users)"
         U1[User: alice] --> KC1[Keycloak Login]
@@ -88,6 +93,7 @@ flowchart TB
 #### Session Lifecycle Flow
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 sequenceDiagram
     %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
     participant SP as Service Principal

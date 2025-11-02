@@ -2,6 +2,10 @@
 title: 28. Multi-Layer Caching Strategy
 description: 'Three-layer caching architecture for performance optimization and cost reduction'
 icon: 'file-lines'
+seoTitle: "ADR-0028: 28. Multi-Layer Caching Strategy"
+seoDescription: "Architecture Decision Record 0028: Three-layer caching architecture for performance optimization and cost reduction"
+keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "28."]
+contentType: "explanation"
 ---
 
 ## ADR-0028: Multi-Layer Caching Strategy
@@ -42,6 +46,7 @@ Implement a **multi-layer caching strategy** with three distinct layers:
 #### Cache Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     Request[API Request] --> L1[L1: In-Memory LRU Cache<br/>~10ms<br/>local, per-instance]
     L1 -->|Cache miss| L2[L2: Redis Distributed Cache<br/>~50ms<br/>shared, cross-instance]
@@ -68,6 +73,7 @@ flowchart TB
 #### Multi-Layer Caching Flow
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     Request[API Request] --> L1{L1: In-Memory<br/>LRU Cache}
 
@@ -90,6 +96,7 @@ flowchart TB
 ```
 **Cache Lookup Sequence with Fallback**:
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 sequenceDiagram
     %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
     participant Client

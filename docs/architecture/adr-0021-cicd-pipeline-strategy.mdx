@@ -2,6 +2,10 @@
 title: 21. CI/CD Pipeline Strategy
 description: 'Architecture Decision Record: 21. CI/CD Pipeline Strategy'
 icon: 'file-lines'
+seoTitle: "ADR-0021: 21. CI/CD Pipeline Strategy"
+seoDescription: "Architecture Decision Record 0021: Architecture Decision Record: 21. CI/CD Pipeline Strategy"
+keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "21."]
+contentType: "explanation"
 ---
 
 Date: 2025-10-13
@@ -41,6 +45,7 @@ We will implement a **multi-stage CI/CD pipeline** using GitHub Actions with the
 #### Pipeline Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TD
     PR[PR Checks<br/>on pull_request<br/><br/>• Lint Black, isort, flake8<br/>• Type Check mypy<br/>• Unit Tests pytest]
 

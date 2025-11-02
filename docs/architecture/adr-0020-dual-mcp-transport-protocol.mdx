@@ -2,6 +2,10 @@
 title: 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)
 description: 'Architecture Decision Record: 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)'
 icon: 'file-lines'
+seoTitle: "ADR-0020: 20. Dual MCP Transport Protocol (STDIO + Streamabl"
+seoDescription: "Architecture Decision Record 0020: Architecture Decision Record: 20. Dual MCP Transport Protocol (STDIO + StreamableHTTP)"
+keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "20."]
+contentType: "explanation"
 ---
 
 Date: 2025-10-13
@@ -65,6 +69,7 @@ Both share the same underlying agent logic, differing only in transport layer.
 #### Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TD
     Agent[Core Agent Logic<br/>agent.py, tools]
 

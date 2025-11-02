@@ -2,6 +2,10 @@
 title: 37. Identity Federation Architecture
 description: 'Enterprise users exist in multiple identity systems (Active Directory, Azure AD, Google Workspace, Okta, GitHub) and forcing migration to Keycloak-...'
 icon: 'file-lines'
+seoTitle: "ADR-0037: 37. Identity Federation Architecture"
+seoDescription: "Architecture Decision Record 0037: Enterprise users exist in multiple identity systems (Active Directory, Azure AD, Google Workspace, Okta, GitHub) and forcing migration to Ke"
+keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "37."]
+contentType: "explanation"
 ---
 
 
@@ -35,6 +39,7 @@ External IdPs (LDAP, SAML, OIDC) → Keycloak (Broker + Normalizer)
 #### Identity Federation Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph "External Identity Providers"
         LDAP[LDAP / Active Directory<br/>Corporate Directory]
@@ -81,6 +86,7 @@ flowchart TB
 ```
 **Authentication Flows by Provider Type**:
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 sequenceDiagram
     %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
     participant User
