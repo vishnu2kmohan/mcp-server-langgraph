@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762126751237,
+  "lastUpdate": 1762127847650,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -23002,6 +23002,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018307730070315417",
             "extra": "mean: 59.362251610418745 usec\nrounds: 5588"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "12921ce8475359c11db02bf72affe5b44fbdadd1",
+          "message": "feat: comprehensive deployment issue prevention system\n\n**Prevention Infrastructure**:\n- Created deployment-issues-prevention.md with all 8 issue patterns\n- Added automated validation workflow (validate-deployments.yaml)\n- Validates Docker, K8s, database configs on every PR\n\n**GDPR Database Support**:\n- Added GDPR database to GCP infrastructure script\n- Updated docker-compose to create multiple databases (openfga, keycloak, gdpr)\n- Created GDPR user and stored password in Secret Manager\n\n**Validated Configurations**:\n✅ Cloud SQL: 3 databases (keycloak, openfga, gdpr)\n✅ Docker Compose: Multi-database init script\n✅ Kubernetes: POSTGRES_MULTIPLE_DATABASES already configured\n\n**Issue Prevention Coverage**:\n1. Docker editable install detection\n2. PostgreSQL shared_buffers validation\n3. VPC peering verification\n4. Security context enforcement\n5. Unused RBAC detection\n6. Server-side kubectl validation\n7. Namespace creation ordering\n8. Env var value/valueFrom conflicts\n\n**Platform Coverage**: Docker, GKE, EKS, AKS, Rancher, on-premises K8s\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T18:55:53-05:00",
+          "tree_id": "cbcbf77f983366ca351594338fd3407d9f4929f3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/12921ce8475359c11db02bf72affe5b44fbdadd1"
+        },
+        "date": 1762127846581,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.42678777524605,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010743263044813526",
+            "extra": "mean: 6.923923292929419 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.3368543530034,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013299148431909733",
+            "extra": "mean: 6.696270685039298 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51251.36898642303,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031038224667210955",
+            "extra": "mean: 19.511673927479077 usec\nrounds: 9044"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52938.716793256215,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002949236286966947",
+            "extra": "mean: 18.889766518243004 usec\nrounds: 11457"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49511.238514580466,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023301433200014696",
+            "extra": "mean: 20.19743456236733 usec\nrounds: 19148"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.72738602048875,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020663700538586594",
+            "extra": "mean: 5.2430855414364865 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35375209014417,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013152065784262864",
+            "extra": "mean: 51.669567500001534 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.940267619757666,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000042722042546140976",
+            "extra": "mean: 100.60091319999884 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2646069.9345296104,
+            "unit": "iter/sec",
+            "range": "stddev: 4.963333713850793e-8",
+            "extra": "mean: 377.9189608523213 nsec\nrounds: 187970"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5109.216115702656,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017517362987241903",
+            "extra": "mean: 195.724740812314 usec\nrounds: 517"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3009.527780115254,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009924525319010683",
+            "extra": "mean: 332.2780426242497 usec\nrounds: 2698"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2985.198017161872,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010315333161293824",
+            "extra": "mean: 334.9861530963811 usec\nrounds: 1744"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60000.77954297028,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020303029019958724",
+            "extra": "mean: 16.66645012976603 usec\nrounds: 12332"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17218.70680347017,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002075828789342395",
+            "extra": "mean: 58.076370741063144 usec\nrounds: 5195"
           }
         ]
       }
