@@ -15,6 +15,7 @@ This guide covers setting up **Vertex AI** with **Workload Identity Federation**
 ### Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph Pod["GKE Pod (mcp-server-langgraph)"]
         K8sSA[Kubernetes Service Account<br/>mcp-staging/mcp-server-langgraph<br/>• Annotated with GCP SA]
@@ -257,16 +258,16 @@ EOF
        gcloud container clusters describe mcp-staging-cluster \
          --region=us-central1 \
          --format="value(workloadIdentityConfig.workloadPool)"
-```
+       ```
     2. Check service account annotation:
        ```bash
        kubectl describe sa mcp-server-langgraph -n mcp-staging | grep Annotations
-```
+       ```
     3. Verify IAM binding:
        ```bash
        gcloud iam service-accounts get-iam-policy \
          vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
-```
+       ```
     4. Restart pods to pick up new annotation:
        ```bash
        kubectl rollout restart deployment/mcp-server-langgraph -n mcp-staging
@@ -282,7 +283,7 @@ EOF
        gcloud projects get-iam-policy vishnu-sandbox-20250310 \
          --flatten="bindings[].members" \
          --filter="bindings.members:serviceAccount:vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com"
-```
+       ```
     2. Grant missing permissions:
        ```bash
        # Vertex AI User
@@ -308,11 +309,11 @@ EOF
 
        # Also works (LiteLLM auto-detects)
        model="gemini-2.5-flash"
-```
+       ```
     2. Check available models:
        ```bash
        gcloud ai models list --region=us-central1
-```
+       ```
     3. Use supported model names:
        - `gemini-2.5-flash`
        - `gemini-2.5-pro`
@@ -326,13 +327,13 @@ EOF
        ```yaml
        spec:
          serviceAccountName: mcp-server-langgraph  # Must match annotated SA
-```
+       ```
     2. Check if annotation was applied before pod creation:
        ```bash
        # Delete and recreate pod
        kubectl delete pod $POD_NAME -n mcp-staging
        # Pod will be recreated by deployment
-```
+       ```
     3. Verify namespace has Workload Identity enabled:
        ```bash
        kubectl get namespace mcp-staging -o yaml | grep workload-identity

@@ -147,7 +147,7 @@ gcloud scheduler jobs create http scale-up-dev \
     ```bash
     gcloud sql instances describe mcp-prod-postgres \
       --format="yaml(settings.tier)"
-```
+    ```
     **If CPU < 50% consistently**, downgrade:
     - db-custom-4-15360 → db-custom-2-7680
     - **Savings**: $140/month (50%)
@@ -159,11 +159,11 @@ gcloud scheduler jobs create http scale-up-dev \
     **Check connections**:
     ```bash
     gcloud sql instances describe mcp-prod-postgres-replica-1
-```
+    ```
     **If unused**, remove:
     ```hcl
     cloudsql_read_replica_count = 0
-```
+    ```
     **Savings**: $140/month
   </Accordion>
 
@@ -172,7 +172,7 @@ gcloud scheduler jobs create http scale-up-dev \
     ```hcl
     backup_retention_count         = 14  # vs. 30
     transaction_log_retention_days = 3   # vs. 7
-```
+    ```
     **Savings**: $5-10/month
   </Accordion>
 </AccordionGroup>
@@ -251,7 +251,7 @@ ORDER BY total_cost DESC
     ```bash
     kubectl top pods -n mcp-production --containers
     # Adjust requests based on actual usage
-```
+    ```
     **Savings**: $50-150/month
   </Step>
 

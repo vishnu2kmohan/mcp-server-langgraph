@@ -2,6 +2,10 @@
 title: Authentication
 description: 'Secure your MCP server with JWT and Keycloak SSO'
 icon: 'key'
+seoTitle: "Authentication: JWT & Keycloak Integration Guide"
+seoDescription: "Secure your MCP Server with JWT authentication and Keycloak SSO. API key management, service principals, and identity federation support."
+keywords: ["JWT authentication", "Keycloak", "API security", "service principals", "SSO integration"]
+contentType: "explanation"
 ---
 
 ### Overview
@@ -102,7 +106,7 @@ curl -X POST http://localhost:8000/message \
       --namespace mcp-server-langgraph \
       --set replicaCount=2 \
       --set postgresql.enabled=true
-```
+    ```
     Access Keycloak admin console:
     - **Docker**: http://localhost:8080/admin (admin/admin)
     - **Kubernetes**: Port-forward and access
@@ -113,7 +117,7 @@ curl -X POST http://localhost:8000/message \
 
     ```bash
     python scripts/setup/setup_keycloak.py
-```
+    ```
     This creates:
     - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
@@ -179,7 +183,7 @@ curl -X POST http://localhost:8000/message \
     AUTH_MODE=token
     JWT_SECRET_KEY=your-secret-key-here
     JWT_EXPIRATION_SECONDS=3600  # 1 hour
-```
+    ```
     With Keycloak:
     ```bash
     AUTH_PROVIDER=keycloak

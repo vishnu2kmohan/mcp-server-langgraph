@@ -389,6 +389,36 @@
       "href": "https://github.com/vishnu2kmohan/mcp-server-langgraph"
     }
   },
+  "mcp": {
+    "enabled": true,
+    "tools": ["search"]
+  },
+  "api": {
+    "baseUrl": "http://localhost:8000",
+    "auth": {
+      "method": "bearer",
+      "name": "JWT Token"
+    },
+    "playground": {
+      "mode": "show"
+    }
+  },
+  "openapi": "openapi.yaml",
+  "versions": ["v2.8.0", "v2.7.0", "v2.6.0", "v2.5.0"],
+  "analytics": {
+    "plausible": {
+      "domain": "mcp-server-langgraph.mintlify.app"
+    }
+  },
+  "feedback": {
+    "suggestEdit": true,
+    "raiseIssue": true,
+    "thumbsRating": true
+  },
+  "search": {
+    "placeholder": "Search MCP Server docs...",
+    "prompt": "Ask anything about MCP Server with LangGraph"
+  },
   "footer": {
     "socials": {
       "github": "https://github.com/vishnu2kmohan/mcp-server-langgraph"

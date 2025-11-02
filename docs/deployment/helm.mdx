@@ -82,7 +82,7 @@ kubectl get ingress -n mcp-server-langgraph
 
 ### Chart Structure
 
-```
+    ```
 deployments/helm/mcp-server-langgraph/
 ├── Chart.yaml              # Chart metadata
 ├── values.yaml             # Default configuration
@@ -255,7 +255,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "standard-rwo"
-```
+    ```
     ```bash
     # Create static IP
     gcloud compute addresses create mcp-server-langgraph-ip --global
@@ -296,7 +296,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "gp3"
-```
+    ```
     ```bash
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
@@ -330,7 +330,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "managed-premium"
-```
+    ```
     ```bash
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \

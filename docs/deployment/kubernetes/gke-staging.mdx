@@ -394,7 +394,7 @@ Create alert policies for:
     **Check pod status:**
     ```bash
     kubectl describe pod <pod-name> -n mcp-staging
-```
+    ```
     **Common issues:**
     - Image pull errors: Check Artifact Registry permissions
     - Cloud SQL proxy fails: Verify service account has `cloudsql.client` role
@@ -405,7 +405,7 @@ Create alert policies for:
     **Check ExternalSecret status:**
     ```bash
     kubectl describe externalsecret mcp-staging-secrets -n mcp-staging
-```
+    ```
     **Common fixes:**
     - Verify Workload Identity binding
     - Check secret exists in Secret Manager
@@ -416,7 +416,7 @@ Create alert policies for:
     **Check Cloud SQL proxy logs:**
     ```bash
     kubectl logs -n mcp-staging <pod-name> -c cloud-sql-proxy
-```
+    ```
     **Verify connection:**
     ```bash
     # From inside pod
@@ -429,7 +429,7 @@ Create alert policies for:
     **List network policies:**
     ```bash
     kubectl get networkpolicies -n mcp-staging
-```
+    ```
     **Temporarily disable for testing:**
     ```bash
     kubectl delete networkpolicy <policy-name> -n mcp-staging

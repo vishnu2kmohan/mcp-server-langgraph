@@ -368,7 +368,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
       relations
         define owner: [user]
         define viewer: [user]
-```
+    ```
     **Too Complex**:
     ```typescript
     type document
@@ -397,7 +397,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     **Good** (2 hops):
     ```typescript
     define viewer: [user] or viewer from parent
-```
+    ```
     **Bad** (5+ hops):
     ```typescript
     define viewer: [user] or viewer from parent from grandparent from workspace from tenant

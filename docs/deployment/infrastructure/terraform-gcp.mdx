@@ -98,7 +98,7 @@ terraform apply
     terraform init
     terraform plan -out=tfplan
     terraform apply tfplan
-```
+    ```
     **Duration**: ~25 minutes
     **Cost**: $880-1,275/month
   </Tab>
@@ -110,7 +110,7 @@ terraform apply
     cp terraform.tfvars.example terraform.tfvars
     terraform init
     terraform apply
-```
+    ```
     **Duration**: ~20 minutes
     **Cost**: $250-350/month
   </Tab>
@@ -122,7 +122,7 @@ terraform apply
     cp terraform.tfvars.example terraform.tfvars
     terraform init
     terraform apply
-```
+    ```
     **Duration**: ~15 minutes
     **Cost**: $100-150/month
   </Tab>
@@ -827,7 +827,7 @@ terraform destroy
     # Request quota increase via Console or:
     gcloud alpha compute regions describe REGION \
       --format="yaml(quotas)"
-```
+    ```
     Common quotas to increase:
     - CPUs: 100+
     - In-use IP addresses: 50+
@@ -884,7 +884,7 @@ Want to create custom modules or extend existing ones?
 
 #### Module Structure
 
-```
+    ```
 terraform/modules/my-module/
 ├── main.tf          # Resources
 ├── variables.tf     # Input variables with validation

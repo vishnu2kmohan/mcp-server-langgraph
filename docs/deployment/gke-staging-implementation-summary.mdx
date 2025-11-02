@@ -183,19 +183,19 @@ This document summarizes the complete GKE staging environment implementation for
    ```bash
    echo -n "sk-ant-YOUR_KEY" | gcloud secrets versions add staging-anthropic-api-key --data-file=-
    echo -n "YOUR_KEY" | gcloud secrets versions add staging-google-api-key --data-file=-
-```
+   ```
 3. **Install External Secrets Operator**:
    ```bash
    helm repo add external-secrets https://charts.external-secrets.io
    helm install external-secrets external-secrets/external-secrets \
      --namespace external-secrets-system \
      --create-namespace
-```
+   ```
 4. **Deploy application**:
    ```bash
    gcloud container clusters get-credentials mcp-staging-cluster --region=us-central1
    kubectl apply -k deployments/overlays/staging-gke
-```
+   ```
 5. **Run smoke tests**:
    ```bash
    ./scripts/gcp/staging-smoke-tests.sh
@@ -285,20 +285,20 @@ Run the security checklist:
    ```bash
    kubectl describe pod <pod-name> -n mcp-staging
    kubectl logs <pod-name> -n mcp-staging
-```
+   ```
 2. **External Secrets not syncing**:
    ```bash
    kubectl describe externalsecret mcp-staging-secrets -n mcp-staging
-```
+   ```
 3. **Cloud SQL connection fails**:
    ```bash
    kubectl logs <pod-name> -n mcp-staging -c cloud-sql-proxy
-```
+   ```
 4. **Network policies blocking traffic**:
    ```bash
    kubectl get networkpolicies -n mcp-staging
    # Temporarily delete to test
-```
+   ```
 ### Rollback Procedures
 
 #### Manual Rollback

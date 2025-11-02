@@ -17,7 +17,7 @@ Scale your MCP Server horizontally (more replicas) and vertically (more resource
   # .env or Kubernetes ConfigMap
   CHECKPOINT_BACKEND=redis
   CHECKPOINT_REDIS_URL=redis://redis-service:6379/1
-```
+  ```
   Without Redis, conversation state is stored in pod memory and **will be lost** during:
   - Pod restarts
   - Scale-up events (new pods have no history)

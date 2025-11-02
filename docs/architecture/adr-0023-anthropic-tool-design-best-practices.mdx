@@ -306,12 +306,12 @@ Track the following to measure success:
 1. **Add Response Format Control**:
    ```python
    response_format: Literal["concise", "detailed"] = Field(default="concise")
-```
+   ```
 2. **Apply Response Formatting**:
    ```python
    from mcp_server_langgraph.utils.response_optimizer import format_response
    formatted = format_response(text, format_type=response_format_type)
-```
+   ```
 3. **Use Search-Focused Patterns**:
    - Add `query` and `limit` parameters
    - Filter before returning

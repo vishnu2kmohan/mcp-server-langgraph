@@ -2,6 +2,10 @@
 title: Kubernetes Deployment
 description: 'Deploy MCP Server with LangGraph on Kubernetes'
 icon: 'dharmachakra'
+seoTitle: "Kubernetes Deployment: MCP Server on GKE, EKS, AKS"
+seoDescription: "Deploy MCP Server on Kubernetes (GKE, EKS, AKS). Helm charts, Kustomize, autoscaling, observability, and production best practices."
+keywords: ["Kubernetes deployment", "GKE", "EKS", "AKS", "Helm charts", "k8s"]
+contentType: "how-to"
 ---
 
 ### Overview
@@ -446,7 +450,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
                 name: mcp-server-langgraph
                 port:
                   number: 8000
-```
+    ```
     ```bash
     kubectl apply -f ingress.yaml
     ```

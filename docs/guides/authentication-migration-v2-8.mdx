@@ -303,14 +303,14 @@ For development and testing, the InMemoryUserProvider has these default users:
    export KEYCLOAK_REALM=production
    export KEYCLOAK_CLIENT_ID=mcp-server
    export KEYCLOAK_CLIENT_SECRET=<secret>
-```
+   ```
 2. **Obtain Tokens from Keycloak**:
    ```python
    # Clients obtain tokens from Keycloak directly
    # Tokens are validated by the MCP server
 
    # The server will verify Keycloak JWT tokens automatically
-```
+   ```
 3. **No code changes needed** - the auth factory automatically uses KeycloakUserProvider
 
 #### Custom Authentication Provider
@@ -493,7 +493,7 @@ If you need to temporarily rollback to the old behavior (NOT RECOMMENDED):
 1. **Checkout previous version**:
    ```bash
    git checkout v2.7.0
-```
+   ```
 2. **Or apply this patch** (INSECURE - development only):
    ```python
    # In server_stdio.py and server_streamable.py

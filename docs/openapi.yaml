@@ -1,0 +1,551 @@
+openapi: 3.0.3
+info:
+  title: MCP Server with LangGraph API
+  description: |
+    RESTful API for the MCP Server with LangGraph following the Model Context Protocol (MCP) specification.
+
+    This server provides AI-powered agent capabilities with enterprise features including:
+    - Multi-LLM support (Google Gemini, Anthropic Claude, OpenAI GPT)
+    - JWT authentication and OpenFGA authorization
+    - Observability with Jaeger and Prometheus
+    - Multi-cloud deployment support
+  version: 2.8.0
+  contact:
+    name: API Support
+    url: https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions
+  license:
+    name: MIT
+    url: https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/LICENSE
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://your-domain.com
+    description: Production
+  - url: http://mcp-server-langgraph.mcp-server-langgraph.svc.cluster.local:8000
+    description: Kubernetes cluster
+
+tags:
+  - name: Authentication
+    description: JWT token management
+  - name: MCP Protocol
+    description: Model Context Protocol endpoints
+  - name: Health
+    description: Health check and readiness endpoints
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/token:
+    post:
+      tags:
+        - Authentication
+      summary: Get JWT token
+      description: Authenticate and receive a JWT token for API access
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: alice
+                password:
+                  type: string
+                  format: password
+                  example: password
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expires_in:
+                    type: integer
+                    description: Token expiration time in seconds
+                    example: 3600
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /mcp/initialize:
+    post:
+      tags:
+        - MCP Protocol
+      summary: Initialize MCP session
+      description: Initialize a new MCP session and retrieve server capabilities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - protocolVersion
+                - capabilities
+                - clientInfo
+              properties:
+                protocolVersion:
+                  type: string
+                  example: "2024-11-05"
+                capabilities:
+                  type: object
+                  properties:
+                    roots:
+                      type: object
+                      properties:
+                        listChanged:
+                          type: boolean
+                    sampling:
+                      type: object
+                clientInfo:
+                  type: object
+                  required:
+                    - name
+                    - version
+                  properties:
+                    name:
+                      type: string
+                      example: mcp-client
+                    version:
+                      type: string
+                      example: 1.0.0
+      responses:
+        '200':
+          description: Successfully initialized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  protocolVersion:
+                    type: string
+                    example: "2024-11-05"
+                  capabilities:
+                    type: object
+                    properties:
+                      logging:
+                        type: object
+                      prompts:
+                        type: object
+                        properties:
+                          listChanged:
+                            type: boolean
+                      resources:
+                        type: object
+                        properties:
+                          subscribe:
+                            type: boolean
+                          listChanged:
+                            type: boolean
+                      tools:
+                        type: object
+                        properties:
+                          listChanged:
+                            type: boolean
+                  serverInfo:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: mcp-server-langgraph
+                      version:
+                        type: string
+                        example: 2.8.0
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /mcp/tools/list:
+    post:
+      tags:
+        - MCP Protocol
+      summary: List available tools
+      description: Retrieve all available tools the server can execute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  example: tools/list
+      responses:
+        '200':
+          description: List of available tools
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tools:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        inputSchema:
+                          type: object
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /mcp/tools/call:
+    post:
+      tags:
+        - MCP Protocol
+      summary: Execute a tool
+      description: Call a specific tool with provided parameters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+                - params
+              properties:
+                method:
+                  type: string
+                  example: tools/call
+                params:
+                  type: object
+                  required:
+                    - name
+                    - arguments
+                  properties:
+                    name:
+                      type: string
+                      example: search
+                    arguments:
+                      type: object
+      responses:
+        '200':
+          description: Tool execution result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      type: object
+                  isError:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '400':
+          description: Invalid tool or parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /mcp/resources/list:
+    post:
+      tags:
+        - MCP Protocol
+      summary: List available resources
+      description: Retrieve all available resources from the server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  example: resources/list
+      responses:
+        '200':
+          description: List of available resources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        uri:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        mimeType:
+                          type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /mcp/resources/read:
+    post:
+      tags:
+        - MCP Protocol
+      summary: Read a resource
+      description: Read the contents of a specific resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+                - params
+              properties:
+                method:
+                  type: string
+                  example: resources/read
+                params:
+                  type: object
+                  required:
+                    - uri
+                  properties:
+                    uri:
+                      type: string
+                      example: resource://config
+      responses:
+        '200':
+          description: Resource contents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contents:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /mcp/messages/send:
+    post:
+      tags:
+        - MCP Protocol
+      summary: Send a message
+      description: Send a message to the LLM agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+                - params
+              properties:
+                method:
+                  type: string
+                  example: messages/send
+                params:
+                  type: object
+                  required:
+                    - messages
+                  properties:
+                    messages:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          role:
+                            type: string
+                            enum: [user, assistant, system]
+                          content:
+                            type: string
+                    modelPreferences:
+                      type: object
+                      properties:
+                        hints:
+                          type: array
+                          items:
+                            type: string
+                        costPriority:
+                          type: number
+                        speedPriority:
+                          type: number
+                        intelligencePriority:
+                          type: number
+      responses:
+        '200':
+          description: Message response from agent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+                  role:
+                    type: string
+                    enum: [assistant]
+                  model:
+                    type: string
+                  usage:
+                    type: object
+                    properties:
+                      prompt_tokens:
+                        type: integer
+                      completion_tokens:
+                        type: integer
+                      total_tokens:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: rate_limit_exceeded
+                  message:
+                    type: string
+                    example: Too many requests
+                  retry_after:
+                    type: integer
+                    example: 60
+
+  /healthz:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the server is healthy and responding
+      security: []
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  version:
+                    type: string
+                    example: 2.8.0
+                  timestamp:
+                    type: string
+                    format: date-time
+        '503':
+          description: Server is unhealthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: unhealthy
+                  error:
+                    type: string
+
+  /readyz:
+    get:
+      tags:
+        - Health
+      summary: Readiness check
+      description: Check if the server is ready to accept traffic
+      security: []
+      responses:
+        '200':
+          description: Server is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ready
+                  checks:
+                    type: object
+                    properties:
+                      database:
+                        type: boolean
+                      openfga:
+                        type: boolean
+                      redis:
+                        type: boolean
+        '503':
+          description: Server is not ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: not_ready
+                  checks:
+                    type: object
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/token endpoint
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: unauthorized
+            message: Invalid or missing authentication token

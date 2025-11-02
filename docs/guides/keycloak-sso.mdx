@@ -58,10 +58,10 @@ sequenceDiagram
           ports:
             - "8080:8080"
           command: start-dev
-```
+        ```
         ```bash
         docker compose up -d keycloak
-```
+        ```
         Access: http://localhost:8080/admin (admin/admin)
       </Tab>
 
@@ -81,7 +81,7 @@ sequenceDiagram
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
           deployment/keycloak -n mcp-server-langgraph
-```
+        ```
         Access via ingress or port-forward:
         ```bash
         kubectl port-forward svc/keycloak 8080:80 -n mcp-server-langgraph
@@ -106,7 +106,7 @@ sequenceDiagram
 
     # Save the client secret from output
     KEYCLOAK_CLIENT_SECRET=abc123...
-```
+    ```
     This script creates:
     - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)

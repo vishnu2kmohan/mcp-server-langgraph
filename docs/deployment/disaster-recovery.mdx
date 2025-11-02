@@ -15,6 +15,7 @@ Implement comprehensive disaster recovery (DR) to protect against data loss, ser
 ### Disaster Recovery Flow
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph "Production Environment (Primary)"
         App[MCP Server<br/>GKE Cluster]
@@ -258,7 +259,7 @@ sequenceDiagram
 
     # Clean up local files older than 7 days
     find ${BACKUP_DIR} -name "*.dump.gz" -mtime +7 -delete
-```
+    ```
     **Schedule with cron**:
     ```bash
     # Daily full backup at 2 AM
@@ -331,7 +332,7 @@ sequenceDiagram
     gcloud sql instances patch keycloak-db \
       --enable-point-in-time-recovery \
       --retained-transaction-log-days=7
-```
+    ```
     **AWS RDS**:
     ```bash
     # Enable automated backups
@@ -340,7 +341,7 @@ sequenceDiagram
       --backup-retention-period 30 \
       --preferred-backup-window 02:00-03:00 \
       --enable-iam-database-authentication
-```
+    ```
     **Azure Database**:
     ```bash
     az postgres server update \

@@ -176,7 +176,7 @@ gcloud run services update mcp-server-langgraph \
     ```bash
     --min-instances 0
     --cpu-throttling
-```
+    ```
     - **Pros**: Lowest cost
     - **Cons**: 1-2s cold start
     - **Use**: Dev, low-traffic apps
@@ -186,7 +186,7 @@ gcloud run services update mcp-server-langgraph \
     ```bash
     --min-instances 3
     --no-cpu-throttling
-```
+    ```
     - **Pros**: No cold starts
     - **Cons**: Higher baseline cost
     - **Use**: Production, latency-sensitive
@@ -196,7 +196,7 @@ gcloud run services update mcp-server-langgraph \
     ```bash
     --min-instances 1
     --max-instances 50
-```
+    ```
     - **Pros**: Balance cost and latency
     - **Cons**: Some cold starts during spikes
     - **Use**: Most production workloads

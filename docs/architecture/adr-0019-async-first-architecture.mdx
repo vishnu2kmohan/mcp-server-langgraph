@@ -158,7 +158,7 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
   async def test_async_function():
       result = await async_function()
       assert result == expected
-```
+  ```
 - **Blocking Pitfalls**: Accidentally using sync I/O blocks event loop
   ```python
   # ❌ BAD: Blocks event loop
@@ -171,7 +171,7 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
       async with httpx.AsyncClient() as client:
           result = await client.get("https://api.com")
           return result.json()
-```
+  ```
 #### Neutral Consequences
 
 - **Learning Curve**: Team must learn async patterns

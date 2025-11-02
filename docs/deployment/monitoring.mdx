@@ -913,7 +913,7 @@ rule_files:
     job:up:avg:keycloak      # Target: 99.5%
     job:up:avg:openfga       # Target: 99.5%
     job:up:avg:redis_session # Target: 99.9%
-```
+    ```
     **Usage in Grafana**:
     ```promql
     # Current availability
@@ -940,7 +940,7 @@ rule_files:
 
     # Keycloak latency
     job:keycloak_request_duration:p95 # Target: 1000ms
-```
+    ```
     **Usage in Grafana**:
     ```promql
     # P95 latency vs target
@@ -966,7 +966,7 @@ rule_files:
 
     # LLM fallback rate
     job:llm_fallback:rate             # Target: 0.10 (10%)
-```
+    ```
     **Usage in Grafana**:
     ```promql
     # Error rate as percentage
@@ -992,7 +992,7 @@ rule_files:
 
     # Redis connection pool
     job:redis_pool:saturation         # Target: 0.95 (95%)
-```
+    ```
     **Usage in Grafana**:
     ```promql
     # Memory pressure
@@ -1015,7 +1015,7 @@ rule_files:
 
     # Slow burn (3 day window)
     job:error_budget:burn_rate_3d
-```
+    ```
     **Interpretation**:
     - Burn rate = 1.0: Consuming error budget at expected rate
     - Burn rate > 1.0: Consuming faster (alert!)
@@ -1043,7 +1043,7 @@ rule_files:
 
     # Error rate compliance (success rate)
     job:slo_compliance:error_rate_30d    # Target: 99%
-```
+    ```
     **Usage in Grafana**:
     ```promql
     # Monthly SLO report

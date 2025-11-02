@@ -1,6 +1,10 @@
 ---
 title: Quick Start
 description: 'Get MCP Server with LangGraph running in 5 minutes'
+seoTitle: "Quick Start: MCP Server with LangGraph in 5 Minutes"
+seoDescription: "Get started with MCP Server and LangGraph in just 5 minutes. Step-by-step installation guide with Google Gemini integration, Docker Compose setup, and your first AI agent request."
+keywords: ["MCP quickstart", "LangGraph tutorial", "AI agent setup", "Google Gemini", "Docker Compose", "MCP installation"]
+contentType: "tutorial"
 icon: 'bolt'
 ---
 
@@ -50,7 +54,7 @@ Before you begin, ensure you have:
     ```bash
     # uv automatically creates .venv and installs all dependencies
     uv sync
-```
+    ```
     Or use the Makefile:
     ```bash
     make install
@@ -69,7 +73,7 @@ Before you begin, ensure you have:
 
     ```bash
     docker compose up -d
-```
+    ```
     Verify services are running:
     ```bash
     docker compose ps
@@ -81,14 +85,14 @@ Before you begin, ensure you have:
 
     ```bash
     python scripts/setup/setup_openfga.py
-```
+    ```
     Save the output `OPENFGA_STORE_ID` and `OPENFGA_MODEL_ID` - you'll need them next.
   </Step>
 
   <Step title="Configure Environment">
     ```bash
     cp .env.example .env
-```
+    ```
     Edit `.env` with your values:
     ```bash
     # Get free API key from https://aistudio.google.com/apikey
@@ -108,7 +112,7 @@ Before you begin, ensure you have:
 
     ```bash
     python examples/client_stdio.py
-```
+    ```
     You should see the agent responding to queries! 🎉
   </Step>
 </Steps>
@@ -291,7 +295,7 @@ The agent returns a structured response:
 
     # Test directly
     curl https://generativelanguage.googleapis.com/v1/models?key=YOUR_KEY
-```
+    ```
     Get a new key from [Google AI Studio](https://aistudio.google.com/apikey)
   </Accordion>
 

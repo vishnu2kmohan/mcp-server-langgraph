@@ -2,6 +2,10 @@
 title: Google GKE Deployment
 description: 'Deploy MCP Server with LangGraph on Google Kubernetes Engine (GKE)'
 icon: 'google'
+seoTitle: "GKE Deployment: MCP Server on Google Kubernetes Engine"
+seoDescription: "Deploy MCP Server to Google Kubernetes Engine (GKE). Workload Identity, Cloud SQL, Vertex AI integration, and GCP-optimized configuration."
+keywords: ["GKE deployment", "Google Kubernetes Engine", "GCP", "Workload Identity", "Vertex AI"]
+contentType: "how-to"
 ---
 
 ### Overview
@@ -635,7 +639,7 @@ kubectl get ingress -n mcp-server-langgraph
       --preemptible \
       --num-nodes=3 \
       --machine-type=n2-standard-4
-```
+    ```
     Use node affinity to schedule on preemptible nodes:
     ```yaml
     affinity:

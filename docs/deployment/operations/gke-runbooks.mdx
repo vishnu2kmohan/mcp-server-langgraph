@@ -197,11 +197,11 @@ Run this every morning to ensure system health:
     **Check Cloud SQL Proxy**:
     ```bash
     kubectl logs -n mcp-production POD_NAME -c cloud-sql-proxy --tail=50
-```
+    ```
     **Verify Instance Running**:
     ```bash
     gcloud sql instances describe mcp-prod-postgres --format="value(state)"
-```
+    ```
     **Restart Proxy**:
     ```bash
     kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
@@ -213,11 +213,11 @@ Run this every morning to ensure system health:
     ```bash
     kubectl port-forward -n mcp-production svc/production-mcp-server-langgraph 5432:5432 &
     psql "host=localhost user=postgres" -c "SELECT count(*) FROM pg_stat_activity;"
-```
+    ```
     **Kill Idle Connections**:
     ```bash
     psql -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle' AND state_change < NOW() - INTERVAL '10 minutes';"
-```
+    ```
     **Increase Max Connections** (via Terraform):
     ```hcl
     database_flags = {
@@ -343,7 +343,7 @@ gcloud sql backups list --instance=mcp-prod-postgres
     gcloud sql instances clone mcp-prod-postgres mcp-prod-postgres-restored \
       --backup-id=BACKUP_ID \
       --project=PROJECT_ID
-```
+    ```
     **Recommended**: Test on new instance, then switch connection if successful
   </Tab>
 
@@ -353,7 +353,7 @@ gcloud sql backups list --instance=mcp-prod-postgres
     gcloud sql instances clone mcp-prod-postgres mcp-prod-postgres-pitr \
       --point-in-time='2025-11-01T12:00:00.000Z' \
       --project=PROJECT_ID
-```
+    ```
     **PITR Window**: 7 days (configurable)
   </Tab>
 </Tabs>

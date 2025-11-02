@@ -412,7 +412,7 @@ Enable image signing to ensure only trusted container images run in your cluster
     ./deployments/security/binary-authorization/setup-binary-auth.sh \
       PROJECT_ID \
       production
-```
+    ```
     This creates:
     - KMS key for signing
     - Binary Authorization attestor
@@ -538,7 +538,7 @@ kubectl get sa production-mcp-server-langgraph \
     **Diagnosis**:
     ```bash
     kubectl describe pod POD_NAME -n mcp-production
-```
+    ```
     **Common causes**:
     1. Resource requests too high (Autopilot provisions automatically but has limits)
     2. Image pull errors (check Workload Identity permissions)
@@ -554,7 +554,7 @@ kubectl get sa production-mcp-server-langgraph \
     **Diagnosis**:
     ```bash
     kubectl logs -n mcp-production POD_NAME -c cloud-sql-proxy
-```
+    ```
     **Solution**:
     1. Verify private service connection exists
     2. Check Cloud SQL instance is running

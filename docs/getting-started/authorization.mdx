@@ -2,6 +2,10 @@
 title: Authorization
 description: 'Fine-grained access control with OpenFGA'
 icon: 'shield'
+seoTitle: "Authorization: OpenFGA Relationship-Based Access Control"
+seoDescription: "Implement fine-grained authorization with OpenFGA in MCP Server. Define permission models, manage relationships, and secure AI agent access."
+keywords: ["OpenFGA", "authorization", "RBAC", "relationship-based access", "permission model"]
+contentType: "explanation"
 ---
 
 ### Overview
@@ -59,7 +63,7 @@ The default model supports:
   <Step title="Initialize Authorization Model">
     ```bash
     python scripts/setup/setup_openfga.py
-```
+    ```
     This creates:
     - OpenFGA store
     - Authorization model with types and relations
@@ -428,7 +432,7 @@ rate(openfga_check_total{allowed="false"}[5m])
       datastore:
         engine: postgres
         uri: "postgres://openfga:password@postgres:5432/openfga?sslmode=require"
-```
+    ```
     Deploy PostgreSQL with:
     - Replication for high availability
     - Regular backups
@@ -447,7 +451,7 @@ rate(openfga_check_total{allowed="false"}[5m])
 
     # Production
     OPENFGA_STORE_ID=01HPRD...
-```
+    ```
     Prevents accidental permission changes across environments.
   </Accordion>
 
@@ -462,7 +466,7 @@ rate(openfga_check_total{allowed="false"}[5m])
       audit:
         enabled: true
         backend: postgres  # Store audit logs
-```
+    ```
     Monitor for:
     - Unexpected permission grants
     - Failed authorization attempts
@@ -478,7 +482,7 @@ rate(openfga_check_total{allowed="false"}[5m])
 
     # Fail-closed (deny on error) - Production
     FF_OPENFGA_STRICT_MODE=true
-```
+    ```
     In production, **always fail-closed** to prevent unauthorized access.
   </Accordion>
 
@@ -494,7 +498,7 @@ rate(openfga_check_total{allowed="false"}[5m])
         cache_backend="redis",
         cache_ttl=300
     )
-```
+    ```
     Balance security (fresh decisions) vs performance (cached).
   </Accordion>
 
@@ -513,7 +517,7 @@ rate(openfga_check_total{allowed="false"}[5m])
     # - Orphaned permissions (deleted users)
     # - Over-privileged users
     # - Unused permissions
-```
+    ```
     Run monthly or after major changes.
   </Accordion>
 </AccordionGroup>

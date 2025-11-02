@@ -437,7 +437,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
   <Tab title="GCP">
     ```
     severity="ERROR"
-```
+    ```
     Then use "Group by" feature in console.
   </Tab>
   <Tab title="Azure">
@@ -566,7 +566,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
 **Find errors for specific user in specific time range**:
 
 #### CloudWatch
-```
+    ```
 fields @timestamp, level, message, trace_id
 | filter user_id = "alice"
 | filter level = "ERROR"

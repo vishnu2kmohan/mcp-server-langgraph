@@ -194,7 +194,7 @@ flowchart LR
     # Check status
     kubectl get pods -n kong
     kubectl get svc -n kong
-```
+    ```
     **Access Kong**:
     ```bash
     # Port forward Kong admin API
@@ -760,7 +760,7 @@ spec:
     # 1. Database connection failed
     # 2. Migrations not run
     # 3. Port conflicts
-```
+    ```
     **Fix**:
     ```bash
     # Re-run migrations
@@ -782,7 +782,7 @@ spec:
 
     # Test upstream directly
     curl http://mcp-server-langgraph:8000/health
-```
+    ```
     **Fix**:
     ```bash
     # Update service URL

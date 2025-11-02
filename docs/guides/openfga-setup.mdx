@@ -73,7 +73,7 @@ flowchart TB
             POSTGRES_DB: openfga
           volumes:
             - openfga-data:/var/lib/postgresql/data
-```
+        ```
         ```bash
         docker compose up -d openfga postgres
         ```
@@ -130,7 +130,7 @@ flowchart TB
     ```bash
     # Initialize store and model
     python scripts/setup/setup_openfga.py
-```
+    ```
     **Output**:
     ```
     ============================================================
@@ -239,7 +239,7 @@ type document
 
     ```typescript
     type user
-```
+    ```
     No relations defined - users are leaf nodes in the authorization graph.
   </Tab>
 
@@ -252,7 +252,7 @@ type document
         define admin: [user]
         define member: [user] or admin
         define viewer: [user] or member
-```
+    ```
     **Hierarchy**: admin → member → viewer
 
     Admin users automatically have member and viewer permissions.
@@ -267,7 +267,7 @@ type document
         define owner: [user]
         define executor: [user, organization#member]
         define viewer: [user, organization#member]
-```
+    ```
     **executor**: Can execute the tool
     **viewer**: Can see tool metadata
     **organization#member**: All org members can execute
@@ -282,7 +282,7 @@ type document
         define owner: [user]
         define editor: [user]
         define viewer: [user] or editor or owner
-```
+    ```
     **Hierarchy**: owner → editor → viewer
 
     Owners can edit, editors can view and modify.

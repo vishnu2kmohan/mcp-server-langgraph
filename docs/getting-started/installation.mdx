@@ -2,6 +2,10 @@
 title: Installation
 description: 'Detailed installation guide for all environments'
 icon: 'download'
+seoTitle: "Installation Guide: MCP Server with LangGraph Setup"
+seoDescription: "Complete installation guide for MCP Server with LangGraph. Install with uv, pip, or Docker. Supports Python 3.11+, multiple LLM providers, and enterprise deployment."
+keywords: ["MCP installation", "LangGraph setup", "uv package manager", "Python AI server", "Docker installation"]
+contentType: "tutorial"
 ---
 
 ### System Requirements
@@ -37,7 +41,7 @@ Choose the installation method that best fits your use case:
 
         ```bash
         python --version  # Should show 3.10+
-```
+        ```
         If not installed:
         - **macOS**: `brew install python@3.11`
         - **Ubuntu**: `sudo apt install python3.11`
@@ -102,7 +106,7 @@ Choose the installation method that best fits your use case:
         uv sync --extra secrets      # With Infisical support
         uv sync --extra embeddings   # With self-hosted embeddings
         uv sync --all-extras         # All optional features
-```
+        ```
         Or use the Makefile:
         ```bash
         make install     # Production only (from lockfile)
@@ -223,7 +227,7 @@ docker compose up -d
   **Verify services are running:**
   ```bash
   docker compose ps
-```
+  ```
   All services should show "Up" status.
 </Check>
 

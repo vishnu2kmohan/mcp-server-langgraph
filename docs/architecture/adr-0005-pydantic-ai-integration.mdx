@@ -26,12 +26,12 @@ Traditional approaches have limitations:
    response = llm.invoke("Route this message")
    if "search" in response.lower():
        action = "use_tools"  # Fragile!
-```
+   ```
 2. **JSON Output Parsing**
    ```python
    response = llm.invoke("Return JSON: {action: ...}")
    data = json.loads(response)  # May fail!
-```
+   ```
 3. **Function Calling** (Provider-specific)
    ```python
    # Only works with some providers

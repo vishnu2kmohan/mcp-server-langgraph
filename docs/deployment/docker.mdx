@@ -2,6 +2,10 @@
 title: Docker Compose
 description: 'Local development and testing with Docker Compose'
 icon: 'docker'
+seoTitle: "Docker Deployment: Containerized MCP Server Setup"
+seoDescription: "Deploy MCP Server with LangGraph using Docker and Docker Compose. Production-ready container images with health checks and volume mounts."
+keywords: ["Docker deployment", "Docker Compose", "container deployment", "MCP Docker", "containerization"]
+contentType: "how-to"
 ---
 
 ### Overview
@@ -37,7 +41,7 @@ This script will:
   <Step title="Create .env file">
     ```bash
     cp .env.example .env
-```
+    ```
     Edit `.env` and add your API keys:
     ```bash
     # At minimum, add one LLM API key
@@ -52,14 +56,14 @@ This script will:
   <Step title="Start services">
     ```bash
     docker compose up -d
-```
+    ```
     First build takes 2-3 minutes. Subsequent starts are under 30 seconds.
   </Step>
 
   <Step title="Verify health">
     ```bash
     curl http://localhost:8000/health
-```
+    ```
     Expected response:
     ```json
     {
@@ -408,7 +412,7 @@ docker compose restart agent
     **Check logs**:
     ```bash
     docker compose logs agent
-```
+    ```
     **Common causes**:
     - Missing API key in `.env`
     - Invalid API key
@@ -450,7 +454,7 @@ docker compose restart agent
 
     # Verify service names resolve
     docker compose exec agent ping openfga
-```
+    ```
     **Solution**: Ensure all services use `networks: [observability]`
   </Accordion>
 

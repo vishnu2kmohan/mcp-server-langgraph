@@ -68,7 +68,7 @@ Redis provides production-grade session storage with:
 
         volumes:
           redis-session-data:
-```
+        ```
         ```bash
         # Start Redis
         export REDIS_PASSWORD=$(openssl rand -base64 32)
@@ -119,7 +119,7 @@ Redis provides production-grade session storage with:
         gcloud redis instances describe sessions \
           --region=us-central1 \
           --format="get(host,port,authString)"
-```
+        ```
         **AWS ElastiCache**:
         ```bash
         aws elasticache create-replication-group \
@@ -129,7 +129,7 @@ Redis provides production-grade session storage with:
           --cache-node-type cache.t3.medium \
           --num-cache-clusters 2 \
           --auth-token "$(openssl rand -base64 32)"
-```
+        ```
         **Azure Cache for Redis**:
         ```bash
         az redis create \
@@ -660,7 +660,7 @@ Switching from stateless tokens to Redis sessions:
     fetch('/api/message', {
       headers: {'Authorization': `Bearer ${token}`}
     });
-```
+    ```
     **After** (Session):
     ```javascript
     // Session cookie sent automatically

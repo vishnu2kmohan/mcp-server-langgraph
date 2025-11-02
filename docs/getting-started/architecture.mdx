@@ -2,6 +2,10 @@
 title: Architecture
 description: 'System architecture and component overview'
 icon: 'sitemap'
+seoTitle: "Architecture: MCP Server with LangGraph System Design"
+seoDescription: "Understand the architecture of MCP Server with LangGraph: multi-LLM routing, OpenFGA authorization, Redis sessions, observability stack, and deployment patterns."
+keywords: ["MCP architecture", "LangGraph design", "microservices", "AI agent architecture", "system design"]
+contentType: "explanation"
 ---
 
 ### Overview
@@ -187,7 +191,7 @@ START → authenticate → authorize → execute_tool → END
         authorized: bool
         context: Dict[str, Any]
         tool_results: List[Any]
-```
+    ```
     **Features**:
     - Immutable state transitions
     - Type validation
@@ -203,7 +207,7 @@ START → authenticate → authorize → execute_tool → END
         "search": search_tool,
         # Add custom tools
     }
-```
+    ```
     **Authorization**:
     - Per-tool permission checks
     - OpenFGA relationship validation
@@ -309,13 +313,13 @@ sequenceDiagram
 **Fine-grained, relationship-based** access control with OpenFGA.
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart LR
     User[User: alice] -->|admin| Org[Org: acme]
     Org -->|member| Tool1[Tool: chat]
     Org -->|member| Tool2[Tool: search]
     User2[User: bob] -->|member| Org
 
-    %% ColorBrewer2 Set3 palette - each component type uniquely colored
 ```
 **Authorization Model**:
 
@@ -486,7 +490,7 @@ FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-5"]
         class Exporter exporterStyle
         class Collector collectorStyle
         class Jaeger,Prometheus,Grafana backendStyle
-```
+    ```
     **Traces**:
     - End-to-end request flow
     - LLM call timing
