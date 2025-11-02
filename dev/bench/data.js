@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762103735497,
+  "lastUpdate": 1762104532829,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -20562,6 +20562,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021821561114439553",
             "extra": "mean: 58.348532679955404 usec\nrounds: 4697"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a542439cedef47639e35b6ed8efaf6ca44a75deb",
+          "message": "fix: resolve kustomize namespace conflict and ConfigMap generator error\n\n## Critical Issues Fixed\n\n### 1. ConfigMap Generator Error (CRITICAL)\n**Issue**: Kustomize failed to build ANY resources due to:\n```\nError: merging from generator: ConfigMap \"otel-collector-config\" does not exist; cannot merge or replace\n```\n\n**Root Cause**: ConfigMap generator had `behavior: merge` but no base ConfigMap existed to merge with.\n\n**Fix**: Changed `behavior: merge` → `behavior: create` (line 61)\n\n### 2. Namespace Conflict (BLOCKING)\n**Issue**: Kustomize failed with namespace ID conflict:\n```\nerror: namespace transformation produces ID conflict\n```\n\n**Root Cause**:\n- Base includes `namespace.yaml` with name `mcp-server-langgraph`\n- Overlay sets `namespace: mcp-staging` which transforms resources\n- Overlay included its own `namespace.yaml` in resources\n- Result: TWO Namespace definitions for `mcp-staging`\n\n**Fix**: Use strategic merge patch instead of resource inclusion\n```yaml\n# Removed from resources:\n# - namespace.yaml\n\n# Added to patches:\npatchesStrategicMerge:\n  - namespace.yaml  # Replaces base namespace\n```\n\n## Verification\n\nTested locally with kubectl kustomize:\n```bash\n$ kubectl kustomize deployments/overlays/staging-gke > /tmp/test.yaml\n✓ Build succeeded (2,618 lines)\n\n$ grep \"kind: Namespace\" -A5 /tmp/test.yaml\nname: mcp-staging  ✓\nlabels: environment: staging ✓\nistio-injection: disabled ✓\n\n$ grep \"name: staging-mcp-server-langgraph\" /tmp/test.yaml\n✓ Deployment found\n✓ Services found\n✓ All resources in mcp-staging namespace\n```\n\n## Impact\n\n**Before**:\n- ❌ Kustomize build: FAILED (namespace conflict)\n- ❌ ConfigMap generation: FAILED (merge error)\n- ❌ Deployment: BLOCKED (no manifests generated)\n- ❌ Namespace creation: NEVER ATTEMPTED\n\n**After**:\n- ✅ Kustomize build: SUCCESS (2,618 lines)\n- ✅ ConfigMap generation: SUCCESS\n- ✅ Namespace: `mcp-staging` correctly defined\n- ✅ Deployment: `staging-mcp-server-langgraph` ready\n- ✅ All 32 resources generated correctly\n\n## Files Modified\n\n- `deployments/overlays/staging-gke/kustomization.yaml`:\n  - Line 11: Removed namespace.yaml from resources (avoid conflict)\n  - Line 30: Added namespace.yaml as strategic merge patch\n  - Line 61: Changed ConfigMap behavior: merge → create\n\n## Testing\n\nReady to deploy:\n```bash\nkubectl apply -k deployments/overlays/staging-gke\n# Should now create namespace and all resources successfully\n```\n\nRelated: Deploy to GKE Staging workflow failures\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T12:27:42-05:00",
+          "tree_id": "93dc5c19490b03676396028ac8c3d9703c517ef6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a542439cedef47639e35b6ed8efaf6ca44a75deb"
+        },
+        "date": 1762104531593,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.9088962349558,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017833269853934235",
+            "extra": "mean: 7.046774561224967 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 145.2823600393887,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00020542449631017983",
+            "extra": "mean: 6.883148096774321 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50949.95550969105,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025168473476692315",
+            "extra": "mean: 19.627102516503527 usec\nrounds: 8623"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53562.14276756598,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023051253306659334",
+            "extra": "mean: 18.669902814372467 usec\nrounds: 12152"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49173.78414202059,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002579558976211714",
+            "extra": "mean: 20.336039160863923 usec\nrounds: 17875"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.21569183200594,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028499500839825134",
+            "extra": "mean: 5.257189826816058 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.352467913746175,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008543789829664832",
+            "extra": "mean: 51.67299614999976 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.933721267996138,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000034236147088204364",
+            "extra": "mean: 100.66720950000274 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2423830.2758461577,
+            "unit": "iter/sec",
+            "range": "stddev: 5.107187752908136e-8",
+            "extra": "mean: 412.5701415504023 nsec\nrounds: 188680"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5085.3435462601155,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015364237234912898",
+            "extra": "mean: 196.64354844530104 usec\nrounds: 2219"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2975.760115297572,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002131619341815668",
+            "extra": "mean: 336.04859304998155 usec\nrounds: 2590"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2947.262279418029,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013174776894982441",
+            "extra": "mean: 339.29793319835164 usec\nrounds: 494"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59264.94347832814,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020767915845171154",
+            "extra": "mean: 16.873381485054104 usec\nrounds: 12606"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16955.68631735107,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000027375524902984784",
+            "extra": "mean: 58.97726469359612 usec\nrounds: 4764"
           }
         ]
       }
