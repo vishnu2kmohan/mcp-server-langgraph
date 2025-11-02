@@ -153,14 +153,14 @@ jobs:
         cache-to: type=gha,mode=max,scope=release-${{ steps.platform.outputs.name }}
 
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0.20.8
+      uses: anchore/sbom-action@v0.20.9
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
         image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
 
     - name: Upload SBOM as artifact
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5
       with:
         name: sbom-${{ matrix.platform }}
         path: sbom-${{ matrix.platform }}.spdx.json
@@ -265,7 +265,7 @@ jobs:
     needs: [create-release, create-manifest]
     steps:
     - name: Download SBOM artifacts
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact@v6.0.0
       with:
         pattern: sbom-*
         merge-multiple: true
@@ -348,7 +348,7 @@ jobs:
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
     - name: Slack Notification
-      uses: slackapi/slack-github-action@v2.0.0
+      uses: slackapi/slack-github-action@v2.1.1
       if: env.SLACK_WEBHOOK != ''
       with:
         webhook-type: incoming-webhook

@@ -63,7 +63,7 @@ jobs:
         cache-key-prefix: 'coverage-trend'
 
     - name: Download previous coverage data
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact@v6.0.0
       with:
         name: coverage-history
         path: .coverage-history
@@ -91,7 +91,7 @@ jobs:
         echo "coverage_rounded=$COVERAGE_ROUNDED" >> $GITHUB_OUTPUT
 
     - name: Upload coverage history
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-history
         path: .coverage-history/

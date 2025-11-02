@@ -190,6 +190,41 @@ create_gke_cluster() {
     kubectl cluster-info
 }
 
+install_external_secrets_operator() {
+    log_info "Installing External Secrets Operator for secret management..."
+
+    # Check if operator is already installed
+    if kubectl get deployment -n external-secrets-system external-secrets 2>/dev/null; then
+        log_warn "External Secrets Operator already installed, skipping"
+        return 0
+    fi
+
+    # Add Helm repository
+    helm repo add external-secrets https://charts.external-secrets.io 2>/dev/null || true
+    helm repo update
+
+    # Install External Secrets Operator with CRDs
+    helm upgrade --install external-secrets \
+        external-secrets/external-secrets \
+        --namespace external-secrets-system \
+        --create-namespace \
+        --set installCRDs=true \
+        --wait \
+        --timeout 5m
+
+    # Verify installation
+    log_info "Verifying External Secrets Operator installation..."
+    kubectl wait --for=condition=available --timeout=300s \
+        deployment/external-secrets -n external-secrets-system
+
+    # Verify CRDs are installed
+    kubectl get crd secretstores.external-secrets.io >/dev/null
+    kubectl get crd externalsecrets.external-secrets.io >/dev/null
+    kubectl get crd clustersecretstores.external-secrets.io >/dev/null
+
+    log_info "External Secrets Operator installed successfully"
+}
+
 setup_workload_identity() {
     log_info "Setting up Workload Identity for Kubernetes pods..."
 
@@ -495,6 +530,7 @@ main() {
     enable_apis
     create_vpc_network
     create_gke_cluster
+    install_external_secrets_operator
     setup_workload_identity
     setup_github_workload_identity
     create_cloud_sql
