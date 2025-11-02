@@ -123,7 +123,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     . /opt/venv/bin/activate && \
     uv pip install --python /opt/venv/bin/python --no-cache \
     -r /tmp/requirements-base.txt && \
-    uv pip install --python /opt/venv/bin/python --no-cache --no-deps -e .
+    uv pip install --python /opt/venv/bin/python --no-cache --no-deps .
 
 # ==============================================================================
 # STAGE: build-full
@@ -139,7 +139,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     . /opt/venv/bin/activate && \
     uv pip install --python /opt/venv/bin/python --no-cache \
     -r /tmp/requirements-full.txt && \
-    uv pip install --python /opt/venv/bin/python --no-cache --no-deps -e .
+    uv pip install --python /opt/venv/bin/python --no-cache --no-deps .
 
 # ==============================================================================
 # STAGE: build-test
