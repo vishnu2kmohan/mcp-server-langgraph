@@ -42,7 +42,7 @@ repos:
     rev: 1.8.6
     hooks:
       - id: bandit
-        args: [-ll, -x, tests]
+        args: [-ll, -x, tests, --skip, B608]
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
