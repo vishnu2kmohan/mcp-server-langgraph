@@ -97,6 +97,11 @@ secrets/
 *.crt
 *.p12
 *.pfx
+.secrets
+
+# Act (GitHub Actions local testing)
+/tmp/act-artifacts/
+.act/
 
 # OpenFGA
 openfga.db

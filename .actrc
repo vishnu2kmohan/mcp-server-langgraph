@@ -1,0 +1,33 @@
+# Act Configuration for Local GitHub Actions Testing
+# This file configures `act` to run GitHub Actions workflows locally
+#
+# NOTE: GITHUB_TOKEN is injected via gh CLI, not from .secrets file
+# Usage: act -s GITHUB_TOKEN="$(gh auth token)" [other args]
+
+# Use medium-sized Ubuntu image for better compatibility and faster downloads
+# catthehacker/ubuntu:act-latest (~5.5GB) vs ubuntu:full-latest (~18GB)
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+
+# Bind local Docker socket for Docker-in-Docker workflows
+# Required for workflows that build Docker images
+--container-daemon-socket /var/run/docker.sock
+
+# Use local directory for artifact storage
+# This persists artifacts between runs for debugging
+--artifact-server-path /tmp/act-artifacts
+
+# Don't use .gitignore when detecting actions
+# Ensures custom actions in .github/actions/ are recognized
+--use-gitignore=false
+
+# Reuse containers between runs for faster execution
+# Containers are stopped but not removed after workflow completes
+--reuse
+
+# Enable verbose output for debugging
+# Shows detailed step execution and environment information
+-v
+
+# Default event file (can be overridden with --eventpath)
+# Simulates push event to main branch
+--eventpath .github/act-event.json
