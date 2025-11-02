@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762103615349,
+  "lastUpdate": 1762103735497,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -20440,6 +20440,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018698023083594094",
             "extra": "mean: 58.266728397782074 usec\nrounds: 4444"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "570947f77e0b3b56f3992eeffa544ca3f9dde7a3",
+          "message": "fix: install kustomize in GKE deployment workflow\n\n## Issue\nDeployment workflow was failing with:\n```\nerror: specify one path to kustomization.yaml\n```\n\n## Root Cause\nThe workflow was using `kubectl kustomize edit set image` which is incorrect syntax.\nThe correct command is:\n- `kustomize edit set image` (when running FROM the kustomize directory)\n- OR `kubectl kustomize` for rendering only (not editing)\n\nAdditionally, kustomize is not pre-installed in GitHub Actions runners.\n\n## Fix\n1. **Install kustomize** before using it:\n   ```yaml\n   - name: Install kustomize\n     run: |\n       curl -s \"https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh\" | bash\n       sudo mv kustomize /usr/local/bin/\n       kustomize version\n   ```\n\n2. **Use correct command syntax**:\n   ```yaml\n   - name: Update image tag\n     working-directory: deployments/overlays/staging-gke\n     run: |\n       kustomize edit set image \\\n         mcp-server-langgraph=IMAGE_PATH:TAG\n   ```\n\n## Verification\nThe `kustomize edit set image` command:\n- Modifies `kustomization.yaml` in place\n- Updates the `images:` section with new tag\n- Must be run from the kustomization directory\n\n## Impact\n- Deployment workflow can now update image tags correctly\n- Kustomize commands will work as expected\n- Image updates will propagate to deployed pods\n\n## Testing\nWill test in next workflow run with kustomize properly installed.\n\nRelated: Deploy to GKE Staging workflow\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T12:14:35-05:00",
+          "tree_id": "f134123ee58db5dcd7ec680eeebf5e548ac885bd",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/570947f77e0b3b56f3992eeffa544ca3f9dde7a3"
+        },
+        "date": 1762103734878,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.46097835524486,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00039395150767911237",
+            "extra": "mean: 6.970536597929456 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.40483706942513,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014144560435504772",
+            "extra": "mean: 6.738324839992856 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52253.8795979788,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002241240686157544",
+            "extra": "mean: 19.137335020741318 usec\nrounds: 8889"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52700.14897833508,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003908530950642552",
+            "extra": "mean: 18.97527842684274 usec\nrounds: 11820"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49782.84054228181,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002225042449087105",
+            "extra": "mean: 20.087242694612314 usec\nrounds: 11908"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.92915509889258,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000034961292885847126",
+            "extra": "mean: 5.265121089383663 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37640636257886,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00019774685921831444",
+            "extra": "mean: 51.60915710001177 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934627005030833,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009195157873224578",
+            "extra": "mean: 100.65803169999299 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2681239.615711554,
+            "unit": "iter/sec",
+            "range": "stddev: 5.295386668940167e-8",
+            "extra": "mean: 372.96181741467274 nsec\nrounds: 198808"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5003.763964115094,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012955868173345808",
+            "extra": "mean: 199.84955468954624 usec\nrounds: 512"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3010.7358947474113,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010104408659363927",
+            "extra": "mean: 332.1447097849465 usec\nrounds: 2698"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2990.7700380943716,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007328206670176122",
+            "extra": "mean: 334.362049660351 usec\nrounds: 1772"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60316.23440181519,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002005071750229791",
+            "extra": "mean: 16.579284332277638 usec\nrounds: 11986"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17138.391559648117,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021821561114439553",
+            "extra": "mean: 58.348532679955404 usec\nrounds: 4697"
           }
         ]
       }
