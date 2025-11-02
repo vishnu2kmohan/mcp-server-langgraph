@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762121396969,
+  "lastUpdate": 1762121462379,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -22026,6 +22026,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002653343843447255",
             "extra": "mean: 65.94563939662052 usec\nrounds: 5305"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a863b2d8e52ccb2e3c79e83bc70c47430842b35b",
+          "message": "fix(gke): use server-side dry-run for CRD validation\n\nThis commit fixes the persistent GKE deployment validation failures by changing from client-side to server-side dry-run validation.\n\n**Root Cause**:\n- External Secrets Operator IS properly installed on the cluster ✅\n- ESO CRDs exist on the cluster ✅\n- ESO verification step passes ✅\n- BUT: kubectl apply --dry-run=client validates using LOCAL kubectl schemas\n- Client-side validation doesn't know about cluster-installed CRDs\n- Error: \"resource mapping not found for kind ClusterSecretStore\"\n\n**The Fix**:\nChanged line 193 from:\n```\nkubectl apply --dry-run=client -f /tmp/staging-manifests.yaml\n```\nTo:\n```\nkubectl apply --dry-run=server -f /tmp/staging-manifests.yaml\n```\n\n**Why This Works**:\n\nClient-side dry-run (--dry-run=client):\n- ❌ Validates using kubectl's built-in schemas only\n- ❌ Doesn't communicate with cluster\n- ❌ Cannot validate custom resources (CRDs)\n\nServer-side dry-run (--dry-run=server):\n- ✅ Sends manifests to API server for validation\n- ✅ Uses actual cluster state including installed CRDs\n- ✅ Properly validates custom resources\n\n**Expected Results**:\n- ✅ Validation step passes (API server knows about CRDs)\n- ✅ Manifest validation succeeds\n- ✅ Deploy to staging succeeds\n- ✅ Rollback not needed (deployment succeeds)\n\n**Verification**:\nESO infrastructure verified:\n- ESO deployment: Running (1/1 pods ready)\n- All 23 CRDs: Present on cluster\n- Installation: Completed manually after infrastructure script\n\n**Testing**: Validated YAML syntax\n\nThis is the definitive fix for the persistent GKE deployment failures.\n\nFixes: Manifest validation failures for External Secrets resources\nFixes: \"resource mapping not found\" errors for CRDs\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T17:09:42-05:00",
+          "tree_id": "1d55f71de95f517498ae72c60c459e5613f0a5b7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a863b2d8e52ccb2e3c79e83bc70c47430842b35b"
+        },
+        "date": 1762121460997,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.56332150049116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000173022390935665",
+            "extra": "mean: 6.869862474226557 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 152.0478124695034,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011586734806041517",
+            "extra": "mean: 6.576878573643223 msec\nrounds: 129"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50730.96658045928,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002252292499433752",
+            "extra": "mean: 19.711826275062208 usec\nrounds: 8784"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53572.66106872905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002171957558022788",
+            "extra": "mean: 18.666237219709643 usec\nrounds: 12891"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49701.777150363894,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026864828641192382",
+            "extra": "mean: 20.120004903942924 usec\nrounds: 19576"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.0209659182153,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024489518650102424",
+            "extra": "mean: 5.235027449437907 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.359065218264536,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000056320301397975794",
+            "extra": "mean: 51.655386700001316 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.945150248774056,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005862844120247027",
+            "extra": "mean: 100.5515226 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2712861.2019783994,
+            "unit": "iter/sec",
+            "range": "stddev: 4.2739917390806054e-8",
+            "extra": "mean: 368.6145090175396 nsec\nrounds: 192308"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5131.283268908054,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014130670393783862",
+            "extra": "mean: 194.88302391319777 usec\nrounds: 460"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2982.482108243817,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012230953251093937",
+            "extra": "mean: 335.2911983062432 usec\nrounds: 2834"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2953.277322766418,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012057463243218865",
+            "extra": "mean: 338.6068732154391 usec\nrounds: 1751"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59095.133923874484,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000191367573242753",
+            "extra": "mean: 16.921867057416026 usec\nrounds: 9380"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16933.896143862003,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018068207767438274",
+            "extra": "mean: 59.05315536982717 usec\nrounds: 4544"
           }
         ]
       }
