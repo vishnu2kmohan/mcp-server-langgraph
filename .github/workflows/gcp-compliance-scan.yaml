@@ -40,7 +40,7 @@ jobs:
           output: 'trivy-terraform-results.sarif'
 
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-terraform-results.sarif'
@@ -62,7 +62,7 @@ jobs:
           output_file_path: checkov-results.sarif
 
       - name: Upload Checkov results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'checkov-results.sarif'
@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-k8s-results.sarif'
