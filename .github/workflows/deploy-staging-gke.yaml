@@ -150,6 +150,31 @@ jobs:
           sudo mv kustomize /usr/local/bin/
           kustomize version
 
+      # Install External Secrets Operator (Required for Secret Management)
+      - name: Install External Secrets Operator
+        run: |
+          echo "Installing External Secrets Operator..."
+
+          # Add Helm repo
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo update
+
+          # Install operator with CRDs
+          helm upgrade --install external-secrets \
+            external-secrets/external-secrets \
+            --namespace external-secrets-system \
+            --create-namespace \
+            --set installCRDs=true \
+            --wait \
+            --timeout 5m
+
+          # Verify CRDs are installed
+          kubectl get crd secretstores.external-secrets.io
+          kubectl get crd externalsecrets.external-secrets.io
+          kubectl get crd clustersecretstores.external-secrets.io
+
+          echo "✓ External Secrets Operator installed successfully"
+
       # Update image tag in Kustomization
       - name: Update image tag
         working-directory: deployments/overlays/staging-gke
