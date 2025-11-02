@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762058010071,
+  "lastUpdate": 1762100569646,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -19708,6 +19708,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000022331465938874608",
             "extra": "mean: 59.190309992471114 usec\nrounds: 5184"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "97c84d1b579c249e88099bab7c006839d8d78458",
+          "message": "fix: remove conflicting dual uv sync in composite action\n\n## Critical Bug Fix\n\n**Root Cause**: Composite action ran `uv sync` TWICE, with the second sync\nOVERWRITING the first, removing critical builder dependencies.\n\n**Sequence (BROKEN)**:\n1. Line 64: `uv sync --extra dev --extra builder` → Installs 215 packages including black ✓\n2. Line 71: `uv sync --group dev` → Syncs to ONLY 12 packages in [dependency-groups].dev ✗\n3. Result: black, flake8, isort, jinja2, ast-comments REMOVED\n4. Tests import builder modules → ModuleNotFoundError: No module named 'black'\n\n**Why It Happened**:\n- pyproject.toml has TWO different \"dev\" dependency sets:\n  - `[project.optional-dependencies].dev` - 27 packages (includes black)\n  - `[dependency-groups].dev` - 12 packages (NO black)\n- Legacy `install-test: 'true'` flag caused second sync\n- Second sync REMOVED 108 packages installed by first sync!\n\n**The Fix**:\n- Remove lines 69-72 (legacy install-test support)\n- Composite action now only does ONE sync with extras\n- No more dual-sync conflicts\n\n**File**: .github/actions/setup-python-deps/action.yml:69-72\n\n---\n\n## Impact\n\n### Fixes These Failing Workflows (11 jobs)\n\n1. **Quality Tests** (4 jobs):\n   - Property-Based Tests ✅\n   - Contract Tests ✅\n   - Performance Regression Tests ✅\n   - Quality Summary ✅\n\n2. **Coverage Trend Tracking** (1 job):\n   - Track Coverage Trends ✅\n\n3. **CI/CD Pipeline** (3 jobs):\n   - Test on Python 3.10 ✅\n   - Test on Python 3.11 ✅\n   - Test on Python 3.12 ✅\n\nAll were failing with: `ModuleNotFoundError: No module named 'black'`\nAll now have black available in .venv\n\n---\n\n## Testing & Validation\n\n### Local Testing (VERIFIED ✅)\n\n```bash\n# Clean environment test\nrm -rf .venv\nuv venv --python 3.12\nuv sync --frozen --extra dev --extra builder\n\n# Verify imports\npython -c \"import black, jinja2\"\n# Output: ✓ black 25.9.0 available, ✓ jinja2 available\n\n# Test builder module collection\npytest tests/builder/ --co -q\n# Output: 137 tests collected (NO errors)\n```\n\n### Expected CI Behavior\n\n**Quality Tests will now**:\n```\n| Setup Python and dependencies\n| Installing with extras: dev builder\n| uv sync --frozen --extra dev --extra builder\n| ✓ Dependencies installed  ← NO second sync!\n|\n| Run property-based tests\n| pytest -m property -v\n| tests/builder/test_code_generator.py::... ✅ PASSES\n```\n\n---\n\n## Why Previous Fixes Didn't Work\n\n1. **d693fc2**: Added `extras: 'dev builder'` to workflows ✅\n   - BUT composite action still ran second sync ✗\n   - Workflows passed correct parameters, action ignored them\n\n2. **Root cause was hidden**: Composite action logic executed BOTH paths:\n   - extras path (correct)\n   - install-test path (incorrect - overwrote extras)\n\n3. **Didn't test composite action in isolation**: Only tested workflows, not the action itself\n\n---\n\n## Prevention Strategy\n\n### Why We Didn't Catch This with act\n\n**We should have tested**:\n```bash\n# Test a workflow that USES the composite action\nact push -W .github/workflows/quality-tests.yaml -j property-tests\n\n# Would show BOTH sync commands executing:\n| uv sync --frozen --extra dev --extra builder\n| uv sync --frozen --group dev  ← AHA! Double sync!\n```\n\n**Going forward**: Always test workflows that use composite actions, not just workflows with inline commands.\n\n---\n\n## Files Changed\n\n### Modified (1 file):\n- .github/actions/setup-python-deps/action.yml (removed lines 69-72)\n\n**Change Summary**: -4 lines (removed conflicting legacy code)\n\n---\n\n## Related Issues\n\n**This fix resolves**:\n- ModuleNotFoundError in all quality test workflows\n- Import errors in coverage trend tracking\n- Test collection failures in CI/CD pipeline\n- 11 failing CI jobs → 11 passing jobs\n\n**GKE Staging deployment** will still fail (expected - no GCP credentials)\n\n---\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T11:21:42-05:00",
+          "tree_id": "1dd8c8b61ae5ea30baee4511b05b8d4ba3e626b0",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/97c84d1b579c249e88099bab7c006839d8d78458"
+        },
+        "date": 1762100568753,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.2758850970245,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011083675414474542",
+            "extra": "mean: 6.979541597825854 msec\nrounds: 92"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 146.79328675363698,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001275812115763918",
+            "extra": "mean: 6.812300631147383 msec\nrounds: 122"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50456.26979864043,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002678782166475381",
+            "extra": "mean: 19.819142477055358 usec\nrounds: 8268"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52626.54699210316,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002407428268058677",
+            "extra": "mean: 19.001816709541178 usec\nrounds: 12041"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49097.60197589304,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002735740794095658",
+            "extra": "mean: 20.367593523019735 usec\nrounds: 19824"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.77287281299678,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017582998184652348",
+            "extra": "mean: 5.241835410112213 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.335239687423304,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009206930519515206",
+            "extra": "mean: 51.7190381999999 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934952567138653,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000045300135671579335",
+            "extra": "mean: 100.65473320000038 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2697720.5972823906,
+            "unit": "iter/sec",
+            "range": "stddev: 4.555838818729897e-8",
+            "extra": "mean: 370.6833098310375 nsec\nrounds: 193088"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5033.110780041079,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015265361152261702",
+            "extra": "mean: 198.68428169026674 usec\nrounds: 497"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2969.3103914814333,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011733607154155685",
+            "extra": "mean: 336.7785337864544 usec\nrounds: 2501"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2934.373420615894,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005183595174099907",
+            "extra": "mean: 340.7882558417227 usec\nrounds: 1669"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58356.03512607122,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022502887591119285",
+            "extra": "mean: 17.1361881909835 usec\nrounds: 11940"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16680.34496014294,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002457420704498052",
+            "extra": "mean: 59.95079852301993 usec\nrounds: 5281"
           }
         ]
       }
