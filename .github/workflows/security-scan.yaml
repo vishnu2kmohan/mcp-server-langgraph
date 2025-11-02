@@ -333,7 +333,7 @@ jobs:
       SLACK_SECURITY_WEBHOOK: ${{ secrets.SLACK_SECURITY_WEBHOOK }}
     steps:
     - name: Send notification
-      uses: slackapi/slack-github-action@v2.0.0
+      uses: slackapi/slack-github-action@v2.1.1
       if: env.SLACK_SECURITY_WEBHOOK != ''
       with:
         webhook-type: incoming-webhook
