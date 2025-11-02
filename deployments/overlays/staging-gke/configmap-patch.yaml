@@ -7,6 +7,10 @@ data:
   environment: "staging"
   log_level: "INFO"
 
+  # LLM Provider Configuration (overrides base)
+  llm_provider: "google"  # Use Google provider for Vertex AI
+  model_name: "gemini-2.5-flash"  # Vertex AI model name
+
   # Authentication (use Keycloak for staging)
   auth_provider: "keycloak"
   auth_mode: "token"

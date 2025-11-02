@@ -38,12 +38,6 @@ spec:
 
         # Environment variables from External Secrets
         env:
-        # LLM Provider Configuration
-        - name: LLM_PROVIDER
-          value: "google"  # Use "google" provider for both AI Studio and Vertex AI
-        - name: MODEL_NAME
-          value: "gemini-2.5-flash"  # Vertex AI model name
-
         # Vertex AI Configuration (Workload Identity - no credentials needed)
         # Authentication handled automatically via Workload Identity
         - name: VERTEX_PROJECT
