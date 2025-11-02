@@ -54,10 +54,10 @@ class QuickStartAgent:
         """
         self.config = config
         self.checkpointer = MemorySaver()
-        self._graph = None
-        self._compiled_agent = None
+        self._graph: Optional[StateGraph[Any]] = None
+        self._compiled_agent: Optional[Any] = None
 
-    def _build_graph(self) -> StateGraph:
+    def _build_graph(self) -> StateGraph[Any]:
         """Build the agent graph with specified tools."""
         from typing import Annotated, TypedDict
 
@@ -128,9 +128,9 @@ class QuickStartAgent:
             config={"configurable": {"thread_id": thread_id}},
         )
 
-        return result["response"]
+        return str(result["response"])
 
-    def stream_chat(self, query: str, thread_id: str = "default"):
+    def stream_chat(self, query: str, thread_id: str = "default") -> Any:
         """
         Stream chat responses.
 
@@ -223,7 +223,7 @@ class QuickStart:
         tools: Optional[List[str]] = None,
         llm: str = "gemini-flash",
         port: int = 8000,
-    ):
+    ) -> Any:
         """
         Create a FastAPI app with the agent.
 
@@ -247,7 +247,7 @@ class QuickStart:
         agent = QuickStart.create(name, tools, llm)  # type: ignore
 
         @app.get("/")
-        def root():
+        def root() -> Dict[str, Any]:
             """Health check."""
             return {
                 "status": "healthy",
@@ -257,13 +257,13 @@ class QuickStart:
             }
 
         @app.post("/chat")
-        def chat(query: str, thread_id: str = "default"):
+        def chat(query: str, thread_id: str = "default") -> Dict[str, str]:
             """Chat with the agent."""
             response = agent.chat(query, thread_id)
             return {"query": query, "response": response, "thread_id": thread_id}
 
         @app.get("/health")
-        def health():
+        def health() -> Dict[str, str]:
             """Health check endpoint."""
             return {"status": "healthy", "preset": "quickstart"}
 

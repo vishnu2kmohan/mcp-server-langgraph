@@ -60,9 +60,9 @@ class HierarchicalCoordinator:
 
     def __init__(
         self,
-        ceo_agent: Callable,
-        managers: Dict[str, Callable],
-        workers: Dict[str, List[Callable]],
+        ceo_agent: Callable[[str], str],
+        managers: Dict[str, Callable[[str], str]],
+        workers: Dict[str, List[Callable[[str], Any]]],
         delegation_strategy: str = "balanced",
     ):
         """
@@ -80,7 +80,7 @@ class HierarchicalCoordinator:
         self.managers = managers
         self.workers = workers
         self.delegation_strategy = delegation_strategy
-        self._graph = None
+        self._graph: Optional[StateGraph[HierarchicalState]] = None
 
     def _ceo_node(self, state: HierarchicalState) -> HierarchicalState:
         """
@@ -107,7 +107,9 @@ class HierarchicalCoordinator:
 
         return state
 
-    def _create_manager_node(self, manager_name: str, manager_func: Callable) -> Callable:
+    def _create_manager_node(
+        self, manager_name: str, manager_func: Callable[[str], str]
+    ) -> Callable[[HierarchicalState], HierarchicalState]:
         """
         Create manager node that delegates to workers.
 
@@ -190,9 +192,9 @@ class HierarchicalCoordinator:
 
         return state
 
-    def build(self) -> StateGraph:
+    def build(self) -> "StateGraph[HierarchicalState]":
         """Build the hierarchical graph."""
-        graph = StateGraph(HierarchicalState)
+        graph: StateGraph[HierarchicalState] = StateGraph(HierarchicalState)
 
         # Add CEO node
         graph.add_node("ceo", self._ceo_node)
@@ -200,7 +202,7 @@ class HierarchicalCoordinator:
         # Add manager nodes
         for manager_name, manager_func in self.managers.items():
             manager_node = self._create_manager_node(manager_name, manager_func)
-            graph.add_node(f"manager_{manager_name}", manager_node)
+            graph.add_node(f"manager_{manager_name}", manager_node)  # type: ignore[arg-type]
 
         # Add consolidation node
         graph.add_node("consolidate", self._consolidate_node)
@@ -221,7 +223,7 @@ class HierarchicalCoordinator:
 
         return graph
 
-    def compile(self, checkpointer=None):
+    def compile(self, checkpointer: Any = None) -> Any:
         """
         Compile the hierarchical graph.
 
@@ -236,7 +238,7 @@ class HierarchicalCoordinator:
 
         return self._graph.compile(checkpointer=checkpointer)
 
-    def invoke(self, project: str, config: Optional[Dict] = None) -> Dict[str, Any]:
+    def invoke(self, project: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Execute the hierarchical pattern.
 

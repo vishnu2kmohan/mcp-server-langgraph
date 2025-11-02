@@ -28,17 +28,26 @@ Example:
     result = swarm.invoke({"query": "What is the capital of France?"})
 """
 
-from typing import Any, Callable, Dict, List, Literal, Optional
+from typing import Annotated, Any, Callable, Dict, List, Literal, Optional
 
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
+
+
+def merge_agent_results(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge agent results dictionaries for concurrent updates."""
+    result = left.copy()
+    result.update(right)
+    return result
 
 
 class SwarmState(BaseModel):
     """State for swarm pattern."""
 
     query: str = Field(description="The query/task for all agents")
-    agent_results: Dict[str, Any] = Field(default_factory=dict, description="Results from each agent")
+    agent_results: Annotated[Dict[str, Any], merge_agent_results] = Field(
+        default_factory=dict, description="Results from each agent"
+    )
     aggregated_result: str = Field(default="", description="Aggregated final result")
     consensus_score: float = Field(default=0.0, description="Agreement level between agents (0-1)")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
@@ -53,7 +62,7 @@ class Swarm:
 
     def __init__(
         self,
-        agents: Dict[str, Callable],
+        agents: Dict[str, Callable[[str], Any]],
         aggregation_strategy: Literal["consensus", "voting", "synthesis", "concatenate"] = "synthesis",
         min_agreement: float = 0.7,
     ):
@@ -72,9 +81,11 @@ class Swarm:
         self.agents = agents
         self.aggregation_strategy = aggregation_strategy
         self.min_agreement = min_agreement
-        self._graph = None
+        self._graph: Optional[StateGraph[SwarmState]] = None
 
-    def _create_agent_wrapper(self, agent_name: str, agent_func: Callable) -> Callable:
+    def _create_agent_wrapper(
+        self, agent_name: str, agent_func: Callable[[str], Any]
+    ) -> Callable[[SwarmState], Dict[str, Any]]:
         """
         Create wrapper for agent execution.
 
@@ -86,15 +97,18 @@ class Swarm:
             Wrapped function that stores result in state
         """
 
-        def agent_node(state: SwarmState) -> SwarmState:
+        def agent_node(state: SwarmState) -> Dict[str, Any]:
             """Execute agent and store result."""
             try:
                 result = agent_func(state.query)
-                state.agent_results[agent_name] = result
+                # Return only the updated field to avoid concurrent update conflicts
+                updated_results = state.agent_results.copy()
+                updated_results[agent_name] = result
+                return {"agent_results": updated_results}
             except Exception as e:
-                state.agent_results[agent_name] = f"Error: {str(e)}"
-
-            return state
+                updated_results = state.agent_results.copy()
+                updated_results[agent_name] = f"Error: {str(e)}"
+                return {"agent_results": updated_results}
 
         return agent_node
 
@@ -131,7 +145,7 @@ class Swarm:
 
         return sum(similarities) / len(similarities) if similarities else 0.0
 
-    def _aggregate_results(self, state: SwarmState) -> SwarmState:
+    def _aggregate_results(self, state: SwarmState) -> Dict[str, Any]:
         """
         Aggregate results from all agents.
 
@@ -139,41 +153,43 @@ class Swarm:
             state: Current state with agent results
 
         Returns:
-            Updated state with aggregated result
+            Dict with updated aggregated_result and consensus_score fields
         """
         results = list(state.agent_results.values())
+        aggregated_result = ""
+        consensus_score = 0.0
 
         if self.aggregation_strategy == "concatenate":
             # Simple concatenation
             formatted_results = []
             for agent_name, result in state.agent_results.items():
                 formatted_results.append(f"**{agent_name.title()}:**\n{result}")
-            state.aggregated_result = "\n\n".join(formatted_results)
+            aggregated_result = "\n\n".join(formatted_results)
 
         elif self.aggregation_strategy == "consensus":
             # Find consensus
-            state.consensus_score = self._calculate_consensus(results)
+            consensus_score = self._calculate_consensus(results)
 
-            if state.consensus_score >= self.min_agreement:
+            if consensus_score >= self.min_agreement:
                 # High agreement - present consensus
-                state.aggregated_result = f"**Consensus (agreement: {state.consensus_score:.0%}):**\n\n"
-                state.aggregated_result += f"All agents agree:\n{results[0]}"
+                aggregated_result = f"**Consensus (agreement: {consensus_score:.0%}):**\n\n"
+                aggregated_result += f"All agents agree:\n{results[0]}"
             else:
                 # Low agreement - present all viewpoints
-                state.aggregated_result = f"**Multiple Perspectives (agreement: {state.consensus_score:.0%}):**\n\n"
+                aggregated_result = f"**Multiple Perspectives (agreement: {consensus_score:.0%}):**\n\n"
                 for agent_name, result in state.agent_results.items():
-                    state.aggregated_result += f"**{agent_name.title()}:** {result}\n\n"
+                    aggregated_result += f"**{agent_name.title()}:** {result}\n\n"
 
         elif self.aggregation_strategy == "synthesis":
             # Synthesize all results (simplified - in production use LLM)
-            state.aggregated_result = "**Synthesized Response:**\n\n"
-            state.aggregated_result += "Based on analysis from multiple agents:\n\n"
+            aggregated_result = "**Synthesized Response:**\n\n"
+            aggregated_result += "Based on analysis from multiple agents:\n\n"
 
             for agent_name, result in state.agent_results.items():
                 # Extract key points (simplified)
-                state.aggregated_result += f"• From {agent_name}: {result[:100]}...\n"
+                aggregated_result += f"• From {agent_name}: {result[:100]}...\n"
 
-            state.consensus_score = self._calculate_consensus(results)
+            consensus_score = self._calculate_consensus(results)
 
         elif self.aggregation_strategy == "voting":
             # Simple voting (count identical responses)
@@ -182,21 +198,21 @@ class Swarm:
             vote_counter = Counter(results)
             winner, count = vote_counter.most_common(1)[0]
 
-            state.aggregated_result = f"**Voting Result ({count}/{len(results)} agents agree):**\n\n{winner}"
-            state.consensus_score = count / len(results)
+            aggregated_result = f"**Voting Result ({count}/{len(results)} agents agree):**\n\n{winner}"
+            consensus_score = count / len(results)
 
-        return state
+        return {"aggregated_result": aggregated_result, "consensus_score": consensus_score}
 
-    def build(self) -> StateGraph:
+    def build(self) -> "StateGraph[SwarmState]":
         """Build the swarm graph."""
         from langgraph.graph import END, START
 
-        graph = StateGraph(SwarmState)
+        graph: StateGraph[SwarmState] = StateGraph(SwarmState)
 
         # Add all agent nodes
         for agent_name, agent_func in self.agents.items():
             agent_wrapper = self._create_agent_wrapper(agent_name, agent_func)
-            graph.add_node(agent_name, agent_wrapper)
+            graph.add_node(agent_name, agent_wrapper)  # type: ignore[arg-type]
 
         # Add aggregator
         graph.add_node("aggregate", self._aggregate_results)
@@ -214,7 +230,7 @@ class Swarm:
 
         return graph
 
-    def compile(self, checkpointer=None):
+    def compile(self, checkpointer: Any = None) -> Any:
         """
         Compile the swarm graph.
 
@@ -229,7 +245,7 @@ class Swarm:
 
         return self._graph.compile(checkpointer=checkpointer)
 
-    def invoke(self, query: str, config: Optional[Dict] = None) -> Dict[str, Any]:
+    def invoke(self, query: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Execute the swarm pattern.
 
@@ -246,11 +262,11 @@ class Swarm:
         result = compiled.invoke(state, config=config or {})
 
         return {
-            "query": result.query,
-            "aggregated_result": result.aggregated_result,
-            "agent_results": result.agent_results,
-            "consensus_score": result.consensus_score,
-            "num_agents": len(result.agent_results),
+            "query": result["query"],
+            "aggregated_result": result["aggregated_result"],
+            "agent_results": result["agent_results"],
+            "consensus_score": result["consensus_score"],
+            "num_agents": len(result["agent_results"]),
         }
 
 

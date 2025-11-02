@@ -25,7 +25,7 @@ Example:
 
 from .ast_parser import PythonCodeParser
 from .graph_extractor import GraphExtractor
-from .importer import import_from_code, import_from_file
+from .importer import import_from_code, import_from_file, validate_import
 from .layout_engine import LayoutEngine
 
 __all__ = [
@@ -34,4 +34,5 @@ __all__ = [
     "LayoutEngine",
     "import_from_code",
     "import_from_file",
+    "validate_import",
 ]

@@ -169,9 +169,9 @@ if __name__ == "__main__":
     print(result)
 '''
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize code generator."""
-        self.templates = {}
+        self.templates: Dict[str, str] = {}
 
     def _generate_state_fields(self, state_schema: Dict[str, str]) -> str:
         """

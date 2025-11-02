@@ -750,9 +750,7 @@ class RedisSessionStore(SessionStore):
         return count
 
 
-def create_session_store(
-    backend: str = "memory", redis_url: Optional[str] = None, **kwargs
-) -> SessionStore:  # type: ignore[no-untyped-def]
+def create_session_store(backend: str = "memory", redis_url: Optional[str] = None, **kwargs: Any) -> SessionStore:
     """
     Factory function to create session store
 

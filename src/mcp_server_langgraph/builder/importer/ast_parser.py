@@ -31,7 +31,7 @@ class PythonCodeParser:
     Safely analyzes Python code to extract structure without execution.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize parser."""
         self.ast_tree: Optional[ast.Module] = None
 

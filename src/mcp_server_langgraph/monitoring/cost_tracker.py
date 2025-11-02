@@ -73,9 +73,9 @@ class MockPrometheusCounter:
     name: str
     description: str
     labelnames: List[str]
-    _values: Dict[tuple, float] = field(default_factory=lambda: defaultdict(float))
+    _values: Dict[tuple[str, ...], float] = field(default_factory=lambda: defaultdict(float))
 
-    def labels(self, **labels):
+    def labels(self, **labels: str) -> "MockCounterChild":
         """Return label-specific counter."""
         label_tuple = tuple(labels.get(name, "") for name in self.labelnames)
         return MockCounterChild(self, label_tuple)
@@ -86,9 +86,9 @@ class MockCounterChild:
     """Child counter with specific labels."""
 
     parent: MockPrometheusCounter
-    label_values: tuple
+    label_values: tuple[str, ...]
 
-    def inc(self, amount: float = 1.0):
+    def inc(self, amount: float = 1.0) -> None:
         """Increment counter."""
         self.parent._values[self.label_values] += amount
 
@@ -123,7 +123,7 @@ class CostMetricsCollector:
     - In-memory storage (TODO: Add PostgreSQL persistence)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the cost metrics collector."""
         self._records: List[TokenUsage] = []
         self._lock = asyncio.Lock()

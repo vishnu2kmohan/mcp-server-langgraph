@@ -31,7 +31,7 @@ class GraphExtractor:
     Uses AST analysis to identify graph construction patterns.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize extractor."""
         self.parser = PythonCodeParser()
 
@@ -120,7 +120,8 @@ class GraphExtractor:
             if var_name.endswith("_agent") or var_name.endswith("_workflow") or var_name == "graph":
                 if var_name in ["graph", "agent", "workflow"]:
                     continue  # Too generic
-                return var_name.replace("_agent", "").replace("_workflow", "")
+                result = var_name.replace("_agent", "").replace("_workflow", "")
+                return str(result)
 
         # Default
         return "imported_workflow"
@@ -300,7 +301,8 @@ class GraphExtractor:
         entry_calls = self.parser.find_function_calls(tree, "set_entry_point")
 
         if entry_calls and entry_calls[0]["args"]:
-            return entry_calls[0]["args"][0]
+            result = entry_calls[0]["args"][0]
+            return str(result)
 
         return "start"  # Default
 

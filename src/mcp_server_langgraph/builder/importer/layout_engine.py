@@ -58,7 +58,7 @@ class LayoutEngine:
         nodes: List[Dict[str, Any]],
         edges: List[Dict[str, str]],
         algorithm: Literal["hierarchical", "force", "grid"] = "hierarchical",
-        entry_point: str = None,
+        entry_point: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Layout nodes using specified algorithm.
@@ -224,11 +224,14 @@ class LayoutEngine:
 
             # Calculate attractive forces (connected pairs)
             for edge in edges:
-                node1 = next((n for n in nodes if n["id"] == edge["from"]), None)
-                node2 = next((n for n in nodes if n["id"] == edge["to"]), None)
+                node1_result = next((n for n in nodes if n["id"] == edge["from"]), {})
+                node2_result = next((n for n in nodes if n["id"] == edge["to"]), {})
 
-                if not node1 or not node2:
+                if not node1_result or not node2_result:
                     continue
+
+                node1 = node1_result
+                node2 = node2_result
 
                 dx = node1["position"]["x"] - node2["position"]["x"]
                 dy = node1["position"]["y"] - node2["position"]["y"]
@@ -248,12 +251,12 @@ class LayoutEngine:
             temp = temperature * (1 - iteration / iterations)
 
             for node in nodes:
-                force = forces[node["id"]]
-                displacement = math.sqrt(force["x"] ** 2 + force["y"] ** 2) or 1
+                force_vec = forces[node["id"]]
+                displacement = math.sqrt(force_vec["x"] ** 2 + force_vec["y"] ** 2) or 1
 
                 # Limit displacement by temperature
-                node["position"]["x"] += (force["x"] / displacement) * min(displacement, temp)
-                node["position"]["y"] += (force["y"] / displacement) * min(displacement, temp)
+                node["position"]["x"] += (force_vec["x"] / displacement) * min(displacement, temp)
+                node["position"]["y"] += (force_vec["y"] / displacement) * min(displacement, temp)
 
                 # Keep within canvas bounds
                 node["position"]["x"] = max(50, min(self.canvas_width - 50, node["position"]["x"]))

@@ -55,7 +55,7 @@ class Supervisor:
 
     def __init__(
         self,
-        agents: Dict[str, Callable],
+        agents: Dict[str, Callable[[str], Any]],
         routing_strategy: Literal["sequential", "conditional", "parallel"] = "conditional",
         supervisor_prompt: Optional[str] = None,
     ):
@@ -73,7 +73,7 @@ class Supervisor:
         self.agents = agents
         self.routing_strategy = routing_strategy
         self.supervisor_prompt = supervisor_prompt or self._default_supervisor_prompt()
-        self._graph = None
+        self._graph: Optional[StateGraph[SupervisorState]] = None
 
     def _default_supervisor_prompt(self) -> str:
         """Default supervisor prompt."""
@@ -116,7 +116,9 @@ Choose the best agent for each sub-task."""
 
         return state
 
-    def _create_worker_wrapper(self, agent_name: str, agent_func: Callable) -> Callable:
+    def _create_worker_wrapper(
+        self, agent_name: str, agent_func: Callable[[str], Any]
+    ) -> Callable[[SupervisorState], SupervisorState]:
         """
         Create a wrapper for worker agent.
 
@@ -180,9 +182,9 @@ Choose the best agent for each sub-task."""
         else:
             return "supervisor"
 
-    def build(self) -> StateGraph:
+    def build(self) -> "StateGraph[SupervisorState]":
         """Build the supervisor graph."""
-        graph = StateGraph(SupervisorState)
+        graph: StateGraph[SupervisorState] = StateGraph(SupervisorState)
 
         # Add supervisor node
         graph.add_node("supervisor", self._create_supervisor_node)
@@ -190,7 +192,7 @@ Choose the best agent for each sub-task."""
         # Add worker nodes
         for agent_name, agent_func in self.agents.items():
             worker_node = self._create_worker_wrapper(agent_name, agent_func)
-            graph.add_node(agent_name, worker_node)
+            graph.add_node(agent_name, worker_node)  # type: ignore[arg-type]
 
         # Add aggregator node
         graph.add_node("aggregate", self._create_aggregator_node)
@@ -210,7 +212,7 @@ Choose the best agent for each sub-task."""
 
         return graph
 
-    def compile(self, checkpointer=None):
+    def compile(self, checkpointer: Any = None) -> Any:
         """
         Compile the supervisor graph.
 
@@ -225,7 +227,7 @@ Choose the best agent for each sub-task."""
 
         return self._graph.compile(checkpointer=checkpointer)
 
-    def invoke(self, task: str, config: Optional[Dict] = None) -> Dict[str, Any]:
+    def invoke(self, task: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Execute the supervisor pattern.
 
@@ -242,11 +244,11 @@ Choose the best agent for each sub-task."""
         result = compiled.invoke(state, config=config or {})
 
         return {
-            "task": result.task,
-            "final_result": result.final_result,
-            "agent_history": result.agent_history,
-            "agent_results": result.agent_results,
-            "routing_decision": result.routing_decision,
+            "task": result["task"],
+            "final_result": result["final_result"],
+            "agent_history": result["agent_history"],
+            "agent_results": result["agent_results"],
+            "routing_decision": result["routing_decision"],
         }
 
 

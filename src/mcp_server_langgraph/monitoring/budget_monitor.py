@@ -26,7 +26,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -74,7 +74,7 @@ class Budget(BaseModel):
         description="Alert thresholds as percentages (e.g., 0.75 = 75%)",
     )
     enabled: bool = Field(default=True, description="Whether budget monitoring is enabled")
-    metadata: Dict[str, any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     class Config:
         json_encoders = {
@@ -135,11 +135,11 @@ class BudgetMonitor:
     - Budget forecasting
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize budget monitor."""
         self._budgets: Dict[str, Budget] = {}
         self._alerts: List[BudgetAlert] = []
-        self._alerted_thresholds: Dict[str, set] = {}  # Track which thresholds have been alerted
+        self._alerted_thresholds: Dict[str, set[Decimal]] = {}  # Track which thresholds have been alerted
         self._lock = asyncio.Lock()
 
     async def create_budget(
@@ -398,10 +398,8 @@ class BudgetMonitor:
             return start_date + timedelta(days=30)
         elif period == BudgetPeriod.QUARTERLY:
             return start_date + timedelta(days=90)
-        elif period == BudgetPeriod.YEARLY:
+        else:  # BudgetPeriod.YEARLY
             return start_date + timedelta(days=365)
-        else:
-            return start_date + timedelta(days=30)
 
     async def reset_budget(self, budget_id: str) -> None:
         """

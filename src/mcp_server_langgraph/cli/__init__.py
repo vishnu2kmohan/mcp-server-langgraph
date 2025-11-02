@@ -19,7 +19,7 @@ from .init import init_project
 
 @click.group()
 @click.version_option(version="2.8.0", prog_name="mcpserver")
-def cli():
+def cli() -> None:
     """
     MCP Server with LangGraph CLI
 
@@ -50,7 +50,7 @@ def cli():
     prompt="Project name",
     help="Name of your MCP Server project",
 )
-def init(quickstart: bool, template: str, name: str):
+def init(quickstart: bool, template: str, name: str) -> None:
     """
     Initialize a new MCP Server project.
 
@@ -70,7 +70,7 @@ def init(quickstart: bool, template: str, name: str):
     click.echo(f"Template: {template}")
 
     try:
-        init_project(name, template)
+        init_project(name, template)  # type: ignore[arg-type]
         click.secho(f"✓ Project '{name}' created successfully!", fg="green")
 
         if template == "quickstart":
@@ -107,7 +107,7 @@ def init(quickstart: bool, template: str, name: str):
     multiple=True,
     help="Tools to include (e.g., search, calculator)",
 )
-def create_agent(name: str, template: str, tools: tuple):
+def create_agent(name: str, template: str, tools: tuple[str, ...]) -> None:
     """
     Create a new agent in the current project.
 
@@ -126,7 +126,7 @@ def create_agent(name: str, template: str, tools: tuple):
     try:
         from .create_agent import generate_agent
 
-        generate_agent(name, template, list(tools))
+        generate_agent(name, template, list(tools))  # type: ignore[arg-type]
         click.secho(f"✓ Agent '{name}' created successfully!", fg="green")
         click.echo(f"\nAgent file: src/agents/{name}_agent.py")
         click.echo("\nNext steps:")
@@ -146,7 +146,7 @@ def create_agent(name: str, template: str, tools: tuple):
     prompt="Tool description",
     help="What does this tool do?",
 )
-def add_tool(name: str, description: str):
+def add_tool(name: str, description: str) -> None:
     """
     Add a new tool to the current project.
 
@@ -190,7 +190,7 @@ def add_tool(name: str, description: str):
     required=True,
     help="Path to existing project",
 )
-def migrate(from_framework: str, input_path: str):
+def migrate(from_framework: str, input_path: str) -> None:
     """
     Migrate from another agent framework to MCP Server with LangGraph.
 
@@ -210,7 +210,7 @@ def migrate(from_framework: str, input_path: str):
     sys.exit(0)
 
 
-def main():
+def main() -> None:
     """Main entry point for the CLI."""
     cli()
 

@@ -30,7 +30,7 @@ class InterruptConfig(BaseModel):
 
     interrupt_type: InterruptType = Field(description="Type of interrupt")
     node_name: str = Field(description="Node where interrupt occurs")
-    condition: Optional[Callable] = Field(default=None, description="Optional condition function")
+    condition: Optional[Callable[[Dict[str, Any]], bool]] = Field(default=None, description="Optional condition function")
     timeout_seconds: Optional[int] = Field(default=None, description="Timeout in seconds")
     notification_channels: List[str] = Field(default_factory=list, description="Channels to notify")
     auto_resume: bool = Field(default=False, description="Whether to auto-resume after timeout")
@@ -43,7 +43,7 @@ class InterruptHandler:
     Provides mechanisms to pause, resume, and manage interrupted executions.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize interrupt handler."""
         self.pending_interrupts: Dict[str, InterruptConfig] = {}
         self.interrupt_history: List[Dict[str, Any]] = []

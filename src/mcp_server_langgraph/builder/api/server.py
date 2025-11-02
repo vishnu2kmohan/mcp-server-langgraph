@@ -88,7 +88,7 @@ app.add_middleware(
 
 
 @app.get("/")
-def root():
+def root() -> Dict[str, Any]:
     """API information."""
     return {
         "name": "Visual Workflow Builder API",
@@ -104,7 +104,7 @@ def root():
 
 
 @app.post("/api/builder/generate", response_model=GenerateCodeResponse)
-async def generate_code(request: GenerateCodeRequest):
+async def generate_code(request: GenerateCodeRequest) -> GenerateCodeResponse:
     """
     Generate Python code from visual workflow.
 
@@ -149,7 +149,7 @@ async def generate_code(request: GenerateCodeRequest):
 
 
 @app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)
-async def validate_workflow(request: ValidateWorkflowRequest):
+async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflowResponse:
     """
     Validate workflow structure.
 
@@ -217,7 +217,7 @@ async def validate_workflow(request: ValidateWorkflowRequest):
 
 
 @app.post("/api/builder/save")
-async def save_workflow(request: SaveWorkflowRequest):
+async def save_workflow(request: SaveWorkflowRequest) -> Dict[str, Any]:
     """
     Save workflow to Python file.
 
@@ -249,7 +249,7 @@ async def save_workflow(request: SaveWorkflowRequest):
 
 
 @app.get("/api/builder/templates")
-async def list_templates():
+async def list_templates() -> Dict[str, Any]:
     """
     List available workflow templates.
 
@@ -294,7 +294,7 @@ async def list_templates():
 
 
 @app.get("/api/builder/templates/{template_id}")
-async def get_template(template_id: str):
+async def get_template(template_id: str) -> Dict[str, Any]:
     """
     Get a specific workflow template.
 
@@ -328,7 +328,7 @@ async def get_template(template_id: str):
 
 
 @app.post("/api/builder/import")
-async def import_workflow(code: str, layout: str = "hierarchical"):
+async def import_workflow(code: str, layout: str = "hierarchical") -> Dict[str, Any]:
     """
     Import Python code into visual workflow.
 
@@ -370,7 +370,7 @@ async def import_workflow(code: str, layout: str = "hierarchical"):
 
 
 @app.get("/api/builder/node-types")
-async def list_node_types():
+async def list_node_types() -> Dict[str, Any]:
     """
     List available node types for the builder.
 

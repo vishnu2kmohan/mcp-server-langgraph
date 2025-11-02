@@ -8,7 +8,7 @@ Note: pydantic-ai is an optional dependency. If not installed, this module will 
 ImportError when used. The agent.py module handles this gracefully with PYDANTIC_AI_AVAILABLE flag.
 """
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
@@ -166,9 +166,7 @@ class PydanticAIAgentWrapper:
                 span.record_exception(e)
                 raise
 
-    async def generate_response(
-        self, messages: list[BaseMessage], context: Optional[dict] = None
-    ) -> AgentResponse:  # type: ignore[type-arg]
+    async def generate_response(self, messages: list[BaseMessage], context: Optional[dict[str, Any]] = None) -> AgentResponse:
         """
         Generate a typed response to user messages.
 

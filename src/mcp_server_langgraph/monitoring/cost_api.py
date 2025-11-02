@@ -19,7 +19,7 @@ import csv
 import io
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
@@ -120,7 +120,7 @@ class TrendsResponse(BaseModel):
 
 
 @app.get("/")
-def root():
+def root() -> Dict[str, Any]:
     """API information."""
     return {
         "name": "Cost Monitoring API",
@@ -270,15 +270,15 @@ async def get_budget_status(budget_id: str) -> BudgetStatus:
         GET /api/cost/budget/dev_team_monthly
     """
     monitor = get_budget_monitor()
-    status = await monitor.get_budget_status(budget_id)
+    budget_status = await monitor.get_budget_status(budget_id)
 
-    if not status:
+    if not budget_status:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Budget '{budget_id}' not found",
         )
 
-    return status
+    return budget_status
 
 
 @app.post("/api/cost/budget", response_model=Budget, status_code=status.HTTP_201_CREATED)
@@ -468,7 +468,7 @@ async def export_cost_data(
 
 
 @app.get("/health")
-def health_check():
+def health_check() -> Dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy", "service": "cost-monitoring-api"}
 
