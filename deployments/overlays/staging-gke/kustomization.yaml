@@ -8,7 +8,7 @@ namePrefix: staging-
 # Base configuration
 resources:
   - ../../base
-  - namespace.yaml
+  # Note: namespace.yaml removed - base provides namespace, overlay transforms via 'namespace:' field
   - network-policy.yaml
   - external-secrets.yaml
 
@@ -26,6 +26,12 @@ commonLabels:
 
 # Configuration patches
 patches:
+  # Namespace patch - Replace base namespace with staging-specific one
+  - path: namespace.yaml
+    target:
+      kind: Namespace
+      name: mcp-server-langgraph
+
   # Deployment patches
   - path: deployment-patch.yaml
     target:
@@ -58,6 +64,6 @@ images:
 # Generate ConfigMap from GCP-specific OTel config
 configMapGenerator:
   - name: otel-collector-config
-    behavior: merge
+    behavior: create
     files:
       - otel-collector-config.yaml
