@@ -52,7 +52,6 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
-  packages: write
 
 env:
   REGISTRY: ghcr.io
@@ -205,6 +204,9 @@ jobs:
     name: Build ${{ matrix.variant }} image
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write  # Required to push to ghcr.io
     strategy:
       fail-fast: false
       matrix:
@@ -261,7 +263,6 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         cache-from: |
           type=gha,scope=build-${{ matrix.variant }}
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}
         labels: |
@@ -328,6 +329,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, docker-build]
     if: github.event_name != 'pull_request'
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write  # Required to push to ghcr.io
     strategy:
       matrix:
         platform:
@@ -369,7 +374,6 @@ jobs:
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ steps.platform.outputs.name }}
         cache-from: |
           type=gha,scope=build-${{ matrix.variant }}-${{ steps.platform.outputs.name }}
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ steps.platform.outputs.name }}
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}-${{ steps.platform.outputs.name }}
 
@@ -382,6 +386,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker-multiplatform
     if: github.event_name != 'pull_request'
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write  # Required to create and push manifests
     strategy:
       matrix:
         variant: [base, full]

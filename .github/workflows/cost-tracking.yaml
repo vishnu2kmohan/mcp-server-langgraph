@@ -50,6 +50,10 @@ permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false  # Don't cancel cost analysis runs
+
 jobs:
   track-costs:
     name: Track GitHub Actions Costs

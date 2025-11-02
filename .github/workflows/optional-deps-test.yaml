@@ -9,10 +9,15 @@ on:
     # Run weekly on Sundays at 2am UTC
     - cron: "0 2 * * 0"
 
+permissions:
+  contents: read
+  pull-requests: write  # For PR comments if needed
+
 jobs:
   test-minimal:
     name: Test Minimal Install (No Extras)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v5
@@ -47,6 +52,7 @@ jobs:
   test-with-secrets:
     name: Test with Secrets Extra
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v5
@@ -80,6 +86,7 @@ jobs:
   test-with-embeddings:
     name: Test with Embeddings Extra
     runs-on: ubuntu-latest
+    timeout-minutes: 15  # Embeddings may take longer
 
     steps:
       - uses: actions/checkout@v5
@@ -112,6 +119,7 @@ jobs:
   test-all-extras:
     name: Test with All Extras
     runs-on: ubuntu-latest
+    timeout-minutes: 15  # All extras installation may take longer
 
     steps:
       - uses: actions/checkout@v5
@@ -146,6 +154,7 @@ jobs:
   test-production-config:
     name: Test Production Configuration
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v5
@@ -183,6 +192,7 @@ jobs:
   test-feature-flags:
     name: Test Feature Flag Combinations
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     strategy:
       matrix:

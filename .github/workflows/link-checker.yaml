@@ -58,10 +58,19 @@ on:
     - cron: '0 9 * * 1'
   workflow_dispatch:  # Allow manual triggering
 
+permissions:
+  contents: read
+  pull-requests: write  # For PR comments
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true  # Cancel outdated runs for PRs
+
 jobs:
   check-links:
     name: Check Internal Documentation Links
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -137,6 +146,7 @@ jobs:
   check-external-links:
     name: Check External Links (Optional)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     continue-on-error: true  # Don't fail CI for external link issues
 
     steps:
@@ -170,6 +180,7 @@ jobs:
   validate-markdown:
     name: Validate Markdown Syntax
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
