@@ -114,7 +114,6 @@ jobs:
         source .venv/bin/activate
         # Set TESTING env var to enable integration tests
         TESTING=true OTEL_SDK_DISABLED=true pytest -m e2e -v --tb=short
-      continue-on-error: true  # E2E tests are WIP (marked with skip)
 
     - name: Run new test suites
       run: |

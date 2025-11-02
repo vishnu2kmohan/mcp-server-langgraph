@@ -1,0 +1,191 @@
+name: Track Skipped Tests
+
+# ==============================================================================
+# Track Skipped Tests Workflow
+# ==============================================================================
+#
+# Purpose:
+#   Monitor and report on skipped tests to ensure they're properly tracked
+#   and eventually enabled.
+#
+# Triggers:
+#   - Pull requests to main/develop
+#   - Push to main/develop
+#   - Weekly schedule (Monday 9 AM UTC)
+#   - Manual workflow dispatch
+#
+# Features:
+#   - Extracts all @pytest.mark.skip decorators
+#   - Identifies tests without GitHub issue references
+#   - Generates trend reports
+#   - Posts PR comments with skip statistics
+#   - Creates issues for untracked skipped tests (optional)
+#
+# ==============================================================================
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  track-skipped-tests:
+    name: Track Skipped Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Run skipped test tracker
+      id: track
+      run: |
+        python scripts/ci/track-skipped-tests.py --format summary > summary.md
+        python scripts/ci/track-skipped-tests.py --format action > action-items.md
+        python scripts/ci/track-skipped-tests.py --format json > skipped-tests.json
+
+        # Extract metrics
+        TOTAL=$(jq '.total_skipped' skipped-tests.json)
+        WITH_ISSUES=$(jq '.with_issues' skipped-tests.json)
+        WITHOUT_ISSUES=$((TOTAL - WITH_ISSUES))
+
+        echo "total=$TOTAL" >> $GITHUB_OUTPUT
+        echo "with_issues=$WITH_ISSUES" >> $GITHUB_OUTPUT
+        echo "without_issues=$WITHOUT_ISSUES" >> $GITHUB_OUTPUT
+
+    - name: Upload reports
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: skipped-tests-report
+        path: |
+          summary.md
+          action-items.md
+          skipped-tests.json
+        retention-days: 90
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7.1.0
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('summary.md', 'utf8');
+          const actionItems = fs.readFileSync('action-items.md', 'utf8');
+
+          const total = ${{ steps.track.outputs.total }};
+          const withIssues = ${{ steps.track.outputs.with_issues }};
+          const withoutIssues = ${{ steps.track.outputs.without_issues }};
+
+          let statusEmoji = '✅';
+          if (withoutIssues > 20) {
+            statusEmoji = '🔴';
+          } else if (withoutIssues > 10) {
+            statusEmoji = '🟡';
+          }
+
+          const comment = `## ${statusEmoji} Skipped Tests Report
+
+          **Total Skipped:** ${total} | **Tracked:** ${withIssues} | **Untracked:** ${withoutIssues}
+
+          <details>
+          <summary>📊 View Summary</summary>
+
+          ${summary}
+
+          </details>
+
+          ${withoutIssues > 0 ? `
+          <details>
+          <summary>⚠️ Action Items (${withoutIssues} tests need GitHub issues)</summary>
+
+          ${actionItems}
+
+          </details>
+          ` : ''}
+
+          ---
+          **Target:** Reduce untracked skipped tests to <20 (currently ${withoutIssues})
+          `;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            body: comment
+          });
+
+    - name: Create issue if too many untracked tests
+      if: github.event_name == 'schedule' && steps.track.outputs.without_issues > 30
+      uses: actions/github-script@v7.1.0
+      with:
+        script: |
+          const fs = require('fs');
+          const actionItems = fs.readFileSync('action-items.md', 'utf8');
+
+          const title = `🔴 Too many untracked skipped tests: ${{ steps.track.outputs.without_issues }}`;
+          const body = `## Problem
+
+          Our weekly check found **${{ steps.track.outputs.without_issues }} skipped tests** without GitHub issue references.
+
+          **Target:** <20 untracked skipped tests
+          **Current:** ${{ steps.track.outputs.without_issues }}
+
+          ## Action Required
+
+          ${actionItems}
+
+          ## How to Fix
+
+          For each skipped test, either:
+
+          1. **Create a GitHub issue** explaining why it's skipped and when it should be enabled
+          2. **Update the skip decorator** to reference the issue:
+             \`\`\`python
+             @pytest.mark.skip(reason="WIP: See #123")
+             \`\`\`
+          3. **Enable the test** if it's no longer needed to be skipped
+
+          ## Reports
+
+          Full reports available in workflow artifacts: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          `;
+
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            title: title,
+            body: body,
+            labels: ['technical-debt', 'testing']
+          });
+
+    - name: Generate step summary
+      if: always()
+      run: |
+        echo "## 📋 Skipped Tests Tracking" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Total Skipped Tests:** ${{ steps.track.outputs.total }}" >> $GITHUB_STEP_SUMMARY
+        echo "**With GitHub Issues:** ${{ steps.track.outputs.with_issues }} ✅" >> $GITHUB_STEP_SUMMARY
+        echo "**Without Issues:** ${{ steps.track.outputs.without_issues }} $([ ${{ steps.track.outputs.without_issues }} -gt 20 ] && echo '🔴' || echo '✅')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Target Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- **Goal:** <20 untracked skipped tests" >> $GITHUB_STEP_SUMMARY
+        echo "- **Current:** ${{ steps.track.outputs.without_issues }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** $([ ${{ steps.track.outputs.without_issues }} -lt 20 ] && echo '✅ On target' || echo '⚠️ Needs attention')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📄 **Full reports available in workflow artifacts**" >> $GITHUB_STEP_SUMMARY

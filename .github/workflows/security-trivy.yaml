@@ -1,14 +1,27 @@
-name: Security Scanning - Trivy
+# ==============================================================================
+# DEPRECATED: This workflow has been consolidated into security-scan.yaml
+# ==============================================================================
+#
+# Date Deprecated: 2025-11-02
+# Reason: Consolidated Trivy functionality into security-scan.yaml to eliminate
+#         redundant scans and reduce CI costs.
+#
+# Migration: All features from this workflow are now available in security-scan.yaml:
+#   - Multi-type Trivy scans (filesystem, image, config)
+#   - PR comments with scan results
+#   - SBOM generation in CycloneDX format
+#   - Comprehensive security reports
+#
+# Action Required: This file can be safely deleted after confirming the consolidated
+#                  workflow is functioning correctly.
+#
+# ==============================================================================
 
+name: Security Scanning - Trivy (DEPRECATED)
+
+# Disabled all triggers - this workflow no longer runs
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-  schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger only for emergency use
 
 permissions:
   contents: read

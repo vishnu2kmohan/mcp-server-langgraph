@@ -1,0 +1,311 @@
+name: Cost Tracking
+
+# ==============================================================================
+# GitHub Actions Cost & Usage Tracking
+# ==============================================================================
+#
+# Purpose:
+#   Monitor GitHub Actions usage, track costs, and identify optimization
+#   opportunities to stay within budget.
+#
+# Triggers:
+#   - Weekly schedule (Sunday 9 AM UTC) - weekly report
+#   - Monthly schedule (1st day 9 AM UTC) - monthly report
+#   - Manual workflow dispatch
+#
+# Features:
+#   - Tracks total minutes used per workflow
+#   - Calculates cost estimates (public repos: $0.008/min)
+#   - Identifies most expensive workflows
+#   - Trend analysis over time
+#   - Budget alerts if exceeding thresholds
+#   - Recommendations for optimization
+#
+# Budget Targets:
+#   - Monthly: <6000 minutes (~$48/month)
+#   - Weekly: <1500 minutes (~$12/week)
+#
+# ==============================================================================
+
+on:
+  schedule:
+    # Weekly report: Sunday at 9 AM UTC
+    - cron: '0 9 * * 0'
+    # Monthly report: 1st of month at 9 AM UTC
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+    inputs:
+      period:
+        description: 'Report period (days)'
+        required: false
+        default: '7'
+        type: choice
+        options:
+          - '7'
+          - '30'
+          - '90'
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  track-costs:
+    name: Track GitHub Actions Costs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        pip install requests pandas tabulate
+
+    - name: Fetch workflow runs
+      id: fetch
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Determine period
+        PERIOD_DAYS=${{ github.event.inputs.period || '7' }}
+        SINCE_DATE=$(date -u -d "$PERIOD_DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
+
+        echo "Fetching workflow runs since $SINCE_DATE..."
+
+        # Fetch all workflow runs in the period
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "/repos/${{ github.repository }}/actions/runs?created=>=$SINCE_DATE&per_page=100" \
+          > workflow-runs.json
+
+        # Also fetch second page if needed
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "/repos/${{ github.repository }}/actions/runs?created=>=$SINCE_DATE&page=2&per_page=100" \
+          >> workflow-runs-page2.json 2>/dev/null || true
+
+        echo "period=$PERIOD_DAYS" >> $GITHUB_OUTPUT
+
+    - name: Analyze costs
+      id: analyze
+      run: |
+        cat > analyze_costs.py << 'PYTHON_SCRIPT'
+        import json
+        import sys
+        from collections import defaultdict
+        from datetime import datetime, timedelta
+        import os
+
+        # Cost per minute for public repos (GitHub Actions pricing)
+        COST_PER_MIN_LINUX = 0.008  # $0.008/min for Linux runners
+
+        # Budget thresholds
+        WEEKLY_BUDGET_MINS = 1500  # ~$12/week
+        MONTHLY_BUDGET_MINS = 6000  # ~$48/month
+
+        def load_runs():
+            """Load workflow runs from JSON files"""
+            runs = []
+
+            try:
+                with open('workflow-runs.json', 'r') as f:
+                    data = json.load(f)
+                    runs.extend(data.get('workflow_runs', []))
+            except:
+                pass
+
+            try:
+                with open('workflow-runs-page2.json', 'r') as f:
+                    data = json.load(f)
+                    runs.extend(data.get('workflow_runs', []))
+            except:
+                pass
+
+            return runs
+
+        def analyze_usage(runs, period_days):
+            """Analyze workflow usage and costs"""
+            by_workflow = defaultdict(lambda: {'count': 0, 'total_minutes': 0, 'billable_minutes': 0})
+            total_minutes = 0
+            total_billable = 0
+
+            for run in runs:
+                workflow_name = run.get('name', 'Unknown')
+
+                # Duration in minutes (run_duration_ms is in milliseconds)
+                duration_ms = run.get('run_duration_ms', 0)
+                duration_min = duration_ms / 1000 / 60 if duration_ms else 0
+
+                # Billable time (rounded up to nearest minute)
+                billable = int(duration_min) + (1 if duration_min % 1 > 0 else 0)
+
+                by_workflow[workflow_name]['count'] += 1
+                by_workflow[workflow_name]['total_minutes'] += duration_min
+                by_workflow[workflow_name]['billable_minutes'] += billable
+
+                total_minutes += duration_min
+                total_billable += billable
+
+            # Calculate costs
+            total_cost = total_billable * COST_PER_MIN_LINUX
+
+            # Budget status
+            if period_days <= 7:
+                budget = WEEKLY_BUDGET_MINS
+                budget_name = "Weekly"
+            else:
+                budget = MONTHLY_BUDGET_MINS
+                budget_name = "Monthly"
+
+            budget_pct = (total_billable / budget * 100) if budget > 0 else 0
+            budget_remaining = budget - total_billable
+
+            # Generate report
+            report = []
+            report.append(f"# GitHub Actions Cost Report ({period_days} days)")
+            report.append("")
+            report.append(f"**Period:** Last {period_days} days")
+            report.append(f"**Total Runs:** {len(runs)}")
+            report.append(f"**Total Minutes:** {total_minutes:.1f} min ({total_billable} billable)")
+            report.append(f"**Estimated Cost:** ${total_cost:.2f}")
+            report.append("")
+
+            # Budget status
+            status_emoji = "✅" if budget_pct < 80 else ("🟡" if budget_pct < 100 else "🔴")
+            report.append(f"## {status_emoji} {budget_name} Budget Status")
+            report.append("")
+            report.append(f"- **Budget:** {budget} minutes (${budget * COST_PER_MIN_LINUX:.2f})")
+            report.append(f"- **Used:** {total_billable} minutes (${total_cost:.2f})")
+            report.append(f"- **Remaining:** {budget_remaining} minutes (${budget_remaining * COST_PER_MIN_LINUX:.2f})")
+            report.append(f"- **Utilization:** {budget_pct:.1f}%")
+            report.append("")
+
+            # Top workflows by cost
+            report.append("## Top Workflows by Cost")
+            report.append("")
+            report.append("| Workflow | Runs | Total Min | Billable Min | Cost |")
+            report.append("|----------|------|-----------|--------------|------|")
+
+            sorted_workflows = sorted(by_workflow.items(),
+                                     key=lambda x: x[1]['billable_minutes'],
+                                     reverse=True)
+
+            for workflow_name, stats in sorted_workflows[:10]:
+                cost = stats['billable_minutes'] * COST_PER_MIN_LINUX
+                report.append(f"| {workflow_name} | {stats['count']} | {stats['total_minutes']:.1f} | {stats['billable_minutes']} | ${cost:.2f} |")
+
+            # Optimization recommendations
+            report.append("")
+            report.append("## 💡 Optimization Opportunities")
+            report.append("")
+
+            # Find workflows with high average duration
+            high_duration = [(name, stats) for name, stats in by_workflow.items()
+                           if stats['count'] > 0 and stats['total_minutes'] / stats['count'] > 15]
+
+            if high_duration:
+                report.append("### High Duration Workflows (>15 min avg)")
+                for name, stats in sorted(high_duration, key=lambda x: x[1]['total_minutes'] / x[1]['count'], reverse=True)[:5]:
+                    avg = stats['total_minutes'] / stats['count']
+                    report.append(f"- **{name}**: {avg:.1f} min avg ({stats['count']} runs)")
+
+            # High frequency workflows
+            high_freq = [(name, stats) for name, stats in by_workflow.items() if stats['count'] > 20]
+            if high_freq:
+                report.append("")
+                report.append("### High Frequency Workflows (>20 runs)")
+                for name, stats in sorted(high_freq, key=lambda x: x[1]['count'], reverse=True)[:5]:
+                    report.append(f"- **{name}**: {stats['count']} runs")
+
+            # Save metrics
+            with open('cost-metrics.txt', 'w') as f:
+                f.write(f"total_minutes={total_minutes:.1f}\n")
+                f.write(f"billable_minutes={total_billable}\n")
+                f.write(f"total_cost={total_cost:.2f}\n")
+                f.write(f"budget_pct={budget_pct:.1f}\n")
+                f.write(f"budget_remaining={budget_remaining}\n")
+
+            return '\n'.join(report)
+
+        # Main
+        period_days = int(os.environ.get('PERIOD_DAYS', 7))
+        runs = load_runs()
+        report = analyze_usage(runs, period_days)
+
+        with open('cost-report.md', 'w') as f:
+            f.write(report)
+
+        print(report)
+        PYTHON_SCRIPT
+
+        PERIOD_DAYS=${{ steps.fetch.outputs.period }} python analyze_costs.py
+
+        # Load metrics into outputs
+        source cost-metrics.txt
+        echo "total_minutes=$total_minutes" >> $GITHUB_OUTPUT
+        echo "billable_minutes=$billable_minutes" >> $GITHUB_OUTPUT
+        echo "total_cost=$total_cost" >> $GITHUB_OUTPUT
+        echo "budget_pct=$budget_pct" >> $GITHUB_OUTPUT
+        echo "budget_remaining=$budget_remaining" >> $GITHUB_OUTPUT
+
+    - name: Upload report
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: cost-report-${{ steps.fetch.outputs.period }}days
+        path: |
+          cost-report.md
+          workflow-runs.json
+        retention-days: 90
+
+    - name: Create issue if over budget
+      if: steps.analyze.outputs.budget_pct > 100
+      uses: actions/github-script@v7.1.0
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('cost-report.md', 'utf8');
+
+          const title = `🔴 GitHub Actions budget exceeded: ${steps.analyze.outputs.budget_pct}%`;
+          const body = `## Budget Alert
+
+          Our GitHub Actions usage has exceeded the budget threshold.
+
+          ${report}
+
+          ## Action Required
+
+          Review the optimization opportunities above and consider:
+
+          1. **Caching improvements** - Add or improve caching for dependencies
+          2. **Concurrency limits** - Use concurrency groups to cancel duplicate runs
+          3. **Conditional execution** - Skip unnecessary jobs with \`if\` conditions
+          4. **Workflow optimization** - Reduce job duration through parallelization
+          5. **Scheduled run frequency** - Reduce frequency of scheduled workflows
+
+          ## Reports
+
+          Full reports available in workflow artifacts: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          `;
+
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            title: title,
+            body: body,
+            labels: ['infrastructure', 'cost-optimization']
+          });
+
+    - name: Generate step summary
+      if: always()
+      run: |
+        cat cost-report.md >> $GITHUB_STEP_SUMMARY

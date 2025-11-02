@@ -48,6 +48,7 @@ jobs:
   test:
     name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
@@ -118,6 +119,61 @@ jobs:
         fail_ci_if_error: false
 
   # ============================================================================
+  # PRE-COMMIT HOOKS ENFORCEMENT
+  # ============================================================================
+
+  pre-commit:
+    name: Pre-commit Hooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Cache pre-commit environments
+      uses: actions/cache@v4.3.0
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          pre-commit-${{ runner.os }}-
+
+    - name: Install pre-commit
+      run: |
+        pip install pre-commit
+        echo "✓ pre-commit installed"
+
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit run --all-files --show-diff-on-failure
+        echo "✓ All pre-commit hooks passed"
+
+    - name: Pre-commit Summary
+      if: always()
+      run: |
+        echo "## Pre-commit Hooks Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Hooks Executed" >> $GITHUB_STEP_SUMMARY
+        echo "- Trailing whitespace removal" >> $GITHUB_STEP_SUMMARY
+        echo "- End-of-file fixer" >> $GITHUB_STEP_SUMMARY
+        echo "- YAML/JSON/TOML validation" >> $GITHUB_STEP_SUMMARY
+        echo "- Black code formatting" >> $GITHUB_STEP_SUMMARY
+        echo "- isort import sorting" >> $GITHUB_STEP_SUMMARY
+        echo "- flake8 linting" >> $GITHUB_STEP_SUMMARY
+        echo "- Bandit security checks" >> $GITHUB_STEP_SUMMARY
+        echo "- Gitleaks secret detection" >> $GITHUB_STEP_SUMMARY
+        echo "- GitHub Actions workflow validation" >> $GITHUB_STEP_SUMMARY
+        echo "- Mintlify documentation validation" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
   # DOCKER BUILDS (Parallel by variant)
   # ============================================================================
 
@@ -169,7 +225,7 @@ jobs:
         file: docker/Dockerfile
         target: final-${{ matrix.variant }}
         push: ${{ github.event_name != 'pull_request' }}
-        load: ${{ github.event_name == 'pull_request' }}
+        load: true  # Always load for verification
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
@@ -195,7 +251,7 @@ jobs:
         file: docker/Dockerfile
         target: final-${{ matrix.variant }}
         push: ${{ github.event_name != 'pull_request' }}
-        load: ${{ github.event_name == 'pull_request' }}
+        load: true  # Always load for verification
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
@@ -210,7 +266,6 @@ jobs:
         sbom: false
 
     - name: Verify image was loaded
-      if: github.event_name == 'pull_request'
       run: |
         echo "=== Checking if image was loaded ==="
         docker images | grep "${{ matrix.variant }}"
@@ -218,7 +273,6 @@ jobs:
         docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }} | jq '.[0].Config.Cmd, .[0].Config.Entrypoint, .[0].Config.WorkingDir'
 
     - name: Test ${{ matrix.variant }} image
-      if: github.event_name == 'pull_request'
       run: |
         # Use explicit entrypoint for distroless images (base, full)
         # Distroless images have limited command parsing - use --entrypoint

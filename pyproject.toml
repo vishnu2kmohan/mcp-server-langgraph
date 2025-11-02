@@ -388,6 +388,24 @@ derandomize = false  # Set true for deterministic testing
 
 [tool.mutmut]
 # Mutation testing configuration
+#
+# Target Mutation Score: 85% (industry best practice)
+#   - <70%: Poor - Many untested code paths
+#   - 70-80%: Acceptable - Most code paths tested
+#   - 80-90%: Good - Comprehensive test coverage
+#   - >90%: Excellent - Very thorough testing
+#
+# Current implementation:
+#   - Runs weekly via GitHub Actions (quality-tests.yaml)
+#   - Focuses on core business logic files only
+#   - Uses fast unit tests (pytest -x -m unit)
+#   - Results available as workflow artifacts
+#
+# How to run locally:
+#   mutmut run
+#   mutmut results  # View summary
+#   mutmut html     # Generate HTML report
+#
 paths_to_mutate = [
     "agent.py",
     "auth.py",

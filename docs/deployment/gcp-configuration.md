@@ -1,0 +1,563 @@
+# GCP Configuration Guide
+
+This guide explains how to configure Google Cloud Platform (GCP) settings for CI/CD deployment workflows.
+
+## Overview
+
+The deployment workflows (`deploy-staging-gke.yaml`, `deploy-production-gke.yaml`) require GCP configuration for:
+
+- **Authentication**: Workload Identity Federation (keyless authentication)
+- **Resource Access**: GKE clusters, Artifact Registry, Cloud Logging
+- **Deployment**: Kubernetes manifest application via kubectl/Kustomize
+
+## Prerequisites
+
+- GCP project with billing enabled
+- `gcloud` CLI installed and authenticated
+- Repository admin access to configure GitHub secrets
+- Permissions to create service accounts and configure Workload Identity
+
+---
+
+## Quick Setup (Automated Script)
+
+We provide an automated setup script for convenience:
+
+```bash
+# Run the setup script
+./scripts/setup/configure-gcp-cicd.sh \
+  --project-id YOUR_PROJECT_ID \
+  --github-repo vishnu2kmohan/mcp-server-langgraph \
+  --region us-central1
+
+# Follow the prompts to create:
+# 1. Service account for GitHub Actions
+# 2. Workload Identity Pool and Provider
+# 3. GKE clusters (staging + production)
+# 4. Required IAM bindings
+```
+
+**Script outputs:** GitHub secrets ready to paste into repository settings.
+
+---
+
+## Manual Setup
+
+### Step 1: Set Environment Variables
+
+```bash
+export PROJECT_ID="your-gcp-project-id"
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+export GITHUB_REPO="vishnu2kmohan/mcp-server-langgraph"
+export GCP_REGION="us-central1"
+```
+
+### Step 2: Enable Required APIs
+
+```bash
+gcloud services enable \
+  container.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudresourcemanager.googleapis.com \
+  iam.googleapis.com \
+  logging.googleapis.com \
+  monitoring.googleapis.com \
+  --project=$PROJECT_ID
+```
+
+### Step 3: Create Service Account
+
+```bash
+# Create service account for GitHub Actions
+gcloud iam service-accounts create github-actions-deployer \
+  --display-name="GitHub Actions Deployer" \
+  --description="Service account for GitHub Actions CI/CD pipelines" \
+  --project=$PROJECT_ID
+
+# Grant necessary roles
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/container.developer"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/logging.logWriter"
+```
+
+### Step 4: Configure Workload Identity Federation
+
+```bash
+# Create Workload Identity Pool
+gcloud iam workload-identity-pools create "github-actions-pool" \
+  --project="$PROJECT_ID" \
+  --location="global" \
+  --display-name="GitHub Actions Pool"
+
+# Create Workload Identity Provider
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+  --project="$PROJECT_ID" \
+  --location="global" \
+  --workload-identity-pool="github-actions-pool" \
+  --display-name="GitHub Provider" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+  --issuer-uri="https://token.actions.githubusercontent.com"
+
+# Allow GitHub repo to impersonate service account
+gcloud iam service-accounts add-iam-policy-binding \
+  "github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --project="$PROJECT_ID" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions-pool/attribute.repository/${GITHUB_REPO}"
+```
+
+### Step 5: Create GKE Clusters
+
+#### Staging Cluster
+
+```bash
+gcloud container clusters create mcp-staging-cluster \
+  --project=$PROJECT_ID \
+  --region=$GCP_REGION \
+  --enable-autoscaling \
+  --min-nodes=1 \
+  --max-nodes=5 \
+  --machine-type=e2-medium \
+  --enable-autorepair \
+  --enable-autoupgrade \
+  --enable-stackdriver-kubernetes \
+  --workload-pool="${PROJECT_ID}.svc.id.goog" \
+  --labels=environment=staging,managed-by=terraform
+```
+
+#### Production Cluster
+
+```bash
+gcloud container clusters create mcp-production-cluster \
+  --project=$PROJECT_ID \
+  --region=$GCP_REGION \
+  --enable-autoscaling \
+  --min-nodes=2 \
+  --max-nodes=10 \
+  --machine-type=e2-standard-2 \
+  --enable-autorepair \
+  --enable-autoupgrade \
+  --enable-stackdriver-kubernetes \
+  --enable-binary-authorization \
+  --workload-pool="${PROJECT_ID}.svc.id.goog" \
+  --labels=environment=production,managed-by=terraform
+```
+
+### Step 6: Create Artifact Registry
+
+```bash
+gcloud artifacts repositories create mcp-server-langgraph \
+  --repository-format=docker \
+  --location=$GCP_REGION \
+  --description="MCP Server LangGraph container images" \
+  --project=$PROJECT_ID
+```
+
+---
+
+## GitHub Secrets Configuration
+
+### Required Secrets
+
+Configure the following secrets in your GitHub repository settings (`Settings` → `Secrets and variables` → `Actions`):
+
+| Secret Name | Value | Description |
+|-------------|-------|-------------|
+| `GCP_PROJECT_ID` | `your-gcp-project-id` | Your GCP project ID |
+| `GCP_PROJECT_NUMBER` | `123456789012` | Your GCP project number |
+| `GCP_REGION` | `us-central1` | GCP region for resources |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider` | Workload Identity Provider path |
+| `GCP_SERVICE_ACCOUNT` | `github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com` | Service account email |
+| `GKE_STAGING_CLUSTER` | `mcp-staging-cluster` | Staging GKE cluster name |
+| `GKE_PRODUCTION_CLUSTER` | `mcp-production-cluster` | Production GKE cluster name |
+
+### How to Get Values
+
+```bash
+# Project ID and Number
+echo "GCP_PROJECT_ID: $PROJECT_ID"
+echo "GCP_PROJECT_NUMBER: $PROJECT_NUMBER"
+
+# Region
+echo "GCP_REGION: $GCP_REGION"
+
+# Workload Identity Provider
+echo "GCP_WORKLOAD_IDENTITY_PROVIDER: projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider"
+
+# Service Account
+echo "GCP_SERVICE_ACCOUNT: github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
+
+# Cluster Names
+echo "GKE_STAGING_CLUSTER: mcp-staging-cluster"
+echo "GKE_PRODUCTION_CLUSTER: mcp-production-cluster"
+```
+
+---
+
+## Update Workflow Files
+
+Once secrets are configured, update the workflow files to use them:
+
+### deploy-staging-gke.yaml
+
+```yaml
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  GKE_CLUSTER: ${{ secrets.GKE_STAGING_CLUSTER }}
+
+# ... in auth step:
+- uses: google-github-actions/auth@v2
+  with:
+    workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+    service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+```
+
+### deploy-production-gke.yaml
+
+```yaml
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  GKE_CLUSTER: ${{ secrets.GKE_PRODUCTION_CLUSTER }}
+
+# ... in auth step:
+- uses: google-github-actions/auth@v2
+  with:
+    workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+    service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+```
+
+---
+
+## Verification
+
+### Test Authentication
+
+```bash
+# Verify service account permissions
+gcloud projects get-iam-policy $PROJECT_ID \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
+
+# Verify Workload Identity configuration
+gcloud iam service-accounts get-iam-policy \
+  github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com
+```
+
+### Test Deployment
+
+Trigger a manual workflow run to test:
+
+```bash
+# Via GitHub UI: Actions → Deploy Staging GKE → Run workflow
+
+# Or via gh CLI:
+gh workflow run deploy-staging-gke.yaml
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. "Permission denied" during deployment
+
+**Cause:** Service account lacks required permissions.
+
+**Solution:**
+```bash
+# Add missing role (example: container.developer)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/container.developer"
+```
+
+#### 2. "Workload Identity Provider not found"
+
+**Cause:** Incorrect provider path or pool not created.
+
+**Solution:**
+```bash
+# List pools
+gcloud iam workload-identity-pools list --location=global --project=$PROJECT_ID
+
+# List providers
+gcloud iam workload-identity-pools providers list \
+  --workload-identity-pool=github-actions-pool \
+  --location=global \
+  --project=$PROJECT_ID
+```
+
+#### 3. "Cluster not found"
+
+**Cause:** Cluster name mismatch or wrong region.
+
+**Solution:**
+```bash
+# List clusters
+gcloud container clusters list --project=$PROJECT_ID
+
+# Update secret with correct cluster name
+```
+
+---
+
+## Security Best Practices
+
+### 1. Principle of Least Privilege
+
+Grant only necessary permissions:
+
+```bash
+# Example: Read-only for monitoring
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/monitoring.viewer"
+```
+
+### 2. Separate Environments
+
+Use different service accounts for staging vs production:
+
+```bash
+# Staging service account
+gcloud iam service-accounts create github-actions-staging \
+  --project=$PROJECT_ID
+
+# Production service account (more restrictive)
+gcloud iam service-accounts create github-actions-production \
+  --project=$PROJECT_ID
+```
+
+### 3. Audit Logging
+
+Enable audit logs for service account activity:
+
+```bash
+gcloud logging read \
+  'protoPayload.authenticationInfo.principalEmail="github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com"' \
+  --limit=50 \
+  --format=json
+```
+
+### 4. Conditional Access
+
+Limit Workload Identity to specific branches:
+
+```yaml
+# In workflow file
+- uses: google-github-actions/auth@v2
+  if: github.ref == 'refs/heads/main'  # Only on main branch
+  with:
+    workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+```
+
+---
+
+## Cost Optimization
+
+### 1. Use Preemptible Nodes (Staging)
+
+```bash
+gcloud container node-pools create preemptible-pool \
+  --cluster=mcp-staging-cluster \
+  --region=$GCP_REGION \
+  --preemptible \
+  --num-nodes=1 \
+  --machine-type=e2-medium
+```
+
+### 2. Enable Cluster Autoscaling
+
+Already enabled in cluster creation. Monitor usage:
+
+```bash
+gcloud container clusters describe mcp-staging-cluster \
+  --region=$GCP_REGION \
+  --format="value(autoscaling)"
+```
+
+### 3. Use Artifact Registry Lifecycle Policies
+
+```bash
+# Delete images older than 90 days
+gcloud artifacts repositories set-cleanup-policies mcp-server-langgraph \
+  --location=$GCP_REGION \
+  --policy=keep-minimum-versions,delete-older-than-90-days
+```
+
+---
+
+## Monitoring & Alerts
+
+### Setup Budget Alerts
+
+```bash
+# Create budget (example: $100/month)
+gcloud billing budgets create \
+  --billing-account=BILLING_ACCOUNT_ID \
+  --display-name="GKE Monthly Budget" \
+  --budget-amount=100USD \
+  --threshold-rule=percent=80
+```
+
+### View Deployment Logs
+
+```bash
+# View Cloud Build logs
+gcloud builds list --limit=10 --project=$PROJECT_ID
+
+# View GKE deployment logs
+kubectl logs -l app=mcp-server-langgraph -n default
+```
+
+---
+
+## Automated Setup Script
+
+Create `scripts/setup/configure-gcp-cicd.sh`:
+
+```bash
+#!/usr/bin/env bash
+# Automated GCP CI/CD setup script
+# Usage: ./configure-gcp-cicd.sh --project-id PROJECT_ID --github-repo REPO --region REGION
+
+set -euo pipefail
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --project-id)
+      PROJECT_ID="$2"
+      shift 2
+      ;;
+    --github-repo)
+      GITHUB_REPO="$2"
+      shift 2
+      ;;
+    --region)
+      GCP_REGION="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+# Validate inputs
+if [[ -z "${PROJECT_ID:-}" ]] || [[ -z "${GITHUB_REPO:-}" ]] || [[ -z "${GCP_REGION:-}" ]]; then
+  echo "Usage: $0 --project-id PROJECT_ID --github-repo REPO --region REGION"
+  exit 1
+fi
+
+echo "=== GCP CI/CD Configuration ==="
+echo "Project ID: $PROJECT_ID"
+echo "GitHub Repo: $GITHUB_REPO"
+echo "Region: $GCP_REGION"
+echo ""
+
+# Get project number
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+
+# Enable APIs
+echo "Enabling required APIs..."
+gcloud services enable \
+  container.googleapis.com \
+  artifactregistry.googleapis.com \
+  iam.googleapis.com \
+  --project=$PROJECT_ID
+
+# Create service account
+echo "Creating service account..."
+gcloud iam service-accounts create github-actions-deployer \
+  --display-name="GitHub Actions Deployer" \
+  --project=$PROJECT_ID || true
+
+# Grant roles
+echo "Granting IAM roles..."
+for role in "roles/container.developer" "roles/artifactregistry.writer"; do
+  gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --role="$role" \
+    --quiet
+done
+
+# Create Workload Identity Pool
+echo "Configuring Workload Identity..."
+gcloud iam workload-identity-pools create "github-actions-pool" \
+  --project="$PROJECT_ID" \
+  --location="global" \
+  --display-name="GitHub Actions Pool" || true
+
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+  --project="$PROJECT_ID" \
+  --location="global" \
+  --workload-identity-pool="github-actions-pool" \
+  --display-name="GitHub Provider" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --issuer-uri="https://token.actions.githubusercontent.com" || true
+
+# Bind service account
+gcloud iam service-accounts add-iam-policy-binding \
+  "github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --project="$PROJECT_ID" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions-pool/attribute.repository/${GITHUB_REPO}" \
+  --quiet
+
+# Output GitHub secrets
+echo ""
+echo "=== GitHub Secrets Configuration ==="
+echo ""
+echo "Add these secrets to your GitHub repository:"
+echo ""
+echo "GCP_PROJECT_ID=$PROJECT_ID"
+echo "GCP_PROJECT_NUMBER=$PROJECT_NUMBER"
+echo "GCP_REGION=$GCP_REGION"
+echo "GCP_WORKLOAD_IDENTITY_PROVIDER=projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider"
+echo "GCP_SERVICE_ACCOUNT=github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
+echo ""
+echo "✅ Configuration complete!"
+```
+
+Make it executable:
+
+```bash
+chmod +x scripts/setup/configure-gcp-cicd.sh
+```
+
+---
+
+## Next Steps
+
+1. **Configure GitHub Secrets** - Add all required secrets to repository
+2. **Update Workflow Files** - Replace hardcoded values with `${{ secrets.* }}`
+3. **Test Staging Deployment** - Trigger manual workflow run
+4. **Configure Production** - Set up production environment protection
+5. **Monitor Costs** - Review GCP billing dashboard weekly
+
+---
+
+## References
+
+- [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation)
+- [GKE Best Practices](https://cloud.google.com/kubernetes-engine/docs/best-practices)
+- [GitHub Actions Security](https://docs.github.com/en/actions/security-guides)
+- [GCP IAM Roles](https://cloud.google.com/iam/docs/understanding-roles)
+
+---
+
+**Last Updated:** 2025-11-02
+**Maintained By:** CI/CD Team
