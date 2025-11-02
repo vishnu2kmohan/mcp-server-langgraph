@@ -196,15 +196,13 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime-slim,sharing=p
 # ==============================================================================
 FROM runtime-distroless AS final-base
 
-# Copy virtual environment from builder
-COPY --from=build-base --chown=nonroot:nonroot /opt/venv /opt/venv
+# Copy Python packages from venv's site-packages to system site-packages
+# Distroless Python is at /usr/bin/python3, not /opt/venv/bin/python
+COPY --from=build-base --chown=nonroot:nonroot /opt/venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
 COPY --chown=nonroot:nonroot pyproject.toml ./
-
-# Set PATH to use virtual environment
-ENV PATH="/opt/venv/bin:$PATH"
 
 # Metadata
 LABEL org.opencontainers.image.title="MCP Server LangGraph (Base)"
@@ -214,23 +212,21 @@ LABEL org.opencontainers.image.size="~200MB"
 
 EXPOSE 8000
 
-# Distroless has no shell, use exec form
-CMD ["/opt/venv/bin/python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
+# Distroless Python is at /usr/bin/python3
+CMD ["/usr/bin/python3", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 
 # ==============================================================================
 # FINAL STAGE: full variant (distroless)
 # ==============================================================================
 FROM runtime-distroless AS final-full
 
-# Copy virtual environment from builder (includes ML dependencies)
-COPY --from=build-full --chown=nonroot:nonroot /opt/venv /opt/venv
+# Copy Python packages from venv's site-packages to system site-packages
+# Distroless Python is at /usr/bin/python3, not /opt/venv/bin/python
+COPY --from=build-full --chown=nonroot:nonroot /opt/venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
 COPY --chown=nonroot:nonroot pyproject.toml ./
-
-# Set PATH to use virtual environment
-ENV PATH="/opt/venv/bin:$PATH"
 
 # Metadata
 LABEL org.opencontainers.image.title="MCP Server LangGraph (Full)"
@@ -240,7 +236,8 @@ LABEL org.opencontainers.image.size="~1.2GB"
 
 EXPOSE 8000
 
-CMD ["/opt/venv/bin/python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
+# Distroless Python is at /usr/bin/python3
+CMD ["/usr/bin/python3", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 
 # ==============================================================================
 # FINAL STAGE: test variant (slim, with shell)

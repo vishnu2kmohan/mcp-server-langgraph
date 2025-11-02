@@ -1,0 +1,61 @@
+---
+# Network Policy for Redis
+# Restricts Redis access to only authorized pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis
+  namespace: mcp-server-langgraph
+spec:
+  podSelector:
+    matchLabels:
+      app: redis-session
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow from MCP Server application (session management)
+    - from:
+        - podSelector:
+            matchLabels:
+              app: mcp-server-langgraph
+      ports:
+        - protocol: TCP
+          port: 6379
+
+    # Allow from monitoring/metrics scrapers
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9121  # redis-exporter metrics port
+
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+        - podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow connections within the same namespace (for Redis Sentinel/Cluster if using HA)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis-session
+      ports:
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 26379  # Redis Sentinel port

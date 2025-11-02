@@ -35,6 +35,7 @@ def auth_token(client):
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.unit
 class TestMCPStreamableHTTP:
     """Test StreamableHTTP MCP server"""
 
@@ -516,6 +517,7 @@ class TestMCPStreamableHTTP:
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.unit
 class TestTokenRefresh:
     """Test token refresh endpoint"""
 
@@ -652,6 +654,7 @@ class TestTokenRefresh:
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.unit
 class TestTokenValidation:
     """Test token-based authentication for tool calls"""
 
@@ -752,6 +755,7 @@ class TestTokenValidation:
 
 @pytest.mark.e2e
 @pytest.mark.mcp
+@pytest.mark.unit
 class TestMCPEndToEnd:
     """End-to-end tests for complete MCP flow"""
 

@@ -1,0 +1,172 @@
+# Velero Configuration for Azure AKS
+# Provides automated backup and disaster recovery using Azure Blob Storage and Disk snapshots
+
+configuration:
+  # Azure provider
+  provider: azure
+
+  # Backup storage location (Azure Blob Storage)
+  backupStorageLocation:
+    - name: default
+      provider: azure
+      bucket: mcp-server-backups  # Azure Blob Storage container name
+      prefix: velero
+      default: true
+      config:
+        resourceGroup: ""  # Update with your resource group
+        storageAccount: ""  # Update with your storage account name
+        storageAccountKeyEnvVar: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
+        # Or use managed identity:
+        # subscriptionId: ""
+        # useAAD: "true"
+
+  # Volume snapshot location (Azure Managed Disks)
+  volumeSnapshotLocation:
+    - name: default
+      provider: azure
+      config:
+        resourceGroup: ""  # Update with your resource group
+        subscriptionId: ""  # Update with your subscription ID
+        incremental: "true"  # Use incremental snapshots for cost savings
+
+  # Features to enable
+  features: EnableCSI  # Enable CSI snapshot support
+  uploaderType: restic  # Use restic for file-level backup
+
+  # Backup default settings
+  defaultBackupStorageLocation: default
+  defaultVolumeSnapshotLocations: azure:default
+  defaultBackupTTL: 720h  # 30 days
+
+# Credentials
+credentials:
+  useSecret: true
+  existingSecret: cloud-credentials  # Create this secret with Azure credentials
+  # Or use Azure Managed Identity (recommended)
+  # secretContents: {}
+
+# Service Account (use Azure Workload Identity for production)
+serviceAccount:
+  server:
+    create: true
+    name: velero
+    annotations:
+      azure.workload.identity/client-id: ""  # Add your Azure Managed Identity client ID
+
+# Init containers for Azure plugin
+initContainers:
+  - name: velero-plugin-for-microsoft-azure
+    image: velero/velero-plugin-for-microsoft-azure:v1.9.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# Resource limits
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Node selector (optional)
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Metrics
+metrics:
+  enabled: true
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+# Backup schedules
+schedules:
+  # Daily backup at 2 AM UTC
+  daily:
+    disabled: false
+    schedule: "0 2 * * *"
+    useOwnerReferencesInBackup: false
+    template:
+      includedNamespaces:
+        - mcp-server-langgraph
+      storageLocation: default
+      volumeSnapshotLocations:
+        - default
+      ttl: 720h  # 30 days
+      includedResources:
+        - "*"
+      excludedResources:
+        - events
+        - events.events.k8s.io
+      snapshotVolumes: true
+      defaultVolumesToRestic: false
+
+  # Weekly backup on Sunday at 3 AM UTC
+  weekly:
+    disabled: false
+    schedule: "0 3 * * 0"
+    useOwnerReferencesInBackup: false
+    template:
+      includedNamespaces:
+        - mcp-server-langgraph
+      storageLocation: default
+      volumeSnapshotLocations:
+        - default
+      ttl: 2160h  # 90 days
+      snapshotVolumes: true
+
+# Security context
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsNonRoot: true
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+
+# Clean up completed backups
+cleanUpCRDs: false
+
+# Configure snapshot controller (for CSI)
+snapshotsEnabled: true
+
+deployNodeAgent: true  # Deploy node agent (restic)
+
+nodeAgent:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  podSecurityContext:
+    runAsUser: 0  # Restic needs root access
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+# Azure-specific environment variables
+env:
+  - name: AZURE_CLOUD_NAME
+    value: AzurePublicCloud  # Or AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud

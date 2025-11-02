@@ -523,9 +523,36 @@ spec:
       - name: cache
         emptyDir: {}
 
+      # Topology spread constraints for zone distribution
+      # Ensures pods are evenly distributed across availability zones
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: mcp-server-langgraph
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: mcp-server-langgraph
+
       # Affinity rules for high availability
+      # Using required anti-affinity for production-grade HA
       affinity:
         podAntiAffinity:
+          # Required: Do not schedule pods on the same zone
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - mcp-server-langgraph
+            topologyKey: topology.kubernetes.io/zone
+          # Preferred: Try to spread across different nodes
           preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100
             podAffinityTerm:

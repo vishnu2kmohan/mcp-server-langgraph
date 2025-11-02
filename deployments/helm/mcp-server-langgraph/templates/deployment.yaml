@@ -250,11 +250,55 @@ spec:
           mountPath: /tmp
         - name: cache
           mountPath: /app/.cache
+
+      {{- if and (not .Values.postgresql.enabled) .Values.postgresql.external.cloud.cloudSql.enabled }}
+      # CloudSQL Proxy sidecar for GCP CloudSQL connections
+      - name: cloud-sql-proxy
+        image: {{ .Values.postgresql.external.cloud.cloudSql.proxyImage }}
+        command:
+        - "/cloud-sql-proxy"
+        - "--port=5432"
+        - "{{ .Values.postgresql.external.cloud.cloudSql.instanceConnectionName }}"
+        {{- if .Values.postgresql.external.cloud.cloudSql.credentialsSecret }}
+        - "--credentials-file=/secrets/service-account-key.json"
+        {{- end }}
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          {{- toYaml .Values.postgresql.external.cloud.cloudSql.proxyResources | nindent 12 }}
+        {{- if .Values.postgresql.external.cloud.cloudSql.credentialsSecret }}
+        volumeMounts:
+        - name: cloudsql-credentials
+          mountPath: /secrets
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        {{- else }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        {{- end }}
+      {{- end }}
+
       volumes:
       - name: tmp
         emptyDir: {}
       - name: cache
         emptyDir: {}
+      {{- if and (not .Values.postgresql.enabled) .Values.postgresql.external.cloud.cloudSql.enabled .Values.postgresql.external.cloud.cloudSql.credentialsSecret }}
+      - name: cloudsql-credentials
+        secret:
+          secretName: {{ .Values.postgresql.external.cloud.cloudSql.credentialsSecret }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

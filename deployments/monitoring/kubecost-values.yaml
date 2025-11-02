@@ -1,0 +1,244 @@
+# Kubecost Configuration
+# Provides cost monitoring and optimization across cloud providers
+
+kubecostProductConfigs:
+  clusterName: mcp-production
+
+  # Product key (optional - use for enterprise features)
+  productKey: ""
+
+  # Cluster profile
+  clusterProfile: production
+
+  # Currency settings
+  currencyCode: USD
+
+  # Cloud provider costs
+  cloudCost:
+    enabled: true
+
+  # Resource recommendations
+  recommendations:
+    enabled: true
+
+  # Alerts
+  alerts:
+    enabled: true
+    # Slack webhook for cost alerts
+    slackWebhookUrl: ""
+
+  # Savings
+  savings:
+    enabled: true
+
+# Prometheus integration
+prometheus:
+  server:
+    # Use existing Prometheus instance
+    enabled: false
+    # Reference to existing Prometheus
+    global:
+      external_labels:
+        cluster_id: mcp-prod
+
+  # Or use Kubecost's built-in Prometheus
+  # enabled: true
+  # retention: 15d
+  # resources:
+  #   requests:
+  #     cpu: 500m
+  #     memory: 2Gi
+  #   limits:
+  #     cpu: 2000m
+  #     memory: 4Gi
+
+# Grafana integration
+grafana:
+  # Use existing Grafana instance
+  enabled: false
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: kubecost.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: kubecost-tls
+      hosts:
+        - kubecost.example.com
+
+# Resource limits
+kubecostModel:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+kubecostFrontend:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+# Network cost monitoring
+networkCosts:
+  enabled: true
+  # Pod network monitoring
+  podMonitor:
+    enabled: true
+  # Traffic metrics
+  trafficLogging:
+    enabled: true
+
+# Cloud provider-specific configurations
+# AWS
+awsCloudCost:
+  enabled: true
+  # Configure AWS Cost and Usage Report (CUR)
+  cur:
+    # S3 bucket with CUR data
+    bucket: ""  # s3://my-cur-bucket
+    # Path to CUR files
+    path: ""  # cur/
+    # AWS region
+    region: us-east-1
+    # Authentication via IRSA
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: ""  # Add your IRSA role ARN
+
+# GCP
+gcpCloudCost:
+  enabled: true
+  # Configure BigQuery billing export
+  bigQuery:
+    # BigQuery dataset with billing data
+    dataset: ""  # billing_export
+    # BigQuery table
+    table: ""  # gcp_billing_export_v1_XXXX
+    # GCP project ID
+    projectId: ""
+    # Authentication via Workload Identity
+    serviceAccount:
+      create: true
+      annotations:
+        iam.gke.io/gcp-service-account: ""  # kubecost@PROJECT_ID.iam.gserviceaccount.com
+
+# Azure
+azureCloudCost:
+  enabled: true
+  # Configure Azure Cost Management API
+  costManagement:
+    # Subscription ID
+    subscriptionId: ""
+    # Resource group (optional - leave empty for subscription-level)
+    resourceGroup: ""
+    # Authentication via Azure Workload Identity
+    serviceAccount:
+      create: true
+      annotations:
+        azure.workload.identity/client-id: ""
+
+# Service monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    release: prometheus
+
+# Persistent volume for cost data
+persistentVolume:
+  enabled: true
+  size: 32Gi
+  storageClass: ""  # Use default storage class
+
+# Reporting
+reporting:
+  # Daily cost reports
+  daily:
+    enabled: true
+    # Email recipients
+    recipients: []
+
+  # Weekly cost reports
+  weekly:
+    enabled: true
+    recipients: []
+
+  # Monthly cost reports
+  monthly:
+    enabled: true
+    recipients: []
+
+# Cost allocation
+costAllocation:
+  # Namespace-level allocation
+  namespace:
+    enabled: true
+
+  # Label-based allocation
+  labels:
+    - app
+    - environment
+    - team
+    - cost-center
+
+  # Annotation-based allocation
+  annotations:
+    - owner
+    - project
+
+# Idle resource detection
+idleResources:
+  enabled: true
+  # CPU threshold for idle detection (%)
+  cpuThreshold: 5
+  # Memory threshold for idle detection (%)
+  memoryThreshold: 10
+  # Duration before marking as idle (hours)
+  duration: 24
+
+# Right-sizing recommendations
+rightSizing:
+  enabled: true
+  # Recommendation window (days)
+  window: 7
+  # Target utilization (%)
+  targetCPUUtilization: 65
+  targetMemoryUtilization: 80
+
+# Node auto-scaling recommendations
+nodeAutoScaling:
+  enabled: true
+
+# Cluster sizing recommendations
+clusterSizing:
+  enabled: true
+  # Analysis window (days)
+  window: 30

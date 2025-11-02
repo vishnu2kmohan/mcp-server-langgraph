@@ -1,0 +1,56 @@
+---
+# Resource Quota for mcp-server-langgraph namespace
+# Prevents resource exhaustion and ensures fair allocation
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: mcp-server-langgraph
+spec:
+  hard:
+    # CPU limits
+    requests.cpu: "50"
+    limits.cpu: "100"
+
+    # Memory limits
+    requests.memory: 100Gi
+    limits.memory: 200Gi
+
+    # Storage limits
+    requests.storage: 500Gi
+    persistentvolumeclaims: "20"
+
+    # Object count limits
+    pods: "100"
+    services: "50"
+    secrets: "100"
+    configmaps: "100"
+    replicationcontrollers: "20"
+    services.loadbalancers: "5"
+    services.nodeports: "10"
+
+---
+# Resource Quota for monitoring namespace (if separate)
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: monitoring-quota
+  namespace: monitoring
+spec:
+  hard:
+    # CPU limits (monitoring needs more resources)
+    requests.cpu: "20"
+    limits.cpu: "40"
+
+    # Memory limits
+    requests.memory: 40Gi
+    limits.memory: 80Gi
+
+    # Storage limits
+    requests.storage: 200Gi
+    persistentvolumeclaims: "10"
+
+    # Object count limits
+    pods: "50"
+    services: "20"
+    configmaps: "50"

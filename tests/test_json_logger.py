@@ -77,6 +77,7 @@ def log_record():
     return record
 
 
+@pytest.mark.unit
 class TestCustomJSONFormatter:
     """Tests for CustomJSONFormatter class"""
 
@@ -257,6 +258,7 @@ class TestCustomJSONFormatter:
         assert "trace_id" not in log_data or log_data.get("trace_id") is None
 
 
+@pytest.mark.unit
 class TestSetupJSONLogging:
     """Tests for setup_json_logging helper function"""
 
@@ -294,6 +296,7 @@ class TestSetupJSONLogging:
             assert log_data["level"] == "INFO"
 
 
+@pytest.mark.unit
 class TestLogWithContext:
     """Tests for log_with_context helper function"""
 
@@ -323,6 +326,7 @@ class TestLogWithContext:
             assert call_args[1]["extra"]["ip"] == "192.168.1.100"
 
 
+@pytest.mark.unit
 class TestEdgeCases:
     """Tests for edge cases and error handling"""
 
@@ -384,6 +388,7 @@ class TestEdgeCases:
 
 
 @pytest.mark.benchmark
+@pytest.mark.unit
 class TestPerformance:
     """Performance tests for JSON logging"""
 

@@ -1,0 +1,119 @@
+---
+# Daily Backup Schedule
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: mcp-daily-backup
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"  # 2 AM UTC daily
+  template:
+    includedNamespaces:
+      - mcp-server-langgraph
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    ttl: 720h  # 30 days retention
+    snapshotVolumes: true
+    includedResources:
+      - "*"
+    excludedResources:
+      - events
+      - events.events.k8s.io
+    labelSelector:
+      matchLabels:
+        backup-enabled: "true"
+    hooks:
+      resources:
+        - name: postgres-backup-hook
+          includedNamespaces:
+            - mcp-server-langgraph
+          labelSelector:
+            matchLabels:
+              app: postgres
+          pre:
+            - exec:
+                container: postgres
+                command:
+                  - /bin/bash
+                  - -c
+                  - PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U postgres -d postgres -Fc > /tmp/backup.dump
+                onError: Fail
+                timeout: 5m
+          post:
+            - exec:
+                container: postgres
+                command:
+                  - /bin/bash
+                  - -c
+                  - rm -f /tmp/backup.dump
+                onError: Continue
+
+---
+# Weekly Backup Schedule (longer retention)
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: mcp-weekly-backup
+  namespace: velero
+spec:
+  schedule: "0 3 * * 0"  # 3 AM UTC on Sundays
+  template:
+    includedNamespaces:
+      - mcp-server-langgraph
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    ttl: 2160h  # 90 days retention
+    snapshotVolumes: true
+    includedResources:
+      - "*"
+    excludedResources:
+      - events
+      - events.events.k8s.io
+
+---
+# Monthly Backup Schedule (longest retention)
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: mcp-monthly-backup
+  namespace: velero
+spec:
+  schedule: "0 4 1 * *"  # 4 AM UTC on 1st of each month
+  template:
+    includedNamespaces:
+      - mcp-server-langgraph
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    ttl: 8760h  # 365 days retention (1 year)
+    snapshotVolumes: true
+    includedResources:
+      - "*"
+    excludedResources:
+      - events
+      - events.events.k8s.io
+
+---
+# On-Demand Backup (disabled by default, trigger manually)
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: mcp-manual-backup-template
+  namespace: velero
+  annotations:
+    description: "Template for manual backups - copy and update name before applying"
+spec:
+  includedNamespaces:
+    - mcp-server-langgraph
+  storageLocation: default
+  volumeSnapshotLocations:
+    - default
+  ttl: 168h  # 7 days retention for manual backups
+  snapshotVolumes: true
+  includedResources:
+    - "*"
+  excludedResources:
+    - events
+    - events.events.k8s.io

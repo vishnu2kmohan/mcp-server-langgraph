@@ -23,6 +23,7 @@ from mcp_server_langgraph.auth.role_mapper import ConditionalMapping, GroupMappi
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestSimpleRoleMapping:
     """Tests for SimpleRoleMapping"""
 
@@ -99,6 +100,7 @@ class TestSimpleRoleMapping:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestGroupMapping:
     """Tests for GroupMapping"""
 
@@ -177,6 +179,7 @@ class TestGroupMapping:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestConditionalMapping:
     """Tests for ConditionalMapping"""
 
@@ -310,6 +313,7 @@ class TestConditionalMapping:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestRoleMapper:
     """Tests for RoleMapper"""
 
@@ -604,6 +608,7 @@ group_mappings:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestRoleMapperIntegration:
     """Integration tests for role mapper"""
 

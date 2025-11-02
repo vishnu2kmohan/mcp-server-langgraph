@@ -1,0 +1,68 @@
+---
+# Network Policy for OpenFGA
+# Restricts OpenFGA access to authorized pods and allows database connections
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openfga
+  namespace: mcp-server-langgraph
+spec:
+  podSelector:
+    matchLabels:
+      app: openfga
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow from MCP Server application (authorization/FGA)
+    - from:
+        - podSelector:
+            matchLabels:
+              app: mcp-server-langgraph
+      ports:
+        - protocol: TCP
+          port: 8080  # OpenFGA HTTP API
+        - protocol: TCP
+          port: 8081  # OpenFGA gRPC API
+
+    # Allow from monitoring/metrics scrapers
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 2112  # OpenFGA metrics port
+
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+        - podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow connection to PostgreSQL
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow HTTPS for external authorization model fetching (if configured)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443

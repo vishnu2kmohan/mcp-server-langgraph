@@ -1,0 +1,166 @@
+# Velero Configuration for AWS EKS
+# Provides automated backup and disaster recovery using S3 and EBS snapshots
+
+configuration:
+  # AWS provider
+  provider: aws
+
+  # Backup storage location (S3)
+  backupStorageLocation:
+    - name: default
+      provider: aws
+      bucket: mcp-server-backups  # Update with your S3 bucket name
+      prefix: velero
+      default: true
+      config:
+        region: us-east-1  # Update with your region
+        s3ForcePathStyle: "false"
+        s3Url: ""  # Leave empty for standard S3
+        kmsKeyId: ""  # Optional: KMS key for encryption
+        publicUrl: ""
+        serverSideEncryption: AES256
+        insecureSkipTLSVerify: "false"
+
+  # Volume snapshot location (EBS)
+  volumeSnapshotLocation:
+    - name: default
+      provider: aws
+      config:
+        region: us-east-1  # Update with your region
+
+  # Features to enable
+  features: EnableCSI  # Enable CSI snapshot support
+  uploaderType: restic  # Use restic for file-level backup
+
+  # Backup default settings
+  defaultBackupStorageLocation: default
+  defaultVolumeSnapshotLocations: aws:default
+  defaultBackupTTL: 720h  # 30 days
+
+# Credentials
+credentials:
+  useSecret: true
+  existingSecret: cloud-credentials  # Create this secret with AWS credentials
+  # Or use IRSA (recommended)
+  # secretContents: {}
+
+# Service Account (use IRSA for production)
+serviceAccount:
+  server:
+    create: true
+    name: velero
+    annotations:
+      eks.amazonaws.com/role-arn: ""  # Add your IRSA role ARN
+
+# Init containers for AWS plugin
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.9.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# Resource limits
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Node selector (optional)
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Metrics
+metrics:
+  enabled: true
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+# Backup schedules
+schedules:
+  # Daily backup at 2 AM UTC
+  daily:
+    disabled: false
+    schedule: "0 2 * * *"
+    useOwnerReferencesInBackup: false
+    template:
+      includedNamespaces:
+        - mcp-server-langgraph
+      storageLocation: default
+      volumeSnapshotLocations:
+        - default
+      ttl: 720h  # 30 days
+      includedResources:
+        - "*"
+      excludedResources:
+        - events
+        - events.events.k8s.io
+      snapshotVolumes: true
+      defaultVolumesToRestic: false
+
+  # Weekly backup on Sunday at 3 AM UTC
+  weekly:
+    disabled: false
+    schedule: "0 3 * * 0"
+    useOwnerReferencesInBackup: false
+    template:
+      includedNamespaces:
+        - mcp-server-langgraph
+      storageLocation: default
+      volumeSnapshotLocations:
+        - default
+      ttl: 2160h  # 90 days
+      snapshotVolumes: true
+
+# Security context
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsNonRoot: true
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+
+# Clean up completed backups
+cleanUpCRDs: false
+
+# Configure snapshot controller (for CSI)
+snapshotsEnabled: true
+
+deployNodeAgent: true  # Deploy node agent (restic)
+
+nodeAgent:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  podSecurityContext:
+    runAsUser: 0  # Restic needs root access
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault

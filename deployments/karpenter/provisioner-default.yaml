@@ -1,0 +1,215 @@
+---
+# Default Karpenter Provisioner
+# Provides cost-optimized node provisioning with spot instances
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: default
+spec:
+  # Requirements for nodes
+  requirements:
+    # Use spot instances by default, fall back to on-demand
+    - key: karpenter.sh/capacity-type
+      operator: In
+      values: ["spot", "on-demand"]
+
+    # Instance categories
+    - key: karpenter.k8s.aws/instance-category
+      operator: In
+      values: ["c", "m", "r"]  # Compute, general, memory optimized
+
+    # Instance generations (5th gen and newer for better performance/cost)
+    - key: karpenter.k8s.aws/instance-generation
+      operator: Gt
+      values: ["4"]
+
+    # Architecture
+    - key: kubernetes.io/arch
+      operator: In
+      values: ["amd64"]
+
+    # Operating system
+    - key: kubernetes.io/os
+      operator: In
+      values: ["linux"]
+
+  # Resource limits
+  limits:
+    resources:
+      cpu: 1000  # Max 1000 CPUs across all nodes
+      memory: 1000Gi  # Max 1000 GiB memory
+
+  # Provider reference
+  providerRef:
+    name: default
+
+  # Consolidation settings
+  consolidation:
+    enabled: true  # Automatically consolidate underutilized nodes
+
+  # Time to live settings
+  ttlSecondsAfterEmpty: 30  # Remove node 30s after becoming empty
+  ttlSecondsUntilExpired: 604800  # Recycle nodes after 7 days
+
+  # Weight (higher = preferred)
+  weight: 10
+
+---
+# AWS-specific provisioner configuration
+apiVersion: karpenter.k8s.aws/v1alpha1
+kind: AWSNodeTemplate
+metadata:
+  name: default
+spec:
+  # Subnet selector (use private subnets with karpenter.sh/discovery tag)
+  subnetSelector:
+    karpenter.sh/discovery: "${CLUSTER_NAME}"
+
+  # Security group selector
+  securityGroupSelector:
+    karpenter.sh/discovery: "${CLUSTER_NAME}"
+
+  # AMI selector (use latest EKS-optimized AMI)
+  amiSelector:
+    karpenter.sh/discovery: "${CLUSTER_NAME}"
+
+  # IAM instance profile
+  instanceProfile: "${CLUSTER_NAME}-karpenter-node"
+
+  # User data (bootstrap script)
+  userData: |
+    #!/bin/bash
+    /etc/eks/bootstrap.sh ${CLUSTER_NAME}
+
+  # Tags for instances
+  tags:
+    Name: "${CLUSTER_NAME}-karpenter-node"
+    Environment: production
+    ManagedBy: karpenter
+
+  # Metadata options
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 2
+    httpTokens: required  # Require IMDSv2
+
+  # Block device mappings
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 20Gi
+        volumeType: gp3
+        encrypted: true
+        deleteOnTermination: true
+
+  # Detailed monitoring
+  detailedMonitoring: false
+
+---
+# Spot Provisioner (cost-optimized)
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: spot
+spec:
+  # Only use spot instances
+  requirements:
+    - key: karpenter.sh/capacity-type
+      operator: In
+      values: ["spot"]
+
+    # Diverse instance types for better spot availability
+    - key: karpenter.k8s.aws/instance-category
+      operator: In
+      values: ["c", "m", "r", "t"]
+
+    - key: karpenter.k8s.aws/instance-generation
+      operator: Gt
+      values: ["4"]
+
+    - key: kubernetes.io/arch
+      operator: In
+      values: ["amd64"]
+
+  # Limits
+  limits:
+    resources:
+      cpu: 500
+      memory: 500Gi
+
+  # Provider reference
+  providerRef:
+    name: default
+
+  # Consolidation
+  consolidation:
+    enabled: true
+
+  # Taints (workloads must tolerate spot)
+  taints:
+    - key: karpenter.sh/spot
+      value: "true"
+      effect: NoSchedule
+
+  # Labels
+  labels:
+    karpenter.sh/capacity-type: spot
+
+  # TTL
+  ttlSecondsAfterEmpty: 30
+  ttlSecondsUntilExpired: 604800
+
+  # Weight (lower than default, use when default can't provision)
+  weight: 5
+
+---
+# On-Demand Provisioner (for critical workloads)
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: on-demand
+spec:
+  # Only use on-demand instances
+  requirements:
+    - key: karpenter.sh/capacity-type
+      operator: In
+      values: ["on-demand"]
+
+    - key: karpenter.k8s.aws/instance-category
+      operator: In
+      values: ["c", "m", "r"]
+
+    - key: karpenter.k8s.aws/instance-generation
+      operator: Gt
+      values: ["5"]
+
+    - key: kubernetes.io/arch
+      operator: In
+      values: ["amd64"]
+
+  # Limits
+  limits:
+    resources:
+      cpu: 200
+      memory: 200Gi
+
+  # Provider reference
+  providerRef:
+    name: default
+
+  # Consolidation (less aggressive)
+  consolidation:
+    enabled: true
+
+  # Labels
+  labels:
+    karpenter.sh/capacity-type: on-demand
+    workload-type: critical
+
+  # TTL (longer for on-demand)
+  ttlSecondsAfterEmpty: 300  # 5 minutes
+  ttlSecondsUntilExpired: 2592000  # 30 days
+
+  # Weight (highest priority)
+  weight: 20

@@ -1,0 +1,42 @@
+---
+# Vertical Pod Autoscaler for PostgreSQL
+# Automatically adjusts CPU and memory requests/limits based on actual usage
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: postgres-vpa
+  namespace: mcp-server-langgraph
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: postgres
+
+  # Update policy
+  updatePolicy:
+    # "Auto" - automatically apply recommendations
+    # "Recreate" - apply recommendations on pod restart
+    # "Initial" - only set on pod creation
+    # "Off" - recommendations only, no updates
+    updateMode: "Recreate"  # Safer for databases
+
+  # Resource policy
+  resourcePolicy:
+    containerPolicies:
+      - containerName: postgres
+        # Minimum allowed resources
+        minAllowed:
+          cpu: 250m
+          memory: 256Mi
+        # Maximum allowed resources
+        maxAllowed:
+          cpu: 4000m
+          memory: 8Gi
+        # Controlled resources
+        controlledResources: ["cpu", "memory"]
+        # Controlled values (Request, Limit, or both)
+        controlledValues: RequestsAndLimits
+
+  # Recommender configuration
+  recommenders:
+    - name: default

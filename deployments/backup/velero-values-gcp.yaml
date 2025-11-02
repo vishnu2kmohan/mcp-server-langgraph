@@ -1,0 +1,170 @@
+# Velero Configuration for GCP GKE
+# Provides automated backup and disaster recovery using GCS and Persistent Disk snapshots
+
+configuration:
+  # GCP provider
+  provider: gcp
+
+  # Backup storage location (GCS)
+  backupStorageLocation:
+    - name: default
+      provider: gcp
+      bucket: mcp-server-backups  # Update with your GCS bucket name
+      prefix: velero
+      default: true
+      config:
+        serviceAccount: ""  # Leave empty if using Workload Identity
+        # For Workload Identity (recommended):
+        # serviceAccount: velero@PROJECT_ID.iam.gserviceaccount.com
+
+  # Volume snapshot location (Persistent Disk)
+  volumeSnapshotLocation:
+    - name: default
+      provider: gcp
+      config:
+        project: ""  # Update with your GCP project ID
+        snapshotLocation: us-central1  # Update with your region
+
+  # Features to enable
+  features: EnableCSI  # Enable CSI snapshot support
+  uploaderType: restic  # Use restic for file-level backup
+
+  # Backup default settings
+  defaultBackupStorageLocation: default
+  defaultVolumeSnapshotLocations: gcp:default
+  defaultBackupTTL: 720h  # 30 days
+
+# Credentials
+credentials:
+  useSecret: false  # Use Workload Identity instead
+  # If not using Workload Identity, create secret:
+  # useSecret: true
+  # existingSecret: cloud-credentials
+
+# Service Account (use Workload Identity for production)
+serviceAccount:
+  server:
+    create: true
+    name: velero
+    annotations:
+      iam.gke.io/gcp-service-account: velero@PROJECT_ID.iam.gserviceaccount.com  # Update PROJECT_ID
+
+# Init containers for GCP plugin
+initContainers:
+  - name: velero-plugin-for-gcp
+    image: velero/velero-plugin-for-gcp:v1.9.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# Resource limits
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Node selector (optional)
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Metrics
+metrics:
+  enabled: true
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+# Backup schedules
+schedules:
+  # Daily backup at 2 AM UTC
+  daily:
+    disabled: false
+    schedule: "0 2 * * *"
+    useOwnerReferencesInBackup: false
+    template:
+      includedNamespaces:
+        - mcp-server-langgraph
+      storageLocation: default
+      volumeSnapshotLocations:
+        - default
+      ttl: 720h  # 30 days
+      includedResources:
+        - "*"
+      excludedResources:
+        - events
+        - events.events.k8s.io
+      snapshotVolumes: true
+      defaultVolumesToRestic: false
+      # GKE-specific labels
+      labelSelector:
+        matchLabels:
+          backup: "true"
+
+  # Weekly backup on Sunday at 3 AM UTC
+  weekly:
+    disabled: false
+    schedule: "0 3 * * 0"
+    useOwnerReferencesInBackup: false
+    template:
+      includedNamespaces:
+        - mcp-server-langgraph
+      storageLocation: default
+      volumeSnapshotLocations:
+        - default
+      ttl: 2160h  # 90 days
+      snapshotVolumes: true
+
+# Security context
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsNonRoot: true
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+
+# Clean up completed backups
+cleanUpCRDs: false
+
+# Configure snapshot controller (for CSI)
+snapshotsEnabled: true
+
+deployNodeAgent: true  # Deploy node agent (restic)
+
+nodeAgent:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  podSecurityContext:
+    runAsUser: 0  # Restic needs root access
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+# GKE-specific configurations (merged into main configuration above)
+# gkeBackupAgent: true

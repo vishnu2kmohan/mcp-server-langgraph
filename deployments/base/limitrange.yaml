@@ -1,0 +1,52 @@
+---
+# LimitRange for mcp-server-langgraph namespace
+# Provides default resource constraints for pods and containers
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: mcp-server-langgraph
+spec:
+  limits:
+    # Container-level limits
+    - type: Container
+      # Default limits (applied if not specified)
+      default:
+        cpu: 500m
+        memory: 512Mi
+      # Default requests (applied if not specified)
+      defaultRequest:
+        cpu: 250m
+        memory: 256Mi
+      # Minimum allowed
+      min:
+        cpu: 50m
+        memory: 64Mi
+      # Maximum allowed
+      max:
+        cpu: 4000m
+        memory: 8Gi
+      # Maximum ratio between limit and request (prevents unrealistic ratios)
+      maxLimitRequestRatio:
+        cpu: 4
+        memory: 4
+
+    # Pod-level limits
+    - type: Pod
+      # Maximum resources for a single pod
+      max:
+        cpu: 8000m
+        memory: 16Gi
+      # Minimum resources for a single pod
+      min:
+        cpu: 50m
+        memory: 64Mi
+
+    # PersistentVolumeClaim limits
+    - type: PersistentVolumeClaim
+      # Minimum PVC size
+      min:
+        storage: 1Gi
+      # Maximum PVC size
+      max:
+        storage: 100Gi

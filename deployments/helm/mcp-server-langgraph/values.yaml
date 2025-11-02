@@ -126,8 +126,34 @@ tolerations:
     value: "ai-agents"
     effect: "NoSchedule"
 
+# Topology Spread Constraints for zone distribution
+# Ensures pods are evenly distributed across availability zones for HA
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: mcp-server-langgraph
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: mcp-server-langgraph
+
 affinity:
   podAntiAffinity:
+    # Required: Do not schedule pods on the same zone (production-grade HA)
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - mcp-server-langgraph
+        topologyKey: topology.kubernetes.io/zone
+    # Preferred: Try to spread across different nodes
     preferredDuringSchedulingIgnoredDuringExecution:
       - weight: 100
         podAffinityTerm:
@@ -319,9 +345,13 @@ openfga:
     type: ClusterIP
     port: 8080
 
-# PostgreSQL dependency (shared by OpenFGA and Keycloak)
+# PostgreSQL Configuration
+# Choose between in-cluster PostgreSQL or external cloud-managed databases
 postgresql:
+  # Set to false to use external database (CloudSQL, RDS, Azure Database)
   enabled: true
+
+  # In-cluster PostgreSQL configuration (when enabled=true)
   auth:
     username: postgres
     password: postgres
@@ -344,6 +374,58 @@ postgresql:
       limits:
         cpu: 1000m
         memory: 1Gi
+
+  # External PostgreSQL configuration (when enabled=false)
+  # Use this for production with CloudSQL, RDS, or Azure Database
+  external:
+    # Connection details
+    host: ""  # e.g., my-instance.123456789.us-central1.sql.gke.io (CloudSQL)
+              #      my-db.abc123.us-east-1.rds.amazonaws.com (RDS)
+              #      my-server.postgres.database.azure.com (Azure)
+    port: 5432
+    database: postgres
+    username: postgres
+
+    # Password can be provided via existingSecret or directly (not recommended)
+    password: ""
+    existingSecret: ""  # Name of existing secret with password
+    existingSecretPasswordKey: "postgres-password"
+
+    # SSL/TLS configuration
+    sslMode: "require"  # disable, allow, prefer, require, verify-ca, verify-full
+    sslCert: ""  # Path to client certificate (optional)
+    sslKey: ""   # Path to client key (optional)
+    sslRootCert: ""  # Path to root CA certificate (optional)
+
+    # Cloud-specific configurations
+    cloud:
+      # GCP CloudSQL
+      cloudSql:
+        enabled: false
+        # When enabled, adds CloudSQL proxy sidecar
+        instanceConnectionName: ""  # project:region:instance
+        credentialsSecret: ""  # Secret with GCP service account key
+        proxyImage: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4"
+        proxyResources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+      # AWS RDS
+      rds:
+        enabled: false
+        # RDS uses IAM authentication via IRSA
+        useIamAuth: false
+        region: "us-east-1"
+
+      # Azure Database
+      azure:
+        enabled: false
+        # Azure uses managed identity for authentication
+        useManagedIdentity: false
 
 # Redis dependency (for session management)
 redis:
@@ -589,13 +671,43 @@ grafana:
       memory: 512Mi
 
 # Service Mesh (Istio/Linkerd)
+# Enable for production deployments with mTLS STRICT mode
 serviceMesh:
-  enabled: false
+  enabled: true  # Changed to true for production-grade security
   istio:
+    # Sidecar injection (also set via namespace label)
+    injection: enabled
+    # Gateway for external traffic
     gateway:
-      enabled: false
+      enabled: true
+      hosts:
+        - "mcp.example.com"
+      tlsCredentialName: "mcp-server-tls"
+    # VirtualService for traffic management
     virtualService:
-      enabled: false
+      enabled: true
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+      timeout: 30s
+      canaryWeight: 10  # 10% traffic to canary
+    # DestinationRule with mTLS
+    destinationRule:
+      enabled: true
+      mtlsMode: ISTIO_MUTUAL
+      circuitBreaker:
+        consecutive5xxErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+    # PeerAuthentication - STRICT mTLS
+    peerAuthentication:
+      enabled: true
+      mode: STRICT
+    # AuthorizationPolicy
+    authorizationPolicy:
+      enabled: true
+      allowIngress: true
+      allowMonitoring: true
 
 # Monitoring
 monitoring:

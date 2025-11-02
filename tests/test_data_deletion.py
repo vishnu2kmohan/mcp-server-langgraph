@@ -43,6 +43,7 @@ def mock_preferences_store():
 
 
 @pytest.mark.integration
+@pytest.mark.unit
 class TestDataDeletionAuditLogging:
     """Test audit logging for data deletion operations"""
 
