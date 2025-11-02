@@ -150,30 +150,30 @@ jobs:
           sudo mv kustomize /usr/local/bin/
           kustomize version
 
-      # Install External Secrets Operator (Required for Secret Management)
-      - name: Install External Secrets Operator
+      # Verify External Secrets Operator (installed by infrastructure script)
+      - name: Verify External Secrets Operator
         run: |
-          echo "Installing External Secrets Operator..."
+          echo "Verifying External Secrets Operator is installed..."
 
-          # Add Helm repo
-          helm repo add external-secrets https://charts.external-secrets.io
-          helm repo update
+          # Check if ESO is running
+          if ! kubectl get deployment -n external-secrets-system external-secrets 2>/dev/null; then
+            echo "❌ External Secrets Operator not found!"
+            echo "Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
+            exit 1
+          fi
 
-          # Install operator with CRDs
-          helm upgrade --install external-secrets \
-            external-secrets/external-secrets \
-            --namespace external-secrets-system \
-            --create-namespace \
-            --set installCRDs=true \
-            --wait \
-            --timeout 5m
-
-          # Verify CRDs are installed
+          # Verify CRDs exist
           kubectl get crd secretstores.external-secrets.io
           kubectl get crd externalsecrets.external-secrets.io
           kubectl get crd clustersecretstores.external-secrets.io
 
-          echo "✓ External Secrets Operator installed successfully"
+          echo "✓ External Secrets Operator verified"
+
+      # Create namespace early (before validation to support rollback)
+      - name: Create namespace
+        run: |
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+          echo "✓ Namespace created/verified: ${{ env.NAMESPACE }}"
 
       # Update image tag in Kustomization
       - name: Update image tag
@@ -195,9 +195,6 @@ jobs:
       # Deploy to cluster
       - name: Deploy to staging
         run: |
-          echo "Creating namespace first..."
-          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-
           echo "Deploying to staging..."
           kubectl apply -k deployments/overlays/staging-gke
 
