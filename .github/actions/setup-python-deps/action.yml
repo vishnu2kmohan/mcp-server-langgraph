@@ -18,6 +18,11 @@ inputs:
     required: false
     default: 'false'
 
+  extras:
+    description: 'Space-separated list of optional dependency groups (e.g., "dev builder")'
+    required: false
+    default: ''
+
   cache-key-prefix:
     description: 'Prefix for cache key (e.g., "lint", "test")'
     required: false
@@ -48,12 +53,23 @@ runs:
     - name: Install base dependencies
       run: |
         uv venv --python ${{ inputs.python-version }}
-        uv sync --frozen
-      shell: bash
 
-    - name: Install test dependencies
-      if: inputs.install-test == 'true'
-      run: uv sync --frozen --group dev
+        # Build extras flags if provided
+        EXTRA_FLAGS=""
+        if [ -n "${{ inputs.extras }}" ]; then
+          for extra in ${{ inputs.extras }}; do
+            EXTRA_FLAGS="$EXTRA_FLAGS --extra $extra"
+          done
+          echo "Installing with extras: ${{ inputs.extras }}"
+          uv sync --frozen $EXTRA_FLAGS
+        else
+          uv sync --frozen
+        fi
+
+        # Legacy support: install-test flag
+        if [ "${{ inputs.install-test }}" == "true" ]; then
+          uv sync --frozen --group dev
+        fi
       shell: bash
 
     - name: Validate dependency consistency

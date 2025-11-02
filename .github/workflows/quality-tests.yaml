@@ -75,6 +75,7 @@ jobs:
         with:
           python-version: '3.12'
           install-test: 'true'
+          extras: 'dev builder'
           cache-key-prefix: 'property-tests'
 
       - name: Run property-based tests
@@ -110,6 +111,7 @@ jobs:
         with:
           python-version: '3.12'
           install-test: 'true'
+          extras: 'dev builder'
           cache-key-prefix: 'contract-tests'
 
       - name: Generate OpenAPI schema
@@ -142,6 +144,7 @@ jobs:
         with:
           python-version: '3.12'
           install-test: 'true'
+          extras: 'dev builder'
           cache-key-prefix: 'regression-tests'
 
       - name: Run regression tests
@@ -178,6 +181,7 @@ jobs:
         with:
           python-version: '3.12'
           install-test: 'true'
+          extras: 'dev builder'
           cache-key-prefix: 'mutation-tests'
 
       - name: Run mutation tests
@@ -215,6 +219,7 @@ jobs:
         with:
           python-version: '3.12'
           install-test: 'true'
+          extras: 'dev builder'
           cache-key-prefix: 'benchmark-tests'
 
       - name: Run benchmarks

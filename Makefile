@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-all deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
+.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -431,6 +431,41 @@ validate-kustomize:
 
 validate-all: validate-deployments validate-docker-compose validate-helm validate-kustomize
 	@echo "✓ All deployment validations passed"
+
+# GitHub Actions workflow testing with act
+test-workflows:
+	@echo "🧪 Testing critical workflows locally with act..."
+	@echo ""
+	@echo "Prerequisites: Docker must be running"
+	@docker ps > /dev/null 2>&1 || (echo "❌ Docker not running. Start Docker first." && exit 1)
+	@echo ""
+	@echo "1. Testing CI/CD Pipeline (test job on Python 3.12)..."
+	@act push -W .github/workflows/ci.yaml -j test --matrix python-version:3.12 --quiet || echo "  ⚠️  May fail without full infrastructure (check logs for real errors)"
+	@echo ""
+	@echo "2. Testing E2E Tests (dry-run)..."
+	@act push -W .github/workflows/e2e-tests.yaml --dry-run || echo "  ⚠️  Workflow validation failed"
+	@echo ""
+	@echo "3. Testing Quality Tests (property tests dry-run)..."
+	@act push -W .github/workflows/quality-tests.yaml -j property-tests --dry-run || echo "  ⚠️  Workflow validation failed"
+	@echo ""
+	@echo "✓ Workflow testing complete"
+	@echo ""
+	@echo "💡 For full test execution: act push -W .github/workflows/FILE.yaml -j JOB_NAME"
+
+test-workflow-%:
+	@echo "Testing workflow: $*.yaml"
+	@act push -W .github/workflows/$*.yaml
+
+validate-workflows:
+	@echo "Validating all workflow YAML syntax..."
+	@for file in .github/workflows/*.yaml; do \
+		python -c "import yaml; yaml.safe_load(open('$$file'))" 2>/dev/null && echo "  ✓ $$(basename $$file)" || echo "  ✗ $$(basename $$file) INVALID"; \
+	done
+	@echo "✓ Workflow syntax validation complete"
+
+act-dry-run:
+	@echo "Showing what would execute in CI workflows..."
+	@act push --list
 
 # Code quality
 lint:

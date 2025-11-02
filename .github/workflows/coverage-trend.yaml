@@ -59,6 +59,7 @@ jobs:
       with:
         python-version: '3.12'
         install-test: 'true'
+        extras: 'dev builder'
         cache-key-prefix: 'coverage-trend'
 
     - name: Download previous coverage data
