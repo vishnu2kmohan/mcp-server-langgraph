@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762126567134,
+  "lastUpdate": 1762126751237,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -22880,6 +22880,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019047767200869937",
             "extra": "mean: 58.39265611541498 usec\nrounds: 4644"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9a7b84fc0f034b6c5ad71f56aed87aa5a28967c3",
+          "message": "fix(infra): correct Cloud SQL shared_buffers for 4GB RAM instance\n\n- Changed shared_buffers from 32768 to 65536 (512MB)\n- Cloud SQL requires shared_buffers between 52428-314572 for 4GB RAM\n- This was blocking Cloud SQL instance creation and causing deployment failures\n\nIssue: Deploy to GKE Staging was timing out because database didn't exist",
+          "timestamp": "2025-11-02T18:37:59-05:00",
+          "tree_id": "68b4d26760f0379b8262f168a109810682ffc1ba",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9a7b84fc0f034b6c5ad71f56aed87aa5a28967c3"
+        },
+        "date": 1762126749746,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.82740797605553,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008068620844976281",
+            "extra": "mean: 6.904770402059057 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 144.9043596636834,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008797441386522706",
+            "extra": "mean: 6.901103612899954 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51559.65304493224,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002651149918027129",
+            "extra": "mean: 19.395010263714124 usec\nrounds: 9061"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53368.06258396485,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024255617011418403",
+            "extra": "mean: 18.737798443154716 usec\nrounds: 13103"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49644.9592067673,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026340420302486807",
+            "extra": "mean: 20.143031960910264 usec\nrounds: 20400"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.0767160713053,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015158722220187849",
+            "extra": "mean: 5.233500033708051 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.40127265170204,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017113461598547504",
+            "extra": "mean: 51.54301049999788 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.950180936576842,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000046418576331970675",
+            "extra": "mean: 100.50068500000862 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2726600.4586290093,
+            "unit": "iter/sec",
+            "range": "stddev: 4.371452041366018e-8",
+            "extra": "mean: 366.7570717357029 nsec\nrounds: 187618"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5153.370955063399,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014615850276163097",
+            "extra": "mean: 194.04774248154186 usec\nrounds: 2660"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2963.4271873258613,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008676502877086587",
+            "extra": "mean: 337.4471302270735 usec\nrounds: 2726"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3025.923447016359,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012438939981240975",
+            "extra": "mean: 330.4776269161821 usec\nrounds: 1761"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60331.00579084535,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020108319610472078",
+            "extra": "mean: 16.575225075258736 usec\nrounds: 12618"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16845.722203442983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018307730070315417",
+            "extra": "mean: 59.362251610418745 usec\nrounds: 5588"
           }
         ]
       }
