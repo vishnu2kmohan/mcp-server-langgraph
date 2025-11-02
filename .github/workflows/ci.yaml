@@ -221,6 +221,12 @@ jobs:
         docker system prune -af --volumes
         echo "=== Removing unnecessary packages ==="
         sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo apt-get clean
+        # Clean GitHub hosted runner extras
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        sudo rm -rf /usr/local/.ghcup
         echo "=== Disk space after cleanup ==="
         df -h
 

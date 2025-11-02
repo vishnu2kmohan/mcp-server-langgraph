@@ -170,6 +170,9 @@ jobs:
       # Deploy to cluster
       - name: Deploy to staging
         run: |
+          echo "Creating namespace first..."
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
           echo "Deploying to staging..."
           kubectl apply -k deployments/overlays/staging-gke
 
