@@ -27,14 +27,13 @@ Provider-specific (replace PROVIDER with google, microsoft, github, okta):
     {PROVIDER}_TENANT_ID: Tenant ID (optional, for Microsoft)
 """
 
+import argparse
 import asyncio
 import os
 import sys
-import argparse
-from typing import Dict, Any
+from typing import Any, Dict
 
 import httpx
-
 
 PROVIDER_CONFIGS = {
     "google": {
@@ -89,9 +88,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             self.access_token = response.json()["access_token"]
 
-    async def create_identity_provider(
-        self, realm: str, idp_config: Dict[str, Any]
-    ):
+    async def create_identity_provider(self, realm: str, idp_config: Dict[str, Any]):
         """Create identity provider"""
         if not self.access_token:
             await self.get_admin_token()
@@ -110,9 +107,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             return response.json()
 
-    async def create_identity_provider_mapper(
-        self, realm: str, idp_alias: str, mapper_config: Dict[str, Any]
-    ):
+    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: Dict[str, Any]):
         """Create identity provider mapper"""
         if not self.access_token:
             await self.get_admin_token()
@@ -300,9 +295,7 @@ async def configure_oidc_attribute_mappers(
             },
         }
 
-        await keycloak_admin.create_identity_provider_mapper(
-            realm_name, idp_alias, mapper_config
-        )
+        await keycloak_admin.create_identity_provider_mapper(realm_name, idp_alias, mapper_config)
         print(f"  ✓ Mapper configured: {mapper_def['name']}")
 
 
@@ -373,9 +366,7 @@ async def main():
             )
 
         elif provider == "github":
-            idp_alias = await configure_github_identity_provider(
-                keycloak_admin, realm_name, client_id, client_secret
-            )
+            idp_alias = await configure_github_identity_provider(keycloak_admin, realm_name, client_id, client_secret)
 
         elif provider == "okta":
             okta_domain = os.getenv("OKTA_DOMAIN")
@@ -387,9 +378,7 @@ async def main():
             )
 
         # Configure attribute mappers
-        await configure_oidc_attribute_mappers(
-            keycloak_admin, realm_name, idp_alias
-        )
+        await configure_oidc_attribute_mappers(keycloak_admin, realm_name, idp_alias)
 
         print("\n" + "=" * 70)
         print(f"✓ {provider.upper()} identity provider setup completed successfully!")
@@ -405,7 +394,7 @@ async def main():
 
     except httpx.HTTPError as e:
         print(f"\nHTTP ERROR: {e}")
-        if hasattr(e, 'response'):
+        if hasattr(e, "response"):
             print(f"Status: {e.response.status_code}")
             print(f"Response: {e.response.text}")
         return 1
@@ -413,6 +402,7 @@ async def main():
     except Exception as e:
         print(f"\nERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

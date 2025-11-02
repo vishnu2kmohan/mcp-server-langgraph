@@ -27,7 +27,7 @@ Environment Variables:
 import asyncio
 import os
 import sys
-from typing import Dict, Any
+from typing import Any, Dict
 
 import httpx
 
@@ -56,9 +56,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             self.access_token = response.json()["access_token"]
 
-    async def create_identity_provider(
-        self, realm: str, idp_config: Dict[str, Any]
-    ):
+    async def create_identity_provider(self, realm: str, idp_config: Dict[str, Any]):
         """Create identity provider"""
         if not self.access_token:
             await self.get_admin_token()
@@ -77,9 +75,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             return response.json()
 
-    async def create_identity_provider_mapper(
-        self, realm: str, idp_alias: str, mapper_config: Dict[str, Any]
-    ):
+    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: Dict[str, Any]):
         """Create identity provider mapper"""
         if not self.access_token:
             await self.get_admin_token()
@@ -135,30 +131,21 @@ async def configure_saml_identity_provider(
             # SAML endpoints
             "singleSignOnServiceUrl": saml_config["ssoUrl"],
             "singleLogoutServiceUrl": saml_config.get("logoutUrl", saml_config["ssoUrl"]),
-
             # Name ID
-            "nameIDPolicyFormat": saml_config.get(
-                "nameIdFormat",
-                "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
-            ),
-
+            "nameIDPolicyFormat": saml_config.get("nameIdFormat", "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"),
             # Signature/encryption
             "signatureAlgorithm": "RSA_SHA256",
             "xmlSigKeyInfoKeyNameTransformer": "KEY_ID",
             "validateSignature": "true",
             "wantAuthnRequestsSigned": saml_config.get("signRequests", "false"),
-
             # Binding
             "postBindingResponse": "true",
             "postBindingAuthnRequest": "true",
             "postBindingLogout": "true",
-
             # Principal type
             "principalType": "SUBJECT",
-
             # Entity ID
             "entityId": saml_config.get("entityId", saml_config["ssoUrl"]),
-
             # Backchannel logout
             "backchannelSupported": "false",
         },
@@ -222,9 +209,7 @@ async def configure_saml_attribute_mappers(
             },
         }
 
-        await keycloak_admin.create_identity_provider_mapper(
-            realm_name, idp_alias, mapper_config
-        )
+        await keycloak_admin.create_identity_provider_mapper(realm_name, idp_alias, mapper_config)
         print(f"  ✓ Mapper configured: {mapper_def['name']}")
 
 
@@ -275,14 +260,10 @@ async def main():
         )
 
         # Configure SAML identity provider
-        await configure_saml_identity_provider(
-            keycloak_admin, realm_name, saml_config
-        )
+        await configure_saml_identity_provider(keycloak_admin, realm_name, saml_config)
 
         # Configure attribute mappers
-        await configure_saml_attribute_mappers(
-            keycloak_admin, realm_name, saml_alias
-        )
+        await configure_saml_attribute_mappers(keycloak_admin, realm_name, saml_alias)
 
         print("\n" + "=" * 70)
         print("✓ SAML identity provider setup completed successfully!")
@@ -299,7 +280,7 @@ async def main():
 
     except httpx.HTTPError as e:
         print(f"\nHTTP ERROR: {e}")
-        if hasattr(e, 'response'):
+        if hasattr(e, "response"):
             print(f"Status: {e.response.status_code}")
             print(f"Response: {e.response.text}")
         return 1
@@ -307,6 +288,7 @@ async def main():
     except Exception as e:
         print(f"\nERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

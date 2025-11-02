@@ -46,6 +46,7 @@ per-file-ignores =
     tests/*:F401,F811,S101
     conftest.py:F401,F811
     */migrations/*:E501,F401
+    scripts/*:F401,F541,E722,C901
 
 # Show source code for each error
 show-source = True

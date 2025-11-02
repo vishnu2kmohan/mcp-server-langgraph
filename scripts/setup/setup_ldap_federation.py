@@ -28,7 +28,7 @@ Environment Variables:
 import asyncio
 import os
 import sys
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 import httpx
 
@@ -105,7 +105,6 @@ async def configure_ldap_user_federation(
             "connectionUrl": [ldap_config["connectionUrl"]],
             "bindDn": [ldap_config["bindDn"]],
             "bindCredential": [ldap_config["bindPassword"]],
-
             # User search settings
             "usersDn": [ldap_config["usersDn"]],
             "searchScope": ["2"],  # 2 = SUBTREE
@@ -113,13 +112,13 @@ async def configure_ldap_user_federation(
             "connectionPooling": ["true"],
             "connectionTimeout": ["10000"],  # 10 seconds
             "readTimeout": ["30000"],  # 30 seconds
-
             # User attributes
             "usernameLDAPAttribute": [ldap_config.get("usernameAttribute", "sAMAccountName")],
             "rdnLDAPAttribute": [ldap_config.get("rdnAttribute", "cn")],
-            "uuidLDAPAttribute": [ldap_config.get("uuidAttribute", "objectGUID" if ldap_config.get("vendor") == "ad" else "entryUUID")],
+            "uuidLDAPAttribute": [
+                ldap_config.get("uuidAttribute", "objectGUID" if ldap_config.get("vendor") == "ad" else "entryUUID")
+            ],
             "userObjectClasses": [ldap_config.get("userObjectClasses", "person,organizationalPerson,user")],
-
             # Sync settings
             "editMode": ["READ_ONLY"],  # Users managed in LDAP, not Keycloak
             "syncRegistrations": ["false"],
@@ -128,15 +127,12 @@ async def configure_ldap_user_federation(
             "fullSyncPeriod": ["86400"],  # Daily full sync
             "changedSyncPeriod": ["3600"],  # Hourly changed sync
             "cachePolicy": ["DEFAULT"],
-
             # Vendor
             "vendor": [ldap_config.get("vendor", "ad")],
-
             # Authentication
             "authType": ["simple"],
             "validatePasswordPolicy": ["false"],
             "trustEmail": ["true"],
-
             # Pagination
             "pagination": ["true"],
         },
@@ -307,22 +303,16 @@ async def main():
         )
 
         # Configure LDAP user federation
-        component_id = await configure_ldap_user_federation(
-            keycloak_admin, realm_name, ldap_config
-        )
+        component_id = await configure_ldap_user_federation(keycloak_admin, realm_name, ldap_config)
 
         if component_id:
             # Configure attribute mappers
-            await configure_ldap_attribute_mappers(
-                keycloak_admin, realm_name, component_id
-            )
+            await configure_ldap_attribute_mappers(keycloak_admin, realm_name, component_id)
 
             # Configure group mapper if groups DN provided
             groups_dn = os.getenv("LDAP_GROUPS_DN")
             if groups_dn:
-                await configure_ldap_group_mapper(
-                    keycloak_admin, realm_name, component_id, groups_dn
-                )
+                await configure_ldap_group_mapper(keycloak_admin, realm_name, component_id, groups_dn)
 
         print("\n" + "=" * 70)
         print("✓ LDAP federation setup completed successfully!")
@@ -338,7 +328,7 @@ async def main():
 
     except httpx.HTTPError as e:
         print(f"\nHTTP ERROR: {e}")
-        if hasattr(e, 'response'):
+        if hasattr(e, "response"):
             print(f"Status: {e.response.status_code}")
             print(f"Response: {e.response.text}")
         return 1
@@ -346,6 +336,7 @@ async def main():
     except Exception as e:
         print(f"\nERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

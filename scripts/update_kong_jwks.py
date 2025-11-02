@@ -17,15 +17,15 @@ Environment Variables:
     KONG_CONSUMER: Kong consumer name (default: keycloak-users)
 """
 
-import os
-import sys
 import asyncio
 import base64
-import httpx
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend
+import os
+import sys
 
+import httpx
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 # Configuration
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://keycloak:8080")
@@ -48,6 +48,7 @@ async def fetch_jwks():
 
 def jwk_to_pem(jwk):
     """Convert JWK to PEM format"""
+
     # Decode base64url encoded components
     def b64url_decode(data):
         # Add padding if necessary
@@ -165,6 +166,7 @@ async def main():
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
