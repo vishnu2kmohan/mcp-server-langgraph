@@ -81,7 +81,7 @@ jobs:
 
     - name: Upload Trivy filesystem results
       if: matrix.scan-type == 'fs' && always()
-      uses: github/codeql-action/upload-sarif@v4.30.9
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: 'trivy-fs-results.sarif'
         category: 'trivy-filesystem'
@@ -104,7 +104,7 @@ jobs:
 
     - name: Upload Trivy image results
       if: matrix.scan-type == 'image' && always()
-      uses: github/codeql-action/upload-sarif@v4.30.9
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: 'trivy-image-results.sarif'
         category: 'trivy-container'
@@ -123,7 +123,7 @@ jobs:
 
     - name: Upload Trivy config results
       if: matrix.scan-type == 'config' && always()
-      uses: github/codeql-action/upload-sarif@v4.30.9
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: 'trivy-config-results.sarif'
         category: 'trivy-config'
@@ -267,13 +267,13 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4.30.9
+      uses: github/codeql-action/init@v4
       with:
         languages: python
         queries: security-and-quality
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v4.30.9
+      uses: github/codeql-action/analyze@v4
 
   secrets-scan:
     name: Secrets Scan
