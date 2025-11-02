@@ -9,8 +9,6 @@ Implements data subject rights under GDPR:
 - Article 21: Right to Object (Consent Management)
 """
 
-import os
-import warnings
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, Optional
@@ -22,6 +20,8 @@ from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
+from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage, get_gdpr_storage
+from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord as GDPRConsentRecord
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 router = APIRouter(prefix="/api/v1/users", tags=["GDPR Compliance"])
@@ -99,34 +99,9 @@ class ConsentResponse(BaseModel):
     )
 
 
-# In-memory consent storage (replace with database in production)
-# WARNING: This is not production-ready - data will be lost on server restart
-_consent_storage: Dict[str, Dict[str, dict]] = {}  # type: ignore[type-arg]
-
-
-# PRODUCTION READINESS WARNING AND GUARD
-# Check if running in production and guard against using in-memory storage
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-GDPR_STORAGE_BACKEND = os.getenv("GDPR_STORAGE_BACKEND", "memory")  # "memory", "postgres", "redis"
-
-if ENVIRONMENT == "production" and GDPR_STORAGE_BACKEND == "memory":
-    raise RuntimeError(
-        "CRITICAL: GDPR endpoints cannot use in-memory storage in production. "
-        "Set GDPR_STORAGE_BACKEND=postgres or GDPR_STORAGE_BACKEND=redis, "
-        "or set ENVIRONMENT=development for testing. "
-        "Data subject rights (GDPR compliance) require persistent storage."
-    )
-
-# Warn in non-production environments
-if GDPR_STORAGE_BACKEND == "memory":
-    warnings.warn(
-        "GDPR endpoints use in-memory storage which is NOT production-ready. "
-        "Profile and consent data will be lost on server restart. "
-        "For production use, set GDPR_STORAGE_BACKEND=postgres or GDPR_STORAGE_BACKEND=redis. "
-        "See docs/compliance/gdpr-storage-requirements.md for details.",
-        category=RuntimeWarning,
-        stacklevel=2,
-    )
+# PRODUCTION READINESS CHECK
+# Storage is now managed by factory (initialized on app startup)
+# Production guard enforced by factory configuration
 
 # ==================== Endpoints ====================
 
@@ -135,6 +110,7 @@ if GDPR_STORAGE_BACKEND == "memory":
 async def get_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     session_store: SessionStore = Depends(get_session_store),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> UserDataExport:
     """
     Export all user data (GDPR Article 15 - Right to Access)
@@ -166,8 +142,8 @@ async def get_user_data(
 
         email = user.get("email", f"{username}@example.com")
 
-        # Create export service
-        export_service = DataExportService(session_store=session_store)
+        # Create export service with storage backend
+        export_service = DataExportService(session_store=session_store, gdpr_storage=gdpr_storage)
 
         # Export all user data
         export = await export_service.export_user_data(user_id=user_id, username=username, email=email)
@@ -190,6 +166,7 @@ async def export_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> Response:
     """
     Export user data in portable format (GDPR Article 20 - Right to Data Portability)
@@ -208,8 +185,8 @@ async def export_user_data(
         username = user.get("username")
         email = user.get("email", f"{username}@example.com")
 
-        # Create export service
-        export_service = DataExportService(session_store=session_store)
+        # Create export service with storage backend
+        export_service = DataExportService(session_store=session_store, gdpr_storage=gdpr_storage)
 
         # Export data in requested format
         data_bytes, content_type = await export_service.export_user_data_portable(
@@ -296,6 +273,7 @@ async def delete_user_account(
     user: Dict[str, Any] = Depends(get_current_user),
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
     session_store: SessionStore = Depends(get_session_store),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> Dict[str, Any]:
     """
     Delete user account and all data (GDPR Article 17 - Right to Erasure)
@@ -341,12 +319,13 @@ async def delete_user_account(
             },
         )
 
-        # Create deletion service with OpenFGA client
+        # Create deletion service with storage backend
         # Note: OpenFGA client should be passed from FastAPI app state for proper lifecycle
         # For production, add OpenFGA client to app startup and inject via Depends()
         # Example: openfga_client = Depends(get_openfga_client)
         deletion_service = DataDeletionService(
             session_store=session_store,
+            gdpr_storage=gdpr_storage,
             openfga_client=None,  # Configured via dependency injection in production
         )
 
@@ -387,6 +366,7 @@ async def delete_user_account(
 async def update_consent(
     consent: ConsentRecord,
     user: Dict[str, Any] = Depends(get_current_user),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> ConsentResponse:
     """
     Update user consent preferences (GDPR Article 21 - Right to Object)
@@ -403,20 +383,24 @@ async def update_consent(
         user_id = user.get("user_id")
 
         # Capture metadata
-        consent.timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        consent.ip_address = None  # Could capture from X-Forwarded-For if needed
-        consent.user_agent = None  # Could capture from headers if needed
+        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        ip_address = None  # Could capture from X-Forwarded-For if needed
+        user_agent = None  # Could capture from headers if needed
 
-        # Store consent (in-memory for now)
-        if user_id not in _consent_storage:
-            _consent_storage[user_id] = {}  # type: ignore[index]
+        # Create consent record
+        consent_id = f"consent_{user_id}_{consent.consent_type}_{timestamp.replace(':', '').replace('-', '')}"
+        consent_record = GDPRConsentRecord(
+            consent_id=consent_id,
+            user_id=user_id,
+            consent_type=consent.consent_type.value,
+            granted=consent.granted,
+            timestamp=timestamp,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
 
-        _consent_storage[user_id][consent.consent_type] = {  # type: ignore[index]
-            "granted": consent.granted,
-            "timestamp": consent.timestamp,
-            "ip_address": consent.ip_address,
-            "user_agent": consent.user_agent,
-        }
+        # Store consent in PostgreSQL (append-only audit trail)
+        await gdpr_storage.consents.create(consent_record)
 
         # Log consent change
         logger.info(
@@ -425,16 +409,33 @@ async def update_consent(
                 "user_id": user_id,
                 "consent_type": consent.consent_type,
                 "granted": consent.granted,
-                "ip_address": consent.ip_address,
+                "ip_address": ip_address,
                 "gdpr_article": "21",
             },
         )
 
-        return ConsentResponse(user_id=user_id, consents=_consent_storage.get(user_id, {}))  # type: ignore[arg-type]
+        # Get all current consents for response
+        all_consents = await gdpr_storage.consents.get_user_consents(user_id)
+        consents_dict = {}
+        for c in all_consents:
+            # Get latest consent for each type
+            latest = await gdpr_storage.consents.get_latest_consent(user_id, c.consent_type)
+            if latest:
+                consents_dict[c.consent_type] = {
+                    "granted": latest.granted,
+                    "timestamp": latest.timestamp,
+                    "ip_address": latest.ip_address,
+                    "user_agent": latest.user_agent,
+                }
+
+        return ConsentResponse(user_id=user_id, consents=consents_dict)  # type: ignore[arg-type]
 
 
 @router.get("/me/consent")
-async def get_consent_status(user: Dict[str, Any] = Depends(get_current_user)) -> ConsentResponse:
+async def get_consent_status(
+    user: Dict[str, Any] = Depends(get_current_user),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+) -> ConsentResponse:
     """
     Get current consent status (GDPR Article 21 - Right to Object)
 
@@ -446,9 +447,26 @@ async def get_consent_status(user: Dict[str, Any] = Depends(get_current_user)) -
         # Get authenticated user
         user_id = user.get("user_id")
 
-        # Get consent status
-        consents = _consent_storage.get(user_id, {})  # type: ignore[arg-type]
+        # Get all consent records from PostgreSQL
+        all_consents = await gdpr_storage.consents.get_user_consents(user_id)
+
+        # Build consent status dict (latest consent for each type)
+        consents_dict = {}
+        consent_types_seen = set()
+
+        for consent_rec in all_consents:
+            if consent_rec.consent_type not in consent_types_seen:
+                consent_types_seen.add(consent_rec.consent_type)
+                # Get latest consent for this type
+                latest = await gdpr_storage.consents.get_latest_consent(user_id, consent_rec.consent_type)
+                if latest:
+                    consents_dict[consent_rec.consent_type] = {
+                        "granted": latest.granted,
+                        "timestamp": latest.timestamp,
+                        "ip_address": latest.ip_address,
+                        "user_agent": latest.user_agent,
+                    }
 
         logger.info("User consent status retrieved", extra={"user_id": user_id})
 
-        return ConsentResponse(user_id=user_id, consents=consents)  # type: ignore[arg-type]
+        return ConsentResponse(user_id=user_id, consents=consents_dict)  # type: ignore[arg-type]

@@ -9,13 +9,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.session import SessionStore
-from mcp_server_langgraph.compliance.gdpr.storage import (
-    AuditLogStore,
-    ConsentStore,
-    ConversationStore,
-    PreferencesStore,
-    UserProfileStore,
-)
+from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -53,32 +47,20 @@ class DataDeletionService:
     def __init__(
         self,
         session_store: Optional[SessionStore] = None,
+        gdpr_storage: Optional[GDPRStorage] = None,
         openfga_client: Optional[OpenFGAClient] = None,
-        user_profile_store: Optional[UserProfileStore] = None,
-        conversation_store: Optional[ConversationStore] = None,
-        preferences_store: Optional[PreferencesStore] = None,
-        audit_log_store: Optional[AuditLogStore] = None,
-        consent_store: Optional[ConsentStore] = None,
     ):
         """
         Initialize data deletion service
 
         Args:
             session_store: Session storage backend
+            gdpr_storage: GDPR storage backend (user profiles, conversations, consents, etc.)
             openfga_client: OpenFGA authorization client
-            user_profile_store: User profile storage backend
-            conversation_store: Conversation storage backend
-            preferences_store: Preferences storage backend
-            audit_log_store: Audit log storage backend
-            consent_store: Consent storage backend
         """
         self.session_store = session_store
+        self.gdpr_storage = gdpr_storage
         self.openfga_client = openfga_client
-        self.user_profile_store = user_profile_store
-        self.conversation_store = conversation_store
-        self.preferences_store = preferences_store
-        self.audit_log_store = audit_log_store
-        self.consent_store = consent_store
 
     async def _safe_delete(self, operation_name: str, delete_func, user_id: str, deleted_items: dict, errors: list) -> None:  # type: ignore[no-untyped-def,type-arg]
         """
@@ -166,7 +148,7 @@ class DataDeletionService:
                 )
 
             # 5. Delete consent records
-            if self.consent_store:
+            if self.gdpr_storage:
                 await self._safe_delete("consents", self._delete_user_consents, user_id, deleted_items, errors)
 
             # 6. Anonymize audit logs (don't delete for compliance)
@@ -227,11 +209,11 @@ class DataDeletionService:
 
     async def _delete_user_conversations(self, user_id: str) -> int:
         """Delete all user conversations"""
-        if not self.conversation_store:
+        if not self.gdpr_storage:
             return 0
 
         try:
-            count = await self.conversation_store.delete_user_conversations(user_id)
+            count = await self.gdpr_storage.conversations.delete_user_conversations(user_id)
             return count
         except Exception as e:
             logger.error(f"Failed to delete user conversations: {e}", exc_info=True)
@@ -239,11 +221,11 @@ class DataDeletionService:
 
     async def _delete_user_preferences(self, user_id: str) -> int:
         """Delete all user preferences"""
-        if not self.preferences_store:
+        if not self.gdpr_storage:
             return 0
 
         try:
-            deleted = await self.preferences_store.delete(user_id)
+            deleted = await self.gdpr_storage.preferences.delete(user_id)
             return 1 if deleted else 0
         except Exception as e:
             logger.error(f"Failed to delete user preferences: {e}", exc_info=True)
@@ -274,11 +256,11 @@ class DataDeletionService:
 
         Replace user_id with pseudonymized identifier.
         """
-        if not self.audit_log_store:
+        if not self.gdpr_storage:
             return 0
 
         try:
-            count = await self.audit_log_store.anonymize_user_logs(user_id)
+            count = await self.gdpr_storage.audit_logs.anonymize_user_logs(user_id)
             return count
         except Exception as e:
             logger.error(f"Failed to anonymize user audit logs: {e}", exc_info=True)
@@ -286,11 +268,11 @@ class DataDeletionService:
 
     async def _delete_user_consents(self, user_id: str) -> int:
         """Delete all user consent records"""
-        if not self.consent_store:
+        if not self.gdpr_storage:
             return 0
 
         try:
-            count = await self.consent_store.delete_user_consents(user_id)
+            count = await self.gdpr_storage.consents.delete_user_consents(user_id)
             return count
         except Exception as e:
             logger.error(f"Failed to delete user consents: {e}", exc_info=True)
@@ -298,12 +280,12 @@ class DataDeletionService:
 
     async def _delete_user_profile(self, user_id: str) -> int:
         """Delete user profile/account"""
-        if not self.user_profile_store:
+        if not self.gdpr_storage:
             # If no profile store, assume profile was deleted elsewhere
             return 1
 
         try:
-            deleted = await self.user_profile_store.delete(user_id)
+            deleted = await self.gdpr_storage.user_profiles.delete(user_id)
             return 1 if deleted else 0
         except Exception as e:
             logger.error(f"Failed to delete user profile: {e}", exc_info=True)
@@ -347,10 +329,10 @@ class DataDeletionService:
             },
         )
 
-        # Store audit record if audit log store is configured
-        if self.audit_log_store:
+        # Store audit record if GDPR storage is configured
+        if self.gdpr_storage:
             try:
-                stored_id = await self.audit_log_store.log(audit_entry)
+                stored_id = await self.gdpr_storage.audit_logs.log(audit_entry)
                 logger.info(
                     "User account deletion audit record stored",
                     extra={

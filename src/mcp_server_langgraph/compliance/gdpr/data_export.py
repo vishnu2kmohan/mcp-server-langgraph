@@ -10,13 +10,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.session import SessionStore
-from mcp_server_langgraph.compliance.gdpr.storage import (
-    AuditLogStore,
-    ConsentStore,
-    ConversationStore,
-    PreferencesStore,
-    UserProfileStore,
-)
+from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -69,29 +63,17 @@ class DataExportService:
     def __init__(
         self,
         session_store: Optional[SessionStore] = None,
-        user_profile_store: Optional[UserProfileStore] = None,
-        conversation_store: Optional[ConversationStore] = None,
-        preferences_store: Optional[PreferencesStore] = None,
-        audit_log_store: Optional[AuditLogStore] = None,
-        consent_store: Optional[ConsentStore] = None,
+        gdpr_storage: Optional[GDPRStorage] = None,
     ):
         """
         Initialize data export service
 
         Args:
             session_store: Session storage backend
-            user_profile_store: User profile storage backend
-            conversation_store: Conversation storage backend
-            preferences_store: Preferences storage backend
-            audit_log_store: Audit log storage backend
-            consent_store: Consent storage backend
+            gdpr_storage: GDPR storage backend (user profiles, conversations, consents, etc.)
         """
         self.session_store = session_store
-        self.user_profile_store = user_profile_store
-        self.conversation_store = conversation_store
-        self.preferences_store = preferences_store
-        self.audit_log_store = audit_log_store
-        self.consent_store = consent_store
+        self.gdpr_storage = gdpr_storage
 
     async def export_user_data(self, user_id: str, username: str, email: str) -> UserDataExport:
         """
@@ -259,8 +241,8 @@ class DataExportService:
 
     async def _get_user_profile(self, user_id: str) -> Dict[str, Any]:
         """Get user profile data"""
-        if not self.user_profile_store:
-            # Return minimal data if no profile store configured
+        if not self.gdpr_storage:
+            # Return minimal data if no storage configured
             return {
                 "user_id": user_id,
                 "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -268,7 +250,7 @@ class DataExportService:
             }
 
         try:
-            profile = await self.user_profile_store.get(user_id)
+            profile = await self.gdpr_storage.user_profiles.get(user_id)
             if profile:
                 return profile.model_dump()
             else:
@@ -307,11 +289,11 @@ class DataExportService:
 
     async def _get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user conversation history"""
-        if not self.conversation_store:
+        if not self.gdpr_storage:
             return []
 
         try:
-            conversations = await self.conversation_store.list_user_conversations(user_id)
+            conversations = await self.gdpr_storage.conversations.list_user_conversations(user_id)
             return [conv.model_dump() for conv in conversations]
         except Exception as e:
             logger.error(f"Failed to retrieve user conversations: {e}", exc_info=True)
@@ -319,11 +301,11 @@ class DataExportService:
 
     async def _get_user_preferences(self, user_id: str) -> Dict[str, Any]:
         """Get user preferences"""
-        if not self.preferences_store:
+        if not self.gdpr_storage:
             return {}
 
         try:
-            preferences = await self.preferences_store.get(user_id)
+            preferences = await self.gdpr_storage.preferences.get(user_id)
             if preferences:
                 return preferences.preferences
             return {}
@@ -333,11 +315,11 @@ class DataExportService:
 
     async def _get_user_audit_log(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user audit log entries"""
-        if not self.audit_log_store:
+        if not self.gdpr_storage:
             return []
 
         try:
-            logs = await self.audit_log_store.list_user_logs(user_id, limit=1000)
+            logs = await self.gdpr_storage.audit_logs.list_user_logs(user_id, limit=1000)
             return [log.model_dump() for log in logs]
         except Exception as e:
             logger.error(f"Failed to retrieve user audit logs: {e}", exc_info=True)
@@ -345,11 +327,11 @@ class DataExportService:
 
     async def _get_user_consents(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user consent records"""
-        if not self.consent_store:
+        if not self.gdpr_storage:
             return []
 
         try:
-            consents = await self.consent_store.get_user_consents(user_id)
+            consents = await self.gdpr_storage.consents.get_user_consents(user_id)
             return [consent.model_dump() for consent in consents]
         except Exception as e:
             logger.error(f"Failed to retrieve user consents: {e}", exc_info=True)

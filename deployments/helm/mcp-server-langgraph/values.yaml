@@ -278,6 +278,12 @@ config:
   checkpointRedisUrl: "redis://redis-session:6379/1"  # Use db 1
   checkpointRedisTtl: "604800"  # 7 days TTL for conversation checkpoints
 
+  # GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041)
+  # CRITICAL: Must use "postgres" in production (never use "memory")
+  # Retention: Audit logs & consents = 7 years, Conversations = 90 days
+  gdprStorageBackend: "postgres"  # postgres (production), memory (dev/test ONLY)
+  gdprPostgresUrl: "postgresql://postgres:postgres@{{ .Release.Name }}-postgres:5432/gdpr"
+
 # Secrets configuration
 secrets:
   # Use existingSecret to reference an existing secret

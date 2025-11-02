@@ -53,3 +53,12 @@ data:
   {{- if .Values.openfga.enabled }}
   openfga_api_url: "http://{{ .Release.Name }}-openfga:{{ .Values.openfga.service.port }}"
   {{- end }}
+
+  # Conversation Checkpointing Configuration
+  checkpoint_backend: {{ .Values.config.checkpointBackend | quote }}
+  checkpoint_redis_url: {{ .Values.config.checkpointRedisUrl | quote }}
+  checkpoint_redis_ttl: {{ .Values.config.checkpointRedisTtl | quote }}
+
+  # GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041)
+  gdpr_storage_backend: {{ .Values.config.gdprStorageBackend | quote }}
+  gdpr_postgres_url: {{ .Values.config.gdprPostgresUrl | quote }}

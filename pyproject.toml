@@ -52,6 +52,7 @@ dependencies = [
     "python-keycloak>=5.8.1",
     "authlib>=1.6.5",
     "redis[hiredis]>=6.4.0",  # Also used for conversation checkpoints (db 1)
+    "asyncpg>=0.29.0",  # PostgreSQL async driver for GDPR/HIPAA/SOC2 compliance storage
     "pyyaml>=6.0.3",
     "apscheduler>=3.11.0",
     "python-json-logger>=4.0.0",
@@ -303,6 +304,23 @@ module = [
     "mcp_server_langgraph.utils.response_optimizer",
     "mcp_server_langgraph.health.checks",
     "mcp_server_langgraph.monitoring.sla",
+]
+disallow_untyped_calls = true
+strict = true
+
+# Phase 4: Compliance and resilience modules - Production-critical for GDPR/HIPAA/SOC2
+[[tool.mypy.overrides]]
+module = [
+    "mcp_server_langgraph.compliance.gdpr.storage",
+    "mcp_server_langgraph.compliance.gdpr.postgres_storage",
+    "mcp_server_langgraph.compliance.gdpr.factory",
+    "mcp_server_langgraph.compliance.gdpr.data_export",
+    "mcp_server_langgraph.compliance.gdpr.data_deletion",
+    "mcp_server_langgraph.compliance.retention",
+    "mcp_server_langgraph.compliance.soc2.evidence",
+    "mcp_server_langgraph.resilience.retry",
+    "mcp_server_langgraph.resilience.fallback",
+    "mcp_server_langgraph.resilience.circuit_breaker",
 ]
 disallow_untyped_calls = true
 strict = true

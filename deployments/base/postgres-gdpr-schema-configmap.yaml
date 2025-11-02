@@ -1,0 +1,156 @@
+---
+# ConfigMap containing GDPR database schema migration
+# This is mounted in the postgres StatefulSet init scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-gdpr-schema
+  namespace: mcp-server-langgraph
+  labels:
+    app: postgres
+    component: migrations
+data:
+  001_gdpr_schema.sql: |
+    -- GDPR/HIPAA/SOC2 Compliant Storage Schema
+    -- See migrations/001_gdpr_schema.sql for full documentation
+
+    CREATE TABLE IF NOT EXISTS user_profiles (
+        user_id TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        email TEXT,
+        full_name TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        metadata JSONB DEFAULT '{}'::jsonb,
+        CONSTRAINT user_profiles_username_not_empty CHECK (LENGTH(username) > 0),
+        CONSTRAINT user_profiles_created_before_updated CHECK (created_at <= last_updated)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(email) WHERE email IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_user_profiles_username ON user_profiles(username);
+    CREATE INDEX IF NOT EXISTS idx_user_profiles_created_at ON user_profiles(created_at);
+
+    CREATE TABLE IF NOT EXISTS user_preferences (
+        user_id TEXT PRIMARY KEY REFERENCES user_profiles(user_id) ON DELETE CASCADE,
+        preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_user_preferences_updated_at ON user_preferences(updated_at);
+    CREATE INDEX IF NOT EXISTS idx_user_preferences_gin ON user_preferences USING GIN (preferences);
+
+    CREATE TABLE IF NOT EXISTS consent_records (
+        consent_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES user_profiles(user_id) ON DELETE CASCADE,
+        consent_type TEXT NOT NULL,
+        granted BOOLEAN NOT NULL,
+        timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        ip_address TEXT,
+        user_agent TEXT,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        CONSTRAINT consent_records_type_not_empty CHECK (LENGTH(consent_type) > 0)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_consent_records_user_id ON consent_records(user_id);
+    CREATE INDEX IF NOT EXISTS idx_consent_records_type ON consent_records(consent_type);
+    CREATE INDEX IF NOT EXISTS idx_consent_records_timestamp ON consent_records(timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_consent_records_user_type ON consent_records(user_id, consent_type);
+
+    CREATE TABLE IF NOT EXISTS conversations (
+        conversation_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES user_profiles(user_id) ON DELETE CASCADE,
+        title TEXT,
+        messages JSONB NOT NULL DEFAULT '[]'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_message_at TIMESTAMPTZ,
+        archived BOOLEAN DEFAULT FALSE,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        CONSTRAINT conversations_messages_is_array CHECK (jsonb_typeof(messages) = 'array'),
+        CONSTRAINT conversations_last_message_after_created CHECK (
+            last_message_at IS NULL OR last_message_at >= created_at
+        )
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+    CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON conversations(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_conversations_last_message_at ON conversations(last_message_at DESC NULLS LAST);
+    CREATE INDEX IF NOT EXISTS idx_conversations_archived ON conversations(archived) WHERE archived = TRUE;
+    CREATE INDEX IF NOT EXISTS idx_conversations_user_last_message ON conversations(user_id, last_message_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_conversations_retention_cleanup
+        ON conversations(last_message_at)
+        WHERE archived = FALSE AND last_message_at < (NOW() - INTERVAL '90 days');
+
+    CREATE TABLE IF NOT EXISTS audit_logs (
+        log_id TEXT PRIMARY KEY,
+        user_id TEXT,
+        action TEXT NOT NULL,
+        resource_type TEXT,
+        resource_id TEXT,
+        timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        ip_address TEXT,
+        user_agent TEXT,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        CONSTRAINT audit_logs_action_not_empty CHECK (LENGTH(action) > 0),
+        CONSTRAINT audit_logs_timestamp_not_future CHECK (timestamp <= NOW() + INTERVAL '5 minutes')
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id) WHERE user_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs(resource_type, resource_id)
+        WHERE resource_type IS NOT NULL AND resource_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_user_timestamp_action
+        ON audit_logs(user_id, timestamp DESC, action) WHERE user_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_retention_archival
+        ON audit_logs(timestamp)
+        WHERE timestamp < (NOW() - INTERVAL '90 days');
+
+    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at = NOW();
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER trigger_user_preferences_updated_at
+        BEFORE UPDATE ON user_preferences
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+
+    CREATE OR REPLACE FUNCTION update_user_profile_timestamp()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.last_updated = NOW();
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER trigger_user_profiles_last_updated
+        BEFORE UPDATE ON user_profiles
+        FOR EACH ROW
+        EXECUTE FUNCTION update_user_profile_timestamp();
+
+    CREATE OR REPLACE VIEW conversations_for_cleanup AS
+    SELECT
+        conversation_id,
+        user_id,
+        title,
+        last_message_at,
+        AGE(NOW(), last_message_at) as age
+    FROM conversations
+    WHERE archived = FALSE
+      AND last_message_at < (NOW() - INTERVAL '90 days')
+    ORDER BY last_message_at ASC;
+
+    CREATE OR REPLACE VIEW audit_logs_for_archival AS
+    SELECT
+        log_id,
+        user_id,
+        action,
+        timestamp,
+        AGE(NOW(), timestamp) as age
+    FROM audit_logs
+    WHERE timestamp < (NOW() - INTERVAL '90 days')
+      AND timestamp >= (NOW() - INTERVAL '2555 days')
+    ORDER BY timestamp ASC;

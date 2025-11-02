@@ -256,6 +256,19 @@ class Settings(BaseSettings):
     # Conversation Storage (uses checkpoint backend by default)
     conversation_storage_backend: str = "checkpoint"  # "checkpoint" (uses checkpoint_backend), "database"
 
+    # GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041: Pure PostgreSQL)
+    # Storage for user profiles, preferences, consents, conversations, and audit logs
+    # CRITICAL: Must use "postgres" in production (in-memory is DEVELOPMENT ONLY)
+    gdpr_storage_backend: str = "memory"  # "postgres" (production), "memory" (dev/test only)
+    gdpr_postgres_url: str = "postgresql://postgres:postgres@localhost:5432/gdpr"
+
+    # GDPR Storage Configuration
+    # - User profiles: Until deletion request (GDPR Article 17)
+    # - Preferences: Until deletion request
+    # - Consents: 7 years (GDPR Article 7, legal requirement)
+    # - Conversations: 90 days (GDPR Article 5(1)(e), configurable)
+    # - Audit logs: 7 years (HIPAA §164.316(b)(2)(i), SOC2 CC6.6)
+
     # Audit Log Cold Storage (for long-term compliance archival)
     audit_log_cold_storage_backend: Optional[str] = None  # None, "s3", "gcs", "azure", "local"
     audit_log_cold_storage_path: Optional[str] = None  # Local path or bucket name

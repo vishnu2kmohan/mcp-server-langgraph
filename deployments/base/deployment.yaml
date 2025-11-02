@@ -47,6 +47,14 @@ spec:
             sleep 2
           done
           echo "OpenFGA is ready!"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
       - name: wait-for-keycloak
         image: busybox:1.36
         command: ['sh', '-c']
@@ -57,6 +65,14 @@ spec:
             sleep 2
           done
           echo "Keycloak is ready!"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
       - name: wait-for-redis
         image: busybox:1.36
         command: ['sh', '-c']
@@ -67,6 +83,14 @@ spec:
             sleep 2
           done
           echo "Redis is ready!"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
       # Optional: Wait for Qdrant if dynamic context loading is enabled
       # Uncomment when ENABLE_DYNAMIC_CONTEXT_LOADING=true
       # - name: wait-for-qdrant

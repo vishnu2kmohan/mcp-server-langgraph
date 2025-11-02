@@ -65,17 +65,17 @@ def client(test_app):
 
 
 @pytest.fixture(autouse=True)
-def clear_consent_storage():
-    """Clear in-memory consent storage between tests to ensure test isolation."""
-    from mcp_server_langgraph.api import gdpr
+async def setup_gdpr_storage():
+    """Initialize GDPR storage for tests (using memory backend for speed)."""
+    from mcp_server_langgraph.compliance.gdpr.factory import initialize_gdpr_storage, reset_gdpr_storage
 
-    # Clear before test
-    gdpr._consent_storage.clear()
+    # Initialize with memory backend for fast testing
+    await initialize_gdpr_storage(backend="memory")
 
     yield
 
-    # Clear after test
-    gdpr._consent_storage.clear()
+    # Reset after test
+    reset_gdpr_storage()
 
 
 @pytest.mark.integration

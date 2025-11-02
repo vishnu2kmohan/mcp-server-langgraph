@@ -34,6 +34,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
 
       # Init container to wait for PostgreSQL
       initContainers:
@@ -47,6 +49,14 @@ spec:
             sleep 2
           done
           echo "PostgreSQL is ready!"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
 
       containers:
       - name: openfga

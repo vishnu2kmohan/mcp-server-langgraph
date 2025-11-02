@@ -15,9 +15,10 @@ resources:
   - hpa.yaml
   - pdb.yaml
   - networkpolicy.yaml
-  # PostgreSQL database (for OpenFGA and Keycloak)
+  # PostgreSQL database (for OpenFGA, Keycloak, and GDPR compliance)
   - postgres-statefulset.yaml
   - postgres-service.yaml
+  - postgres-gdpr-schema-configmap.yaml
   # OpenFGA authorization
   - openfga-deployment.yaml
   - openfga-service.yaml

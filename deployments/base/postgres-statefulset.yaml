@@ -31,6 +31,16 @@ data:
         echo "Multiple databases created"
     fi
 
+    # Run GDPR schema migration if database exists
+    echo "Initializing GDPR schema..."
+    if psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw gdpr; then
+        echo "Running GDPR schema migration..."
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname=gdpr -f /docker-entrypoint-initdb.d/001_gdpr_schema.sql
+        echo "GDPR schema migration complete"
+    else
+        echo "GDPR database not found, skipping schema migration"
+    fi
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -82,7 +92,7 @@ spec:
               key: postgres-password
               optional: true
         - name: POSTGRES_MULTIPLE_DATABASES
-          value: "openfga,keycloak"
+          value: "openfga,keycloak,gdpr"
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
 
@@ -91,6 +101,9 @@ spec:
           mountPath: /var/lib/postgresql/data
         - name: init-scripts
           mountPath: /docker-entrypoint-initdb.d
+        - name: gdpr-schema
+          mountPath: /docker-entrypoint-initdb.d/001_gdpr_schema.sql
+          subPath: 001_gdpr_schema.sql
 
         # Health check probes
         startupProbe:
@@ -150,6 +163,10 @@ spec:
         configMap:
           name: postgres-init-scripts
           defaultMode: 0755
+      - name: gdpr-schema
+        configMap:
+          name: postgres-gdpr-schema
+          defaultMode: 0644
 
   volumeClaimTemplates:
   - metadata:
