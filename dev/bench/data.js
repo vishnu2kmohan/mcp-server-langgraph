@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762121052178,
+  "lastUpdate": 1762121151374,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -21782,6 +21782,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001728728840237483",
             "extra": "mean: 58.15930957104693 usec\nrounds: 5036"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "4bcb4bfec7a512a79786b38bcd92809456324912",
+          "message": "fix(workflows): resolve 7 critical GitHub Actions issues for production readiness\n\nThis commit addresses all critical blocking issues identified in the comprehensive\nworkflow analysis, increasing production readiness from 60% to 85%.\n\n## Critical Fixes (7/7 Complete):\n\n1. **Fix Deprecated CodeQL Action** (gcp-compliance-scan.yaml)\n   - Updated github/codeql-action@v3 → @v4.30.9 (3 occurrences)\n   - Eliminates security vulnerabilities from deprecated action\n\n2. **Replace Production Placeholder Values** (deploy-production-gke.yaml)\n   - YOUR_PROJECT_ID → vishnu-sandbox-20250310\n   - PROJECT_NUMBER → 1024691643349 (4 workload identity providers)\n   - Production deployment now fully configured\n\n3. **Fix Missing Environment Variables** (gcp-compliance-scan.yaml)\n   - Added env block with PROJECT_ID and PROJECT_NUMBER\n   - Updated workload identity provider to use env variables\n   - Prevents workflow execution failures\n\n4. **Standardize All Trivy Versions**\n   - Updated aquasecurity/trivy-action v0.28.0 → v0.33.1\n   - Applied to gcp-compliance-scan.yaml (2×), deploy-production-gke.yaml (2×)\n   - Ensures consistent security scanning across all workflows\n\n5. **Verified Google Cloud Auth at v3**\n   - Confirmed all 12 instances using google-github-actions/auth@v3\n   - Latest security fixes and features in place\n\n6. **Fix TruffleHog Version Inconsistency** (gcp-compliance-scan.yaml)\n   - Changed trufflesecurity/trufflehog@main → @v3.90.11\n   - Ensures stable, predictable secret scanning\n\n7. **Standardize Artifact Upload Versions**\n   - Updated actions/upload-artifact@v4 → @v4.6.2\n   - Applied to gcp-compliance-scan.yaml (2×), gcp-drift-detection.yaml (1×)\n\n## Validation:\n- ✅ All 18 workflow files validated successfully\n- ✅ Zero YAML syntax errors\n- ✅ No placeholder values remaining\n- ✅ No undefined environment variables\n\n## Impact:\n- Production deployment unblocked and ready to execute\n- Consistent security scanning with latest vulnerability detection\n- All GCP workflows properly configured with actual project values\n- All workflows parse correctly and are production-ready\n\nFiles modified:\n- .github/workflows/deploy-production-gke.yaml (6 changes)\n- .github/workflows/gcp-compliance-scan.yaml (6 changes)\n- .github/workflows/gcp-drift-detection.yaml (1 change)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T17:04:20-05:00",
+          "tree_id": "a6bf4f55f1ec0cc532a4a1e07a030dde5be242ff",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/4bcb4bfec7a512a79786b38bcd92809456324912"
+        },
+        "date": 1762121150760,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.224297108881,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014169380936017393",
+            "extra": "mean: 6.933644469385473 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.61102611499405,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013369623151442134",
+            "extra": "mean: 6.683999341274351 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52093.61098201303,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002706073386859588",
+            "extra": "mean: 19.196211995080965 usec\nrounds: 7203"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53559.14449241988,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023486132650102538",
+            "extra": "mean: 18.67094796746666 usec\nrounds: 11512"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49721.80910449017,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023916068600078096",
+            "extra": "mean: 20.11189894355019 usec\nrounds: 19880"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.18028912078077,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014577315921132073",
+            "extra": "mean: 5.230664754190409 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.44683559764168,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00018955686786383813",
+            "extra": "mean: 51.42224784999314 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.944855171439691,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003375216252577962",
+            "extra": "mean: 100.55450609998502 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2525648.00809932,
+            "unit": "iter/sec",
+            "range": "stddev: 5.4563658900689455e-8",
+            "extra": "mean: 395.93799167309595 nsec\nrounds: 193051"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5266.244084363008,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014079949966118678",
+            "extra": "mean: 189.88865384521145 usec\nrounds: 2496"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2990.556264603075,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009325012566383641",
+            "extra": "mean: 334.38595081331005 usec\nrounds: 2521"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3001.9680797393116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009784776156947625",
+            "extra": "mean: 333.1148011696511 usec\nrounds: 1710"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60454.602053160794,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019800814523162787",
+            "extra": "mean: 16.54133789716537 usec\nrounds: 11906"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17122.284180290884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018081603723706286",
+            "extra": "mean: 58.40342266664864 usec\nrounds: 5347"
           }
         ]
       }
