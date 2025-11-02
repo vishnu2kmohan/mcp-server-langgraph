@@ -219,7 +219,7 @@ jobs:
 
     # OPTIMIZATION: Variant-specific cache scopes with GitHub Actions cache
     - name: Build ${{ matrix.variant }} image
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: docker/Dockerfile
@@ -245,7 +245,7 @@ jobs:
     # Retry failed builds once (handles transient network issues)
     - name: Retry build on failure
       if: failure()
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: docker/Dockerfile
@@ -322,7 +322,7 @@ jobs:
 
     # OPTIMIZATION: Platform-specific builds in parallel with enhanced caching
     - name: Build ${{ matrix.variant }} for ${{ matrix.platform }}
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: docker/Dockerfile

@@ -136,7 +136,7 @@ jobs:
         echo "name=$PLATFORM_NAME" >> $GITHUB_OUTPUT
 
     - name: Build and push platform-specific image
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: docker/Dockerfile
@@ -147,7 +147,7 @@ jobs:
         cache-to: type=gha,mode=max,scope=release-${{ steps.platform.outputs.name }}
 
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0.20.8
+      uses: anchore/sbom-action@v0.20.9
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
@@ -340,7 +340,7 @@ jobs:
     if: always()
     steps:
     - name: Slack Notification
-      uses: slackapi/slack-github-action@v2.0.0
+      uses: slackapi/slack-github-action@v2.1.1
       if: ${{ secrets.SLACK_WEBHOOK != '' }}
       with:
         webhook-type: incoming-webhook
