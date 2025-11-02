@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762101982779,
+  "lastUpdate": 1762103330158,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -20196,6 +20196,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000022345208205215825",
             "extra": "mean: 59.98071438180152 usec\nrounds: 4464"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9ce84e238471214655db84db9ccb35ce60cd765a",
+          "message": "fix: add missing IAM roles to GCP staging infrastructure setup script\n\nAdded two critical IAM roles that were missing from the setup script:\n- roles/artifactregistry.writer - Required to push Docker images\n- roles/container.developer - Required to deploy to GKE\n\n## Issue\nThe deployment workflow was failing with:\n```\nERROR: denied: Permission \"artifactregistry.repositories.uploadArtifacts\" denied\n```\n\n## Root Cause\nThe setup script (`scripts/gcp/setup-staging-infrastructure.sh`) was only granting:\n- roles/secretmanager.secretAccessor\n- roles/cloudsql.client\n- roles/logging.logWriter\n- roles/monitoring.metricWriter\n\nBut missing the two essential roles for CI/CD deployments.\n\n## Fix\nAdded to the `setup_workload_identity()` function:\n```bash\n# Artifact Registry writer (push Docker images)\ngcloud projects add-iam-policy-binding \"$PROJECT_ID\" \\\n  --member=\"serviceAccount:${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com\" \\\n  --role=\"roles/artifactregistry.writer\"\n\n# Container developer (deploy to GKE)\ngcloud projects add-iam-policy-binding \"$PROJECT_ID\" \\\n  --member=\"serviceAccount:${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com\" \\\n  --role=\"roles/container.developer\"\n```\n\n## Verification\nService account now has all 6 required roles:\n- ✅ roles/artifactregistry.writer (NEW)\n- ✅ roles/container.developer (NEW)\n- ✅ roles/secretmanager.secretAccessor\n- ✅ roles/cloudsql.client\n- ✅ roles/logging.logWriter\n- ✅ roles/monitoring.metricWriter\n\n## Impact\nFuture runs of the setup script will grant all necessary permissions automatically,\npreventing this deployment failure from recurring.\n\n## Testing\nManually granted the roles and verified deployment workflow can now:\n- Push images to Artifact Registry\n- Deploy to GKE cluster\n\nRelated: Deploy to GKE Staging workflow failure\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T12:07:46-05:00",
+          "tree_id": "2ad28dda32c40e773f0763b8dac4cdd1f508103f",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9ce84e238471214655db84db9ccb35ce60cd765a"
+        },
+        "date": 1762103328854,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 146.2276359359142,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007921065837619178",
+            "extra": "mean: 6.838652581638264 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.76945800111756,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011772548946859932",
+            "extra": "mean: 6.6769287500028085 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51751.83651307438,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022658534259665253",
+            "extra": "mean: 19.322985760077596 usec\nrounds: 8567"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52869.7293159061,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024751556109869896",
+            "extra": "mean: 18.914414976948738 usec\nrounds: 12673"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49783.32374422825,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023917470588469217",
+            "extra": "mean: 20.087047725814763 usec\nrounds: 20157"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.94902129763818,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001420189452759059",
+            "extra": "mean: 5.236999871506379 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.348616949685876,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008697761959998084",
+            "extra": "mean: 51.68328065000196 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.95417246319525,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001793168907559829",
+            "extra": "mean: 100.4603852000173 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2499812.149133592,
+            "unit": "iter/sec",
+            "range": "stddev: 4.672870674779636e-8",
+            "extra": "mean: 400.0300583972237 nsec\nrounds: 187970"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5197.407685672742,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013528753539862452",
+            "extra": "mean: 192.40360973733425 usec\nrounds: 2629"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3011.35468928185,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009403917467682564",
+            "extra": "mean: 332.0764583326054 usec\nrounds: 2616"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3031.256380846255,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000029050112193659366",
+            "extra": "mean: 329.8962127778923 usec\nrounds: 1706"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60424.118918710956,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019554793351703865",
+            "extra": "mean: 16.549682773948398 usec\nrounds: 12458"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17268.499514875963,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017752038039502204",
+            "extra": "mean: 57.90891091252886 usec\nrounds: 5736"
           }
         ]
       }
