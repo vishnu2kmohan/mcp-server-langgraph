@@ -270,10 +270,11 @@ setup_workload_identity() {
         --role="roles/artifactregistry.writer" \
         --condition=None
 
-    # Container developer (deploy to GKE)
+    # Container admin (deploy to GKE with full RBAC permissions)
+    # Note: container.admin includes container.developer + RBAC creation permissions
     gcloud projects add-iam-policy-binding "$PROJECT_ID" \
         --member="serviceAccount:${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
-        --role="roles/container.developer" \
+        --role="roles/container.admin" \
         --condition=None
 
     log_info "Workload Identity configured successfully"

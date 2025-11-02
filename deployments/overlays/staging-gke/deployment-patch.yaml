@@ -20,7 +20,7 @@ spec:
       - name: mcp-server-langgraph
         resources:
           requests:
-            cpu: 250m
+            cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
             memory: 512Mi
           limits:
             cpu: 1000m
@@ -149,6 +149,33 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
+
+      # Init containers - Add resources for GKE Autopilot compatibility
+      initContainers:
+      - name: wait-for-openfga
+        resources:
+          requests:
+            cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      - name: wait-for-keycloak
+        resources:
+          requests:
+            cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      - name: wait-for-redis
+        resources:
+          requests:
+            cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
 
       # Node affinity for GKE
       affinity:
