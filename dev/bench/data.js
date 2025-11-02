@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762124236881,
+  "lastUpdate": 1762125511339,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -22514,6 +22514,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000020031129618051025",
             "extra": "mean: 58.36286825905141 usec\nrounds: 5359"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "fd03d70ed335b1f419e3112c4c9137696cbd98ef",
+          "message": "fix(ci): pin kube-score to v1.19.0 to avoid 404 errors\n\nThe workflow was using `/latest/download` which redirects to a\nnon-existent v1.20.0 release, causing 404 errors.\n\nRoot cause:\n- URL: https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64\n- Redirects to v1.20.0 which doesn't exist\n- Error: HTTP 404: Not Found\n\nFix:\n- Pin to v1.19.0 (last confirmed working version)\n- Use direct version URL instead of `/latest`\n\nThis fixes CI/CD compliance scan failure:\n- GCP Compliance Scanning / Scan Kubernetes Manifests\n\nNote: The Kubernetes manifests themselves are valid - this was purely\nan external dependency download issue unrelated to code changes.",
+          "timestamp": "2025-11-02T18:17:00-05:00",
+          "tree_id": "6598989fd7fee414268796fb46fe8f9221624d96",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/fd03d70ed335b1f419e3112c4c9137696cbd98ef"
+        },
+        "date": 1762125509797,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.7326399354456,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000997185066932168",
+            "extra": "mean: 6.86188077319511 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.5353866110577,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001269429499104834",
+            "extra": "mean: 6.68738030952503 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51803.72597885543,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002351623554922748",
+            "extra": "mean: 19.303630793046953 usec\nrounds: 9041"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54074.03306877582,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021957217392399816",
+            "extra": "mean: 18.49316470861564 usec\nrounds: 13193"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49896.34088508609,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002238992332307496",
+            "extra": "mean: 20.041549786246907 usec\nrounds: 20337"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.044721271436,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014497526821122957",
+            "extra": "mean: 5.234376502762418 msec\nrounds: 181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.3722092885641,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008843861245778922",
+            "extra": "mean: 51.62033845000451 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.953921456103672,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005084958673890852",
+            "extra": "mean: 100.46291850000557 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2620078.218663291,
+            "unit": "iter/sec",
+            "range": "stddev: 4.453149710996051e-8",
+            "extra": "mean: 381.6679948242839 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5297.2089287277495,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014095015839910131",
+            "extra": "mean: 188.77865937603747 usec\nrounds: 2469"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2962.4044012945683,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008566257659239699",
+            "extra": "mean: 337.5636356612895 usec\nrounds: 2591"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3005.699109517385,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010498420698020621",
+            "extra": "mean: 332.7012996189651 usec\nrounds: 1839"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60242.272768692506,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021636207055730233",
+            "extra": "mean: 16.599639323695854 usec\nrounds: 12776"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17166.68827396557,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017490100514317522",
+            "extra": "mean: 58.252353863532704 usec\nrounds: 5358"
           }
         ]
       }
