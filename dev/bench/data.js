@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762104532829,
+  "lastUpdate": 1762104711442,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -20684,6 +20684,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000027375524902984784",
             "extra": "mean: 58.97726469359612 usec\nrounds: 4764"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ed215321709f70acbc3aafc637b9925f76a87f01",
+          "message": "fix: add missing external-secrets.yaml and update gitignore exception\n\n## Issue\nKustomize build failing in CI with:\n```\nlstat external-secrets.yaml: no such file or directory\n```\n\n## Root Cause\nThe file `deployments/overlays/staging-gke/external-secrets.yaml` exists locally\nbut was blocked by .gitignore pattern `*-secrets.yaml` (line 132).\n\n**Important**: This file does NOT contain actual secrets. It's an External Secrets\nOperator (ESO) manifest that defines WHERE to fetch secrets from (e.g., Google\nSecret Manager), not the secrets themselves.\n\n## Fix\n\n### 1. Updated .gitignore\nAdded exception for External Secrets Operator manifests:\n```gitignore\n# External Secrets Operator manifests (safe - no actual secrets, just references)\n!external-secrets.yaml\n!**/external-secrets.yaml\n*-secrets.yaml  # Still block actual secret files\n```\n\n### 2. Added Missing File\nCommitted `deployments/overlays/staging-gke/external-secrets.yaml` which defines:\n- ExternalSecret resources (references to Google Secret Manager)\n- SecretStore configuration\n- Secret sync policies\n\n## Verification\n```bash\n$ git ls-files | grep external-secrets\ndeployments/overlays/staging-gke/external-secrets.yaml  ✓\n\n$ kubectl kustomize deployments/overlays/staging-gke | grep -c \"kind:\"\n32  ✓ All resources generated\n```\n\n## Security Note\nExternal Secrets Operator separates:\n- **Configuration** (committed to git): What secrets to sync, from where\n- **Actual Secrets** (in Secret Manager): The sensitive values themselves\n\nThis file only contains configuration, making it safe to commit.\n\n## Impact\nKustomize build will now succeed in CI with all resources properly defined.\n\nRelated: Deploy to GKE Staging workflow\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T12:30:34-05:00",
+          "tree_id": "0b80b6337f020bf858909555bedcd2f8bef60bcc",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ed215321709f70acbc3aafc637b9925f76a87f01"
+        },
+        "date": 1762104710605,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.3540235322085,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012733019220478932",
+            "extra": "mean: 6.92741342105285 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.6287569095254,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012214824420903828",
+            "extra": "mean: 6.683207296874494 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50922.679627971396,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024230613691391744",
+            "extra": "mean: 19.637615445725846 usec\nrounds: 8805"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53932.708692362736,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000242688848238749",
+            "extra": "mean: 18.541623891062 usec\nrounds: 11159"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49036.02859307212,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003600103518383122",
+            "extra": "mean: 20.393168629102263 usec\nrounds: 19534"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.57601257822324,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002278799377141529",
+            "extra": "mean: 5.247250094444825 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.389333841946865,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001442404257923916",
+            "extra": "mean: 51.57474764999925 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.947847870355817,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000050360407833036025",
+            "extra": "mean: 100.52425540000058 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2423647.5474879914,
+            "unit": "iter/sec",
+            "range": "stddev: 5.609138856617033e-8",
+            "extra": "mean: 412.60124684237115 nsec\nrounds: 193462"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5181.716293269614,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001427030149396494",
+            "extra": "mean: 192.98625077155847 usec\nrounds: 2592"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2948.6945264859905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008793394760415532",
+            "extra": "mean: 339.13312858206336 usec\nrounds: 2722"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2902.2727824061167,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007015768606995112",
+            "extra": "mean: 344.5575502282574 usec\nrounds: 1752"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59087.25913732923,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020218755901573705",
+            "extra": "mean: 16.924122299797716 usec\nrounds: 12314"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16933.12833501965,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017402100877895935",
+            "extra": "mean: 59.055833051940276 usec\nrounds: 5331"
           }
         ]
       }
