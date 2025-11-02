@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762104711442,
+  "lastUpdate": 1762118418280,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -20806,6 +20806,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017402100877895935",
             "extra": "mean: 59.055833051940276 usec\nrounds: 5331"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6afdf1ddcf0f2ec2d58562f2d73eaffefc994af7",
+          "message": "fix(ci): resolve 7 failing CI/CD workflow issues\n\nThis commit fixes all 7 failing CI/CD workflows identified in the investigation:\n\n1. **Pre-commit Python Version** (.pre-commit-config.yaml)\n   - Updated black language_version from python3.11 to python3.12\n   - Fixes \"No such file or directory: python3.11\" error\n   - Aligns with GitHub Actions runner Python version\n\n2. **Enhanced Disk Cleanup** (.github/workflows/ci.yaml)\n   - Added more aggressive disk cleanup for Docker builds\n   - Added removal of boost, CodeQL, ghcup, AGENT_TOOLSDIRECTORY\n   - Fixes disk space exhaustion during triton library installation\n\n3. **Namespace Pre-creation** (.github/workflows/deploy-staging-gke.yaml)\n   - Added namespace creation step before kubectl apply\n   - Fixes \"namespaces mcp-staging not found\" error\n   - Uses declarative approach with dry-run for idempotency\n\n4. **Trivy SARIF Fallback** (.github/workflows/gcp-compliance-scan.yaml)\n   - Added continue-on-error for Trivy scan\n   - Added SARIF file fallback creation if scan fails\n   - Prevents upload-sarif errors when Trivy fails\n\n5. **TruffleHog Base Fix** (.github/workflows/gcp-compliance-scan.yaml)\n   - Changed base reference from 'main' to github.event.before || 'HEAD~1'\n   - Fixes \"BASE and HEAD commits are the same\" error on push events\n\n6. **GCP Project Configuration** (.github/workflows/gcp-drift-detection.yaml)\n   - Replaced placeholder PROJECT_ID with vishnu-sandbox-20250310\n   - Replaced placeholder PROJECT_NUMBER with 1024691643349\n   - Fixed Workload Identity Provider paths to use env variables\n   - Fixes authentication failures in drift detection\n\n**Root Causes Addressed**:\n- Python version mismatch: Aligned with runner Python 3.12\n- Disk space: More aggressive cleanup before builds\n- Namespace ordering: Create namespace before resources\n- Compliance scan resilience: Fallback for failed scans\n- Secret scanning: Proper commit comparison\n- GCP authentication: Actual project values instead of placeholders\n\n**Expected Results**:\n- ✅ Pre-commit hooks pass\n- ✅ Docker builds complete successfully\n- ✅ GKE deployments succeed\n- ✅ Compliance scans complete with warnings\n- ✅ Drift detection authenticates properly\n- ✅ 100% CI/CD pipeline pass rate\n\n**Testing**: All workflow YAML files validated for syntax\n\nRelated: Previous fixes included kustomize installation, ConfigMap generator behavior, and namespace conflict resolution.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T16:19:14-05:00",
+          "tree_id": "68f395b28f655b9e0729dd4c77ec620d910f8497",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6afdf1ddcf0f2ec2d58562f2d73eaffefc994af7"
+        },
+        "date": 1762118417322,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.78329449149874,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015104599010085744",
+            "extra": "mean: 6.9549108854167025 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 145.92373055507082,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002479538194059695",
+            "extra": "mean: 6.852894975999845 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51184.55389129525,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002318930789904191",
+            "extra": "mean: 19.537144000976944 usec\nrounds: 8243"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52949.03046152608,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002452184043608045",
+            "extra": "mean: 18.886087078150027 usec\nrounds: 11794"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49500.93424027029,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002597079879469754",
+            "extra": "mean: 20.201638925563433 usec\nrounds: 18168"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.40163335600036,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021924785179185903",
+            "extra": "mean: 5.25205578531076 msec\nrounds: 177"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.359639275712908,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010667659674458123",
+            "extra": "mean: 51.65385500000106 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934996579127398,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003081455545946971",
+            "extra": "mean: 100.65428729999937 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2600851.7373437504,
+            "unit": "iter/sec",
+            "range": "stddev: 5.1086813101526715e-8",
+            "extra": "mean: 384.48942922878797 nsec\nrounds: 189754"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5011.2681496395135,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014926430657078577",
+            "extra": "mean: 199.55028749996848 usec\nrounds: 480"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2976.818890732938,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016772162934068494",
+            "extra": "mean: 335.9290694885992 usec\nrounds: 2835"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3006.4163973790905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008920957381956056",
+            "extra": "mean: 332.6219218574552 usec\nrounds: 1766"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60061.611703146795,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022605208170791817",
+            "extra": "mean: 16.649569860736975 usec\nrounds: 11480"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17010.670807278268,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020090306607193125",
+            "extra": "mean: 58.78662936514739 usec\nrounds: 5183"
           }
         ]
       }
