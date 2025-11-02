@@ -129,6 +129,9 @@ docker-compose.override.yml
 kubeconfig
 *.kubeconfig
 secrets.yaml
+# External Secrets Operator manifests (safe - no actual secrets, just references)
+!external-secrets.yaml
+!**/external-secrets.yaml
 *-secrets.yaml
 
 # Helm
