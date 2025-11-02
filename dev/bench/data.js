@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762119901713,
+  "lastUpdate": 1762120301900,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -21294,6 +21294,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001926735139011404",
             "extra": "mean: 59.61915030425865 usec\nrounds: 5256"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b17ab2592b8184f743fbd4d0738dc41409a9cef3",
+          "message": "fix(gke): replace ESO installation with verification to fix permission errors\n\nThis commit fixes the GKE deployment permission errors by replacing the External Secrets Operator installation with verification.\n\n**Root Cause**:\n- Workflow tried to install ESO but service account lacked cluster-admin permissions\n- Error: \"cannot create resource 'clusterroles' at the cluster scope\"\n- ESO is already installed by setup-staging-infrastructure.sh (redundant)\n- When ESO install failed, namespace was never created\n- Rollback failed with \"namespaces mcp-staging not found\"\n\n**Changes Made**:\n\n1. **Replaced ESO installation with verification** (lines 153-170)\n   - Removed `helm install` command (requires cluster-admin)\n   - Added verification that ESO is already installed\n   - Fails fast with clear message if ESO missing\n   - No permission issues (only reads resources)\n\n2. **Moved namespace creation earlier** (lines 172-176)\n   - Now runs BEFORE manifest validation\n   - Ensures namespace exists for rollback scenarios\n   - Uses idempotent `--dry-run=client` approach\n\n3. **Removed duplicate namespace creation** (lines 196-199)\n   - Was previously in \"Deploy to staging\" step\n   - No longer needed since namespace created earlier\n   - Cleaner workflow structure\n\n**Expected Results**:\n- ✅ ESO verification succeeds (already installed by infrastructure)\n- ✅ Namespace created before validation\n- ✅ No permission errors\n- ✅ Manifest validation succeeds\n- ✅ Deployment succeeds\n- ✅ Rollback works (namespace exists)\n\n**Prevention**:\n- Infrastructure script installs ESO once with proper permissions\n- Workflow only verifies (no installation = no permission issues)\n- Clear error if infrastructure not set up\n- Namespace created early to support all scenarios\n\n**Testing**: Validated YAML syntax\n\nFixes: Permission denied errors in ESO installation\nFixes: Namespace not found errors in rollback\n\nRelated: setup-staging-infrastructure.sh installs ESO at line 533\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T16:46:54-05:00",
+          "tree_id": "c1b397bbdfd31cc0527462ff5a60d5133a0bf6f7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b17ab2592b8184f743fbd4d0738dc41409a9cef3"
+        },
+        "date": 1762120300637,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.6570925025507,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015812874568106787",
+            "extra": "mean: 6.912899897959494 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.7049628225418,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001595126182229036",
+            "extra": "mean: 6.724725126984212 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50725.06588769595,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023941673408109663",
+            "extra": "mean: 19.71411929190936 usec\nrounds: 8869"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53730.752192135034,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023345106904842685",
+            "extra": "mean: 18.611315851751232 usec\nrounds: 12680"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49319.852426925645,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002397848468627548",
+            "extra": "mean: 20.275810871122168 usec\nrounds: 18379"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.76881613768822,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003655644666969263",
+            "extra": "mean: 5.241946877094659 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35908521244706,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010664339469151127",
+            "extra": "mean: 51.655333349999566 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93532873959132,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004330750289628274",
+            "extra": "mean: 100.65092219999698 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2493913.5401432216,
+            "unit": "iter/sec",
+            "range": "stddev: 5.192319768064514e-8",
+            "extra": "mean: 400.97621024286656 nsec\nrounds: 191608"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5120.970544849901,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016265492028901574",
+            "extra": "mean: 195.2754836689479 usec\nrounds: 2235"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3020.90812073983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010247741418510037",
+            "extra": "mean: 331.02628747116506 usec\nrounds: 2602"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2992.525980874057,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009534753850421774",
+            "extra": "mean: 334.16585399466436 usec\nrounds: 1815"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59105.18913862148,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021596757896983422",
+            "extra": "mean: 16.918988240688392 usec\nrounds: 12926"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17002.10707900202,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001898272667325253",
+            "extra": "mean: 58.8162393845303 usec\nrounds: 5393"
           }
         ]
       }
