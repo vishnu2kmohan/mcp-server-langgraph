@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762121462379,
+  "lastUpdate": 1762122072868,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -22148,6 +22148,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018068207767438274",
             "extra": "mean: 59.05315536982717 usec\nrounds: 4544"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f3c5b307e31d51b755f60912ca7ba774c9f75fb9",
+          "message": "fix(gke): resolve deployment env var value/valueFrom conflict\n\nThis commit fixes the invalid Kubernetes manifest error by moving environment variable overrides from deployment patch to ConfigMap patch.\n\n**Root Cause**:\n- Base deployment defines LLM_PROVIDER and MODEL_NAME with `valueFrom: configMapKeyRef`\n- Staging deployment-patch.yaml tried to override with `value: \"google\"` and `value: \"gemini-2.5-flash\"`\n- Kustomize merged both, creating invalid manifest with BOTH `value` AND `valueFrom`\n- Error: \"spec.template.spec.containers[0].env[0].valueFrom: Invalid value: may not be specified when `value` is not empty\"\n\n**Changes Made**:\n\n1. **configmap-patch.yaml** (lines 10-12):\n   - Added llm_provider: \"google\"\n   - Added model_name: \"gemini-2.5-flash\"\n   - These override the base ConfigMap values properly\n\n2. **deployment-patch.yaml** (removed lines 41-46):\n   - Removed LLM_PROVIDER env var with value: \"google\"\n   - Removed MODEL_NAME env var with value: \"gemini-2.5-flash\"\n   - Kept Vertex AI configuration (VERTEX_PROJECT, VERTEX_LOCATION)\n   - Environment variables now reference ConfigMap values only\n\n**Why This Works**:\n\nStrategic Merge Patch (Kustomize):\n- ConfigMap patch: Merges data fields correctly\n- Deployment patch: Only defines new env vars, doesn't override base env structure\n- Result: Valid manifest with valueFrom: configMapKeyRef pointing to patched ConfigMap\n\n**Validation**:\n```bash\n$ kubectl kustomize deployments/overlays/staging-gke | grep -A 5 \"name: LLM_PROVIDER\"\n- name: LLM_PROVIDER\n  valueFrom:\n    configMapKeyRef:\n      key: llm_provider\n      name: staging-mcp-server-langgraph-config\n```\n\n✅ No value/valueFrom conflict\n✅ Kustomize build successful (2616 lines generated)\n✅ ConfigMap properly patched with Google/Gemini values\n\n**Verification**:\n- Checked all other overlays (dev, staging, production, production-gke)\n- None have this issue (staging-gke was the only one affected)\n- No EKS or AKS overlays exist currently\n\n**Expected Results**:\n- ✅ Valid Kubernetes manifest\n- ✅ Server-side validation passes\n- ✅ Deployment succeeds\n- ✅ Environment variables correctly loaded from patched ConfigMap\n\nFixes: Invalid Kubernetes manifest error\nFixes: \"may not be specified when value is not empty\" validation error\n\nRelated: Server-side validation (commit a863b2d) now properly reveals manifest errors\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T17:20:07-05:00",
+          "tree_id": "129c7f9ecc271f4dab8ec5e2c1164d2d4f2a07d4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f3c5b307e31d51b755f60912ca7ba774c9f75fb9"
+        },
+        "date": 1762122071380,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.67461910160318,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008427748060701152",
+            "extra": "mean: 6.86461379591824 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.98722311673578,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011714933479504137",
+            "extra": "mean: 6.623076968750197 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51161.6585911334,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021429907347235496",
+            "extra": "mean: 19.545887047792185 usec\nrounds: 7242"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53227.24816785322,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022382536525188956",
+            "extra": "mean: 18.78736989833627 usec\nrounds: 13182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49377.927939507776,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005363472250398892",
+            "extra": "mean: 20.251963614696155 usec\nrounds: 20173"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.85397632913933,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024772778657757985",
+            "extra": "mean: 5.239607888889037 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.434883288953824,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017303094030018644",
+            "extra": "mean: 51.453872149999924 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.957075515435427,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020156497007605866",
+            "extra": "mean: 100.4310953000008 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2658499.9112258554,
+            "unit": "iter/sec",
+            "range": "stddev: 3.807806744807558e-8",
+            "extra": "mean: 376.1519779547001 nsec\nrounds: 98435"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5137.014089545574,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012563147023025917",
+            "extra": "mean: 194.6656136363568 usec\nrounds: 616"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2976.4787960739222,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001507238938237227",
+            "extra": "mean: 335.96745299144555 usec\nrounds: 2808"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2944.3743611193954,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000752413069921376",
+            "extra": "mean: 339.6307253605547 usec\nrounds: 1664"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58937.02693350412,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019179237322984084",
+            "extra": "mean: 16.96726238207185 usec\nrounds: 11872"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17264.311737952117,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001790832891972685",
+            "extra": "mean: 57.92295778589894 usec\nrounds: 5709"
           }
         ]
       }
