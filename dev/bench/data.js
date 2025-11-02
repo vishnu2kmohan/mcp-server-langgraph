@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762057142741,
+  "lastUpdate": 1762058010071,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -19600,6 +19600,114 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019271375766298884",
             "extra": "mean: 58.50391289652203 usec\nrounds: 5327"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "0bc25bc2f9e3fe72f8a3e5cd23a458334c392e97",
+          "message": "docs: optimize README organization and replace ASCII art with Mermaid diagrams\n\nMajor improvements to README.md for better organization and visual quality:\n\n## Visual Improvements\n- Replace System Architecture ASCII diagram (41 lines) with Mermaid flowchart\n- Replace Agentic Loop ASCII diagram (52 lines) with Mermaid flowchart\n- Apply ColorBrewer2 Set3 palette with semantic color coding\n- Use modern flowchart syntax with proper classDef styling\n- All diagrams pass mermaid styling validation\n\n## Content Optimization\n- Add comprehensive Table of Contents with quick links\n- Create decision table for Template vs Project Usage (65% reduction)\n- Simplify Testing Strategy section to table format (88% reduction)\n- Simplify Authentication section to table format (81% reduction)\n- Consolidate redundant Documentation sections\n\n## Organization\n- Improve progressive disclosure (simple → complex)\n- Replace verbose prose with scannable comparison tables\n- Add cross-references to detailed documentation guides\n- Better visual hierarchy with emoji icons\n\n## Metrics\n- Before: 1,290 lines\n- After: 1,015 lines\n- Reduction: 275 lines (21% smaller)\n- Net: +126 insertions, -400 deletions\n\nAll diagrams validated with check_mermaid_styling.py ✅\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T00:32:34-04:00",
+          "tree_id": "cc62d3c2f307e039c3b447ab72040547d9b8a9b2",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/0bc25bc2f9e3fe72f8a3e5cd23a458334c392e97"
+        },
+        "date": 1762058009359,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51124.56211468556,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002325998253706814",
+            "extra": "mean: 19.560069732367438 usec\nrounds: 7959"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53356.91277022947,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032680270558306834",
+            "extra": "mean: 18.7417140175687 usec\nrounds: 12256"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49662.45548381977,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002325189890766381",
+            "extra": "mean: 20.13593549207014 usec\nrounds: 19672"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.00510057790623,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001787738171116404",
+            "extra": "mean: 5.235462283333764 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.373457614865696,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009109843257702346",
+            "extra": "mean: 51.617012299997356 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.942220487371003,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000523623637260179",
+            "extra": "mean: 100.58115300000026 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2531447.3202490006,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6254777212394866e-8",
+            "extra": "mean: 395.03093428056684 nsec\nrounds: 184468"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5185.486555202302,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014029686513376423",
+            "extra": "mean: 192.84593438908007 usec\nrounds: 2652"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2958.184953497179,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008655964024581082",
+            "extra": "mean: 338.045124196104 usec\nrounds: 2488"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2862.922925458704,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004487788877377982",
+            "extra": "mean: 349.29337115835125 usec\nrounds: 1692"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59597.50539804446,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002083154668225899",
+            "extra": "mean: 16.779225796803445 usec\nrounds: 10040"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16894.65725263473,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022331465938874608",
+            "extra": "mean: 59.190309992471114 usec\nrounds: 5184"
           }
         ]
       }
