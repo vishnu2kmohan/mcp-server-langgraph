@@ -33,7 +33,7 @@ Successfully completed **comprehensive analysis and implementation** of GCP GKE 
 - ⏳ `docs/deployment/cost-optimization.mdx` (in progress)
 - ⏳ `docs/security/gcp-security-hardening.mdx` (in progress)
 
-**Remaining** (12 additional .mdx files + mint.json update)
+**Remaining** (12 additional .mdx files + docs.json update)
 
 ---
 

@@ -107,7 +107,7 @@ Successfully completed a comprehensive documentation audit and remediation of th
 ✅ **Perfect Sync Maintained**
 - Source: `adr/` (26 files: 25 ADRs + 1 README)
 - Mintlify: `docs/architecture/` (25 ADR .mdx files)
-- Navigation: All 25 ADRs in mint.json
+- Navigation: All 25 ADRs in docs.json
 
 | ADR # | Source | Mintlify | Navigation |
 |-------|--------|----------|------------|
@@ -210,7 +210,7 @@ python scripts/validate_documentation_links.py 2>&1 | grep "Found.*broken links"
 ## Files Modified
 
 ### Configuration
-1. **docs/mint.json** - Added 5 pages, created 2 navigation groups
+1. **docs/docs.json** - Added 5 pages, created 2 navigation groups
 
 ### Documentation Files
 2. **CHANGELOG.md** - Fixed 3 broken references
@@ -339,8 +339,8 @@ python scripts/validate_documentation_links.py -o reports/link_report.md
 # Test Mintlify build
 cd docs && mintlify dev
 
-# Validate mint.json
-python -c "import json; json.load(open('docs/mint.json'))"
+# Validate docs.json
+python -c "import json; json.load(open('docs/docs.json'))"
 
 # Check ADR sync
 ls -1 adr/*.md | wc -l  # Should be 26 (25 ADRs + 1 README)
@@ -408,7 +408,7 @@ ls -1 docs/architecture/adr-*.mdx | wc -l  # Should be 25
 - ✅ 134 .github/ references improved
 
 ### Files Modified
-- **Core**: 5 files (CHANGELOG, SECURITY, REPOSITORY_STRUCTURE, TESTING, docs/mint.json)
+- **Core**: 5 files (CHANGELOG, SECURITY, REPOSITORY_STRUCTURE, TESTING, docs/docs.json)
 - **.github/**: 6 files (SUPPORT, CONTRIBUTING, CLAUDE, AGENTS, templates)
 - **Archive**: 2 files (SECURITY_AUDIT, security-review)
 - **ADRs**: 28 files (3 source + 25 Mintlify)

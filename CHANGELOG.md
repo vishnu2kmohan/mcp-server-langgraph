@@ -1076,7 +1076,7 @@ VERIFICATION_MODE=standard
 - Fixed integration guide paths (integrations/, reference/, docs-internal/)
 - Updated architecture diagram to show agentic loop components
 - Converted ADR-0023 and ADR-0024 to Mintlify format
-- Updated docs/mint.json navigation to include new ADRs
+- Updated docs/docs.json navigation to include new ADRs
 - Fixed tool name references (chat → agent_chat)
 
 #### Files Created

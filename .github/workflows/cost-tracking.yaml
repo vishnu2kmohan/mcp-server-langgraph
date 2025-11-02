@@ -60,14 +60,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Setup Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
+        cache-key-prefix: 'cost-tracking'
 
-    - name: Install dependencies
+    - name: Install cost tracking dependencies
       run: |
-        pip install requests pandas tabulate
+        uv sync --group cost-tracking
+        echo "✓ Cost tracking dependencies installed via uv"
 
     - name: Fetch workflow runs
       id: fetch
@@ -248,7 +250,7 @@ jobs:
         print(report)
         PYTHON_SCRIPT
 
-        PERIOD_DAYS=${{ steps.fetch.outputs.period }} python analyze_costs.py
+        PERIOD_DAYS=${{ steps.fetch.outputs.period }} uv run python analyze_costs.py
 
         # Load metrics into outputs
         source cost-metrics.txt

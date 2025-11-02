@@ -191,7 +191,7 @@ docs/
 └── releases/ (6 MDX files)
 ```
 
-**Mintlify Configuration** (`docs/mint.json`):
+**Mintlify Configuration** (`docs/docs.json`):
 - ✅ 5 tabs: API Reference, Deployment, Guides, Architecture, Releases
 - ✅ Complete navigation structure (257 lines)
 - ✅ All 25 ADRs included

@@ -144,7 +144,7 @@ docs/
 │   ├── adr-0018-*.mdx ⚠️ v2.2.0 references
 │   ├── adr-0020-*.mdx ⚠️ v2.2.0 references
 │   └── adr-0021-*.mdx ⚠️ v2.2.0 reference
-└── mint.json (80 .mdx files referenced)
+└── docs.json (80 .mdx files referenced)
 
 Total: 108 files (95 .md + .mdx in docs/, 13 .md at root)
 Issues: 2 duplicates, 3 outdated ADRs, 13 orphaned .md files
@@ -176,7 +176,7 @@ docs/
 │   ├── adr-0018-*.mdx ✅ v2.4.0
 │   ├── adr-0020-*.mdx ✅ v2.4.0
 │   └── adr-0021-*.mdx ✅ v2.4.0
-└── mint.json (80 .mdx files referenced, all valid)
+└── docs.json (80 .mdx files referenced, all valid)
 
 Total: 91 files (11 .md, 80 .mdx in docs/, 7 .md at root)
 Issues: 0 duplicates, 0 outdated versions, 0 orphaned files
@@ -261,8 +261,8 @@ grep -r "kubernetes\.md\|langgraph-platform\.md\|cloudrun\.md\|production\.md\|t
 ### ✅ Mintlify Navigation Validation
 
 ```bash
-# Verify all files in mint.json exist
-grep -o '"[^"]*"' docs/mint.json | grep -E '\.mdx$' | while read file; do
+# Verify all files in docs.json exist
+grep -o '"[^"]*"' docs/docs.json | grep -E '\.mdx$' | while read file; do
   file_path="docs/${file//\"/}"
   [ -f "$file_path" ] || echo "MISSING: $file_path"
 done
@@ -386,7 +386,7 @@ done
 | Requirement | Status | Evidence |
 |-------------|--------|----------|
 | No duplicate .md/.mdx for same topic | ✅ PASS | 2 duplicates removed (kubernetes, langgraph-platform) |
-| All user-facing docs in Mintlify | ✅ PASS | 80 .mdx files in mint.json, all valid |
+| All user-facing docs in Mintlify | ✅ PASS | 80 .mdx files in docs.json, all valid |
 | Version consistency at 2.4.0 | ✅ PASS | 10 version references updated across 3 ADRs |
 | No broken internal links | ✅ PASS | Grep search found 0 references to deleted files |
 | Clear doc organization | ✅ PASS | docs/reference/ created with README.md |

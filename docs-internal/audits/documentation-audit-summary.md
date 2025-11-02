@@ -39,7 +39,7 @@
 
 ### Modified (2)
 - `CHANGELOG.md` - Fixed version status
-- `docs/mint.json` - Added VMWARE_RESOURCE_ESTIMATION
+- `docs/docs.json` - Added VMWARE_RESOURCE_ESTIMATION
 
 ### Moved (5)
 - `DOCUMENTATION_AUDIT_*.md` → `docs-internal/audits/` (3 files)
@@ -73,12 +73,12 @@
    ```bash
    git status
    git diff CHANGELOG.md
-   git diff docs/mint.json
+   git diff docs/docs.json
    ```
 
 2. **Commit changes**:
    ```bash
-   git add CHANGELOG.md docs/mint.json docs-internal/ DOCUMENTATION_AUDIT_SUMMARY.md
+   git add CHANGELOG.md docs/docs.json docs-internal/ DOCUMENTATION_AUDIT_SUMMARY.md
    git commit -m "docs: comprehensive documentation audit and cleanup
 
    - Fix CHANGELOG.md v2.8.0 version status (mark as Unreleased)

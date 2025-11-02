@@ -34,7 +34,7 @@ mintlify dev
 ### Adding New Pages
 
 1. Create a new `.mdx` file in the appropriate subdirectory
-2. Add the page reference to `../mint.json` navigation
+2. Add the page reference to `../docs/docs.json` navigation
 3. Restart `mintlify dev` to see changes
 
 Example:
@@ -54,7 +54,7 @@ Content goes here...
 ### File Naming
 - Use lowercase with hyphens: `multi-llm-setup.mdx`
 - Be descriptive but concise
-- Match the navigation slug in `mint.json`
+- Match the navigation slug in `docs.json`
 
 ### Content Structure
 ```mdx
@@ -121,7 +121,7 @@ The following content types are **not** in this directory:
 
 ## 🔧 Configuration
 
-All Mintlify configuration is in `../mint.json`:
+All Mintlify configuration is in `../docs/docs.json`:
 - Navigation structure
 - Theme and branding
 - API endpoints

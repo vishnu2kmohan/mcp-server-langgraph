@@ -58,7 +58,7 @@ All renamed using `git mv` to preserve history:
 4. `VMWARE_RESOURCE_ESTIMATION.mdx` → `vmware-resource-estimation.mdx`
 
 #### References Updated (3 files)
-1. `docs/mint.json` - Updated 4 navigation references
+1. `docs/docs.json` - Updated 4 navigation references
 2. `docs/reference/README.md` - Updated operational docs references
 3. `docs/deployment/version-pinning.mdx` - Updated 2 internal links
 

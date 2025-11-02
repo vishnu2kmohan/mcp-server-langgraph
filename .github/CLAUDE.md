@@ -213,13 +213,13 @@ Claude Code generates documentation with:
 ### Mintlify Documentation Integration (2025-10-14)
 
 **Documentation Structure**:
-- Moved `mint.json` to `docs/` directory for clean scanning
+- Using `docs.json` in `docs/` directory (modern Mintlify v4+ format)
 - Fixed all MDX/Markdown parsing errors (HTML entity escaping)
 - 100% documentation coverage across all features
-- Comprehensive navigation structure with 4 main tabs
+- Comprehensive navigation structure with 7 main tabs
 
 **Files Updated**:
-- `docs/mint.json` (currently backed up as `mint.json.backup`)
+- `docs/docs.json` (modern Mintlify v4+ configuration)
 - `.mintlifyignore` - Enhanced ignore patterns
 - Multiple `.mdx` files - Fixed `<` character escaping
 

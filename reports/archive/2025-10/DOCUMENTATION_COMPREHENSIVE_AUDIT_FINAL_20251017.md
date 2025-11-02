@@ -316,7 +316,7 @@ python scripts/validate_documentation_links.py
 
 ### B. Files Modified in This Audit
 
-1. `docs/mint.json` - Added 5 pages, created 2 new navigation groups
+1. `docs/docs.json` - Added 5 pages, created 2 new navigation groups
 2. `docs/architecture/adr-*.mdx` - Fixed 37+ cross-references
 3. `../adr/*.md` - Updated reference file paths
 4. `.github/SUPPORT.md` - Updated reference paths

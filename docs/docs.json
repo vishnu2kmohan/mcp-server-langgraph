@@ -41,7 +41,9 @@
               "comparisons/vs-crewai",
               "comparisons/vs-google-adk",
               "comparisons/vs-claude-agent-sdk",
-              "comparisons/vs-microsoft-agent-framework"
+              "comparisons/vs-microsoft-agent-framework",
+              "comparisons/benchmarks",
+              "comparisons/tco-calculator"
             ]
           },
           {
@@ -292,7 +294,7 @@
             ]
           },
           {
-            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40)",
+            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-42)",
             "pages": [
               "architecture/adr-0008-infisical-secrets-management",
               "architecture/adr-0009-feature-flag-system",
@@ -302,7 +304,9 @@
               "architecture/adr-0027-rate-limiting-strategy",
               "architecture/adr-0028-caching-strategy",
               "architecture/adr-0030-resilience-patterns",
-              "architecture/adr-0040-gcp-gke-autopilot-deployment"
+              "architecture/adr-0040-gcp-gke-autopilot-deployment",
+              "architecture/adr-0041-cost-monitoring-dashboard",
+              "architecture/adr-0042-visual-workflow-builder"
             ]
           },
           {
@@ -347,6 +351,19 @@
               "releases/v2-3-0",
               "releases/v2-2-0",
               "releases/v2-1-0"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Compliance",
+        "groups": [
+          {
+            "group": "Compliance Frameworks",
+            "pages": [
+              "compliance/gdpr-compliance",
+              "compliance/hipaa-compliance",
+              "compliance/soc2-compliance"
             ]
           }
         ]

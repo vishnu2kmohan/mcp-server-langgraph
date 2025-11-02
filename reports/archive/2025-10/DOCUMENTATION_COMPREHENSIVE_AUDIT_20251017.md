@@ -39,7 +39,7 @@
 **Fix Required**:
 1. Convert `/../adr/0025-anthropic-best-practices-enhancements.md` to MDX format
 2. Place in `/docs/architecture/adr-0025-anthropic-best-practices-enhancements.mdx`
-3. Update `docs/mint.json` navigation (see Issue #3 below)
+3. Update `docs/docs.json` navigation (see Issue #3 below)
 
 **Priority**: 🔴 CRITICAL - Breaks documentation consistency
 
@@ -57,7 +57,7 @@
 
 **Fix Required**:
 1. Create `/docs/releases/v2-6-0.mdx` from CHANGELOG.md content
-2. Add to `docs/mint.json` navigation under "Version History" group
+2. Add to `docs/docs.json` navigation under "Version History" group
 3. Ensure it's listed FIRST in the version history (most recent)
 
 **Priority**: 🔴 CRITICAL - Latest version undocumented
@@ -69,13 +69,13 @@
 **Impact**: Users cannot access ADR-0025 or v2.6.0 docs via Mintlify UI
 
 **Current State**:
-- `docs/mint.json` has 24 ADR references but only includes 0001-0024
+- `docs/docs.json` has 24 ADR references but only includes 0001-0024
 - Navigation group "Development & Quality (ADRs 10, 14-19, 22-24)" stops at ADR-0024
 - No v2.6.0 in "Version History"
 
 **Fix Required**:
 
-Update `/docs/mint.json`:
+Update `/docs/docs.json`:
 
 ```json
 {
@@ -180,7 +180,7 @@ And:
 - Actual ADRs: 25 (0001-0025 in `/../adr/` directory)
 - ../adr/README.md: Lists 25 ADRs (correct)
 - README.md: Multiple references need updating
-- docs/mint.json: References 24 ADRs (missing ADR-0025)
+- docs/docs.json: References 24 ADRs (missing ADR-0025)
 
 **Fix Required**: Update all references to "25 ADRs"
 
@@ -234,7 +234,7 @@ And:
 - `/logo/favicon.svg` - EXISTS ✓
 - `/docs/favicon.svg` - EXISTS ✓
 
-**mint.json References**: All correct ✓
+**docs.json References**: All correct ✓
 
 **Priority**: ✅ No action needed
 
@@ -414,9 +414,9 @@ See previous audit report for details on:
    # Follow format of existing v2-5-0.mdx
    ```
 
-3. **Update mint.json**:
+3. **Update docs.json**:
    ```bash
-   # Edit docs/mint.json
+   # Edit docs/docs.json
    # Add ADR-0025 to "Development & Quality" group
    # Add v2-6-0 to "Version History" group
    # Update group label to include ADR-25
@@ -502,7 +502,7 @@ on:
     paths:
       - '**.md'
       - '**.mdx'
-      - 'docs/mint.json'
+      - 'docs/docs.json'
 
 jobs:
   check-links:
@@ -529,12 +529,12 @@ adr_count=$(ls -1 ../adr/*.md | grep -E '[0-9]{4}' | wc -l)
 # Count ADRs in Mintlify
 mintlify_count=$(ls -1 docs/architecture/adr-*.mdx | wc -l)
 
-# Count ADRs in mint.json
-mint_json_count=$(grep -c '"architecture/adr-' docs/mint.json)
+# Count ADRs in docs.json
+mint_json_count=$(grep -c '"architecture/adr-' docs/docs.json)
 
 echo "ADRs in /../adr/: $adr_count"
 echo "ADRs in /docs/architecture/: $mintlify_count"
-echo "ADRs in mint.json: $mint_json_count"
+echo "ADRs in docs.json: $mint_json_count"
 
 if [ "$adr_count" != "$mintlify_count" ] || [ "$adr_count" != "$mint_json_count" ]; then
   echo "❌ ADR count mismatch!"

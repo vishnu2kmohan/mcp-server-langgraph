@@ -273,7 +273,7 @@ open http://localhost:3000
 - **Testing**: See `docs/advanced/testing.mdx`
 - **Development**: See `docs/advanced/development-setup.mdx`
 - **Contributing**: See `CONTRIBUTING.md` and `docs/advanced/contributing.mdx`
-- **Mintlify Docs**: See `docs/mint.json` (100% coverage)
+- **Mintlify Docs**: See `docs/docs.json` (100% coverage)
 
 ## Current Project State (2025-10-14)
 

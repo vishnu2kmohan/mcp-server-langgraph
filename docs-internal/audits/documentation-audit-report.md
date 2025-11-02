@@ -30,7 +30,7 @@
 
 ## Phase 1: Mintlify Validation ✅
 
-### mint.json Structure
+### docs.json Structure
 - **Status**: ✅ Valid JSON
 - **Schema Version**: Latest (https://mintlify.com/schema.json)
 - **Configuration**: Complete and well-formed
@@ -559,10 +559,10 @@ grep -r "\.md)" docs/architecture/
 **Tasks**:
 1. ⏳ Create `docs/releases/v2-8-0.mdx`
 2. ⏳ Add orphaned user-facing docs to navigation
-3. ⏳ Update `mint.json` with new navigation entries
+3. ⏳ Update `docs.json` with new navigation entries
 4. ⏳ Test navigation structure
 
-**mint.json Updates**:
+**docs.json Updates**:
 ```json
 // Add to navigation array
 {
@@ -619,7 +619,7 @@ grep -r "\.md)" docs/architecture/
 
 Documentation is considered **clean and production-ready** when:
 
-- [x] ✅ mint.json is valid JSON
+- [x] ✅ docs.json is valid JSON
 - [x] ✅ All navigation references resolve to existing files
 - [ ] ⏳ No broken internal documentation links (21 to fix)
 - [ ] ⏳ Version numbers consistent across all files (3 to fix)
@@ -640,8 +640,8 @@ Documentation is considered **clean and production-ready** when:
 After remediation, run these validations:
 
 ```bash
-# 1. Validate mint.json syntax
-python3 -c "import json; json.load(open('docs/mint.json')); print('✅ mint.json valid')"
+# 1. Validate docs.json syntax
+python3 -c "import json; json.load(open('docs/docs.json')); print('✅ docs.json valid')"
 
 # 2. Test Mintlify build locally
 cd docs && mintlify dev
@@ -655,7 +655,7 @@ grep -r "2\.[0-9]\.[0-9]" README.md CHANGELOG.md .env.example docs/releases/
 
 # 5. Count orphaned files
 find docs -name "*.mdx" -o -name "*.md" | wc -l
-python3 -c "import json; nav = json.load(open('docs/mint.json'))['navigation']; print('Navigation entries:', len([p for g in nav for p in g.get('pages', [])]))"
+python3 -c "import json; nav = json.load(open('docs/docs.json'))['navigation']; print('Navigation entries:', len([p for g in nav for p in g.get('pages', [])]))"
 
 # 6. Verify ADR sync
 ls -1 adr/*.md | wc -l
@@ -668,7 +668,7 @@ ls -1 docs/architecture/adr-*.mdx | wc -l
 
 ### A. Tools Used in This Audit
 
-1. **Python JSON parser**: Validate mint.json
+1. **Python JSON parser**: Validate docs.json
 2. **Bash glob patterns**: Find documentation files
 3. **Python regex**: Extract links and patterns
 4. **File system traversal**: Compare directories
@@ -680,7 +680,7 @@ ls -1 docs/architecture/adr-*.mdx | wc -l
 - Mintlify pages: 96
 - Root documentation: 10+
 - ADR files: 52 (26 in each location)
-- Configuration files: mint.json, pyproject.toml, .env.example
+- Configuration files: docs.json, pyproject.toml, .env.example
 
 ### C. Recommendations for Future Audits
 

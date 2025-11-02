@@ -71,13 +71,13 @@ grep -n "2\.[0-7]\.0" CHANGELOG.md docs/releases/overview.mdx
 
 **High-Value Docs to Add First**:
 ```
-Priority files (add to mint.json):
+Priority files (add to docs.json):
 1. docs/reference/environment-variables.md
 2. docs/development/integration-testing.md
 3. docs/diagrams/system-architecture.md
 ```
 
-**Suggested mint.json additions**:
+**Suggested docs.json additions**:
 ```json
 {
   "group": "Reference",
@@ -118,7 +118,7 @@ Released: 2025-10-20
 
 EOF
 
-# Add to mint.json navigation (under Version History group)
+# Add to docs.json navigation (under Version History group)
 ```
 
 ---
@@ -162,7 +162,7 @@ grep -r "2\.[0-9]\.[0-9]" .env.example README.md | grep -v "2.8.0"
 # 3. Navigation completeness
 python3 << 'EOF'
 import json
-with open('docs/mint.json') as f:
+with open('docs/docs.json') as f:
     nav = json.load(f)['navigation']
     pages = [p for g in nav for p in g.get('pages', [])]
     print(f"Navigation entries: {len(pages)}")

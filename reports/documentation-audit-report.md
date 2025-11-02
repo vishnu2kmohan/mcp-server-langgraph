@@ -30,7 +30,7 @@ The MCP Server LangGraph repository maintains **exceptional documentation qualit
 **Structure**:
 ```
 docs/
-├── mint.json                          # Mintlify configuration (UPDATED)
+├── docs.json                          # Mintlify configuration (UPDATED)
 ├── getting-started/                   # 8 files - Installation & quickstart
 ├── guides/                            # 25 files - How-to guides
 │   ├── service-principals.mdx         # ✅ NEW (v3.0)
@@ -216,7 +216,7 @@ docs/
 
 ### 3.1 Navigation Structure Updated
 
-**Added to `docs/mint.json`**:
+**Added to `docs/docs.json`**:
 
 1. **New ADR Group** - "Enterprise Authentication (ADRs 31-39) - NEW"
    - 9 new ADRs added to navigation
@@ -298,7 +298,7 @@ docs/
 - `pyproject.toml`: **2.8.0**
 - `.env.example`: **2.7.0** ⚠️ (needs update)
 - `README.md`: References 2.7.0, 2.8.0, 3.0.0
-- `mint.json`: No version (uses GitHub releases)
+- `docs.json`: No version (uses GitHub releases)
 - Release docs: Up to v2.8.0
 
 **Recommendation**: Update `.env.example` SERVICE_VERSION to 2.8.0
@@ -574,7 +574,7 @@ docs/
 
 ### Immediate (This PR)
 
-- [x] Update mint.json with new navigation groups
+- [x] Update docs.json with new navigation groups
 - [x] Convert .md files to .mdx
 - [x] Copy ADRs to docs/architecture/
 - [x] Fix broken internal links
@@ -639,7 +639,7 @@ docs/
 15. `docs/architecture/keycloak-jwt-architecture-overview.mdx`
 
 **Modified Files** (2):
-1. `docs/mint.json` - Added 2 new navigation groups
+1. `docs/docs.json` - Added 2 new navigation groups
 2. `README.md` - Added Enterprise Authentication section
 
 **Total Documentation Impact**: +16 files, ~15,000 lines of new documentation

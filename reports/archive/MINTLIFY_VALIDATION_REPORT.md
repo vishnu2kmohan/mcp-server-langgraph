@@ -30,7 +30,7 @@ Pages found: 77 (100.0%)
 Missing pages: 0 (0.0%)
 ```
 
-All pages referenced in `mint.json` navigation now exist in the `docs/` directory.
+All pages referenced in `docs.json` navigation now exist in the `docs/` directory.
 
 ### ✅ Asset Files: Complete
 
@@ -123,7 +123,7 @@ The documentation includes:
 
 **Action**: Copied `docs/guides/observability.mdx` → `docs/getting-started/observability.mdx`
 
-**Reason**: mint.json expects observability in Core Concepts section (getting-started)
+**Reason**: docs.json expects observability in Core Concepts section (getting-started)
 
 ### 5. Created Logo and Favicon Assets ✅
 
@@ -152,7 +152,7 @@ The documentation includes:
 
 ## Mintlify Configuration Analysis
 
-### mint.json Structure ✅
+### docs.json Structure ✅
 
 ```json
 {
@@ -232,7 +232,7 @@ mintlify dev
 1. ✅ All 77 navigation paths exist
 2. ✅ All MDX files have proper frontmatter
 3. ✅ Logo and favicon assets created
-4. ✅ No broken internal links in mint.json
+4. ✅ No broken internal links in docs.json
 5. ✅ Directory structure matches navigation
 
 **Automated Validation Script**:
@@ -293,7 +293,7 @@ The documentation can be deployed to Mintlify hosting immediately:
 1. Sign up at https://mintlify.com
 2. Connect GitHub repository: `vishnu2kmohan/mcp-server-langgraph`
 3. Set documentation path: `.` (root directory)
-4. Mintlify auto-detects `mint.json`
+4. Mintlify auto-detects `docs.json`
 5. Deploy!
 
 **Expected URL**: `https://mcp-server-langgraph.mintlify.app`
@@ -471,7 +471,7 @@ docs/getting-started/introduction.mdx   (removed hero image references)
 ### Existing Files (Validated)
 
 ```
-mint.json                               (6,161 bytes, validated)
+docs.json                               (6,161 bytes, validated)
 package.json                            (376 bytes, validated)
 docs/**/*.mdx                           (80 files, validated)
 ```
@@ -488,7 +488,7 @@ The Mintlify documentation for MCP Server with LangGraph is **complete and valid
 - **21 Architecture Decision Records** converted to MDX format
 - **Complete navigation structure** with 19 groups
 - **Logo and favicon assets** created
-- **No broken links** in mint.json configuration
+- **No broken links** in docs.json configuration
 - **Ready for deployment** to Mintlify hosting
 
 ### 🚀 Next Steps

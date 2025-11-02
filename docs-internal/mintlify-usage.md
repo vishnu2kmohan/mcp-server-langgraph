@@ -6,9 +6,9 @@ This project uses [Mintlify](https://mintlify.com) for documentation.
 
 ```
 /
-├── mint.json              # Mintlify configuration (root)
 ├── .mintlifyignore        # Files to exclude from Mintlify (root)
 └── docs/
+    ├── docs.json          # Mintlify configuration (Mintlify v4+)
     ├── getting-started/   # Getting started guides (MDX)
     ├── api-reference/     # API documentation (MDX)
     ├── guides/            # How-to guides (MDX)
@@ -67,7 +67,7 @@ Or use GitHub Actions (see `.github/workflows/mintlify.yml`)
 
 ## Configuration
 
-All configuration is in `mint.json` at the project root:
+All configuration is in `docs/docs.json` (Mintlify v4+ format):
 - Navigation structure
 - Theming and branding
 - API reference endpoints
@@ -76,22 +76,29 @@ All configuration is in `mint.json` at the project root:
 ## Adding New Pages
 
 1. Create a new `.mdx` file in the appropriate `docs/` subdirectory
-2. Add the page reference to `mint.json` navigation
+2. Add the page reference to `docs/docs.json` navigation
 3. Restart `mintlify dev` to see changes
 
 Example:
 ```json
-// mint.json
+// docs/docs.json
 {
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": [
-        "getting-started/introduction",
-        "getting-started/new-page"  // ← Add here
-      ]
-    }
-  ]
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "getting-started/introduction",
+              "getting-started/new-page"  // ← Add here
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
@@ -103,8 +110,8 @@ Example:
 - Check that `.venv/` is listed in `.mintlifyignore`
 
 ### Page not showing up
-- Check that the file path in `mint.json` matches the actual `.mdx` file
-- File paths are relative to project root
+- Check that the file path in `docs/docs.json` matches the actual `.mdx` file
+- File paths are relative to docs/ directory
 - Example: `"getting-started/introduction"` → `docs/getting-started/introduction.mdx`
 
 ### Changes not appearing

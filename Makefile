@@ -418,13 +418,13 @@ validate-helm:
 validate-kustomize:
 	@echo "Validating Kustomize overlays in parallel..."
 	@( \
-		echo "  Validating dev overlay..." && kubectl kustomize deployments/kustomize/overlays/dev > /dev/null 2>&1 && echo "  ✓ dev overlay valid" \
+		echo "  Validating dev overlay..." && kubectl kustomize deployments/overlays/dev > /dev/null 2>&1 && echo "  ✓ dev overlay valid" \
 	) & pid1=$$!; \
 	( \
-		echo "  Validating staging overlay..." && kubectl kustomize deployments/kustomize/overlays/staging > /dev/null 2>&1 && echo "  ✓ staging overlay valid" \
+		echo "  Validating staging overlay..." && kubectl kustomize deployments/overlays/staging > /dev/null 2>&1 && echo "  ✓ staging overlay valid" \
 	) & pid2=$$!; \
 	( \
-		echo "  Validating production overlay..." && kubectl kustomize deployments/kustomize/overlays/production > /dev/null 2>&1 && echo "  ✓ production overlay valid" \
+		echo "  Validating production overlay..." && kubectl kustomize deployments/overlays/production > /dev/null 2>&1 && echo "  ✓ production overlay valid" \
 	) & pid3=$$!; \
 	wait $$pid1 $$pid2 $$pid3
 	@echo "✓ All Kustomize overlays valid"
@@ -575,7 +575,7 @@ test-rate-limit:
 # Deployment targets
 deploy-dev:
 	@echo "Deploying to development environment..."
-	kubectl apply -k deployments/kustomize/overlays/dev
+	kubectl apply -k deployments/overlays/dev
 	@echo "Waiting for rollout..."
 	kubectl rollout status deployment/dev-langgraph-agent -n langgraph-agent-dev --timeout=5m
 	@echo "✓ Development deployment complete"
@@ -586,7 +586,7 @@ deploy-dev:
 
 deploy-staging:
 	@echo "Deploying to staging environment..."
-	kubectl apply -k deployments/kustomize/overlays/staging
+	kubectl apply -k deployments/overlays/staging
 	@echo "Waiting for rollout..."
 	kubectl rollout status deployment/staging-langgraph-agent -n langgraph-agent-staging --timeout=5m
 	@echo "✓ Staging deployment complete"

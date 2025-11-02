@@ -45,8 +45,8 @@ Successfully completed comprehensive documentation audit and remediation with th
    - Content: CI/CD fixes, documentation improvements, ADR-0025 documentation
    - Impact: Latest release fully documented for users
 
-3. **Updated mint.json Navigation**
-   - File: `docs/mint.json`
+3. **Updated docs.json Navigation**
+   - File: `docs/docs.json`
    - Changes:
      - Added ADR-0025 to "Development & Quality (ADRs 10, 14-19, 22-25)" group
      - Added v2-6-0 to "Version History" group (listed first as most recent)
@@ -117,7 +117,7 @@ All files moved from root → `/reports/` with `_20251017` suffix
 ## 📝 Files Modified
 
 ### Configuration Files
-1. `docs/mint.json`
+1. `docs/docs.json`
    - Added ADR-0025 to navigation
    - Added v2-6-0 to version history
 
@@ -137,7 +137,7 @@ All files moved from root → `/reports/` with `_20251017` suffix
 1. **ADR Synchronization**:
    - Source ADRs in `/../adr/`: 25 files (0001-0025)
    - Mintlify ADRs in `/docs/architecture/`: 25 files (adr-0001.mdx through adr-0025.mdx)
-   - mint.json navigation: 25 ADRs referenced
+   - docs.json navigation: 25 ADRs referenced
    - ../adr/README.md index: 25 ADRs listed
    - **Status**: 100% synchronized ✅
 
@@ -158,7 +158,7 @@ All files moved from root → `/reports/` with `_20251017` suffix
    - `/logo/light.svg` ✅
    - `/logo/favicon.svg` ✅
    - `/docs/favicon.svg` ✅
-   - All referenced in mint.json exist ✅
+   - All referenced in docs.json exist ✅
 
 5. **Diagrams**:
    - 26 Mermaid diagrams across 17 files
@@ -237,11 +237,11 @@ Create `scripts/validate-docs.sh`:
 
 adr_source=$(ls -1 ../adr/*.md | grep -E '[0-9]{4}' | wc -l)
 adr_mintlify=$(ls -1 docs/architecture/adr-*.mdx | wc -l)
-adr_navigation=$(grep -c '"architecture/adr-' docs/mint.json)
+adr_navigation=$(grep -c '"architecture/adr-' docs/docs.json)
 
 echo "ADRs in /../adr/: $adr_source"
 echo "ADRs in /docs/architecture/: $adr_mintlify"
-echo "ADRs in mint.json: $adr_navigation"
+echo "ADRs in docs.json: $adr_navigation"
 
 if [ "$adr_source" != "$adr_mintlify" ] || [ "$adr_source" != "$adr_navigation" ]; then
   echo "❌ ADR count mismatch!"
@@ -263,7 +263,7 @@ on:
     paths:
       - '**.md'
       - '**.mdx'
-      - 'docs/mint.json'
+      - 'docs/docs.json'
       - '../adr/**'
 
 jobs:
@@ -398,7 +398,7 @@ jobs:
 
 ### Documentation Best Practices Applied
 1. **Synchronization**: Keep source ADRs and Mintlify ADRs in sync
-2. **Navigation Updates**: Always update mint.json when adding new docs
+2. **Navigation Updates**: Always update docs.json when adding new docs
 3. **Versioning**: Include dates in report filenames for historical tracking
 4. **Structure**: Clear separation between user-facing (docs/) and internal (docs-internal/)
 5. **Validation**: Regular audits catch drift early

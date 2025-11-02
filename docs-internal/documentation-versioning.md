@@ -120,11 +120,11 @@ vim docs/releases/overview.mdx
 # - Update version comparison matrix
 
 # 4. Update navigation
-vim docs/mint.json
+vim docs/docs.json
 # Add to "Version History" group
 
 # 5. Commit
-git add docs/releases/v2-8-0.mdx docs/releases/overview.mdx docs/mint.json
+git add docs/releases/v2-8-0.mdx docs/releases/overview.mdx docs/docs.json
 git commit -m "docs: add v2.8.0 release documentation"
 ```
 
@@ -280,7 +280,7 @@ icon: "arrow-up"
 - [ ] **CHANGELOG updated** with all changes since last release
 - [ ] **Release documentation created** in `docs/releases/vX-Y-Z.mdx`
 - [ ] **Overview updated** with latest version info
-- [ ] **Navigation updated** in `docs/mint.json`
+- [ ] **Navigation updated** in `docs/docs.json`
 - [ ] **ADRs synced** via `scripts/sync-adrs.py`
 - [ ] **Links validated** via `scripts/check-links.py`
 - [ ] **Migration guide created** (if breaking changes)

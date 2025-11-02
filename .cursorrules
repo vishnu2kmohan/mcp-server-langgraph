@@ -346,7 +346,7 @@ def test_function_error_case():
 - **Testing**: See docs/advanced/testing.mdx
 - **Development**: See docs/advanced/development-setup.mdx
 - **API Docs**: Run server and visit /docs
-- **Mintlify Docs**: See docs/mint.json (100% coverage)
+- **Mintlify Docs**: See docs/docs.json (100% coverage)
 
 ## Current Project State (2025-10-14)
 

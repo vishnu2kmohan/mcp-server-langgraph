@@ -143,7 +143,7 @@ mintlify dev --port 3001
 
 **Problem**: Pages show 404 errors
 ```bash
-# Check mint.json navigation paths match file locations
+# Check docs.json navigation paths match file locations
 # All paths should be relative to docs/ directory
 ```
 

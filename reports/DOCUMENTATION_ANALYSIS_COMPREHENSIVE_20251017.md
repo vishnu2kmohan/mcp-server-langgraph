@@ -240,7 +240,7 @@ Focus on fixing **HIGH PRIORITY** links in active documentation. Archive links c
 
 ### Mintlify Configuration Analysis
 
-**File**: `/docs/mint.json`
+**File**: `/docs/docs.json`
 
 **Status**: ✅ Valid and Complete
 

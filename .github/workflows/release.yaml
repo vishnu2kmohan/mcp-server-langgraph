@@ -74,10 +74,16 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Setup Python and uv
+      uses: ./.github/actions/setup-python-deps
+      with:
+        python-version: '3.12'
+        cache-key-prefix: 'release'
+
     - name: Extract CHANGELOG section
       id: extract_changelog
       run: |
-        python3 scripts/ci/extract-changelog.py \
+        uv run python scripts/ci/extract-changelog.py \
           ${{ github.ref_name }} \
           --changelog CHANGELOG.md \
           --output release_notes.md \

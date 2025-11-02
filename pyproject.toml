@@ -435,3 +435,10 @@ dev = [
     "pytest-testmon>=2.1.3",
     "pytest-xdist>=3.8.0",
 ]
+
+# Cost tracking and CI/CD analytics dependencies
+cost-tracking = [
+    "requests>=2.32.0",  # HTTP client for GitHub API
+    "pandas>=2.2.0",     # Data analysis for workflow metrics
+    "tabulate>=0.9.0",   # Table formatting for reports
+]

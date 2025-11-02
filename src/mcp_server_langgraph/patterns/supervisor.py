@@ -132,11 +132,15 @@ Choose the best agent for each sub-task."""
 
         def worker_node(state: SupervisorState) -> SupervisorState:
             """Execute worker agent."""
-            # Call the actual agent function
-            result = agent_func(state.task)
+            # Call the actual agent function with error handling
+            try:
+                result = agent_func(state.task)
+                state.agent_results[agent_name] = result
+            except Exception as e:
+                # Handle agent errors gracefully
+                state.agent_results[agent_name] = f"Error: {str(e)}"
 
-            # Store result
-            state.agent_results[agent_name] = result
+            # Track agent execution
             state.agent_history.append(agent_name)
             state.current_agent = agent_name
 

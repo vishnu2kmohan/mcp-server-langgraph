@@ -82,7 +82,6 @@ mcp-server-langgraph/
 │   └── (runtime logs)
 │
 └── Root-level files
-    ├── mint.json              # Mintlify configuration
     ├── .mintlifyignore        # Mintlify exclusions
     ├── pyproject.toml         # Python project config
     ├── README.md              # Main README
@@ -162,7 +161,7 @@ mintlify dev
 ### Adding User Documentation
 
 1. Create `.mdx` file in appropriate `docs/` subdirectory
-2. Add reference to `mint.json` navigation
+2. Add reference to `docs/docs.json` navigation
 3. Run `mintlify dev` to preview
 4. Commit and push
 
@@ -176,7 +175,7 @@ mintlify dev
 
 1. Create ADR in `adr/` using template
 2. Convert to `.mdx` for `docs/architecture/`
-3. Add to `mint.json` navigation
+3. Add to `docs/docs.json` navigation
 4. ADR source in `adr/` remains immutable
 
 ## Maintenance

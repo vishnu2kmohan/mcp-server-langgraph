@@ -125,7 +125,7 @@ This document summarizes all documentation fixes applied following the comprehen
 
 ### 4. Updated Navigation (96 → 97 pages) ✅
 
-**File Modified**: `docs/mint.json`
+**File Modified**: `docs/docs.json`
 
 **Change**:
 ```json
@@ -151,8 +151,8 @@ This document summarizes all documentation fixes applied following the comprehen
 ### ✅ All Checks Passed
 
 ```bash
-# 1. mint.json validity
-✅ mint.json is valid JSON
+# 1. docs.json validity
+✅ docs.json is valid JSON
 ✅ Navigation entries: 97 (was 96)
 
 # 2. Version consistency
@@ -181,7 +181,7 @@ This document summarizes all documentation fixes applied following the comprehen
 
 ### Modified (15 files)
 1. `.env.example` - Version update
-2. `docs/mint.json` - Added v2-8-0 to navigation
+2. `docs/docs.json` - Added v2-8-0 to navigation
 3. `docs/releases/overview.mdx` - Updated latest version
 4. `docs/architecture/adr-0001-llm-multi-provider.mdx`
 5. `docs/architecture/adr-0002-openfga-authorization.mdx`
@@ -294,7 +294,7 @@ Recommendations (P2-P3): 0/7 (0%)
 
 ### Phase 2 (This Week)
 1. Decide on orphaned files (add to nav or move to internal)
-2. Add "Reference" section to mint.json if needed
+2. Add "Reference" section to docs.json if needed
 3. Create operational docs section if needed
 
 ### Phase 3 (Ongoing)
@@ -308,7 +308,7 @@ Recommendations (P2-P3): 0/7 (0%)
 
 **Current Status**: 6/10 → 9/10 ✅
 
-- [x] ✅ mint.json is valid JSON
+- [x] ✅ docs.json is valid JSON
 - [x] ✅ All navigation references resolve to existing files
 - [x] ✅ No broken internal documentation links
 - [x] ✅ Version numbers consistent across all files

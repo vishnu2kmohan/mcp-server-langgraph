@@ -268,7 +268,7 @@ docs/
 
 - [x] All Mintlify directories still present in `docs/`
 - [x] All `.mdx` files intact
-- [x] `mint.json` navigation still valid
+- [x] `docs.json` navigation still valid
 - [x] `.mintlifyignore` excludes new root directories
 - [x] Documentation comprehensive and accurate
 - [x] No broken links in documentation
@@ -302,7 +302,7 @@ mintlify dev
 
 **User-Facing Documentation** → `docs/`
 - Create `.mdx` file in appropriate subdirectory
-- Add to `mint.json` navigation
+- Add to `docs.json` navigation
 - Format: Mintlify MDX with frontmatter
 
 **Project Reports** → `reports/`

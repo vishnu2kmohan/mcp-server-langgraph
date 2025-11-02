@@ -16,9 +16,9 @@ Generated: 2025-10-17 13:38:31
 - Link: `**arguments`
   - Text: "name"
   - Resolved to: `.github/**arguments`
-- Link: `docs/mint.json`
-  - Text: "docs/mint.json"
-  - Resolved to: `.github/docs/mint.json`
+- Link: `docs/docs.json`
+  - Text: "docs/docs.json"
+  - Resolved to: `.github/docs/docs.json`
 - Link: `docs/architecture/adr-0005-pydantic-ai-integration.mdx`
   - Text: "Pydantic AI Integration"
   - Resolved to: `.github/docs/architecture/adr-0005-pydantic-ai-integration.mdx`
@@ -36,9 +36,9 @@ Generated: 2025-10-17 13:38:31
 - Link: `README.md`
   - Text: "README.md"
   - Resolved to: `.github/README.md`
-- Link: `docs/mint.json`
-  - Text: "docs/mint.json"
-  - Resolved to: `.github/docs/mint.json`
+- Link: `docs/docs.json`
+  - Text: "docs/docs.json"
+  - Resolved to: `.github/docs/docs.json`
 - Link: `docs/advanced/testing.mdx`
   - Text: "docs/advanced/testing.mdx"
   - Resolved to: `.github/docs/advanced/testing.mdx`

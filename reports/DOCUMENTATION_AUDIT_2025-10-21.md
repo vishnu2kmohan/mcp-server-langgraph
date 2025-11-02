@@ -57,7 +57,7 @@ Conducted comprehensive documentation audit and remediation in preparation for v
 
 ### 3. Mintlify Navigation ✅
 
-**File Modified:** `docs/mint.json:258-284`
+**File Modified:** `docs/docs.json:258-284`
 
 **Changes:**
 - Updated "Infrastructure" group title: "ADRs 8-9, 13, 20-21" → "ADRs 8-9, 13, 20-21, 27-28"
@@ -177,7 +177,7 @@ Essential Files Only (5 .md files):
 2. `CHANGELOG.md` - All v2.8.0 changes in [Unreleased]
 3. `README.md` - Updated version markers
 4. `adr/README.md` - Added 3 ADRs to index
-5. `docs/mint.json` - Added 3 ADRs to navigation
+5. `docs/docs.json` - Added 3 ADRs to navigation
 
 **Created (Mintlify ADRs):**
 6. `docs/architecture/adr-0027-rate-limiting-strategy.mdx`

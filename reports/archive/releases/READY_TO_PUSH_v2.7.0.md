@@ -108,7 +108,7 @@ Working tree: CLEAN ✅
 4. `.github/AGENTS.md` - Clarified comment
 5. `adr/0005-pydantic-ai-integration.md` - Fixed 2 paths
 6. `adr/README.md` - Added ADR-0026 to index
-7. `docs/mint.json` - Added ADR-0026 to navigation
+7. `docs/docs.json` - Added ADR-0026 to navigation
 8. `reports/README.md` - Rewritten with current inventory
 9. `reports/DEPLOYMENT_UPDATE_SUMMARY.md` - Fixed extension
 

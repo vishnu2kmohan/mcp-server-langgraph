@@ -13,8 +13,8 @@ This guide walks you through deploying your Mintlify documentation and integrati
 2. **Create New Documentation**
    - Click "New Documentation"
    - Select repository: `vishnu2kmohan/mcp-server-langgraph`
-   - Set root directory: `./` (leave as default)
-   - Mintlify auto-detects `mint.json`
+   - Set root directory: `./docs/` (points to docs directory)
+   - Mintlify auto-detects `docs.json`
 
 3. **Configure Settings**
    - **Documentation URL**: `mcp-server-langgraph` (or custom subdomain)
@@ -253,7 +253,7 @@ Configure webhooks in Mintlify dashboard to notify on:
 
 ### Enable Analytics
 
-Update `mint.json`:
+Update `docs/docs.json`:
 ```json
 {
   "analytics": {
@@ -318,7 +318,7 @@ async def documentation_redirect():
 
 ### Documentation not deploying
 
-1. Check `mint.json` syntax
+1. Check `docs.json` syntax
 2. Verify all referenced pages exist
 3. Check Mintlify dashboard for build errors
 4. Review deployment logs

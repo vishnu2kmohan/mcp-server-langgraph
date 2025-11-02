@@ -8,7 +8,7 @@ Your documentation is now ready to be published with Mintlify! 🎉
 
 ```
 mcp_server_langgraph/
-├── mint.json                 # Mintlify configuration
+├── docs.json                 # Mintlify configuration
 ├── package.json              # NPM scripts for docs
 ├── docs/
 │   ├── README.md             # Documentation guide
@@ -52,7 +52,7 @@ Your docs will hot-reload as you edit `.mdx` files!
    - Click "New Documentation"
    - Select your repository: `vishnu2kmohan/mcp-server-langgraph`
    - Set documentation path: `./` (root directory)
-   - Mintlify will automatically detect `mint.json`
+   - Mintlify will automatically detect `docs.json`
 
 3. **Deploy**:
    - Pushes to `main` branch auto-deploy
@@ -143,7 +143,7 @@ Your docs will hot-reload as you edit `.mdx` files!
    # Add favicon.svg to root
    ```
 
-3. **Update colors** in `mint.json`:
+3. **Update colors** in `docs.json`:
    ```json
    {
      "colors": {
@@ -156,7 +156,7 @@ Your docs will hot-reload as you edit `.mdx` files!
 
 ### Add Analytics
 
-Update `mint.json`:
+Update `docs.json`:
 ```json
 {
   "analytics": {
@@ -199,7 +199,7 @@ EOF
 
 ### Add to Navigation
 
-Edit `mint.json`:
+Edit `docs.json`:
 ```json
 {
   "group": "Guides",
@@ -313,7 +313,7 @@ curl http://example.com
 
 ## ✅ Checklist
 
-- [x] Mintlify configuration created (`mint.json`)
+- [x] Mintlify configuration created (`docs.json`)
 - [x] Documentation structure set up
 - [x] Getting Started pages created
 - [x] API Reference intro created

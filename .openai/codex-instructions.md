@@ -643,7 +643,7 @@ python scripts/validate_production.py
 - **SECURITY.md** - Security policy
 - **docs/deployment/** - Deployment guides (Kubernetes, Helm, Cloud Run, LangGraph Platform)
 - **docs/architecture/** - Architecture Decision Records (ADRs)
-- **docs/mint.json** - Mintlify documentation (100% coverage)
+- **docs/docs.json** - Mintlify documentation (100% coverage)
 - **API Docs** - http://localhost:8000/docs (when running)
 
 ## Current Project State (2025-10-14)

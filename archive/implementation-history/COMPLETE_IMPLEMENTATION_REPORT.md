@@ -278,7 +278,7 @@ kubectl apply -k ../../deployments/overlays/production-gke
 
 **Mintlify User-Facing** (docs/ Directory):
 - ✅ 5 critical .mdx files (2,100+ lines)
-- ✅ Navigation updated in mint.json
+- ✅ Navigation updated in docs.json
 - ⏳ 11 additional .mdx files pending (non-blocking)
 
 **Coverage**:
@@ -346,7 +346,7 @@ kubectl apply -k ../../deployments/overlays/production-gke
 38. ✅ 6 module READMEs (detailed)
 39. ✅ 5 Mintlify user-facing pages
 40. ✅ 1 Architecture Decision Record
-41. ✅ Complete navigation in mint.json
+41. ✅ Complete navigation in docs.json
 
 ---
 

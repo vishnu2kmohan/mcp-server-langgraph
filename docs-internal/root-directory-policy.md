@@ -17,7 +17,6 @@
 
 **Configuration Files:**
 - `pyproject.toml` - Python project config
-- `mint.json` - Mintlify configuration
 - `.mintlifyignore` - Mintlify exclusions
 - `.gitignore` - Git exclusions
 - `.pre-commit-config.yaml` - Pre-commit hooks
@@ -221,7 +220,6 @@ mv *.txt docs-internal/
 ```
 /
 ├── .mintlifyignore        ✅ Essential (Mintlify config)
-├── mint.json              ✅ Essential (Mintlify config)
 ├── pyproject.toml         ✅ Essential (Python project)
 ├── README.md              ✅ Essential (Project README)
 ├── CHANGELOG.md           ✅ Essential (Version history)
@@ -230,6 +228,8 @@ mv *.txt docs-internal/
 ├── requirements*.txt      ✅ Essential (Dependencies)
 ├── .gitignore             ✅ Essential (Git config)
 ├── .pre-commit-config.yaml ✅ Essential (Git hooks)
+├── docs/
+│   └── docs.json          ✅ Essential (Mintlify v4+ config)
 └── (no other .md/.html files) ✅ Clean!
 ```
 

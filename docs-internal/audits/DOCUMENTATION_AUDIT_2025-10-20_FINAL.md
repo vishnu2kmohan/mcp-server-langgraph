@@ -340,13 +340,13 @@ Found 11 mentions of "deprecated" in documentation. **All are legitimate**:
 ### For Future Audits
 
 ```bash
-# 1. Validate mint.json syntax
-python3 -c "import json; json.load(open('docs/mint.json')); print('✅ valid')"
+# 1. Validate docs.json syntax
+python3 -c "import json; json.load(open('docs/docs.json')); print('✅ valid')"
 
 # 2. Count navigation entries
 python3 << 'EOF'
 import json
-with open('docs/mint.json') as f:
+with open('docs/docs.json') as f:
     nav = json.load(f)['navigation']
     count = sum(len(g.get('pages', [])) for g in nav)
     print(f"Navigation entries: {count}")
@@ -373,7 +373,7 @@ cd docs && mintlify dev
 
 **Documentation is considered production-ready when**:
 
-- [x] ✅ mint.json is valid JSON
+- [x] ✅ docs.json is valid JSON
 - [x] ✅ All navigation references resolve to existing files
 - [x] ✅ No broken internal documentation links
 - [x] ✅ Version numbers consistent across all files
@@ -392,7 +392,7 @@ cd docs && mintlify dev
 
 ### Files Modified (2)
 1. `CHANGELOG.md` - Fixed v2.8.0 version status
-2. `docs/mint.json` - Added VMWARE_RESOURCE_ESTIMATION to Kubernetes section
+2. `docs/docs.json` - Added VMWARE_RESOURCE_ESTIMATION to Kubernetes section
 
 ### Files Moved (5)
 1. `DOCUMENTATION_AUDIT_REPORT.md` → `docs-internal/audits/`

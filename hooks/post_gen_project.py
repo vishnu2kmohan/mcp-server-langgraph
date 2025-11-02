@@ -112,9 +112,8 @@ def _cleanup_documentation(project_root: Path):
     """Remove documentation files based on configuration."""
     if "{{ cookiecutter.include_documentation }}" == "no":
         _remove_directory(project_root / "docs", "Removed docs/ directory")
-        _remove_file(project_root / "mint.json")
     elif "{{ cookiecutter.documentation_format }}" != "mintlify":
-        _remove_file(project_root / "mint.json")
+        _remove_file(project_root / "docs" / "docs.json")
         if (project_root / "docs").exists() and (project_root / "docs" / "getting-started").exists():
             _remove_directory(project_root / "docs")
 

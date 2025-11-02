@@ -128,7 +128,7 @@ After creating both files, provide:
 4. Reminder to:
    - Fill in the template sections
    - Run `/validate` before committing
-   - Update docs/mint.json to include the new ADR in navigation (if needed)
+   - Update docs/docs.json to include the new ADR in navigation (if needed)
 
 ## Filename Convention
 

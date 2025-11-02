@@ -421,7 +421,7 @@ mintlify deploy
 **Pre-Deployment Checklist**:
 - [x] Logo assets present and valid
 - [x] Favicon present and valid
-- [x] Valid mint.json configuration
+- [x] Valid docs.json configuration
 - [x] All 95 navigation pages exist
 - [x] No critical broken links
 - [x] All 25 ADRs synchronized
