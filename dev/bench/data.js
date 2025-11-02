@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762122072868,
+  "lastUpdate": 1762122627473,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -22270,6 +22270,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001790832891972685",
             "extra": "mean: 57.92295778589894 usec\nrounds: 5709"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "669f6cb464819ac00b815384dd966daf19dfb374",
+          "message": "fix(gke): resolve all remaining deployment issues - ESO API version, RBAC, CPU constraints\n\nThis commit fixes the final three critical issues blocking GKE staging deployments.\n\n**Issues Fixed**:\n\n1. **External Secrets API Version Mismatch** ✅\n   - Manifests used: `external-secrets.io/v1beta1`\n   - Cluster CRDs use: `external-secrets.io/v1`\n   - Fixed: Updated all ExternalSecret resources to v1\n   - File: deployments/overlays/staging-gke/external-secrets.yaml (lines 3, 21, 95)\n\n2. **RBAC Permission Denied** ✅\n   - Error: \"User cannot create resource 'roles' - requires container.roles.create\"\n   - Service account had: roles/container.developer (insufficient)\n   - Fixed: Upgraded to roles/container.admin (includes RBAC permissions)\n   - File: scripts/gcp/setup-staging-infrastructure.sh (line 273-278)\n   - Manually applied: gcloud projects add-iam-policy-binding (container.admin)\n\n3. **GKE Autopilot CPU Constraints** ✅\n   - Error: \"cpu requests '350m' is lower than Autopilot minimum of '500m'\"\n   - GKE Autopilot requires 500m CPU minimum when using pod anti-affinity\n   - Fixed: Increased main container CPU from 250m → 500m\n   - Fixed: Added init container resources (all 500m)\n   - File: deployments/overlays/staging-gke/deployment-patch.yaml (lines 23, 154-178)\n\n**Changes Made**:\n\n1. **external-secrets.yaml**: Updated API version (v1beta1 → v1)\n2. **deployment-patch.yaml**:\n   - Main container CPU: 250m → 500m (line 23)\n   - Added init container resources (lines 154-178):\n     - wait-for-openfga: 500m CPU\n     - wait-for-keycloak: 500m CPU\n     - wait-for-redis: 500m CPU\n3. **setup-staging-infrastructure.sh**:\n   - Changed role from container.developer → container.admin (line 277)\n\n**Validation Results**:\n```bash\n$ kubectl kustomize deployments/overlays/staging-gke | kubectl apply --dry-run=server -f -\n✅ All resources validated successfully\n✅ No RBAC errors\n✅ No CPU constraint violations\n✅ External Secrets resources created (v1 API)\n```\n\n**Expected Results**:\n- ✅ Server-side validation passes\n- ✅ RBAC resources created successfully\n- ✅ GKE Autopilot accepts pod specifications\n- ✅ External Secrets work with v1 API\n- ✅ Deploy to GKE Staging succeeds\n- ✅ Rollback not needed (deployment succeeds)\n\n**Prevention Measures**:\n1. ESO API version: Always check installed CRD version with `kubectl api-resources`\n2. RBAC permissions: Use container.admin for deployment automation (not just container.developer)\n3. GKE Autopilot: Use 500m minimum CPU when using pod anti-affinity\n4. All fixes documented for EKS/AKS prevention\n\n**Testing**: All manifests validated with server-side dry-run on actual cluster\n\nFixes: ESO CRD API version mismatch\nFixes: RBAC permission denied errors\nFixes: GKE Autopilot CPU constraint violations\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T17:29:18-05:00",
+          "tree_id": "8a4fa18082fb83e0b820ad836b47d80b222056a1",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/669f6cb464819ac00b815384dd966daf19dfb374"
+        },
+        "date": 1762122626664,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.5169064088987,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012923386223457885",
+            "extra": "mean: 6.919605635416677 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 146.8655842356298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005795984486898104",
+            "extra": "mean: 6.808947141732056 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 49590.74795107358,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000056387332751153485",
+            "extra": "mean: 20.16505177511345 usec\nrounds: 8788"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54183.60196281391,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000027720372938332936",
+            "extra": "mean: 18.455768235679457 usec\nrounds: 11982"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50252.87490649035,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003247813625258484",
+            "extra": "mean: 19.899359028926842 usec\nrounds: 19731"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.64014592536807,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000033637847859559515",
+            "extra": "mean: 5.245484864407734 msec\nrounds: 177"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.380689504833285,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011372105869170895",
+            "extra": "mean: 51.59775144999941 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.944259541434937,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003504145341293813",
+            "extra": "mean: 100.56052900000054 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2651468.055038177,
+            "unit": "iter/sec",
+            "range": "stddev: 5.170140058019255e-8",
+            "extra": "mean: 377.1495561109453 nsec\nrounds: 186568"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5038.890370514486,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015216851596202486",
+            "extra": "mean: 198.45639148086823 usec\nrounds: 493"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2873.0822235561704,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000057723593644689006",
+            "extra": "mean: 348.05826015039884 usec\nrounds: 2660"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2881.767194573227,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006408688575361985",
+            "extra": "mean: 347.0092941175612 usec\nrounds: 1479"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 55116.81704663843,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004940391469788579",
+            "extra": "mean: 18.14328282335001 usec\nrounds: 12156"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 14956.351722746087,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028507238913995307",
+            "extra": "mean: 66.86122515286725 usec\nrounds: 5232"
           }
         ]
       }
