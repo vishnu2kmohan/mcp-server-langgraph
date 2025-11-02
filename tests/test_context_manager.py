@@ -64,23 +64,27 @@ def long_conversation():
 class TestContextManager:
     """Unit tests for ContextManager."""
 
+    @pytest.mark.unit
     def test_initialization(self, context_manager):
         """Test ContextManager initializes with correct config."""
         assert context_manager.compaction_threshold == 1000
         assert context_manager.target_after_compaction == 500
         assert context_manager.recent_message_count == 2
 
+    @pytest.mark.unit
     def test_needs_compaction_short_conversation(self, context_manager, short_conversation):
         """Test that short conversations don't trigger compaction."""
         needs_compaction = context_manager.needs_compaction(short_conversation)
         assert needs_compaction is False
 
+    @pytest.mark.unit
     def test_needs_compaction_long_conversation(self, context_manager, long_conversation):
         """Test that long conversations trigger compaction."""
         needs_compaction = context_manager.needs_compaction(long_conversation)
         assert needs_compaction is True
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_compact_conversation_structure(self, context_manager, long_conversation):
         """Test that compaction maintains proper message structure."""
         result = await context_manager.compact_conversation(long_conversation)
@@ -93,6 +97,7 @@ class TestContextManager:
         assert result.messages_summarized > 0
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_compact_conversation_preserves_recent(self, context_manager, long_conversation):
         """Test that compaction preserves recent messages."""
         result = await context_manager.compact_conversation(long_conversation)
@@ -109,6 +114,7 @@ class TestContextManager:
         assert "Summary" in result.compacted_messages[0].content or "summary" in result.compacted_messages[0].content.lower()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_compact_conversation_with_system_messages(self, context_manager):
         """Test that system messages are preserved during compaction."""
         messages = [
@@ -127,6 +133,7 @@ class TestContextManager:
         assert any("helpful assistant" in msg.content for msg in system_messages)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_compact_conversation_no_older_messages(self, context_manager):
         """Test compaction with no older messages to summarize."""
         # Create conversation with exactly recent_message_count messages (no older messages)
@@ -144,6 +151,7 @@ class TestContextManager:
         assert len(result.compacted_messages) == len(very_short_conversation)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_summarization_calls_llm(self, context_manager, long_conversation):
         """Test that summarization actually calls the LLM."""
         await context_manager.compact_conversation(long_conversation)
@@ -163,6 +171,7 @@ class TestContextManager:
         assert "summarize" in prompt_content.lower() or "summary" in prompt_content.lower()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_summarization_fallback_on_error(self, context_manager, long_conversation):
         """Test that summarization has fallback when LLM fails."""
         # Make LLM raise an exception
@@ -175,6 +184,7 @@ class TestContextManager:
         assert len(result.compacted_messages) > 0
         assert result.messages_summarized > 0
 
+    @pytest.mark.unit
     def test_message_to_text(self, context_manager):
         """Test conversion of messages to text for token counting."""
         messages = [
@@ -188,12 +198,14 @@ class TestContextManager:
             assert isinstance(text, str)
             assert len(text) > 0
 
+    @pytest.mark.unit
     def test_get_role_label(self, context_manager):
         """Test role label extraction from messages."""
         assert context_manager._get_role_label(HumanMessage(content="test")) == "User"
         assert context_manager._get_role_label(AIMessage(content="test")) == "Assistant"
         assert context_manager._get_role_label(SystemMessage(content="test")) == "System"
 
+    @pytest.mark.unit
     def test_extract_key_information(self, context_manager):
         """Test extraction of key information from conversation."""
         messages = [
@@ -222,6 +234,7 @@ class TestConvenienceFunctions:
     """Test convenience functions."""
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_compact_if_needed_no_compaction(self, short_conversation):
         """Test compact_if_needed doesn't compact short conversations."""
         # Mock ContextManager
@@ -237,6 +250,7 @@ class TestConvenienceFunctions:
             mock_manager.compact_conversation.assert_not_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_compact_if_needed_with_compaction(self, long_conversation):
         """Test compact_if_needed compacts long conversations."""
         # Mock ContextManager
@@ -266,6 +280,7 @@ class TestConvenienceFunctions:
 class TestTokenCounting:
     """Test token counting functionality."""
 
+    @pytest.mark.unit
     def test_token_counting_accuracy(self, context_manager):
         """Test that token counting is reasonably accurate."""
         # Short text
@@ -285,6 +300,7 @@ class TestTokenCounting:
 class TestCompactionResult:
     """Test CompactionResult model."""
 
+    @pytest.mark.unit
     def test_compaction_result_creation(self):
         """Test creating CompactionResult."""
         result = CompactionResult(
@@ -301,6 +317,7 @@ class TestCompactionResult:
         assert result.messages_summarized == 5
         assert result.compression_ratio == 0.5
 
+    @pytest.mark.unit
     def test_compaction_result_validation(self):
         """Test CompactionResult validation."""
         # Compression ratio should be between 0 and 1

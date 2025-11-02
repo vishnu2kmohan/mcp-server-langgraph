@@ -35,6 +35,7 @@ class TestInMemorySessionStore:
         return InMemorySessionStore(default_ttl_seconds=3600, max_concurrent_sessions=3)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_create_session(self, store):
         """Test creating a session"""
         session_id = await store.create(
@@ -56,6 +57,7 @@ class TestInMemorySessionStore:
         assert session.metadata == {"ip": "192.168.1.1"}
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_session(self, store):
         """Test retrieving a session"""
         session_id = await store.create(user_id="user:bob", username="bob", roles=["user"])
@@ -68,12 +70,14 @@ class TestInMemorySessionStore:
         assert session.roles == ["user"]
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_nonexistent_session(self, store):
         """Test retrieving a non-existent session"""
         session = await store.get("nonexistent-session-id")
         assert session is None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_update_session(self, store):
         """Test updating session metadata"""
         session_id = await store.create(
@@ -92,12 +96,14 @@ class TestInMemorySessionStore:
         assert session.metadata == {"ip": "10.0.0.2", "device": "mobile"}
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_update_nonexistent_session(self, store):
         """Test updating a non-existent session"""
         success = await store.update("nonexistent", metadata={"foo": "bar"})
         assert success is False
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_refresh_session(self, store):
         """Test refreshing session expiration"""
         session_id = await store.create(user_id="user:dave", username="dave", roles=["user"])
@@ -118,6 +124,7 @@ class TestInMemorySessionStore:
         assert session2.expires_at > original_expiry
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_refresh_with_custom_ttl(self, store):
         """Test refreshing with custom TTL"""
         session_id = await store.create(user_id="user:eve", username="eve", roles=["user"])
@@ -133,6 +140,7 @@ class TestInMemorySessionStore:
         assert 55 < time_until_expiry < 65  # Allow some tolerance
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_delete_session(self, store):
         """Test deleting a session"""
         session_id = await store.create(user_id="user:frank", username="frank", roles=["user"])
@@ -148,12 +156,14 @@ class TestInMemorySessionStore:
         assert await store.get(session_id) is None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_delete_nonexistent_session(self, store):
         """Test deleting a non-existent session"""
         success = await store.delete("nonexistent")
         assert success is False
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_session_expiration(self):
         """Test that expired sessions are not returned"""
         store = InMemorySessionStore(default_ttl_seconds=1)  # 1 second TTL
@@ -170,6 +180,7 @@ class TestInMemorySessionStore:
         assert await store.get(session_id) is None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_list_user_sessions(self, store):
         """Test listing all sessions for a user"""
         user_id = "user:henry"
@@ -186,12 +197,14 @@ class TestInMemorySessionStore:
         assert session_ids == {session_id1, session_id2, session_id3}
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_list_user_sessions_empty(self, store):
         """Test listing sessions for user with no sessions"""
         sessions = await store.list_user_sessions("user:nobody")
         assert sessions == []
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_delete_user_sessions(self, store):
         """Test deleting all sessions for a user"""
         user_id = "user:iris"
@@ -214,6 +227,7 @@ class TestInMemorySessionStore:
         assert len(sessions) == 0
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_concurrent_session_limit(self, store):
         """Test concurrent session limit enforcement"""
         user_id = "user:jack"
@@ -243,6 +257,7 @@ class TestInMemorySessionStore:
         assert await store.get(session_id4) is not None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_sliding_window_enabled(self):
         """Test sliding window expiration (refreshes on access)"""
         store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=True)
@@ -263,6 +278,7 @@ class TestInMemorySessionStore:
         assert session2.last_accessed >= original_last_accessed
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_sliding_window_disabled(self):
         """Test that sliding window can be disabled"""
         store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=False)
@@ -283,6 +299,7 @@ class TestInMemorySessionStore:
         assert session2.last_accessed == original_last_accessed
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_custom_ttl_per_session(self, store):
         """Test creating sessions with custom TTL"""
         # Short TTL session
@@ -334,6 +351,7 @@ class TestRedisSessionStore:
             return store
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_create_session(self, store, mock_redis):
         """Test creating a session in Redis"""
         session_id = await store.create(
@@ -351,6 +369,7 @@ class TestRedisSessionStore:
         mock_redis.rpush.assert_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_session(self, store, mock_redis):
         """Test retrieving a session from Redis"""
         # Mock Redis response (strings because decode_responses=True)
@@ -373,6 +392,7 @@ class TestRedisSessionStore:
         assert session.roles == ["user"]
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_nonexistent_session(self, store, mock_redis):
         """Test retrieving non-existent session"""
         mock_redis.hgetall.return_value = {}
@@ -381,6 +401,7 @@ class TestRedisSessionStore:
         assert session is None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_update_session(self, store, mock_redis):
         """Test updating session metadata"""
         session_id = "h" * 32  # 32-character session ID
@@ -404,6 +425,7 @@ class TestRedisSessionStore:
         mock_redis.hset.assert_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_refresh_session(self, store, mock_redis):
         """Test refreshing session expiration"""
         session_id = "i" * 32  # 32-character session ID
@@ -417,6 +439,7 @@ class TestRedisSessionStore:
         mock_redis.expire.assert_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_delete_session(self, store, mock_redis):
         """Test deleting a session"""
         session_id = "b" * 32  # 32-character session ID
@@ -432,6 +455,7 @@ class TestRedisSessionStore:
         mock_redis.lrem.assert_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_list_user_sessions(self, store, mock_redis):
         """Test listing all sessions for a user"""
         # Create proper 32+ character session IDs
@@ -473,6 +497,7 @@ class TestRedisSessionStore:
         assert len(sessions) == 2
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_delete_user_sessions(self, store, mock_redis):
         """Test deleting all sessions for a user"""
         # Mock user session list with proper 32+ character IDs
@@ -488,6 +513,7 @@ class TestRedisSessionStore:
         assert mock_redis.delete.call_count >= 3
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_concurrent_session_limit(self, store, mock_redis):
         """Test concurrent session limit with Redis"""
         store.max_concurrent = 2
@@ -517,6 +543,7 @@ class TestRedisSessionStore:
         assert mock_redis.delete.called
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_connection_error_handling(self):
         """Test handling of Redis connection errors"""
         with patch("redis.asyncio.from_url") as mock_from_url:
@@ -539,6 +566,7 @@ class TestRedisSessionStore:
 class TestSessionStoreFactory:
     """Tests for create_session_store factory function"""
 
+    @pytest.mark.unit
     def test_create_memory_store(self):
         """Test creating in-memory store"""
         store = create_session_store(backend="memory", default_ttl_seconds=7200)
@@ -546,6 +574,7 @@ class TestSessionStoreFactory:
         assert isinstance(store, InMemorySessionStore)
         assert store.default_ttl == 7200
 
+    @pytest.mark.unit
     def test_create_redis_store(self):
         """Test creating Redis store"""
         with patch("redis.asyncio.from_url"):
@@ -558,12 +587,14 @@ class TestSessionStoreFactory:
             assert isinstance(store, RedisSessionStore)
             assert store.default_ttl == 3600
 
+    @pytest.mark.unit
     def test_create_default_store(self):
         """Test creating store with defaults"""
         store = create_session_store()
 
         assert isinstance(store, InMemorySessionStore)
 
+    @pytest.mark.unit
     def test_create_with_custom_settings(self):
         """Test creating store with custom settings"""
         store = create_session_store(
@@ -578,6 +609,7 @@ class TestSessionStoreFactory:
         assert store.max_concurrent == 10
         assert store.sliding_window is False
 
+    @pytest.mark.unit
     def test_invalid_backend(self):
         """Test error handling for invalid backend"""
         with pytest.raises(ValueError, match="Unknown session backend"):
@@ -593,6 +625,7 @@ class TestSessionIntegration:
     """Integration tests for session management"""
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_session_lifecycle(self):
         """Test complete session lifecycle"""
         store = InMemorySessionStore(default_ttl_seconds=3600)
@@ -627,6 +660,7 @@ class TestSessionIntegration:
         assert session is None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_multi_user_sessions(self):
         """Test managing sessions for multiple users"""
         store = InMemorySessionStore()

@@ -11,15 +11,13 @@ Tests cover:
 - Keycloak attribute storage
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
-import bcrypt
 
-from mcp_server_langgraph.auth.api_keys import (
-    APIKeyManager,
-    APIKey,
-)
+import bcrypt
+import pytest
+
+from mcp_server_langgraph.auth.api_keys import APIKey, APIKeyManager
 
 
 @pytest.fixture
@@ -41,6 +39,7 @@ def api_key_manager(mock_keycloak_client):
 class TestAPIKeyGeneration:
     """Test API key generation"""
 
+    @pytest.mark.unit
     def test_generate_api_key_format(self, api_key_manager):
         """Test that generated API keys have correct format"""
         api_key = api_key_manager.generate_api_key()
@@ -49,6 +48,7 @@ class TestAPIKeyGeneration:
         # Key should be long enough (32 bytes base64)
         assert len(api_key) > 40
 
+    @pytest.mark.unit
     def test_generate_api_key_uniqueness(self, api_key_manager):
         """Test that generated keys are cryptographically unique"""
         keys = {api_key_manager.generate_api_key() for _ in range(100)}
@@ -56,6 +56,7 @@ class TestAPIKeyGeneration:
         # All keys should be unique
         assert len(keys) == 100
 
+    @pytest.mark.unit
     def test_generate_api_key_test_prefix(self, api_key_manager):
         """Test generating API key with test prefix"""
         api_key = api_key_manager.generate_api_key(prefix="mcpkey_test_")
@@ -67,9 +68,8 @@ class TestAPIKeyCreation:
     """Test API key creation"""
 
     @pytest.mark.asyncio
-    async def test_create_api_key_success(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_create_api_key_success(self, api_key_manager, mock_keycloak_client):
         """Test successful API key creation"""
         # Arrange
         user_id = "user:alice"
@@ -101,16 +101,13 @@ class TestAPIKeyCreation:
         assert "$2b$" in key_entry  # bcrypt hash
 
     @pytest.mark.asyncio
-    async def test_create_api_key_enforces_max_limit(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_create_api_key_enforces_max_limit(self, api_key_manager, mock_keycloak_client):
         """Test that creating more than max keys raises error"""
         # Arrange
         user_id = "user:bob"
         existing_keys = [f"key:id{i}:hash{i}" for i in range(5)]  # 5 existing keys
-        mock_keycloak_client.get_user_attributes.return_value = {
-            "apiKeys": existing_keys
-        }
+        mock_keycloak_client.get_user_attributes.return_value = {"apiKeys": existing_keys}
 
         # Act & Assert
         with pytest.raises(ValueError, match="Maximum API keys reached"):
@@ -120,9 +117,8 @@ class TestAPIKeyCreation:
             )
 
     @pytest.mark.asyncio
-    async def test_create_api_key_stores_metadata(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_create_api_key_stores_metadata(self, api_key_manager, mock_keycloak_client):
         """Test that API key metadata is stored correctly"""
         # Arrange
         user_id = "user:charlie"
@@ -155,9 +151,8 @@ class TestAPIKeyValidation:
     """Test API key validation"""
 
     @pytest.mark.asyncio
-    async def test_validate_api_key_success(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_validate_api_key_success(self, api_key_manager, mock_keycloak_client):
         """Test successful API key validation"""
         # Arrange
         api_key = "mcpkey_live_testkeyvalue123"
@@ -171,9 +166,7 @@ class TestAPIKeyValidation:
                 "attributes": {
                     "apiKeys": [f"key:abc123:{key_hash}"],
                     "apiKey_abc123_name": "Production Key",
-                    "apiKey_abc123_expiresAt": (
-                        datetime.utcnow() + timedelta(days=365)
-                    ).isoformat(),
+                    "apiKey_abc123_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
                 },
             }
         ]
@@ -188,9 +181,8 @@ class TestAPIKeyValidation:
         assert user_info["key_id"] == "abc123"
 
     @pytest.mark.asyncio
-    async def test_validate_api_key_invalid_key(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_validate_api_key_invalid_key(self, api_key_manager, mock_keycloak_client):
         """Test that invalid API key returns None"""
         # Arrange
         mock_keycloak_client.search_users.return_value = []
@@ -202,9 +194,8 @@ class TestAPIKeyValidation:
         assert user_info is None
 
     @pytest.mark.asyncio
-    async def test_validate_api_key_expired_key(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_validate_api_key_expired_key(self, api_key_manager, mock_keycloak_client):
         """Test that expired API key is rejected"""
         # Arrange
         api_key = "mcpkey_live_expiredkey"
@@ -216,9 +207,7 @@ class TestAPIKeyValidation:
                 "username": "alice",
                 "attributes": {
                     "apiKeys": [f"key:old123:{key_hash}"],
-                    "apiKey_old123_expiresAt": (
-                        datetime.utcnow() - timedelta(days=1)  # Expired yesterday
-                    ).isoformat(),
+                    "apiKey_old123_expiresAt": (datetime.utcnow() - timedelta(days=1)).isoformat(),  # Expired yesterday
                 },
             }
         ]
@@ -230,9 +219,8 @@ class TestAPIKeyValidation:
         assert user_info is None
 
     @pytest.mark.asyncio
-    async def test_validate_api_key_updates_last_used(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_validate_api_key_updates_last_used(self, api_key_manager, mock_keycloak_client):
         """Test that successful validation updates last_used timestamp"""
         # Arrange
         api_key = "mcpkey_live_testkey"
@@ -244,9 +232,7 @@ class TestAPIKeyValidation:
                 "username": "alice",
                 "attributes": {
                     "apiKeys": [f"key:xyz:{key_hash}"],
-                    "apiKey_xyz_expiresAt": (
-                        datetime.utcnow() + timedelta(days=365)
-                    ).isoformat(),
+                    "apiKey_xyz_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
                 },
             }
         ]
@@ -265,9 +251,8 @@ class TestAPIKeyRevocation:
     """Test API key revocation"""
 
     @pytest.mark.asyncio
-    async def test_revoke_api_key_success(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_revoke_api_key_success(self, api_key_manager, mock_keycloak_client):
         """Test successful API key revocation"""
         # Arrange
         user_id = "user:dave"
@@ -297,15 +282,12 @@ class TestAPIKeyRevocation:
         assert "apiKey_xyz789_name" in call_args  # Other key metadata preserved
 
     @pytest.mark.asyncio
-    async def test_revoke_nonexistent_key_no_error(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_revoke_nonexistent_key_no_error(self, api_key_manager, mock_keycloak_client):
         """Test revoking non-existent key doesn't raise error"""
         # Arrange
         user_id = "user:eve"
-        mock_keycloak_client.get_user_attributes.return_value = {
-            "apiKeys": ["key:other:hash"]
-        }
+        mock_keycloak_client.get_user_attributes.return_value = {"apiKeys": ["key:other:hash"]}
 
         # Act - should not raise
         await api_key_manager.revoke_api_key(user_id, "nonexistent")
@@ -318,9 +300,8 @@ class TestAPIKeyListing:
     """Test listing API keys"""
 
     @pytest.mark.asyncio
-    async def test_list_api_keys_success(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_list_api_keys_success(self, api_key_manager, mock_keycloak_client):
         """Test listing API keys for a user"""
         # Arrange
         user_id = "user:frank"
@@ -358,9 +339,8 @@ class TestAPIKeyListing:
         assert "last_used" not in keys[1]  # Never used
 
     @pytest.mark.asyncio
-    async def test_list_api_keys_empty(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_list_api_keys_empty(self, api_key_manager, mock_keycloak_client):
         """Test listing API keys when user has none"""
         # Arrange
         mock_keycloak_client.get_user_attributes.return_value = {}
@@ -376,9 +356,8 @@ class TestAPIKeyRotation:
     """Test API key rotation"""
 
     @pytest.mark.asyncio
-    async def test_rotate_api_key_success(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_rotate_api_key_success(self, api_key_manager, mock_keycloak_client):
         """Test successful API key rotation"""
         # Arrange
         user_id = "user:george"
@@ -405,14 +384,11 @@ class TestAPIKeyRotation:
         assert "$2b$" in new_key_entry  # Still bcrypt
 
     @pytest.mark.asyncio
-    async def test_rotate_nonexistent_key_raises_error(
-        self, api_key_manager, mock_keycloak_client
-    ):
+    @pytest.mark.unit
+    async def test_rotate_nonexistent_key_raises_error(self, api_key_manager, mock_keycloak_client):
         """Test rotating non-existent key raises error"""
         # Arrange
-        mock_keycloak_client.get_user_attributes.return_value = {
-            "apiKeys": []
-        }
+        mock_keycloak_client.get_user_attributes.return_value = {"apiKeys": []}
 
         # Act & Assert
         with pytest.raises(ValueError, match="API key.*not found"):
@@ -422,6 +398,7 @@ class TestAPIKeyRotation:
 class TestBcryptHashing:
     """Test bcrypt hashing functionality"""
 
+    @pytest.mark.unit
     def test_hash_api_key(self, api_key_manager):
         """Test that API keys are hashed with bcrypt"""
         api_key = "mcpkey_live_test123"
@@ -433,6 +410,7 @@ class TestBcryptHashing:
         # Should verify correctly
         assert bcrypt.checkpw(api_key.encode(), hashed.encode())
 
+    @pytest.mark.unit
     def test_verify_api_key_hash(self, api_key_manager):
         """Test API key hash verification"""
         api_key = "mcpkey_live_verify_test"

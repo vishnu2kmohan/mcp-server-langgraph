@@ -68,6 +68,7 @@ class TestEnhancedNoteExtraction:
     """Test suite for LLM-based key information extraction"""
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extract_key_information_llm_success(self, context_manager, mock_llm):
         """Test successful LLM-based extraction"""
         messages = [
@@ -108,6 +109,7 @@ class TestEnhancedNoteExtraction:
         assert any("structured output" in p for p in result["preferences"])
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extract_key_information_llm_empty_categories(self, context_manager):
         """Test extraction when some categories are empty"""
 
@@ -152,6 +154,7 @@ PREFERENCES:
         assert len(result["preferences"]) == 0
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extract_key_information_llm_fallback_on_error(self, context_manager):
         """Test fallback to rule-based extraction on LLM error"""
         # Make LLM raise an exception
@@ -180,6 +183,7 @@ PREFERENCES:
         assert len(result["issues"]) > 0
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_parse_extraction_response(self, context_manager):
         """Test parsing of LLM extraction response"""
         response_text = """Here is the analysis:
@@ -230,6 +234,7 @@ PREFERENCES:
         assert "REST" in result["preferences"][0]
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_parse_extraction_multiline_items(self, context_manager):
         """Test parsing multi-line items (should handle gracefully)"""
         response_text = """DECISIONS:
@@ -263,6 +268,7 @@ PREFERENCES:
         assert "CSV" in result["requirements"][0]
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extract_prompt_format(self, context_manager, mock_llm):
         """Test that extraction prompt follows XML structure"""
         messages = [
@@ -301,6 +307,7 @@ PREFERENCES:
         assert "PREFERENCES:" in prompt
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extraction_categories_complete(self, context_manager):
         """Test that all 6 categories are extracted"""
         response_text = """DECISIONS:
@@ -333,6 +340,7 @@ PREFERENCES:
         assert len(result["preferences"]) == 1
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extraction_case_insensitive_headers(self, context_manager):
         """Test that category headers are case-insensitive"""
         response_text = """decisions:
@@ -365,6 +373,7 @@ preferences:
         assert len(result["preferences"]) == 1
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extract_with_system_messages(self, context_manager, mock_llm):
         """Test extraction works with system messages in conversation"""
         messages = [
@@ -381,6 +390,7 @@ preferences:
         assert len(result["requirements"]) > 0
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extraction_metrics_logged(self, context_manager, mock_llm):
         """Test that extraction logs metrics"""
         with patch("mcp_server_langgraph.core.context_manager.metrics") as mock_metrics:
@@ -394,6 +404,7 @@ preferences:
             mock_metrics.successful_calls.add.assert_called_once_with(1, {"operation": "extract_key_info_llm"})
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_extraction_error_metrics_logged(self, context_manager):
         """Test that extraction errors are logged in metrics"""
         context_manager.llm.ainvoke = AsyncMock(side_effect=Exception("LLM error"))
@@ -414,6 +425,7 @@ preferences:
 class TestRuleBasedExtraction:
     """Test suite for rule-based extraction (fallback)"""
 
+    @pytest.mark.unit
     def test_extract_key_information_decisions(self):
         """Test rule-based extraction of decisions"""
         manager = ContextManager()
@@ -430,6 +442,7 @@ class TestRuleBasedExtraction:
         assert any("PostgreSQL" in d for d in result["decisions"])
         assert any("Docker" in d for d in result["decisions"])
 
+    @pytest.mark.unit
     def test_extract_key_information_requirements(self):
         """Test rule-based extraction of requirements"""
         manager = ContextManager()
@@ -444,6 +457,7 @@ class TestRuleBasedExtraction:
 
         assert len(result["requirements"]) >= 3
 
+    @pytest.mark.unit
     def test_extract_key_information_issues(self):
         """Test rule-based extraction of issues"""
         manager = ContextManager()
@@ -458,6 +472,7 @@ class TestRuleBasedExtraction:
 
         assert len(result["issues"]) >= 3
 
+    @pytest.mark.unit
     def test_extract_key_information_truncation(self):
         """Test that extracted items are truncated to 200 chars"""
         manager = ContextManager()
@@ -477,6 +492,7 @@ class TestContextManagerLLMIntegration:
 
     @pytest.mark.skip(reason="Requires actual LLM")
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_full_extraction_workflow(self):
         """Test complete extraction workflow with real LLM"""
         manager = ContextManager()
