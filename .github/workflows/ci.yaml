@@ -298,11 +298,18 @@ jobs:
 
     - name: Test ${{ matrix.variant }} image
       run: |
-        # Use explicit entrypoint for distroless images (base, full)
-        # Distroless images have limited command parsing - use --entrypoint
-        # For PRs with load:true, only the first tag is loaded, so use the SHA tag
+        # Use correct Python path based on variant
+        # - Distroless (base, full): /usr/bin/python3 (system Python)
+        # - Slim (test): /opt/venv/bin/python (venv Python)
+        if [[ "${{ matrix.variant }}" == "test" ]]; then
+          PYTHON_PATH="/opt/venv/bin/python"
+        else
+          PYTHON_PATH="/usr/bin/python3"
+        fi
+
+        echo "Testing with Python at: $PYTHON_PATH"
         docker run --rm \
-          --entrypoint /opt/venv/bin/python \
+          --entrypoint "$PYTHON_PATH" \
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }} \
           -c "import mcp_server_langgraph.core.agent; print('✓ Import successful')"
 
