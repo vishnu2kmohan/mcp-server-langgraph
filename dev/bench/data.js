@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762101277226,
+  "lastUpdate": 1762101917349,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -19952,6 +19952,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000201087164714516",
             "extra": "mean: 47.978480548924836 usec\nrounds: 4807"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "75e97e33b07122146414ef108c02036833c6d564",
+          "message": "feat: implement all 11 Kubernetes best practices for GKE/EKS/AKS\n\nThis comprehensive update implements enterprise-grade Kubernetes best\npractices across all cloud providers (GCP GKE, AWS EKS, Azure AKS).\n\n## Phase 1: High Availability & Data Protection\n\n✅ Cloud-Managed PostgreSQL Databases\n- Created Azure Database for PostgreSQL Terraform module\n- Added CloudSQL proxy sidecar support for GKE\n- Updated Helm chart for external database configuration\n- Supports CloudSQL (GCP), RDS (AWS), Azure Database (Azure)\n\n✅ Topology Spread Constraints\n- Added zone-based pod distribution (maxSkew: 1)\n- Upgraded podAntiAffinity to required (production-grade HA)\n- Configured both base and Helm deployments\n\n✅ Velero Backup/DR\n- Cloud-specific Velero configurations (AWS, GCP, Azure)\n- Daily, weekly, monthly backup schedules\n- Comprehensive restore procedures\n- 1h RTO, 24h RPO\n\n## Phase 2: Security Hardening\n\n✅ Istio Service Mesh with mTLS STRICT\n- Enabled Istio sidecar injection in namespace\n- Configured PeerAuthentication with STRICT mode\n- Added VirtualService, DestinationRule, AuthorizationPolicy\n- Zero-trust networking with encrypted service-to-service comms\n\n✅ Pod Security Standards\n- Added PSS labels to namespace (enforce: restricted)\n- Most secure pod security level enforced\n\n✅ Network Policies for All Services\n- PostgreSQL, Redis, Keycloak, OpenFGA network isolation\n- Default deny with explicit allows\n- DNS and monitoring exceptions\n\n## Phase 3: Observability & Cost Management\n\n✅ Loki Log Aggregation\n- Loki stack with Promtail\n- 30-day log retention\n- Grafana integration\n\n✅ ResourceQuota and LimitRange\n- Per-namespace compute quotas\n- Default resource constraints\n- Prevents resource exhaustion\n\n✅ Kubecost for FinOps\n- Real-time cost monitoring\n- Cloud billing integration (CUR, BigQuery, Cost Management)\n- Right-sizing recommendations\n- Idle resource detection\n\n## Phase 4: Infrastructure Optimization\n\n✅ Karpenter for EKS Autoscaling\n- Terraform module with IAM roles\n- Spot interruption handling\n- Default, Spot, and On-Demand provisioners\n- 30-50% cost reduction potential\n\n✅ VPA for Stateful Services\n- PostgreSQL, Redis, Keycloak VPA configs\n- Automated resource right-sizing\n- 10-20% cost savings\n\n## Infrastructure & Deployment\n\n- 4 Terraform modules (Azure Database, Karpenter)\n- 35+ Kubernetes manifests\n- 3 cloud-specific deployment scripts\n- Comprehensive validation test suite\n- Detailed documentation and runbooks\n\n## Impact\n\n- Availability: 99.5% → 99.99% (+0.49%)\n- RTO/RPO: 4h/1w → 1h/24h (75% faster)\n- Security: B → A+ (+2 grades)\n- Cost: $5,000/mo → $3,500/mo (30% reduction)\n- Utilization: 40% → 65% (62% improvement)\n\n## Testing\n\nAll configurations validated:\n- ✅ 34/34 validation tests passed\n- ✅ YAML syntax validated\n- ✅ Terraform modules structured correctly\n- ✅ Helm charts compatible\n- ✅ All pre-commit hooks passed\n\n## Documentation\n\n- Implementation guide with detailed steps\n- Comprehensive implementation summary\n- Cloud-specific deployment scripts\n- Backup/restore procedures\n- Troubleshooting guides\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T11:42:12-05:00",
+          "tree_id": "c6397205e085e331d4d455db291091c249b230fd",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/75e97e33b07122146414ef108c02036833c6d564"
+        },
+        "date": 1762101915520,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.70178069182882,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008721016967890522",
+            "extra": "mean: 6.863334101009252 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.57927431175523,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011631221365969749",
+            "extra": "mean: 6.685418181102992 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52042.849751545524,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003051206999911002",
+            "extra": "mean: 19.214935476708842 usec\nrounds: 9175"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52804.9366532013,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002421789404651112",
+            "extra": "mean: 18.937623324264987 usec\nrounds: 13651"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49656.703410949136,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002348645599326512",
+            "extra": "mean: 20.138267974098003 usec\nrounds: 21058"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.62058869872996,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023117363450923572",
+            "extra": "mean: 5.246023038888363 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.388337992637968,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016980376371814545",
+            "extra": "mean: 51.57739670000154 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.953976436207057,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003058635770875233",
+            "extra": "mean: 100.46236359999341 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2616057.3904332547,
+            "unit": "iter/sec",
+            "range": "stddev: 8.912590126707679e-8",
+            "extra": "mean: 382.2546109488777 nsec\nrounds: 189394"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5038.556614472059,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013324616694509827",
+            "extra": "mean: 198.46953731307437 usec\nrounds: 469"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2996.300408674489,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010508739615673597",
+            "extra": "mean: 333.7449065871144 usec\nrounds: 2687"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2958.023741870029,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000921642932795544",
+            "extra": "mean: 338.06354757917234 usec\nrounds: 1797"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59466.002955813434,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000201620291910172",
+            "extra": "mean: 16.816331185787888 usec\nrounds: 13503"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17297.245713600805,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001759107381396484",
+            "extra": "mean: 57.81267240793725 usec\nrounds: 5690"
           }
         ]
       }
