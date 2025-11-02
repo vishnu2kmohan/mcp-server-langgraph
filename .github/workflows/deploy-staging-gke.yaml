@@ -143,13 +143,22 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
+      # Install kustomize
+      - name: Install kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+          kustomize version
+
       # Update image tag in Kustomization
       - name: Update image tag
         working-directory: deployments/overlays/staging-gke
         run: |
           # Update image tag in kustomization.yaml
-          kubectl kustomize edit set image \
+          kustomize edit set image \
             mcp-server-langgraph=us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:${{ needs.build-and-push.outputs.image_tag }}
+          echo "✓ Updated image tag to: ${{ needs.build-and-push.outputs.image_tag }}"
+          cat kustomization.yaml | grep -A 3 "images:"
 
       # Validate manifests
       - name: Validate Kubernetes manifests
