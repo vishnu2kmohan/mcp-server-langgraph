@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: false  # Never cancel production deployments
 
 env:
-  GCP_PROJECT_ID: YOUR_PROJECT_ID  # Replace with your project ID
+  GCP_PROJECT_ID: vishnu-sandbox-20250310
   GCP_REGION: us-central1
   GKE_CLUSTER: mcp-prod-gke
   NAMESPACE: mcp-production
@@ -90,7 +90,7 @@ jobs:
           echo "✅ Manifest validation passed"
 
       - name: Security scan manifests
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'config'
           scan-ref: 'deployments/overlays/production-gke'
@@ -130,7 +130,7 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
           token_format: access_token
 
@@ -161,7 +161,7 @@ jobs:
 
       # Scan image for vulnerabilities
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: '${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-production/mcp-server-langgraph:${{ steps.image.outputs.tag }}'
           format: 'sarif'
@@ -211,7 +211,7 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
       - name: Set up Cloud SDK
@@ -297,7 +297,7 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
       - name: Set up Cloud SDK
@@ -395,7 +395,7 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
       - name: Set up Cloud SDK
