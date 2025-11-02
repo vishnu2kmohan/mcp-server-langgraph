@@ -66,10 +66,8 @@ runs:
           uv sync --frozen
         fi
 
-        # Legacy support: install-test flag
-        if [ "${{ inputs.install-test }}" == "true" ]; then
-          uv sync --frozen --group dev
-        fi
+        # NOTE: Removed legacy install-test flag support (redundant with extras parameter)
+        # Workflows should use extras: 'dev builder' instead of install-test: 'true'
       shell: bash
 
     - name: Validate dependency consistency
