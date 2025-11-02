@@ -117,44 +117,72 @@ create_vpc_network() {
     # Check if VPC already exists
     if gcloud compute networks describe "$VPC_NAME" &> /dev/null; then
         log_warn "VPC $VPC_NAME already exists, skipping creation"
-        return 0
+    else
+        # Create VPC
+        gcloud compute networks create "$VPC_NAME" \
+            --subnet-mode=custom \
+            --description="Staging VPC for MCP Server LangGraph"
+
+        # Create subnet with secondary ranges for GKE
+        gcloud compute networks subnets create "$SUBNET_NAME" \
+            --network="$VPC_NAME" \
+            --range=10.1.0.0/20 \
+            --region="$REGION" \
+            --secondary-range pods=10.2.0.0/16,services=10.3.0.0/16 \
+            --enable-flow-logs \
+            --enable-private-ip-google-access \
+            --logging-aggregation-interval=interval-5-sec \
+            --logging-flow-sampling=0.5 \
+            --logging-metadata=include-all
+
+        # Create firewall rules
+        log_info "Creating firewall rules..."
+
+        # Allow internal communication
+        gcloud compute firewall-rules create "$VPC_NAME-allow-internal" \
+            --network="$VPC_NAME" \
+            --allow=tcp,udp,icmp \
+            --source-ranges=10.1.0.0/20,10.2.0.0/16,10.3.0.0/16 \
+            --description="Allow internal communication within staging VPC"
+
+        # Allow SSH from IAP (for debugging)
+        gcloud compute firewall-rules create "$VPC_NAME-allow-iap-ssh" \
+            --network="$VPC_NAME" \
+            --allow=tcp:22 \
+            --source-ranges=35.235.240.0/20 \
+            --description="Allow SSH from Identity-Aware Proxy"
+
+        log_info "VPC network created successfully"
     fi
 
-    # Create VPC
-    gcloud compute networks create "$VPC_NAME" \
-        --subnet-mode=custom \
-        --description="Staging VPC for MCP Server LangGraph"
+    # Configure VPC peering for private services (Cloud SQL, Redis)
+    log_info "Configuring VPC peering for private services..."
 
-    # Create subnet with secondary ranges for GKE
-    gcloud compute networks subnets create "$SUBNET_NAME" \
+    # Allocate IP range for private services
+    if ! gcloud compute addresses describe google-managed-services-${VPC_NAME} \
+        --global &> /dev/null; then
+        gcloud compute addresses create google-managed-services-${VPC_NAME} \
+            --global \
+            --purpose=VPC_PEERING \
+            --prefix-length=16 \
+            --network="$VPC_NAME" \
+            --description="IP range for Google managed services (Cloud SQL, Redis)"
+    else
+        log_warn "IP allocation google-managed-services-${VPC_NAME} already exists"
+    fi
+
+    # Create service networking connection
+    if ! gcloud services vpc-peerings list \
         --network="$VPC_NAME" \
-        --range=10.1.0.0/20 \
-        --region="$REGION" \
-        --secondary-range pods=10.2.0.0/16,services=10.3.0.0/16 \
-        --enable-flow-logs \
-        --enable-private-ip-google-access \
-        --logging-aggregation-interval=interval-5-sec \
-        --logging-flow-sampling=0.5 \
-        --logging-metadata=include-all
-
-    # Create firewall rules
-    log_info "Creating firewall rules..."
-
-    # Allow internal communication
-    gcloud compute firewall-rules create "$VPC_NAME-allow-internal" \
-        --network="$VPC_NAME" \
-        --allow=tcp,udp,icmp \
-        --source-ranges=10.1.0.0/20,10.2.0.0/16,10.3.0.0/16 \
-        --description="Allow internal communication within staging VPC"
-
-    # Allow SSH from IAP (for debugging)
-    gcloud compute firewall-rules create "$VPC_NAME-allow-iap-ssh" \
-        --network="$VPC_NAME" \
-        --allow=tcp:22 \
-        --source-ranges=35.235.240.0/20 \
-        --description="Allow SSH from Identity-Aware Proxy"
-
-    log_info "VPC network created successfully"
+        --service=servicenetworking.googleapis.com 2>/dev/null | grep -q "ACTIVE"; then
+        gcloud services vpc-peerings connect \
+            --service=servicenetworking.googleapis.com \
+            --ranges=google-managed-services-${VPC_NAME} \
+            --network="$VPC_NAME"
+        log_info "VPC peering configured successfully"
+    else
+        log_warn "VPC peering already configured for $VPC_NAME"
+    fi
 }
 
 create_gke_cluster() {
