@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762120700869,
+  "lastUpdate": 1762121052178,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -21660,6 +21660,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000023812433183648445",
             "extra": "mean: 59.23243063649903 usec\nrounds: 4981"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "01584a319ec0c9d6cc50f054d9e311d3c36061b2",
+          "message": "ci: bump trufflesecurity/trufflehog from 3.90.11 to 3.90.12 (#66)\n\nBumps [trufflesecurity/trufflehog](https://github.com/trufflesecurity/trufflehog) from 3.90.11 to 3.90.12.\n\nUpdates TruffleHog secrets scanner with latest security detection patterns.\n\nPre-commit hooks passing. All critical tests green.\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2025-11-02T17:03:11-05:00",
+          "tree_id": "5023fdd71baed422222db997c8799d4444767dad",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/01584a319ec0c9d6cc50f054d9e311d3c36061b2"
+        },
+        "date": 1762121051261,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 134.33917059827112,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0011083899272525029",
+            "extra": "mean: 7.443845272726952 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 146.3208796829522,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00046129487220288555",
+            "extra": "mean: 6.834294614458293 msec\nrounds: 83"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50978.67672624168,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003293760713565664",
+            "extra": "mean: 19.61604467236479 usec\nrounds: 9066"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53179.41951008464,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022730711683064924",
+            "extra": "mean: 18.80426693657996 usec\nrounds: 9137"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50025.16441028326,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002755647498841794",
+            "extra": "mean: 19.98993929931869 usec\nrounds: 20181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.10456949909488,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013874386419967896",
+            "extra": "mean: 5.232737252809312 msec\nrounds: 178"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.375211450765107,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011900466766492793",
+            "extra": "mean: 51.6123399499989 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94826695255572,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007052087060524631",
+            "extra": "mean: 100.5200206999973 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2756195.4788462343,
+            "unit": "iter/sec",
+            "range": "stddev: 4.594765445926892e-8",
+            "extra": "mean: 362.81896827528647 nsec\nrounds: 191571"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5025.105609888544,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001635608687550195",
+            "extra": "mean: 199.0007927459618 usec\nrounds: 579"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2946.249397573282,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007643179001835467",
+            "extra": "mean: 339.41457937120447 usec\nrounds: 2608"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2961.3338035739985,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000032891150403934696",
+            "extra": "mean: 337.6856735276219 usec\nrounds: 1749"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59966.01109180808,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020434257927868383",
+            "extra": "mean: 16.676113381445333 usec\nrounds: 12039"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17194.151845602777,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001728728840237483",
+            "extra": "mean: 58.15930957104693 usec\nrounds: 5036"
           }
         ]
       }
