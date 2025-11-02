@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762122627473,
+  "lastUpdate": 1762124236881,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -22392,6 +22392,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000028507238913995307",
             "extra": "mean: 66.86122515286725 usec\nrounds: 5232"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b97567c63b0e9927488048af5b93bea81f2a680e",
+          "message": "fix: remove unused RBAC resources from base manifests\n\nThe application does not use the Kubernetes API, so the Role and\nRoleBinding resources were unnecessary boilerplate. Removing them:\n\n- Eliminates RBAC permission requirement (container.admin)\n- Follows least privilege security principle\n- Reduces attack surface\n- Allows deployment with container.developer role\n\nThis fixes the deployment failure:\n  Error: cannot create resource 'roles' in API group 'rbac.authorization.k8s.io'\n  requires one of ['container.roles.create'] permission(s)\n\nValidated:\n- ✅ Role removed from manifests\n- ✅ RoleBinding removed from manifests\n- ✅ Server-side validation passes\n- ✅ No permission errors",
+          "timestamp": "2025-11-02T17:55:38-05:00",
+          "tree_id": "b1b1b7d916c1d8ab2adc0cc14e0d1573047a269c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b97567c63b0e9927488048af5b93bea81f2a680e"
+        },
+        "date": 1762124235528,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.07732331178246,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012209035439214526",
+            "extra": "mean: 6.892875999999822 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.08524084230547,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00020972496207191768",
+            "extra": "mean: 6.707572086614177 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51413.450700063986,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021066752826189664",
+            "extra": "mean: 19.450163067906185 usec\nrounds: 8892"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54215.27138787383,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002154762825071743",
+            "extra": "mean: 18.444987443587106 usec\nrounds: 12185"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50088.525662407075,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002590801607066655",
+            "extra": "mean: 19.96465231857542 usec\nrounds: 19236"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.64254307075487,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004140881128466428",
+            "extra": "mean: 5.245418907514578 msec\nrounds: 173"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.34117292318975,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012429706528817137",
+            "extra": "mean: 51.70317249999954 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938554400430087,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003817712337886774",
+            "extra": "mean: 100.61825490000089 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2709418.6047268277,
+            "unit": "iter/sec",
+            "range": "stddev: 4.52242530145503e-8",
+            "extra": "mean: 369.0828719694361 nsec\nrounds: 189036"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5170.4382591890735,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013752085984509253",
+            "extra": "mean: 193.40720261435612 usec\nrounds: 612"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2963.2372030209203,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019314856989958427",
+            "extra": "mean: 337.4687652343639 usec\nrounds: 2560"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3020.486521244152,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000858762879263555",
+            "extra": "mean: 331.07249211895027 usec\nrounds: 1713"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59474.68718049467,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002427093191957208",
+            "extra": "mean: 16.8138757412071 usec\nrounds: 11468"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17134.181883614187,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020031129618051025",
+            "extra": "mean: 58.36286825905141 usec\nrounds: 5359"
           }
         ]
       }
