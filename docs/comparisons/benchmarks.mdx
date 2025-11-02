@@ -61,7 +61,7 @@ All benchmarks run on standardized hardware:
 | **Latency (p50)** | 245 ms | Median response time |
 | **Latency (p95)** | 890 ms | 95th percentile |
 | **Latency (p99)** | 1,210 ms | 99th percentile |
-| **Error Rate** | 0.02% | <1 error per 5,000 requests |
+| **Error Rate** | 0.02% | Less than 1 error per 5,000 requests |
 | **CPU Usage** | 68% avg | Peak: 85% |
 | **Memory Usage** | 4.2 GB avg | Peak: 5.8 GB |
 
@@ -223,19 +223,19 @@ MCP Server with LangGraph (Kubernetes)
 **Scenario 1: Healthcare Startup (HIPAA-compliant)**
 - **Load**: 50K requests/month
 - **Configuration**: MCP Server on GKE (2 pods, n2-standard-2)
-- **Performance**: p95 latency <1s, 99.95% uptime
+- **Performance**: p95 latency under 1s, 99.95% uptime
 - **Cost**: ~$150/month (infrastructure + LLM)
 
 **Scenario 2: Enterprise Customer Support (High Volume)**
 - **Load**: 10M requests/month
 - **Configuration**: MCP Server on GKE (12 pods, n2-standard-4, multi-region)
-- **Performance**: p95 latency <2s, 99.99% uptime
+- **Performance**: p95 latency under 2s, 99.99% uptime
 - **Cost**: ~$1,200/month (infrastructure + LLM)
 
 **Scenario 3: Financial Services (Compliance-Critical)**
 - **Load**: 500K requests/month
 - **Configuration**: MCP Server on GKE (4 pods, n2-highmem-4, private cluster)
-- **Performance**: p95 latency <1.5s, 99.99% uptime
+- **Performance**: p95 latency under 1.5s, 99.99% uptime
 - **Cost**: ~$500/month (infrastructure + LLM)
 
 ---
@@ -247,7 +247,7 @@ MCP Server with LangGraph (Kubernetes)
 ❌ **Cold Start Performance**: All tests measured warm instances (excluding cold starts)
 ❌ **Network Latency**: Tests run in same region as LLM provider (minimal network overhead)
 ❌ **Complex Tool Execution**: Simple tools used (web search, database queries not benchmarked)
-❌ **Long-Running Workflows**: Tests limited to <10 second workflows
+❌ **Long-Running Workflows**: Tests limited to under 10 second workflows
 ❌ **Memory-Intensive Workloads**: Benchmarks focus on CPU/network, not memory-bound operations
 
 ### Factors That Impact Your Performance
@@ -369,8 +369,8 @@ See [CONTRIBUTING.md](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob
   <Card title="Production Deployment" icon="rocket" href="/deployment/kubernetes">
     Deploy to production
   </Card>
-  <Card title="Cost Optimization" icon="dollar-sign" href="/guides/cost-optimization">
-    Reduce costs at scale
+  <Card title="Multi-LLM Setup" icon="dollar-sign" href="/guides/multi-llm-setup">
+    Optimize costs with multiple providers
   </Card>
 </CardGroup>
 
