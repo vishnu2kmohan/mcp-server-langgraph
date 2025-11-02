@@ -394,7 +394,7 @@ python scripts/generate_openapi.py
 - **Contributing**: See `CONTRIBUTING.md` and `../docs/advanced/contributing.mdx`
 - **Development**: See `../docs/advanced/development-setup.mdx`
 - **Testing**: See `../docs/advanced/testing.mdx`
-- **Mintlify Docs**: See `../docs/mint.json` (100% coverage)
+- **Project Docs**: See `../docs/` directory (100% coverage)
 
 ## Current Project State (2025-10-14)
 

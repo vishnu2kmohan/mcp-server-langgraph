@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict
 
 import pytest
+import pytest_asyncio
 
 # These tests require the full test infrastructure
 pytestmark = [
@@ -50,7 +51,7 @@ def test_infrastructure_check():
     return True
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture
 async def test_user_credentials():
     """Test user credentials for E2E tests"""
     return {
@@ -60,7 +61,7 @@ async def test_user_credentials():
     }
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture
 async def authenticated_session(test_infrastructure_check, test_user_credentials):
     """
     Create authenticated session with JWT token.

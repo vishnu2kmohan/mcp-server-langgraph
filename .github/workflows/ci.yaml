@@ -21,8 +21,26 @@ name: CI/CD Pipeline (Optimized)
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
+      - '.github/AGENTS.md'
+      - '.github/CLAUDE.md'
+      - '.github/SUPPORT.md'
+      - '.github/copilot-instructions.md'
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
+      - '.github/AGENTS.md'
+      - '.github/CLAUDE.md'
+      - '.github/SUPPORT.md'
+      - '.github/copilot-instructions.md'
   release:
     types: [created]
   workflow_dispatch:

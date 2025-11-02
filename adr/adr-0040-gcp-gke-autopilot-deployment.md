@@ -276,7 +276,7 @@ metadata:
 ## Related Decisions
 
 - [ADR-0013: Multi-Deployment Target Strategy](adr-0013-multi-deployment-target-strategy.md) - Multi-cloud strategy
-- [ADR-0021: CI/CD Pipeline Strategy](adr-0021-ci-cd-pipeline-strategy.md) - GitHub Actions integration
+- [ADR-0021: CI/CD Pipeline Strategy](adr-0021-cicd-pipeline-strategy.md) - GitHub Actions integration
 - [ADR-0001: Multi-Provider LLM Support](adr-0001-llm-multi-provider.md) - Vertex AI integration
 
 ## References

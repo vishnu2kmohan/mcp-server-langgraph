@@ -8,7 +8,7 @@ Before asking for help, please check our comprehensive documentation:
 
 ### Getting Started
 - [README.md](../README.md) - Project overview and quick start
-- [Developer Onboarding](../docs-internal/DEVELOPER_ONBOARDING.md) - Developer setup guide
+- [Developer Setup Guide](../docs/advanced/development-setup.mdx) - Complete development environment setup
 - [.env.example](../.env.example) - Configuration reference
 
 ### Deployment & Operations

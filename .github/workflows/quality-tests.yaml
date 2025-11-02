@@ -36,8 +36,18 @@ name: Quality Tests
 on:
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
   push:
     branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
   schedule:
     # Run weekly on Sunday at midnight
     - cron: '0 0 * * 0'
@@ -55,6 +65,7 @@ jobs:
   property-tests:
     name: Property-Based Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v5
@@ -89,6 +100,7 @@ jobs:
   contract-tests:
     name: Contract Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v5
@@ -120,6 +132,7 @@ jobs:
   regression-tests:
     name: Performance Regression Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v5
@@ -154,6 +167,7 @@ jobs:
   mutation-tests:
     name: Mutation Testing
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     if: github.event_name == 'schedule'  # Only on weekly schedule (too slow for PRs)
 
     steps:
@@ -189,6 +203,7 @@ jobs:
   benchmark-tests:
     name: Benchmark Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write  # Required for benchmark-action to push to gh-pages
 

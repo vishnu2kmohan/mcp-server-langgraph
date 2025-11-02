@@ -219,7 +219,7 @@ Claude Code generates documentation with:
 - Comprehensive navigation structure with 4 main tabs
 
 **Files Updated**:
-- `../docs/mint.json` - Main configuration
+- `docs/mint.json` (currently backed up as `mint.json.backup`)
 - `.mintlifyignore` - Enhanced ignore patterns
 - Multiple `.mdx` files - Fixed `<` character escaping
 
@@ -701,7 +701,7 @@ When using extended thinking, Claude Code will:
 
 - **Claude Code Documentation**: https://docs.claude.com/claude-code
 - **Project README**: [../README.md](../README.md)
-- **Mintlify Documentation**: [../docs/mint.json](../docs/mint.json) - Comprehensive docs with 100% coverage
+- **Mintlify Documentation**: See `docs/` directory - Comprehensive docs with 100% coverage
 - **Testing Guide**: [../docs/advanced/testing.mdx](../docs/advanced/testing.mdx)
 - **Development Guide**: [../docs/advanced/development-setup.mdx](../docs/advanced/development-setup.mdx)
 - **CHANGELOG**: [../CHANGELOG.md](../CHANGELOG.md)

@@ -25,12 +25,22 @@ name: E2E Tests
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
   workflow_dispatch:
   schedule:
-    # Run nightly at 2 AM UTC for regression testing
-    - cron: '0 2 * * *'
+    # Run weekly on Monday at 2 AM UTC for regression testing (optimized from daily)
+    - cron: '0 2 * * 1'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

@@ -53,6 +53,11 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Install jq for JSON parsing
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
+
     - name: Run skipped test tracker
       id: track
       run: |
