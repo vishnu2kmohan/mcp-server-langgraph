@@ -28,10 +28,11 @@ contentType: "explanation"
 |--------|----------------|---------------------------|
 | **Approach** | Low-code/no-code (visual) | Code-first (Python) |
 | **LLM Support** | ❌ OpenAI only | ✅ 100+ providers |
-| **Development** | ✅ Visual Agent Builder | ⚠️ Code (coming: visual builder) |
+| **Development** | ✅ Visual Agent Builder | ✅ Code-first with type safety |
 | **Deployment** | ⚠️ OpenAI Platform only | ✅ Multi-cloud (GCP, AWS, Azure) |
 | **Pricing** | Usage-based (API costs) | Self-hosted OR Platform |
 | **Enterprise Auth** | ⚠️ Basic | ✅ JWT + Keycloak + OpenFGA |
+| **Disaster Recovery** | ❌ Not available | ✅ Complete (automated backups, multi-region) |
 | **Observability** | ⚠️ Basic (Evals only) | ✅ LangSmith + OTEL + Grafana |
 | **Status** | Beta (Agent Builder) | ✅ Production-ready |
 | **Vendor Lock-in** | ⚠️ OpenAI only | ✅ Provider-agnostic |
@@ -180,46 +181,44 @@ contentType: "explanation"
     - OpenAI models only
   </Accordion>
 
-  <Accordion title="MCP Server Visual Builder (Planned)">
-    **Status:** Planned for Q2 2025
+  <Accordion title="MCP Server Code-First Approach">
+    **Status:** Production-ready
 
-    **Planned Features:**
-    - React Flow-based canvas
-    - Drag-and-drop agent composition
-    - **Export to Python code** (unique!)
-    - Import from existing code
-    - Live preview and testing
+    **Current Features:**
+    - Type-safe Python development (Pydantic)
+    - Full code control and customization
+    - Version control friendly (Git)
+    - Testable (437 test suite included)
+    - CI/CD ready
+    - IDE support with autocomplete
 
     **Approach:**
-    - Visual builder **generates code**
-    - Code is editable and versionable
-    - Best of both worlds: visual + code
-
-    **Current State:**
-    - Code-first development fully supported
-    - Visual builder in development
+    - Code-first development
+    - Maximum flexibility and control
+    - Production-grade patterns
 
     **Strengths:**
-    - Full code control (export feature)
+    - Full code control
     - Works with any LLM provider
-    - Can self-host
+    - Can self-host anywhere
     - Production-grade output
+    - Mature, stable framework
 
-    **Limitations:**
-    - Not available yet (Q2 2025)
-    - Currently code-only
+    **Considerations:**
+    - Requires Python knowledge
+    - No visual builder (code only)
   </Accordion>
 </AccordionGroup>
 
-**Current Winner:** OpenAI AgentKit (visual builder exists now)
-**Future Winner:** MCP Server with LangGraph (visual + code export capability)
+**Winner for Non-Developers:** OpenAI AgentKit (visual builder available now)
+**Winner for Developers:** MCP Server with LangGraph (code control, flexibility, production-ready)
 
 ### Authentication & Authorization
 
 | Feature | OpenAI AgentKit | MCP Server with LangGraph |
 |---------|----------------|---------------------------|
 | **Authentication** | ⚠️ API keys | ✅ JWT + Keycloak SSO |
-| **Authorization** | ⚠️ Basic (per-agent) | ✅ OpenFGA (Zanzibar model) |
+| **Authorization** | ⚠️ Basic (per-agent) | ✅ OpenFGA ([Google Zanzibar](https://research.google/pubs/pub48190/) model) |
 | **SSO Integration** | ❌ No | ✅ SAML, OAuth, OIDC |
 | **Service Principals** | ⚠️ Limited | ✅ Full support |
 | **Fine-Grained Permissions** | ❌ No | ✅ Relationship-based (OpenFGA) |
@@ -534,16 +533,16 @@ contentType: "explanation"
   </Step>
 </Steps>
 
-<Note>
-  **Migration Tool Planned:** `mcpserver migrate --from openai-agentkit` to automate conversion.
-</Note>
+<Tip>
+  **Migration Effort:** Typical visual workflow migrates in 1-3 days. Most effort in recreating visual logic as code, not integration complexity.
+</Tip>
 
 ## Feature Maturity
 
 | Feature | OpenAI AgentKit | MCP Server with LangGraph |
 |---------|----------------|---------------------------|
-| **Agent Builder** | ⚠️ Beta | 🔄 Planned Q2 2025 |
-| **ChatKit** | ✅ GA | ⚠️ Playground (planned) |
+| **Agent Builder** | ⚠️ Beta | ❌ Not available (code-first) |
+| **ChatKit** | ✅ GA | ❌ Not available |
 | **Evals** | ✅ GA | ✅ LangSmith (production) |
 | **Production Ready** | ⚠️ Beta (expect bugs) | ✅ 100% test pass (437/437) |
 | **Documentation** | ⚠️ In progress | ✅ Complete |
@@ -573,6 +572,21 @@ contentType: "explanation"
 **Ideal Strategy:**
 1. **Prototype:** Use OpenAI AgentKit visual builder (if non-developer) OR MCP Server with LangGraph quick-start (if developer)
 2. **Production:** Use MCP Server with LangGraph for scale, security, and cost optimization
+
+### When NOT to Use MCP Server with LangGraph:
+
+**Choose OpenAI AgentKit instead if:**
+- ❌ **Non-technical team** - MCP Server requires Python development skills
+- ❌ **Need visual workflow builder NOW** - MCP Server is code-first only (no visual builder)
+- ❌ **OpenAI models are sufficient** - No need for multi-provider complexity if OpenAI meets all needs
+- ❌ **Zero DevOps capacity** - OpenAI AgentKit requires no infrastructure management
+- ❌ **Low volume (<10K requests/month)** - OpenAI's pay-per-use is simpler for low traffic
+
+**MCP Server is overkill if:**
+- You're building simple chatbots or FAQ agents (OpenAI AgentKit's visual builder is faster)
+- Your team prefers drag-and-drop over code
+- You're okay with OpenAI vendor lock-in for the convenience
+- You need a working demo in the next 2 hours (visual builder wins for speed)
 
 ---
 

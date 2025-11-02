@@ -34,6 +34,7 @@ contentType: "explanation"
 | **Cloud Integration** | Deep Google Cloud/Vertex AI | Multi-cloud (GCP, AWS, Azure, Platform) |
 | **Primary Models** | Gemini (optimized) | 100+ providers via LiteLLM |
 | **Security** | Google Cloud IAM | Enterprise-grade (JWT, OpenFGA, Keycloak) |
+| **Disaster Recovery** | ⚠️ Manual setup | ✅ Complete (automated backups, multi-region) |
 | **Observability** | Google Cloud Ops | Dual stack (LangSmith + OTEL) |
 | **Multi-Agent** | ✅ Built-in hierarchies | ✅ LangGraph patterns available |
 | **Streaming** | ✅ Bidirectional audio/video | ✅ MCP streaming support |
@@ -89,7 +90,7 @@ contentType: "explanation"
 
 | Feature | Google ADK | MCP Server with LangGraph |
 |---------|------------|---------------------------|
-| **Getting Started** | ✅ ~100 lines of code | 🔄 Coming soon: `mcpserver init` |
+| **Getting Started** | ✅ ~100 lines of code | ✅ Multiple quick-start options |
 | **Documentation** | ✅ Official Google docs | ✅ Complete Mintlify docs |
 | **Examples** | ✅ Google Cloud focused | ✅ 12+ multi-cloud examples |
 | **Learning Curve** | ✅ Low (workflow-based) | ⚠️ Medium (graph concepts) |
@@ -187,7 +188,7 @@ contentType: "explanation"
 | Feature | Google ADK | MCP Server with LangGraph |
 |---------|------------|---------------------------|
 | **Authentication** | ✅ Google Cloud IAM | ✅ JWT + Keycloak SSO |
-| **Authorization** | ✅ IAM Policies | ✅ OpenFGA (Zanzibar model) |
+| **Authorization** | ✅ IAM Policies | ✅ OpenFGA ([Google Zanzibar](https://research.google/pubs/pub48190/) model) |
 | **Identity Federation** | ✅ Workforce Identity | ✅ Keycloak federation |
 | **Service Accounts** | ✅ Google Cloud SA | ✅ Service principals |
 | **Secrets Management** | ✅ Secret Manager | ✅ Infisical + cloud-native |
@@ -440,6 +441,21 @@ If you want to optimize for Google Cloud:
 ### If You Need Bidirectional Streaming:
 - **Google ADK** has unique audio/video streaming capabilities
 - **MCP Server with LangGraph** supports streaming but not bidirectional media
+
+### When NOT to Use MCP Server with LangGraph:
+
+**Choose Google ADK instead if:**
+- ❌ **100% Google Cloud committed** - You'll never use AWS or Azure, and Google Cloud is your long-term platform
+- ❌ **Gemini models exclusively** - Google ADK is specifically optimized for Gemini performance
+- ❌ **Bidirectional audio/video streaming required** - Unique ADK capability for real-time voice/video agents
+- ❌ **Vertex AI Model Garden integration critical** - Deep native integration with Google's model ecosystem
+- ❌ **Google Workspace/Agentspace deployment** - Building agents for Google's agent platform
+
+**MCP Server is overkill if:**
+- Your entire infrastructure is Google Cloud and will remain so indefinitely
+- You prioritize Google-native tooling over multi-cloud portability
+- Gemini-specific optimizations outweigh provider flexibility benefits
+- Your team already has deep Google Cloud expertise but no multi-cloud experience
 
 ## Summary
 

@@ -35,6 +35,7 @@ contentType: "explanation"
 | **Cloud Integration** | Deep Azure integration | Multi-cloud (GCP, AWS, Azure, Platform) |
 | **Model Support** | Extensive via Semantic Kernel | 100+ via LiteLLM |
 | **Security** | Microsoft Entra, PII Detection | JWT, OpenFGA, Keycloak |
+| **Disaster Recovery** | ⚠️ Azure-managed | ✅ Complete (automated backups, multi-region) |
 | **Observability** | OpenTelemetry built-in | Dual stack (LangSmith + OTEL) |
 | **Managed Service** | ✅ Azure AI Foundry | ✅ LangGraph Platform |
 | **Enterprise Adoption** | 10,000+ organizations | Growing ecosystem |
@@ -96,7 +97,7 @@ contentType: "explanation"
 
 | Feature | Microsoft Agent Framework | MCP Server with LangGraph |
 |---------|---------------------------|---------------------------|
-| **Getting Started** | ✅ Under 20 lines of code | 🔄 Coming soon: `mcpserver init` |
+| **Getting Started** | ✅ Under 20 lines of code | ✅ Multiple quick-start options |
 | **Documentation** | ✅ Microsoft Learn + Azure docs | ✅ Complete Mintlify docs |
 | **Examples** | ✅ Azure-focused examples | ✅ 12+ multi-cloud examples |
 | **Learning Curve** | ✅ Low (unified abstraction) | ⚠️ Medium (graph concepts) |
@@ -205,7 +206,7 @@ contentType: "explanation"
 | Feature | Microsoft Agent Framework | MCP Server with LangGraph |
 |---------|---------------------------|---------------------------|
 | **Authentication** | ✅ Microsoft Entra ID | ✅ JWT + Keycloak SSO |
-| **Authorization** | ✅ Azure RBAC | ✅ OpenFGA (Zanzibar model) |
+| **Authorization** | ✅ Azure RBAC | ✅ OpenFGA ([Google Zanzibar](https://research.google/pubs/pub48190/) model) |
 | **Identity Federation** | ✅ Microsoft Entra | ✅ Keycloak federation |
 | **PII Detection** | ✅ Built-in alerting | ⚠️ Custom implementation |
 | **Prompt Injection** | ✅ Prompt Shields | ⚠️ Custom implementation |
@@ -473,6 +474,22 @@ If you want to optimize for Azure:
 ### If Framework Transition Concerns You:
 - **MCP Server with LangGraph** is stable
 - **Microsoft Agent Framework** is consolidating AutoGen + Semantic Kernel (both now in maintenance mode)
+
+### When NOT to Use MCP Server with LangGraph:
+
+**Choose Microsoft Agent Framework instead if:**
+- ❌ **Azure-only infrastructure** - Fully committed to Azure with no multi-cloud plans
+- ❌ **Responsible AI features required** - Need built-in PII detection, prompt shields, and task adherence monitoring
+- ❌ **.NET/C# development required** - Need cross-language agent communication (Python ↔ C#)
+- ❌ **Microsoft ecosystem integration** - Building for Microsoft 365, Dynamics 365, or Azure AI Foundry
+- ❌ **Enterprise Microsoft shop** - Organization standardized on Microsoft stack with Azure expertise
+
+**MCP Server is overkill if:**
+- Your entire organization is Azure-native and Microsoft-committed indefinitely
+- You need responsible AI safeguards and don't want to build them custom
+- .NET interoperability is a core requirement (MCP Server is Python-only)
+- You prefer Microsoft's unified abstraction over multi-cloud complexity
+- Azure AI Foundry managed service meets all your needs
 
 ## Summary
 

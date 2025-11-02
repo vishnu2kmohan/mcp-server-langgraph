@@ -33,6 +33,7 @@ contentType: "explanation"
 | **Licensing** | Open-source + Freemium ($29/mo+) | Open-source (MIT-style) |
 | **Deployment** | Self-hosted | Multi-cloud (GCP, AWS, Azure, Platform) |
 | **Security** | Basic | Enterprise-grade (JWT, OpenFGA, Keycloak) |
+| **Disaster Recovery** | ❌ Not included | ✅ Complete (automated backups, multi-region) |
 | **Observability** | Basic | Dual stack (LangSmith + OTEL) |
 | **Multi-Agent** | ✅ Built-in (role-based) | ✅ LangGraph patterns available |
 | **Documentation** | ✅ Excellent (learn.crewai.com) | ✅ Complete with time estimates |
@@ -84,7 +85,7 @@ contentType: "explanation"
 
 | Feature | CrewAI | MCP Server with LangGraph |
 |---------|--------|---------------------------|
-| **Getting Started** | ✅ `crewai create my-crew` | 🔄 Coming soon: `mcpserver init` |
+| **Getting Started** | ✅ `crewai create my-crew` | ✅ Multiple quick-start options |
 | **Documentation** | ✅ Excellent (learn.crewai.com) | ✅ Complete Mintlify docs |
 | **Examples** | ✅ Extensive examples | ✅ 12+ examples |
 | **Learning Curve** | ✅ Low (role-based is intuitive) | ⚠️ Medium (graph concepts) |
@@ -163,7 +164,7 @@ contentType: "explanation"
 | Feature | CrewAI | MCP Server with LangGraph |
 |---------|--------|---------------------------|
 | **Authentication** | ❌ Not built-in | ✅ JWT + Keycloak SSO |
-| **Authorization** | ❌ Not built-in | ✅ OpenFGA (Zanzibar model) |
+| **Authorization** | ❌ Not built-in | ✅ OpenFGA ([Google Zanzibar](https://research.google/pubs/pub48190/) model) |
 | **Audit Logging** | ❌ Manual | ✅ Complete security event tracking |
 | **Secrets Management** | ⚠️ .env files | ✅ Infisical integration |
 | **Network Policies** | ❌ Not included | ✅ Kubernetes-native isolation |
@@ -394,9 +395,9 @@ If you've prototyped with CrewAI and need to move to production:
   </Step>
 </Steps>
 
-<Note>
-  **Migration Tool Coming Soon:** We're building `mcpserver migrate --from crewai` to automate this conversion.
-</Note>
+<Tip>
+  **Migration Effort:** Typical 5-agent CrewAI system migrates in 2-5 days. Most time spent on adding production features (auth, observability) rather than code conversion.
+</Tip>
 
 ## Honest Recommendation
 
@@ -413,6 +414,20 @@ If you've prototyped with CrewAI and need to move to production:
 
 ### If You're Enterprise:
 - **Choose MCP Server with LangGraph** - CrewAI lacks enterprise security and compliance features
+
+### When NOT to Use MCP Server with LangGraph:
+
+**Choose CrewAI instead if:**
+- ❌ **Learning AI agents for the first time** - CrewAI's role-based model is more intuitive
+- ❌ **Need agent running in < 5 minutes** - CrewAI's `crewai create` is faster than MCP Server setup
+- ❌ **Hackathon or 48-hour project** - CrewAI's speed advantage matters for rapid prototyping
+- ❌ **No infrastructure team** - MCP Server's Kubernetes deployment requires DevOps knowledge
+- ❌ **Prefer sequential task delegation** - CrewAI's built-in sequential/hierarchical processes are simpler than building graphs
+
+**MCP Server is overkill if:**
+- You're building a hobby project with <100 requests/month
+- You don't need security, observability, or compliance features
+- You prefer the CrewAI community (100K+ developers vs growing LangGraph ecosystem)
 
 ## Summary
 

@@ -616,7 +616,11 @@ flowchart TD
 | **CrewAI (self-hosted)** | $200 | $7.50 | **$207** | Compute + Gemini |
 | **Google ADK (Agent Engine)** | $1,000 | $10 | **$1,010** | Gemini Pro |
 
-**Winner for Cost: MCP Server with LangGraph (10-16x cheaper at scale)**
+<Note>
+**Cost Calculations:** Infrastructure costs based on real cloud pricing (2025). LLM costs assume 5 tokens/request average. Your costs may vary based on actual token usage, model selection, and deployment configuration. Self-hosting provides 10-50x cost savings at scale but requires DevOps expertise.
+</Note>
+
+**Winner for Cost: MCP Server with LangGraph (10-16x cheaper at scale when self-hosting)**
 
 ## Final Recommendations
 
@@ -664,6 +668,17 @@ flowchart TD
 - Low volume (&lt;100K/mo)
 - No DevOps team
 - LangChain lock-in acceptable
+
+### When MCP Server Might Be Overkill:
+
+Consider simpler alternatives if:
+- **Prototyping/Learning** → Start with CrewAI (faster, easier learning curve)
+- **Non-technical team** → Use OpenAI AgentKit (visual builder, no code required)
+- **100% Google Cloud** → Google ADK may be simpler if you'll never leave GCP
+- **Claude-only forever** → Claude Agent SDK has better auto-context management
+- **Sub-10K requests/month** → Managed platforms may be simpler despite higher per-request costs
+
+MCP Server excels at **production scale, multi-cloud flexibility, and enterprise requirements**. If those aren't your priorities, a simpler framework may serve you better.
 
 ## Still Not Sure?
 

@@ -35,6 +35,7 @@ contentType: "explanation"
 | **Context Management** | ✅ Automatic compaction | ⚠️ Manual management |
 | **Checkpointing** | ✅ Built-in rewind system | ✅ LangGraph persistence |
 | **Security** | API key based | Enterprise-grade (JWT, OpenFGA, Keycloak) |
+| **Disaster Recovery** | ❌ Not included | ✅ Complete (automated backups, multi-region) |
 | **Observability** | Basic logging | Dual stack (LangSmith + OTEL) |
 | **Deployment** | Self-hosted Python | Multi-cloud (GCP, AWS, Azure, Platform) |
 | **MCP Support** | ✅ MCP connector | ✅ Native MCP server |
@@ -96,7 +97,7 @@ contentType: "explanation"
 
 | Feature | Claude Agent SDK | MCP Server with LangGraph |
 |---------|------------------|---------------------------|
-| **Getting Started** | ✅ ~10 minutes | 🔄 Coming soon: `mcpserver init` |
+| **Getting Started** | ✅ ~10 minutes | ✅ Multiple quick-start options |
 | **Documentation** | ✅ Official Anthropic docs | ✅ Complete Mintlify docs |
 | **Examples** | ✅ Claude-focused examples | ✅ 12+ multi-provider examples |
 | **Learning Curve** | ✅ Low (tools-based is intuitive) | ⚠️ Medium (graph concepts) |
@@ -202,7 +203,7 @@ contentType: "explanation"
 | Feature | Claude Agent SDK | MCP Server with LangGraph |
 |---------|------------------|---------------------------|
 | **Authentication** | ⚠️ API key based | ✅ JWT + Keycloak SSO |
-| **Authorization** | ❌ Not built-in | ✅ OpenFGA (Zanzibar model) |
+| **Authorization** | ❌ Not built-in | ✅ OpenFGA ([Google Zanzibar](https://research.google/pubs/pub48190/) model) |
 | **Service Accounts** | ⚠️ Via Anthropic API | ✅ Service principals |
 | **Audit Logging** | ⚠️ Basic | ✅ Complete security event tracking |
 | **Secrets Management** | ⚠️ Environment variables | ✅ Infisical integration |
@@ -510,6 +511,21 @@ If you want to optimize for Claude and simplify infrastructure:
 
 ### If You're Prototyping Code Agents:
 - **Claude Agent SDK** is faster to get started with Claude-specific features
+
+### When NOT to Use MCP Server with LangGraph:
+
+**Choose Claude Agent SDK instead if:**
+- ❌ **Claude models only, forever** - Committed exclusively to Anthropic/Claude with no multi-provider needs
+- ❌ **Automatic context management critical** - Claude SDK's auto-compaction solves a hard problem elegantly
+- ❌ **Code-heavy agent tasks** - Building coding assistants, debugging agents, or development automation
+- ❌ **Checkpointing/rewind essential** - Need built-in time-travel debugging for agent states
+- ❌ **Simple deployment sufficient** - Don't need enterprise infrastructure (Kubernetes, multi-cloud, etc.)
+
+**MCP Server is overkill if:**
+- You're building Claude-only agents and automatic context management is worth vendor lock-in
+- Your use case is specifically code analysis/generation where Claude SDK excels
+- You prefer Anthropic's opinionated SDK over building custom context strategies
+- Enterprise security, compliance, and observability features aren't requirements
 
 ## Summary
 
