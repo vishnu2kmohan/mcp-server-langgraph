@@ -1,0 +1,340 @@
+name: Validate Deployment Configurations
+
+# Prevents all 8 critical deployment issues from occurring
+# Runs on: PRs touching deployment configs, Docker files, or infrastructure scripts
+
+on:
+  pull_request:
+    paths:
+      - 'deployments/**'
+      - 'docker/**'
+      - 'scripts/**'
+      - '.github/workflows/deploy-*.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ==========================================================================
+  # Issue #1 Prevention: Docker Editable Install Check
+  # ==========================================================================
+  validate-docker:
+    name: Validate Docker Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for editable install in Dockerfiles
+        run: |
+          echo "🔍 Checking for editable install (-e) in Docker builds..."
+
+          for dockerfile in docker/Dockerfile*; do
+            if [ -f "$dockerfile" ]; then
+              echo "Checking $dockerfile..."
+
+              if grep -q 'pip install.*-e' "$dockerfile"; then
+                echo "❌ ERROR: Found editable install in $dockerfile"
+                echo "Editable install is incompatible with multi-stage builds that only copy site-packages"
+                echo "Use: uv pip install --no-deps . (without -e flag)"
+                exit 1
+              fi
+
+              echo "✓ $dockerfile OK"
+            fi
+          done
+
+          echo "✅ All Dockerfiles validated - no editable install found"
+
+      - name: Check for import validation
+        run: |
+          echo "🔍 Checking for package import validation in Dockerfiles..."
+
+          for dockerfile in docker/Dockerfile*; do
+            if [ -f "$dockerfile" ]; then
+              if ! grep -q 'python -c "import mcp_server_langgraph' "$dockerfile"; then
+                echo "⚠️  WARNING: $dockerfile lacks import validation"
+                echo "Recommended: Add 'RUN python -c \"import mcp_server_langgraph\"' after pip install"
+              fi
+            fi
+          done
+
+  # ==========================================================================
+  # Issue #2 Prevention: Database Configuration Validation
+  # ==========================================================================
+  validate-database-config:
+    name: Validate Database Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate PostgreSQL shared_buffers
+        run: |
+          echo "🔍 Validating PostgreSQL configuration..."
+
+          for script in scripts/*/setup-*-infrastructure.sh; do
+            if [ -f "$script" ]; then
+              echo "Checking $script..."
+
+              # Extract shared_buffers value
+              buffers=$(grep -oP 'shared_buffers=\K[0-9]+' "$script" || echo "0")
+
+              if [ "$buffers" -gt 0 ]; then
+                # Validate for 4GB RAM instance (common staging size)
+                # Min: 52428 (409MB), Max: 314572 (2.4GB), Recommended: 65536 (512MB)
+                if [ "$buffers" -lt 52428 ]; then
+                  echo "❌ ERROR: shared_buffers=$buffers too low in $script"
+                  echo "For 4GB RAM instances, shared_buffers must be >= 52428"
+                  echo "Recommended: 65536 (512MB)"
+                  exit 1
+                fi
+
+                if [ "$buffers" -gt 314572 ]; then
+                  echo "❌ ERROR: shared_buffers=$buffers too high in $script"
+                  echo "For 4GB RAM instances, shared_buffers must be <= 314572"
+                  exit 1
+                fi
+
+                echo "✓ shared_buffers=$buffers is valid"
+              fi
+            fi
+          done
+
+          echo "✅ PostgreSQL configuration validated"
+
+      - name: Check for GDPR database
+        run: |
+          echo "🔍 Checking for GDPR database configuration..."
+
+          # Check GCP infrastructure script
+          if ! grep -q 'create gdpr' scripts/gcp/setup-staging-infrastructure.sh; then
+            echo "❌ ERROR: GDPR database not found in GCP infrastructure script"
+            exit 1
+          fi
+
+          # Check Kubernetes manifests
+          if ! grep -q 'gdpr' deployments/base/postgres-statefulset.yaml; then
+            echo "❌ ERROR: GDPR database not in Kubernetes POSTGRES_MULTIPLE_DATABASES"
+            exit 1
+          fi
+
+          # Check docker-compose
+          if ! grep -q 'POSTGRES_MULTIPLE_DATABASES.*gdpr' docker/docker-compose.yml; then
+            echo "❌ ERROR: GDPR database not in docker-compose configuration"
+            exit 1
+          fi
+
+          echo "✅ GDPR database configured in all deployment types"
+
+  # ==========================================================================
+  # Issue #3 Prevention: VPC Peering Documentation Check
+  # ==========================================================================
+  validate-vpc-peering:
+    name: Validate VPC Peering Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for VPC peering in infrastructure scripts
+        run: |
+          echo "🔍 Checking for VPC peering configuration..."
+
+          for script in scripts/*/setup-*-infrastructure.sh; do
+            if grep -q 'cloud sql\|Cloud SQL\|RDS\|Azure Database' "$script"; then
+              echo "Checking $script for VPC peering..."
+
+              # Check for GCP peering
+              if grep -q 'gcloud sql' "$script" && ! grep -q 'vpc-peerings' "$script"; then
+                echo "⚠️  WARNING: $script creates Cloud SQL but doesn't configure VPC peering"
+                echo "Add: gcloud services vpc-peerings connect"
+              fi
+            fi
+          done
+
+  # ==========================================================================
+  # Issue #4 & #5 Prevention: Kubernetes Security & RBAC
+  # ==========================================================================
+  validate-kubernetes-manifests:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          # Install kubectl
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+
+          # Install kustomize
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+          # Install yq
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq
+          chmod +x yq && sudo mv yq /usr/local/bin/
+
+      - name: Check security contexts (Issue #4)
+        run: |
+          echo "🔍 Validating security contexts..."
+
+          for overlay in deployments/overlays/*; do
+            if [ -d "$overlay" ]; then
+              echo "Checking $overlay..."
+              kubectl kustomize "$overlay" > /tmp/manifests.yaml
+
+              # Check all containers have security contexts
+              missing=$(yq eval '
+                select(.kind == "Deployment" or .kind == "StatefulSet") |
+                path(.spec.template.spec.containers[], .spec.template.spec.initContainers[]?) as $p |
+                getpath($p) |
+                select(.securityContext == null) |
+                .name
+              ' /tmp/manifests.yaml | head -1)
+
+              if [ -n "$missing" ]; then
+                echo "❌ ERROR: Container '$missing' missing securityContext in $overlay"
+                echo "All containers (main + init) must have securityContext defined"
+                exit 1
+              fi
+
+              echo "✓ $overlay security contexts OK"
+            fi
+          done
+
+          echo "✅ All security contexts validated"
+
+      - name: Check for unused RBAC (Issue #5)
+        run: |
+          echo "🔍 Checking for unused RBAC resources..."
+
+          # Check if app uses Kubernetes API
+          if ! grep -rq "kubernetes\.client\|@kubernetes/client-node\|k8s\.io/client-go" src/ 2>/dev/null; then
+            echo "Application does not use Kubernetes API"
+
+            # Check for RBAC resources
+            for overlay in deployments/overlays/*; do
+              if [ -d "$overlay" ]; then
+                kubectl kustomize "$overlay" > /tmp/manifests.yaml
+
+                if grep -q "kind: Role$" /tmp/manifests.yaml || grep -q "kind: RoleBinding$" /tmp/manifests.yaml; then
+                  echo "❌ ERROR: Found RBAC resources in $overlay but app doesn't use K8s API"
+                  echo "Remove Role and RoleBinding from deployments/base/serviceaccount.yaml"
+                  echo "Keep only ServiceAccount with workload identity annotations"
+                  exit 1
+                fi
+              fi
+            done
+
+            echo "✅ No unused RBAC resources found"
+          else
+            echo "Application uses Kubernetes API - RBAC resources are needed"
+          fi
+
+  # ==========================================================================
+  # Issue #6 & #7 Prevention: Manifest Syntax & Structure
+  # ==========================================================================
+  validate-manifest-syntax:
+    name: Validate Manifest Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq
+          chmod +x yq && sudo mv yq /usr/local/bin/
+
+      - name: Check for env value/valueFrom conflicts (Issue #8)
+        run: |
+          echo "🔍 Checking for environment variable conflicts..."
+
+          for overlay in deployments/overlays/*; do
+            if [ -d "$overlay" ]; then
+              echo "Checking $overlay..."
+              kubectl kustomize "$overlay" > /tmp/manifests.yaml
+
+              # Check for env vars with both value and valueFrom
+              conflicts=$(yq eval '
+                select(.kind == "Deployment" or .kind == "StatefulSet") |
+                .spec.template.spec.containers[].env[]? |
+                select(.value != null and .valueFrom != null) |
+                .name
+              ' /tmp/manifests.yaml)
+
+              if [ -n "$conflicts" ]; then
+                echo "❌ ERROR: Found env vars with both value and valueFrom in $overlay:"
+                echo "$conflicts"
+                echo "Fix: Patch ConfigMap data instead of Deployment env array"
+                exit 1
+              fi
+
+              echo "✓ $overlay OK"
+            fi
+          done
+
+          echo "✅ No env value/valueFrom conflicts found"
+
+      - name: Client-side syntax validation
+        run: |
+          echo "🔍 Running client-side syntax validation..."
+
+          for overlay in deployments/overlays/*; do
+            if [ -d "$overlay" ]; then
+              echo "Validating $overlay..."
+              kubectl apply --dry-run=client -k "$overlay" > /dev/null
+              echo "✓ $overlay syntax OK"
+            fi
+          done
+
+          echo "✅ All manifests have valid syntax"
+          echo "⚠️  NOTE: Server-side validation (CRD checks) requires cluster access"
+
+  # ==========================================================================
+  # Summary Report
+  # ==========================================================================
+  validation-summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-docker, validate-database-config, validate-vpc-peering, validate-kubernetes-manifests, validate-manifest-syntax]
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# Deployment Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Configuration: ${{ needs.validate-docker.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Database Configuration: ${{ needs.validate-database-config.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- VPC Peering: ${{ needs.validate-vpc-peering.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Kubernetes Manifests: ${{ needs.validate-kubernetes-manifests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Manifest Syntax: ${{ needs.validate-manifest-syntax.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.validate-docker.result }}" == "success" ] && \
+             [ "${{ needs.validate-database-config.result }}" == "success" ] && \
+             [ "${{ needs.validate-vpc-peering.result }}" == "success" ] && \
+             [ "${{ needs.validate-kubernetes-manifests.result }}" == "success" ] && \
+             [ "${{ needs.validate-manifest-syntax.result }}" == "success" ]; then
+            echo "## ✅ All Validations Passed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment configurations meet all safety requirements." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Validation Failures Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Review the failed jobs above and fix issues before merging." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

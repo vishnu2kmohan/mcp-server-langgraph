@@ -252,6 +252,10 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
 ```
 #### Create Databases
 
+<Info>
+**Three databases required**: Keycloak (identity), OpenFGA (authorization), and GDPR (compliance data storage per ADR-0041).
+</Info>
+
 ```bash
 ## Connect to RDS
 PGPASSWORD=your-master-password psql \
@@ -264,6 +268,12 @@ PGPASSWORD=your-master-password psql \
   -U postgres \
   -c "CREATE DATABASE openfga;"
 
+## NEW: GDPR compliance database (ADR-0041)
+PGPASSWORD=your-master-password psql \
+  -h $RDS_ENDPOINT \
+  -U postgres \
+  -c "CREATE DATABASE gdpr;"
+
 ## Create users
 PGPASSWORD=your-master-password psql \
   -h $RDS_ENDPOINT \
@@ -273,8 +283,53 @@ PGPASSWORD=your-master-password psql \
 PGPASSWORD=your-master-password psql \
   -h $RDS_ENDPOINT \
   -U postgres \
+  -c "CREATE USER openfga WITH PASSWORD 'secure-password';"
+
+## NEW: GDPR database user with restricted permissions
+PGPASSWORD=your-master-password psql \
+  -h $RDS_ENDPOINT \
+  -U postgres \
+  -c "CREATE USER gdpr_user WITH PASSWORD 'secure-gdpr-password';"
+
+## Grant privileges
+PGPASSWORD=your-master-password psql \
+  -h $RDS_ENDPOINT \
+  -U postgres \
   -c "GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;"
+
+PGPASSWORD=your-master-password psql \
+  -h $RDS_ENDPOINT \
+  -U postgres \
+  -c "GRANT ALL PRIVILEGES ON DATABASE openfga TO openfga;"
+
+## NEW: Grant GDPR database privileges
+PGPASSWORD=your-master-password psql \
+  -h $RDS_ENDPOINT \
+  -U postgres \
+  -c "GRANT ALL PRIVILEGES ON DATABASE gdpr TO gdpr_user;"
 ```
+
+#### Initialize GDPR Schema
+
+After creating the databases, initialize the GDPR schema:
+
+```bash
+## Apply GDPR schema (5 tables: user_profiles, user_preferences, consent_records, conversations, audit_logs)
+PGPASSWORD=secure-gdpr-password psql \
+  -h $RDS_ENDPOINT \
+  -U gdpr_user \
+  -d gdpr \
+  -f deployments/base/postgres-gdpr-schema.sql
+```
+
+**Schema Details**:
+- **user_profiles**: User profile data (GDPR Article 15, 16, 17)
+- **user_preferences**: User preferences (GDPR Article 16, 17)
+- **consent_records**: Consent audit trail, 7-year retention (GDPR Article 21, Article 7)
+- **conversations**: Conversation history, 90-day retention (GDPR Article 15, 20)
+- **audit_logs**: Compliance audit trail, 7-year retention (HIPAA §164.316(b)(2)(i), SOC2 CC6.6)
+
+See [ADR-0041: PostgreSQL GDPR Storage](/architecture/adr-0041-postgresql-gdpr-storage) for architecture details and [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for retention policies.
 ### ElastiCache for Redis
 
 #### Create Redis Cluster

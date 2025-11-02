@@ -1,0 +1,768 @@
+---
+title: GDPR Compliance Endpoints
+description: 'GDPR data subject rights API endpoints for compliance and data privacy'
+icon: 'shield-check'
+seoTitle: "GDPR API Endpoints: Data Subject Rights & Privacy Compliance"
+seoDescription: "Complete GDPR compliance API reference: right to access, erasure, rectification, data portability, and consent management. EU data privacy endpoints."
+keywords: ["GDPR API", "data subject rights", "privacy compliance", "right to erasure", "data portability", "consent management"]
+contentType: "reference"
+---
+
+### Overview
+
+The GDPR Compliance API provides endpoints that implement data subject rights under the General Data Protection Regulation (GDPR). These endpoints enable users to exercise their privacy rights including access, rectification, erasure, data portability, and consent management.
+
+<Info>
+All GDPR endpoints require user authentication and operate on the authenticated user's data only. These endpoints are designed to meet EU GDPR compliance requirements (Articles 15-21).
+</Info>
+
+<Warning>
+The **DELETE /me** endpoint permanently deletes user data and cannot be reversed. Always require explicit user confirmation before calling this endpoint.
+</Warning>
+
+### Base URL
+
+```
+http://localhost:8000/api/v1/users
+```
+
+### Endpoints
+
+#### Get User Data (Article 15: Right to Access)
+
+<ParamField path="GET /me/data" type="endpoint">
+  Export all user data in structured JSON format for data subject access requests.
+</ParamField>
+
+**GDPR Article 15**: The data subject shall have the right to obtain from the controller confirmation as to whether or not personal data concerning him or her are being processed, and access to the personal data.
+
+**Request**:
+```bash
+GET /api/v1/users/me/data
+Authorization: Bearer <token>
+```
+
+**Response**:
+```json
+{
+  "export_id": "export_20251102_120530",
+  "user_id": "user:alice",
+  "username": "alice",
+  "email": "alice@acme.com",
+  "export_timestamp": "2025-11-02T12:05:30Z",
+  "profile": {
+    "user_id": "user:alice",
+    "username": "alice",
+    "email": "alice@acme.com",
+    "name": "Alice Smith",
+    "created_at": "2025-01-15T10:00:00Z",
+    "preferences": {
+      "theme": "dark",
+      "language": "en"
+    }
+  },
+  "sessions": [
+    {
+      "session_id": "sess_abc123",
+      "created_at": "2025-11-02T10:00:00Z",
+      "last_accessed": "2025-11-02T12:00:00Z",
+      "ip_address": "192.168.1.1"
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": "conv_xyz789",
+      "created_at": "2025-11-01T15:30:00Z",
+      "message_count": 12,
+      "last_message_at": "2025-11-01T16:45:00Z"
+    }
+  ],
+  "consents": [
+    {
+      "consent_id": "consent_user:alice_analytics_20251101",
+      "consent_type": "analytics",
+      "granted": true,
+      "timestamp": "2025-11-01T10:00:00Z",
+      "ip_address": "192.168.1.1"
+    }
+  ],
+  "audit_log": [
+    {
+      "event_id": "audit_001",
+      "event_type": "login",
+      "timestamp": "2025-11-02T10:00:00Z",
+      "ip_address": "192.168.1.1"
+    }
+  ]
+}
+```
+
+**Example**:
+```python
+import httpx
+
+async with httpx.AsyncClient() as client:
+    response = await client.get(
+        "http://localhost:8000/api/v1/users/me/data",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    user_data = response.json()
+    print(f"Export ID: {user_data['export_id']}")
+    print(f"Total sessions: {len(user_data['sessions'])}")
+    print(f"Total conversations: {len(user_data['conversations'])}")
+```
+
+#### Export User Data (Article 20: Right to Data Portability)
+
+<ParamField path="GET /me/export" type="endpoint">
+  Export user data in portable format (JSON or CSV) for transfer to another service.
+</ParamField>
+
+**GDPR Article 20**: The data subject shall have the right to receive the personal data concerning him or her in a structured, commonly used and machine-readable format.
+
+**Query Parameters**:
+- `format` (string, optional): Export format - `json` or `csv`. Default: `json`
+
+**Request**:
+```bash
+GET /api/v1/users/me/export?format=json
+Authorization: Bearer <token>
+```
+
+**Response**: File download with appropriate Content-Type header
+
+**Response Headers**:
+```
+Content-Type: application/json
+Content-Disposition: attachment; filename="user_data_alice_20251102.json"
+```
+
+**Example (JSON)**:
+```python
+async def export_user_data_json():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8000/api/v1/users/me/export?format=json",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        # Save to file
+        with open("my_data.json", "wb") as f:
+            f.write(response.content)
+
+        print(f"Downloaded {len(response.content)} bytes")
+```
+
+**Example (CSV)**:
+```python
+async def export_user_data_csv():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8000/api/v1/users/me/export?format=csv",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        # Save to file
+        with open("my_data.csv", "wb") as f:
+            f.write(response.content)
+```
+
+#### Update User Profile (Article 16: Right to Rectification)
+
+<ParamField path="PATCH /me" type="endpoint">
+  Update user profile information to correct inaccurate personal data.
+</ParamField>
+
+**GDPR Article 16**: The data subject shall have the right to obtain from the controller without undue delay the rectification of inaccurate personal data concerning him or her.
+
+**Request Body**:
+```json
+{
+  "name": "Alice Smith",
+  "email": "alice.smith@acme.com",
+  "preferences": {
+    "theme": "dark",
+    "language": "en"
+  }
+}
+```
+
+**Fields** (all optional):
+- `name` (string): User's full name (1-100 characters)
+- `email` (string): User's email address
+- `preferences` (object): User preferences and settings
+
+**Response**:
+```json
+{
+  "user_id": "user:alice",
+  "username": "alice",
+  "name": "Alice Smith",
+  "email": "alice.smith@acme.com",
+  "preferences": {
+    "theme": "dark",
+    "language": "en"
+  },
+  "updated_at": "2025-11-02T12:10:00Z",
+  "storage_note": "Configure user profile storage backend for persistence"
+}
+```
+
+**Example**:
+```python
+async def update_profile():
+    async with httpx.AsyncClient() as client:
+        response = await client.patch(
+            "http://localhost:8000/api/v1/users/me",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "name": "Alice Smith",
+                "email": "alice.smith@acme.com",
+                "preferences": {"theme": "light"}
+            }
+        )
+
+        updated = response.json()
+        print(f"Profile updated at: {updated['updated_at']}")
+```
+
+#### Delete User Account (Article 17: Right to Erasure)
+
+<ParamField path="DELETE /me" type="endpoint">
+  Permanently delete user account and all associated personal data.
+</ParamField>
+
+**GDPR Article 17**: The data subject shall have the right to obtain from the controller the erasure of personal data concerning him or her without undue delay.
+
+<Warning>
+This operation is **irreversible** and permanently deletes all user data including sessions, conversations, preferences, and authorization tuples. Audit logs are anonymized (not deleted) for compliance purposes.
+</Warning>
+
+**Query Parameters**:
+- `confirm` (boolean, **required**): Must be `true` to confirm deletion
+
+**Request**:
+```bash
+DELETE /api/v1/users/me?confirm=true
+Authorization: Bearer <token>
+```
+
+**Response**:
+```json
+{
+  "message": "Account deleted successfully",
+  "deletion_timestamp": "2025-11-02T12:15:00Z",
+  "deleted_items": {
+    "sessions": 5,
+    "conversations": 12,
+    "preferences": 1,
+    "authorization_tuples": 8,
+    "consents": 4
+  },
+  "anonymized_items": {
+    "audit_logs": 157
+  },
+  "audit_record_id": "deletion_user:alice_20251102_121500"
+}
+```
+
+**What gets deleted**:
+- User profile and account
+- All sessions
+- All conversations and messages
+- All preferences and settings
+- All authorization tuples (OpenFGA)
+- All consent records
+
+**What gets anonymized** (retained for compliance):
+- Audit logs (user_id replaced with cryptographic hash)
+
+**Example**:
+```python
+async def delete_account():
+    # WARNING: This permanently deletes the account
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(
+            "http://localhost:8000/api/v1/users/me?confirm=true",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        result = response.json()
+        print(f"Deleted {result['deleted_items']['sessions']} sessions")
+        print(f"Deleted {result['deleted_items']['conversations']} conversations")
+        print(f"Anonymized {result['anonymized_items']['audit_logs']} audit logs")
+        print(f"Audit record: {result['audit_record_id']}")
+```
+
+#### Update Consent (Article 21: Right to Object)
+
+<ParamField path="POST /me/consent" type="endpoint">
+  Grant or revoke consent for specific data processing activities.
+</ParamField>
+
+**GDPR Article 21**: The data subject shall have the right to object at any time to processing of personal data concerning him or her.
+
+**Request Body**:
+```json
+{
+  "consent_type": "analytics",
+  "granted": true
+}
+```
+
+**Consent Types**:
+- `analytics`: Analytics and usage tracking
+- `marketing`: Marketing communications and promotions
+- `third_party`: Third-party data sharing
+- `profiling`: Automated profiling and decision-making
+
+**Response**:
+```json
+{
+  "user_id": "user:alice",
+  "consents": {
+    "analytics": {
+      "granted": true,
+      "timestamp": "2025-11-02T12:20:00Z",
+      "ip_address": "192.168.1.1"
+    },
+    "marketing": {
+      "granted": false,
+      "timestamp": "2025-11-01T10:00:00Z",
+      "ip_address": "192.168.1.1"
+    }
+  }
+}
+```
+
+**Example**:
+```python
+async def update_consent(consent_type: str, granted: bool):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:8000/api/v1/users/me/consent",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "consent_type": consent_type,
+                "granted": granted
+            }
+        )
+
+        result = response.json()
+        print(f"Updated consent for {consent_type}: {granted}")
+        print(f"All consents: {result['consents']}")
+
+# Grant analytics consent
+await update_consent("analytics", True)
+
+# Revoke marketing consent
+await update_consent("marketing", False)
+```
+
+#### Get Consent Status (Article 21: Right to Object)
+
+<ParamField path="GET /me/consent" type="endpoint">
+  Retrieve current consent status for all data processing activities.
+</ParamField>
+
+**Request**:
+```bash
+GET /api/v1/users/me/consent
+Authorization: Bearer <token>
+```
+
+**Response**:
+```json
+{
+  "user_id": "user:alice",
+  "consents": {
+    "analytics": {
+      "granted": true,
+      "timestamp": "2025-11-02T12:20:00Z",
+      "ip_address": "192.168.1.1",
+      "user_agent": "Mozilla/5.0..."
+    },
+    "marketing": {
+      "granted": false,
+      "timestamp": "2025-11-01T10:00:00Z",
+      "ip_address": "192.168.1.1",
+      "user_agent": "Mozilla/5.0..."
+    },
+    "third_party": {
+      "granted": false,
+      "timestamp": "2025-10-15T08:00:00Z",
+      "ip_address": "192.168.1.1",
+      "user_agent": null
+    }
+  }
+}
+```
+
+**Example**:
+```python
+async def get_consent_status():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8000/api/v1/users/me/consent",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        result = response.json()
+        for consent_type, details in result['consents'].items():
+            status = "granted" if details['granted'] else "revoked"
+            print(f"{consent_type}: {status} at {details['timestamp']}")
+```
+
+### Authentication
+
+All GDPR endpoints require authentication. Include a valid JWT token in the `Authorization` header:
+
+```bash
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
+```
+
+The authenticated user's identity is used to determine which data to access, export, or delete. Users can only access their own data.
+
+See [Authentication API](/api-reference/authentication) for obtaining tokens.
+
+### Error Responses
+
+GDPR endpoints return standard HTTP status codes:
+
+<ResponseField name="400" type="Bad Request">
+  Invalid request format, missing required fields, or missing confirmation.
+
+  ```json
+  {
+    "detail": "Account deletion requires confirmation. Set confirm=true to proceed."
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Missing or invalid authentication token.
+
+  ```json
+  {
+    "detail": "Invalid authentication credentials"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  Insufficient permissions to access resource.
+
+  ```json
+  {
+    "detail": "Access denied"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="422" type="Unprocessable Entity">
+  Invalid consent type or validation error.
+
+  ```json
+  {
+    "detail": [
+      {
+        "loc": ["body", "consent_type"],
+        "msg": "value is not a valid enumeration member",
+        "type": "type_error.enum"
+      }
+    ]
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server error during data deletion or export.
+
+  ```json
+  {
+    "detail": "Account deletion completed with errors: Failed to delete authorization tuples"
+  }
+  ```
+</ResponseField>
+
+### SDK Examples
+
+#### Python
+
+```python
+import httpx
+from typing import Literal
+
+class GDPRClient:
+    def __init__(self, base_url: str, token: str):
+        self.base_url = base_url
+        self.token = token
+        self.client = httpx.AsyncClient(
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+    async def get_user_data(self):
+        """Get all user data (Article 15: Right to Access)"""
+        response = await self.client.get(f"{self.base_url}/me/data")
+        response.raise_for_status()
+        return response.json()
+
+    async def export_data(self, format: Literal["json", "csv"] = "json"):
+        """Export data in portable format (Article 20: Data Portability)"""
+        response = await self.client.get(
+            f"{self.base_url}/me/export",
+            params={"format": format}
+        )
+        response.raise_for_status()
+        return response.content
+
+    async def update_profile(self, **updates):
+        """Update user profile (Article 16: Rectification)"""
+        response = await self.client.patch(
+            f"{self.base_url}/me",
+            json=updates
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def delete_account(self, confirm: bool = False):
+        """Delete user account (Article 17: Erasure)"""
+        if not confirm:
+            raise ValueError("Must explicitly confirm account deletion")
+
+        response = await self.client.delete(
+            f"{self.base_url}/me",
+            params={"confirm": "true"}
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def update_consent(self, consent_type: str, granted: bool):
+        """Update consent (Article 21: Right to Object)"""
+        response = await self.client.post(
+            f"{self.base_url}/me/consent",
+            json={"consent_type": consent_type, "granted": granted}
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_consents(self):
+        """Get all consent status (Article 21: Right to Object)"""
+        response = await self.client.get(f"{self.base_url}/me/consent")
+        response.raise_for_status()
+        return response.json()
+
+# Usage
+gdpr = GDPRClient("http://localhost:8000/api/v1/users", token)
+
+# Get all data
+data = await gdpr.get_user_data()
+
+# Export as JSON
+json_data = await gdpr.export_data("json")
+
+# Update profile
+updated = await gdpr.update_profile(name="Alice Smith", email="alice@acme.com")
+
+# Manage consent
+await gdpr.update_consent("analytics", True)
+consents = await gdpr.get_consents()
+
+# Delete account (use with caution!)
+# result = await gdpr.delete_account(confirm=True)
+```
+
+#### JavaScript/TypeScript
+
+```typescript
+interface ConsentType {
+  analytics: boolean;
+  marketing: boolean;
+  third_party: boolean;
+  profiling: boolean;
+}
+
+class GDPRClient {
+  constructor(private baseUrl: string, private token: string) {}
+
+  private headers() {
+    return {
+      'Authorization': `Bearer ${this.token}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  async getUserData() {
+    const response = await fetch(`${this.baseUrl}/me/data`, {
+      headers: this.headers()
+    });
+    return await response.json();
+  }
+
+  async exportData(format: 'json' | 'csv' = 'json') {
+    const response = await fetch(
+      `${this.baseUrl}/me/export?format=${format}`,
+      { headers: this.headers() }
+    );
+    return await response.blob();
+  }
+
+  async updateProfile(updates: Record<string, any>) {
+    const response = await fetch(`${this.baseUrl}/me`, {
+      method: 'PATCH',
+      headers: this.headers(),
+      body: JSON.stringify(updates)
+    });
+    return await response.json();
+  }
+
+  async deleteAccount(confirm: boolean = false) {
+    if (!confirm) {
+      throw new Error('Must explicitly confirm account deletion');
+    }
+
+    const response = await fetch(
+      `${this.baseUrl}/me?confirm=true`,
+      { method: 'DELETE', headers: this.headers() }
+    );
+    return await response.json();
+  }
+
+  async updateConsent(consentType: string, granted: boolean) {
+    const response = await fetch(`${this.baseUrl}/me/consent`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify({ consent_type: consentType, granted })
+    });
+    return await response.json();
+  }
+
+  async getConsents() {
+    const response = await fetch(`${this.baseUrl}/me/consent`, {
+      headers: this.headers()
+    });
+    return await response.json();
+  }
+}
+
+// Usage
+const gdpr = new GDPRClient('http://localhost:8000/api/v1/users', token);
+
+// Get user data
+const data = await gdpr.getUserData();
+
+// Export as JSON
+const jsonBlob = await gdpr.exportData('json');
+const url = URL.createObjectURL(jsonBlob);
+// Trigger download...
+
+// Update consent
+await gdpr.updateConsent('analytics', true);
+```
+
+#### cURL
+
+```bash
+# Get user data (Article 15: Right to Access)
+curl -X GET http://localhost:8000/api/v1/users/me/data \
+  -H "Authorization: Bearer $TOKEN"
+
+# Export user data as JSON (Article 20: Data Portability)
+curl -X GET "http://localhost:8000/api/v1/users/me/export?format=json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o user_data.json
+
+# Export user data as CSV
+curl -X GET "http://localhost:8000/api/v1/users/me/export?format=csv" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o user_data.csv
+
+# Update user profile (Article 16: Right to Rectification)
+curl -X PATCH http://localhost:8000/api/v1/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Alice Smith",
+    "email": "alice.smith@acme.com",
+    "preferences": {"theme": "dark"}
+  }'
+
+# Delete user account (Article 17: Right to Erasure)
+# WARNING: This permanently deletes all user data
+curl -X DELETE "http://localhost:8000/api/v1/users/me?confirm=true" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Update consent (Article 21: Right to Object)
+curl -X POST http://localhost:8000/api/v1/users/me/consent \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "consent_type": "analytics",
+    "granted": true
+  }'
+
+# Get consent status
+curl -X GET http://localhost:8000/api/v1/users/me/consent \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Storage Backend Configuration
+
+GDPR compliance data is stored in PostgreSQL for production deployments. Configure the storage backend in your environment:
+
+```bash
+# Development (in-memory storage)
+GDPR_STORAGE_BACKEND=memory
+
+# Production (PostgreSQL storage)
+GDPR_STORAGE_BACKEND=postgres
+GDPR_POSTGRES_URL=postgresql://user:pass@localhost:5432/gdpr
+```
+
+See [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for detailed setup instructions.
+
+### Compliance Notes
+
+<Check>
+**GDPR Compliant**: These endpoints implement EU GDPR requirements for data subject rights (Articles 15-21).
+</Check>
+
+**Audit Trail**: All GDPR operations are logged with:
+- User ID
+- Timestamp
+- IP address (where applicable)
+- GDPR article reference
+
+**Data Retention**:
+- Consent records: Retained indefinitely (append-only audit trail)
+- Deletion records: Retained for 7 years for compliance
+- Anonymized audit logs: Retained for compliance (user IDs hashed)
+
+**Response Times**:
+- Right to Access: Immediate (real-time API response)
+- Right to Erasure: Immediate (synchronous deletion)
+- Data Export: Immediate for JSON, may take longer for large CSV exports
+
+### Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GDPR Storage Setup" icon="database" href="/deployment/gdpr-storage-configuration">
+    Configure PostgreSQL storage for GDPR compliance
+  </Card>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Get authentication tokens
+  </Card>
+  <Card title="GDPR Compliance Guide" icon="shield-check" href="/compliance/gdpr">
+    Complete GDPR compliance documentation
+  </Card>
+  <Card title="Architecture Decision" icon="file-code" href="/architecture/adr-0041-postgresql-gdpr-storage">
+    ADR-0041: PostgreSQL GDPR Storage
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Privacy First**: Empower users with full control over their personal data!
+</Check>

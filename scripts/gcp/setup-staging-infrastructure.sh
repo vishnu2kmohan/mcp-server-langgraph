@@ -395,10 +395,12 @@ create_cloud_sql() {
 
     gcloud sql databases create keycloak --instance="$INSTANCE_NAME"
     gcloud sql databases create openfga --instance="$INSTANCE_NAME"
+    gcloud sql databases create gdpr --instance="$INSTANCE_NAME"
 
     # Generate secure passwords
     KEYCLOAK_PASSWORD=$(openssl rand -base64 32)
     OPENFGA_PASSWORD=$(openssl rand -base64 32)
+    GDPR_PASSWORD=$(openssl rand -base64 32)
 
     # Create users
     gcloud sql users create keycloak \
@@ -409,12 +411,20 @@ create_cloud_sql() {
         --instance="$INSTANCE_NAME" \
         --password="$OPENFGA_PASSWORD"
 
+    gcloud sql users create gdpr \
+        --instance="$INSTANCE_NAME" \
+        --password="$GDPR_PASSWORD"
+
     # Store passwords in Secret Manager
     echo -n "$KEYCLOAK_PASSWORD" | gcloud secrets create staging-keycloak-db-password \
         --data-file=- \
         --replication-policy=automatic || true
 
     echo -n "$OPENFGA_PASSWORD" | gcloud secrets create staging-openfga-db-password \
+        --data-file=- \
+        --replication-policy=automatic || true
+
+    echo -n "$GDPR_PASSWORD" | gcloud secrets create staging-gdpr-db-password \
         --data-file=- \
         --replication-policy=automatic || true
 

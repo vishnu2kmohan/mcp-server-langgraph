@@ -49,13 +49,16 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: openfga
+      POSTGRES_DB: postgres
+      POSTGRES_MULTIPLE_DATABASES: openfga,keycloak,gdpr
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      # Initialize GDPR schema on startup
-      - ../migrations:/docker-entrypoint-initdb.d
+      # Script to create multiple databases
+      - ../scripts/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
+      # Initialize GDPR schema after databases are created
+      - ../migrations:/docker-entrypoint-initdb.d/02-migrations
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

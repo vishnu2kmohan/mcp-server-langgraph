@@ -433,7 +433,7 @@ async def update_consent(
                     "user_agent": latest.user_agent,
                 }
 
-        return ConsentResponse(user_id=user_id, consents=consents_dict)  # type: ignore[arg-type]
+        return ConsentResponse(user_id=user_id, consents=consents_dict)
 
 
 @router.get("/me/consent")
@@ -479,4 +479,4 @@ async def get_consent_status(
 
         logger.info("User consent status retrieved", extra={"user_id": user_id})
 
-        return ConsentResponse(user_id=user_id, consents=consents_dict)  # type: ignore[arg-type]
+        return ConsentResponse(user_id=user_id, consents=consents_dict)

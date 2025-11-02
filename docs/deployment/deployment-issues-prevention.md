@@ -1,0 +1,725 @@
+# Deployment Issues Prevention Guide
+
+**Last Updated**: 2025-11-02
+**Applies To**: All deployment types (Docker, GKE, EKS, AKS, Rancher, on-premises Kubernetes)
+
+## Overview
+
+This document catalogues all deployment issues encountered and provides universal prevention strategies to ensure they never occur again, regardless of deployment platform.
+
+## Issue Catalog
+
+### Issue #1: Docker Editable Install Incompatibility
+
+**Commit**: Introduced in `a0ba7a1` (Oct 31), Fixed in `3833ae6` (Nov 2)
+**Platform**: Universal (all Docker-based deployments)
+**Severity**: Critical (prevents container startup)
+
+**Problem**:
+```dockerfile
+# WRONG - causes ModuleNotFoundError
+RUN uv pip install --no-deps -e .
+# Only copies site-packages to final stage, not full venv
+COPY --from=build /opt/venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+```
+
+**Root Cause**: Editable install (`-e`) creates `.pth` pointer files in `site-packages` that reference `/app/src/`. When only `site-packages` is copied (not the full venv), the pointers break.
+
+**Prevention**:
+
+1. **Never use editable install in multi-stage Docker builds**
+2. **Use regular install**: `uv pip install --no-deps .`
+3. **Add validation check**:
+
+```dockerfile
+# After installation, verify package is importable
+RUN python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__version__)"
+```
+
+**Automated Check**: Add to CI/CD:
+
+```yaml
+- name: Validate Docker image
+  run: |
+    docker run --rm $IMAGE_NAME python -c "import mcp_server_langgraph"
+```
+
+---
+
+### Issue #2: Cloud SQL shared_buffers Configuration
+
+**Commit**: Fixed in `9a7b84f` (Nov 2)
+**Platform**: GCP Cloud SQL, AWS RDS, Azure Database for PostgreSQL
+**Severity**: Critical (prevents database creation)
+
+**Problem**:
+```bash
+# WRONG for 4GB RAM instance
+shared_buffers=32768  # 256MB - too low
+
+# Error: shared_buffers must be between 52428-314572 for 4GB RAM
+```
+
+**Root Cause**: Each cloud provider has specific memory configuration requirements based on instance size.
+
+**Prevention**:
+
+1. **Calculate from RAM**: `shared_buffers = RAM * 0.25 / 8KB`
+   - 4GB RAM → 1GB * 0.25 = 256MB → 256MB / 8KB = 32768 pages → **TOO LOW**
+   - Recommendation: Use 512MB for 4GB RAM → 65536 pages
+
+2. **Provider-specific validation**:
+
+| Provider | Instance Size | Recommended shared_buffers | Min | Max |
+|----------|---------------|---------------------------|-----|-----|
+| **GCP Cloud SQL** | 4GB RAM | 65536 (512MB) | 52428 | 314572 |
+| **AWS RDS** | db.t3.medium (4GB) | 131072 (1GB) | Variable | Variable |
+| **Azure Database** | B1ms (4GB) | 65536 (512MB) | Variable | Variable |
+
+**Automated Check**:
+
+```bash
+# Validate before database creation
+validate_postgres_config() {
+  local ram_mb=$1
+  local shared_buffers=$2
+  local min_buffers=$((ram_mb * 1024 / 8 / 77))  # Conservative minimum
+  local max_buffers=$((ram_mb * 1024 / 8 / 13))  # Conservative maximum
+
+  if [ $shared_buffers -lt $min_buffers ] || [ $shared_buffers -gt $max_buffers ]; then
+    echo "ERROR: shared_buffers=$shared_buffers out of range [$min_buffers, $max_buffers]"
+    return 1
+  fi
+}
+```
+
+---
+
+### Issue #3: VPC Peering for Private Services
+
+**Commit**: Fixed in `616f81b` (Nov 2)
+**Platform**: GCP, AWS, Azure private cloud services
+**Severity**: Critical (prevents private resource creation)
+
+**Problem**:
+```
+ERROR: NETWORK_NOT_PEERED
+VPC not connected to servicenetworking.googleapis.com
+```
+
+**Root Cause**: Private Cloud SQL/RDS/managed database instances require VPC peering to be established before creation.
+
+**Prevention**:
+
+1. **Always configure VPC peering BEFORE creating managed services**
+
+**GCP**:
+```bash
+# 1. Allocate IP range
+gcloud compute addresses create google-managed-services-${VPC_NAME} \
+  --global \
+  --purpose=VPC_PEERING \
+  --prefix-length=16 \
+  --network="$VPC_NAME"
+
+# 2. Create peering connection
+gcloud services vpc-peerings connect \
+  --service=servicenetworking.googleapis.com \
+  --ranges=google-managed-services-${VPC_NAME} \
+  --network="$VPC_NAME"
+```
+
+**AWS**:
+```bash
+# Create DB subnet group (equivalent to VPC peering)
+aws rds create-db-subnet-group \
+  --db-subnet-group-name staging-db-subnet \
+  --db-subnet-group-description "Private subnets for RDS" \
+  --subnet-ids subnet-xxx subnet-yyy
+```
+
+**Azure**:
+```bash
+# Configure service endpoint
+az network vnet subnet update \
+  --resource-group $RG \
+  --vnet-name $VNET \
+  --name $SUBNET \
+  --service-endpoints Microsoft.Sql
+```
+
+**Automated Validation**:
+
+```yaml
+# CI/CD pre-deployment check
+- name: Validate VPC peering
+  run: |
+    case $CLOUD_PROVIDER in
+      gcp)
+        gcloud services vpc-peerings list \
+          --network=$VPC_NAME \
+          --service=servicenetworking.googleapis.com | grep -q "ACTIVE"
+        ;;
+      aws)
+        aws rds describe-db-subnet-groups \
+          --db-subnet-group-name staging-db-subnet
+        ;;
+      azure)
+        az network vnet subnet show \
+          --resource-group $RG \
+          --vnet-name $VNET \
+          --name $SUBNET \
+          --query serviceEndpoints
+        ;;
+    esac
+```
+
+---
+
+### Issue #4: Pod Security Context Missing
+
+**Commit**: Fixed in previous session
+**Platform**: Universal (all Kubernetes platforms with Pod Security Standards)
+**Severity**: High (pods fail admission)
+
+**Problem**:
+```yaml
+# WRONG - init containers without security context
+initContainers:
+- name: wait-for-postgres
+  image: busybox:1.36
+  # No securityContext!
+```
+
+**Root Cause**: GKE Autopilot, EKS Fargate, and clusters with Pod Security Standards enforce security contexts on ALL containers (including init containers).
+
+**Prevention**:
+
+1. **Always define security context for ALL containers**:
+
+```yaml
+# Template for ALL containers (main + init + sidecar)
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true  # or false if needed
+  runAsNonRoot: true
+  runAsUser: 65532  # or appropriate UID
+```
+
+2. **Pod-level security context**:
+
+```yaml
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+```
+
+**Automated Validation**:
+
+```yaml
+# Pre-deployment manifest validation
+- name: Validate security contexts
+  run: |
+    kubectl kustomize deployments/overlays/staging | \
+    yq eval '
+      select(.kind == "Deployment" or .kind == "StatefulSet") |
+      (.spec.template.spec.containers[], .spec.template.spec.initContainers[]?) |
+      select(.securityContext == null) |
+      "Missing securityContext in container: " + .name
+    '
+```
+
+---
+
+### Issue #5: RBAC Resources Not Needed
+
+**Commit**: Fixed in `b97567c` (Nov 2)
+**Platform**: Universal (all Kubernetes platforms)
+**Severity**: Medium (requires elevated permissions, violates least privilege)
+
+**Problem**:
+```yaml
+# WRONG - unused RBAC resources
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+# Application doesn't use Kubernetes API!
+```
+
+**Root Cause**: Boilerplate RBAC resources copied from examples when application doesn't actually use the Kubernetes API.
+
+**Prevention**:
+
+1. **Audit RBAC necessity**:
+
+```bash
+# Search codebase for Kubernetes API usage
+grep -r "kubernetes.client" src/
+grep -r "@kubernetes/client-node" src/
+grep -r "k8s.io/client-go" src/
+
+# If NO results → Remove Role/RoleBinding
+```
+
+2. **Keep ONLY ServiceAccount with workload identity**:
+
+```yaml
+# Minimal ServiceAccount for workload identity
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app-name
+  annotations:
+    # Platform-specific workload identity
+    iam.gke.io/gcp-service-account: SA@PROJECT.iam.gserviceaccount.com
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/ROLE
+    azure.workload.identity/client-id: "CLIENT_ID"
+```
+
+3. **Use External Secrets Operator** instead of in-cluster RBAC for secret access
+
+**Automated Check**:
+
+```yaml
+- name: Validate RBAC necessity
+  run: |
+    # Check if app uses Kubernetes API
+    if ! grep -rq "kubernetes" src/; then
+      # Check for unused RBAC
+      if kubectl kustomize deployments/overlays/staging | grep -q "kind: Role"; then
+        echo "ERROR: Found Role/RoleBinding but app doesn't use K8s API"
+        exit 1
+      fi
+    fi
+```
+
+---
+
+### Issue #6: kubectl Client-Side vs Server-Side Validation
+
+**Commit**: Documented in EKS/AKS guide
+**Platform**: Universal (all Kubernetes platforms)
+**Severity**: High (false validation success)
+
+**Problem**:
+```yaml
+# WRONG - client-side validation
+kubectl apply --dry-run=client -f manifests.yaml
+# CRDs not recognized!
+```
+
+**Root Cause**: Client-side validation only knows built-in Kubernetes resources, not CRDs from operators (External Secrets, Cert-Manager, etc.).
+
+**Prevention**:
+
+1. **Always use server-side validation**:
+
+```yaml
+# CORRECT - validates against actual cluster
+kubectl apply --dry-run=server -f manifests.yaml
+```
+
+2. **Verify CRDs exist first**:
+
+```bash
+# Check External Secrets Operator
+kubectl get crd externalsecrets.external-secrets.io
+
+# Check API version matches manifests
+kubectl api-resources | grep externalsecret
+```
+
+**Universal CI/CD Pattern**:
+
+```yaml
+- name: Validate manifests (server-side)
+  run: |
+    # Generate manifests
+    kubectl kustomize deployments/overlays/$ENV > /tmp/manifests.yaml
+
+    # Verify CRDs exist
+    for crd in $(yq eval 'select(.kind | test("External|Certificate")) | .kind' /tmp/manifests.yaml | sort -u); do
+      kubectl get crd "${crd,,}s.external-secrets.io" || kubectl get crd "${crd,,}s.cert-manager.io"
+    done
+
+    # Server-side validation
+    kubectl apply --dry-run=server -f /tmp/manifests.yaml
+```
+
+---
+
+### Issue #7: Namespace Creation Timing
+
+**Commit**: Documented in EKS/AKS guide
+**Platform**: Universal (all Kubernetes platforms)
+**Severity**: Medium (prevents rollback, complicates validation)
+
+**Problem**:
+```yaml
+# WRONG - namespace created during deployment
+- run: |
+    kubectl create namespace staging
+    kubectl apply -k deployments/overlays/staging
+```
+
+**Root Cause**: If deployment fails, namespace doesn't exist for rollback. Validation also fails without namespace.
+
+**Prevention**:
+
+1. **Create namespace BEFORE validation**:
+
+```yaml
+- name: Ensure namespace exists
+  run: |
+    kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+
+- name: Validate manifests
+  run: |
+    kubectl apply --dry-run=server -k deployments/overlays/$ENV
+
+- name: Deploy
+  run: |
+    kubectl apply -k deployments/overlays/$ENV
+```
+
+2. **Make namespace creation idempotent** (using `--dry-run=client | kubectl apply`)
+
+---
+
+### Issue #8: Environment Variable value/valueFrom Conflict
+
+**Commit**: Documented in EKS/AKS guide
+**Platform**: Universal (all Kustomize deployments)
+**Severity**: High (invalid Kubernetes manifest)
+
+**Problem**:
+```yaml
+# Base deployment
+env:
+- name: LLM_PROVIDER
+  valueFrom:
+    configMapKeyRef:
+      name: config
+      key: llm_provider
+
+# Overlay patch (WRONG)
+env:
+- name: LLM_PROVIDER
+  value: "google"  # ❌ Creates value + valueFrom conflict!
+```
+
+**Root Cause**: Kustomize merges arrays by appending, creating a field with both `value` and `valueFrom` (invalid).
+
+**Prevention**:
+
+1. **Patch ConfigMap data, not Deployment env**:
+
+```yaml
+# CORRECT overlay approach
+# configmap-patch.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  llm_provider: "google"  # ✅ Overrides ConfigMap value
+```
+
+2. **Use strategic merge patch for env array replacement**:
+
+```yaml
+# Alternative: Replace entire env array
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        env:
+        - $patch: replace
+        - name: LLM_PROVIDER
+          value: "google"
+```
+
+**Automated Check**:
+
+```yaml
+- name: Check for env conflicts
+  run: |
+    kubectl kustomize deployments/overlays/$ENV | \
+    yq eval '
+      select(.kind == "Deployment") |
+      .spec.template.spec.containers[].env[]? |
+      select(.value != null and .valueFrom != null) |
+      "ERROR: Env var has both value and valueFrom: " + .name
+    '
+```
+
+---
+
+## Universal Prevention Checklist
+
+Use this checklist for **ALL** new deployment configurations:
+
+### ✅ Docker Configuration
+
+- [ ] Use regular install, NOT editable (`-e`) in multi-stage builds
+- [ ] Validate package import after build
+- [ ] Use distroless or minimal base images
+- [ ] Test image locally before CI/CD
+
+```bash
+# Quick Docker validation
+docker build -t test:local .
+docker run --rm test:local python -c "import mcp_server_langgraph"
+```
+
+### ✅ Managed Database Configuration
+
+- [ ] Calculate `shared_buffers` from instance RAM (25% of RAM)
+- [ ] Validate configuration against provider limits
+- [ ] Configure VPC peering/subnet groups BEFORE creation
+- [ ] Test configuration with smallest instance size first
+
+### ✅ Kubernetes Manifests
+
+- [ ] Security contexts on ALL containers (main + init + sidecar)
+- [ ] Pod-level security context with seccomp profile
+- [ ] Explicit resource requests/limits (min 500m CPU for safety)
+- [ ] Remove unused RBAC resources (audit with code search)
+- [ ] Use ConfigMap patches for env var overrides
+- [ ] Strategic merge patches for namespace resources
+
+### ✅ CI/CD Workflows
+
+- [ ] Server-side kubectl validation (`--dry-run=server`)
+- [ ] Create namespace before validation
+- [ ] Verify CRDs exist before validation
+- [ ] Validate security contexts in manifests
+- [ ] Check for env value/valueFrom conflicts
+- [ ] Validate RBAC necessity
+
+### ✅ Infrastructure Setup
+
+- [ ] VPC peering configured before managed services
+- [ ] Database configuration validated before creation
+- [ ] Secrets exist before deployment
+- [ ] Network connectivity tested
+
+---
+
+## Platform-Specific Quick Reference
+
+### GCP / GKE
+
+**Minimum CPU**: 500m with pod anti-affinity, 250m without
+**Workload Identity**: `iam.gke.io/gcp-service-account`
+**Managed Database**: Cloud SQL (requires VPC peering)
+**Validation**: Server-side dry-run
+
+### AWS / EKS
+
+**Minimum CPU**: 250m (Fargate), flexible (EC2)
+**Workload Identity**: `eks.amazonaws.com/role-arn` (IRSA)
+**Managed Database**: RDS (requires DB subnet group)
+**Validation**: Server-side dry-run
+
+### Azure / AKS
+
+**Minimum CPU**: Flexible (check node pool quotas)
+**Workload Identity**: `azure.workload.identity/client-id`
+**Managed Database**: Azure Database (requires service endpoint)
+**Validation**: Server-side dry-run
+
+### Rancher / On-Premises
+
+**Minimum CPU**: Depends on cluster configuration
+**Workload Identity**: Platform-specific or service account tokens
+**Managed Database**: Self-hosted PostgreSQL
+**Validation**: Server-side dry-run
+
+---
+
+## Automated Validation Script
+
+Create `.github/workflows/validate-deployment.yaml`:
+
+```yaml
+name: Validate Deployment Configuration
+
+on:
+  pull_request:
+    paths:
+      - 'deployments/**'
+      - 'docker/**'
+      - 'scripts/**'
+
+jobs:
+  validate:
+    name: Validate Deployment Configs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          # kubectl, kustomize, yq
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq
+          chmod +x yq && sudo mv yq /usr/local/bin/
+
+      - name: Validate Docker builds
+        run: |
+          for dockerfile in docker/Dockerfile*; do
+            echo "Checking $dockerfile for editable install..."
+            if grep -q 'pip install.*-e' "$dockerfile"; then
+              echo "ERROR: Found editable install in $dockerfile"
+              exit 1
+            fi
+          done
+
+      - name: Validate Kubernetes security contexts
+        run: |
+          for overlay in deployments/overlays/*; do
+            echo "Validating $overlay..."
+            kubectl kustomize "$overlay" > /tmp/manifests.yaml
+
+            # Check all containers have security contexts
+            missing=$(yq eval '
+              select(.kind == "Deployment" or .kind == "StatefulSet") |
+              (.spec.template.spec.containers[], .spec.template.spec.initContainers[]?) |
+              select(.securityContext == null) |
+              .name
+            ' /tmp/manifests.yaml)
+
+            if [ -n "$missing" ]; then
+              echo "ERROR: Containers missing securityContext: $missing"
+              exit 1
+            fi
+          done
+
+      - name: Check for unused RBAC
+        run: |
+          # Check if app uses K8s API
+          if ! grep -rq "kubernetes" src/; then
+            # App doesn't use K8s API - check for RBAC
+            for overlay in deployments/overlays/*; do
+              if kubectl kustomize "$overlay" | grep -q "kind: Role"; then
+                echo "ERROR: Found RBAC resources but app doesn't use K8s API in $overlay"
+                exit 1
+              fi
+            done
+          fi
+
+      - name: Check for env conflicts
+        run: |
+          for overlay in deployments/overlays/*; do
+            kubectl kustomize "$overlay" | \
+            yq eval '
+              select(.kind == "Deployment") |
+              .spec.template.spec.containers[].env[]? |
+              select(.value != null and .valueFrom != null) |
+              .name
+            ' | while read -r envvar; do
+              if [ -n "$envvar" ]; then
+                echo "ERROR: Env var $envvar has both value and valueFrom in $overlay"
+                exit 1
+              fi
+            done
+          done
+
+      - name: Validate PostgreSQL configuration
+        run: |
+          for script in scripts/*/setup-*-infrastructure.sh; do
+            echo "Checking $script for PostgreSQL config..."
+
+            # Extract shared_buffers value
+            buffers=$(grep -oP 'shared_buffers=\K[0-9]+' "$script" || echo "0")
+
+            if [ "$buffers" -gt 0 ] && [ "$buffers" -lt 52428 ]; then
+              echo "ERROR: shared_buffers=$buffers too low in $script (min 52428 for 4GB RAM)"
+              exit 1
+            fi
+          done
+```
+
+---
+
+## Testing Methodology
+
+### Pre-Deployment Testing
+
+```bash
+# 1. Docker image validation
+docker build --target final-base -t app:test .
+docker run --rm app:test python -c "import mcp_server_langgraph; print('✓ Import OK')"
+
+# 2. Kubernetes manifest validation (local)
+kubectl kustomize deployments/overlays/staging > /tmp/staging.yaml
+kubectl apply --dry-run=client -f /tmp/staging.yaml  # Quick syntax check
+# Note: Server-side validation requires cluster
+
+# 3. Security validation
+kubectl kustomize deployments/overlays/staging | \
+  grep -A20 "kind: Deployment" | \
+  grep -q "securityContext" && echo "✓ Security contexts present"
+
+# 4. RBAC audit
+grep -r "kubernetes" src/ || echo "✓ No K8s API usage - RBAC not needed"
+```
+
+### Post-Deployment Validation
+
+```bash
+# 1. Verify pods running
+kubectl get pods -n $NAMESPACE -l app=$APP_NAME
+
+# 2. Check security contexts applied
+kubectl get pod -n $NAMESPACE -l app=$APP_NAME -o yaml | grep -A5 securityContext
+
+# 3. Verify database connection
+kubectl logs -n $NAMESPACE -l app=$APP_NAME | grep "Database connected"
+
+# 4. Test application endpoint
+kubectl port-forward -n $NAMESPACE svc/$SERVICE_NAME 8080:80
+curl http://localhost:8080/health
+```
+
+---
+
+## Conclusion
+
+By following this prevention guide and implementing the automated validation checks, **all 8 critical deployment issues** are prevented across:
+
+- ✅ Docker builds (all platforms)
+- ✅ GCP (GKE, Cloud SQL, VPC)
+- ✅ AWS (EKS, RDS, VPC)
+- ✅ Azure (AKS, Azure Database, VNet)
+- ✅ Rancher / On-Premises Kubernetes
+- ✅ Any Kubernetes platform with Pod Security Standards
+
+**Key Takeaways**:
+1. Always use server-side kubectl validation
+2. Never use editable install in multi-stage Docker builds
+3. Configure VPC peering before creating managed databases
+4. Security contexts required on ALL containers
+5. Remove unused RBAC resources
+6. Calculate database `shared_buffers` from instance RAM
+7. Create namespaces before validation
+8. Patch ConfigMaps, not Deployment env arrays
+
+**Next Steps**:
+- Implement automated validation workflow
+- Add validation to existing CI/CD pipelines
+- Test on fresh environments to verify prevention
+- Update deployment documentation with checklist

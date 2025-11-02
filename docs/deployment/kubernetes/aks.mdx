@@ -205,7 +205,7 @@ az postgres flexible-server create \
   --vnet langgraph-vnet \
   --subnet postgres-subnet
 
-## Create databases
+## Create databases (Keycloak, OpenFGA, GDPR compliance)
 az postgres flexible-server db create \
   --resource-group langgraph-rg \
   --server-name langgraph-postgres \
@@ -215,6 +215,12 @@ az postgres flexible-server db create \
   --resource-group langgraph-rg \
   --server-name langgraph-postgres \
   --database-name openfga
+
+## NEW: GDPR compliance database (ADR-0041)
+az postgres flexible-server db create \
+  --resource-group langgraph-rg \
+  --server-name langgraph-postgres \
+  --database-name gdpr
 
 ## Create firewall rule for AKS
 az postgres flexible-server firewall-rule create \
@@ -231,6 +237,33 @@ POSTGRES_HOST=$(az postgres flexible-server show \
   --query fullyQualifiedDomainName \
   --output tsv)
 ```
+
+<Info>
+**Three databases required**: Keycloak (identity), OpenFGA (authorization), and GDPR (compliance data storage per [ADR-0041](/architecture/adr-0041-postgresql-gdpr-storage)).
+</Info>
+
+#### Initialize GDPR Schema
+
+After creating the databases, initialize the GDPR schema:
+
+```bash
+## Apply GDPR schema (5 tables: user_profiles, user_preferences, consent_records, conversations, audit_logs)
+PGPASSWORD=your-admin-password psql \
+  -h $POSTGRES_HOST \
+  -U adminuser \
+  -d gdpr \
+  -f deployments/base/postgres-gdpr-schema.sql
+```
+
+**Schema Details**:
+- **user_profiles**: User profile data (GDPR Article 15, 16, 17)
+- **user_preferences**: User preferences (GDPR Article 16, 17)
+- **consent_records**: Consent audit trail, 7-year retention (GDPR Article 21, Article 7)
+- **conversations**: Conversation history, 90-day retention (GDPR Article 15, 20)
+- **audit_logs**: Compliance audit trail, 7-year retention (HIPAA §164.316(b)(2)(i), SOC2 CC6.6)
+
+See [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for retention policies and backup procedures.
+
 #### Configure Private Endpoint
 
 ```bash

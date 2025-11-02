@@ -1,0 +1,474 @@
+---
+title: Database Migrations Guide
+description: 'Manage PostgreSQL GDPR database schema changes with versioned migrations'
+icon: 'database'
+seoTitle: "Database Migrations Guide - Deployment Guide"
+seoDescription: "Deploy MCP Server: Manage PostgreSQL GDPR database schema changes with versioned migrations"
+keywords: ["deployment", "database", "migrations", "PostgreSQL", "GDPR", "schema management"]
+contentType: "how-to"
+---
+
+### Overview
+
+The MCP Server uses PostgreSQL for GDPR compliance data storage (per [ADR-0041](/architecture/adr-0041-postgresql-gdpr-storage)). Database schema changes are managed through versioned migrations in the `migrations/` directory.
+
+<Info>
+All migrations are idempotent and can be safely re-run. They check for existing tables/columns before applying changes.
+</Info>
+
+### Migration Directory Structure
+
+```bash
+migrations/
+├── README.md                     # Migration instructions
+├── 001_initial_schema.sql       # Initial GDPR tables (user_profiles, consent_records, etc.)
+├── 002_add_audit_indexes.sql    # Performance optimization indexes
+└── [future migrations]          # Numbered sequentially
+```
+
+### Migration Naming Convention
+
+Migrations follow a strict naming convention:
+
+```
+<number>_<description>.sql
+```
+
+**Examples**:
+- `001_initial_schema.sql` - Initial GDPR database schema
+- `002_add_audit_indexes.sql` - Add performance indexes
+- `003_add_retention_views.sql` - Add retention policy views
+- `004_alter_consent_records.sql` - Modify consent_records table
+
+**Rules**:
+- Numbers are zero-padded to 3 digits (001, 002, 003, ...)
+- Use underscores between words in description
+- Use lowercase for file names
+- Always use `.sql` extension
+
+### Applying Migrations
+
+#### Manual Migration (Local Development)
+
+```bash
+## Set connection details
+export GDPR_POSTGRES_URL="postgresql://gdpr_user:password@localhost:5432/gdpr"
+
+## Apply all migrations in order
+for migration in migrations/*.sql; do
+  echo "Applying $migration..."
+  psql $GDPR_POSTGRES_URL -f $migration
+done
+```
+
+#### Manual Migration (Specific File)
+
+```bash
+## Apply a specific migration
+psql $GDPR_POSTGRES_URL -f migrations/001_initial_schema.sql
+```
+
+#### Automated Migration (Kubernetes)
+
+Migrations are automatically applied during PostgreSQL StatefulSet initialization via ConfigMap.
+
+**Base Deployment** (`deployments/base/postgres-statefulset.yaml`):
+
+```yaml
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: init-gdpr-schema
+        image: postgres:15
+        command:
+        - sh
+        - -c
+        - |
+          echo "Applying GDPR schema migrations..."
+          PGPASSWORD=$POSTGRES_PASSWORD psql -h localhost -U postgres -d gdpr -f /docker-entrypoint-initdb.d/postgres-gdpr-schema.sql
+        volumeMounts:
+        - name: gdpr-schema
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: gdpr-schema
+        configMap:
+          name: postgres-gdpr-schema
+```
+
+**ConfigMap** (`deployments/base/postgres-gdpr-schema-configmap.yaml`):
+
+```bash
+## View the ConfigMap
+kubectl get configmap postgres-gdpr-schema -o yaml
+
+## Update with new migrations
+kubectl apply -f deployments/base/postgres-gdpr-schema-configmap.yaml
+```
+
+### Current Migrations
+
+#### 001_initial_schema.sql
+
+**Purpose**: Create initial GDPR compliance tables
+
+**Tables Created**:
+1. `user_profiles` - User profile data (GDPR Article 15, 16, 17)
+2. `user_preferences` - User preferences (GDPR Article 16, 17)
+3. `consent_records` - Consent audit trail, 7-year retention (GDPR Article 21, Article 7)
+4. `conversations` - Conversation history, 90-day retention (GDPR Article 15, 20)
+5. `audit_logs` - Compliance audit trail, 7-year retention (HIPAA §164.316(b)(2)(i), SOC2 CC6.6)
+
+**Schema Details**:
+
+```sql
+-- User profiles
+CREATE TABLE IF NOT EXISTS user_profiles (
+    user_id VARCHAR(255) PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    preferences JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User preferences
+CREATE TABLE IF NOT EXISTS user_preferences (
+    user_id VARCHAR(255) PRIMARY KEY REFERENCES user_profiles(user_id) ON DELETE CASCADE,
+    preferences JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Consent records (append-only audit trail)
+CREATE TABLE IF NOT EXISTS consent_records (
+    consent_id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    consent_type VARCHAR(50) NOT NULL,
+    granted BOOLEAN NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Conversations (90-day retention)
+CREATE TABLE IF NOT EXISTS conversations (
+    conversation_id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    thread_id VARCHAR(255),
+    messages JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Audit logs (7-year retention)
+CREATE TABLE IF NOT EXISTS audit_logs (
+    audit_id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255),
+    action VARCHAR(100) NOT NULL,
+    resource_type VARCHAR(100),
+    resource_id VARCHAR(255),
+    metadata JSONB,
+    timestamp TIMESTAMP NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT
+);
+```
+
+#### 002_add_audit_indexes.sql
+
+**Purpose**: Add performance indexes for audit log queries
+
+**Indexes Created**:
+- `idx_consent_user_id` - Fast user consent lookups
+- `idx_consent_timestamp` - Time-based consent queries
+- `idx_conversations_user_id` - User conversation queries
+- `idx_conversations_last_message_at` - Retention policy queries
+- `idx_audit_user_id` - User audit log queries
+- `idx_audit_timestamp` - Time-range audit queries
+- `idx_audit_action` - Action-based audit queries
+
+**SQL**:
+
+```sql
+-- Consent indexes
+CREATE INDEX IF NOT EXISTS idx_consent_user_id ON consent_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_consent_timestamp ON consent_records(timestamp);
+
+-- Conversation indexes
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_last_message_at ON conversations(last_message_at);
+
+-- Audit log indexes
+CREATE INDEX IF NOT EXISTS idx_audit_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
+```
+
+### Creating New Migrations
+
+#### Step 1: Determine Migration Number
+
+```bash
+## Find the latest migration
+ls -1 migrations/*.sql | tail -1
+
+## Next number is +1 (e.g., if last is 002, use 003)
+```
+
+#### Step 2: Create Migration File
+
+```bash
+## Create new migration file
+cat > migrations/003_add_retention_views.sql << 'EOF'
+-- Migration: Add retention policy views
+-- Author: Your Name
+-- Date: 2025-11-02
+-- Description: Add database views for 90-day and 7-year retention policies
+
+-- View for conversations eligible for deletion (>90 days old)
+CREATE OR REPLACE VIEW conversations_eligible_for_deletion AS
+SELECT conversation_id, user_id, last_message_at
+FROM conversations
+WHERE last_message_at < NOW() - INTERVAL '90 days';
+
+-- View for audit logs requiring archival (>90 days, <7 years)
+CREATE OR REPLACE VIEW audit_logs_for_archival AS
+SELECT audit_id, user_id, action, timestamp
+FROM audit_logs
+WHERE timestamp < NOW() - INTERVAL '90 days'
+  AND timestamp > NOW() - INTERVAL '7 years';
+
+-- View for audit logs eligible for deletion (>7 years)
+CREATE OR REPLACE VIEW audit_logs_eligible_for_deletion AS
+SELECT audit_id, user_id, action, timestamp
+FROM audit_logs
+WHERE timestamp < NOW() - INTERVAL '7 years';
+EOF
+```
+
+#### Step 3: Test Migration Locally
+
+```bash
+## Test on local database
+psql $GDPR_POSTGRES_URL -f migrations/003_add_retention_views.sql
+
+## Verify changes
+psql $GDPR_POSTGRES_URL -c "\dv"  # List views
+```
+
+#### Step 4: Make Migration Idempotent
+
+Ensure migrations can be safely re-run:
+
+```sql
+-- Use IF NOT EXISTS for tables
+CREATE TABLE IF NOT EXISTS table_name (...);
+
+-- Use IF NOT EXISTS for indexes
+CREATE INDEX IF NOT EXISTS idx_name ON table_name(column);
+
+-- Use CREATE OR REPLACE for views/functions
+CREATE OR REPLACE VIEW view_name AS ...;
+
+-- Check before ALTER TABLE
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='user_profiles' AND column_name='new_column'
+    ) THEN
+        ALTER TABLE user_profiles ADD COLUMN new_column VARCHAR(255);
+    END IF;
+END $$;
+```
+
+#### Step 5: Update ConfigMap (Kubernetes)
+
+```bash
+## Add migration to ConfigMap
+kubectl create configmap postgres-gdpr-schema \
+  --from-file=migrations/001_initial_schema.sql \
+  --from-file=migrations/002_add_audit_indexes.sql \
+  --from-file=migrations/003_add_retention_views.sql \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+### Migration Best Practices
+
+<Check>
+**Idempotency**: All migrations must be idempotent (safe to re-run)
+</Check>
+
+<Check>
+**Sequential Numbering**: Migrations must be numbered sequentially
+</Check>
+
+<Check>
+**No Rollbacks**: Write forward-only migrations (no DOWN migrations)
+</Check>
+
+<Check>
+**Test Locally First**: Always test migrations on local database before production
+</Check>
+
+<Check>
+**Document Changes**: Include comments explaining what and why
+</Check>
+
+<Check>
+**Small Changesets**: Keep migrations focused on single logical changes
+</Check>
+
+### Rollback Strategy
+
+<Warning>
+**No automatic rollbacks**: Migrations do not support automatic rollbacks. If a migration fails, fix forward by creating a new migration.
+</Warning>
+
+**Example rollback scenario**:
+
+```sql
+-- Migration 003 added a column that needs to be removed
+-- Create migration 004 to remove it:
+
+-- Migration: Remove incorrectly added column
+-- File: 004_remove_incorrect_column.sql
+ALTER TABLE user_profiles DROP COLUMN IF EXISTS incorrect_column;
+```
+
+### Verification
+
+#### Verify Schema
+
+```bash
+## Connect to database
+psql $GDPR_POSTGRES_URL
+
+## List all tables
+\dt
+
+## Show table structure
+\d user_profiles
+\d consent_records
+\d conversations
+\d audit_logs
+
+## List all indexes
+\di
+
+## List all views
+\dv
+
+## Exit
+\q
+```
+
+#### Verify Data Integrity
+
+```sql
+-- Check table row counts
+SELECT 'user_profiles' AS table_name, COUNT(*) FROM user_profiles
+UNION ALL
+SELECT 'consent_records', COUNT(*) FROM consent_records
+UNION ALL
+SELECT 'conversations', COUNT(*) FROM conversations
+UNION ALL
+SELECT 'audit_logs', COUNT(*) FROM audit_logs;
+
+-- Check for orphaned consent records (should be 0)
+SELECT COUNT(*)
+FROM consent_records c
+WHERE NOT EXISTS (
+    SELECT 1 FROM user_profiles u WHERE u.user_id = c.user_id
+);
+
+-- Verify indexes exist
+SELECT schemaname, tablename, indexname
+FROM pg_indexes
+WHERE schemaname = 'public'
+ORDER BY tablename, indexname;
+```
+
+### Troubleshooting
+
+#### Migration Fails: "relation already exists"
+
+**Cause**: Migration not idempotent
+
+**Solution**: Add `IF NOT EXISTS` clauses:
+
+```sql
+CREATE TABLE IF NOT EXISTS table_name (...);
+CREATE INDEX IF NOT EXISTS idx_name ON table_name(column);
+```
+
+#### Migration Fails: "permission denied"
+
+**Cause**: Insufficient database privileges
+
+**Solution**: Ensure database user has CREATE privileges:
+
+```sql
+GRANT CREATE ON DATABASE gdpr TO gdpr_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO gdpr_user;
+```
+
+#### ConfigMap Not Updating
+
+**Cause**: Kubernetes doesn't detect ConfigMap changes
+
+**Solution**: Force pod restart:
+
+```bash
+kubectl rollout restart statefulset/postgres -n mcp-server-langgraph
+```
+
+### Production Migration Checklist
+
+Before applying migrations to production:
+
+- [ ] Test migration on local database
+- [ ] Test migration on staging environment
+- [ ] Verify migration is idempotent
+- [ ] Document migration purpose and changes
+- [ ] Backup production database
+- [ ] Plan rollback strategy (new forward migration)
+- [ ] Schedule maintenance window (if needed)
+- [ ] Apply migration during low-traffic period
+- [ ] Verify schema changes after migration
+- [ ] Monitor application logs for errors
+- [ ] Test GDPR endpoints functionality
+
+### Backup Before Migrations
+
+**Always backup before applying production migrations**:
+
+```bash
+## PostgreSQL dump
+pg_dump -h $DB_HOST -U gdpr_user -d gdpr -F c -f gdpr_backup_$(date +%Y%m%d_%H%M%S).dump
+
+## Cloud SQL backup (GCP)
+gcloud sql backups create --instance=langgraph-postgres
+
+## RDS backup (AWS)
+aws rds create-db-snapshot \
+  --db-instance-identifier langgraph-postgres \
+  --db-snapshot-identifier gdpr-pre-migration-$(date +%Y%m%d)
+```
+
+### References
+
+- [ADR-0041: PostgreSQL GDPR Storage](/architecture/adr-0041-postgresql-gdpr-storage)
+- [GDPR Storage Configuration](/deployment/gdpr-storage-configuration)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/15/ddl-schemas.html)
+
+### Support
+
+For migration assistance:
+
+1. Check existing migrations in `migrations/` directory
+2. Review migration logs: `kubectl logs statefulset/postgres -n mcp-server-langgraph`
+3. Create issue with `database` and `migrations` labels

@@ -69,6 +69,40 @@ At least one LLM provider API key is required for the agent to function:
   - Required: Only if processing Protected Health Information (PHI)
   - Example: `export HIPAA_INTEGRITY_SECRET="your-secure-hipaa-secret"`
 
+#### GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041)
+
+<Warning>
+**Production Critical**: Use PostgreSQL storage backend in production. In-memory storage is for development/testing ONLY and will block GDPR endpoints in production.
+</Warning>
+
+- **`GDPR_STORAGE_BACKEND`**
+  - Purpose: Storage backend for compliance data (user profiles, preferences, consents, conversations, audit logs)
+  - Type: String
+  - Values:
+    - `postgres` - PostgreSQL storage (production)
+    - `memory` - In-memory storage (development/testing only)
+  - Default: `memory`
+  - Example: `export GDPR_STORAGE_BACKEND="postgres"`
+  - Production: **MUST be set to `postgres`**
+  - See: [ADR-0041: PostgreSQL GDPR Storage](/architecture/adr-0041-postgresql-gdpr-storage)
+
+- **`GDPR_POSTGRES_URL`**
+  - Purpose: PostgreSQL connection string for GDPR compliance data
+  - Type: PostgreSQL connection URL
+  - Required: Only if `GDPR_STORAGE_BACKEND=postgres`
+  - Example: `export GDPR_POSTGRES_URL="postgresql://gdpr_user:secure_pass@db.example.com:5432/gdpr"`
+  - Note: Use separate database for compliance data isolation
+  - See: [GDPR Storage Configuration](/deployment/gdpr-storage-configuration)
+
+**Retention Requirements**:
+- User profiles: Until deletion request (GDPR Article 17)
+- Preferences: Until deletion request
+- Consents: 7 years (GDPR Article 7, legal requirement)
+- Conversations: 90 days (GDPR Article 5(1)(e), configurable)
+- Audit logs: 7 years (HIPAA §164.316(b)(2)(i), SOC2 CC6.6)
+
+**Production Guard**: If `GDPR_STORAGE_BACKEND=memory` in production, GDPR endpoints will be blocked to prevent data loss and compliance violations.
+
 ### Optional Environment Variables
 
 #### Observability & Monitoring

@@ -259,7 +259,7 @@ async def delete_user(
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
-) -> Optional[JSONResponse]:
+) -> None:
     """
     Delete (deactivate) user (SCIM 2.0)
 
@@ -272,10 +272,9 @@ async def delete_user(
         # Remove OpenFGA tuples
         await openfga.delete_tuples_for_object(f"user:{user_id}")
 
-        return None
-
     except Exception as e:
-        return scim_error(500, f"Failed to delete user: {str(e)}", "internalError")
+        # For 204 responses, we must raise HTTPException not return error body
+        raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}")
 
 
 @router.get("/Users", response_model=SCIMListResponse)
@@ -395,7 +394,7 @@ async def get_group(
         # Get group members
         members = await keycloak.get_group_members(group_id)
 
-        scim_members = [SCIMMember(value=member["id"], display=member.get("username"), **{"$ref": None}) for member in members]
+        scim_members = [SCIMMember(value=member["id"], display=member.get("username"), reference=None) for member in members]
 
         return SCIMGroup(
             id=group["id"],

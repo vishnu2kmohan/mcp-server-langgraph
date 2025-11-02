@@ -14,7 +14,7 @@ References:
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # SCIM Schema URNs
 SCIM_USER_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:User"
@@ -65,8 +65,17 @@ class SCIMAddress(BaseModel):
 class SCIMGroupMembership(BaseModel):
     """SCIM group membership"""
 
+    model_config = ConfigDict(
+        populate_by_name=True,
+        # Fix JSON schema to avoid $ref conflicts
+        json_schema_extra=lambda schema, model: schema.update(
+            {"properties": {k if k != "$ref" else "ref": v for k, v in schema.get("properties", {}).items()}}
+        ),
+    )
+
     value: str  # Group ID
-    ref: Optional[str] = Field(None, alias="$ref")
+    # Use 'reference' as field name, serialize as '$ref' for SCIM compliance
+    reference: Optional[str] = Field(None, serialization_alias="$ref", validation_alias="$ref")
     display: Optional[str] = None
     type: Optional[str] = "direct"
 
@@ -138,8 +147,17 @@ class SCIMUser(BaseModel):
 class SCIMMember(BaseModel):
     """SCIM group member"""
 
+    model_config = ConfigDict(
+        populate_by_name=True,
+        # Fix JSON schema to avoid $ref conflicts
+        json_schema_extra=lambda schema, model: schema.update(
+            {"properties": {k if k != "$ref" else "ref": v for k, v in schema.get("properties", {}).items()}}
+        ),
+    )
+
     value: str  # User ID
-    ref: Optional[str] = Field(None, alias="$ref")
+    # Use 'reference' as field name, serialize as '$ref' for SCIM compliance
+    reference: Optional[str] = Field(None, serialization_alias="$ref", validation_alias="$ref")
     display: Optional[str] = None
     type: Optional[str] = "User"
 

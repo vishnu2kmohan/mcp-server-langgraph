@@ -102,6 +102,7 @@
               "api-reference/introduction",
               "api-reference/authentication",
               "api-reference/mcp-endpoints",
+              "api-reference/gdpr-endpoints",
               "api-reference/health-checks"
             ]
           },
@@ -305,7 +306,7 @@
               "architecture/adr-0028-caching-strategy",
               "architecture/adr-0030-resilience-patterns",
               "architecture/adr-0040-gcp-gke-autopilot-deployment",
-              "architecture/adr-0041-cost-monitoring-dashboard",
+              "architecture/adr-0041-postgresql-gdpr-storage",
               "architecture/adr-0042-visual-workflow-builder"
             ]
           },

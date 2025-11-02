@@ -15,6 +15,10 @@ The GDPR compliance endpoints (`/api/v1/users/me/*`) require persistent storage 
 
 **CRITICAL**: In-memory storage is **NOT production-ready** and will cause data loss on server restart, violating GDPR compliance requirements.
 
+<Info>
+PostgreSQL storage backend is **fully implemented** as of ADR-0041 (2025-11-02). See [ADR-0041: PostgreSQL GDPR Storage](/architecture/adr-0041-postgresql-gdpr-storage) for architecture details.
+</Info>
+
 ### GDPR Data Subject Rights Flow
 
 ```mermaid
@@ -113,27 +117,34 @@ GDPR_STORAGE_BACKEND=memory
 ```
 ### Storage Backend Options
 
-#### Option 1: PostgreSQL (Recommended)
+#### Option 1: PostgreSQL (Recommended) ✅
 
-PostgreSQL provides ACID compliance and is ideal for GDPR data subject rights.
+PostgreSQL provides ACID compliance and is ideal for GDPR data subject rights. **Fully implemented as of ADR-0041.**
+
+<Check>
+**Production Ready**: PostgreSQL storage backend is fully implemented with factory pattern, migrations, and comprehensive testing.
+</Check>
 
 **Configuration:**
 
 ```bash
 GDPR_STORAGE_BACKEND=postgres
-GDPR_POSTGRES_URL=postgresql://user:pass@localhost:5432/gdpr_db
+GDPR_POSTGRES_URL=postgresql://user:pass@localhost:5432/gdpr
 ```
-**Implementation Required:**
 
-Currently, PostgreSQL integration is not yet implemented. To add support:
+**Architecture Benefits** (see [ADR-0041](/architecture/adr-0041-postgresql-gdpr-storage)):
+- **ACID Compliance**: Atomic GDPR Article 17 deletions across all data
+- **Cost-Effective**: 14x cheaper than Redis for 7-year retention ($50/month vs $720/month)
+- **Audit Trail**: Time-series queries for compliance reports
+- **Already in Stack**: Keycloak and OpenFGA use PostgreSQL
+- **5-10ms Latency**: Acceptable for user-initiated GDPR operations
 
-1. Create migrations for user profiles and consent records
-2. Implement `PostgresConsentStore` in `src/mcp_server_langgraph/api/gdpr.py`
-3. Replace `_consent_storage` dict with database queries
+**Database Schema:**
 
-**Schema Example:**
+The PostgreSQL schema includes 5 tables optimized for GDPR compliance:
 
 ```sql
+-- User profiles (GDPR Article 15, 16, 17)
 CREATE TABLE user_profiles (
     user_id VARCHAR(255) PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
@@ -144,18 +155,91 @@ CREATE TABLE user_profiles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- User preferences (GDPR Article 16, 17)
+CREATE TABLE user_preferences (
+    user_id VARCHAR(255) PRIMARY KEY REFERENCES user_profiles(user_id) ON DELETE CASCADE,
+    preferences JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Consent records (GDPR Article 21, 7-year retention)
 CREATE TABLE consent_records (
-    id SERIAL PRIMARY KEY,
+    consent_id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
     consent_type VARCHAR(50) NOT NULL,
     granted BOOLEAN NOT NULL,
     timestamp TIMESTAMP NOT NULL,
     ip_address VARCHAR(45),
     user_agent TEXT,
-    UNIQUE(user_id, consent_type)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_consent_user_id ON consent_records(user_id);
+CREATE INDEX idx_consent_timestamp ON consent_records(timestamp);
+
+-- Conversations (GDPR Article 15, 20, 90-day retention)
+CREATE TABLE conversations (
+    conversation_id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    thread_id VARCHAR(255),
+    messages JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX idx_conversations_last_message_at ON conversations(last_message_at);
+
+-- Audit logs (HIPAA 7-year retention, GDPR Article 5(2))
+CREATE TABLE audit_logs (
+    audit_id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255),
+    action VARCHAR(100) NOT NULL,
+    resource_type VARCHAR(100),
+    resource_id VARCHAR(255),
+    metadata JSONB,
+    timestamp TIMESTAMP NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT
+);
+
+CREATE INDEX idx_audit_user_id ON audit_logs(user_id);
+CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp);
+CREATE INDEX idx_audit_action ON audit_logs(action);
+```
+
+**Kubernetes Deployment:**
+
+The schema is deployed via ConfigMap in Kubernetes:
+
+```bash
+# View the schema ConfigMap
+kubectl get configmap postgres-gdpr-schema -o yaml
+```
+
+The ConfigMap is defined in `deployments/base/postgres-gdpr-schema-configmap.yaml` and automatically applied during PostgreSQL initialization.
+
+**Factory Pattern Usage:**
+
+```python
+from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
+
+# Dependency injection in FastAPI
+async def my_endpoint(
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage)
+):
+    # Access user profiles
+    profile = await gdpr_storage.user_profiles.get(user_id)
+
+    # Access consents
+    consents = await gdpr_storage.consents.get_user_consents(user_id)
+
+    # Access conversations
+    conversations = await gdpr_storage.conversations.list_by_user(user_id)
+
+    # Log audit event
+    await gdpr_storage.audit_logs.log(audit_entry)
 ```
 #### Option 2: Redis
 
@@ -213,15 +297,51 @@ Data subject rights (GDPR compliance) require persistent storage.
 Before deploying GDPR endpoints to production:
 
 - [ ] Set `ENVIRONMENT=production`
-- [ ] Set `GDPR_STORAGE_BACKEND=postgres` or `redis`
-- [ ] Configure database connection strings
-- [ ] Run database migrations (if PostgreSQL)
-- [ ] Implement persistent storage integration
-- [ ] Test data subject rights workflows
-- [ ] Verify data is persisted across restarts
-- [ ] Configure backup and retention policies
-- [ ] Document data retention periods
-- [ ] Update privacy policy with GDPR rights
+- [ ] Set `GDPR_STORAGE_BACKEND=postgres`
+- [ ] Configure `GDPR_POSTGRES_URL` connection string
+- [ ] Deploy PostgreSQL GDPR schema (see [Kubernetes deployment](#kubernetes-deployment) section)
+- [ ] Apply `postgres-gdpr-schema-configmap.yaml` to create database tables
+- [ ] Run database migrations from `migrations/` directory (if any schema updates)
+- [ ] Test data subject rights workflows (see [Testing](#testing) section)
+- [ ] Verify data is persisted across pod/container restarts
+- [ ] Configure automated backups (daily PostgreSQL dumps recommended)
+- [ ] Configure retention policies (see [Data Retention](#data-retention) section)
+- [ ] Document data retention periods in privacy policy
+- [ ] Update privacy policy with GDPR data subject rights
+- [ ] Test GDPR API endpoints (see [GDPR API Reference](/api-reference/gdpr-endpoints))
+- [ ] Verify audit logging for all GDPR operations
+
+**New in v2.8.0**: PostgreSQL storage is fully implemented and production-ready. The factory pattern automatically initializes the correct storage backend based on `GDPR_STORAGE_BACKEND` environment variable.
+
+### Database Migrations
+
+The `migrations/` directory contains schema migrations for PostgreSQL GDPR storage:
+
+```bash
+migrations/
+├── 001_initial_schema.sql       # Initial GDPR tables
+├── 002_add_audit_indexes.sql    # Performance optimization indexes
+└── README.md                     # Migration instructions
+```
+
+**Applying Migrations Manually:**
+
+```bash
+# Connect to GDPR database
+psql $GDPR_POSTGRES_URL
+
+# Run migrations in order
+\i migrations/001_initial_schema.sql
+\i migrations/002_add_audit_indexes.sql
+```
+
+**Automated Migration (Kubernetes):**
+
+Migrations are automatically applied via the `postgres-gdpr-schema` ConfigMap during PostgreSQL StatefulSet initialization. See `deployments/base/postgres-statefulset.yaml` for implementation details.
+
+<Info>
+Future schema changes will be added as numbered migrations. Always apply migrations in sequential order.
+</Info>
 
 ### GDPR Compliance Requirements
 

@@ -154,6 +154,43 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
 - **LangGraph Platform**: Deploy to managed LangGraph Cloud with one command
 - **Automatic Fallback**: Resilient multi-model fallback for high availability
 
+### 🔒 GDPR & Privacy Compliance
+
+Complete GDPR compliance implementation with production-ready PostgreSQL storage ([ADR-0041](adr/ADR-0041-postgresql-gdpr-storage.md)):
+
+- **Data Subject Rights API**: 6 endpoints implementing GDPR Articles 15-21
+  - **Right to Access** (Article 15): `GET /api/v1/users/me/data` - Complete data export
+  - **Right to Data Portability** (Article 20): `GET /api/v1/users/me/export` - JSON/CSV export
+  - **Right to Rectification** (Article 16): `PATCH /api/v1/users/me` - Update profile
+  - **Right to Erasure** (Article 17): `DELETE /api/v1/users/me` - Delete all data
+  - **Right to Object** (Article 21): `POST/GET /api/v1/users/me/consent` - Consent management
+  - See: [GDPR API Reference](docs/api-reference/gdpr-endpoints.mdx)
+
+- **PostgreSQL Storage Backend**: ACID-compliant, cost-effective compliance storage
+  - **5 Tables**: user_profiles, user_preferences, consent_records, conversations, audit_logs
+  - **Atomic Deletions**: Single transaction for GDPR Article 17 compliance
+  - **Retention Policies**: 7-year audit logs (HIPAA §164.316), 90-day conversations (GDPR Article 5)
+  - **14x Cost Savings**: $50/month vs $720/month for Redis (7-year storage)
+  - **5-10ms Latency**: Acceptable for user-initiated GDPR operations
+  - See: [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
+
+- **Audit Trail**: Complete compliance logging
+  - All GDPR operations logged with user_id, timestamp, IP address, GDPR article
+  - Anonymized audit logs after deletion (user_id → cryptographic hash)
+  - 7-year retention for HIPAA/SOC2 compliance
+
+- **Production Guard**: Runtime protection against data loss
+  - Blocks GDPR endpoints if using in-memory storage in production
+  - Prevents compliance violations from misconfiguration
+
+**Compliance Coverage**: GDPR (Articles 5, 7, 15-17, 20-21), HIPAA (§164.312, §164.316), SOC2 (CC6.6, PI1.4)
+
+**Documentation**:
+- [GDPR API Endpoints](docs/api-reference/gdpr-endpoints.mdx) - Complete API reference with examples
+- [ADR-0041: PostgreSQL GDPR Storage](adr/ADR-0041-postgresql-gdpr-storage.md) - Architecture decision
+- [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx) - Setup guide
+- [Database Migrations](docs/deployment/database-migrations.mdx) - Schema management
+
 ### 📦 Optional Dependencies
 
 The project supports optional feature sets that can be installed on demand:

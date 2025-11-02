@@ -31,6 +31,7 @@ This guide provides step-by-step instructions for deploying MCP Server LangGraph
 
 - **GKE Autopilot Cluster**: Fully managed Kubernetes (regional, multi-zone)
 - **Cloud SQL PostgreSQL**: High-availability database with automated backups
+  - **3 databases**: Keycloak (identity), OpenFGA (authorization), GDPR (compliance per [ADR-0041](/architecture/adr-0041-postgresql-gdpr-storage))
 - **Memorystore Redis**: High-availability cache with persistence
 - **Workload Identity**: Secure pod-to-GCP service authentication
 - **Private Networking**: VPC-native with Cloud NAT

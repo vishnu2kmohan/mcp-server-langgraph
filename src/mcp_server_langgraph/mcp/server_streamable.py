@@ -87,6 +87,10 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_tags=[
         {
+            "name": "API Metadata",
+            "description": "API version information and metadata for client compatibility",
+        },
+        {
             "name": "mcp",
             "description": "Model Context Protocol (MCP) endpoints for agent interaction",
         },
@@ -97,6 +101,22 @@ app = FastAPI(
         {
             "name": "auth",
             "description": "Authentication and authorization endpoints",
+        },
+        {
+            "name": "GDPR Compliance",
+            "description": "GDPR data protection and privacy rights endpoints (Articles 15-21)",
+        },
+        {
+            "name": "API Keys",
+            "description": "API key management for programmatic access",
+        },
+        {
+            "name": "Service Principals",
+            "description": "Service principal (service account) management for machine-to-machine authentication",
+        },
+        {
+            "name": "SCIM 2.0",
+            "description": "System for Cross-domain Identity Management (SCIM) 2.0 user and group provisioning",
         },
     ],
     responses={
@@ -1236,10 +1256,19 @@ from mcp_server_langgraph.health.checks import app as health_app  # noqa: E402
 
 app.mount("/health", health_app)
 
-# Include GDPR compliance routes
+from mcp_server_langgraph.api.api_keys import router as api_keys_router  # noqa: E402
 from mcp_server_langgraph.api.gdpr import router as gdpr_router  # noqa: E402
+from mcp_server_langgraph.api.scim import router as scim_router  # noqa: E402
+from mcp_server_langgraph.api.service_principals import router as service_principals_router  # noqa: E402
 
+# Include REST API routes
+from mcp_server_langgraph.api.version import router as version_router  # noqa: E402
+
+app.include_router(version_router)
 app.include_router(gdpr_router)
+app.include_router(api_keys_router)
+app.include_router(service_principals_router)
+app.include_router(scim_router)
 
 
 def main() -> None:

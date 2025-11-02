@@ -1,0 +1,318 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MCP Server - Tool Wrappers API",
+    "version": "2.8.0",
+    "description": "\n## MCP (Model Context Protocol) Tools API\n\nThis API provides HTTP wrappers around MCP protocol tools for client libraries and SDKs.\n\n### Available Tools\n\n1. **agent_chat** - Chat with AI agent (supports streaming)\n2. **conversation_get** - Retrieve specific conversation\n3. **conversation_search** - Search conversations with filters\n\n### Authentication\n\nAll tools require JWT authentication via the `token` parameter or `Authorization` header.\n\n### Response Formats\n\n- **Concise**: ~500 tokens (faster, less context)\n- **Detailed**: ~2000 tokens (comprehensive, more context)\n\n### Usage\n\n**Via MCP Protocol** (recommended):\n```json\nPOST /message\n{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"agent_chat\",\n    \"arguments\": {\n      \"message\": \"Hello\",\n      \"user_id\": \"alice\",\n      \"token\": \"jwt_token\"\n    }\n  }\n}\n```\n\n**Via Tool Endpoints** (convenience):\n```\nPOST /tools/agent_chat\n{\n  \"message\": \"Hello\",\n  \"user_id\": \"alice\",\n  \"token\": \"jwt_token\"\n}\n```\n        ",
+    "contact": {
+      "name": "API Support"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/tools/agent_chat": {
+      "post": {
+        "summary": "Chat with AI agent",
+        "description": "Send a message to the AI agent and receive a response",
+        "operationId": "agent_chat",
+        "tags": [
+          "MCP Tools"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentChatResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token"
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions"
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/tools/conversation_get": {
+      "post": {
+        "summary": "Get specific conversation",
+        "description": "Retrieve a conversation by thread_id",
+        "operationId": "conversation_get",
+        "tags": [
+          "MCP Tools"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationGetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Conversation not found"
+          }
+        }
+      }
+    },
+    "/tools/conversation_search": {
+      "post": {
+        "summary": "Search conversations",
+        "description": "Search user conversations with filters",
+        "operationId": "conversation_search",
+        "tags": [
+          "MCP Tools"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationSearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationSearchResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentChatRequest": {
+        "type": "object",
+        "required": [
+          "message",
+          "user_id",
+          "token"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "description": "The user message to send to the agent",
+            "example": "What is the weather today?"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User identifier for authentication and authorization",
+            "example": "alice"
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT authentication token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "thread_id": {
+            "type": "string",
+            "description": "Optional thread ID for conversation continuity",
+            "example": "conv_123"
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "detailed"
+            ],
+            "default": "concise",
+            "description": "Response verbosity level"
+          }
+        }
+      },
+      "AgentChatResponse": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "type": "string",
+            "description": "Agent response text"
+          },
+          "thread_id": {
+            "type": "string",
+            "description": "Thread ID for conversation continuity"
+          },
+          "tokens_used": {
+            "type": "integer",
+            "description": "Approximate tokens used"
+          }
+        }
+      },
+      "ConversationGetRequest": {
+        "type": "object",
+        "required": [
+          "thread_id",
+          "user_id",
+          "token"
+        ],
+        "properties": {
+          "thread_id": {
+            "type": "string",
+            "description": "Thread ID of conversation to retrieve",
+            "example": "conv_123"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User identifier",
+            "example": "alice"
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT authentication token"
+          }
+        }
+      },
+      "ConversationSearchRequest": {
+        "type": "object",
+        "required": [
+          "query",
+          "user_id",
+          "token"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Search query to filter conversations",
+            "example": "weather"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User identifier",
+            "example": "alice"
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT authentication token"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10,
+            "description": "Maximum number of conversations to return"
+          }
+        }
+      },
+      "ConversationResponse": {
+        "type": "object",
+        "properties": {
+          "thread_id": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "assistant"
+                  ]
+                },
+                "content": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ConversationSearchResponse": {
+        "type": "object",
+        "properties": {
+          "conversations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of matching conversations"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from /auth/login"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "MCP Tools",
+      "description": "MCP protocol tools exposed as HTTP endpoints"
+    }
+  ]
+}
