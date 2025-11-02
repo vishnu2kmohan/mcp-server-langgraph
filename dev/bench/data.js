@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762118704915,
+  "lastUpdate": 1762119306415,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -21050,6 +21050,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000023747942422862047",
             "extra": "mean: 61.65073398057186 usec\nrounds: 5150"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "567807ffaf5940d1b0b70b5e1c1e2f91e0cd1342",
+          "message": "fix(gke): add External Secrets Operator installation to deployment workflow\n\nThis commit fixes the GKE deployment failure by installing the External Secrets Operator before deploying manifests.\n\n**Root Cause**:\n- External Secrets CRDs (ClusterSecretStore, ExternalSecret, SecretStore) were not installed\n- Deployment manifests reference these resources but CRDs didn't exist\n- kubectl validation failed with: \"resource mapping not found\"\n\n**Changes Made**:\n\n1. **.github/workflows/deploy-staging-gke.yaml** (lines 153-176)\n   - Added \"Install External Secrets Operator\" step after kustomize installation\n   - Installs operator with CRDs using Helm\n   - Verifies CRDs are installed before proceeding\n   - Prevents manifest validation errors\n\n2. **scripts/gcp/setup-staging-infrastructure.sh**\n   - Added install_external_secrets_operator() function (lines 193-226)\n   - Calls function in main() after create_gke_cluster (line 533)\n   - Ensures operator is pre-installed for future cluster setups\n   - Includes idempotency checks and verification\n\n**Expected Results**:\n- ✅ External Secrets CRDs available before deployment\n- ✅ Manifest validation succeeds\n- ✅ kubectl apply succeeds\n- ✅ Deploy to GKE Staging job succeeds\n- ✅ Rollback job skipped (not needed)\n\n**Prevention**:\n- All new GKE clusters will have operator pre-installed\n- CI/CD workflow installs operator before every deployment\n- No manual intervention required\n\n**Testing**: Validated YAML and bash syntax\n\nFixes: \"Deploy to GKE Staging / Deploy to GKE Staging (push)\" failure\nFixes: \"Deploy to GKE Staging / Rollback Deployment (push)\" failure (consequence of deploy failure)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T16:32:49-05:00",
+          "tree_id": "3744f50638e920a3c8edc82b2fd00a8de5d2b603",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/567807ffaf5940d1b0b70b5e1c1e2f91e0cd1342"
+        },
+        "date": 1762119305636,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.0588210752786,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010010361665944745",
+            "extra": "mean: 6.893755185567431 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.07342098505725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013655776828027166",
+            "extra": "mean: 6.79932508064527 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50220.24760016927,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002908480367415297",
+            "extra": "mean: 19.912287330033585 usec\nrounds: 8753"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52866.449777251866,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024093837619453485",
+            "extra": "mean: 18.9155883213912 usec\nrounds: 12296"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49025.56454115326,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024064422043044636",
+            "extra": "mean: 20.397521361749448 usec\nrounds: 19240"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.81168137131868,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001782142074033924",
+            "extra": "mean: 5.240769290502736 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.3787639379252,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006431987184621621",
+            "extra": "mean: 51.602878450000134 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.950407992449666,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008155002406407082",
+            "extra": "mean: 100.49839169999828 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2486267.87019515,
+            "unit": "iter/sec",
+            "range": "stddev: 4.571798385426145e-8",
+            "extra": "mean: 402.20927599466944 nsec\nrounds: 188324"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5160.221689507726,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013437429660668096",
+            "extra": "mean: 193.79012379125086 usec\nrounds: 517"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2984.4309198604856,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001038470295917039",
+            "extra": "mean: 335.072255599988 usec\nrounds: 2500"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2980.279125268156,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000916590661011859",
+            "extra": "mean: 335.5390411326064 usec\nrounds: 1872"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58958.99142633632,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022172865587482656",
+            "extra": "mean: 16.960941423996463 usec\nrounds: 12121"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17439.857582248267,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001993723210189495",
+            "extra": "mean: 57.3399177879688 usec\nrounds: 5425"
           }
         ]
       }
