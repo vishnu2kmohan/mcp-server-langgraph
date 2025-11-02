@@ -190,7 +190,7 @@ jobs:
         run: |
           echo "Validating manifests..."
           kubectl kustomize deployments/overlays/staging-gke > /tmp/staging-manifests.yaml
-          kubectl apply --dry-run=client -f /tmp/staging-manifests.yaml
+          kubectl apply --dry-run=server -f /tmp/staging-manifests.yaml
 
       # Deploy to cluster
       - name: Deploy to staging
