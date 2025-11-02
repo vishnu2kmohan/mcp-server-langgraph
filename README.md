@@ -138,7 +138,7 @@ The project supports optional feature sets that can be installed on demand:
   - Install: `uv sync --extra secrets`
   - Fallback: Environment variables (`.env` file)
   - Production: Recommended for secure secret rotation
-  - See: [Infisical Installation Guide](docs/deployment/infisical-installation.md)
+  - See: [Infisical Installation Guide](docs/deployment/infisical-installation.mdx)
 
 - **Self-Hosted Embeddings** (`[embeddings]`): sentence-transformers for local embedding generation
   - Install: `uv sync --extra embeddings`
@@ -150,7 +150,7 @@ The project supports optional feature sets that can be installed on demand:
   - **CRITICAL**: In-memory storage is NOT production-ready
   - Required for: GDPR compliance endpoints (`/api/v1/users/me/*`)
   - Config: Set `GDPR_STORAGE_BACKEND=postgres` or `redis` in production
-  - See: [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.md)
+  - See: [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
 
 - **All Features** (`[all]`): Install all optional dependencies
   - Install: `uv sync --all-extras`
@@ -185,24 +185,24 @@ The project supports optional feature sets that can be installed on demand:
 
 ### 📚 Documentation & Architecture
 - **Architecture Decision Records (ADRs)**: 39 documented design decisions ([adr/](adr/))
-- **Comprehensive Documentation**: [Complete documentation index](docs/README.md) with guides, tutorials, and references
+- **Comprehensive Documentation**: [https://mcp-server-langgraph.mintlify.app](https://mcp-server-langgraph.mintlify.app) - Full documentation site
 - **API Documentation**: Interactive OpenAPI/Swagger UI
 
 ## 📚 Documentation
 
-- **[Documentation Index](docs/README.md)** - Complete guide to all documentation
+- **[📖 Mintlify Documentation](https://mcp-server-langgraph.mintlify.app)** - Complete online documentation with guides, tutorials, and references
 - **[API Documentation](http://localhost:8000/docs)** - Interactive OpenAPI/Swagger UI (when running locally)
-- **[Mintlify Deployment](docs-internal/DEPLOYMENT.md)** - Mintlify documentation deployment instructions
+- **[Mintlify Deployment Guide](docs-internal/DEPLOYMENT.md)** - How to deploy documentation updates
 
 ### 📖 Quality & Testing Guides
-- **[Mutation Testing Guide](docs-internal/MUTATION_TESTING.md)** - Test effectiveness measurement and improvement
-- **[Strict Typing Guide](docs-internal/STRICT_TYPING_GUIDE.md)** - Gradual mypy strict mode rollout
+- **[Mutation Testing Guide](docs-internal/testing/mutation-testing.md)** - Test effectiveness measurement and improvement
+- **[Strict Typing Guide](docs-internal/architecture/strict-typing-guide.md)** - Gradual mypy strict mode rollout
 - **[Architecture Decision Records](adr/)** - Documented architectural choices
 
 ### 🚀 Deployment & Operations
 - **[Deployment Quickstart](deployments/QUICKSTART.md)** - Quick deployment guide for all platforms
 - **[Deployment README](deployments/README.md)** - Comprehensive deployment documentation
-- **[CI/CD Guide](docs/reference/development/ci-cd.md)** - Continuous integration and deployment pipeline
+- **[CI/CD Guide](docs/reference/development/ci-cd.mdx)** - Continuous integration and deployment pipeline
 - **[Keycloak Integration](integrations/keycloak.md)** - Enterprise SSO setup and configuration
 
 ### 📝 Architecture Decision Records (ADRs)
@@ -597,10 +597,10 @@ KEYCLOAK_OIDC_ENABLED=true
 ```
 
 **See Guides**:
-- [Service Principals](/docs/guides/service-principals.md)
-- [API Key Management](/docs/guides/api-key-management.md)
-- [Identity Federation](/docs/guides/identity-federation-quickstart.md)
-- [SCIM Provisioning](/docs/guides/scim-provisioning.md)
+- [Service Principals](/docs/guides/service-principals.mdx)
+- [API Key Management](/docs/guides/api-key-management.mdx)
+- [Identity Federation](/docs/guides/identity-federation-quickstart.mdx)
+- [SCIM Provisioning](/docs/guides/scim-provisioning.mdx)
 
 ### OpenFGA Fine-Grained Authorization
 
@@ -1267,7 +1267,7 @@ We welcome contributions from the community! 🎉
 
 1. **Read the guides**:
    - [CONTRIBUTING.md](.github/CONTRIBUTING.md) - Contribution guidelines
-   - [Development Guide](docs/reference/development/development.md) - Developer setup
+   - [Development Guide](docs/reference/development/development.mdx) - Developer setup
 
 2. **Find something to work on**:
    - [Good First Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/good%20first%20issue)
