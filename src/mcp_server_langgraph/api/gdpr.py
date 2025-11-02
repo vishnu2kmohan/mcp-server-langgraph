@@ -381,6 +381,11 @@ async def update_consent(
     with tracer.start_as_current_span("gdpr.update_consent"):
         # Get authenticated user
         user_id = user.get("user_id")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing user_id in token",
+            )
 
         # Capture metadata
         timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -391,7 +396,7 @@ async def update_consent(
         consent_id = f"consent_{user_id}_{consent.consent_type}_{timestamp.replace(':', '').replace('-', '')}"
         consent_record = GDPRConsentRecord(
             consent_id=consent_id,
-            user_id=user_id,
+            user_id=str(user_id),
             consent_type=consent.consent_type.value,
             granted=consent.granted,
             timestamp=timestamp,
@@ -415,11 +420,11 @@ async def update_consent(
         )
 
         # Get all current consents for response
-        all_consents = await gdpr_storage.consents.get_user_consents(user_id)
+        all_consents = await gdpr_storage.consents.get_user_consents(str(user_id))
         consents_dict = {}
         for c in all_consents:
             # Get latest consent for each type
-            latest = await gdpr_storage.consents.get_latest_consent(user_id, c.consent_type)
+            latest = await gdpr_storage.consents.get_latest_consent(str(user_id), c.consent_type)
             if latest:
                 consents_dict[c.consent_type] = {
                     "granted": latest.granted,
@@ -446,9 +451,14 @@ async def get_consent_status(
     with tracer.start_as_current_span("gdpr.get_consent_status"):
         # Get authenticated user
         user_id = user.get("user_id")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing user_id in token",
+            )
 
         # Get all consent records from PostgreSQL
-        all_consents = await gdpr_storage.consents.get_user_consents(user_id)
+        all_consents = await gdpr_storage.consents.get_user_consents(str(user_id))
 
         # Build consent status dict (latest consent for each type)
         consents_dict = {}
@@ -458,7 +468,7 @@ async def get_consent_status(
             if consent_rec.consent_type not in consent_types_seen:
                 consent_types_seen.add(consent_rec.consent_type)
                 # Get latest consent for this type
-                latest = await gdpr_storage.consents.get_latest_consent(user_id, consent_rec.consent_type)
+                latest = await gdpr_storage.consents.get_latest_consent(str(user_id), consent_rec.consent_type)
                 if latest:
                     consents_dict[consent_rec.consent_type] = {
                         "granted": latest.granted,
