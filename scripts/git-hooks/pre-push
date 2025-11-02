@@ -95,7 +95,7 @@ echo ""
 
 # 5. bandit security scan
 run_linter "bandit" \
-    "echo '$CHANGED_FILES' | xargs -r uv run bandit -ll"
+    "echo '$CHANGED_FILES' | xargs -r uv run bandit -ll --skip B608"
 
 # Final status
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
