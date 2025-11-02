@@ -15,20 +15,21 @@ This document provides comprehensive guidance for deploying to AWS EKS and Azure
 
 ## Overview
 
-This guide ensures that the 10+ issues encountered during GKE deployment **do not occur** on EKS or AKS deployments.
+This guide ensures that the 11 issues encountered during GKE deployment **do not occur** on EKS or AKS deployments.
 
 ### GKE Issues Resolved
 
 1. ✅ Pre-commit Python version mismatch (3.11 vs 3.12)
 2. ✅ Docker build disk space exhaustion
 3. ✅ External Secrets Operator CRD API version mismatch (v1beta1 vs v1)
-4. ✅ RBAC permission denied errors (container.developer vs container.admin)
+4. ✅ RBAC permission denied errors (unused Role/RoleBinding resources)
 5. ✅ GKE Autopilot CPU constraints (pod anti-affinity requires 500m minimum)
 6. ✅ Environment variable value/valueFrom conflict (Kustomize merge issue)
 7. ✅ Client-side vs server-side kubectl validation (CRDs not recognized)
 8. ✅ Namespace creation ordering (must exist before resources)
 9. ✅ ConfigMap generator behavior (create vs merge)
 10. ✅ External Secrets Operator installation permissions
+11. ✅ Unused RBAC resources requiring elevated IAM permissions
 
 ---
 
@@ -109,41 +110,61 @@ data:
 
 ---
 
-### 4. **RBAC Permissions: Deployment Automation Needs Admin Role**
+### 4. **RBAC Resources: Remove Unused Kubernetes RBAC**
 
-❌ **INSUFFICIENT** (Can deploy pods but not RBAC):
-```bash
-# AWS Example
-aws iam attach-role-policy \
-  --role-name github-actions-eks-deploy \
-  --policy-arn arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+❌ **WRONG** (Include unused RBAC resources):
+```yaml
+# deployments/base/serviceaccount.yaml
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mcp-server-langgraph
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+# ...
 ```
 
-✅ **SUFFICIENT** (Can deploy pods AND create RBAC resources):
-```bash
-# GCP Example
-gcloud projects add-iam-policy-binding PROJECT_ID \
-  --member="serviceAccount:SA@PROJECT.iam.gserviceaccount.com" \
-  --role="roles/container.admin"  # Not just container.developer
+**Problem**: If application doesn't use Kubernetes API, these resources:
+- Require elevated IAM permissions to deploy (container.admin, EKS Cluster Admin, AKS RBAC Admin)
+- Violate least privilege principle
+- Increase attack surface
 
-# AWS Example
-aws iam attach-role-policy \
-  --role-name github-actions-eks-deploy \
-  --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-
-# Azure Example
-az role assignment create \
-  --assignee CLIENT_ID \
-  --role "Azure Kubernetes Service RBAC Cluster Admin" \
-  --scope /subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.ContainerService/managedClusters/CLUSTER
+✅ **CORRECT** (Only include ServiceAccount):
+```yaml
+# deployments/base/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-server-langgraph
+  annotations:
+    # Platform-specific workload identity annotations
+    iam.gke.io/gcp-service-account: SA@PROJECT.iam.gserviceaccount.com
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/ROLE
+    azure.workload.identity/client-id: "CLIENT_ID"
 ```
 
-**Required Kubernetes Permissions**:
-- `create` for `roles.rbac.authorization.k8s.io`
-- `create` for `rolebindings.rbac.authorization.k8s.io`
-- `create` for `serviceaccounts`
+**Why**:
+- Application uses External Secrets Operator (ESO handles secret access)
+- Application doesn't use Kubernetes API directly
+- No need for in-cluster RBAC permissions
 
-**Applies to**: ✅ EKS, ✅ AKS, ✅ All platforms with automated deployment
+**How to Verify**:
+1. Search codebase for `kubernetes.client` or `@kubernetes/client-node`
+2. If not found, remove Role and RoleBinding
+3. Keep only ServiceAccount with workload identity annotations
+
+**IAM Permissions Required** (after RBAC removal):
+- **GCP**: `roles/container.developer` (sufficient for workload deployment)
+- **AWS**: `AmazonEKSWorkerNodePolicy` + ECR access
+- **Azure**: `Azure Kubernetes Service Cluster User Role`
+
+**Applies to**: ✅ EKS, ✅ AKS, ✅ All platforms (universal best practice)
 
 ---
 
@@ -738,6 +759,7 @@ kubectl describe resourcequota -n mcp-staging
 2. **Enhanced disk cleanup** - Already in ci.yaml
 3. **Trivy/TruffleHog fixes** - Already in gcp-compliance-scan.yaml
 4. **ConfigMap env overrides** - Pattern for all Kustomize deployments
+5. **Remove unused RBAC resources** - Security best practice (Issue #11)
 
 ### ✅ **KUBERNETES-SPECIFIC** (Apply to GKE, EKS, AKS)
 
@@ -747,6 +769,7 @@ kubectl describe resourcequota -n mcp-staging
 4. **ESO verification** - If using External Secrets
 5. **ConfigMap generator behavior** - All Kustomize deployments
 6. **Resource specifications** - Check platform-specific constraints
+7. **Minimal IAM permissions** - No RBAC creation needed after removing unused resources
 
 ### ❌ **GCP-ONLY** (Different for EKS/AKS)
 
@@ -759,15 +782,16 @@ kubectl describe resourcequota -n mcp-staging
 
 ## Conclusion
 
-All critical lessons from GKE troubleshooting have been documented and templates provided for EKS and AKS. When creating actual EKS/AKS deployment workflows, use the templates above and follow the prevention checklist to avoid all issues encountered with GKE.
+All 11 critical lessons from GKE troubleshooting have been documented and templates provided for EKS and AKS. When creating actual EKS/AKS deployment workflows, use the templates above and follow the prevention checklist to avoid all issues encountered with GKE.
 
 **Key Takeaways**:
 1. Always use **server-side validation** for CRD support
 2. Create **namespace before validation** for proper error handling
 3. Use **ConfigMap patches** for environment variable overrides
 4. Check **ESO API version** matches cluster
-5. Grant **admin-level permissions** for RBAC resource creation
-6. Set **explicit resource requests** meeting platform constraints
+5. **Remove unused RBAC resources** - verify application needs before including
+6. Grant **minimal IAM permissions** - only what's needed for deployment
+7. Set **explicit resource requests** meeting platform constraints
 
 **Next Steps** (when ready to deploy):
 1. Create EKS overlay directory: `deployments/overlays/staging-eks/`
