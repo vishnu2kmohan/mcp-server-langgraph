@@ -23,6 +23,34 @@ A **production-ready cookie-cutter template** for building MCP servers with Lang
 
 **🎯 Opinionated, production-grade foundation for your MCP server projects.**
 
+## 📑 Table of Contents
+
+**Quick Links**:
+- 🚀 [Use as Template](#-use-this-template) - Generate your own MCP server project
+- ⚡ [Quick Start](#quick-start) - Get running in 2 minutes
+- 📦 [Installation](#installation) - Setup instructions
+- 🏗️ [Architecture](#architecture) - System design and agentic loop
+- 🔐 [Authentication](#authentication--authorization) - Security setup
+- 🚢 [Deployment](#deployment-options) - Production deployment guides
+
+**Main Sections**:
+- [Template vs Project Usage](#-template-vs-project-usage) - Choose your approach
+- [Features](#features) - Core capabilities and best practices
+- [Documentation](#-documentation) - Complete guides and references
+- [Requirements](#requirements) - System and service requirements
+- [Usage](#usage) - MCP server usage and client configuration
+- [Testing Strategy](#testing-strategy) - Multi-layered testing approach
+- [Feature Flags](#feature-flags) - Dynamic feature control
+- [Observability](#observability) - LangSmith and OpenTelemetry
+- [Configuration](#configuration) - Environment variables and settings
+- [Security Considerations](#security-considerations) - Production checklist
+- [API Gateway & Rate Limiting](#api-gateway--rate-limiting) - Kong integration
+- [Quality Practices](#quality-practices) - Code quality standards
+- [Contributing](#contributing) - Contribution guidelines
+- [Support](#support) - Get help and report issues
+
+---
+
 ## 🚀 Use This Template
 
 ```bash
@@ -38,41 +66,17 @@ uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
 
 ## 📖 Template vs Project Usage
 
-### Using This as a Template
+Choose the approach that matches your goals:
 
-**For**: Creating your own MCP server with custom tools and logic
+| **Use Case** | **As Template** | **Clone Directly** |
+|--------------|-----------------|-------------------|
+| **Best For** | Building your own custom MCP server | Learning, testing, or using reference implementation |
+| **Command** | `uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph` | `git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git && cd mcp-server-langgraph && uv sync` |
+| **You Get** | Customizable project scaffold:<br/>• Your project name, author, license<br/>• Choose features (auth, observability, deployment)<br/>• Select LLM providers<br/>• Implement custom tools | Fully working reference implementation:<br/>• Example tools (`agent_chat`, `conversation_search`, `conversation_get`)<br/>• Complete observability stack<br/>• Production-ready deployment configs<br/>• Comprehensive test suite |
+| **Next Steps** | 1. Customize tools in `agent.py`<br/>2. Update authorization in `scripts/setup/setup_openfga.py`<br/>3. Configure `.env` with your API keys<br/>4. Deploy your custom server | 1. Copy `.env.example` to `.env`<br/>2. Add API keys (GOOGLE_API_KEY, etc.)<br/>3. Run `make run-streamable`<br/>4. See [Quick Start](#quick-start) for details |
+| **Learn More** | [Cookiecutter Template Strategy (ADR-0011)](adr/adr-0011-cookiecutter-template-strategy.md) | [Quick Start Guide](#quick-start) |
 
-**How**:
-1. Generate project: `uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph`
-2. Customize tools in generated `agent.py`
-3. Update authorization model in `scripts/setup/setup_openfga.py`
-4. Deploy your custom server
-
-**What gets customized**:
-- Project name, author, license
-- Which features to include (auth, observability, deployment configs)
-- LLM provider preferences
-- Tool implementations
-
-**See**: [Cookiecutter Template Strategy (ADR-0011)](adr/adr-0011-cookiecutter-template-strategy.md)
-
-### Using This Project Directly
-
-**For**: Learning, testing, or using the reference implementation
-
-**How**:
-1. Clone: `git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git`
-2. Install: `uv sync`
-3. Configure: Copy `.env.example` to `.env` and add API keys
-4. Run: `make run-streamable`
-
-**What you get**:
-- Fully working MCP server with example tools (`agent_chat`, `conversation_search`, `conversation_get`)
-- Complete observability stack
-- Production-ready deployment configs
-- Comprehensive test suite
-
-**See**: [Quick Start](#quick-start) below
+**💡 Recommendation**: Use **As Template** for production projects, **Clone Directly** for learning and testing.
 
 ---
 
@@ -183,11 +187,6 @@ The project supports optional feature sets that can be installed on demand:
 - **Secrets**: External secrets operator support, sealed secrets compatible
 - **Service Mesh**: Compatible with Istio, Linkerd, and other service meshes
 
-### 📚 Documentation & Architecture
-- **Architecture Decision Records (ADRs)**: 39 documented design decisions ([adr/](adr/))
-- **Comprehensive Documentation**: [https://mcp-server-langgraph.mintlify.app](https://mcp-server-langgraph.mintlify.app) - Full documentation site
-- **API Documentation**: Interactive OpenAPI/Swagger UI
-
 ## 📚 Documentation
 
 - **[📖 Mintlify Documentation](https://mcp-server-langgraph.mintlify.app)** - Complete online documentation with guides, tutorials, and references
@@ -284,103 +283,69 @@ See [Installation Guide](docs/getting-started/installation.mdx) for complete ins
 
 ### System Architecture
 
-```
-┌──────────────────────┐
-│    MCP Client        │
-│  (Claude Desktop     │
-│   or other)          │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────────────────────┐
-│         MCP Server                   │
-│  (server_stdio.py/streamable.py)    │
-│  ┌────────────────────────────┐     │
-│  │   Auth Middleware          │     │
-│  │   - JWT Verification       │     │
-│  │   - OpenFGA Authorization  │     │
-│  └────────────────────────────┘     │
-│  ┌────────────────────────────┐     │
-│  │   LangGraph Agent          │     │
-│  │   - Context Compaction     │     │
-│  │   - Pydantic AI Routing    │     │
-│  │   - Tool Execution         │     │
-│  │   - Response Generation    │     │
-│  │   - Output Verification    │     │
-│  │   - Iterative Refinement   │     │
-│  └────────────────────────────┘     │
-└──────────┬───────────────────────────┘
-           │
-           ▼
-┌──────────────────────────────────────┐
-│    Observability Stack               │
-│  ┌──────────┐    ┌──────────────┐   │
-│  │ Traces   │    │   Metrics    │   │
-│  │ (Jaeger) │    │ (Prometheus) │   │
-│  └─────┬────┘    └──────┬───────┘   │
-│        └────────────────┘            │
-│                ▼                     │
-│        ┌──────────────┐              │
-│        │   Grafana    │              │
-│        └──────────────┘              │
-└──────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph client["MCP Client"]
+        mcpclient["Claude Desktop<br/>or other MCP client"]
+    end
+
+    subgraph server["MCP Server<br/>(server_stdio.py / streamable.py)"]
+        auth["Auth Middleware<br/>• JWT Verification<br/>• OpenFGA Authorization"]
+        agent["LangGraph Agent<br/>• Context Compaction<br/>• Pydantic AI Routing<br/>• Tool Execution<br/>• Response Generation<br/>• Output Verification<br/>• Iterative Refinement"]
+    end
+
+    subgraph observability["Observability Stack"]
+        jaeger["Jaeger<br/>(Traces)"]
+        prometheus["Prometheus<br/>(Metrics)"]
+        grafana["Grafana<br/>(Dashboards)"]
+    end
+
+    mcpclient --> auth
+    auth --> agent
+    agent --> jaeger
+    agent --> prometheus
+    jaeger --> grafana
+    prometheus --> grafana
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef authStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef observabilityStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
+
+    class mcpclient clientStyle
+    class auth authStyle
+    class agent agentStyle
+    class jaeger,prometheus,grafana observabilityStyle
 ```
 
 ### Agentic Loop (ADR-0024, ADR-0025)
 
 Our agent implements Anthropic's full **gather-action-verify-repeat** cycle with advanced enhancements:
 
-```
-┌─────────────────────────────────────────────────┐
-│         LangGraph Agent Workflow                │
-│                                                 │
-│  START                                          │
-│    │                                            │
-│    ▼                                            │
-│  ┌─────────────────────┐                       │
-│  │ 0. Load Context     │ Just-in-Time          │
-│  │    (Dynamic)        │ Semantic Search       │
-│  └──────────┬──────────┘                       │
-│             │                                    │
-│             ▼                                    │
-│  ┌─────────────────────┐                       │
-│  │ 1. Gather Context   │ Compaction when       │
-│  │    (Compact)        │ approaching limits    │
-│  └──────────┬──────────┘                       │
-│             │                                    │
-│             ▼                                    │
-│  ┌─────────────────────┐                       │
-│  │ 2. Take Action      │ Route & Execute       │
-│  │    (Route/Tools)    │ (Parallel if enabled) │
-│  └──────────┬──────────┘                       │
-│             │                                    │
-│             ▼                                    │
-│  ┌─────────────────────┐                       │
-│  │    (Respond)        │ Generate Response     │
-│  └──────────┬──────────┘                       │
-│             │                                    │
-│             ▼                                    │
-│  ┌─────────────────────┐                       │
-│  │ 3. Verify Work      │ LLM-as-Judge          │
-│  │    (Verify)         │ Quality Check         │
-│  └──────────┬──────────┘                       │
-│             │                                    │
-│        ┌────┴────┐                              │
-│        │         │                              │
-│     Passed    Failed                            │
-│        │         │                              │
-│        │         ▼                              │
-│        │    ┌─────────────────────┐            │
-│        │    │ 4. Repeat           │            │
-│        │    │    (Refine)         │ Max 3×     │
-│        │    └──────────┬──────────┘            │
-│        │               │                        │
-│        │               └─────►(Respond)        │
-│        │                                        │
-│        ▼                                        │
-│      END                                        │
-│                                                 │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    START([START]) --> load["0. Load Context<br/>(Dynamic)<br/><br/>Just-in-Time<br/>Semantic Search"]
+    load --> gather["1. Gather Context<br/>(Compact)<br/><br/>Compaction when<br/>approaching limits"]
+    gather --> action["2. Take Action<br/>(Route/Tools)<br/><br/>Route & Execute<br/>(Parallel if enabled)"]
+    action --> respond["Generate Response"]
+    respond --> verify{"3. Verify Work<br/>(Verify)<br/><br/>LLM-as-Judge<br/>Quality Check"}
+    verify -->|Passed| END([END])
+    verify -->|Failed| refine["4. Repeat<br/>(Refine)<br/><br/>Max 3×"]
+    refine --> respond
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startEndStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef processStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef responseStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef refineStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+
+    class START,END startEndStyle
+    class load,gather,action processStyle
+    class respond responseStyle
+    class verify decisionStyle
+    class refine refineStyle
 ```
 
 **Key Features**:
@@ -501,289 +466,50 @@ Add to your MCP client config (e.g., Claude Desktop):
 
 ## Authentication & Authorization
 
-### Token-Based Authentication (v2.8.0)
+Enterprise-grade authentication and fine-grained authorization powered by Keycloak and OpenFGA:
 
-All tool calls now require JWT token authentication for security:
+| **Feature** | **Technology** | **Use Case** | **Guide** |
+|-------------|----------------|--------------|-----------|
+| **JWT Authentication** | Keycloak RS256 | All API calls require tokens (15min lifetime) | [Migration Guide](docs/guides/authentication-migration-v2-8.mdx) |
+| **Service Principals** | Keycloak + 30-day refresh | Machine-to-machine authentication | [Service Principals](docs/guides/service-principals.mdx) |
+| **API Keys** | Bcrypt-hashed keys → JWT | Long-lived keys for automation | [API Key Management](docs/guides/api-key-management.mdx) |
+| **Identity Federation** | LDAP, SAML, OIDC | Integrate existing identity providers (Google, Azure AD, Okta) | [Identity Federation](docs/guides/identity-federation-quickstart.mdx) |
+| **SCIM Provisioning** | SCIM 2.0 | Automated user/group sync from enterprise systems | [SCIM Provisioning](docs/guides/scim-provisioning.mdx) |
+| **Fine-Grained Authz** | OpenFGA (Zanzibar) | Relationship-based access control per tool/resource | [OpenFGA Setup](docs/guides/openfga-setup.mdx) |
 
+**Quick Example** (JWT Authentication):
 ```python
-import httpx
+# 1. Login to get JWT
+response = httpx.post("http://localhost:8000/auth/login",
+    json={"username": "alice", "password": "alice123"})
+token = response.json()["access_token"]
 
-# 1. Login to get JWT token
-async with httpx.AsyncClient() as client:
-    response = await client.post(
-        "http://localhost:8000/auth/login",
-        json={"username": "alice", "password": "alice123"}
-    )
-    data = response.json()
-    token = data["access_token"]
-    print(f"Token expires in {data['expires_in']}s")
-
-# 2. Use token in all tool calls
-response = await client.post(
-    "http://localhost:8000/message",
-    json={
-        "jsonrpc": "2.0",
-        "method": "tools/call",
-        "params": {
-            "name": "agent_chat",
-            "arguments": {
-                "message": "Hello!",
-                "token": token,  # ✅ Required
-                "user_id": "user:alice"
-            }
-        }
-    }
-)
+# 2. Use token in tool calls
+response = httpx.post("http://localhost:8000/message",
+    json={"method": "tools/call", "params": {"name": "agent_chat", "arguments": {"token": token, "message": "Hello!"}}})
 ```
 
-**See**: [Authentication Migration Guide](docs/guides/authentication-migration-v2-8.mdx) for complete details
+**Development Users** (⚠️ Plaintext passwords - dev only):
+- `alice` / `alice123` (premium user) | `bob` / `bob123` (standard user) | `admin` / `admin123` (admin)
 
-### Enterprise Authentication & Identity (NEW in v3.0)
-
-Comprehensive identity and access management with Keycloak as authoritative provider:
-
-#### 🔐 Authentication Methods
-
-1. **User Authentication** (JWT-based)
-   - Username/password (ROPC flow)
-   - Federated identity (LDAP, SAML, OIDC)
-   - Automatic JWT issuance
-
-2. **Service Principals** ([ADR-0033](/adr/adr-0033-service-principal-design.md))
-   - Machine-to-machine authentication
-   - 30-day refresh tokens for long-running tasks
-   - Permission inheritance from users
-   - Both client credentials and service account modes
-
-3. **API Keys** ([ADR-0034](/adr/adr-0034-api-key-jwt-exchange.md))
-   - Long-lived keys exchanged for JWTs
-   - Stored in Keycloak (bcrypt hashed)
-   - Rotation and expiration support
-
-#### 🌐 Identity Federation ([ADR-0037](/adr/adr-0037-identity-federation.md))
-
-Integrate existing identity providers:
-- **LDAP/Active Directory**: Direct user federation
-- **SAML 2.0**: ADFS, Azure AD, Ping Identity
-- **OIDC/OAuth2**: Google, Microsoft, GitHub, Okta, OneLogin
-
-All federated users receive consistent Keycloak JWTs.
-
-#### 📋 SCIM 2.0 Provisioning ([ADR-0038](/adr/adr-0038-scim-implementation.md))
-
-Automated user provisioning from external systems:
-- User create/update/delete operations
-- Group synchronization
-- Enterprise user attributes
-- Automatic OpenFGA role sync
-
-#### 🔑 JWT Standardization ([ADR-0032](/adr/adr-0032-jwt-standardization.md))
-
-All authentication methods produce Keycloak-issued RS256 JWTs:
-- Stateless validation at Kong gateway
-- Consistent authorization model
-- Short-lived tokens (15 min) with refresh
-
-**Configuration**:
-```bash
-# .env
-AUTH_PROVIDER=keycloak  # Keycloak as authoritative source
-AUTH_MODE=hybrid  # Stateless users + stateful service principals
-ENABLE_SERVICE_PRINCIPALS=true
-API_KEY_ENABLED=true
-SCIM_ENABLED=true
-KEYCLOAK_LDAP_ENABLED=true
-KEYCLOAK_OIDC_ENABLED=true
-```
-
-**See Guides**:
-- [Service Principals](/docs/guides/service-principals.mdx)
-- [API Key Management](/docs/guides/api-key-management.mdx)
-- [Identity Federation](/docs/guides/identity-federation-quickstart.mdx)
-- [SCIM Provisioning](/docs/guides/scim-provisioning.mdx)
-
-### OpenFGA Fine-Grained Authorization
-
-Uses relationship-based access control (Google Zanzibar model):
-
-```python
-from mcp_server_langgraph.auth.openfga import OpenFGAClient
-
-client = OpenFGAClient(
-    api_url=settings.openfga_api_url,
-    store_id=settings.openfga_store_id,
-    model_id=settings.openfga_model_id
-)
-
-# Check permission
-allowed = await client.check_permission(
-    user="user:alice",
-    relation="executor",
-    object="tool:agent_chat"
-)
-
-# Grant permission
-await client.write_tuples([
-    {"user": "user:alice", "relation": "executor", "object": "tool:agent_chat"}
-])
-
-# List accessible resources
-resources = await client.list_objects(
-    user="user:alice",
-    relation="executor",
-    object_type="tool"
-)
-```
-
-### Default Users (Development Only)
-
-| Username | Password | Roles | Description |
-|----------|----------|-------|-------------|
-| `alice` | `alice123` | `user`, `premium` | Premium user, member and admin of organization:acme |
-| `bob` | `bob123` | `user` | Standard user, member of organization:acme |
-| `admin` | `admin123` | `admin` | Admin user with elevated privileges |
-
-⚠️ **Security Warning**: Default users use **plaintext passwords** for development only.
-
-**For Production**:
-- Use `AUTH_PROVIDER=keycloak` with proper SSO
-- Or implement password hashing in `InMemoryUserProvider`
-- Never use default credentials in production
-
-**See**:
-- [Keycloak Integration Guide](integrations/keycloak.md)
-- [Authentication Migration Guide](docs/guides/authentication-migration-v2-8.mdx)
+**Production**: Use `AUTH_PROVIDER=keycloak` with proper SSO. See [Keycloak Integration Guide](integrations/keycloak.md) for setup.
 
 ## Testing Strategy
 
-This project uses a comprehensive, multi-layered testing approach to ensure production quality:
+Multi-layered testing approach ensuring production quality:
 
-### 🧪 Test Types
+| **Test Type** | **Count** | **Command** | **Purpose** |
+|---------------|-----------|-------------|-------------|
+| **Unit Tests** | ~400 tests | `make test-unit` | Fast tests with mocked dependencies (2-5s) |
+| **Integration Tests** | ~200 tests | `make test-integration` | End-to-end with real infrastructure |
+| **Property Tests** | 27+ tests | `make test-property` | Edge case discovery with Hypothesis |
+| **Contract Tests** | 20+ tests | `make test-contract` | MCP protocol compliance validation |
+| **Performance Tests** | Baseline tracking | `make test-regression` | Latency monitoring (p95 thresholds) |
+| **Mutation Tests** | 80%+ target | `make test-mutation` | Test effectiveness measurement |
 
-#### Combined Coverage Testing (Recommended)
-```bash
-make test-coverage-combined
-```
-- **Combined coverage** reporting (unit + integration tests)
-- Most accurate coverage metric reflecting all test types
-- Includes MCP server entry points tested via integration tests
-- Generates combined HTML report: `htmlcov-combined/index.html`
-- See [testing documentation](docs/advanced/testing.mdx) for current metrics
-
-#### Unit Tests (Fast, No External Dependencies)
-```bash
-make test-unit
-# OR: pytest -m unit -v
-```
-- **~400 tests** with comprehensive assertions
-- Mock all external dependencies (LLM, OpenFGA, Infisical)
-- Test pure logic, validation, and error handling
-
-#### Integration Tests (Require Infrastructure)
-```bash
-make test-integration
-# OR: pytest -m integration -v
-```
-- **~200 tests** in isolated Docker environment
-- Real OpenFGA authorization checks
-- Real observability stack (Jaeger, Prometheus)
-- End-to-end workflows with actual dependencies
-- Coverage collection enabled (merged with unit tests in CI)
-
-#### Property-Based Tests (Edge Case Discovery)
-```bash
-make test-property
-# OR: pytest -m property -v
-```
-- **27+ Hypothesis tests** generating thousands of test cases
-- Automatic edge case discovery (empty strings, extreme values, malformed input)
-- Tests properties like "JWT encode/decode should be reversible"
-- **See**: `tests/property/test_llm_properties.py`, `tests/property/test_auth_properties.py`
-
-#### Contract Tests (Protocol Compliance)
-```bash
-make test-contract
-# OR: pytest -m contract -v
-```
-- **20+ JSON Schema tests** validating MCP protocol compliance
-- Ensures JSON-RPC 2.0 format correctness
-- Validates request/response schemas match specification
-- **See**: `tests/contract/test_mcp_contract.py`, `tests/contract/mcp_schemas.json`
-
-#### Performance Regression Tests
-```bash
-make test-regression
-# OR: pytest -m regression -v
-```
-- Tracks latency metrics against baselines
-- Alerts on >20% performance regressions
-- Monitors: agent_response (p95 < 5s), llm_call (p95 < 10s), authorization (p95 < 50ms)
-- **See**: `tests/regression/test_performance_regression.py`, `tests/regression/baseline_metrics.json`
-
-#### Mutation Testing (Test Effectiveness)
-```bash
-make test-mutation
-# OR: mutmut run && mutmut results
-```
-- **Measures test quality** by introducing code mutations
-- **Target**: 80%+ mutation score on critical modules
-- Identifies weak assertions and missing test cases
-- **See**: [Mutation Testing Guide](docs-internal/MUTATION_TESTING.md)
-
-#### OpenAPI Validation
-```bash
-make validate-openapi
-# OR: python scripts/validate_openapi.py
-```
-- Generates OpenAPI schema from code
-- Validates schema correctness
-- Detects breaking changes
-- Ensures all endpoints documented
-
-### 🎯 Running Tests
-
-```bash
-# Quick: Run all unit tests (2-5 seconds)
-make test-unit
-
-# All automated tests (unit + integration)
-make test
-
-# All quality tests (property + contract + regression)
-make test-all-quality
-
-# Coverage report
-make test-coverage
-# Opens htmlcov/index.html with detailed coverage
-
-# Full test suite (including mutation tests - SLOW!)
-make test-unit && make test-all-quality && make test-mutation
-```
-
-### 📊 Quality Metrics
-
-- **Test Coverage**: See [testing documentation](docs/advanced/testing.mdx) for current coverage metrics by module
-- **Property Tests**: 27+ test classes with thousands of generated cases
-- **Contract Tests**: 20+ protocol compliance tests
-- **Mutation Score**: 80%+ target on critical modules (agent.py, middleware.py, config.py)
-- **Type Coverage**: Strict mypy on 3 modules (config, feature_flags, observability)
-- **Performance**: All p95 latencies within target thresholds
-
-### 🔄 CI/CD Integration
-
-GitHub Actions runs quality tests on every PR:
-
-```yaml
-# .github/workflows/quality-tests.yaml
-jobs:
-  - property-tests     # 15min timeout
-  - contract-tests     # MCP protocol validation
-  - regression-tests   # Performance monitoring
-  - openapi-validation # API schema validation
-  - mutation-tests     # Weekly schedule (too slow for every PR)
-```
-
-**See**: [.github/workflows/quality-tests.yaml](.github/workflows/quality-tests.yaml)
+**Quick Start**: `make test` (runs unit + integration tests)
+**Coverage Report**: `make test-coverage` (opens htmlcov/index.html)
+**Complete Details**: See [Testing Documentation](docs/advanced/testing.mdx) for metrics, strategies, and CI/CD integration
 
 ## Feature Flags
 
