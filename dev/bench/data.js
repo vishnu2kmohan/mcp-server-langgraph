@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762121151374,
+  "lastUpdate": 1762121396969,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -21904,6 +21904,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018081603723706286",
             "extra": "mean: 58.40342266664864 usec\nrounds: 5347"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b64ac541b0a9e6d042e49923142e5ffe1bf7bde6",
+          "message": "feat(workflows): Phase 2 security and reliability improvements\n\nImplements high-priority security hardening and reliability enhancements\nidentified in comprehensive workflow analysis, increasing production\nreadiness from 85% to 95%.\n\n## Security Improvements:\n\n1. **Implement Least-Privilege Permissions** (3 workflows)\n   - build-hygiene.yaml: Added explicit contents:read permission\n   - optional-deps-test.yaml: Added contents:read, pull-requests:write\n   - link-checker.yaml: Added contents:read, pull-requests:write\n   - Impact: Follows principle of least privilege, reduces attack surface\n\n2. **Reduce CI.yaml Permissions Scope**\n   - Moved packages:write from workflow-level to job-level permissions\n   - Only docker-build, docker-multiplatform, docker-manifest have write access\n   - Impact: Other jobs (test, pre-commit, etc.) now run with read-only access\n\n3. **Fix Docker Cache Security (CRITICAL)**\n   - Removed type=registry cache sources (potential cache poisoning vector)\n   - Now exclusively using type=gha (GitHub Actions cache)\n   - Applied to docker-build and docker-multiplatform jobs\n   - Impact: Eliminates cache poisoning attack vector in public repos\n\n## Reliability Improvements:\n\n4. **Add Timeout Specifications** (14 jobs across 4 workflows)\n   - build-hygiene.yaml: 5 minutes\n   - optional-deps-test.yaml: 10-15 minutes (6 jobs)\n   - link-checker.yaml: 10-15 minutes (3 jobs)\n   - ci.yaml: 15-60 minutes (3 Docker jobs)\n   - Impact: Prevents runaway jobs, improves cost control\n\n5. **Add Concurrency Controls** (2 workflows)\n   - cost-tracking.yaml: Single run, no cancellation\n   - link-checker.yaml: Per-PR with cancellation for outdated runs\n   - Impact: Prevents duplicate runs, optimizes resource usage\n\n## Configuration Changes:\n\nFiles modified:\n- .github/workflows/build-hygiene.yaml (2 changes: permissions, timeout)\n- .github/workflows/optional-deps-test.yaml (8 changes: permissions, 6 job timeouts)\n- .github/workflows/ci.yaml (6 changes: permissions scope reduction, 3 job timeouts, 2 cache security fixes)\n- .github/workflows/cost-tracking.yaml (1 change: concurrency control)\n- .github/workflows/link-checker.yaml (5 changes: permissions, concurrency, 3 job timeouts)\n\n## Validation:\n- ✅ All 18 workflow files validated successfully\n- ✅ Zero YAML syntax errors\n- ✅ All security best practices implemented\n- ✅ No breaking changes\n\n## Impact Summary:\n- Security posture: Significantly hardened\n- Cache poisoning risk: Eliminated\n- Permission scope: Minimized (least-privilege)\n- Resource management: Improved (timeouts + concurrency)\n- Cost control: Enhanced (timeout enforcement)\n- Production readiness: 95% (was 85%)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T17:08:46-05:00",
+          "tree_id": "921121218c4dd1b22519269f2c9514fbaa41f62a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b64ac541b0a9e6d042e49923142e5ffe1bf7bde6"
+        },
+        "date": 1762121396161,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.47289942551663,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001987822065798118",
+            "extra": "mean: 7.068491591398288 msec\nrounds: 93"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 145.0534475834819,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003595981265159686",
+            "extra": "mean: 6.894010564102415 msec\nrounds: 117"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51367.411176660666,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021877220522259467",
+            "extra": "mean: 19.467595837384945 usec\nrounds: 7784"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52958.1409973001,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020640059110320725",
+            "extra": "mean: 18.882838052245486 usec\nrounds: 11973"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49804.711123100715,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023024074965773803",
+            "extra": "mean: 20.078421849056244 usec\nrounds: 19232"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.99972998813425,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002163317154471213",
+            "extra": "mean: 5.26316537430054 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37637217836418,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009044278858344793",
+            "extra": "mean: 51.60924815000243 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.942506590641273,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006420178170653345",
+            "extra": "mean: 100.57825870000272 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2344761.8549567265,
+            "unit": "iter/sec",
+            "range": "stddev: 9.456668944776382e-8",
+            "extra": "mean: 426.4825435837088 nsec\nrounds: 159185"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4817.111532306662,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003281594256714132",
+            "extra": "mean: 207.5932835047214 usec\nrounds: 582"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2744.4864442117037,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006344643693936689",
+            "extra": "mean: 364.3668935254039 usec\nrounds: 1390"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2794.309746106925,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006690439799361396",
+            "extra": "mean: 357.87013282733426 usec\nrounds: 1581"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57238.438049386095,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004365012873603309",
+            "extra": "mean: 17.470777227309846 usec\nrounds: 11505"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 15164.00491601339,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002653343843447255",
+            "extra": "mean: 65.94563939662052 usec\nrounds: 5305"
           }
         ]
       }
