@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762103330158,
+  "lastUpdate": 1762103615349,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -20318,6 +20318,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017752038039502204",
             "extra": "mean: 57.90891091252886 usec\nrounds: 5736"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "c6bcf66a7417f54c79507754c2356387ae11dd34",
+          "message": "docs: add comprehensive IAM/RBAC requirements and validation\n\nAdded comprehensive documentation and validation for IAM/RBAC across all\nthree cloud providers (GCP, AWS, Azure) to prevent permission-related\ndeployment failures.\n\n## Documentation Added\n\n### 1. IAM/RBAC Requirements (Multi-Cloud)\n**File**: `docs/deployment/iam-rbac-requirements.md` (400+ lines)\n\nComprehensive guide covering:\n- **GCP**: All 6 required IAM roles with grant commands\n- **AWS**: EKS IAM policies, IRSA configuration, custom policies\n- **Azure**: AKS RBAC roles, service principals, pod identity\n- **Kubernetes RBAC**: Common across all platforms\n- **CI/CD permissions**: GitHub Actions requirements\n- **Validation scripts**: Per-platform verification\n- **Troubleshooting**: Common permission errors and fixes\n- **Security best practices**: Workload identity, least privilege\n\n### 2. GCP Troubleshooting Guide\n**File**: `docs/deployment/gcp-troubleshooting-resolved.md` (250+ lines)\n\nDocuments the recent permission issue and resolution:\n- Root cause analysis: Missing artifactregistry.writer and container.developer\n- Immediate fix: Manual role grants\n- Permanent fix: Updated setup script\n- Verification steps and commands\n- Prevention measures\n- Lessons learned\n\n### 3. GCP Permissions Validation Script\n**File**: `scripts/validation/validate-gcp-permissions.sh` (150 lines)\n\nAutomated validation that checks:\n- Service account existence\n- All 5 required IAM roles\n- Optional roles (with warnings)\n- Workload Identity bindings\n- Clear pass/fail output with remediation commands\n\n**Usage**:\n```bash\n./scripts/validation/validate-gcp-permissions.sh\n# Output: ✓ All required IAM roles present\n```\n\n## Impact\n\n### Prevention\n- Future deployments will catch missing permissions early\n- Setup scripts now grant all required roles automatically\n- Documentation provides clear reference for each cloud provider\n\n### Validation\n- Automated script validates permissions before deployment\n- Can be integrated into pre-deployment checks\n- Clear error messages with exact fix commands\n\n### Multi-Cloud Coverage\n- GCP: Complete (6 roles documented, validated)\n- AWS: Documented (ECR, EKS policies defined)\n- Azure: Documented (ACR, AKS roles defined)\n\n## Testing\n\nRan validation script successfully:\n```bash\n$ ./scripts/validation/validate-gcp-permissions.sh\n✓ roles/artifactregistry.writer\n✓ roles/container.developer\n✓ roles/logging.logWriter\n✓ roles/monitoring.metricWriter\n✓ roles/secretmanager.secretAccessor\n✓ roles/cloudsql.client\n✓ Workload Identity User binding present\n✓ GCP permissions validation complete\n```\n\n## Related Commits\n- `9ce84e2` - fix: add missing IAM roles to GCP staging infrastructure setup script\n- `a686517` - docs: add comprehensive GCP infrastructure setup summary\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T12:12:15-05:00",
+          "tree_id": "7dc57ec2a18a733b143465cbed71e0170391ef09",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/c6bcf66a7417f54c79507754c2356387ae11dd34"
+        },
+        "date": 1762103614453,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.74580187757886,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010255658941872096",
+            "extra": "mean: 6.861261093749811 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 151.1433097614725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000124389686159073",
+            "extra": "mean: 6.61623727559066 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51609.32634075237,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002273941244688955",
+            "extra": "mean: 19.37634282217647 usec\nrounds: 8993"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52903.024431607075,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002193365507069315",
+            "extra": "mean: 18.90251097633932 usec\nrounds: 12527"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48773.19065598582,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026898210100927347",
+            "extra": "mean: 20.50306708563206 usec\nrounds: 19572"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.155584783302,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001473115794522448",
+            "extra": "mean: 5.231340748603401 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.382141012485604,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010762270282701931",
+            "extra": "mean: 51.593887350000145 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941564349668825,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000034417582239055064",
+            "extra": "mean: 100.5877912999992 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2671112.759769752,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3700656858654165e-8",
+            "extra": "mean: 374.37580886184645 nsec\nrounds: 188360"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5093.95325955565,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001860769859558817",
+            "extra": "mean: 196.31118485905205 usec\nrounds: 568"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3016.3652141674384,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008564800487206341",
+            "extra": "mean: 331.5248416548309 usec\nrounds: 2804"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3000.0602309237734,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009038677681970628",
+            "extra": "mean: 333.3266411428286 usec\nrounds: 1750"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59780.715242948725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002175136046538733",
+            "extra": "mean: 16.727802535249065 usec\nrounds: 12701"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17162.45321297403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018698023083594094",
+            "extra": "mean: 58.266728397782074 usec\nrounds: 4444"
           }
         ]
       }
