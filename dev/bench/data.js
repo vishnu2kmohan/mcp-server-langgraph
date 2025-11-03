@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762139318522,
+  "lastUpdate": 1762139960107,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -24466,6 +24466,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019116743949594025",
             "extra": "mean: 60.15526253624505 usec\nrounds: 4487"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9d60c523bcce1f1a0761b0001383c7e80deaacba",
+          "message": "docs: comprehensive documentation audit fixes (OpenAI Codex validation)\n\nThis commit addresses all CRITICAL, HIGH, and MEDIUM severity findings\nfrom the OpenAI Codex documentation audit, validated comprehensively by\nClaude Code. All 6 major issues confirmed and resolved.\n\n## CRITICAL: Docker Quickstart Fixed\n- Added agent service to base docker-compose.yml (production mode now works)\n- Updated docker/docker-compose.dev.yml to use override pattern\n- Production and dev modes both functional\n- Location: docker-compose.yml:224-296\n\n## HIGH: Path & Port Synchronization\n- Fixed script path: ./scripts/setup/docker-compose-quickstart.sh\n- Corrected Grafana port: 3000 → 3001 across all docs\n- Removed OpenFGA Playground references (service disabled)\n- Fixed API endpoint: /messages → /message (singular)\n- Locations: docs/deployment/docker.mdx, docs/getting-started/quickstart.mdx\n\n## MEDIUM: Configuration Standardization\n- LangGraph config: ./langgraph/ → ./langgraph_platform/\n- Python version: 3.11 → 3.12\n- Added missing environment variables (8 total)\n- Location: docs/deployment/langgraph-platform.mdx:73-92\n\n- Keycloak port: standardized to 8082 across all files\n  - config.py: 8180 → 8082\n  - docs: 8080 → 8082\n  - Locations: src/mcp_server_langgraph/core/config.py:237,\n    docs/reference/setup-scripts.mdx (4 instances),\n    docs/reference/configuration-files.mdx:171\n\n## MEDIUM: Mintlify Configuration\n- Converted 4 key .md files to .mdx with frontmatter:\n  * API_COMPLIANCE_REPORT.mdx\n  * ci-cd-troubleshooting.mdx\n  * deployment/gcp-configuration.mdx\n  * deployment/iam-rbac-requirements.mdx\n- Added all converted files to docs.json navigation\n- Removed unused versions array from docs.json:427\n\n## Files Changed (14 modified, 4 created)\nModified:\n  - docker/docker-compose.yml (added agent service)\n  - docker/docker-compose.dev.yml (dev overrides only)\n  - docs/deployment/docker.mdx (paths, ports, endpoints)\n  - docs/deployment/langgraph-platform.mdx (config sync)\n  - docs/getting-started/quickstart.mdx (Grafana port)\n  - docs/reference/setup-scripts.mdx (Keycloak port)\n  - docs/reference/configuration-files.mdx (Keycloak port)\n  - docs/docs.json (navigation + removed versions)\n  - scripts/setup/docker-compose-quickstart.sh (URLs, endpoints)\n  - src/mcp_server_langgraph/core/config.py (Keycloak port)\n\nCreated:\n  - docs/API_COMPLIANCE_REPORT.mdx\n  - docs/ci-cd-troubleshooting.mdx\n  - docs/deployment/gcp-configuration.mdx\n  - docs/deployment/iam-rbac-requirements.mdx\n\n## Validation Summary\nAll findings from OpenAI Codex audit have been verified and resolved:\n✅ Finding 1 (CRITICAL) - Docker quickstart broken: FIXED\n✅ Finding 2 (HIGH) - Path/port mismatches: FIXED\n✅ Finding 3 (HIGH) - Script wrong URLs: FIXED\n✅ Finding 4 (MEDIUM) - LangGraph config stale: FIXED\n✅ Finding 5 (MEDIUM) - Keycloak port mismatch: FIXED\n✅ Finding 6 (MEDIUM) - Mintlify hides .md: FIXED\n\n🤖 Generated with Claude Code (https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T22:16:58-05:00",
+          "tree_id": "1ae2e08740806694e6c254ea828c123384ea8414",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9d60c523bcce1f1a0761b0001383c7e80deaacba"
+        },
+        "date": 1762139959174,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.9207264306494,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001161378285360812",
+            "extra": "mean: 6.9482695425517225 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.43845347487604,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001590331199123948",
+            "extra": "mean: 6.7824911102340275 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51483.36854206503,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023637075407030113",
+            "extra": "mean: 19.423748451559447 usec\nrounds: 8559"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52462.12092977556,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002218723241141883",
+            "extra": "mean: 19.061371943741545 usec\nrounds: 8875"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49306.383906530624,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024847491653045224",
+            "extra": "mean: 20.281349406918284 usec\nrounds: 19556"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.9091794021636,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001602961408499938",
+            "extra": "mean: 5.23809281005514 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35989779445026,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009808964963370833",
+            "extra": "mean: 51.65316525000776 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934593112660554,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000046097096374696915",
+            "extra": "mean: 100.65837509999369 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2634662.530473907,
+            "unit": "iter/sec",
+            "range": "stddev: 5.5969985914126006e-8",
+            "extra": "mean: 379.55525173849344 nsec\nrounds: 194932"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5052.041982085498,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021882096880670195",
+            "extra": "mean: 197.93976446474363 usec\nrounds: 484"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2974.6700216003173,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016967742729907198",
+            "extra": "mean: 336.1717409791956 usec\nrounds: 2494"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2987.2973170938694,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010353832750626513",
+            "extra": "mean: 334.7507441853258 usec\nrounds: 1591"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59052.29543342118,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020943041190327944",
+            "extra": "mean: 16.934142740098142 usec\nrounds: 12225"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17175.431869409036,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002722531557469082",
+            "extra": "mean: 58.22269900421476 usec\nrounds: 4216"
           }
         ]
       }
