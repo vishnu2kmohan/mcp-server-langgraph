@@ -190,13 +190,23 @@ class LLMFactory:
             providers_needed.add(provider)
 
         # Map provider to environment variable and config attribute
+        # Provider-specific credential mapping (some providers need multiple env vars)
         provider_config_map = {
-            "anthropic": ("ANTHROPIC_API_KEY", "anthropic_api_key"),
-            "openai": ("OPENAI_API_KEY", "openai_api_key"),
-            "google": ("GOOGLE_API_KEY", "google_api_key"),
-            "gemini": ("GOOGLE_API_KEY", "google_api_key"),
-            "azure": ("AZURE_API_KEY", "azure_api_key"),
-            "bedrock": ("AWS_ACCESS_KEY_ID", "aws_access_key_id"),
+            "anthropic": [("ANTHROPIC_API_KEY", "anthropic_api_key")],
+            "openai": [("OPENAI_API_KEY", "openai_api_key")],
+            "google": [("GOOGLE_API_KEY", "google_api_key")],
+            "gemini": [("GOOGLE_API_KEY", "google_api_key")],
+            "azure": [
+                ("AZURE_API_KEY", "azure_api_key"),
+                ("AZURE_API_BASE", "azure_api_base"),
+                ("AZURE_API_VERSION", "azure_api_version"),
+                ("AZURE_DEPLOYMENT_NAME", "azure_deployment_name"),
+            ],
+            "bedrock": [
+                ("AWS_ACCESS_KEY_ID", "aws_access_key_id"),
+                ("AWS_SECRET_ACCESS_KEY", "aws_secret_access_key"),
+                ("AWS_REGION", "aws_region"),
+            ],
         }
 
         # Set up credentials for each needed provider
@@ -204,22 +214,24 @@ class LLMFactory:
             if provider not in provider_config_map:
                 continue  # Skip unknown providers (e.g., ollama doesn't need API key)
 
-            env_var, config_attr = provider_config_map[provider]
+            credential_pairs = provider_config_map[provider]
 
-            # Get API key from config or use primary if this is the main provider
-            if config and hasattr(config, config_attr):
-                api_key = getattr(config, config_attr)
-            elif provider == self.provider:
-                api_key = self.api_key
-            else:
-                api_key = None
+            for env_var, config_attr in credential_pairs:
+                # Get value from config
+                if config and hasattr(config, config_attr):
+                    value = getattr(config, config_attr)
+                    # For primary provider, use self.api_key as fallback for API key fields
+                    if value is None and provider == self.provider and "api_key" in config_attr.lower():
+                        value = self.api_key
+                else:
+                    value = None
 
-            # Set environment variable if we have a key
-            if api_key and env_var:
-                os.environ[env_var] = api_key
-                logger.debug(
-                    f"Configured credentials for provider: {provider}", extra={"provider": provider, "env_var": env_var}
-                )
+                # Set environment variable if we have a value
+                if value and env_var:
+                    os.environ[env_var] = str(value)
+                    logger.debug(
+                        f"Configured credential for provider: {provider}", extra={"provider": provider, "env_var": env_var}
+                    )
 
     def _format_messages(self, messages: list[BaseMessage]) -> list[Dict[str, str]]:
         """
