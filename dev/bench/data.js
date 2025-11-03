@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762132888577,
+  "lastUpdate": 1762134633475,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -23612,6 +23612,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021606804378016197",
             "extra": "mean: 58.29613069671025 usec\nrounds: 4981"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d5327e8238cd242a961df63f3134379461ba2cda",
+          "message": "fix(k8s): implement direct Cloud SQL connections for GKE staging and fix Keycloak configuration\n\n## Changes Made\n\n### Direct Cloud SQL Connections (Simplified Architecture)\n- Remove Cloud SQL Proxy complexity - use direct private IP connections instead\n- Update Keycloak to connect directly to Cloud SQL at 10.110.0.3:5432\n- Update OpenFGA to connect directly to Cloud SQL at 10.110.0.3:5432\n- Update main app ConfigMap to use direct Cloud SQL connection\n- Eliminates Workload Identity configuration complexity\n- Simpler deployment, faster startup, lower resource usage\n\n### Keycloak Fixes\n- Remove invalid `--hostname-strict-https` parameter (not supported in Keycloak 26.4.2)\n- Remove `KC_HOSTNAME_STRICT_HTTPS` environment variable\n- Fix JDBC URL format (remove `?sslmode=disable` which is not valid for JDBC)\n- Add `KC_DB=postgres` environment variable via JSON patch (required for JDBC driver loading)\n- Update base deployment to work with newer Keycloak versions\n\n### Service Account Workload Identity\n- Fix service account annotation to use correct GCP SA: `mcp-staging-sa`\n- Previously referenced non-existent `vertex-ai-staging` service account\n- Workload Identity IAM binding created for mcp-staging/staging-mcp-server-langgraph\n\n### Qdrant Permissions\n- Add init container to fix snapshots directory permissions\n- Creates `/qdrant/storage/snapshots/tmp` with correct ownership\n- Resolves \"Permission denied\" crashes\n\n### JSON Patches for Array Merging\n- Use JSON 6902 patches instead of strategic merge for Keycloak and OpenFGA\n- Properly handles container array modifications\n- Successfully removes init containers and updates environment variables\n\n## Infrastructure Verified\n- Cloud SQL PostgreSQL: 10.110.0.3 (RUNNABLE) with keycloak, openfga, gdpr databases\n- Memorystore Redis: 10.110.1.4:6379 (READY) with AUTH enabled\n- GKE Autopilot cluster: mcp-staging-cluster (RUNNING) with Workload Identity enabled\n\n## Known Issues (Documented for GitHub Actions / CI/CD workflow)\n1. **External Secrets Operator RBAC**: Service accounts lack cluster-scope permissions\n   - external-secrets-cert-controller cannot list ValidatingWebhookConfigurations or CRDs\n   - external-secrets-webhook cannot find TLS certificates\n   - external-secrets controller cannot list ExternalSecrets at cluster scope\n   - **Impact**: External Secrets don't sync automatically\n   - **Workaround**: Manually create secrets for local testing\n   - **Fix**: Update External Secrets Operator RBAC roles to include missing permissions\n\n2. **Keycloak Database Connection**: Still investigating connection issues\n   - JDBC URL format fixed but connection still failing\n   - May need additional Keycloak configuration\n\n3. **OpenFGA Connection**: Needs testing after Keycloak is working\n\n## Testing Approach\nAll changes validated via:\n- kubectl kustomize build verification\n- Local cluster deployment testing\n- Cloud SQL and Memorystore infrastructure verified operational\n- Direct connection pattern validated\n\n## Next Steps (for CI/CD workflow)\n1. Fix External Secrets Operator RBAC in setup-staging-infrastructure.sh\n2. Complete Keycloak database connection troubleshooting\n3. Validate OpenFGA connects to Cloud SQL successfully\n4. Test end-to-end application deployment via GitHub Actions\n5. Document pattern for EKS (RDS) and AKS (Azure Database)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T20:49:43-05:00",
+          "tree_id": "cfd63605faeacc1bcb0a9dcd3e9bdf35b5b54f54",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d5327e8238cd242a961df63f3134379461ba2cda"
+        },
+        "date": 1762134632400,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 158.85935346484658,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011111181192919418",
+            "extra": "mean: 6.294876431190351 msec\nrounds: 109"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 151.12420696498884,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00020693647126750005",
+            "extra": "mean: 6.6170735984849305 msec\nrounds: 132"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 56672.697783261276,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015408081373569076",
+            "extra": "mean: 17.645180821008275 usec\nrounds: 7018"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 58269.54308635618,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013395166010144523",
+            "extra": "mean: 17.161624187064373 usec\nrounds: 11990"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 54430.48207702314,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001748490498619005",
+            "extra": "mean: 18.37205848342343 usec\nrounds: 16774"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.980503901678,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023638250117356703",
+            "extra": "mean: 5.236136566666655 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.5611550709474,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004184594940542184",
+            "extra": "mean: 51.1217255000048 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.940918437677018,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000055429282917691974",
+            "extra": "mean: 100.59432699999888 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2707595.280953861,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6003089494771966e-8",
+            "extra": "mean: 369.33141634362323 nsec\nrounds: 194402"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6546.65373790011,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001150644734627627",
+            "extra": "mean: 152.74979249486896 usec\nrounds: 453"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2901.387646349137,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000060973698498541316",
+            "extra": "mean: 344.6626655553304 usec\nrounds: 2700"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3162.350818168576,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000044007739784801656",
+            "extra": "mean: 316.22045038606234 usec\nrounds: 1814"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67650.43053618247,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001179150593659438",
+            "extra": "mean: 14.781871927114423 usec\nrounds: 11837"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20718.81402425124,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001981851364194037",
+            "extra": "mean: 48.26531088263577 usec\nrounds: 5642"
           }
         ]
       }
