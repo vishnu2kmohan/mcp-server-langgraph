@@ -28,7 +28,13 @@ router = APIRouter(
 class CreateServicePrincipalRequest(BaseModel):
     """Request to create a new service principal"""
 
-    name: str = Field(..., description="Human-readable name for the service")
+    name: str = Field(
+        ...,
+        description="Human-readable name for the service",
+        pattern=r"^[a-zA-Z0-9 _-]{1,50}$",  # SECURITY: Prevent CWE-20 injection into Keycloak/OpenFGA
+        min_length=1,
+        max_length=50,
+    )
     description: str = Field(..., description="Purpose/description of the service")
     authentication_mode: str = Field(
         default="client_credentials",

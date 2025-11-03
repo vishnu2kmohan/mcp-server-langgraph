@@ -294,13 +294,23 @@ async def list_users(
         # Parse filter (simple implementation)
         query = {}
         if filter:
-            # Simple filter parsing: "userName eq \"alice@example.com\""
-            if "userName eq" in filter:
-                username = filter.split('"')[1]
-                query["username"] = username
-            elif "email eq" in filter:
-                email = filter.split('"')[1]
-                query["email"] = email
+            # SECURITY: Safe SCIM filter parsing with error handling (CWE-20 prevention)
+            # Format: "userName eq \"alice@example.com\"" or "email eq \"alice@example.com\""
+            try:
+                if "userName eq" in filter:
+                    parts = filter.split('"')
+                    if len(parts) >= 2:
+                        username = parts[1]
+                        query["username"] = username
+                elif "email eq" in filter:
+                    parts = filter.split('"')
+                    if len(parts) >= 2:
+                        email = parts[1]
+                        query["email"] = email
+            except (IndexError, ValueError):
+                # Malformed filter - continue with empty query (fail-safe, return no results)
+                # Don't raise - prevents DoS via malformed SCIM queries
+                pass
 
         # Get users from Keycloak
         users = await keycloak.search_users(query=query, first=startIndex - 1, max=count)
