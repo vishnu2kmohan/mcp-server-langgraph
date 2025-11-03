@@ -45,14 +45,16 @@ class ParallelToolExecutor:
     - Aggregates results
     """
 
-    def __init__(self, max_parallelism: int = 5) -> None:
+    def __init__(self, max_parallelism: int = 5, task_timeout_seconds: float | None = None) -> None:
         """
         Initialize parallel executor.
 
         Args:
             max_parallelism: Maximum concurrent tool executions
+            task_timeout_seconds: Optional timeout for each task (None = no timeout)
         """
         self.max_parallelism = max_parallelism
+        self.task_timeout_seconds = task_timeout_seconds
         self.semaphore = asyncio.Semaphore(max_parallelism)
 
     async def execute_parallel(
@@ -123,18 +125,43 @@ class ParallelToolExecutor:
             return results  # type: ignore[return-value]
 
     async def _execute_single(self, invocation: ToolInvocation, tool_executor: Callable[..., Any]) -> ToolResult:
-        """Execute a single tool invocation."""
+        """Execute a single tool invocation with optional timeout."""
         async with self.semaphore:  # Limit concurrency
             start_time = time.time()
 
             try:
-                result = await tool_executor(invocation.tool_name, invocation.arguments)
+                # Apply timeout if configured
+                if self.task_timeout_seconds is not None:
+                    result = await asyncio.wait_for(
+                        tool_executor(invocation.tool_name, invocation.arguments), timeout=self.task_timeout_seconds
+                    )
+                else:
+                    result = await tool_executor(invocation.tool_name, invocation.arguments)
+
                 duration_ms = (time.time() - start_time) * 1000
 
                 return ToolResult(
                     invocation_id=invocation.invocation_id,
                     tool_name=invocation.tool_name,
                     result=result,
+                    duration_ms=duration_ms,
+                )
+
+            except asyncio.TimeoutError:
+                duration_ms = (time.time() - start_time) * 1000
+                timeout_error = asyncio.TimeoutError(
+                    f"Tool '{invocation.tool_name}' exceeded timeout of {self.task_timeout_seconds}s"
+                )
+                logger.warning(
+                    f"Tool execution timeout: {invocation.tool_name}",
+                    extra={"timeout_seconds": self.task_timeout_seconds, "duration_ms": duration_ms},
+                )
+
+                return ToolResult(
+                    invocation_id=invocation.invocation_id,
+                    tool_name=invocation.tool_name,
+                    result=None,
+                    error=timeout_error,
                     duration_ms=duration_ms,
                 )
 
