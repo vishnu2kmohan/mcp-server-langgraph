@@ -80,7 +80,7 @@ class ConsentResponse(BaseModel):
     """Response for consent operations"""
 
     user_id: str
-    consents: Dict[str, dict] = Field(description="Current consent status for all types")
+    consents: Dict[str, dict[str, Any]] = Field(description="Current consent status for all types")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -181,9 +181,9 @@ async def export_user_data(
     """
     with tracer.start_as_current_span("gdpr.export_user_data"):
         # Get authenticated user
-        user_id = user.get("user_id")
-        username = user.get("username")
-        email = user.get("email", f"{username}@example.com")
+        user_id = str(user.get("user_id") or "")
+        username = str(user.get("username") or "")
+        email = str(user.get("email", f"{username}@example.com"))
 
         # Create export service with storage backend
         export_service = DataExportService(session_store=session_store, gdpr_storage=gdpr_storage)
@@ -306,8 +306,8 @@ async def delete_user_account(
             )
 
         # Get authenticated user
-        user_id = user.get("user_id")
-        username = user.get("username")
+        user_id = str(user.get("user_id") or "")
+        username = str(user.get("username") or "")
 
         # Log deletion request (before deletion)
         logger.warning(

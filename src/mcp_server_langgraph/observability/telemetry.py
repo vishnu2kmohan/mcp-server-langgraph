@@ -289,6 +289,9 @@ class ObservabilityConfig:
         LoggingInstrumentor().instrument(set_logging_format=True)
 
         # Choose formatter based on log_format setting
+        formatter: logging.Formatter
+        console_formatter: logging.Formatter
+
         if self.log_format == "json":
             # JSON formatter with trace context
             formatter = CustomJSONFormatter(
@@ -315,7 +318,7 @@ class ObservabilityConfig:
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(console_formatter)
 
-        handlers = [console_handler]
+        handlers: list[logging.Handler] = [console_handler]
 
         # File handlers - opt-in only
         if enable_file_logging:
@@ -376,13 +379,13 @@ class ObservabilityConfig:
 
     def get_tracer(self) -> trace.Tracer:
         """Get tracer instance"""
-        return self.tracer  # type: ignore[return-value]
+        return self.tracer
 
     def get_meter(self) -> otel_metrics.Meter:
         """Get meter instance"""
-        return self.meter  # type: ignore[return-value]
+        return self.meter
 
-    def get_logger(self) -> None:
+    def get_logger(self) -> logging.Logger:
         """Get logger instance"""
         return self.logger
 
@@ -421,7 +424,7 @@ def is_initialized() -> bool:
 
 
 def init_observability(
-    settings=None,
+    settings: Any | None = None,
     service_name: str = SERVICE_NAME,
     otlp_endpoint: str = OTLP_ENDPOINT,
     enable_console_export: bool = True,

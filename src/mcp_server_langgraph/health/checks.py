@@ -88,7 +88,7 @@ async def readiness_check() -> JSONResponse:
         critical_secrets_missing.append("JWT_SECRET_KEY")
 
     if critical_secrets_missing:
-        checks["secrets"] = {"status": "unhealthy", "missing": critical_secrets_missing}
+        checks["secrets"] = {"status": "unhealthy", "missing": ", ".join(critical_secrets_missing)}
         all_healthy = False
     else:
         checks["secrets"] = {"status": "healthy", "message": "All critical secrets loaded"}

@@ -610,7 +610,7 @@ class DynamicContextLoader:
         Returns:
             List of SystemMessages containing context
         """
-        messages = []
+        messages: list[BaseMessage] = []
 
         for ctx in loaded_contexts:
             message = SystemMessage(
