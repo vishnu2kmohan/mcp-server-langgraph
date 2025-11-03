@@ -13,7 +13,7 @@ contentType: "how-to"
 Deploy the MCP Server with LangGraph using Helm for simplified Kubernetes deployment management. The Helm chart includes all dependencies (Keycloak, Redis, OpenFGA, PostgreSQL) with production-ready defaults.
 
 <Info>
-**v2.1.0** Helm chart includes Keycloak SSO, Redis sessions, OpenFGA authorization, and comprehensive observability.
+**v2.8.0** Helm chart includes Keycloak SSO, Redis sessions, OpenFGA authorization, and comprehensive observability.
 </Info>
 
 ### Quick Start
@@ -31,7 +31,7 @@ helm install mcp-server-langgraph ./mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --create-namespace \
   --set image.repository=gcr.io/your-project/mcp-server-langgraph \
-  --set image.tag=v2.1.0 \
+  --set image.tag=v2.8.0 \
   --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}"
 
 ## Check deployment status
@@ -64,8 +64,8 @@ kubectl get ingress -n mcp-server-langgraph
     Build and push your container image:
 
     ```bash
-    docker build -t gcr.io/your-project/mcp-server-langgraph:v2.1.0 .
-    docker push gcr.io/your-project/mcp-server-langgraph:v2.1.0
+    docker build -t gcr.io/your-project/mcp-server-langgraph:v2.8.0 .
+    docker push gcr.io/your-project/mcp-server-langgraph:v2.8.0
     ```
   </Step>
 
@@ -112,7 +112,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --create-namespace \
   --set image.repository=gcr.io/your-project/mcp-server-langgraph \
-  --set image.tag=v2.1.0 \
+  --set image.tag=v2.8.0 \
   --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
   --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
   --set ingress.enabled=true \
@@ -128,7 +128,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
     image:
       repository: gcr.io/your-project/mcp-server-langgraph
-      tag: "v2.1.0"
+      tag: "v2.8.0"
       pullPolicy: IfNotPresent
 
     # Ingress
@@ -563,7 +563,7 @@ vim values-production.yaml
 helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   --values values-production.yaml \
-  --set image.tag=v2.1.1
+  --set image.tag=v2.8.0
 
 ## Check rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph

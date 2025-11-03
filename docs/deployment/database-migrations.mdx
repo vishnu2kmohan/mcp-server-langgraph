@@ -234,7 +234,7 @@ SELECT conversation_id, user_id, last_message_at
 FROM conversations
 WHERE last_message_at < NOW() - INTERVAL '90 days';
 
--- View for audit logs requiring archival (>90 days, <7 years)
+-- View for audit logs requiring archival (>90 days, &lt;7 years)
 CREATE OR REPLACE VIEW audit_logs_for_archival AS
 SELECT audit_id, user_id, action, timestamp
 FROM audit_logs

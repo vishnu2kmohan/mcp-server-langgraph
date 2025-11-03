@@ -73,6 +73,7 @@
             "group": "Reference",
             "pages": [
               "references/sources",
+              "references/mermaid-guide",
               "reference/environment-variables",
               "reference/setup-scripts",
               "reference/configuration-files",
@@ -295,7 +296,7 @@
             ]
           },
           {
-            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-42)",
+            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-41, 43)",
             "pages": [
               "architecture/adr-0008-infisical-secrets-management",
               "architecture/adr-0009-feature-flag-system",
@@ -307,7 +308,8 @@
               "architecture/adr-0030-resilience-patterns",
               "architecture/adr-0040-gcp-gke-autopilot-deployment",
               "architecture/adr-0041-postgresql-gdpr-storage",
-              "architecture/adr-0042-visual-workflow-builder"
+              "architecture/adr-0042-visual-workflow-builder",
+              "architecture/adr-0043-cost-monitoring-dashboard"
             ]
           },
           {

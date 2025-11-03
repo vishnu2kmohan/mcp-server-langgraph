@@ -18,7 +18,7 @@ This section documents the architectural decisions made throughout the developme
 
 ### Architecture Decision Records
 
-We maintain **40 ADRs** organized into seven categories:
+We maintain **43 ADRs** organized into seven categories:
 
 <Note>
   **New in v3.0**: 10 new ADRs (ADRs 31-39) document our enterprise authentication architecture with Keycloak, service principals, API keys, identity federation, and SCIM provisioning. See [Keycloak JWT Architecture Overview](/architecture/keycloak-jwt-architecture-overview) for details.
@@ -185,6 +185,19 @@ Quick reference table of all architectural decisions:
 | [0028](/architecture/adr-0028-caching-strategy) | Multi-Layer Caching Strategy | Infrastructure | Accepted | 2025-10-20 |
 | [0029](/architecture/adr-0029-custom-exception-hierarchy) | Custom Exception Hierarchy | Development | Accepted | 2025-10-20 |
 | [0030](/architecture/adr-0030-resilience-patterns) | Resilience Patterns for Production Systems | Infrastructure | Accepted | 2025-10-20 |
+| [0031](/architecture/adr-0031-keycloak-authoritative-identity) | Keycloak as Authoritative Identity Provider | Auth | Accepted | 2025-10-23 |
+| [0032](/architecture/adr-0032-jwt-standardization) | JWT Standardization for Multi-Component Auth | Auth | Accepted | 2025-10-23 |
+| [0033](/architecture/adr-0033-service-principal-design) | Service Principal Design for Machine-to-Machine Auth | Auth | Accepted | 2025-10-23 |
+| [0034](/architecture/adr-0034-api-key-jwt-exchange) | API Key to JWT Exchange Pattern | Auth | Accepted | 2025-10-23 |
+| [0035](/architecture/adr-0035-kong-jwt-validation) | Kong Gateway for JWT Validation | Auth | Accepted | 2025-10-23 |
+| [0036](/architecture/adr-0036-hybrid-session-model) | Hybrid Session Model (Stateless JWT + Stateful Redis) | Auth | Accepted | 2025-10-23 |
+| [0037](/architecture/adr-0037-identity-federation) | Identity Federation with External IDPs | Auth | Accepted | 2025-10-23 |
+| [0038](/architecture/adr-0038-scim-implementation) | SCIM 2.0 Implementation for User Provisioning | Auth | Accepted | 2025-10-23 |
+| [0039](/architecture/adr-0039-openfga-permission-inheritance) | OpenFGA Permission Inheritance Model | Auth | Accepted | 2025-10-23 |
+| [0040](/architecture/adr-0040-gcp-gke-autopilot-deployment) | GCP GKE Autopilot Deployment Strategy | Infrastructure | Accepted | 2025-10-25 |
+| [0041](/architecture/adr-0041-postgresql-gdpr-storage) | PostgreSQL for GDPR-Compliant Storage | Infrastructure | Accepted | 2025-10-30 |
+| [0042](/architecture/adr-0042-visual-workflow-builder) | Visual Workflow Builder (Future) | Development | Proposed | 2025-11-02 |
+| [0043](/architecture/adr-0043-cost-monitoring-dashboard) | Cost Monitoring Dashboard for LLM Usage | Infrastructure | Accepted | 2025-11-02 |
 
 ### Design Principles
 

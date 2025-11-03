@@ -521,9 +521,9 @@ Track these to measure effectiveness:
 | Metric | Target | Current |
 |--------|--------|---------|
 | **Workflow changes tested with act before commit** | 100% | ~0% → 100% (new policy) |
-| **CI failures from preventable issues** | <5% | Reducing |
-| **Time to detect issues** | <5 min (local) | Was: 10+ min (CI) |
-| **CI minutes wasted** | <50 min/month | Reducing |
+| **CI failures from preventable issues** | &lt;5% | Reducing |
+| **Time to detect issues** | &lt;5 min (local) | Was: 10+ min (CI) |
+| **CI minutes wasted** | &lt;50 min/month | Reducing |
 
 ---
 
