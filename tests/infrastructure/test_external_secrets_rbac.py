@@ -153,8 +153,6 @@ class TestGCPServiceAccountIAM:
     @pytest.mark.integration
     def test_service_account_exists(self, skip_if_not_gke, gcp_project_id: str, gcp_service_account_email: str):
         """Test that the GCP service account exists."""
-        _ = gcp_service_account_email.split("@")[0]  # Unused variable
-
         result = run_gcloud(
             ["iam", "service-accounts", "describe", gcp_service_account_email, "--project", gcp_project_id, "--format=json"],
             check=False,
