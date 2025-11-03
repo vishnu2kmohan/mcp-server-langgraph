@@ -160,6 +160,13 @@ spec:
           capabilities:
             drop:
               - ALL
+        resources:
+          requests:
+            cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
       - name: wait-for-keycloak
         securityContext:
           allowPrivilegeEscalation: false
@@ -175,6 +182,13 @@ spec:
           limits:
             cpu: 500m
             memory: 256Mi
+      - name: wait-for-redis
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
               - ALL
         resources:
           requests:
