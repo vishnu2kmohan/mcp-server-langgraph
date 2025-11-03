@@ -22,6 +22,7 @@ from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionServi
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
 from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage, get_gdpr_storage
 from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord as GDPRConsentRecord
+from mcp_server_langgraph.core.security import sanitize_header_value
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 router = APIRouter(prefix="/api/v1/users", tags=["GDPR Compliance"])
@@ -205,7 +206,10 @@ async def export_user_data(
         )
 
         # Return as downloadable file
-        filename = f"user_data_{username}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.{format}"
+        # SECURITY: Sanitize username to prevent CWE-113 (HTTP Response Splitting)
+        # Username from JWT could contain CR/LF if IdP allows special characters
+        safe_username = sanitize_header_value(username)
+        filename = f"user_data_{safe_username}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.{format}"
         headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
 
         return Response(content=data_bytes, media_type=content_type, headers=headers)
