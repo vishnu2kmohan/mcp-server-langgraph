@@ -16,7 +16,7 @@ from typing import Any, Dict, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
-from litellm.utils import ModelResponse  # type: ignore[attr-defined]
+from litellm.utils import ModelResponse
 
 from mcp_server_langgraph.core.exceptions import LLMModelNotFoundError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -299,7 +299,7 @@ class LLMFactory:
                     "LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
+                        "tokens": response.usage.total_tokens if response.usage else 0,
                     },
                 )
 
@@ -373,7 +373,7 @@ class LLMFactory:
                     "Async LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
+                        "tokens": response.usage.total_tokens if response.usage else 0,
                     },
                 )
 

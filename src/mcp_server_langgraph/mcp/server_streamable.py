@@ -154,7 +154,7 @@ try:
     app.state.limiter = limiter
 
     # Register custom exception handler for rate limit exceeded
-    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 
     logger.info(
         "Rate limiting enabled",
@@ -288,7 +288,7 @@ class MCPAgentStreamableServer:
         """
         # Call the registered handler
         # The handler is registered below in _setup_handlers()
-        return await self._list_tools_handler()
+        return await self._list_tools_handler()  # type: ignore[no-any-return]
 
     async def call_tool_public(self, name: str, arguments: dict[str, Any]) -> list[TextContent]:
         """
@@ -296,7 +296,7 @@ class MCPAgentStreamableServer:
 
         This wraps the internal MCP handler to avoid accessing private SDK attributes.
         """
-        return await self._call_tool_handler(name, arguments)
+        return await self._call_tool_handler(name, arguments)  # type: ignore[no-any-return]
 
     async def list_resources_public(self) -> list[Resource]:
         """
@@ -304,12 +304,12 @@ class MCPAgentStreamableServer:
 
         This wraps the internal MCP handler to avoid accessing private SDK attributes.
         """
-        return await self._list_resources_handler()
+        return await self._list_resources_handler()  # type: ignore[no-any-return]
 
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc,no-untyped-call]
+        @self.server.list_tools()
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -457,7 +457,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc,no-untyped-call]
+        @self.server.list_resources()
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):

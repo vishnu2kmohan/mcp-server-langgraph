@@ -38,7 +38,7 @@ class CircuitBreakerState(str, Enum):
     HALF_OPEN = "half_open"  # Testing recovery
 
 
-class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
+class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):  # type: ignore[misc]
     """
     Listener for circuit breaker events.
 
@@ -246,9 +246,9 @@ def circuit_breaker(  # noqa: C901
                         if fallback:
                             logger.info(f"Using fallback for {name}")
                             if asyncio.iscoroutinefunction(fallback):
-                                return await fallback(*args, **kwargs)
+                                return await fallback(*args, **kwargs)  # type: ignore[no-any-return]
                             else:
-                                return fallback(*args, **kwargs)
+                                return fallback(*args, **kwargs)  # type: ignore[no-any-return]
                         else:
                             # Raise our custom exception
                             from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
@@ -260,7 +260,7 @@ def circuit_breaker(  # noqa: C901
 
                     # Call the function
                     try:
-                        result: T = await func(*args, **kwargs)
+                        result: T = await func(*args, **kwargs)  # type: ignore[misc]
 
                         # Success - handle via state machine
                         with breaker._lock:
@@ -311,7 +311,7 @@ def circuit_breaker(  # noqa: C901
                 return result
             except pybreaker.CircuitBreakerError as e:
                 if fallback:
-                    return fallback(*args, **kwargs)
+                    return fallback(*args, **kwargs)  # type: ignore[no-any-return]
                 else:
                     from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 
@@ -324,9 +324,9 @@ def circuit_breaker(  # noqa: C901
         import asyncio
 
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper
+            return async_wrapper  # type: ignore[return-value]
         else:
-            return sync_wrapper
+            return sync_wrapper  # type: ignore[return-value]
 
     return decorator
 

@@ -315,19 +315,19 @@ def setup_rate_limiting(app: Any) -> None:
 # Decorators for endpoint-specific rate limits
 def rate_limit_for_auth(func: Callable[..., Any]) -> Callable[..., Any]:
     """Rate limit decorator for authentication endpoints"""
-    return limiter.limit(ENDPOINT_RATE_LIMITS["auth_login"])(func)
+    return limiter.limit(ENDPOINT_RATE_LIMITS["auth_login"])(func)  # type: ignore[no-any-return]
 
 
 def rate_limit_for_llm(func: Callable[..., Any]) -> Callable[..., Any]:
     """Rate limit decorator for LLM endpoints"""
-    return limiter.limit(ENDPOINT_RATE_LIMITS["llm_chat"])(func)
+    return limiter.limit(ENDPOINT_RATE_LIMITS["llm_chat"])(func)  # type: ignore[no-any-return]
 
 
 def rate_limit_for_search(func: Callable[..., Any]) -> Callable[..., Any]:
     """Rate limit decorator for search endpoints"""
-    return limiter.limit(ENDPOINT_RATE_LIMITS["search"])(func)
+    return limiter.limit(ENDPOINT_RATE_LIMITS["search"])(func)  # type: ignore[no-any-return]
 
 
 def exempt_from_rate_limit(func: Callable[..., Any]) -> Callable[..., Any]:
     """Exempt endpoint from rate limiting (health checks, metrics)"""
-    return limiter.exempt(func)  # type: ignore[no-any-return,no-untyped-call]
+    return limiter.exempt(func)  # type: ignore[no-any-return]

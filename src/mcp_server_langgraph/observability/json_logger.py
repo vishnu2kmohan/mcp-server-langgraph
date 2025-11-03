@@ -15,10 +15,10 @@ from opentelemetry import trace
 try:
     from pythonjsonlogger import jsonlogger
 
-    JsonFormatterBase = jsonlogger.JsonFormatter  # type: ignore[attr-defined]
+    JsonFormatterBase = jsonlogger.JsonFormatter
 except (ImportError, AttributeError):
     # Fallback if pythonjsonlogger is not available
-    JsonFormatterBase = logging.Formatter  # type: ignore[assignment]
+    JsonFormatterBase = logging.Formatter
 
 
 class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type,misc]

@@ -1327,7 +1327,7 @@ class KeycloakClient:
 
                     # Extract group ID from Location header
                     location = response.headers.get("Location", "")
-                    group_id = location.split("/")[-1]
+                    group_id: str = location.split("/")[-1]
 
                     logger.info(f"Created group {group_id}")
                     metrics.successful_calls.add(1, {"operation": "create_group"})

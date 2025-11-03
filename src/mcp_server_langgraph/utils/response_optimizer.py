@@ -56,7 +56,7 @@ class ResponseOptimizer:
         """
         try:
             # Use LiteLLM's model-aware token counting
-            token_count = litellm.token_counter(model=self.model, text=text)
+            token_count: int = litellm.token_counter(model=self.model, text=text)
             return token_count
         except Exception as e:
             # Fallback: estimate 1 token per 4 characters (conservative estimate)
