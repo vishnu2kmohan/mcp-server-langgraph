@@ -87,7 +87,7 @@ app.add_middleware(
 # ==============================================================================
 
 
-@app.get("/")
+@app.get("/")  # type: ignore[misc]
 def root() -> Dict[str, Any]:
     """API information."""
     return {
@@ -103,7 +103,7 @@ def root() -> Dict[str, Any]:
     }
 
 
-@app.post("/api/builder/generate", response_model=GenerateCodeResponse)
+@app.post("/api/builder/generate", response_model=GenerateCodeResponse)  # type: ignore[misc]
 async def generate_code(request: GenerateCodeRequest) -> GenerateCodeResponse:
     """
     Generate Python code from visual workflow.
@@ -148,7 +148,7 @@ async def generate_code(request: GenerateCodeRequest) -> GenerateCodeResponse:
         raise HTTPException(status_code=400, detail=f"Code generation failed: {str(e)}")
 
 
-@app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)
+@app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)  # type: ignore[misc]
 async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflowResponse:
     """
     Validate workflow structure.
@@ -216,7 +216,7 @@ async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflo
         return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {str(e)}"])
 
 
-@app.post("/api/builder/save")
+@app.post("/api/builder/save")  # type: ignore[misc]
 async def save_workflow(request: SaveWorkflowRequest) -> Dict[str, Any]:
     """
     Save workflow to Python file.
@@ -248,7 +248,7 @@ async def save_workflow(request: SaveWorkflowRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
 
 
-@app.get("/api/builder/templates")
+@app.get("/api/builder/templates")  # type: ignore[misc]
 async def list_templates() -> Dict[str, Any]:
     """
     List available workflow templates.
@@ -293,7 +293,7 @@ async def list_templates() -> Dict[str, Any]:
     return {"templates": templates}
 
 
-@app.get("/api/builder/templates/{template_id}")
+@app.get("/api/builder/templates/{template_id}")  # type: ignore[misc]
 async def get_template(template_id: str) -> Dict[str, Any]:
     """
     Get a specific workflow template.
@@ -327,7 +327,7 @@ async def get_template(template_id: str) -> Dict[str, Any]:
     raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
 
 
-@app.post("/api/builder/import")
+@app.post("/api/builder/import")  # type: ignore[misc]
 async def import_workflow(code: str, layout: Literal["hierarchical", "force", "grid"] = "hierarchical") -> Dict[str, Any]:
     """
     Import Python code into visual workflow.
@@ -369,7 +369,7 @@ async def import_workflow(code: str, layout: Literal["hierarchical", "force", "g
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
 
-@app.get("/api/builder/node-types")
+@app.get("/api/builder/node-types")  # type: ignore[misc]
 async def list_node_types() -> Dict[str, Any]:
     """
     List available node types for the builder.

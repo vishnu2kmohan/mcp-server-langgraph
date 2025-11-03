@@ -89,7 +89,7 @@ def _safe_eval(expression: str) -> float:
         raise ValueError(f"Invalid expression: {e}") from e
 
 
-@tool
+@tool  # type: ignore[misc]
 def calculator(expression: str = Field(description="Mathematical expression to evaluate (e.g., '2 + 2', '10 * 3')")) -> str:
     """
     Evaluate a mathematical expression safely.
@@ -117,7 +117,7 @@ def calculator(expression: str = Field(description="Mathematical expression to e
         return f"Error: {e}"
 
 
-@tool
+@tool  # type: ignore[misc]
 def add(a: float = Field(description="First number"), b: float = Field(description="Second number")) -> str:
     """Add two numbers together."""
     try:
@@ -132,7 +132,7 @@ def add(a: float = Field(description="First number"), b: float = Field(descripti
         return f"Error: {e}"
 
 
-@tool
+@tool  # type: ignore[misc]
 def subtract(a: float = Field(description="First number"), b: float = Field(description="Second number")) -> str:
     """Subtract second number from first number."""
     try:
@@ -147,7 +147,7 @@ def subtract(a: float = Field(description="First number"), b: float = Field(desc
         return f"Error: {e}"
 
 
-@tool
+@tool  # type: ignore[misc]
 def multiply(a: float = Field(description="First number"), b: float = Field(description="Second number")) -> str:
     """Multiply two numbers together."""
     try:
@@ -162,7 +162,7 @@ def multiply(a: float = Field(description="First number"), b: float = Field(desc
         return f"Error: {e}"
 
 
-@tool
+@tool  # type: ignore[misc]
 def divide(a: float = Field(description="Numerator"), b: float = Field(description="Denominator (cannot be zero)")) -> str:
     """Divide first number by second number."""
     try:

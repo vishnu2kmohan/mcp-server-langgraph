@@ -33,7 +33,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         register_exception_handlers(app)
     """
 
-    @app.exception_handler(MCPServerException)
+    @app.exception_handler(MCPServerException)  # type: ignore[misc]
     async def mcp_exception_handler(request: Request, exc: MCPServerException) -> JSONResponse:
         """
         Handle MCP server exceptions.
@@ -94,7 +94,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             headers=headers,
         )
 
-    @app.exception_handler(Exception)
+    @app.exception_handler(Exception)  # type: ignore[misc]
     async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """
         Handle unexpected exceptions.

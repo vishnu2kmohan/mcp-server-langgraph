@@ -246,7 +246,7 @@ class QuickStart:
 
         agent = QuickStart.create(name, tools, llm)
 
-        @app.get("/")
+        @app.get("/")  # type: ignore[misc]
         def root() -> Dict[str, Any]:
             """Health check."""
             return {
@@ -256,13 +256,13 @@ class QuickStart:
                 "message": f"{name} is running! Try POST /chat with a query.",
             }
 
-        @app.post("/chat")
+        @app.post("/chat")  # type: ignore[misc]
         def chat(query: str, thread_id: str = "default") -> Dict[str, str]:
             """Chat with the agent."""
             response = agent.chat(query, thread_id)
             return {"query": query, "response": response, "thread_id": thread_id}
 
-        @app.get("/health")
+        @app.get("/health")  # type: ignore[misc]
         def health() -> Dict[str, str]:
             """Health check endpoint."""
             return {"status": "healthy", "preset": "quickstart"}

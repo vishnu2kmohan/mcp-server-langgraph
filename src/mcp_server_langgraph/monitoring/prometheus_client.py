@@ -189,8 +189,11 @@ class PrometheusClient:
         url = f"{self.config.url}/api/v1/query_range"
 
         try:
-            response = await self.client.get(url, params=params)
-            response.raise_for_status()
+            if self.client is not None:
+                response = await self.client.get(url, params=params)
+                response.raise_for_status()
+            else:
+                raise ValueError("Prometheus client not initialized")
 
             data = response.json()
 

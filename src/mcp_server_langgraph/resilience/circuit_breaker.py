@@ -326,7 +326,7 @@ def circuit_breaker(  # noqa: C901
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore[return-value]
         else:
-            return sync_wrapper  # type: ignore[return-value]
+            return sync_wrapper
 
     return decorator
 
