@@ -29,6 +29,7 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.security import sanitize_for_logging
 from mcp_server_langgraph.middleware.rate_limiter import custom_rate_limit_exceeded_handler, limiter
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
@@ -384,7 +385,8 @@ class MCPAgentStreamableServer:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
             with tracer.start_as_current_span("mcp.call_tool", attributes={"tool.name": name}) as span:
-                logger.info(f"Tool called: {name}", extra={"tool": name, "tool_args": arguments})
+                # SECURITY: Sanitize arguments before logging to prevent CWE-200/CWE-532 (token exposure in logs)
+                logger.info(f"Tool called: {name}", extra={"tool": name, "tool_args": sanitize_for_logging(arguments)})
                 metrics.tool_calls.add(1, {"tool": name})
 
                 # SECURITY: Require JWT token for all tool calls
@@ -481,7 +483,8 @@ class MCPAgentStreamableServer:
             try:
                 chat_input = ChatInput.model_validate(arguments)
             except Exception as e:
-                logger.error(f"Invalid chat input: {e}", extra={"arguments": arguments})
+                # SECURITY: Sanitize arguments before logging to prevent token exposure in error logs
+                logger.error(f"Invalid chat input: {e}", extra={"arguments": sanitize_for_logging(arguments)})
                 raise ValueError(f"Invalid chat input: {e}")
 
             message = chat_input.message
@@ -719,7 +722,8 @@ class MCPAgentStreamableServer:
             try:
                 search_input = SearchConversationsInput.model_validate(arguments)
             except Exception as e:
-                logger.error(f"Invalid search input: {e}", extra={"arguments": arguments})
+                # SECURITY: Sanitize arguments before logging to prevent token exposure in error logs
+                logger.error(f"Invalid search input: {e}", extra={"arguments": sanitize_for_logging(arguments)})
                 raise ValueError(f"Invalid search input: {e}")
 
             query = search_input.query

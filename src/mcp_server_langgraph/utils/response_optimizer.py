@@ -38,7 +38,8 @@ class ResponseOptimizer:
             model: Model name for token encoding (default: gpt-4)
         """
         self.model = model
-        logger.debug(f"ResponseOptimizer initialized with model: {model}")
+        # Removed logger call here to avoid observability initialization issues at module import time
+        # Logger will be used when methods are actually called
 
     def count_tokens(self, text: str) -> int:
         """
