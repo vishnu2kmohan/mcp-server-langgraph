@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+spec:
+  template:
+    spec:
+      # Update init container to wait for Cloud SQL Proxy (localhost)
+      initContainers:
+      - name: wait-for-postgres
+        command: ['sh', '-c']
+        args:
+        - |
+          until nc -z 127.0.0.1 5432; do
+            echo "Waiting for Cloud SQL Proxy..."
+            sleep 2
+          done
+          echo "Cloud SQL Proxy is ready!"
+
+      # Add Cloud SQL Proxy sidecar
+      containers:
+      - name: keycloak
+        env:
+        # Update database connection to use Cloud SQL via localhost
+        - name: KC_DB_URL
+          value: "jdbc:postgresql://127.0.0.1:5432/keycloak"
+        - name: KC_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: postgres-username  # Will use 'keycloak' user
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: keycloak-db-password
+
+      # Cloud SQL Proxy sidecar
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+        args:
+          - "--structured-logs"
+          - "--port=5432"
+          - "--private-ip"
+          - "vishnu-sandbox-20250310:us-central1:mcp-staging-postgres"
+
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 9801
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 9801
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5

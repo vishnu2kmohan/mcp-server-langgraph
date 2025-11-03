@@ -8,7 +8,6 @@ namePrefix: staging-
 # Base configuration
 resources:
   - ../../base
-  # Note: namespace.yaml removed - base provides namespace, overlay transforms via 'namespace:' field
   - network-policy.yaml
   - external-secrets.yaml
 
@@ -19,20 +18,73 @@ commonAnnotations:
   environment: staging
   managed-by: kustomize
 
-commonLabels:
-  environment: staging
-  platform: gke
-  cloud: gcp
+labels:
+  - pairs:
+      environment: staging
+      platform: gke
+      cloud: gcp
 
 # Configuration patches
 patches:
-  # Namespace patch - Replace base namespace with staging-specific one
+  # Exclude self-hosted database resources - use cloud-managed services instead
+  # PostgreSQL → Cloud SQL, Redis → Memorystore Redis
+  - patch: |-
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: postgres
+      $patch: delete
+    target:
+      kind: StatefulSet
+      name: postgres
+
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: postgres
+      $patch: delete
+    target:
+      kind: Service
+      name: postgres
+
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: postgres-external
+      $patch: delete
+    target:
+      kind: Service
+      name: postgres-external
+
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: redis-session
+      $patch: delete
+    target:
+      kind: Deployment
+      name: redis-session
+
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: redis-session
+      $patch: delete
+    target:
+      kind: Service
+      name: redis-session
+
+  # Namespace patch
   - path: namespace.yaml
     target:
       kind: Namespace
       name: mcp-server-langgraph
 
-  # Deployment patches
+  # Deployment patches (includes Cloud SQL Proxy sidecar)
   - path: deployment-patch.yaml
     target:
       kind: Deployment
@@ -44,11 +96,23 @@ patches:
       kind: ConfigMap
       name: mcp-server-langgraph-config
 
-  # ServiceAccount - Add Workload Identity annotation
+  # ServiceAccount - Workload Identity
   - path: serviceaccount-patch.yaml
     target:
       kind: ServiceAccount
       name: mcp-server-langgraph
+
+  # Keycloak - Add Cloud SQL Proxy sidecar
+  - path: keycloak-patch.yaml
+    target:
+      kind: Deployment
+      name: keycloak
+
+  # OpenFGA - Add Cloud SQL Proxy sidecar
+  - path: openfga-patch.yaml
+    target:
+      kind: Deployment
+      name: openfga
 
 # Resource configuration
 replicas:
