@@ -105,11 +105,11 @@ jobs:
 
       - name: Run kube-score
         run: |
-          wget https://github.com/zegl/kube-score/releases/download/v1.19.0/kube-score_linux_amd64
-          chmod +x kube-score_linux_amd64
+          wget https://github.com/zegl/kube-score/releases/download/v1.20.0/kube-score_1.20.0_linux_amd64
+          chmod +x kube-score_1.20.0_linux_amd64
 
           kubectl kustomize deployments/overlays/production-gke \
-            | ./kube-score_linux_amd64 score - \
+            | ./kube-score_1.20.0_linux_amd64 score - \
             --output-format ci
 
       - name: Validate with kubeval
