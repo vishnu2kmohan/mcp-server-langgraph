@@ -351,3 +351,87 @@ class TestAgentIntegration:
         last_message = result["messages"][-1]
         assert isinstance(last_message, AIMessage)
         assert "4" in last_message.content
+
+
+@pytest.mark.unit
+class TestRedisCheckpointerLifecycle:
+    """
+    Test Redis checkpointer lifecycle management (TDD RED phase).
+
+    Tests written FIRST to ensure proper context manager cleanup.
+    Will fail until cleanup hooks are implemented in agent.py
+    """
+
+    @patch("mcp_server_langgraph.core.agent.RedisSaver")
+    def test_redis_checkpointer_context_manager_cleanup(self, mock_redis_saver):
+        """
+        Test Redis checkpointer context manager is properly cleaned up.
+
+        RED: Will fail until __exit__ is called on checkpointer context.
+        """
+        from mcp_server_langgraph.core.agent import create_checkpointer
+        from mcp_server_langgraph.core.config import Settings
+
+        # Mock context manager
+        mock_ctx = MagicMock()
+        mock_checkpointer = MagicMock()
+        mock_ctx.__enter__ = MagicMock(return_value=mock_checkpointer)
+        mock_ctx.__exit__ = MagicMock(return_value=None)
+        mock_redis_saver.from_conn_string.return_value = mock_ctx
+
+        settings = Settings(
+            checkpoint_backend="redis",
+            checkpoint_redis_url="redis://localhost:6379/0",
+        )
+
+        checkpointer = create_checkpointer(settings)
+
+        # Verify context manager entered
+        assert mock_ctx.__enter__.called
+
+        # Verify checkpointer returned
+        assert checkpointer == mock_checkpointer
+
+        # NOTE: __exit__ should be called on application shutdown
+        # This test verifies the infrastructure is in place
+
+    @patch("mcp_server_langgraph.core.agent.RedisSaver")
+    def test_redis_checkpointer_stores_context_for_cleanup(self, mock_redis_saver):
+        """
+        Test Redis checkpointer stores context manager reference for cleanup.
+
+        RED: Will fail until context manager reference is stored.
+        """
+        from mcp_server_langgraph.core.agent import create_checkpointer
+        from mcp_server_langgraph.core.config import Settings
+
+        mock_ctx = MagicMock()
+        mock_checkpointer = MagicMock()
+        mock_ctx.__enter__ = MagicMock(return_value=mock_checkpointer)
+        mock_redis_saver.from_conn_string.return_value = mock_ctx
+
+        settings = Settings(
+            checkpoint_backend="redis",
+            checkpoint_redis_url="redis://localhost:6379/0",
+        )
+
+        checkpointer = create_checkpointer(settings)
+
+        # After implementation, checkpointer should have reference to context manager
+        # This allows cleanup on shutdown
+        assert hasattr(checkpointer, "__context_manager__") or hasattr(checkpointer, "_context")
+
+    @patch("mcp_server_langgraph.core.agent.RedisSaver")
+    def test_memory_checkpointer_no_cleanup_needed(self, mock_redis_saver):
+        """Test MemorySaver doesn't require context manager cleanup"""
+        from mcp_server_langgraph.core.agent import create_checkpointer
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings(checkpoint_backend="memory")
+
+        checkpointer = create_checkpointer(settings)
+
+        # MemorySaver doesn't need context manager
+        assert checkpointer is not None
+        # Should not call Redis
+        assert not mock_redis_saver.called

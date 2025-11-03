@@ -143,6 +143,10 @@ def _create_checkpointer() -> BaseCheckpointSaver[Any]:
             # Enter the context manager to get the actual RedisSaver instance
             checkpointer = checkpointer_ctx.__enter__()
 
+            # Store context manager reference for proper cleanup on shutdown
+            # This prevents resource leaks (Redis connections, file descriptors)
+            checkpointer.__context_manager__ = checkpointer_ctx  # type: ignore[attr-defined]
+
             logger.info("Redis checkpointer initialized successfully")
             return checkpointer
 
@@ -162,6 +166,49 @@ def _create_checkpointer() -> BaseCheckpointSaver[Any]:
             f"Unknown checkpoint backend '{backend}', falling back to MemorySaver. " f"Supported: 'memory', 'redis'"
         )
         return MemorySaver()
+
+
+def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
+    """
+    Clean up checkpointer resources on application shutdown.
+
+    Properly closes Redis connections and context managers to prevent:
+    - Connection pool exhaustion
+    - File descriptor leaks
+    - Memory leaks in long-running processes
+
+    Args:
+        checkpointer: Checkpointer instance to clean up
+
+    Usage:
+        # In FastAPI lifespan or atexit handler:
+        import atexit
+        checkpointer = create_checkpointer(settings)
+        atexit.register(lambda: cleanup_checkpointer(checkpointer))
+
+    Example:
+        # FastAPI lifespan context manager
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
+            checkpointer = create_checkpointer(settings)
+            yield
+            cleanup_checkpointer(checkpointer)
+    """
+    try:
+        # Check if checkpointer has context manager reference
+        if hasattr(checkpointer, "__context_manager__"):
+            context_manager = checkpointer.__context_manager__
+            logger.info("Cleaning up Redis checkpointer context manager")
+
+            # Exit context manager to close connections
+            context_manager.__exit__(None, None, None)
+
+            logger.info("Redis checkpointer cleanup completed successfully")
+        else:
+            logger.debug(f"Checkpointer {type(checkpointer).__name__} does not require cleanup")
+
+    except Exception as e:
+        logger.error(f"Error during checkpointer cleanup: {e}", exc_info=True)
 
 
 def _get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str] = None) -> Optional[RunnableConfig]:
