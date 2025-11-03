@@ -324,3 +324,86 @@ def test_extract_high_signal_parametrized(data, should_contain, should_not_conta
 
     for field in should_not_contain:
         assert field not in filtered, f"Expected {field} to NOT be in filtered data"
+
+
+@pytest.mark.unit
+class TestLiteLLMTokenCounting:
+    """
+    Test LiteLLM-based token counting for model-aware accuracy.
+
+    TDD RED phase: Tests written FIRST to define expected behavior for LiteLLM integration.
+    Will fail until tiktoken is replaced with litellm.token_counter().
+    """
+
+    def test_count_tokens_openai_model(self):
+        """Test token counting for OpenAI models (GPT-4)"""
+        optimizer = ResponseOptimizer(model="gpt-4")
+        text = "Hello, world!"
+        token_count = optimizer.count_tokens(text)
+
+        # Should be accurate for GPT-4
+        assert token_count > 0
+        assert isinstance(token_count, int)
+
+    def test_count_tokens_gemini_model(self):
+        """
+        Test token counting for Gemini models.
+
+        RED: Will be more accurate after switching to LiteLLM.
+        Currently uses tiktoken which approximates Gemini tokens.
+        """
+        optimizer = ResponseOptimizer(model="gemini-2.5-flash")
+        text = "The quick brown fox jumps over the lazy dog."
+        token_count = optimizer.count_tokens(text)
+
+        # Token count should be reasonable (not negative, not extremely high)
+        assert 0 < token_count < 100
+
+    def test_count_tokens_claude_model(self):
+        """
+        Test token counting for Claude models.
+
+        RED: Will be more accurate after switching to LiteLLM.
+        """
+        optimizer = ResponseOptimizer(model="claude-sonnet-4-5-20250929")
+        text = "Test message for Claude model token counting."
+        token_count = optimizer.count_tokens(text)
+
+        assert token_count > 0
+
+    def test_count_tokens_unknown_model_fallback(self):
+        """Test fallback behavior for unknown models"""
+        optimizer = ResponseOptimizer(model="unknown-model-xyz")
+        text = "Test text"
+        token_count = optimizer.count_tokens(text)
+
+        # Should still work with fallback encoding
+        assert token_count > 0
+
+    def test_model_specific_token_accuracy(self):
+        """
+        Test that different models may have different token counts.
+
+        After LiteLLM integration, models should use their native tokenizers.
+        """
+        text = "This is a test sentence with some words in it."
+
+        # Different models may tokenize differently
+        gpt4_optimizer = ResponseOptimizer(model="gpt-4")
+        gemini_optimizer = ResponseOptimizer(model="gemini-2.5-flash")
+        claude_optimizer = ResponseOptimizer(model="claude-sonnet-4-5-20250929")
+
+        gpt4_tokens = gpt4_optimizer.count_tokens(text)
+        gemini_tokens = gemini_optimizer.count_tokens(text)
+        claude_tokens = claude_optimizer.count_tokens(text)
+
+        # All should be non-zero
+        assert gpt4_tokens > 0
+        assert gemini_tokens > 0
+        assert claude_tokens > 0
+
+        # Token counts should be in similar range (within 50% of each other)
+        # After LiteLLM, they may vary but should be reasonable
+        min_tokens = min(gpt4_tokens, gemini_tokens, claude_tokens)
+        max_tokens = max(gpt4_tokens, gemini_tokens, claude_tokens)
+        assert max_tokens <= min_tokens * 1.5, "Token counts vary too much across models"

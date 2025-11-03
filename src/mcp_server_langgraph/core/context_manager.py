@@ -68,6 +68,7 @@ class ContextManager:
 
             settings = global_settings
 
+        self.settings = settings
         self.llm = create_summarization_model(settings)
         logger.info(
             "ContextManager initialized",
@@ -75,6 +76,7 @@ class ContextManager:
                 "compaction_threshold": compaction_threshold,
                 "target_after_compaction": target_after_compaction,
                 "recent_message_count": recent_message_count,
+                "model": settings.model_name,
             },
         )
 
@@ -88,7 +90,9 @@ class ContextManager:
         Returns:
             True if token count exceeds threshold
         """
-        total_tokens = sum(count_tokens(self._message_to_text(msg)) for msg in messages)
+        # Use model-aware token counting
+        model_name = self.settings.model_name
+        total_tokens = sum(count_tokens(self._message_to_text(msg), model=model_name) for msg in messages)
 
         with tracer.start_as_current_span("context.check_compaction") as span:
             span.set_attribute("message.count", len(messages))
@@ -125,7 +129,9 @@ class ContextManager:
             CompactionResult with compacted messages and metrics
         """
         with tracer.start_as_current_span("context.compact") as span:
-            original_tokens = sum(count_tokens(self._message_to_text(msg)) for msg in messages)
+            # Use model-aware token counting
+            model_name = self.settings.model_name
+            original_tokens = sum(count_tokens(self._message_to_text(msg), model=model_name) for msg in messages)
 
             span.set_attribute("message.count.original", len(messages))
             span.set_attribute("token.count.original", original_tokens)
@@ -159,7 +165,7 @@ class ContextManager:
             # Reconstruct conversation: system + summary + recent
             compacted_messages = system_messages + [summary_message] + recent_messages
 
-            compacted_tokens = sum(count_tokens(self._message_to_text(msg)) for msg in compacted_messages)
+            compacted_tokens = sum(count_tokens(self._message_to_text(msg), model=model_name) for msg in compacted_messages)
 
             # Calculate compression ratio (clamped to max 1.0)
             # In rare cases, summary may be longer than original, so clamp to prevent validation errors
@@ -256,7 +262,7 @@ Focus on high-signal information that maintains conversation context.
 
     def count_tokens(self, text: str) -> int:
         """
-        Count tokens in text using tiktoken.
+        Count tokens in text using LiteLLM model-aware counting.
 
         Args:
             text: Text to count tokens for
@@ -264,7 +270,7 @@ Focus on high-signal information that maintains conversation context.
         Returns:
             Number of tokens
         """
-        return count_tokens(text)
+        return count_tokens(text, model=self.settings.model_name)
 
     def _message_to_text(self, message: BaseMessage) -> str:
         """Convert message to text for token counting."""

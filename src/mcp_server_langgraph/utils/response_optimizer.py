@@ -9,7 +9,7 @@ Implements Anthropic's best practices for writing tools for agents:
 
 from typing import Any, Literal
 
-import tiktoken
+import litellm
 
 from mcp_server_langgraph.observability.telemetry import logger
 
@@ -37,30 +37,37 @@ class ResponseOptimizer:
         Args:
             model: Model name for token encoding (default: gpt-4)
         """
-        try:
-            self.encoding = tiktoken.encoding_for_model(model)
-        except KeyError:
-            # Fallback to cl100k_base (GPT-4, Claude, Gemini compatible)
-            logger.warning(f"Model {model} not found, using cl100k_base encoding")
-            self.encoding = tiktoken.get_encoding("cl100k_base")
+        self.model = model
+        logger.debug(f"ResponseOptimizer initialized with model: {model}")
 
     def count_tokens(self, text: str) -> int:
         """
-        Count tokens in text.
+        Count tokens in text using LiteLLM model-aware token counting.
 
         Args:
             text: Text to count tokens for
 
         Returns:
             Number of tokens
+
+        Note:
+            Uses litellm.token_counter() which provides accurate token counts
+            for OpenAI, Anthropic, Google, and other LLM providers.
         """
-        return len(self.encoding.encode(text))
+        try:
+            # Use LiteLLM's model-aware token counting
+            token_count = litellm.token_counter(model=self.model, text=text)
+            return token_count
+        except Exception as e:
+            # Fallback: estimate 1 token per 4 characters (conservative estimate)
+            logger.warning(f"LiteLLM token counting failed for model {self.model}, using fallback estimate: {e}")
+            return len(text) // 4
 
     def truncate_response(
         self, content: str, max_tokens: int = MAX_RESPONSE_TOKENS, truncation_message: str | None = None
     ) -> tuple[str, bool]:
         """
-        Truncate response to fit within token limit.
+        Truncate response to fit within token limit using LiteLLM token counting.
 
         Args:
             content: Response content to truncate
@@ -70,9 +77,10 @@ class ResponseOptimizer:
         Returns:
             Tuple of (truncated_content, was_truncated)
         """
-        tokens = self.encoding.encode(content)
+        # Count tokens using LiteLLM
+        current_tokens = self.count_tokens(content)
 
-        if len(tokens) <= max_tokens:
+        if current_tokens <= max_tokens:
             return content, False
 
         # Reserve tokens for truncation message
@@ -82,7 +90,7 @@ class ResponseOptimizer:
                 "Use more specific filters or request detailed format for full results.]"
             )
 
-        message_tokens = len(self.encoding.encode(truncation_message))
+        message_tokens = self.count_tokens(truncation_message)
         available_tokens = max_tokens - message_tokens
 
         if available_tokens <= 0:
@@ -92,16 +100,24 @@ class ResponseOptimizer:
             )
             available_tokens = max(100, max_tokens - 50)
 
-        # Truncate and decode
-        truncated_tokens = tokens[:available_tokens]
-        truncated_text = self.encoding.decode(truncated_tokens)
+        # Character-based truncation with token counting
+        # Estimate characters per token (roughly 4:1 ratio)
+        estimated_chars = available_tokens * 4
+        truncated_text = content[:estimated_chars]
+
+        # Iteratively adjust until within token limit
+        while self.count_tokens(truncated_text) > available_tokens and len(truncated_text) > 100:
+            # Reduce by 10% each iteration
+            truncated_text = truncated_text[: int(len(truncated_text) * 0.9)]
+
+        final_tokens = self.count_tokens(truncated_text)
 
         logger.info(
             "Response truncated",
             extra={
-                "original_tokens": len(tokens),
-                "truncated_tokens": len(truncated_tokens),
-                "truncation_ratio": len(truncated_tokens) / len(tokens),
+                "original_tokens": current_tokens,
+                "truncated_tokens": final_tokens,
+                "truncation_ratio": final_tokens / current_tokens if current_tokens > 0 else 0,
             },
         )
 
@@ -174,13 +190,29 @@ class ResponseOptimizer:
         return filtered
 
 
-# Global instance for convenience
+# Global instance for convenience (uses default model)
+# Note: For model-specific counting, create ResponseOptimizer with specific model
 _optimizer = ResponseOptimizer()
 
 
-def count_tokens(text: str) -> int:
-    """Count tokens in text using global optimizer."""
-    return _optimizer.count_tokens(text)
+def count_tokens(text: str, model: str | None = None) -> int:
+    """
+    Count tokens in text using LiteLLM model-aware counting.
+
+    Args:
+        text: Text to count tokens for
+        model: Optional model name for accurate counting (uses global default if None)
+
+    Returns:
+        Number of tokens
+    """
+    if model:
+        # Use model-specific optimizer for accurate counting
+        optimizer = ResponseOptimizer(model=model)
+        return optimizer.count_tokens(text)
+    else:
+        # Use global optimizer with default model
+        return _optimizer.count_tokens(text)
 
 
 def truncate_response(
