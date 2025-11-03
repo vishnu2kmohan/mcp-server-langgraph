@@ -4,11 +4,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ConsentType** | [**ConsentType**](ConsentType.md) | Type of consent | 
-**Granted** | **bool** | Whether consent is granted | 
-**Timestamp** | Pointer to **NullableString** |  | [optional] 
-**IpAddress** | Pointer to **NullableString** |  | [optional] 
-**UserAgent** | Pointer to **NullableString** |  | [optional] 
+**ConsentType** | [**ConsentType**](ConsentType.md) | Type of consent |
+**Granted** | **bool** | Whether consent is granted |
+**Timestamp** | Pointer to **NullableString** |  | [optional]
+**IpAddress** | Pointer to **NullableString** |  | [optional]
+**UserAgent** | Pointer to **NullableString** |  | [optional]
 
 ## Methods
 
@@ -176,5 +176,3 @@ HasUserAgent returns a boolean if a field has been set.
 UnsetUserAgent ensures that no value is present for UserAgent, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

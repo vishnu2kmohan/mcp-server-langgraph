@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ServiceId** | **string** |  | 
-**ClientSecret** | **string** | New client secret | 
+**ServiceId** | **string** |  |
+**ClientSecret** | **string** | New client secret |
 **Message** | Pointer to **string** |  | [optional] [default to "Secret rotated successfully. Update your service configuration."]
 
 ## Methods
@@ -94,5 +94,3 @@ HasMessage returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

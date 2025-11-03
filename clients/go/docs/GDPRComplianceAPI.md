@@ -60,8 +60,8 @@ Other parameters are passed through a pointer to a apiDeleteUserAccountApiV1User
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **confirm** | **bool** | Must be true to confirm account deletion | 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **confirm** | **bool** | Must be true to confirm account deletion |
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -129,7 +129,7 @@ Other parameters are passed through a pointer to a apiExportUserDataApiV1UsersMe
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **format** | **string** | Export format: json or csv | [default to &quot;json&quot;]
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -195,7 +195,7 @@ Other parameters are passed through a pointer to a apiGetConsentStatusApiV1Users
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -261,7 +261,7 @@ Other parameters are passed through a pointer to a apiGetUserDataApiV1UsersMeDat
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -302,7 +302,7 @@ import (
 )
 
 func main() {
-	bodyUpdateConsentApiV1UsersMeConsentPost := *openapiclient.NewBodyUpdateConsentApiV1UsersMeConsentPost(*openapiclient.NewConsentRecord(openapiclient.ConsentType("analytics"), false)) // BodyUpdateConsentApiV1UsersMeConsentPost | 
+	bodyUpdateConsentApiV1UsersMeConsentPost := *openapiclient.NewBodyUpdateConsentApiV1UsersMeConsentPost(*openapiclient.NewConsentRecord(openapiclient.ConsentType("analytics"), false)) // BodyUpdateConsentApiV1UsersMeConsentPost |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -327,7 +327,7 @@ Other parameters are passed through a pointer to a apiUpdateConsentApiV1UsersMeC
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **bodyUpdateConsentApiV1UsersMeConsentPost** | [**BodyUpdateConsentApiV1UsersMeConsentPost**](BodyUpdateConsentApiV1UsersMeConsentPost.md) |  | 
+ **bodyUpdateConsentApiV1UsersMeConsentPost** | [**BodyUpdateConsentApiV1UsersMeConsentPost**](BodyUpdateConsentApiV1UsersMeConsentPost.md) |  |
 
 ### Return type
 
@@ -368,7 +368,7 @@ import (
 )
 
 func main() {
-	bodyUpdateUserProfileApiV1UsersMePatch := *openapiclient.NewBodyUpdateUserProfileApiV1UsersMePatch(*openapiclient.NewUserProfileUpdate()) // BodyUpdateUserProfileApiV1UsersMePatch | 
+	bodyUpdateUserProfileApiV1UsersMePatch := *openapiclient.NewBodyUpdateUserProfileApiV1UsersMePatch(*openapiclient.NewUserProfileUpdate()) // BodyUpdateUserProfileApiV1UsersMePatch |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -393,7 +393,7 @@ Other parameters are passed through a pointer to a apiUpdateUserProfileApiV1User
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **bodyUpdateUserProfileApiV1UsersMePatch** | [**BodyUpdateUserProfileApiV1UsersMePatch**](BodyUpdateUserProfileApiV1UsersMePatch.md) |  | 
+ **bodyUpdateUserProfileApiV1UsersMePatch** | [**BodyUpdateUserProfileApiV1UsersMePatch**](BodyUpdateUserProfileApiV1UsersMePatch.md) |  |
 
 ### Return type
 
@@ -411,4 +411,3 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
-

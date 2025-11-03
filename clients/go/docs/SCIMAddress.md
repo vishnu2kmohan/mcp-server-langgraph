@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Formatted** | Pointer to **NullableString** |  | [optional] 
-**StreetAddress** | Pointer to **NullableString** |  | [optional] 
-**Locality** | Pointer to **NullableString** |  | [optional] 
-**Region** | Pointer to **NullableString** |  | [optional] 
-**PostalCode** | Pointer to **NullableString** |  | [optional] 
-**Country** | Pointer to **NullableString** |  | [optional] 
-**Type** | Pointer to **NullableString** |  | [optional] 
+**Formatted** | Pointer to **NullableString** |  | [optional]
+**StreetAddress** | Pointer to **NullableString** |  | [optional]
+**Locality** | Pointer to **NullableString** |  | [optional]
+**Region** | Pointer to **NullableString** |  | [optional]
+**PostalCode** | Pointer to **NullableString** |  | [optional]
+**Country** | Pointer to **NullableString** |  | [optional]
+**Type** | Pointer to **NullableString** |  | [optional]
 **Primary** | Pointer to **bool** |  | [optional] [default to false]
 
 ## Methods
@@ -304,5 +304,3 @@ HasPrimary returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

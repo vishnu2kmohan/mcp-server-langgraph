@@ -6,8 +6,8 @@ SCIM phone number
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**value** | **str** |  | 
-**type** | **str** |  | [optional] 
+**value** | **str** |  |
+**type** | **str** |  | [optional]
 **primary** | **bool** |  | [optional] [default to False]
 
 ## Example
@@ -28,5 +28,3 @@ scim_phone_number_dict = scim_phone_number_instance.to_dict()
 scim_phone_number_from_dict = SCIMPhoneNumber.from_dict(scim_phone_number_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -4,11 +4,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**KeyId** | **string** |  | 
-**Name** | **string** |  | 
-**Created** | **string** |  | 
-**ExpiresAt** | **string** |  | 
-**LastUsed** | Pointer to **NullableString** |  | [optional] 
+**KeyId** | **string** |  |
+**Name** | **string** |  |
+**Created** | **string** |  |
+**ExpiresAt** | **string** |  |
+**LastUsed** | Pointer to **NullableString** |  | [optional]
 
 ## Methods
 
@@ -146,5 +146,3 @@ HasLastUsed returns a boolean if a field has been set.
 UnsetLastUsed ensures that no value is present for LastUsed, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

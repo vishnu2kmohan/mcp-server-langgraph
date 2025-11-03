@@ -6,8 +6,8 @@ Token refresh request
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**refresh_token** | **str** |  | [optional] 
-**current_token** | **str** |  | [optional] 
+**refresh_token** | **str** |  | [optional]
+**current_token** | **str** |  | [optional]
 
 ## Example
 
@@ -27,5 +27,3 @@ refresh_token_request_dict = refresh_token_request_instance.to_dict()
 refresh_token_request_from_dict = RefreshTokenRequest.from_dict(refresh_token_request_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

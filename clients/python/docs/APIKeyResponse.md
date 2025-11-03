@@ -6,11 +6,11 @@ Response containing API key metadata
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**key_id** | **str** |  | 
-**name** | **str** |  | 
-**created** | **str** |  | 
-**expires_at** | **str** |  | 
-**last_used** | **str** |  | [optional] 
+**key_id** | **str** |  |
+**name** | **str** |  |
+**created** | **str** |  |
+**expires_at** | **str** |  |
+**last_used** | **str** |  | [optional]
 
 ## Example
 
@@ -30,5 +30,3 @@ api_key_response_dict = api_key_response_instance.to_dict()
 api_key_response_from_dict = APIKeyResponse.from_dict(api_key_response_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

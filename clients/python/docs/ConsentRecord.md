@@ -6,11 +6,11 @@ Consent record for GDPR Article 21
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**consent_type** | [**ConsentType**](ConsentType.md) | Type of consent | 
-**granted** | **bool** | Whether consent is granted | 
-**timestamp** | **str** |  | [optional] 
-**ip_address** | **str** |  | [optional] 
-**user_agent** | **str** |  | [optional] 
+**consent_type** | [**ConsentType**](ConsentType.md) | Type of consent |
+**granted** | **bool** | Whether consent is granted |
+**timestamp** | **str** |  | [optional]
+**ip_address** | **str** |  | [optional]
+**user_agent** | **str** |  | [optional]
 
 ## Example
 
@@ -30,5 +30,3 @@ consent_record_dict = consent_record_instance.to_dict()
 consent_record_from_dict = ConsentRecord.from_dict(consent_record_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

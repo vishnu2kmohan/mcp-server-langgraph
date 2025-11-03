@@ -4,10 +4,10 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Value** | **string** |  | 
-**Ref** | Pointer to **NullableString** |  | [optional] 
-**Display** | Pointer to **NullableString** |  | [optional] 
-**Type** | Pointer to **NullableString** |  | [optional] 
+**Value** | **string** |  |
+**Ref** | Pointer to **NullableString** |  | [optional]
+**Display** | Pointer to **NullableString** |  | [optional]
+**Type** | Pointer to **NullableString** |  | [optional]
 
 ## Methods
 
@@ -155,5 +155,3 @@ HasType returns a boolean if a field has been set.
 UnsetType ensures that no value is present for Type, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

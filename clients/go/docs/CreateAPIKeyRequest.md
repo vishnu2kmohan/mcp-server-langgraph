@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Name** | **string** | Human-readable name for the API key | 
+**Name** | **string** | Human-readable name for the API key |
 **ExpiresDays** | Pointer to **int32** | Days until expiration (default: 365) | [optional] [default to 365]
 
 ## Methods
@@ -73,5 +73,3 @@ HasExpiresDays returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

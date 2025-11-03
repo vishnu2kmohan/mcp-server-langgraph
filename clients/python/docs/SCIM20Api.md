@@ -53,7 +53,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.SCIM20Api(api_client)
-    body_create_group_scim_v2_groups_post = mcp_client.BodyCreateGroupScimV2GroupsPost() # BodyCreateGroupScimV2GroupsPost | 
+    body_create_group_scim_v2_groups_post = mcp_client.BodyCreateGroupScimV2GroupsPost() # BodyCreateGroupScimV2GroupsPost |
 
     try:
         # Create Group
@@ -71,7 +71,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body_create_group_scim_v2_groups_post** | [**BodyCreateGroupScimV2GroupsPost**](BodyCreateGroupScimV2GroupsPost.md)|  | 
+ **body_create_group_scim_v2_groups_post** | [**BodyCreateGroupScimV2GroupsPost**](BodyCreateGroupScimV2GroupsPost.md)|  |
 
 ### Return type
 
@@ -146,7 +146,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.SCIM20Api(api_client)
-    body_create_user_scim_v2_users_post = mcp_client.BodyCreateUserScimV2UsersPost() # BodyCreateUserScimV2UsersPost | 
+    body_create_user_scim_v2_users_post = mcp_client.BodyCreateUserScimV2UsersPost() # BodyCreateUserScimV2UsersPost |
 
     try:
         # Create User
@@ -164,7 +164,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body_create_user_scim_v2_users_post** | [**BodyCreateUserScimV2UsersPost**](BodyCreateUserScimV2UsersPost.md)|  | 
+ **body_create_user_scim_v2_users_post** | [**BodyCreateUserScimV2UsersPost**](BodyCreateUserScimV2UsersPost.md)|  |
 
 ### Return type
 
@@ -221,7 +221,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.SCIM20Api(api_client)
-    user_id = 'user_id_example' # str | 
+    user_id = 'user_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -238,8 +238,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **user_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -295,7 +295,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.SCIM20Api(api_client)
-    group_id = 'group_id_example' # str | 
+    group_id = 'group_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -314,8 +314,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **group_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **group_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -373,7 +373,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.SCIM20Api(api_client)
-    user_id = 'user_id_example' # str | 
+    user_id = 'user_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -392,8 +392,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **user_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -472,10 +472,10 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **filter** | **str**| SCIM filter expression | [optional] 
+ **filter** | **str**| SCIM filter expression | [optional]
  **start_index** | **int**| 1-based start index | [optional] [default to 1]
  **count** | **int**| Number of results | [optional] [default to 100]
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -533,8 +533,8 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.SCIM20Api(api_client)
-    user_id = 'user_id_example' # str | 
-    body_replace_user_scim_v2_users_user_id_put = mcp_client.BodyReplaceUserScimV2UsersUserIdPut() # BodyReplaceUserScimV2UsersUserIdPut | 
+    user_id = 'user_id_example' # str |
+    body_replace_user_scim_v2_users_user_id_put = mcp_client.BodyReplaceUserScimV2UsersUserIdPut() # BodyReplaceUserScimV2UsersUserIdPut |
 
     try:
         # Replace User
@@ -552,8 +552,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user_id** | **str**|  | 
- **body_replace_user_scim_v2_users_user_id_put** | [**BodyReplaceUserScimV2UsersUserIdPut**](BodyReplaceUserScimV2UsersUserIdPut.md)|  | 
+ **user_id** | **str**|  |
+ **body_replace_user_scim_v2_users_user_id_put** | [**BodyReplaceUserScimV2UsersUserIdPut**](BodyReplaceUserScimV2UsersUserIdPut.md)|  |
 
 ### Return type
 
@@ -625,8 +625,8 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.SCIM20Api(api_client)
-    user_id = 'user_id_example' # str | 
-    body_update_user_scim_v2_users_user_id_patch = mcp_client.BodyUpdateUserScimV2UsersUserIdPatch() # BodyUpdateUserScimV2UsersUserIdPatch | 
+    user_id = 'user_id_example' # str |
+    body_update_user_scim_v2_users_user_id_patch = mcp_client.BodyUpdateUserScimV2UsersUserIdPatch() # BodyUpdateUserScimV2UsersUserIdPatch |
 
     try:
         # Update User
@@ -644,8 +644,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user_id** | **str**|  | 
- **body_update_user_scim_v2_users_user_id_patch** | [**BodyUpdateUserScimV2UsersUserIdPatch**](BodyUpdateUserScimV2UsersUserIdPatch.md)|  | 
+ **user_id** | **str**|  |
+ **body_update_user_scim_v2_users_user_id_patch** | [**BodyUpdateUserScimV2UsersUserIdPatch**](BodyUpdateUserScimV2UsersUserIdPatch.md)|  |
 
 ### Return type
 
@@ -672,4 +672,3 @@ No authorization required
 **422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-

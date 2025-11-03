@@ -6,12 +6,12 @@ SCIM user name
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**formatted** | **str** |  | [optional] 
-**family_name** | **str** |  | [optional] 
-**given_name** | **str** |  | [optional] 
-**middle_name** | **str** |  | [optional] 
-**honorific_prefix** | **str** |  | [optional] 
-**honorific_suffix** | **str** |  | [optional] 
+**formatted** | **str** |  | [optional]
+**family_name** | **str** |  | [optional]
+**given_name** | **str** |  | [optional]
+**middle_name** | **str** |  | [optional]
+**honorific_prefix** | **str** |  | [optional]
+**honorific_suffix** | **str** |  | [optional]
 
 ## Example
 
@@ -31,5 +31,3 @@ scim_name_dict = scim_name_instance.to_dict()
 scim_name_from_dict = SCIMName.from_dict(scim_name_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -7,10 +7,10 @@ SCIM 2.0 Group Resource
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **schemas** | **List[Optional[str]]** |  | [optional] [default to [urn:ietf:params:scim:schemas:core:2.0:Group]]
-**id** | **str** |  | [optional] 
-**display_name** | **str** |  | 
+**id** | **str** |  | [optional]
+**display_name** | **str** |  |
 **members** | [**List[SCIMMember]**](SCIMMember.md) |  | [optional] [default to []]
-**meta** | **Dict[str, object]** |  | [optional] 
+**meta** | **Dict[str, object]** |  | [optional]
 
 ## Example
 
@@ -30,5 +30,3 @@ scim_group_dict = scim_group_instance.to_dict()
 scim_group_from_dict = SCIMGroup.from_dict(scim_group_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

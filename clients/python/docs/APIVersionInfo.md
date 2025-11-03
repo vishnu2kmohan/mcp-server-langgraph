@@ -6,13 +6,13 @@ API version metadata  Follows semantic versioning (MAJOR.MINOR.PATCH): - MAJOR: 
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**version** | **str** | Application version (semantic versioning: MAJOR.MINOR.PATCH) | 
-**api_version** | **str** | Current API version (e.g., &#39;v1&#39;) | 
-**supported_versions** | **List[str]** | List of supported API versions | 
-**deprecated_versions** | **List[str]** | List of deprecated API versions (still functional but will be removed) | [optional] 
-**sunset_dates** | **Dict[str, str]** | Sunset dates for deprecated versions (ISO 8601 format) | [optional] 
-**changelog_url** | **str** |  | [optional] 
-**documentation_url** | **str** |  | [optional] 
+**version** | **str** | Application version (semantic versioning: MAJOR.MINOR.PATCH) |
+**api_version** | **str** | Current API version (e.g., &#39;v1&#39;) |
+**supported_versions** | **List[str]** | List of supported API versions |
+**deprecated_versions** | **List[str]** | List of deprecated API versions (still functional but will be removed) | [optional]
+**sunset_dates** | **Dict[str, str]** | Sunset dates for deprecated versions (ISO 8601 format) | [optional]
+**changelog_url** | **str** |  | [optional]
+**documentation_url** | **str** |  | [optional]
 
 ## Example
 
@@ -32,5 +32,3 @@ api_version_info_dict = api_version_info_instance.to_dict()
 api_version_info_from_dict = APIVersionInfo.from_dict(api_version_info_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

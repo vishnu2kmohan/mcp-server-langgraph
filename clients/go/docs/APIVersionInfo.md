@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Version** | **string** | Application version (semantic versioning: MAJOR.MINOR.PATCH) | 
-**ApiVersion** | **string** | Current API version (e.g., &#39;v1&#39;) | 
-**SupportedVersions** | **[]string** | List of supported API versions | 
-**DeprecatedVersions** | Pointer to **[]string** | List of deprecated API versions (still functional but will be removed) | [optional] 
-**SunsetDates** | Pointer to **map[string]string** | Sunset dates for deprecated versions (ISO 8601 format) | [optional] 
-**ChangelogUrl** | Pointer to **NullableString** |  | [optional] 
-**DocumentationUrl** | Pointer to **NullableString** |  | [optional] 
+**Version** | **string** | Application version (semantic versioning: MAJOR.MINOR.PATCH) |
+**ApiVersion** | **string** | Current API version (e.g., &#39;v1&#39;) |
+**SupportedVersions** | **[]string** | List of supported API versions |
+**DeprecatedVersions** | Pointer to **[]string** | List of deprecated API versions (still functional but will be removed) | [optional]
+**SunsetDates** | Pointer to **map[string]string** | Sunset dates for deprecated versions (ISO 8601 format) | [optional]
+**ChangelogUrl** | Pointer to **NullableString** |  | [optional]
+**DocumentationUrl** | Pointer to **NullableString** |  | [optional]
 
 ## Methods
 
@@ -213,5 +213,3 @@ HasDocumentationUrl returns a boolean if a field has been set.
 UnsetDocumentationUrl ensures that no value is present for DocumentationUrl, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

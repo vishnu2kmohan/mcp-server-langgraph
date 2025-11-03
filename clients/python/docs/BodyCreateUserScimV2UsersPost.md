@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**user_data** | **Dict[str, object]** |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**user_data** | **Dict[str, object]** |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_create_user_scim_v2_users_post_dict = body_create_user_scim_v2_users_post_i
 body_create_user_scim_v2_users_post_from_dict = BodyCreateUserScimV2UsersPost.from_dict(body_create_user_scim_v2_users_post_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

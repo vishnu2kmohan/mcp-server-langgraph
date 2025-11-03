@@ -6,8 +6,8 @@ Response when rotating service principal secret
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**service_id** | **str** |  | 
-**client_secret** | **str** | New client secret | 
+**service_id** | **str** |  |
+**client_secret** | **str** | New client secret |
 **message** | **str** |  | [optional] [default to 'Secret rotated successfully. Update your service configuration.']
 
 ## Example
@@ -28,5 +28,3 @@ rotate_secret_response_dict = rotate_secret_response_instance.to_dict()
 rotate_secret_response_from_dict = RotateSecretResponse.from_dict(rotate_secret_response_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

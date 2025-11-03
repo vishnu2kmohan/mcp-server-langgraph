@@ -4,10 +4,10 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Name** | **string** | Human-readable name for the service | 
-**Description** | **string** | Purpose/description of the service | 
+**Name** | **string** | Human-readable name for the service |
+**Description** | **string** | Purpose/description of the service |
 **AuthenticationMode** | Pointer to **string** | Authentication mode: &#39;client_credentials&#39; or &#39;service_account_user&#39; | [optional] [default to "client_credentials"]
-**AssociatedUserId** | Pointer to **NullableString** |  | [optional] 
+**AssociatedUserId** | Pointer to **NullableString** |  | [optional]
 **InheritPermissions** | Pointer to **bool** | Whether to inherit permissions from associated user | [optional] [default to false]
 
 ## Methods
@@ -156,5 +156,3 @@ HasInheritPermissions returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

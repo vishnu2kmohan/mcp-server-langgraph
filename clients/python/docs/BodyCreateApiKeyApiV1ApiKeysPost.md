@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**request** | [**CreateAPIKeyRequest**](CreateAPIKeyRequest.md) |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**request** | [**CreateAPIKeyRequest**](CreateAPIKeyRequest.md) |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_create_api_key_api_v1_api_keys_post_dict = body_create_api_key_api_v1_api_k
 body_create_api_key_api_v1_api_keys_post_from_dict = BodyCreateApiKeyApiV1ApiKeysPost.from_dict(body_create_api_key_api_v1_api_keys_post_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -4,9 +4,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Name** | Pointer to **NullableString** |  | [optional] 
-**Email** | Pointer to **NullableString** |  | [optional] 
-**Preferences** | Pointer to **map[string]interface{}** |  | [optional] 
+**Name** | Pointer to **NullableString** |  | [optional]
+**Email** | Pointer to **NullableString** |  | [optional]
+**Preferences** | Pointer to **map[string]interface{}** |  | [optional]
 
 ## Methods
 
@@ -134,5 +134,3 @@ HasPreferences returns a boolean if a field has been set.
 UnsetPreferences ensures that no value is present for Preferences, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

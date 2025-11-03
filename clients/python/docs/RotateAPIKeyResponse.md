@@ -6,8 +6,8 @@ Response when rotating API key
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**key_id** | **str** |  | 
-**new_api_key** | **str** | New API key | 
+**key_id** | **str** |  |
+**new_api_key** | **str** | New API key |
 **message** | **str** |  | [optional] [default to 'API key rotated successfully. Update your client configuration.']
 
 ## Example
@@ -28,5 +28,3 @@ rotate_api_key_response_dict = rotate_api_key_response_instance.to_dict()
 rotate_api_key_response_from_dict = RotateAPIKeyResponse.from_dict(rotate_api_key_response_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

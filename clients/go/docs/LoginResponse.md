@@ -4,12 +4,12 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**AccessToken** | **string** | JWT access token | 
+**AccessToken** | **string** | JWT access token |
 **TokenType** | Pointer to **string** | Token type (always &#39;bearer&#39;) | [optional] [default to "bearer"]
-**ExpiresIn** | **int32** | Token expiration in seconds | 
-**UserId** | **string** | User identifier | 
-**Username** | **string** | Username | 
-**Roles** | **[]string** | User roles | 
+**ExpiresIn** | **int32** | Token expiration in seconds |
+**UserId** | **string** | User identifier |
+**Username** | **string** | Username |
+**Roles** | **[]string** | User roles |
 
 ## Methods
 
@@ -157,5 +157,3 @@ SetRoles sets Roles field to given value.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

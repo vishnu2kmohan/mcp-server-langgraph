@@ -4,12 +4,12 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**KeyId** | **string** |  | 
-**Name** | **string** |  | 
-**Created** | **string** |  | 
-**ExpiresAt** | **string** |  | 
-**LastUsed** | Pointer to **NullableString** |  | [optional] 
-**ApiKey** | **string** | API key (save securely, won&#39;t be shown again) | 
+**KeyId** | **string** |  |
+**Name** | **string** |  |
+**Created** | **string** |  |
+**ExpiresAt** | **string** |  |
+**LastUsed** | Pointer to **NullableString** |  | [optional]
+**ApiKey** | **string** | API key (save securely, won&#39;t be shown again) |
 **Message** | Pointer to **string** |  | [optional] [default to "API key created successfully. Save it securely - it will not be shown again."]
 
 ## Methods
@@ -193,5 +193,3 @@ HasMessage returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

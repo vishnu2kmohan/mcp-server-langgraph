@@ -32,7 +32,7 @@ import (
 )
 
 func main() {
-	bodyCreateApiKeyApiV1ApiKeysPost := *openapiclient.NewBodyCreateApiKeyApiV1ApiKeysPost(*openapiclient.NewCreateAPIKeyRequest("Name_example")) // BodyCreateApiKeyApiV1ApiKeysPost | 
+	bodyCreateApiKeyApiV1ApiKeysPost := *openapiclient.NewBodyCreateApiKeyApiV1ApiKeysPost(*openapiclient.NewCreateAPIKeyRequest("Name_example")) // BodyCreateApiKeyApiV1ApiKeysPost |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -57,7 +57,7 @@ Other parameters are passed through a pointer to a apiCreateApiKeyApiV1ApiKeysPo
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **bodyCreateApiKeyApiV1ApiKeysPost** | [**BodyCreateApiKeyApiV1ApiKeysPost**](BodyCreateApiKeyApiV1ApiKeysPost.md) |  | 
+ **bodyCreateApiKeyApiV1ApiKeysPost** | [**BodyCreateApiKeyApiV1ApiKeysPost**](BodyCreateApiKeyApiV1ApiKeysPost.md) |  |
 
 ### Return type
 
@@ -123,7 +123,7 @@ Other parameters are passed through a pointer to a apiListApiKeysApiV1ApiKeysGet
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -164,7 +164,7 @@ import (
 )
 
 func main() {
-	keyId := "keyId_example" // string | 
+	keyId := "keyId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -183,7 +183,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**keyId** | **string** |  | 
+**keyId** | **string** |  |
 
 ### Other Parameters
 
@@ -193,7 +193,7 @@ Other parameters are passed through a pointer to a apiRevokeApiKeyApiV1ApiKeysKe
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -234,7 +234,7 @@ import (
 )
 
 func main() {
-	keyId := "keyId_example" // string | 
+	keyId := "keyId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -255,7 +255,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**keyId** | **string** |  | 
+**keyId** | **string** |  |
 
 ### Other Parameters
 
@@ -265,7 +265,7 @@ Other parameters are passed through a pointer to a apiRotateApiKeyApiV1ApiKeysKe
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -283,4 +283,3 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
-

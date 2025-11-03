@@ -6,10 +6,10 @@ SCIM group member
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**value** | **str** |  | 
-**ref** | **str** |  | [optional] 
-**display** | **str** |  | [optional] 
-**type** | **str** |  | [optional] 
+**value** | **str** |  |
+**ref** | **str** |  | [optional]
+**display** | **str** |  | [optional]
+**type** | **str** |  | [optional]
 
 ## Example
 
@@ -29,5 +29,3 @@ scim_member_dict = scim_member_instance.to_dict()
 scim_member_from_dict = SCIMMember.from_dict(scim_member_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

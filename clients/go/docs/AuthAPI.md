@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	loginRequest := *openapiclient.NewLoginRequest("Username_example", "Password_example") // LoginRequest | 
+	loginRequest := *openapiclient.NewLoginRequest("Username_example", "Password_example") // LoginRequest |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -55,7 +55,7 @@ Other parameters are passed through a pointer to a apiLoginAuthLoginPostRequest 
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **loginRequest** | [**LoginRequest**](LoginRequest.md) |  | 
+ **loginRequest** | [**LoginRequest**](LoginRequest.md) |  |
 
 ### Return type
 
@@ -96,7 +96,7 @@ import (
 )
 
 func main() {
-	refreshTokenRequest := *openapiclient.NewRefreshTokenRequest() // RefreshTokenRequest | 
+	refreshTokenRequest := *openapiclient.NewRefreshTokenRequest() // RefreshTokenRequest |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -121,7 +121,7 @@ Other parameters are passed through a pointer to a apiRefreshTokenAuthRefreshPos
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **refreshTokenRequest** | [**RefreshTokenRequest**](RefreshTokenRequest.md) |  | 
+ **refreshTokenRequest** | [**RefreshTokenRequest**](RefreshTokenRequest.md) |  |
 
 ### Return type
 
@@ -139,4 +139,3 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
-

@@ -78,8 +78,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **confirm** | **bool**| Must be true to confirm account deletion | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **confirm** | **bool**| Must be true to confirm account deletion |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -162,7 +162,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **format** | **str**| Export format: json or csv | [optional] [default to &#39;json&#39;]
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -240,7 +240,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -328,7 +328,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -391,7 +391,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.GDPRComplianceApi(api_client)
-    body_update_consent_api_v1_users_me_consent_post = mcp_client.BodyUpdateConsentApiV1UsersMeConsentPost() # BodyUpdateConsentApiV1UsersMeConsentPost | 
+    body_update_consent_api_v1_users_me_consent_post = mcp_client.BodyUpdateConsentApiV1UsersMeConsentPost() # BodyUpdateConsentApiV1UsersMeConsentPost |
 
     try:
         # Update Consent
@@ -409,7 +409,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body_update_consent_api_v1_users_me_consent_post** | [**BodyUpdateConsentApiV1UsersMeConsentPost**](BodyUpdateConsentApiV1UsersMeConsentPost.md)|  | 
+ **body_update_consent_api_v1_users_me_consent_post** | [**BodyUpdateConsentApiV1UsersMeConsentPost**](BodyUpdateConsentApiV1UsersMeConsentPost.md)|  |
 
 ### Return type
 
@@ -472,7 +472,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.GDPRComplianceApi(api_client)
-    body_update_user_profile_api_v1_users_me_patch = mcp_client.BodyUpdateUserProfileApiV1UsersMePatch() # BodyUpdateUserProfileApiV1UsersMePatch | 
+    body_update_user_profile_api_v1_users_me_patch = mcp_client.BodyUpdateUserProfileApiV1UsersMePatch() # BodyUpdateUserProfileApiV1UsersMePatch |
 
     try:
         # Update User Profile
@@ -490,7 +490,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body_update_user_profile_api_v1_users_me_patch** | [**BodyUpdateUserProfileApiV1UsersMePatch**](BodyUpdateUserProfileApiV1UsersMePatch.md)|  | 
+ **body_update_user_profile_api_v1_users_me_patch** | [**BodyUpdateUserProfileApiV1UsersMePatch**](BodyUpdateUserProfileApiV1UsersMePatch.md)|  |
 
 ### Return type
 
@@ -517,4 +517,3 @@ No authorization required
 **422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-

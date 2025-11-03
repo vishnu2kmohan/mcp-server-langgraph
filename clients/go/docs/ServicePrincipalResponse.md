@@ -4,15 +4,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ServiceId** | **string** |  | 
-**Name** | **string** |  | 
-**Description** | **string** |  | 
-**AuthenticationMode** | **string** |  | 
-**AssociatedUserId** | **NullableString** |  | 
-**OwnerUserId** | **NullableString** |  | 
-**InheritPermissions** | **bool** |  | 
-**Enabled** | **bool** |  | 
-**CreatedAt** | **NullableString** |  | 
+**ServiceId** | **string** |  |
+**Name** | **string** |  |
+**Description** | **string** |  |
+**AuthenticationMode** | **string** |  |
+**AssociatedUserId** | **NullableString** |  |
+**OwnerUserId** | **NullableString** |  |
+**InheritPermissions** | **bool** |  |
+**Enabled** | **bool** |  |
+**CreatedAt** | **NullableString** |  |
 
 ## Methods
 
@@ -245,5 +245,3 @@ SetCreatedAt sets CreatedAt field to given value.
 UnsetCreatedAt ensures that no value is present for CreatedAt, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -1,0 +1,18 @@
+# OpenAPI Generator configuration for Go client
+# Generates golint and go vet compliant code
+
+generatorName: go
+inputSpec: ../openapi.json
+outputDir: ../clients/go
+packageName: mcpserverlanggraph
+
+additionalProperties:
+  packageName: mcpserverlanggraph
+  packageVersion: "2.8.0"
+  hideGenerationTimestamp: true
+  generateInterfaces: true
+  structPrefix: false
+  enumClassPrefix: false
+  useOneOfDiscriminatorLookup: true
+  disallowAdditionalPropertiesIfNotPresent: false
+  isGoSubmodule: true

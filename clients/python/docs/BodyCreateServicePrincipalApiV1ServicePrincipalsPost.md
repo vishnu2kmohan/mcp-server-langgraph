@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**request** | [**CreateServicePrincipalRequest**](CreateServicePrincipalRequest.md) |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**request** | [**CreateServicePrincipalRequest**](CreateServicePrincipalRequest.md) |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_create_service_principal_api_v1_service_principals_post_dict = body_create_
 body_create_service_principal_api_v1_service_principals_post_from_dict = BodyCreateServicePrincipalApiV1ServicePrincipalsPost.from_dict(body_create_service_principal_api_v1_service_principals_post_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

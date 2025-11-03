@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Scheme** | **string** |  | 
-**Credentials** | **string** |  | 
+**Scheme** | **string** |  |
+**Credentials** | **string** |  |
 
 ## Methods
 
@@ -68,5 +68,3 @@ SetCredentials sets Credentials field to given value.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -4,12 +4,12 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**EmployeeNumber** | Pointer to **NullableString** |  | [optional] 
-**CostCenter** | Pointer to **NullableString** |  | [optional] 
-**Organization** | Pointer to **NullableString** |  | [optional] 
-**Division** | Pointer to **NullableString** |  | [optional] 
-**Department** | Pointer to **NullableString** |  | [optional] 
-**Manager** | Pointer to **map[string]string** |  | [optional] 
+**EmployeeNumber** | Pointer to **NullableString** |  | [optional]
+**CostCenter** | Pointer to **NullableString** |  | [optional]
+**Organization** | Pointer to **NullableString** |  | [optional]
+**Division** | Pointer to **NullableString** |  | [optional]
+**Department** | Pointer to **NullableString** |  | [optional]
+**Manager** | Pointer to **map[string]string** |  | [optional]
 
 ## Methods
 
@@ -242,5 +242,3 @@ HasManager returns a boolean if a field has been set.
 UnsetManager ensures that no value is present for Manager, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

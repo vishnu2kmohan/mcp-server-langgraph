@@ -7,7 +7,7 @@ SCIM PATCH request
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **schemas** | **List[str]** |  | [optional] [default to [urn:ietf:params:scim:api:messages:2.0:PatchOp]]
-**operations** | [**List[SCIMPatchOperation]**](SCIMPatchOperation.md) |  | 
+**operations** | [**List[SCIMPatchOperation]**](SCIMPatchOperation.md) |  |
 
 ## Example
 
@@ -27,5 +27,3 @@ scim_patch_request_dict = scim_patch_request_instance.to_dict()
 scim_patch_request_from_dict = SCIMPatchRequest.from_dict(scim_patch_request_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

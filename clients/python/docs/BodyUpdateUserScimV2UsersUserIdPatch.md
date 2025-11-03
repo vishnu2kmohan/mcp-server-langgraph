@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**patch_request** | [**SCIMPatchRequest**](SCIMPatchRequest.md) |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**patch_request** | [**SCIMPatchRequest**](SCIMPatchRequest.md) |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_update_user_scim_v2_users_user_id_patch_dict = body_update_user_scim_v2_use
 body_update_user_scim_v2_users_user_id_patch_from_dict = BodyUpdateUserScimV2UsersUserIdPatch.from_dict(body_update_user_scim_v2_users_user_id_patch_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

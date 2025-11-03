@@ -4,9 +4,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Loc** | [**[]ValidationErrorLocInner**](ValidationErrorLocInner.md) |  | 
-**Msg** | **string** |  | 
-**Type** | **string** |  | 
+**Loc** | [**[]ValidationErrorLocInner**](ValidationErrorLocInner.md) |  |
+**Msg** | **string** |  |
+**Type** | **string** |  |
 
 ## Methods
 
@@ -89,5 +89,3 @@ SetType sets Type field to given value.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

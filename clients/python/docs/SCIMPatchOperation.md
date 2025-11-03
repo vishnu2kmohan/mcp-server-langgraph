@@ -6,9 +6,9 @@ SCIM PATCH operation
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**op** | [**SCIMPatchOp**](SCIMPatchOp.md) |  | 
-**path** | **str** |  | [optional] 
-**value** | **object** |  | [optional] 
+**op** | [**SCIMPatchOp**](SCIMPatchOp.md) |  |
+**path** | **str** |  | [optional]
+**value** | **object** |  | [optional]
 
 ## Example
 
@@ -28,5 +28,3 @@ scim_patch_operation_dict = scim_patch_operation_instance.to_dict()
 scim_patch_operation_from_dict = SCIMPatchOperation.from_dict(scim_patch_operation_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

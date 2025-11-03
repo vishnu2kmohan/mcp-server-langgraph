@@ -6,15 +6,15 @@ Response containing service principal details
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**service_id** | **str** |  | 
-**name** | **str** |  | 
-**description** | **str** |  | 
-**authentication_mode** | **str** |  | 
-**associated_user_id** | **str** |  | 
-**owner_user_id** | **str** |  | 
-**inherit_permissions** | **bool** |  | 
-**enabled** | **bool** |  | 
-**created_at** | **str** |  | 
+**service_id** | **str** |  |
+**name** | **str** |  |
+**description** | **str** |  |
+**authentication_mode** | **str** |  |
+**associated_user_id** | **str** |  |
+**owner_user_id** | **str** |  |
+**inherit_permissions** | **bool** |  |
+**enabled** | **bool** |  |
+**created_at** | **str** |  |
 
 ## Example
 
@@ -34,5 +34,3 @@ service_principal_response_dict = service_principal_response_instance.to_dict()
 service_principal_response_from_dict = ServicePrincipalResponse.from_dict(service_principal_response_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

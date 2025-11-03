@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**profile_update** | [**UserProfileUpdate**](UserProfileUpdate.md) |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**profile_update** | [**UserProfileUpdate**](UserProfileUpdate.md) |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_update_user_profile_api_v1_users_me_patch_dict = body_update_user_profile_a
 body_update_user_profile_api_v1_users_me_patch_from_dict = BodyUpdateUserProfileApiV1UsersMePatch.from_dict(body_update_user_profile_api_v1_users_me_patch_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

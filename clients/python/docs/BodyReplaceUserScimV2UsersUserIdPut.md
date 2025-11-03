@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**user_data** | **Dict[str, object]** |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**user_data** | **Dict[str, object]** |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_replace_user_scim_v2_users_user_id_put_dict = body_replace_user_scim_v2_use
 body_replace_user_scim_v2_users_user_id_put_from_dict = BodyReplaceUserScimV2UsersUserIdPut.from_dict(body_replace_user_scim_v2_users_user_id_put_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

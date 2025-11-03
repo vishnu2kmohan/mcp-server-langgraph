@@ -18,7 +18,11 @@ exclude =
     .mypy_cache,
     .hypothesis,
     node_modules,
-    .mintlify
+    .mintlify,
+    clients/python/mcp_server_langgraph_client,
+    clients/python/mcp_client,
+    clients/python/test,
+    clients/python/docs
 
 # Ignore specific rules that conflict with black formatting
 extend-ignore =

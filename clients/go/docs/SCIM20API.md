@@ -36,7 +36,7 @@ import (
 )
 
 func main() {
-	bodyCreateGroupScimV2GroupsPost := *openapiclient.NewBodyCreateGroupScimV2GroupsPost(map[string]interface{}{"key": interface{}(123)}) // BodyCreateGroupScimV2GroupsPost | 
+	bodyCreateGroupScimV2GroupsPost := *openapiclient.NewBodyCreateGroupScimV2GroupsPost(map[string]interface{}{"key": interface{}(123)}) // BodyCreateGroupScimV2GroupsPost |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -61,7 +61,7 @@ Other parameters are passed through a pointer to a apiCreateGroupScimV2GroupsPos
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **bodyCreateGroupScimV2GroupsPost** | [**BodyCreateGroupScimV2GroupsPost**](BodyCreateGroupScimV2GroupsPost.md) |  | 
+ **bodyCreateGroupScimV2GroupsPost** | [**BodyCreateGroupScimV2GroupsPost**](BodyCreateGroupScimV2GroupsPost.md) |  |
 
 ### Return type
 
@@ -102,7 +102,7 @@ import (
 )
 
 func main() {
-	bodyCreateUserScimV2UsersPost := *openapiclient.NewBodyCreateUserScimV2UsersPost(map[string]interface{}{"key": interface{}(123)}) // BodyCreateUserScimV2UsersPost | 
+	bodyCreateUserScimV2UsersPost := *openapiclient.NewBodyCreateUserScimV2UsersPost(map[string]interface{}{"key": interface{}(123)}) // BodyCreateUserScimV2UsersPost |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -127,7 +127,7 @@ Other parameters are passed through a pointer to a apiCreateUserScimV2UsersPostR
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **bodyCreateUserScimV2UsersPost** | [**BodyCreateUserScimV2UsersPost**](BodyCreateUserScimV2UsersPost.md) |  | 
+ **bodyCreateUserScimV2UsersPost** | [**BodyCreateUserScimV2UsersPost**](BodyCreateUserScimV2UsersPost.md) |  |
 
 ### Return type
 
@@ -168,7 +168,7 @@ import (
 )
 
 func main() {
-	userId := "userId_example" // string | 
+	userId := "userId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -187,7 +187,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**userId** | **string** |  | 
+**userId** | **string** |  |
 
 ### Other Parameters
 
@@ -197,7 +197,7 @@ Other parameters are passed through a pointer to a apiDeleteUserScimV2UsersUserI
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -238,7 +238,7 @@ import (
 )
 
 func main() {
-	groupId := "groupId_example" // string | 
+	groupId := "groupId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -259,7 +259,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**groupId** | **string** |  | 
+**groupId** | **string** |  |
 
 ### Other Parameters
 
@@ -269,7 +269,7 @@ Other parameters are passed through a pointer to a apiGetGroupScimV2GroupsGroupI
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -310,7 +310,7 @@ import (
 )
 
 func main() {
-	userId := "userId_example" // string | 
+	userId := "userId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -331,7 +331,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**userId** | **string** |  | 
+**userId** | **string** |  |
 
 ### Other Parameters
 
@@ -341,7 +341,7 @@ Other parameters are passed through a pointer to a apiGetUserScimV2UsersUserIdGe
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -410,10 +410,10 @@ Other parameters are passed through a pointer to a apiListUsersScimV2UsersGetReq
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **filter** | **string** | SCIM filter expression | 
+ **filter** | **string** | SCIM filter expression |
  **startIndex** | **int32** | 1-based start index | [default to 1]
  **count** | **int32** | Number of results | [default to 100]
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -454,8 +454,8 @@ import (
 )
 
 func main() {
-	userId := "userId_example" // string | 
-	bodyReplaceUserScimV2UsersUserIdPut := *openapiclient.NewBodyReplaceUserScimV2UsersUserIdPut(map[string]interface{}{"key": interface{}(123)}) // BodyReplaceUserScimV2UsersUserIdPut | 
+	userId := "userId_example" // string |
+	bodyReplaceUserScimV2UsersUserIdPut := *openapiclient.NewBodyReplaceUserScimV2UsersUserIdPut(map[string]interface{}{"key": interface{}(123)}) // BodyReplaceUserScimV2UsersUserIdPut |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -475,7 +475,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**userId** | **string** |  | 
+**userId** | **string** |  |
 
 ### Other Parameters
 
@@ -485,7 +485,7 @@ Other parameters are passed through a pointer to a apiReplaceUserScimV2UsersUser
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **bodyReplaceUserScimV2UsersUserIdPut** | [**BodyReplaceUserScimV2UsersUserIdPut**](BodyReplaceUserScimV2UsersUserIdPut.md) |  | 
+ **bodyReplaceUserScimV2UsersUserIdPut** | [**BodyReplaceUserScimV2UsersUserIdPut**](BodyReplaceUserScimV2UsersUserIdPut.md) |  |
 
 ### Return type
 
@@ -526,8 +526,8 @@ import (
 )
 
 func main() {
-	userId := "userId_example" // string | 
-	bodyUpdateUserScimV2UsersUserIdPatch := *openapiclient.NewBodyUpdateUserScimV2UsersUserIdPatch(*openapiclient.NewSCIMPatchRequest([]openapiclient.SCIMPatchOperation{*openapiclient.NewSCIMPatchOperation(openapiclient.SCIMPatchOp("add"))})) // BodyUpdateUserScimV2UsersUserIdPatch | 
+	userId := "userId_example" // string |
+	bodyUpdateUserScimV2UsersUserIdPatch := *openapiclient.NewBodyUpdateUserScimV2UsersUserIdPatch(*openapiclient.NewSCIMPatchRequest([]openapiclient.SCIMPatchOperation{*openapiclient.NewSCIMPatchOperation(openapiclient.SCIMPatchOp("add"))})) // BodyUpdateUserScimV2UsersUserIdPatch |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -547,7 +547,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**userId** | **string** |  | 
+**userId** | **string** |  |
 
 ### Other Parameters
 
@@ -557,7 +557,7 @@ Other parameters are passed through a pointer to a apiUpdateUserScimV2UsersUserI
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **bodyUpdateUserScimV2UsersUserIdPatch** | [**BodyUpdateUserScimV2UsersUserIdPatch**](BodyUpdateUserScimV2UsersUserIdPatch.md) |  | 
+ **bodyUpdateUserScimV2UsersUserIdPatch** | [**BodyUpdateUserScimV2UsersUserIdPatch**](BodyUpdateUserScimV2UsersUserIdPatch.md) |  |
 
 ### Return type
 
@@ -575,4 +575,3 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
-

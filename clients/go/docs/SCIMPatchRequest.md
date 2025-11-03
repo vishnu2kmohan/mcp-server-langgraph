@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schemas** | Pointer to **[]string** |  | [optional] [default to [urn:ietf:params:scim:api:messages:2.0:PatchOp]]
-**Operations** | [**[]SCIMPatchOperation**](SCIMPatchOperation.md) |  | 
+**Operations** | [**[]SCIMPatchOperation**](SCIMPatchOperation.md) |  |
 
 ## Methods
 
@@ -73,5 +73,3 @@ SetOperations sets Operations field to given value.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

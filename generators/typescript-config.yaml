@@ -1,0 +1,20 @@
+# OpenAPI Generator configuration for TypeScript client
+# Generates ESLint and Prettier compliant code
+
+generatorName: typescript-axios
+inputSpec: ../openapi.json
+outputDir: ../clients/typescript
+packageName: mcp-server-langgraph-client
+
+additionalProperties:
+  npmName: "@mcp-server-langgraph/client"
+  npmVersion: "2.8.0"
+  snapshot: false
+  supportsES6: true
+  withSeparateModelsAndApi: false
+  modelPropertyNaming: camelCase
+  enumPropertyNaming: UPPERCASE
+  hideGenerationTimestamp: true
+  useSingleRequestParameter: false
+  withNodeImports: true
+  usePromises: true

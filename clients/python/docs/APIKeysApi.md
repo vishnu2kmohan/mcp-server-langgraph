@@ -51,7 +51,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.APIKeysApi(api_client)
-    body_create_api_key_api_v1_api_keys_post = mcp_client.BodyCreateApiKeyApiV1ApiKeysPost() # BodyCreateApiKeyApiV1ApiKeysPost | 
+    body_create_api_key_api_v1_api_keys_post = mcp_client.BodyCreateApiKeyApiV1ApiKeysPost() # BodyCreateApiKeyApiV1ApiKeysPost |
 
     try:
         # Create Api Key
@@ -69,7 +69,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body_create_api_key_api_v1_api_keys_post** | [**BodyCreateApiKeyApiV1ApiKeysPost**](BodyCreateApiKeyApiV1ApiKeysPost.md)|  | 
+ **body_create_api_key_api_v1_api_keys_post** | [**BodyCreateApiKeyApiV1ApiKeysPost**](BodyCreateApiKeyApiV1ApiKeysPost.md)|  |
 
 ### Return type
 
@@ -146,7 +146,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -204,7 +204,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.APIKeysApi(api_client)
-    key_id = 'key_id_example' # str | 
+    key_id = 'key_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -221,8 +221,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **key_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **key_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -283,7 +283,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.APIKeysApi(api_client)
-    key_id = 'key_id_example' # str | 
+    key_id = 'key_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -302,8 +302,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **key_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **key_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -330,4 +330,3 @@ No authorization required
 **422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-

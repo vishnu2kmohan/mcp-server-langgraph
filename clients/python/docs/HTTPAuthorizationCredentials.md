@@ -6,8 +6,8 @@ The HTTP authorization credentials in the result of using `HTTPBearer` or `HTTPD
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**scheme** | **str** |  | 
-**credentials** | **str** |  | 
+**scheme** | **str** |  |
+**credentials** | **str** |  |
 
 ## Example
 
@@ -27,5 +27,3 @@ http_authorization_credentials_dict = http_authorization_credentials_instance.to
 http_authorization_credentials_from_dict = HTTPAuthorizationCredentials.from_dict(http_authorization_credentials_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

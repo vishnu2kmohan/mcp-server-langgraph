@@ -5,10 +5,10 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schemas** | Pointer to **[]string** |  | [optional] [default to [urn:ietf:params:scim:api:messages:2.0:ListResponse]]
-**TotalResults** | **int32** |  | 
+**TotalResults** | **int32** |  |
 **StartIndex** | Pointer to **int32** |  | [optional] [default to 1]
-**ItemsPerPage** | **int32** |  | 
-**Resources** | **[]interface{}** |  | 
+**ItemsPerPage** | **int32** |  |
+**Resources** | **[]interface{}** |  |
 
 ## Methods
 
@@ -141,5 +141,3 @@ SetResources sets Resources field to given value.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

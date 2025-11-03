@@ -6,8 +6,8 @@ Response for consent operations
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**user_id** | **str** |  | 
-**consents** | **Dict[str, Dict[str, object]]** | Current consent status for all types | 
+**user_id** | **str** |  |
+**consents** | **Dict[str, Dict[str, object]]** | Current consent status for all types |
 
 ## Example
 
@@ -27,5 +27,3 @@ consent_response_dict = consent_response_instance.to_dict()
 consent_response_from_dict = ConsentResponse.from_dict(consent_response_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

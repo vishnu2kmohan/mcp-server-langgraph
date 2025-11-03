@@ -5,10 +5,10 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schemas** | Pointer to **[]string** |  | [optional] [default to [urn:ietf:params:scim:schemas:core:2.0:Group]]
-**Id** | Pointer to **NullableString** |  | [optional] 
-**DisplayName** | **string** |  | 
+**Id** | Pointer to **NullableString** |  | [optional]
+**DisplayName** | **string** |  |
 **Members** | Pointer to [**[]SCIMMember**](SCIMMember.md) |  | [optional] [default to []]
-**Meta** | Pointer to **map[string]interface{}** |  | [optional] 
+**Meta** | Pointer to **map[string]interface{}** |  | [optional]
 
 ## Methods
 
@@ -171,5 +171,3 @@ HasMeta returns a boolean if a field has been set.
 UnsetMeta ensures that no value is present for Meta, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

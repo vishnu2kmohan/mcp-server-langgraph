@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**consent** | [**ConsentRecord**](ConsentRecord.md) |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**consent** | [**ConsentRecord**](ConsentRecord.md) |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_update_consent_api_v1_users_me_consent_post_dict = body_update_consent_api_
 body_update_consent_api_v1_users_me_consent_post_from_dict = BodyUpdateConsentApiV1UsersMeConsentPost.from_dict(body_update_consent_api_v1_users_me_consent_post_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

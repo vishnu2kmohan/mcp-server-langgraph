@@ -1,0 +1,21 @@
+# OpenAPI Generator configuration for Python client
+# Generates flake8 and mypy compliant code
+
+generatorName: python
+inputSpec: ../openapi.json
+outputDir: ../clients/python
+packageName: mcp_server_langgraph_client
+projectName: mcp-server-langgraph-client
+packageVersion: "2.8.0"
+
+additionalProperties:
+  packageName: mcp_server_langgraph_client
+  projectName: mcp-server-langgraph-client
+  packageVersion: "2.8.0"
+  packageUrl: https://github.com/vishnu2kmohan/mcp-server-langgraph
+  disallowAdditionalPropertiesIfNotPresent: false
+  useOneOfDiscriminatorLookup: true
+  hideGenerationTimestamp: true
+  generateSourceCodeOnly: false
+  # Python-specific quality settings
+  library: urllib3

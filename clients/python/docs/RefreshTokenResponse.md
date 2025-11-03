@@ -6,10 +6,10 @@ Token refresh response
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**access_token** | **str** | New JWT access token | 
+**access_token** | **str** | New JWT access token |
 **token_type** | **str** | Token type | [optional] [default to 'bearer']
-**expires_in** | **int** | Token expiration in seconds | 
-**refresh_token** | **str** |  | [optional] 
+**expires_in** | **int** | Token expiration in seconds |
+**refresh_token** | **str** |  | [optional]
 
 ## Example
 
@@ -29,5 +29,3 @@ refresh_token_response_dict = refresh_token_response_instance.to_dict()
 refresh_token_response_from_dict = RefreshTokenResponse.from_dict(refresh_token_response_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

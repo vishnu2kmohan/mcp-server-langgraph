@@ -44,8 +44,8 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.ServicePrincipalsApi(api_client)
-    service_id = 'service_id_example' # str | 
-    user_id = 'user_id_example' # str | 
+    service_id = 'service_id_example' # str |
+    user_id = 'user_id_example' # str |
     inherit_permissions = True # bool |  (optional) (default to True)
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
@@ -65,10 +65,10 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **service_id** | **str**|  | 
- **user_id** | **str**|  | 
+ **service_id** | **str**|  |
+ **user_id** | **str**|  |
  **inherit_permissions** | **bool**|  | [optional] [default to True]
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -141,7 +141,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.ServicePrincipalsApi(api_client)
-    body_create_service_principal_api_v1_service_principals_post = mcp_client.BodyCreateServicePrincipalApiV1ServicePrincipalsPost() # BodyCreateServicePrincipalApiV1ServicePrincipalsPost | 
+    body_create_service_principal_api_v1_service_principals_post = mcp_client.BodyCreateServicePrincipalApiV1ServicePrincipalsPost() # BodyCreateServicePrincipalApiV1ServicePrincipalsPost |
 
     try:
         # Create Service Principal
@@ -159,7 +159,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body_create_service_principal_api_v1_service_principals_post** | [**BodyCreateServicePrincipalApiV1ServicePrincipalsPost**](BodyCreateServicePrincipalApiV1ServicePrincipalsPost.md)|  | 
+ **body_create_service_principal_api_v1_service_principals_post** | [**BodyCreateServicePrincipalApiV1ServicePrincipalsPost**](BodyCreateServicePrincipalApiV1ServicePrincipalsPost.md)|  |
 
 ### Return type
 
@@ -217,7 +217,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.ServicePrincipalsApi(api_client)
-    service_id = 'service_id_example' # str | 
+    service_id = 'service_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -234,8 +234,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **service_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **service_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -293,7 +293,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.ServicePrincipalsApi(api_client)
-    service_id = 'service_id_example' # str | 
+    service_id = 'service_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -312,8 +312,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **service_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **service_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -390,7 +390,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -452,7 +452,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.ServicePrincipalsApi(api_client)
-    service_id = 'service_id_example' # str | 
+    service_id = 'service_id_example' # str |
     http_authorization_credentials = mcp_client.HTTPAuthorizationCredentials() # HTTPAuthorizationCredentials |  (optional)
 
     try:
@@ -471,8 +471,8 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **service_id** | **str**|  | 
- **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional] 
+ **service_id** | **str**|  |
+ **http_authorization_credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md)|  | [optional]
 
 ### Return type
 
@@ -499,4 +499,3 @@ No authorization required
 **422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-

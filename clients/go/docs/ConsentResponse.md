@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**UserId** | **string** |  | 
-**Consents** | **map[string]map[string]interface{}** | Current consent status for all types | 
+**UserId** | **string** |  |
+**Consents** | **map[string]map[string]interface{}** | Current consent status for all types |
 
 ## Methods
 
@@ -68,5 +68,3 @@ SetConsents sets Consents field to given value.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

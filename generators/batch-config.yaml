@@ -1,0 +1,7 @@
+# OpenAPI Generator batch configuration
+# Generates all three client SDKs at once with proper linting compliance
+
+includes:
+  - python-config.yaml
+  - go-config.yaml
+  - typescript-config.yaml

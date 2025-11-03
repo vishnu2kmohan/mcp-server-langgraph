@@ -6,8 +6,8 @@ Login request with username and password
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**username** | **str** | Username | 
-**password** | **str** | Password | 
+**username** | **str** | Username |
+**password** | **str** | Password |
 
 ## Example
 
@@ -27,5 +27,3 @@ login_request_dict = login_request_instance.to_dict()
 login_request_from_dict = LoginRequest.from_dict(login_request_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

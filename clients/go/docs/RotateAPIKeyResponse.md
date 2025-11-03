@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**KeyId** | **string** |  | 
-**NewApiKey** | **string** | New API key | 
+**KeyId** | **string** |  |
+**NewApiKey** | **string** | New API key |
 **Message** | Pointer to **string** |  | [optional] [default to "API key rotated successfully. Update your client configuration."]
 
 ## Methods
@@ -94,5 +94,3 @@ HasMessage returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

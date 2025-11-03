@@ -58,7 +58,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.AuthApi(api_client)
-    login_request = mcp_client.LoginRequest() # LoginRequest | 
+    login_request = mcp_client.LoginRequest() # LoginRequest |
 
     try:
         # Login
@@ -76,7 +76,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **login_request** | [**LoginRequest**](LoginRequest.md)|  | 
+ **login_request** | [**LoginRequest**](LoginRequest.md)|  |
 
 ### Return type
 
@@ -156,7 +156,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.AuthApi(api_client)
-    refresh_token_request = mcp_client.RefreshTokenRequest() # RefreshTokenRequest | 
+    refresh_token_request = mcp_client.RefreshTokenRequest() # RefreshTokenRequest |
 
     try:
         # Refresh Token
@@ -174,7 +174,7 @@ with mcp_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **refresh_token_request** | [**RefreshTokenRequest**](RefreshTokenRequest.md)|  | 
+ **refresh_token_request** | [**RefreshTokenRequest**](RefreshTokenRequest.md)|  |
 
 ### Return type
 
@@ -201,4 +201,3 @@ No authorization required
 **422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-

@@ -67,7 +67,7 @@ configuration = mcp_client.Configuration(
 with mcp_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = mcp_client.APIKeysApi(api_client)
-    body_create_api_key_api_v1_api_keys_post = mcp_client.BodyCreateApiKeyApiV1ApiKeysPost() # BodyCreateApiKeyApiV1ApiKeysPost | 
+    body_create_api_key_api_v1_api_keys_post = mcp_client.BodyCreateApiKeyApiV1ApiKeysPost() # BodyCreateApiKeyApiV1ApiKeysPost |
 
     try:
         # Create Api Key
@@ -172,7 +172,3 @@ Endpoints do not require authorization.
 
 
 ## Author
-
-
-
-

@@ -5,26 +5,26 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Schemas** | Pointer to **[]string** |  | [optional] [default to [urn:ietf:params:scim:schemas:core:2.0:User]]
-**Id** | Pointer to **NullableString** |  | [optional] 
-**ExternalId** | Pointer to **NullableString** |  | [optional] 
-**UserName** | **string** |  | 
-**Name** | Pointer to [**NullableSCIMName**](SCIMName.md) |  | [optional] 
-**DisplayName** | Pointer to **NullableString** |  | [optional] 
-**NickName** | Pointer to **NullableString** |  | [optional] 
-**ProfileUrl** | Pointer to **NullableString** |  | [optional] 
-**Title** | Pointer to **NullableString** |  | [optional] 
-**UserType** | Pointer to **NullableString** |  | [optional] 
-**PreferredLanguage** | Pointer to **NullableString** |  | [optional] 
-**Locale** | Pointer to **NullableString** |  | [optional] 
-**Timezone** | Pointer to **NullableString** |  | [optional] 
+**Id** | Pointer to **NullableString** |  | [optional]
+**ExternalId** | Pointer to **NullableString** |  | [optional]
+**UserName** | **string** |  |
+**Name** | Pointer to [**NullableSCIMName**](SCIMName.md) |  | [optional]
+**DisplayName** | Pointer to **NullableString** |  | [optional]
+**NickName** | Pointer to **NullableString** |  | [optional]
+**ProfileUrl** | Pointer to **NullableString** |  | [optional]
+**Title** | Pointer to **NullableString** |  | [optional]
+**UserType** | Pointer to **NullableString** |  | [optional]
+**PreferredLanguage** | Pointer to **NullableString** |  | [optional]
+**Locale** | Pointer to **NullableString** |  | [optional]
+**Timezone** | Pointer to **NullableString** |  | [optional]
 **Active** | Pointer to **bool** |  | [optional] [default to true]
-**Password** | Pointer to **NullableString** |  | [optional] 
+**Password** | Pointer to **NullableString** |  | [optional]
 **Emails** | Pointer to [**[]SCIMEmail**](SCIMEmail.md) |  | [optional] [default to []]
 **PhoneNumbers** | Pointer to [**[]SCIMPhoneNumber**](SCIMPhoneNumber.md) |  | [optional] [default to []]
 **Addresses** | Pointer to [**[]SCIMAddress**](SCIMAddress.md) |  | [optional] [default to []]
 **Groups** | Pointer to [**[]SCIMGroupMembership**](SCIMGroupMembership.md) |  | [optional] [default to []]
-**Meta** | Pointer to **map[string]interface{}** |  | [optional] 
-**UrnIetfParamsScimSchemasExtensionEnterprise20User** | Pointer to [**NullableSCIMEnterpriseUser**](SCIMEnterpriseUser.md) |  | [optional] 
+**Meta** | Pointer to **map[string]interface{}** |  | [optional]
+**UrnIetfParamsScimSchemasExtensionEnterprise20User** | Pointer to [**NullableSCIMEnterpriseUser**](SCIMEnterpriseUser.md) |  | [optional]
 
 ## Methods
 
@@ -707,5 +707,3 @@ HasUrnIetfParamsScimSchemasExtensionEnterprise20User returns a boolean if a fiel
 UnsetUrnIetfParamsScimSchemasExtensionEnterprise20User ensures that no value is present for UrnIetfParamsScimSchemasExtensionEnterprise20User, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

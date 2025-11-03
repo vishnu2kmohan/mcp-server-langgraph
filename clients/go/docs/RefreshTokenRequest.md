@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**RefreshToken** | Pointer to **NullableString** |  | [optional] 
-**CurrentToken** | Pointer to **NullableString** |  | [optional] 
+**RefreshToken** | Pointer to **NullableString** |  | [optional]
+**CurrentToken** | Pointer to **NullableString** |  | [optional]
 
 ## Methods
 
@@ -98,5 +98,3 @@ HasCurrentToken returns a boolean if a field has been set.
 UnsetCurrentToken ensures that no value is present for CurrentToken, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

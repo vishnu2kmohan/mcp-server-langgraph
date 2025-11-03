@@ -4,16 +4,16 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ServiceId** | **string** |  | 
-**Name** | **string** |  | 
-**Description** | **string** |  | 
-**AuthenticationMode** | **string** |  | 
-**AssociatedUserId** | **NullableString** |  | 
-**OwnerUserId** | **NullableString** |  | 
-**InheritPermissions** | **bool** |  | 
-**Enabled** | **bool** |  | 
-**CreatedAt** | **NullableString** |  | 
-**ClientSecret** | **string** | Client secret (save securely, won&#39;t be shown again) | 
+**ServiceId** | **string** |  |
+**Name** | **string** |  |
+**Description** | **string** |  |
+**AuthenticationMode** | **string** |  |
+**AssociatedUserId** | **NullableString** |  |
+**OwnerUserId** | **NullableString** |  |
+**InheritPermissions** | **bool** |  |
+**Enabled** | **bool** |  |
+**CreatedAt** | **NullableString** |  |
+**ClientSecret** | **string** | Client secret (save securely, won&#39;t be shown again) |
 **Message** | Pointer to **string** |  | [optional] [default to "Service principal created successfully. Save the client_secret securely."]
 
 ## Methods
@@ -292,5 +292,3 @@ HasMessage returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

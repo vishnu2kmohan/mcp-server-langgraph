@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**group_data** | **Dict[str, object]** |  | 
-**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**group_data** | **Dict[str, object]** |  |
+**credentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Example
 
@@ -26,5 +26,3 @@ body_create_group_scim_v2_groups_post_dict = body_create_group_scim_v2_groups_po
 body_create_group_scim_v2_groups_post_from_dict = BodyCreateGroupScimV2GroupsPost.from_dict(body_create_group_scim_v2_groups_post_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

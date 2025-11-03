@@ -4,10 +4,10 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**AccessToken** | **string** | New JWT access token | 
+**AccessToken** | **string** | New JWT access token |
 **TokenType** | Pointer to **string** | Token type | [optional] [default to "bearer"]
-**ExpiresIn** | **int32** | Token expiration in seconds | 
-**RefreshToken** | Pointer to **NullableString** |  | [optional] 
+**ExpiresIn** | **int32** | Token expiration in seconds |
+**RefreshToken** | Pointer to **NullableString** |  | [optional]
 
 ## Methods
 
@@ -130,5 +130,3 @@ HasRefreshToken returns a boolean if a field has been set.
 UnsetRefreshToken ensures that no value is present for RefreshToken, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

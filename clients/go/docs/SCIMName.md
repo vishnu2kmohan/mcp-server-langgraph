@@ -4,12 +4,12 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Formatted** | Pointer to **NullableString** |  | [optional] 
-**FamilyName** | Pointer to **NullableString** |  | [optional] 
-**GivenName** | Pointer to **NullableString** |  | [optional] 
-**MiddleName** | Pointer to **NullableString** |  | [optional] 
-**HonorificPrefix** | Pointer to **NullableString** |  | [optional] 
-**HonorificSuffix** | Pointer to **NullableString** |  | [optional] 
+**Formatted** | Pointer to **NullableString** |  | [optional]
+**FamilyName** | Pointer to **NullableString** |  | [optional]
+**GivenName** | Pointer to **NullableString** |  | [optional]
+**MiddleName** | Pointer to **NullableString** |  | [optional]
+**HonorificPrefix** | Pointer to **NullableString** |  | [optional]
+**HonorificSuffix** | Pointer to **NullableString** |  | [optional]
 
 ## Methods
 
@@ -242,5 +242,3 @@ HasHonorificSuffix returns a boolean if a field has been set.
 UnsetHonorificSuffix ensures that no value is present for HonorificSuffix, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

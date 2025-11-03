@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Consent** | [**ConsentRecord**](ConsentRecord.md) |  | 
-**Credentials** | Pointer to [**NullableHTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional] 
+**Consent** | [**ConsentRecord**](ConsentRecord.md) |  |
+**Credentials** | Pointer to [**NullableHTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | [optional]
 
 ## Methods
 
@@ -83,5 +83,3 @@ HasCredentials returns a boolean if a field has been set.
 UnsetCredentials ensures that no value is present for Credentials, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

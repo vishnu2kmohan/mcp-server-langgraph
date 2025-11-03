@@ -4,18 +4,18 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ExportId** | **string** | Unique export identifier | 
-**ExportTimestamp** | **string** | ISO timestamp of export | 
-**UserId** | **string** | User identifier | 
-**Username** | **string** | Username | 
-**Email** | **string** | User email address | 
-**Profile** | Pointer to **map[string]interface{}** | User profile data | [optional] 
-**Sessions** | Pointer to **[]map[string]interface{}** | Active and recent sessions | [optional] 
-**Conversations** | Pointer to **[]map[string]interface{}** | Conversation history | [optional] 
-**Preferences** | Pointer to **map[string]interface{}** | User preferences and settings | [optional] 
-**AuditLog** | Pointer to **[]map[string]interface{}** | User activity audit log | [optional] 
-**Consents** | Pointer to **[]map[string]interface{}** | Consent records | [optional] 
-**Metadata** | Pointer to **map[string]interface{}** | Additional metadata | [optional] 
+**ExportId** | **string** | Unique export identifier |
+**ExportTimestamp** | **string** | ISO timestamp of export |
+**UserId** | **string** | User identifier |
+**Username** | **string** | Username |
+**Email** | **string** | User email address |
+**Profile** | Pointer to **map[string]interface{}** | User profile data | [optional]
+**Sessions** | Pointer to **[]map[string]interface{}** | Active and recent sessions | [optional]
+**Conversations** | Pointer to **[]map[string]interface{}** | Conversation history | [optional]
+**Preferences** | Pointer to **map[string]interface{}** | User preferences and settings | [optional]
+**AuditLog** | Pointer to **[]map[string]interface{}** | User activity audit log | [optional]
+**Consents** | Pointer to **[]map[string]interface{}** | Consent records | [optional]
+**Metadata** | Pointer to **map[string]interface{}** | Additional metadata | [optional]
 
 ## Methods
 
@@ -313,5 +313,3 @@ HasMetadata returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

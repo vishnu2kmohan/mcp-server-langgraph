@@ -34,8 +34,8 @@ import (
 )
 
 func main() {
-	serviceId := "serviceId_example" // string | 
-	userId := "userId_example" // string | 
+	serviceId := "serviceId_example" // string |
+	userId := "userId_example" // string |
 	inheritPermissions := true // bool |  (optional) (default to true)
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
@@ -57,7 +57,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**serviceId** | **string** |  | 
+**serviceId** | **string** |  |
 
 ### Other Parameters
 
@@ -67,9 +67,9 @@ Other parameters are passed through a pointer to a apiAssociateServicePrincipalW
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **userId** | **string** |  | 
+ **userId** | **string** |  |
  **inheritPermissions** | **bool** |  | [default to true]
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -110,7 +110,7 @@ import (
 )
 
 func main() {
-	bodyCreateServicePrincipalApiV1ServicePrincipalsPost := *openapiclient.NewBodyCreateServicePrincipalApiV1ServicePrincipalsPost(*openapiclient.NewCreateServicePrincipalRequest("Name_example", "Description_example")) // BodyCreateServicePrincipalApiV1ServicePrincipalsPost | 
+	bodyCreateServicePrincipalApiV1ServicePrincipalsPost := *openapiclient.NewBodyCreateServicePrincipalApiV1ServicePrincipalsPost(*openapiclient.NewCreateServicePrincipalRequest("Name_example", "Description_example")) // BodyCreateServicePrincipalApiV1ServicePrincipalsPost |
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
@@ -135,7 +135,7 @@ Other parameters are passed through a pointer to a apiCreateServicePrincipalApiV
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **bodyCreateServicePrincipalApiV1ServicePrincipalsPost** | [**BodyCreateServicePrincipalApiV1ServicePrincipalsPost**](BodyCreateServicePrincipalApiV1ServicePrincipalsPost.md) |  | 
+ **bodyCreateServicePrincipalApiV1ServicePrincipalsPost** | [**BodyCreateServicePrincipalApiV1ServicePrincipalsPost**](BodyCreateServicePrincipalApiV1ServicePrincipalsPost.md) |  |
 
 ### Return type
 
@@ -176,7 +176,7 @@ import (
 )
 
 func main() {
-	serviceId := "serviceId_example" // string | 
+	serviceId := "serviceId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -195,7 +195,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**serviceId** | **string** |  | 
+**serviceId** | **string** |  |
 
 ### Other Parameters
 
@@ -205,7 +205,7 @@ Other parameters are passed through a pointer to a apiDeleteServicePrincipalApiV
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -246,7 +246,7 @@ import (
 )
 
 func main() {
-	serviceId := "serviceId_example" // string | 
+	serviceId := "serviceId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -267,7 +267,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**serviceId** | **string** |  | 
+**serviceId** | **string** |  |
 
 ### Other Parameters
 
@@ -277,7 +277,7 @@ Other parameters are passed through a pointer to a apiGetServicePrincipalApiV1Se
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -343,7 +343,7 @@ Other parameters are passed through a pointer to a apiListServicePrincipalsApiV1
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -384,7 +384,7 @@ import (
 )
 
 func main() {
-	serviceId := "serviceId_example" // string | 
+	serviceId := "serviceId_example" // string |
 	hTTPAuthorizationCredentials := *openapiclient.NewHTTPAuthorizationCredentials("Scheme_example", "Credentials_example") // HTTPAuthorizationCredentials |  (optional)
 
 	configuration := openapiclient.NewConfiguration()
@@ -405,7 +405,7 @@ func main() {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**serviceId** | **string** |  | 
+**serviceId** | **string** |  |
 
 ### Other Parameters
 
@@ -415,7 +415,7 @@ Other parameters are passed through a pointer to a apiRotateServicePrincipalSecr
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  | 
+ **hTTPAuthorizationCredentials** | [**HTTPAuthorizationCredentials**](HTTPAuthorizationCredentials.md) |  |
 
 ### Return type
 
@@ -433,4 +433,3 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
-

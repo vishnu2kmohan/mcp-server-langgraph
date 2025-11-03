@@ -6,9 +6,9 @@ User profile update model (GDPR Article 16 - Right to Rectification)
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **str** |  | [optional] 
-**email** | **str** |  | [optional] 
-**preferences** | **Dict[str, object]** |  | [optional] 
+**name** | **str** |  | [optional]
+**email** | **str** |  | [optional]
+**preferences** | **Dict[str, object]** |  | [optional]
 
 ## Example
 
@@ -28,5 +28,3 @@ user_profile_update_dict = user_profile_update_instance.to_dict()
 user_profile_update_from_dict = UserProfileUpdate.from_dict(user_profile_update_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

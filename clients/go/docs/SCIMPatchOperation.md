@@ -4,9 +4,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Op** | [**SCIMPatchOp**](SCIMPatchOp.md) |  | 
-**Path** | Pointer to **NullableString** |  | [optional] 
-**Value** | Pointer to **interface{}** |  | [optional] 
+**Op** | [**SCIMPatchOp**](SCIMPatchOp.md) |  |
+**Path** | Pointer to **NullableString** |  | [optional]
+**Value** | Pointer to **interface{}** |  | [optional]
 
 ## Methods
 
@@ -119,5 +119,3 @@ HasValue returns a boolean if a field has been set.
 UnsetValue ensures that no value is present for Value, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-
