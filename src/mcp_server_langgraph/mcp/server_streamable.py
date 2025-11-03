@@ -190,7 +190,9 @@ class ChatInput(BaseModel):
     )
     user_id: str = Field(description="User identifier for authentication and authorization")
     thread_id: str | None = Field(
-        default=None, description="Optional thread ID for conversation continuity (e.g., 'conv_123')"
+        default=None,
+        description="Optional thread ID for conversation continuity (e.g., 'conv_123')",
+        pattern=r"^[a-zA-Z0-9_-]{1,128}$",  # SECURITY: Prevent CWE-20 injection into OpenFGA/Redis/logs
     )
     response_format: Literal["concise", "detailed"] = Field(
         default="concise",
