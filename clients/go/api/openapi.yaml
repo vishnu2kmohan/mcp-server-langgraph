@@ -1,0 +1,2676 @@
+openapi: 3.1.0
+info:
+  description: AI Agent with fine-grained authorization and observability - StreamableHTTP
+    transport
+  title: MCP Server with LangGraph
+  version: 2.8.0
+servers:
+- url: /
+tags:
+- description: API version information and metadata for client compatibility
+  name: API Metadata
+- description: Model Context Protocol (MCP) endpoints for agent interaction
+  name: mcp
+- description: Health check and system status endpoints
+  name: health
+- description: Authentication and authorization endpoints
+  name: auth
+- description: GDPR data protection and privacy rights endpoints (Articles 15-21)
+  name: GDPR Compliance
+- description: API key management for programmatic access
+  name: API Keys
+- description: Service principal (service account) management for machine-to-machine
+    authentication
+  name: Service Principals
+- description: System for Cross-domain Identity Management (SCIM) 2.0 user and group
+    provisioning
+  name: SCIM 2.0
+paths:
+  /:
+    get:
+      description: Root endpoint with server info
+      operationId: root__get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                additionalProperties: {}
+                title: Response Root  Get
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+      summary: Root
+  /auth/login:
+    post:
+      description: |-
+        Authenticate user and return JWT token
+
+        This endpoint accepts username and password, validates credentials,
+        and returns a JWT token that can be used for subsequent tool calls.
+
+        The token should be included in the 'token' field of all tool call requests.
+
+        Example:
+            POST /auth/login
+            {
+                "username": "alice",
+                "password": "alice123"
+            }
+
+            Response:
+            {
+                "access_token": "eyJ...",
+                "token_type": "bearer",
+                "expires_in": 3600,
+                "user_id": "user:alice",
+                "username": "alice",
+                "roles": ["user", "premium"]
+            }
+      operationId: login_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Login
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      description: |-
+        Refresh authentication token
+
+        Supports two refresh methods:
+        1. Keycloak: Uses refresh_token to get new access token
+        2. InMemory: Validates current token and issues new one
+
+        Example (Keycloak):
+            POST /auth/refresh
+            {
+                "refresh_token": "eyJ..."
+            }
+
+        Example (InMemory):
+            POST /auth/refresh
+            {
+                "current_token": "eyJ..."
+            }
+
+        Response:
+            {
+                "access_token": "eyJ...",
+                "token_type": "bearer",
+                "expires_in": 3600,
+                "refresh_token": "eyJ..."  // Keycloak only
+            }
+      operationId: refresh_token_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshTokenResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Refresh Token
+      tags:
+      - auth
+  /message:
+    post:
+      description: |-
+        Handle MCP messages via StreamableHTTP POST
+
+        This is the main endpoint for MCP protocol messages.
+        Supports both regular and streaming responses.
+      operationId: handle_message_message_post
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+      summary: Handle Message
+  /tools:
+    get:
+      description: List available tools (convenience endpoint)
+      operationId: list_tools_tools_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                additionalProperties: {}
+                title: Response List Tools Tools Get
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+      summary: List Tools
+  /resources:
+    get:
+      description: List available resources (convenience endpoint)
+      operationId: list_resources_resources_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                additionalProperties: {}
+                title: Response List Resources Resources Get
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+      summary: List Resources
+  /api/version:
+    get:
+      description: |-
+        Returns API version metadata for client compatibility checking.
+
+            **Versioning Strategy:**
+            - **Semantic Versioning**: MAJOR.MINOR.PATCH
+            - **URL Versioning**: `/api/v1`, `/api/v2`, etc.
+            - **Header Negotiation**: `X-API-Version: 1.0` (optional)
+            - **Deprecation Policy**: 6-month sunset period for deprecated versions
+
+            **Breaking Changes:**
+            - Removing fields from responses
+            - Changing field types
+            - Removing endpoints
+            - Changing authentication methods
+
+            **Non-Breaking Changes:**
+            - Adding new endpoints
+            - Adding new optional fields to requests
+            - Adding new fields to responses
+            - Adding new query parameters (optional)
+
+            Use this endpoint to:
+            - Check current API version
+            - Determine if your client is compatible
+            - Find out when deprecated versions will be removed
+            - Locate API documentation
+      operationId: get_api_version_metadata
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                version: 2.8.0
+                api_version: v1
+                supported_versions:
+                - v1
+                deprecated_versions: []
+                sunset_dates: {}
+                documentation_url: /docs
+              schema:
+                $ref: "#/components/schemas/APIVersionInfo"
+          description: API version information
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+      summary: Get API version information
+      tags:
+      - API Metadata
+  /api/v1/users/me/data:
+    get:
+      description: |-
+        Export all user data (GDPR Article 15 - Right to Access)
+
+        Returns all personal data associated with the authenticated user.
+
+        **GDPR Article 15**: The data subject shall have the right to obtain from the
+        controller confirmation as to whether or not personal data concerning him or
+        her are being processed, and access to the personal data.
+
+        **Response**: Complete JSON export of all user data including:
+        - User profile
+        - Sessions
+        - Conversations
+        - Preferences
+        - Audit log
+        - Consents
+      operationId: get_user_data_api_v1_users_me_data_get
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataExport"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get User Data
+      tags:
+      - GDPR Compliance
+  /api/v1/users/me/export:
+    get:
+      description: |-
+        Export user data in portable format (GDPR Article 20 - Right to Data Portability)
+
+        **GDPR Article 20**: The data subject shall have the right to receive the personal
+        data concerning him or her in a structured, commonly used and machine-readable format.
+
+        **Query Parameters**:
+        - `format`: Export format (json or csv)
+
+        **Response**: File download in requested format
+      operationId: export_user_data_api_v1_users_me_export_get
+      parameters:
+      - description: "Export format: json or csv"
+        explode: true
+        in: query
+        name: format
+        required: false
+        schema:
+          default: json
+          description: "Export format: json or csv"
+          pattern: ^(json|csv)$
+          title: Format
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Export User Data
+      tags:
+      - GDPR Compliance
+  /api/v1/users/me:
+    delete:
+      description: |-
+        Delete user account and all data (GDPR Article 17 - Right to Erasure)
+
+        **WARNING**: This is an irreversible operation that permanently deletes all user data.
+
+        **GDPR Article 17**: The data subject shall have the right to obtain from the
+        controller the erasure of personal data concerning him or her without undue delay.
+
+        **Query Parameters**:
+        - `confirm`: Must be set to `true` to confirm deletion
+
+        **What gets deleted**:
+        - User profile and account
+        - All sessions
+        - All conversations and messages
+        - All preferences and settings
+        - All authorization tuples
+
+        **What gets anonymized** (retained for compliance):
+        - Audit logs (user_id replaced with hash)
+
+        **Response**: Deletion result with details
+      operationId: delete_user_account_api_v1_users_me_delete
+      parameters:
+      - description: Must be true to confirm account deletion
+        explode: true
+        in: query
+        name: confirm
+        required: true
+        schema:
+          description: Must be true to confirm account deletion
+          title: Confirm
+          type: boolean
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                additionalProperties: {}
+                title: Response Delete User Account Api V1 Users Me Delete
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete User Account
+      tags:
+      - GDPR Compliance
+    patch:
+      description: |-
+        Update user profile (GDPR Article 16 - Right to Rectification)
+
+        **GDPR Article 16**: The data subject shall have the right to obtain from the
+        controller without undue delay the rectification of inaccurate personal data
+        concerning him or her.
+
+        **Request Body**: Profile fields to update (only provided fields are updated)
+
+        **Response**: Updated user profile
+      operationId: update_user_profile_api_v1_users_me_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_update_user_profile_api_v1_users_me_patch"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                additionalProperties: {}
+                title: Response Update User Profile Api V1 Users Me Patch
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update User Profile
+      tags:
+      - GDPR Compliance
+  /api/v1/users/me/consent:
+    get:
+      description: |-
+        Get current consent status (GDPR Article 21 - Right to Object)
+
+        Returns all consent preferences for the authenticated user.
+
+        **Response**: Current consent status for all consent types
+      operationId: get_consent_status_api_v1_users_me_consent_get
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsentResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Consent Status
+      tags:
+      - GDPR Compliance
+    post:
+      description: |-
+        Update user consent preferences (GDPR Article 21 - Right to Object)
+
+        **GDPR Article 21**: The data subject shall have the right to object at any time
+        to processing of personal data concerning him or her.
+
+        **Request Body**: Consent type and whether it's granted
+
+        **Response**: Current consent status for all types
+      operationId: update_consent_api_v1_users_me_consent_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_update_consent_api_v1_users_me_consent_post"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsentResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update Consent
+      tags:
+      - GDPR Compliance
+  /api/v1/api-keys/:
+    get:
+      description: |-
+        List all API keys for the current user
+
+        Returns metadata for all keys (name, created, expires, last_used).
+        Does not include the actual API keys.
+      operationId: list_api_keys_api_v1_api_keys__get
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/APIKeyResponse"
+                type: array
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: List Api Keys
+      tags:
+      - API Keys
+    post:
+      description: |-
+        Create a new API key for the current user
+
+        Creates a cryptographically secure API key with bcrypt hashing.
+        **Save the returned api_key securely** - it will not be shown again.
+
+        Maximum 5 keys per user. Revoke an existing key before creating more.
+
+        Example:
+            ```json
+            {
+                "name": "Production API Key",
+                "expires_days": 365
+            }
+            ```
+      operationId: create_api_key_api_v1_api_keys__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_create_api_key_api_v1_api_keys__post"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAPIKeyResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Create Api Key
+      tags:
+      - API Keys
+  /api/v1/api-keys/{key_id}/rotate:
+    post:
+      description: |-
+        Rotate an API key
+
+        Generates a new API key while keeping the same key_id.
+        The old key is invalidated immediately.
+
+        **Save the new_api_key securely** - update your client configuration.
+      operationId: rotate_api_key_api_v1_api_keys__key_id__rotate_post
+      parameters:
+      - explode: false
+        in: path
+        name: key_id
+        required: true
+        schema:
+          title: Key Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RotateAPIKeyResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Rotate Api Key
+      tags:
+      - API Keys
+  /api/v1/api-keys/{key_id}:
+    delete:
+      description: |-
+        Revoke an API key
+
+        Permanently deletes the API key. This action cannot be undone.
+        Any clients using this key will immediately lose access.
+      operationId: revoke_api_key_api_v1_api_keys__key_id__delete
+      parameters:
+      - explode: false
+        in: path
+        name: key_id
+        required: true
+        schema:
+          title: Key Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "204":
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Revoke Api Key
+      tags:
+      - API Keys
+  /api/v1/service-principals/:
+    get:
+      description: |-
+        List service principals owned by the current user
+
+        Returns all service principals where the current user is the owner.
+        Does not include client secrets.
+      operationId: list_service_principals_api_v1_service_principals__get
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/ServicePrincipalResponse"
+                type: array
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: List Service Principals
+      tags:
+      - Service Principals
+    post:
+      description: |-
+        Create a new service principal
+
+        Creates a service principal with the specified authentication mode.
+        The calling user becomes the owner of the service principal.
+
+        Returns the created service principal with credentials (client_secret).
+        **Save the client_secret securely** - it will not be shown again.
+
+        Example:
+            ```json
+            {
+                "name": "Batch ETL Job",
+                "description": "Nightly data processing",
+                "authentication_mode": "client_credentials",
+                "associated_user_id": "user:alice",
+                "inherit_permissions": true
+            }
+            ```
+      operationId: create_service_principal_api_v1_service_principals__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_create_service_principal_api_v1_service_principals__post"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateServicePrincipalResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Create Service Principal
+      tags:
+      - Service Principals
+  /api/v1/service-principals/{service_id}:
+    delete:
+      description: |-
+        Delete a service principal
+
+        Permanently deletes the service principal from Keycloak and OpenFGA.
+        This action cannot be undone.
+      operationId: delete_service_principal_api_v1_service_principals__service_id__delete
+      parameters:
+      - explode: false
+        in: path
+        name: service_id
+        required: true
+        schema:
+          title: Service Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "204":
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Service Principal
+      tags:
+      - Service Principals
+    get:
+      description: |-
+        Get details of a specific service principal
+
+        Returns service principal details if the current user is the owner.
+      operationId: get_service_principal_api_v1_service_principals__service_id__get
+      parameters:
+      - explode: false
+        in: path
+        name: service_id
+        required: true
+        schema:
+          title: Service Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServicePrincipalResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Service Principal
+      tags:
+      - Service Principals
+  /api/v1/service-principals/{service_id}/rotate-secret:
+    post:
+      description: |-
+        Rotate service principal secret
+
+        Generates a new client secret for the service principal.
+        The old secret will be invalidated immediately.
+
+        **Save the new client_secret securely** - update your service configuration
+        before the old secret expires.
+      operationId: rotate_service_principal_secret_api_v1_service_principals__service_id__rotate_secret_post
+      parameters:
+      - explode: false
+        in: path
+        name: service_id
+        required: true
+        schema:
+          title: Service Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RotateSecretResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Rotate Service Principal Secret
+      tags:
+      - Service Principals
+  /api/v1/service-principals/{service_id}/associate-user:
+    post:
+      description: |-
+        Associate service principal with a user for permission inheritance
+
+        Links a service principal to a user, optionally enabling permission inheritance.
+        When inherit_permissions is true, the service principal can act on behalf of
+        the user and inherit all their permissions.
+      operationId: associate_service_principal_with_user_api_v1_service_principals__service_id__associate_user_post
+      parameters:
+      - explode: false
+        in: path
+        name: service_id
+        required: true
+        schema:
+          title: Service Id
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: inherit_permissions
+        required: false
+        schema:
+          default: true
+          title: Inherit Permissions
+          type: boolean
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServicePrincipalResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Associate Service Principal With User
+      tags:
+      - Service Principals
+  /scim/v2/Users:
+    get:
+      description: |-
+        List/search users (SCIM 2.0)
+
+        Supports basic filtering (e.g., 'userName eq "alice@example.com"').
+      operationId: list_users_scim_v2_Users_get
+      parameters:
+      - description: SCIM filter expression
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - description: 1-based start index
+        explode: true
+        in: query
+        name: startIndex
+        required: false
+        schema:
+          default: 1
+          description: 1-based start index
+          minimum: 1
+          title: Startindex
+          type: integer
+        style: form
+      - description: Number of results
+        explode: true
+        in: query
+        name: count
+        required: false
+        schema:
+          default: 100
+          description: Number of results
+          maximum: 1000
+          minimum: 1
+          title: Count
+          type: integer
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SCIMListResponse"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: List Users
+      tags:
+      - SCIM 2.0
+    post:
+      description: |-
+        Create a new user (SCIM 2.0)
+
+        Provisions user in Keycloak and syncs roles to OpenFGA.
+
+        Example:
+            ```json
+            {
+                "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+                "userName": "alice@example.com",
+                "name": {
+                    "givenName": "Alice",
+                    "familyName": "Smith"
+                },
+                "emails": [{
+                    "value": "alice@example.com",
+                    "primary": true
+                }],
+                "active": true
+            }
+            ```
+      operationId: create_user_scim_v2_Users_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_create_user_scim_v2_Users_post"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SCIMUser"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Create User
+      tags:
+      - SCIM 2.0
+  /scim/v2/Users/{user_id}:
+    delete:
+      description: |-
+        Delete (deactivate) user (SCIM 2.0)
+
+        Deactivates user in Keycloak and removes OpenFGA tuples.
+      operationId: delete_user_scim_v2_Users__user_id__delete
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "204":
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete User
+      tags:
+      - SCIM 2.0
+    get:
+      description: |-
+        Get user by ID (SCIM 2.0)
+
+        Returns user in SCIM format.
+      operationId: get_user_scim_v2_Users__user_id__get
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SCIMUser"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get User
+      tags:
+      - SCIM 2.0
+    patch:
+      description: |-
+        Update user with PATCH operations (SCIM 2.0)
+
+        Supports add, remove, replace operations.
+
+        Example:
+            ```json
+            {
+                "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                "Operations": [
+                    {
+                        "op": "replace",
+                        "path": "active",
+                        "value": false
+                    }
+                ]
+            }
+            ```
+      operationId: update_user_scim_v2_Users__user_id__patch
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_update_user_scim_v2_Users__user_id__patch"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SCIMUser"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update User
+      tags:
+      - SCIM 2.0
+    put:
+      description: |-
+        Replace user (SCIM 2.0 PUT)
+
+        Replaces entire user resource.
+      operationId: replace_user_scim_v2_Users__user_id__put
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_replace_user_scim_v2_Users__user_id__put"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SCIMUser"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Replace User
+      tags:
+      - SCIM 2.0
+  /scim/v2/Groups:
+    post:
+      description: |-
+        Create a new group (SCIM 2.0)
+
+        Example:
+            ```json
+            {
+                "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+                "displayName": "Engineering",
+                "members": [
+                    {"value": "user-id-123", "display": "Alice Smith"}
+                ]
+            }
+            ```
+      operationId: create_group_scim_v2_Groups_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Body_create_group_scim_v2_Groups_post"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SCIMGroup"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Create Group
+      tags:
+      - SCIM 2.0
+  /scim/v2/Groups/{group_id}:
+    get:
+      description: Get group by ID (SCIM 2.0)
+      operationId: get_group_scim_v2_Groups__group_id__get
+      parameters:
+      - explode: false
+        in: path
+        name: group_id
+        required: true
+        schema:
+          title: Group Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SCIMGroup"
+          description: Successful Response
+        "401":
+          description: Unauthorized - Invalid or missing authentication token
+        "403":
+          description: Forbidden - Insufficient permissions
+        "429":
+          description: Too Many Requests - Rate limit exceeded
+        "500":
+          description: Internal Server Error
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Group
+      tags:
+      - SCIM 2.0
+components:
+  schemas:
+    APIKeyResponse:
+      description: Response containing API key metadata
+      example:
+        expires_at: expires_at
+        key_id: key_id
+        created: created
+        last_used: last_used
+        name: name
+      properties:
+        key_id:
+          title: Key Id
+          type: string
+        name:
+          title: Name
+          type: string
+        created:
+          title: Created
+          type: string
+        expires_at:
+          title: Expires At
+          type: string
+        last_used:
+          nullable: true
+          type: string
+      required:
+      - created
+      - expires_at
+      - key_id
+      - name
+      title: APIKeyResponse
+    APIVersionInfo:
+      description: |-
+        API version metadata
+
+        Follows semantic versioning (MAJOR.MINOR.PATCH):
+        - MAJOR: Breaking changes (incompatible API changes)
+        - MINOR: New features (backward-compatible)
+        - PATCH: Bug fixes (backward-compatible)
+      example:
+        supported_versions:
+        - supported_versions
+        - supported_versions
+        sunset_dates:
+          key: sunset_dates
+        changelog_url: changelog_url
+        api_version: api_version
+        deprecated_versions:
+        - deprecated_versions
+        - deprecated_versions
+        documentation_url: documentation_url
+        version: version
+      properties:
+        version:
+          description: "Application version (semantic versioning: MAJOR.MINOR.PATCH)"
+          title: Version
+          type: string
+        api_version:
+          description: "Current API version (e.g., 'v1')"
+          title: Api Version
+          type: string
+        supported_versions:
+          description: List of supported API versions
+          items:
+            type: string
+          type: array
+        deprecated_versions:
+          description: List of deprecated API versions (still functional but will
+            be removed)
+          items:
+            type: string
+          type: array
+        sunset_dates:
+          additionalProperties:
+            type: string
+          description: Sunset dates for deprecated versions (ISO 8601 format)
+          title: Sunset Dates
+        changelog_url:
+          nullable: true
+          type: string
+        documentation_url:
+          nullable: true
+          type: string
+      required:
+      - api_version
+      - supported_versions
+      - version
+      title: APIVersionInfo
+    Body_create_api_key_api_v1_api_keys__post:
+      properties:
+        request:
+          $ref: "#/components/schemas/CreateAPIKeyRequest"
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - request
+      title: Body_create_api_key_api_v1_api_keys__post
+    Body_create_group_scim_v2_Groups_post:
+      properties:
+        group_data:
+          additionalProperties: true
+          title: Group Data
+          type: object
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - group_data
+      title: Body_create_group_scim_v2_Groups_post
+    Body_create_service_principal_api_v1_service_principals__post:
+      properties:
+        request:
+          $ref: "#/components/schemas/CreateServicePrincipalRequest"
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - request
+      title: Body_create_service_principal_api_v1_service_principals__post
+    Body_create_user_scim_v2_Users_post:
+      properties:
+        user_data:
+          additionalProperties: true
+          title: User Data
+          type: object
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - user_data
+      title: Body_create_user_scim_v2_Users_post
+    Body_replace_user_scim_v2_Users__user_id__put:
+      properties:
+        user_data:
+          additionalProperties: true
+          title: User Data
+          type: object
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - user_data
+      title: Body_replace_user_scim_v2_Users__user_id__put
+    Body_update_consent_api_v1_users_me_consent_post:
+      properties:
+        consent:
+          $ref: "#/components/schemas/ConsentRecord"
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - consent
+      title: Body_update_consent_api_v1_users_me_consent_post
+    Body_update_user_profile_api_v1_users_me_patch:
+      properties:
+        profile_update:
+          $ref: "#/components/schemas/UserProfileUpdate"
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - profile_update
+      title: Body_update_user_profile_api_v1_users_me_patch
+    Body_update_user_scim_v2_Users__user_id__patch:
+      properties:
+        patch_request:
+          $ref: "#/components/schemas/SCIMPatchRequest"
+        credentials:
+          $ref: "#/components/schemas/HTTPAuthorizationCredentials"
+      required:
+      - patch_request
+      title: Body_update_user_scim_v2_Users__user_id__patch
+    ConsentRecord:
+      description: Consent record for GDPR Article 21
+      example:
+        consent_type: analytics
+        granted: true
+      properties:
+        consent_type:
+          $ref: "#/components/schemas/ConsentType"
+        granted:
+          description: Whether consent is granted
+          title: Granted
+          type: boolean
+        timestamp:
+          nullable: true
+          type: string
+        ip_address:
+          nullable: true
+          type: string
+        user_agent:
+          nullable: true
+          type: string
+      required:
+      - consent_type
+      - granted
+      title: ConsentRecord
+    ConsentResponse:
+      description: Response for consent operations
+      example:
+        consents:
+          analytics:
+            granted: true
+            ip_address: 192.168.1.1
+            timestamp: 2025-01-01T12:00:00Z
+          marketing:
+            granted: false
+            timestamp: 2025-01-01T12:00:00Z
+        user_id: user:alice
+      properties:
+        user_id:
+          title: User Id
+          type: string
+        consents:
+          additionalProperties:
+            additionalProperties: true
+            type: object
+          description: Current consent status for all types
+          title: Consents
+      required:
+      - consents
+      - user_id
+      title: ConsentResponse
+    ConsentType:
+      description: Types of consent that can be granted or revoked
+      enum:
+      - analytics
+      - marketing
+      - third_party
+      - profiling
+      title: ConsentType
+      type: string
+    CreateAPIKeyRequest:
+      description: Request to create a new API key
+      properties:
+        name:
+          description: Human-readable name for the API key
+          title: Name
+          type: string
+        expires_days:
+          default: 365
+          description: "Days until expiration (default: 365)"
+          title: Expires Days
+          type: integer
+      required:
+      - name
+      title: CreateAPIKeyRequest
+    CreateAPIKeyResponse:
+      description: Response when creating API key (includes the key itself)
+      example:
+        expires_at: expires_at
+        key_id: key_id
+        api_key: api_key
+        created: created
+        last_used: last_used
+        name: name
+        message: API key created successfully. Save it securely - it will not be shown
+          again.
+      properties:
+        key_id:
+          title: Key Id
+          type: string
+        name:
+          title: Name
+          type: string
+        created:
+          title: Created
+          type: string
+        expires_at:
+          title: Expires At
+          type: string
+        last_used:
+          nullable: true
+          type: string
+        api_key:
+          description: "API key (save securely, won't be shown again)"
+          title: Api Key
+          type: string
+        message:
+          default: API key created successfully. Save it securely - it will not be
+            shown again.
+          title: Message
+          type: string
+      required:
+      - api_key
+      - created
+      - expires_at
+      - key_id
+      - name
+      title: CreateAPIKeyResponse
+    CreateServicePrincipalRequest:
+      description: Request to create a new service principal
+      properties:
+        name:
+          description: Human-readable name for the service
+          title: Name
+          type: string
+        description:
+          description: Purpose/description of the service
+          title: Description
+          type: string
+        authentication_mode:
+          default: client_credentials
+          description: "Authentication mode: 'client_credentials' or 'service_account_user'"
+          title: Authentication Mode
+          type: string
+        associated_user_id:
+          nullable: true
+          type: string
+        inherit_permissions:
+          default: false
+          description: Whether to inherit permissions from associated user
+          title: Inherit Permissions
+          type: boolean
+      required:
+      - description
+      - name
+      title: CreateServicePrincipalRequest
+    CreateServicePrincipalResponse:
+      description: Response when creating service principal (includes secret)
+      example:
+        authentication_mode: authentication_mode
+        associated_user_id: associated_user_id
+        owner_user_id: owner_user_id
+        service_id: service_id
+        name: name
+        description: description
+        created_at: created_at
+        inherit_permissions: true
+        client_secret: client_secret
+        message: Service principal created successfully. Save the client_secret securely.
+        enabled: true
+      properties:
+        service_id:
+          title: Service Id
+          type: string
+        name:
+          title: Name
+          type: string
+        description:
+          title: Description
+          type: string
+        authentication_mode:
+          title: Authentication Mode
+          type: string
+        associated_user_id:
+          nullable: true
+          type: string
+        owner_user_id:
+          nullable: true
+          type: string
+        inherit_permissions:
+          title: Inherit Permissions
+          type: boolean
+        enabled:
+          title: Enabled
+          type: boolean
+        created_at:
+          nullable: true
+          type: string
+        client_secret:
+          description: "Client secret (save securely, won't be shown again)"
+          title: Client Secret
+          type: string
+        message:
+          default: Service principal created successfully. Save the client_secret
+            securely.
+          title: Message
+          type: string
+      required:
+      - associated_user_id
+      - authentication_mode
+      - client_secret
+      - created_at
+      - description
+      - enabled
+      - inherit_permissions
+      - name
+      - owner_user_id
+      - service_id
+      title: CreateServicePrincipalResponse
+    HTTPAuthorizationCredentials:
+      description: |-
+        The HTTP authorization credentials in the result of using `HTTPBearer` or
+        `HTTPDigest` in a dependency.
+
+        The HTTP authorization header value is split by the first space.
+
+        The first part is the `scheme`, the second part is the `credentials`.
+
+        For example, in an HTTP Bearer token scheme, the client will send a header
+        like:
+
+        ```
+        Authorization: Bearer deadbeef12346
+        ```
+
+        In this case:
+
+        * `scheme` will have the value `"Bearer"`
+        * `credentials` will have the value `"deadbeef12346"`
+      example:
+        scheme: scheme
+        credentials: credentials
+      properties:
+        scheme:
+          title: Scheme
+          type: string
+        credentials:
+          title: Credentials
+          type: string
+      required:
+      - credentials
+      - scheme
+      title: HTTPAuthorizationCredentials
+    HTTPValidationError:
+      example:
+        detail:
+        - msg: msg
+          loc:
+          - ValidationError_loc_inner
+          - ValidationError_loc_inner
+          type: type
+        - msg: msg
+          loc:
+          - ValidationError_loc_inner
+          - ValidationError_loc_inner
+          type: type
+      properties:
+        detail:
+          items:
+            $ref: "#/components/schemas/ValidationError"
+          type: array
+      title: HTTPValidationError
+    LoginRequest:
+      description: Login request with username and password
+      example:
+        password: password
+        username: username
+      properties:
+        username:
+          description: Username
+          maxLength: 100
+          minLength: 1
+          title: Username
+          type: string
+        password:
+          description: Password
+          maxLength: 500
+          minLength: 1
+          title: Password
+          type: string
+      required:
+      - password
+      - username
+      title: LoginRequest
+    LoginResponse:
+      description: Login response with JWT token
+      example:
+        access_token: access_token
+        user_id: user_id
+        roles:
+        - roles
+        - roles
+        token_type: bearer
+        expires_in: 0
+        username: username
+      properties:
+        access_token:
+          description: JWT access token
+          title: Access Token
+          type: string
+        token_type:
+          default: bearer
+          description: Token type (always 'bearer')
+          title: Token Type
+          type: string
+        expires_in:
+          description: Token expiration in seconds
+          title: Expires In
+          type: integer
+        user_id:
+          description: User identifier
+          title: User Id
+          type: string
+        username:
+          description: Username
+          title: Username
+          type: string
+        roles:
+          description: User roles
+          items:
+            type: string
+          type: array
+      required:
+      - access_token
+      - expires_in
+      - roles
+      - user_id
+      - username
+      title: LoginResponse
+    RefreshTokenRequest:
+      description: Token refresh request
+      example:
+        refresh_token: refresh_token
+        current_token: current_token
+      properties:
+        refresh_token:
+          nullable: true
+          type: string
+        current_token:
+          nullable: true
+          type: string
+      title: RefreshTokenRequest
+    RefreshTokenResponse:
+      description: Token refresh response
+      example:
+        access_token: access_token
+        refresh_token: refresh_token
+        token_type: bearer
+        expires_in: 0
+      properties:
+        access_token:
+          description: New JWT access token
+          title: Access Token
+          type: string
+        token_type:
+          default: bearer
+          description: Token type
+          title: Token Type
+          type: string
+        expires_in:
+          description: Token expiration in seconds
+          title: Expires In
+          type: integer
+        refresh_token:
+          nullable: true
+          type: string
+      required:
+      - access_token
+      - expires_in
+      title: RefreshTokenResponse
+    RotateAPIKeyResponse:
+      description: Response when rotating API key
+      example:
+        key_id: key_id
+        new_api_key: new_api_key
+        message: API key rotated successfully. Update your client configuration.
+      properties:
+        key_id:
+          title: Key Id
+          type: string
+        new_api_key:
+          description: New API key
+          title: New Api Key
+          type: string
+        message:
+          default: API key rotated successfully. Update your client configuration.
+          title: Message
+          type: string
+      required:
+      - key_id
+      - new_api_key
+      title: RotateAPIKeyResponse
+    RotateSecretResponse:
+      description: Response when rotating service principal secret
+      example:
+        service_id: service_id
+        client_secret: client_secret
+        message: Secret rotated successfully. Update your service configuration.
+      properties:
+        service_id:
+          title: Service Id
+          type: string
+        client_secret:
+          description: New client secret
+          title: Client Secret
+          type: string
+        message:
+          default: Secret rotated successfully. Update your service configuration.
+          title: Message
+          type: string
+      required:
+      - client_secret
+      - service_id
+      title: RotateSecretResponse
+    SCIMAddress:
+      description: SCIM address
+      example:
+        country: country
+        streetAddress: streetAddress
+        formatted: formatted
+        postalCode: postalCode
+        locality: locality
+        region: region
+        type: type
+        primary: false
+      properties:
+        formatted:
+          nullable: true
+          type: string
+        streetAddress:
+          nullable: true
+          type: string
+        locality:
+          nullable: true
+          type: string
+        region:
+          nullable: true
+          type: string
+        postalCode:
+          nullable: true
+          type: string
+        country:
+          nullable: true
+          type: string
+        type:
+          nullable: true
+          type: string
+        primary:
+          default: false
+          title: Primary
+          type: boolean
+      title: SCIMAddress
+    SCIMEmail:
+      description: SCIM email address
+      example:
+        type: type
+        value: value
+        primary: false
+      properties:
+        value:
+          title: Value
+          type: string
+        type:
+          nullable: true
+          type: string
+        primary:
+          default: false
+          title: Primary
+          type: boolean
+      required:
+      - value
+      title: SCIMEmail
+    SCIMEnterpriseUser:
+      description: SCIM Enterprise User Extension (RFC 7643 Section 4.3)
+      example:
+        division: division
+        manager:
+          key: manager
+        costCenter: costCenter
+        organization: organization
+        department: department
+        employeeNumber: employeeNumber
+      properties:
+        employeeNumber:
+          nullable: true
+          type: string
+        costCenter:
+          nullable: true
+          type: string
+        organization:
+          nullable: true
+          type: string
+        division:
+          nullable: true
+          type: string
+        department:
+          nullable: true
+          type: string
+        manager:
+          additionalProperties:
+            type: string
+          nullable: true
+      title: SCIMEnterpriseUser
+    SCIMGroup:
+      description: SCIM 2.0 Group Resource
+      example:
+        displayName: displayName
+        meta:
+          key: ""
+        schemas:
+        - schemas
+        - schemas
+        members:
+        - ref: ref
+          display: display
+          type: type
+          value: value
+        - ref: ref
+          display: display
+          type: type
+          value: value
+        id: id
+      properties:
+        schemas:
+          default:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+          items:
+            nullable: true
+            type: string
+          type: array
+        id:
+          nullable: true
+          type: string
+        displayName:
+          title: Displayname
+          type: string
+        members:
+          default: []
+          items:
+            $ref: "#/components/schemas/SCIMMember"
+          type: array
+        meta:
+          additionalProperties: true
+          nullable: true
+          type: object
+      required:
+      - displayName
+      title: SCIMGroup
+    SCIMGroupMembership:
+      description: SCIM group membership
+      example:
+        ref: ref
+        display: display
+        type: type
+        value: value
+      properties:
+        value:
+          title: Value
+          type: string
+        ref:
+          nullable: true
+          type: string
+        display:
+          nullable: true
+          type: string
+        type:
+          nullable: true
+          type: string
+      required:
+      - value
+      title: SCIMGroupMembership
+    SCIMListResponse:
+      description: SCIM List Response
+      example:
+        totalResults: 0
+        startIndex: 6
+        itemsPerPage: 1
+        schemas:
+        - schemas
+        - schemas
+        Resources:
+        - ""
+        - ""
+      properties:
+        schemas:
+          default:
+          - urn:ietf:params:scim:api:messages:2.0:ListResponse
+          items:
+            type: string
+          type: array
+        totalResults:
+          title: Totalresults
+          type: integer
+        startIndex:
+          default: 1
+          title: Startindex
+          type: integer
+        itemsPerPage:
+          title: Itemsperpage
+          type: integer
+        Resources:
+          items: {}
+          type: array
+      required:
+      - Resources
+      - itemsPerPage
+      - totalResults
+      title: SCIMListResponse
+    SCIMMember:
+      description: SCIM group member
+      example:
+        ref: ref
+        display: display
+        type: type
+        value: value
+      properties:
+        value:
+          title: Value
+          type: string
+        ref:
+          nullable: true
+          type: string
+        display:
+          nullable: true
+          type: string
+        type:
+          nullable: true
+          type: string
+      required:
+      - value
+      title: SCIMMember
+    SCIMName:
+      description: SCIM user name
+      example:
+        honorificSuffix: honorificSuffix
+        formatted: formatted
+        familyName: familyName
+        givenName: givenName
+        honorificPrefix: honorificPrefix
+        middleName: middleName
+      properties:
+        formatted:
+          nullable: true
+          type: string
+        familyName:
+          nullable: true
+          type: string
+        givenName:
+          nullable: true
+          type: string
+        middleName:
+          nullable: true
+          type: string
+        honorificPrefix:
+          nullable: true
+          type: string
+        honorificSuffix:
+          nullable: true
+          type: string
+      title: SCIMName
+    SCIMPatchOp:
+      description: SCIM PATCH operation types
+      enum:
+      - add
+      - remove
+      - replace
+      title: SCIMPatchOp
+      type: string
+    SCIMPatchOperation:
+      description: SCIM PATCH operation
+      properties:
+        op:
+          $ref: "#/components/schemas/SCIMPatchOp"
+        path:
+          nullable: true
+          type: string
+        value:
+          title: Value
+      required:
+      - op
+      title: SCIMPatchOperation
+    SCIMPatchRequest:
+      description: SCIM PATCH request
+      properties:
+        schemas:
+          default:
+          - urn:ietf:params:scim:api:messages:2.0:PatchOp
+          items:
+            type: string
+          type: array
+        Operations:
+          items:
+            $ref: "#/components/schemas/SCIMPatchOperation"
+          type: array
+      required:
+      - Operations
+      title: SCIMPatchRequest
+    SCIMPhoneNumber:
+      description: SCIM phone number
+      example:
+        type: type
+        value: value
+        primary: false
+      properties:
+        value:
+          title: Value
+          type: string
+        type:
+          nullable: true
+          type: string
+        primary:
+          default: false
+          title: Primary
+          type: boolean
+      required:
+      - value
+      title: SCIMPhoneNumber
+    SCIMUser:
+      description: |-
+        SCIM 2.0 User Resource
+
+        Core schema with optional Enterprise extension.
+      example:
+        profileUrl: profileUrl
+        preferredLanguage: preferredLanguage
+        addresses:
+        - country: country
+          streetAddress: streetAddress
+          formatted: formatted
+          postalCode: postalCode
+          locality: locality
+          region: region
+          type: type
+          primary: false
+        - country: country
+          streetAddress: streetAddress
+          formatted: formatted
+          postalCode: postalCode
+          locality: locality
+          region: region
+          type: type
+          primary: false
+        displayName: displayName
+        nickName: nickName
+        timezone: timezone
+        externalId: externalId
+        active: true
+        groups:
+        - ref: ref
+          display: display
+          type: type
+          value: value
+        - ref: ref
+          display: display
+          type: type
+          value: value
+        userName: userName
+        title: title
+        locale: locale
+        phoneNumbers:
+        - type: type
+          value: value
+          primary: false
+        - type: type
+          value: value
+          primary: false
+        urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:
+          division: division
+          manager:
+            key: manager
+          costCenter: costCenter
+          organization: organization
+          department: department
+          employeeNumber: employeeNumber
+        emails:
+        - type: type
+          value: value
+          primary: false
+        - type: type
+          value: value
+          primary: false
+        password: password
+        meta:
+          key: ""
+        schemas:
+        - schemas
+        - schemas
+        name:
+          honorificSuffix: honorificSuffix
+          formatted: formatted
+          familyName: familyName
+          givenName: givenName
+          honorificPrefix: honorificPrefix
+          middleName: middleName
+        id: id
+        userType: userType
+      properties:
+        schemas:
+          default:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          items:
+            nullable: true
+            type: string
+          type: array
+        id:
+          nullable: true
+          type: string
+        externalId:
+          nullable: true
+          type: string
+        userName:
+          title: Username
+          type: string
+        name:
+          $ref: "#/components/schemas/SCIMName"
+        displayName:
+          nullable: true
+          type: string
+        nickName:
+          nullable: true
+          type: string
+        profileUrl:
+          nullable: true
+          type: string
+        title:
+          nullable: true
+          type: string
+        userType:
+          nullable: true
+          type: string
+        preferredLanguage:
+          nullable: true
+          type: string
+        locale:
+          nullable: true
+          type: string
+        timezone:
+          nullable: true
+          type: string
+        active:
+          default: true
+          title: Active
+          type: boolean
+        password:
+          nullable: true
+          type: string
+        emails:
+          default: []
+          items:
+            $ref: "#/components/schemas/SCIMEmail"
+          type: array
+        phoneNumbers:
+          default: []
+          items:
+            $ref: "#/components/schemas/SCIMPhoneNumber"
+          type: array
+        addresses:
+          default: []
+          items:
+            $ref: "#/components/schemas/SCIMAddress"
+          type: array
+        groups:
+          default: []
+          items:
+            $ref: "#/components/schemas/SCIMGroupMembership"
+          type: array
+        meta:
+          additionalProperties: true
+          nullable: true
+          type: object
+        urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:
+          $ref: "#/components/schemas/SCIMEnterpriseUser"
+      required:
+      - userName
+      title: SCIMUser
+    ServicePrincipalResponse:
+      description: Response containing service principal details
+      example:
+        authentication_mode: authentication_mode
+        associated_user_id: associated_user_id
+        owner_user_id: owner_user_id
+        service_id: service_id
+        name: name
+        description: description
+        created_at: created_at
+        inherit_permissions: true
+        enabled: true
+      properties:
+        service_id:
+          title: Service Id
+          type: string
+        name:
+          title: Name
+          type: string
+        description:
+          title: Description
+          type: string
+        authentication_mode:
+          title: Authentication Mode
+          type: string
+        associated_user_id:
+          nullable: true
+          type: string
+        owner_user_id:
+          nullable: true
+          type: string
+        inherit_permissions:
+          title: Inherit Permissions
+          type: boolean
+        enabled:
+          title: Enabled
+          type: boolean
+        created_at:
+          nullable: true
+          type: string
+      required:
+      - associated_user_id
+      - authentication_mode
+      - created_at
+      - description
+      - enabled
+      - inherit_permissions
+      - name
+      - owner_user_id
+      - service_id
+      title: ServicePrincipalResponse
+    UserDataExport:
+      description: |-
+        Complete user data export for GDPR compliance
+
+        Includes all personal data associated with a user.
+      example:
+        audit_log: []
+        consents: []
+        conversations: []
+        email: alice@acme.com
+        export_id: exp_20250101120000_user123
+        export_timestamp: 2025-01-01T12:00:00Z
+        preferences:
+          theme: dark
+        profile:
+          created_at: 2024-01-01
+          name: Alice
+        sessions:
+        - created_at: 2025-01-01T10:00:00Z
+          session_id: sess_123
+        user_id: user:alice
+        username: alice
+      properties:
+        export_id:
+          description: Unique export identifier
+          title: Export Id
+          type: string
+        export_timestamp:
+          description: ISO timestamp of export
+          title: Export Timestamp
+          type: string
+        user_id:
+          description: User identifier
+          title: User Id
+          type: string
+        username:
+          description: Username
+          title: Username
+          type: string
+        email:
+          description: User email address
+          title: Email
+          type: string
+        profile:
+          additionalProperties: true
+          description: User profile data
+          title: Profile
+          type: object
+        sessions:
+          description: Active and recent sessions
+          items:
+            additionalProperties: true
+            nullable: true
+            type: object
+          type: array
+        conversations:
+          description: Conversation history
+          items:
+            additionalProperties: true
+            nullable: true
+            type: object
+          type: array
+        preferences:
+          additionalProperties: true
+          description: User preferences and settings
+          title: Preferences
+          type: object
+        audit_log:
+          description: User activity audit log
+          items:
+            additionalProperties: true
+            nullable: true
+            type: object
+          type: array
+        consents:
+          description: Consent records
+          items:
+            additionalProperties: true
+            nullable: true
+            type: object
+          type: array
+        metadata:
+          additionalProperties: true
+          description: Additional metadata
+          title: Metadata
+          type: object
+      required:
+      - email
+      - export_id
+      - export_timestamp
+      - user_id
+      - username
+      title: UserDataExport
+    UserProfileUpdate:
+      description: User profile update model (GDPR Article 16 - Right to Rectification)
+      example:
+        email: alice.smith@acme.com
+        name: Alice Smith
+        preferences:
+          language: en
+          theme: dark
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          nullable: true
+          type: string
+        email:
+          nullable: true
+          type: string
+        preferences:
+          additionalProperties: true
+          nullable: true
+          type: object
+      title: UserProfileUpdate
+    ValidationError:
+      example:
+        msg: msg
+        loc:
+        - ValidationError_loc_inner
+        - ValidationError_loc_inner
+        type: type
+      properties:
+        loc:
+          items:
+            $ref: "#/components/schemas/ValidationError_loc_inner"
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    ValidationError_loc_inner:
+      anyOf:
+      - type: string
+      - type: integer

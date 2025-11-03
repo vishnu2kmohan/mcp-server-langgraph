@@ -1,0 +1,744 @@
+# API Gateway Deployment Guide
+
+Complete guide for deploying OpenAPI-compliant APIs to production API Gateways.
+
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Kong API Gateway](#kong-api-gateway)
+3. [AWS API Gateway](#aws-api-gateway)
+4. [Google Cloud API Gateway](#google-cloud-api-gateway)
+5. [Azure API Management](#azure-api-management)
+6. [Kubernetes Ingress](#kubernetes-ingress)
+
+---
+
+## Prerequisites
+
+### OpenAPI Specification
+- **File:** `openapi/v1.json`
+- **Version:** OpenAPI 3.1.0
+- **Endpoints:** 22
+- **Schemas:** 42
+
+### Required Configuration
+- JWT secret key
+- Keycloak SSO (optional)
+- OpenFGA authorization
+- PostgreSQL database (for GDPR storage)
+- Redis (for rate limiting)
+
+---
+
+## Kong API Gateway
+
+### 1. Install Kong Gateway
+
+```bash
+# Using Docker
+docker run -d --name kong-gateway \
+  --network=kong-net \
+  -e "KONG_DATABASE=postgres" \
+  -e "KONG_PG_HOST=postgres" \
+  -e "KONG_PROXY_ACCESS_LOG=/dev/stdout" \
+  -e "KONG_ADMIN_ACCESS_LOG=/dev/stdout" \
+  -e "KONG_PROXY_ERROR_LOG=/dev/stderr" \
+  -e "KONG_ADMIN_ERROR_LOG=/dev/stderr" \
+  -e "KONG_ADMIN_LISTEN=0.0.0.0:8001" \
+  -p 8000:8000 \
+  -p 8443:8443 \
+  -p 8001:8001 \
+  kong:latest
+```
+
+### 2. Import OpenAPI Specification
+
+```bash
+# Install deck (Kong's declarative configuration tool)
+brew install deck
+
+# Convert OpenAPI to Kong config
+deck file openapi2kong \
+  -s openapi/v1.json \
+  -o kong.yaml
+
+# Apply configuration
+deck gateway sync kong.yaml
+```
+
+### 3. Configure API Key Plugin
+
+Kong configuration is already integrated:
+- See `src/mcp_server_langgraph/api/api_keys.py:validate` endpoint
+- Kong calls `/api/v1/api-keys/validate` to exchange API key for JWT
+
+**Kong Plugin Config:**
+```yaml
+plugins:
+  - name: request-transformer
+    config:
+      add:
+        headers:
+          - "Authorization: Bearer {{jwt_token}}"
+```
+
+### 4. Enable Rate Limiting
+
+```bash
+curl -X POST http://localhost:8001/services/mcp-server/plugins \
+  --data "name=rate-limiting" \
+  --data "config.minute=60" \
+  --data "config.policy=redis" \
+  --data "config.redis_host=redis"
+```
+
+---
+
+## AWS API Gateway
+
+### 1. Import OpenAPI Spec
+
+```bash
+# Using AWS CLI
+aws apigateway import-rest-api \
+  --body file://openapi/v1.json \
+  --fail-on-warnings \
+  --endpoint-configuration types=REGIONAL
+
+# Save API ID
+export API_ID=<api-id-from-output>
+```
+
+### 2. Configure JWT Authorizer
+
+```bash
+# Create Lambda authorizer for JWT validation
+aws apigateway create-authorizer \
+  --rest-api-id $API_ID \
+  --name JWTAuthorizer \
+  --type TOKEN \
+  --authorizer-uri arn:aws:apigateway:region:lambda:path/2015-03-31/functions/arn:aws:lambda:region:account-id:function:jwt-authorizer/invocations \
+  --identity-source method.request.header.Authorization
+```
+
+### 3. Deploy to Stage
+
+```bash
+# Create deployment
+aws apigateway create-deployment \
+  --rest-api-id $API_ID \
+  --stage-name production
+
+# Get invoke URL
+echo "https://${API_ID}.execute-api.region.amazonaws.com/production"
+```
+
+### 4. Add Usage Plan (Rate Limiting)
+
+```bash
+# Create usage plan
+aws apigateway create-usage-plan \
+  --name "Production Tier" \
+  --throttle burstLimit=100,rateLimit=50 \
+  --quota limit=10000,period=DAY
+
+# Associate with API stage
+aws apigateway create-usage-plan-key \
+  --usage-plan-id $USAGE_PLAN_ID \
+  --key-type API_KEY \
+  --key-id $API_KEY_ID
+```
+
+---
+
+## Google Cloud API Gateway
+
+### 1. Create API Config
+
+```bash
+# Deploy OpenAPI spec
+gcloud api-gateway api-configs create mcp-api-v1 \
+  --api=mcp-server \
+  --openapi-spec=openapi/v1.json \
+  --project=$PROJECT_ID \
+  --backend-auth-service-account=$SERVICE_ACCOUNT
+```
+
+### 2. Create Gateway
+
+```bash
+# Create gateway
+gcloud api-gateway gateways create mcp-gateway \
+  --api=mcp-server \
+  --api-config=mcp-api-v1 \
+  --location=us-central1 \
+  --project=$PROJECT_ID
+
+# Get gateway URL
+gcloud api-gateway gateways describe mcp-gateway \
+  --location=us-central1 \
+  --format="value(defaultHostname)"
+```
+
+### 3. Configure Authentication
+
+**Option A: API Keys**
+```yaml
+# Add to openapi/v1.json
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: x-api-key
+    in: header
+
+security:
+  - api_key: []
+```
+
+**Option B: JWT (Firebase Auth)**
+```yaml
+securityDefinitions:
+  firebase:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    x-google-issuer: "https://securetoken.google.com/PROJECT_ID"
+    x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+    x-google-audiences: "PROJECT_ID"
+```
+
+---
+
+## Azure API Management
+
+### 1. Import OpenAPI
+
+```bash
+# Create API Management instance
+az apim create \
+  --name mcp-apim \
+  --resource-group mcp-resources \
+  --publisher-email admin@example.com \
+  --publisher-name "MCP API"
+
+# Import OpenAPI spec
+az apim api import \
+  --resource-group mcp-resources \
+  --service-name mcp-apim \
+  --path /api/v1 \
+  --specification-format OpenApi \
+  --specification-path openapi/v1.json \
+  --api-id mcp-server-api
+```
+
+### 2. Configure JWT Validation
+
+```xml
+<!-- Add to inbound policy -->
+<validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+  <openid-config url="https://YOUR_KEYCLOAK/realms/YOUR_REALM/.well-known/openid-configuration" />
+  <required-claims>
+    <claim name="aud" match="any">
+      <value>mcp-api</value>
+    </claim>
+  </required-claims>
+</validate-jwt>
+```
+
+### 3. Enable Rate Limiting
+
+```xml
+<rate-limit calls="100" renewal-period="60" />
+<quota calls="10000" renewal-period="86400" />
+```
+
+---
+
+## Kubernetes Ingress (NGINX/Traefik)
+
+### Option 1: NGINX Ingress
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-api-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/auth-url: "http://mcp-server.default.svc.cluster.local:8000/auth/validate"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.example.com
+      http:
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-server
+                port:
+                  number: 8000
+  tls:
+    - hosts:
+        - api.example.com
+      secretName: api-tls-cert
+```
+
+### Option 2: Traefik Ingress
+
+```yaml
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: mcp-api-route
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`api.example.com`) && PathPrefix(`/api/v1`)
+      kind: Rule
+      services:
+        - name: mcp-server
+          port: 8000
+      middlewares:
+        - name: rate-limit
+        - name: jwt-auth
+  tls:
+    certResolver: letsencrypt
+```
+
+---
+
+## Environment Configuration
+
+### Required Environment Variables
+
+```bash
+# JWT Authentication
+export JWT_SECRET_KEY="your-secret-key-here"
+
+# Keycloak SSO
+export KEYCLOAK_SERVER_URL="https://keycloak.example.com"
+export KEYCLOAK_REALM="mcp-realm"
+export KEYCLOAK_CLIENT_ID="mcp-api"
+export KEYCLOAK_CLIENT_SECRET="client-secret"
+
+# OpenFGA Authorization
+export OPENFGA_API_URL="https://openfga.example.com"
+export OPENFGA_STORE_ID="your-store-id"
+export OPENFGA_API_TOKEN="openfga-token"
+
+# Database
+export DATABASE_URL="postgresql://user:pass@postgres:5432/mcp"
+
+# Redis (Rate Limiting)
+export REDIS_URL="redis://redis:6379/0"
+
+# GDPR Storage
+export GDPR_STORAGE_BACKEND="postgres"
+
+# CORS
+export CORS_ORIGINS="https://app.example.com,https://admin.example.com"
+```
+
+---
+
+## Testing Deployment
+
+### 1. Health Check
+
+```bash
+curl https://api.example.com/health
+# Expected: {"status": "healthy"}
+
+curl https://api.example.com/health/ready
+# Expected: {"status": "ready", "checks": {...}}
+```
+
+### 2. OpenAPI Documentation
+
+```bash
+# Swagger UI
+https://api.example.com/docs
+
+# ReDoc
+https://api.example.com/redoc
+
+# OpenAPI JSON
+https://api.example.com/openapi.json
+```
+
+### 3. Authentication Test
+
+```bash
+# Login
+curl -X POST https://api.example.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "secret"
+  }'
+
+# Use JWT token
+export TOKEN="<access_token from response>"
+
+curl https://api.example.com/api/v1/api-keys/ \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 4. Rate Limiting Test
+
+```bash
+# Make 101 requests (rate limit is 100/minute)
+for i in {1..101}; do
+  curl -s -o /dev/null -w "%{http_code}\n" \
+    https://api.example.com/api/version
+done
+
+# Should see 200 responses, then 429 (Too Many Requests)
+```
+
+---
+
+## Monitoring & Observability
+
+### Prometheus Metrics
+
+```bash
+# Endpoint: /metrics/prometheus
+
+# Metrics exposed:
+# - http_requests_total
+# - http_request_duration_seconds
+# - circuit_breaker_state
+# - rate_limit_exceeded_total
+```
+
+### Grafana Dashboard
+
+```bash
+# Import dashboard from grafana.com
+# ID: 14282 (FastAPI dashboard)
+
+# Configure Prometheus data source
+# URL: http://prometheus:9090
+```
+
+### Traces (OpenTelemetry)
+
+```bash
+# Export to Jaeger
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318"
+export OTEL_SERVICE_NAME="mcp-server"
+```
+
+---
+
+## Security Checklist
+
+Before production deployment:
+
+- [ ] JWT secret is secure (32+ characters, rotated)
+- [ ] HTTPS/TLS enabled (valid certificates)
+- [ ] CORS origins restricted (not `*`)
+- [ ] Rate limiting configured (per user/IP)
+- [ ] OpenFGA authorization policies defined
+- [ ] Database credentials secured (secrets manager)
+- [ ] API keys hashed with bcrypt
+- [ ] GDPR storage uses PostgreSQL (not in-memory)
+- [ ] Audit logging enabled
+- [ ] Circuit breakers configured
+- [ ] Health checks responding
+- [ ] Monitoring alerts configured
+
+---
+
+## API Gateway Features Comparison
+
+| Feature | Kong | AWS | GCP | Azure | NGINX |
+|---------|------|-----|-----|-------|-------|
+| OpenAPI Import | ✅ | ✅ | ✅ | ✅ | ⚠️ |
+| JWT Validation | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Rate Limiting | ✅ | ✅ | ✅ | ✅ | ✅ |
+| API Key Management | ✅ | ✅ | ✅ | ✅ | ❌ |
+| SCIM Support | ✅ | ⚠️ | ⚠️ | ✅ | ❌ |
+| Monitoring | ✅ | ✅ | ✅ | ✅ | ⚠️ |
+| Auto-scaling | ✅ | ✅ | ✅ | ✅ | ⚠️ |
+
+Legend: ✅ Full Support | ⚠️ Partial | ❌ Not Supported
+
+---
+
+## Production Deployment Example (Kong + Kubernetes)
+
+### Complete Setup
+
+```yaml
+# mcp-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server
+spec:
+  selector:
+    app: mcp-server
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      containers:
+        - name: mcp-server
+          image: your-registry/mcp-server:2.8.0
+          ports:
+            - containerPort: 8000
+          env:
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-secrets
+                  key: jwt-secret
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-secrets
+                  key: database-url
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+# Kong Ingress
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limiting
+config:
+  minute: 100
+  policy: redis
+  redis_host: redis
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-api
+  annotations:
+    konghq.com/plugins: rate-limiting
+spec:
+  ingressClassName: kong
+  rules:
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kong-proxy
+                port:
+                  number: 80
+```
+
+---
+
+## API Versioning Strategy
+
+### URL-Based Versioning (Current)
+- `/api/v1/*` - Version 1 (current)
+- `/api/v2/*` - Version 2 (future)
+
+### Header-Based Versioning (Optional)
+```bash
+curl https://api.example.com/api/v1/users/me/data \
+  -H "X-API-Version: 1.0" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Deprecation Policy
+1. **Announce deprecation** - 6 months notice
+2. **Mark as deprecated** - Add `deprecated: true` to OpenAPI
+3. **Update `/api/version`** - Add to `deprecated_versions` with sunset date
+4. **Return headers** - `Sunset: Sat, 01 Jun 2026 00:00:00 GMT`
+5. **Remove version** - After sunset date
+
+---
+
+## Breaking Change Prevention
+
+### Automated Validation
+
+```bash
+# Run before deploying
+python scripts/validation/validate_openapi.py
+
+# Check for breaking changes
+python scripts/validation/detect_breaking_changes.py \
+  --baseline openapi/v1-baseline.json \
+  --current openapi/v1.json
+```
+
+### Breaking Changes (Require Version Bump)
+- ❌ Removing endpoints
+- ❌ Removing required fields
+- ❌ Changing field types
+- ❌ Renaming fields
+- ❌ Changing authentication methods
+
+### Safe Changes (No Version Bump)
+- ✅ Adding new endpoints
+- ✅ Adding optional fields
+- ✅ Adding new response fields
+- ✅ Adding query parameters (optional)
+- ✅ Expanding enum values
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+# .github/workflows/api-deploy.yml
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  validate-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate OpenAPI Spec
+        run: |
+          python scripts/validation/validate_openapi.py
+
+      - name: Detect Breaking Changes
+        run: |
+          python scripts/validation/detect_breaking_changes.py \
+            --baseline openapi/v1-baseline.json \
+            --current openapi/v1.json
+
+  generate-sdks:
+    needs: validate-openapi
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Python SDK
+        run: |
+          docker run --rm \
+            -v $(pwd):/local \
+            openapitools/openapi-generator-cli generate \
+            -i /local/openapi/v1.json \
+            -g python \
+            -o /local/clients/python
+
+      - name: Publish to PyPI
+        run: |
+          cd clients/python
+          python -m build
+          twine upload dist/*
+
+  deploy-to-kong:
+    needs: validate-openapi
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Kong
+        run: |
+          deck file openapi2kong -s openapi/v1.json -o kong.yaml
+          deck gateway sync kong.yaml --kong-addr https://kong-admin.example.com
+```
+
+---
+
+## Troubleshooting
+
+### Issue: 404 on API Endpoints
+**Cause:** Routers not registered
+**Solution:** Verify all routers in `server_streamable.py:1262-1271`
+
+### Issue: OpenAPI Generation Fails
+**Cause:** Pydantic model issues (`$ref` conflicts)
+**Solution:** See `scim/schema.py:68-77` for `$ref` workaround
+
+### Issue: Authentication Fails
+**Cause:** JWT secret not configured
+**Solution:** Set `JWT_SECRET_KEY` environment variable
+
+### Issue: GDPR Operations Fail
+**Cause:** In-memory storage in production
+**Solution:** Set `GDPR_STORAGE_BACKEND=postgres`
+
+### Issue: Rate Limiting Not Working
+**Cause:** Redis not configured
+**Solution:** Set `REDIS_URL` and configure SlowAPI
+
+---
+
+## Performance Tuning
+
+### Recommended Settings
+
+```python
+# Gunicorn workers
+workers = (2 * cpu_cores) + 1  # e.g., 9 workers for 4 cores
+
+# Worker class
+worker_class = "uvicorn.workers.UvicornWorker"
+
+# Connection limits
+max_requests = 10000  # Restart workers after N requests
+max_requests_jitter = 1000  # Add randomness to prevent thundering herd
+keepalive = 65  # Seconds
+
+# Timeouts
+timeout = 120  # Request timeout
+graceful_timeout = 30  # Graceful shutdown
+```
+
+### Database Connection Pooling
+
+```python
+# asyncpg pool settings
+min_size = 10
+max_size = 50
+max_queries = 50000
+max_inactive_connection_lifetime = 300
+```
+
+---
+
+## Support & Resources
+
+- **OpenAPI Spec:** `openapi/v1.json`
+- **MCP Tools Spec:** `openapi/mcp-tools.json`
+- **API Documentation:** `/docs` (Swagger UI)
+- **Compliance Report:** `docs/API_COMPLIANCE_REPORT.md`
+- **SDK Usage:** `clients/README.md`
+
+**Generated:** 2025-11-02
+**Version:** 2.8.0

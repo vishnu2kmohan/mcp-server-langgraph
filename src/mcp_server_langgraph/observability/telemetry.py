@@ -376,11 +376,11 @@ class ObservabilityConfig:
 
     def get_tracer(self) -> None:
         """Get tracer instance"""
-        return self.tracer  # type: ignore[return-value]
+        return self.tracer  # type: ignore[no-any-return]
 
     def get_meter(self) -> None:
         """Get meter instance"""
-        return self.meter  # type: ignore[return-value]
+        return self.meter  # type: ignore[no-any-return]
 
     def get_logger(self) -> None:
         """Get logger instance"""

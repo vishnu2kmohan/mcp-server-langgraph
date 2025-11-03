@@ -122,7 +122,7 @@ class OutputVerifier:
                 judgment = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
 
                 # Parse judgment into structured result
-                result = self._parse_verification_judgment(judgment, threshold)  # type: ignore[arg-type]
+                result = self._parse_verification_judgment(judgment, threshold)
 
                 span.set_attribute("verification.passed", result.passed)
                 span.set_attribute("verification.overall_score", result.overall_score)

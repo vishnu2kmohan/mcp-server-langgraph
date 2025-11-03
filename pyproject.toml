@@ -92,6 +92,9 @@ dev = [
     "black>=25.9.0",
     "flake8>=7.0.0",
     "mypy>=1.18.2",
+    "types-PyYAML",
+    "types-redis",
+    "types-requests",
     "isort>=7.0.0",
     "bandit>=1.7.6",
     # Deployment tools

@@ -16,7 +16,7 @@ from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
-class SessionTimeoutMiddleware(BaseHTTPMiddleware):
+class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
     """
     Automatic session timeout middleware (HIPAA 164.312(a)(2)(iii))
 
@@ -66,14 +66,14 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
         """
         # Skip timeout check for public endpoints
         if self._is_public_endpoint(request.url.path):
-            return await call_next(request)  # type: ignore[no-any-return]
+            return await call_next(request)
 
         # Get session from request (if authenticated)
         session_id = self._get_session_id(request)
 
         if not session_id:
             # No session, continue normally
-            return await call_next(request)  # type: ignore[no-any-return]
+            return await call_next(request)
 
         # Check session inactivity
         try:
@@ -81,7 +81,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
 
             if not session:
                 # Session not found (already expired or deleted)
-                return await call_next(request)  # type: ignore[no-any-return]
+                return await call_next(request)
 
             # Parse last accessed time
             last_accessed = datetime.fromisoformat(session.last_accessed.replace("Z", "+00:00"))
@@ -112,7 +112,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
 
         # Session is active, continue
         response = await call_next(request)
-        return response  # type: ignore[no-any-return]
+        return response
 
     async def _handle_timeout(self, request: Request, session_id: str, inactive_seconds: float) -> None:
         """
@@ -172,7 +172,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
         # Try cookie
         session_id = request.cookies.get("session_id")
         if session_id:
-            return session_id
+            return session_id  # type: ignore[no-any-return]
 
         # Try request state (if already authenticated by previous middleware)
         if hasattr(request.state, "session_id"):

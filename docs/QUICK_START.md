@@ -1,0 +1,407 @@
+# OpenAPI Quick Start Guide
+
+5-minute guide to using the generated OpenAPI specifications and SDKs.
+
+## 🚀 Getting Started
+
+### View API Documentation
+```bash
+# Start the server
+uvicorn mcp_server_langgraph.mcp.server_streamable:app --reload
+
+# Open in browser
+open http://localhost:8000/docs      # Swagger UI
+open http://localhost:8000/redoc     # ReDoc
+open http://localhost:8000/openapi.json  # Raw OpenAPI spec
+```
+
+---
+
+## 📦 Using the Python SDK
+
+### Install
+```bash
+cd clients/python
+pip install -e .
+```
+
+### Basic Usage
+```python
+from mcp_client import ApiClient, Configuration
+from mcp_client.api import APIKeysApi, AuthApi
+
+# Configure
+config = Configuration(host="http://localhost:8000")
+
+with ApiClient(config) as client:
+    # Login
+    auth = AuthApi(client)
+    login = auth.login_auth_login_post({
+        "username": "alice",
+        "password": "password"
+    })
+
+    # Use JWT token
+    config.access_token = login.access_token
+
+    # Call APIs
+    api_keys = APIKeysApi(client)
+    keys = api_keys.list_api_keys_api_v1_api_keys_get()
+
+    print(f"You have {len(keys)} API keys")
+```
+
+---
+
+## 🌐 Using the TypeScript SDK
+
+### Install
+```bash
+cd clients/typescript
+npm install
+```
+
+### Basic Usage
+```typescript
+import { Configuration, APIKeysApi, AuthApi } from 'mcp-client';
+
+const config = new Configuration({
+  basePath: 'http://localhost:8000'
+});
+
+const authApi = new AuthApi(config);
+const apiKeysApi = new APIKeysApi(config);
+
+// Login
+const login = await authApi.loginAuthLoginPost({
+  username: 'alice',
+  password: 'password'
+});
+
+// Configure token
+config.accessToken = login.data.access_token;
+
+// Call APIs
+const keys = await apiKeysApi.listApiKeysApiV1ApiKeysGet();
+console.log(`You have ${keys.data.length} API keys`);
+```
+
+---
+
+## 🔐 Authentication Examples
+
+### JWT Login
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "alice", "password": "secret"}'
+
+# Response:
+# {"access_token": "eyJ...", "expires_in": 900, ...}
+```
+
+### Using JWT Token
+```bash
+export TOKEN="your-jwt-token-here"
+
+curl http://localhost:8000/api/v1/api-keys/ \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### API Key Authentication
+```bash
+# Create API key (requires JWT)
+curl -X POST http://localhost:8000/api/v1/api-keys/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My API Key", "expires_days": 365}'
+
+# Use API key (via Kong Gateway)
+curl http://api.example.com/api/v1/users/me \
+  -H "X-API-Key: mcp_..."
+```
+
+---
+
+## 🔄 Common Operations
+
+### Create API Key
+```python
+# Python
+api_keys = APIKeysApi(client)
+response = api_keys.create_api_key_api_v1_api_keys_post({
+    "name": "Production Key",
+    "expires_days": 365
+})
+print(f"API Key: {response.api_key}")  # Save this securely!
+```
+
+### Export GDPR Data
+```python
+# Python
+from mcp_client.api import GDPRComplianceApi
+
+gdpr = GDPRComplianceApi(client)
+data = gdpr.export_user_data_api_v1_users_me_data_get()
+
+print(f"Exported {len(data.conversations)} conversations")
+print(f"Export ID: {data.export_id}")
+```
+
+### SCIM User Provisioning
+```python
+# Python
+from mcp_client.api import SCIM20Api
+
+scim = SCIM20Api(client)
+user = scim.create_user_scim_v2_users_post({
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+    "userName": "bob@example.com",
+    "name": {"givenName": "Bob", "familyName": "Smith"},
+    "emails": [{"value": "bob@example.com", "primary": True}],
+    "active": True
+})
+
+print(f"Created user: {user.id}")
+```
+
+---
+
+## 📖 API Endpoints Reference
+
+### Quick Reference Table
+
+| Category | Endpoint | Method | Auth Required |
+|----------|----------|--------|---------------|
+| **Metadata** | `/api/version` | GET | ❌ |
+| **Auth** | `/auth/login` | POST | ❌ |
+| **Auth** | `/auth/refresh` | POST | ✅ |
+| **API Keys** | `/api/v1/api-keys/` | POST | ✅ |
+| **API Keys** | `/api/v1/api-keys/` | GET | ✅ |
+| **API Keys** | `/api/v1/api-keys/{id}/rotate` | POST | ✅ |
+| **API Keys** | `/api/v1/api-keys/{id}` | DELETE | ✅ |
+| **GDPR** | `/api/v1/users/me/data` | GET | ✅ |
+| **GDPR** | `/api/v1/users/me/export` | GET | ✅ |
+| **GDPR** | `/api/v1/users/me` | PATCH | ✅ |
+| **GDPR** | `/api/v1/users/me` | DELETE | ✅ |
+| **GDPR** | `/api/v1/users/me/consent` | GET | ✅ |
+| **GDPR** | `/api/v1/users/me/consent` | POST | ✅ |
+| **SCIM** | `/scim/v2/Users` | POST | ✅ |
+| **SCIM** | `/scim/v2/Users/{id}` | GET | ✅ |
+| **SCIM** | `/scim/v2/Users?filter=...` | GET | ✅ |
+| **Health** | `/health` | GET | ❌ |
+| **Health** | `/health/ready` | GET | ❌ |
+
+---
+
+## 🧪 Testing Your API
+
+### Health Check
+```bash
+curl http://localhost:8000/health
+# {"status": "healthy"}
+```
+
+### Swagger UI (Interactive)
+Open http://localhost:8000/docs in your browser:
+1. Click "Authorize" button
+2. Login at `/auth/login` to get JWT
+3. Enter JWT token in authorization dialog
+4. Try any endpoint interactively
+
+### cURL Examples
+```bash
+# Login
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"secret"}' \
+  | jq -r '.access_token')
+
+# Create API key
+curl -X POST http://localhost:8000/api/v1/api-keys/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test Key","expires_days":30}' \
+  | jq .
+
+# List API keys
+curl http://localhost:8000/api/v1/api-keys/ \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# Export GDPR data
+curl http://localhost:8000/api/v1/users/me/data \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+```
+
+---
+
+## 🔧 Development Workflow
+
+### 1. Add New Endpoint
+```python
+# In src/mcp_server_langgraph/api/your_router.py
+from fastapi import APIRouter
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/api/v1/items", tags=["Items"])
+
+class ItemResponse(BaseModel):
+    id: str
+    name: str
+
+@router.get("/", response_model=List[ItemResponse])
+async def list_items():
+    return [{"id": "1", "name": "Item 1"}]
+```
+
+### 2. Register Router
+```python
+# In server_streamable.py
+from mcp_server_langgraph.api.your_router import router as items_router
+app.include_router(items_router)
+```
+
+### 3. Regenerate OpenAPI
+```bash
+python -c "
+import json
+from mcp_server_langgraph.mcp.server_streamable import app
+with open('openapi/v1.json', 'w') as f:
+    json.dump(app.openapi(), f, indent=2)
+"
+```
+
+### 4. Regenerate SDKs
+```bash
+# Python
+docker run --rm -v "$(pwd):/local" \
+  openapitools/openapi-generator-cli generate \
+  -i /local/openapi/v1.json \
+  -g python \
+  -o /local/clients/python
+
+# TypeScript
+docker run --rm -v "$(pwd):/local" \
+  openapitools/openapi-generator-cli generate \
+  -i /local/openapi/v1.json \
+  -g typescript-axios \
+  -o /local/clients/typescript
+```
+
+### 5. Test
+```bash
+pytest tests/api/ -v
+```
+
+---
+
+## 📋 Pagination Usage
+
+```python
+from fastapi import Depends
+from mcp_server_langgraph.api.pagination import (
+    PaginationParams,
+    PaginatedResponse,
+    create_paginated_response
+)
+
+@router.get("/items", response_model=PaginatedResponse[ItemResponse])
+async def list_items(
+    pagination: PaginationParams = Depends()
+):
+    # Database query with pagination
+    items = await db.query() \
+        .offset(pagination.offset) \
+        .limit(pagination.limit) \
+        .all()
+
+    total = await db.query().count()
+
+    return create_paginated_response(
+        data=items,
+        total=total,
+        page=pagination.page,
+        page_size=pagination.page_size
+    )
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {"id": "1", "name": "Item 1"},
+    {"id": "2", "name": "Item 2"}
+  ],
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 5,
+    "has_next": true,
+    "has_prev": false,
+    "next_page": 2,
+    "prev_page": null
+  }
+}
+```
+
+---
+
+## 🎯 Key Files
+
+| File | Purpose |
+|------|---------|
+| `openapi/v1.json` | Main API specification (22 endpoints) |
+| `openapi/mcp-tools.json` | MCP tools specification |
+| `clients/python/` | Python SDK (mcp-client) |
+| `clients/typescript/` | TypeScript SDK (mcp-client) |
+| `clients/go/` | Go SDK (mcpclient) |
+| `docs/API_COMPLIANCE_REPORT.md` | Comprehensive analysis |
+| `docs/API_GATEWAY_DEPLOYMENT.md` | Deployment guide |
+| `docs/OPENAPI_IMPLEMENTATION_SUMMARY.md` | Full summary |
+
+---
+
+## 🐛 Troubleshooting
+
+### Swagger UI Shows "Unauthorized"
+```bash
+# Click "Authorize" button
+# Login at /auth/login first
+# Copy access_token and paste in authorization dialog
+```
+
+### SDK Import Errors
+```bash
+# Python
+cd clients/python && pip install -e .
+
+# TypeScript
+cd clients/typescript && npm install
+
+# Go
+cd clients/go && go mod tidy
+```
+
+### OpenAPI Generation Fails
+```bash
+# Check for Pydantic model issues
+python -c "
+from mcp_server_langgraph.mcp.server_streamable import app
+schema = app.openapi()
+print('✓ OpenAPI generation works')
+"
+```
+
+---
+
+## 📞 Need Help?
+
+- **Swagger UI:** http://localhost:8000/docs
+- **API Compliance Report:** `docs/API_COMPLIANCE_REPORT.md`
+- **Deployment Guide:** `docs/API_GATEWAY_DEPLOYMENT.md`
+- **Full Summary:** `docs/OPENAPI_IMPLEMENTATION_SUMMARY.md`
+
+**Generated:** 2025-11-02 | **Version:** 2.8.0

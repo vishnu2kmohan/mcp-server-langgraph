@@ -55,13 +55,13 @@ class PaginationParams(BaseModel):
             return 1000
         return v
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def offset(self) -> int:
         """Calculate offset from page and page_size (for database queries)"""
         return (self.page - 1) * self.page_size
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def limit(self) -> int:
         """Alias for page_size (for database queries)"""
@@ -89,25 +89,25 @@ class PaginationMetadata(BaseModel):
     page_size: int = Field(ge=1, description="Number of items per page", examples=[20, 50, 100])
     total_pages: int = Field(ge=0, description="Total number of pages", examples=[5, 20, 100])
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def has_next(self) -> bool:
         """Whether there is a next page"""
         return self.page < self.total_pages
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def has_prev(self) -> bool:
         """Whether there is a previous page"""
         return self.page > 1
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def next_page(self) -> Optional[int]:
         """Next page number (None if on last page)"""
         return self.page + 1 if self.has_next else None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def prev_page(self) -> Optional[int]:
         """Previous page number (None if on first page)"""

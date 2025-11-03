@@ -131,6 +131,13 @@ jobs:
         echo "=== Running MCP server unit tests ==="
         OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -v --tb=short
 
+    - name: Run mypy type checking
+      run: |
+        source .venv/bin/activate
+        echo "=== Running mypy type checking ==="
+        mypy src/mcp_server_langgraph --no-error-summary
+        echo "✓ All type checks passed!"
+
     - name: Upload coverage
       if: matrix.python-version == '3.12'
       uses: codecov/codecov-action@v5.5.1

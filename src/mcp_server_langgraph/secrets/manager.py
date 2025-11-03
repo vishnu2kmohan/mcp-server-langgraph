@@ -46,7 +46,7 @@ def _get_tracer() -> Optional["Tracer"]:
         from mcp_server_langgraph.observability.telemetry import get_tracer, is_initialized
 
         if is_initialized():
-            return get_tracer()  # type: ignore[no-any-return]
+            return get_tracer()
     except (ImportError, RuntimeError):
         pass
     return None

@@ -796,7 +796,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         async def dependency(
             request: Request,
-            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,  # type: ignore[assignment]
+            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,
         ) -> Dict[str, Any]:
             # Get authenticated user
             user = await get_current_user(request, credentials)

@@ -271,7 +271,7 @@ def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded)
     )
 
     # Return structured error response
-    return JSONResponse(  # type: ignore[return-value]
+    return JSONResponse(  # type: ignore[no-any-return]
         status_code=429,
         content=rate_limit_error.to_dict(),
         headers={
@@ -330,4 +330,4 @@ def rate_limit_for_search(func: Callable) -> Callable:  # type: ignore[type-arg]
 
 def exempt_from_rate_limit(func: Callable) -> Callable:  # type: ignore[type-arg]
     """Exempt endpoint from rate limiting (health checks, metrics)"""
-    return limiter.exempt(func)  # type: ignore[no-any-return,no-untyped-call]
+    return limiter.exempt(func)  # type: ignore[no-any-return]

@@ -202,7 +202,7 @@ class HierarchicalCoordinator:
         # Add manager nodes
         for manager_name, manager_func in self.managers.items():
             manager_node = self._create_manager_node(manager_name, manager_func)
-            graph.add_node(f"manager_{manager_name}", manager_node)  # type: ignore[arg-type]
+            graph.add_node(f"manager_{manager_name}", manager_node)
 
         # Add consolidation node
         graph.add_node("consolidate", self._consolidate_node)

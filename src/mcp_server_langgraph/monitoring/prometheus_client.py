@@ -189,7 +189,7 @@ class PrometheusClient:
         url = f"{self.config.url}/api/v1/query_range"
 
         try:
-            response = await self.client.get(url, params=params)  # type: ignore[union-attr,arg-type]
+            response = await self.client.get(url, params=params)  # type: ignore[union-attr]
             response.raise_for_status()
 
             data = response.json()

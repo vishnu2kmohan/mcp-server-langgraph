@@ -44,7 +44,7 @@ class APIVersionInfo(BaseModel):
     )
 
 
-@router.get(
+@router.get(  # type: ignore[misc]
     "/version",
     response_model=APIVersionInfo,
     summary="Get API version information",
@@ -107,5 +107,6 @@ async def get_version() -> APIVersionInfo:
         supported_versions=["v1"],
         deprecated_versions=[],
         sunset_dates={},
+        changelog_url=None,
         documentation_url="/docs",
     )

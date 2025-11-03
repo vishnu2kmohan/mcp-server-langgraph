@@ -79,7 +79,7 @@ def _create_embeddings(
         try:
             from sentence_transformers import SentenceTransformer
 
-            class SentenceTransformerEmbeddings(Embeddings):
+            class SentenceTransformerEmbeddings(Embeddings):  # type: ignore[misc]
                 """Wrapper to make SentenceTransformer compatible with LangChain Embeddings interface."""
 
                 def __init__(self, model_name: str) -> None:
@@ -95,7 +95,7 @@ def _create_embeddings(
                     embedding = self.model.encode(text)
                     return embedding.tolist()  # type: ignore[no-any-return]
 
-            embeddings = SentenceTransformerEmbeddings(model_name)  # type: ignore[assignment]
+            embeddings = SentenceTransformerEmbeddings(model_name)
 
             logger.info(
                 "Initialized local sentence-transformers embeddings",
@@ -620,7 +620,7 @@ class DynamicContextLoader:
             )
             messages.append(message)
 
-        return messages  # type: ignore[return-value]
+        return messages
 
 
 # Convenience functions

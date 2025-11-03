@@ -38,7 +38,7 @@ class CircuitBreakerState(str, Enum):
     HALF_OPEN = "half_open"  # Testing recovery
 
 
-class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
+class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):  # type: ignore[misc]
     """
     Listener for circuit breaker events.
 
@@ -50,7 +50,7 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
         self._state = CircuitBreakerState.CLOSED
         self._last_state_change = datetime.now()
 
-    def state_change(  # type: ignore[override]
+    def state_change(
         self, breaker: pybreaker.CircuitBreaker, old: pybreaker.CircuitBreakerState, new: pybreaker.CircuitBreakerState
     ) -> None:
         """Called when circuit breaker state changes"""
@@ -79,7 +79,7 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
             attributes={"service": self.name, "state": new_state.value},
         )
 
-    def before_call(self, breaker: pybreaker.CircuitBreaker, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+    def before_call(self, breaker: pybreaker.CircuitBreaker, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
         """Called before calling the protected function"""
         pass
 
@@ -89,7 +89,7 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
 
         circuit_breaker_success_counter.add(1, attributes={"service": self.name})
 
-    def failure(self, breaker: pybreaker.CircuitBreaker, exception: Exception) -> None:  # type: ignore[override]
+    def failure(self, breaker: pybreaker.CircuitBreaker, exception: Exception) -> None:
         """Called on failed call"""
         from mcp_server_langgraph.observability.telemetry import circuit_breaker_failure_counter
 
@@ -114,9 +114,9 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
     @staticmethod
     def _map_state(state: pybreaker.CircuitBreakerState) -> CircuitBreakerState:
         """Map pybreaker state to our enum"""
-        if state == pybreaker.STATE_CLOSED:  # type: ignore[comparison-overlap]
+        if state == pybreaker.STATE_CLOSED:
             return CircuitBreakerState.CLOSED
-        elif state == pybreaker.STATE_OPEN:  # type: ignore[comparison-overlap]
+        elif state == pybreaker.STATE_OPEN:
             return CircuitBreakerState.OPEN
         else:  # STATE_HALF_OPEN
             return CircuitBreakerState.HALF_OPEN
@@ -265,7 +265,7 @@ def circuit_breaker(  # noqa: C901
                         # Success - handle via state machine
                         with breaker._lock:
                             breaker._state_storage.increment_counter()
-                            for listener in breaker.listeners:  # type: ignore[assignment]
+                            for listener in breaker.listeners:
                                 listener.success(breaker)
                             breaker.state.on_success()
 
@@ -278,13 +278,13 @@ def circuit_breaker(  # noqa: C901
                             with breaker._lock:
                                 if breaker.is_system_error(e):
                                     breaker._inc_counter()
-                                    for listener in breaker.listeners:  # type: ignore[assignment]
+                                    for listener in breaker.listeners:
                                         listener.failure(breaker, e)
                                     breaker.state.on_failure(e)
                                 else:
                                     # Not a system error, treat as success
                                     breaker._state_storage.increment_counter()
-                                    for listener in breaker.listeners:  # type: ignore[assignment]
+                                    for listener in breaker.listeners:
                                         listener.success(breaker)
                                     breaker.state.on_success()
                         except pybreaker.CircuitBreakerError:
@@ -362,7 +362,7 @@ def get_circuit_breaker_state(name: str) -> CircuitBreakerState:
         return CircuitBreakerState.CLOSED
 
     breaker = _circuit_breakers[name]
-    return CircuitBreakerMetricsListener._map_state(breaker.current_state)  # type: ignore[arg-type]
+    return CircuitBreakerMetricsListener._map_state(breaker.current_state)
 
 
 def get_all_circuit_breaker_states() -> Dict[str, CircuitBreakerState]:

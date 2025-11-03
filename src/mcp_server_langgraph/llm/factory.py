@@ -16,7 +16,7 @@ from typing import Any, Dict, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
-from litellm.utils import ModelResponse  # type: ignore[attr-defined]
+from litellm.utils import ModelResponse
 
 from mcp_server_langgraph.core.exceptions import LLMModelNotFoundError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -239,9 +239,9 @@ class LLMFactory:
                 formatted.append({"role": "assistant", "content": msg.content})
             elif isinstance(msg, SystemMessage):
                 formatted.append({"role": "system", "content": msg.content})
-            elif isinstance(msg, dict):  # type: ignore[unreachable]
+            elif isinstance(msg, dict):
                 # Handle dict messages (already in correct format or need conversion)
-                if "role" in msg and "content" in msg:  # type: ignore[unreachable]
+                if "role" in msg and "content" in msg:
                     # Already formatted dict
                     formatted.append(msg)
                 elif "content" in msg:
@@ -258,7 +258,7 @@ class LLMFactory:
                     # Last resort: convert entire object to string
                     formatted.append({"role": "user", "content": str(msg)})
 
-        return formatted  # type: ignore[return-value]
+        return formatted
 
     def invoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """
@@ -290,7 +290,7 @@ class LLMFactory:
             try:
                 response: ModelResponse = completion(**params)
 
-                content = response.choices[0].message.content  # type: ignore[union-attr]
+                content = response.choices[0].message.content
 
                 # Track metrics
                 metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
@@ -299,7 +299,7 @@ class LLMFactory:
                     "LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
+                        "tokens": response.usage.total_tokens if response.usage else 0,
                     },
                 )
 
@@ -365,7 +365,7 @@ class LLMFactory:
             try:
                 response: ModelResponse = await acompletion(**params)
 
-                content = response.choices[0].message.content  # type: ignore[union-attr]
+                content = response.choices[0].message.content
 
                 metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 
@@ -373,7 +373,7 @@ class LLMFactory:
                     "Async LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
+                        "tokens": response.usage.total_tokens if response.usage else 0,
                     },
                 )
 
