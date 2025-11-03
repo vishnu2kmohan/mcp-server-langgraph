@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762131976243,
+  "lastUpdate": 1762132602170,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -23368,6 +23368,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021613289091558392",
             "extra": "mean: 59.33103904424037 usec\nrounds: 5148"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "00ba961b764b474696b9f186a1785b55e1538b87",
+          "message": "feat(k8s): implement cloud-native GKE staging with Cloud SQL and Memorystore Redis\n\n## Changes Made\n\n### Cloud SQL Proxy Integration\n- Add JSON 6902 patches for Keycloak and OpenFGA with Cloud SQL Proxy sidecars\n- Configure Cloud SQL Proxy to connect to vishnu-sandbox-20250310:us-central1:mcp-staging-postgres\n- Update database connection strings to use localhost (127.0.0.1:5432) via proxy\n- Add proper security contexts for Cloud SQL Proxy containers\n\n### Memorystore Redis Integration\n- Update ConfigMap to use Memorystore Redis at 10.110.1.4:6379\n- Configure direct connection via private VPC (no proxy needed)\n- Disable SSL since connection is within private VPC\n\n### Kustomization Improvements\n- Use JSON 6902 patches instead of strategic merge for Keycloak and OpenFGA\n- Properly handles array appending for sidecar containers\n- Fix deployment-patch.yaml affinity configuration (remove empty podAntiAffinity)\n\n### Infrastructure\n- Cloud SQL PostgreSQL: mcp-staging-postgres (10.110.0.3)\n- Memorystore Redis: mcp-staging-redis (10.110.1.4:6379)\n- Both running and verified ready for connections\n\n## Validation\n- kubectl kustomize build succeeds\n- Cloud SQL Proxy containers appear in all 3 deployments (main, keycloak, openfga)\n- All deployments created successfully in cluster\n\n## Known Issues (for follow-up)\n- Init containers wait for Cloud SQL Proxy on localhost:5432, causing timing issue\n  - Proxy starts as sidecar after init containers, creating circular dependency\n  - Solution: Remove proxy health checks from init containers\n- Qdrant has permission errors creating snapshots temp directory\n  - Solution: Add initOwnerAsRoot securityContext\n\n## Testing\n- Deployed to mcp-staging-cluster successfully\n- All manifests apply without errors\n- Cloud SQL and Memorystore infrastructure verified ready\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T20:15:44-05:00",
+          "tree_id": "fc77cdb67840b5ec9df044c3c31e1f687d63e4e4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/00ba961b764b474696b9f186a1785b55e1538b87"
+        },
+        "date": 1762132601313,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 142.89245090132334,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013076917098805264",
+            "extra": "mean: 6.998270333333186 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.8681559265084,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013791466387920985",
+            "extra": "mean: 6.762781301587394 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50687.614319302746,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002621794909312187",
+            "extra": "mean: 19.728685467431482 usec\nrounds: 7872"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52902.11274684256,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002485256381937764",
+            "extra": "mean: 18.90283673140605 usec\nrounds: 12409"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49543.40808979294,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024741311307079766",
+            "extra": "mean: 20.18431994398913 usec\nrounds: 19991"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.81234731435237,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021130965388416864",
+            "extra": "mean: 5.2407509999997925 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.415661400572475,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012495697427778823",
+            "extra": "mean: 51.50481250000141 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.947214499478317,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000063501251281055",
+            "extra": "mean: 100.53065610000118 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2522519.8134798263,
+            "unit": "iter/sec",
+            "range": "stddev: 4.816371414164285e-8",
+            "extra": "mean: 396.4289971702922 nsec\nrounds: 198413"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5049.57231364624,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015685918395839842",
+            "extra": "mean: 198.03657377032613 usec\nrounds: 488"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2975.033879329582,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010119156192460257",
+            "extra": "mean: 336.1306259226023 usec\nrounds: 2438"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2943.596984895173,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009908086989018093",
+            "extra": "mean: 339.7204186345543 usec\nrounds: 1567"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57402.79211684744,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002370198026085068",
+            "extra": "mean: 17.42075538702768 usec\nrounds: 12530"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16915.189447248857,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017433681676971476",
+            "extra": "mean: 59.1184629127901 usec\nrounds: 5541"
           }
         ]
       }
