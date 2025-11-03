@@ -502,6 +502,69 @@ def get_config() -> ObservabilityConfig:
     return _observability_config
 
 
+def shutdown_observability() -> None:
+    """
+    Shutdown observability system and flush all pending telemetry data.
+
+    This function should be called during application shutdown to ensure:
+    - All pending spans are flushed to exporters
+    - All pending metrics are exported
+    - HTTP connections to collectors are closed gracefully
+    - No telemetry data is lost
+
+    Usage:
+        - Call from FastAPI lifespan shutdown event
+        - Register with atexit.register() as fallback
+        - Call in exception handlers before exit
+
+    Thread Safety:
+        This function is NOT thread-safe. Call only during shutdown when
+        no new telemetry is being generated.
+    """
+    global _observability_config
+
+    if _observability_config is None:
+        return  # Nothing to shutdown
+
+    try:
+        # Flush tracer spans
+        if hasattr(_observability_config, "tracer_provider"):
+            tracer_provider = _observability_config.tracer_provider
+            if hasattr(tracer_provider, "force_flush"):
+                tracer_provider.force_flush(timeout_millis=5000)
+                if OBSERVABILITY_VERBOSE:
+                    print("✅ Flushed trace spans", file=sys.stderr)
+
+            # Shutdown span processors
+            if hasattr(tracer_provider, "shutdown"):
+                tracer_provider.shutdown()
+                if OBSERVABILITY_VERBOSE:
+                    print("✅ Shutdown tracer provider", file=sys.stderr)
+
+        # Flush and shutdown meter provider
+        if hasattr(_observability_config, "meter_provider"):
+            meter_provider = _observability_config.meter_provider
+            if hasattr(meter_provider, "force_flush"):
+                meter_provider.force_flush(timeout_millis=5000)
+                if OBSERVABILITY_VERBOSE:
+                    print("✅ Flushed metrics", file=sys.stderr)
+
+            if hasattr(meter_provider, "shutdown"):
+                meter_provider.shutdown()
+                if OBSERVABILITY_VERBOSE:
+                    print("✅ Shutdown meter provider", file=sys.stderr)
+
+        if OBSERVABILITY_VERBOSE:
+            print("✅ Observability system shutdown complete", file=sys.stderr)
+
+    except Exception as e:
+        # Log error but don't raise - shutdown should be graceful
+        print(f"⚠️  Error during observability shutdown: {e}", file=sys.stderr)
+
+    finally:
+        _observability_config = None  # Mark as shutdown
+
+
 # Note: config is available via get_config() function or via the lazy 'config' proxy below
 
 

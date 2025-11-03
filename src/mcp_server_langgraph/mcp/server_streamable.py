@@ -77,8 +77,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     yield
 
-    # Shutdown (if needed in the future)
-    pass
+    # Shutdown - cleanup observability and close connections
+    from mcp_server_langgraph.observability.telemetry import shutdown_observability
+
+    logger.info("Application shutdown initiated")
+
+    # Shutdown observability (flush spans, close exporters)
+    shutdown_observability()
+
+    # Close Prometheus client if initialized
+    try:
+        mcp_server = get_mcp_server()
+        if hasattr(mcp_server, "prometheus_client") and mcp_server.prometheus_client:
+            await mcp_server.prometheus_client.close()
+            logger.info("Prometheus client closed")
+    except Exception as e:
+        logger.warning(f"Error closing Prometheus client: {e}")
+
+    logger.info("Application shutdown complete")
 
 
 app = FastAPI(
@@ -1377,11 +1393,16 @@ app.openapi = custom_openapi
 def main() -> None:
     """Entry point for console script"""
     # Initialize observability system before creating server
+    import atexit
+
     from mcp_server_langgraph.core.config import settings
-    from mcp_server_langgraph.observability.telemetry import init_observability
+    from mcp_server_langgraph.observability.telemetry import init_observability, shutdown_observability
 
     # Initialize with settings and enable file logging if configured
     init_observability(settings=settings, enable_file_logging=getattr(settings, "enable_file_logging", False))
+
+    # Register shutdown handler as fallback (lifespan is primary)
+    atexit.register(shutdown_observability)
 
     # SECURITY: Validate CORS configuration before starting server
     settings.validate_cors_config()
