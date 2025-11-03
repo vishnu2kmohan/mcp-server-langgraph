@@ -127,9 +127,14 @@ def create_session_store(settings: Settings) -> Optional[SessionStore]:
         logger.warning(
             "Using in-memory session store. Sessions will not persist across restarts. " "For production, use 'redis' backend."
         )
-        # In-memory sessions are handled by default SessionStore (not implemented yet)
-        # For now, return None and sessions won't be used
-        return None
+        # Import here to avoid circular dependency
+        from mcp_server_langgraph.auth.session import InMemorySessionStore
+
+        return InMemorySessionStore(
+            default_ttl_seconds=settings.session_ttl_seconds,
+            sliding_window=settings.session_sliding_window,
+            max_concurrent_sessions=settings.session_max_concurrent,
+        )
 
     elif backend == "redis":
         logger.info("Creating Redis session store")
@@ -138,7 +143,7 @@ def create_session_store(settings: Settings) -> Optional[SessionStore]:
         if not settings.redis_url:
             raise ValueError("CRITICAL: Redis URL required for Redis session store. " "Set REDIS_URL environment variable.")
 
-        return RedisSessionStore(  # type: ignore[call-arg]
+        return RedisSessionStore(
             redis_url=settings.redis_url,
             password=settings.redis_password,
             ssl=settings.redis_ssl,

@@ -229,7 +229,9 @@ class MCPAgentServer:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
             with tracer.start_as_current_span("mcp.call_tool", attributes={"tool.name": name}) as span:
-                logger.info(f"Tool called: {name}", extra={"tool": name, "args": arguments})
+                from mcp_server_langgraph.core.security import sanitize_for_logging
+
+                logger.info(f"Tool called: {name}", extra={"tool": name, "args": sanitize_for_logging(arguments)})
                 metrics.tool_calls.add(1, {"tool": name})
 
                 # SECURITY: Require JWT token for all tool calls

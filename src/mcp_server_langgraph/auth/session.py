@@ -322,7 +322,12 @@ class InMemorySessionStore(SessionStore):
                 self.user_sessions[user_id] = []
             self.user_sessions[user_id].append(session_id)
 
-            logger.info("Session created", extra={"session_id": session_id, "user_id": user_id, "ttl_seconds": ttl})
+            from mcp_server_langgraph.core.security import sanitize_for_logging
+
+            logger.info(
+                "Session created",
+                extra=sanitize_for_logging({"session_id": session_id, "user_id": user_id, "ttl_seconds": ttl}),
+            )
 
             return session_id
 
@@ -480,6 +485,8 @@ class RedisSessionStore(SessionStore):
         max_concurrent_sessions: int = 5,
         ssl: bool = False,
         decode_responses: bool = True,
+        password: Optional[str] = None,
+        ttl_seconds: Optional[int] = None,
     ):
         """
         Initialize Redis session store
@@ -491,11 +498,17 @@ class RedisSessionStore(SessionStore):
             max_concurrent_sessions: Max sessions per user
             ssl: Use SSL/TLS
             decode_responses: Decode responses to strings
+            password: Redis password (optional)
+            ttl_seconds: Alias for default_ttl_seconds (for backward compatibility)
         """
         if not REDIS_AVAILABLE:
             raise ImportError(
                 "Redis not available. Add 'redis[hiredis]>=5.0.0' to pyproject.toml dependencies, then run: uv sync"
             )
+
+        # Support both ttl_seconds and default_ttl_seconds for backward compatibility
+        if ttl_seconds is not None:
+            default_ttl_seconds = ttl_seconds
 
         self.redis_url = redis_url
         self.default_ttl = default_ttl_seconds
@@ -504,8 +517,9 @@ class RedisSessionStore(SessionStore):
         self.decode_responses = decode_responses
 
         # Initialize Redis client
-        self.redis = redis.from_url(  # type: ignore[no-untyped-call]
+        self.redis = redis.from_url(
             redis_url,
+            password=password,
             ssl=ssl,
             decode_responses=decode_responses,
             encoding="utf-8",
@@ -555,7 +569,7 @@ class RedisSessionStore(SessionStore):
                 "user_id": user_id,
                 "username": username,
                 "roles": ",".join(roles),  # Store as comma-separated
-                "metadata": str(metadata or {}),  # Store as string
+                "metadata": json.dumps(metadata or {}),  # Store as JSON string
                 "created_at": now.isoformat(),
                 "last_accessed": now.isoformat(),
                 "expires_at": (now + timedelta(seconds=ttl)).isoformat(),
@@ -563,14 +577,19 @@ class RedisSessionStore(SessionStore):
 
             # Store session in Redis
             session_key = f"session:{session_id}"
-            await self.redis.hset(session_key, mapping=session_data)
+            await self.redis.hset(session_key, mapping=session_data)  # type: ignore[arg-type]
             await self.redis.expire(session_key, ttl)
 
             # Track user sessions
             await self.redis.rpush(user_sessions_key, session_id)
             await self.redis.expire(user_sessions_key, ttl + 3600)  # Extra hour
 
-            logger.info("Session created in Redis", extra={"session_id": session_id, "user_id": user_id, "ttl_seconds": ttl})
+            from mcp_server_langgraph.core.security import sanitize_for_logging
+
+            logger.info(
+                "Session created in Redis",
+                extra=sanitize_for_logging({"session_id": session_id, "user_id": user_id, "ttl_seconds": ttl}),
+            )
 
             return session_id
 
@@ -628,7 +647,9 @@ class RedisSessionStore(SessionStore):
         session.last_accessed = datetime.now(timezone.utc).isoformat()
 
         # Persist to Redis
-        await self.redis.hset(session_key, mapping={"metadata": str(session.metadata), "last_accessed": session.last_accessed})
+        await self.redis.hset(  # type: ignore[arg-type]
+            session_key, mapping={"metadata": json.dumps(session.metadata), "last_accessed": session.last_accessed}
+        )
 
         logger.info(f"Session metadata updated in Redis: {session_id}")
         return True

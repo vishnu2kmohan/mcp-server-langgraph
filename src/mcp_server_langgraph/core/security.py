@@ -15,11 +15,14 @@ def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> di
     """Sanitize sensitive data from arguments before logging.
 
     Prevents CWE-200 (Information Exposure) and CWE-532 (Information Exposure Through Log Files)
-    by redacting authentication tokens and truncating large text fields.
+    by redacting authentication tokens, session identifiers, and PII, plus truncating large text fields.
 
     This function creates a shallow copy of the input dict and applies the following
     transformations:
     - Redacts 'token' field value to prevent JWT/credential exposure
+    - Redacts 'session_id' to prevent session hijacking via log access
+    - Redacts 'user_id' to prevent user enumeration and privacy violations
+    - Redacts 'username' to comply with GDPR/CCPA privacy requirements
     - Truncates 'message' and 'query' fields that exceed max_length
     - Preserves all other fields as-is (shallow copy)
 
@@ -31,15 +34,17 @@ def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> di
         Sanitized copy of arguments safe for logging
 
     Example:
-        >>> args = {"token": "secret_jwt", "message": "Hello"}
+        >>> args = {"token": "secret_jwt", "session_id": "sess_123", "username": "alice"}
         >>> sanitized = sanitize_for_logging(args)
         >>> sanitized
-        {"token": "[REDACTED]", "message": "Hello"}
+        {"token": "[REDACTED]", "session_id": "[REDACTED]", "username": "[REDACTED]"}
         >>> args["token"]  # Original unchanged
         "secret_jwt"
 
     Security Context:
         - JWT tokens in logs can be extracted and replayed to impersonate users
+        - Session IDs in logs enable session hijacking if logs are compromised
+        - Usernames/user IDs are PII subject to GDPR/CCPA/HIPAA protection
         - Large prompts may contain sensitive user data (PII, credentials, secrets)
         - Centralized logging systems may have broader access than application logs
         - Compliance frameworks (SOC2, PCI-DSS, HIPAA) require credential protection
@@ -53,6 +58,18 @@ def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> di
     # Redact authentication token
     if "token" in sanitized and sanitized["token"] is not None:
         sanitized["token"] = "[REDACTED]"
+
+    # Redact session identifiers (prevent session hijacking)
+    if "session_id" in sanitized and sanitized["session_id"] is not None:
+        sanitized["session_id"] = "[REDACTED]"
+
+    # Redact user identifiers (PII protection)
+    if "user_id" in sanitized and sanitized["user_id"] is not None:
+        sanitized["user_id"] = "[REDACTED]"
+
+    # Redact usernames (PII protection)
+    if "username" in sanitized and sanitized["username"] is not None:
+        sanitized["username"] = "[REDACTED]"
 
     # Truncate long message fields
     if "message" in sanitized and isinstance(sanitized["message"], str):

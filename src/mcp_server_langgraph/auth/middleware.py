@@ -182,9 +182,18 @@ class AuthMiddleware:
             result = await self.user_provider.authenticate(normalized_username, password)
 
             if result.authorized:
-                logger.info("User authenticated", extra={"username": username, "user_id": result.user_id})
+                from mcp_server_langgraph.core.security import sanitize_for_logging
+
+                logger.info(
+                    "User authenticated",
+                    extra=sanitize_for_logging({"username": username, "user_id": result.user_id}),
+                )
             else:
-                logger.warning("Authentication failed", extra={"username": username, "reason": result.reason})
+                from mcp_server_langgraph.core.security import sanitize_for_logging
+
+                logger.warning(
+                    "Authentication failed", extra=sanitize_for_logging({"username": username, "reason": result.reason})
+                )
 
             return result
 

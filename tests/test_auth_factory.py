@@ -10,7 +10,7 @@ import pytest
 
 from mcp_server_langgraph.auth.factory import create_auth_middleware, create_session_store, create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
-from mcp_server_langgraph.auth.session import RedisSessionStore, SessionStore
+from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore, SessionStore
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, KeycloakUserProvider, UserProvider
 
 # ============================================================================
@@ -231,8 +231,9 @@ class TestCreateSessionStore:
 
         store = create_session_store(mock_settings)
 
-        # Currently returns None - in-memory not implemented yet
-        assert store is None
+        # Should return InMemorySessionStore instance (bug fixed)
+        assert store is not None
+        assert isinstance(store, InMemorySessionStore)
 
     @patch("mcp_server_langgraph.auth.factory.RedisSessionStore")
     def test_create_redis_session_store(self, mock_redis_class, mock_settings):
@@ -279,8 +280,9 @@ class TestCreateSessionStore:
 
         store = create_session_store(mock_settings)
 
-        # Returns None (in-memory not implemented)
-        assert store is None
+        # Should return InMemorySessionStore (bug fixed, case-insensitive)
+        assert store is not None
+        assert isinstance(store, InMemorySessionStore)
 
 
 # ============================================================================
@@ -402,3 +404,307 @@ class TestFactoryIntegration:
         assert middleware.user_provider == mock_keycloak_instance
         assert middleware.session_store == mock_redis_instance
         assert middleware.openfga == mock_openfga_client  # Changed from openfga_client to openfga
+
+
+# ============================================================================
+# TDD RED Phase: Tests for OpenAI Codex Security Findings
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestRedisSessionStoreSignatureFix:
+    """
+    TDD RED phase tests for Redis session store signature mismatch.
+
+    These tests use the REAL RedisSessionStore class (not mocked) to expose
+    the bug where factory.py passes parameters that RedisSessionStore.__init__()
+    doesn't accept.
+
+    Expected behavior: These tests will FAIL until the signature is fixed.
+    """
+
+    def test_redis_session_store_accepts_password_parameter(self, mock_settings):
+        """
+        Test that RedisSessionStore accepts password parameter.
+
+        RED: Will fail with TypeError: __init__() got unexpected keyword argument 'password'
+        """
+        # This should NOT raise TypeError
+        try:
+            store = RedisSessionStore(
+                redis_url="redis://localhost:6379/1",
+                password="test-password",  # This parameter is not accepted currently
+                default_ttl_seconds=3600,
+                sliding_window=True,
+                max_concurrent_sessions=5,
+                ssl=False,
+            )
+            # If we got here, password parameter is accepted
+            assert store is not None
+        except TypeError as e:
+            # Expected to fail in RED phase
+            pytest.fail(f"RedisSessionStore does not accept 'password' parameter: {e}")
+
+    def test_redis_session_store_accepts_ttl_seconds_parameter(self, mock_settings):
+        """
+        Test that RedisSessionStore accepts ttl_seconds parameter (as used by factory).
+
+        RED: Will fail because factory uses 'ttl_seconds' but class expects 'default_ttl_seconds'
+        """
+        # Factory passes ttl_seconds, but class expects default_ttl_seconds
+        try:
+            store = RedisSessionStore(
+                redis_url="redis://localhost:6379/1",
+                ttl_seconds=3600,  # Factory uses this name
+                sliding_window=True,
+                max_concurrent_sessions=5,
+                ssl=False,
+            )
+            # If we got here, ttl_seconds parameter is accepted
+            assert store is not None
+        except TypeError as e:
+            # Expected to fail in RED phase
+            pytest.fail(f"RedisSessionStore does not accept 'ttl_seconds' parameter: {e}")
+
+    @patch("redis.asyncio.from_url")
+    def test_factory_creates_redis_store_with_real_class(self, mock_redis_client, mock_settings):
+        """
+        Test that factory can actually instantiate RedisSessionStore with real signature.
+
+        RED: Will fail with TypeError due to signature mismatch between factory and class.
+        """
+        mock_settings.auth_mode = "session"
+        mock_settings.session_backend = "redis"
+        mock_settings.redis_url = "redis://localhost:6379/1"
+        mock_settings.redis_password = "test-password"
+        mock_settings.session_ttl_seconds = 3600
+
+        # This will call the REAL RedisSessionStore (not mocked), exposing the bug
+        try:
+            store = create_session_store(mock_settings)
+            # If we got here, signature is compatible
+            assert store is not None
+            assert isinstance(store, RedisSessionStore)
+        except TypeError as e:
+            # Expected to fail in RED phase with signature mismatch
+            pytest.fail(f"Factory cannot instantiate RedisSessionStore: {e}")
+
+
+@pytest.mark.unit
+class TestRedisMetadataSerializationFix:
+    """
+    TDD RED phase tests for Redis metadata serialization bug.
+
+    These tests verify that metadata roundtrips correctly through Redis
+    (stored as JSON, retrieved as JSON).
+
+    Expected behavior: These tests will FAIL until str() is replaced with json.dumps().
+    """
+
+    @pytest.mark.asyncio
+    async def test_redis_metadata_roundtrip_preserves_data(self):
+        """
+        Test that session metadata survives roundtrip to Redis storage.
+
+        RED: Will fail because str() produces non-JSON format that json.loads() cannot parse.
+        """
+        # Use real RedisSessionStore with mock Redis client
+        from unittest.mock import AsyncMock
+
+        # Create a real storage dict to simulate Redis behavior
+        redis_storage = {}
+
+        mock_redis = AsyncMock()
+
+        # Mock hset to actually store data (handles both hset(key, mapping) and hset(key, field, value))
+        async def mock_hset(key, field=None, value=None, mapping=None, **kwargs):
+            if mapping:
+                if key not in redis_storage:
+                    redis_storage[key] = {}
+                redis_storage[key].update(mapping)
+            elif field is not None:
+                if key not in redis_storage:
+                    redis_storage[key] = {}
+                redis_storage[key][field] = value
+            return 1
+
+        # Mock hgetall to retrieve stored data
+        async def mock_hgetall(key):
+            return redis_storage.get(key, {})
+
+        # Mock other required methods
+        mock_redis.hset.side_effect = mock_hset
+        mock_redis.hgetall.side_effect = mock_hgetall
+        mock_redis.expire = AsyncMock(return_value=True)
+        mock_redis.rpush = AsyncMock(return_value=1)
+        mock_redis.lrange = AsyncMock(return_value=[])
+
+        with patch("redis.asyncio.from_url", return_value=mock_redis):
+            store = RedisSessionStore(redis_url="redis://localhost:6379/0")
+
+            metadata = {
+                "ip": "192.168.1.100",
+                "device": "mobile",
+                "browser": "Chrome",
+                "count": 42,
+            }
+
+            # Create session with metadata
+            session_id = await store.create(
+                user_id="user:test",
+                username="test",
+                roles=["user"],
+                metadata=metadata,
+            )
+
+            # Retrieve session
+            session = await store.get(session_id)
+
+            # Metadata should be identical - this will FAIL in RED phase
+            assert session is not None
+            assert session.metadata == metadata, f"Expected {metadata}, got {session.metadata}"
+            assert session.metadata["ip"] == "192.168.1.100"
+            assert session.metadata["device"] == "mobile"
+            assert session.metadata["count"] == 42
+
+    @pytest.mark.asyncio
+    async def test_redis_nested_metadata_serializes_correctly(self):
+        """
+        Test that nested metadata objects serialize correctly in Redis.
+
+        RED: Will fail with JSON decode error on complex nested structures.
+        """
+        from unittest.mock import AsyncMock
+
+        # Create a real storage dict
+        redis_storage = {}
+
+        mock_redis = AsyncMock()
+
+        async def mock_hset(key, field=None, value=None, mapping=None, **kwargs):
+            if mapping:
+                if key not in redis_storage:
+                    redis_storage[key] = {}
+                redis_storage[key].update(mapping)
+            elif field is not None:
+                if key not in redis_storage:
+                    redis_storage[key] = {}
+                redis_storage[key][field] = value
+            return 1
+
+        async def mock_hgetall(key):
+            return redis_storage.get(key, {})
+
+        mock_redis.hset.side_effect = mock_hset
+        mock_redis.hgetall.side_effect = mock_hgetall
+        mock_redis.expire = AsyncMock(return_value=True)
+        mock_redis.rpush = AsyncMock(return_value=1)
+        mock_redis.lrange = AsyncMock(return_value=[])
+
+        with patch("redis.asyncio.from_url", return_value=mock_redis):
+            store = RedisSessionStore(redis_url="redis://localhost:6379/0")
+
+            metadata = {
+                "user_preferences": {
+                    "theme": "dark",
+                    "language": "en",
+                    "notifications": True,
+                },
+                "session_info": {
+                    "login_count": 5,
+                    "last_ips": ["192.168.1.1", "192.168.1.2"],
+                },
+            }
+
+            session_id = await store.create(
+                user_id="user:test",
+                username="test",
+                roles=["user"],
+                metadata=metadata,
+            )
+
+            session = await store.get(session_id)
+
+            # Nested structures should be preserved - will FAIL in RED phase
+            assert session is not None
+            assert session.metadata == metadata, f"Expected {metadata}, got {session.metadata}"
+            assert session.metadata["user_preferences"]["theme"] == "dark"
+            assert session.metadata["session_info"]["login_count"] == 5
+            assert "192.168.1.1" in session.metadata["session_info"]["last_ips"]
+
+
+@pytest.mark.unit
+class TestMemorySessionStoreFix:
+    """
+    TDD RED phase tests for memory session store factory bug.
+
+    Tests verify that factory returns a functional InMemorySessionStore
+    instead of None.
+
+    Expected behavior: These tests will FAIL until factory returns InMemorySessionStore().
+    """
+
+    def test_factory_creates_memory_session_store(self, mock_settings):
+        """
+        Test that factory creates InMemorySessionStore for memory backend.
+
+        RED: Will fail because factory returns None instead of InMemorySessionStore().
+        """
+        mock_settings.auth_mode = "session"
+        mock_settings.session_backend = "memory"
+
+        store = create_session_store(mock_settings)
+
+        # Should return InMemorySessionStore, not None
+        assert store is not None, "Factory returned None for memory backend"
+        assert isinstance(store, InMemorySessionStore)
+
+    @pytest.mark.asyncio
+    async def test_memory_sessions_work_with_session_auth_mode(self, mock_settings):
+        """
+        Test that memory sessions are functional for session auth mode.
+
+        RED: Will fail because factory returns None, making sessions non-functional.
+        """
+        mock_settings.auth_mode = "session"
+        mock_settings.session_backend = "memory"
+        mock_settings.session_ttl_seconds = 3600
+
+        store = create_session_store(mock_settings)
+
+        # Store should be functional
+        assert store is not None
+
+        # Should be able to create sessions
+        session_id = await store.create(
+            user_id="user:test",
+            username="test",
+            roles=["user"],
+        )
+
+        assert session_id is not None
+
+        # Should be able to retrieve sessions
+        session = await store.get(session_id)
+        assert session is not None
+        assert session.user_id == "user:test"
+
+    def test_memory_session_store_uses_configured_ttl(self, mock_settings):
+        """
+        Test that memory session store uses TTL from settings.
+
+        RED: Will fail because factory doesn't pass settings to InMemorySessionStore.
+        """
+        mock_settings.auth_mode = "session"
+        mock_settings.session_backend = "memory"
+        mock_settings.session_ttl_seconds = 7200
+        mock_settings.session_sliding_window = False
+        mock_settings.session_max_concurrent = 10
+
+        store = create_session_store(mock_settings)
+
+        assert store is not None
+        assert isinstance(store, InMemorySessionStore)
+        assert store.default_ttl == 7200
+        assert store.sliding_window is False
+        assert store.max_concurrent == 10

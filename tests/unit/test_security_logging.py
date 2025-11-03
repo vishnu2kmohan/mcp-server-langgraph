@@ -177,6 +177,75 @@ class TestLogSanitization:
         assert sanitized["items"] == [1, 2, 3]
         assert sanitized["meta"] == {"key": "value"}
 
+    def test_sanitize_for_logging_redacts_session_id(self):
+        """Test that session_id is redacted to prevent session hijacking"""
+        # GIVEN: Arguments containing session identifier
+        arguments = {
+            "session_id": "sess_abc123xyz789",
+            "user_id": "user:alice",
+            "action": "login",
+        }
+
+        # WHEN: Sanitizing for logging
+        sanitized = sanitize_for_logging(arguments)
+
+        # THEN: session_id should be redacted
+        assert sanitized["session_id"] == "[REDACTED]"
+        assert sanitized["user_id"] == "[REDACTED]"
+        assert sanitized["action"] == "login"
+
+    def test_sanitize_for_logging_redacts_user_id(self):
+        """Test that user_id is redacted for GDPR/CCPA compliance"""
+        # GIVEN: Arguments containing user identifier (PII)
+        arguments = {
+            "user_id": "user:bob",
+            "operation": "delete_account",
+        }
+
+        # WHEN: Sanitizing for logging
+        sanitized = sanitize_for_logging(arguments)
+
+        # THEN: user_id should be redacted
+        assert sanitized["user_id"] == "[REDACTED]"
+        assert sanitized["operation"] == "delete_account"
+
+    def test_sanitize_for_logging_redacts_username(self):
+        """Test that username is redacted for privacy protection"""
+        # GIVEN: Arguments containing username (PII)
+        arguments = {
+            "username": "alice@example.com",
+            "ip_address": "192.168.1.1",
+        }
+
+        # WHEN: Sanitizing for logging
+        sanitized = sanitize_for_logging(arguments)
+
+        # THEN: username should be redacted, IP preserved for security analysis
+        assert sanitized["username"] == "[REDACTED]"
+        assert sanitized["ip_address"] == "192.168.1.1"
+
+    def test_sanitize_for_logging_handles_all_sensitive_fields(self):
+        """Test comprehensive redaction of all sensitive fields"""
+        # GIVEN: Arguments with all sensitive fields
+        arguments = {
+            "token": "jwt_token_here",
+            "session_id": "sess_12345",
+            "user_id": "user:charlie",
+            "username": "charlie",
+            "message": "Hello, world!",
+        }
+
+        # WHEN: Sanitizing for logging
+        sanitized = sanitize_for_logging(arguments)
+
+        # THEN: All sensitive fields should be redacted
+        expected_redaction = "[REDACTED]"
+        assert sanitized["token"] == expected_redaction
+        assert sanitized["session_id"] == expected_redaction
+        assert sanitized["user_id"] == expected_redaction
+        assert sanitized["username"] == expected_redaction
+        assert sanitized["message"] == "Hello, world!"
+
 
 class TestLogSanitizationWithRealWorldPayloads:
     """Test log sanitization with realistic MCP tool call payloads"""
