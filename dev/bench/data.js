@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762134633475,
+  "lastUpdate": 1762136254469,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -23734,6 +23734,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001981851364194037",
             "extra": "mean: 48.26531088263577 usec\nrounds: 5642"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "e3bd686d5573d23f285663a211bc5080bdcbc66a",
+          "message": "fix(k8s): comprehensive security and configuration fixes for GKE staging deployment\n\nThis commit addresses 10 critical, high, and medium severity issues identified in security audit:\n\nCRITICAL FIXES (Production-Breaking):\n- Fix External Secrets authentication by updating ServiceAccount references to use staging- prefix\n- Override redis_url, checkpoint_redis_url, gdpr_postgres_url to point to Cloud SQL/Memorystore instead of deleted in-cluster services\n- Fix OpenFGA password expansion by using valueFrom secretKeyRef instead of literal $(VARIABLE) placeholder\n- Add missing postgres-username to ExternalSecret template for Keycloak authentication\n\nSECURITY IMPROVEMENTS:\n- Remove unnecessary NET_BIND_SERVICE capability (app uses port 8000, doesn't need privileged ports)\n- Implement Workload Identity least privilege with separate ServiceAccounts:\n  * external-secrets-operator: Secret Manager only\n  * keycloak: Cloud SQL only\n  * openfga: Cloud SQL only\n  * mcp-server-langgraph: Vertex AI, Secret Manager, logging/monitoring\n\nAUTOSCALING & RESOURCE OPTIMIZATION:\n- Remove conflicting replica count (let HPA manage with minReplicas: 3)\n- Fix Keycloak VPA to target Deployment instead of StatefulSet\n- Delete obsolete VPAs for redis-session and postgres (services deleted in staging)\n\nNETWORK POLICY REFINEMENT:\n- Add TCP/443 to Cloud SQL egress rules for control plane communication (in addition to TCP/3307 for database)\n\nAll changes validated via:\n- kubectl kustomize build (successful)\n- kubectl apply --dry-run=client (all resources valid)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T21:16:34-05:00",
+          "tree_id": "7958e46e9ae2e7816c2ae7d152c17605ceb4be32",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/e3bd686d5573d23f285663a211bc5080bdcbc66a"
+        },
+        "date": 1762136253608,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.35856175517216,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009623017416017347",
+            "extra": "mean: 6.9271956428602435 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.66128906494953,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013626198801544744",
+            "extra": "mean: 6.6817545555552655 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50479.89831278369,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023925669527948965",
+            "extra": "mean: 19.80986557864671 usec\nrounds: 9314"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52292.82108255722,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024300840448363827",
+            "extra": "mean: 19.123083805734087 usec\nrounds: 13400"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 48373.241898949396,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002636508594497481",
+            "extra": "mean: 20.67258593271415 usec\nrounds: 19876"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.1414088980544,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001751487403117694",
+            "extra": "mean: 5.231728727778457 msec\nrounds: 180"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.35498884195041,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008421002397684533",
+            "extra": "mean: 51.666265900013286 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.9531780309821,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000216870636007059",
+            "extra": "mean: 100.47042230001466 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2533542.6822020123,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7637610503867026e-8",
+            "extra": "mean: 394.7042246514893 nsec\nrounds: 191608"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5219.261904775379,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001440459566241482",
+            "extra": "mean: 191.59797271047984 usec\nrounds: 2675"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3047.460203224132,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000934106093443029",
+            "extra": "mean: 328.14210303452904 usec\nrounds: 2669"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2979.1535820824593,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008127826827640783",
+            "extra": "mean: 335.6658099180606 usec\nrounds: 1815"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59246.115628525156,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020988431455051364",
+            "extra": "mean: 16.878743684565393 usec\nrounds: 12984"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17169.82186948446,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001736706915017082",
+            "extra": "mean: 58.241722459408706 usec\nrounds: 4684"
           }
         ]
       }
