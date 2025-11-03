@@ -3,35 +3,6 @@
   path: /spec/template/spec/serviceAccountName
   value: staging-keycloak
 
-# Remove init container - direct Cloud SQL connection
+# Remove init container - Keycloak will wait for DB internally
 - op: remove
   path: /spec/template/spec/initContainers/0
-
-# Set database type to postgres (required for JDBC driver loading)
-- op: add
-  path: /spec/template/spec/containers/0/env/2
-  value:
-    name: KC_DB
-    value: "postgres"
-
-# Update database URL to connect directly to Cloud SQL private IP
-- op: replace
-  path: /spec/template/spec/containers/0/env/3
-  value:
-    name: KC_DB_URL
-    value: "jdbc:postgresql://10.110.0.3:5432/keycloak"
-
-- op: replace
-  path: /spec/template/spec/containers/0/env/4
-  value:
-    name: KC_DB_USERNAME
-    value: "keycloak"
-
-- op: replace
-  path: /spec/template/spec/containers/0/env/5
-  value:
-    name: KC_DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: mcp-staging-secrets
-        key: keycloak-db-password

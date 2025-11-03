@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mcp-staging
+  name: mcp-server-langgraph-staging
   labels:
     environment: staging
     platform: gke

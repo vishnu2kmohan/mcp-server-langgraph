@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: mcp-staging
+namespace: mcp-server-langgraph-staging
 
 namePrefix: staging-
 
@@ -29,6 +29,17 @@ labels:
 
 # Configuration patches
 patches:
+  # Exclude static secret - use External Secrets instead
+  - patch: |-
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: mcp-server-langgraph-secrets
+      $patch: delete
+    target:
+      kind: Secret
+      name: mcp-server-langgraph-secrets
+
   # Exclude self-hosted database resources - use cloud-managed services instead
   # PostgreSQL → Cloud SQL, Redis → Memorystore Redis
   - patch: |-
@@ -126,13 +137,25 @@ patches:
       kind: ServiceAccount
       name: mcp-server-langgraph
 
-  # Keycloak - Add Cloud SQL Proxy sidecar (JSON 6902 patch)
+  # Keycloak - Add Cloud SQL Proxy sidecar
+  - path: keycloak-patch.yaml
+    target:
+      kind: Deployment
+      name: keycloak
+
+  # Keycloak - Set ServiceAccount for Workload Identity (JSON 6902 patch)
   - path: keycloak-json-patch.yaml
     target:
       kind: Deployment
       name: keycloak
 
-  # OpenFGA - Add Cloud SQL Proxy sidecar (JSON 6902 patch)
+  # OpenFGA - Add Cloud SQL Proxy sidecar
+  - path: openfga-patch.yaml
+    target:
+      kind: Deployment
+      name: openfga
+
+  # OpenFGA - Set ServiceAccount and database credentials (JSON 6902 patch)
   - path: openfga-json-patch.yaml
     target:
       kind: Deployment

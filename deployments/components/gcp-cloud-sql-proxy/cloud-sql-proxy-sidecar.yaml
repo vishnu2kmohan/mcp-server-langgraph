@@ -1,27 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: openfga
+  name: placeholder
 spec:
   template:
     spec:
-      # Remove init container - OpenFGA will wait for database connection internally
-      # The Cloud SQL Proxy sidecar starts simultaneously with the main container
-      initContainers: []
-
       containers:
-      # Cloud SQL Proxy sidecar
+      # Cloud SQL Proxy sidecar - connects to Cloud SQL via private IP
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
         args:
           - "--structured-logs"
           - "--port=5432"
           - "--private-ip"
-          - "vishnu-sandbox-20250310:us-central1:mcp-staging-postgres"
+          - "$(CLOUDSQL_CONNECTION_NAME)"
+
+        env:
+        - name: CLOUDSQL_CONNECTION_NAME
+          valueFrom:
+            secretKeyRef:
+              name: placeholder-secrets  # Override in overlay
+              key: cloudsql-connection-name
 
         securityContext:
           runAsNonRoot: true
-          runAsUser: 65532
+          runAsUser: 65532  # Cloud SQL Proxy non-root user
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           capabilities:
@@ -30,17 +33,15 @@ spec:
 
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
             memory: "256Mi"
-            cpu: "200m"
+            cpu: "250m"
+            ephemeral-storage: "100Mi"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+            ephemeral-storage: "200Mi"
 
-        # Volume mount for /tmp required by Cloud SQL proxy for credential caching
-        volumeMounts:
-        - name: tmp
-          mountPath: /tmp
-
+        # Health checks via Cloud SQL Proxy admin server
         livenessProbe:
           httpGet:
             path: /liveness
@@ -48,6 +49,7 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 10
+          failureThreshold: 3
 
         readinessProbe:
           httpGet:
@@ -56,3 +58,13 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
+          failureThreshold: 3
+
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+
+      # Volumes for sidecars
+      volumes:
+      - name: tmp
+        emptyDir: {}

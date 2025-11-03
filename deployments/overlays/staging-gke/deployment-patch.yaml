@@ -48,42 +48,42 @@ spec:
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: anthropic-api-key
         - name: GOOGLE_API_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: google-api-key
 
         # Authentication & Secrets
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: jwt-secret
 
         # Redis Configuration
         - name: REDIS_HOST
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: redis-host
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: redis-password
         # Override ConfigMap redis URLs (which point to deleted in-cluster service)
         - name: redis_url
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: redis-url
         - name: checkpoint_redis_url
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: checkpoint-redis-url
 
         # PostgreSQL Configuration
@@ -92,7 +92,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: keycloak-db-password
 
         # Readiness probe
@@ -118,7 +118,7 @@ spec:
 
       # Cloud SQL Proxy sidecar
       - name: cloud-sql-proxy
-        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
         args:
           - "--structured-logs"
           - "--port=5432"
@@ -141,6 +141,11 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+
+        # Volume mount for /tmp required by Cloud SQL proxy for credential caching
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
 
         # Liveness probe for proxy
         livenessProbe:

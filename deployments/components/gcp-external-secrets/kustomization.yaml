@@ -1,0 +1,5 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# This component provides base configuration for GCP External Secrets Operator
+# Overlays must provide their own external-secrets.yaml with environment-specific values

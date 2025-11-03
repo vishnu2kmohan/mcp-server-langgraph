@@ -46,7 +46,7 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: kube-system
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: UDP
       port: 53
@@ -97,12 +97,29 @@ spec:
     - protocol: TCP
       port: 6333
 
+  # Allow GKE metadata server (required for Workload Identity)
+  # 169.254.169.254 - Application metadata endpoint
+  - to:
+    - ipBlock:
+        cidr: 169.254.169.254/32
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 988
+
+  # 169.254.169.252 - GKE metadata server for Workload Identity (GKE 1.21+)
+  - to:
+    - ipBlock:
+        cidr: 169.254.169.252/32
+    ports:
+    - protocol: TCP
+      port: 988
+
   # Allow HTTPS egress (for LLM API calls)
   - to:
     - ipBlock:
         cidr: 0.0.0.0/0
-        except:
-        - 169.254.169.254/32  # Block metadata service
     ports:
     - protocol: TCP
       port: 443
@@ -111,8 +128,6 @@ spec:
   - to:
     - ipBlock:
         cidr: 0.0.0.0/0
-        except:
-        - 169.254.169.254/32
     ports:
     - protocol: TCP
       port: 80
@@ -176,10 +191,26 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: kube-system
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: UDP
       port: 53
+  # Allow GKE metadata server (required for Workload Identity)
+  - to:
+    - ipBlock:
+        cidr: 169.254.169.254/32
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 988
+  # GKE metadata server for Workload Identity (GKE 1.21+)
+  - to:
+    - ipBlock:
+        cidr: 169.254.169.252/32
+    ports:
+    - protocol: TCP
+      port: 988
   # Allow Cloud SQL (database + control plane)
   - to:
     - ipBlock:
@@ -218,10 +249,26 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: kube-system
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: UDP
       port: 53
+  # Allow GKE metadata server (required for Workload Identity)
+  - to:
+    - ipBlock:
+        cidr: 169.254.169.254/32
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 988
+  # GKE metadata server for Workload Identity (GKE 1.21+)
+  - to:
+    - ipBlock:
+        cidr: 169.254.169.252/32
+    ports:
+    - protocol: TCP
+      port: 988
   # Allow Cloud SQL (database + control plane)
   - to:
     - ipBlock:

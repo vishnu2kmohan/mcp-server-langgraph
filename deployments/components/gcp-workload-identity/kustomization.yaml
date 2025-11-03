@@ -1,0 +1,5 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# This component documents Workload Identity pattern for GCP
+# Actual ServiceAccount annotations must be defined in overlay-specific patches

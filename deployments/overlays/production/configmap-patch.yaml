@@ -27,3 +27,9 @@ data:
   # Security
   keycloak_verify_ssl: "true"
   redis_ssl: "true"
+
+  # Service URLs (override base with production- prefix)
+  keycloak_server_url: "http://production-keycloak:8080"
+  redis_url: "redis://production-redis-session:6379/0"
+  checkpoint_redis_url: "redis://production-redis-session:6379/1"
+  openfga_api_url: "http://production-openfga:8080"

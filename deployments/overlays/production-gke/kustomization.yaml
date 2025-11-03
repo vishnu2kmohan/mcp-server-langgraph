@@ -1,14 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: mcp-production
+namespace: mcp-server-langgraph
 
 namePrefix: production-
 
 # Base configuration
 resources:
   - ../../base
-  - namespace.yaml
   - network-policy.yaml
   - external-secrets.yaml
   - pod-disruption-budget.yaml
@@ -30,6 +29,12 @@ commonLabels:
 
 # Configuration patches
 patches:
+  # Namespace patch
+  - path: namespace.yaml
+    target:
+      kind: Namespace
+      name: mcp-server-langgraph
+
   # Deployment patches
   - path: deployment-patch.yaml
     target:
@@ -68,7 +73,7 @@ images:
 # Generate ConfigMap from GCP-specific OTel config
 configMapGenerator:
   - name: otel-collector-config
-    behavior: merge
+    behavior: create
     files:
       - otel-collector-config.yaml
 

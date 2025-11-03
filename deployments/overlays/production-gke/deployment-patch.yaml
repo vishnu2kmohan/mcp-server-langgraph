@@ -80,46 +80,46 @@ spec:
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: anthropic-api-key
         - name: GOOGLE_API_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: google-api-key
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: openai-api-key
 
         # Authentication & Secrets
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: jwt-secret
         - name: API_KEY
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: api-key
 
         # Redis Configuration (from Secret Manager)
         - name: REDIS_HOST
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: redis-host
         - name: REDIS_PORT
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: redis-port
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: redis-password
         - name: REDIS_SSL
           value: "true"
@@ -132,17 +132,17 @@ spec:
         - name: POSTGRES_DATABASE
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: postgres-database
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: postgres-user
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: postgres-password
         - name: POSTGRES_SSL_MODE
           value: "disable"  # Proxy handles TLS
@@ -189,7 +189,7 @@ spec:
 
       # Cloud SQL Proxy sidecar
       - name: cloud-sql-proxy
-        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
         args:
           - "--structured-logs"
           - "--port=5432"
@@ -200,7 +200,7 @@ spec:
         - name: CLOUDSQL_CONNECTION_NAME
           valueFrom:
             secretKeyRef:
-              name: mcp-production-secrets
+              name: production-mcp-server-langgraph-secrets
               key: cloudsql-connection-name
 
         securityContext:
@@ -272,3 +272,10 @@ spec:
 
       # Termination grace period
       terminationGracePeriodSeconds: 60
+
+      # Volumes for Cloud SQL Proxy and app cache
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}

@@ -63,7 +63,8 @@ spec:
         image: openfga/openfga:v1.10.2
         imagePullPolicy: IfNotPresent
 
-        command: ["run"]
+        command: ["/openfga"]
+        args: ["run"]
 
         ports:
         - name: http
@@ -81,7 +82,11 @@ spec:
         - name: OPENFGA_DATASTORE_ENGINE
           value: "postgres"
         - name: OPENFGA_DATASTORE_URI
-          value: "postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable"
+          valueFrom:
+            secretKeyRef:
+              name: mcp-server-langgraph-secrets
+              key: openfga-datastore-uri
+              optional: true
 
         # Logging
         - name: OPENFGA_LOG_FORMAT

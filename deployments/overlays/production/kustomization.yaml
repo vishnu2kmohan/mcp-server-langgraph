@@ -3,7 +3,7 @@ kind: Kustomization
 
 namespace: mcp-server-langgraph
 
-namePrefix: prod-
+namePrefix: production-
 
 # Fixed: 'bases' is deprecated, use 'resources' instead
 resources:

@@ -5,17 +5,9 @@ metadata:
 spec:
   template:
     spec:
-      # Update init container to wait for Cloud SQL Proxy (localhost)
-      initContainers:
-      - name: wait-for-postgres
-        command: ['sh', '-c']
-        args:
-        - |
-          until nc -z 127.0.0.1 5432; do
-            echo "Waiting for Cloud SQL Proxy..."
-            sleep 2
-          done
-          echo "Cloud SQL Proxy is ready!"
+      # Remove init container - Cloud SQL Proxy sidecar starts simultaneously
+      # and has its own readiness probe
+      initContainers: []
 
       # Main container array - merge with base
       containers:
@@ -27,17 +19,17 @@ spec:
         - name: KC_DB_USERNAME
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: postgres-username  # Will use 'keycloak' user
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mcp-staging-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: keycloak-db-password
 
       # Cloud SQL Proxy sidecar - append to containers array
       - name: cloud-sql-proxy
-        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
         args:
           - "--structured-logs"
           - "--port=5432"
@@ -60,6 +52,11 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+
+        # Volume mount for /tmp required by Cloud SQL proxy for credential caching
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
 
         livenessProbe:
           httpGet:

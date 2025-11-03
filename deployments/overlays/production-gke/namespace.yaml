@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mcp-production
+  name: mcp-server-langgraph
   labels:
-    name: mcp-production
+    name: mcp-server-langgraph
     environment: production
     platform: gke
     cloud: gcp

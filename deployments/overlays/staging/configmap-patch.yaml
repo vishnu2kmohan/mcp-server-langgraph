@@ -21,3 +21,9 @@ data:
   enable_metrics: "true"
   observability_backend: "opentelemetry"
   langsmith_tracing: "false"
+
+  # Service URLs (override base with staging- prefix)
+  keycloak_server_url: "http://staging-keycloak:8080"
+  redis_url: "redis://staging-redis-session:6379/0"
+  checkpoint_redis_url: "redis://staging-redis-session:6379/1"
+  openfga_api_url: "http://staging-openfga:8080"
