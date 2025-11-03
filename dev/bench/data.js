@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762127847650,
+  "lastUpdate": 1762131866739,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -23124,6 +23124,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002075828789342395",
             "extra": "mean: 58.076370741063144 usec\nrounds: 5195"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ed75faf8de6dbab130fb6d093d44fddd097a5645",
+          "message": "fix(api): include pagination models in OpenAPI schema for contract compliance\n\nAdded custom OpenAPI schema generator to explicitly include PaginationParams\nand PaginationMetadata models in the API documentation, even though no endpoints\nuse them yet. This follows TDD principles where contract tests define the expected\nAPI behavior first.\n\n**Root Cause:**\n- FastAPI only includes models in OpenAPI schema if they're used in endpoint signatures\n- Pagination models were implemented with TDD-style contract tests but not used yet\n- Contract tests expected models in /openapi.json but they were missing\n\n**Changes:**\n- src/mcp_server_langgraph/mcp/server_streamable.py:1274-1330\n  - Added custom_openapi() function to generate OpenAPI schema\n  - Explicitly adds PaginationParams and PaginationMetadata to schema components\n  - Applied custom schema generator to FastAPI app\n\n**Testing:**\n- ✅ All 79 contract tests pass (including 2 pagination OpenAPI tests)\n- ✅ All quality tests pass\n- ✅ Black and isort formatting passes\n\n**Fixes CI/CD Failures:**\n- Quality Tests / Contract Tests (push)\n- Quality Tests / Quality Summary (push)\n- Coverage Trend Tracking / Track Coverage Trends (push)\n\n**Why This Wasn't Caught Locally:**\nGit pre-push hooks run linting (flake8, black, isort, mypy, bandit) but not\ntests. Contract tests only run in CI/CD, so the missing OpenAPI schemas weren't\ndetected until after push.\n\n**Prevention:**\nConsider adding contract tests to pre-push hook:\n```bash\nOTEL_SDK_DISABLED=true uv run pytest -n auto -m contract -q\n```\n\nNote: Bypassed mypy pre-commit hook as all errors are pre-existing issues\nunrelated to this fix (BaseModel subclassing errors across the codebase).\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T19:48:21-05:00",
+          "tree_id": "8493cd86901b16270e4dccb5aa27b73d26c1b9a6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ed75faf8de6dbab130fb6d093d44fddd097a5645"
+        },
+        "date": 1762131865292,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.3759365614271,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008236606785806712",
+            "extra": "mean: 6.974671091836713 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.91835154940384,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001249546389681474",
+            "extra": "mean: 6.715089104839096 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50630.44532678568,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025753016146746493",
+            "extra": "mean: 19.750961966573048 usec\nrounds: 7546"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53557.00425433249,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002366268146377111",
+            "extra": "mean: 18.67169409347807 usec\nrounds: 12664"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49877.56369246374,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024058004523333005",
+            "extra": "mean: 20.04909474259456 usec\nrounds: 20181"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.03328622780793,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000014593409683922357",
+            "extra": "mean: 5.234689826816339 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37010512056324,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001129343471437573",
+            "extra": "mean: 51.62594594999916 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.955361225488423,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002322698837227032",
+            "extra": "mean: 100.4483893000014 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2515248.0196351246,
+            "unit": "iter/sec",
+            "range": "stddev: 4.878127025977744e-8",
+            "extra": "mean: 397.5751067861154 nsec\nrounds: 190477"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5060.368896821852,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016271183615509926",
+            "extra": "mean: 197.614051542378 usec\nrounds: 2561"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2958.835750567091,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008967626968613456",
+            "extra": "mean: 337.97077104004165 usec\nrounds: 2721"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2954.1780900010613,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010490216379483858",
+            "extra": "mean: 338.50362758585106 usec\nrounds: 580"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59453.79582201054,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024392036689427558",
+            "extra": "mean: 16.8197839376605 usec\nrounds: 13348"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17107.992046145428,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017178253019616662",
+            "extra": "mean: 58.45221328737456 usec\nrounds: 4937"
           }
         ]
       }
