@@ -150,9 +150,23 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
 
-      # Init containers - Add resources for GKE Autopilot compatibility
+      # Init containers - Add resources and security contexts for GKE Autopilot compatibility
       initContainers:
       - name: wait-for-openfga
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
+              - ALL
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
+              - ALL
         resources:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
@@ -161,6 +175,20 @@ spec:
             cpu: 500m
             memory: 256Mi
       - name: wait-for-keycloak
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
+              - ALL
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
+              - ALL
         resources:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
@@ -169,6 +197,20 @@ spec:
             cpu: 500m
             memory: 256Mi
       - name: wait-for-redis
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
+              - ALL
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
+              - ALL
         resources:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
