@@ -288,9 +288,14 @@ def _create_enterprise_project(project_dir: Path, name: str) -> None:
 
     Features:
     - Kubernetes manifests (Helm charts)
-    - Terraform modules (GKE, EKS, AKS)
+    - Terraform modules (GKE: Complete, EKS: Modules ready, AKS: In development)
     - GitOps ready (ArgoCD)
     - Multi-region support
+
+    Platform Maturity:
+    - GKE: Production Ready (full automation, dev/staging/prod)
+    - EKS: Beta (modules complete, prod environment ready)
+    - AKS: Alpha (manual deployment only)
     """
     # TODO: Implement full enterprise template generation
     readme_content = f"""# {name}

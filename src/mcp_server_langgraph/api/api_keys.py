@@ -70,7 +70,7 @@ class ValidateAPIKeyResponse(BaseModel):
 # User-Facing API Endpoints
 
 
-@router.post("/", response_model=CreateAPIKeyResponse, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]
+@router.post("/", response_model=CreateAPIKeyResponse, status_code=status.HTTP_201_CREATED)
 async def create_api_key(
     request: CreateAPIKeyRequest,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -114,7 +114,7 @@ async def create_api_key(
         )
 
 
-@router.get("/", response_model=List[APIKeyResponse])  # type: ignore[misc]
+@router.get("/", response_model=List[APIKeyResponse])
 async def list_api_keys(
     current_user: Dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
@@ -139,7 +139,7 @@ async def list_api_keys(
     ]
 
 
-@router.post("/{key_id}/rotate", response_model=RotateAPIKeyResponse)  # type: ignore[misc]
+@router.post("/{key_id}/rotate", response_model=RotateAPIKeyResponse)
 async def rotate_api_key(
     key_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -171,7 +171,7 @@ async def rotate_api_key(
         )
 
 
-@router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)  # type: ignore[misc]
+@router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def revoke_api_key(
     key_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -194,7 +194,7 @@ async def revoke_api_key(
 # Internal Endpoint for Kong Plugin
 
 
-@router.post("/validate", response_model=ValidateAPIKeyResponse, include_in_schema=False)  # type: ignore[misc]
+@router.post("/validate", response_model=ValidateAPIKeyResponse, include_in_schema=False)
 async def validate_api_key(
     api_key: Optional[str] = Header(None, alias="X-API-Key"),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),

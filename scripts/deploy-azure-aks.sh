@@ -15,6 +15,7 @@ NC='\033[0m' # No Color
 RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-mcp-production-rg}"
 CLUSTER_NAME="${AKS_CLUSTER_NAME:-mcp-production}"
 LOCATION="${AZURE_LOCATION:-eastus}"
+ENVIRONMENT="${AZURE_ENVIRONMENT:-azure}"  # Terraform automation not yet available
 NAMESPACE="mcp-server-langgraph"
 
 # Functions
@@ -67,26 +68,25 @@ check_prerequisites() {
 }
 
 deploy_infrastructure() {
-    log_info "Deploying Azure infrastructure with Terraform..."
-
-    cd terraform/environments/azure
-
-    # Initialize Terraform
-    terraform init
-
-    # Plan
-    terraform plan \
-        -var="resource_group_name=$RESOURCE_GROUP" \
-        -var="cluster_name=$CLUSTER_NAME" \
-        -var="location=$LOCATION" \
-        -out=tfplan
-
-    # Apply
-    terraform apply tfplan
-
-    cd ../../..
-
-    log_info "✓ Infrastructure deployed"
+    log_error "=========================================="
+    log_error "TERRAFORM AUTOMATION NOT YET AVAILABLE"
+    log_error "=========================================="
+    echo ""
+    log_warn "AKS Terraform automation is currently under development."
+    log_warn "The terraform/environments/azure directory does not exist yet."
+    echo ""
+    log_info "Please use the MANUAL deployment process instead:"
+    log_info "1. See documentation: docs/deployment/kubernetes/aks.mdx"
+    log_info "2. Follow the manual runbook using Azure CLI"
+    log_info "3. Or help contribute AKS Terraform modules!"
+    echo ""
+    log_info "What's missing:"
+    log_info "  - terraform/modules/aks/ (AKS cluster module)"
+    log_info "  - terraform/modules/azure-vnet/ (Azure networking)"
+    log_info "  - terraform/modules/azure-cache/ (Azure Cache for Redis)"
+    log_info "  - terraform/environments/azure-prod/"
+    echo ""
+    exit 1
 }
 
 configure_kubectl() {
@@ -332,6 +332,11 @@ print_next_steps() {
 # Main execution
 main() {
     log_info "Starting AKS deployment for $CLUSTER_NAME..."
+    echo ""
+    log_warn "⚠️  IMPORTANT: Automated Terraform deployment not yet available for AKS"
+    log_warn "    This script will guide you to the manual deployment documentation."
+    log_warn "    See: docs/deployment/kubernetes/aks.mdx"
+    echo ""
 
     check_prerequisites
     deploy_infrastructure

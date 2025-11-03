@@ -88,16 +88,56 @@ class OpenFGAClient:
         self.client = OpenFgaClient(configuration)
         logger.info("OpenFGA client initialized", extra={"api_url": config.api_url})
 
-    @circuit_breaker(name="openfga", fail_max=10, timeout=30, fallback=lambda self, *args, **kwargs: True)
+    def _circuit_breaker_fallback(
+        self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None, critical: bool = True
+    ) -> bool:
+        """
+        Circuit breaker fallback for check_permission.
+
+        Security policy:
+        - critical=True (default): Fail-closed (deny access) when circuit opens
+        - critical=False: Fail-open (allow access) when circuit opens
+
+        Args:
+            user: User identifier
+            relation: Relation to check
+            object: Object identifier
+            context: Additional contextual data
+            critical: If True, fail-closed; if False, fail-open
+
+        Returns:
+            False for critical resources (fail-closed), True for non-critical (fail-open)
+        """
+        if critical:
+            logger.warning(
+                "OpenFGA circuit breaker open: DENYING access to critical resource",
+                extra={"user": user, "relation": relation, "object": object, "critical": critical},
+            )
+            return False  # Fail-closed for critical resources
+        else:
+            logger.warning(
+                "OpenFGA circuit breaker open: ALLOWING access to non-critical resource",
+                extra={"user": user, "relation": relation, "object": object, "critical": critical},
+            )
+            return True  # Fail-open for non-critical resources
+
+    @circuit_breaker(
+        name="openfga",
+        fail_max=10,
+        timeout=30,
+        fallback=lambda self, *args, **kwargs: self._circuit_breaker_fallback(*args, **kwargs),
+    )
     @retry_with_backoff(max_attempts=3, exponential_base=1.5)
     @with_timeout(operation_type="auth")
     @with_bulkhead(resource_type="openfga")
-    async def check_permission(self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None) -> bool:
+    async def check_permission(
+        self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None, critical: bool = True
+    ) -> bool:
         """
         Check if user has permission via relationship (with resilience protection).
 
         Protected by:
-        - Circuit breaker: Fail-open (allow) if OpenFGA is down (10 failures → open, 30s timeout)
+        - Circuit breaker: Fail-closed (deny) by default when OpenFGA is down (10 failures → open, 30s timeout)
         - Retry logic: Up to 3 attempts with 1.5x exponential backoff (1s, 1.5s, 2.25s)
         - Timeout: 5s timeout for auth operations
         - Bulkhead: Limit to 50 concurrent auth checks
@@ -107,13 +147,16 @@ class OpenFGAClient:
             relation: Relation to check (e.g., "can_read", "can_execute")
             object: Object identifier (e.g., "tool:chat", "resource:conversation_123")
             context: Additional contextual data for dynamic checks
+            critical: If True (default), fail-closed when circuit opens; if False, fail-open
 
         Returns:
             True if user has permission, False otherwise
-            True if OpenFGA is unavailable (fail-open for availability)
+            When circuit breaker is open:
+            - False if critical=True (fail-closed, secure by default)
+            - True if critical=False (fail-open, prefer availability)
 
         Raises:
-            CircuitBreakerOpenError: If circuit breaker is open (returns True via fallback)
+            CircuitBreakerOpenError: If circuit breaker is open (uses fallback for return value)
             OpenFGATimeoutError: If check exceeds 5s timeout
             OpenFGAError: For other OpenFGA errors
         """

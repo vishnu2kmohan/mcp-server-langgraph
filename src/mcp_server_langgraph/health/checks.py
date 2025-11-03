@@ -26,7 +26,7 @@ class HealthResponse(BaseModel):
     checks: Dict[str, Any]
 
 
-@app.get("/health", response_model=HealthResponse)  # type: ignore[misc]
+@app.get("/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
     """
     Liveness probe - returns 200 if application is running
@@ -41,7 +41,7 @@ async def health_check() -> HealthResponse:
     )
 
 
-@app.get("/health/ready", response_model=None)  # type: ignore[misc]
+@app.get("/health/ready", response_model=None)
 async def readiness_check() -> JSONResponse:
     """
     Readiness probe - returns 200 if application can serve traffic
@@ -88,7 +88,7 @@ async def readiness_check() -> JSONResponse:
         critical_secrets_missing.append("JWT_SECRET_KEY")
 
     if critical_secrets_missing:
-        checks["secrets"] = {"status": "unhealthy", "missing": critical_secrets_missing}  # type: ignore[dict-item]
+        checks["secrets"] = {"status": "unhealthy", "missing": critical_secrets_missing}
         all_healthy = False
     else:
         checks["secrets"] = {"status": "healthy", "message": "All critical secrets loaded"}
@@ -107,7 +107,7 @@ async def readiness_check() -> JSONResponse:
     )
 
 
-@app.get("/health/startup", response_model=None)  # type: ignore[misc]
+@app.get("/health/startup", response_model=None)
 async def startup_check() -> JSONResponse | Dict[str, Any]:
     """
     Startup probe - returns 200 when application has fully started
@@ -132,7 +132,7 @@ async def startup_check() -> JSONResponse | Dict[str, Any]:
     return {"status": "started", "timestamp": datetime.now(timezone.utc).isoformat(), "checks": checks}
 
 
-@app.get("/metrics/prometheus")  # type: ignore[misc]
+@app.get("/metrics/prometheus")
 async def prometheus_metrics() -> Dict[str, Any]:
     """
     Prometheus metrics endpoint

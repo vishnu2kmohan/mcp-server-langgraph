@@ -106,7 +106,7 @@ def _initialize_pydantic_agent() -> None:
         return None
 
 
-def _create_checkpointer() -> BaseCheckpointSaver:
+def _create_checkpointer() -> BaseCheckpointSaver[Any]:  # type: ignore[type-arg]
     """
     Create checkpointer backend based on configuration
 

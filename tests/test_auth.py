@@ -5,8 +5,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import jwt
 import pytest
+from fastapi import Request
+from fastapi.security import HTTPAuthorizationCredentials
 
-from mcp_server_langgraph.auth.middleware import AuthMiddleware, require_auth, verify_token
+from mcp_server_langgraph.auth.middleware import (
+    AuthMiddleware,
+    get_current_user,
+    require_auth,
+    set_global_auth_middleware,
+    verify_token,
+)
 
 
 @pytest.mark.unit
@@ -420,3 +428,236 @@ class TestStandaloneVerifyToken:
         result = await verify_token("invalid.token", secret_key="test-secret")
 
         assert result.valid is False
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+class TestGetCurrentUser:
+    """Test get_current_user FastAPI dependency for bearer token authentication"""
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_with_valid_bearer_token(self):
+        """
+        Test get_current_user authenticates with valid JWT bearer token.
+
+        SECURITY: This is a critical test to ensure bearer token authentication works.
+        Without proper dependency injection, bearer tokens are never validated.
+        """
+        # Setup: Create auth middleware and valid token
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+        token = auth.create_token("alice", expires_in=3600)
+
+        # Create mock request and credentials
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = None  # No user in request state
+
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+
+        # Act: Call get_current_user with bearer token
+        user = await get_current_user(request, credentials)
+
+        # Assert: User should be authenticated
+        assert user is not None
+        assert user["username"] == "alice"
+        assert user["user_id"] == "user:alice"
+        assert "premium" in user["roles"]
+        assert user["email"] == "alice@acme.com"
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_with_invalid_bearer_token(self):
+        """Test get_current_user rejects invalid JWT bearer token"""
+        from fastapi import HTTPException
+
+        # Setup
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = None
+
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid.jwt.token")
+
+        # Act & Assert: Should raise 401 Unauthorized
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user(request, credentials)
+
+        assert exc_info.value.status_code == 401
+        assert "Invalid token" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_with_expired_bearer_token(self):
+        """Test get_current_user rejects expired JWT bearer token"""
+        from fastapi import HTTPException
+
+        # Setup: Create expired token
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+
+        payload = {
+            "sub": "user:alice",
+            "username": "alice",
+            "email": "alice@acme.com",
+            "roles": ["premium"],
+            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
+            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+        }
+        expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
+
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = None
+
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=expired_token)
+
+        # Act & Assert: Should raise 401 Unauthorized
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user(request, credentials)
+
+        assert exc_info.value.status_code == 401
+        assert "Token expired" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_without_credentials_raises_401(self):
+        """Test get_current_user requires authentication when no credentials provided"""
+        from fastapi import HTTPException
+
+        # Setup
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = None
+
+        # Act & Assert: Should raise 401 when no credentials
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user(request, credentials=None)
+
+        assert exc_info.value.status_code == 401
+        assert "Authentication required" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_uses_request_state_if_set(self):
+        """Test get_current_user returns user from request.state if already authenticated"""
+        # Setup
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = {"user_id": "user:bob", "username": "bob", "roles": ["standard"], "email": "bob@acme.com"}
+
+        # Act: Call without credentials (should use request.state.user)
+        user = await get_current_user(request, credentials=None)
+
+        # Assert: Should return cached user from request state
+        assert user["username"] == "bob"
+        assert user["user_id"] == "user:bob"
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_prefers_preferred_username_over_sub(self):
+        """
+        Test get_current_user uses preferred_username instead of sub for Keycloak compatibility.
+
+        SECURITY: Keycloak JWTs use UUID in 'sub' field, but OpenFGA tuples use 'user:username'.
+        We must extract 'preferred_username' to ensure authorization works correctly.
+        """
+        # Setup: Create Keycloak-style JWT with UUID in sub and username in preferred_username
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+
+        keycloak_payload = {
+            "sub": "f47ac10b-58cc-4372-a567-0e02b2c3d479",  # Keycloak UUID
+            "preferred_username": "alice",  # Actual username
+            "email": "alice@acme.com",
+            "roles": ["premium"],
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iat": datetime.now(timezone.utc),
+        }
+        keycloak_token = jwt.encode(keycloak_payload, "test-secret", algorithm="HS256")
+
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = None
+
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=keycloak_token)
+
+        # Act: Call get_current_user with Keycloak JWT
+        user = await get_current_user(request, credentials)
+
+        # Assert: Should use preferred_username, NOT sub UUID
+        assert user["username"] == "alice"  # From preferred_username
+        assert user["user_id"] == "user:alice"  # Format for OpenFGA
+        assert "uuid" not in user["user_id"].lower()  # Should NOT contain UUID
+        assert "f47ac10b" not in user["user_id"]  # Should NOT contain UUID
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_falls_back_to_sub_if_no_preferred_username(self):
+        """
+        Test get_current_user falls back to sub if preferred_username is missing.
+
+        This handles legacy JWTs or non-Keycloak identity providers.
+        """
+        # Setup: Create JWT without preferred_username
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+
+        legacy_payload = {
+            "sub": "user:charlie",  # Already in user:username format
+            "email": "charlie@acme.com",
+            "roles": ["standard"],
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iat": datetime.now(timezone.utc),
+        }
+        legacy_token = jwt.encode(legacy_payload, "test-secret", algorithm="HS256")
+
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = None
+
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=legacy_token)
+
+        # Act: Call get_current_user with legacy JWT
+        user = await get_current_user(request, credentials)
+
+        # Assert: Should fall back to sub
+        assert user["username"] == "charlie"
+        assert user["user_id"] == "user:charlie"
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_normalizes_username_format(self):
+        """
+        Test get_current_user normalizes user_id to 'user:username' format for OpenFGA.
+
+        This ensures consistent format regardless of JWT structure.
+        """
+        # Setup: Create JWT with plain username in preferred_username
+        auth = AuthMiddleware(secret_key="test-secret")
+        set_global_auth_middleware(auth)
+
+        payload = {
+            "sub": "12345",  # Some numeric ID
+            "preferred_username": "dave",  # Plain username (no prefix)
+            "email": "dave@acme.com",
+            "roles": ["admin"],
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iat": datetime.now(timezone.utc),
+        }
+        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+
+        request = MagicMock(spec=Request)
+        request.state = MagicMock()
+        request.state.user = None
+
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+
+        # Act: Call get_current_user
+        user = await get_current_user(request, credentials)
+
+        # Assert: user_id should be normalized to user:username format
+        assert user["username"] == "dave"
+        assert user["user_id"] == "user:dave"  # Normalized format
+        assert user["user_id"].startswith("user:")  # Always has prefix

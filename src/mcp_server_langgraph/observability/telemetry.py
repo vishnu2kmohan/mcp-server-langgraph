@@ -307,7 +307,7 @@ class ObservabilityConfig:
             log_format_str = (
                 "%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s"
             )
-            formatter = logging.Formatter(log_format_str)  # type: ignore[assignment]
+            formatter = logging.Formatter(log_format_str)
             console_formatter = formatter
 
         # Console handler (stdout) - always enabled
@@ -333,7 +333,7 @@ class ObservabilityConfig:
             )
             rotating_handler.setLevel(logging.INFO)
             rotating_handler.setFormatter(formatter)
-            handlers.append(rotating_handler)  # type: ignore[arg-type]
+            handlers.append(rotating_handler)
 
             # Time-based rotating handler (daily rotation)
             # Rotates daily at midnight, keeps 30 days of logs
@@ -346,7 +346,7 @@ class ObservabilityConfig:
             )
             daily_handler.setLevel(logging.INFO)
             daily_handler.setFormatter(formatter)
-            handlers.append(daily_handler)  # type: ignore[arg-type]
+            handlers.append(daily_handler)
 
             # Error log handler (only ERROR and CRITICAL)
             error_handler = RotatingFileHandler(
@@ -357,7 +357,7 @@ class ObservabilityConfig:
             )
             error_handler.setLevel(logging.ERROR)
             error_handler.setFormatter(formatter)
-            handlers.append(error_handler)  # type: ignore[arg-type]
+            handlers.append(error_handler)
 
         # Configure root logger
         logging.basicConfig(level=logging.INFO, handlers=handlers)
@@ -374,17 +374,17 @@ class ObservabilityConfig:
             else:
                 print("  - File logging: disabled (console only)")
 
-    def get_tracer(self) -> None:
+    def get_tracer(self) -> trace.Tracer:
         """Get tracer instance"""
-        return self.tracer  # type: ignore[no-any-return]
+        return self.tracer  # type: ignore[return-value]
 
-    def get_meter(self) -> None:
+    def get_meter(self) -> otel_metrics.Meter:
         """Get meter instance"""
-        return self.meter  # type: ignore[no-any-return]
+        return self.meter  # type: ignore[return-value]
 
     def get_logger(self) -> None:
         """Get logger instance"""
-        return self.logger  # type: ignore[return-value]
+        return self.logger
 
     def _setup_langsmith(self) -> None:
         """Configure LangSmith tracing"""
@@ -420,7 +420,7 @@ def is_initialized() -> bool:
     return _observability_config is not None
 
 
-def init_observability(  # type: ignore[no-untyped-def]
+def init_observability(
     settings=None,
     service_name: str = SERVICE_NAME,
     otlp_endpoint: str = OTLP_ENDPOINT,

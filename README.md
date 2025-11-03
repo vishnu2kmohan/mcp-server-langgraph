@@ -927,12 +927,20 @@ See **[Cloud Run Deployment Guide](docs/deployment/cloud-run.mdx)** for complete
 
 ### Kubernetes Deployment
 
-The agent is fully containerized and ready for Kubernetes deployment. Supported platforms:
-- Google Kubernetes Engine (GKE)
-- Amazon Elastic Kubernetes Service (EKS)
-- Azure Kubernetes Service (AKS)
-- Rancher
-- VMware Tanzu
+The agent is fully containerized and ready for Kubernetes deployment. Platform automation maturity:
+
+| Platform | Terraform Automation | Deployment Overlays | Maturity Status |
+|----------|---------------------|---------------------|-----------------|
+| **Google Kubernetes Engine (GKE)** | ✅ Complete (dev/staging/prod) | ✅ Rich (32 files) | 🟢 **Production Ready** |
+| **Amazon Elastic Kubernetes Service (EKS)** | ⚠️ Partial (prod only) | ⚠️ Minimal (2 files) | 🟡 **Beta** |
+| **Azure Kubernetes Service (AKS)** | ❌ Manual only | ⚠️ Minimal (3 files) | 🔴 **Alpha** (Manual deployment) |
+| **Rancher** | ⚠️ Generic manifests | ✅ Base manifests | 🟡 **Community** |
+| **VMware Tanzu** | ⚠️ Generic manifests | ✅ Base manifests | 🟡 **Community** |
+
+**Platform-Specific Features**:
+- **GKE**: Full Terraform automation, Cloud SQL integration, Workload Identity, GCP monitoring, staging & production environments
+- **EKS**: Complete Terraform modules, Karpenter autoscaling, IRSA support, production environment (staging/dev in development)
+- **AKS**: Manual deployment only, requires Azure CLI setup (Terraform automation in development)
 
 **Quick Deploy**:
 

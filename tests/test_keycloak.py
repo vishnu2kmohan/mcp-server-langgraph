@@ -797,3 +797,334 @@ class TestTokenValidatorErrorPaths:
 
             with pytest.raises(Exception, match="Network error"):
                 await validator.verify_token(token)
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+@pytest.mark.integration
+class TestKeycloakAdminClientManagement:
+    """
+    Test Keycloak Admin API client management methods.
+
+    These tests follow TDD principles - RED phase.
+    Tests written BEFORE implementation to ensure proper behavior.
+    """
+
+    @pytest.mark.asyncio
+    async def test_create_client_success(self, keycloak_config):
+        """
+        Test creating a Keycloak client via Admin API.
+
+        RED: This test will FAIL initially because create_client raises NotImplementedError.
+        """
+        client = KeycloakClient(keycloak_config)
+
+        client_config = {
+            "clientId": "test-service-principal",
+            "name": "Test Service Principal",
+            "description": "Service account for testing",
+            "enabled": True,
+            "serviceAccountsEnabled": True,
+            "standardFlowEnabled": False,
+            "directAccessGrantsEnabled": False,
+            "implicitFlowEnabled": False,
+            "publicClient": False,
+            "clientAuthenticatorType": "client-secret",
+            "secret": "test-secret-123",
+            "attributes": {
+                "associatedUserId": "user:alice",
+                "inheritPermissions": "true",
+                "owner": "user:alice",
+            },
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token call
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock client creation call
+            mock_create_response = MagicMock()
+            mock_create_response.status_code = 201
+            mock_create_response.headers = {
+                "Location": "http://localhost:8180/admin/realms/test-realm/clients/client-uuid-123"
+            }
+            mock_create_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_create_response])
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            client_id = await client.create_client(client_config)
+
+            # Assertions
+            assert client_id == "client-uuid-123"
+            assert mock_async_client.post.call_count == 2  # Admin token + client creation
+
+    @pytest.mark.asyncio
+    async def test_create_client_http_error(self, keycloak_config):
+        """Test create_client handles HTTP errors gracefully"""
+        client = KeycloakClient(keycloak_config)
+
+        client_config = {
+            "clientId": "duplicate-client",
+            "name": "Duplicate Client",
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token (success)
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock client creation (failure - conflict)
+            mock_create_response = MagicMock()
+            mock_create_response.status_code = 409
+            mock_create_response.text = "Client already exists"
+            mock_create_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Conflict", request=MagicMock(), response=mock_create_response
+            )
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_create_response])
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.create_client(client_config)
+
+    @pytest.mark.asyncio
+    async def test_delete_client_success(self, keycloak_config):
+        """Test deleting a Keycloak client via Admin API"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock delete call
+            mock_delete_response = MagicMock()
+            mock_delete_response.status_code = 204
+            mock_delete_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(return_value=mock_token_response)
+            mock_async_client.delete = AsyncMock(return_value=mock_delete_response)
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            await client.delete_client("client-uuid-123")
+
+            # Verify delete was called
+            mock_async_client.delete.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_delete_client_not_found(self, keycloak_config):
+        """Test delete_client handles 404 Not Found"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock delete (not found)
+            mock_delete_response = MagicMock()
+            mock_delete_response.status_code = 404
+            mock_delete_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Not Found", request=MagicMock(), response=mock_delete_response
+            )
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(return_value=mock_token_response)
+            mock_async_client.delete = AsyncMock(return_value=mock_delete_response)
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.delete_client("nonexistent-client")
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+@pytest.mark.integration
+class TestKeycloakAdminUserManagement:
+    """Test Keycloak Admin API user management methods"""
+
+    @pytest.mark.asyncio
+    async def test_create_user_success(self, keycloak_config):
+        """Test creating a Keycloak user via Admin API"""
+        client = KeycloakClient(keycloak_config)
+
+        user_config = {
+            "username": "svc_batch_job",
+            "enabled": True,
+            "email": "svc-batch-job@example.com",
+            "emailVerified": True,
+            "attributes": {
+                "serviceAccount": "true",
+                "associatedUserId": "user:alice",
+                "inheritPermissions": "true",
+                "owner": "user:alice",
+            },
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock user creation
+            mock_create_response = MagicMock()
+            mock_create_response.status_code = 201
+            mock_create_response.headers = {"Location": "http://localhost:8180/admin/realms/test-realm/users/user-uuid-456"}
+            mock_create_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_create_response])
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            user_id = await client.create_user(user_config)
+
+            assert user_id == "user-uuid-456"
+
+    @pytest.mark.asyncio
+    async def test_delete_user_success(self, keycloak_config):
+        """Test deleting a Keycloak user via Admin API"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock delete
+            mock_delete_response = MagicMock()
+            mock_delete_response.status_code = 204
+            mock_delete_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(return_value=mock_token_response)
+            mock_async_client.delete = AsyncMock(return_value=mock_delete_response)
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            await client.delete_user("user-uuid-456")
+
+            mock_async_client.delete.assert_called_once()
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+class TestKeycloakUserAttributes:
+    """Test Keycloak user attribute management (for API keys)"""
+
+    @pytest.mark.asyncio
+    async def test_get_user_attributes_success(self, keycloak_config):
+        """Test retrieving user attributes via Admin API"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock get user
+            mock_get_response = MagicMock()
+            mock_get_response.json.return_value = {
+                "id": "user-uuid-789",
+                "username": "alice",
+                "attributes": {
+                    "apiKeys": ["key:abc123:hash1", "key:def456:hash2"],
+                    "apiKey_abc123_name": "Production Key",
+                    "apiKey_def456_name": "Development Key",
+                },
+            }
+            mock_get_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(return_value=mock_token_response)
+            mock_async_client.get = AsyncMock(return_value=mock_get_response)
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            attributes = await client.get_user_attributes("user-uuid-789")
+
+            assert "apiKeys" in attributes
+            assert len(attributes["apiKeys"]) == 2
+            assert "apiKey_abc123_name" in attributes
+
+    @pytest.mark.asyncio
+    async def test_update_user_attributes_success(self, keycloak_config):
+        """Test updating user attributes via Admin API"""
+        client = KeycloakClient(keycloak_config)
+
+        new_attributes = {
+            "apiKeys": ["key:abc123:hash1", "key:def456:hash2", "key:ghi789:hash3"],
+            "apiKey_ghi789_name": "Staging Key",
+            "apiKey_ghi789_created": "2025-11-02T12:00:00",
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {
+                "access_token": "admin-token-123",
+                "expires_in": 300,
+            }
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock GET request (to fetch current user)
+            mock_get_response = MagicMock()
+            mock_get_response.json.return_value = {
+                "id": "user-uuid-789",
+                "username": "alice",
+                "email": "alice@example.com",
+                "enabled": True,
+                "attributes": {
+                    "apiKeys": ["key:abc123:hash1", "key:def456:hash2"],
+                },
+            }
+            mock_get_response.raise_for_status = MagicMock()
+
+            # Mock PUT request
+            mock_put_response = MagicMock()
+            mock_put_response.status_code = 204
+            mock_put_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(return_value=mock_token_response)
+            mock_async_client.get = AsyncMock(return_value=mock_get_response)
+            mock_async_client.put = AsyncMock(return_value=mock_put_response)
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            await client.update_user_attributes("user-uuid-789", new_attributes)
+
+            # Verify PUT was called with correct payload
+            mock_async_client.put.assert_called_once()
+            call_args = mock_async_client.put.call_args
+            assert "attributes" in call_args.kwargs["json"]
+            assert call_args.kwargs["json"]["attributes"] == new_attributes

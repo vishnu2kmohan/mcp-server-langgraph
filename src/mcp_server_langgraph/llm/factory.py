@@ -16,7 +16,7 @@ from typing import Any, Dict, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
-from litellm.utils import ModelResponse
+from litellm.utils import ModelResponse  # type: ignore[attr-defined]
 
 from mcp_server_langgraph.core.exceptions import LLMModelNotFoundError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer

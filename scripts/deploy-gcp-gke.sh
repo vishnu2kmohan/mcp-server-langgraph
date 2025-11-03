@@ -15,6 +15,7 @@ NC='\033[0m' # No Color
 PROJECT_ID="${GCP_PROJECT_ID:-}"
 CLUSTER_NAME="${GKE_CLUSTER_NAME:-mcp-production}"
 REGION="${GCP_REGION:-us-central1}"
+ENVIRONMENT="${GCP_ENVIRONMENT:-gcp-prod}"  # Options: gcp-dev, gcp-staging, gcp-prod
 NAMESPACE="mcp-server-langgraph"
 
 # Functions
@@ -63,13 +64,20 @@ check_prerequisites() {
         exit 1
     fi
 
+    # Validate environment
+    if [[ ! "$ENVIRONMENT" =~ ^(gcp-dev|gcp-staging|gcp-prod)$ ]]; then
+        log_error "Invalid GCP_ENVIRONMENT: $ENVIRONMENT. Must be one of: gcp-dev, gcp-staging, gcp-prod"
+        exit 1
+    fi
+
+    log_info "Using environment: $ENVIRONMENT"
     log_info "✓ All prerequisites met"
 }
 
 deploy_infrastructure() {
     log_info "Deploying GCP infrastructure with Terraform..."
 
-    cd terraform/environments/gcp
+    cd "terraform/environments/$ENVIRONMENT"
 
     # Initialize Terraform
     terraform init
@@ -200,7 +208,7 @@ deploy_application() {
     log_info "Deploying application with Helm..."
 
     # Get CloudSQL connection details
-    CLOUDSQL_INSTANCE=$(terraform -chdir=terraform/environments/gcp output -raw cloudsql_connection_name 2>/dev/null || echo "")
+    CLOUDSQL_INSTANCE=$(terraform -chdir="terraform/environments/$ENVIRONMENT" output -raw cloudsql_connection_name 2>/dev/null || echo "")
 
     if [ -z "$CLOUDSQL_INSTANCE" ]; then
         log_warn "CloudSQL instance not found. Using in-cluster PostgreSQL."

@@ -29,6 +29,7 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.middleware.rate_limiter import custom_rate_limit_exceeded_handler, limiter
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
 
@@ -140,6 +141,33 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
 )
+
+# Rate limiting middleware
+# SECURITY: Protect against DoS, brute force, and API abuse
+# Uses tiered rate limits (anonymous: 10/min, free: 60/min, premium: 1000/min, enterprise: unlimited)
+# Tracks by user ID (from JWT) > IP address > global anonymous
+# Fail-open: allows requests if Redis is down (graceful degradation)
+try:
+    from slowapi.errors import RateLimitExceeded
+
+    # Register rate limiter with app
+    app.state.limiter = limiter
+
+    # Register custom exception handler for rate limit exceeded
+    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+    logger.info(
+        "Rate limiting enabled",
+        extra={
+            "strategy": "fixed-window",
+            "tiers": ["anonymous", "free", "standard", "premium", "enterprise"],
+            "fail_open": True,
+        },
+    )
+except Exception as e:
+    logger.warning(
+        f"Failed to initialize rate limiting: {e}. Requests will proceed without rate limits.", extra={"error": str(e)}
+    )
 
 
 class ChatInput(BaseModel):
@@ -260,7 +288,7 @@ class MCPAgentStreamableServer:
         """
         # Call the registered handler
         # The handler is registered below in _setup_handlers()
-        return await self._list_tools_handler()  # type: ignore[no-any-return]
+        return await self._list_tools_handler()
 
     async def call_tool_public(self, name: str, arguments: dict[str, Any]) -> list[TextContent]:
         """
@@ -268,7 +296,7 @@ class MCPAgentStreamableServer:
 
         This wraps the internal MCP handler to avoid accessing private SDK attributes.
         """
-        return await self._call_tool_handler(name, arguments)  # type: ignore[no-any-return]
+        return await self._call_tool_handler(name, arguments)
 
     async def list_resources_public(self) -> list[Resource]:
         """
@@ -276,12 +304,12 @@ class MCPAgentStreamableServer:
 
         This wraps the internal MCP handler to avoid accessing private SDK attributes.
         """
-        return await self._list_resources_handler()  # type: ignore[no-any-return]
+        return await self._list_resources_handler()
 
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc]
+        @self.server.list_tools()  # type: ignore[misc,no-untyped-call]
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -386,7 +414,17 @@ class MCPAgentStreamableServer:
                     metrics.auth_failures.add(1)
                     raise PermissionError("Invalid token: missing user identifier")
 
-                user_id = token_verification.payload["sub"]
+                # Extract username: prefer preferred_username (Keycloak) over sub
+                # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
+                username = token_verification.payload.get("preferred_username")
+                if not username:
+                    # Fallback to sub (for non-Keycloak IdPs)
+                    sub = token_verification.payload["sub"]
+                    # If sub is in "user:username" format, extract username
+                    username = sub.replace("user:", "") if sub.startswith("user:") else sub
+
+                # Normalize user_id to "user:username" format for OpenFGA compatibility
+                user_id = f"user:{username}" if not username.startswith("user:") else username
                 span.set_attribute("user.id", user_id)
 
                 logger.info("User authenticated via token", extra={"user_id": user_id, "tool": name})
@@ -419,7 +457,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc]
+        @self.server.list_resources()  # type: ignore[misc,no-untyped-call]
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
@@ -461,7 +499,7 @@ class MCPAgentStreamableServer:
             conversation_resource = f"conversation:{thread_id}"
 
             # Check if conversation exists by trying to get state from checkpointer
-            graph = get_agent_graph()  # type: ignore[func-returns-value]
+            graph = get_agent_graph()
             conversation_exists = False
             if hasattr(graph, "checkpointer") and graph.checkpointer is not None:
                 try:
@@ -520,7 +558,7 @@ class MCPAgentStreamableServer:
             config = {"configurable": {"thread_id": thread_id}}
 
             try:
-                result = await get_agent_graph().ainvoke(initial_state, config)  # type: ignore[func-returns-value]
+                result = await get_agent_graph().ainvoke(initial_state, config)
 
                 # Seed OpenFGA tuples for new conversations
                 if not conversation_exists and self.openfga is not None:
@@ -597,7 +635,7 @@ class MCPAgentStreamableServer:
                 raise PermissionError(f"Not authorized to view conversation {thread_id}")
 
             # Retrieve conversation from checkpointer
-            graph = get_agent_graph()  # type: ignore[func-returns-value]
+            graph = get_agent_graph()
 
             if not hasattr(graph, "checkpointer") or graph.checkpointer is None:
                 logger.warning("No checkpointer available, cannot retrieve conversation history")
@@ -837,7 +875,7 @@ class RefreshTokenResponse(BaseModel):
 
 
 # FastAPI endpoints for MCP StreamableHTTP transport
-@app.get("/")  # type: ignore[misc]
+@app.get("/")
 async def root() -> dict[str, Any]:
     """Root endpoint with server info"""
     return {
@@ -868,7 +906,7 @@ async def root() -> dict[str, Any]:
     }
 
 
-@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])  # type: ignore[misc]
+@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])
 async def login(request: LoginRequest) -> LoginResponse:
     """
     Authenticate user and return JWT token
@@ -951,7 +989,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         )
 
 
-@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])  # type: ignore[misc]
+@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])
 async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
     """
     Refresh authentication token
@@ -1070,7 +1108,7 @@ async def stream_jsonrpc_response(data: dict[str, Any]) -> AsyncIterator[str]:
     yield json.dumps(data) + "\n"
 
 
-@app.post("/message", response_model=None)  # type: ignore[misc]
+@app.post("/message", response_model=None)
 async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
     """
     Handle MCP messages via StreamableHTTP POST
@@ -1235,7 +1273,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
         )
 
 
-@app.get("/tools")  # type: ignore[misc]
+@app.get("/tools")
 async def list_tools() -> dict[str, Any]:
     """List available tools (convenience endpoint)"""
     # Use public API instead of private _tool_manager
@@ -1243,7 +1281,7 @@ async def list_tools() -> dict[str, Any]:
     return {"tools": [tool.model_dump(mode="json") for tool in tools]}
 
 
-@app.get("/resources")  # type: ignore[misc]
+@app.get("/resources")
 async def list_resources() -> dict[str, Any]:
     """List available resources (convenience endpoint)"""
     # Use public API instead of private _resource_manager
@@ -1278,7 +1316,7 @@ app.include_router(scim_router)
 # even if not all endpoints use them yet. This ensures consistent API contract.
 
 
-def custom_openapi():  # type: ignore[no-untyped-def]
+def custom_openapi():
     """
     Custom OpenAPI schema generator that includes pagination models.
 
@@ -1327,7 +1365,7 @@ def custom_openapi():  # type: ignore[no-untyped-def]
 
 
 # Apply custom OpenAPI schema
-app.openapi = custom_openapi  # type: ignore[assignment]
+app.openapi = custom_openapi
 
 
 def main() -> None:

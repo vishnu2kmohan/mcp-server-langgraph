@@ -79,7 +79,7 @@ def _create_embeddings(
         try:
             from sentence_transformers import SentenceTransformer
 
-            class SentenceTransformerEmbeddings(Embeddings):  # type: ignore[misc]
+            class SentenceTransformerEmbeddings(Embeddings):
                 """Wrapper to make SentenceTransformer compatible with LangChain Embeddings interface."""
 
                 def __init__(self, model_name: str) -> None:
@@ -88,12 +88,12 @@ def _create_embeddings(
                 def embed_documents(self, texts: list[str]) -> list[list[float]]:
                     """Embed multiple documents."""
                     embeddings = self.model.encode(texts)
-                    return embeddings.tolist()  # type: ignore[no-any-return]
+                    return embeddings.tolist()
 
                 def embed_query(self, text: str) -> list[float]:
                     """Embed a single query."""
                     embedding = self.model.encode(text)
-                    return embedding.tolist()  # type: ignore[no-any-return]
+                    return embedding.tolist()
 
             embeddings = SentenceTransformerEmbeddings(model_name)
 

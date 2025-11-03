@@ -16,7 +16,7 @@ from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
-class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
+class SessionTimeoutMiddleware(BaseHTTPMiddleware):
     """
     Automatic session timeout middleware (HIPAA 164.312(a)(2)(iii))
 
@@ -30,11 +30,11 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
     - Metrics tracking
     """
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
         app,
         timeout_seconds: int = 900,  # 15 minutes default
-        session_store: SessionStore = None,  # type: ignore[assignment]
+        session_store: SessionStore = None,
     ):
         """
         Initialize session timeout middleware
@@ -53,7 +53,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
             extra={"timeout_seconds": timeout_seconds, "timeout_minutes": timeout_seconds / 60},
         )
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:  # type: ignore[type-arg]
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         Check session activity and enforce timeout
 
@@ -66,14 +66,14 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
         """
         # Skip timeout check for public endpoints
         if self._is_public_endpoint(request.url.path):
-            return await call_next(request)
+            return await call_next(request)  # type: ignore[no-any-return]
 
         # Get session from request (if authenticated)
         session_id = self._get_session_id(request)
 
         if not session_id:
             # No session, continue normally
-            return await call_next(request)
+            return await call_next(request)  # type: ignore[no-any-return]
 
         # Check session inactivity
         try:
@@ -81,7 +81,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
 
             if not session:
                 # Session not found (already expired or deleted)
-                return await call_next(request)
+                return await call_next(request)  # type: ignore[no-any-return]
 
             # Parse last accessed time
             last_accessed = datetime.fromisoformat(session.last_accessed.replace("Z", "+00:00"))
@@ -112,7 +112,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
 
         # Session is active, continue
         response = await call_next(request)
-        return response
+        return response  # type: ignore[no-any-return]
 
     async def _handle_timeout(self, request: Request, session_id: str, inactive_seconds: float) -> None:
         """
@@ -172,7 +172,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
         # Try cookie
         session_id = request.cookies.get("session_id")
         if session_id:
-            return session_id  # type: ignore[no-any-return]
+            return session_id
 
         # Try request state (if already authenticated by previous middleware)
         if hasattr(request.state, "session_id"):
@@ -202,10 +202,10 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
         return any(path.startswith(public_path) for public_path in public_paths)
 
 
-def create_session_timeout_middleware(  # type: ignore[no-untyped-def]
+def create_session_timeout_middleware(
     app,
     timeout_minutes: int = 15,
-    session_store: SessionStore = None,  # type: ignore[assignment]
+    session_store: SessionStore = None,
 ) -> SessionTimeoutMiddleware:
     """
     Create session timeout middleware

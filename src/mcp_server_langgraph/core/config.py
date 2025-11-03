@@ -15,7 +15,7 @@ except ImportError:
     __version__ = "2.7.0"  # Fallback
 
 
-class Settings(BaseSettings):  # type: ignore[misc]
+class Settings(BaseSettings):
     """Application settings with Infisical secrets support"""
 
     # Service

@@ -436,3 +436,157 @@ class TestOpenFGAIntegration:
         # Verify permission removed
         allowed = await client.check_permission(user="user:alice", relation="executor", object="tool:chat")
         assert allowed is False
+
+
+@pytest.mark.unit
+@pytest.mark.openfga
+class TestOpenFGACircuitBreakerCriticality:
+    """Test OpenFGA circuit breaker with criticality flag for fail-open/fail-closed behavior"""
+
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
+    async def test_circuit_breaker_fails_closed_for_critical_resources(self, mock_sdk_client):
+        """
+        Test circuit breaker denies access (fail-closed) when open for CRITICAL resources.
+
+        SECURITY: Critical resources (admin, delete, etc.) must fail-closed to prevent
+        unauthorized access during OpenFGA outages.
+        """
+        from mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+
+        # Mock OpenFGA to always fail (trigger circuit breaker)
+        mock_instance = AsyncMock()
+        mock_instance.check.side_effect = Exception("OpenFGA unavailable")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        # Trigger circuit breaker to open (10 failures)
+        for _ in range(15):
+            try:
+                await client.check_permission(user="user:alice", relation="admin", object="system:critical", critical=True)
+            except Exception:
+                pass  # Ignore errors, just trigger circuit breaker
+
+        # Circuit breaker should now be open
+        cb = get_circuit_breaker("openfga")
+        # Check circuit breaker is open (state.name should be 'open')
+        assert (
+            hasattr(cb.state, "name") and cb.state.name == "open"
+        ), f"Expected circuit breaker to be open, got state: {cb.state}"
+
+        # Now check permission for critical resource - should return False (fail-closed)
+        result = await client.check_permission(user="user:alice", relation="admin", object="system:critical", critical=True)
+
+        assert result is False  # CRITICAL: Must deny access when circuit is open
+
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
+    async def test_circuit_breaker_fails_open_for_non_critical_resources(self, mock_sdk_client):
+        """
+        Test circuit breaker allows access (fail-open) when open for NON-CRITICAL resources.
+
+        For non-critical resources (like read-only content), we prefer availability
+        over strict security, so we fail-open.
+        """
+        from mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+
+        # Mock OpenFGA to always fail (trigger circuit breaker)
+        mock_instance = AsyncMock()
+        mock_instance.check.side_effect = Exception("OpenFGA unavailable")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        # Trigger circuit breaker to open (10 failures)
+        for _ in range(15):
+            try:
+                await client.check_permission(user="user:alice", relation="viewer", object="content:public", critical=False)
+            except Exception:
+                pass  # Ignore errors, just trigger circuit breaker
+
+        # Circuit breaker should now be open
+        cb = get_circuit_breaker("openfga")
+        # Check circuit breaker is open (state.name should be 'open')
+        assert (
+            hasattr(cb.state, "name") and cb.state.name == "open"
+        ), f"Expected circuit breaker to be open, got state: {cb.state}"
+
+        # Now check permission for non-critical resource - should return True (fail-open)
+        result = await client.check_permission(user="user:alice", relation="viewer", object="content:public", critical=False)
+
+        assert result is True  # Allow access for non-critical resources
+
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
+    async def test_circuit_breaker_defaults_to_critical_true(self, mock_sdk_client):
+        """
+        Test circuit breaker defaults to critical=True (fail-closed) if not specified.
+
+        SECURITY: For safety, all resources are considered critical by default.
+        Developers must explicitly opt-in to fail-open behavior.
+        """
+        from mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+
+        # Mock OpenFGA to always fail (trigger circuit breaker)
+        mock_instance = AsyncMock()
+        mock_instance.check.side_effect = Exception("OpenFGA unavailable")
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        # Trigger circuit breaker to open (10 failures)
+        for _ in range(15):
+            try:
+                # Call without critical parameter (should default to True)
+                await client.check_permission(user="user:alice", relation="executor", object="tool:sensitive")
+            except Exception:
+                pass  # Ignore errors, just trigger circuit breaker
+
+        # Circuit breaker should now be open
+        cb = get_circuit_breaker("openfga")
+        # Check circuit breaker is open (state.name should be 'open')
+        assert (
+            hasattr(cb.state, "name") and cb.state.name == "open"
+        ), f"Expected circuit breaker to be open, got state: {cb.state}"
+
+        # Check permission without specifying critical parameter
+        result = await client.check_permission(user="user:alice", relation="executor", object="tool:sensitive")
+
+        # Should default to critical=True (fail-closed)
+        assert result is False
+
+    @pytest.mark.asyncio
+    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
+    async def test_circuit_breaker_allows_when_closed_regardless_of_criticality(self, mock_sdk_client):
+        """
+        Test circuit breaker respects OpenFGA response when circuit is CLOSED.
+
+        When circuit breaker is closed (normal operation), criticality flag should have
+        no effect - OpenFGA response is always used.
+        """
+        from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+        # Mock OpenFGA to return allowed=True
+        mock_response = MagicMock()
+        mock_response.allowed = True
+
+        mock_instance = AsyncMock()
+        mock_instance.check.return_value = mock_response
+        mock_sdk_client.return_value = mock_instance
+
+        client = OpenFGAClient()
+
+        # Check both critical and non-critical - both should return OpenFGA response
+        result_critical = await client.check_permission(
+            user="user:alice", relation="admin", object="system:critical", critical=True
+        )
+        result_non_critical = await client.check_permission(
+            user="user:alice", relation="viewer", object="content:public", critical=False
+        )
+
+        assert result_critical is True  # OpenFGA allowed
+        assert result_non_critical is True  # OpenFGA allowed

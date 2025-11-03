@@ -15,6 +15,7 @@ NC='\033[0m' # No Color
 AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${EKS_CLUSTER_NAME:-mcp-production}"
 AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-}"
+ENVIRONMENT="${AWS_ENVIRONMENT:-prod}"  # Currently only 'prod' is available (AWS production)
 NAMESPACE="mcp-server-langgraph"
 
 # Functions
@@ -63,13 +64,26 @@ check_prerequisites() {
         log_info "AWS Account ID: $AWS_ACCOUNT_ID"
     fi
 
+    # Validate environment
+    if [[ ! "$ENVIRONMENT" =~ ^(prod|aws-dev|aws-staging|aws-prod)$ ]]; then
+        log_error "Invalid AWS_ENVIRONMENT: $ENVIRONMENT. Currently supported: prod (production)"
+        log_error "Note: 'prod' refers to terraform/environments/prod (AWS production environment)"
+        exit 1
+    fi
+
+    if [ "$ENVIRONMENT" = "aws-dev" ] || [ "$ENVIRONMENT" = "aws-staging" ]; then
+        log_error "Environment $ENVIRONMENT not yet implemented. Only 'prod' is currently available."
+        exit 1
+    fi
+
+    log_info "Using environment: $ENVIRONMENT"
     log_info "✓ All prerequisites met"
 }
 
 deploy_infrastructure() {
     log_info "Deploying AWS infrastructure with Terraform..."
 
-    cd terraform/environments/aws
+    cd "terraform/environments/$ENVIRONMENT"
 
     # Initialize Terraform
     terraform init
@@ -112,7 +126,7 @@ deploy_velero() {
     fi
 
     # Get Velero IAM role ARN
-    VELERO_ROLE_ARN=$(terraform -chdir=terraform/environments/aws output -raw velero_role_arn 2>/dev/null || echo "")
+    VELERO_ROLE_ARN=$(terraform -chdir="terraform/environments/$ENVIRONMENT" output -raw velero_role_arn 2>/dev/null || echo "")
 
     # Install Velero
     helm repo add vmware-tanzu https://vmware-tanzu.github.io/helm-charts
@@ -137,9 +151,9 @@ deploy_karpenter() {
     log_info "Deploying Karpenter for intelligent autoscaling..."
 
     # Get Karpenter IAM role ARN
-    KARPENTER_ROLE_ARN=$(terraform -chdir=terraform/environments/aws output -raw karpenter_controller_role_arn 2>/dev/null || echo "")
-    KARPENTER_INSTANCE_PROFILE=$(terraform -chdir=terraform/environments/aws output -raw karpenter_node_instance_profile_name 2>/dev/null || echo "")
-    KARPENTER_SQS_QUEUE=$(terraform -chdir=terraform/environments/aws output -raw karpenter_sqs_queue_name 2>/dev/null || echo "")
+    KARPENTER_ROLE_ARN=$(terraform -chdir="terraform/environments/$ENVIRONMENT" output -raw karpenter_controller_role_arn 2>/dev/null || echo "")
+    KARPENTER_INSTANCE_PROFILE=$(terraform -chdir="terraform/environments/$ENVIRONMENT" output -raw karpenter_node_instance_profile_name 2>/dev/null || echo "")
+    KARPENTER_SQS_QUEUE=$(terraform -chdir="terraform/environments/$ENVIRONMENT" output -raw karpenter_sqs_queue_name 2>/dev/null || echo "")
 
     # Install Karpenter
     helm repo add karpenter https://charts.karpenter.sh
@@ -234,7 +248,7 @@ deploy_application() {
     log_info "Deploying application with Helm..."
 
     # Get RDS endpoint
-    RDS_ENDPOINT=$(terraform -chdir=terraform/environments/aws output -raw rds_endpoint 2>/dev/null || echo "")
+    RDS_ENDPOINT=$(terraform -chdir="terraform/environments/$ENVIRONMENT" output -raw rds_endpoint 2>/dev/null || echo "")
 
     if [ -z "$RDS_ENDPOINT" ]; then
         log_warn "RDS endpoint not found. Using in-cluster PostgreSQL."

@@ -244,9 +244,9 @@ class QuickStart:
 
         app = FastAPI(title=f"{name} - QuickStart", version="1.0.0")
 
-        agent = QuickStart.create(name, tools, llm)  # type: ignore
+        agent = QuickStart.create(name, tools, llm)
 
-        @app.get("/")  # type: ignore[misc]
+        @app.get("/")
         def root() -> Dict[str, Any]:
             """Health check."""
             return {
@@ -256,13 +256,13 @@ class QuickStart:
                 "message": f"{name} is running! Try POST /chat with a query.",
             }
 
-        @app.post("/chat")  # type: ignore[misc]
+        @app.post("/chat")
         def chat(query: str, thread_id: str = "default") -> Dict[str, str]:
             """Chat with the agent."""
             response = agent.chat(query, thread_id)
             return {"query": query, "response": response, "thread_id": thread_id}
 
-        @app.get("/health")  # type: ignore[misc]
+        @app.get("/health")
         def health() -> Dict[str, str]:
             """Health check endpoint."""
             return {"status": "healthy", "preset": "quickstart"}

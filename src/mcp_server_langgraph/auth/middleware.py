@@ -19,7 +19,7 @@ from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 # FastAPI imports for dependency injection (optional, only if using FastAPI endpoints)
 try:
-    from fastapi import HTTPException, Request, status
+    from fastapi import Depends, HTTPException, Request, status
     from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
     FASTAPI_AVAILABLE = True
@@ -677,7 +677,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
     async def get_current_user(
         request: Request,
-        credentials: Optional[HTTPAuthorizationCredentials] = None,
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     ) -> Dict[str, Any]:
         """
         FastAPI dependency for extracting authenticated user from request.
@@ -688,7 +688,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         Args:
             request: FastAPI request object
-            credentials: Optional Bearer token credentials
+            credentials: Bearer token credentials from Authorization header (auto-injected by FastAPI)
 
         Returns:
             User dict with user_id, username, roles, etc.
@@ -706,9 +706,21 @@ if FASTAPI_AVAILABLE:  # noqa: C901
             verification = await auth.verify_token(credentials.credentials)
 
             if verification.valid and verification.payload:
+                # Extract username: prefer preferred_username (Keycloak) over sub
+                # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
+                username = verification.payload.get("preferred_username")
+                if not username:
+                    # Fallback to sub (for non-Keycloak IdPs)
+                    sub = verification.payload.get("sub", "unknown")
+                    # If sub is in "user:username" format, extract username
+                    username = sub.replace("user:", "") if sub.startswith("user:") else sub
+
+                # Normalize user_id to "user:username" format for OpenFGA compatibility
+                user_id = f"user:{username}" if not username.startswith("user:") else username
+
                 user_data = {
-                    "user_id": verification.payload.get("sub", "unknown"),
-                    "username": verification.payload.get("sub", "unknown").replace("user:", ""),
+                    "user_id": user_id,
+                    "username": username,
                     "roles": verification.payload.get("roles", []),
                     "email": verification.payload.get("email"),
                 }

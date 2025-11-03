@@ -72,6 +72,16 @@ export AZURE_LOCATION="eastus"                   # Optional, defaults to eastus
 ./scripts/deploy-azure-aks.sh
 ```
 
+## Platform Automation Status
+
+| Script | Status | Notes |
+|--------|--------|-------|
+| `deploy-gcp-gke.sh` | ✅ **Production Ready** | Full automation with dev/staging/prod environments |
+| `deploy-aws-eks.sh` | 🟡 **Beta** | Production environment ready, staging/dev in development |
+| `deploy-azure-aks.sh` | ❌ **Manual Only** | Terraform automation not yet available, see [aks.mdx](../docs/deployment/kubernetes/aks.mdx) |
+
+**Note**: AKS deployment currently requires manual setup using Azure CLI. The script will display instructions pointing to the manual runbook.
+
 ## What Each Script Does
 
 All deployment scripts follow the same pattern and implement all 11 best practices:
@@ -88,13 +98,30 @@ All deployment scripts follow the same pattern and implement all 11 best practic
 10. **VPA Deployment** - Installs Vertical Pod Autoscalers
 11. **Verification** - Validates all components are working correctly
 
+## Environment Selection
+
+The GKE and EKS scripts now support environment selection:
+
+**GKE Environments**:
+```bash
+export GCP_ENVIRONMENT=gcp-dev      # Development environment
+export GCP_ENVIRONMENT=gcp-staging  # Staging environment
+export GCP_ENVIRONMENT=gcp-prod     # Production environment (default)
+```
+
+**EKS Environments**:
+```bash
+export AWS_ENVIRONMENT=prod         # Production (currently only option)
+# aws-staging and aws-dev coming soon
+```
+
 ## Deployment Time
 
-Approximate deployment times:
+Approximate deployment times (automated deployments):
 
 - **GKE**: 25-35 minutes
 - **EKS**: 30-40 minutes (includes Karpenter)
-- **AKS**: 25-35 minutes
+- **AKS**: Manual deployment only (see documentation)
 
 ## Post-Deployment
 

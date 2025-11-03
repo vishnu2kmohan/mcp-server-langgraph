@@ -545,14 +545,134 @@ class KeycloakClient:
     # These methods interact with Keycloak Admin API for user/client management
 
     async def create_client(self, client_config: Dict[str, Any]) -> str:
-        """Create Keycloak client (stub for service principals)"""
-        # TODO: Implement Keycloak Admin API client creation
-        raise NotImplementedError("create_client needs implementation")
+        """
+        Create Keycloak client via Admin API.
+
+        Args:
+            client_config: Client configuration dictionary with fields:
+                - clientId: Client ID (required)
+                - name: Display name
+                - description: Description
+                - enabled: Whether client is enabled (default: True)
+                - serviceAccountsEnabled: Enable service accounts
+                - standardFlowEnabled: Enable authorization code flow
+                - directAccessGrantsEnabled: Enable ROPC flow
+                - implicitFlowEnabled: Enable implicit flow
+                - publicClient: Public vs confidential client
+                - clientAuthenticatorType: Authentication type (e.g., "client-secret")
+                - secret: Client secret (for confidential clients)
+                - attributes: Custom attributes
+
+        Returns:
+            Client UUID from Keycloak
+
+        Raises:
+            httpx.HTTPError: If client creation fails
+        """
+        with tracer.start_as_current_span("keycloak.create_client") as span:
+            span.set_attribute("client.id", client_config.get("clientId", "unknown"))
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    url = f"{self.config.admin_url}/clients"
+                    response = await client.post(url, headers=headers, json=client_config)
+                    response.raise_for_status()
+
+                    # Extract client UUID from Location header
+                    location = response.headers.get("Location", "")
+                    client_uuid = location.split("/")[-1] if location else ""
+
+                    logger.info(
+                        f"Keycloak client created: {client_config.get('clientId')}",
+                        extra={"client_id": client_config.get("clientId"), "uuid": client_uuid},
+                    )
+
+                    metrics.successful_calls.add(1, {"operation": "create_client"})
+
+                    return client_uuid
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to create client: {e}",
+                    extra={"status_code": e.response.status_code, "detail": e.response.text},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "create_client"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error creating client: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "create_client"})
+                raise
 
     async def create_user(self, user_config: Dict[str, Any]) -> str:
-        """Create Keycloak user (stub for SCIM/service principals)"""
-        # TODO: Implement Keycloak Admin API user creation
-        raise NotImplementedError("create_user needs implementation")
+        """
+        Create Keycloak user via Admin API.
+
+        Args:
+            user_config: User configuration dictionary with fields:
+                - username: Username (required)
+                - email: Email address
+                - emailVerified: Whether email is verified
+                - enabled: Whether user is enabled (default: True)
+                - firstName: First name
+                - lastName: Last name
+                - attributes: Custom attributes dictionary
+                - credentials: List of credentials (e.g., password)
+
+        Returns:
+            User UUID from Keycloak
+
+        Raises:
+            httpx.HTTPError: If user creation fails
+        """
+        with tracer.start_as_current_span("keycloak.create_user") as span:
+            span.set_attribute("user.username", user_config.get("username", "unknown"))
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    url = f"{self.config.admin_url}/users"
+                    response = await client.post(url, headers=headers, json=user_config)
+                    response.raise_for_status()
+
+                    # Extract user UUID from Location header
+                    location = response.headers.get("Location", "")
+                    user_uuid = location.split("/")[-1] if location else ""
+
+                    logger.info(
+                        f"Keycloak user created: {user_config.get('username')}",
+                        extra={"username": user_config.get("username"), "uuid": user_uuid},
+                    )
+
+                    metrics.successful_calls.add(1, {"operation": "create_user"})
+
+                    return user_uuid
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to create user: {e}",
+                    extra={"status_code": e.response.status_code, "detail": e.response.text},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "create_user"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error creating user: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "create_user"})
+                raise
 
     async def update_user(self, user_id: str, user_config: Dict[str, Any]) -> None:
         """Update Keycloak user (stub for SCIM)"""
@@ -570,14 +690,105 @@ class KeycloakClient:
         raise NotImplementedError("get_user needs implementation")
 
     async def get_user_attributes(self, user_id: str) -> Dict[str, Any]:
-        """Get user attributes (stub for API keys)"""
-        # TODO: Implement Keycloak Admin API attribute retrieval
-        raise NotImplementedError("get_user_attributes needs implementation")
+        """
+        Get user custom attributes via Admin API.
+
+        Args:
+            user_id: User UUID
+
+        Returns:
+            Dictionary of user attributes
+
+        Raises:
+            httpx.HTTPError: If getting user attributes fails
+        """
+        with tracer.start_as_current_span("keycloak.get_user_attributes") as span:
+            span.set_attribute("user.uuid", user_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/users/{user_id}"
+                    response = await client.get(url, headers=headers)
+                    response.raise_for_status()
+
+                    user_data = response.json()
+                    attributes = user_data.get("attributes", {})
+
+                    logger.info(f"Retrieved attributes for user {user_id}")
+                    metrics.successful_calls.add(1, {"operation": "get_user_attributes"})
+
+                    return attributes  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to get user attributes: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_user_attributes"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error getting user attributes: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_user_attributes"})
+                raise
 
     async def update_user_attributes(self, user_id: str, attributes: Dict[str, Any]) -> None:
-        """Update user attributes (stub for API keys)"""
-        # TODO: Implement Keycloak Admin API attribute update
-        raise NotImplementedError("update_user_attributes needs implementation")
+        """
+        Update user custom attributes via Admin API.
+
+        Args:
+            user_id: User UUID
+            attributes: Dictionary of attributes to update
+
+        Raises:
+            httpx.HTTPError: If updating user attributes fails
+        """
+        with tracer.start_as_current_span("keycloak.update_user_attributes") as span:
+            span.set_attribute("user.uuid", user_id)
+            span.set_attribute("attributes.count", len(attributes))
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Keycloak requires full user object in PUT request
+                    # We need to get the current user first, then update attributes
+                    get_url = f"{self.config.admin_url}/users/{user_id}"
+                    get_response = await client.get(get_url, headers=headers)
+                    get_response.raise_for_status()
+
+                    user_data = get_response.json()
+                    user_data["attributes"] = attributes
+
+                    # Update user with new attributes
+                    put_url = f"{self.config.admin_url}/users/{user_id}"
+                    put_response = await client.put(put_url, headers=headers, json=user_data)
+                    put_response.raise_for_status()
+
+                    logger.info(f"Updated attributes for user {user_id}")
+                    metrics.successful_calls.add(1, {"operation": "update_user_attributes"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to update user attributes: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "update_user_attributes"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error updating user attributes: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "update_user_attributes"})
+                raise
 
     async def update_client_attributes(self, client_id: str, attributes: Dict[str, Any]) -> None:
         """Update client attributes (stub for service principals)"""
@@ -600,14 +811,82 @@ class KeycloakClient:
         raise NotImplementedError("get_client needs implementation")
 
     async def delete_client(self, client_id: str) -> None:
-        """Delete client (stub for service principals)"""
-        # TODO: Implement Keycloak Admin API client deletion
-        raise NotImplementedError("delete_client needs implementation")
+        """
+        Delete Keycloak client via Admin API.
+
+        Args:
+            client_id: Client UUID (not clientId) to delete
+
+        Raises:
+            httpx.HTTPError: If client deletion fails
+        """
+        with tracer.start_as_current_span("keycloak.delete_client") as span:
+            span.set_attribute("client.uuid", client_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/clients/{client_id}"
+                    response = await client.delete(url, headers=headers)
+                    response.raise_for_status()
+
+                    logger.info(f"Keycloak client deleted: {client_id}")
+                    metrics.successful_calls.add(1, {"operation": "delete_client"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to delete client: {e}",
+                    extra={"status_code": e.response.status_code, "client_id": client_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "delete_client"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error deleting client: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "delete_client"})
+                raise
 
     async def delete_user(self, user_id: str) -> None:
-        """Delete user (stub for service principals/SCIM)"""
-        # TODO: Implement Keycloak Admin API user deletion
-        raise NotImplementedError("delete_user needs implementation")
+        """
+        Delete Keycloak user via Admin API.
+
+        Args:
+            user_id: User UUID to delete
+
+        Raises:
+            httpx.HTTPError: If user deletion fails
+        """
+        with tracer.start_as_current_span("keycloak.delete_user") as span:
+            span.set_attribute("user.uuid", user_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/users/{user_id}"
+                    response = await client.delete(url, headers=headers)
+                    response.raise_for_status()
+
+                    logger.info(f"Keycloak user deleted: {user_id}")
+                    metrics.successful_calls.add(1, {"operation": "delete_user"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to delete user: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "delete_user"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error deleting user: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "delete_user"})
+                raise
 
     async def search_users(
         self, query: Optional[Dict[str, Any]] = None, first: int = 0, max: int = 100
