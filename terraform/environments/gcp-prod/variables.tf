@@ -60,7 +60,7 @@ variable "enable_cloud_armor" {
 variable "enable_private_endpoint" {
   description = "Enable private endpoint (control plane only accessible via VPC)"
   type        = bool
-  default     = false  # Set to true for maximum security
+  default     = true  # Enabled for production security
 }
 
 variable "master_ipv4_cidr_block" {
@@ -76,15 +76,17 @@ variable "enable_master_authorized_networks" {
 }
 
 variable "master_authorized_networks_cidrs" {
-  description = "CIDR blocks authorized to access the control plane"
+  description = "CIDR blocks authorized to access the control plane - restrict to specific VPC subnets"
   type = list(object({
     cidr_block   = string
     display_name = string
   }))
+  # TODO: Replace with your actual VPC CIDR blocks (specific /16 or /24 ranges)
+  # Restricted from 10.0.0.0/8 to specific VPC subnet for better security
   default = [
     {
-      cidr_block   = "10.0.0.0/8"
-      display_name = "Internal VPC"
+      cidr_block   = "10.0.0.0/16"
+      display_name = "VPC Primary Subnet"
     }
   ]
 }

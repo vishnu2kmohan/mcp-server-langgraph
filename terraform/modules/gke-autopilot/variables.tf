@@ -146,6 +146,11 @@ variable "master_authorized_networks_cidrs" {
     display_name = string
   }))
   default = []
+
+  validation {
+    condition     = !var.enable_master_authorized_networks || length(var.master_authorized_networks_cidrs) > 0
+    error_message = "When master authorized networks are enabled, at least one CIDR block must be specified to prevent lockout."
+  }
 }
 
 #######################

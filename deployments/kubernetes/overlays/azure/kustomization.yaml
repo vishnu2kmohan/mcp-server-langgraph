@@ -37,7 +37,7 @@ patches:
     patch: |-
       - op: add
         path: /metadata/annotations/azure.workload.identity~1client-id
-        value: CLIENT_ID
+        value: 12345678-1234-1234-1234-123456789012
       - op: add
         path: /metadata/labels/azure.workload.identity~1use
         value: "true"

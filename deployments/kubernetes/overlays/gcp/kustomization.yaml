@@ -17,8 +17,8 @@ commonAnnotations:
   platform: gcp
   cloud-provider: google
 
-commonLabels:
-  cloud.google.com/gke-nodepool: default-pool
+# Note: GKE Autopilot manages node pools automatically
+# cloud.google.com/gke-nodepool label is deprecated for Autopilot clusters
 
 # Patches for GCP-specific configuration
 patches:
@@ -29,7 +29,7 @@ patches:
     patch: |-
       - op: add
         path: /metadata/annotations/iam.gke.io~1gcp-service-account
-        value: otel-collector@PROJECT_ID.iam.gserviceaccount.com
+        value: otel-collector@my-gcp-project.iam.gserviceaccount.com
 
   # Update Deployment with GCP-specific settings
   - target:
@@ -50,12 +50,12 @@ patches:
         path: /spec/template/spec/containers/0/env/-
         value:
           name: GOOGLE_CLOUD_PROJECT
-          value: PROJECT_ID
+          value: my-gcp-project
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:
           name: GCP_PROJECT_ID
-          value: PROJECT_ID
+          value: my-gcp-project
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:

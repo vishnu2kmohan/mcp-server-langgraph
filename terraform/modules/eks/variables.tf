@@ -62,9 +62,14 @@ variable "cluster_endpoint_public_access" {
 }
 
 variable "cluster_endpoint_public_access_cidrs" {
-  description = "List of CIDR blocks that can access the public API server endpoint"
+  description = "List of CIDR blocks that can access the public API server endpoint - must be specified explicitly"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []  # No default - must be explicitly set in environment config
+
+  validation {
+    condition = !contains(var.cluster_endpoint_public_access_cidrs, "0.0.0.0/0") || var.environment == "dev"
+    error_message = "EKS endpoint must not be accessible from 0.0.0.0/0 in non-dev environments. Specify your corporate VPN or bastion host CIDR blocks."
+  }
 }
 
 variable "cluster_enabled_log_types" {

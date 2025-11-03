@@ -1,0 +1,158 @@
+name: Security Validation
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'terraform/**'
+      - 'deployments/**'
+      - 'tests/**'
+      - '.github/workflows/security-validation.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - 'terraform/**'
+      - 'deployments/**'
+
+jobs:
+  terraform-security:
+    name: Terraform Security Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest pyyaml
+
+      - name: Run Terraform security tests
+        run: |
+          python3 -m pytest tests/terraform/ -v --tb=short
+        env:
+          PYTEST_ARGS: "--strict-markers"
+
+  kubernetes-security:
+    name: Kubernetes Manifest Security Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest pyyaml
+
+      - name: Run Kubernetes security tests
+        run: |
+          python3 -m pytest tests/kubernetes/ -v --tb=short
+        env:
+          PYTEST_ARGS: "--strict-markers"
+
+  placeholder-detection:
+    name: Detect Placeholder Values
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for ACCOUNT_ID placeholders
+        run: |
+          if grep -r "ACCOUNT_ID" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" | grep -v "#" | grep -v "error_message"; then
+            echo "::error::Found ACCOUNT_ID placeholder in configuration files"
+            exit 1
+          fi
+
+      - name: Check for PROJECT_ID placeholders
+        run: |
+          if grep -r "PROJECT_ID" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" | grep -v "#" | grep -v "error_message"; then
+            echo "::error::Found PROJECT_ID placeholder in configuration files"
+            exit 1
+          fi
+
+      - name: Check for ENVIRONMENT placeholders
+        run: |
+          if grep -r "\bENVIRONMENT\b" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" | grep -v "#" | grep -v "error_message" | grep -v "GOOGLE"; then
+            echo "::error::Found ENVIRONMENT placeholder in configuration files"
+            exit 1
+          fi
+
+      - name: Check for 0.0.0.0/0 in production configs
+        run: |
+          if grep -r "0.0.0.0/0" terraform/environments/prod terraform/environments/gcp-prod --exclude-dir=.git | grep "default" | grep -v "#"; then
+            echo "::error::Found 0.0.0.0/0 in production endpoint configuration"
+            exit 1
+          fi
+
+  terraform-validation:
+    name: Terraform Validate and Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive terraform/
+        continue-on-error: true
+
+      - name: Validate Terraform modules
+        run: |
+          for module in terraform/modules/*; do
+            if [ -d "$module" ]; then
+              echo "Validating $module..."
+              cd "$module"
+              terraform init -backend=false
+              terraform validate
+              cd -
+            fi
+          done
+
+      - name: Comment format check result
+        if: steps.fmt.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ Terraform files are not properly formatted. Run `terraform fmt -recursive terraform/` locally.'
+            })
+
+  security-summary:
+    name: Security Validation Summary
+    runs-on: ubuntu-latest
+    needs: [terraform-security, kubernetes-security, placeholder-detection, terraform-validation]
+    if: always()
+
+    steps:
+      - name: Check all security validations passed
+        run: |
+          if [ "${{ needs.terraform-security.result }}" != "success" ] || \
+             [ "${{ needs.kubernetes-security.result }}" != "success" ] || \
+             [ "${{ needs.placeholder-detection.result }}" != "success" ] || \
+             [ "${{ needs.terraform-validation.result }}" != "success" ]; then
+            echo "::error::One or more security validations failed"
+            exit 1
+          fi
+          echo "✅ All security validations passed!"

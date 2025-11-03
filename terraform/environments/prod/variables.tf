@@ -31,9 +31,11 @@ variable "cluster_endpoint_public_access" {
 }
 
 variable "cluster_endpoint_public_access_cidrs" {
-  description = "CIDR blocks allowed to access public API endpoint"
+  description = "CIDR blocks allowed to access public API endpoint - restrict to corporate VPN/bastion"
   type        = list(string)
-  default     = ["0.0.0.0/0"] # Restrict this in production!
+  # TODO: Replace with your actual corporate VPN or bastion host CIDR blocks
+  # Example: ["203.0.113.0/24", "198.51.100.0/24"]
+  default     = ["10.0.0.0/16"] # Restricted to VPC CIDR - update with your specific network
 }
 
 variable "general_node_instance_types" {
