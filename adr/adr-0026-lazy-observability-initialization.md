@@ -146,12 +146,12 @@ def _setup_logging(self, enable_file_logging: bool = False):
 
 ### Positive
 
-✅ **No Circular Import**: Config → secrets → telemetry chain is broken
-✅ **Configuration Honored**: Settings are read at init time, not import time
-✅ **Container-Friendly**: No filesystem writes unless explicitly requested
-✅ **Library-Reusable**: Can be imported without side effects
-✅ **Testable**: Easy to mock/customize observability per test
-✅ **Explicit Dependencies**: Clear when observability is needed
+- ✅ **No Circular Import**: Config → secrets → telemetry chain is broken
+- ✅ **Configuration Honored**: Settings are read at init time, not import time
+- ✅ **Container-Friendly**: No filesystem writes unless explicitly requested
+- ✅ **Library-Reusable**: Can be imported without side effects
+- ✅ **Testable**: Easy to mock/customize observability per test
+- ✅ **Explicit Dependencies**: Clear when observability is needed
 
 ### Negative
 
@@ -283,12 +283,12 @@ async def main():
 
 ### Success Criteria
 
-✅ Package can be imported without filesystem writes
-✅ Settings.log_format and langsmith_tracing are honored
-✅ No circular import errors
-✅ Works in read-only containers
-✅ All tests pass (42/42 new tests + existing suite)
-✅ CI build hygiene check passes (no .pyc files committed)
+- ✅ Package can be imported without filesystem writes
+- ✅ Settings.log_format and langsmith_tracing are honored
+- ✅ No circular import errors
+- ✅ Works in read-only containers
+- ✅ All tests pass (42/42 new tests + existing suite)
+- ✅ CI build hygiene check passes (no .pyc files committed)
 
 ### Test Coverage
 

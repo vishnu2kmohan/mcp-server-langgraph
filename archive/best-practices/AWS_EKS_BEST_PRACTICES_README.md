@@ -269,11 +269,11 @@ kubectl apply -k deployments/argocd/base/
 
 ### Cost Optimizations
 
-✅ Spot instances (70-90% off)
-✅ VPC endpoints (70% data transfer savings)
-✅ Storage autoscaling
-✅ Right-sized instances
-✅ Kubecost monitoring
+- ✅ Spot instances (70-90% off)
+- ✅ VPC endpoints (70% data transfer savings)
+- ✅ Storage autoscaling
+- ✅ Right-sized instances
+- ✅ Kubecost monitoring
 
 ---
 
@@ -435,11 +435,11 @@ See [LICENSE](LICENSE) file.
 
 ## Status
 
-✅ **All Phases Complete**
-✅ **Production Ready**
-✅ **Fully Documented**
-✅ **Security Hardened**
-✅ **Cost Optimized**
+- ✅ **All Phases Complete**
+- ✅ **Production Ready**
+- ✅ **Fully Documented**
+- ✅ **Security Hardened**
+- ✅ **Cost Optimized**
 
 **Deploy Now**: `./scripts/deploy-all-phases.sh`
 

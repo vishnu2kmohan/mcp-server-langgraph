@@ -119,14 +119,14 @@ Your docs will hot-reload as you edit `.mdx` files!
 
 ### Features Enabled
 
-✅ **Search** - Powered by Algolia (auto-configured)
-✅ **Tabs** - API Reference, Deployment, Guides
-✅ **Code Groups** - Multiple language support
-✅ **Dark Mode** - Automatic theme switching
-✅ **Mobile Responsive** - Works on all devices
-✅ **Custom Branding** - Colors, logo, favicon
-✅ **Analytics Ready** - Google Analytics support
-✅ **Social Links** - GitHub, Twitter integration
+- ✅ **Search** - Powered by Algolia (auto-configured)
+- ✅ **Tabs** - API Reference, Deployment, Guides
+- ✅ **Code Groups** - Multiple language support
+- ✅ **Dark Mode** - Automatic theme switching
+- ✅ **Mobile Responsive** - Works on all devices
+- ✅ **Custom Branding** - Colors, logo, favicon
+- ✅ **Analytics Ready** - Google Analytics support
+- ✅ **Social Links** - GitHub, Twitter integration
 
 ## 🎨 Customization
 

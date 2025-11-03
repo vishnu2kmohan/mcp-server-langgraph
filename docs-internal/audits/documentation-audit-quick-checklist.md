@@ -10,9 +10,9 @@
 
 ### Status at a Glance
 ```
-✅ Navigation structure: 100% - All links resolve
-✅ Content quality: 100% - No TODO/FIXME markers
-✅ ADR sync: 96% - 26 ADRs synced
+- ✅ Navigation structure: 100% - All links resolve
+- ✅ Content quality: 100% - No TODO/FIXME markers
+- ✅ ADR sync: 96% - 26 ADRs synced
 🟡 Link health: 49% - 21 broken internal links
 🟡 Version consistency: 92% - 3 files need updates
 🟡 File coverage: 82% - 17 orphaned files

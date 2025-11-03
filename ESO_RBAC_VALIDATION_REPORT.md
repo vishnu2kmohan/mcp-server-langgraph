@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-✅ **RBAC Issue Successfully Resolved**
+- ✅ **RBAC Issue Successfully Resolved**
 
 The External Secrets Operator RBAC issue has been successfully validated and resolved on the GKE staging cluster. The service account now has `roles/container.admin`, and all critical cluster-scoped RBAC resources have been created successfully.
 
@@ -209,9 +209,9 @@ $ kubectl get crd | grep external-secrets | wc -l
 
 #### ✅ TestGCPServiceAccountIAM (3/3 PASSED)
 ```
-✅ test_service_account_exists
-✅ test_service_account_has_container_admin_role
-✅ test_service_account_has_secret_manager_access
+- ✅ test_service_account_exists
+- ✅ test_service_account_has_container_admin_role
+- ✅ test_service_account_has_secret_manager_access
 ```
 
 **Validation:**
@@ -223,10 +223,10 @@ $ kubectl get crd | grep external-secrets | wc -l
 
 #### ✅ TestESONamespaceAndDeployments (4/4 PASSED)
 ```
-✅ test_eso_namespace_exists
-✅ test_eso_controller_deployment_exists
-✅ test_eso_webhook_deployment_exists
-✅ test_eso_cert_controller_deployment_exists
+- ✅ test_eso_namespace_exists
+- ✅ test_eso_controller_deployment_exists
+- ✅ test_eso_webhook_deployment_exists
+- ✅ test_eso_cert_controller_deployment_exists
 ```
 
 **Validation:**
@@ -238,9 +238,9 @@ $ kubectl get crd | grep external-secrets | wc -l
 
 #### ✅ TestESOCRDs (3/3 PASSED)
 ```
-✅ test_externalsecret_crd_exists
-✅ test_secretstore_crd_exists
-✅ test_clustersecretstore_crd_exists
+- ✅ test_externalsecret_crd_exists
+- ✅ test_secretstore_crd_exists
+- ✅ test_clustersecretstore_crd_exists
 ```
 
 **Validation:**
@@ -251,12 +251,12 @@ $ kubectl get crd | grep external-secrets | wc -l
 
 #### ⚠️ TestESORBACResources (4/6 PASSED)
 ```
-✅ test_eso_controller_clusterrole_exists
+- ✅ test_eso_controller_clusterrole_exists
 ❌ test_eso_webhook_clusterrole_exists          # See note below
-✅ test_eso_cert_controller_clusterrole_exists
-✅ test_eso_controller_clusterrolebinding_exists
+- ✅ test_eso_cert_controller_clusterrole_exists
+- ✅ test_eso_controller_clusterrolebinding_exists
 ❌ test_eso_webhook_clusterrolebinding_exists   # See note below
-✅ test_eso_cert_controller_clusterrolebinding_exists
+- ✅ test_eso_cert_controller_clusterrolebinding_exists
 ```
 
 **Note on Failures:**
@@ -286,7 +286,7 @@ external-secrets-controller
 
 #### ❌ TestExternalSecretSync (1/3 FAILED)
 ```
-✅ test_externalsecret_resources_exist
+- ✅ test_externalsecret_resources_exist
 ❌ test_externalsecret_sync_status
 ❌ test_synced_secrets_exist
 ```
@@ -415,7 +415,7 @@ external-secrets-controller
 
 The infrastructure script (`scripts/gcp/setup-staging-infrastructure.sh`) is **already correct**:
 
-✅ **Line 301-306:** Grants `roles/container.admin`
+- ✅ **Line 301-306:** Grants `roles/container.admin`
 ```bash
 # Container admin (deploy to GKE with full RBAC permissions)
 # Note: container.admin includes container.developer + RBAC creation permissions
@@ -425,7 +425,7 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --condition=None
 ```
 
-✅ **Line 221-254:** Installs ESO with proper configuration
+- ✅ **Line 221-254:** Installs ESO with proper configuration
 ```bash
 install_external_secrets_operator() {
     log_info "Installing External Secrets Operator for secret management..."

@@ -6,12 +6,12 @@ This guide helps you upgrade from v2.7.x to v2.8.0, which includes operational h
 
 v2.8.0 introduces significant improvements to operational ergonomics:
 
-✅ **Fixed**: Circular import between config, secrets, and telemetry
-✅ **Fixed**: Observability settings not being honored due to import-time race conditions
-✅ **Improved**: Package can now be used as a library without filesystem operations
-✅ **Improved**: Container-friendly (works in read-only filesystems)
-✅ **Improved**: Multi-provider fallback with proper credential validation
-✅ **Improved**: Developer experience with mock data when OpenFGA is disabled
+- ✅ **Fixed**: Circular import between config, secrets, and telemetry
+- ✅ **Fixed**: Observability settings not being honored due to import-time race conditions
+- ✅ **Improved**: Package can now be used as a library without filesystem operations
+- ✅ **Improved**: Container-friendly (works in read-only filesystems)
+- ✅ **Improved**: Multi-provider fallback with proper credential validation
+- ✅ **Improved**: Developer experience with mock data when OpenFGA is disabled
 
 ⚠️ **Breaking**: Observability requires explicit initialization in entry points
 

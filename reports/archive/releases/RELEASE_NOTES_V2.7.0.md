@@ -209,7 +209,7 @@ USE_PASSWORD_HASHING=true  # Default is bcrypt hashing
 
 ### Test Results
 ```
-✅ Unit Tests: 727/743 passed (98% pass rate)
+- ✅ Unit Tests: 727/743 passed (98% pass rate)
 ⏭️  Skipped: 16 tests
 📊 Coverage: 68%
 ⏱️  Duration: ~2m 35s

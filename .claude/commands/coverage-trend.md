@@ -140,8 +140,8 @@ Coverage Gaps (< 60%):
 ⚠️  src/schedulers/compliance.py: 52% (new file)
 
 Recently Improved (> +5%):
-✅ src/auth/middleware.py: +5%
-✅ src/core/feature_flags.py: +8%
+- ✅ src/auth/middleware.py: +5%
+- ✅ src/core/feature_flags.py: +8%
 ```
 
 ---
@@ -415,8 +415,8 @@ Coverage Gaps (Priority):
 3. ⚠️  src/core/parallel_executor.py: 58% (+22% needed)
 
 Recently Improved:
-✅ src/auth/middleware.py: +5% (excellent progress!)
-✅ src/core/feature_flags.py: +8% (great work!)
+- ✅ src/auth/middleware.py: +5% (excellent progress!)
+- ✅ src/core/feature_flags.py: +8% (great work!)
 
 Recommendations:
 1. 📈 Maintain current velocity - on track for 80% target

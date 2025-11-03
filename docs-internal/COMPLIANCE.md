@@ -75,11 +75,11 @@ flowchart TB
 
 ### Features
 
-✅ **Article 15 - Right to Access**
-✅ **Article 16 - Right to Rectification**
-✅ **Article 17 - Right to Erasure ("Right to be Forgotten")**
-✅ **Article 20 - Right to Data Portability**
-✅ **Article 21 - Consent Management**
+- ✅ **Article 15 - Right to Access**
+- ✅ **Article 16 - Right to Rectification**
+- ✅ **Article 17 - Right to Erasure ("Right to be Forgotten")**
+- ✅ **Article 20 - Right to Data Portability**
+- ✅ **Article 21 - Consent Management**
 
 ### API Endpoints
 

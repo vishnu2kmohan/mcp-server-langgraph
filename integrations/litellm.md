@@ -459,13 +459,13 @@ ollama list
 
 ```bash
 # LiteLLM uses specific formats:
-✅ claude-sonnet-4-5
+- ✅ claude-sonnet-4-5
 ❌ claude-3.5-sonnet
 
-✅ ollama/llama3.1:8b
+- ✅ ollama/llama3.1:8b
 ❌ llama3.1
 
-✅ azure/gpt-4
+- ✅ azure/gpt-4
 ❌ gpt-4 (when using Azure)
 ```
 

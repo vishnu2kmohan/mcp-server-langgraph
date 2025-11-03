@@ -624,7 +624,7 @@ message="request completed"
 Always query on structured fields (not text search on message):
 
 ```
-✅ user_id = "alice"
+- ✅ user_id = "alice"
 ❌ message like /user alice/
 ```
 ### 2. Limit Time Ranges
@@ -632,7 +632,7 @@ Always query on structured fields (not text search on message):
 Always specify time ranges for better performance:
 
 ```
-✅ timestamp:[now-1h TO now]
+- ✅ timestamp:[now-1h TO now]
 ❌ No time filter (searches all data)
 ```
 ### 3. Use Trace IDs
@@ -640,7 +640,7 @@ Always specify time ranges for better performance:
 For request debugging, always use trace_id:
 
 ```
-✅ trace_id = "0af7651916cd43dd..."
+- ✅ trace_id = "0af7651916cd43dd..."
 ❌ Searching multiple unrelated fields
 ```
 ### 4. Aggregate When Possible
@@ -648,7 +648,7 @@ For request debugging, always use trace_id:
 Use aggregations instead of returning all results:
 
 ```
-✅ stats count() by user_id
+- ✅ stats count() by user_id
 ❌ return 10000 individual log entries
 ```
 

@@ -116,7 +116,7 @@ After comprehensive analysis and remediation, **v2.7.0 is ready for production r
 
 ### Unit Tests
 ```
-✅ 727 passed
+- ✅ 727 passed
 ⏭️  16 skipped
 📊 68% coverage
 ⏱️  2m 55s

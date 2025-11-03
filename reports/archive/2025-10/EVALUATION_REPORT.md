@@ -179,7 +179,7 @@ ERROR tests/api/test_openapi_compliance.py::TestOpenAPIStructure::test_schema_ha
 
 Despite execution blockers, test **quality** is excellent:
 
-✅ **Property-Based Testing** (Hypothesis):
+- ✅ **Property-Based Testing** (Hypothesis):
 ```python
 @given(provider=valid_providers, temperature=valid_temperatures)
 @settings(max_examples=50)
@@ -187,21 +187,21 @@ def test_factory_creation_never_crashes(provider, temperature, max_tokens):
     # Tests invariants across all valid inputs
 ```
 
-✅ **Contract Testing** (JSON Schema validation):
+- ✅ **Contract Testing** (JSON Schema validation):
 ```python
 def test_request_has_required_fields(validate_with_schema):
     request = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
     validate_with_schema(request, "jsonrpc_request")
 ```
 
-✅ **Benchmark Testing** (Performance targets):
+- ✅ **Benchmark Testing** (Performance targets):
 ```python
 # JWT validation: p95 < 2ms
 # Authorization checks: p95 < 50ms
 # Agent response: p95 < 5 seconds
 ```
 
-✅ **Comprehensive Fixtures** (`conftest.py`):
+- ✅ **Comprehensive Fixtures** (`conftest.py`):
 - Mock LLM clients
 - Mock OpenFGA responses
 - In-memory span exporters for trace validation
@@ -214,12 +214,12 @@ def test_request_has_required_fields(validate_with_schema):
 
 ### 4.1 Authentication & Authorization
 
-✅ **JWT-based Authentication**:
+- ✅ **JWT-based Authentication**:
 - RS256/HS256 algorithm support
 - Token expiration validation
 - Secure secret management via Infisical
 
-✅ **OpenFGA (Zanzibar) Authorization**:
+- ✅ **OpenFGA (Zanzibar) Authorization**:
 - Relationship-based access control
 - Tuple-based permissions
 - Hierarchical inheritance (org → tools → users)
@@ -237,7 +237,7 @@ tool:chat
 
 ### 4.2 Secrets Management
 
-✅ **Infisical Integration**:
+- ✅ **Infisical Integration**:
 - Centralized secret storage
 - Automatic fallback to environment variables
 - Secret caching with TTL
@@ -260,31 +260,31 @@ make security-check  # bandit -r src/ -ll
 
 ### 5.1 Design Patterns Observed
 
-✅ **Factory Pattern** (`llm/factory.py`):
+- ✅ **Factory Pattern** (`llm/factory.py`):
 ```python
 def create_llm_from_config(config: Settings) -> BaseChatModel:
     # Multi-provider abstraction with automatic fallback
 ```
 
-✅ **Strategy Pattern** (Dual observability):
+- ✅ **Strategy Pattern** (Dual observability):
 - OpenTelemetry for infrastructure metrics
 - LangSmith for LLM-specific tracing
 
-✅ **Middleware Pattern** (`auth/middleware.py`):
+- ✅ **Middleware Pattern** (`auth/middleware.py`):
 ```python
 @require_auth
 async def protected_endpoint(request: Request, user_id: str):
     # JWT + OpenFGA authorization
 ```
 
-✅ **Settings Pattern** (Pydantic Settings):
+- ✅ **Settings Pattern** (Pydantic Settings):
 - Environment-based configuration
 - Type-safe settings with validation
 - Secrets integration
 
 ### 5.2 LangGraph Functional API Usage
 
-✅ **Well-Structured Agent Graph**:
+- ✅ **Well-Structured Agent Graph**:
 ```python
 graph = StateGraph(AgentState)
 graph.add_node("router", route_input)
@@ -293,9 +293,9 @@ graph.add_node("respond", generate_response)
 graph.add_conditional_edges("router", decide_next_step)
 ```
 
-✅ **Checkpointing** with `MemorySaver` for conversation persistence
+- ✅ **Checkpointing** with `MemorySaver` for conversation persistence
 
-✅ **Type-Safe State** using `TypedDict`:
+- ✅ **Type-Safe State** using `TypedDict`:
 ```python
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], operator.add]
@@ -329,34 +329,34 @@ assert isinstance(decision.reasoning, str)
 
 ### 6.1 Dual Backend Strategy
 
-✅ **OpenTelemetry**:
+- ✅ **OpenTelemetry**:
 - Distributed tracing (Jaeger)
 - Metrics (Prometheus)
 - Structured JSON logging
 - OTLP gRPC export
 
-✅ **LangSmith**:
+- ✅ **LangSmith**:
 - LLM-specific tracing
 - Prompt engineering
 - Evaluation framework
 
 ### 6.2 Instrumentation
 
-✅ **Span Coverage**:
+- ✅ **Span Coverage**:
 ```python
 with tracer.start_as_current_span("mcp.call_tool") as span:
     span.set_attribute("tool.name", tool_name)
     span.set_attribute("user.id", user_id)
 ```
 
-✅ **Metrics**:
+- ✅ **Metrics**:
 - `tool_calls` (counter)
 - `successful_calls` (counter)
 - `failed_calls` (counter)
 - `auth_failures` (counter)
 - `response_duration` (histogram)
 
-✅ **Structured Logging**:
+- ✅ **Structured Logging**:
 ```python
 logger.info("Operation completed", extra={
     "user_id": user_id,
@@ -382,7 +382,7 @@ def disable_telemetry_export():
 
 ### 7.1 Python Version Support
 
-✅ **Supported**: Python 3.10, 3.11, 3.12
+- ✅ **Supported**: Python 3.10, 3.11, 3.12
 ❌ **Not Supported**: Python 3.13 (Infisical incompatibility)
 
 ### 7.2 Key Dependencies
@@ -412,7 +412,7 @@ def disable_telemetry_export():
 
 ### 8.1 Documentation Coverage
 
-✅ **Excellent**:
+- ✅ **Excellent**:
 - `README.md` (comprehensive, 100+ lines)
 - `CLAUDE.md` (27KB, excellent AI developer guide!)
 - `AGENTS.md` (agent-specific documentation)
@@ -422,9 +422,9 @@ def disable_telemetry_export():
 
 ### 8.2 API Documentation
 
-✅ **OpenAPI schema** (`openapi.json`)
-✅ **Interactive docs** (FastAPI Swagger UI)
-✅ **Code examples** in docs/
+- ✅ **OpenAPI schema** (`openapi.json`)
+- ✅ **Interactive docs** (FastAPI Swagger UI)
+- ✅ **Code examples** in docs/
 
 ### 8.3 CLAUDE.md Highlights
 
@@ -457,10 +457,10 @@ def disable_telemetry_export():
 
 ### 9.1 Deployment Options
 
-✅ **Docker**: Dockerfile + docker-compose.yml
-✅ **Kubernetes**: Helm chart + Kustomize overlays
-✅ **Cloud Run**: cloudrun/ configuration
-✅ **LangGraph Platform**: langgraph.json + CLI support
+- ✅ **Docker**: Dockerfile + docker-compose.yml
+- ✅ **Kubernetes**: Helm chart + Kustomize overlays
+- ✅ **Cloud Run**: cloudrun/ configuration
+- ✅ **LangGraph Platform**: langgraph.json + CLI support
 
 ### 9.2 Production Checklist
 

@@ -44,7 +44,7 @@ This guide ensures that the 11 issues encountered during GKE deployment **do not
     kubectl apply --dry-run=client -f /tmp/manifests.yaml
 ```
 
-✅ **CORRECT** (Server-side - validates against actual cluster):
+- ✅ **CORRECT** (Server-side - validates against actual cluster):
 ```yaml
 - name: Validate manifests
   run: |
@@ -68,7 +68,7 @@ apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 ```
 
-✅ **CORRECT** (Verify installed version first):
+- ✅ **CORRECT** (Verify installed version first):
 ```bash
 # Check what version is installed
 kubectl api-resources | grep externalsecret
@@ -97,7 +97,7 @@ env:
   value: "google"  # ❌ Conflicts if base uses valueFrom
 ```
 
-✅ **CORRECT** (Override ConfigMap data):
+- ✅ **CORRECT** (Override ConfigMap data):
 ```yaml
 # configmap-patch.yaml
 data:
@@ -135,7 +135,7 @@ kind: RoleBinding
 - Violate least privilege principle
 - Increase attack surface
 
-✅ **CORRECT** (Only include ServiceAccount):
+- ✅ **CORRECT** (Only include ServiceAccount):
 ```yaml
 # deployments/base/serviceaccount.yaml
 apiVersion: v1
@@ -178,7 +178,7 @@ metadata:
     kubectl apply -k deployments/overlays/staging
 ```
 
-✅ **CORRECT** (Namespace created before validation):
+- ✅ **CORRECT** (Namespace created before validation):
 ```yaml
 - name: Create namespace
   run: |
@@ -567,7 +567,7 @@ configMapGenerator:
     behavior: merge  # ❌ Fails if base doesn't have this ConfigMap
 ```
 
-✅ **CORRECT** (Create new ConfigMap):
+- ✅ **CORRECT** (Create new ConfigMap):
 ```yaml
 configMapGenerator:
   - name: otel-collector-config
@@ -631,7 +631,7 @@ resources:
   - namespace.yaml  # ❌ Creates conflict with base namespace
 ```
 
-✅ **CORRECT** (Namespace as patch):
+- ✅ **CORRECT** (Namespace as patch):
 ```yaml
 # kustomization.yaml
 resources:

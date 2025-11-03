@@ -342,7 +342,7 @@ After generation:
 
 ### When to Use This Template
 
-✅ **Perfect For**:
+- ✅ **Perfect For**:
 - New MCP server projects
 - Production deployments
 - Learning MCP + LangGraph

@@ -541,7 +541,7 @@ Executing: make benchmark
 
 🔄 Running benchmark suite (this may take 2-3 minutes)...
 
-✅ Benchmark Results:
+- ✅ Benchmark Results:
 
 Agent Performance:
 - agent_response: Mean 2.3s, P95 4.5s ✅ (target: <5s)

@@ -18,7 +18,7 @@ This guide documents common MDX parsing errors in Mintlify documentation and how
 - High volume (>1M requests/mo)
 ```
 
-✅ **Correct:**
+- ✅ **Correct:**
 ```
 - Low volume (&lt;100K requests/mo)
 - High volume (&gt;1M requests/mo)
@@ -43,7 +43,7 @@ This guide documents common MDX parsing errors in Mintlify documentation and how
 </CodeGroup>
 ```
 
-✅ **Correct:**
+- ✅ **Correct:**
 ```
 <CodeGroup>
 
@@ -75,7 +75,7 @@ This guide documents common MDX parsing errors in Mintlify documentation and how
 command here
 ```xml
 
-✅ Correct:
+- ✅ Correct:
 ```bash
 command here
 ```
@@ -100,7 +100,7 @@ spec:
 '
 ```
 
-✅ Better:
+- ✅ Better:
 ```bash
 kubectl patch deployment grafana --patch-file=patch.yaml
 ```
@@ -134,7 +134,7 @@ spec:
 </AccordionGroup>
 ```
 
-✅ **Correct:**
+- ✅ **Correct:**
 ```
 <AccordionGroup>
   <Accordion title="First">
@@ -214,7 +214,7 @@ kubectl patch --patch-file=patch.yaml
 Always escape comparison operators when followed by numbers:
 
 ```
-✅ Use: &lt; and &gt;
+- ✅ Use: &lt; and &gt;
 ❌ Avoid: < and >
 ```
 

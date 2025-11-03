@@ -492,7 +492,7 @@ Is it development/code reference?
 - Use quoted titles in frontmatter
 - Use double quotes for descriptions
 
-✅ **Do**:
+- ✅ **Do**:
 - Follow category conventions
 - Use semantic, meaningful icons
 - Maintain consistency within directories

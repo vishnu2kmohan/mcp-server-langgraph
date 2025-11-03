@@ -442,7 +442,7 @@ key_info = await manager.extract_key_information_llm(messages)
 
 ### Test Results
 ```
-✅ 42 unit tests PASSED (100%)
+- ✅ 42 unit tests PASSED (100%)
 ⏭️  3 integration tests SKIPPED (require infrastructure)
 ⏱️  Total time: 6.76 seconds
 ```

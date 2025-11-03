@@ -132,7 +132,7 @@ The project now includes optimized workflow templates and automation to make Cla
 
 Claude Code excels when tasks are well-defined:
 
-✅ **Good**: "Implement session management with Redis backend, including tests"
+- ✅ **Good**: "Implement session management with Redis backend, including tests"
 - Clear scope
 - Testable outcome
 - Well-defined deliverable
@@ -440,12 +440,12 @@ User: "Implement automatic JWT token rotation with the following:
 6. Update ../CHANGELOG.md"
 
 Claude Code Response:
-✅ Created src/mcp_server_langgraph/auth/token_rotation.py (250 lines)
-✅ Updated src/mcp_server_langgraph/auth/middleware.py (+80 lines)
-✅ Added rotation metrics to src/mcp_server_langgraph/auth/metrics.py (+15 lines)
-✅ Created tests/test_token_rotation.py (350 lines, 18 tests)
-✅ Updated ../CHANGELOG.md with implementation details
-✅ All 18 tests passing
+- ✅ Created src/mcp_server_langgraph/auth/token_rotation.py (250 lines)
+- ✅ Updated src/mcp_server_langgraph/auth/middleware.py (+80 lines)
+- ✅ Added rotation metrics to src/mcp_server_langgraph/auth/metrics.py (+15 lines)
+- ✅ Created tests/test_token_rotation.py (350 lines, 18 tests)
+- ✅ Updated ../CHANGELOG.md with implementation details
+- ✅ All 18 tests passing
 
 Summary:
 - Implemented TokenRotationManager with configurable thresholds

@@ -272,30 +272,30 @@ src/mcp_server_langgraph/collaboration/
 
 ### Completed Features (All Phases)
 
-✅ **Documentation** (Part 1)
+- ✅ **Documentation** (Part 1)
 - Framework comparisons (17,700 words)
 - Decision guides and positioning
 
-✅ **CLI & Quick Wins** (Part 2)
+- ✅ **CLI & Quick Wins** (Part 2)
 - CLI scaffolding (mcpserver command)
 - QuickStart preset (2-min setup)
 - Agent templates
 
-✅ **Multi-Agent Patterns** (Part 3)
+- ✅ **Multi-Agent Patterns** (Part 3)
 - Supervisor, Swarm, Hierarchical
 - 28 comprehensive tests
 - Production-ready
 
-✅ **Human-in-the-Loop** (Part 3)
+- ✅ **Human-in-the-Loop** (Part 3)
 - Approval system
 - Interrupt handling
 
-✅ **Visual Builder** (Part 3)
+- ✅ **Visual Builder** (Part 3)
 - React Flow canvas
 - Code export (UNIQUE!)
 - FastAPI backend
 
-✅ **Code Import** (Part 4A - JUST COMPLETED!)
+- ✅ **Code Import** (Part 4A - JUST COMPLETED!)
 - AST parser
 - Graph extractor
 - Auto-layout (3 algorithms)

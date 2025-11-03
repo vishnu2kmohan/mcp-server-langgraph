@@ -38,7 +38,7 @@
 ### Navigation Coverage
 ```
 Total navigation entries: 96
-✅ Existing files: 96 (100%)
+- ✅ Existing files: 96 (100%)
 ❌ Missing files: 0
 ```
 

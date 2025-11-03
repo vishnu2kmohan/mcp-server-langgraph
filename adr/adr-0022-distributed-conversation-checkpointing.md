@@ -112,13 +112,13 @@ redis:
 
 ### Positive Consequences
 
-✅ **Auto-Scaling Works**: HPA can scale 3-10 replicas without losing conversations
-✅ **State Persistence**: Conversations survive pod restarts and scale events
-✅ **Zero Infrastructure Overhead**: Reuses existing Redis (already used for sessions)
-✅ **Better Performance**: Redis (in-memory) is faster than PostgreSQL
-✅ **Backward Compatible**: Defaults to `memory` backend (existing behavior)
-✅ **Consistent Architecture**: Both sessions AND checkpoints use Redis
-✅ **Simple Operations**: No schema migrations or new databases
+- ✅ **Auto-Scaling Works**: HPA can scale 3-10 replicas without losing conversations
+- ✅ **State Persistence**: Conversations survive pod restarts and scale events
+- ✅ **Zero Infrastructure Overhead**: Reuses existing Redis (already used for sessions)
+- ✅ **Better Performance**: Redis (in-memory) is faster than PostgreSQL
+- ✅ **Backward Compatible**: Defaults to `memory` backend (existing behavior)
+- ✅ **Consistent Architecture**: Both sessions AND checkpoints use Redis
+- ✅ **Simple Operations**: No schema migrations or new databases
 
 ### Negative Consequences
 

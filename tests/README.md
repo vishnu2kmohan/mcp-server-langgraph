@@ -818,7 +818,7 @@ make test-quick-new         # Quick parallel check
 
 ### Implementation Status
 
-✅ **Completed**:
+- ✅ **Completed**:
 - docker-compose.test.yml (isolated infrastructure)
 - tests/api/test_api_keys_endpoints.py (15+ tests)
 - tests/api/test_service_principals_endpoints.py (18+ tests)

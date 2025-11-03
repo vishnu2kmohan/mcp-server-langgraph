@@ -3,11 +3,11 @@
 **Unique Feature:** Export visual workflows to production-ready Python code!
 
 Unlike OpenAI AgentKit (which has visual builder but NO code export), we provide:
-✅ Full Python code generation
-✅ Production-ready patterns
-✅ Type-safe code with Pydantic
-✅ Black-formatted output
-✅ Import/export round-trip capability
+- ✅ Full Python code generation
+- ✅ Production-ready patterns
+- ✅ Type-safe code with Pydantic
+- ✅ Black-formatted output
+- ✅ Import/export round-trip capability
 
 ## Architecture
 

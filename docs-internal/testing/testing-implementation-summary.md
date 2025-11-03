@@ -87,7 +87,7 @@ make test-quick-new      # Quick parallel check
 
 ### Key Findings
 
-✅ **FastAPI 0.120.3 + Pydantic 2.12.3 compatibility is PERFECT**
+- ✅ **FastAPI 0.120.3 + Pydantic 2.12.3 compatibility is PERFECT**
 
 Tested and confirmed working:
 - Simple POST endpoints ✅

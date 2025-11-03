@@ -9,7 +9,7 @@
 
 ### Overall Results
 ```
-✅ 42 tests passed
+- ✅ 42 tests passed
 ⏭️  3 tests skipped (integration tests requiring infrastructure)
 ⚠️  1 warning (deprecation warning in dependency - harmless)
 ```
@@ -27,19 +27,19 @@
 **Status:** ✅ 13/13 PASSED
 
 ```
-✅ test_initialization - Loader initialization
-✅ test_semantic_search - Semantic search functionality
-✅ test_semantic_search_with_filter - Search with type filter
-✅ test_index_context - Context indexing
-✅ test_load_context - Loading full context
-✅ test_load_batch_within_budget - Token budget management
-✅ test_progressive_search - Progressive discovery pattern
-✅ test_caching - LRU caching
-✅ test_to_messages - Message conversion
-✅ test_error_handling_search - Search error handling
-✅ test_error_handling_index - Index error handling
-✅ test_search_and_load - End-to-end helper function
-✅ test_search_no_results - Empty results handling
+- ✅ test_initialization - Loader initialization
+- ✅ test_semantic_search - Semantic search functionality
+- ✅ test_semantic_search_with_filter - Search with type filter
+- ✅ test_index_context - Context indexing
+- ✅ test_load_context - Loading full context
+- ✅ test_load_batch_within_budget - Token budget management
+- ✅ test_progressive_search - Progressive discovery pattern
+- ✅ test_caching - LRU caching
+- ✅ test_to_messages - Message conversion
+- ✅ test_error_handling_search - Search error handling
+- ✅ test_error_handling_index - Index error handling
+- ✅ test_search_and_load - End-to-end helper function
+- ✅ test_search_no_results - Empty results handling
 ```
 
 **Coverage:**
@@ -56,20 +56,20 @@
 **Status:** ✅ 14/14 PASSED
 
 ```
-✅ test_initialization - Executor initialization
-✅ test_execute_single_tool - Single tool execution
-✅ test_execute_independent_tools_parallel - Parallel execution
-✅ test_execute_with_dependencies - Dependency chain handling
-✅ test_mixed_dependencies - Complex dependency graph
-✅ test_error_handling - Error recovery
-✅ test_dependency_on_failed_tool - Failed dependency handling
-✅ test_parallelism_limit - Concurrency limit enforcement
-✅ test_build_dependency_graph - Graph construction
-✅ test_topological_sort - Topological sorting algorithm
-✅ test_topological_sort_cycle_detection - Circular dependency detection
-✅ test_group_by_level - Level-based grouping
-✅ test_exception_handling - Exception recovery
-✅ test_parameter_substitution_detection - Dependency detection
+- ✅ test_initialization - Executor initialization
+- ✅ test_execute_single_tool - Single tool execution
+- ✅ test_execute_independent_tools_parallel - Parallel execution
+- ✅ test_execute_with_dependencies - Dependency chain handling
+- ✅ test_mixed_dependencies - Complex dependency graph
+- ✅ test_error_handling - Error recovery
+- ✅ test_dependency_on_failed_tool - Failed dependency handling
+- ✅ test_parallelism_limit - Concurrency limit enforcement
+- ✅ test_build_dependency_graph - Graph construction
+- ✅ test_topological_sort - Topological sorting algorithm
+- ✅ test_topological_sort_cycle_detection - Circular dependency detection
+- ✅ test_group_by_level - Level-based grouping
+- ✅ test_exception_handling - Exception recovery
+- ✅ test_parameter_substitution_detection - Dependency detection
 ```
 
 **Coverage:**
@@ -87,23 +87,23 @@
 
 ```
 Enhanced Note Extraction:
-✅ test_extract_key_information_llm_success - Successful LLM extraction
-✅ test_extract_key_information_llm_empty_categories - Empty category handling
-✅ test_extract_key_information_llm_fallback_on_error - Fallback mechanism
-✅ test_parse_extraction_response - Response parsing
-✅ test_parse_extraction_multiline_items - Multi-line item handling
-✅ test_extract_prompt_format - XML prompt structure validation
-✅ test_extraction_categories_complete - All 6 categories extraction
-✅ test_extraction_case_insensitive_headers - Case-insensitive parsing
-✅ test_extract_with_system_messages - System message handling
-✅ test_extraction_metrics_logged - Success metrics
-✅ test_extraction_error_metrics_logged - Error metrics
+- ✅ test_extract_key_information_llm_success - Successful LLM extraction
+- ✅ test_extract_key_information_llm_empty_categories - Empty category handling
+- ✅ test_extract_key_information_llm_fallback_on_error - Fallback mechanism
+- ✅ test_parse_extraction_response - Response parsing
+- ✅ test_parse_extraction_multiline_items - Multi-line item handling
+- ✅ test_extract_prompt_format - XML prompt structure validation
+- ✅ test_extraction_categories_complete - All 6 categories extraction
+- ✅ test_extraction_case_insensitive_headers - Case-insensitive parsing
+- ✅ test_extract_with_system_messages - System message handling
+- ✅ test_extraction_metrics_logged - Success metrics
+- ✅ test_extraction_error_metrics_logged - Error metrics
 
 Rule-Based Extraction (Fallback):
-✅ test_extract_key_information_decisions - Decision extraction
-✅ test_extract_key_information_requirements - Requirement extraction
-✅ test_extract_key_information_issues - Issue extraction
-✅ test_extract_key_information_truncation - Content truncation
+- ✅ test_extract_key_information_decisions - Decision extraction
+- ✅ test_extract_key_information_requirements - Requirement extraction
+- ✅ test_extract_key_information_issues - Issue extraction
+- ✅ test_extract_key_information_truncation - Content truncation
 ```
 
 **Coverage:**

@@ -68,9 +68,9 @@ Successfully removed **4 categories of deprecated items** from the codebase, rec
 ## Verification
 
 ### Compilation Checks
-✅ `server_stdio.py` - Compiles successfully
-✅ `server_streamable.py` - Compiles successfully
-✅ `.mcp/manifest.json` - Valid JSON
+- ✅ `server_stdio.py` - Compiles successfully
+- ✅ `server_streamable.py` - Compiles successfully
+- ✅ `.mcp/manifest.json` - Valid JSON
 
 ### Reference Audit
 - Remaining references to removed items are in:

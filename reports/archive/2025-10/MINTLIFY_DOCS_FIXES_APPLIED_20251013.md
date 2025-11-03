@@ -184,16 +184,16 @@ asyncio.run(test_agent())
 VALIDATION RESULTS
 ======================================================================
 
-✅ NO ERRORS - All critical issues fixed!
+- ✅ NO ERRORS - All critical issues fixed!
 
-✅ CORRECT PATTERNS FOUND:
+- ✅ CORRECT PATTERNS FOUND:
   'scripts/setup/setup_openfga.py': 2 occurrences
   'examples/client_stdio.py': 2 occurrences
   'docker compose': 11 occurrences
   'mcp_server_langgraph.auth.middleware': 1 occurrences
 
 ======================================================================
-✅ VALIDATION PASSED: All fixes applied successfully!
+- ✅ VALIDATION PASSED: All fixes applied successfully!
 ======================================================================
 ```
 

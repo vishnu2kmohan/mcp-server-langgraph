@@ -57,7 +57,7 @@ make test-workflow-YOUR_WORKFLOW
 
 **Watch for**:
 
-✅ **Success indicators**:
+- ✅ **Success indicators**:
 - Dependencies install without errors
 - Commands execute successfully
 - No "ModuleNotFoundError"
@@ -84,7 +84,7 @@ Check these in act output:
 | Install dependencies
 | uv sync --extra dev --extra builder
 | ✓ Dependencies installed from lockfile with dev+builder extras
-✅ GOOD
+- ✅ GOOD
 ```
 
 #### Tool Installation
@@ -92,14 +92,14 @@ Check these in act output:
 | Install pre-commit
 | uv tool install pre-commit
 | ✓ pre-commit installed via uv tool
-✅ GOOD
+- ✅ GOOD
 ```
 
 #### Script Execution
 ```
 | Run skipped test tracker
 | uv run python scripts/ci/track-skipped-tests.py
-✅ GOOD
+- ✅ GOOD
 ```
 
 ---

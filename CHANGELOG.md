@@ -2542,7 +2542,7 @@ report = await monitor.generate_sla_report(period_days=7)
 
 #### Implementation Status
 
-✅ **Completed (Phase 2.2)**:
+- ✅ **Completed (Phase 2.2)**:
 - SLA monitoring framework with 3 metric types
 - Default SLA targets (99.9% uptime, 500ms p95, 1% error rate)
 - Breach detection and status determination
@@ -2732,7 +2732,7 @@ monthly_summary = await scheduler.trigger_monthly_report()
 
 #### Implementation Status
 
-✅ **Completed**:
+- ✅ **Completed**:
 - Evidence collection framework with 14+ evidence collectors
 - Daily/weekly/monthly compliance automation
 - Access review generation
@@ -2855,7 +2855,7 @@ score = ((passed + (partial * 0.5)) / total * 100) if total > 0 else 0
 
 #### Implementation Status
 
-✅ **Completed**:
+- ✅ **Completed**:
 - All 5 GDPR API endpoints implemented and tested
 - Data export service with multi-format support
 - Data deletion service with cascade deletion

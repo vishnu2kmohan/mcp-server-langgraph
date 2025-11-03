@@ -131,7 +131,7 @@ See `../ICON_GUIDE.md` for icon selection guidelines.
 
 All documentation files should follow kebab-case:
 
-✅ **Correct**:
+- ✅ **Correct**:
 - `user-authentication.mdx`
 - `api-key-management.mdx`
 - `adr-0040-distributed-tracing.mdx`

@@ -46,7 +46,7 @@ grep -A 20 "Recent Commits" .claude/context/recent-work.md
 Provide user with summary:
 
 ```
-✅ Context Refreshed
+- ✅ Context Refreshed
 
 Updated:
 - recent-work.md: Last 15 commits, 7 days of file activity
@@ -187,7 +187,7 @@ Refreshing context from repository state...
 
 Running: python scripts/workflow/update-context-files.py --recent-work
 
-✅ Context Refreshed Successfully!
+- ✅ Context Refreshed Successfully!
 
 Updated Files:
 - .claude/context/recent-work.md

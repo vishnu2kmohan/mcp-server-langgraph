@@ -50,34 +50,34 @@ Working tree: CLEAN ✅
 ## 🎯 What's Included in This Release
 
 ### Documentation Enhancements
-✅ **Visual Assets**
+- ✅ **Visual Assets**
 - Mintlify logos (dark + light themes)
 - Favicon verified
 - 10 professional Mermaid diagrams
 
-✅ **Automation**
+- ✅ **Automation**
 - GitHub Actions link checker workflow
 - Local Python link checker script
 - Markdownlint configuration
 - Build hygiene checks
 
-✅ **Organization**
+- ✅ **Organization**
 - Updated reports/README.md
 - Created archive/README.md with policy
 - Comprehensive analysis reports
 - Clear deprecation notices
 
-✅ **ADRs**
+- ✅ **ADRs**
 - ADR-0026: Lazy Observability Initialization
 - All 26 ADRs synchronized (source + Mintlify)
 - Updated index and navigation
 
-✅ **v2.8.0 Preparation**
+- ✅ **v2.8.0 Preparation**
 - BREAKING_CHANGES.md
 - MIGRATION.md
 - Breaking changes documented
 
-✅ **Quality**
+- ✅ **Quality**
 - 63 broken links fixed
 - 0 high-priority broken links remaining
 - Documentation health: 98/100

@@ -29,10 +29,10 @@ Internal documentation (docs-internal/, reports/) is recommended but not require
 - **Average complexity**: 34.0/100 (healthy)
 
 ### Validation Status
-✅ All diagrams pass `mmdc` CLI validation
-✅ All sequence diagrams have ColorBrewer2 themes
-✅ All user-facing flowcharts have ColorBrewer2 Set3 palette styling
-✅ No syntax errors
+- ✅ All diagrams pass `mmdc` CLI validation
+- ✅ All sequence diagrams have ColorBrewer2 themes
+- ✅ All user-facing flowcharts have ColorBrewer2 Set3 palette styling
+- ✅ No syntax errors
 
 ---
 
@@ -149,7 +149,7 @@ sequenceDiagram
 
 ### Flowchart Syntax
 
-✅ **ALWAYS USE** modern flowchart syntax:
+- ✅ **ALWAYS USE** modern flowchart syntax:
 ```mermaid
 flowchart TD   # Top to bottom
 flowchart TB   # Top to bottom (same as TD)
@@ -177,7 +177,7 @@ graph LR      # DEPRECATED - use flowchart LR instead
 
 ### 1. Theme Initialization (Sequence Diagrams)
 
-✅ **ALWAYS** start sequence diagrams with theme:
+- ✅ **ALWAYS** start sequence diagrams with theme:
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': {...}}}%%
 sequenceDiagram
@@ -190,7 +190,7 @@ sequenceDiagram
 
 ### 2. Styling (Flowcharts/Graphs)
 
-✅ **USE** classDef for reusable styles:
+- ✅ **USE** classDef for reusable styles:
 ```mermaid
 flowchart TB
     A[Node]

@@ -59,7 +59,7 @@ All done! ✅
 
 # isort formatting
 $ isort --check src/mcp_server_langgraph/core/agent.py
-✅ Clean
+- ✅ Clean
 ```
 
 ---

@@ -12,7 +12,7 @@ This codebase demonstrates **exceptional alignment** with Anthropic's engineerin
 
 ### Key Findings
 
-✅ **Major Strengths**:
+- ✅ **Major Strengths**:
 - **Reference-quality agentic loop** implementation (ADR-0024)
 - **Outstanding tool design** following 9/10 best practices (ADR-0023)
 - **Full context engineering** with compaction and XML prompts
@@ -639,7 +639,7 @@ This codebase is **already production-ready** with exceptional adherence to Anth
 
 ### Completed This Session
 
-✅ **3 Major Deliverables**:
+- ✅ **3 Major Deliverables**:
 1. Comprehensive 40-page enhancement plan with all code
 2. Enhanced documentation with 300+ lines of technical details
 3. Parameter naming standardization (backward compatible)

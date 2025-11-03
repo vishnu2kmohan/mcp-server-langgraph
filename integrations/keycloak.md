@@ -23,12 +23,12 @@ Keycloak integration provides **production-grade authentication** for your MCP s
 
 ### Key Features
 
-✅ **OAuth2/OIDC Compliance**: Industry-standard authentication protocols
-✅ **JWKS Token Verification**: No shared secrets, uses public key cryptography
-✅ **Automatic Token Refresh**: Seamless session extension without re-authentication
-✅ **Role Synchronization**: Automatic mapping of Keycloak roles/groups to OpenFGA
-✅ **User Provider Pattern**: Pluggable architecture supporting multiple backends
-✅ **Backward Compatible**: Defaults to in-memory provider for development
+- ✅ **OAuth2/OIDC Compliance**: Industry-standard authentication protocols
+- ✅ **JWKS Token Verification**: No shared secrets, uses public key cryptography
+- ✅ **Automatic Token Refresh**: Seamless session extension without re-authentication
+- ✅ **Role Synchronization**: Automatic mapping of Keycloak roles/groups to OpenFGA
+- ✅ **User Provider Pattern**: Pluggable architecture supporting multiple backends
+- ✅ **Backward Compatible**: Defaults to in-memory provider for development
 
 ### When to Use
 
@@ -671,8 +671,8 @@ keycloak_config = KeycloakConfig(
 
 #### 1. Enable JWKS Caching
 
-✅ Already enabled (1-hour TTL)
-✅ Automatic cache refresh on key rotation
+- ✅ Already enabled (1-hour TTL)
+- ✅ Automatic cache refresh on key rotation
 
 #### 2. Enable Role Sync on Login
 

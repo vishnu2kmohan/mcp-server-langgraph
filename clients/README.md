@@ -224,14 +224,14 @@ func main() {
 
 All generated SDKs include:
 
-✅ **Type Safety** - Full type hints/annotations
-✅ **Authentication** - JWT, API keys, service principals
-✅ **Error Handling** - Structured exceptions
-✅ **Rate Limiting** - Automatic retry with backoff
-✅ **Pagination** - Built-in pagination support
-✅ **Async Support** - Async/await patterns (where applicable)
-✅ **Documentation** - Generated markdown docs
-✅ **Unit Tests** - Auto-generated test templates
+- ✅ **Type Safety** - Full type hints/annotations
+- ✅ **Authentication** - JWT, API keys, service principals
+- ✅ **Error Handling** - Structured exceptions
+- ✅ **Rate Limiting** - Automatic retry with backoff
+- ✅ **Pagination** - Built-in pagination support
+- ✅ **Async Support** - Async/await patterns (where applicable)
+- ✅ **Documentation** - Generated markdown docs
+- ✅ **Unit Tests** - Auto-generated test templates
 
 ---
 

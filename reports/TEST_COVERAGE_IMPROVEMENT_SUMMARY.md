@@ -394,11 +394,11 @@ pytest tests/unit/test_search_tools.py tests/test_pydantic_ai.py tests/test_mcp_
 
 ### All Phases Complete! 🎉
 
-✅ Phase 1.1: server_streamable.py coverage improved (41% → ~80%)
-✅ Phase 1.2: search_tools.py coverage improved (53% → ~85%)
-✅ Phase 1.3: pydantic_agent.py coverage improved (56% → ~80%)
-✅ Phase 2.1: Qdrant test infrastructure setup
-✅ Phase 2.2: FastAPI testing infrastructure (22 tests enabled)
+- ✅ Phase 1.1: server_streamable.py coverage improved (41% → ~80%)
+- ✅ Phase 1.2: search_tools.py coverage improved (53% → ~85%)
+- ✅ Phase 1.3: pydantic_agent.py coverage improved (56% → ~80%)
+- ✅ Phase 2.1: Qdrant test infrastructure setup
+- ✅ Phase 2.2: FastAPI testing infrastructure (22 tests enabled)
 
 **No remaining skipped tests that can be enabled** without live LLM/external service requirements.
 

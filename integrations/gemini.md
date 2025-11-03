@@ -6,12 +6,12 @@ Quick setup guide for using Google Gemini 2.5 models (default configuration).
 
 The MCP Server with LangGraph defaults to **Gemini 2.5 Flash** for several reasons:
 
-✅ **Latest Technology** - Google's newest model family (2025)
-✅ **Fastest Performance** - Sub-second response times
-✅ **Cost Efficient** - More affordable than GPT-4 or Claude
-✅ **Multimodal** - Native support for text, images, video, audio
-✅ **Large Context** - 1M+ token context window
-✅ **High Quality** - Competitive with GPT-4o and Claude 3.5 Sonnet
+- ✅ **Latest Technology** - Google's newest model family (2025)
+- ✅ **Fastest Performance** - Sub-second response times
+- ✅ **Cost Efficient** - More affordable than GPT-4 or Claude
+- ✅ **Multimodal** - Native support for text, images, video, audio
+- ✅ **Large Context** - 1M+ token context window
+- ✅ **High Quality** - Competitive with GPT-4o and Claude 3.5 Sonnet
 
 ## Quick Start
 

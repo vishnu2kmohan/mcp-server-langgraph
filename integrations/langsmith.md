@@ -29,13 +29,13 @@ LangSmith is LangChain's observability and debugging platform. It provides:
 
 ### Why LangSmith?
 
-✅ **For Developers**:
+- ✅ **For Developers**:
 - See exactly what your agent is doing
 - Debug failures with full context
 - Optimize prompts based on real usage
 - Track costs per user/session
 
-✅ **For Teams**:
+- ✅ **For Teams**:
 - Share traces for collaboration
 - Create regression test suites
 - Monitor production performance

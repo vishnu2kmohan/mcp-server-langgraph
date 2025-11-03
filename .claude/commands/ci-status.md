@@ -246,9 +246,9 @@ Current Workflow: CI/CD Pipeline
 - Progress: 3/5 jobs completed
 
 Completed Jobs:
-✅ Lint and Format (15s)
-✅ Unit Tests (45s)
-✅ Integration Tests (23s)
+- ✅ Lint and Format (15s)
+- ✅ Unit Tests (45s)
+- ✅ Integration Tests (23s)
 
 Running Jobs:
 🔄 Quality Tests (running, 18s so far)

@@ -357,11 +357,11 @@ git push --no-verify
 ```
 🔍 Running comprehensive lint checks...
 
-✅ flake8: 0 errors
-✅ black: All files formatted correctly
+- ✅ flake8: 0 errors
+- ✅ black: All files formatted correctly
 ❌ isort: 2 files need import sorting
 ❌ mypy: 5 type errors found
-✅ bandit: No security issues
+- ✅ bandit: No security issues
 
 🔧 Auto-fix suggestions:
   make lint-fix  # Fix isort issues

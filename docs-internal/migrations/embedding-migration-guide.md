@@ -96,11 +96,11 @@ pip install sentence-transformers>=2.2.0
 
 ## Advantages of Google Gemini Embeddings
 
-✅ **No Model Hosting**: No need to download or serve embedding models
-✅ **Better Quality**: 768-dimensional embeddings with Matryoshka truncation support
-✅ **Task Optimization**: Optimized for retrieval, similarity, classification, etc.
-✅ **Scalability**: API-based, scales automatically
-✅ **Cost-Effective**: Google's embedding API is very affordable
+- ✅ **No Model Hosting**: No need to download or serve embedding models
+- ✅ **Better Quality**: 768-dimensional embeddings with Matryoshka truncation support
+- ✅ **Task Optimization**: Optimized for retrieval, similarity, classification, etc.
+- ✅ **Scalability**: API-based, scales automatically
+- ✅ **Cost-Effective**: Google's embedding API is very affordable
 
 ## API Costs
 

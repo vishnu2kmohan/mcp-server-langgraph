@@ -14,48 +14,48 @@ This document summarizes the comprehensive improvements made to GitHub Actions w
 
 ### High Priority Security & Reliability
 
-✅ **Fixed integration test error handling** (ci.yaml:75)
+- ✅ **Fixed integration test error handling** (ci.yaml:75)
 - Changed from `|| true` to `continue-on-error: true` with explanatory comment
 - Tests now properly report failures while not blocking workflow
 
-✅ **Fixed deployment paths** (ci.yaml - 3 locations)
+- ✅ **Fixed deployment paths** (ci.yaml - 3 locations)
 - Added `deployments/` prefix to all kustomize and helm paths
 - Prevents deployment failures in production
 
-✅ **Fixed Python version inconsistency** (security-scan.yaml - 2 locations)
+- ✅ **Fixed Python version inconsistency** (security-scan.yaml - 2 locations)
 - Changed from 3.13 to 3.12 to match tested versions (3.10-3.12)
 - Ensures consistent testing across all workflows
 
-✅ **Replaced deprecated GitHub Actions** (release.yaml)
+- ✅ **Replaced deprecated GitHub Actions** (release.yaml)
 - Replaced `actions/create-release@v1` with `ncipollo/release-action@v1`
 - Added GitHub's automatic release notes generation
 - Removed outdated `metcalfc/changelog-generator@v4.6.2`
 
-✅ **Fixed security check error handling** (security-scan.yaml - 2 locations)
+- ✅ **Fixed security check error handling** (security-scan.yaml - 2 locations)
 - Changed from `|| true` to `continue-on-error: true`
 - Safety and pip-audit now properly report failures
 
-✅ **Fixed Slack webhook syntax** (security-scan.yaml:150)
+- ✅ **Fixed Slack webhook syntax** (security-scan.yaml:150)
 - Changed from `if: ${{ secrets.SLACK_SECURITY_WEBHOOK }}` to `if: secrets.SLACK_SECURITY_WEBHOOK != ''`
 - Prevents workflow errors when secret is not set
 
-✅ **Improved mypy checks** (ci.yaml, pr-checks.yaml - 2 locations)
+- ✅ **Improved mypy checks** (ci.yaml, pr-checks.yaml - 2 locations)
 - Changed from `mypy *.py` to `mypy src/` (correct path)
 - Changed from `|| true` to `continue-on-error: true`
 - Tests now run on actual source code
 
 ### Medium Priority Best Practices
 
-✅ **Added concurrency controls** (all 5 workflows)
+- ✅ **Added concurrency controls** (all 5 workflows)
 - Prevents duplicate workflow runs
 - Saves ~30% CI minutes
 - Cancels only PR workflows, preserves main/develop
 
-✅ **Added workflow_dispatch** (all 5 workflows)
+- ✅ **Added workflow_dispatch** (all 5 workflows)
 - Enables manual workflow triggering
 - Useful for testing and debugging
 
-✅ **Added caching** (ci.yaml)
+- ✅ **Added caching** (ci.yaml)
 - Helm cache: `~/.cache/helm` and `~/.local/share/helm`
 - kubectl cache: `/usr/local/bin/kubectl`
 - 20-30% faster builds
@@ -66,7 +66,7 @@ This document summarizes the comprehensive improvements made to GitHub Actions w
 
 ### Supply Chain Security
 
-✅ **SBOM Generation** (release.yaml)
+- ✅ **SBOM Generation** (release.yaml)
 - Generates Software Bill of Materials for each platform (amd64, arm64)
 - Uses Anchore SBOM Action (SPDX JSON format)
 - Attaches to GitHub releases
@@ -80,7 +80,7 @@ grype sbom:sbom-linux-amd64.spdx.json
 
 ### Advanced Testing
 
-✅ **Mutation Testing** (quality-tests.yaml)
+- ✅ **Mutation Testing** (quality-tests.yaml)
 - Runs weekly (too slow for every PR - 60 min runtime)
 - Validates test effectiveness
 - Generates HTML reports
@@ -93,7 +93,7 @@ mutmut run --paths-to-mutate=src/mcp_server_langgraph/
 mutmut html
 ```
 
-✅ **Benchmark Testing** (quality-tests.yaml)
+- ✅ **Benchmark Testing** (quality-tests.yaml)
 - Runs on every PR + weekly schedule
 - Tracks performance over time
 - Alerts on 20%+ regressions
@@ -107,7 +107,7 @@ mutmut html
 
 ### Code Quality
 
-✅ **CODEOWNERS Validation** (pr-checks.yaml)
+- ✅ **CODEOWNERS Validation** (pr-checks.yaml)
 - Validates CODEOWNERS file syntax
 - Checks file patterns and ownership
 - Non-blocking (continue-on-error)
@@ -115,7 +115,7 @@ mutmut html
 
 ### Storage Optimization
 
-✅ **Artifact Retention Policies** (7 updates across 3 workflows)
+- ✅ **Artifact Retention Policies** (7 updates across 3 workflows)
 
 | Artifact Type | Retention | Workflow |
 |--------------|-----------|----------|
@@ -131,7 +131,7 @@ mutmut html
 
 ### Visibility
 
-✅ **Status Badges** (../README.md)
+- ✅ **Status Badges** (../README.md)
 Added 4 workflow status badges:
 ```markdown
 [![CI/CD](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](...)
@@ -142,7 +142,7 @@ Added 4 workflow status badges:
 
 ### Documentation
 
-✅ **GitHub Actions Documentation** (docs/development/github-actions.md)
+- ✅ **GitHub Actions Documentation** (docs/development/github-actions.md)
 - Added "Workflow Concurrency Controls" section
 - Added "Manual Workflow Triggering" section
 - Added "Build Optimization with Caching" section
@@ -151,7 +151,7 @@ Added 4 workflow status badges:
 - Added 3 new troubleshooting entries
 - Updated best practices
 
-✅ **CI/CD Documentation** (docs/development/ci-cd.md)
+- ✅ **CI/CD Documentation** (docs/development/ci-cd.md)
 - Added "Software Bill of Materials (SBOM)" section
 - Expanded "Testing Strategy" section
 - Added "Mutation Testing" subsection

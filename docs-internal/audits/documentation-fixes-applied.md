@@ -152,21 +152,21 @@ This document summarizes all documentation fixes applied following the comprehen
 
 ```bash
 # 1. docs.json validity
-✅ docs.json is valid JSON
-✅ Navigation entries: 97 (was 96)
+- ✅ docs.json is valid JSON
+- ✅ Navigation entries: 97 (was 96)
 
 # 2. Version consistency
-✅ .env.example: SERVICE_VERSION=2.8.0
-✅ pyproject.toml: version = "2.8.0"
-✅ docs/releases/overview.mdx: Latest = v2.8.0
+- ✅ .env.example: SERVICE_VERSION=2.8.0
+- ✅ pyproject.toml: version = "2.8.0"
+- ✅ docs/releases/overview.mdx: Latest = v2.8.0
 
 # 3. Broken links
-✅ No broken .mdx links in ADR files
-✅ Remaining .md links are valid (point to actual .md files)
+- ✅ No broken .mdx links in ADR files
+- ✅ Remaining .md links are valid (point to actual .md files)
 
 # 4. Navigation coverage
-✅ v2.8.0 added to Version History group
-✅ All navigation paths resolve to existing files
+- ✅ v2.8.0 added to Version History group
+- ✅ All navigation paths resolve to existing files
 ```
 
 ---
@@ -327,10 +327,10 @@ Recommendations (P2-P3): 0/7 (0%)
 
 The critical documentation issues have been **successfully resolved**:
 
-✅ **All broken links fixed** (21 → 0)
-✅ **Version consistency achieved** (3 issues → 0)
-✅ **v2.8.0 fully documented** (new 300+ line release page)
-✅ **Navigation updated** (96 → 97 pages)
+- ✅ **All broken links fixed** (21 → 0)
+- ✅ **Version consistency achieved** (3 issues → 0)
+- ✅ **v2.8.0 fully documented** (new 300+ line release page)
+- ✅ **Navigation updated** (96 → 97 pages)
 
 The documentation is now in **excellent health** (95+/100) with only optional improvements remaining in Phase 2 and Phase 3.
 

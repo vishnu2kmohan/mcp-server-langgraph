@@ -178,24 +178,24 @@ curl -X DELETE https://api.example.com/api/v1/api-keys/abc123 \
 ### Security Best Practices
 
 #### Storage
-✅ **DO**: Store in secrets manager (Vault, AWS Secrets Manager, GCP Secret Manager)
-✅ **DO**: Use environment variables in production
+- ✅ **DO**: Store in secrets manager (Vault, AWS Secrets Manager, GCP Secret Manager)
+- ✅ **DO**: Use environment variables in production
 ❌ **DON'T**: Commit to version control
 ❌ **DON'T**: Log API keys
 ❌ **DON'T**: Include in error messages
 
 #### Rotation
-✅ **DO**: Rotate keys every 90-180 days
-✅ **DO**: Rotate immediately if compromised
-✅ **DO**: Test new key before revoking old key
+- ✅ **DO**: Rotate keys every 90-180 days
+- ✅ **DO**: Rotate immediately if compromised
+- ✅ **DO**: Test new key before revoking old key
 ❌ **DON'T**: Share keys across multiple systems
 ❌ **DON'T**: Reuse revoked keys
 
 #### Usage
-✅ **DO**: Use HTTPS only
-✅ **DO**: Monitor key usage (last_used timestamp)
-✅ **DO**: Set appropriate expiration dates
-✅ **DO**: Use different keys for dev/staging/production
+- ✅ **DO**: Use HTTPS only
+- ✅ **DO**: Monitor key usage (last_used timestamp)
+- ✅ **DO**: Set appropriate expiration dates
+- ✅ **DO**: Use different keys for dev/staging/production
 ❌ **DON'T**: Use in client-side code (browsers)
 ❌ **DON'T**: Share keys in public repositories
 
