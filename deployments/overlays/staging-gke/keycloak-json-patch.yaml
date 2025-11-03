@@ -1,3 +1,8 @@
+# Set Keycloak ServiceAccount for Workload Identity
+- op: replace
+  path: /spec/template/spec/serviceAccountName
+  value: staging-keycloak
+
 # Remove init container - direct Cloud SQL connection
 - op: remove
   path: /spec/template/spec/initContainers/0

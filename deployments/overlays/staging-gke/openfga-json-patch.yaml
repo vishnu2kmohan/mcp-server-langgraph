@@ -1,3 +1,8 @@
+# Set OpenFGA ServiceAccount for Workload Identity
+- op: replace
+  path: /spec/template/spec/serviceAccountName
+  value: staging-openfga
+
 # Remove init container - direct Cloud SQL connection
 - op: remove
   path: /spec/template/spec/initContainers/0
@@ -12,9 +17,12 @@
         name: mcp-staging-secrets
         key: openfga-db-password
 
-# Update connection string to use direct Cloud SQL private IP
+# Update connection string to use direct Cloud SQL private IP with password from secret
 - op: replace
   path: /spec/template/spec/containers/0/env/1
   value:
     name: OPENFGA_DATASTORE_URI
-    value: "postgres://openfga:$(OPENFGA_DB_PASSWORD)@10.110.0.3:5432/openfga?sslmode=disable"
+    valueFrom:
+      secretKeyRef:
+        name: mcp-staging-secrets
+        key: openfga-datastore-uri

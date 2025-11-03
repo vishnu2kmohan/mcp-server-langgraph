@@ -52,12 +52,15 @@ spec:
       port: 53
 
   # Allow Cloud SQL proxy connection (to GCP private IP)
+  # Requires both database port and control plane port
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8  # GCP private IP range
     ports:
     - protocol: TCP
-      port: 3307  # Cloud SQL proxy
+      port: 3307  # Cloud SQL database port (PostgreSQL over private IP)
+    - protocol: TCP
+      port: 443   # Cloud SQL control plane & health checks
 
   # Allow Redis connection (Memorystore private IP)
   - to:
@@ -177,13 +180,15 @@ spec:
     ports:
     - protocol: UDP
       port: 53
-  # Allow Cloud SQL
+  # Allow Cloud SQL (database + control plane)
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
-      port: 3307
+      port: 3307  # Database port
+    - protocol: TCP
+      port: 443   # Control plane
 
 ---
 # Network Policy: OpenFGA - Restrict access
@@ -217,10 +222,12 @@ spec:
     ports:
     - protocol: UDP
       port: 53
-  # Allow Cloud SQL
+  # Allow Cloud SQL (database + control plane)
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
-      port: 3307
+      port: 3307  # Database port
+    - protocol: TCP
+      port: 443   # Control plane

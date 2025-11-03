@@ -9,7 +9,7 @@ metadata:
 spec:
   targetRef:
     apiVersion: apps/v1
-    kind: StatefulSet
+    kind: Deployment
     name: keycloak
 
   # Update policy

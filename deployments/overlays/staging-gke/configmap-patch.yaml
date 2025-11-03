@@ -28,6 +28,8 @@ data:
 
   # Memorystore Redis connection
   # Connect to cloud-managed Memorystore Redis instance
+  # NOTE: redis_url and checkpoint_redis_url are injected via env vars from secrets
+  # because they require passwords. See deployment-patch.yaml env section.
   redis_host: "10.110.1.4"
   redis_port: "6379"
   redis_ssl: "false"  # Not required for private VPC connection
@@ -56,3 +58,7 @@ data:
   # Resource limits
   max_concurrent_requests: "50"
   request_timeout_seconds: "60"
+
+  # GDPR Compliance Storage (direct Cloud SQL private IP)
+  # Override base config to use direct Cloud SQL connection instead of deleted in-cluster postgres
+  gdpr_postgres_url: "postgresql://postgres@10.110.0.3:5432/gdpr?sslmode=disable"

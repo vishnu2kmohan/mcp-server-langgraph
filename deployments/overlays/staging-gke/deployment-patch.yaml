@@ -33,8 +33,7 @@ spec:
           capabilities:
             drop:
               - ALL
-            add:
-              - NET_BIND_SERVICE
+            # No capabilities needed - app listens on port 8000 (non-privileged)
 
         # Environment variables from External Secrets
         env:
@@ -75,6 +74,17 @@ spec:
             secretKeyRef:
               name: mcp-staging-secrets
               key: redis-password
+        # Override ConfigMap redis URLs (which point to deleted in-cluster service)
+        - name: redis_url
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: redis-url
+        - name: checkpoint_redis_url
+          valueFrom:
+            secretKeyRef:
+              name: mcp-staging-secrets
+              key: checkpoint-redis-url
 
         # PostgreSQL Configuration
         - name: POSTGRES_USER

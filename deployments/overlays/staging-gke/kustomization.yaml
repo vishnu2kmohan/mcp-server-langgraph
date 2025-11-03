@@ -10,6 +10,9 @@ resources:
   - ../../base
   - network-policy.yaml
   - external-secrets.yaml
+  - serviceaccount-external-secrets.yaml
+  - serviceaccount-keycloak.yaml
+  - serviceaccount-openfga.yaml
 
 # GCP-specific annotations
 commonAnnotations:
@@ -78,6 +81,27 @@ patches:
       kind: Service
       name: redis-session
 
+  # Delete VPAs for services that are deleted in staging
+  - patch: |-
+      apiVersion: autoscaling.k8s.io/v1
+      kind: VerticalPodAutoscaler
+      metadata:
+        name: redis-session-vpa
+      $patch: delete
+    target:
+      kind: VerticalPodAutoscaler
+      name: redis-session-vpa
+
+  - patch: |-
+      apiVersion: autoscaling.k8s.io/v1
+      kind: VerticalPodAutoscaler
+      metadata:
+        name: postgres-vpa
+      $patch: delete
+    target:
+      kind: VerticalPodAutoscaler
+      name: postgres-vpa
+
   # Namespace patch
   - path: namespace.yaml
     target:
@@ -119,11 +143,6 @@ patches:
     target:
       kind: Deployment
       name: qdrant
-
-# Resource configuration
-replicas:
-  - name: mcp-server-langgraph
-    count: 2
 
 # Image configuration
 images:
