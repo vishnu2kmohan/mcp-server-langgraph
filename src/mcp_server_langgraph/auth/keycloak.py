@@ -675,19 +675,150 @@ class KeycloakClient:
                 raise
 
     async def update_user(self, user_id: str, user_config: Dict[str, Any]) -> None:
-        """Update Keycloak user (stub for SCIM)"""
-        # TODO: Implement Keycloak Admin API user update
-        raise NotImplementedError("update_user needs implementation")
+        """
+        Update Keycloak user via Admin API.
+
+        Args:
+            user_id: User UUID to update
+            user_config: Dictionary of user properties to update (camelCase format expected by Keycloak)
+
+        Raises:
+            httpx.HTTPError: If user update fails
+        """
+        with tracer.start_as_current_span("keycloak.update_user") as span:
+            span.set_attribute("user.uuid", user_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    url = f"{self.config.admin_url}/users/{user_id}"
+                    response = await client.put(url, headers=headers, json=user_config)
+                    response.raise_for_status()
+
+                    logger.info(f"Updated user {user_id}")
+                    metrics.successful_calls.add(1, {"operation": "update_user"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to update user: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "update_user"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error updating user: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "update_user"})
+                raise
 
     async def set_user_password(self, user_id: str, password: str, temporary: bool = False) -> None:
-        """Set user password (stub for SCIM)"""
-        # TODO: Implement Keycloak Admin API password update
-        raise NotImplementedError("set_user_password needs implementation")
+        """
+        Set user password via Admin API.
+
+        Args:
+            user_id: User UUID
+            password: New password to set
+            temporary: If True, user must change password on next login
+
+        Raises:
+            httpx.HTTPError: If password update fails
+        """
+        with tracer.start_as_current_span("keycloak.set_user_password") as span:
+            span.set_attribute("user.uuid", user_id)
+            span.set_attribute("password.temporary", temporary)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Keycloak password reset endpoint
+                    url = f"{self.config.admin_url}/users/{user_id}/reset-password"
+                    password_config = {
+                        "type": "password",
+                        "value": password,
+                        "temporary": temporary,
+                    }
+
+                    response = await client.put(url, headers=headers, json=password_config)
+                    response.raise_for_status()
+
+                    logger.info(f"Set password for user {user_id} (temporary={temporary})")
+                    metrics.successful_calls.add(1, {"operation": "set_user_password"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to set user password: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "set_user_password"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error setting user password: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "set_user_password"})
+                raise
 
     async def get_user(self, user_id: str) -> Optional[Dict[str, Any]]:
-        """Get user by ID (stub for SCIM)"""
-        # TODO: Implement Keycloak Admin API user retrieval
-        raise NotImplementedError("get_user needs implementation")
+        """
+        Get user by ID via Admin API.
+
+        Args:
+            user_id: User UUID
+
+        Returns:
+            User data dictionary or None if not found
+
+        Raises:
+            httpx.HTTPError: If getting user fails (except 404 which returns None)
+        """
+        with tracer.start_as_current_span("keycloak.get_user") as span:
+            span.set_attribute("user.uuid", user_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/users/{user_id}"
+                    response = await client.get(url, headers=headers)
+                    response.raise_for_status()
+
+                    user_data = response.json()
+
+                    logger.info(f"Retrieved user {user_id}")
+                    metrics.successful_calls.add(1, {"operation": "get_user"})
+
+                    return user_data  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                # Return None for 404 (user not found)
+                if e.response.status_code == 404:
+                    logger.info(f"User {user_id} not found")
+                    return None
+
+                logger.error(
+                    f"Failed to get user: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_user"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error getting user: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_user"})
+                raise
 
     async def get_user_attributes(self, user_id: str) -> Dict[str, Any]:
         """
@@ -791,24 +922,200 @@ class KeycloakClient:
                 raise
 
     async def update_client_attributes(self, client_id: str, attributes: Dict[str, Any]) -> None:
-        """Update client attributes (stub for service principals)"""
-        # TODO: Implement Keycloak Admin API client attribute update
-        raise NotImplementedError("update_client_attributes needs implementation")
+        """
+        Update client attributes via Admin API.
+
+        Args:
+            client_id: Client UUID (not clientId)
+            attributes: Dictionary of attributes to update
+
+        Raises:
+            httpx.HTTPError: If client attribute update fails
+        """
+        with tracer.start_as_current_span("keycloak.update_client_attributes") as span:
+            span.set_attribute("client.uuid", client_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Get current client data
+                    get_url = f"{self.config.admin_url}/clients/{client_id}"
+                    get_response = await client.get(get_url, headers=headers)
+                    get_response.raise_for_status()
+
+                    client_data = get_response.json()
+                    client_data["attributes"] = attributes
+
+                    # Update client with new attributes
+                    put_url = f"{self.config.admin_url}/clients/{client_id}"
+                    put_response = await client.put(put_url, headers=headers, json=client_data)
+                    put_response.raise_for_status()
+
+                    logger.info(f"Updated attributes for client {client_id}")
+                    metrics.successful_calls.add(1, {"operation": "update_client_attributes"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to update client attributes: {e}",
+                    extra={"status_code": e.response.status_code, "client_id": client_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "update_client_attributes"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error updating client attributes: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "update_client_attributes"})
+                raise
 
     async def update_client_secret(self, client_id: str, secret: str) -> None:
-        """Update client secret (stub for service principals)"""
-        # TODO: Implement Keycloak Admin API client secret update
-        raise NotImplementedError("update_client_secret needs implementation")
+        """
+        Update client secret via Admin API.
+
+        Args:
+            client_id: Client UUID (not clientId)
+            secret: New client secret
+
+        Raises:
+            httpx.HTTPError: If client secret update fails
+        """
+        with tracer.start_as_current_span("keycloak.update_client_secret") as span:
+            span.set_attribute("client.uuid", client_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    # Keycloak client-secret regeneration endpoint
+                    url = f"{self.config.admin_url}/clients/{client_id}/client-secret"
+                    secret_config = {"type": "secret", "value": secret}
+
+                    response = await client.post(url, headers=headers, json=secret_config)
+                    response.raise_for_status()
+
+                    logger.info(f"Updated secret for client {client_id}")
+                    metrics.successful_calls.add(1, {"operation": "update_client_secret"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to update client secret: {e}",
+                    extra={"status_code": e.response.status_code, "client_id": client_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "update_client_secret"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error updating client secret: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "update_client_secret"})
+                raise
 
     async def get_clients(self, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        """Get clients (stub for service principals)"""
-        # TODO: Implement Keycloak Admin API client listing
-        raise NotImplementedError("get_clients needs implementation")
+        """
+        Get clients via Admin API.
+
+        Args:
+            query: Optional query parameters (e.g., {"clientId": "my-client"})
+
+        Returns:
+            List of client data dictionaries
+
+        Raises:
+            httpx.HTTPError: If getting clients fails
+        """
+        with tracer.start_as_current_span("keycloak.get_clients"):
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/clients"
+                    # Pass query parameters if provided
+                    params = query if query else {}
+
+                    response = await client.get(url, headers=headers, params=params)
+                    response.raise_for_status()
+
+                    clients_data = response.json()
+
+                    logger.info(f"Retrieved {len(clients_data)} clients")
+                    metrics.successful_calls.add(1, {"operation": "get_clients"})
+
+                    return clients_data  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to get clients: {e}",
+                    extra={"status_code": e.response.status_code},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_clients"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error getting clients: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_clients"})
+                raise
 
     async def get_client(self, client_id: str) -> Optional[Dict[str, Any]]:
-        """Get client by ID (stub for service principals)"""
-        # TODO: Implement Keycloak Admin API client retrieval
-        raise NotImplementedError("get_client needs implementation")
+        """
+        Get client by ID via Admin API.
+
+        Args:
+            client_id: Client UUID (not clientId)
+
+        Returns:
+            Client data dictionary or None if not found
+
+        Raises:
+            httpx.HTTPError: If getting client fails (except 404 which returns None)
+        """
+        with tracer.start_as_current_span("keycloak.get_client") as span:
+            span.set_attribute("client.uuid", client_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/clients/{client_id}"
+                    response = await client.get(url, headers=headers)
+                    response.raise_for_status()
+
+                    client_data = response.json()
+
+                    logger.info(f"Retrieved client {client_id}")
+                    metrics.successful_calls.add(1, {"operation": "get_client"})
+
+                    return client_data  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                # Return None for 404 (client not found)
+                if e.response.status_code == 404:
+                    logger.info(f"Client {client_id} not found")
+                    return None
+
+                logger.error(
+                    f"Failed to get client: {e}",
+                    extra={"status_code": e.response.status_code, "client_id": client_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_client"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error getting client: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_client"})
+                raise
 
     async def delete_client(self, client_id: str) -> None:
         """
@@ -891,34 +1198,293 @@ class KeycloakClient:
     async def search_users(
         self, query: Optional[Dict[str, Any]] = None, first: int = 0, max: int = 100
     ) -> List[Dict[str, Any]]:
-        """Search users (stub for API keys/SCIM)"""
-        # TODO: Implement Keycloak Admin API user search
-        raise NotImplementedError("search_users needs implementation")
+        """
+        Search users via Admin API with pagination.
+
+        Args:
+            query: Optional search query (e.g., {"username": "alice", "email": "alice@example.com"})
+            first: Pagination offset (default: 0)
+            max: Maximum results to return (default: 100)
+
+        Returns:
+            List of user data dictionaries matching the query
+
+        Raises:
+            httpx.HTTPError: If user search fails
+        """
+        with tracer.start_as_current_span("keycloak.search_users") as span:
+            span.set_attribute("pagination.first", first)
+            span.set_attribute("pagination.max", max)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/users"
+
+                    # Build query parameters
+                    params: Dict[str, Any] = {"first": first, "max": max}
+                    if query:
+                        params.update(query)
+
+                    response = await client.get(url, headers=headers, params=params)
+                    response.raise_for_status()
+
+                    users_data = response.json()
+
+                    logger.info(f"Searched users, found {len(users_data)} results")
+                    metrics.successful_calls.add(1, {"operation": "search_users"})
+
+                    return users_data  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to search users: {e}",
+                    extra={"status_code": e.response.status_code},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "search_users"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error searching users: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "search_users"})
+                raise
 
     async def get_users(self, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        """Get users with optional query (stub for service principals)"""
-        # TODO: Implement Keycloak Admin API user listing
-        raise NotImplementedError("get_users needs implementation")
+        """
+        Get all users via Admin API with optional filtering.
+
+        Args:
+            query: Optional query parameters (e.g., {"email": "example.com"})
+
+        Returns:
+            List of all user data dictionaries
+
+        Raises:
+            httpx.HTTPError: If getting users fails
+        """
+        with tracer.start_as_current_span("keycloak.get_users"):
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/users"
+                    params = query if query else {}
+
+                    response = await client.get(url, headers=headers, params=params)
+                    response.raise_for_status()
+
+                    users_data = response.json()
+
+                    logger.info(f"Retrieved {len(users_data)} users")
+                    metrics.successful_calls.add(1, {"operation": "get_users"})
+
+                    return users_data  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to get users: {e}",
+                    extra={"status_code": e.response.status_code},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_users"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error getting users: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_users"})
+                raise
 
     async def create_group(self, group_config: Dict[str, Any]) -> str:
-        """Create group (stub for SCIM)"""
-        # TODO: Implement Keycloak Admin API group creation
-        raise NotImplementedError("create_group needs implementation")
+        """
+        Create group via Admin API.
+
+        Args:
+            group_config: Dictionary of group properties (must include "name")
+
+        Returns:
+            Group UUID extracted from Location header
+
+        Raises:
+            httpx.HTTPError: If group creation fails
+        """
+        with tracer.start_as_current_span("keycloak.create_group"):
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {
+                        "Authorization": f"Bearer {admin_token}",
+                        "Content-Type": "application/json",
+                    }
+
+                    url = f"{self.config.admin_url}/groups"
+                    response = await client.post(url, headers=headers, json=group_config)
+                    response.raise_for_status()
+
+                    # Extract group ID from Location header
+                    location = response.headers.get("Location", "")
+                    group_id = location.split("/")[-1]
+
+                    logger.info(f"Created group {group_id}")
+                    metrics.successful_calls.add(1, {"operation": "create_group"})
+
+                    return group_id
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to create group: {e}",
+                    extra={"status_code": e.response.status_code},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "create_group"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error creating group: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "create_group"})
+                raise
 
     async def get_group(self, group_id: str) -> Optional[Dict[str, Any]]:
-        """Get group by ID (stub for SCIM)"""
-        # TODO: Implement Keycloak Admin API group retrieval
-        raise NotImplementedError("get_group needs implementation")
+        """
+        Get group by ID via Admin API.
+
+        Args:
+            group_id: Group UUID
+
+        Returns:
+            Group data dictionary or None if not found
+
+        Raises:
+            httpx.HTTPError: If getting group fails (except 404 which returns None)
+        """
+        with tracer.start_as_current_span("keycloak.get_group") as span:
+            span.set_attribute("group.uuid", group_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/groups/{group_id}"
+                    response = await client.get(url, headers=headers)
+                    response.raise_for_status()
+
+                    group_data = response.json()
+
+                    logger.info(f"Retrieved group {group_id}")
+                    metrics.successful_calls.add(1, {"operation": "get_group"})
+
+                    return group_data  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                # Return None for 404 (group not found)
+                if e.response.status_code == 404:
+                    logger.info(f"Group {group_id} not found")
+                    return None
+
+                logger.error(
+                    f"Failed to get group: {e}",
+                    extra={"status_code": e.response.status_code, "group_id": group_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_group"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error getting group: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_group"})
+                raise
 
     async def get_group_members(self, group_id: str) -> List[Dict[str, Any]]:
-        """Get group members (stub for SCIM)"""
-        # TODO: Implement Keycloak Admin API group member listing
-        raise NotImplementedError("get_group_members needs implementation")
+        """
+        Get group members via Admin API.
+
+        Args:
+            group_id: Group UUID
+
+        Returns:
+            List of user data dictionaries for group members
+
+        Raises:
+            httpx.HTTPError: If getting group members fails
+        """
+        with tracer.start_as_current_span("keycloak.get_group_members") as span:
+            span.set_attribute("group.uuid", group_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    url = f"{self.config.admin_url}/groups/{group_id}/members"
+                    response = await client.get(url, headers=headers)
+                    response.raise_for_status()
+
+                    members_data = response.json()
+
+                    logger.info(f"Retrieved {len(members_data)} members for group {group_id}")
+                    metrics.successful_calls.add(1, {"operation": "get_group_members"})
+
+                    return members_data  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to get group members: {e}",
+                    extra={"status_code": e.response.status_code, "group_id": group_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "get_group_members"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error getting group members: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "get_group_members"})
+                raise
 
     async def add_user_to_group(self, user_id: str, group_id: str) -> None:
-        """Add user to group (stub for SCIM)"""
-        # TODO: Implement Keycloak Admin API group membership
-        raise NotImplementedError("add_user_to_group needs implementation")
+        """
+        Add user to group via Admin API.
+
+        Args:
+            user_id: User UUID
+            group_id: Group UUID
+
+        Raises:
+            httpx.HTTPError: If adding user to group fails
+        """
+        with tracer.start_as_current_span("keycloak.add_user_to_group") as span:
+            span.set_attribute("user.uuid", user_id)
+            span.set_attribute("group.uuid", group_id)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Authorization": f"Bearer {admin_token}"}
+
+                    # Keycloak endpoint for adding user to group
+                    url = f"{self.config.admin_url}/users/{user_id}/groups/{group_id}"
+                    response = await client.put(url, headers=headers)
+                    response.raise_for_status()
+
+                    logger.info(f"Added user {user_id} to group {group_id}")
+                    metrics.successful_calls.add(1, {"operation": "add_user_to_group"})
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to add user to group: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id, "group_id": group_id},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "add_user_to_group"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error adding user to group: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "add_user_to_group"})
+                raise
 
     async def issue_token_for_user(self, user_id: str) -> Dict[str, Any]:
         """Issue JWT token for user (stub for API key exchange)"""

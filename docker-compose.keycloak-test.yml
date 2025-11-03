@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  keycloak-test:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: keycloak-test
+    environment:
+      # Admin credentials
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
+      # Database (H2 for testing - in-memory)
+      KC_DB: dev-mem
+
+      # HTTP configuration
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: "8080"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+
+      # Development mode
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+
+    ports:
+      - "8180:8080"  # Map to 8180 to avoid conflicts with app
+
+    command:
+      - start-dev
+      - --import-realm
+
+    volumes:
+      # Import test realm configuration
+      - ./tests/fixtures/keycloak-realm-test.json:/opt/keycloak/data/import/realm-test.json:ro
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
