@@ -1,5 +1,5 @@
 """
-Unit tests for PostgreSQL PreferencesStore implementation
+Integration tests for PostgreSQL PreferencesStore implementation
 
 Tests GDPR compliance for user preferences storage
 """
@@ -75,7 +75,7 @@ async def test_user(profile_store: PostgresUserProfileStore) -> str:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_nonexistent_preferences(store: PostgresPreferencesStore):
     """Test getting preferences for user without preferences returns None"""
@@ -84,7 +84,7 @@ async def test_get_nonexistent_preferences(store: PostgresPreferencesStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_set_preferences_new_user(store: PostgresPreferencesStore, test_user: str):
     """Test setting preferences for user"""
@@ -105,7 +105,7 @@ async def test_set_preferences_new_user(store: PostgresPreferencesStore, test_us
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_set_preferences_overwrites_existing(store: PostgresPreferencesStore, test_user: str):
     """Test that set overwrites existing preferences"""
@@ -131,7 +131,7 @@ async def test_set_preferences_overwrites_existing(store: PostgresPreferencesSto
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_preferences_partial(store: PostgresPreferencesStore, test_user: str):
     """Test updating specific preferences without overwriting all"""
@@ -153,7 +153,7 @@ async def test_update_preferences_partial(store: PostgresPreferencesStore, test_
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_preferences_nested(store: PostgresPreferencesStore, test_user: str):
     """Test updating nested preferences"""
@@ -180,7 +180,7 @@ async def test_update_preferences_nested(store: PostgresPreferencesStore, test_u
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_nonexistent_preferences(store: PostgresPreferencesStore):
     """Test updating non-existent preferences fails"""
@@ -194,7 +194,7 @@ async def test_update_nonexistent_preferences(store: PostgresPreferencesStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_preferences(store: PostgresPreferencesStore, test_user: str):
     """Test deleting user preferences"""
@@ -211,7 +211,7 @@ async def test_delete_preferences(store: PostgresPreferencesStore, test_user: st
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_nonexistent_preferences(store: PostgresPreferencesStore):
     """Test deleting non-existent preferences"""
@@ -225,7 +225,7 @@ async def test_delete_nonexistent_preferences(store: PostgresPreferencesStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_preferences_deleted_when_user_deleted(
     profile_store: PostgresUserProfileStore,

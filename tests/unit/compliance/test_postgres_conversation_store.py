@@ -1,5 +1,5 @@
 """
-Unit tests for PostgreSQL ConversationStore implementation
+Integration tests for PostgreSQL ConversationStore implementation
 
 Tests GDPR Article 5(1)(e) - 90-day retention with auto-cleanup
 """
@@ -75,7 +75,7 @@ async def test_user(profile_store: PostgresUserProfileStore) -> str:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_conversation(store: PostgresConversationStore, test_user: str):
     """Test creating a conversation"""
@@ -103,7 +103,7 @@ async def test_create_conversation(store: PostgresConversationStore, test_user: 
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_conversation_with_empty_messages(store: PostgresConversationStore, test_user: str):
     """Test creating conversation with no messages yet"""
@@ -127,7 +127,7 @@ async def test_create_conversation_with_empty_messages(store: PostgresConversati
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_conversation(store: PostgresConversationStore, test_user: str):
     """Test retrieving conversation"""
@@ -150,7 +150,7 @@ async def test_get_conversation(store: PostgresConversationStore, test_user: str
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_nonexistent_conversation(store: PostgresConversationStore):
     """Test getting non-existent conversation returns None"""
@@ -164,7 +164,7 @@ async def test_get_nonexistent_conversation(store: PostgresConversationStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_list_user_conversations(store: PostgresConversationStore, test_user: str):
     """Test listing all conversations for a user"""
@@ -188,7 +188,7 @@ async def test_list_user_conversations(store: PostgresConversationStore, test_us
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_list_archived_conversations(store: PostgresConversationStore, test_user: str):
     """Test listing only archived conversations"""
@@ -235,7 +235,7 @@ async def test_list_archived_conversations(store: PostgresConversationStore, tes
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_conversation_title(store: PostgresConversationStore, test_user: str):
     """Test updating conversation title"""
@@ -261,7 +261,7 @@ async def test_update_conversation_title(store: PostgresConversationStore, test_
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_conversation_messages(store: PostgresConversationStore, test_user: str):
     """Test updating conversation messages"""
@@ -291,7 +291,7 @@ async def test_update_conversation_messages(store: PostgresConversationStore, te
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_archive_conversation(store: PostgresConversationStore, test_user: str):
     """Test archiving a conversation"""
@@ -323,7 +323,7 @@ async def test_update_archive_conversation(store: PostgresConversationStore, tes
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_conversation(store: PostgresConversationStore, test_user: str):
     """Test deleting a single conversation"""
@@ -348,7 +348,7 @@ async def test_delete_conversation(store: PostgresConversationStore, test_user: 
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_user_conversations(store: PostgresConversationStore, test_user: str):
     """Test deleting all conversations for a user (GDPR Article 17)"""
@@ -381,7 +381,7 @@ async def test_delete_user_conversations(store: PostgresConversationStore, test_
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_conversations_deleted_when_user_deleted(
     profile_store: PostgresUserProfileStore,

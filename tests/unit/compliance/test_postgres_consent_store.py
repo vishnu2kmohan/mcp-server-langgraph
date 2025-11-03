@@ -1,5 +1,5 @@
 """
-Unit tests for PostgreSQL ConsentStore implementation
+Integration tests for PostgreSQL ConsentStore implementation
 
 Tests GDPR Article 7 (Consent) - 7-year retention requirement
 """
@@ -75,7 +75,7 @@ async def test_user(profile_store: PostgresUserProfileStore) -> str:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_consent_record(store: PostgresConsentStore, test_user: str):
     """Test creating consent record"""
@@ -96,7 +96,7 @@ async def test_create_consent_record(store: PostgresConsentStore, test_user: str
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_multiple_consent_types(store: PostgresConsentStore, test_user: str):
     """Test creating multiple consent types for same user"""
@@ -133,7 +133,7 @@ async def test_create_multiple_consent_types(store: PostgresConsentStore, test_u
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_user_consents(store: PostgresConsentStore, test_user: str):
     """Test getting all consents for a user"""
@@ -159,7 +159,7 @@ async def test_get_user_consents(store: PostgresConsentStore, test_user: str):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_latest_consent(store: PostgresConsentStore, test_user: str):
     """Test getting latest consent for a specific type"""
@@ -193,7 +193,7 @@ async def test_get_latest_consent(store: PostgresConsentStore, test_user: str):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_latest_consent_nonexistent_type(store: PostgresConsentStore, test_user: str):
     """Test getting latest consent for non-existent type returns None"""
@@ -207,7 +207,7 @@ async def test_get_latest_consent_nonexistent_type(store: PostgresConsentStore, 
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_user_consents(store: PostgresConsentStore, test_user: str):
     """Test deleting all consents for a user"""
@@ -239,7 +239,7 @@ async def test_delete_user_consents(store: PostgresConsentStore, test_user: str)
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_consents_deleted_when_user_deleted(
     profile_store: PostgresUserProfileStore,
@@ -273,7 +273,7 @@ async def test_consents_deleted_when_user_deleted(
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_consent_withdrawal_creates_new_record(store: PostgresConsentStore, test_user: str):
     """Test that withdrawing consent creates a new record (audit trail)"""

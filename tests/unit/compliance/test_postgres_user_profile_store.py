@@ -1,5 +1,5 @@
 """
-Unit tests for PostgreSQL UserProfileStore implementation
+Integration tests for PostgreSQL UserProfileStore implementation
 
 Tests GDPR compliance requirements:
 - Article 15: Right to access
@@ -75,7 +75,7 @@ def sample_profile() -> UserProfile:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_user_profile_success(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test creating a new user profile"""
@@ -96,7 +96,7 @@ async def test_create_user_profile_success(store: PostgresUserProfileStore, samp
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_duplicate_user_profile_fails(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test that creating duplicate user profile fails"""
@@ -111,7 +111,7 @@ async def test_create_duplicate_user_profile_fails(store: PostgresUserProfileSto
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_user_profile_with_minimal_data(store: PostgresUserProfileStore):
     """Test creating user profile with only required fields"""
@@ -142,7 +142,7 @@ async def test_create_user_profile_with_minimal_data(store: PostgresUserProfileS
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_existing_user_profile(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test retrieving existing user profile (GDPR Article 15)"""
@@ -160,7 +160,7 @@ async def test_get_existing_user_profile(store: PostgresUserProfileStore, sample
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_nonexistent_user_profile(store: PostgresUserProfileStore):
     """Test retrieving non-existent user profile returns None"""
@@ -177,7 +177,7 @@ async def test_get_nonexistent_user_profile(store: PostgresUserProfileStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_user_profile_email(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test updating user profile email"""
@@ -200,7 +200,7 @@ async def test_update_user_profile_email(store: PostgresUserProfileStore, sample
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_user_profile_metadata(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test updating user profile metadata"""
@@ -221,7 +221,7 @@ async def test_update_user_profile_metadata(store: PostgresUserProfileStore, sam
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_nonexistent_user_profile(store: PostgresUserProfileStore):
     """Test updating non-existent user profile fails"""
@@ -233,7 +233,7 @@ async def test_update_nonexistent_user_profile(store: PostgresUserProfileStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_update_multiple_fields(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test updating multiple fields at once"""
@@ -265,7 +265,7 @@ async def test_update_multiple_fields(store: PostgresUserProfileStore, sample_pr
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_user_profile(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test deleting user profile (GDPR Article 17)"""
@@ -284,7 +284,7 @@ async def test_delete_user_profile(store: PostgresUserProfileStore, sample_profi
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_nonexistent_user_profile(store: PostgresUserProfileStore):
     """Test deleting non-existent user profile"""
@@ -296,7 +296,7 @@ async def test_delete_nonexistent_user_profile(store: PostgresUserProfileStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_delete_user_profile_is_permanent(store: PostgresUserProfileStore, sample_profile: UserProfile):
     """Test that deletion is permanent and cannot be retrieved"""
@@ -317,7 +317,7 @@ async def test_delete_user_profile_is_permanent(store: PostgresUserProfileStore,
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_profile_with_special_characters(store: PostgresUserProfileStore):
     """Test creating profile with special characters in fields"""
@@ -347,7 +347,7 @@ async def test_create_profile_with_special_characters(store: PostgresUserProfile
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_create_profile_with_unicode(store: PostgresUserProfileStore):
     """Test creating profile with Unicode characters"""
@@ -378,7 +378,7 @@ async def test_create_profile_with_unicode(store: PostgresUserProfileStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_metadata_nested_json(store: PostgresUserProfileStore):
     """Test storing complex nested JSON in metadata"""

@@ -1,5 +1,5 @@
 """
-Unit tests for PostgreSQL AuditLogStore implementation
+Integration tests for PostgreSQL AuditLogStore implementation
 
 Tests HIPAA §164.312(b) and SOC2 CC6.6 - 7-year audit log retention
 """
@@ -52,7 +52,7 @@ async def store(db_pool: asyncpg.Pool) -> PostgresAuditLogStore:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_log_audit_entry(store: PostgresAuditLogStore):
     """Test logging an audit entry"""
@@ -74,7 +74,7 @@ async def test_log_audit_entry(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_log_system_event_without_user(store: PostgresAuditLogStore):
     """Test logging system event (no user_id)"""
@@ -98,7 +98,7 @@ async def test_log_system_event_without_user(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_audit_log_entry(store: PostgresAuditLogStore):
     """Test retrieving audit log entry by ID"""
@@ -122,7 +122,7 @@ async def test_get_audit_log_entry(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_get_nonexistent_audit_log(store: PostgresAuditLogStore):
     """Test getting non-existent audit log returns None"""
@@ -136,7 +136,7 @@ async def test_get_nonexistent_audit_log(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_list_user_logs_basic(store: PostgresAuditLogStore):
     """Test listing all logs for a user"""
@@ -160,7 +160,7 @@ async def test_list_user_logs_basic(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
     """Test listing user logs with date range filter (HIPAA compliance query)"""
@@ -201,7 +201,7 @@ async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
     """Test listing user logs with limit"""
@@ -225,7 +225,7 @@ async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore):
     """Test that logs are returned in descending timestamp order"""
@@ -259,7 +259,7 @@ async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore)
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_anonymize_user_logs(store: PostgresAuditLogStore):
     """Test anonymizing audit logs for deleted user (GDPR Article 17)"""
@@ -291,7 +291,7 @@ async def test_anonymize_user_logs(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
     """Test that anonymization preserves audit trail (compliance requirement)"""
@@ -334,7 +334,7 @@ async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_audit_log_immutability(store: PostgresAuditLogStore):
     """Test that audit logs are immutable (cannot be updated)"""
@@ -354,7 +354,7 @@ async def test_audit_log_immutability(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
     """Test storing complex metadata in audit logs"""
@@ -396,7 +396,7 @@ async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.gdpr
 @pytest.mark.slow
 async def test_list_logs_performance_with_many_users(store: PostgresAuditLogStore):
