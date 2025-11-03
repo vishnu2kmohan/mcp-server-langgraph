@@ -36,12 +36,12 @@ concurrency:
   cancel-in-progress: false  # Never cancel production deployments
 
 env:
-  GCP_PROJECT_ID: vishnu-sandbox-20250310
-  GCP_REGION: us-central1
-  GKE_CLUSTER: mcp-prod-gke
-  NAMESPACE: mcp-production
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+  GKE_CLUSTER: ${{ vars.GKE_PROD_CLUSTER || 'mcp-prod-gke' }}
+  NAMESPACE: ${{ vars.PRODUCTION_NAMESPACE || 'mcp-production' }}
   DEPLOYMENT_NAME: production-mcp-server-langgraph
-  ARTIFACT_REGISTRY: us-central1-docker.pkg.dev
+  ARTIFACT_REGISTRY: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev
 
 permissions:
   contents: read
@@ -116,6 +116,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Validate required environment variables
+        run: |
+          MISSING=""
+          [ -z "${{ env.GCP_PROJECT_ID }}" ] && MISSING="$MISSING GCP_PROJECT_ID"
+          [ -z "${{ env.GCP_REGION }}" ] && MISSING="$MISSING GCP_REGION"
+          [ -z "${{ env.GKE_CLUSTER }}" ] && MISSING="$MISSING GKE_CLUSTER"
+          [ -z "${{ env.NAMESPACE }}" ] && MISSING="$MISSING NAMESPACE"
+
+          if [ -n "$MISSING" ]; then
+            echo "❌ Missing required environment variables:$MISSING"
+            echo "Please configure these in Settings → Secrets and variables → Actions → Variables"
+            exit 1
+          fi
+
+          echo "✅ All required environment variables configured"
+          echo "- GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}"
+          echo "- GCP_REGION: ${{ env.GCP_REGION }}"
+          echo "- GKE_CLUSTER: ${{ env.GKE_CLUSTER }}"
+          echo "- NAMESPACE: ${{ env.NAMESPACE }}"
+
       - name: Set image tag
         id: image
         run: |
@@ -130,8 +150,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
           token_format: access_token
 
       - name: Configure Docker for Artifact Registry
@@ -211,8 +231,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
@@ -297,8 +317,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
@@ -395,8 +415,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'mcp-production-sa@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3

@@ -231,11 +231,12 @@ install_external_secrets_operator() {
     helm repo add external-secrets https://charts.external-secrets.io 2>/dev/null || true
     helm repo update
 
-    # Install External Secrets Operator with CRDs
+    # Install External Secrets Operator with CRDs (v0.20.4)
     helm upgrade --install external-secrets \
         external-secrets/external-secrets \
         --namespace external-secrets-system \
         --create-namespace \
+        --version 0.20.4 \
         --set installCRDs=true \
         --wait \
         --timeout 5m

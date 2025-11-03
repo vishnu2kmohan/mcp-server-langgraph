@@ -18,6 +18,10 @@ permissions:
   security-events: write
   id-token: write
 
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER || '1024691643349' }}
+
 jobs:
   # ============================================================================
   # Terraform Security Scan
@@ -136,8 +140,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'compliance-scanner@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', env.PROJECT_NUMBER) }}
+          service_account: ${{ secrets.GCP_COMPLIANCE_SA_EMAIL || format('compliance-scanner@{0}.iam.gserviceaccount.com', env.PROJECT_ID) }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3

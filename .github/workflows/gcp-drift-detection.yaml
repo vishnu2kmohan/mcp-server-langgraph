@@ -23,8 +23,8 @@ permissions:
   pull-requests: write
 
 env:
-  PROJECT_ID: vishnu-sandbox-20250310
-  PROJECT_NUMBER: 1024691643349
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER || '1024691643349' }}
   TF_VERSION: 1.5.0
 
 jobs:
@@ -50,8 +50,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/${{ env.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'terraform@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', vars.PROJECT_NUMBER || '1024691643349') }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL || format('terraform@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
 
       - name: Terraform Init
         run: |
@@ -159,8 +159,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/${{ env.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'terraform@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', vars.PROJECT_NUMBER || '1024691643349') }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL || format('terraform@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
 
       - name: Terraform Init
         run: |
@@ -222,8 +222,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/${{ env.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-          service_account: 'terraform@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', vars.PROJECT_NUMBER || '1024691643349') }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL || format('terraform@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
 
       - name: Check staging drift
         run: |
