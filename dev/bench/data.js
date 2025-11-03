@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762138790298,
+  "lastUpdate": 1762138952479,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -24222,6 +24222,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002368960490858713",
             "extra": "mean: 60.222103126303914 usec\nrounds: 4606"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "47f811c344bfedbef1b529e7e5a0be214e661c46",
+          "message": "docs(security): complete Keycloak Admin API implementation (Issue #1 - FINAL)\n\nComplete the final security remediation by documenting the full\nimplementation of all 6 critical Keycloak Admin API methods.\n\n## Changes\n\n### Documentation\n- Updated SECURITY_REMEDIATION_REPORT.md to reflect 100% completion\n- All 5 CRITICAL vulnerabilities now fully remediated\n- Updated test coverage summary: 125 tests (100% passing)\n- Documented all 6 implemented Keycloak admin methods\n\n### Security Posture\n- Issue #1: ✅ FIXED - Keycloak Admin API fully functional\n- Issue #2: ✅ FIXED - Bearer token authentication enforced\n- Issue #3: ✅ FIXED - JWT format compatible with Keycloak\n- Issue #4: ✅ FIXED - Rate limiting active (tiered DoS protection)\n- Issue #5: ✅ FIXED - OpenFGA fails closed by default\n\n### Test Coverage\n- 125 total tests (100% passing in 1.12s)\n- 8 new Keycloak admin API tests\n- 44 authentication tests\n- 27 rate limiter tests\n- 4 OpenFGA circuit breaker tests\n- 42 existing Keycloak integration tests\n\n### Production Readiness\n✅ API key management fully functional\n✅ Service principal lifecycle fully functional\n✅ All authentication/authorization endpoints secure\n✅ DoS protection via tiered rate limiting\n✅ Graceful degradation with fail-closed defaults\n\n🎉 System is now 100% production-ready with all security vulnerabilities remediated.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T21:58:37-05:00",
+          "tree_id": "1a52b3976b80a5da66bbcb4398304d44a6cc4d48",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/47f811c344bfedbef1b529e7e5a0be214e661c46"
+        },
+        "date": 1762138951613,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.6876491593274,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008715203199079297",
+            "extra": "mean: 6.91143995918282 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.7005525701954,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011357919496437722",
+            "extra": "mean: 6.680002062992349 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51575.58627368213,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002291138471791859",
+            "extra": "mean: 19.389018569630444 usec\nrounds: 8724"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54315.19216948758,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019801387446485865",
+            "extra": "mean: 18.41105517733519 usec\nrounds: 12632"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50987.14380193251,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000231908152066253",
+            "extra": "mean: 19.6127871740503 usec\nrounds: 20209"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.11267228003436,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015408779009257707",
+            "extra": "mean: 5.232515395602421 msec\nrounds: 182"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.38315818532038,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009662292164870527",
+            "extra": "mean: 51.59117985000705 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.955397846479462,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002474403705101818",
+            "extra": "mean: 100.44801979999534 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2439231.075399552,
+            "unit": "iter/sec",
+            "range": "stddev: 6.730965731825387e-8",
+            "extra": "mean: 409.96525916930494 nsec\nrounds: 188680"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5183.691996430855,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013415105320921632",
+            "extra": "mean: 192.91269633468448 usec\nrounds: 2483"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2947.7624067171687,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011613402684665283",
+            "extra": "mean: 339.24036676811716 usec\nrounds: 2642"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2996.3142342158585,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008509190504204459",
+            "extra": "mean: 333.7433666271328 usec\nrounds: 1672"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59770.15003753225,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019932992315699417",
+            "extra": "mean: 16.730759407029378 usec\nrounds: 12943"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17199.4873910264,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016695783757477655",
+            "extra": "mean: 58.14126765904294 usec\nrounds: 5507"
           }
         ]
       }
