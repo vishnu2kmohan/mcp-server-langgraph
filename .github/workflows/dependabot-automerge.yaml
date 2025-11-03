@@ -121,22 +121,26 @@ jobs:
 
       - name: Enable auto-merge
         if: steps.check-update.outputs.auto_merge == 'true'
-        run: |
-          # Verify gh CLI is available
-          if ! command -v gh &> /dev/null; then
-            echo "Error: GitHub CLI (gh) not found"
-            exit 1
-          fi
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 2
+          max_attempts: 3
+          retry_wait_seconds: 5
+          command: |
+            # Verify gh CLI is available
+            if ! command -v gh &> /dev/null; then
+              echo "Error: GitHub CLI (gh) not found"
+              exit 1
+            fi
 
-          # Enable auto-merge with error handling
-          if gh pr merge --auto --squash "$PR_URL"; then
-            echo "✅ Auto-merge enabled successfully"
-          else
-            echo "❌ Failed to enable auto-merge"
-            exit 1
-          fi
+            # Enable auto-merge with retry logic for transient API failures
+            if gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"; then
+              echo "✅ Auto-merge enabled successfully"
+            else
+              echo "❌ Failed to enable auto-merge (will retry if attempts remain)"
+              exit 1
+            fi
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve PR

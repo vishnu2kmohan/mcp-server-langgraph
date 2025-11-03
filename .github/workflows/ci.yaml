@@ -97,9 +97,9 @@ jobs:
           ${{ runner.os }}-uv-py${{ matrix.python-version }}-
 
     - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      uses: astral-sh/setup-uv@v7.1.1
+      with:
+        enable-cache: true
 
     # OPTIMIZATION: Use uv sync for lockfile-based installation (no resolution)
     - name: Install dependencies (fast path)
@@ -482,15 +482,8 @@ jobs:
     - name: Verify pod health
       run: |
         echo "Checking pod health..."
-        POD_NAME=$(kubectl get pods -n mcp-server-langgraph-dev -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}')
-        echo "Pod: $POD_NAME"
-
-        # Check pod is running
-        kubectl get pod $POD_NAME -n mcp-server-langgraph-dev
-
-        # Verify Python import works
-        kubectl exec $POD_NAME -n mcp-server-langgraph-dev -- \
-          python -c "import mcp_server_langgraph; print('✓ Import successful')"
+        # Run comprehensive health checks using reusable script
+        ./scripts/k8s/health-check.sh mcp-server-langgraph-dev
 
     - name: Check service endpoints
       run: |

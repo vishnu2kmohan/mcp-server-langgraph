@@ -237,21 +237,8 @@ jobs:
           kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph
 
           # Get pod name
-          POD_NAME=$(kubectl get pods -n ${{ env.NAMESPACE }} \
-            -l app=mcp-server-langgraph \
-            -o jsonpath='{.items[0].metadata.name}')
-
-          echo "Pod: $POD_NAME"
-
-          # Verify Python import works
-          kubectl exec $POD_NAME -n ${{ env.NAMESPACE }} -- \
-            python -c "import mcp_server_langgraph; print('✓ Import successful')"
-
-          # Check readiness
-          kubectl wait --for=condition=ready pod \
-            -l app=mcp-server-langgraph \
-            -n ${{ env.NAMESPACE }} \
-            --timeout=5m
+          # Run comprehensive health checks using reusable script
+          ./scripts/k8s/health-check.sh ${{ env.NAMESPACE }}
 
       # Run smoke tests
       - name: Run smoke tests
