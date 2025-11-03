@@ -140,7 +140,7 @@ class LLMValidator:
 
                 metrics.successful_calls.add(1, {"operation": "validate_response"})
 
-                return ValidatedResponse(data=validated, raw_content=content, validation_success=True)
+                return ValidatedResponse(data=validated, raw_content=content, validation_success=True)  # type: ignore[arg-type]
 
             except ValidationError as e:
                 span.set_attribute("validation.success", False)

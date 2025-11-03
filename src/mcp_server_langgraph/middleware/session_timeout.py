@@ -6,7 +6,7 @@ Required for HIPAA compliance when processing PHI.
 """
 
 from datetime import datetime, timezone
-from typing import Callable
+from typing import Any, Awaitable, Callable, Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -32,9 +32,9 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
 
     def __init__(
         self,
-        app,
+        app: Any,
         timeout_seconds: int = 900,  # 15 minutes default
-        session_store: SessionStore = None,
+        session_store: Optional[SessionStore] = None,
     ):
         """
         Initialize session timeout middleware
@@ -53,7 +53,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
             extra={"timeout_seconds": timeout_seconds, "timeout_minutes": timeout_seconds / 60},
         )
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         """
         Check session activity and enforce timeout
 
@@ -203,9 +203,9 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
 
 
 def create_session_timeout_middleware(
-    app,
+    app: Any,
     timeout_minutes: int = 15,
-    session_store: SessionStore = None,
+    session_store: Optional[SessionStore] = None,
 ) -> SessionTimeoutMiddleware:
     """
     Create session timeout middleware

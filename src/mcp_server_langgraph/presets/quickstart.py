@@ -221,7 +221,7 @@ class QuickStart:
     def create_app(
         name: str,
         tools: Optional[List[str]] = None,
-        llm: str = "gemini-flash",
+        llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-5-mini"] = "gemini-flash",
         port: int = 8000,
     ) -> Any:
         """

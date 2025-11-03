@@ -299,7 +299,7 @@ class LLMFactory:
                     "LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
                     },
                 )
 
@@ -373,7 +373,7 @@ class LLMFactory:
                     "Async LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
                     },
                 )
 

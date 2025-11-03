@@ -13,7 +13,7 @@ Example:
     uvicorn mcp_server_langgraph.builder.api.server:app --reload
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -328,7 +328,7 @@ async def get_template(template_id: str) -> Dict[str, Any]:
 
 
 @app.post("/api/builder/import")
-async def import_workflow(code: str, layout: str = "hierarchical") -> Dict[str, Any]:
+async def import_workflow(code: str, layout: Literal["hierarchical", "force", "grid"] = "hierarchical") -> Dict[str, Any]:
     """
     Import Python code into visual workflow.
 
