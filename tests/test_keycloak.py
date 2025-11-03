@@ -1880,3 +1880,97 @@ class TestKeycloakSCIMClientMethods:
             client_result = await client.get_client("nonexistent-client")
 
             assert client_result is None
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+class TestKeycloakTokenIssuance:
+    """Test Keycloak token issuance methods for API key → JWT exchange (TDD RED phase)"""
+
+    @pytest.mark.asyncio
+    async def test_issue_token_for_user_success(self, keycloak_config):
+        """Test issuing JWT token for user (for API key exchange)"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            # Mock admin token
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {"access_token": "admin-token-123"}
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock token exchange/impersonation response
+            mock_issue_response = MagicMock()
+            mock_issue_response.json.return_value = {
+                "access_token": "user-access-token-xyz",
+                "refresh_token": "user-refresh-token-abc",
+                "expires_in": 300,
+                "token_type": "Bearer",
+            }
+            mock_issue_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_issue_response])
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            tokens = await client.issue_token_for_user("user-uuid-123")
+
+            assert tokens["access_token"] == "user-access-token-xyz"
+            assert tokens["refresh_token"] == "user-refresh-token-abc"
+            assert tokens["expires_in"] == 300
+            assert mock_async_client.post.call_count == 2  # Admin token + token issuance
+
+    @pytest.mark.asyncio
+    async def test_issue_token_for_user_with_client_id(self, keycloak_config):
+        """Test issuing token with specific client_id"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {"access_token": "admin-token-123"}
+            mock_token_response.raise_for_status = MagicMock()
+
+            mock_issue_response = MagicMock()
+            mock_issue_response.json.return_value = {
+                "access_token": "user-token",
+                "expires_in": 300,
+            }
+            mock_issue_response.raise_for_status = MagicMock()
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_issue_response])
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            tokens = await client.issue_token_for_user(
+                "user-uuid-123", requested_token_type="urn:ietf:params:oauth:token-type:access_token"
+            )
+
+            assert tokens["access_token"] == "user-token"
+            # Verify POST was called with token exchange params
+            call_args = mock_async_client.post.call_args_list[1]
+            assert "data" in call_args.kwargs
+            assert call_args.kwargs["data"]["requested_token_type"] == "urn:ietf:params:oauth:token-type:access_token"
+
+    @pytest.mark.asyncio
+    async def test_issue_token_for_user_http_error(self, keycloak_config):
+        """Test issue_token_for_user handles HTTP errors"""
+        client = KeycloakClient(keycloak_config)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_token_response = MagicMock()
+            mock_token_response.json.return_value = {"access_token": "admin-token-123"}
+            mock_token_response.raise_for_status = MagicMock()
+
+            # Mock error response
+            mock_issue_response = MagicMock()
+            mock_issue_response.status_code = 403
+            mock_issue_response.text = "Forbidden: Impersonation not allowed"
+            mock_issue_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Forbidden", request=MagicMock(), response=mock_issue_response
+            )
+
+            mock_async_client = AsyncMock()
+            mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_issue_response])
+            mock_client.return_value.__aenter__.return_value = mock_async_client
+
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.issue_token_for_user("user-uuid-123")

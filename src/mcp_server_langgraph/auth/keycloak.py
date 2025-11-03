@@ -1486,10 +1486,82 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "add_user_to_group"})
                 raise
 
-    async def issue_token_for_user(self, user_id: str) -> Dict[str, Any]:
-        """Issue JWT token for user (stub for API key exchange)"""
-        # TODO: Implement token issuance (possibly via impersonation or token exchange)
-        raise NotImplementedError("issue_token_for_user needs implementation")
+    async def issue_token_for_user(
+        self,
+        user_id: str,
+        requested_token_type: str = "urn:ietf:params:oauth:token-type:access_token",
+        audience: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Issue JWT token for user using OAuth 2.0 Token Exchange (RFC 8693).
+
+        This enables programmatic token issuance for API key → JWT exchange workflows.
+        Uses Keycloak's token exchange protocol to exchange admin token for user token.
+
+        Args:
+            user_id: User UUID to issue token for
+            requested_token_type: Type of token requested (default: access_token)
+            audience: Optional audience for the issued token
+
+        Returns:
+            Token response with access_token, refresh_token, expires_in, etc.
+
+        Raises:
+            httpx.HTTPError: If token exchange fails
+
+        Note:
+            Requires Keycloak realm to have token exchange enabled and admin user
+            to have appropriate permissions (token-exchange scope).
+        """
+        with tracer.start_as_current_span("keycloak.issue_token_for_user") as span:
+            span.set_attribute("user.uuid", user_id)
+            span.set_attribute("requested_token_type", requested_token_type)
+
+            try:
+                admin_token = await self.get_admin_token()
+
+                async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
+                    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+                    # OAuth 2.0 Token Exchange (RFC 8693)
+                    # https://www.rfc-editor.org/rfc/rfc8693.html
+                    data = {
+                        "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                        "client_id": self.config.client_id,
+                        "subject_token": admin_token,
+                        "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                        "requested_token_type": requested_token_type,
+                        "requested_subject": user_id,  # User to issue token for
+                    }
+
+                    if self.config.client_secret:
+                        data["client_secret"] = self.config.client_secret
+
+                    if audience:
+                        data["audience"] = audience
+
+                    response = await client.post(self.config.token_endpoint, headers=headers, data=data)
+                    response.raise_for_status()
+
+                    tokens = response.json()
+
+                    logger.info(f"Issued token for user {user_id}")
+                    metrics.successful_calls.add(1, {"operation": "issue_token_for_user"})
+
+                    return tokens  # type: ignore[no-any-return]
+
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"Failed to issue token for user: {e}",
+                    extra={"status_code": e.response.status_code, "user_id": user_id, "detail": e.response.text},
+                    exc_info=True,
+                )
+                metrics.failed_calls.add(1, {"operation": "issue_token_for_user"})
+                raise
+            except httpx.HTTPError as e:
+                logger.error(f"HTTP error issuing token for user: {e}", exc_info=True)
+                metrics.failed_calls.add(1, {"operation": "issue_token_for_user"})
+                raise
 
 
 async def sync_user_to_openfga(
