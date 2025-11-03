@@ -77,7 +77,7 @@ export AZURE_LOCATION="eastus"                   # Optional, defaults to eastus
 | Script | Status | Notes |
 |--------|--------|-------|
 | `deploy-gcp-gke.sh` | ✅ **Production Ready** | Full automation with dev/staging/prod environments |
-| `deploy-aws-eks.sh` | 🟡 **Beta** | Production environment ready, staging/dev in development |
+| `deploy-aws-eks.sh` | ✅ **Production Ready** | Full automation with dev/staging/prod environments |
 | `deploy-azure-aks.sh` | ❌ **Manual Only** | Terraform automation not yet available, see [aks.mdx](../docs/deployment/kubernetes/aks.mdx) |
 
 **Note**: AKS deployment currently requires manual setup using Azure CLI. The script will display instructions pointing to the manual runbook.
@@ -111,8 +111,9 @@ export GCP_ENVIRONMENT=gcp-prod     # Production environment (default)
 
 **EKS Environments**:
 ```bash
-export AWS_ENVIRONMENT=prod         # Production (currently only option)
-# aws-staging and aws-dev coming soon
+export AWS_ENVIRONMENT=aws-dev      # Development (minimal cost)
+export AWS_ENVIRONMENT=aws-staging  # Staging (cost-optimized)
+export AWS_ENVIRONMENT=prod         # Production (default)
 ```
 
 ## Deployment Time

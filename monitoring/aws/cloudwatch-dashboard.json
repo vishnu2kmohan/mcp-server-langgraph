@@ -1,0 +1,99 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "AWS/EKS", "cluster_failed_node_count", { "stat": "Average" } ],
+          [ ".", "cluster_node_count", { "stat": "Average" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "EKS Cluster Nodes",
+        "yAxis": {
+          "left": {
+            "min": 0
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "MCPServer/EKS", "requests_total", { "stat": "Sum" } ],
+          [ ".", "requests_errors", { "stat": "Sum" } ]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "us-east-1",
+        "title": "Application Requests",
+        "yAxis": {
+          "left": {
+            "min": 0
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "MCPServer/EKS", "response_time_ms", { "stat": "Average" } ],
+          [ "...", { "stat": "p99" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "Response Time (ms)",
+        "yAxis": {
+          "left": {
+            "min": 0
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "AWS/RDS", "CPUUtilization", { "stat": "Average" } ],
+          [ ".", "DatabaseConnections", { "stat": "Average" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "RDS Metrics",
+        "yAxis": {
+          "left": {
+            "min": 0
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "AWS/ElastiCache", "CPUUtilization", { "stat": "Average" } ],
+          [ ".", "CurrConnections", { "stat": "Average" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "ElastiCache Metrics"
+      }
+    },
+    {
+      "type": "log",
+      "properties": {
+        "query": "SOURCE '/aws/eks/mcp-server-langgraph'\n| fields @timestamp, @message\n| filter @message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+        "region": "us-east-1",
+        "title": "Recent Errors",
+        "stacked": false,
+        "view": "table"
+      }
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
+spec:
+  template:
+    metadata:
+      annotations:
+        # Force pod restart on config changes
+        checksum/config: "REPLACE_WITH_CONFIG_HASH"
+    spec:
+      serviceAccountName: mcp-server-langgraph
+      containers:
+        - name: mcp-server
+          env:
+            # AWS-specific environment variables
+            - name: AWS_REGION
+              value: "us-east-1"  # Override per deployment
+            - name: CLOUD_PROVIDER
+              value: "aws"
+            # RDS Connection (from External Secrets)
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            # Redis/ElastiCache Connection (from External Secrets)
+            - name: REDIS_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: endpoint
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: port
+            - name: REDIS_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: auth_token
+                  optional: true  # Not used in dev environment
+            # X-Ray tracing
+            - name: AWS_XRAY_DAEMON_ADDRESS
+              value: "xray-service.amazon-cloudwatch:2000"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"

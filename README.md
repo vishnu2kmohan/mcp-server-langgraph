@@ -932,14 +932,14 @@ The agent is fully containerized and ready for Kubernetes deployment. Platform a
 | Platform | Terraform Automation | Deployment Overlays | Maturity Status |
 |----------|---------------------|---------------------|-----------------|
 | **Google Kubernetes Engine (GKE)** | ✅ Complete (dev/staging/prod) | ✅ Rich (32 files) | 🟢 **Production Ready** |
-| **Amazon Elastic Kubernetes Service (EKS)** | ⚠️ Partial (prod only) | ⚠️ Minimal (2 files) | 🟡 **Beta** |
+| **Amazon Elastic Kubernetes Service (EKS)** | ✅ Complete (dev/staging/prod) | ⚠️ Minimal (2 files) | 🟢 **Production Ready** |
 | **Azure Kubernetes Service (AKS)** | ❌ Manual only | ⚠️ Minimal (3 files) | 🔴 **Alpha** (Manual deployment) |
 | **Rancher** | ⚠️ Generic manifests | ✅ Base manifests | 🟡 **Community** |
 | **VMware Tanzu** | ⚠️ Generic manifests | ✅ Base manifests | 🟡 **Community** |
 
 **Platform-Specific Features**:
-- **GKE**: Full Terraform automation, Cloud SQL integration, Workload Identity, GCP monitoring, staging & production environments
-- **EKS**: Complete Terraform modules, Karpenter autoscaling, IRSA support, production environment (staging/dev in development)
+- **GKE**: Full Terraform automation, Cloud SQL integration, Workload Identity, GCP monitoring, dev/staging/production environments
+- **EKS**: Full Terraform automation (dev/staging/prod), complete modules, Karpenter autoscaling, IRSA support, RDS & ElastiCache integration
 - **AKS**: Manual deployment only, requires Azure CLI setup (Terraform automation in development)
 
 **Quick Deploy**:

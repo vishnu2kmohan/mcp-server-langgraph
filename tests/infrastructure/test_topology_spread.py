@@ -141,6 +141,19 @@ class TestMultiZoneSupport:
         # Should reference multiple subnet_ids (which span AZs)
         assert "subnet_ids" in content, "EKS not using multiple subnets"
 
+    def test_terraform_aks_module_structure(self):
+        """Test AKS Terraform module structure exists (foundational check)."""
+        import os
+
+        # Check that AKS module directory exists
+        assert os.path.exists("terraform/modules/aks"), "AKS module directory not found"
+
+        # Check that README exists documenting in-progress status
+        assert os.path.exists("terraform/modules/aks/README.md"), "AKS module README not found"
+
+        # Future: When AKS module is complete, add checks for multi-zone configuration
+        # similar to GKE and EKS tests above
+
     def test_stateful_services_have_topology_spread(self):
         """Test stateful services (Redis, PostgreSQL) have topology spread."""
         # This ensures dependencies are also HA

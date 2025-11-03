@@ -66,13 +66,18 @@ check_prerequisites() {
 
     # Validate environment
     if [[ ! "$ENVIRONMENT" =~ ^(prod|aws-dev|aws-staging|aws-prod)$ ]]; then
-        log_error "Invalid AWS_ENVIRONMENT: $ENVIRONMENT. Currently supported: prod (production)"
-        log_error "Note: 'prod' refers to terraform/environments/prod (AWS production environment)"
+        log_error "Invalid AWS_ENVIRONMENT: $ENVIRONMENT"
+        log_error "Supported environments: prod, aws-dev, aws-staging"
+        log_error "Note: 'prod' is an alias for production environment"
         exit 1
     fi
 
-    if [ "$ENVIRONMENT" = "aws-dev" ] || [ "$ENVIRONMENT" = "aws-staging" ]; then
-        log_error "Environment $ENVIRONMENT not yet implemented. Only 'prod' is currently available."
+    # Verify environment directory exists
+    if [ ! -d "terraform/environments/$ENVIRONMENT" ]; then
+        log_error "Environment directory not found: terraform/environments/$ENVIRONMENT"
+        if [ "$ENVIRONMENT" = "aws-prod" ]; then
+            log_error "Did you mean 'prod' instead of 'aws-prod'?"
+        fi
         exit 1
     fi
 

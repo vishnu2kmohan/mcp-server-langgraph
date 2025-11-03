@@ -3,48 +3,55 @@ kind: Kustomization
 
 namespace: mcp-server-langgraph
 
+# Base resources
 resources:
-  - ../../base/otel-collector-deployment.yaml
+  - ../../base
+  - external-secrets.yaml
 
+# AWS-specific labels
+commonLabels:
+  cloud.provider: aws
+  cloud.platform: aws_eks
+  managed-by: kustomize
+
+# AWS-specific annotations
+commonAnnotations:
+  cloud.provider: aws
+  deployment.platform: eks
+
+# Patches for AWS EKS integration
+patchesStrategicMerge:
+  - serviceaccount-patch.yaml
+  - deployment-patch.yaml
+
+# ConfigMap for OpenTelemetry with AWS exporters
 configMapGenerator:
   - name: otel-collector-config
     behavior: replace
     files:
       - otel-collector.yaml=otel-collector-config.yaml
 
-# Add AWS-specific labels
-commonLabels:
-  cloud.provider: aws
-  cloud.platform: aws_eks
+# Images - override if using ECR
+images:
+  - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
+    newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/mcp-server-langgraph
+    newTag: latest
 
-# Patches for AWS EKS
-patchesStrategicMerge:
-  - |-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: otel-collector
-    spec:
-      template:
-        metadata:
-          annotations:
-            iam.amazonaws.com/role: mcp-server-otel-collector
-        spec:
-          containers:
-            - name: otel-collector
-              env:
-                - name: AWS_REGION
-                  value: us-east-1  # Override per deployment
+# Replica count adjustments (override in environment-specific overlays)
+replicas:
+  - name: mcp-server-langgraph
+    count: 3
 
-# ServiceAccount annotation for AWS IAM role
-patchesJson6902:
-  - target:
-      group: ""
-      version: v1
-      kind: ServiceAccount
-      name: otel-collector
-    patch: |-
-      - op: add
-        path: /metadata/annotations
-        value:
-          eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/mcp-server-otel-collector
+# Resource quotas and limits
+generatorOptions:
+  disableNameSuffixHash: false
+
+# Variables that can be set via kustomize edit
+vars:
+  - name: AWS_REGION
+    objref:
+      kind: ConfigMap
+      name: aws-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.region
