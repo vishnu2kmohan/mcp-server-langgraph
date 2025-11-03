@@ -43,6 +43,49 @@ A **production-ready cookie-cutter template** for building MCP servers with Lang
 
 **🎯 Opinionated, production-grade foundation for your MCP server projects.**
 
+---
+
+## 🔧 CI/CD Configuration
+
+This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GCP) Workload Identity Federation for secure deployments.
+
+### Quick Setup for Contributors
+
+1. **Configure repository secrets/variables** → See [SECRETS.md](SECRETS.md)
+2. **Set up GCP Workload Identity Federation** → Complete instructions in [SECRETS.md](SECRETS.md)
+3. **Verify configuration** → Run "GCP Drift Detection" workflow manually
+
+### Required Configuration
+
+| Variable/Secret | Type | Description |
+|----------------|------|-------------|
+| `GCP_PROJECT_ID` | Variable | Your Google Cloud project ID |
+| `GCP_WIF_PROVIDER` | Secret | Workload Identity Federation provider path |
+| `GCP_STAGING_SA_EMAIL` | Secret | Staging service account email |
+| `GCP_PRODUCTION_SA_EMAIL` | Secret | Production service account email |
+
+**📚 Complete guides**:
+- [SECRETS.md](SECRETS.md) - Setup & configuration (350+ lines)
+- [.github/ACTION_VERSIONING_STRATEGY.md](.github/ACTION_VERSIONING_STRATEGY.md) - Version pinning policy
+- [.github/WORKFLOW_AUDIT_REMAINING.md](.github/WORKFLOW_AUDIT_REMAINING.md) - Recent improvements
+
+### CI/CD Features
+
+✅ **Comprehensive Testing**: Unit, integration, E2E, property-based, contract, regression, mutation
+✅ **Multi-layered Security**: Trivy, CodeQL, TruffleHog, Gitleaks, SAST
+✅ **Production Deployments**: Manual approval gates, automatic rollback, smoke tests
+✅ **Cost Tracking**: Weekly/monthly reports, budget alerts, optimization recommendations
+✅ **Drift Detection**: Every 6 hours, auto-remediation options
+✅ **Compliance Scanning**: Daily CIS benchmarks, Terraform security validation
+
+**Recent Improvements** (2025-11-03):
+- ✅ Eliminated hardcoded credentials (11 locations)
+- ✅ Extracted cost tracking script with 27 TDD tests
+- ✅ Optimized Docker caching (+20% build speed)
+- ✅ Added comprehensive documentation (SECRETS.md, 350+ lines)
+
+---
+
 ## 📑 Table of Contents
 
 **Quick Links**:
