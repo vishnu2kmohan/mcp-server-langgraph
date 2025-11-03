@@ -57,6 +57,7 @@ jobs:
   pre-deployment-checks:
     name: Pre-Deployment Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment:
       name: production-validation
     outputs:
@@ -108,6 +109,7 @@ jobs:
   build-and-push:
     name: Build and Push to Artifact Registry
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: pre-deployment-checks
     outputs:
       image_tag: ${{ steps.image.outputs.tag }}
@@ -219,6 +221,7 @@ jobs:
   deploy-production:
     name: Deploy to Production GKE
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [build-and-push, approve-deployment]
     environment:
       name: production
@@ -308,6 +311,7 @@ jobs:
   post-deployment-validation:
     name: Post-Deployment Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: deploy-production
     steps:
       - name: Checkout code
@@ -405,6 +409,7 @@ jobs:
   rollback-on-failure:
     name: Rollback Deployment
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [deploy-production, post-deployment-validation]
     if: failure()
     steps:
@@ -456,6 +461,7 @@ jobs:
   deployment-summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [build-and-push, deploy-production, post-deployment-validation]
     if: success()
     steps:

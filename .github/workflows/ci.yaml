@@ -270,8 +270,10 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         cache-from: |
           type=gha,scope=build-${{ matrix.variant }}
+          type=gha,scope=build-base
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}
+          type=gha,mode=max,scope=build-base
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
@@ -295,8 +297,10 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-latest
         cache-from: |
           type=gha,scope=build-${{ matrix.variant }}
+          type=gha,scope=build-base
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}
+          type=gha,mode=max,scope=build-base
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
