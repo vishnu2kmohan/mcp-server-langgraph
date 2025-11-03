@@ -74,14 +74,21 @@ The `langgraph.json` file configures your deployment:
 {
   "dependencies": ["."],
   "graphs": {
-    "agent": "./langgraph/agent.py:graph"
+    "agent": "./langgraph_platform/agent.py:graph"
   },
   "env": {
     "ANTHROPIC_API_KEY": "",
+    "OPENAI_API_KEY": "",
+    "GOOGLE_API_KEY": "",
+    "LANGSMITH_API_KEY": "",
     "LANGSMITH_TRACING": "true",
-    "LANGSMITH_PROJECT": "mcp-server-langgraph"
+    "LANGSMITH_PROJECT": "mcp-server-langgraph",
+    "JWT_SECRET_KEY": "",
+    "OPENFGA_API_URL": "http://localhost:8080",
+    "OPENFGA_STORE_ID": "",
+    "OPENFGA_MODEL_ID": ""
   },
-  "python_version": "3.11"
+  "python_version": "3.12"
 }
 ```
 <ParamField path="dependencies" type="array">

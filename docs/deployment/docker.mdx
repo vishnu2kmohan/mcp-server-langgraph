@@ -21,7 +21,7 @@ Run the complete MCP Server with LangGraph stack locally with Docker Compose for
 #### One-Command Setup
 
 ```bash
-./scripts/docker-compose-quickstart.sh
+./scripts/setup/docker-compose-quickstart.sh
 ```
 This script will:
 1. Check prerequisites (Docker, Docker Compose)
@@ -87,11 +87,11 @@ This script will:
   </Card>
 
   <Card title="OpenFGA" icon="shield">
-    **Port**: 8080 (API), 3001 (UI)
+    **Port**: 8080 (API)
 
-    Authorization service
+    Authorization service (Playground disabled)
 
-    [http://localhost:3001](http://localhost:3001)
+    [http://localhost:8080](http://localhost:8080)
   </Card>
 
   <Card title="Jaeger" icon="magnifying-glass">
@@ -111,11 +111,11 @@ This script will:
   </Card>
 
   <Card title="Grafana" icon="chart-simple">
-    **Port**: 3000
+    **Port**: 3001
 
     Visualization dashboards
 
-    [http://localhost:3000](http://localhost:3000)
+    [http://localhost:3001](http://localhost:3001)
   </Card>
 
   <Card title="PostgreSQL" icon="database">
@@ -132,7 +132,7 @@ This script will:
 Use development mode for hot reload and debugging:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.yml -f docker/docker-compose.dev.yml up
 ```
 **Development features**:
 - 🔄 **Hot reload** - Code changes restart server automatically
@@ -144,7 +144,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 ```bash
 ## Start in dev mode
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.yml -f docker/docker-compose.dev.yml up
 
 ## In another terminal, edit code
 vim agent.py
@@ -180,7 +180,7 @@ docker compose down
 curl http://localhost:8000/health
 
 ## Test agent with message
-curl -X POST http://localhost:8000/messages \
+curl -X POST http://localhost:8000/message \
   -H 'Content-Type: application/json' \
   -d '{
     "messages": [{
@@ -190,7 +190,7 @@ curl -X POST http://localhost:8000/messages \
   }'
 
 ## Test with authentication (if enabled)
-curl -X POST http://localhost:8000/messages \
+curl -X POST http://localhost:8000/message \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
   -d '{
@@ -288,7 +288,7 @@ sum(llm_tokens_total) by (model)
 ```
 #### Grafana Dashboards
 
-Access at [http://localhost:3000](http://localhost:3000) (admin/admin):
+Access at [http://localhost:3001](http://localhost:3001) (admin/admin):
 
 Pre-configured datasources:
 - **Prometheus** - Metrics
@@ -330,7 +330,7 @@ docker compose restart agent
     docker compose up -d
 
     # Development mode with hot reload
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+    docker compose -f docker-compose.yml -f docker/docker-compose.dev.yml up
 
     # Build from scratch
     docker compose up -d --build
@@ -525,5 +525,5 @@ For production, use:
 ---
 
 <Check>
-  **Ready to develop?** Run `./scripts/docker-compose-quickstart.sh` to start coding!
+  **Ready to develop?** Run `./scripts/setup/docker-compose-quickstart.sh` to start coding!
 </Check>

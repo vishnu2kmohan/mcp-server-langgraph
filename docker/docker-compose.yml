@@ -218,6 +218,84 @@ services:
       - mcp-network
 
   # ==============================================================================
+  # APPLICATION SERVICE
+  # ==============================================================================
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: mcp-agent
+    command: python -m uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      openfga:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      redis-sessions:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      # Environment
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+
+      # Database
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+
+      # OpenFGA
+      - OPENFGA_API_URL=http://openfga:8080
+      - OPENFGA_STORE_ID=${OPENFGA_STORE_ID:-}
+      - OPENFGA_MODEL_ID=${OPENFGA_MODEL_ID:-}
+
+      # Keycloak
+      - KEYCLOAK_SERVER_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-master}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-mcp-server}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-}
+
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_SESSIONS_HOST=redis-sessions
+      - REDIS_SESSIONS_PORT=6379
+
+      # Qdrant
+      - QDRANT_URL=http://qdrant:6333
+
+      # Observability
+      - ENABLE_TELEMETRY=true
+      - JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - PROMETHEUS_METRICS_ENABLED=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - mcp-network
+
+  # ==============================================================================
   # OBSERVABILITY SERVICES
   # ==============================================================================
 

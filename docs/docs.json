@@ -79,6 +79,8 @@
               "reference/configuration-files",
               "reference/api-endpoints",
               "reference/kong-plugins",
+              "API_COMPLIANCE_REPORT",
+              "ci-cd-troubleshooting",
               "reference/development/ide-setup",
               "reference/development/github-actions",
               "reference/development/build-verification",
@@ -129,7 +131,9 @@
               "deployment/docker",
               "deployment/kubernetes",
               "deployment/helm",
-              "deployment/production-checklist"
+              "deployment/production-checklist",
+              "deployment/gcp-configuration",
+              "deployment/iam-rbac-requirements"
             ]
           },
           {
@@ -424,7 +428,6 @@
     }
   },
   "openapi": "openapi.yaml",
-  "versions": ["v2.8.0", "v2.7.0", "v2.6.0", "v2.5.0"],
   "analytics": {
     "plausible": {
       "domain": "mcp-server-langgraph.mintlify.app"

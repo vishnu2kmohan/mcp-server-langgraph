@@ -234,7 +234,7 @@ class Settings(BaseSettings):
     enable_mock_authorization: Optional[bool] = None  # None = auto-determine based on environment
 
     # Keycloak Settings
-    keycloak_server_url: str = "http://localhost:8180"
+    keycloak_server_url: str = "http://localhost:8082"
     keycloak_realm: str = "langgraph-agent"
     keycloak_client_id: str = "langgraph-client"
     keycloak_client_secret: Optional[str] = None

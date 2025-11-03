@@ -1,0 +1,660 @@
+---
+title: CI/CD Troubleshooting Guide
+description: 'Comprehensive troubleshooting guide for GitHub Actions workflows'
+icon: 'circle-exclamation'
+contentType: "reference"
+---
+
+# CI/CD Troubleshooting Guide
+
+Comprehensive troubleshooting guide for GitHub Actions workflows and CI/CD pipeline issues.
+
+## Table of Contents
+
+- [Common Issues](#common-issues)
+- [Workflow-Specific Issues](#workflow-specific-issues)
+- [Performance Issues](#performance-issues)
+- [Cost Optimization](#cost-optimization)
+- [Security Issues](#security-issues)
+- [Debugging Techniques](#debugging-techniques)
+
+---
+
+## Common Issues
+
+### 1. Tests Failing in CI But Passing Locally
+
+**Symptoms:**
+- Tests pass on local machine
+- Same tests fail in GitHub Actions
+- Error messages mention environment differences
+
+**Root Causes:**
+- Environment variable differences
+- Timing/race conditions
+- Different Python versions
+- Missing dependencies
+
+**Solutions:**
+
+```bash
+# 1. Check Python version match
+python --version  # Local
+# vs CI workflow (check ci.yaml matrix.python-version)
+
+# 2. Run tests with same Python version
+pyenv install 3.12
+pyenv local 3.12
+pytest tests/
+
+# 3. Disable OpenTelemetry (matches CI)
+OTEL_SDK_DISABLED=true pytest tests/
+
+# 4. Use parallel execution (matches CI)
+pytest -n auto tests/
+
+# 5. Check for timing issues
+pytest tests/ --timeout=30  # Add timeout
+```
+
+**Prevention:**
+- Use `.env.example` to document required variables
+- Run pre-commit hooks before pushing
+- Test with multiple Python versions locally: `make test-all-pythons`
+
+---
+
+### 2. Docker Build Failures
+
+**Symptoms:**
+- `docker build` fails in CI
+- "No space left on device" errors
+- Network timeout errors
+
+**Root Causes:**
+- Disk space exhaustion
+- Network timeouts
+- Cache issues
+- Base image unavailability
+
+**Solutions:**
+
+```yaml
+# Already implemented in ci.yaml:
+- name: Free disk space
+  run: |
+    docker system prune -af --volumes
+    sudo rm -rf /usr/share/dotnet
+    sudo rm -rf /usr/local/lib/android
+```
+
+**Additional Debug Steps:**
+
+```bash
+# Check available disk space
+df -h
+
+# Inspect build context size
+docker build --no-cache -f docker/Dockerfile . --dry-run
+
+# Test build locally with same base image
+docker pull python:3.12-slim
+docker build --no-cache -t test -f docker/Dockerfile .
+```
+
+**Known Issue:** GitHub-hosted runners have ~14GB free space. Our cleanup step addresses this.
+
+---
+
+### 3. Pre-commit Hooks Failing
+
+**Symptoms:**
+- Pre-commit job fails in CI
+- Hooks pass locally but fail in CI
+- Formatting differences
+
+**Root Causes:**
+- Different tool versions
+- Line ending differences (CRLF vs LF)
+- File not committed
+
+**Solutions:**
+
+```bash
+# 1. Run pre-commit locally
+pre-commit run --all-files
+
+# 2. Check tool versions match .pre-commit-config.yaml
+pre-commit autoupdate  # Update to latest
+
+# 3. Fix line endings
+git config --global core.autocrlf input
+find . -type f -name "*.py" -exec dos2unix {} \;
+
+# 4. Install same versions as CI
+pip install black==25.9.0 isort==5.13.2
+```
+
+**Workaround:** If hooks consistently fail, you can temporarily skip:
+
+```yaml
+# In .github/workflows/ci.yaml
+- name: Run pre-commit hooks
+  run: pre-commit run --all-files
+  continue-on-error: true  # Temporary only!
+```
+
+---
+
+### 4. Deployment Authentication Failures
+
+**Symptoms:**
+- "Permission denied" during GCP auth
+- "Workload Identity Provider not found"
+- "Invalid service account"
+
+**Root Causes:**
+- Missing or incorrect GitHub secrets
+- Workload Identity misconfiguration
+- Service account lacks permissions
+
+**Solutions:**
+
+```bash
+# 1. Verify secrets are set
+gh secret list
+
+# 2. Check Workload Identity configuration
+gcloud iam workload-identity-pools describe github-actions-pool \
+  --location=global \
+  --project=PROJECT_ID
+
+# 3. Verify service account permissions
+gcloud projects get-iam-policy PROJECT_ID \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:github-actions-deployer@*"
+
+# 4. Test authentication locally
+gcloud auth application-default login
+gcloud container clusters get-credentials CLUSTER_NAME --region=REGION
+```
+
+**See Also:** [GCP Configuration Guide](deployment/gcp-configuration.md)
+
+---
+
+## Workflow-Specific Issues
+
+### Main CI/CD Pipeline (ci.yaml)
+
+#### Issue: Test Job Timeout
+
+**Symptoms:**
+- Job exceeds 30-minute timeout
+- Tests hang indefinitely
+
+**Solutions:**
+
+```bash
+# 1. Identify slow tests
+pytest tests/ --durations=20
+
+# 2. Add timeout to specific tests
+@pytest.mark.timeout(5)
+def test_slow_function():
+    ...
+
+# 3. Skip slow tests in CI
+pytest -m "not slow" tests/
+```
+
+#### Issue: Docker Multi-platform Build Fails
+
+**Symptoms:**
+- ARM64 build fails
+- "exec format error"
+
+**Solutions:**
+
+```bash
+# Test multi-platform build locally
+docker buildx create --use
+docker buildx build --platform linux/amd64,linux/arm64 -f docker/Dockerfile .
+
+# Debug specific platform
+docker buildx build --platform linux/arm64 --load -t test-arm -f docker/Dockerfile .
+docker run --rm test-arm python -c "import platform; print(platform.machine())"
+```
+
+---
+
+### Security Scan Workflow (security-scan.yaml)
+
+#### Issue: Trivy Scan Finds Vulnerabilities
+
+**Symptoms:**
+- Security scan fails
+- Critical/High vulnerabilities reported
+
+**Solutions:**
+
+```bash
+# 1. Run Trivy locally
+trivy image --severity CRITICAL,HIGH mcp-server-langgraph:latest
+
+# 2. Update base image
+# In docker/Dockerfile, update:
+FROM python:3.12-slim  # Check for newer version
+
+# 3. Update dependencies
+uv lock --upgrade-package PACKAGE_NAME
+
+# 4. Accept risk (if false positive)
+# Create .trivyignore file:
+CVE-2024-XXXXX  # Reason: False positive, not exploitable in our use case
+```
+
+#### Issue: CodeQL Analysis Fails
+
+**Symptoms:**
+- "No code found to analyze"
+- Python extraction errors
+
+**Solutions:**
+
+```yaml
+# Ensure Python setup before CodeQL
+- name: Set up Python
+  uses: actions/setup-python@v6
+  with:
+    python-version: '3.12'
+
+- name: Install dependencies
+  run: |
+    pip install -r requirements.txt
+
+- name: Initialize CodeQL
+  uses: github/codeql-action/init@v4
+  with:
+    languages: python
+```
+
+---
+
+### E2E Tests Workflow (e2e-tests.yaml)
+
+#### Issue: Test Infrastructure Not Ready
+
+**Symptoms:**
+- Tests fail with connection errors
+- "Service not healthy" messages
+
+**Solutions:**
+
+```bash
+# 1. Increase health check wait time
+# In e2e-tests.yaml:
+sleep 30  # Increase from 15
+
+# 2. Add retries to health checks
+for i in {1..5}; do
+  curl -f http://localhost:9080/healthz && break
+  sleep 5
+done
+
+# 3. Check Docker Compose logs
+docker compose -f docker-compose.test.yml logs postgres-test
+
+# 4. Verify port availability
+netstat -tuln | grep 9432  # Should not be in use before test
+```
+
+---
+
+### Coverage Tracking Workflow (coverage-trend.yaml)
+
+#### Issue: Coverage Drops >5% Without Code Changes
+
+**Symptoms:**
+- Coverage workflow fails
+- No obvious code changes
+
+**Root Causes:**
+- New files added without tests
+- Conditional code not executed in CI
+- Test files excluded incorrectly
+
+**Solutions:**
+
+```bash
+# 1. Generate local coverage report
+pytest --cov=src/mcp_server_langgraph --cov-report=html tests/
+open htmlcov/index.html
+
+# 2. Find uncovered files
+pytest --cov=src/mcp_server_langgraph --cov-report=term-missing tests/ | grep "0%"
+
+# 3. Check .coveragerc exclusions
+cat .coveragerc  # Or [tool.coverage] in pyproject.toml
+
+# 4. Temporarily adjust threshold
+# In coverage-trend.yaml:
+python scripts/ci/track-coverage.py --threshold=10  # Increase from 5%
+```
+
+---
+
+## Performance Issues
+
+### Slow Workflow Runs
+
+**Symptoms:**
+- CI takes >20 minutes
+- Jobs queued for long time
+
+**Diagnosis:**
+
+```bash
+# View workflow timing
+gh run view RUN_ID --log
+
+# Identify slow jobs
+gh run view RUN_ID --json jobs --jq '.jobs[] | {name, conclusion, startedAt, completedAt}'
+```
+
+**Optimizations:**
+
+1. **Improve Caching:**
+
+```yaml
+# Better cache key
+- uses: actions/cache@v4
+  with:
+    key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock', 'pyproject.toml') }}
+```
+
+2. **Parallel Execution:**
+
+```yaml
+# Run independent jobs in parallel
+jobs:
+  test:
+    ...
+  lint:  # Runs parallel to test
+    ...
+```
+
+3. **Conditional Execution:**
+
+```yaml
+# Skip jobs on docs-only changes
+jobs:
+  test:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+```
+
+4. **Reduce Test Scope:**
+
+```bash
+# Only run tests for changed files
+pytest --testmon tests/
+```
+
+---
+
+### High GitHub Actions Costs
+
+**Symptoms:**
+- Monthly bill exceeds budget
+- Many long-running workflows
+
+**Solutions:**
+
+1. **Monitor Costs:**
+
+```bash
+# Run cost tracking workflow manually
+gh workflow run cost-tracking.yaml
+
+# View report
+gh run list --workflow=cost-tracking.yaml --limit=1
+gh run view RUN_ID
+```
+
+2. **Optimize Workflows:**
+
+```yaml
+# Add concurrency limits
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # Cancel outdated runs
+```
+
+3. **Reduce Scheduled Runs:**
+
+```yaml
+# Change from daily to weekly
+schedule:
+  - cron: '0 9 * * 1'  # Weekly instead of daily
+```
+
+---
+
+## Security Issues
+
+### Secrets Exposed in Logs
+
+**Symptoms:**
+- Secrets visible in workflow logs
+- Security alerts from GitHub
+
+**Prevention:**
+
+```yaml
+# Use GitHub's secret masking
+- name: Use secret
+  env:
+    MY_SECRET: ${{ secrets.MY_SECRET }}
+  run: |
+    echo "::add-mask::$MY_SECRET"  # Mask in logs
+    echo "Using secret..."  # Won't show value
+```
+
+### Dependency Vulnerabilities
+
+**Symptoms:**
+- Dependabot alerts
+- Security scan failures
+
+**Solutions:**
+
+```bash
+# 1. Update vulnerable dependency
+uv lock --upgrade-package PACKAGE_NAME
+
+# 2. Check for security advisories
+pip-audit --fix
+
+# 3. Pin to secure version
+# In pyproject.toml:
+[project.dependencies]
+package = ">=1.2.3"  # Version without vulnerability
+```
+
+---
+
+## Debugging Techniques
+
+### Enable Debug Logging
+
+**In Workflow File:**
+
+```yaml
+jobs:
+  debug-job:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Enable debug
+      run: echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
+
+    - name: Debug info
+      run: |
+        echo "::debug::Debugging information"
+        env | sort  # Print all environment variables
+```
+
+**Via GitHub UI:**
+
+1. Go to repository Settings → Secrets
+2. Add secret: `ACTIONS_STEP_DEBUG` = `true`
+3. Re-run workflow
+
+### SSH Into Runner (for Emergencies)
+
+**Using tmate:**
+
+```yaml
+# Add this step to workflow for interactive debugging
+- name: Setup tmate session
+  if: failure()  # Only on failure
+  uses: mxschmitt/action-tmate@v3
+  timeout-minutes: 30
+```
+
+**⚠️ Warning:** Remove tmate step before merging! It exposes your runner.
+
+### View Workflow Artifacts
+
+```bash
+# List artifacts
+gh run view RUN_ID --log
+
+# Download artifacts
+gh run download RUN_ID
+
+# View specific artifact
+unzip artifact.zip
+cat report.json | jq
+```
+
+### Test Workflow Locally with Act
+
+```bash
+# Install act
+brew install act  # macOS
+# or
+curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+
+# Run workflow locally
+act pull_request
+
+# Run specific job
+act -j test
+
+# Use specific runner image
+act -P ubuntu-latest=catthehacker/ubuntu:act-latest
+```
+
+---
+
+## Getting Help
+
+### Where to Look
+
+1. **Workflow Run Logs** - Most detailed information
+2. **GitHub Status** - Check if GitHub Actions is down: https://www.githubstatus.com/
+3. **Issue Tracker** - Search existing issues: `gh issue list`
+4. **Documentation** - Workflow comments explain logic
+
+### Reporting Issues
+
+When reporting CI/CD issues, include:
+
+```markdown
+## Issue Description
+Brief description of the problem
+
+## Workflow Details
+- Workflow: `ci.yaml`
+- Run ID: #12345
+- Commit: abc123
+- Branch: feature/new-thing
+
+## Steps to Reproduce
+1. Push to branch
+2. Wait for CI
+3. Observe failure in step X
+
+## Logs
+```
+[Paste relevant log excerpt]
+```
+
+## Expected vs Actual
+Expected: Tests pass
+Actual: Tests fail with error Y
+```
+
+### Emergency Contacts
+
+- **CI/CD Issues:** @cicd-team
+- **Security Alerts:** @security-team
+- **Infrastructure:** @platform-team
+
+---
+
+## Useful Commands
+
+```bash
+# View recent workflow runs
+gh run list --limit=10
+
+# View specific run
+gh run view RUN_ID
+
+# Re-run failed jobs
+gh run rerun RUN_ID --failed
+
+# Cancel running workflow
+gh run cancel RUN_ID
+
+# Download workflow logs
+gh run view RUN_ID --log > workflow.log
+
+# List workflows
+gh workflow list
+
+# Disable/enable workflow
+gh workflow disable WORKFLOW_NAME
+gh workflow enable WORKFLOW_NAME
+
+# View workflow file
+gh workflow view WORKFLOW_NAME
+
+# List secrets
+gh secret list
+
+# Set secret
+gh secret set SECRET_NAME
+
+# Delete secret
+gh secret delete SECRET_NAME
+```
+
+---
+
+## Appendix: Workflow Quick Reference
+
+| Workflow | Triggers | Duration | Troubleshooting Priority |
+|----------|----------|----------|-------------------------|
+| ci.yaml | PR, push | 12 min | HIGH |
+| e2e-tests.yaml | PR, push, nightly | 15 min | MEDIUM |
+| security-scan.yaml | PR, daily, release | 15 min | HIGH |
+| quality-tests.yaml | PR, push, weekly | 20 min | LOW |
+| deploy-staging-gke.yaml | push (main) | 10 min | HIGH |
+| deploy-production-gke.yaml | release, manual | 15 min | CRITICAL |
+
+---
+
+**Last Updated:** 2025-11-02
+**Maintained By:** CI/CD Team
