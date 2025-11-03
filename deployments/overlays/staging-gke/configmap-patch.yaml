@@ -20,11 +20,11 @@ data:
   session_ttl_seconds: "43200"  # 12 hours
 
   # Cloud SQL connection
-  # Connection will be via Cloud SQL Proxy sidecar at 127.0.0.1:5432
-  postgres_host: "127.0.0.1"
+  # Direct connection to Cloud SQL private IP (simpler, no proxy needed)
+  postgres_host: "10.110.0.3"
   postgres_port: "5432"
   postgres_database: "keycloak"
-  postgres_ssl_mode: "disable"  # Proxy handles TLS
+  postgres_ssl_mode: "disable"  # SSL not required within private VPC
 
   # Memorystore Redis connection
   # Connect to cloud-managed Memorystore Redis instance

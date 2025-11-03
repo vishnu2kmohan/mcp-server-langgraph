@@ -114,6 +114,12 @@ patches:
       kind: Deployment
       name: openfga
 
+  # Qdrant - Fix permissions for snapshots directory
+  - path: qdrant-patch.yaml
+    target:
+      kind: Deployment
+      name: qdrant
+
 # Resource configuration
 replicas:
   - name: mcp-server-langgraph

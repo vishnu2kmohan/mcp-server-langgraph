@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qdrant
+spec:
+  template:
+    spec:
+      # Add init container to create snapshots directory with correct permissions
+      initContainers:
+      - name: init-snapshots-dir
+        image: busybox:1.36
+        command: ['sh', '-c']
+        args:
+        - |
+          mkdir -p /qdrant/storage/snapshots/tmp
+          chown -R 1000:1000 /qdrant/storage
+        volumeMounts:
+        - name: qdrant-storage
+          mountPath: /qdrant/storage
+        securityContext:
+          runAsUser: 0  # Run as root to fix permissions
+          runAsNonRoot: false
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - CHOWN
+              - FOWNER
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi

@@ -1,12 +1,8 @@
-- op: replace
-  path: /spec/template/spec/initContainers/0/args/0
-  value: |
-    until nc -z 127.0.0.1 5432; do
-      echo "Waiting for Cloud SQL Proxy..."
-      sleep 2
-    done
-    echo "Cloud SQL Proxy is ready!"
+# Remove init container - direct Cloud SQL connection
+- op: remove
+  path: /spec/template/spec/initContainers/0
 
+# Add database password environment variable
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
@@ -16,48 +12,9 @@
         name: mcp-staging-secrets
         key: openfga-db-password
 
+# Update connection string to use direct Cloud SQL private IP
 - op: replace
   path: /spec/template/spec/containers/0/env/1
   value:
     name: OPENFGA_DATASTORE_URI
-    value: "postgres://openfga:$(OPENFGA_DB_PASSWORD)@127.0.0.1:5432/openfga?sslmode=disable"
-
-- op: add
-  path: /spec/template/spec/containers/-
-  value:
-    name: cloud-sql-proxy
-    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
-    args:
-      - "--structured-logs"
-      - "--port=5432"
-      - "--private-ip"
-      - "vishnu-sandbox-20250310:us-central1:mcp-staging-postgres"
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: 65532
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-    resources:
-      requests:
-        memory: "128Mi"
-        cpu: "100m"
-      limits:
-        memory: "256Mi"
-        cpu: "200m"
-    livenessProbe:
-      httpGet:
-        path: /liveness
-        port: 9801
-      initialDelaySeconds: 30
-      periodSeconds: 30
-      timeoutSeconds: 10
-    readinessProbe:
-      httpGet:
-        path: /readiness
-        port: 9801
-      initialDelaySeconds: 10
-      periodSeconds: 10
-      timeoutSeconds: 5
+    value: "postgres://openfga:$(OPENFGA_DB_PASSWORD)@10.110.0.3:5432/openfga?sslmode=disable"
