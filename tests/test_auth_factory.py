@@ -126,6 +126,88 @@ class TestCreateUserProvider:
 
 
 # ============================================================================
+# Tests for Production Environment Guards (TDD RED phase)
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestProductionEnvironmentGuards:
+    """
+    Test production environment guards for InMemoryUserProvider.
+
+    TDD RED phase: Tests written FIRST to define security requirements.
+    These tests will FAIL until environment guards are implemented.
+    """
+
+    def test_inmemory_provider_blocked_in_production(self, mock_settings):
+        """
+        Test InMemoryUserProvider is blocked in production environment.
+
+        RED: Will fail until environment guard is implemented in factory.py
+        """
+        mock_settings.auth_provider = "inmemory"
+        mock_settings.environment = "production"
+
+        with pytest.raises(RuntimeError, match="InMemoryUserProvider is not allowed in production"):
+            create_user_provider(mock_settings)
+
+    def test_inmemory_provider_blocked_in_staging(self, mock_settings):
+        """Test InMemoryUserProvider is blocked in staging environment"""
+        mock_settings.auth_provider = "inmemory"
+        mock_settings.environment = "staging"
+
+        with pytest.raises(RuntimeError, match="InMemoryUserProvider is not allowed in production"):
+            create_user_provider(mock_settings)
+
+    def test_inmemory_provider_allowed_in_development(self, mock_settings):
+        """Test InMemoryUserProvider is allowed in development"""
+        mock_settings.auth_provider = "inmemory"
+        mock_settings.environment = "development"
+
+        provider = create_user_provider(mock_settings)
+
+        assert isinstance(provider, InMemoryUserProvider)
+
+    def test_inmemory_provider_allowed_in_test(self, mock_settings):
+        """Test InMemoryUserProvider is allowed in test environment"""
+        mock_settings.auth_provider = "inmemory"
+        mock_settings.environment = "test"
+
+        provider = create_user_provider(mock_settings)
+
+        assert isinstance(provider, InMemoryUserProvider)
+
+    def test_inmemory_provider_default_environment_is_development(self, mock_settings):
+        """Test default environment is development (safe fallback)"""
+        mock_settings.auth_provider = "inmemory"
+        # No environment attribute set
+
+        provider = create_user_provider(mock_settings)
+
+        # Should succeed (defaults to development)
+        assert isinstance(provider, InMemoryUserProvider)
+
+    def test_keycloak_provider_allowed_in_production(self, mock_settings):
+        """Test KeycloakUserProvider is allowed in production"""
+        mock_settings.auth_provider = "keycloak"
+        mock_settings.environment = "production"
+
+        with patch("mcp_server_langgraph.auth.factory.KeycloakUserProvider"):
+            provider = create_user_provider(mock_settings)
+
+            # Should succeed (Keycloak is production-safe)
+            assert provider is not None
+
+    def test_environment_validation_case_insensitive(self, mock_settings):
+        """Test environment names are case-insensitive"""
+        mock_settings.auth_provider = "inmemory"
+        mock_settings.environment = "PRODUCTION"
+
+        with pytest.raises(RuntimeError, match="InMemoryUserProvider is not allowed in production"):
+            create_user_provider(mock_settings)
+
+
+# ============================================================================
 # Tests for create_session_store()
 # ============================================================================
 

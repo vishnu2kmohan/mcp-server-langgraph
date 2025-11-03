@@ -45,7 +45,25 @@ def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGACli
     provider_type = settings.auth_provider.lower()
 
     if provider_type == "inmemory":
+        # SECURITY: Block InMemoryUserProvider in production/staging environments
+        # Get environment with safe fallback to 'development'
+        environment = getattr(settings, "environment", "development").lower()
+
+        # Block in production and staging (allow in development/test)
+        if environment in ("production", "staging", "prod", "stg"):
+            raise RuntimeError(
+                f"SECURITY: InMemoryUserProvider is not allowed in production environments. "
+                f"Current environment: '{environment}'. "
+                f"InMemoryUserProvider contains hardcoded demo credentials (alice:alice123, bob:bob123, admin:admin123) "
+                f"and is only suitable for development/testing. "
+                f"For production, use AUTH_PROVIDER=keycloak with proper SSO integration."
+            )
+
         logger.info("Creating InMemoryUserProvider for authentication")
+        logger.warning(
+            f"InMemoryUserProvider is being used in '{environment}' environment. "
+            f"This provider has hardcoded credentials and should NEVER be used in production."
+        )
 
         # Validate JWT secret is configured
         if not settings.jwt_secret_key:
