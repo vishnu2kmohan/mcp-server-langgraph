@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762136514783,
+  "lastUpdate": 1762136604058,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -23978,6 +23978,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000020219565641059332",
             "extra": "mean: 57.56397290771036 usec\nrounds: 5389"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "dc407d1637d9ad31c0fd8ce1cc66ac4da31627f2",
+          "message": "test(gke): add comprehensive External Secrets Operator RBAC validation tests\n\nAdd integration tests and documentation for validating ESO RBAC configuration\non GKE staging cluster. Tests confirm the container.admin role fix enables\nproper creation of cluster-scoped RBAC resources.\n\n## What's Added\n\n### Integration Test Suite (tests/infrastructure/test_external_secrets_rbac.py)\n- 21 comprehensive integration tests across 6 test classes\n- Tests GCP IAM roles (container.admin, secretmanager.secretAccessor)\n- Tests ESO deployments (controller, webhook, cert-controller)\n- Tests CRD installation (ExternalSecret, SecretStore, ClusterSecretStore)\n- Tests RBAC resources (ClusterRoles, ClusterRoleBindings)\n- Tests secret synchronization from GCP Secret Manager\n- Uses pytest markers (@pytest.mark.integration) for selective execution\n\n### Test Documentation (tests/infrastructure/README_ESO_RBAC_TESTS.md)\n- Complete setup guide with prerequisites\n- Environment configuration instructions\n- Test execution examples for all scenarios\n- Comprehensive troubleshooting guide\n- CI/CD integration examples\n\n### Validation Report (ESO_RBAC_VALIDATION_REPORT.md)\n- Detailed before/after comparison of cluster state\n- Analysis of RBAC issue root cause\n- Test results breakdown (15/21 passing, 71% success)\n- Resolution steps and recommendations\n- Timeline and evidence of successful fix\n\n## Validation Results\n\nTested on GKE staging cluster (mcp-staging-cluster, vishnu-sandbox-20250310):\n\n### ✅ Passing Tests (15/21)\n- All GCP IAM tests (3/3): Service account has roles/container.admin\n- All ESO deployment tests (4/4): All components running (1/1 ready)\n- All CRD tests (3/3): 23 CRDs installed successfully\n- Critical RBAC tests (4/6): ClusterRoles and ClusterRoleBindings created\n- ExternalSecret resources exist (1/3)\n\n### ⚠️ Known Issues (Not RBAC-Related)\n- 2 tests: Webhook ClusterRole naming (test expects different name than Helm creates)\n- 2 tests: Secret sync failures (ClusterSecretStore not configured)\n- 2 tests: Skipped (ClusterSecretStore doesn't exist yet)\n\n## Confirmed RBAC Fix\n\nThe infrastructure script (scripts/gcp/setup-staging-infrastructure.sh) correctly\ngrants roles/container.admin (lines 301-306), which enables:\n\n1. Creation of ClusterRoles for cert-controller and controller\n2. Creation of ClusterRoleBindings\n3. ESO cert-controller can list CRDs and ValidatingWebhookConfigurations\n4. ESO webhook receives TLS certificates from cert-controller\n5. All ESO deployments running successfully (no more CrashLoopBackOff)\n\n## Test Coverage\n\n- GCP IAM validation (service account roles)\n- Kubernetes deployment validation (pod readiness, replica counts)\n- CRD installation validation\n- Cluster-scoped RBAC resource validation\n- Secret synchronization validation (end-to-end)\n\n## Files Changed\n\n- tests/infrastructure/test_external_secrets_rbac.py (NEW, 500+ lines)\n- tests/infrastructure/README_ESO_RBAC_TESTS.md (NEW, 400+ lines)\n- ESO_RBAC_VALIDATION_REPORT.md (NEW, validation evidence)\n\n## Related Issues\n\nValidates the fix from commit 669f6cb which upgraded the GCP service account\nIAM role from roles/container.developer to roles/container.admin to enable\ncluster-scoped RBAC resource creation for External Secrets Operator.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T21:21:03-05:00",
+          "tree_id": "25ad50712cbca5e95e0b86025247af450a721468",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/dc407d1637d9ad31c0fd8ce1cc66ac4da31627f2"
+        },
+        "date": 1762136602470,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 142.95150191012337,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009733966560257343",
+            "extra": "mean: 6.995379458333506 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 144.39583286467013,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00022347470041848082",
+            "extra": "mean: 6.925407611570167 msec\nrounds: 121"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50031.635003391195,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031656597971311145",
+            "extra": "mean: 19.987353999768725 usec\nrounds: 7613"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53049.53702759341,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002102530034610999",
+            "extra": "mean: 18.850305884476537 usec\nrounds: 11233"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49285.26180237668,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002520222261151149",
+            "extra": "mean: 20.290041351708457 usec\nrounds: 17726"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.23591810870298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003790489851986189",
+            "extra": "mean: 5.256630871508652 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.34486318775938,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00018986154214287903",
+            "extra": "mean: 51.693309499999884 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93467990680388,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003002499102069667",
+            "extra": "mean: 100.65749570000122 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2490608.383830108,
+            "unit": "iter/sec",
+            "range": "stddev: 5.053044996265068e-8",
+            "extra": "mean: 401.50832483032906 nsec\nrounds: 193462"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5017.2829781066,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019079012461571978",
+            "extra": "mean: 199.31106225492897 usec\nrounds: 2297"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2957.8942370081822,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009076426235138257",
+            "extra": "mean: 338.0783489444399 usec\nrounds: 2605"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2932.0935182489984,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000035148476110311904",
+            "extra": "mean: 341.0532419160985 usec\nrounds: 1670"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58613.9587675564,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031692351169018347",
+            "extra": "mean: 17.06078246592539 usec\nrounds: 11874"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16496.83337871055,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003910444956854348",
+            "extra": "mean: 60.617694138228806 usec\nrounds: 3992"
           }
         ]
       }
