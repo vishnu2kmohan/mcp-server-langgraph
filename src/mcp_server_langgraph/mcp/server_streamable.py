@@ -1271,6 +1271,65 @@ app.include_router(service_principals_router)
 app.include_router(scim_router)
 
 
+# ==============================================================================
+# Custom OpenAPI Schema Generation
+# ==============================================================================
+# Pagination models need to be included in OpenAPI schema for API documentation,
+# even if not all endpoints use them yet. This ensures consistent API contract.
+
+
+def custom_openapi():  # type: ignore[no-untyped-def]
+    """
+    Custom OpenAPI schema generator that includes pagination models.
+
+    FastAPI only includes models in the OpenAPI schema if they're used in endpoint
+    signatures. We explicitly add pagination models here to ensure they're documented
+    for API consumers, even if not all endpoints implement pagination yet.
+
+    This follows TDD principles - tests define the expected API contract first.
+    """
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    # Generate base OpenAPI schema
+    from fastapi.openapi.utils import get_openapi
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+    )
+
+    # Add pagination models to schema components
+    from mcp_server_langgraph.api.pagination import PaginationMetadata, PaginationParams
+
+    # Get JSON schemas for pagination models
+    pagination_params_schema = PaginationParams.model_json_schema()
+    pagination_metadata_schema = PaginationMetadata.model_json_schema()
+
+    # Add to components/schemas
+    if "components" not in openapi_schema:
+        openapi_schema["components"] = {}
+    if "schemas" not in openapi_schema["components"]:
+        openapi_schema["components"]["schemas"] = {}
+
+    openapi_schema["components"]["schemas"]["PaginationParams"] = pagination_params_schema
+    openapi_schema["components"]["schemas"]["PaginationMetadata"] = pagination_metadata_schema
+
+    # Note: PaginatedResponse is generic, so we document it in the description
+    # Individual endpoint responses (e.g., PaginatedResponse[APIKey]) will be
+    # generated automatically when endpoints use them
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+# Apply custom OpenAPI schema
+app.openapi = custom_openapi  # type: ignore[assignment]
+
+
 def main() -> None:
     """Entry point for console script"""
     # Initialize observability system before creating server
