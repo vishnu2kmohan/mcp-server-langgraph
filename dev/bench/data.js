@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762132602170,
+  "lastUpdate": 1762132888577,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -23490,6 +23490,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017433681676971476",
             "extra": "mean: 59.1184629127901 usec\nrounds: 5541"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a55c66fa53adc7d650e0bd534a4e0542b1bf1508",
+          "message": "fix(tests): correct test markers and DataDeletionService initialization\n\nFixed test failures that were blocking CI/CD coverage tracking:\n\n1. **PostgreSQL test markers** (unit → integration):\n   - test_postgres_audit_log_store.py\n   - test_postgres_consent_store.py\n   - test_postgres_conversation_store.py\n   - test_postgres_preferences_store.py\n   - test_postgres_user_profile_store.py\n\n   These tests require PostgreSQL connectivity, making them integration\n   tests. CI unit tests (-m unit) no longer attempt to connect to\n   PostgreSQL, resolving OSError: Connect call failed ('127.0.0.1', 5432).\n\n2. **DataDeletionService test initialization**:\n   - Updated tests/test_data_deletion.py to use GDPRStorage container\n   - Fixed TypeError: DataDeletionService.__init__() got unexpected\n     keyword argument 'audit_log_store'\n   - Service now accepts gdpr_storage instead of individual stores\n   - Added missing InMemoryConsentStore import\n   - Created gdpr_storage fixture for cleaner test setup\n\n**Test Results**:\n- Unit tests: 86 passed, 12 skipped ✅\n- DataDeletionService tests: 5/5 passed ✅\n- PostgreSQL tests: Excluded from unit tests ✅\n\n**Fixes CI Failures**:\n- Resolves f1764d2 coverage tracking failure (7 test failures)\n- Enables coverage trend tracking to complete successfully\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-02T20:20:15-05:00",
+          "tree_id": "4c3e08b210ed43c71d8defd5da33f8de5cb611d5",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a55c66fa53adc7d650e0bd534a4e0542b1bf1508"
+        },
+        "date": 1762132887192,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.79750011097303,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010617095094475767",
+            "extra": "mean: 6.95422381632691 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.15081769488904,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015130974578065758",
+            "extra": "mean: 6.749878370968306 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51337.28817930766,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024654396967306355",
+            "extra": "mean: 19.479018769111114 usec\nrounds: 8791"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52665.73609883282,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002090195312343752",
+            "extra": "mean: 18.987677265601953 usec\nrounds: 11542"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49305.99968991569,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003099650679498227",
+            "extra": "mean: 20.28150744917408 usec\nrounds: 18794"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.84660795257565,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026259314066638687",
+            "extra": "mean: 5.239810184357558 msec\nrounds: 179"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.39980361831001,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000123236273841622",
+            "extra": "mean: 51.54691354999983 msec\nrounds: 20"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936005280088716,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028860685035469625",
+            "extra": "mean: 100.64406889999873 msec\nrounds: 10"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 2381769.1470887,
+            "unit": "iter/sec",
+            "range": "stddev: 5.190369753861208e-8",
+            "extra": "mean: 419.85597186122203 nsec\nrounds: 197278"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5031.260985952126,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001500492282410414",
+            "extra": "mean: 198.75732997992313 usec\nrounds: 497"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3017.097208230577,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009509598420961815",
+            "extra": "mean: 331.4444086428575 usec\nrounds: 2638"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2994.502635790272,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026905733692315514",
+            "extra": "mean: 333.94527293047196 usec\nrounds: 1788"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59934.36249066267,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002233444557901974",
+            "extra": "mean: 16.684919275745905 usec\nrounds: 12041"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17153.79713968618,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021606804378016197",
+            "extra": "mean: 58.29613069671025 usec\nrounds: 4981"
           }
         ]
       }
