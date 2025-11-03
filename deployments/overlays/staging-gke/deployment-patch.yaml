@@ -200,11 +200,6 @@ spec:
 
       # Node affinity for GKE
       affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100

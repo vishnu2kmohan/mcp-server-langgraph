@@ -17,7 +17,7 @@ spec:
           done
           echo "Cloud SQL Proxy is ready!"
 
-      # Add Cloud SQL Proxy sidecar
+      # Main container array - merge with base
       containers:
       - name: keycloak
         env:
@@ -35,7 +35,7 @@ spec:
               name: mcp-staging-secrets
               key: keycloak-db-password
 
-      # Cloud SQL Proxy sidecar
+      # Cloud SQL Proxy sidecar - append to containers array
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
         args:

@@ -102,14 +102,14 @@ patches:
       kind: ServiceAccount
       name: mcp-server-langgraph
 
-  # Keycloak - Add Cloud SQL Proxy sidecar
-  - path: keycloak-patch.yaml
+  # Keycloak - Add Cloud SQL Proxy sidecar (JSON 6902 patch)
+  - path: keycloak-json-patch.yaml
     target:
       kind: Deployment
       name: keycloak
 
-  # OpenFGA - Add Cloud SQL Proxy sidecar
-  - path: openfga-patch.yaml
+  # OpenFGA - Add Cloud SQL Proxy sidecar (JSON 6902 patch)
+  - path: openfga-json-patch.yaml
     target:
       kind: Deployment
       name: openfga

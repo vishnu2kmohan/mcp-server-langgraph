@@ -26,10 +26,11 @@ data:
   postgres_database: "keycloak"
   postgres_ssl_mode: "disable"  # Proxy handles TLS
 
-  # Redis connection
-  # Values will be loaded from External Secrets
+  # Memorystore Redis connection
+  # Connect to cloud-managed Memorystore Redis instance
+  redis_host: "10.110.1.4"
   redis_port: "6379"
-  redis_ssl: "true"
+  redis_ssl: "false"  # Not required for private VPC connection
 
   # Observability
   enable_console_export: "false"
