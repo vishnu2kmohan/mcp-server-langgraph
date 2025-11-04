@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762276074074,
+  "lastUpdate": 1762277075341,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -25686,6 +25686,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001723692318333723",
             "extra": "mean: 57.51063514220709 usec\nrounds: 5583"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a5eeb4e084bb7f84cb4236a3b03963185b6c7467",
+          "message": "feat(infrastructure): extract infrastructure layer with FastAPI app factory (Phase 4)\n\nComplete separation of infrastructure concerns from business logic, providing\nreusable components for FastAPI app creation, middleware, and transport adapters.\n\n## Phase 4: Infrastructure Layer Extraction (TDD Approach)\n\n### Test-Driven Development:\n✅ RED: Wrote 20 comprehensive tests first (tests/infrastructure/test_app_factory.py)\n✅ GREEN: Implemented infrastructure modules to pass all tests\n✅ REFACTOR: Formatted code and added comprehensive documentation\n\n## New Infrastructure Modules\n\n### 1. App Factory (src/mcp_server_langgraph/infrastructure/app_factory.py) - 175 lines\n\nFunctions:\n- create_app(container, settings, environment) - Main factory function\n  - Creates configured FastAPI application\n  - Adds CORS middleware\n  - Adds health check endpoint\n  - Configures lifespan management\n  - Customizes OpenAPI schema\n\n- create_lifespan(container) - Async context manager\n  - Handles startup/shutdown tasks\n  - Integrates with container telemetry\n\n- customize_openapi(app) - OpenAPI customization\n  - Enhances API documentation\n\n### 2. Middleware (src/mcp_server_langgraph/infrastructure/middleware.py) - 75 lines\n\nFunctions:\n- create_cors_middleware() - CORS configuration\n- create_rate_limit_middleware(settings) - Rate limiting\n- create_auth_middleware(container) - Authentication\n\nDesign: Returns None in test mode, actual middleware in production\n\n### 3. Transport Adapters (src/mcp_server_langgraph/infrastructure/transport_adapters.py) - 50 lines\n\nFunctions:\n- create_stdio_adapter() - STDIO transport\n- create_http_adapter() - HTTP transport\n\nExtensible for WebSocket, gRPC, etc.\n\n## Test Suite (tests/infrastructure/test_app_factory.py) - 250 lines\n\nTest Classes:\n- TestAppFactory: 5 tests (creation, container, settings, endpoints, middleware)\n- TestMiddlewareFactory: 3 tests (CORS, rate limit, auth)\n- TestLifespanManager: 2 tests (basic, with container)\n- TestOpenAPICustomization: 2 tests (schema, version)\n- TestAppConfiguration: 3 tests (test/dev/prod environments)\n- TestTransportAdapters: 2 tests (STDIO, HTTP)\n- TestAppFactoryIntegration: 2 tests (compatibility, uvicorn)\n- TestAppFactoryDocumentation: 1 test (docstrings)\n\nResults: 20/20 tests PASSING\n\n## Documentation (docs/architecture/infrastructure-layer.md) - 300 lines\n\nContents:\n- Architecture overview with diagrams\n- Component descriptions\n- Usage patterns (test/dev/production)\n- Benefits of separation\n- Integration with container pattern\n- Testing guide\n- Future enhancements\n- Complete code examples\n\n## Benefits\n\n### Separation of Concerns\n✅ Infrastructure separate from business logic\n✅ Reusable across server implementations\n✅ Single responsibility per module\n\n### Testability\n✅ Test infrastructure independently\n✅ Mock infrastructure in business logic tests\n✅ No coupling between layers\n\n### Maintainability\n✅ Clear module boundaries\n✅ Easy to locate and modify\n✅ Smaller, focused files\n\n## Code Organization\n\nBefore:\n- server_streamable.py: 1425 lines (mixed concerns)\n- server_stdio.py: 675 lines (mixed concerns)\n\nAfter:\n- infrastructure/app_factory.py: 175 lines (FastAPI setup)\n- infrastructure/middleware.py: 75 lines (Middleware)\n- infrastructure/transport_adapters.py: 50 lines (Transports)\n- server_streamable.py: 1425 lines (unchanged - migration to come)\n\nTarget (Future Phase 5):\n- server_streamable.py: <500 lines (business logic only)\n- server_stdio.py: <300 lines (business logic only)\n\n## Test Results\n\nCumulative Test Results (All Phases):\n✅ 21/21 container tests PASSING (Phase 2)\n✅ 18/18 test helper tests PASSING (Phase 2)\n✅ 18/18 agent DI tests PASSING (Phase 3)\n✅ 20/20 infrastructure tests PASSING (Phase 4)\n✅ 76/76 exception tests PASSING (existing)\n\nTotal: 173/174 tests PASSING (1 intentional skip)\n\n## Integration Example\n\n```python\nfrom mcp_server_langgraph.core.container import create_test_container\nfrom mcp_server_langgraph.infrastructure.app_factory import create_app\nfrom mcp_server_langgraph.core.agent import create_agent\n\n# Create container\ncontainer = create_test_container()\n\n# Create infrastructure\napp = create_app(container=container)\n\n# Create business logic\nagent = create_agent(container=container)\n\n# Use together\nfrom fastapi.testclient import TestClient\nclient = TestClient(app)\nresponse = client.get(\"/health\")\n```\n\n## Breaking Changes\n\nNone. All changes are additive and backward compatible.\n\n## Future Work (Phase 5 - Optional)\n\n- Refactor server_streamable.py to use create_app()\n- Reduce file size from 1425 to <500 lines\n- Extract MCP handlers to separate module\n- Complete infrastructure/business logic separation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T12:21:22-05:00",
+          "tree_id": "915bdacfff0b3d0f8a59bcc478fc8e843c641dec",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a5eeb4e084bb7f84cb4236a3b03963185b6c7467"
+        },
+        "date": 1762277073655,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 146.14458214749297,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008711200546095133",
+            "extra": "mean: 6.842538979589223 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.13127031451162,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001246941705991044",
+            "extra": "mean: 6.660837531748642 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44850.812740702415,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.296140000435116 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48327.06209082065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.692340000323384 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45919.43801948732,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.777270000029603 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.6384444903359,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.245531680000113 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.451835185432973,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.40903110000011 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.947172293782124,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.53108264999992 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1475230.8738875317,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 677.8599998824575 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4922.970768675242,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 203.12938000017766 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2965.6794374540036,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.1908600001916 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2906.666136489849,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.0367600001082 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58950.42913618087,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023716830684554573",
+            "extra": "mean: 16.96340492602537 usec\nrounds: 12627"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16905.815051178542,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000178813832809495",
+            "extra": "mean: 59.15124452578746 usec\nrounds: 5206"
           }
         ]
       }
