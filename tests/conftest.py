@@ -17,24 +17,14 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-# Set test environment variables before importing modules
+# Set minimal test environment variables
+# With container pattern, we no longer need to set all these before imports!
+# The container handles test mode configuration automatically.
+# We only set critical ones that can't be overridden:
+os.environ.setdefault("ENVIRONMENT", "test")  # Trigger test mode
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("HIPAA_INTEGRITY_SECRET", "test-hipaa-secret-key-for-testing-only")
-os.environ.setdefault("ANTHROPIC_API_KEY", "test-anthropic-key")
-os.environ.setdefault("OPENFGA_API_URL", "http://localhost:8080")
-os.environ.setdefault("OPENFGA_STORE_ID", "")  # Disable OpenFGA for tests
-os.environ.setdefault("OPENFGA_MODEL_ID", "")  # Disable OpenFGA for tests
-os.environ.setdefault("LOG_LEVEL", "DEBUG")
-os.environ.setdefault("OTLP_ENDPOINT", "http://localhost:4317")
-
-# Disable telemetry output during tests for cleaner output
-os.environ.setdefault("ENABLE_TRACING", "false")
-os.environ.setdefault("ENABLE_METRICS", "false")
-os.environ.setdefault("ENABLE_CONSOLE_EXPORT", "false")
-
-# Disable OTLP exporters in tests to prevent gRPC connection errors
-# This forces OpenTelemetry to use no-op exporters
-os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")  # Disable OpenTelemetry SDK
 
 # Suppress gRPC logging noise in tests
 warnings.filterwarnings("ignore", message=".*failed to connect to all addresses.*")
@@ -69,49 +59,65 @@ settings.register_profile(
 settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
 
 
-# Initialize observability for tests (required after lazy init refactor)
+# Container-based test fixtures (NEW APPROACH)
+# These replace the old global initialization pattern
+
+
+@pytest.fixture(scope="session")
+def test_container():
+    """
+    Create test container for the session.
+
+    This container:
+    - Uses no-op telemetry (no output)
+    - Uses no-op auth (accepts any token)
+    - Uses in-memory storage
+    - Has NO global side effects
+
+    Replaces: pytest_configure(), init_observability_for_workers()
+    """
+    from mcp_server_langgraph.core.container import create_test_container
+
+    container = create_test_container()
+    yield container
+    # No cleanup needed - container has no global state
+
+
+@pytest.fixture
+def container(test_container):
+    """
+    Per-test container fixture.
+
+    Use this when you need a fresh container for each test.
+    For most tests, use test_container (session-scoped) instead.
+    """
+    from mcp_server_langgraph.core.container import create_test_container
+
+    return create_test_container()
+
+
+# Legacy observability initialization (DEPRECATED - will be removed after migration)
+# Kept temporarily for backward compatibility with existing tests
 def pytest_configure(config):
-    """Initialize observability system for tests."""
+    """
+    DEPRECATED: Use container fixtures instead.
+
+    Initialize observability system for tests (legacy approach).
+    New tests should use the container fixture.
+    """
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
 
     # Only initialize if not already done
     if not is_initialized():
-        # Always initialize observability, even when OTEL SDK is disabled
-        # This ensures lazy metrics don't raise RuntimeError
-        # The OTEL SDK environment variable will ensure no-op implementations are used
         test_settings = Settings(
-            log_format="text",  # Text format for easier test debugging
-            enable_file_logging=False,  # No file logging in tests
-            langsmith_tracing=False,  # Disable LangSmith in tests
-            observability_backend="opentelemetry",  # OpenTelemetry only
-        )
-        init_observability(settings=test_settings, enable_file_logging=False)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def init_observability_for_workers():
-    """
-    Initialize observability in each worker process (for pytest-xdist).
-
-    This fixture ensures observability is initialized even when tests run in parallel.
-    pytest_configure() only runs in the main process, not in worker processes.
-    """
-    from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-    # Initialize if not already done (may already be done by pytest_configure in main process)
-    if not is_initialized():
-        test_settings = Settings(
+            environment="test",
             log_format="text",
             enable_file_logging=False,
             langsmith_tracing=False,
             observability_backend="opentelemetry",
         )
         init_observability(settings=test_settings, enable_file_logging=False)
-
-    yield
-    # No cleanup needed - observability persists for the session
 
 
 # Mock MCP server initialization at session level to prevent event loop issues
@@ -143,11 +149,18 @@ def mock_mcp_modules():
 
 
 @pytest.fixture(scope="session")
-def mock_settings():
-    """Mock settings for testing (session-scoped for performance)"""
+def mock_settings(test_container):
+    """
+    Mock settings for testing (session-scoped for performance).
+
+    Now uses container.settings instead of creating settings directly.
+    This ensures consistency with the container pattern.
+    """
+    # You can still create custom settings for specific tests
     from mcp_server_langgraph.core.config import Settings
 
     return Settings(
+        environment="test",
         service_name="test-service",
         otlp_endpoint="http://localhost:4317",
         jwt_secret_key="test-secret-key",

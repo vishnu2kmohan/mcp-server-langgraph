@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -12,8 +12,54 @@ UV_RUN := uv run
 COV_SRC := src/mcp_server_langgraph
 COV_OPTIONS := --cov=$(COV_SRC)
 
+# ==============================================================================
+# Help - Common Commands (Day-1 Developer)
+# ==============================================================================
+
+help-common:
+	@echo "╔══════════════════════════════════════════════════════════════╗"
+	@echo "║  LangGraph MCP Agent - Common Commands (Quick Reference)    ║"
+	@echo "╚══════════════════════════════════════════════════════════════╝"
+	@echo ""
+	@echo "🚀 Getting Started (< 5 minutes):"
+	@echo "  1. make install-dev        # Install dependencies (~1 min)"
+	@echo "  2. make quick-start        # Start with defaults (~2 min)"
+	@echo "  3. make test-dev           # Verify everything works (~1 min)"
+	@echo ""
+	@echo "📝 Daily Development:"
+	@echo "  make test-dev              🚀 Run tests (fast, parallel, recommended)"
+	@echo "  make format                Format code (black, isort)"
+	@echo "  make lint-check            Check code quality"
+	@echo "  make run-streamable        Start HTTP server"
+	@echo ""
+	@echo "🧪 Essential Testing:"
+	@echo "  make test-unit             Unit tests with coverage"
+	@echo "  make test-fast             All tests, skip coverage (faster)"
+	@echo "  make test-integration      Integration tests (needs Docker)"
+	@echo ""
+	@echo "🐳 Infrastructure:"
+	@echo "  make setup-infra           Start all Docker services"
+	@echo "  make logs                  View service logs"
+	@echo "  make clean                 Stop and cleanup"
+	@echo ""
+	@echo "📚 Documentation:"
+	@echo "  make help                  Full command reference (112+ targets)"
+	@echo "  make help-advanced         Advanced & specialized targets"
+	@echo ""
+	@echo "💡 Pro Tips:"
+	@echo "  • New here? See docs/day-1-developer.md for step-by-step guide"
+	@echo "  • Use 'make -j4' for parallel execution (4x faster)"
+	@echo "  • Use 'make test-dev' instead of 'make test' for development"
+	@echo ""
+
+# ==============================================================================
+# Help - Full Reference
+# ==============================================================================
+
 help:
-	@echo "LangGraph MCP Agent - Make Commands"
+	@echo "LangGraph MCP Agent - Full Make Commands Reference"
+	@echo ""
+	@echo "💡 NEW HERE? Run 'make help-common' for the essential commands"
 	@echo ""
 	@echo "⚡ Performance Tip:"
 	@echo "  Use 'make -j4' to run independent targets in parallel (4 jobs)"

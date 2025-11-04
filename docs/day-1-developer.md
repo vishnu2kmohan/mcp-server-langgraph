@@ -1,0 +1,289 @@
+# Day-1 Developer Guide
+
+Welcome! This guide gets you from zero to running your first LangGraph MCP agent in **under 5 minutes**.
+
+## 🎯 Choose Your Path
+
+### Path 1: Quickstart (0 infrastructure, < 2 minutes)
+**Perfect for**: Learning, prototyping, exploring LangGraph + MCP
+
+- ✅ No Docker, no databases, no auth services
+- ✅ In-memory everything (conversations, checkpoints, sessions)
+- ✅ Free LLM tier (Google Gemini)
+- ✅ 3 endpoints, minimal complexity
+
+[→ Jump to Quickstart](#quickstart-zero-infrastructure)
+
+---
+
+### Path 2: Local Development (Minimal infrastructure, ~5 minutes)
+**Perfect for**: Feature development, integration testing
+
+- Uses: Redis (checkpoints), PostgreSQL (conversations)
+- No auth required (development mode)
+- Full observability optional
+- ~8 docker services
+
+[→ Jump to Local Dev](#local-development-minimal-infrastructure)
+
+---
+
+### Path 3: Full Production Setup (~20 minutes)
+**Perfect for**: Production deployment, enterprise features
+
+- Full stack: Auth (Keycloak/OpenFGA), observability (Prometheus/Grafana), compliance
+- Multi-tenant ready
+- All 10+ services
+
+[→ Jump to Production Setup](#full-production-setup)
+
+---
+
+## Quickstart (Zero Infrastructure)
+
+### Prerequisites
+- Python 3.12+
+- `uv` package manager ([Install uv](https://docs.astral.sh/uv/getting-started/installation/))
+
+### Steps
+
+```bash
+# 1. Clone and enter directory
+git clone <your-repo>
+cd mcp-server-langgraph
+
+# 2. Install dependencies (35-45 seconds)
+uv sync
+
+# 3. Set ONE environment variable (Google Gemini API key - free tier)
+export GOOGLE_API_KEY="your-key-here"  # Get free key: https://aistudio.google.com/apikey
+
+# 4. Run the quickstart server
+uv run python quickstart_app.py
+
+# ✅ Server running at http://localhost:8000
+```
+
+### Test It
+
+```bash
+# Send a chat message
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello! What can you help me with?"}'
+
+# Get conversation history
+curl http://localhost:8000/conversations
+
+# Interactive docs
+open http://localhost:8000/docs
+```
+
+### What You Get
+- **In-memory agent**: Conversations persist until server restart
+- **3 API endpoints**: `/chat`, `/conversations`, `/health`
+- **MemorySaver checkpointer**: State management without Redis
+- **No authentication**: Open for local experimentation
+- **Code location**: `quickstart_app.py` + `src/mcp_server_langgraph/presets/quickstart.py`
+
+### Limitations
+- Data lost on restart (no persistent storage)
+- Single-threaded (no concurrency)
+- No auth/authorization
+- No observability/metrics
+
+**Next step**: When you're ready for persistence and multi-user support, move to Path 2 (Local Development).
+
+---
+
+## Local Development (Minimal Infrastructure)
+
+### Prerequisites
+- Docker & Docker Compose
+- `uv` package manager
+
+### Steps
+
+```bash
+# 1. Start minimal infrastructure (Redis + PostgreSQL only)
+docker compose -f docker-compose.minimal.yml up -d
+
+# 2. Copy environment template
+cp .env.example .env
+
+# 3. Configure for development mode
+cat >> .env << EOF
+# Minimal dev configuration
+ENVIRONMENT=development
+AUTH_PROVIDER=inmemory
+CHECKPOINT_BACKEND=redis
+REDIS_URL=redis://localhost:6379
+
+# Database for conversations
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/langgraph
+
+# LLM (use free tier)
+GOOGLE_API_KEY=your-key-here
+
+# Disable heavy features
+OPENFGA_STORE_ID=
+OPENFGA_MODEL_ID=
+ENABLE_TRACING=false
+ENABLE_METRICS=false
+EOF
+
+# 4. Run migrations
+uv run alembic upgrade head
+
+# 5. Start the server
+uv run uvicorn src.mcp_server_langgraph.mcp.server_streamable:app --reload
+
+# ✅ Server running at http://localhost:8000 with persistence
+```
+
+### Test It
+
+```bash
+# Use same curl commands as quickstart, but conversations now persist!
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Remember this: my favorite color is blue"}'
+
+# Restart server, then:
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is my favorite color?"}'
+# Response: "Your favorite color is blue" ✅
+```
+
+### What You Get
+- **Persistent conversations**: PostgreSQL storage
+- **Distributed checkpointing**: Redis for agent state
+- **Fast development**: Hot reload with `--reload`
+- **Full MCP server**: All tools, resources, prompts
+- **Test infrastructure**: Run full integration tests
+
+### Adding Features Incrementally
+
+```bash
+# Add observability (Jaeger tracing)
+docker compose up -d jaeger
+export ENABLE_TRACING=true
+export JAEGER_ENDPOINT=http://localhost:14268/api/traces
+# View traces: http://localhost:16686
+
+# Add metrics (Prometheus)
+docker compose up -d prometheus
+export ENABLE_METRICS=true
+# View metrics: http://localhost:9090
+
+# Add authentication
+docker compose up -d keycloak openfga
+export AUTH_PROVIDER=keycloak
+export OPENFGA_STORE_ID=<created-store-id>
+# See docs/deployment/authentication.md for setup
+```
+
+**Next step**: When you're ready for production deployment, move to Path 3.
+
+---
+
+## Full Production Setup
+
+For production deployment with all enterprise features, see:
+- [Production Deployment Guide](deployment/production-deployment.md)
+- [Kubernetes Deployment](deployment/kubernetes.md)
+- [Authentication Setup](deployment/authentication.md)
+- [Observability Configuration](architecture/observability.md)
+
+---
+
+## Common Tasks
+
+### Running Tests
+
+```bash
+# Unit tests (fast, no infrastructure needed)
+make test-unit
+
+# Integration tests (requires minimal docker-compose)
+make test-integration
+
+# All tests
+make test
+```
+
+### Development Workflow
+
+```bash
+# Format code
+make format
+
+# Lint
+make lint
+
+# Type check
+make type-check
+
+# Run fast quality checks before committing
+make quick-check
+```
+
+### Debugging
+
+```bash
+# Enable debug logging
+export LOG_LEVEL=DEBUG
+
+# Disable telemetry for cleaner logs
+export OTEL_SDK_DISABLED=true
+
+# Run with debugger
+uv run python -m debugpy --listen 5678 --wait-for-client \
+  -m uvicorn src.mcp_server_langgraph.mcp.server_streamable:app
+```
+
+---
+
+## Progressive Complexity Roadmap
+
+Your learning journey:
+
+1. **Quickstart** (you are here) → Understand agent basics, MCP protocol
+2. **Add Redis** → Learn checkpointing, state management
+3. **Add PostgreSQL** → Persistent conversations, audit logs
+4. **Add Authentication** → Multi-user support, authorization
+5. **Add Observability** → Tracing, metrics, debugging in production
+6. **Add Compliance Features** → GDPR, HIPAA, audit trails
+7. **Deploy to Kubernetes** → Horizontal scaling, high availability
+
+Each step builds on the previous, and you can stop whenever you have what you need.
+
+---
+
+## Getting Help
+
+- **Issue with quickstart?** Check [Troubleshooting](development/troubleshooting.md)
+- **Understanding architecture?** See [Architecture Overview](architecture/overview.md)
+- **Contributing?** Read [Contributing Guide](../CONTRIBUTING.md)
+- **Found a bug?** [Open an issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
+
+---
+
+## What's Different from Production?
+
+| Feature | Quickstart | Local Dev | Production |
+|---------|-----------|-----------|------------|
+| **Persistence** | None (MemorySaver) | Redis + PostgreSQL | Redis + PostgreSQL + backups |
+| **Authentication** | None | Optional (inmemory) | Required (Keycloak + OpenFGA) |
+| **Observability** | None | Optional | Full (Jaeger + Prometheus + Grafana) |
+| **Compliance** | None | Optional | GDPR + HIPAA + audit logs |
+| **Scaling** | Single process | Single process | Kubernetes horizontal scaling |
+| **Startup time** | < 2 seconds | ~10 seconds | ~30 seconds (all services) |
+| **Code path** | `quickstart_app.py` | `server_streamable.py` (dev mode) | `server_streamable.py` (prod mode) |
+
+The goal of this project's architecture is to let you **start simple** and **add complexity only when needed**.
+
+---
+
+**Ready to start?** Pick your path above and let's go! 🚀

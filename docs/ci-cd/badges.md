@@ -1,0 +1,77 @@
+# CI/CD Pipeline Status & Badges
+
+This page contains the comprehensive CI/CD status for the mcp-server-langgraph project.
+
+## CI/CD Pipeline Status
+
+**CI/CD Pipeline:**
+[![Main Pipeline](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml)
+[![E2E Tests](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/e2e-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/e2e-tests.yaml)
+[![Quality Tests](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/quality-tests.yaml)
+[![Build Hygiene](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-hygiene.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/build-hygiene.yaml)
+[![Coverage Trend](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/coverage-trend.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/coverage-trend.yaml)
+[![Optional Deps](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/optional-deps-test.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/optional-deps-test.yaml)
+
+**Security:**
+[![Security Scan](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml)
+[![GCP Compliance](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/gcp-compliance-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/gcp-compliance-scan.yaml)
+[![GCP Drift Detection](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/gcp-drift-detection.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/gcp-drift-detection.yaml)
+
+**Deployment:**
+[![Release](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/release.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/release.yaml)
+[![Deploy Staging](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-staging-gke.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-staging-gke.yaml)
+[![Deploy Production](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-production-gke.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-production-gke.yaml)
+
+**Automation:**
+[![Dependabot Auto-merge](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/dependabot-automerge.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/dependabot-automerge.yaml)
+[![Link Checker](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/link-checker.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/link-checker.yaml)
+[![Stale Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/stale.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/stale.yaml)
+[![Version Bump](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/bump-deployment-versions.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/bump-deployment-versions.yaml)
+
+## Quality Metrics
+
+[![Security Audit](https://img.shields.io/badge/security-audited-success.svg)](../archive/SECURITY_AUDIT.md)
+[![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
+[![Code Coverage](https://img.shields.io/badge/coverage-see_testing_docs-blue.svg)](#testing-strategy)
+[![Property Tests](https://img.shields.io/badge/property%20tests-27%2B-blue.svg)](#testing-strategy)
+[![Contract Tests](https://img.shields.io/badge/contract%20tests-20%2B-blue.svg)](#testing-strategy)
+[![Mutation Testing](https://img.shields.io/badge/mutation%20testing-enabled-yellow.svg)](../docs-internal/MUTATION_TESTING.md)
+
+## CI/CD Configuration
+
+This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GCP) Workload Identity Federation for secure deployments.
+
+### Quick Setup for Contributors
+
+1. **Configure repository secrets/variables** → See [SECRETS.md](../../SECRETS.md)
+2. **Set up GCP Workload Identity Federation** → Complete instructions in [SECRETS.md](../../SECRETS.md)
+3. **Verify configuration** → Run "GCP Drift Detection" workflow manually
+
+### Required Configuration
+
+| Variable/Secret | Type | Description |
+|----------------|------|-------------|
+| `GCP_PROJECT_ID` | Variable | Your Google Cloud project ID |
+| `GCP_WIF_PROVIDER` | Secret | Workload Identity Federation provider path |
+| `GCP_STAGING_SA_EMAIL` | Secret | Staging service account email |
+| `GCP_PRODUCTION_SA_EMAIL` | Secret | Production service account email |
+
+**📚 Complete guides**:
+- [SECRETS.md](../../SECRETS.md) - Setup & configuration (350+ lines)
+- [.github/ACTION_VERSIONING_STRATEGY.md](../../.github/ACTION_VERSIONING_STRATEGY.md) - Version pinning policy
+- [.github/WORKFLOW_AUDIT_REMAINING.md](../../.github/WORKFLOW_AUDIT_REMAINING.md) - Recent improvements
+
+### CI/CD Features
+
+✅ **Comprehensive Testing**: Unit, integration, E2E, property-based, contract, regression, mutation
+✅ **Multi-layered Security**: Trivy, CodeQL, TruffleHog, Gitleaks, SAST
+✅ **Production Deployments**: Manual approval gates, automatic rollback, smoke tests
+✅ **Cost Tracking**: Weekly/monthly reports, budget alerts, optimization recommendations
+✅ **Drift Detection**: Every 6 hours, auto-remediation options
+✅ **Compliance Scanning**: Daily CIS benchmarks, Terraform security validation
+
+**Recent Improvements** (2025-11-03):
+- ✅ Eliminated hardcoded credentials (11 locations)
+- ✅ Extracted cost tracking script with 27 TDD tests
+- ✅ Optimized Docker caching (+20% build speed)
+- ✅ Added comprehensive documentation (SECRETS.md, 350+ lines)

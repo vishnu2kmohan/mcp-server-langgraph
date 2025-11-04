@@ -1,0 +1,94 @@
+# Docker Compose for MCP Server LangGraph - Minimal Development Stack
+# =========================================================================
+# Lightweight local development with only essential persistence services
+#
+# USAGE:
+#   docker compose -f docker-compose.minimal.yml up -d
+#
+# SERVICES:
+#   - PostgreSQL: Conversation storage
+#   - Redis: Checkpoint storage
+#
+# This is perfect for:
+#   - Local feature development
+#   - Testing with persistence
+#   - Fast startup (~5 seconds vs ~30 seconds for full stack)
+#
+# What's NOT included (use full docker-compose.yml for these):
+#   - OpenFGA (authorization)
+#   - Keycloak (authentication)
+#   - Qdrant (vector search)
+#   - Jaeger (tracing)
+#   - Prometheus/Grafana (metrics/dashboards)
+#
+
+services:
+  # ==============================================================================
+  # DATABASE
+  # ==============================================================================
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: mcp-postgres-minimal
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: langgraph
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data-minimal:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - mcp-network-minimal
+
+  # ==============================================================================
+  # CACHE & CHECKPOINT STORAGE
+  # ==============================================================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis-minimal
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data-minimal:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    networks:
+      - mcp-network-minimal
+
+networks:
+  mcp-network-minimal:
+    driver: bridge
+    name: mcp-network-minimal
+
+volumes:
+  postgres-data-minimal:
+    name: mcp-postgres-data-minimal
+  redis-data-minimal:
+    name: mcp-redis-data-minimal
