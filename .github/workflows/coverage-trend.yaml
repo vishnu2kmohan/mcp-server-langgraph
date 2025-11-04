@@ -39,6 +39,11 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+# Auto-cancel old runs when new commits are pushed
+concurrency:
+  group: coverage-trend-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -47,6 +52,7 @@ jobs:
   track-coverage:
     name: Track Coverage Trends
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Prevent indefinite hanging
 
     steps:
     - name: Checkout code

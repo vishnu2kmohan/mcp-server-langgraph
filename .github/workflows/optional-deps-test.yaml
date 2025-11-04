@@ -9,6 +9,11 @@ on:
     # Run weekly on Sundays at 2am UTC
     - cron: "0 2 * * 0"
 
+# Auto-cancel old runs when new commits are pushed
+concurrency:
+  group: optional-deps-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write  # For PR comments if needed

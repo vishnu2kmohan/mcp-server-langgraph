@@ -16,6 +16,11 @@ on:
           - 'false'
           - 'true'
 
+# Prevent overlapping drift detection runs
+concurrency:
+  group: gcp-drift-detection
+  cancel-in-progress: false  # Let detection runs complete
+
 permissions:
   contents: read
   id-token: write

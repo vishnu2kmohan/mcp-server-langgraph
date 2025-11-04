@@ -33,6 +33,11 @@ on:
     - cron: '0 9 * * 1'
   workflow_dispatch:
 
+# Auto-cancel old runs when new commits are pushed
+concurrency:
+  group: track-skipped-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
