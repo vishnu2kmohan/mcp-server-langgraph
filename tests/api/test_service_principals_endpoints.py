@@ -323,8 +323,23 @@ class TestGetServicePrincipal:
 
     def test_get_service_principal_success(self, test_client, mock_sp_manager):
         """Test successful retrieval of service principal details"""
+        # Arrange: Configure mock to return existing service principal
+        mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
+            service_id="batch-etl-job",
+            name="Batch ETL Job",
+            description="Nightly data processing",
+            authentication_mode="client_credentials",
+            associated_user_id=None,
+            owner_user_id="user123",
+            inherit_permissions=False,
+            enabled=True,
+            created_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+        # Act: Retrieve service principal
         response = test_client.get("/api/v1/service-principals/batch-etl-job")
 
+        # Assert: Verify response
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
@@ -381,8 +396,23 @@ class TestRotateServicePrincipalSecret:
 
     def test_rotate_secret_success(self, test_client, mock_sp_manager):
         """Test successful secret rotation"""
+        # Arrange: Configure mock to return existing service principal owned by current user
+        mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
+            service_id="batch-etl-job",
+            name="Batch ETL Job",
+            description="Nightly data processing",
+            authentication_mode="client_credentials",
+            associated_user_id=None,
+            owner_user_id="user123",  # Matches mock_current_user fixture
+            inherit_permissions=False,
+            enabled=True,
+            created_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+        # Act: Call rotate secret endpoint
         response = test_client.post("/api/v1/service-principals/batch-etl-job/rotate-secret")
 
+        # Assert: Verify response
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
@@ -437,8 +467,23 @@ class TestDeleteServicePrincipal:
 
     def test_delete_service_principal_success(self, test_client, mock_sp_manager):
         """Test successful service principal deletion"""
+        # Arrange: Configure mock to return existing service principal owned by current user
+        mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
+            service_id="batch-etl-job",
+            name="Batch ETL Job",
+            description="Nightly data processing",
+            authentication_mode="client_credentials",
+            associated_user_id=None,
+            owner_user_id="user123",  # Matches mock_current_user fixture
+            inherit_permissions=False,
+            enabled=True,
+            created_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+        # Act: Delete service principal
         response = test_client.delete("/api/v1/service-principals/batch-etl-job")
 
+        # Assert: Verify response
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert response.content == b""  # No response body
 

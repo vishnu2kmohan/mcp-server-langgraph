@@ -40,19 +40,16 @@ name: Documentation Link Checker
 # ==============================================================================
 
 on:
-  pull_request:
-    branches: [main, develop]
+  # Optimized for Balanced Approach: schedule + main branch only
+  # Reduces PR queue time while maintaining link quality
+  push:
+    branches: [main]
     paths:
       - '**.md'
       - '**.mdx'
       - 'docs/**'
       - 'adr/**'
       - '.github/**'
-  push:
-    branches: [main, develop]
-    paths:
-      - '**.md'
-      - '**.mdx'
   schedule:
     # Run weekly on Mondays at 9 AM UTC
     - cron: '0 9 * * 1'
