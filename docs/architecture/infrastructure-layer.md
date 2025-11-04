@@ -213,9 +213,9 @@ pytest tests/infrastructure/test_app_factory.py
 
 ## Related Documentation
 
-- [Container Pattern](../MIGRATION_GUIDE.md) - DI container usage
-- [Day-1 Developer Guide](../day-1-developer.md) - Getting started
-- [Agent Architecture](agent-architecture.md) - Agent system design
+- [Container Pattern](../guides/container-migration.mdx) - DI container usage
+- [Day-1 Developer Guide](../getting-started/day-1-developer.mdx) - Getting started
+- [Agentic Loop ADR](./adr-0024-agentic-loop-implementation.mdx) - Agent system design
 
 ## Examples
 
