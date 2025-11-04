@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762295293197,
+  "lastUpdate": 1762296724230,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27638,6 +27638,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000359486006502939",
             "extra": "mean: 60.139500875330285 usec\nrounds: 3999"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "09c518c1c52de763270bf41a5d920574641f11a9",
+          "message": "fix(app): resolve critical startup failures and security issues\n\nThis commit addresses 5 critical issues identified by OpenAI Codex analysis:\n\n## High Priority Fixes (Startup Blockers)\n\n1. **Fix RateLimiter ImportError** (app.py:21, 51)\n   - Removed non-existent `RateLimiter` class import\n   - Changed `app.add_middleware(RateLimiter)` to `setup_rate_limiting(app)`\n   - Properly wires rate limiting using the correct setup function\n   - Prevents ImportError: cannot import name 'RateLimiter'\n\n2. **Fix logger initialization RuntimeError** (app.py:52-81)\n   - Wrapped all logger calls in try/except to handle uninitialized observability\n   - App can now start even if observability hasn't been initialized yet\n   - Prevents RuntimeError: Observability not initialized\n\n## Medium Priority Fixes (Security & Functionality)\n\n3. **Fix CORS security misconfiguration** (app.py:42-62)\n   - Replaced hardcoded `allow_origins=[\"*\"]` with `settings.cors_allowed_origins`\n   - CORS middleware only added when origins are explicitly configured\n   - Secure by default: CORS disabled if no origins specified\n   - Closes security vulnerability allowing any origin with credentials\n\n4. **Implement JWT session timeout** (session_timeout.py:167-200)\n   - Added JWT Bearer token decoding to extract session IDs\n   - Supports 'sid', 'session_id', and 'jti' JWT claims\n   - JWT session IDs take priority over cookies and request state\n   - Graceful fallback on invalid tokens\n   - Restores HIPAA compliance (§164.312(a)(2)(iii))\n\n5. **Fix rate limiting not wired** (rate_limiter.py:305-316)\n   - Added try/except to logger calls in setup_rate_limiting\n   - Ensures rate limiting is properly enabled\n   - Fixes DoS vulnerability from disabled rate limiting\n\n## Additional Improvements\n\n- Added type annotations to app.py endpoints\n- Fixed type errors in session_timeout.py\n- Enhanced error handling throughout\n\n## Testing\n\n- Added 15 new unit tests in tests/api/test_app_configuration.py\n- Added 6 new JWT extraction tests in tests/test_session_timeout.py\n- All tests pass (21/21)\n- No mypy type errors introduced\n- App startup verified manually\n\nFixes prevent ImportError and RuntimeError at startup, close security vulnerabilities,\nand restore HIPAA compliance for session timeout enforcement.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T17:50:44-05:00",
+          "tree_id": "e335960054e4a33ba965e2efb43ddcc70afb71d7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/09c518c1c52de763270bf41a5d920574641f11a9"
+        },
+        "date": 1762296722484,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.54468484498753,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010003072523403835",
+            "extra": "mean: 6.9182758333343015 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.2820744953799,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003402071710267536",
+            "extra": "mean: 6.7439034920647645 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44622.55786326682,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.410189999959584 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47433.334819489304,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.082220000039342 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45643.23875310269,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.909049999919716 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.6581793373203,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.244988720000094 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.34894818205376,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.682395890000095 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.946902930831325,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.53380503999989 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1402072.262799824,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 713.2300000023406 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4862.689323946488,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 205.6475199999852 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3013.6290772289894,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 331.8258400000218 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2903.7023133677562,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.38792000003104 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60358.93163475105,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021319931294836825",
+            "extra": "mean: 16.567556332031895 usec\nrounds: 13021"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17344.843699534344,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016907054366788495",
+            "extra": "mean: 57.654021986191026 usec\nrounds: 5458"
           }
         ]
       }
