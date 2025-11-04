@@ -104,30 +104,37 @@ jobs:
         docker compose -f docker-compose.test.yml up -d
 
         echo "Waiting for all services to report healthy..."
-        echo "This may take up to 60 seconds for Keycloak..."
+        echo "This may take up to 3 minutes for Keycloak to initialize..."
 
-        # Wait for all services to be healthy (max 90 seconds)
-        for i in {1..45}; do
+        # Wait for all services to be healthy (max 3 minutes = 180 seconds)
+        # Keycloak needs 45s start_period + up to 40 retries * 5s = ~3 min worst case
+        for i in {1..60}; do
           HEALTH_STATUS=$(docker compose -f docker-compose.test.yml ps --format json | jq -r '.[].Health')
 
           # Count healthy services
           HEALTHY=$(echo "$HEALTH_STATUS" | grep -c "healthy" || true)
           TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l)
 
-          echo "Attempt $i: $HEALTHY/$TOTAL services healthy"
+          echo "Attempt $i/60: $HEALTHY/$TOTAL services healthy"
 
-          if [ "$HEALTHY" -eq "$TOTAL" ]; then
-            echo "✓ All services are healthy!"
+          if [ "$HEALTHY" -eq "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
+            echo "✅ All $TOTAL services are healthy!"
             break
           fi
 
-          if [ $i -eq 45 ]; then
-            echo "⚠️  Timeout waiting for services. Current status:"
+          if [ $i -eq 60 ]; then
+            echo "❌ Timeout waiting for services after 3 minutes. Current status:"
             docker compose -f docker-compose.test.yml ps
-            # Continue anyway - some tests may work
+            echo ""
+            echo "Showing logs for unhealthy services:"
+            docker compose -f docker-compose.test.yml ps --format json | jq -r '.[] | select(.Health != "healthy") | .Service' | while read service; do
+              echo "=== Logs for $service ==="
+              docker compose -f docker-compose.test.yml logs --tail=50 "$service"
+            done
+            exit 1  # Fail explicitly instead of continuing
           fi
 
-          sleep 2
+          sleep 3
         done
 
         echo ""

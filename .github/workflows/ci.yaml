@@ -401,7 +401,7 @@ jobs:
   docker-compose-smoke-test:
     name: Docker Compose smoke test (${{ matrix.stack }})
     runs-on: ubuntu-latest
-    needs: [verify]
+    needs: [pre-commit]
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -636,4 +636,4 @@ jobs:
         echo "| Docker build (test) | 600s | 90s | **-85%** |" >> $GITHUB_STEP_SUMMARY
         echo "| Dependency install | 180s | 45s | **-75%** |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Cost Savings:** ~$150/month in GitHub Actions minutes" >> $GITHUB_STEP_SUMMARY
+        echo "**Cost Savings:** ~\$150/month in GitHub Actions minutes" >> $GITHUB_STEP_SUMMARY

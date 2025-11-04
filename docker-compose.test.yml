@@ -143,9 +143,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
       interval: 5s
-      timeout: 3s
-      retries: 30
-      start_period: 30s
+      timeout: 5s
+      retries: 40
+      start_period: 45s
     deploy:
       resources:
         limits:
