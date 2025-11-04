@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762270555731,
+  "lastUpdate": 1762270867000,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -25076,6 +25076,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017794686807616983",
             "extra": "mean: 57.29556474452795 usec\nrounds: 5429"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b7f58f39290e90055bc08d4c606a43952f36e707",
+          "message": "feat(ci/cd): achieve Level 5 Elite CI/CD maturity with DORA metrics, performance regression detection, and observability\n\nThis commit implements the final features to reach Level 5 (Elite) CI/CD maturity,\ncompleting all identified gaps and following TDD best practices throughout.\n\n## Level 5 (Elite) Features Implemented\n\n### 1. DORA Metrics Tracking\n**Files**: `.github/workflows/dora-metrics.yaml`, `scripts/ci/dora_metrics.py`\n\n**Purpose**: Track the four key DevOps Research and Assessment (DORA) metrics\n\n**Key Metrics**:\n- **Deployment Frequency**: How often code is deployed to production\n  * Elite: Multiple per day\n  * Tracks actual GitHub deployments via API\n- **Lead Time for Changes**: Time from commit to production deployment\n  * Elite: <1 hour\n  * Calculates from first commit timestamp to deployment\n- **Mean Time to Recovery (MTTR)**: Time to recover from failures\n  * Elite: <1 hour\n  * Tracks incident detection to recovery deployment\n- **Change Failure Rate**: Percentage of deployments causing failures\n  * Elite: 0-15%\n  * Analyzes deployment success/failure ratios\n\n**Features**:\n- Daily metric calculation and tracking\n- Historical trending (90-day retention)\n- Performance classification (Elite/High/Medium/Low)\n- Automatic regression detection\n- GitHub issue creation for performance degradation\n- Slack/PagerDuty notifications\n- Datadog metrics export\n\n**Test Coverage**: 15 comprehensive tests following TDD\n\n### 2. Automatic Performance Regression Detection\n**Files**: `.github/workflows/performance-regression.yaml`, `scripts/ci/performance_regression.py`\n\n**Purpose**: Automatically detect performance regressions before production\n\n**Metrics Tracked**:\n- API response times (p50, p95, p99)\n- Memory usage\n- CPU utilization\n- Database query times\n\n**Features**:\n- Baseline establishment from benchmark results\n- Regression detection (>50% degradation threshold)\n- Automatic PR comments with regression details\n- GitHub issue creation for regressions\n- Critical regression workflow failure (>100% degradation)\n- Baseline auto-update on improvements (>20%)\n- Comprehensive regression reports with remediation steps\n\n**Workflow**:\n1. Run performance benchmarks on PR/push\n2. Compare against baseline\n3. Detect regressions\n4. Alert on degradation\n5. Fail workflow if critical\n\n**Test Coverage**: 13 comprehensive tests following TDD\n\n### 3. Advanced Observability Integration\n**File**: `.github/workflows/observability-alerts.yaml`\n\n**Purpose**: Integrate with observability platforms for comprehensive monitoring\n\n**Integrations**:\n- **Slack**: Real-time workflow notifications\n  * Colored attachments based on severity\n  * Quick links to workflow runs\n  * Contextual information (repo, branch, status)\n\n- **PagerDuty**: Critical alert escalation\n  * Only triggered for critical severity\n  * Production deployment failures\n  * Comprehensive incident details\n\n- **Datadog**: Metrics export\n  * Workflow status metrics\n  * Success/failure rates\n  * Tagged by workflow, repository, conclusion\n\n**Severity Classification**:\n- **Critical**: Production deployment failures\n- **High**: Performance regressions, security scan failures\n- **Medium**: Other workflow failures\n- **Info**: Successful workflows\n\n**Features**:\n- Automatic severity classification\n- Conditional notification routing\n- Workflow metadata collection\n- Step summary generation\n- Configuration via secrets\n\n## Implementation Approach - TDD Best Practices\n\n### Test-First Development\n1. **tests/ci/test_dora_metrics.py**: 15 tests written BEFORE implementation\n   - Deployment frequency calculation\n   - Lead time tracking\n   - MTTR calculation\n   - Change failure rate\n   - Performance classification\n   - Data collection, storage, reporting\n\n2. **tests/ci/test_performance_regression.py**: 13 tests written BEFORE implementation\n   - Baseline establishment\n   - Regression detection\n   - Multiple metric tracking\n   - Benchmarking\n   - Percentile calculation\n   - Reporting and alerting\n   - Baseline updates\n\n### Red-Green-Refactor Cycle\n1. **Red**: Tests written first (failed initially)\n2. **Green**: Implementation created to make tests pass\n3. **Refactor**: Code optimized while maintaining test coverage\n\n### Test Results\n```\ntests/ci/test_dora_metrics.py: 15/15 PASSED ✅\ntests/ci/test_performance_regression.py: 13/13 PASSED ✅\nTotal: 28/28 tests passing (100%)\n```\n\n## CI/CD Maturity Progression\n\n**Before This Commit**:\n- Level 4 - Advanced\n\n**After This Commit**:\n- **Level 5 - ELITE** 🏆\n\n**Completed Capabilities**:\n✅ DORA metrics tracking\n✅ Automated performance regression detection\n✅ Advanced observability integration\n✅ Comprehensive alerting\n✅ Deployment frequency monitoring\n✅ Lead time tracking\n✅ MTTR measurement\n✅ Change failure rate tracking\n\n## Benefits\n\n**Visibility**:\n- Real-time DORA metrics tracking\n- Performance regression alerts before production\n- Multi-channel observability (Slack, PagerDuty, Datadog)\n\n**Quality**:\n- Automatic detection of performance degradation\n- Baseline tracking with auto-updates\n- Comprehensive regression reports\n\n**Velocity**:\n- DORA metrics guide improvement efforts\n- Quick identification of bottlenecks\n- Data-driven deployment decisions\n\n**Reliability**:\n- Critical alert escalation to PagerDuty\n- Historical trending for pattern analysis\n- Automatic regression detection\n\n## Files Added (7 total)\n\n**Workflows** (3):\n- `.github/workflows/dora-metrics.yaml` - DORA metrics tracking\n- `.github/workflows/performance-regression.yaml` - Performance regression detection\n- `.github/workflows/observability-alerts.yaml` - Observability integration\n\n**Scripts** (2):\n- `scripts/ci/dora_metrics.py` - DORA metrics calculator\n- `scripts/ci/performance_regression.py` - Performance regression detector\n\n**Tests** (2):\n- `tests/ci/test_dora_metrics.py` - DORA metrics tests (15 tests)\n- `tests/ci/test_performance_regression.py` - Performance regression tests (13 tests)\n\n## Configuration Required\n\n**Secrets** (optional, enables enhanced features):\n- `SLACK_WEBHOOK_URL` - Slack notifications\n- `PAGERDUTY_INTEGRATION_KEY` - Critical alerts\n- `DATADOG_API_KEY` - Metrics export\n\n**Variables**:\n- None required - works out of the box with GitHub deployments API\n\n## Achievement Unlocked 🏆\n\n**Level 5 Elite CI/CD Maturity**\n- Top 10% of industry performers\n- All DORA metrics tracked automatically\n- Comprehensive observability\n- TDD best practices throughout\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T10:39:30-05:00",
+          "tree_id": "780ea4957bdbc016ebd8bcd755dc1e78db5fb3b1",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b7f58f39290e90055bc08d4c606a43952f36e707"
+        },
+        "date": 1762270865129,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 161.4561878747347,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009742743905206933",
+            "extra": "mean: 6.193630688071534 msec\nrounds: 109"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 162.6320685467753,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014799450872036112",
+            "extra": "mean: 6.148848802918508 msec\nrounds: 137"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51081.86277143681,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.576420000078087 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53321.81582132282,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.754049999927247 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51806.30451626428,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.302670000058697 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.38516172506226,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.225065470000061 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.597661775380008,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.026495480000165 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938333573386648,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.6204906100001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1426838.8384639556,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 700.8500000438289 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6422.2330515456915,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 155.70907999972405 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2925.718180428065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.79642000026433 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3145.794488018384,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 317.8847199995971 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66943.52011835937,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011549463195913242",
+            "extra": "mean: 14.93796558997722 usec\nrounds: 12322"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20451.632082131524,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002096087234730319",
+            "extra": "mean: 48.89585320057143 usec\nrounds: 5218"
           }
         ]
       }
