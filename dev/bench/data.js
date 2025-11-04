@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762274961927,
+  "lastUpdate": 1762275887514,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -25442,6 +25442,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000020247849495288825",
             "extra": "mean: 58.2508750276585 usec\nrounds: 4513"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1d696770fb67b2a4a9c9ba5f496e8b44a05176db",
+          "message": "fix(terraform): comprehensive infrastructure remediation per OpenAI Codex analysis\n\nThis commit addresses critical issues identified in the Terraform infrastructure\nand implements best practices for monitoring, API management, and backend configuration.\n\nBREAKING CHANGES:\n- Backend configuration now requires partial config files (see terraform/backend-configs/README.md)\n- Removed enable_vulnerability_scanning variable from gke-autopilot module\n\nCritical Fixes:\n- Fix GKE CPU alert metric bug (kubernetes.io/container/cpu/core_usage_time → limit_utilization)\n  * Changed from absolute core measurement to percentage-based utilization\n  * Updated resource type from k8s_cluster to k8s_container for proper scoping\n  * Changed aggregation from ALIGN_RATE to ALIGN_MEAN for utilization metrics\n  * Location: terraform/modules/gke-autopilot/main.tf:441-463\n\nHigh Priority:\n- Consolidate API enablement to single source of truth\n  * Removed duplicate google_project_service.container_scanning from gke-autopilot\n  * gcp-project-services module now owns all API enablement\n  * Locations: terraform/modules/gke-autopilot/main.tf:362-370 (removed)\n\nMedium Priority:\n- Add comprehensive GKE monitoring alerts (5 new policies)\n  * high_memory: Memory limit utilization monitoring (85% threshold)\n  * high_ephemeral_storage: Storage utilization monitoring (80% threshold)\n  * pod_crash_loop: Restart count detection (5 restarts threshold)\n  * node_not_ready: Node health monitoring\n  * pods_pending: Unschedulable pod detection\n  * Locations: terraform/modules/gke-autopilot/main.tf:465-636\n\n- Refactor backend configuration to use partial config\n  * Created backend-configs/ directory with example files for all environments\n  * Replaced hardcoded backend blocks with empty backend declarations\n  * Added comprehensive setup documentation in backend-configs/README.md\n  * Updated .gitignore to exclude *.tfbackend but keep *.tfbackend.example\n  * Locations: All environment main.tf files, backend-configs/ (new)\n\nNew Variables:\n- cpu_alert_threshold (default: 0.8) - Configurable CPU alert threshold\n- memory_alert_threshold (default: 0.85) - Configurable memory alert threshold\n- ephemeral_storage_alert_threshold (default: 0.8) - Configurable storage threshold\n- pod_restart_threshold (default: 5) - Pod crash loop detection threshold\n- alert_duration_seconds (default: 300) - Alert evaluation duration\n\nValidation Results:\n- OpenAI Codex analysis accuracy: 60% (3/5 findings valid)\n- Cloud SQL dependency claim was invalid (working as intended)\n- Terraform lint workflow claim partially invalid (basic validation exists)\n\nFiles Changed:\n- Modified: 9 files (251 insertions, 67 deletions)\n- Created: 8 new backend config files + README\n\nMigration Notes:\nUsers must create backend config files from examples before running terraform init.\nSee terraform/backend-configs/README.md for detailed instructions.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T12:01:30-05:00",
+          "tree_id": "eb501e30bf7eb744af24b6f66aa0b254c350e9ef",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1d696770fb67b2a4a9c9ba5f496e8b44a05176db"
+        },
+        "date": 1762275885578,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.52774282880006,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017221610243895805",
+            "extra": "mean: 6.919086816325273 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.60595625576937,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001262961916204874",
+            "extra": "mean: 6.684225849206029 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44966.859424874136,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.238599999866437 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46889.38185261393,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.32678999998916 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44069.07386635303,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.69165000001294 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.67484897188538,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.244530180000027 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.411097957504026,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.516921000000195 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954939234348103,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.45264731999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1401679.2116585008,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 713.4300000188887 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5154.321679669633,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 194.0119500000037 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2864.168088630739,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 349.1415199999892 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2941.518811468569,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.9604300000192 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59774.55813988575,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021812693404009277",
+            "extra": "mean: 16.729525589461957 usec\nrounds: 13404"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17249.71526716296,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001687259974144659",
+            "extra": "mean: 57.9719713926889 usec\nrounds: 5558"
           }
         ]
       }
