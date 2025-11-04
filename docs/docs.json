@@ -17,6 +17,7 @@
             "group": "Getting Started",
             "pages": [
               "getting-started/introduction",
+              "getting-started/day-1-developer",
               "getting-started/quickstart",
               "getting-started/installation",
               "getting-started/first-request"
@@ -54,6 +55,7 @@
               "security/best-practices",
               "security/gcp-security-hardening",
               "security/aws-security-hardening",
+              "security/remediation-guide",
               "security/audit-checklist",
               "security/gke-staging-checklist",
               "security/compliance"
@@ -97,12 +99,31 @@
         ]
       },
       {
+        "tab": "CI/CD",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "ci-cd/overview",
+              "ci-cd/local-testing"
+            ]
+          },
+          {
+            "group": "Elite Features",
+            "pages": [
+              "ci-cd/elite-features"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API Reference",
         "groups": [
           {
             "group": "API Documentation",
             "pages": [
               "api-reference/introduction",
+              "api-reference/sdk-quickstart",
               "api-reference/authentication",
               "api-reference/api-keys",
               "api-reference/service-principals",
@@ -159,6 +180,7 @@
               "deployment/kubernetes/eks-production",
               "deployment/kubernetes/aks",
               "deployment/kubernetes/kustomize",
+              "deployment/kubernetes/multi-cloud-lessons",
               "deployment/vmware-resource-estimation"
             ]
           },
@@ -176,6 +198,7 @@
           {
             "group": "Advanced",
             "pages": [
+              "deployment/advanced/api-gateway",
               "deployment/kong-gateway",
               "deployment/keycloak-jwt-deployment",
               "deployment/vertex-ai-workload-identity",
@@ -194,6 +217,7 @@
             "pages": [
               "deployment/operations/gke-runbooks",
               "deployment/operations/eks-runbooks",
+              "deployment/operations/issue-prevention",
               "deployment/version-pinning",
               "deployment/version-compatibility",
               "deployment/release-process",
@@ -217,6 +241,12 @@
               "guides/openai-gpt",
               "guides/local-models",
               "guides/uv-migration"
+            ]
+          },
+          {
+            "group": "Migration",
+            "pages": [
+              "guides/container-migration"
             ]
           },
           {
