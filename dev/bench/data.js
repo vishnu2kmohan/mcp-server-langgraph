@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762275887514,
+  "lastUpdate": 1762276074074,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -25564,6 +25564,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001687259974144659",
             "extra": "mean: 57.9719713926889 usec\nrounds: 5558"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "74961106415e9224982653b5d697507649962c87",
+          "message": "feat(agent): implement dependency injection for agent creation (Phase 3)\n\nComplete agent refactoring to support dependency injection pattern, enabling\nmultiple independent agent instances and eliminating singleton limitations.\n\n## Phase 3: Agent Dependency Injection (TDD Approach)\n\n### Test-Driven Development:\n✅ **RED**: Wrote 18 comprehensive tests first (tests/core/test_agent_di.py)\n✅ **GREEN**: Implemented agent factory functions to pass all tests\n✅ **REFACTOR**: Updated test helpers and documentation\n\n## New Agent Factory API\n\n### New Functions (src/mcp_server_langgraph/core/agent.py):\n\n1. **create_agent(settings=None, container=None)**\n   - Main factory function for creating agents\n   - Supports container-based DI (preferred)\n   - Supports custom settings\n   - Returns fresh instance (not singleton!)\n\n2. **create_agent_graph(settings=None, container=None)**\n   - Creates agent graph with DI support\n   - Same parameters as create_agent()\n   - Returns compiled LangGraph StateGraph\n\n### Legacy Compatibility:\n\n- **get_agent_graph()**: Still works (deprecated)\n  - Marked as deprecated in docstring\n  - Returns singleton for backward compatibility\n  - Will be removed in v3.0\n\n### Implementation Details:\n\n- Renamed old create_agent_graph() to _create_agent_graph_singleton()\n- New create_agent_graph() accepts settings/container\n- create_agent() is main entry point\n- Backward compatible with existing code\n\n## Modified Files\n\n### src/mcp_server_langgraph/core/agent.py\n- Added create_agent() factory function (main API)\n- Added create_agent_graph() with DI support\n- Renamed old function to _create_agent_graph_singleton()\n- Updated get_agent_graph() to use renamed function\n- Added comprehensive docstrings with examples\n\n### src/mcp_server_langgraph/core/test_helpers.py\n- Updated create_test_agent() to use new create_agent()\n- Updated docstring to reflect DI support\n- Removed \"TODO\" comments (feature complete!)\n\n### tests/core/test_agent_di.py (NEW - 300+ lines)\n- 18 comprehensive tests for agent DI\n- TestAgentFactory: Factory function tests\n- TestAgentGraphFactory: Graph creation tests\n- TestBackwardCompatibility: Legacy function tests\n- TestAgentStateManagement: Checkpointer tests\n- TestAgentConfiguration: Settings tests\n- TestAgentIsolation: Instance independence tests\n- TestAgentTestHelperIntegration: Helper integration tests\n- TestAgentDocumentation: Documentation tests\n\n### docs/MIGRATION_GUIDE.md (NEW - 350+ lines)\n- Complete migration guide for container pattern\n- Before/After code examples\n- Common migration patterns\n- Troubleshooting guide\n- Best practices\n- Timeline & rollout plan\n\n## Test Results\n\n```\n✅ 18/18 agent DI tests PASSING\n✅ 155/155 core tests PASSING (no regressions!)\n✅ All files formatted with black\n✅ Backward compatible with existing code\n```\n\n## Key Features\n\n### Multiple Agent Instances\n```python\n# Before: Singleton (same instance)\nagent1 = get_agent_graph()\nagent2 = get_agent_graph()\nassert agent1 is agent2  # True\n\n# After: Factory (different instances)\nagent1 = create_agent()\nagent2 = create_agent()\nassert agent1 is not agent2  # True!\n```\n\n### Container-Based DI\n```python\nfrom mcp_server_langgraph.core.container import create_test_container\nfrom mcp_server_langgraph.core.agent import create_agent\n\ncontainer = create_test_container()\nagent = create_agent(container=container)\n```\n\n### Custom Settings\n```python\nfrom mcp_server_langgraph.core.config import Settings\nfrom mcp_server_langgraph.core.agent import create_agent\n\nsettings = Settings(model_name=\"gpt-4\", temperature=0.7)\nagent = create_agent(settings=settings)\n```\n\n### Simplified Testing\n```python\nfrom mcp_server_langgraph.core.test_helpers import create_test_agent\n\n# No setup needed!\nagent = create_test_agent()\n```\n\n## Benefits\n\n1. ✅ **Multiple Agents**: Create independent agent instances\n2. ✅ **Better Testing**: No global state, easy mocking\n3. ✅ **Per-Tenant Config**: Different settings per agent\n4. ✅ **Type Safety**: Container provides proper typing\n5. ✅ **Backward Compatible**: Old code still works\n\n## Breaking Changes\n\nNone. All changes are backward compatible.\n\n## Migration Path\n\n1. **Now**: New code uses `create_agent()`\n2. **v2.0**: `get_agent_graph()` marked deprecated\n3. **v3.0**: `get_agent_graph()` removed\n\nSee docs/MIGRATION_GUIDE.md for detailed migration steps.\n\n## Future Work (Phase 4)\n\n- Extract infrastructure layer from server modules\n- Refactor server to use app factory pattern\n- Complete singleton elimination\n- Full DI throughout codebase\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T12:04:37-05:00",
+          "tree_id": "2e8a08b0c2a0063276a19a7f033201d0b9cc0a5c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/74961106415e9224982653b5d697507649962c87"
+        },
+        "date": 1762276072650,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 146.27216812175837,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013419508704656666",
+            "extra": "mean: 6.836570571426755 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.76768143391294,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00027606072316462016",
+            "extra": "mean: 6.677007952755575 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44429.43716769893,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.507600000096772 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48020.98324906443,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.824229999902855 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45393.69726713119,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.02948999979526 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.08668513710774,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.233226999999943 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.382643161312046,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.592550700000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.947861193315081,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.52412076999985 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1405619.6677200184,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 711.4299998534079 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4984.438831194456,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 200.62438999985943 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2975.0558819614075,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.12814000008484 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2941.0286406466253,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.01709000023084 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58697.524443232345,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009358160961519466",
+            "extra": "mean: 17.03649360829726 usec\nrounds: 13298"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17388.08826449735,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001723692318333723",
+            "extra": "mean: 57.51063514220709 usec\nrounds: 5583"
           }
         ]
       }
