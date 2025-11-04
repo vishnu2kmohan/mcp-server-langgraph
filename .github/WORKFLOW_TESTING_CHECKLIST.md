@@ -187,7 +187,7 @@ gh run list --limit=5
    - Different runner image?
    - GitHub-specific service issue?
 4. Update .actrc or testing approach
-5. Document in [testing-workflows-locally.md](../docs/development/testing-workflows-locally.md)
+5. Document learnings in this file or workflow comments
 
 ---
 

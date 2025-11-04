@@ -14,16 +14,6 @@
 #
 # ============================================================================
 
-terraform {
-  required_version = ">= 1.3"
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 6.0"
-    }
-  }
-}
-
 locals {
   # Full provider resource name
   workload_identity_provider_name = "projects/${var.project_number}/locations/global/workloadIdentityPools/${var.pool_id}/providers/${var.provider_id}"

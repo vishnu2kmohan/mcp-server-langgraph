@@ -244,8 +244,8 @@ publish-pypi:
 This project uses GitHub Actions with Google Cloud Platform (GCP) Workload Identity Federation for secure deployments.
 
 ### Quick Setup
-1. Configure repository secrets/variables (see [SECRETS.md](SECRETS.md))
-2. Set up GCP Workload Identity Federation (instructions in SECRETS.md)
+1. Configure repository secrets/variables (see terraform/modules/github-actions-wif/README.md)
+2. Set up GCP Workload Identity Federation using Terraform module
 3. Verify configuration: Run "GCP Drift Detection" workflow manually
 
 ### Required Configuration
@@ -254,7 +254,7 @@ This project uses GitHub Actions with Google Cloud Platform (GCP) Workload Ident
 - **GCP_STAGING_SA_EMAIL**: Staging service account email
 - **GCP_PRODUCTION_SA_EMAIL**: Production service account email
 
-See [SECRETS.md](SECRETS.md) for complete setup instructions.
+See terraform/modules/github-actions-wif/README.md for complete setup instructions.
 ```
 
 ---
