@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762293870241,
+  "lastUpdate": 1762295293197,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27516,6 +27516,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019189009658456325",
             "extra": "mean: 58.34603080608173 usec\nrounds: 4577"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "bddebb2b29673dc8d34a46fd141a74878c35d895",
+          "message": "feat(infrastructure): standardize naming conventions across all platforms\n\nImplement comprehensive naming standardization using {environment}-mcp-server-langgraph-{resource-type} pattern across GCP, AWS, and Azure deployments.\n\n## Summary\n\nStandardized infrastructure resource naming to improve consistency, discoverability, and maintainability across multi-cloud deployments. The new pattern follows: `{env}-mcp-server-langgraph-{resource-type}`.\n\n## Changes by Category\n\n### Infrastructure (Terraform)\n- **GCP environments** (gcp-dev, gcp-staging, gcp-prod): Updated cluster names and namespaces\n  - Clusters: `{env}-mcp-server-langgraph-gke`\n  - Namespaces: `{env}-mcp-server-langgraph`\n- **AWS environments** (aws-dev, aws-staging): Updated cluster naming\n  - Clusters: `{env}-mcp-server-langgraph-eks`\n- **Terraform formatting**: Applied `terraform fmt` to all modules\n  - Files: terraform/environments/*, terraform/modules/*\n\n### Kubernetes (Kustomization)\n- **Overlays**: Updated namespaces and namePrefix for all environments\n  - deployments/overlays/dev/kustomization.yaml\n  - deployments/overlays/staging-gke/kustomization.yaml\n  - deployments/overlays/production-gke/kustomization.yaml\n  - deployments/overlays/*/namespace.yaml\n- **Fixed**: Removed non-existent external-secrets.yaml from production-gke\n\n### CI/CD (GitHub Workflows)\n- **Workflows**: Updated cluster and namespace references\n  - .github/workflows/deploy-staging-gke.yaml\n  - .github/workflows/deploy-production-gke.yaml\n  - .github/workflows/ci.yaml (dev cluster)\n\n### Scripts\n- **GCP scripts**: Updated cluster and namespace variables\n  - scripts/gcp/setup-staging-infrastructure.sh\n  - scripts/gcp/teardown-staging-infrastructure.sh\n  - scripts/gcp/validate-staging-deployment.sh\n  - scripts/gcp/staging-smoke-tests.sh\n\n### Documentation\n- **Core docs**: Updated naming references\n  - SECRETS.md: Updated default values\n  - docs/infrastructure/gke-cluster-requirements.md: Complete update\n- **Deployment docs**: Batch updated 17 documentation files\n  - docs/deployment/*.mdx\n  - docs/security/*.mdx\n  - docs/ci-cd/*.mdx\n- **NEW**: Created NAMING-CONVENTIONS.md comprehensive reference document\n\n### Tests & Monitoring\n- **Test fixes**: Updated hardcoded references\n  - tests/infrastructure/test_validation.py\n  - tests/infrastructure/README_ESO_RBAC_TESTS.md\n- **Monitoring**: Updated kubecost cluster name\n  - deployments/monitoring/kubecost-values.yaml\n\n## New Naming Standards\n\n### GKE Clusters\n- Development: `dev-mcp-server-langgraph-gke`\n- Staging: `staging-mcp-server-langgraph-gke`\n- Production: `production-mcp-server-langgraph-gke`\n\n### Namespaces (Platform-agnostic)\n- Development: `dev-mcp-server-langgraph`\n- Staging: `staging-mcp-server-langgraph`\n- Production: `production-mcp-server-langgraph`\n\n### EKS/AKS Clusters\n- Pattern: `{env}-mcp-server-langgraph-{eks|aks}`\n\n## Migration Notes\n\n- **GitHub Variables**: Updated repository variables to match new defaults\n- **Backward Compatibility**: Old naming patterns documented in NAMING-CONVENTIONS.md\n- **Infrastructure**: Requires cluster recreation or variable overrides for existing deployments\n\n## Testing\n\n- ✅ Terraform formatting validated\n- ✅ Kustomize overlays validated (staging-gke, production-gke, dev)\n- ✅ Infrastructure tests passing (27/27 naming-related tests)\n- ✅ Test suite verified (no breaking changes from naming updates)\n\n## Breaking Changes\n\n- Cluster names changed (requires infrastructure recreation or variable overrides)\n- Namespace names changed (requires deployment updates)\n- GitHub workflow variables updated\n\n## Files Changed\n\n- **Terraform**: 32 files (environments + modules)\n- **Kustomization**: 5 files (overlays + namespaces)\n- **Workflows**: 3 files (GitHub Actions)\n- **Scripts**: 4 files (GCP deployment scripts)\n- **Documentation**: 20+ files\n- **Tests**: 2 files\n- **Monitoring**: 1 file\n- **NEW**: NAMING-CONVENTIONS.md\n\nTotal: 69 files modified, 1 file created\n\n## References\n\n- NAMING-CONVENTIONS.md: Complete naming standards reference\n- GitHub Variables: Updated via `gh variable set`\n- Related Issue: Standardization epic\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T17:26:43-05:00",
+          "tree_id": "60f839b9d5ced2e8c3c6baff87234e1f7490a3cc",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/bddebb2b29673dc8d34a46fd141a74878c35d895"
+        },
+        "date": 1762295291932,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 138.70602831317262,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00024115155959186736",
+            "extra": "mean: 7.209491989361735 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 143.435156262282,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00021266310112111938",
+            "extra": "mean: 6.971791477477284 msec\nrounds: 111"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45643.67625121151,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.908840000008922 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47624.853315479166,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.997439999987932 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45446.24118684361,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.004019999997126 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 185.06509575912017,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.403504080000019 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.32568252624101,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.74461489999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.935550182368079,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.64867889999988 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1279344.975290529,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 781.6500000501492 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4822.822056965565,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 207.34747999995307 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2937.4622223993147,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.4299100000685 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2957.57351914051,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.1150100000241 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57168.69888302918,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000005220517238611522",
+            "extra": "mean: 17.492089544421223 usec\nrounds: 11458"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16628.006309413988,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000359486006502939",
+            "extra": "mean: 60.139500875330285 usec\nrounds: 3999"
           }
         ]
       }
