@@ -109,11 +109,9 @@ jobs:
         # Wait for all services to be healthy (max 3 minutes = 180 seconds)
         # Keycloak needs 45s start_period + up to 40 retries * 5s = ~3 min worst case
         for i in {1..60}; do
-          HEALTH_STATUS=$(docker compose -f docker-compose.test.yml ps --format json | jq -r '.[].Health')
-
-          # Count healthy services
-          HEALTHY=$(echo "$HEALTH_STATUS" | grep -c "healthy" || true)
-          TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l)
+          # Count healthy services using grep on ps output (more reliable than JSON parsing)
+          HEALTHY=$(docker compose -f docker-compose.test.yml ps --status running --filter "health=healthy" --format "table {{.Service}}" | tail -n +2 | wc -l | tr -d ' ')
+          TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
 
           echo "Attempt $i/60: $HEALTHY/$TOTAL services healthy"
 
@@ -126,11 +124,8 @@ jobs:
             echo "❌ Timeout waiting for services after 3 minutes. Current status:"
             docker compose -f docker-compose.test.yml ps
             echo ""
-            echo "Showing logs for unhealthy services:"
-            docker compose -f docker-compose.test.yml ps --format json | jq -r '.[] | select(.Health != "healthy") | .Service' | while read service; do
-              echo "=== Logs for $service ==="
-              docker compose -f docker-compose.test.yml logs --tail=50 "$service"
-            done
+            echo "Showing logs for all services:"
+            docker compose -f docker-compose.test.yml logs --tail=50
             exit 1  # Fail explicitly instead of continuing
           fi
 
