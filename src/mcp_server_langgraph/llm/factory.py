@@ -220,11 +220,12 @@ class LLMFactory:
                 # Get value from config
                 if config and hasattr(config, config_attr):
                     value = getattr(config, config_attr)
-                    # For primary provider, use self.api_key as fallback for API key fields
-                    if value is None and provider == self.provider and "api_key" in config_attr.lower():
-                        value = self.api_key
                 else:
                     value = None
+
+                # For primary provider, use self.api_key as fallback for API key fields
+                if value is None and provider == self.provider and "api_key" in config_attr.lower():
+                    value = self.api_key
 
                 # Set environment variable if we have a value
                 if value and env_var:

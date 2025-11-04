@@ -50,7 +50,9 @@ def _is_safe_path(path: str) -> bool:
 
         for dangerous in dangerous_paths:
             dangerous_path = Path(dangerous) if isinstance(dangerous, str) else dangerous
-            if abs_path.is_relative_to(dangerous_path):  # type: ignore[arg-type]
+            # Resolve dangerous path too (handles macOS /etc -> /private/etc symlinks)
+            dangerous_path_resolved = dangerous_path.resolve()
+            if abs_path.is_relative_to(dangerous_path_resolved):  # type: ignore[arg-type]
                 return False
 
         return True

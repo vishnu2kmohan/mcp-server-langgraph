@@ -168,6 +168,43 @@ def _create_checkpointer() -> BaseCheckpointSaver[Any]:
         return MemorySaver()
 
 
+def create_checkpointer(settings_override: Optional[Any] = None) -> BaseCheckpointSaver[Any]:
+    """
+    Public API to create checkpointer backend based on configuration.
+
+    Args:
+        settings_override: Optional Settings object to override global settings.
+                          Useful for testing with custom configurations.
+
+    Returns:
+        BaseCheckpointSaver: Configured checkpointer (MemorySaver or RedisSaver)
+
+    Example:
+        # Use global settings
+        checkpointer = create_checkpointer()
+
+        # Use custom settings for testing
+        test_settings = Settings(checkpoint_backend="memory")
+        checkpointer = create_checkpointer(test_settings)
+    """
+    if settings_override is not None:
+        # Temporarily override global settings for checkpointer creation
+        original_backend = settings.checkpoint_backend
+        original_redis_url = settings.checkpoint_redis_url
+
+        try:
+            settings.checkpoint_backend = settings_override.checkpoint_backend
+            if hasattr(settings_override, 'checkpoint_redis_url'):
+                settings.checkpoint_redis_url = settings_override.checkpoint_redis_url
+            return _create_checkpointer()
+        finally:
+            # Restore original settings
+            settings.checkpoint_backend = original_backend
+            settings.checkpoint_redis_url = original_redis_url
+    else:
+        return _create_checkpointer()
+
+
 def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
     """
     Clean up checkpointer resources on application shutdown.

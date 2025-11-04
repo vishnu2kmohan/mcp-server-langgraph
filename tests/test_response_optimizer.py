@@ -26,12 +26,14 @@ class TestResponseOptimizer:
     def test_initialization(self):
         """Test ResponseOptimizer initialization."""
         optimizer = ResponseOptimizer()
-        assert optimizer.encoding is not None
+        assert optimizer.model is not None
+        assert optimizer.model == "gpt-4"  # Default model
 
     def test_initialization_with_model(self):
         """Test ResponseOptimizer with specific model."""
-        optimizer = ResponseOptimizer(model="gpt-4")
-        assert optimizer.encoding is not None
+        optimizer = ResponseOptimizer(model="claude-sonnet-4-5-20250929")
+        assert optimizer.model is not None
+        assert optimizer.model == "claude-sonnet-4-5-20250929"
 
     def test_count_tokens_simple(self):
         """Test token counting with simple text."""
