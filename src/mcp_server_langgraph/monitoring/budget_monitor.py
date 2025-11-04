@@ -22,12 +22,17 @@ Example:
 """
 
 import asyncio
+import json
 import logging
+import smtplib
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+import httpx
 from pydantic import BaseModel, Field
 
 # ==============================================================================
@@ -135,12 +140,46 @@ class BudgetMonitor:
     - Budget forecasting
     """
 
-    def __init__(self) -> None:
-        """Initialize budget monitor."""
+    def __init__(
+        self,
+        cost_collector: Optional["CostMetricsCollector"] = None,
+        smtp_host: Optional[str] = None,
+        smtp_port: int = 587,
+        smtp_username: Optional[str] = None,
+        smtp_password: Optional[str] = None,
+        email_from: Optional[str] = None,
+        email_to: Optional[List[str]] = None,
+        webhook_url: Optional[str] = None,
+    ) -> None:
+        """
+        Initialize budget monitor.
+
+        Args:
+            cost_collector: CostMetricsCollector instance for querying actual spend.
+            smtp_host: SMTP server hostname for email alerts
+            smtp_port: SMTP server port (default: 587)
+            smtp_username: SMTP authentication username
+            smtp_password: SMTP authentication password
+            email_from: From email address for alerts
+            email_to: List of recipient email addresses
+            webhook_url: Webhook URL for POST notifications
+        """
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
         self._budgets: Dict[str, Budget] = {}
         self._alerts: List[BudgetAlert] = []
-        self._alerted_thresholds: Dict[str, set[Decimal]] = {}  # Track which thresholds have been alerted
+        self._alerted_thresholds: Dict[str, set[Decimal]] = {}
         self._lock = asyncio.Lock()
+        self._cost_collector = cost_collector or CostMetricsCollector()
+
+        # Alert transport configuration
+        self._smtp_host = smtp_host
+        self._smtp_port = smtp_port
+        self._smtp_username = smtp_username
+        self._smtp_password = smtp_password
+        self._email_from = email_from
+        self._email_to = email_to or []
+        self._webhook_url = webhook_url
 
     async def create_budget(
         self,
@@ -201,7 +240,7 @@ class BudgetMonitor:
         """
         Get total spending for current budget period.
 
-        This is a stub that should be connected to CostMetricsCollector.
+        Queries CostMetricsCollector for actual spending within the current period.
 
         Args:
             budget_id: Budget identifier
@@ -209,9 +248,38 @@ class BudgetMonitor:
         Returns:
             Total spend in USD for current period
         """
-        # TODO: Connect to CostMetricsCollector to get actual spend
-        # For now, return a mock value for testing
-        return Decimal("0.00")
+        async with self._lock:
+            budget = self._budgets.get(budget_id)
+
+        if not budget:
+            return Decimal("0.00")
+
+        # Calculate current period boundaries
+        now = datetime.now(timezone.utc)
+        period_start, period_end = self._calculate_period_boundaries(budget, now)
+
+        # Get all records from cost collector (using "day" but we'll filter manually)
+        all_records = await self._cost_collector.get_records(period="day")
+
+        # Filter records by budget period
+        period_records = [
+            record
+            for record in all_records
+            if period_start <= record.timestamp <= period_end
+        ]
+
+        # Sum costs
+        total_cost = sum(
+            (record.estimated_cost_usd for record in period_records),
+            Decimal("0.00"),
+        )
+
+        logger.debug(
+            f"Budget {budget_id}: {len(period_records)} records in period "
+            f"{period_start} to {period_end}, total cost: ${total_cost}"
+        )
+
+        return total_cost
 
     async def get_budget_status(self, budget_id: str) -> Optional[BudgetStatus]:
         """
@@ -360,13 +428,12 @@ class BudgetMonitor:
         utilization: float,
     ) -> None:
         """
-        Send budget alert notification.
+        Send budget alert notification via multiple channels.
 
-        This is a stub that can be extended to support multiple channels:
-        - Logging (implemented)
-        - Email (TODO)
-        - Slack/Teams webhooks (TODO)
-        - PagerDuty (TODO)
+        Supports:
+        - Logging (always enabled)
+        - Email via SMTP (if configured)
+        - Generic webhooks for Slack/Teams/custom (if configured)
 
         Args:
             level: Alert level (info, warning, critical)
@@ -374,7 +441,7 @@ class BudgetMonitor:
             budget_id: Budget identifier
             utilization: Current utilization percentage
         """
-        # Log alert
+        # 1. Log alert (always enabled)
         log_level = {
             "info": logging.INFO,
             "warning": logging.WARNING,
@@ -383,9 +450,148 @@ class BudgetMonitor:
 
         logger.log(log_level, f"BUDGET ALERT [{level.upper()}]: {message}")
 
-        # TODO: Send email alert
-        # TODO: Send webhook notification
-        # TODO: Send to PagerDuty/OpsGenie
+        # 2. Send email alert (if configured)
+        if self._smtp_host and self._email_from and self._email_to:
+            try:
+                await self._send_email_alert(level, message, budget_id, utilization)
+            except Exception as e:
+                logger.error(f"Failed to send email alert: {e}")
+
+        # 3. Send webhook notification (if configured)
+        if self._webhook_url:
+            try:
+                await self._send_webhook_alert(level, message, budget_id, utilization)
+            except Exception as e:
+                logger.error(f"Failed to send webhook alert: {e}")
+
+    async def _send_email_alert(
+        self, level: str, message: str, budget_id: str, utilization: float
+    ) -> None:
+        """Send email alert via SMTP."""
+        subject = f"[{level.upper()}] Budget Alert: {budget_id}"
+
+        # Create HTML email body
+        html_body = f"""
+        <html>
+          <body>
+            <h2 style="color: {'red' if level == 'critical' else 'orange'};">Budget Alert</h2>
+            <p><strong>Level:</strong> {level.upper()}</p>
+            <p><strong>Budget ID:</strong> {budget_id}</p>
+            <p><strong>Utilization:</strong> {utilization:.1f}%</p>
+            <p><strong>Message:</strong> {message}</p>
+            <p><strong>Timestamp:</strong> {datetime.now(timezone.utc).isoformat()}</p>
+          </body>
+        </html>
+        """
+
+        # Create plain text fallback
+        text_body = f"""
+Budget Alert [{level.upper()}]
+
+Budget ID: {budget_id}
+Utilization: {utilization:.1f}%
+Message: {message}
+Timestamp: {datetime.now(timezone.utc).isoformat()}
+        """
+
+        # Create message
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = self._email_from
+        msg["To"] = ", ".join(self._email_to)
+
+        msg.attach(MIMEText(text_body, "plain"))
+        msg.attach(MIMEText(html_body, "html"))
+
+        # Send email (run in thread pool to avoid blocking)
+        await asyncio.to_thread(self._send_smtp, msg)
+
+        logger.info(f"Email alert sent to {len(self._email_to)} recipients")
+
+    def _send_smtp(self, msg: MIMEMultipart) -> None:
+        """Send SMTP message (blocking, meant to be called via to_thread)."""
+        with smtplib.SMTP(self._smtp_host, self._smtp_port) as server:
+            server.starttls()
+            if self._smtp_username and self._smtp_password:
+                server.login(self._smtp_username, self._smtp_password)
+            server.send_message(msg)
+
+    async def _send_webhook_alert(
+        self, level: str, message: str, budget_id: str, utilization: float
+    ) -> None:
+        """Send webhook notification via HTTP POST."""
+        payload = {
+            "alert_type": "budget",
+            "level": level,
+            "budget_id": budget_id,
+            "message": message,
+            "utilization": utilization,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self._webhook_url,
+                json=payload,
+                headers={"Content-Type": "application/json"},
+                timeout=10.0,
+            )
+            response.raise_for_status()
+
+        logger.info(f"Webhook alert sent to {self._webhook_url}")
+
+    def _calculate_period_boundaries(
+        self, budget: Budget, current_time: datetime
+    ) -> tuple[datetime, datetime]:
+        """
+        Calculate the start and end boundaries for the current budget period.
+
+        For recurring periods, this calculates which period we're currently in
+        based on the budget start date.
+
+        Args:
+            budget: Budget configuration
+            current_time: Current timestamp
+
+        Returns:
+            Tuple of (period_start, period_end)
+        """
+        budget_start = budget.start_date
+
+        if budget.period == BudgetPeriod.DAILY:
+            # Find current day boundary
+            period_start = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+            period_end = period_start + timedelta(days=1)
+        elif budget.period == BudgetPeriod.WEEKLY:
+            # Find current week boundary (Monday-Sunday)
+            days_since_monday = current_time.weekday()
+            period_start = (current_time - timedelta(days=days_since_monday)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            period_end = period_start + timedelta(weeks=1)
+        elif budget.period == BudgetPeriod.MONTHLY:
+            # Find current month boundary
+            period_start = current_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            # Next month's first day
+            if current_time.month == 12:
+                period_end = period_start.replace(year=period_start.year + 1, month=1)
+            else:
+                period_end = period_start.replace(month=period_start.month + 1)
+        elif budget.period == BudgetPeriod.QUARTERLY:
+            # Find current quarter boundary
+            quarter_month = ((current_time.month - 1) // 3) * 3 + 1
+            period_start = current_time.replace(
+                month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+            period_end = period_start + timedelta(days=90)
+        else:  # BudgetPeriod.YEARLY
+            # Find current year boundary
+            period_start = current_time.replace(
+                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+            period_end = period_start.replace(year=period_start.year + 1)
+
+        return period_start, period_end
 
     def _calculate_period_end(self, start_date: datetime, period: BudgetPeriod) -> datetime:
         """Calculate end date for budget period."""

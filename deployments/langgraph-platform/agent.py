@@ -4,20 +4,14 @@ This module defines the graph for deployment to LangGraph Platform
 """
 
 import operator
-import os
-import sys
 from typing import Annotated, Literal, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from llm_factory import create_llm_from_config  # noqa: E402
-
-from config import settings  # noqa: E402
+from mcp_server_langgraph.llm.factory import create_llm_from_config
+from mcp_server_langgraph.core.config import settings
 
 
 class AgentState(TypedDict):
