@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762272376057,
+  "lastUpdate": 1762274961927,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -25320,6 +25320,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001810137592302951",
             "extra": "mean: 60.49243475864176 usec\nrounds: 5426"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "5015e36f6b5c6d9469edd591dcf2f0adb46e2b8b",
+          "message": "feat(architecture): implement dependency injection container pattern and improve developer onboarding\n\nThis commit addresses validated findings from OpenAI Codex analysis and implements\ncomprehensive improvements to developer experience and testability.\n\n## Phase 1: Documentation & Onboarding (docs/day-1-developer.md, README.md)\n\n### New Files:\n- **docs/day-1-developer.md**: Comprehensive guide with 3 progressive paths\n  - Quickstart (< 2 min, zero infrastructure)\n  - Local Development (~5 min, Redis + PostgreSQL only)\n  - Full Production (~20 min, complete stack)\n- **docs/ci-cd/badges.md**: Moved all CI/CD badges and configuration details\n- **docker-compose.minimal.yml**: Minimal stack (Redis + PostgreSQL only)\n\n### Modified Files:\n- **README.md**: Cleaner header with \"Choose Your Path\" table\n  - Reduced from 28 badges to 3 essential ones\n  - Added prominent quickstart guide links\n  - CI/CD details moved to separate documentation\n- **Makefile**: Added `help-common` target\n  - Shows only 7 essential commands for new developers\n  - Full reference still available via `make help`\n\n**Impact**: New developers can now get started in < 5 minutes with clear guidance.\n\n## Phase 2: Dependency Injection Container (TDD Approach)\n\n### Test-Driven Development:\n✅ **RED**: Wrote 21 comprehensive tests first (tests/core/test_container.py)\n✅ **GREEN**: Implemented container to pass all tests (src/mcp_server_langgraph/core/container.py)\n✅ **REFACTOR**: Fixed protocols, lazy initialization - all 21 tests passing\n\n### New Files:\n- **src/mcp_server_langgraph/core/container.py** (450 lines):\n  - ApplicationContainer: Main DI container\n  - ContainerConfig: Environment-aware configuration\n  - Provider Protocols: TelemetryProvider, AuthProvider, StorageProvider (runtime_checkable)\n  - No-Op Providers: For testing (no global side effects!)\n  - Production Providers: Real implementations\n  - Helper functions: create_test_container(), create_development_container()\n\n- **src/mcp_server_langgraph/core/test_helpers.py** (300 lines):\n  - create_test_agent(): Agent factory with container support\n  - create_test_server(): MCP server factory\n  - create_test_settings(): Settings with safe test defaults\n  - create_mock_llm_response(), create_mock_mcp_request(): Test utilities\n  - create_mock_jwt_token(): JWT token generation for tests\n\n- **tests/core/test_container.py** (400+ lines):\n  - 21 comprehensive tests for container pattern\n  - Tests for lazy initialization, independence, no side effects\n  - Tests for all provider types\n\n- **tests/core/test_test_helpers.py** (200+ lines):\n  - 18 tests for test helper functions\n  - Validates helper documentation and functionality\n\n### Modified Files:\n- **tests/conftest.py**: Refactored to use container pattern\n  - Reduced environment variable pre-seeding from 15+ to 3 critical ones\n  - Added `test_container` fixture (session-scoped, no global state)\n  - Added `container` fixture (per-test, fresh container)\n  - Deprecated old init_observability() pattern (kept for backward compatibility)\n\n### Key Features:\n✅ Multiple independent containers (no global singletons!)\n✅ Test mode with zero side effects\n✅ Lazy initialization (providers created on demand)\n✅ Injectable dependencies (easy mocking for tests)\n✅ Environment-aware defaults (test/dev/prod)\n\n## Test Results:\n```\n✅ 21/21 container tests PASSING\n✅ 17/18 test helper tests PASSING (1 skipped - deferred to Phase 3)\n✅ 76/76 exception tests PASSING\n✅ 137 total core tests PASSING\n✅ All files formatted with black\n```\n\n## Validation of Codex Findings:\n\n### Addressed:\n1. ✅ Test Infrastructure Simplification (High → MEDIUM priority)\n   - Container pattern eliminates need for environment pre-seeding\n   - No global init_observability() required for tests\n   - Each test can create independent container\n\n2. ✅ Documentation Improvements (Medium priority → DONE)\n   - Day-1 guide created with progressive paths\n   - README simplified with \"Choose Your Path\"\n   - Progressive disclosure implemented\n\n3. ✅ Dependency Injection Foundation (Medium priority → IN PROGRESS)\n   - Container module created with TDD\n   - Replaces global singletons pattern\n   - Thread-safe, testable architecture\n\n### Findings Not Confirmed:\n4. ❌ Complex Infrastructure Requirements (claimed HIGH → actually LOW)\n   - Quickstart requires ZERO infrastructure (validated)\n   - Production deployment properly separated\n   - .env.example has in-memory defaults\n\n5. ❌ Dependency Bloat (claimed HIGH → NOT VALID)\n   - 36 core deps appropriate for production MCP server\n   - Optional extras properly separated\n   - Heavy deps (torch) only in optional extras\n\n## Breaking Changes:\nNone. All changes are additive and backward compatible.\n\n## Future Work (Deferred):\n- Phase 3: Refactor agent.py to accept injectable dependencies\n- Phase 4: Extract infrastructure layer to separate modules\n- Phase 4: Slim down server modules to <500 lines per file\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T11:48:16-05:00",
+          "tree_id": "e30d546fd9633ec1f331a9e5a43a4b43f3edb35b",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/5015e36f6b5c6d9469edd591dcf2f0adb46e2b8b"
+        },
+        "date": 1762274960999,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.64648497180775,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009476836521730244",
+            "extra": "mean: 6.865939814431954 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.99037242463916,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014277923349770335",
+            "extra": "mean: 6.622938826772615 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44381.166763140194,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.53207999999063 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47380.9470789268,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.105529999942974 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46744.34954280984,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.392960000099492 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.825006593528,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.240403330000021 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.419129751589274,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.495613489999954 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.945815999053671,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.54479190999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1369000.3559937975,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 730.4599999713446 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4738.891126963183,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 211.01982999994107 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2948.4147420616823,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.1653100000269 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2967.581663099232,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.9747200000006 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60542.0067480074,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021995421474147628",
+            "extra": "mean: 16.517457113079796 usec\nrounds: 12498"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17167.124090842983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020247849495288825",
+            "extra": "mean: 58.2508750276585 usec\nrounds: 4513"
           }
         ]
       }
