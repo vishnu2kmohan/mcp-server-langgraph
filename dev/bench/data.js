@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762285253356,
+  "lastUpdate": 1762285370592,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -26296,6 +26296,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000022568515590204697",
             "extra": "mean: 57.648007079225216 usec\nrounds: 4379"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "c37b2674baf7cc405062150852a444bfe07ca291",
+          "message": "fix(terraform): correct IAM binding format in GitHub Actions WIF module\n\n## Problem\n\nTerraform module used incorrect principalSet member format that included\nthe full provider path, causing \"Invalid principalSet member\" errors during\nterraform apply.\n\n## Root Cause\n\n```hcl\n# ❌ INCORRECT:\nmember = \"principalSet://iam.googleapis.com/${workload_identity_provider_name}/attribute.repository/...\"\n# where workload_identity_provider_name = \"projects/NUM/.../POOL/providers/PROVIDER\"\n```\n\nThe principalSet member must use the pool path only, NOT the provider path.\n\n## Solution\n\nCreated separate local variable for pool path (without provider segment):\n\n```hcl\nlocals {\n  # Full provider name (for outputs and GitHub Actions workflows)\n  workload_identity_provider_name = \"projects/NUM/.../POOL/providers/PROVIDER\"\n\n  # Pool path for IAM bindings (WITHOUT /providers/PROVIDER)\n  workload_identity_pool_name = \"projects/NUM/.../POOL\"\n}\n\n# ✅ CORRECT:\nmember = \"principalSet://iam.googleapis.com/${workload_identity_pool_name}/attribute.repository/...\"\n```\n\n## Validation\n\nSuccessfully deployed via gcloud using corrected format:\n```bash\n$ gcloud iam service-accounts add-iam-policy-binding \\\n  github-actions-staging@PROJECT.iam.gserviceaccount.com \\\n  --member=\"principalSet://iam.googleapis.com/projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/attribute.repository/vishnu2kmohan/mcp-server-langgraph\"\n\n✓ Updated IAM policy successfully\n```\n\n## Impact\n\n- ✅ Terraform module can now be applied without errors\n- ✅ Correct IAM binding format for all 3 service accounts\n- ✅ Repository-based access control works properly\n- ✅ Future terraform applies will succeed\n\n## Testing\n\nValidated through actual deployment:\n1. ✅ Created WIF provider with gcloud\n2. ✅ Added IAM bindings with corrected format\n3. ✅ Configured GitHub secrets\n4. ✅ Triggered workflows - now pending (not failing)\n\n## Files Modified\n\n- terraform/modules/github-actions-wif/main.tf:\n  - Added workload_identity_pool_name local variable\n  - Updated IAM binding member references\n  - Added explanatory comments\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T14:31:49-05:00",
+          "tree_id": "8057bd987af0adb704e64e8e2978ccd2f468f8bd",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/c37b2674baf7cc405062150852a444bfe07ca291"
+        },
+        "date": 1762285369512,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.54391301538834,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010101964073229615",
+            "extra": "mean: 6.96650926530613 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.56623021072394,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001442040837710533",
+            "extra": "mean: 6.731004741667175 msec\nrounds: 120"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45639.4891115639,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.910849999997595 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 44261.536105492894,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.592979999984664 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45603.419891716774,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.928179999974873 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.97723246354195,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.263788649999981 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.36941049464134,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.627797359999974 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934440567286941,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.65992073000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1455625.2636096638,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 686.99000010497 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5075.244303230202,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 197.03484999993748 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2962.923106160311,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.50453999999763 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2782.2873245314986,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 359.41650999987473 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 61069.35929207085,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028462282081402744",
+            "extra": "mean: 16.37482383296984 usec\nrounds: 8333"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17169.64130968234,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000029432556606031884",
+            "extra": "mean: 58.24233494243574 usec\nrounds: 4765"
           }
         ]
       }
