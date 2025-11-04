@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762287690593,
+  "lastUpdate": 1762289326369,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -26540,6 +26540,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018060027120081696",
             "extra": "mean: 58.210171625292155 usec\nrounds: 4504"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "e30f4285f4841d9e7bca308bafa5b076f7735112",
+          "message": "fix(ci/cd): comprehensive workflow reliability improvements\n\nThis commit addresses 5 high-priority CI/CD issues identified during the\ncomprehensive workflow failure analysis:\n\n## Changes\n\n### 1. Workflow Timeout Protection\n- **release.yaml**: Added timeouts to all 8 jobs (5-30 min)\n  - create-release: 10 min\n  - build-and-push: 30 min\n  - create-manifest: already had 10 min\n  - publish-helm: 10 min\n  - attach-sbom: 5 min\n  - publish-pypi: 15 min\n  - update-mcp-registry: 10 min\n  - notify: 5 min\n\n**Impact**: Prevents indefinite hangs in release workflow. All 24 workflows\nnow have complete timeout coverage.\n\n### 2. Terraform State Management\n- **gcp-staging-wif-only/main.tf**: Migrated from local to remote GCS backend\n- **backend-config.tfbackend.example**: Added template with setup instructions\n\n**Impact**:\n- Eliminates state loss risk in ephemeral CI environments\n- Enables state locking for concurrent run protection\n- Follows infrastructure best practices\n\n**Migration Steps** (documented in example file):\n```bash\ncp backend-config.tfbackend.example backend-config.tfbackend\n# Edit with bucket name\nterraform init -backend-config=backend-config.tfbackend -migrate-state\n```\n\n### 3. .gitignore Enhancement\n- Added `*.tfplan` and `**/tfplan` patterns\n\n**Impact**: Prevents accidental commit of sensitive Terraform plan files\n\n### 4. Code Formatting\n- **gcp-staging-wif-only/outputs.tf**: Applied terraform fmt for consistency\n\n### 5. GitHub Repository Configuration (Applied via gh CLI)\n- Set `ENABLE_STAGING_AUTODEPLOY=true`\n- Set `ENABLE_DEV_AUTODEPLOY=true`\n\n**Impact**: Enables automated deployments for dev (develop branch) and\nstaging (main branch) environments per workflow configuration.\n\n## Testing & Validation\n\n✅ YAML syntax validation (release.yaml)\n✅ Terraform validation (gcp-staging-wif-only)\n✅ Terraform formatting check\n✅ Git ignore patterns verified\n✅ GitHub variables configured and verified\n\n## Related Issues\n\nResolves high-priority findings from CI/CD failure analysis:\n- Workflow timeout coverage gaps\n- Local terraform backend risk\n- Untracked tfplan files\n- Auto-deploy variable configuration\n- Service account permissions verified (no changes needed)\n\n## References\n\n- Workflow analysis documentation: workflow-analysis.md\n- Recent fixes: commits 5aab9cc (concurrency), c37b267 (WIF IAM)\n- CI/CD health score: 8.5/10 → 9.5/10 (projected)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T15:47:38-05:00",
+          "tree_id": "e44abed80136be1aa5494188a10bec08e4061582",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/e30f4285f4841d9e7bca308bafa5b076f7735112"
+        },
+        "date": 1762289325245,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.49840903627452,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008913794922379682",
+            "extra": "mean: 6.872927385416894 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.17396742355416,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001385785492105773",
+            "extra": "mean: 6.658943738095276 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44730.62101752188,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.356050000027494 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48965.289974898435,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.422629999998776 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 47010.88348953273,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.27167000004704 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.76947619856406,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.241928740000006 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.395272231404853,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.55895664000006 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938294281659646,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.62088842000009 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1473926.244569495,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 678.4600000742103 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5089.148911602932,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 196.49650999994606 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2977.879359197799,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.8094400000766 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2978.143375982288,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.77966999999376 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60539.05278645085,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002245062769880372",
+            "extra": "mean: 16.51826307107019 usec\nrounds: 12719"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17387.81667838512,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020494977388667797",
+            "extra": "mean: 57.5115334200127 usec\nrounds: 4608"
           }
         ]
       }
