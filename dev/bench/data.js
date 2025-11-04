@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762293690117,
+  "lastUpdate": 1762293870241,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27394,6 +27394,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021706720828351586",
             "extra": "mean: 48.065109249102214 usec\nrounds: 4595"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "27bd0930d7c9bea6cf7af17e28730f0e001acf2f",
+          "message": "fix(ci/cd): replace JSON parsing with docker compose filters for E2E health checks\n\n## Problem\n\nE2E test infrastructure fails with jq parsing errors:\n```\njq: error (at <stdin>:1): Cannot index string with string \"Health\"\nProcess completed with exit code 5\n```\n\n## Root Cause\n\nThe `docker compose ps --format json` JSON structure varies between Docker Compose versions.\nGitHub Actions may have a different version that returns strings instead of objects.\n\nOur previous approach:\n```bash\nHEALTH_STATUS=$(docker compose ps --format json | jq -r '.[].Health')\n```\n\nThis fails when JSON is structured as strings rather than objects with Health field.\n\n## Solution\n\nReplaced JSON parsing with native docker compose filtering:\n\n**Before:**\n```bash\nHEALTH_STATUS=$(docker compose ps --format json | jq -r '.[].Health')\nHEALTHY=$(echo \"$HEALTH_STATUS\" | grep -c \"healthy\" || true)\n```\n\n**After:**\n```bash\nHEALTHY=$(docker compose ps --status running --filter \"health=healthy\" --format \"table {{.Service}}\" | tail -n +2 | wc -l | tr -d ' ')\n```\n\n**Benefits:**\n- No jq dependency on JSON structure\n- Uses native docker compose filters\n- More reliable across Docker Compose versions\n- Simpler and clearer intent\n\n## Changes\n\n**File:** `.github/workflows/e2e-tests.yaml`\n\n- Line 112-113: Replaced jq JSON parsing with docker compose filters\n- Line 114: Added `tr -d ' '` to strip whitespace for reliable comparison\n- Line 128: Simplified log output (show all logs instead of JSON filtering)\n\n## Testing\n\n✅ YAML syntax validation passed\n✅ Bash syntax more robust (no jq errors possible)\n✅ docker compose -f docker-compose.test.yml config - Valid\n\n## Impact\n\n**Expected:**\n- E2E test infrastructure should now start successfully\n- Health check loop will work across all Docker Compose versions\n- Better diagnostic output on failure (all logs shown)\n\n**Workflows Affected:**\n- e2e-tests.yaml - Should now pass infrastructure startup\n\n## Related Commits\n\n- 7b6a1f3: Initial health check timeout improvements\n- 4fcec6f: Removed unsupported deploy.resources\n- This commit: Fixed jq JSON parsing incompatibility\n\nPart of comprehensive CI/CD failure resolution tracking 7+ critical issues.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T17:03:22-05:00",
+          "tree_id": "30cfdafcd16ce56911d377bced45ebdaf6fd9421",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/27bd0930d7c9bea6cf7af17e28730f0e001acf2f"
+        },
+        "date": 1762293868920,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.24745632020722,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010039923534435385",
+            "extra": "mean: 6.884802153061026 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.37739665740628,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014200285004665846",
+            "extra": "mean: 6.69445325984277 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45604.70932471488,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.927559999994628 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48601.6574139035,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.57542999992279 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46865.29741879855,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.337750000043343 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.82840664639093,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.240309959999934 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37044914469245,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.62502906 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.941114667175395,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.59234135000011 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1483569.4682327535,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 674.0499999580152 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4919.28922173803,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 203.28140000003714 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2980.4853911209448,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.5158200000119 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2977.24668989702,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.8808000000124 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60066.358540587076,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002250126233439367",
+            "extra": "mean: 16.648254102573837 usec\nrounds: 13467"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17139.126452724606,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019189009658456325",
+            "extra": "mean: 58.34603080608173 usec\nrounds: 4577"
           }
         ]
       }
