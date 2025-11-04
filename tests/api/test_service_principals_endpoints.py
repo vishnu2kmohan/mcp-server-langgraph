@@ -182,7 +182,14 @@ class TestCreateServicePrincipal:
 
         # Verify defaults
         assert data["authentication_mode"] == "client_credentials"
-        assert data["inherit_permissions"] is False or data["inherit_permissions"] is True  # Based on impl
+
+        # FIXED: Remove always-true assertion - lock in actual default behavior
+        # The default for inherit_permissions should be explicitly documented
+        # Based on the mock fixture, the default is True when associated_user_id is set
+        assert data["inherit_permissions"] is True, (
+            "Default inherit_permissions should be True when creating service principal with minimal fields "
+            "(this locks in the API contract for default behavior)"
+        )
 
     def test_create_service_principal_service_account_mode(self, test_client, mock_sp_manager):
         """Test creating service principal with service_account_user mode"""

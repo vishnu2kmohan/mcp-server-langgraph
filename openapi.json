@@ -8,6 +8,9 @@
   "paths": {
     "/": {
       "get": {
+        "tags": [
+          "mcp"
+        ],
         "summary": "Root",
         "description": "Root endpoint with server info",
         "operationId": "root__get",
@@ -145,6 +148,9 @@
     },
     "/message": {
       "post": {
+        "tags": [
+          "mcp"
+        ],
         "summary": "Handle Message",
         "description": "Handle MCP messages via StreamableHTTP POST\n\nThis is the main endpoint for MCP protocol messages.\nSupports both regular and streaming responses.",
         "operationId": "handle_message_message_post",
@@ -174,6 +180,9 @@
     },
     "/tools": {
       "get": {
+        "tags": [
+          "mcp"
+        ],
         "summary": "List Tools",
         "description": "List available tools (convenience endpoint)",
         "operationId": "list_tools_tools_get",
@@ -203,6 +212,9 @@
     },
     "/resources": {
       "get": {
+        "tags": [
+          "mcp"
+        ],
         "summary": "List Resources",
         "description": "List available resources (convenience endpoint)",
         "operationId": "list_resources_resources_get",

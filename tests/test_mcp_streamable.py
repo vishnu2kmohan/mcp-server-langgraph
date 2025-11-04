@@ -156,11 +156,13 @@ class TestMCPStreamableHTTP:
 
         response = client.post("/message", json=request)
 
-        # Should return error due to missing token
-        assert response.status_code in [200, 403]
-        if response.status_code == 200:
-            data = response.json()
-            assert "error" in data
+        # FIXED: Tighten assertion to expect specific error response
+        # JSON-RPC returns 200 with error in body for protocol-level errors
+        assert response.status_code == 200, "JSON-RPC should return 200 with error in body"
+        data = response.json()
+        assert "error" in data, "Response should contain error for missing token"
+        # Verify it's an authentication/authorization error
+        assert data["error"]["code"] in [-32000, -32001, -32603], "Should return auth-related error code"
 
     def test_tools_call_with_invalid_token(self, client):
         """Test tools/call with invalid token fails"""
@@ -180,11 +182,13 @@ class TestMCPStreamableHTTP:
 
         response = client.post("/message", json=request)
 
-        # Should return error due to invalid token
-        assert response.status_code in [200, 403]
-        if response.status_code == 200:
-            data = response.json()
-            assert "error" in data
+        # FIXED: Tighten assertion to expect specific error response
+        # JSON-RPC returns 200 with error in body for protocol-level errors
+        assert response.status_code == 200, "JSON-RPC should return 200 with error in body"
+        data = response.json()
+        assert "error" in data, "Response should contain error for invalid token"
+        # Verify it's an authentication error
+        assert data["error"]["code"] in [-32000, -32001, -32603], "Should return auth-related error code"
 
     def test_tools_call_missing_required_argument(self, client, auth_token):
         """Test tools/call with missing required argument"""

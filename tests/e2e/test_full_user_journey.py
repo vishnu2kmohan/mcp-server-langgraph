@@ -42,12 +42,52 @@ def test_infrastructure_check():
     - Qdrant (port 9333)
     """
     import os
+    import socket
+    import time
 
     if os.getenv("TESTING") != "true":
         pytest.skip("E2E tests require test infrastructure. " "Run: docker compose -f docker-compose.test.yml up -d")
 
-    # TODO: Add actual health checks for each service
-    # For now, skip if TESTING env var not set
+    # FIXED: Add actual health checks with retries instead of just checking env var
+    services = {
+        "PostgreSQL": ("localhost", int(os.getenv("POSTGRES_PORT", "9432"))),
+        "Redis": ("localhost", int(os.getenv("REDIS_PORT", "9379"))),
+        "OpenFGA": ("localhost", int(os.getenv("OPENFGA_PORT", "9080"))),
+        "Keycloak": ("localhost", int(os.getenv("KEYCLOAK_PORT", "9082"))),
+        "Qdrant": ("localhost", int(os.getenv("QDRANT_PORT", "9333"))),
+    }
+
+    max_retries = 3
+    retry_delay = 2  # seconds
+    failed_services = []
+
+    for service_name, (host, port) in services.items():
+        connected = False
+        for attempt in range(max_retries):
+            try:
+                # Try to connect to the service port
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(2)
+                result = sock.connect_ex((host, port))
+                sock.close()
+
+                if result == 0:
+                    connected = True
+                    break
+                else:
+                    time.sleep(retry_delay)
+            except Exception:
+                time.sleep(retry_delay)
+
+        if not connected:
+            failed_services.append(f"{service_name} ({host}:{port})")
+
+    if failed_services:
+        pytest.skip(
+            f"E2E infrastructure services not ready: {', '.join(failed_services)}. "
+            f"Run: docker compose -f docker-compose.test.yml up -d && wait for services to be healthy"
+        )
+
     return True
 
 

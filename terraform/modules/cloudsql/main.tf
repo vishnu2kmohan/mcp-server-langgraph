@@ -147,12 +147,7 @@ resource "google_sql_database_instance" "main" {
 
   # Encryption at rest (automatic with Google-managed keys)
   # For customer-managed encryption keys (CMEK):
-  dynamic "encryption_key_name" {
-    for_each = var.kms_key_name != null ? [1] : []
-    content {
-      encryption_key_name = var.kms_key_name
-    }
-  }
+  encryption_key_name = var.kms_key_name
 
   # Timeouts
   timeouts {

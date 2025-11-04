@@ -29,8 +29,12 @@ provider "google" {
 }
 
 locals {
+  # Full name for GKE cluster and K8s resources (no length limit)
   name_prefix  = "dev-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-gke"
+
+  # Short name for VPC, Cloud SQL, Redis (20 char limit)
+  short_prefix = "dev-mcp-slg"
 
   common_labels = {
     environment = "development"
@@ -84,7 +88,7 @@ module "vpc" {
   source = "../../modules/gcp-vpc"
 
   project_id   = var.project_id
-  name_prefix  = local.name_prefix
+  name_prefix  = local.short_prefix
   region       = var.region
   cluster_name = local.cluster_name
 
@@ -224,7 +228,7 @@ module "cloudsql" {
   source = "../../modules/cloudsql"
 
   project_id  = var.project_id
-  name_prefix = local.name_prefix
+  name_prefix = local.short_prefix
   region      = var.region
 
   # PostgreSQL version
@@ -289,7 +293,7 @@ module "memorystore" {
   source = "../../modules/memorystore"
 
   project_id  = var.project_id
-  name_prefix = local.name_prefix
+  name_prefix = local.short_prefix
   region      = var.region
 
   # Basic tier for cost savings (no HA)

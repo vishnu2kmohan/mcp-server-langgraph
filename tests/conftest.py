@@ -459,7 +459,9 @@ async def mock_openfga_client(mock_openfga_response):
 @pytest.fixture
 async def mock_infisical_client(mock_infisical_response):
     """Mock Infisical client"""
-    with patch("secrets_manager.InfisicalClient") as mock_client:
+    # FIXED: Corrected patch path to match actual runtime module location
+    # The runtime module is mcp_server_langgraph.secrets.manager, not secrets_manager
+    with patch("mcp_server_langgraph.secrets.manager.InfisicalClient") as mock_client:
         mock_instance = MagicMock()
         mock_instance.get_secret.return_value = mock_infisical_response["secrets"][0]
         mock_instance.list_secrets.return_value = mock_infisical_response["secrets"]

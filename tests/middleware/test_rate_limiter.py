@@ -550,11 +550,16 @@ class TestRateLimitErrorHandling:
         with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
             mock_settings.jwt_secret_key = None
 
-            # Should handle error gracefully
+            # FIXED: Remove 'or True' placeholder - implement proper assertion for both paths
+            # Test should verify graceful error handling for missing JWT secret
             try:
                 user_id = get_user_id_from_jwt(request)
-                # May return None or raise - both are acceptable
-                assert user_id is None or True
-            except Exception:
-                # Exception is also acceptable behavior
-                pass
+                # If no exception raised, user_id should be None (graceful failure)
+                assert user_id is None, "get_user_id_from_jwt should return None when JWT secret is missing"
+            except (TypeError, ValueError, AttributeError) as e:
+                # These exceptions are acceptable - they indicate graceful error handling
+                # The function attempted to decode but failed due to missing secret
+                assert True, f"Acceptable exception when JWT secret missing: {type(e).__name__}"
+            except Exception as e:
+                # Unexpected exception type - this might indicate a problem
+                pytest.fail(f"Unexpected exception type when JWT secret missing: {type(e).__name__}: {e}")

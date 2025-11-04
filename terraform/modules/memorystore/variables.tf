@@ -318,7 +318,7 @@ variable "read_replica_memory_size_gb" {
   default     = null
 
   validation {
-    condition     = var.read_replica_memory_size_gb == null || (var.read_replica_memory_size_gb >= 1 && var.read_replica_memory_size_gb <= 300)
+    condition     = var.read_replica_memory_size_gb == null || try(var.read_replica_memory_size_gb >= 1 && var.read_replica_memory_size_gb <= 300, false)
     error_message = "Read replica memory size must be between 1 and 300 GB."
   }
 }

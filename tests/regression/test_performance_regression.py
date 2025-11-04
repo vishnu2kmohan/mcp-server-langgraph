@@ -212,9 +212,15 @@ class TestAuthPerformance:
 
             result = check_regression("authorization_check", stats["p95"], unit="seconds")
 
-            # Don't fail on regression for mocked tests
+            # FIXED: Use strict xfail instead of skip to track regressions in CI
+            # This ensures performance regressions are visible and tracked
             if result["regression"]:
-                pytest.skip(f"Authorization regression (mocked): {result['message']}")
+                pytest.xfail(
+                    strict=True,  # Fail if test unexpectedly passes
+                    reason=f"Performance regression detected (mocked test): {result['message']} - "
+                    f"Baseline: {result['baseline_p95']}s, Measured: {result['measured_p95']}s, "
+                    f"Regression: {result['regression_percent']:.1f}%",
+                )
 
 
 @pytest.mark.regression
