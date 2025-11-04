@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762269839954,
+  "lastUpdate": 1762270151728,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -24832,6 +24832,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017659671279076452",
             "extra": "mean: 57.785679274748986 usec\nrounds: 5129"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "4347c32151da4a6f8ee31728c583d40d72bbe08f",
+          "message": "fix(ci/cd): complete remaining medium and low-priority workflow improvements\n\nThis commit addresses the final 8 medium and low-priority issues identified\nin the CI/CD pipeline review, bringing total completion to 21/21 fixes (100%).\n\n## Medium Priority Improvements\n\n### 1. Fix overly permissive permissions\n- dependabot-automerge.yaml: Changed contents:write → contents:read\n- Only requires PR write permissions, not content modifications\n- Follows principle of least privilege\n\n### 2. Fix script injection risks with environment variables\n- release.yaml: Moved ${{ github.ref_name }} and ${{ github.repository }} to env vars\n- Prevents potential script injection via tag names or repo names\n- Uses quoted env vars in shell scripts for safety\n\n### 3. Optimize Docker build caching between variants\n- ci.yaml: Added build-common cache scope\n- Shares layer cache between base/full/test variants\n- Reduces build time by reusing common dependency layers\n\n### 4. Add step summaries for better UX\n- terraform-validate.yaml: Added core.summary.write() for Actions UI\n- build-hygiene.yaml: Added GITHUB_STEP_SUMMARY with check results\n- Provides visible summaries in GitHub Actions interface\n\n### 5. Add Terraform plan artifacts for manual review\n- gcp-drift-detection.yaml: Uploads both text and binary tfplan files\n- Retention: 90 days for compliance/audit requirements\n- Enables manual review before applying drift remediation\n\n## Low Priority Polish\n\n### 6. Add workflow description to clients/python workflow\n- Added comprehensive header documenting purpose and triggers\n- Documents Python version matrix (3.9-3.13)\n- Explains OpenAPI Generator auto-generation context\n\n### 7. Add minimum coverage threshold (80%)\n- coverage-trend.yaml: Enforces 80% coverage minimum\n- Fails workflow if coverage drops below threshold\n- Uses environment variables to prevent script injection\n\n### 8. Standardize environment variable usage\n- Completed in previous commit (removed hardcoded fallbacks)\n- All workflows now use secrets/vars consistently\n- No inline credential exposure\n\n### 9. Add workflow dependency comments to complex workflows\n- ci.yaml: Added visual dependency graph showing parallel execution\n- release.yaml: Added dependency graph with build matrices\n- Documents job dependencies for maintainability\n\n### 10. Add External Secrets Operator verification to production\n- deploy-production-gke.yaml: Verifies ESO before deployment\n- Checks CRDs, deployment health, and replica readiness\n- Prevents deployment failures due to missing secrets infrastructure\n\n## Complete Fix Summary\n\n**Total Issues Fixed**: 21/21 (100%)\n\n### By Priority:\n- ✅ Critical (3/3): Timeouts, hardcoded secrets, drift safeguards\n- ✅ High (8/8): Caching, concurrency, action versions, etc.\n- ✅ Medium (5/5): Permissions, injection, Docker cache, summaries, tfplan\n- ✅ Low (5/5): Descriptions, coverage, env vars, comments, ESO\n\n### Impact Metrics:\n- **Security**: 100% of critical vulnerabilities fixed\n- **Cost Savings**: ~$250/month ($3,000/year)\n- **Deployment Safety**: Canary deployment + ESO verification\n- **Developer Experience**: Manual dispatch, summaries, dependency graphs\n- **Maintainability**: Clear documentation and dependency visualization\n\n## Files Modified (9 workflows)\n\n- .github/workflows/build-hygiene.yaml\n- .github/workflows/ci.yaml\n- .github/workflows/coverage-trend.yaml\n- .github/workflows/dependabot-automerge.yaml\n- .github/workflows/deploy-production-gke.yaml\n- .github/workflows/gcp-drift-detection.yaml\n- .github/workflows/release.yaml\n- .github/workflows/terraform-validate.yaml\n- clients/python/.github/workflows/python.yml\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T10:27:30-05:00",
+          "tree_id": "4c2ae19c1bd10e8a1c021e945a39a7b904ad0afe",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/4347c32151da4a6f8ee31728c583d40d72bbe08f"
+        },
+        "date": 1762270150118,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.4268171202836,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014086021913950266",
+            "extra": "mean: 6.8763108469388605 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.49402886487056,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010632598257226662",
+            "extra": "mean: 6.6447819062502855 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45534.334026230594,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.961449999992055 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48393.64552720995,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.663869999992812 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46943.53021916187,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.30219000001432 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.8616572239408,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.239397030000035 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.395630956269166,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.558003049999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954184224665578,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.46026650000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1281131.4954607058,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 780.559999924435 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5055.949644360866,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 197.78677999994443 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2989.4005124958844,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.5152300001075 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2979.6721699130303,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.6073899999501 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60694.44190411802,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001768378750050244",
+            "extra": "mean: 16.47597322963689 usec\nrounds: 13373"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17034.465662595772,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016903091163364354",
+            "extra": "mean: 58.704512357895496 usec\nrounds: 5543"
           }
         ]
       }
