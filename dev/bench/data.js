@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762293493291,
+  "lastUpdate": 1762293690117,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27272,6 +27272,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019870341163328746",
             "extra": "mean: 58.068353894817754 usec\nrounds: 5366"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "4fcec6f1f3281c9bbd3423201b0b972db80fdbed",
+          "message": "fix(ci/cd): remove unsupported deploy.resources from docker-compose.test.yml\n\nGitHub Actions runners don't support docker-compose deploy.resources.limits\nconfiguration, causing docker-compose up to fail with exit code 5.\n\n## Problem\n\n**Error:** Exit code 5 when starting test infrastructure\n**Cause:** GitHub Actions doesn't support Compose V3 deploy.resources\n\nFrom GitHub Actions documentation:\n\"Docker Compose deploy configuration is not supported in GitHub-hosted runners.\nResource limits should be managed at the runner level, not container level.\"\n\n## Solution\n\nRemoved `deploy.resources` blocks from all services in docker-compose.test.yml:\n- postgres-test\n- openfga-test\n- keycloak-test (keeping enhanced health checks from previous commit)\n- redis-test\n- redis-sessions-test\n- qdrant-test\n\nAdded comments explaining why deploy sections are removed for GitHub Actions compatibility.\n\n## Health Check Improvements Retained\n\nFrom commit 7b6a1f3:\n✅ Keycloak timeout: 3s → 5s\n✅ Keycloak retries: 30 → 40\n✅ Keycloak start_period: 30s → 45s\n✅ E2E workflow wait timeout: 90s → 180s\n✅ Enhanced diagnostic logging\n\n## Impact\n\n**Before:**\n- docker compose up failed with exit code 5\n- E2E tests couldn't start infrastructure\n- 0% success rate\n\n**After:**\n- docker compose up should succeed\n- E2E tests can initialize services\n- Expected improvement in test success rate\n\n## Validation\n\n✅ docker compose -f docker-compose.test.yml config - Valid\n✅ Removed 6 deploy.resources blocks\n✅ Health checks preserved\n✅ Network configuration intact\n\n## Related Fixes\n\nThis completes the E2E infrastructure fix started in commit 7b6a1f3.\n\nPart of comprehensive CI/CD failure resolution:\n- 7b6a1f3: Enhanced health checks and timeouts\n- This commit: Removed unsupported deploy.resources\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T17:00:22-05:00",
+          "tree_id": "3d78a7652cadb1a655731b02e6bc679f90769fd3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/4fcec6f1f3281c9bbd3423201b0b972db80fdbed"
+        },
+        "date": 1762293688867,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 163.94833677735372,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016026367574900892",
+            "extra": "mean: 6.099482432432524 msec\nrounds: 111"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 162.62892022004098,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003881848516655402",
+            "extra": "mean: 6.148967838235506 msec\nrounds: 136"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 52490.29716868044,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.051139999959332 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52905.8260423327,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.901510000048916 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50800.6177356393,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.684799999950542 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.51485799367558,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.221526990000029 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.59775601852429,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.02625009999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939041468335224,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.61332405000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1417434.44358109,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 705.5000000377731 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6605.70961868786,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 151.38418999995906 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2903.765803854777,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.3803899999409 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3113.877909269604,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 321.14296999992575 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 63662.99577273357,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000038904230803164514",
+            "extra": "mean: 15.707711958291055 usec\nrounds: 12828"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20805.112390724018,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021706720828351586",
+            "extra": "mean: 48.065109249102214 usec\nrounds: 4595"
           }
         ]
       }
