@@ -7,6 +7,7 @@ Tests automatic logoff after period of inactivity.
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import jwt
 import pytest
 from fastapi import FastAPI, Request, Response
 from starlette.responses import JSONResponse
@@ -267,6 +268,123 @@ class TestSessionTimeoutHelpers:
         session_id = middleware._get_session_id(mock_request)
 
         assert session_id is None
+
+    def test_get_session_id_from_jwt_bearer_token(self, app, mock_session_store):
+        """Test extracting session ID from JWT Bearer token (NEW)"""
+        middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)
+
+        # Create valid JWT with session_id claim
+        secret_key = "test-secret-key"
+        payload = {
+            "sub": "user:alice",
+            "session_id": "jwt-session-123",
+            "exp": 9999999999,
+        }
+        token = jwt.encode(payload, secret_key, algorithm="HS256")
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers.get.return_value = f"Bearer {token}"
+        mock_request.cookies.get.return_value = None
+
+        with patch("mcp_server_langgraph.middleware.session_timeout.settings") as mock_settings:
+            mock_settings.jwt_secret_key = secret_key
+            mock_settings.jwt_algorithm = "HS256"
+
+            session_id = middleware._get_session_id(mock_request)
+
+            assert session_id == "jwt-session-123"
+
+    def test_get_session_id_from_jwt_sid_claim(self, app, mock_session_store):
+        """Test extracting session ID from JWT 'sid' claim (NEW)"""
+        middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)
+
+        # Use 'sid' claim (standard session ID claim)
+        secret_key = "test-secret-key"
+        payload = {
+            "sub": "user:bob",
+            "sid": "sid-session-456",
+            "exp": 9999999999,
+        }
+        token = jwt.encode(payload, secret_key, algorithm="HS256")
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers.get.return_value = f"Bearer {token}"
+        mock_request.cookies.get.return_value = None
+
+        with patch("mcp_server_langgraph.middleware.session_timeout.settings") as mock_settings:
+            mock_settings.jwt_secret_key = secret_key
+            mock_settings.jwt_algorithm = "HS256"
+
+            session_id = middleware._get_session_id(mock_request)
+
+            assert session_id == "sid-session-456"
+
+    def test_get_session_id_from_jwt_jti_claim(self, app, mock_session_store):
+        """Test extracting session ID from JWT 'jti' claim (NEW)"""
+        middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)
+
+        # Use 'jti' claim (JWT ID, can be used as session ID)
+        secret_key = "test-secret-key"
+        payload = {
+            "sub": "user:charlie",
+            "jti": "jti-session-789",
+            "exp": 9999999999,
+        }
+        token = jwt.encode(payload, secret_key, algorithm="HS256")
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers.get.return_value = f"Bearer {token}"
+        mock_request.cookies.get.return_value = None
+
+        with patch("mcp_server_langgraph.middleware.session_timeout.settings") as mock_settings:
+            mock_settings.jwt_secret_key = secret_key
+            mock_settings.jwt_algorithm = "HS256"
+
+            session_id = middleware._get_session_id(mock_request)
+
+            assert session_id == "jti-session-789"
+
+    def test_get_session_id_from_jwt_invalid_token(self, app, mock_session_store):
+        """Test handling invalid JWT token (NEW)"""
+        middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers.get.return_value = "Bearer invalid.jwt.token"
+        mock_request.cookies.get.return_value = "fallback-cookie-session"
+
+        with patch("mcp_server_langgraph.middleware.session_timeout.settings") as mock_settings:
+            mock_settings.jwt_secret_key = "test-secret"
+            mock_settings.jwt_algorithm = "HS256"
+
+            # Should fall back to cookie
+            session_id = middleware._get_session_id(mock_request)
+
+            assert session_id == "fallback-cookie-session"
+
+    def test_get_session_id_jwt_priority_over_cookie(self, app, mock_session_store):
+        """Test JWT session ID takes priority over cookie (NEW)"""
+        middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)
+
+        secret_key = "test-secret-key"
+        payload = {
+            "sub": "user:alice",
+            "session_id": "jwt-session-priority",
+            "exp": 9999999999,
+        }
+        token = jwt.encode(payload, secret_key, algorithm="HS256")
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers.get.return_value = f"Bearer {token}"
+        mock_request.cookies.get.return_value = "cookie-session-lower-priority"
+
+        with patch("mcp_server_langgraph.middleware.session_timeout.settings") as mock_settings:
+            mock_settings.jwt_secret_key = secret_key
+            mock_settings.jwt_algorithm = "HS256"
+
+            session_id = middleware._get_session_id(mock_request)
+
+            # Should use JWT session ID, not cookie
+            assert session_id == "jwt-session-priority"
 
     def test_is_public_endpoint_health(self, app, mock_session_store):
         """Test /health is recognized as public"""

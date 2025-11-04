@@ -8,15 +8,17 @@ Required for HIPAA compliance when processing PHI.
 from datetime import datetime, timezone
 from typing import Any, Awaitable, Callable, Optional
 
+import jwt
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
+from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
-class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
+class SessionTimeoutMiddleware(BaseHTTPMiddleware):
     """
     Automatic session timeout middleware (HIPAA 164.312(a)(2)(iii))
 
@@ -162,12 +164,40 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
         Returns:
             Session ID or None
         """
-        # Try Authorization header
+        # Try Authorization header (JWT Bearer token)
         auth_header = request.headers.get("authorization", "")
         if auth_header.startswith("Bearer "):
-            # In production, decode JWT to get session_id
-            # For now, return None (requires JWT decoding)
-            pass
+            token = auth_header.replace("Bearer ", "").strip()
+
+            try:
+                # Decode JWT to extract session ID
+                # Note: We don't verify expiration here (verify_exp=False) because
+                # session timeout is independent of JWT expiration
+                payload: dict[str, Any] = jwt.decode(
+                    token,
+                    str(settings.jwt_secret_key) if settings.jwt_secret_key else "",
+                    algorithms=[settings.jwt_algorithm],
+                    options={"verify_exp": False},  # Don't verify expiration
+                )
+
+                # Try multiple possible session ID claim names
+                # Standard claims: 'sid' (session ID), 'jti' (JWT ID), or custom 'session_id'
+                session_id_from_jwt: Optional[str] = (
+                    payload.get("sid")
+                    or payload.get("session_id")
+                    or payload.get("jti")
+                )
+
+                if session_id_from_jwt:
+                    return str(session_id_from_jwt)
+
+            except jwt.InvalidTokenError as e:
+                # Invalid JWT - log and continue to other methods
+                logger.debug(f"Failed to decode JWT for session timeout: {e}")
+            except Exception as e:
+                # Unexpected error (e.g., missing jwt_secret_key)
+                logger.warning(f"Unexpected error decoding JWT: {e}")
+                # Continue to other session ID sources
 
         # Try cookie
         session_id: str | None = request.cookies.get("session_id")

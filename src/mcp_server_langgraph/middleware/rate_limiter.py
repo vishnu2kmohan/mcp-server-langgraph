@@ -302,14 +302,18 @@ def setup_rate_limiting(app: Any) -> None:
     # Register custom exception handler
     app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 
-    logger.info(
-        "Rate limiting configured",
-        extra={
-            "storage": get_redis_storage_uri(),
-            "strategy": "fixed-window",
-            "tiers": list(RATE_LIMITS.keys()),
-        },
-    )
+    try:
+        logger.info(
+            "Rate limiting configured",
+            extra={
+                "storage": get_redis_storage_uri(),
+                "strategy": "fixed-window",
+                "tiers": list(RATE_LIMITS.keys()),
+            },
+        )
+    except RuntimeError:
+        # Observability not initialized yet, skip logging
+        pass
 
 
 # Decorators for endpoint-specific rate limits
