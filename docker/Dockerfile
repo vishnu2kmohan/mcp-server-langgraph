@@ -9,9 +9,9 @@
 #   - test:    Test runner (800MB)  - Dev dependencies, no ML models
 #
 # BUILD EXAMPLES:
-#   docker build --target final-base -t mcp-server-langgraph:base -f docker/Dockerfile.optimized .
-#   docker build --target final-full -t mcp-server-langgraph:full -f docker/Dockerfile.optimized .
-#   docker build --target final-test -t mcp-server-langgraph:test -f docker/Dockerfile.optimized .
+#   docker build --target final-base -t mcp-server-langgraph:base -f docker/Dockerfile .
+#   docker build --target final-full -t mcp-server-langgraph:full -f docker/Dockerfile .
+#   docker build --target final-test -t mcp-server-langgraph:test -f docker/Dockerfile .
 #
 # OPTIMIZATION HIGHLIGHTS:
 #   - Distroless runtime (no shell, minimal attack surface)
@@ -24,7 +24,6 @@
 # ==============================================================================
 
 ARG PYTHON_VERSION=3.12
-ARG VARIANT=base
 
 # ==============================================================================
 # STAGE: base-builder

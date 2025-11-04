@@ -45,7 +45,6 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: mcp-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -81,7 +80,6 @@ services:
 
   openfga:
     image: openfga/openfga:v1.10.2
-    container_name: mcp-openfga
     command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable'
     depends_on:
       postgres:
@@ -111,7 +109,6 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.0
-    container_name: mcp-keycloak
     command: start-dev
     depends_on:
       postgres:
@@ -125,7 +122,7 @@ services:
 
       # Database configuration
       - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres:5432/openfga
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
 
@@ -150,7 +147,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: mcp-redis-checkpoints
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
@@ -174,7 +170,6 @@ services:
 
   redis-sessions:
     image: redis:7-alpine
-    container_name: mcp-redis-sessions
     command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
       - "6380:6379"
@@ -200,7 +195,6 @@ services:
 
   qdrant:
     image: qdrant/qdrant:v1.15.1
-    container_name: mcp-qdrant
     ports:
       - "6333:6333"  # HTTP API
       - "6334:6334"  # gRPC API
@@ -223,10 +217,9 @@ services:
 
   agent:
     build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    container_name: mcp-agent
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: final-base
     command: python -m uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
     depends_on:
       postgres:
@@ -301,7 +294,6 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:1.62.0
-    container_name: mcp-jaeger
     ports:
       - "16686:16686"  # Jaeger UI
       - "14268:14268"  # Jaeger collector HTTP
@@ -328,7 +320,6 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.7.1
-    container_name: mcp-prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -360,7 +351,6 @@ services:
 
   alertmanager:
     image: prom/alertmanager:v0.28.1
-    container_name: mcp-alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
@@ -381,7 +371,6 @@ services:
 
   grafana:
     image: grafana/grafana:12.2.0
-    container_name: mcp-grafana
     depends_on:
       prometheus:
         condition: service_healthy

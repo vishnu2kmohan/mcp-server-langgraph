@@ -8,7 +8,7 @@ services:
   agent:
     # Override build target for dev dependencies
     build:
-      target: builder  # Use builder stage for dev dependencies
+      target: build-base  # Use build-base stage for dev dependencies
 
     # Add hot reload
     command: python -m uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000 --reload
@@ -34,6 +34,8 @@ services:
 
   # Use in-memory storage for faster startup in development
   openfga:
+    command: run --datastore-engine=memory
     environment:
       - OPENFGA_DATASTORE_ENGINE=memory
       - OPENFGA_LOG_LEVEL=debug
+    depends_on: []  # Remove postgres dependency for faster startup
