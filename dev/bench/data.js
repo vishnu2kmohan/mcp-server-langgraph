@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762270151728,
+  "lastUpdate": 1762270555731,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -24954,6 +24954,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016903091163364354",
             "extra": "mean: 58.704512357895496 usec\nrounds: 5543"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "78cad211c764e966b33188f0ab60530172e80195",
+          "message": "feat(tests): enable E2E tests with HTTP mocks (Phase 4 - pragmatic approach)\n\nImplements OpenAI Codex recommendation to \"swap to HTTP mocks\" for rapid E2E test activation.\n\n## Phase 4: E2E Test Enablement (3/53 tests activated)\n\nFollowing TDD best practices and the finding to enable E2E tests with lightweight fixtures.\n\n### Implementation Strategy\n\n**Pragmatic Approach** (per OpenAI Codex recommendation):\n- Use HTTP mocks instead of waiting for full infrastructure implementation\n- Enable critical user journey tests immediately\n- Validate test framework and assertions\n- Provide migration path to real infrastructure when ready\n\n### Changes\n\n**NEW: tests/e2e/helpers.py** - HTTP Mock Test Helpers (295 lines)\n- `MockKeycloakAuth` - Mock Keycloak authentication/authorization\n  - login() - Mock JWT token generation\n  - refresh() - Mock token refresh\n  - logout() - Mock session termination\n  - introspect() - Mock token validation\n- `MockMCPClient` - Mock MCP (Model Context Protocol) client\n  - initialize() - Mock MCP handshake\n  - list_tools() - Mock tool discovery\n  - call_tool() - Mock tool invocation\n  - create_conversation() - Mock conversation management\n  - send_message() - Mock agent chat\n  - get_conversation() - Mock conversation retrieval\n  - search_conversations() - Mock conversation search\n- `mock_api_request()` - Mock HTTP API calls for endpoint testing\n\n**UPDATED: tests/e2e/test_full_user_journey.py**\n- Line 75-91: Implemented `authenticated_session` fixture with HTTP mocks\n- Line 105-126: Enabled `test_01_login` - User authentication flow\n- Line 128-147: Enabled `test_02_mcp_initialize` - MCP protocol handshake\n- Line 149-170: Enabled `test_03_list_tools` - MCP tool discovery\n\n**NEW: tests/e2e/README.md** - Comprehensive E2E Strategy Documentation\n- Current state: 3/53 tests enabled with mocks\n- Remaining work: 50 tests require full implementation (Keycloak Admin API, MCP client)\n- Full roadmap: Phase 4A-4D breakdown (28-41 hours estimated)\n- Migration path: Mocks → Real Infrastructure\n- CI/CD integration examples\n\n### Test Results\n\n✅ **3 E2E tests now passing** (100% of enabled tests):\n```\ntests/e2e/test_full_user_journey.py::TestStandardUserJourney::test_01_login PASSED\ntests/e2e/test_full_user_journey.py::TestStandardUserJourney::test_02_mcp_initialize PASSED\ntests/e2e/test_full_user_journey.py::TestStandardUserJourney::test_03_list_tools PASSED\n```\n\n**Running Tests**:\n```bash\n# With HTTP mocks (no infrastructure required)\nTESTING=true pytest tests/e2e/test_full_user_journey.py::TestStandardUserJourney -v -k \"test_01 or test_02 or test_03\"\n```\n\n### Remaining Work (50/53 tests)\n\n**TDD RED Phase** - Tests written, implementation pending:\n- Keycloak Admin API: 15+ tests (SCIM, user mgmt, groups)\n- MCP Protocol Client: 20+ tests (conversations, agent chat)\n- GDPR Implementation: 5 tests (export, consent, deletion)\n- Full Integration: 10+ tests (multi-user, error recovery)\n\n**Estimated Effort**: 28-41 hours for full E2E implementation\n\n### Benefits\n\n1. **Immediate Value**: Critical E2E paths validated without infrastructure\n2. **TDD Compliance**: Tests written first, validate framework\n3. **Fast Execution**: <1s per test vs. minutes with real infrastructure\n4. **CI-Friendly**: No Docker dependencies in CI (yet)\n5. **Migration Path**: Clear roadmap to full infrastructure when ready\n\n### Infrastructure (Ready but not required for mocked tests)\n\n**Already Complete** ✅:\n- docker-compose.test.yml - PostgreSQL, Redis, OpenFGA, Keycloak, Qdrant\n- All services configured with health checks and test ports\n- Infrastructure can be enabled when full implementation is done\n\n### Related Issues\n\nAddresses OpenAI Codex finding:\n> \"Activate the full-user-journey specs by wiring lightweight fixtures for Keycloak/OpenFGA (or swap to HTTP mocks)\"\n\nThis implementation chose the HTTP mocks approach for rapid activation.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T10:29:20-05:00",
+          "tree_id": "4d6183c7ff2b63199c5ca5202d5a4010147ebc27",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/78cad211c764e966b33188f0ab60530172e80195"
+        },
+        "date": 1762270554794,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.73656988959598,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013652013816685716",
+            "extra": "mean: 6.861695734691429 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.52294933925123,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011936409688492026",
+            "extra": "mean: 6.643505222224836 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 46046.74850188156,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.71705999955975 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47769.384697802365,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.933909999598654 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45499.113905685736,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.97844999955123 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.04815845881052,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.234282330000042 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.363113100078362,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.64458808000006 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939994388984482,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.60367852000013 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1403863.4325191514,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 712.3199998204655 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5188.066637390646,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 192.75003000018387 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3009.3803589503186,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 332.2943200004147 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3006.4081891192695,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 332.62282999999115 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59925.177907767684,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001952748061461613",
+            "extra": "mean: 16.68747653180312 usec\nrounds: 12975"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17453.357942431412,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017794686807616983",
+            "extra": "mean: 57.29556474452795 usec\nrounds: 5429"
           }
         ]
       }
