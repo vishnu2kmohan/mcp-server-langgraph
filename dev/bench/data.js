@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762291280790,
+  "lastUpdate": 1762293493291,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27150,6 +27150,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000023897356105780767",
             "extra": "mean: 58.68951169723336 usec\nrounds: 4360"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7b6a1f3d4299f9b10cf2d9aa7d3f5e131c10e5cb",
+          "message": "fix(ci/cd): resolve critical workflow failures in ci.yaml and E2E tests\n\nThis commit fixes 2 critical workflow failures preventing the main CI/CD\npipeline and E2E tests from running.\n\n## Critical Issues Fixed\n\n### 1. ci.yaml Workflow File Error (CRITICAL - Main Pipeline Blocked)\n\n**Problem:** \"This run likely failed because of a workflow file issue\"\n\n**Root Causes:**\na) Job dependency on non-existent job\n   - Line 404: `docker-compose-smoke-test` job needs `[verify]`\n   - The `verify` job doesn't exist in the workflow\n   - **Fix:** Changed dependency to `[pre-commit]` which exists\n\nb) Shellcheck error with positional parameter\n   - Line 639: `$150` interpreted as positional parameter `$1` + `50`\n   - **Fix:** Escaped as `\\$150` to treat as literal dollar amount\n\n**Impact:** Main CI/CD pipeline now runs successfully\n\n**Validation:**\n✅ actionlint .github/workflows/ci.yaml - No critical errors\n✅ YAML syntax validation - Valid\n✅ Job dependency graph - Correct\n\n**Files Modified:**\n- .github/workflows/ci.yaml:404 - Changed `needs: [verify]` to `needs: [pre-commit]`\n- .github/workflows/ci.yaml:639 - Escaped `$150` to `\\$150`\n\n### 2. E2E Test Infrastructure Timeouts (CRITICAL - E2E Tests Blocked)\n\n**Problem:** Health check timeouts causing E2E test infrastructure to fail\n\n**Root Causes:**\na) Insufficient timeout for Keycloak initialization\n   - Keycloak needs 45s start_period + up to 40 retries\n   - Previous timeout: 90 seconds (45 attempts × 2s)\n   - Required: ~180 seconds for worst case\n\nb) No diagnostic output when services fail\n   - Tests continued with unhealthy services\n   - No logs captured for debugging\n\n**Fixes Applied:**\n\n**docker-compose.test.yml:**\n- Increased Keycloak health check timeout: 3s → 5s (line 146)\n- Increased Keycloak retries: 30 → 40 (line 147)\n- Increased start_period: 30s → 45s (line 148)\n- **Total allowance:** 45s + (40 × 5s) = 245 seconds worst case\n\n**e2e-tests.yaml:**\n- Increased wait loop: 45 attempts → 60 attempts (line 111)\n- Increased sleep interval: 2s → 3s (line 137)\n- **Total timeout:** 60 × 3s = 180 seconds (3 minutes)\n- Added service count validation: `[ \"$TOTAL\" -gt 0 ]` (line 120)\n- Changed to fail explicitly instead of continuing (line 134)\n- Added diagnostic logging for failed services (lines 129-133)\n- Enhanced progress messages\n\n**Impact:** E2E test infrastructure now has adequate time to initialize\n\n**Validation:**\n✅ docker compose -f docker-compose.test.yml config - Valid\n✅ YAML syntax validation - Valid\n✅ Health check math: 245s max > 180s timeout ✅ Good margin\n\n**Files Modified:**\n- docker-compose.test.yml:146-148 - Keycloak health check settings\n- .github/workflows/e2e-tests.yaml:111-138 - Wait loop with diagnostics\n\n## Testing & Validation\n\nAll validations passed:\n✅ Property-based tests: 81/81 passed (14.35s)\n✅ actionlint ci.yaml: No critical errors\n✅ YAML syntax: All 3 workflows valid\n✅ docker-compose config: Valid\n✅ Terraform modules: Still valid (previous fixes)\n\n## Impact Summary\n\n**Workflows Fixed:**\n1. ✅ ci.yaml (.github/workflows/ci.yaml) - Main CI/CD pipeline\n   - Was: \"workflow file issue\" - no jobs running\n   - Now: Should run all 12 jobs successfully\n\n2. ✅ e2e-tests.yaml - End-to-end integration testing\n   - Was: Infrastructure timeout after 90s\n   - Now: 180s timeout with diagnostic logging\n\n**Expected Improvement:**\n- 2 more workflows should now pass (ci.yaml, e2e-tests.yaml)\n- Total passing: 8/17 → 10/17 (59% success rate)\n- CI/CD health: 8.0/10 → 8.5/10\n\n## TDD Practices Followed\n\n1. ✅ **Red:** Identified failing workflows via gh CLI\n2. ✅ **Green:** Fixed job dependencies and timeout settings\n3. ✅ **Refactor:** Enhanced with better diagnostics\n4. ✅ **Validate:** Ran actionlint and YAML validation\n5. ✅ **Test:** Verified property tests still pass (81/81)\n\n## Related Issues\n\nResolves issues from upstream CI/CD failure analysis:\n- Issue #3: ci.yaml workflow showing \"no jobs\" error\n- Issue #2: E2E test infrastructure health check timeouts\n- Property-based tests: Confirmed passing locally (false alarm in CI)\n\n## References\n\n- actionlint documentation for workflow validation\n- docker-compose health check best practices\n- GitHub Actions job dependency requirements\n- Previous fixes: commits e30f428, b6ac198, 95b8552\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T16:56:58-05:00",
+          "tree_id": "082d861a1dea536dc04334d89f58afa8e6de6b59",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7b6a1f3d4299f9b10cf2d9aa7d3f5e131c10e5cb"
+        },
+        "date": 1762293491988,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.93336942251455,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008890988492931486",
+            "extra": "mean: 6.947659212121359 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.56743527046635,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001264923649246115",
+            "extra": "mean: 6.730950145161384 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45331.51161108766,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.059709999950883 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48806.74821619585,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.488970000016593 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45992.42688696284,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.742710000012266 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.9401262477793,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.237243839999977 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.39022003667244,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.57239052000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94735898607687,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.52919588000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1436554.5678042532,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 696.1099998648024 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5104.379455487065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 195.9101999999291 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2972.6513401319744,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.4000300000214 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2933.198859854082,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.9247199999754 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59114.73611718327,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002757360869817074",
+            "extra": "mean: 16.916255838775935 usec\nrounds: 11261"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17221.083997169135,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019870341163328746",
+            "extra": "mean: 58.068353894817754 usec\nrounds: 5366"
           }
         ]
       }
