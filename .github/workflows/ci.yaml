@@ -395,6 +395,28 @@ jobs:
           -c "import mcp_server_langgraph.core.agent; print('✓ Import successful')"
 
   # ============================================================================
+  # DOCKER COMPOSE SMOKE TESTS
+  # ============================================================================
+
+  docker-compose-smoke-test:
+    name: Docker Compose smoke test (${{ matrix.stack }})
+    runs-on: ubuntu-latest
+    needs: [verify]
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [main, dev, test]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Run smoke test (config validation only)
+      run: |
+        chmod +x scripts/smoke-test-compose.sh
+        ./scripts/smoke-test-compose.sh --stack ${{ matrix.stack }} --config-only --verbose
+
+  # ============================================================================
   # MULTI-PLATFORM BUILDS (Parallel by platform)
   # ============================================================================
 
