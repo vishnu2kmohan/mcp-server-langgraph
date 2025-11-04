@@ -25,7 +25,7 @@ permissions:
 env:
   PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
   PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER || '1024691643349' }}
-  TF_VERSION: 1.5.0
+  TF_VERSION: 1.6.6
 
 jobs:
   # ============================================================================
@@ -35,6 +35,7 @@ jobs:
   detect-drift-prod:
     name: Detect Drift - Production
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       drift_detected: ${{ steps.plan.outputs.drift_detected }}
     steps:
@@ -50,8 +51,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', vars.PROJECT_NUMBER || '1024691643349') }}
-          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL || format('terraform@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL }}
 
       - name: Terraform Init
         run: |
@@ -142,6 +143,7 @@ jobs:
   auto-remediate:
     name: Auto-Remediate Drift
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: detect-drift-prod
     if: needs.detect-drift-prod.outputs.drift_detected == 'true' && github.event.inputs.auto_remediate == 'true'
     environment:
@@ -159,13 +161,26 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', vars.PROJECT_NUMBER || '1024691643349') }}
-          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL || format('terraform@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL }}
 
       - name: Terraform Init
         run: |
           cd terraform/environments/gcp-prod
           terraform init
+
+      - name: Verify authorized actor
+        run: |
+          # List of authorized actors who can auto-remediate drift
+          AUTHORIZED_ACTORS="vishnu2kmohan"  # Add authorized GitHub usernames here
+
+          if ! echo "$AUTHORIZED_ACTORS" | grep -qw "${{ github.actor }}"; then
+            echo "❌ Error: Auto-remediation requires authorization"
+            echo "Actor: ${{ github.actor }}"
+            echo "Authorized actors: $AUTHORIZED_ACTORS"
+            exit 1
+          fi
+          echo "✅ Actor ${{ github.actor }} authorized for auto-remediation"
 
       - name: Terraform Apply (remediate drift)
         run: |
@@ -209,6 +224,7 @@ jobs:
   detect-drift-staging:
     name: Detect Drift - Staging
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -222,8 +238,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', vars.PROJECT_NUMBER || '1024691643349') }}
-          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL || format('terraform@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL }}
 
       - name: Check staging drift
         run: |

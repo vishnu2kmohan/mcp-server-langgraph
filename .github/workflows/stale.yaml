@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 0 * * *' # Daily at midnight
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false  # Don't cancel stale cleanup runs
+
 permissions:
   issues: write
   pull-requests: write

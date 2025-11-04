@@ -17,12 +17,16 @@ on:
       - '.github/workflows/terraform-validate.yaml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
   pull-requests: write
 
 env:
-  TF_VERSION: 1.5.0
+  TF_VERSION: 1.6.6
 
 jobs:
   # ============================================================================

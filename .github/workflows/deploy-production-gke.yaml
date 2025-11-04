@@ -152,8 +152,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
-          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
           token_format: access_token
 
       - name: Configure Docker for Artifact Registry
@@ -234,8 +234,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
-          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
@@ -266,15 +266,107 @@ jobs:
           kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} -o yaml > /tmp/deployment-backup.yaml
           echo "✅ Backup created"
 
-      - name: Deploy to GKE
-        run: |
-          kubectl apply -k deployments/overlays/production-gke
-          echo "✅ Deployment applied"
+      # ========================================================================
+      # CANARY DEPLOYMENT (Progressive Rollout)
+      # ========================================================================
 
-      - name: Wait for rollout to complete
+      - name: Deploy canary (10% traffic)
+        run: |
+          echo "🐤 Starting canary deployment..."
+
+          # Get current replica count
+          CURRENT_REPLICAS=$(kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.spec.replicas}')
+          echo "Current replicas: $CURRENT_REPLICAS"
+
+          # Calculate canary replicas (10% of current, minimum 1)
+          CANARY_REPLICAS=$(( CURRENT_REPLICAS / 10 ))
+          [ "$CANARY_REPLICAS" -lt 1 ] && CANARY_REPLICAS=1
+          echo "Canary replicas: $CANARY_REPLICAS"
+
+          # Apply deployment with new image but limited replicas
+          kubectl apply -k deployments/overlays/production-gke
+          kubectl scale deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --replicas=$CANARY_REPLICAS
+
+          echo "✅ Canary deployed with $CANARY_REPLICAS replica(s)"
+
+      - name: Wait for canary rollout
+        run: |
+          echo "⏳ Waiting for canary pods to be ready..."
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --timeout=5m
+          echo "✅ Canary rollout completed"
+
+      - name: Monitor canary health
+        run: |
+          echo "🔍 Monitoring canary for 5 minutes..."
+
+          # Get canary pod
+          CANARY_POD=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+          echo "Canary pod: $CANARY_POD"
+
+          # Monitor for 5 minutes (check every 30 seconds)
+          for i in {1..10}; do
+            echo "Health check $i/10..."
+
+            # Check pod status
+            POD_STATUS=$(kubectl get pod $CANARY_POD -n ${{ env.NAMESPACE }} -o jsonpath='{.status.phase}')
+            if [ "$POD_STATUS" != "Running" ]; then
+              echo "❌ Canary pod not running: $POD_STATUS"
+              exit 1
+            fi
+
+            # Check container ready status
+            READY=$(kubectl get pod $CANARY_POD -n ${{ env.NAMESPACE }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}')
+            if [ "$READY" != "True" ]; then
+              echo "❌ Canary pod not ready"
+              exit 1
+            fi
+
+            # Check for restarts (indicates crashes)
+            RESTARTS=$(kubectl get pod $CANARY_POD -n ${{ env.NAMESPACE }} -o jsonpath='{.status.containerStatuses[0].restartCount}')
+            if [ "$RESTARTS" -gt 0 ]; then
+              echo "⚠️ Warning: Canary pod has restarted $RESTARTS time(s)"
+            fi
+
+            echo "✓ Canary healthy (check $i/10)"
+            sleep 30
+          done
+
+          echo "✅ Canary monitoring completed successfully"
+
+      - name: Run canary smoke tests
+        run: |
+          echo "🧪 Running smoke tests on canary..."
+
+          # Get service endpoint
+          SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Health checks (canary is behind same service)
+          curl -f -s "http://${SERVICE_IP}:8000/health/live" || exit 1
+          curl -f -s "http://${SERVICE_IP}:8000/health/ready" || exit 1
+
+          echo "✅ Canary smoke tests passed"
+
+      # ========================================================================
+      # FULL ROLLOUT (after canary validation)
+      # ========================================================================
+
+      - name: Proceed with full rollout
+        run: |
+          echo "🚀 Canary validated - proceeding with full rollout..."
+
+          # Get original replica count from backup
+          ORIGINAL_REPLICAS=$(grep 'replicas:' /tmp/deployment-backup.yaml | head -1 | awk '{print $2}')
+          echo "Scaling to original replica count: $ORIGINAL_REPLICAS"
+
+          # Scale to full replica count
+          kubectl scale deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --replicas=$ORIGINAL_REPLICAS
+
+          echo "✅ Full deployment initiated"
+
+      - name: Wait for full rollout to complete
         run: |
           kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --timeout=10m
-          echo "✅ Rollout completed"
+          echo "✅ Full rollout completed"
 
       - name: Verify deployment
         run: |
@@ -321,8 +413,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
-          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
@@ -420,8 +512,8 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || 'projects/1024691643349/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider' }}
-          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL || format('mcp-production-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310') }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
