@@ -72,17 +72,23 @@ async def authenticated_session(test_infrastructure_check, test_user_credentials
     - user_id: User identifier
     - username: Username
     """
-    # TODO: Implement actual authentication against test Keycloak
-    # For now, return mock data structure
-    pytest.skip("Requires full Keycloak integration - implement when infrastructure is ready")
+    # Use HTTP mock until real Keycloak is implemented
+    from tests.e2e.helpers import mock_keycloak_auth
 
-    return {
-        "access_token": "eyJ...",  # Real JWT from Keycloak
-        "refresh_token": "refresh_...",
-        "user_id": "user:e2e_test_user",
-        "username": "e2e_test_user",
-        "expires_in": 900,
-    }
+    async with mock_keycloak_auth() as auth:
+        username = test_user_credentials["username"]
+        password = test_user_credentials["password"]
+
+        # Mock login
+        tokens = await auth.login(username, password)
+
+        return {
+            "access_token": tokens["access_token"],
+            "refresh_token": tokens["refresh_token"],
+            "user_id": f"user:{username}",
+            "username": username,
+            "expires_in": tokens["expires_in"],
+        }
 
 
 # ==============================================================================
@@ -104,30 +110,71 @@ class TestStandardUserJourney:
 
     async def test_01_login(self, test_user_credentials):
         """Step 1: User logs in and receives JWT token"""
-        # TODO: Implement real login against test Keycloak
-        pytest.skip("Implement when Keycloak test fixture is ready")
+        from tests.e2e.helpers import mock_keycloak_auth
 
-        # Expected flow:
-        # POST /auth/login with username/password
-        # Receive access_token, refresh_token, expires_in
+        # Use HTTP mock until real Keycloak is implemented
+        async with mock_keycloak_auth() as auth:
+            username = test_user_credentials["username"]
+            password = test_user_credentials["password"]
+
+            # Mock login flow
+            tokens = await auth.login(username, password)
+
+            # Verify token structure
+            assert "access_token" in tokens
+            assert "refresh_token" in tokens
+            assert "expires_in" in tokens
+            assert tokens["token_type"] == "Bearer"
+            assert tokens["expires_in"] > 0
+
+            # Verify token introspection
+            introspection = await auth.introspect(tokens["access_token"])
+            assert introspection["active"] is True
+            assert introspection["username"] == username
 
     async def test_02_mcp_initialize(self, authenticated_session):
         """Step 2: Initialize MCP protocol connection"""
-        pytest.skip("Implement when MCP server test fixture is ready")
+        from tests.e2e.helpers import mock_mcp_client
 
-        # Expected flow:
-        # Send MCP initialize request
-        # Receive server capabilities
-        # Verify protocol version compatibility
+        # Use HTTP mock until real MCP server is implemented
+        async with mock_mcp_client() as mcp:
+            # Mock MCP initialize
+            init_response = await mcp.initialize()
+
+            # Verify response structure
+            assert "protocol_version" in init_response
+            assert "server_info" in init_response
+            assert "capabilities" in init_response
+
+            # Verify server info
+            assert init_response["server_info"]["name"] == "mcp-server-langgraph"
+            assert "version" in init_response["server_info"]
+
+            # Verify capabilities
+            assert init_response["capabilities"]["tools"] is True
 
     async def test_03_list_tools(self, authenticated_session):
         """Step 3: List available MCP tools"""
-        pytest.skip("Implement when MCP server test fixture is ready")
+        from tests.e2e.helpers import mock_mcp_client
 
-        # Expected flow:
-        # Send tools/list request
-        # Receive list of tools: agent_chat, conversation_get, conversation_search
-        # Verify tool schemas
+        # Use HTTP mock until real MCP server is implemented
+        async with mock_mcp_client() as mcp:
+            # Mock tool listing
+            tools_response = await mcp.list_tools()
+
+            # Verify response structure
+            assert "tools" in tools_response
+            assert isinstance(tools_response["tools"], list)
+            assert len(tools_response["tools"]) > 0
+
+            # Verify at least basic tools are present
+            tool_names = [t["name"] for t in tools_response["tools"]]
+            assert len(tool_names) >= 3
+
+            # Verify tool structure
+            for tool in tools_response["tools"]:
+                assert "name" in tool
+                assert "description" in tool
 
     async def test_04_agent_chat_create_conversation(self, authenticated_session):
         """Step 4: Chat with agent and create new conversation"""
