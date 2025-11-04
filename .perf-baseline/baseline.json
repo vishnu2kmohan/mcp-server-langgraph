@@ -1,0 +1,19 @@
+{
+  "endpoint": "/health/live",
+  "response_time_ms": 45.0,
+  "memory_mb": 120.0,
+  "cpu_percent": 15.0,
+  "timestamp": "2025-11-04T15:00:00Z",
+  "version": "1.0.0",
+  "metadata": {
+    "description": "Initial performance baseline",
+    "python_version": "3.12",
+    "platform": "ubuntu-latest",
+    "notes": "Baseline established from local benchmarks"
+  },
+  "percentiles": {
+    "p50": 45.0,
+    "p95": 85.0,
+    "p99": 120.0
+  }
+}

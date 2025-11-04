@@ -151,11 +151,15 @@ jobs:
             ---
             🤖 Automated by [bump-deployment-versions workflow](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
 
-            await github.rest.issues.createComment({
+            // Append deployment info to release body
+            const currentBody = release.body || '';
+            const updatedBody = `${currentBody}\n\n${comment}`;
+
+            await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: release.id,
-              body: comment
+              release_id: release.id,
+              body: updatedBody
             });
 
       - name: Summary

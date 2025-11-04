@@ -50,6 +50,8 @@ jobs:
     name: Build and Push to Artifact Registry
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ARTIFACT_REGISTRY: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}/mcp-staging/agent
     outputs:
       image_tag: ${{ steps.image.outputs.tag }}
     steps:
@@ -108,8 +110,6 @@ jobs:
 
       - name: Build and push image
         uses: docker/build-push-action@v6.18.0
-        env:
-          ARTIFACT_REGISTRY: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}/mcp-staging/agent
         with:
           context: .
           file: docker/Dockerfile

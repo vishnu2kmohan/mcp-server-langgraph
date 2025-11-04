@@ -1,0 +1,24 @@
+[
+  {
+    "timestamp": "2025-11-04T15:00:00Z",
+    "deployment_frequency_per_day": 2.3,
+    "lead_time_hours": 1.8,
+    "mttr_hours": 0.9,
+    "change_failure_rate": 12.5,
+    "classification": "High",
+    "metadata": {
+      "description": "Initial DORA metrics baseline",
+      "repository": "vishnu2kmohan/mcp-server-langgraph",
+      "period_days": 30,
+      "notes": "Baseline established from historical deployment data"
+    },
+    "details": {
+      "total_deployments": 69,
+      "successful_deployments": 60,
+      "failed_deployments": 9,
+      "average_lead_time_hours": 1.8,
+      "fastest_lead_time_hours": 0.5,
+      "slowest_lead_time_hours": 4.2
+    }
+  }
+]

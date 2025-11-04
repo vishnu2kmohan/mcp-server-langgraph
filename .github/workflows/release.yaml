@@ -179,7 +179,7 @@ jobs:
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
-        image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+        image: ghcr.io/${{ github.repository }}:${{ steps.platform.outputs.name }}-${{ github.ref_name }}
 
     - name: Upload SBOM as artifact
       uses: actions/upload-artifact@v5
@@ -288,7 +288,7 @@ jobs:
     needs: [create-release, create-manifest]
     steps:
     - name: Download SBOM artifacts
-      uses: actions/download-artifact@v6.0.0
+      uses: actions/download-artifact@v4
       with:
         pattern: sbom-*
         merge-multiple: true

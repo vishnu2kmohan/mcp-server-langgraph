@@ -279,7 +279,7 @@ jobs:
   quality-summary:
     name: Quality Summary
     runs-on: ubuntu-latest
-    needs: [property-tests, contract-tests, regression-tests, benchmark-tests]
+    needs: [property-tests, contract-tests, regression-tests, benchmark-tests, mutation-tests]
     if: always()
 
     steps:

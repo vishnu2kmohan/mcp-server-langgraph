@@ -130,12 +130,14 @@ jobs:
     - name: Create issue if over budget
       if: steps.analyze.outputs.budget_pct > 100
       uses: actions/github-script@v8
+      env:
+        BUDGET_PCT: ${{ steps.analyze.outputs.budget_pct }}
       with:
         script: |
           const fs = require('fs');
           const report = fs.readFileSync('cost-report.md', 'utf8');
 
-          const title = `🔴 GitHub Actions budget exceeded: ${steps.analyze.outputs.budget_pct}%`;
+          const title = `🔴 GitHub Actions budget exceeded: ${process.env.BUDGET_PCT}%`;
           const body = `## Budget Alert
 
           Our GitHub Actions usage has exceeded the budget threshold.

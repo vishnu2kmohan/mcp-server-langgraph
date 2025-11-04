@@ -509,6 +509,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
+    # Authenticate to Google Cloud
+    - id: auth
+      name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v3
+      with:
+        workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+        service_account: ${{ secrets.GCP_DEV_SA_EMAIL }}
+
+    # Get GKE credentials
+    - name: Get GKE Credentials
+      uses: google-github-actions/get-gke-credentials@v3
+      with:
+        cluster_name: ${{ vars.GKE_CLUSTER || 'mcp-dev-cluster' }}
+        location: ${{ vars.GCP_REGION || 'us-central1' }}
+
     - name: Set up kubectl
       uses: azure/setup-kubectl@v4.0.1
 

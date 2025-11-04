@@ -151,6 +151,13 @@ deployments/**/charts/*.tgz
 test_results.log
 test-results/
 
+# CI/CD generated files (keep baselines tracked, ignore reports)
+cost-metrics.txt
+cost-report.md
+performance-report.md
+benchmark-results.json
+release_notes.md
+
 # Session/temporary documentation (should be moved to docs/reports/)
 *_SESSION_*.md
 *_STATUS*.md
