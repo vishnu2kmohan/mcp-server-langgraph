@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762291186403,
+  "lastUpdate": 1762291280790,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27028,6 +27028,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000022036903148351208",
             "extra": "mean: 48.23560615256198 usec\nrounds: 4583"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "85d5194677199f267eb74f2a994c12cb6024a465",
+          "message": "fix(llm): fix provider detection for prefixed models (azure/*, bedrock/*, ollama/*)\n\n## Problem\nProvider extraction failing for prefixed models like \"azure/gpt-4\":\n- Test: `test_azure_fallback_provider_configures_all_credentials` ❌\n- Expected: Extract \"azure\" provider from \"azure/gpt-4\"\n- Actual: Extracted \"openai\" (because \"gpt-\" pattern matched first)\n- Impact: Azure fallback credentials not configured in environment\n\n## Root Cause\n\n**_get_provider_from_model() check order bug:**\n\n```python\n# WRONG ORDER (before fix)\ndef _get_provider_from_model(self, model_name: str) -> str:\n    model_lower = model_name.lower()\n\n    # Check Anthropic pattern first\n    if any(x in model_lower for x in [\"claude\", \"anthropic\"]):\n        return \"anthropic\"\n\n    # Check OpenAI pattern second ❌ BUG: matches \"azure/gpt-4\"\n    if any(x in model_lower for x in [\"gpt-\", \"o1-\", ...]):\n        return \"openai\"  # Returns \"openai\" for \"azure/gpt-4\"!\n\n    # Check Azure prefix AFTER patterns ❌ Never reached!\n    if model_lower.startswith(\"azure/\"):\n        return \"azure\"\n```\n\n**Why this breaks:**\n1. \"azure/gpt-4\".lower() = \"azure/gpt-4\"\n2. Contains \"gpt-\" → matches OpenAI check → returns \"openai\"\n3. Never reaches Azure prefix check\n4. Azure credentials not configured for fallback\n\n## Solution\n\n**Reorder checks: Prefixes BEFORE patterns**\n\n```python\n# CORRECT ORDER (after fix)\ndef _get_provider_from_model(self, model_name: str) -> str:\n    model_lower = model_name.lower()\n\n    # Check provider prefixes FIRST\n    if model_lower.startswith(\"azure/\"):\n        return \"azure\"  # ✅ Returns \"azure\" for \"azure/gpt-4\"\n\n    if model_lower.startswith(\"bedrock/\"):\n        return \"bedrock\"\n\n    if model_lower.startswith(\"ollama/\"):\n        return \"ollama\"\n\n    # THEN check model name patterns\n    if any(x in model_lower for x in [\"claude\", \"anthropic\"]):\n        return \"anthropic\"\n\n    if any(x in model_lower for x in [\"gpt-\", \"o1-\", ...]):\n        return \"openai\"\n\n    # ... other patterns\n```\n\n**Why this works:**\n1. \"azure/gpt-4\".startswith(\"azure/\") → True → returns \"azure\" ✅\n2. Prefix check happens before pattern matching\n3. Azure credentials properly configured for fallback\n\n## Impact\n\n**Test Results:**\n- **Before**: 1412/1413 tests passing (99.93%) - 1 failure\n- **After**: 1413/1413 tests passing (100%) - 0 failures ✅\n\n**Tests Fixed:**\n- `test_azure_fallback_provider_configures_all_credentials` ✅\n- All 16 originally failing tests now pass ✅\n- **100% test pass rate achieved** 🎉\n\n**Affected Scenarios:**\n- ✅ Azure models as fallback (e.g., primary=Anthropic, fallback=azure/gpt-4)\n- ✅ Bedrock models as fallback (e.g., primary=OpenAI, fallback=bedrock/claude-v2)\n- ✅ Ollama models as fallback (e.g., primary=Anthropic, fallback=ollama/llama2)\n- ✅ Multi-provider credential configuration\n- ✅ Seamless failover with proper authentication\n\n## Testing\n\n**Unit Tests:**\n```bash\n# All provider credential tests pass\npytest tests/unit/test_provider_credentials.py::TestProviderCredentialSetup -v\n# Result: 5/5 passed (100%) ✅\n\n# All originally failing tests pass\npytest <all 16 tests> -v\n# Result: 19/19 passed (100%) ✅\n```\n\n**Validation:**\n- ✅ Azure prefix check happens before OpenAI pattern check\n- ✅ Bedrock prefix check happens before pattern checks\n- ✅ Ollama prefix check happens before pattern checks\n- ✅ No regression in existing provider detection\n- ✅ Maintains backward compatibility\n\n## Security & Reliability\n\n**Multi-Provider Fallback:**\n- ✅ Primary provider authentication: Working\n- ✅ Fallback provider authentication: Fixed\n- ✅ Seamless failover: Enabled\n- ✅ No credential leakage: Verified\n\n**Edge Cases Covered:**\n- ✅ azure/gpt-4, azure/gpt-4-turbo, azure/gpt-3.5-turbo\n- ✅ bedrock/anthropic.claude-v2, bedrock/meta.llama2-13b\n- ✅ ollama/llama2, ollama/codellama\n- ✅ All combinations of primary + fallback providers\n\n## Related\n\n**Complete Test Fix Series:**\n1. Service Principal Endpoints (3/3) ✅\n2. Redis Checkpointer (3/3) ✅\n3. LLM Properties (1/1) ✅\n4. Response Optimizer (2/2) ✅\n5. Filesystem Tools (1/1) ✅\n6. Parallel Executor (2/2) ✅\n7. **Provider Credentials (5/5) ✅ ← THIS FIX**\n\n**Total: 16/16 tests fixed (100%)**\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T16:19:20-05:00",
+          "tree_id": "715658630595edbcea10869ce0e24c134a53ba6f",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/85d5194677199f267eb74f2a994c12cb6024a465"
+        },
+        "date": 1762291279768,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.2328294163462,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000112144869412785",
+            "extra": "mean: 6.885495545454464 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.81718719458016,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014018393069647995",
+            "extra": "mean: 6.719653951613053 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45614.29917049566,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.922950000003993 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47035.316938187,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.26061999994988 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46177.75202092036,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.655449999968823 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.27981518304196,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.255418180000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.344334158395426,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.69472321000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93548115824806,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.64937813000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1170398.2863974876,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 854.4100001017796 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4796.088540396765,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 208.50324000008413 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2922.234887838129,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.2038399999394 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2923.897269687763,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.0092800000418 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58676.529222884805,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000041318059607883865",
+            "extra": "mean: 17.04258948584818 usec\nrounds: 12041"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17038.819562152537,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023897356105780767",
+            "extra": "mean: 58.68951169723336 usec\nrounds: 4360"
           }
         ]
       }
