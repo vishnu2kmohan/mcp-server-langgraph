@@ -49,6 +49,8 @@ jobs:
   build-and-push:
     name: Build and Push to Artifact Registry
     runs-on: ubuntu-latest
+    # Allow disabling the automated staging deploy without editing refs
+    if: vars.ENABLE_STAGING_AUTODEPLOY == 'true'
     timeout-minutes: 30
     env:
       ARTIFACT_REGISTRY: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}/mcp-staging/agent
@@ -138,6 +140,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: build-and-push
+    # Mirror the auto-deploy toggle so approvals never block CI unexpectedly
+    if: vars.ENABLE_STAGING_AUTODEPLOY == 'true'
     environment:
       name: staging-gke
       url: https://staging.yourdomain.com

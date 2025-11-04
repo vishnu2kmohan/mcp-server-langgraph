@@ -392,6 +392,8 @@ langgraph deployment rollback my-agent-prod
   <Tab title="Development">
     **Trigger**: Every push to `develop` branch
 
+    > NOTE: Automatic deploys only run when the repository variable `ENABLE_DEV_AUTODEPLOY` is set to `true`. This keeps CI from waiting on environment approvals by default.
+
     ```yaml
     deploy-dev:
       if: github.ref == 'refs/heads/develop'
@@ -401,6 +403,8 @@ langgraph deployment rollback my-agent-prod
 
   <Tab title="Staging">
     **Trigger**: Every push to `main` branch
+
+    > NOTE: Set the repository variable `ENABLE_STAGING_AUTODEPLOY` to `true` to enable automated staging deploys. Leaving it unset keeps CI from stalling on staging approvals.
 
     ```yaml
     deploy-staging:

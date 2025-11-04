@@ -525,7 +525,8 @@ jobs:
     name: Deploy to Development
     runs-on: ubuntu-latest
     needs: docker-manifest
-    if: github.ref == 'refs/heads/develop'
+    # Only auto-deploy when explicitly enabled to avoid blocking CI on approvals
+    if: github.ref == 'refs/heads/develop' && vars.ENABLE_DEV_AUTODEPLOY == 'true'
     environment: development
     steps:
     - name: Checkout code
@@ -563,7 +564,8 @@ jobs:
     name: Verify Deployment
     runs-on: ubuntu-latest
     needs: deploy-dev
-    if: github.ref == 'refs/heads/develop'
+    # Skip verification unless the matching auto-deploy is enabled
+    if: github.ref == 'refs/heads/develop' && vars.ENABLE_DEV_AUTODEPLOY == 'true'
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
