@@ -5,8 +5,11 @@ terraform {
   required_version = ">= 1.5.0"
 
   backend "gcs" {
-    bucket = "mcp-langgraph-terraform-state-us-central1-XXXXX"  # Replace with actual bucket from backend-setup-gcp
+    bucket = "mcp-langgraph-tfstate"  # Must be created before terraform init
     prefix = "env/prod"
+
+    # Recommended: Enable encryption with a customer-managed key
+    # encryption_key = "projects/PROJECT_ID/locations/REGION/keyRings/RING/cryptoKeys/KEY"
   }
 
   required_providers {
@@ -39,6 +42,42 @@ locals {
     team        = var.team
     cost_center = var.cost_center
   }
+}
+
+#######################
+# GCP API Enablement
+#######################
+
+module "project_services" {
+  source = "../../modules/gcp-project-services"
+
+  project_id = var.project_id
+
+  # Core APIs (required for all GCP infrastructure)
+  enable_container_api = true  # Required for GKE
+  enable_compute_api   = true  # Required for VPC, subnets, and compute resources
+
+  # Networking APIs
+  enable_service_networking_api = true  # Required for private service connection (Cloud SQL, Memorystore)
+
+  # GKE Feature APIs
+  enable_gke_backup_api         = true   # Required for backup_plan (enabled below)
+  enable_container_scanning_api = false  # Can be enabled for vulnerability scanning
+
+  # Secret Management APIs
+  enable_secret_manager_api = true  # Required for Workload Identity secret access
+
+  # Database APIs
+  enable_sql_admin_api = true  # Required for Cloud SQL
+  enable_redis_api     = true  # Required for Memorystore
+
+  # Monitoring & Logging APIs
+  enable_monitoring_api = true  # Required for monitoring alerts
+  enable_logging_api    = true  # Required for log exports
+
+  # Safety: Never disable APIs on destroy (can break existing resources)
+  disable_on_destroy         = false
+  disable_dependent_services = false
 }
 
 #######################
@@ -86,6 +125,8 @@ module "vpc" {
   enable_cloud_armor_adaptive_protection  = true
 
   labels = local.common_labels
+
+  depends_on = [module.project_services]
 }
 
 #######################
@@ -193,7 +234,7 @@ module "gke" {
 
   labels = local.common_labels
 
-  depends_on = [module.vpc]
+  depends_on = [module.project_services, module.vpc]
 }
 
 #######################
@@ -278,7 +319,7 @@ module "cloudsql" {
 
   labels = local.common_labels
 
-  depends_on = [module.vpc]
+  depends_on = [module.project_services, module.vpc]
 }
 
 #######################
@@ -339,7 +380,7 @@ module "memorystore" {
 
   labels = local.common_labels
 
-  depends_on = [module.vpc]
+  depends_on = [module.project_services, module.vpc]
 }
 
 #######################
@@ -389,5 +430,5 @@ module "workload_identity" {
     }
   }
 
-  depends_on = [module.gke]
+  depends_on = [module.project_services, module.gke]
 }

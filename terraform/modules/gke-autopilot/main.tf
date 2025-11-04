@@ -26,6 +26,29 @@ resource "google_container_cluster" "autopilot" {
   project  = var.project_id
   location = var.regional_cluster ? var.region : var.zone
 
+  lifecycle {
+    precondition {
+      condition     = !var.enable_gke_backup_agent || var.enable_backup_plan
+      error_message = <<-EOT
+        GKE Backup Agent addon requires a backup plan to be enabled.
+
+        When enabling 'enable_gke_backup_agent', you must also set 'enable_backup_plan = true'.
+        The backup agent is only useful when backup plans are configured.
+      EOT
+    }
+
+    precondition {
+      condition = !(var.enable_config_connector && var.enable_private_endpoint)
+      error_message = <<-EOT
+        Config Connector cannot be used with a fully private cluster endpoint.
+
+        Config Connector requires access to the Kubernetes API server. Either:
+        1. Set 'enable_private_endpoint = false' to allow public access to the API server
+        2. Or disable Config Connector with 'enable_config_connector = false'
+      EOT
+    }
+  }
+
   # Autopilot mode - Google manages nodes, scaling, and upgrades
   enable_autopilot = true
 
@@ -284,6 +307,22 @@ resource "google_gke_backup_backup_plan" "cluster" {
   name     = "${local.cluster_name}-backup-plan"
   location = var.region
   cluster  = google_container_cluster.autopilot.id
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_backup_plan || var.enable_backup_plan
+      error_message = <<-EOT
+        GKE Backup requires the gkebackup.googleapis.com API to be enabled.
+
+        Before enabling backup_plan, ensure that:
+        1. The gkebackup.googleapis.com API is enabled in your project
+        2. A gcp-project-services module is wired in with enable_gke_backup_api = true
+
+        To enable the API manually:
+          gcloud services enable gkebackup.googleapis.com --project=${var.project_id}
+      EOT
+    }
+  }
 
   retention_policy {
     backup_delete_lock_days = var.backup_delete_lock_days

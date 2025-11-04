@@ -1,0 +1,281 @@
+name: Terraform Validation
+
+# Validate Terraform configuration formatting and syntax on PRs and main branch
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**/*.tf'
+      - 'terraform/**/*.tfvars'
+      - '.github/workflows/terraform-validate.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**/*.tf'
+      - 'terraform/**/*.tfvars'
+      - '.github/workflows/terraform-validate.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  TF_VERSION: 1.5.0
+
+jobs:
+  # ============================================================================
+  # Terraform Format Check
+  # ============================================================================
+
+  terraform-fmt:
+    name: Terraform Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        id: fmt
+        run: |
+          echo "Checking Terraform formatting..."
+
+          # Run terraform fmt check recursively
+          terraform fmt -check -recursive terraform/
+
+          if [ $? -eq 0 ]; then
+            echo "✅ All Terraform files are properly formatted"
+            echo "formatted=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Terraform formatting issues detected"
+            echo "formatted=false" >> $GITHUB_OUTPUT
+
+            echo "Run the following command to fix formatting:"
+            echo "  terraform fmt -recursive terraform/"
+            exit 1
+          fi
+
+      - name: Comment on PR (if formatting fails)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## ❌ Terraform Format Check Failed
+
+            Terraform files are not properly formatted.
+
+            ### Fix
+
+            Run the following command to automatically format all Terraform files:
+
+            \`\`\`bash
+            terraform fmt -recursive terraform/
+            \`\`\`
+
+            Then commit the changes.
+            `
+            });
+
+  # ============================================================================
+  # Terraform Validate (All Environments)
+  # ============================================================================
+
+  terraform-validate-dev:
+    name: Validate - Development
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (Dev)
+        run: |
+          cd terraform/environments/gcp-dev
+          terraform init -backend=false
+
+      - name: Terraform Validate (Dev)
+        run: |
+          cd terraform/environments/gcp-dev
+          terraform validate
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Development environment validation passed"
+          else
+            echo "❌ Development environment validation failed"
+            exit 1
+          fi
+
+  terraform-validate-staging:
+    name: Validate - Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (Staging)
+        run: |
+          cd terraform/environments/gcp-staging
+          terraform init -backend=false
+
+      - name: Terraform Validate (Staging)
+        run: |
+          cd terraform/environments/gcp-staging
+          terraform validate
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Staging environment validation passed"
+          else
+            echo "❌ Staging environment validation failed"
+            exit 1
+          fi
+
+  terraform-validate-prod:
+    name: Validate - Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (Production)
+        run: |
+          cd terraform/environments/gcp-prod
+          terraform init -backend=false
+
+      - name: Terraform Validate (Production)
+        run: |
+          cd terraform/environments/gcp-prod
+          terraform validate
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Production environment validation passed"
+          else
+            echo "❌ Production environment validation failed"
+            exit 1
+          fi
+
+  # ============================================================================
+  # Module Validation
+  # ============================================================================
+
+  terraform-validate-modules:
+    name: Validate - All Modules
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module:
+          - gcp-project-services
+          - gcp-vpc
+          - gke-autopilot
+          - cloudsql
+          - memorystore
+          - gke-workload-identity
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (${{ matrix.module }})
+        run: |
+          cd terraform/modules/${{ matrix.module }}
+          terraform init -backend=false
+
+      - name: Terraform Validate (${{ matrix.module }})
+        run: |
+          cd terraform/modules/${{ matrix.module }}
+          terraform validate
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Module ${{ matrix.module }} validation passed"
+          else
+            echo "❌ Module ${{ matrix.module }} validation failed"
+            exit 1
+          fi
+
+  # ============================================================================
+  # Summary Comment on PR
+  # ============================================================================
+
+  validation-summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs:
+      - terraform-fmt
+      - terraform-validate-dev
+      - terraform-validate-staging
+      - terraform-validate-prod
+      - terraform-validate-modules
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - name: Generate Summary
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const needs = ${{ toJSON(needs) }};
+
+            let allPassed = true;
+            let summary = '## Terraform Validation Summary\n\n';
+
+            // Check each job
+            const jobs = {
+              'terraform-fmt': 'Format Check',
+              'terraform-validate-dev': 'Development Environment',
+              'terraform-validate-staging': 'Staging Environment',
+              'terraform-validate-prod': 'Production Environment',
+              'terraform-validate-modules': 'All Modules'
+            };
+
+            for (const [job, name] of Object.entries(jobs)) {
+              const result = needs[job]?.result || 'unknown';
+              const icon = result === 'success' ? '✅' : '❌';
+              summary += `${icon} **${name}**: ${result}\n`;
+              if (result !== 'success') allPassed = false;
+            }
+
+            summary += '\n---\n\n';
+
+            if (allPassed) {
+              summary += '### ✅ All Terraform validations passed!\n\n';
+              summary += 'Your Terraform configuration is properly formatted and validated.';
+            } else {
+              summary += '### ❌ Some validations failed\n\n';
+              summary += 'Please review the failed checks above and fix the issues.\n\n';
+              summary += '**Common fixes:**\n';
+              summary += '- Format issues: `terraform fmt -recursive terraform/`\n';
+              summary += '- Validation errors: Check the error messages in the failed jobs\n';
+              summary += '- Module issues: Ensure all required variables are defined\n';
+            }
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: summary
+            });
