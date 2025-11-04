@@ -127,7 +127,7 @@ jobs:
       run: |
         source .venv/bin/activate
         # Set TESTING env var to enable integration tests
-        TESTING=true OTEL_SDK_DISABLED=true pytest -m e2e -v --tb=short
+        TESTING=true OTEL_SDK_DISABLED=true pytest -m e2e -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-e2e.xml
 
     - name: Run new test suites
       run: |
@@ -138,6 +138,14 @@ jobs:
         echo ""
         echo "=== Running MCP server unit tests ==="
         OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -v --tb=short
+
+    - name: Upload E2E coverage artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-e2e
+        path: coverage-e2e.xml
+        retention-days: 1
 
     - name: Show test infrastructure logs on failure
       if: failure()

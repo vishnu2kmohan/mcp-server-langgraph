@@ -83,10 +83,18 @@ jobs:
           # CI uses 100 examples for comprehensive testing (dev defaults to 25 for speed)
           # HYPOTHESIS_PROFILE=ci activates the CI profile registered in conftest.py
           # Match local development: parallel execution with OTEL disabled
-          OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m property -v --tb=short
+          OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m property -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-property.xml
         timeout-minutes: 15
         env:
           HYPOTHESIS_PROFILE: ci
+
+      - name: Upload property test coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-property
+          path: coverage-property.xml
+          retention-days: 1
 
       - name: Upload property test results
         if: always()
@@ -121,7 +129,15 @@ jobs:
       - name: Run contract tests
         run: |
           # Match local development: parallel execution with OTEL disabled
-          OTEL_SDK_DISABLED=true uv run pytest -n auto -m contract -v --tb=short
+          OTEL_SDK_DISABLED=true uv run pytest -n auto -m contract -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-contract.xml
+
+      - name: Upload contract test coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-contract
+          path: coverage-contract.xml
+          retention-days: 1
 
       - name: Upload OpenAPI schema
         if: always()
@@ -150,12 +166,20 @@ jobs:
       - name: Run regression tests
         run: |
           # Match local development: parallel execution with OTEL disabled
-          OTEL_SDK_DISABLED=true uv run pytest -n auto -m regression -v --tb=short
+          OTEL_SDK_DISABLED=true uv run pytest -n auto -m regression -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-regression.xml
 
       - name: Check for performance regressions
         run: |
           echo "Comparing against baseline metrics..."
           # Results are checked within the tests themselves
+
+      - name: Upload regression test coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-regression
+          path: coverage-regression.xml
+          retention-days: 1
 
       - name: Upload regression results
         if: always()

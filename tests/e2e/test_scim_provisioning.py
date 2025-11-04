@@ -21,9 +21,6 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-# E2E tests require full app initialization
-pytest_plugins = ["tests.conftest"]
-
 # Test configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:8180")

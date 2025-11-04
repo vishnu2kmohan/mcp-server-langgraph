@@ -361,6 +361,7 @@ markers = [
     "observability: OpenTelemetry/metrics/logging tests",
     "benchmark: Performance benchmark tests",
     "property: Property-based tests (hypothesis)",
+    "scim: SCIM 2.0 provisioning tests",
     "contract: Contract tests (MCP protocol, OpenAPI)",
     "regression: Performance regression tests",
     "mutation: Mutation testing (slow, runs on schedule)",

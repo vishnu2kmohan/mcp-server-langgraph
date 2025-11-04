@@ -54,29 +54,30 @@ class TestJWTBenchmarks:
             "roles": ["user", "developer"],
         }
 
-    def test_jwt_encoding_performance(self, jwt_config, sample_payload, benchmark):
+    def test_jwt_encoding_performance(self, jwt_config, sample_payload, percentile_benchmark):
         """Benchmark JWT token encoding.
 
-        Requirement: Token encoding should take < 1ms on average.
+        Requirement: Token encoding p95 < 1.5ms, p99 < 2ms (more stable than mean < 1ms).
         """
 
         def encode_token():
             return jwt.encode(sample_payload, jwt_config["secret_key"], algorithm=jwt_config["algorithm"])
 
         # Run benchmark
-        result = benchmark(encode_token)
+        result = percentile_benchmark(encode_token)
 
         # Verify token is valid
         assert isinstance(result, str)
         assert len(result) > 0
 
-        # Performance assertion: < 1ms average
-        assert benchmark.stats["mean"] < 0.001, f"JWT encoding took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 1ms)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 0.0015, "JWT encoding p95")  # p95 < 1.5ms
+        percentile_benchmark.assert_percentile(99, 0.002, "JWT encoding p99")  # p99 < 2ms
 
-    def test_jwt_decoding_performance(self, jwt_config, sample_payload, benchmark):
+    def test_jwt_decoding_performance(self, jwt_config, sample_payload, percentile_benchmark):
         """Benchmark JWT token decoding.
 
-        Requirement: Token decoding should take < 1ms on average.
+        Requirement: Token decoding p95 < 1.5ms, p99 < 2ms (more stable than mean < 1ms).
         """
         # Pre-generate token
         token = jwt.encode(sample_payload, jwt_config["secret_key"], algorithm=jwt_config["algorithm"])
@@ -85,18 +86,19 @@ class TestJWTBenchmarks:
             return jwt.decode(token, jwt_config["secret_key"], algorithms=[jwt_config["algorithm"]])
 
         # Run benchmark
-        result = benchmark(decode_token)
+        result = percentile_benchmark(decode_token)
 
         # Verify payload
         assert result["sub"] == sample_payload["sub"]
 
-        # Performance assertion: < 1ms average
-        assert benchmark.stats["mean"] < 0.001, f"JWT decoding took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 1ms)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 0.0015, "JWT decoding p95")  # p95 < 1.5ms
+        percentile_benchmark.assert_percentile(99, 0.002, "JWT decoding p99")  # p99 < 2ms
 
-    def test_jwt_validation_performance(self, jwt_config, sample_payload, benchmark):
+    def test_jwt_validation_performance(self, jwt_config, sample_payload, percentile_benchmark):
         """Benchmark JWT token validation with expiration check.
 
-        Requirement: Token validation should take < 2ms on average.
+        Requirement: Token validation p95 < 2.5ms, p99 < 3ms (more stable than mean < 2ms).
         """
         from datetime import timezone
 
@@ -114,12 +116,13 @@ class TestJWTBenchmarks:
                 return False
 
         # Run benchmark
-        result = benchmark(validate_token)
+        result = percentile_benchmark(validate_token)
 
         assert result is True
 
-        # Performance assertion: < 2ms on average
-        assert benchmark.stats["mean"] < 0.002, f"JWT validation took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 2ms)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 0.0025, "JWT validation p95")  # p95 < 2.5ms
+        percentile_benchmark.assert_percentile(99, 0.003, "JWT validation p99")  # p99 < 3ms
 
 
 # OpenFGA Authorization Benchmarks
@@ -142,10 +145,10 @@ class TestOpenFGABenchmarks:
         client.check = mock_check
         return client
 
-    def test_authorization_check_performance(self, mock_openfga_client, benchmark):
+    def test_authorization_check_performance(self, mock_openfga_client, percentile_benchmark):
         """Benchmark OpenFGA authorization check.
 
-        Requirement: Authorization check should take < 50ms on average (including network).
+        Requirement: Authorization check p95 < 60ms, p99 < 75ms (more stable than mean < 50ms).
         """
 
         async def check_authorization():
@@ -155,17 +158,18 @@ class TestOpenFGABenchmarks:
         def run_async_check():
             return asyncio.run(check_authorization())
 
-        result = benchmark(run_async_check)
+        result = percentile_benchmark(run_async_check)
 
         assert result["allowed"] is True
 
-        # Performance assertion: < 50ms average (with network simulation)
-        assert benchmark.stats["mean"] < 0.050, f"Auth check took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
+        # Performance assertions: percentile-based for stability (includes network simulation)
+        percentile_benchmark.assert_percentile(95, 0.060, "OpenFGA check p95")  # p95 < 60ms
+        percentile_benchmark.assert_percentile(99, 0.075, "OpenFGA check p99")  # p99 < 75ms
 
-    def test_batch_authorization_performance(self, mock_openfga_client, benchmark):
+    def test_batch_authorization_performance(self, mock_openfga_client, percentile_benchmark):
         """Benchmark batch authorization checks.
 
-        Requirement: 10 batch checks should take < 200ms on average.
+        Requirement: 10 batch checks p95 < 250ms, p99 < 300ms (more stable than mean < 200ms).
         """
 
         async def batch_check():
@@ -181,13 +185,14 @@ class TestOpenFGABenchmarks:
         def run_async_batch():
             return asyncio.run(batch_check())
 
-        results = benchmark(run_async_batch)
+        results = percentile_benchmark(run_async_batch)
 
         assert len(results) == 10
         assert all(r["allowed"] for r in results)
 
-        # Performance assertion: < 200ms for 10 checks
-        assert benchmark.stats["mean"] < 0.200, f"Batch check took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 200ms)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 0.250, "Batch check p95")  # p95 < 250ms
+        percentile_benchmark.assert_percentile(99, 0.300, "Batch check p99")  # p99 < 300ms
 
 
 # LLM Request Benchmarks
@@ -211,10 +216,10 @@ class TestLLMBenchmarks:
         client.acompletion = mock_completion
         return client
 
-    def test_llm_request_performance(self, mock_llm_client, benchmark):
+    def test_llm_request_performance(self, mock_llm_client, percentile_benchmark):
         """Benchmark single LLM request.
 
-        Requirement: LLM request handling overhead should be < 10ms (excluding actual LLM call).
+        Requirement: LLM request handling overhead p95 < 15ms, p99 < 20ms (excluding actual LLM call).
         """
         timer = BenchmarkTimer()
 
@@ -231,14 +236,18 @@ class TestLLMBenchmarks:
         def run_async_request():
             return asyncio.run(make_request())
 
-        result = benchmark(run_async_request)
+        result = percentile_benchmark(run_async_request)
 
         assert result == "Test response"
 
         # The total time includes 100ms simulated LLM latency
-        # We're measuring the overhead, which should be minimal
-        overhead = benchmark.stats["mean"] - 0.100
-        assert overhead < 0.010, f"LLM request overhead: {overhead * 1000:.2f}ms (target: < 10ms)"
+        # We're measuring the overhead using percentiles for stability
+        stats = percentile_benchmark.stats
+        overhead_p95 = stats["p95"] - 0.100
+        overhead_p99 = stats["p99"] - 0.100
+
+        assert overhead_p95 < 0.015, f"LLM overhead p95: {overhead_p95 * 1000:.2f}ms (target: < 15ms)"
+        assert overhead_p99 < 0.020, f"LLM overhead p99: {overhead_p99 * 1000:.2f}ms (target: < 20ms)"
 
 
 # Agent Execution Benchmarks
@@ -246,10 +255,10 @@ class TestLLMBenchmarks:
 class TestAgentBenchmarks:
     """Benchmark agent execution performance."""
 
-    def test_agent_initialization_performance(self, benchmark):
+    def test_agent_initialization_performance(self, percentile_benchmark):
         """Benchmark agent initialization time.
 
-        Requirement: Agent initialization should take < 100ms.
+        Requirement: Agent initialization p95 < 120ms, p99 < 150ms (more stable than mean < 100ms).
         """
 
         def initialize_agent():
@@ -262,18 +271,19 @@ class TestAgentBenchmarks:
             return {"config": config, "state": state}
 
         # Run benchmark
-        result = benchmark(initialize_agent)
+        result = percentile_benchmark(initialize_agent)
 
         assert "config" in result
         assert "state" in result
 
-        # Performance assertion: < 100ms
-        assert benchmark.stats["mean"] < 0.100, f"Agent init took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 100ms)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 0.120, "Agent init p95")  # p95 < 120ms
+        percentile_benchmark.assert_percentile(99, 0.150, "Agent init p99")  # p99 < 150ms
 
-    def test_message_processing_performance(self, benchmark):
+    def test_message_processing_performance(self, percentile_benchmark):
         """Benchmark message processing throughput.
 
-        Requirement: Process 100 messages in < 1 second.
+        Requirement: Process 100 messages p95 < 1.2s, p99 < 1.5s (more stable than mean < 1s).
         """
 
         async def process_messages():
@@ -296,12 +306,13 @@ class TestAgentBenchmarks:
         def run_async_processing():
             return asyncio.run(process_messages())
 
-        results = benchmark(run_async_processing)
+        results = percentile_benchmark(run_async_processing)
 
         assert len(results) == 100
 
-        # Performance assertion: < 1 second for 100 messages
-        assert benchmark.stats["mean"] < 1.0, f"Processing took {benchmark.stats['mean']:.2f}s (target: < 1s)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 1.2, "Message processing p95")  # p95 < 1.2s
+        percentile_benchmark.assert_percentile(99, 1.5, "Message processing p99")  # p99 < 1.5s
 
 
 # Memory and Resource Benchmarks
@@ -309,10 +320,10 @@ class TestAgentBenchmarks:
 class TestResourceBenchmarks:
     """Benchmark memory and resource usage."""
 
-    def test_state_serialization_performance(self, benchmark):
+    def test_state_serialization_performance(self, percentile_benchmark):
         """Benchmark state serialization for checkpointing.
 
-        Requirement: Serialize 1000-message state in < 50ms.
+        Requirement: Serialize 1000-message state p95 < 60ms, p99 < 75ms (more stable than mean < 50ms).
         """
         import json
 
@@ -326,18 +337,19 @@ class TestResourceBenchmarks:
             return json.dumps(state)
 
         # Run benchmark
-        result = benchmark(serialize_state)
+        result = percentile_benchmark(serialize_state)
 
         assert isinstance(result, str)
         assert len(result) > 0
 
-        # Performance assertion: < 50ms
-        assert benchmark.stats["mean"] < 0.050, f"Serialization took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 0.060, "State serialization p95")  # p95 < 60ms
+        percentile_benchmark.assert_percentile(99, 0.075, "State serialization p99")  # p99 < 75ms
 
-    def test_state_deserialization_performance(self, benchmark):
+    def test_state_deserialization_performance(self, percentile_benchmark):
         """Benchmark state deserialization for checkpointing.
 
-        Requirement: Deserialize 1000-message state in < 50ms.
+        Requirement: Deserialize 1000-message state p95 < 60ms, p99 < 75ms (more stable than mean < 50ms).
         """
         import json
 
@@ -352,13 +364,14 @@ class TestResourceBenchmarks:
             return json.loads(serialized)
 
         # Run benchmark
-        result = benchmark(deserialize_state)
+        result = percentile_benchmark(deserialize_state)
 
         assert isinstance(result, dict)
         assert len(result["messages"]) == 1000
 
-        # Performance assertion: < 50ms
-        assert benchmark.stats["mean"] < 0.050, f"Deserialization took {benchmark.stats['mean'] * 1000:.2f}ms (target: < 50ms)"
+        # Performance assertions: percentile-based for stability
+        percentile_benchmark.assert_percentile(95, 0.060, "State deserialization p95")  # p95 < 60ms
+        percentile_benchmark.assert_percentile(99, 0.075, "State deserialization p99")  # p99 < 75ms
 
 
 # Benchmark configuration

@@ -80,22 +80,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    # OPTIMIZATION: Separate caches for uv binary and dependencies
-    - name: Cache uv binary
-      uses: actions/cache@v4.3.0
-      with:
-        path: ~/.cargo/bin/uv
-        key: uv-binary-${{ runner.os }}-0.5.0
-        restore-keys: uv-binary-${{ runner.os }}-
-
-    - name: Cache uv dependencies
-      uses: actions/cache@v4.3.0
-      with:
-        path: ~/.cache/uv
-        key: ${{ runner.os }}-uv-py${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-py${{ matrix.python-version }}-
-
     - name: Install uv
       uses: astral-sh/setup-uv@v7.1.1
       with:
@@ -119,7 +103,7 @@ jobs:
         source .venv/bin/activate
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=xml --cov-report=term-missing
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
 
     - name: Run new test suites
       run: |
@@ -138,12 +122,78 @@ jobs:
         mypy src/mcp_server_langgraph --no-error-summary
         echo "✓ All type checks passed!"
 
-    - name: Upload coverage
+    - name: Upload coverage artifact
+      if: matrix.python-version == '3.12'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-unit-py${{ matrix.python-version }}
+        path: coverage-unit.xml
+        retention-days: 1
+
+    - name: Upload coverage to Codecov (legacy)
       if: matrix.python-version == '3.12'
       uses: codecov/codecov-action@v5.5.1
       with:
-        files: ./coverage.xml
+        files: ./coverage-unit.xml
+        flags: unit
         fail_ci_if_error: false
+
+  # ============================================================================
+  # COVERAGE MERGE AND UPLOAD
+  # ============================================================================
+
+  coverage-merge:
+    name: Merge Coverage Reports
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: always()  # Run even if some tests fail
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Install coverage tools
+      run: |
+        pip install coverage[toml]
+
+    - name: Download unit test coverage
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-unit-py3.12
+        path: coverage-artifacts/
+      continue-on-error: true
+
+    # Note: E2E and quality test coverage will be downloaded when those workflows
+    # are configured to run as part of the main CI pipeline
+    # For now, we merge only unit test coverage
+
+    - name: List coverage files
+      run: |
+        echo "=== Coverage artifacts downloaded ==="
+        find coverage-artifacts/ -name "*.xml" -type f
+
+    - name: Merge coverage reports
+      run: |
+        # For now, just copy the unit coverage (no merging needed with single source)
+        # In the future, this will use: coverage combine coverage-artifacts/**/*.xml
+        cp coverage-artifacts/coverage-unit.xml coverage-merged.xml
+
+        echo "=== Coverage Summary ==="
+        coverage report --data-file=.coverage 2>/dev/null || echo "Using XML report directly"
+
+    - name: Upload merged coverage to Codecov
+      uses: codecov/codecov-action@v5.5.1
+      with:
+        files: ./coverage-merged.xml
+        flags: merged
+        fail_ci_if_error: false
+        verbose: true
 
   # ============================================================================
   # PRE-COMMIT HOOKS ENFORCEMENT
