@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762289326369,
+  "lastUpdate": 1762289407728,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -26662,6 +26662,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000020494977388667797",
             "extra": "mean: 57.5115334200127 usec\nrounds: 4608"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "768700080aff77b52e49fdcafb1309a80065d714",
+          "message": "feat(ci/cd): optimize workflow triggers + fix service principal endpoint tests\n\n## Workflow Optimizations (Balanced Approach)\n\n### Problem\n- Too many workflows running on every PR causing queue buildup\n- Balanced Approach recommends schedule-only for low-priority validations\n\n### Solution\n\n**1. Optional Dependencies Tests** (optional-deps-test.yaml):\n- Changed from: PR + push (main) + schedule\n- Changed to: schedule-only (weekly) + manual dispatch\n- Rationale: Optional deps rarely break; weekly validation sufficient\n- Impact: Reduces PR queue time by ~10 minutes\n\n**2. Documentation Link Checker** (link-checker.yaml):\n- Changed from: PR + push (main/develop) + schedule\n- Changed to: push (main only) + schedule + manual dispatch\n- Rationale: Links validated post-merge + weekly checks\n- Impact: Removes from PR critical path, maintains link quality\n\n### Benefits\n- **PR Queue Time**: Reduced by ~10-15 minutes per PR\n- **Runner Capacity**: ~15% reduction in concurrent job usage\n- **Quality**: Maintained via schedule + post-merge validation\n- **Flexibility**: Manual dispatch available for on-demand validation\n\n---\n\n## Test Fixes (3 Service Principal Endpoint Tests)\n\n### Problem\nTests failing with 404 Not Found instead of expected 200/204 status codes:\n- `test_rotate_secret_success`\n- `test_get_service_principal_success`\n- `test_delete_service_principal_success`\n\n### Root Cause\nMock fixture `mock_sp_manager.get_service_principal` defaulted to `return_value = None`, causing endpoints to return 404 before reaching test logic.\n\n### Solution (Following TDD Arrange-Act-Assert Pattern)\n\n**Applied to all 3 tests**:\n1. **Arrange**: Configure mock to return valid `MockServicePrincipal` with correct `owner_user_id`\n2. **Act**: Call endpoint\n3. **Assert**: Verify expected response\n\n**Example Fix**:\n```python\ndef test_rotate_secret_success(self, test_client, mock_sp_manager):\n    # Arrange: Configure mock to return existing SP owned by current user\n    mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(\n        service_id=\"batch-etl-job\",\n        owner_user_id=\"user123\",  # Matches mock_current_user fixture\n        # ... other fields\n    )\n\n    # Act: Call rotate secret endpoint\n    response = test_client.post(\"/api/v1/service-principals/batch-etl-job/rotate-secret\")\n\n    # Assert: Verify response\n    assert response.status_code == status.HTTP_200_OK\n```\n\n### Impact\n- **Tests Fixed**: 3/16 failing tests (18.75%)\n- **Test Pattern**: Improved test clarity with Arrange-Act-Assert comments\n- **Coverage**: Maintains existing test coverage for service principal endpoints\n\n---\n\n## Testing\n- ✅ Validated workflow YAML syntax\n- ✅ Confirmed 3 fixed tests pass independently\n- ✅ Verified mock configuration correctness\n- ✅ Followed TDD best practices (Arrange-Act-Assert pattern)\n\n## Remaining Work\n- 13 test failures remaining (documented in separate commit/PR)\n- Categories: Redis checkpointer, LLM properties, response optimizer, filesystem tools, parallel executor, provider credentials\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T15:48:42-05:00",
+          "tree_id": "3829a6dbb73246ac7ccb082faa9c4ef78d1ea863",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/768700080aff77b52e49fdcafb1309a80065d714"
+        },
+        "date": 1762289406741,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.0662415984854,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010613844541474046",
+            "extra": "mean: 6.941251391752232 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.05404670662648,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012356099423359927",
+            "extra": "mean: 6.664265456000123 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45095.88964487064,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.17497000003732 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47466.274025645114,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.067590000001246 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45313.72276243033,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.068370000027926 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.95747423833518,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.236768049999938 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.39415870731751,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.56191692 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.949918869381412,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.50333204999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1468040.7527788698,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 681.180000015047 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5135.829332693451,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 194.710520000001 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2966.252295064266,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.12573999991946 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2972.607510964637,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.40499000000545 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59342.01765995159,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002082931779854096",
+            "extra": "mean: 16.851466118498266 usec\nrounds: 13134"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17297.458082954556,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016976650265533732",
+            "extra": "mean: 57.81196261347964 usec\nrounds: 5510"
           }
         ]
       }
