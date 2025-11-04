@@ -77,6 +77,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: startsWith(github.ref, 'refs/tags/v')
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
@@ -130,6 +131,7 @@ jobs:
   build-and-push:
     name: Build and Push Release Images
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: create-release
     strategy:
       matrix:
@@ -257,6 +259,7 @@ jobs:
   publish-helm:
     name: Publish Helm Chart
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: create-release
     steps:
     - name: Checkout code
@@ -285,6 +288,7 @@ jobs:
   attach-sbom:
     name: Attach SBOM to Release
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [create-release, create-manifest]
     steps:
     - name: Download SBOM artifacts
@@ -308,6 +312,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [create-release, build-and-push]
     if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
     steps:
@@ -341,6 +346,7 @@ jobs:
   update-mcp-registry:
     name: Update MCP Registry
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [create-manifest, publish-helm]
     if: "!contains(github.ref_name, 'alpha') && !contains(github.ref_name, 'beta')"
     steps:
@@ -365,6 +371,7 @@ jobs:
   notify:
     name: Send Notifications
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [create-manifest, publish-helm]
     if: always()
     env:

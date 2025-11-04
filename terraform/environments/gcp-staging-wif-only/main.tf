@@ -5,9 +5,10 @@
 terraform {
   required_version = ">= 1.3"
 
-  backend "local" {
-    path = "terraform.tfstate"
-  }
+  # Backend configuration is provided via -backend-config flag
+  # See backend-config.tfbackend.example for template
+  # Example: terraform init -backend-config=backend-config.tfbackend
+  backend "gcs" {}
 
   required_providers {
     google = {
