@@ -533,7 +533,7 @@ def test_import_workflow_with_syntax_error_returns_400(client):
 
     # Mock import to raise SyntaxError
     with patch(
-        "mcp_server_langgraph.builder.api.server.import_from_code",
+        "mcp_server_langgraph.builder.importer.importer.import_from_code",
         side_effect=SyntaxError("invalid syntax"),
     ):
         # Act

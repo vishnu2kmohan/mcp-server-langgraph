@@ -1,0 +1,66 @@
+---
+title: "Azure AKS Configuration"
+description: "Azure Kubernetes Service (AKS) configuration guide for deploying MCP Server with LangGraph (Coming Soon)"
+icon: "microsoft"
+seoTitle: "Azure AKS Configuration - Microsoft Azure Kubernetes Deployment"
+seoDescription: "Comprehensive guide for configuring and deploying MCP Server on Azure Kubernetes Service (AKS)"
+keywords: ["Azure", "AKS", "Microsoft", "Kubernetes", "deployment", "configuration", "cloud"]
+contentType: "guide"
+---
+
+# Azure AKS Configuration
+
+<Warning>
+This documentation is currently under development. Please check back soon for comprehensive Azure AKS deployment guidance.
+</Warning>
+
+## Coming Soon
+
+This guide will cover:
+
+<CardGroup cols={2}>
+  <Card title="AKS Cluster Setup" icon="server">
+    Instructions for creating and configuring AKS clusters for staging and production environments
+  </Card>
+  <Card title="Managed Identity & RBAC" icon="shield">
+    Setting up Azure Managed Identities, Azure AD integration, and pod identity configuration
+  </Card>
+  <Card title="Networking & Ingress" icon="network-wired">
+    VNet configuration, Application Gateway Ingress Controller (AGIC), and NSG rules
+  </Card>
+  <Card title="Monitoring & Insights" icon="chart-line">
+    Azure Monitor integration, container insights, and Log Analytics workspace setup
+  </Card>
+</CardGroup>
+
+## Related Azure Resources
+
+- [AKS Kubernetes Deployment](kubernetes/aks)
+- [Multi-Cloud Deployment Lessons](kubernetes/multi-cloud-lessons)
+- [IAM & RBAC Requirements](iam-rbac-requirements)
+
+## Temporary Workaround
+
+For immediate Azure deployment needs, please refer to:
+
+1. **AKS Deployment Guide**: See [deployment/kubernetes/aks](kubernetes/aks) for cluster configuration
+2. **Azure Database Module**: Check the Terraform module at `terraform/modules/azure-database/` for PostgreSQL setup
+3. **Kubernetes Best Practices**: Review [kubernetes-best-practices-implementation](../kubernetes-best-practices-implementation) for Azure-specific configurations
+
+## Get Notified
+
+This page is actively being developed. Key topics that will be covered:
+
+- **Prerequisites**: Azure CLI, kubectl, helm setup and authentication
+- **Resource Groups & Networking**: VNet, subnets, and network security groups
+- **AKS Cluster Creation**: Using Azure CLI, Terraform, or Azure Portal
+- **Workload Identity Federation**: GitHub Actions to Azure AD OIDC authentication
+- **Storage**: Azure Disk, Azure Files integration for persistent volumes
+- **Secrets Management**: Azure Key Vault and CSI driver integration
+- **PostgreSQL**: Azure Database for PostgreSQL with zone-redundant HA
+- **Cost Optimization**: Node autoscaling, reserved instances, and Azure Cost Management
+- **Disaster Recovery**: Geo-replication and multi-region setup
+
+<Note>
+Expected completion: Q1 2025. Follow the [GitHub repository](https://github.com/vishnu2kmohan/mcp-server-langgraph) for updates.
+</Note>
