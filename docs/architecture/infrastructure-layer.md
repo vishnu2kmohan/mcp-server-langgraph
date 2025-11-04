@@ -1,0 +1,222 @@
+# Infrastructure Layer Architecture
+
+This document describes the infrastructure layer that separates infrastructure concerns
+from business logic in the MCP Server codebase.
+
+## Overview
+
+The infrastructure layer provides reusable components for:
+- FastAPI application creation
+- Middleware configuration
+- Transport adapters
+- Lifecycle management
+- OpenAPI customization
+
+## Architecture
+
+```
+src/mcp_server_langgraph/
+├── infrastructure/          # Infrastructure layer (NEW)
+│   ├── app_factory.py      # FastAPI app creation
+│   ├── middleware.py       # Middleware factories
+│   └── transport_adapters.py  # Transport utilities
+├── core/                    # Business logic
+│   ├── agent.py            # Agent factories (DI-enabled)
+│   ├── container.py        # DI container
+│   └── test_helpers.py     # Test utilities
+└── mcp/                     # MCP protocol implementation
+    ├── server_streamable.py  # HTTP/SSE server (uses infrastructure)
+    └── server_stdio.py      # STDIO server (uses infrastructure)
+```
+
+## Components
+
+### 1. App Factory (`app_factory.py`)
+
+Creates configured FastAPI applications:
+
+```python
+from mcp_server_langgraph.infrastructure.app_factory import create_app
+from mcp_server_langgraph.core.container import create_test_container
+
+# Using container (preferred)
+container = create_test_container()
+app = create_app(container=container)
+
+# Using settings
+from mcp_server_langgraph.core.config import Settings
+settings = Settings(service_name="my-service")
+app = create_app(settings=settings)
+
+# Using defaults
+app = create_app()
+```
+
+**Features:**
+- CORS middleware configuration
+- Health check endpoint
+- Lifespan management
+- OpenAPI customization
+- Container integration
+
+### 2. Middleware (`middleware.py`)
+
+Factory functions for middleware:
+
+```python
+from mcp_server_langgraph.infrastructure.middleware import (
+    create_cors_middleware,
+    create_rate_limit_middleware,
+    create_auth_middleware,
+)
+
+# Get middleware
+cors = create_cors_middleware()
+rate_limiter = create_rate_limit_middleware(settings)
+auth = create_auth_middleware(container)
+```
+
+### 3. Transport Adapters (`transport_adapters.py`)
+
+Utilities for different transport mechanisms:
+
+```python
+from mcp_server_langgraph.infrastructure.transport_adapters import (
+    create_stdio_adapter,
+    create_http_adapter,
+)
+
+stdio = create_stdio_adapter()
+http = create_http_adapter()
+```
+
+## Usage Patterns
+
+### Pattern 1: Test Application
+
+```python
+from mcp_server_langgraph.infrastructure.app_factory import create_app
+from mcp_server_langgraph.core.container import create_test_container
+
+def test_my_endpoint():
+    container = create_test_container()
+    app = create_app(container=container)
+
+    from fastapi.testclient import TestClient
+    client = TestClient(app)
+
+    response = client.get("/health")
+    assert response.status_code == 200
+```
+
+### Pattern 2: Development Server
+
+```python
+from mcp_server_langgraph.infrastructure.app_factory import create_app
+from mcp_server_langgraph.core.container import create_development_container
+
+container = create_development_container()
+app = create_app(container=container)
+
+# Run with uvicorn
+import uvicorn
+uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+### Pattern 3: Production Server
+
+```python
+from mcp_server_langgraph.infrastructure.app_factory import create_app
+from mcp_server_langgraph.core.container import create_production_container
+
+container = create_production_container()
+app = create_app(container=container)
+
+# App is ready for production deployment
+```
+
+## Benefits
+
+### Separation of Concerns
+- ✅ Infrastructure code separate from business logic
+- ✅ Easy to test infrastructure independently
+- ✅ Reusable across different server types
+
+### Testability
+- ✅ Mock infrastructure in tests
+- ✅ No global state
+- ✅ Easy to create test apps
+
+### Flexibility
+- ✅ Swap implementations easily
+- ✅ Support multiple transport mechanisms
+- ✅ Environment-specific configuration
+
+### Maintainability
+- ✅ Single responsibility
+- ✅ Clear module boundaries
+- ✅ Easy to extend
+
+## Integration with Container Pattern
+
+The infrastructure layer works seamlessly with the container pattern:
+
+```python
+# 1. Create container
+from mcp_server_langgraph.core.container import create_test_container
+container = create_test_container()
+
+# 2. Create app using container
+from mcp_server_langgraph.infrastructure.app_factory import create_app
+app = create_app(container=container)
+
+# 3. Create agent using same container
+from mcp_server_langgraph.core.agent import create_agent
+agent = create_agent(container=container)
+
+# 4. App and agent share configuration but are independent
+assert app is not None
+assert agent is not None
+```
+
+## Testing
+
+All infrastructure components have comprehensive tests:
+
+```bash
+# Run infrastructure tests
+pytest tests/infrastructure/test_app_factory.py
+
+# Results: 20/20 tests passing
+```
+
+**Test Coverage:**
+- ✅ App creation with container/settings
+- ✅ Health endpoint validation
+- ✅ CORS middleware configuration
+- ✅ Lifespan management
+- ✅ OpenAPI customization
+- ✅ Transport adapters
+- ✅ Environment-specific behavior
+
+## Future Enhancements
+
+### Short Term
+- Implement production auth middleware
+- Implement rate limiting middleware
+- Add more transport adapters
+
+### Long Term
+- Refactor server_streamable.py to use app factory
+- Refactor server_stdio.py to use infrastructure
+- Extract common server logic to base class
+
+## Related Documentation
+
+- [Container Pattern](../MIGRATION_GUIDE.md) - DI container usage
+- [Day-1 Developer Guide](../day-1-developer.md) - Getting started
+- [Agent Architecture](agent-architecture.md) - Agent system design
+
+## Examples
+
+See `tests/infrastructure/test_app_factory.py` for comprehensive examples.
