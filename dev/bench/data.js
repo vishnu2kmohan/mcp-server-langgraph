@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762297173673,
+  "lastUpdate": 1762297284857,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -28004,6 +28004,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017409568420550922",
             "extra": "mean: 57.55766430891815 usec\nrounds: 5231"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "84a97ed0b38e04dc24d93037783bf0f4547ef96c",
+          "message": "fix(builder,terraform): fix builder API import endpoint and add short naming for GCP resources\n\nFix builder API test failures and add dual-prefix naming strategy for GCP resources with character limits.\n\n## Builder API Fixes\n\n### Import Endpoint\n- **Added**: `ImportWorkflowRequest` Pydantic model for request validation\n- **Updated**: Endpoint signature to use request model instead of raw parameters\n- **Fixed**: Import path in tests from `server.import_from_code` to `importer.importer.import_from_code`\n\n### Test Updates\n- **Updated**: Mock data to match actual importer output (includes metadata, positions, etc.)\n- **Fixed**: Both import tests now passing\n\nsrc/mcp_server_langgraph/builder/api/server.py:65-69,338,361\ntests/builder/api/test_server.py:487-508,510-511,536-537\n\n## Terraform Naming Strategy\n\n### Dual-Prefix Approach\n- **Full Prefix**: `{env}-mcp-server-langgraph` for resources without length limits\n  - GKE Clusters, Kubernetes Namespaces, Deployments\n- **Short Prefix**: `{env}-mcp-slg` for GCP resources with character limits\n  - VPC (20 char limit), Cloud SQL, Redis, Service Accounts (30 char limit)\n\n### Resource Naming Examples\n\n**Staging:**\n- Cluster: `staging-mcp-server-langgraph-gke`\n- Namespace: `staging-mcp-server-langgraph`\n- VPC: `staging-mcp-slg-vpc`\n- Cloud SQL: `staging-mcp-slg-postgres`\n- Redis: `staging-mcp-slg-redis`\n- Service Accounts: `staging-mcp-slg-app-sa`, `staging-mcp-slg-worker-sa`\n\n**Production:**\n- Cluster: `production-mcp-server-langgraph-gke`\n- VPC: `production-mcp-slg-vpc`\n- Cloud SQL: `production-mcp-slg-postgres`\n\n**Development:**\n- Cluster: `dev-mcp-server-langgraph-gke`\n- VPC: `dev-mcp-slg-vpc`\n\n### Changes\n\n**All GCP Environments:**\n- terraform/environments/gcp-{dev,staging,prod}/main.tf:\n  - Added `short_prefix` local variable\n  - Updated VPC module to use `local.short_prefix`\n  - Updated CloudSQL module to use `local.short_prefix`\n  - Updated Memorystore module to use `local.short_prefix`\n  - Updated Workload Identity service accounts to use `local.short_prefix`\n\nterraform/environments/gcp-staging/main.tf:31-37,91,226,295,355,369\nterraform/environments/gcp-prod/main.tf:31-37,92,249,334\nterraform/environments/gcp-dev/main.tf:31-37,91,231,296\n\n## Test Results\n\n- ✅ Builder API import test: **PASSING**\n- ✅ Builder API syntax error test: **PASSING**\n- ✅ Infrastructure tests: **27/27 passing**\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T18:00:09-05:00",
+          "tree_id": "055958be1d5f5f22c164f49d47db102e90c68d41",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/84a97ed0b38e04dc24d93037783bf0f4547ef96c"
+        },
+        "date": 1762297283859,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 146.16549193035442,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007500344312192201",
+            "extra": "mean: 6.8415601165046835 msec\nrounds: 103"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.64741550117031,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015912545853400838",
+            "extra": "mean: 6.6380163023256875 msec\nrounds: 129"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44987.79706010958,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.228249999969307 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47278.551990344364,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.151239999994687 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45441.03707354006,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.00653999999247 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.7383259723409,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.242784819999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.36540180172436,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.63848446000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954803650423472,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.45401548000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1465244.4026556956,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 682.4800000515552 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4934.835497257318,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 202.6410000000567 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2917.468010035762,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.7629700000523 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2833.714916661392,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 352.8936499999702 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59456.89649802162,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021998344301229585",
+            "extra": "mean: 16.818906786251013 usec\nrounds: 14043"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17238.364784895286,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016728017879611365",
+            "extra": "mean: 58.01014263697602 usec\nrounds: 5840"
           }
         ]
       }
