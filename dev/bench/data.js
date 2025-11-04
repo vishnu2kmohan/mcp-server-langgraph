@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762296724230,
+  "lastUpdate": 1762296813858,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27760,6 +27760,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016907054366788495",
             "extra": "mean: 57.654021986191026 usec\nrounds: 5458"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8189df95876f0d556554db8ccce5349f03bd9948",
+          "message": "fix(terraform): update dependent service naming and fix module issues\n\nUpdate Cloud SQL, Redis, VPC naming to use short prefixes due to GCP character limits. Fix Terraform module validation and syntax errors.\n\n## Changes\n\n### Naming Convention Adjustments\n- **GKE Clusters**: Use full name `{env}-mcp-server-langgraph-gke` (no length limit)\n- **Dependent Services**: Use short prefix `{env}-mcp-slg` (20 char GCP limit)\n  - VPC: `staging-mcp-slg-vpc`\n  - Cloud SQL: `staging-mcp-slg-postgres`\n  - Redis: `staging-mcp-slg-redis`\n  - Service Accounts: `staging-mcp-slg-app-sa`\n\n### Module Fixes\n- **cloudsql**: Fixed `encryption_key_name` block syntax (use attribute, not dynamic block)\n- **cloudsql**: Removed `sensitive = true` from `additional_users` (conflicts with for_each)\n- **memorystore**: Fixed null validation with `try()` function\n- **github-actions-wif**: Downgraded provider version from 6.0 to 5.0 for compatibility\n\n### Files Updated\n- terraform/environments/gcp-{dev,staging,prod}/main.tf\n- terraform/modules/cloudsql/main.tf\n- terraform/modules/cloudsql/variables.tf\n- terraform/modules/memorystore/variables.tf\n- terraform/modules/github-actions-wif/versions.tf\n\n## Rationale\n\nGCP imposes character limits on certain resource types:\n- VPC, Cloud SQL, Redis, Service Accounts: 20-30 character maximum\n- GKE Clusters, Namespaces: No strict limits\n\nUsing a dual-prefix approach:\n- `name_prefix`: Full name for resources without limits\n- `short_prefix`: Abbreviated name for constrained resources\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T17:51:49-05:00",
+          "tree_id": "6f64aecc5f3e1432a4588e2cbdd6473f5b01bbb3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8189df95876f0d556554db8ccce5349f03bd9948"
+        },
+        "date": 1762296812793,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.09724417956443,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00022720365614091917",
+            "extra": "mean: 6.98825477550887 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.5608297416594,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00018139339782104275",
+            "extra": "mean: 6.776866203251498 msec\nrounds: 123"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45179.68865771056,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.133840000009286 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 45725.46885767634,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.869649999928242 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46071.37838656675,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.705449999984694 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.56020393295802,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.247685399999966 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.383202263347567,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.5910625299999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.937144036284355,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.63253550000013 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1377884.9462545866,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 725.7500001855988 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4953.6911612326985,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 201.86967000000777 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2976.0467225041734,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.01623000009795 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2911.80797535002,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.42923999986397 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59297.350864490894,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002436808706348015",
+            "extra": "mean: 16.864159788271945 usec\nrounds: 12454"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17024.49047267421,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002286824055342514",
+            "extra": "mean: 58.73890919702338 usec\nrounds: 5143"
           }
         ]
       }
