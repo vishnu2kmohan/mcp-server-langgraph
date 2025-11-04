@@ -218,7 +218,8 @@ class TestAPIContractIntegration:
         try:
             from mcp_server_langgraph.mcp.server_streamable import app
 
-            schema = schemathesis.from_dict(openapi_schema)
+            # Use schemathesis.openapi.from_dict (API changed in 4.x)
+            schema = schemathesis.openapi.from_dict(openapi_schema)
 
             # Test health endpoint if it exists in schema
             if "/health/" in openapi_schema.get("paths", {}):
@@ -251,10 +252,9 @@ class TestAPIContractIntegration:
         try:
             from mcp_server_langgraph.mcp.server_streamable import app
 
-            schema = schemathesis.from_dict(
-                openapi_schema,
-                validate_schema=True,  # Validate the OpenAPI schema itself
-            )
+            # Use schemathesis.openapi.from_dict (API changed in 4.x)
+            # Schema validation happens automatically in schemathesis 4.x
+            schema = schemathesis.openapi.from_dict(openapi_schema)
 
             client = TestClient(app)
 

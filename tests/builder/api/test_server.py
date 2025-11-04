@@ -486,14 +486,29 @@ graph.set_entry_point("node1")
     # Mock import functionality
     mock_workflow = {
         "name": "imported_workflow",
-        "nodes": [{"id": "node1", "type": "custom"}],
+        "nodes": [
+            {
+                "id": "node1",
+                "type": "custom",
+                "label": "node1",
+                "config": {},
+                "position": {"x": 475, "y": 50},
+            }
+        ],
         "edges": [],
         "entry_point": "node1",
+        "description": "Imported workflow",
+        "metadata": {"source": "imported", "parser_version": "1.0"},
+        "state_schema": {},
     }
-    mock_validation = {"valid": True, "warnings": []}
+    mock_validation = {
+        "valid": True,
+        "warnings": ["No state schema extracted - may need manual configuration"],
+        "errors": [],
+    }
 
-    with patch("mcp_server_langgraph.builder.api.server.import_from_code") as mock_import:
-        with patch("mcp_server_langgraph.builder.api.server.validate_import") as mock_validate:
+    with patch("mcp_server_langgraph.builder.importer.importer.import_from_code") as mock_import:
+        with patch("mcp_server_langgraph.builder.importer.importer.validate_import") as mock_validate:
             mock_import.return_value = mock_workflow
             mock_validate.return_value = mock_validation
 

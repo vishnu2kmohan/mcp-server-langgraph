@@ -105,7 +105,8 @@
             "group": "Overview",
             "pages": [
               "ci-cd/overview",
-              "ci-cd/local-testing"
+              "ci-cd/local-testing",
+              "ci-cd/badges"
             ]
           },
           {
@@ -158,6 +159,13 @@
               "deployment/production-checklist",
               "deployment/gcp-configuration",
               "deployment/iam-rbac-requirements"
+            ]
+          },
+          {
+            "group": "Infrastructure Requirements",
+            "pages": [
+              "infrastructure/gke-cluster-requirements",
+              "kubernetes-best-practices-implementation"
             ]
           },
           {
@@ -298,7 +306,8 @@
             "group": "Architecture Decision Records",
             "pages": [
               "architecture/overview",
-              "architecture/keycloak-jwt-architecture-overview"
+              "architecture/keycloak-jwt-architecture-overview",
+              "architecture/infrastructure-layer"
             ]
           },
           {

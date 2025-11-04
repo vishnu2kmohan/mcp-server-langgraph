@@ -62,6 +62,13 @@ class SaveWorkflowRequest(BaseModel):
     output_path: str
 
 
+class ImportWorkflowRequest(BaseModel):
+    """Request to import Python code into workflow."""
+
+    code: str
+    layout: Literal["hierarchical", "force", "grid"] = "hierarchical"
+
+
 # ==============================================================================
 # FastAPI Application
 # ==============================================================================
@@ -328,15 +335,14 @@ async def get_template(template_id: str) -> Dict[str, Any]:
 
 
 @app.post("/api/builder/import")  # type: ignore[misc]
-async def import_workflow(code: str, layout: Literal["hierarchical", "force", "grid"] = "hierarchical") -> Dict[str, Any]:
+async def import_workflow(request: ImportWorkflowRequest) -> Dict[str, Any]:
     """
     Import Python code into visual workflow.
 
     Round-trip capability: Code → Visual (import) + Visual → Code (export)
 
     Args:
-        code: Python source code
-        layout: Layout algorithm (hierarchical, force, grid)
+        request: Import request containing code and layout
 
     Returns:
         Workflow definition ready for visual builder
@@ -352,7 +358,7 @@ async def import_workflow(code: str, layout: Literal["hierarchical", "force", "g
         from ..importer import import_from_code, validate_import
 
         # Import code
-        workflow = import_from_code(code, layout_algorithm=layout)
+        workflow = import_from_code(request.code, layout_algorithm=request.layout)
 
         # Validate
         validation = validate_import(workflow)
