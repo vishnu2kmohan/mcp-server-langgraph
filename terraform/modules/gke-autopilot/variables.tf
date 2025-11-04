@@ -140,17 +140,12 @@ variable "enable_master_authorized_networks" {
 }
 
 variable "master_authorized_networks_cidrs" {
-  description = "CIDR blocks authorized to access the control plane"
+  description = "CIDR blocks authorized to access the control plane (required when enable_master_authorized_networks is true)"
   type = list(object({
     cidr_block   = string
     display_name = string
   }))
   default = []
-
-  validation {
-    condition     = !var.enable_master_authorized_networks || length(var.master_authorized_networks_cidrs) > 0
-    error_message = "When master authorized networks are enabled, at least one CIDR block must be specified to prevent lockout."
-  }
 }
 
 #######################

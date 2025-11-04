@@ -28,14 +28,14 @@ resource "google_redis_instance" "main" {
   redis_version = var.redis_version
 
   # Network configuration
-  authorized_network      = var.vpc_network_id
-  connect_mode            = var.connect_mode
-  reserved_ip_range       = var.reserved_ip_range
-  customer_managed_key    = var.customer_managed_key
+  authorized_network   = var.vpc_network_id
+  connect_mode         = var.connect_mode
+  reserved_ip_range    = var.reserved_ip_range
+  customer_managed_key = var.customer_managed_key
 
   # High availability configuration
-  replica_count       = var.tier == "STANDARD_HA" ? var.replica_count : 0
-  read_replicas_mode  = var.tier == "STANDARD_HA" && var.replica_count > 0 ? var.read_replicas_mode : null
+  replica_count      = var.tier == "STANDARD_HA" ? var.replica_count : 0
+  read_replicas_mode = var.tier == "STANDARD_HA" && var.replica_count > 0 ? var.read_replicas_mode : null
 
   # Maintenance policy
   dynamic "maintenance_policy" {
@@ -58,8 +58,8 @@ resource "google_redis_instance" "main" {
   dynamic "persistence_config" {
     for_each = var.enable_persistence ? [1] : []
     content {
-      persistence_mode    = var.persistence_mode
-      rdb_snapshot_period = var.persistence_mode == "RDB" ? var.rdb_snapshot_period : null
+      persistence_mode        = var.persistence_mode
+      rdb_snapshot_period     = var.persistence_mode == "RDB" ? var.rdb_snapshot_period : null
       rdb_snapshot_start_time = var.persistence_mode == "RDB" && var.rdb_snapshot_start_time != null ? var.rdb_snapshot_start_time : null
     }
   }
@@ -92,11 +92,12 @@ resource "google_redis_instance" "main" {
 
   # Lifecycle
   lifecycle {
-    prevent_destroy = var.enable_deletion_protection
     ignore_changes = [
-      maintenance_version,  # Allow automatic minor version upgrades
+      maintenance_version, # Allow automatic minor version upgrades
     ]
   }
+  # Note: Deletion protection should be managed through Terraform Cloud/Enterprise policies
+  # The prevent_destroy meta-argument cannot accept variables.
 
   # Timeouts
   timeouts {
@@ -146,9 +147,8 @@ resource "google_redis_instance" "read_replicas" {
     }
   )
 
-  lifecycle {
-    prevent_destroy = var.enable_deletion_protection
-  }
+  # Note: Deletion protection should be managed through Terraform Cloud/Enterprise policies
+  # The prevent_destroy meta-argument cannot accept variables.
 
   depends_on = [google_redis_instance.main]
 }
@@ -188,7 +188,7 @@ resource "google_monitoring_alert_policy" "high_memory" {
   notification_channels = var.monitoring_notification_channels
 
   alert_strategy {
-    auto_close = "86400s"  # 24 hours
+    auto_close = "86400s" # 24 hours
   }
 
   enabled = true
@@ -285,7 +285,7 @@ resource "google_monitoring_alert_policy" "instance_down" {
         "resource.labels.instance_id=\"${google_redis_instance.main.id}\"",
         "metric.type=\"redis.googleapis.com/stats/uptime\""
       ])
-      duration        = "300s"  # 5 minutes
+      duration        = "300s" # 5 minutes
       comparison      = "COMPARISON_LT"
       threshold_value = 1
 
@@ -299,7 +299,7 @@ resource "google_monitoring_alert_policy" "instance_down" {
   notification_channels = var.monitoring_notification_channels
 
   alert_strategy {
-    auto_close = "3600s"  # 1 hour
+    auto_close = "3600s" # 1 hour
   }
 
   enabled = true

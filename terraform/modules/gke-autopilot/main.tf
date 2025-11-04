@@ -38,7 +38,7 @@ resource "google_container_cluster" "autopilot" {
     }
 
     precondition {
-      condition = !(var.enable_config_connector && var.enable_private_endpoint)
+      condition     = !(var.enable_config_connector && var.enable_private_endpoint)
       error_message = <<-EOT
         Config Connector cannot be used with a fully private cluster endpoint.
 
@@ -47,6 +47,22 @@ resource "google_container_cluster" "autopilot" {
         2. Or disable Config Connector with 'enable_config_connector = false'
       EOT
     }
+
+    precondition {
+      condition     = !var.enable_master_authorized_networks || length(var.master_authorized_networks_cidrs) > 0
+      error_message = <<-EOT
+        When master authorized networks are enabled, at least one CIDR block must be specified.
+
+        Set at least one CIDR block in 'master_authorized_networks_cidrs' to prevent cluster lockout.
+      EOT
+    }
+
+    ignore_changes = [
+      # Ignore node pool changes as Autopilot manages them
+      node_pool,
+      # Ignore initial node count
+      initial_node_count,
+    ]
   }
 
   # Autopilot mode - Google manages nodes, scaling, and upgrades
@@ -254,16 +270,6 @@ resource "google_container_cluster" "autopilot" {
 
   # Resource labels
   resource_labels = local.labels
-
-  # Lifecycle management
-  lifecycle {
-    ignore_changes = [
-      # Ignore node pool changes as Autopilot manages them
-      node_pool,
-      # Ignore initial node count
-      initial_node_count,
-    ]
-  }
 
   # Deletion protection
   deletion_protection = var.enable_deletion_protection

@@ -175,7 +175,7 @@ variable "customer_managed_key" {
 variable "maintenance_window_day" {
   description = "Day of week for maintenance (1=Monday, 7=Sunday, null=any day)"
   type        = number
-  default     = 7  # Sunday
+  default     = 7 # Sunday
 
   validation {
     condition     = var.maintenance_window_day == null || (var.maintenance_window_day >= 1 && var.maintenance_window_day <= 7)
@@ -186,7 +186,7 @@ variable "maintenance_window_day" {
 variable "maintenance_window_hour" {
   description = "Hour of day for maintenance (0-23, UTC)"
   type        = number
-  default     = 3  # 3 AM UTC
+  default     = 3 # 3 AM UTC
 
   validation {
     condition     = var.maintenance_window_hour >= 0 && var.maintenance_window_hour <= 23
@@ -375,7 +375,7 @@ variable "alert_connections_threshold" {
 variable "alert_duration_seconds" {
   description = "Duration for alert conditions (seconds)"
   type        = number
-  default     = 300  # 5 minutes
+  default     = 300 # 5 minutes
 
   validation {
     condition     = var.alert_duration_seconds >= 60 && var.alert_duration_seconds <= 3600

@@ -70,16 +70,16 @@ output "read_replica_ids" {
 output "instance_summary" {
   description = "Summary of instance configuration"
   value = {
-    name                    = google_redis_instance.main.name
-    region                  = var.region
-    tier                    = var.tier
-    memory_size_gb          = var.memory_size_gb
-    redis_version           = var.redis_version
-    replica_count           = var.replica_count
-    transit_encryption      = var.enable_transit_encryption
-    auth_enabled            = var.enable_auth
-    persistence_enabled     = var.enable_persistence
-    persistence_mode        = var.enable_persistence ? var.persistence_mode : null
-    cross_region_replicas   = var.create_cross_region_replica ? length(var.read_replica_regions) : 0
+    name                  = google_redis_instance.main.name
+    region                = var.region
+    tier                  = var.tier
+    memory_size_gb        = var.memory_size_gb
+    redis_version         = var.redis_version
+    replica_count         = var.replica_count
+    transit_encryption    = var.enable_transit_encryption
+    auth_enabled          = var.enable_auth
+    persistence_enabled   = var.enable_persistence
+    persistence_mode      = var.enable_persistence ? var.persistence_mode : null
+    cross_region_replicas = var.create_cross_region_replica ? length(var.read_replica_regions) : 0
   }
 }

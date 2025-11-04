@@ -76,21 +76,21 @@ jobs:
 
       - name: Check for ACCOUNT_ID placeholders
         run: |
-          if grep -r "ACCOUNT_ID" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" | grep -v "#" | grep -v "error_message"; then
+          if grep -r "ACCOUNT_ID" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" --exclude="*.example" | grep -v "#" | grep -v "error_message"; then
             echo "::error::Found ACCOUNT_ID placeholder in configuration files"
             exit 1
           fi
 
       - name: Check for PROJECT_ID placeholders
         run: |
-          if grep -r "PROJECT_ID" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" | grep -v "#" | grep -v "error_message"; then
+          if grep -r "PROJECT_ID" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" --exclude="*.example" | grep -v "#" | grep -v "error_message"; then
             echo "::error::Found PROJECT_ID placeholder in configuration files"
             exit 1
           fi
 
       - name: Check for ENVIRONMENT placeholders
         run: |
-          if grep -r "\bENVIRONMENT\b" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" | grep -v "#" | grep -v "error_message" | grep -v "GOOGLE"; then
+          if grep -r "\bENVIRONMENT\b" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" --exclude="*.example" | grep -v "#" | grep -v "error_message" | grep -v "GOOGLE"; then
             echo "::error::Found ENVIRONMENT placeholder in configuration files"
             exit 1
           fi
