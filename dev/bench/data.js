@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762285370592,
+  "lastUpdate": 1762287690593,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -26418,6 +26418,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000029432556606031884",
             "extra": "mean: 58.24233494243574 usec\nrounds: 4765"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7b736a6cf52c3cb85ab587b7ac9d519366cd4f20",
+          "message": "docs(ci/cd): add workflow analysis and auto-deploy toggle documentation\n\n## Problem\n1. No comprehensive analysis of 23 GitHub Actions workflows and their purposes\n2. CI pipelines could block indefinitely on environment approvals\n3. No mechanism to disable auto-deploys without editing workflow files\n4. Missing documentation on workflow optimization strategies\n\n## Solution\n\n### 1. Comprehensive Workflow Analysis (workflow-analysis.md)\nCreated detailed analysis document covering:\n- Classification of all 23 workflows (Critical, Important, Optional, Disabled)\n- Trigger analysis and recommendations\n- Three deployment scenarios (Fast CI/CD, Maximum Quality, Balanced)\n- Workflow health metrics before/after fixes\n- Implementation roadmap with priorities\n\n**Key Recommendations**:\n- 🟢 Critical (8): ci, security, deployments, terraform, validation\n- 🟡 Important (7): e2e, quality, coverage, compliance, performance\n- 🔵 Optional (5): optional-deps, drift-detection, cost-tracking\n- ⏸️ Disabled (2): dora-metrics, observability (need Slack webhook)\n\n**Balanced Approach (Recommended)**:\n- PR-triggered (7 workflows): 8-12 min feedback\n- Main branch (3 workflows): Post-merge validation\n- Scheduled (5 workflows): Periodic checks\n- On-demand (5 workflows): Deployment, release\n\n### 2. Auto-Deploy Toggle Guards\n\n**ci.yaml**:\n- Added `vars.ENABLE_DEV_AUTODEPLOY` guard to deploy-dev job\n- Added matching guard to verify-deployment job\n- Prevents CI from waiting on development environment approvals\n\n**deploy-staging-gke.yaml**:\n- Added `vars.ENABLE_STAGING_AUTODEPLOY` guard to build-and-push job\n- Added matching guard to deploy-staging job\n- Allows disabling staging deploys without editing workflow file\n\n**Benefits**:\n- CI never blocks on environment approvals by default\n- Deployments opt-in via repository variables\n- No workflow file edits needed to enable/disable auto-deploy\n- Clear separation between CI validation and deployment\n\n### 3. Documentation Updates (ci-cd.mdx)\n\nAdded notes to deployment sections:\n- Development: Explain ENABLE_DEV_AUTODEPLOY variable\n- Staging: Explain ENABLE_STAGING_AUTODEPLOY variable\n- Clear guidance on avoiding CI approval bottlenecks\n\n## Impact\n\n**Workflow Analysis**:\n- Complete visibility into all 23 workflows\n- Clear prioritization and optimization strategy\n- Documented workflow health improvements (queue overflow fix)\n\n**Auto-Deploy Toggles**:\n- Prevents unexpected CI blocking on environment approvals\n- Flexible deployment control via repository variables\n- Maintains workflow file immutability for common operations\n\n**Documentation**:\n- Clear guidance on workflow optimization\n- Deployment automation best practices\n- Repository variable configuration\n\n## Testing\n- Validated workflow file syntax\n- Confirmed guards work correctly (boolean check)\n- Verified documentation rendering\n\n## Related\n- Previous commit: fix(ci/cd): add concurrency controls (5aab9cc)\n- Resolves workflow queue overflow issues\n- Implements balanced workflow strategy\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T14:50:56-05:00",
+          "tree_id": "3b6b179a96377b55b014e52b615fccdd645b9751",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7b736a6cf52c3cb85ab587b7ac9d519366cd4f20"
+        },
+        "date": 1762287688972,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.3913065481601,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009221710736232384",
+            "extra": "mean: 6.877990326531355 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.10604046209573,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011615575971088599",
+            "extra": "mean: 6.661957086613824 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44993.829096325346,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.225270000006958 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48227.634434493404,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.735000000016157 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45010.86112081655,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.216859999986127 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.71168962552804,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.24351707000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.39388124520651,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.56265459999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.951101234881516,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.49139049000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1475884.0547040054,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 677.5599999286896 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5004.868235332678,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 199.80545999999322 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2975.7145389897523,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.0537400000396 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2981.5874156263876,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.39180999994755 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60573.23240973651,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002439915734845854",
+            "extra": "mean: 16.508942320193242 usec\nrounds: 13783"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17179.12818462646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018060027120081696",
+            "extra": "mean: 58.210171625292155 usec\nrounds: 4504"
           }
         ]
       }
