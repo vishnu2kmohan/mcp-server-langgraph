@@ -270,12 +270,6 @@ variable "security_posture_vulnerability_mode" {
   }
 }
 
-variable "enable_vulnerability_scanning" {
-  description = "Enable container vulnerability scanning API"
-  type        = bool
-  default     = true
-}
-
 #######################
 # Networking
 #######################
@@ -397,6 +391,51 @@ variable "monitoring_notification_channels" {
   description = "List of notification channel IDs for monitoring alerts"
   type        = list(string)
   default     = []
+}
+
+variable "cpu_alert_threshold" {
+  description = "CPU utilization threshold (0-1) for triggering alerts. Default 0.8 means 80% of container limit"
+  type        = number
+  default     = 0.8
+
+  validation {
+    condition     = var.cpu_alert_threshold > 0 && var.cpu_alert_threshold <= 1
+    error_message = "CPU alert threshold must be between 0 and 1 (representing 0% to 100%)."
+  }
+}
+
+variable "memory_alert_threshold" {
+  description = "Memory utilization threshold (0-1) for triggering alerts. Default 0.85 means 85% of container limit"
+  type        = number
+  default     = 0.85
+
+  validation {
+    condition     = var.memory_alert_threshold > 0 && var.memory_alert_threshold <= 1
+    error_message = "Memory alert threshold must be between 0 and 1 (representing 0% to 100%)."
+  }
+}
+
+variable "ephemeral_storage_alert_threshold" {
+  description = "Ephemeral storage utilization threshold (0-1) for triggering alerts. Default 0.8 means 80% of limit"
+  type        = number
+  default     = 0.8
+
+  validation {
+    condition     = var.ephemeral_storage_alert_threshold > 0 && var.ephemeral_storage_alert_threshold <= 1
+    error_message = "Ephemeral storage alert threshold must be between 0 and 1 (representing 0% to 100%)."
+  }
+}
+
+variable "pod_restart_threshold" {
+  description = "Number of pod restarts within a time window to trigger crash loop alert"
+  type        = number
+  default     = 5
+}
+
+variable "alert_duration_seconds" {
+  description = "Duration in seconds that conditions must be true before alerting"
+  type        = number
+  default     = 300
 }
 
 #######################

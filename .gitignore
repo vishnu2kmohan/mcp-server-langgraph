@@ -188,6 +188,9 @@ yarn.lock
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
+# Ignore actual backend config files but keep examples
+*.tfbackend
+!*.tfbackend.example
 
 # Backup files
 *.bak

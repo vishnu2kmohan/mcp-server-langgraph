@@ -1,0 +1,5 @@
+bucket         = "mcp-langgraph-terraform-state-us-east-1-ACCOUNT_ID"
+key            = "environments/prod/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "mcp-langgraph-terraform-locks"
+encrypt        = true

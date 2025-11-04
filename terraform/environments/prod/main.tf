@@ -19,14 +19,10 @@ terraform {
     }
   }
 
-  backend "s3" {
-    # Configure after running backend-setup
-    # bucket         = "mcp-langgraph-terraform-state-us-east-1-ACCOUNT_ID"
-    # key            = "environments/prod/terraform.tfstate"
-    # region         = "us-east-1"
-    # dynamodb_table = "mcp-langgraph-terraform-locks"
-    # encrypt        = true
-  }
+  # Backend configuration is provided via -backend-config flag
+  # See terraform/backend-configs/README.md for setup instructions
+  # Example: terraform init -backend-config=../../backend-configs/prod.s3.tfbackend
+  backend "s3" {}
 }
 
 provider "aws" {

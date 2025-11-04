@@ -359,16 +359,6 @@ resource "google_gke_backup_backup_plan" "cluster" {
 # Security Scanning
 #######################
 
-# Enable Container Analysis API for vulnerability scanning
-resource "google_project_service" "container_scanning" {
-  count = var.enable_vulnerability_scanning ? 1 : 0
-
-  project = var.project_id
-  service = "containerscanning.googleapis.com"
-
-  disable_on_destroy = false
-}
-
 #######################
 # Cloud Logging Sink
 # (Export cluster logs to BigQuery for analysis)
@@ -446,19 +436,192 @@ resource "google_monitoring_alert_policy" "high_cpu" {
   combiner     = "OR"
 
   conditions {
-    display_name = "CPU usage above 80%"
+    display_name = "CPU utilization above ${var.cpu_alert_threshold * 100}%"
 
     condition_threshold {
-      filter          = "resource.type=\"k8s_cluster\" AND resource.labels.cluster_name=\"${local.cluster_name}\" AND metric.type=\"kubernetes.io/container/cpu/core_usage_time\""
-      duration        = "300s"
+      filter          = "resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"${local.cluster_name}\" AND metric.type=\"kubernetes.io/container/cpu/limit_utilization\""
+      duration        = "${var.alert_duration_seconds}s"
       comparison      = "COMPARISON_GT"
-      threshold_value = 0.8
+      threshold_value = var.cpu_alert_threshold
 
       aggregations {
         alignment_period     = "60s"
-        per_series_aligner   = "ALIGN_RATE"
+        per_series_aligner   = "ALIGN_MEAN"
         cross_series_reducer = "REDUCE_MEAN"
-        group_by_fields      = ["resource.cluster_name"]
+        group_by_fields      = ["resource.cluster_name", "resource.namespace_name"]
+      }
+    }
+  }
+
+  notification_channels = var.monitoring_notification_channels
+
+  alert_strategy {
+    auto_close = "86400s" # 24 hours
+  }
+
+  enabled = true
+}
+
+# Alert for high memory usage
+resource "google_monitoring_alert_policy" "high_memory" {
+  count = var.enable_monitoring_alerts ? 1 : 0
+
+  project      = var.project_id
+  display_name = "${local.cluster_name} - High Memory Usage"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Memory utilization above ${var.memory_alert_threshold * 100}%"
+
+    condition_threshold {
+      filter          = "resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"${local.cluster_name}\" AND metric.type=\"kubernetes.io/container/memory/limit_utilization\""
+      duration        = "${var.alert_duration_seconds}s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = var.memory_alert_threshold
+
+      aggregations {
+        alignment_period     = "60s"
+        per_series_aligner   = "ALIGN_MEAN"
+        cross_series_reducer = "REDUCE_MEAN"
+        group_by_fields      = ["resource.cluster_name", "resource.namespace_name"]
+      }
+    }
+  }
+
+  notification_channels = var.monitoring_notification_channels
+
+  alert_strategy {
+    auto_close = "86400s" # 24 hours
+  }
+
+  enabled = true
+}
+
+# Alert for high ephemeral storage usage
+resource "google_monitoring_alert_policy" "high_ephemeral_storage" {
+  count = var.enable_monitoring_alerts ? 1 : 0
+
+  project      = var.project_id
+  display_name = "${local.cluster_name} - High Ephemeral Storage Usage"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Ephemeral storage utilization above ${var.ephemeral_storage_alert_threshold * 100}%"
+
+    condition_threshold {
+      filter          = "resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"${local.cluster_name}\" AND metric.type=\"kubernetes.io/container/ephemeral_storage/limit_utilization\""
+      duration        = "${var.alert_duration_seconds}s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = var.ephemeral_storage_alert_threshold
+
+      aggregations {
+        alignment_period     = "60s"
+        per_series_aligner   = "ALIGN_MEAN"
+        cross_series_reducer = "REDUCE_MEAN"
+        group_by_fields      = ["resource.cluster_name", "resource.namespace_name"]
+      }
+    }
+  }
+
+  notification_channels = var.monitoring_notification_channels
+
+  alert_strategy {
+    auto_close = "86400s" # 24 hours
+  }
+
+  enabled = true
+}
+
+# Alert for pod crash loops (high restart rate)
+resource "google_monitoring_alert_policy" "pod_crash_loop" {
+  count = var.enable_monitoring_alerts ? 1 : 0
+
+  project      = var.project_id
+  display_name = "${local.cluster_name} - Pod Crash Loop Detected"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Pod restart count above ${var.pod_restart_threshold}"
+
+    condition_threshold {
+      filter          = "resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"${local.cluster_name}\" AND metric.type=\"kubernetes.io/container/restart_count\""
+      duration        = "${var.alert_duration_seconds}s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = var.pod_restart_threshold
+
+      aggregations {
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_DELTA"
+        cross_series_reducer = "REDUCE_SUM"
+        group_by_fields      = ["resource.cluster_name", "resource.namespace_name", "resource.pod_name"]
+      }
+    }
+  }
+
+  notification_channels = var.monitoring_notification_channels
+
+  alert_strategy {
+    auto_close = "86400s" # 24 hours
+  }
+
+  enabled = true
+}
+
+# Alert for nodes not ready
+resource "google_monitoring_alert_policy" "node_not_ready" {
+  count = var.enable_monitoring_alerts ? 1 : 0
+
+  project      = var.project_id
+  display_name = "${local.cluster_name} - Node Not Ready"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Node is not in ready state"
+
+    condition_threshold {
+      filter          = "resource.type=\"k8s_node\" AND resource.labels.cluster_name=\"${local.cluster_name}\" AND metric.type=\"kubernetes.io/node/ready\""
+      duration        = "${var.alert_duration_seconds}s"
+      comparison      = "COMPARISON_LT"
+      threshold_value = 1
+
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+    }
+  }
+
+  notification_channels = var.monitoring_notification_channels
+
+  alert_strategy {
+    auto_close = "86400s" # 24 hours
+  }
+
+  enabled = true
+}
+
+# Alert for pods pending/unschedulable
+resource "google_monitoring_alert_policy" "pods_pending" {
+  count = var.enable_monitoring_alerts ? 1 : 0
+
+  project      = var.project_id
+  display_name = "${local.cluster_name} - Pods Pending/Unschedulable"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Pods stuck in pending state"
+
+    condition_threshold {
+      filter          = "resource.type=\"k8s_pod\" AND resource.labels.cluster_name=\"${local.cluster_name}\" AND metric.type=\"kubernetes.io/pod/phase\" AND metric.labels.phase=\"Pending\""
+      duration        = "${var.alert_duration_seconds}s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0
+
+      aggregations {
+        alignment_period     = "60s"
+        per_series_aligner   = "ALIGN_MAX"
+        cross_series_reducer = "REDUCE_COUNT"
+        group_by_fields      = ["resource.cluster_name", "resource.namespace_name"]
       }
     }
   }

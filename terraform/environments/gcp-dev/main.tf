@@ -4,13 +4,10 @@
 terraform {
   required_version = ">= 1.5.0"
 
-  backend "gcs" {
-    bucket = "mcp-langgraph-tfstate"  # Must be created before terraform init
-    prefix = "env/dev"
-
-    # Recommended: Enable encryption with a customer-managed key
-    # encryption_key = "projects/PROJECT_ID/locations/REGION/keyRings/RING/cryptoKeys/KEY"
-  }
+  # Backend configuration is provided via -backend-config flag
+  # See terraform/backend-configs/README.md for setup instructions
+  # Example: terraform init -backend-config=../../backend-configs/gcp-dev.gcs.tfbackend
+  backend "gcs" {}
 
   required_providers {
     google = {
