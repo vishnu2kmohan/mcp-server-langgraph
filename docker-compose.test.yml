@@ -57,14 +57,7 @@ services:
       timeout: 3s
       retries: 10
       start_period: 5s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
+    # Note: deploy.resources.limits not supported in GitHub Actions
     networks:
       - mcp-test-network
 
@@ -95,14 +88,7 @@ services:
       timeout: 3s
       retries: 15
       start_period: 5s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
+    # Note: deploy.resources.limits not supported in GitHub Actions
     networks:
       - mcp-test-network
 
@@ -146,14 +132,8 @@ services:
       timeout: 5s
       retries: 40
       start_period: 45s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.2'
-          memory: 256M
+    # Note: deploy.resources.limits not supported in GitHub Actions
+    # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
     networks:
       - mcp-test-network
 
