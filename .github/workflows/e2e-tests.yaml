@@ -103,25 +103,90 @@ jobs:
         echo "Starting test infrastructure (docker-compose.test.yml)..."
         docker compose -f docker-compose.test.yml up -d
 
-        echo "Waiting for services to be healthy..."
-        sleep 15
+        echo "Waiting for all services to report healthy..."
+        echo "This may take up to 60 seconds for Keycloak..."
 
-        echo "Checking service health..."
+        # Wait for all services to be healthy (max 90 seconds)
+        for i in {1..45}; do
+          HEALTH_STATUS=$(docker compose -f docker-compose.test.yml ps --format json | jq -r '.[].Health')
+
+          # Count healthy services
+          HEALTHY=$(echo "$HEALTH_STATUS" | grep -c "healthy" || true)
+          TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l)
+
+          echo "Attempt $i: $HEALTHY/$TOTAL services healthy"
+
+          if [ "$HEALTHY" -eq "$TOTAL" ]; then
+            echo "✓ All services are healthy!"
+            break
+          fi
+
+          if [ $i -eq 45 ]; then
+            echo "⚠️  Timeout waiting for services. Current status:"
+            docker compose -f docker-compose.test.yml ps
+            # Continue anyway - some tests may work
+          fi
+
+          sleep 2
+        done
+
+        echo ""
+        echo "Final service status:"
         docker compose -f docker-compose.test.yml ps
 
     - name: Verify test infrastructure
       run: |
         echo "=== Verifying PostgreSQL ==="
-        docker compose -f docker-compose.test.yml exec -T postgres-test pg_isready -U postgres
+        docker compose -f docker-compose.test.yml exec -T postgres-test pg_isready -U postgres || {
+          echo "❌ PostgreSQL not ready"
+          docker compose -f docker-compose.test.yml logs postgres-test
+          exit 1
+        }
+        echo "✓ PostgreSQL ready"
 
-        echo "=== Verifying Redis ==="
-        docker compose -f docker-compose.test.yml exec -T redis-test redis-cli ping
+        echo ""
+        echo "=== Verifying Redis (checkpoints) ==="
+        docker compose -f docker-compose.test.yml exec -T redis-test redis-cli ping || {
+          echo "❌ Redis not ready"
+          docker compose -f docker-compose.test.yml logs redis-test
+          exit 1
+        }
+        echo "✓ Redis ready"
 
+        echo ""
         echo "=== Verifying OpenFGA ==="
-        curl -f http://localhost:9080/healthz || echo "OpenFGA not ready yet"
+        for i in {1..30}; do
+          if curl -sf http://localhost:9080/healthz > /dev/null 2>&1; then
+            echo "✓ OpenFGA ready"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ OpenFGA not ready after 30 attempts"
+            docker compose -f docker-compose.test.yml logs openfga-test
+            exit 1
+          fi
+          echo "Waiting for OpenFGA... (attempt $i/30)"
+          sleep 2
+        done
 
+        echo ""
         echo "=== Verifying Qdrant ==="
-        curl -f http://localhost:9333/healthz || echo "Qdrant not ready yet"
+        for i in {1..20}; do
+          if curl -sf http://localhost:9333/healthz > /dev/null 2>&1; then
+            echo "✓ Qdrant ready"
+            break
+          fi
+          if [ $i -eq 20 ]; then
+            echo "❌ Qdrant not ready after 20 attempts"
+            docker compose -f docker-compose.test.yml logs qdrant-test
+            exit 1
+          fi
+          echo "Waiting for Qdrant... (attempt $i/20)"
+          sleep 2
+        done
+
+        echo ""
+        echo "=== All test infrastructure services verified! ==="
 
     - name: Run E2E tests
       run: |

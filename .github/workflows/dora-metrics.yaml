@@ -12,9 +12,7 @@ name: DORA Metrics Tracking
 #   4. Change Failure Rate - Percentage of failed deployments
 #
 # Triggers:
-#   - Daily at 9 AM UTC
-#   - After each production deployment
-#   - Manual workflow dispatch
+#   - Manual workflow dispatch ONLY (automated triggers disabled)
 #
 # Outputs:
 #   - Historical metrics stored in .dora-metrics/
@@ -22,13 +20,23 @@ name: DORA Metrics Tracking
 #   - Trend analysis and alerts
 #
 # ==============================================================================
+#
+# ⚠️ AUTOMATED TRIGGERS DISABLED ⚠️
+#
+# This workflow requires SLACK_WEBHOOK_URL secret to be configured.
+# Once you've added the secret in GitHub Settings → Secrets → Actions:
+# 1. Uncomment the schedule and workflow_run triggers below
+# 2. Remove this warning comment
+#
+# ==============================================================================
 
 on:
-  schedule:
-    - cron: '0 9 * * *'  # Daily at 9 AM UTC
-  workflow_run:
-    workflows: ["Deploy to GKE Production"]
-    types: [completed]
+  # Disabled until SLACK_WEBHOOK_URL secret is configured:
+  # schedule:
+  #   - cron: '0 9 * * *'  # Daily at 9 AM UTC
+  # workflow_run:
+  #   workflows: ["Deploy to GKE Production"]
+  #   types: [completed]
   workflow_dispatch:
     inputs:
       days:

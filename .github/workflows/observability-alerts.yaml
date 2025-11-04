@@ -18,15 +18,30 @@ name: Observability and Alerting
 #   - Sentry (errors)
 #
 # ==============================================================================
+#
+# ⚠️ AUTOMATED TRIGGERS DISABLED ⚠️
+#
+# This workflow requires observability platform secrets to be configured.
+# Once you've added the secrets in GitHub Settings → Secrets → Actions:
+# - SLACK_WEBHOOK_URL (required for Slack notifications)
+# - PAGERDUTY_INTEGRATION_KEY (optional, for critical alerts)
+# - DATADOG_API_KEY (optional, for metrics)
+#
+# Then:
+# 1. Uncomment the workflow_run trigger below
+# 2. Remove this warning comment
+#
+# ==============================================================================
 
 on:
-  workflow_run:
-    workflows:
-      - "Deploy to GKE Production"
-      - "Performance Regression Detection"
-      - "Security Scan"
-      - "DORA Metrics Tracking"
-    types: [completed]
+  # Disabled until observability secrets are configured:
+  # workflow_run:
+  #   workflows:
+  #     - "Deploy to GKE Production"
+  #     - "Performance Regression Detection"
+  #     - "Security Scan"
+  #     - "DORA Metrics Tracking"
+  #   types: [completed]
   workflow_dispatch:
 
 permissions:
