@@ -20,7 +20,7 @@ Example:
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -62,49 +62,75 @@ class TokenUsage(BaseModel):
 
 
 # ==============================================================================
-# Prometheus Metrics (Mock for now - will use real prometheus_client)
+# Prometheus Metrics
 # ==============================================================================
 
+try:
+    from prometheus_client import Counter
 
-@dataclass
-class MockPrometheusCounter:
-    """Mock Prometheus counter for testing."""
+    # Real Prometheus metrics for production
+    llm_token_usage = Counter(
+        name="llm_token_usage_total",
+        documentation="Total tokens used by LLM calls",
+        labelnames=["provider", "model", "token_type"],
+    )
 
-    name: str
-    description: str
-    labelnames: List[str]
-    _values: Dict[tuple[str, ...], float] = field(default_factory=lambda: defaultdict(float))
+    llm_cost = Counter(
+        name="llm_cost_usd_total",
+        documentation="Total estimated cost in USD (cumulative)",
+        labelnames=["provider", "model"],
+    )
 
-    def labels(self, **labels: str) -> "MockCounterChild":
-        """Return label-specific counter."""
-        label_tuple = tuple(labels.get(name, "") for name in self.labelnames)
-        return MockCounterChild(self, label_tuple)
+    PROMETHEUS_AVAILABLE = True
 
+except ImportError:
+    # Fallback to mock counters if prometheus_client not available
+    import warnings
 
-@dataclass
-class MockCounterChild:
-    """Child counter with specific labels."""
+    warnings.warn(
+        "prometheus_client not available, using mock counters. "
+        "Install prometheus-client for production metrics: pip install prometheus-client"
+    )
 
-    parent: MockPrometheusCounter
-    label_values: tuple[str, ...]
+    @dataclass
+    class MockPrometheusCounter:
+        """Mock Prometheus counter for testing."""
 
-    def inc(self, amount: float = 1.0) -> None:
-        """Increment counter."""
-        self.parent._values[self.label_values] += amount
+        name: str
+        description: str
+        labelnames: List[str]
+        _values: Dict[tuple[str, ...], float] = field(default_factory=lambda: defaultdict(float))
 
+        def labels(self, **labels: str) -> "MockCounterChild":
+            """Return label-specific counter."""
+            label_tuple = tuple(labels.get(name, "") for name in self.labelnames)
+            return MockCounterChild(self, label_tuple)
 
-# Mock Prometheus metrics (replace with real prometheus_client in production)
-llm_token_usage = MockPrometheusCounter(
-    name="llm_token_usage_total",
-    description="Total tokens used by LLM calls",
-    labelnames=["provider", "model", "token_type"],
-)
+    @dataclass
+    class MockCounterChild:
+        """Child counter with specific labels."""
 
-llm_cost = MockPrometheusCounter(
-    name="llm_cost_usd_total",
-    description="Total estimated cost in USD",
-    labelnames=["provider", "model"],
-)
+        parent: MockPrometheusCounter
+        label_values: tuple[str, ...]
+
+        def inc(self, amount: float = 1.0) -> None:
+            """Increment counter."""
+            self.parent._values[self.label_values] += amount
+
+    # Mock Prometheus metrics (fallback when prometheus_client not installed)
+    llm_token_usage = MockPrometheusCounter(
+        name="llm_token_usage_total",
+        description="Total tokens used by LLM calls",
+        labelnames=["provider", "model", "token_type"],
+    )
+
+    llm_cost = MockPrometheusCounter(
+        name="llm_cost_usd_total",
+        description="Total estimated cost in USD",
+        labelnames=["provider", "model"],
+    )
+
+    PROMETHEUS_AVAILABLE = False
 
 
 # ==============================================================================
@@ -120,13 +146,30 @@ class CostMetricsCollector:
     - Async recording to avoid blocking API calls
     - Automatic cost calculation
     - Prometheus metrics integration
-    - In-memory storage (TODO: Add PostgreSQL persistence)
+    - PostgreSQL persistence with retention policy
+    - In-memory fallback when database unavailable
     """
 
-    def __init__(self) -> None:
-        """Initialize the cost metrics collector."""
+    def __init__(
+        self,
+        database_url: Optional[str] = None,
+        retention_days: int = 90,
+        enable_persistence: bool = True,
+    ) -> None:
+        """
+        Initialize the cost metrics collector.
+
+        Args:
+            database_url: PostgreSQL connection URL (postgresql+asyncpg://...)
+                         If None, uses in-memory storage only
+            retention_days: Number of days to retain records (default: 90)
+            enable_persistence: Whether to enable PostgreSQL persistence
+        """
         self._records: List[TokenUsage] = []
         self._lock = asyncio.Lock()
+        self._database_url = database_url
+        self._retention_days = retention_days
+        self._enable_persistence = enable_persistence and database_url is not None
 
     @property
     def total_records(self) -> int:
@@ -199,9 +242,20 @@ class CostMetricsCollector:
             metadata=metadata or {},
         )
 
-        # Store record (thread-safe)
+        # Store record in-memory (thread-safe)
         async with self._lock:
             self._records.append(usage)
+
+        # Persist to PostgreSQL if enabled
+        if self._enable_persistence:
+            try:
+                await self._persist_to_database(usage)
+            except Exception as e:
+                # Log error but don't fail the recording
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to persist usage record to database: {e}")
 
         # Update Prometheus metrics
         llm_token_usage.labels(
@@ -222,6 +276,92 @@ class CostMetricsCollector:
         ).inc(float(estimated_cost_usd))
 
         return usage
+
+    async def _persist_to_database(self, usage: TokenUsage) -> None:
+        """
+        Persist usage record to PostgreSQL.
+
+        Args:
+            usage: TokenUsage record to persist
+        """
+        if not self._database_url:
+            return
+
+        from mcp_server_langgraph.database import get_async_session
+        from mcp_server_langgraph.database.models import TokenUsageRecord
+
+        async with get_async_session(self._database_url) as session:
+            # Create database record
+            db_record = TokenUsageRecord(
+                timestamp=usage.timestamp,
+                user_id=usage.user_id,
+                session_id=usage.session_id,
+                model=usage.model,
+                provider=usage.provider,
+                prompt_tokens=usage.prompt_tokens,
+                completion_tokens=usage.completion_tokens,
+                total_tokens=usage.total_tokens,
+                estimated_cost_usd=usage.estimated_cost_usd,
+                feature=usage.feature,
+                metadata_=usage.metadata,
+            )
+
+            session.add(db_record)
+            # Session commits automatically via context manager
+
+    async def cleanup_old_records(self) -> int:
+        """
+        Remove records older than retention period.
+
+        This method removes both in-memory and PostgreSQL records that exceed
+        the configured retention period (default: 90 days).
+
+        Returns:
+            Number of records deleted
+
+        Example:
+            >>> collector = CostMetricsCollector(database_url="...", retention_days=90)
+            >>> deleted = await collector.cleanup_old_records()
+            >>> print(f"Deleted {deleted} old records")
+        """
+        from datetime import timezone
+
+        cutoff_time = datetime.now(timezone.utc) - timedelta(days=self._retention_days)
+        deleted_count = 0
+
+        # Clean up in-memory records
+        async with self._lock:
+            initial_count = len(self._records)
+            self._records = [r for r in self._records if r.timestamp >= cutoff_time]
+            deleted_count = initial_count - len(self._records)
+
+        # Clean up PostgreSQL records
+        if self._enable_persistence:
+            try:
+                from mcp_server_langgraph.database import get_async_session
+                from mcp_server_langgraph.database.models import TokenUsageRecord
+                from sqlalchemy import delete
+
+                async with get_async_session(self._database_url) as session:
+                    stmt = delete(TokenUsageRecord).where(TokenUsageRecord.timestamp < cutoff_time)
+                    result = await session.execute(stmt)
+                    db_deleted = result.rowcount
+                    deleted_count += db_deleted
+
+                    import logging
+
+                    logger = logging.getLogger(__name__)
+                    logger.info(
+                        f"Cleaned up {deleted_count} records older than {self._retention_days} days "
+                        f"(cutoff: {cutoff_time.isoformat()})"
+                    )
+            except Exception as e:
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to cleanup database records: {e}")
+
+        return deleted_count
 
     async def get_latest_record(self) -> Optional[TokenUsage]:
         """Get the most recent usage record."""

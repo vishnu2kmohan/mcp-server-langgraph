@@ -229,6 +229,69 @@ class TestContextManager:
         # Should detect issue
         assert len(key_info["issues"]) > 0
 
+    @pytest.mark.unit
+    def test_extract_key_information_facts(self, context_manager):
+        """Test extraction of facts from conversation."""
+        messages = [
+            HumanMessage(content="The database is PostgreSQL version 14.5"),
+            AIMessage(content="According to the documentation, the API uses REST"),
+            HumanMessage(content="The server runs on port 8000 by default"),
+        ]
+
+        key_info = context_manager.extract_key_information(messages)
+
+        assert "facts" in key_info
+        assert len(key_info["facts"]) > 0, "Should extract facts from messages"
+
+    @pytest.mark.unit
+    def test_extract_key_information_action_items(self, context_manager):
+        """Test extraction of action items from conversation."""
+        messages = [
+            HumanMessage(content="We need to fix the authentication bug"),
+            AIMessage(content="You should update the dependencies"),
+            HumanMessage(content="Please add unit tests for the new feature"),
+            AIMessage(content="TODO: refactor the database queries"),
+        ]
+
+        key_info = context_manager.extract_key_information(messages)
+
+        assert "action_items" in key_info
+        assert len(key_info["action_items"]) > 0, "Should extract action items from messages"
+
+    @pytest.mark.unit
+    def test_extract_key_information_preferences(self, context_manager):
+        """Test extraction of user preferences from conversation."""
+        messages = [
+            HumanMessage(content="I prefer using TypeScript over JavaScript"),
+            AIMessage(content="I like to use pytest for testing"),
+            HumanMessage(content="My favorite framework is FastAPI"),
+        ]
+
+        key_info = context_manager.extract_key_information(messages)
+
+        assert "preferences" in key_info
+        assert len(key_info["preferences"]) > 0, "Should extract preferences from messages"
+
+    @pytest.mark.unit
+    def test_extract_key_information_all_categories(self, context_manager):
+        """Test that all 6 categories are populated when relevant content exists."""
+        messages = [
+            HumanMessage(content="We decided to use REST instead of GraphQL"),  # decision
+            AIMessage(content="You must implement authentication"),  # requirement
+            HumanMessage(content="The server is running on port 3000"),  # fact
+            AIMessage(content="Please add error handling"),  # action item
+            HumanMessage(content="There's a bug in the login flow"),  # issue
+            AIMessage(content="I prefer using async/await patterns"),  # preference
+        ]
+
+        key_info = context_manager.extract_key_information(messages)
+
+        # All 6 categories should be present
+        expected_categories = ["decisions", "requirements", "facts", "action_items", "issues", "preferences"]
+        for category in expected_categories:
+            assert category in key_info, f"Missing category: {category}"
+            assert len(key_info[category]) > 0, f"Category '{category}' should not be empty"
+
 
 class TestConvenienceFunctions:
     """Test convenience functions."""

@@ -325,33 +325,66 @@ async def get_cost_trends(
     period: str = Query("7d", description="Time period (7d, 30d, 90d)"),
 ) -> TrendsResponse:
     """
-    Get cost trends over time.
+    Get cost trends over time from actual usage records.
+
+    Aggregates cost and token usage data by day from the CostMetricsCollector.
+    Supports both in-memory and PostgreSQL data sources.
 
     Args:
-        metric: Metric to track
-        period: Time period
+        metric: Metric to track ("total_cost" or "token_usage")
+        period: Time period ("7d", "30d", "90d")
 
     Returns:
-        Time-series trend data
+        Time-series trend data with daily aggregations
 
     Example:
         GET /api/cost/trends?metric=total_cost&period=30d
     """
-    # Mock trend data for now
-    # TODO: Implement real trend calculation from time-series data
-
+    collector = get_cost_collector()
     now = datetime.now(timezone.utc)
     days = int(period.replace("d", ""))
 
+    # Get all records from the period
+    period_start = now - timedelta(days=days)
+    all_records = await collector.get_records(period="day")  # Will get all in-memory records
+
+    # Filter records within the period
+    records_in_period = [r for r in all_records if r.timestamp >= period_start]
+
+    # Aggregate by day
+    daily_data: Dict[str, Dict[str, Any]] = {}
+
+    for record in records_in_period:
+        # Get day key (YYYY-MM-DD)
+        day_key = record.timestamp.date().isoformat()
+
+        if day_key not in daily_data:
+            daily_data[day_key] = {
+                "timestamp": record.timestamp.replace(hour=0, minute=0, second=0, microsecond=0),
+                "total_cost": Decimal("0"),
+                "total_tokens": 0,
+            }
+
+        # Aggregate metrics
+        daily_data[day_key]["total_cost"] += record.estimated_cost_usd
+        daily_data[day_key]["total_tokens"] += record.total_tokens
+
+    # Create data points for each day in the period (fill missing days with zeros)
     data_points = []
     for i in range(days):
-        timestamp = now - timedelta(days=days - i)
-        # Mock value - replace with actual data
-        value = Decimal("10.50") + Decimal(str(i * 0.5))
+        day_date = (period_start + timedelta(days=i)).date()
+        day_key = day_date.isoformat()
+
+        if day_key in daily_data:
+            day_data = daily_data[day_key]
+            value = day_data["total_cost"] if metric == "total_cost" else Decimal(str(day_data["total_tokens"]))
+        else:
+            # No data for this day
+            value = Decimal("0")
 
         data_points.append(
             TrendDataPoint(
-                timestamp=timestamp,
+                timestamp=datetime.combine(day_date, datetime.min.time(), tzinfo=timezone.utc),
                 value=str(value),
             )
         )

@@ -311,22 +311,118 @@ Focus on high-signal information that maintains conversation context.
             "preferences": [],
         }
 
-        # Simple keyword-based extraction
+        # Keyword-based extraction for all 6 categories
+        # Expanded from 10 to ~35 keywords for better coverage
         for msg in messages:
             msg_content = msg.content if hasattr(msg, "content") else ""
             content = msg_content.lower() if isinstance(msg_content, str) else ""
 
-            if any(keyword in content for keyword in ["decided", "agreed", "chose"]):
+            # Decisions (voting, choosing, selecting)
+            if any(
+                keyword in content
+                for keyword in [
+                    "decided",
+                    "agreed",
+                    "chose",
+                    "selected",
+                    "picked",
+                    "opted",
+                    "determined",
+                    "concluded",
+                ]
+            ):
                 if isinstance(msg_content, str):
                     key_info["decisions"].append(msg_content[:200])
 
-            if any(keyword in content for keyword in ["need", "require", "must", "should"]):
+            # Requirements (obligations, constraints)
+            if any(
+                keyword in content
+                for keyword in [
+                    "need",
+                    "require",
+                    "must",
+                    "should",
+                    "have to",
+                    "necessary",
+                    "essential",
+                    "mandatory",
+                ]
+            ):
                 if isinstance(msg_content, str):
                     key_info["requirements"].append(msg_content[:200])
 
-            if any(keyword in content for keyword in ["error", "issue", "problem", "failed"]):
+            # Facts (statements of truth, data points)
+            if any(
+                keyword in content
+                for keyword in [
+                    " is ",
+                    " are ",
+                    " was ",
+                    " were ",
+                    "according to",
+                    "version",
+                    "default",
+                    "by default",
+                    "currently",
+                ]
+            ):
+                if isinstance(msg_content, str):
+                    key_info["facts"].append(msg_content[:200])
+
+            # Action Items (tasks, TODOs)
+            if any(
+                keyword in content
+                for keyword in [
+                    "todo",
+                    "to-do",
+                    "please",
+                    "need to",
+                    "should",
+                    "will",
+                    "let's",
+                    "we'll",
+                    "add",
+                    "fix",
+                    "update",
+                    "refactor",
+                ]
+            ):
+                if isinstance(msg_content, str):
+                    key_info["action_items"].append(msg_content[:200])
+
+            # Issues (problems, bugs, errors)
+            if any(
+                keyword in content
+                for keyword in [
+                    "error",
+                    "issue",
+                    "problem",
+                    "failed",
+                    "bug",
+                    "broken",
+                    "crash",
+                    "exception",
+                ]
+            ):
                 if isinstance(msg_content, str):
                     key_info["issues"].append(msg_content[:200])
+
+            # Preferences (likes, dislikes, choices)
+            if any(
+                keyword in content
+                for keyword in [
+                    "prefer",
+                    "like",
+                    "favorite",
+                    "dislike",
+                    "hate",
+                    "love",
+                    "enjoy",
+                    "rather",
+                ]
+            ):
+                if isinstance(msg_content, str):
+                    key_info["preferences"].append(msg_content[:200])
 
         return key_info
 

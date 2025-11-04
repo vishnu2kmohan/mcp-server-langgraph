@@ -13,63 +13,124 @@ class TestLangGraphPlatformDeployment:
 
     def test_can_import_agent_module(self):
         """Verify the agent module can be imported without errors"""
+        import sys
+        from pathlib import Path
+
+        # Add deployments to path
+        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        sys.path.insert(0, str(deployments_dir))
+
         try:
-            from deployments.langgraph_platform import agent
+            from langgraph_platform import agent  # type: ignore
+
             assert agent is not None
         except ImportError as e:
             pytest.fail(f"Failed to import agent module: {e}")
+        finally:
+            if str(deployments_dir) in sys.path:
+                sys.path.remove(str(deployments_dir))
 
     def test_can_import_create_graph_function(self):
         """Verify the create_graph function can be imported"""
+        import sys
+        from pathlib import Path
+
+        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        sys.path.insert(0, str(deployments_dir))
+
         try:
-            from deployments.langgraph_platform.agent import create_graph
+            from langgraph_platform.agent import create_graph  # type: ignore
+
             assert callable(create_graph)
         except ImportError as e:
             pytest.fail(f"Failed to import create_graph function: {e}")
+        finally:
+            if str(deployments_dir) in sys.path:
+                sys.path.remove(str(deployments_dir))
 
     def test_can_import_graph_instance(self):
         """Verify the graph instance can be imported"""
+        import sys
+        from pathlib import Path
+
+        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        sys.path.insert(0, str(deployments_dir))
+
         try:
-            from deployments.langgraph_platform.agent import graph
+            from langgraph_platform.agent import graph  # type: ignore
+
             assert graph is not None
         except ImportError as e:
             pytest.fail(f"Failed to import graph instance: {e}")
+        finally:
+            if str(deployments_dir) in sys.path:
+                sys.path.remove(str(deployments_dir))
 
     def test_graph_has_required_attributes(self):
         """Verify the graph instance has expected LangGraph attributes"""
-        from deployments.langgraph_platform.agent import graph
+        import sys
+        from pathlib import Path
 
-        # LangGraph compiled graphs should have these attributes
-        assert hasattr(graph, "invoke"), "Graph should have invoke method"
-        assert hasattr(graph, "stream"), "Graph should have stream method"
+        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        sys.path.insert(0, str(deployments_dir))
+
+        try:
+            from langgraph_platform.agent import graph  # type: ignore
+
+            # LangGraph compiled graphs should have these attributes
+            assert hasattr(graph, "invoke"), "Graph should have invoke method"
+            assert hasattr(graph, "stream"), "Graph should have stream method"
+        finally:
+            if str(deployments_dir) in sys.path:
+                sys.path.remove(str(deployments_dir))
 
     def test_agent_state_type_defined(self):
         """Verify AgentState TypedDict is properly defined"""
-        from deployments.langgraph_platform.agent import AgentState
+        import sys
+        from pathlib import Path
 
-        # Verify it has required fields
-        assert hasattr(AgentState, "__annotations__")
-        annotations = AgentState.__annotations__
+        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        sys.path.insert(0, str(deployments_dir))
 
-        expected_fields = {"messages", "next_action", "user_id", "request_id"}
-        actual_fields = set(annotations.keys())
+        try:
+            from langgraph_platform.agent import AgentState  # type: ignore
 
-        assert expected_fields == actual_fields, (
-            f"AgentState should have fields {expected_fields}, "
-            f"but has {actual_fields}"
-        )
+            # Verify it has required fields
+            assert hasattr(AgentState, "__annotations__")
+            annotations = AgentState.__annotations__
+
+            expected_fields = {"messages", "next_action", "user_id", "request_id"}
+            actual_fields = set(annotations.keys())
+
+            assert expected_fields == actual_fields, (
+                f"AgentState should have fields {expected_fields}, "
+                f"but has {actual_fields}"
+            )
+        finally:
+            if str(deployments_dir) in sys.path:
+                sys.path.remove(str(deployments_dir))
 
     def test_create_graph_returns_compiled_graph(self):
         """Verify create_graph returns a properly compiled LangGraph"""
-        from deployments.langgraph_platform.agent import create_graph
+        import sys
+        from pathlib import Path
 
-        graph = create_graph()
+        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        sys.path.insert(0, str(deployments_dir))
 
-        # Should be a compiled graph with invoke/stream methods
-        assert hasattr(graph, "invoke")
-        assert hasattr(graph, "stream")
-        assert callable(graph.invoke)
-        assert callable(graph.stream)
+        try:
+            from langgraph_platform.agent import create_graph  # type: ignore
+
+            graph = create_graph()
+
+            # Should be a compiled graph with invoke/stream methods
+            assert hasattr(graph, "invoke")
+            assert hasattr(graph, "stream")
+            assert callable(graph.invoke)
+            assert callable(graph.stream)
+        finally:
+            if str(deployments_dir) in sys.path:
+                sys.path.remove(str(deployments_dir))
 
     @pytest.mark.integration
     def test_graph_can_process_simple_message(self):

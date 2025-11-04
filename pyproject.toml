@@ -53,6 +53,7 @@ dependencies = [
     "authlib>=1.6.5",
     "redis[hiredis]>=6.4.0",  # Also used for conversation checkpoints (db 1)
     "asyncpg>=0.29.0",  # PostgreSQL async driver for GDPR/HIPAA/SOC2 compliance storage
+    "sqlalchemy[asyncio]>=2.0.0",  # Async ORM for cost tracking persistence
     "pyyaml>=6.0.3",
     "apscheduler>=3.11.0",
     "python-json-logger>=4.0.0",
@@ -62,6 +63,7 @@ dependencies = [
     "langchain-google-genai>=3.0.0",  # Google Gemini embeddings (API-based, no model hosting)
     # Monitoring
     "prometheus-api-client>=0.5.5",  # For querying Prometheus metrics in SLA monitoring
+    "prometheus-client>=0.20.0",  # For exporting Prometheus metrics
     # Resilience Patterns (ADR-0026)
     "pybreaker>=1.0.0",  # Circuit breaker pattern for preventing cascade failures
     "tenacity>=9.1.2",  # Retry logic with exponential backoff
