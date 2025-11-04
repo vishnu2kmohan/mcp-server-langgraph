@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762296813858,
+  "lastUpdate": 1762297173673,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -27882,6 +27882,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002286824055342514",
             "extra": "mean: 58.73890919702338 usec\nrounds: 5143"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b1d080bbe7ab37919c7394b700fb59ef2fa71815",
+          "message": "fix(tests): update schemathesis API for version 4.x compatibility\n\nFix AttributeError and TypeError in OpenAPI contract tests caused by\nAPI changes in schemathesis 4.x.\n\n## Problem\n\nContract integration tests were failing with:\n- `AttributeError: module 'schemathesis' has no attribute 'from_dict'`\n- `TypeError: from_dict() got an unexpected keyword argument 'validate_schema'`\n\n## Root Cause\n\nSchemathesis 4.x changed the API:\n- `schemathesis.from_dict()` moved to `schemathesis.openapi.from_dict()`\n- `validate_schema` parameter removed (validation happens automatically)\n\n## Solution\n\nUpdated test code to use correct 4.x API:\n```python\n# Old (3.x):\nschema = schemathesis.from_dict(openapi_schema, validate_schema=True)\n\n# New (4.x):\nschema = schemathesis.openapi.from_dict(openapi_schema)\n```\n\n## Testing\n\n- All 17 OpenAPI compliance tests passing\n- Contract integration tests now execute successfully\n- No regressions in other test suites\n\n## Files Changed\n\n- tests/api/test_openapi_compliance.py\n  - test_health_endpoint_matches_schema: Use schemathesis.openapi.from_dict\n  - test_all_endpoints_return_valid_responses: Remove validate_schema param\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T17:58:23-05:00",
+          "tree_id": "e41cfa2a38241c0e3f88d5ad8dbe2193e5eba48e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b1d080bbe7ab37919c7394b700fb59ef2fa71815"
+        },
+        "date": 1762297172012,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.95512142990864,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009689346166614723",
+            "extra": "mean: 6.946609402062136 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.75411454026465,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016997639547562703",
+            "extra": "mean: 6.7225031259845975 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45432.36619944149,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.010739999984708 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46921.61369055571,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.312140000020463 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45206.01511242592,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.12094999997305 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.87174617522462,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.23912009 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.387081234397282,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.58074018000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954401875311525,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.45806995999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 520621.8307206662,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 1.9207799999776398 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4427.468154107438,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 225.86271999998075 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2900.8617444937513,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.7251500000448 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2974.912680362355,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.14432000007355 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59964.54382732336,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002304562818750211",
+            "extra": "mean: 16.67652142705606 usec\nrounds: 14071"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17373.880820335115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017409568420550922",
+            "extra": "mean: 57.55766430891815 usec\nrounds: 5231"
           }
         ]
       }
