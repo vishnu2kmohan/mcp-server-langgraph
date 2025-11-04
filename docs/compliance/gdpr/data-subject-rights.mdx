@@ -1,0 +1,257 @@
+---
+title: "Data Subject Rights"
+description: "GDPR Chapter III: Implementation of data subject rights including access, erasure, and portability"
+icon: "user-shield"
+seoTitle: "GDPR Data Subject Rights - Chapter III Implementation"
+seoDescription: "Implement GDPR data subject rights: right to access, erasure, rectification, portability, and object to processing"
+keywords: ["GDPR", "data subject rights", "right to access", "right to erasure", "data portability", "DSAR"]
+contentType: "how-to"
+---
+
+## Data Subject Rights (Chapter III)
+
+### 1. Right of Access (Article 15)
+
+**Implementation:**
+
+```python
+# src/api/data_subject_rights.py
+from fastapi import APIRouter, Depends
+from typing import Dict, Any
+
+router = APIRouter()
+
+@router.get("/api/v1/gdpr/data-export")
+async def export_personal_data(
+    user_id: str = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Export all personal data (Right of Access - Article 15)."""
+
+    # Collect all personal data
+    user_data = {
+        "user_profile": await db.users.find_one({"id": user_id}),
+        "conversation_history": await db.conversations.find(
+            {"user_id": user_id}
+        ).to_list(None),
+        "preferences": await db.preferences.find_one({"user_id": user_id}),
+        "consent_records": await db.consents.find(
+            {"user_id": user_id}
+        ).to_list(None),
+        "audit_log": await db.audit_logs.find(
+            {"user.id": user_id}
+        ).to_list(1000)  # Last 1000 events
+    }
+
+    # Include processing information (Article 15(1))
+    processing_info = {
+        "purposes": await get_processing_purposes(user_id),
+        "categories": ["user_queries", "preferences", "usage_analytics"],
+        "recipients": ["LLM providers (with DPA)", "Cloud infrastructure (GCP)"],
+        "retention_periods": await get_retention_periods(),
+        "data_sources": ["direct_user_input", "automated_collection"],
+        "automated_decision_making": {
+            "exists": True,
+            "logic": "LLM-based query routing",
+            "significance": "Determines which specialized agent handles query",
+            "consequences": "Affects response quality and latency"
+        }
+    }
+
+    # Generate portable export (machine-readable)
+    export_package = {
+        "export_date": datetime.utcnow().isoformat(),
+        "data_subject": user_id,
+        "personal_data": user_data,
+        "processing_information": processing_info,
+        "format": "JSON",
+        "gdpr_article": "Article_15_Right_of_Access"
+    }
+
+    # Audit the access request
+    await audit_log.info(
+        event="data_export_requested",
+        user_id=user_id,
+        export_size_bytes=len(json.dumps(export_package))
+    )
+
+    return export_package
+```
+
+---
+
+### 2. Right to Rectification (Article 16)
+
+```python
+@router.patch("/api/v1/gdpr/rectify-data")
+async def rectify_personal_data(
+    corrections: Dict[str, Any],
+    user_id: str = Depends(get_current_user)
+):
+    """Allow user to correct inaccurate personal data (Article 16)."""
+
+    # Validate corrections
+    validated = validate_data_format(corrections)
+
+    # Apply corrections
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                **validated,
+                "last_updated": datetime.utcnow(),
+                "last_verified": datetime.utcnow()
+            }
+        }
+    )
+
+    await audit_log.info(
+        event="data_rectified",
+        user_id=user_id,
+        fields_corrected=list(validated.keys())
+    )
+
+    return {"status": "data_rectified", "updated_fields": list(validated.keys())}
+```
+
+---
+
+### 3. Right to Erasure / Right to be Forgotten (Article 17)
+
+```python
+@router.delete("/api/v1/gdpr/erase-data")
+async def erase_personal_data(
+    user_id: str = Depends(get_current_user),
+    reason: str = None
+):
+    """Delete all personal data (Right to Erasure - Article 17)."""
+
+    # Verify erasure is applicable
+    if not await can_erase_data(user_id, reason):
+        raise HTTPException(
+            status_code=400,
+            detail="Erasure not applicable (legal obligation to retain)"
+        )
+
+    # Delete from all systems
+    deletion_results = {
+        "user_profile": await db.users.delete_one({"id": user_id}),
+        "conversations": await db.conversations.delete_many({"user_id": user_id}),
+        "preferences": await db.preferences.delete_one({"user_id": user_id}),
+        "consents": await db.consents.delete_many({"user_id": user_id}),
+        "sessions": await db.sessions.delete_many({"user_id": user_id})
+    }
+
+    # Notify third-party processors (DPA requirement)
+    await notify_processors_of_erasure(user_id)
+
+    # Audit the erasure (keep minimal log)
+    await audit_log.info(
+        event="data_erased",
+        user_id_hash=hash_user_id(user_id),  # Pseudonymized
+        reason=reason,
+        records_deleted=sum(r.deleted_count for r in deletion_results.values())
+    )
+
+    # Invalidate all tokens
+    await revoke_all_tokens(user_id)
+
+    return {"status": "data_erased", "user_id": user_id}
+```
+
+---
+
+### 4. Right to Data Portability (Article 20)
+
+```python
+@router.get("/api/v1/gdpr/data-portability")
+async def export_portable_data(
+    format: str = "json",  # json, csv, xml
+    user_id: str = Depends(get_current_user)
+):
+    """Export data in machine-readable format (Article 20)."""
+
+    # Collect data provided by the data subject
+    portable_data = {
+        "user_profile": await db.users.find_one({"id": user_id}),
+        "preferences": await db.preferences.find_one({"user_id": user_id}),
+        "conversation_history": await db.conversations.find(
+            {"user_id": user_id}
+        ).to_list(None)
+    }
+
+    # Format conversion
+    if format == "json":
+        export_content = json.dumps(portable_data, indent=2)
+        media_type = "application/json"
+    elif format == "csv":
+        export_content = convert_to_csv(portable_data)
+        media_type = "text/csv"
+    elif format == "xml":
+        export_content = convert_to_xml(portable_data)
+        media_type = "application/xml"
+
+    await audit_log.info(
+        event="data_portability_export",
+        user_id=user_id,
+        format=format
+    )
+
+    return Response(
+        content=export_content,
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename=data-export.{format}"}
+    )
+```
+
+---
+
+### 5. Right to Object (Article 21)
+
+```python
+@router.post("/api/v1/gdpr/object-to-processing")
+async def object_to_processing(
+    purpose: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Allow user to object to processing (Article 21)."""
+
+    # Stop processing for specified purpose
+    await db.consents.update_one(
+        {"user_id": user_id, "purpose": purpose},
+        {
+            "$set": {
+                "consent_given": False,
+                "objection_raised": True,
+                "objection_timestamp": datetime.utcnow()
+            }
+        }
+    )
+
+    # Immediately stop ongoing processing
+    await stop_processing_for_purpose(user_id, purpose)
+
+    await audit_log.info(
+        event="processing_objection",
+        user_id=user_id,
+        purpose=purpose
+    )
+
+    return {"status": "objection_recorded", "purpose": purpose}
+```
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Privacy by Design" icon="drafting-compass" href="./data-protection-design">
+    Implement privacy controls
+  </Card>
+  <Card title="DPIA" icon="clipboard-check" href="./dpia">
+    Conduct impact assessment
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to GDPR overview
+  </Card>
+</CardGroup>

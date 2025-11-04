@@ -1,0 +1,150 @@
+---
+title: "Distributed Tracing"
+description: "Configure Jaeger and OpenTelemetry for distributed tracing and performance analysis"
+icon: "route"
+seoTitle: "Distributed Tracing with Jaeger & OpenTelemetry"
+seoDescription: "Implement distributed tracing using Jaeger and OpenTelemetry for request flow visualization and performance bottleneck identification"
+keywords: ["distributed tracing", "Jaeger", "OpenTelemetry", "tracing", "performance", "latency", "request flow"]
+contentType: "how-to"
+---
+
+### Distributed Tracing with Jaeger
+
+#### Install Jaeger
+
+**Kubernetes**:
+```bash
+## Install Jaeger operator
+kubectl create namespace observability
+kubectl create -f https://github.com/jaegertracing/jaeger-operator/releases/download/v1.51.0/jaeger-operator.yaml -n observability
+
+## Deploy Jaeger instance
+cat << 'EOF' | kubectl apply -f -
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: jaeger
+  namespace: observability
+spec:
+  strategy: production
+  storage:
+    type: elasticsearch
+    options:
+      es:
+        server-urls: http://elasticsearch:9200
+EOF
+```
+**Docker Compose**:
+```yaml
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # UI
+      - "4318:4318"    # OTLP HTTP
+      - "4317:4317"    # OTLP gRPC
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+```
+#### OpenTelemetry Configuration
+
+**Install dependencies**:
+```bash
+uv pip install opentelemetry-api \
+               opentelemetry-sdk \
+               opentelemetry-instrumentation-fastapi \
+               opentelemetry-exporter-otlp
+```
+**Instrument FastAPI**:
+```python
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+## Setup tracing
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer(__name__)
+
+## Configure OTLP exporter
+otlp_exporter = OTLPSpanExporter(
+    endpoint="http://jaeger:4318/v1/traces"
+)
+
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(otlp_exporter)
+)
+
+## Auto-instrument FastAPI
+FastAPIInstrumentor.instrument_app(app)
+HTTPXClientInstrumentor().instrument()
+
+## Manual instrumentation
+@app.post("/chat")
+async def chat(query: str):
+    with tracer.start_as_current_span("chat") as span:
+        span.set_attribute("query_length", len(query))
+
+        # LLM call with tracing
+        with tracer.start_as_current_span("llm_invoke") as llm_span:
+            llm_span.set_attribute("provider", "anthropic")
+            llm_span.set_attribute("model", "claude-3-5-sonnet-20241022")
+
+            response = await llm.ainvoke(query)
+
+            llm_span.set_attribute("prompt_tokens", response.usage.prompt_tokens)
+            llm_span.set_attribute("completion_tokens", response.usage.completion_tokens)
+
+        # OpenFGA check with tracing
+        with tracer.start_as_current_span("openfga_check") as auth_span:
+            allowed = await openfga_client.check_permission(
+                user=f"user:{user_id}",
+                relation="executor",
+                object="tool:chat"
+            )
+            auth_span.set_attribute("allowed", allowed)
+
+        span.set_attribute("response_length", len(response.content))
+
+        return response
+```
+#### Trace Context Propagation
+
+```python
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
+propagator = TraceContextTextMapPropagator()
+
+## Inject trace context into HTTP headers
+async def call_external_service():
+    headers = {}
+    propagator.inject(headers)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://external-api.com/endpoint",
+            headers=headers
+        )
+
+    return response
+```
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Structured Logging" icon="file-lines" href="./logging">
+    Add structured logging with correlation IDs
+  </Card>
+  <Card title="Grafana Dashboards" icon="gauge" href="./dashboards">
+    Visualize traces in Grafana
+  </Card>
+  <Card title="Prometheus Metrics" icon="chart-bar" href="./prometheus">
+    Combine with metrics for full observability
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to monitoring overview
+  </Card>
+</CardGroup>

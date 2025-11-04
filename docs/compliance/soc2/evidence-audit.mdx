@@ -1,0 +1,175 @@
+---
+title: "SOC 2 Evidence Collection & Audit"
+description: "Evidence collection, Type II observation period, and audit preparation"
+icon: "folder-open"
+seoTitle: "SOC 2 Evidence Collection - Type II Audit Preparation"
+seoDescription: "Comprehensive guide to SOC 2 evidence collection, Type II observation period, and audit readiness"
+keywords: ["SOC 2", "evidence collection", "Type II", "audit", "observation period", "audit preparation"]
+contentType: "how-to"
+---
+
+## SOC 2 Evidence Collection
+
+### Required Evidence by Control
+
+<Tabs>
+  <Tab title="Access Control Evidence">
+    **CC6.1 - Logical Access Controls**
+
+    Evidence to collect:
+    - [ ] Access control matrix (roles and permissions)
+    - [ ] User access review logs (quarterly)
+    - [ ] MFA enforcement configuration
+    - [ ] Screenshot of authentication settings
+    - [ ] Sample of access provisioning tickets
+    - [ ] Sample of access deprovisioning tickets (within 24 hours of termination)
+    - [ ] Failed login attempt logs
+    - [ ] Privileged access usage logs
+
+    **Collection Script:**
+    ```bash
+    # scripts/soc2_evidence_collection.sh
+
+    # Collect access review evidence
+    python scripts/export_access_review.py \
+      --period "2025-Q1" \
+      --output evidence/access_reviews/2025-Q1.pdf
+
+    # Export MFA enrollment status
+    python scripts/export_mfa_status.py \
+      --output evidence/mfa/enrollment_status.csv
+
+    # Collect authentication logs
+    kubectl logs -n production deployment/auth-service \
+      --since=30d > evidence/auth_logs/auth_logs_$(date +%Y%m).log
+    ```
+  </Tab>
+
+  <Tab title="Change Management Evidence">
+    **CC8.1 - Change Management Process**
+
+    Evidence to collect:
+    - [ ] Change request log (all changes)
+    - [ ] Sample approved change requests
+    - [ ] Sample emergency change requests (with post-implementation review)
+    - [ ] Code review approvals (GitHub PR approvals)
+    - [ ] Deployment logs with timestamps
+    - [ ] Rollback procedures documentation
+    - [ ] Change failure rate metrics
+
+    **Query Examples:**
+    ```sql
+    -- Changes in observation period
+    SELECT
+      change_id,
+      title,
+      category,
+      submitted_by,
+      submitted_at,
+      status,
+      approvals
+    FROM change_requests
+    WHERE submitted_at BETWEEN '2025-01-01' AND '2025-03-31'
+    ORDER BY submitted_at DESC;
+
+    -- Emergency changes (verify post-review)
+    SELECT *
+    FROM change_requests
+    WHERE category = 'emergency'
+      AND submitted_at BETWEEN '2025-01-01' AND '2025-03-31';
+    ```
+  </Tab>
+
+  <Tab title="Monitoring Evidence">
+    **CC4.1 - Monitoring Activities**
+
+    Evidence to collect:
+    - [ ] Prometheus alerting rules configuration
+    - [ ] Sample security alerts (with response actions)
+    - [ ] Uptime monitoring reports (99.9% SLA)
+    - [ ] Security incident log
+    - [ ] Incident response documentation
+    - [ ] Metrics dashboards screenshots
+    - [ ] On-call rotation schedule
+
+    **Grafana Dashboard Export:**
+    ```bash
+    # Export monitoring dashboards for evidence
+    curl -H "Authorization: Bearer $GRAFANA_API_KEY" \
+      https://grafana.example.com/api/dashboards/uid/soc2-security \
+      > evidence/monitoring/security_dashboard.json
+    ```
+  </Tab>
+
+  <Tab title="Backup and Recovery Evidence">
+    **A1.3 - Data Backup**
+
+    Evidence to collect:
+    - [ ] Backup configuration documentation
+    - [ ] Backup success/failure logs
+    - [ ] Sample backup restoration test
+    - [ ] Recovery Time Objective (RTO) documentation
+    - [ ] Recovery Point Objective (RPO) documentation
+    - [ ] Disaster recovery runbook
+    - [ ] DR test results (quarterly)
+
+    **Backup Verification:**
+    ```bash
+    # Verify backups exist and are restorable
+    python scripts/verify_backups.py \
+      --period "last_30_days" \
+      --output evidence/backups/backup_verification_$(date +%Y%m).pdf
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## SOC 2 Type II Observation Period
+
+### Timeline and Milestones
+
+```
+Month 1-3: Preparation and Readiness
+├── Month 1: Gap analysis and control design
+├── Month 2: Implement controls and documentation
+└── Month 3: Testing and remediation
+
+Month 4-6: Observation Period Begins (Type II)
+├── Month 4: Evidence collection starts
+├── Month 5: Quarterly access reviews
+└── Month 6: Continuous monitoring
+
+Month 7-9: Continued Observation
+├── Month 7: Mid-period audit check-in
+├── Month 8: Quarterly access reviews
+└── Month 9: Evidence compilation
+
+Month 10-12: Audit and Reporting
+├── Month 10: Auditor testing begins
+├── Month 11: Auditor fieldwork
+└── Month 12: SOC 2 report issuance
+```
+
+**Key Requirements:**
+- **Minimum 3-month observation** (some auditors require 6-12 months)
+- **Continuous operation** of controls throughout period
+- **Complete evidence trail** for all controls
+- **No material exceptions** or unmitigated findings
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Readiness Checklist" icon="list-check" href="./readiness">
+    Verify audit readiness
+  </Card>
+  <Card title="Trust Service Criteria" icon="shield-check" href="./trust-criteria">
+    Review control requirements
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to SOC 2 overview
+  </Card>
+</CardGroup>

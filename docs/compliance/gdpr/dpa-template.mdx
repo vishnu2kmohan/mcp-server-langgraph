@@ -1,0 +1,361 @@
+---
+title: "Data Processing Agreement (DPA) Template"
+description: "GDPR-compliant Data Processing Agreement template for data processors"
+icon: "file-contract"
+seoTitle: "DPA Template - GDPR Data Processing Agreement"
+seoDescription: "Complete Data Processing Agreement template for GDPR compliance between controllers and processors"
+keywords: ["DPA", "Data Processing Agreement", "GDPR", "processor agreement", "contract", "compliance"]
+contentType: "reference"
+---
+
+## Data Processing Agreement (DPA) Template
+
+```markdown
+# Data Processing Agreement (DPA)
+
+This Data Processing Agreement is entered into between:
+
+**Controller**: [Your Organization] ("Controller")
+**Processor**: [Vendor Name] ("Processor")
+
+## 1. Subject Matter and Duration
+
+**Subject Matter**: Provision of [Service Description]
+**Duration**: As per Main Agreement
+**Nature and Purpose**: Processing personal data to provide AI agent services
+
+## 2. Obligations of the Processor
+
+The Processor shall:
+
+a) Process personal data only on documented instructions from the Controller;
+
+b) Ensure persons authorized to process personal data have committed to confidentiality;
+
+c) Implement appropriate technical and organizational measures (Article 32);
+
+d) Respect conditions for engaging sub-processors (Article 28(2) and (4));
+
+e) Assist the Controller in responding to data subject rights requests;
+
+f) Assist the Controller in ensuring compliance with Articles 32-36 (security, breach notification, DPIA);
+
+g) Delete or return all personal data after end of provision of services;
+
+h) Make available all information necessary to demonstrate compliance.
+
+## 3. Technical and Organizational Measures
+
+**Encryption**:
+- TLS 1.3 in transit
+- AES-256 at rest
+
+**Access Control**:
+- Multi-factor authentication
+- Role-based access control
+- Least privilege principle
+
+**Monitoring**:
+- 24/7 security monitoring
+- Audit logging
+- Intrusion detection
+
+## 4. Sub-Processors
+
+Approved Sub-Processors:
+- Google Cloud Platform (infrastructure) - [DPA Link]
+- Anthropic/Google (LLM providers) - [DPA Link]
+
+Controller authorizes engagement of sub-processors listed above.
+Processor must notify Controller of any intended changes (addition/replacement) with 30 days notice.
+
+## 5. Data Subject Rights
+
+Processor shall assist Controller in responding to data subject requests:
+- Access (Article 15)
+- Rectification (Article 16)
+- Erasure (Article 17)
+- Restriction (Article 18)
+- Portability (Article 20)
+- Objection (Article 21)
+
+Response time: Within 72 hours of Controller request
+
+## 6. Personal Data Breach Notification
+
+Processor shall notify Controller without undue delay (and within 24 hours) after becoming aware of a personal data breach.
+
+Notification must include:
+- Nature of breach
+- Categories and approximate number of data subjects affected
+- Likely consequences
+- Measures taken or proposed
+
+## 7. Audits and Inspections
+
+Processor shall allow Controller (or auditor) to conduct audits annually.
+Processor shall provide all information necessary to demonstrate compliance.
+
+---
+
+**Controller**: ________________________   Date: __________
+
+**Processor**: ________________________   Date: __________
+```
+
+---
+
+## GDPR Compliance Checklist
+
+<Steps>
+  <Step title="Lawful Basis">
+    - [ ] Identify lawful basis for each processing activity
+    - [ ] Document lawful basis in privacy policy
+    - [ ] Implement consent management system
+    - [ ] Enable consent withdrawal mechanism
+    - [ ] Conduct Legitimate Interests Assessment (if applicable)
+  </Step>
+
+  <Step title="Data Subject Rights">
+    - [ ] Implement data export API (Article 15)
+    - [ ] Implement data rectification API (Article 16)
+    - [ ] Implement data erasure API (Article 17)
+    - [ ] Implement data portability API (Article 20)
+    - [ ] Implement objection mechanism (Article 21)
+    - [ ] Test all rights mechanisms
+    - [ ] Document response procedures
+  </Step>
+
+  <Step title="Data Protection">
+    - [ ] Enable encryption in transit (TLS 1.3)
+    - [ ] Enable encryption at rest
+    - [ ] Implement pseudonymization
+    - [ ] Configure data minimization
+    - [ ] Set up automated retention/deletion
+    - [ ] Deploy within EU region
+    - [ ] Implement access controls
+  </Step>
+
+  <Step title="Documentation">
+    - [ ] Complete Records of Processing Activities (ROPA)
+    - [ ] Conduct Data Protection Impact Assessment (DPIA)
+    - [ ] Draft privacy policy / privacy notice
+    - [ ] Create cookie policy (if applicable)
+    - [ ] Document technical measures
+    - [ ] Prepare breach notification procedures
+  </Step>
+
+  <Step title="Agreements">
+    - [ ] Obtain DPAs from all processors
+    - [ ] Review and sign processor DPAs
+    - [ ] Document sub-processor relationships
+    - [ ] Obtain adequate safeguards for transfers outside EU
+  </Step>
+
+  <Step title="Organizational">
+    - [ ] Appoint Data Protection Officer (if required)
+    - [ ] Conduct privacy training for staff
+    - [ ] Establish data protection policies
+    - [ ] Create incident response plan
+    - [ ] Schedule regular compliance audits
+  </Step>
+</Steps>
+
+---
+
+## Data Residency Configuration
+
+```yaml
+# config/data_residency.yaml
+data_residency:
+  # EU-only data storage for GDPR compliance
+  regions:
+    primary: "europe-west1"  # Belgium
+    failover: "europe-west4"  # Netherlands
+    backup: "europe-west3"  # Frankfurt
+
+  # Allowed regions for processing
+  allowed_regions:
+    - "eu-*"  # All EU regions
+    - "europe-*"  # All European regions
+
+  # Blocked regions (non-EEA without adequacy decision)
+  blocked_regions:
+    - "us-*"  # United States
+    - "asia-*"  # Asia (except with adequate safeguards)
+
+  # Data transfer safeguards (for approved transfers)
+  transfer_safeguards:
+    mechanism: "Standard_Contractual_Clauses_2021"
+    scc_module: "Controller_to_Processor"
+    supplementary_measures:
+      - encryption_in_transit_and_rest
+      - pseudonymization
+      - access_controls
+
+# Kubernetes deployment with region affinity
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-eu
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/region
+                    operator: In
+                    values:
+                      - europe-west1
+                      - europe-west3
+                      - europe-west4
+```
+
+---
+
+## Breach Notification (Article 33-34)
+
+### 72-Hour Notification Requirement
+
+```python
+# src/incidents/gdpr_breach.py
+from datetime import datetime, timedelta
+
+class GDPRBreachNotification:
+    """Manage GDPR breach notification requirements."""
+
+    NOTIFICATION_DEADLINE = timedelta(hours=72)
+
+    async def detect_breach(self, incident: dict):
+        """Detect and classify potential data breach."""
+        # Classify breach severity
+        severity = self.classify_breach(incident)
+
+        if severity in ["high", "medium"]:
+            # Start breach notification clock
+            breach_record = {
+                "incident_id": incident["id"],
+                "detected_at": datetime.utcnow(),
+                "notification_deadline": datetime.utcnow() + self.NOTIFICATION_DEADLINE,
+                "severity": severity,
+                "status": "under_investigation",
+                "affected_individuals": []
+            }
+
+            await self.db.breaches.insert_one(breach_record)
+            await self.alert_dpo(breach_record)
+
+            return breach_record
+
+    async def assess_breach_risk(self, breach_id: str):
+        """Assess risk to individuals' rights and freedoms."""
+        breach = await self.db.breaches.find_one({"_id": breach_id})
+
+        # Determine if notification required
+        risk_assessment = {
+            "identity_theft_risk": "low",  # Assess actual risk
+            "financial_loss_risk": "low",
+            "discrimination_risk": "low",
+            "reputation_damage_risk": "medium",
+            "overall_risk": "medium"
+        }
+
+        # Update breach record
+        await self.db.breaches.update_one(
+            {"_id": breach_id},
+            {"$set": {"risk_assessment": risk_assessment}}
+        )
+
+        # If high risk, notify individuals (Article 34)
+        if risk_assessment["overall_risk"] == "high":
+            await self.notify_individuals(breach_id)
+
+        return risk_assessment
+
+    async def notify_supervisory_authority(self, breach_id: str):
+        """Notify supervisory authority within 72 hours (Article 33)."""
+        breach = await self.db.breaches.find_one({"_id": breach_id})
+
+        notification = {
+            "breach_id": breach_id,
+            "notification_date": datetime.utcnow(),
+            "description": breach["description"],
+            "categories_of_data": breach["data_categories"],
+            "approximate_number_affected": len(breach["affected_individuals"]),
+            "likely_consequences": breach["risk_assessment"]["overall_risk"],
+            "measures_taken": breach["mitigation_actions"],
+            "dpo_contact": {
+                "name": "Data Protection Officer",
+                "email": "dpo@example.com",
+                "phone": "+XX XXX XXX XXXX"
+            }
+        }
+
+        # Send to supervisory authority
+        # (Implementation depends on jurisdiction)
+        await self.send_to_authority(notification)
+
+        await self.db.breaches.update_one(
+            {"_id": breach_id},
+            {"$set": {"authority_notified_at": datetime.utcnow()}}
+        )
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GDPR API Reference" icon="code" href="/api-reference/gdpr-endpoints">
+    REST API documentation for GDPR endpoints
+  </Card>
+  <Card title="HIPAA Compliance" icon="shield-check" href="/compliance/hipaa-compliance">
+    US healthcare data protection
+  </Card>
+  <Card title="SOC 2 Compliance" icon="file-shield" href="/compliance/soc2-compliance">
+    Security controls for service organizations
+  </Card>
+  <Card title="Deploy in EU" icon="globe" href="/deployment/kubernetes">
+    EU-region deployment guide
+  </Card>
+  <Card title="Security Best Practices" icon="lock" href="/security/best-practices">
+    Additional security hardening
+  </Card>
+</CardGroup>
+
+---
+
+<Warning>
+**Final Reminder**: This guide provides technical implementation guidance for GDPR compliance. Full compliance requires:
+- Appointment of DPO (if required under Article 37)
+- Privacy policies and notices
+- Workforce training
+- Regular compliance audits
+- DPAs with all processors
+- Adequate safeguards for international transfers
+
+Consult with legal counsel and your DPO before processing personal data in the EU.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Data Subject Rights" icon="user-shield" href="./data-subject-rights">
+    Implement data subject rights
+  </Card>
+  <Card title="DPIA" icon="clipboard-check" href="./dpia">
+    Conduct impact assessment
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to GDPR overview
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**GDPR Compliance**: Complete guide covering all data protection requirements and subject rights!
+</Check>

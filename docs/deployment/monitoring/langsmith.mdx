@@ -1,0 +1,103 @@
+---
+title: "LangSmith Integration"
+description: "Track LLM performance, prompts, and chain execution with LangSmith for comprehensive AI observability"
+icon: "brain"
+seoTitle: "LangSmith Integration - LLM Observability"
+seoDescription: "Monitor LLM performance, prompt tracking, token usage, and chain visualization with LangSmith integration"
+keywords: ["LangSmith", "LLM observability", "prompt tracking", "token usage", "AI monitoring", "LangChain", "model performance"]
+contentType: "how-to"
+---
+
+### LangSmith Integration
+
+#### Setup LangSmith
+
+```python
+import os
+from langsmith import Client
+
+## Configure LangSmith
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
+os.environ["LANGCHAIN_PROJECT"] = "mcp-agent-production"
+
+## Initialize client
+langsmith_client = Client()
+
+## LangSmith will automatically trace LangChain calls
+from langchain_anthropic import ChatAnthropic
+
+llm = ChatAnthropic(
+    model="claude-3-5-sonnet-20241022",
+    anthropic_api_key=settings.anthropic_api_key
+)
+
+## This call is automatically traced
+response = await llm.ainvoke("Hello!")
+```
+#### Custom LangSmith Runs
+
+```python
+from langsmith import traceable
+
+@traceable(run_type="chain", name="chat_with_auth")
+async def chat_with_auth(query: str, user_id: str):
+    """Chat with authorization check"""
+
+    # Check permission (traced)
+    allowed = await check_permission(user_id, "tool:chat")
+
+    if not allowed:
+        raise PermissionError("User not authorized")
+
+    # Call LLM (traced)
+    response = await llm.ainvoke(query)
+
+    return response
+
+## Call function
+result = await chat_with_auth("What is AI?", user_id="alice")
+```
+#### Feedback Collection
+
+```python
+from langsmith import Client
+
+client = Client()
+
+## Collect user feedback
+@app.post("/feedback")
+async def submit_feedback(
+    run_id: str,
+    score: float,
+    comment: str = None
+):
+    """Submit feedback for a LangSmith run"""
+
+    client.create_feedback(
+        run_id=run_id,
+        key="user_rating",
+        score=score,
+        comment=comment
+    )
+
+    return {"status": "feedback_recorded"}
+```
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Grafana Dashboards" icon="gauge" href="./dashboards">
+    Visualize LLM metrics
+  </Card>
+  <Card title="Prometheus Metrics" icon="chart-bar" href="./prometheus">
+    Track LLM usage metrics
+  </Card>
+  <Card title="Alerting" icon="bell" href="./alerting">
+    Set up LLM performance alerts
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to monitoring overview
+  </Card>
+</CardGroup>

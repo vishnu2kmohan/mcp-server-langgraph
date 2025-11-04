@@ -1,0 +1,89 @@
+---
+title: "SOC 2 Compliance Overview"
+description: "Comprehensive SOC 2 compliance guide for service organizations"
+icon: "certificate"
+seoTitle: "SOC 2 Compliance Overview - Trust Service Criteria"
+seoDescription: "Complete guide to SOC 2 Type I and Type II compliance including trust service criteria and control implementation"
+keywords: ["SOC 2", "compliance", "trust service criteria", "security", "availability", "processing integrity"]
+contentType: "reference"
+---
+
+## Overview
+
+This guide provides a comprehensive framework for achieving **SOC 2 Type II compliance** with MCP Server and LangGraph. SOC 2 (Service Organization Control 2) is an auditing standard for service organizations that handle customer data, focusing on security, availability, processing integrity, confidentiality, and privacy.
+
+<Warning>
+**Audit Disclaimer**: This guide provides technical control implementation guidance but is not a substitute for professional audit services. SOC 2 Type II compliance requires:
+- Independent auditor assessment (CPA firm)
+- 3-12 month observation period
+- Evidence collection and documentation
+- Management assertions
+
+Consult with a qualified SOC 2 auditor before pursuing certification.
+</Warning>
+
+---
+
+## SOC 2 Trust Service Criteria
+
+SOC 2 is based on five **Trust Service Criteria** (TSC):
+
+| Criterion | Focus | Required for |
+|-----------|-------|-------------|
+| **Security (CC)** | Protection against unauthorized access | All SOC 2 audits |
+| **Availability (A)** | System uptime and accessibility | Type II audits |
+| **Processing Integrity (PI)** | Complete, valid, accurate, timely processing | Optional |
+| **Confidentiality (C)** | Protection of confidential information | Optional |
+| **Privacy (P)** | Collection, use, retention, disclosure of personal information | Optional |
+
+<Note>
+**Common Criteria (CC)** = Security controls (always required)
+**Additional Criteria**: Select based on your service commitments (A, PI, C, P)
+</Note>
+
+---
+
+
+## SOC 2 Compliance Topics
+
+<CardGroup cols={2}>
+  <Card title="Trust Service Criteria" icon="shield-check" href="./trust-criteria">
+    Security, Availability, Processing Integrity, Confidentiality, and Privacy controls
+  </Card>
+  <Card title="Evidence Collection & Audit" icon="folder-open" href="./evidence-audit">
+    Type II audit preparation and evidence gathering
+  </Card>
+  <Card title="Readiness Checklist" icon="list-check" href="./readiness">
+    Complete SOC 2 readiness verification and cost planning
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="HIPAA Compliance" icon="shield-check" href="/compliance/hipaa-compliance">
+    Healthcare data protection requirements
+  </Card>
+  <Card title="GDPR Compliance" icon="scale-balanced" href="/compliance/gdpr-compliance">
+    EU data protection requirements
+  </Card>
+  <Card title="Production Deployment" icon="rocket" href="/deployment/kubernetes">
+    Deploy with SOC 2 controls
+  </Card>
+  <Card title="Security Hardening" icon="lock" href="/security/best-practices">
+    Additional security measures
+  </Card>
+</CardGroup>
+
+---
+
+<Warning>
+**Final Reminder**: SOC 2 Type II compliance requires:
+- Independent auditor (CPA firm) assessment
+- 3-12 month continuous observation period
+- Comprehensive evidence collection
+- Effective operation of all controls
+- No material exceptions or gaps
+
+This guide provides technical implementation. Consult with a qualified SOC 2 auditor (e.g., Deloitte, PwC, EY, KPMG, or specialized firms like Vanta, Drata partners) to pursue certification.
+</Warning>

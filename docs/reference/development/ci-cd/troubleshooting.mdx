@@ -1,0 +1,171 @@
+---
+title: "Troubleshooting & Best Practices"
+description: "Secrets management, troubleshooting guides, and CI/CD best practices"
+icon: "wrench"
+seoTitle: "CI/CD Troubleshooting - Best Practices"
+seoDescription: "Troubleshooting guides, secrets management, and best practices for CI/CD pipelines"
+keywords: ["troubleshooting", "secrets management", "best practices", "debugging", "CI/CD"]
+contentType: "reference"
+---
+
+### Secrets Management
+
+#### GitHub Secrets
+
+Required secrets for CI/CD:
+
+| Secret | Purpose | Used By |
+|--------|---------|---------|
+| `GITHUB_TOKEN` | Container registry authentication | build-and-push |
+| `KUBECONFIG` | Kubernetes cluster access | deploy |
+
+#### Kubernetes Secrets
+
+Created manually or via secrets operator:
+
+```bash
+kubectl create secret generic mcp-server-langgraph-secrets \
+  --from-literal=anthropic-api-key="<key>" \
+  --from-literal=jwt-secret-key="<secret>" \
+  --from-literal=redis-password="`<password>`" \
+  --from-literal=postgres-password="`<password>`" \
+  --from-literal=keycloak-client-secret="<secret>" \
+  --from-literal=keycloak-admin-password="`<password>`" \
+  --from-literal=openfga-store-id="<id>" \
+  --from-literal=openfga-model-id="<id>" \
+  -n mcp-server-langgraph
+```
+
+#### Secret Rotation
+
+1. Update secret in Kubernetes
+2. Trigger rolling restart:
+   ```bash
+   kubectl rollout restart deployment/mcp-server-langgraph -n mcp-server-langgraph
+   ```
+
+### Troubleshooting
+
+#### Build Failures
+
+**Issue**: Docker build fails
+
+**Solution**:
+1. Check Dockerfile syntax
+2. Verify base image availability
+3. Check dependency installation
+4. Review build logs in GitHub Actions
+
+#### Test Failures
+
+**Issue**: Tests fail in CI but pass locally
+
+**Solution**:
+1. Ensure same Python version (3.12)
+2. Check environment variables
+3. Verify test isolation
+4. Review CI logs for specific errors
+
+#### Deployment Validation Failures
+
+**Issue**: Validation script reports errors
+
+**Solution**:
+1. Run validation locally:
+   ```bash
+   python3 scripts/validation/validate_deployments.py
+   ```
+2. Fix reported configuration issues
+3. Validate specific components:
+   ```bash
+   docker compose config
+   helm lint deployments/helm/mcp-server-langgraph
+   kubectl kustomize deployments/kustomize/overlays/dev
+   ```
+
+#### Deployment Failures
+
+**Issue**: Deployment fails or pods crash
+
+**Solution**:
+1. Check pod status:
+   ```bash
+   kubectl get pods -n mcp-server-langgraph
+   kubectl describe pod <pod-name> -n mcp-server-langgraph
+   ```
+2. Review logs:
+   ```bash
+   kubectl logs -n mcp-server-langgraph <pod-name>
+   ```
+3. Verify secrets exist:
+   ```bash
+   kubectl get secrets -n mcp-server-langgraph
+   ```
+4. Check resource availability:
+   ```bash
+   kubectl top nodes
+   kubectl top pods -n mcp-server-langgraph
+   ```
+
+#### Rollback Issues
+
+**Issue**: Rollback doesn't restore service
+
+**Solution**:
+1. Verify rollback completed:
+   ```bash
+   kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
+   ```
+2. Check if database migrations need rollback
+3. Verify configuration compatibility
+4. Review pod events for errors
+
+### Best Practices
+
+1. **Always test locally before pushing**: Run `make test` and `make validate-all`
+2. **Use feature branches**: Never commit directly to `main`
+3. **Write meaningful commit messages**: Follow conventional commits
+4. **Update tests with code changes**: Maintain test coverage
+5. **Validate deployment configs**: Run validation before creating PRs
+6. **Monitor deployments**: Watch logs and metrics after deployment
+7. **Test rollbacks in staging**: Practice rollback procedures
+8. **Keep secrets secure**: Never commit secrets to git
+9. **Document changes**: Update CHANGELOG.md
+10. **Review before merge**: Always have PRs reviewed
+11. **Monitor workflow efficiency**: Review Actions usage monthly
+12. **Update dependencies**: Keep GitHub Actions up to date
+13. **Cache strategically**: Balance cache hits vs maintenance
+14. **Use artifact retention**: Don't store artifacts forever
+15. **Review SBOM regularly**: Check for new vulnerabilities
+16. **Run mutation tests**: Verify test effectiveness monthly
+17. **Track benchmarks**: Monitor performance trends over time
+18. **Leverage concurrency controls**: Prevent duplicate workflow runs
+
+### References
+
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Docker Build Documentation](https://docs.docker.com/engine/reference/commandline/build/)
+- [Helm Documentation](https://helm.sh/docs/)
+- [Kustomize Documentation](https://kubectl.docs.kubernetes.io/references/kustomize/)
+- [Deployment Quickstart](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/deployments/QUICKSTART.md)
+- [Deployment README](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/deployments/README.md)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Workflows" icon="github" href="./workflows">
+    Review workflow configuration
+  </Card>
+  <Card title="Testing" icon="flask" href="./testing">
+    Debug test failures
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to CI/CD overview
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**CI/CD Complete**: Comprehensive pipeline with testing, deployment, and troubleshooting guides!
+</Check>

@@ -1,19 +1,19 @@
 # Reference Documentation
 
-This directory contains internal reference documentation that is **not** part of the Mintlify user-facing documentation site.
+This directory contains reference documentation for developers and contributors. Most content is published on the Mintlify documentation site.
 
 ## What's Here
 
 ### Development Reference (`development/`)
 
-Internal development guides and processes:
-- `build-verification.md` - Build validation procedures
-- `ci-cd.md` - CI/CD pipeline internals
-- `development.md` - Development workflow reference
-- `github-actions.md` - GitHub Actions implementation details
-- `ide-setup.md` - IDE configuration for contributors
+Developer-focused guides and technical references:
+- `build-verification.mdx` - Build validation procedures
+- `ci-cd/` - CI/CD pipeline reference (split into overview, workflows, testing, deployment, troubleshooting)
+- `development.mdx` - Development workflow reference
+- `github-actions.mdx` - GitHub Actions implementation details
+- `ide-setup.mdx` - IDE configuration for contributors
 
-These are maintained for internal reference but are not included in the public documentation site at docs.
+**Note**: These development references are published in the Mintlify documentation site under the "Reference" section for developer access.
 
 ## What's NOT Here
 

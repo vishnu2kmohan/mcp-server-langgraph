@@ -1,0 +1,142 @@
+---
+title: "Deployment Procedures"
+description: "Deployment and rollback procedures for production environments"
+icon: "rocket"
+seoTitle: "Deployment Procedures - CI/CD Reference"
+seoDescription: "Production deployment procedures and rollback strategies for safe, reliable releases"
+keywords: ["deployment", "rollback", "production", "release", "Kubernetes", "Helm"]
+contentType: "how-to"
+---
+
+### Deployment Procedures
+
+#### Environment Strategy
+
+```
+Development → Staging → Production
+    ↓           ↓          ↓
+ Kustomize   Kustomize   Helm
+   (dev)     (staging)  (release)
+```
+
+#### Development Deployment
+
+**Trigger**: Automatic on push to `develop` branch (manual gate)
+
+**Method**: Kustomize with dev overlay
+
+```bash
+make deploy-dev
+```
+
+**Configuration**:
+- Namespace: `mcp-server-langgraph-dev`
+- Auth: `inmemory` (no Keycloak)
+- Sessions: `memory` (no Redis)
+- Replicas: 1
+- Resources: Low limits
+
+#### Staging Deployment
+
+**Trigger**: Manual deployment after dev validation
+
+**Method**: Kustomize with staging overlay
+
+```bash
+make deploy-staging
+```
+
+**Configuration**:
+- Namespace: `staging-mcp-server-langgraph`
+- Auth: `keycloak`
+- Sessions: `redis` (12-hour TTL)
+- Replicas: 2
+- Resources: Medium limits
+- Full observability enabled
+
+#### Production Deployment
+
+**Trigger**: Manual deployment with confirmation
+
+**Method**: Helm chart
+
+```bash
+make deploy-production
+```
+
+**Configuration**:
+- Namespace: `mcp-server-langgraph`
+- Auth: `keycloak` (SSL verified)
+- Sessions: `redis` (SSL enabled, 24-hour TTL)
+- Replicas: 3+ (HPA enabled)
+- Resources: Production limits
+- High availability configured
+
+**Safety Features**:
+- 10-second confirmation delay
+- Health check validation
+- Rolling update strategy
+- Pod disruption budgets
+
+### Rollback Procedures
+
+#### Quick Rollback Commands
+
+**Development**:
+```bash
+make deploy-rollback-dev
+```
+
+**Staging**:
+```bash
+make deploy-rollback-staging
+```
+
+**Production**:
+```bash
+make deploy-rollback-production
+```
+
+#### Manual Rollback
+
+**Kubernetes Deployment**:
+```bash
+## List rollout history
+kubectl rollout history deployment/mcp-server-langgraph -n mcp-server-langgraph
+
+## Rollback to previous version
+kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
+
+## Rollback to specific revision
+kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph --to-revision=3
+
+## Monitor rollback
+kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
+```
+
+**Helm Rollback**:
+```bash
+## List release history
+helm history mcp-server-langgraph -n mcp-server-langgraph
+
+## Rollback to previous release
+helm rollback mcp-server-langgraph -n mcp-server-langgraph
+
+## Rollback to specific revision
+helm rollback mcp-server-langgraph 2 -n mcp-server-langgraph
+```
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Workflows" icon="github" href="./workflows">
+    Configure deployment workflows
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="./troubleshooting">
+    Debug deployment issues
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to CI/CD overview
+  </Card>
+</CardGroup>

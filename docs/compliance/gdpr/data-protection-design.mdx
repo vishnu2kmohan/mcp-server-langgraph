@@ -1,0 +1,60 @@
+---
+title: "Privacy by Design & Default"
+description: "GDPR Article 25: Data protection by design and by default implementation"
+icon: "drafting-compass"
+seoTitle: "Privacy by Design - GDPR Article 25"
+seoDescription: "Implement GDPR Article 25: Data protection by design and by default with technical and organizational measures"
+keywords: ["GDPR", "privacy by design", "Article 25", "data protection", "privacy by default"]
+contentType: "how-to"
+---
+
+## Data Protection by Design and Default (Article 25)
+
+### Privacy-Preserving Configuration
+
+```yaml
+# config/privacy_by_default.yaml
+privacy_settings:
+  # Default to most privacy-protective settings
+  defaults:
+    data_collection: "minimal"  # Only essential data
+    sharing: "none"  # No third-party sharing by default
+    retention: "shortest"  # Shortest retention period
+    analytics: "anonymized_only"  # No personal data in analytics
+    profiling: "disabled"  # No automated profiling
+    marketing: "opt_out"  # No marketing communications
+
+  # User must explicitly opt-in for additional processing
+  opt_in_required:
+    - "service_improvement_analytics"
+    - "personalized_recommendations"
+    - "third_party_integrations"
+    - "extended_data_retention"
+
+  # Pseudonymization by default
+  pseudonymization:
+    enabled: true
+    fields:
+      - "user_id"
+      - "session_id"
+      - "ip_address"
+    method: "HMAC-SHA256"
+    key_rotation: "90_days"
+```
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="DPIA" icon="clipboard-check" href="./dpia">
+    Conduct impact assessment
+  </Card>
+  <Card title="Data Protection Principles" icon="scale-balanced" href="./data-protection-principles">
+    Review core principles
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to GDPR overview
+  </Card>
+</CardGroup>

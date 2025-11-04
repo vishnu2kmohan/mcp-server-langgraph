@@ -1,0 +1,125 @@
+---
+title: "HIPAA Compliance Checklist"
+description: "Comprehensive checklist for verifying HIPAA compliance across all requirements"
+icon: "list-check"
+seoTitle: "HIPAA Compliance Checklist - Verification Guide"
+seoDescription: "Complete HIPAA compliance verification checklist covering all technical, administrative, and physical safeguards"
+keywords: ["HIPAA", "compliance checklist", "verification", "audit", "requirements", "safeguards"]
+contentType: "reference"
+---
+
+## HIPAA Compliance Checklist
+
+### Pre-Deployment Checklist
+
+<Steps>
+  <Step title="Risk Assessment">
+    **Complete Security Risk Assessment**
+
+    - [ ] Identify all systems that store, process, or transmit ePHI
+    - [ ] Document potential threats and vulnerabilities
+    - [ ] Assess likelihood and impact of threats
+    - [ ] Document existing security measures
+    - [ ] Identify gaps and create remediation plan
+    - [ ] Assign risk scores to each identified risk
+    - [ ] Obtain executive approval for risk acceptance
+
+    **Documentation**: Store in `docs/compliance/risk-assessment-YYYY.pdf`
+  </Step>
+
+  <Step title="Technical Safeguards">
+    **Implement Required Technical Controls**
+
+    - [ ] Enable JWT authentication with MFA
+    - [ ] Configure OpenFGA for fine-grained authorization
+    - [ ] Enable comprehensive audit logging (7-year retention)
+    - [ ] Implement encryption in transit (TLS 1.3)
+    - [ ] Enable encryption at rest (database and application-level)
+    - [ ] Configure automatic session timeouts (15 min max, 5 min idle)
+    - [ ] Enable integrity controls (HMAC-SHA256 hashing)
+    - [ ] Implement secure key management (Infisical/Vault)
+    - [ ] Deploy network segmentation (Kubernetes NetworkPolicies)
+    - [ ] Enable backup encryption and disaster recovery
+
+    **Verification**: Run `make hipaa-compliance-check`
+  </Step>
+
+  <Step title="Administrative Safeguards">
+    **Establish Policies and Procedures**
+
+    - [ ] Designate HIPAA Privacy Officer
+    - [ ] Designate HIPAA Security Officer
+    - [ ] Create workforce security policies
+    - [ ] Implement workforce training program
+    - [ ] Establish access authorization procedures
+    - [ ] Create incident response plan
+    - [ ] Develop breach notification procedures
+    - [ ] Implement sanction policy for violations
+    - [ ] Create business continuity plan
+    - [ ] Establish vendor management procedures
+
+    **Documentation**: Store in `docs/compliance/policies/`
+  </Step>
+
+  <Step title="Business Associate Agreements">
+    **Obtain Required BAAs**
+
+    - [ ] Cloud provider (GCP/AWS/Azure)
+    - [ ] LLM provider (Anthropic/Google)
+    - [ ] Database provider (if using managed service)
+    - [ ] Monitoring/observability provider (LangSmith)
+    - [ ] Secret management provider (Infisical)
+    - [ ] Any other vendors accessing PHI
+
+    **Documentation**: Store signed BAAs in secure location
+  </Step>
+
+  <Step title="Testing and Validation">
+    **Verify Compliance Controls**
+
+    - [ ] Penetration testing completed
+    - [ ] Vulnerability scanning completed
+    - [ ] Audit log review (sample transactions)
+    - [ ] Access control testing (positive and negative cases)
+    - [ ] Encryption verification (in transit and at rest)
+    - [ ] Backup and recovery testing
+    - [ ] Incident response drill
+    - [ ] Disaster recovery drill
+
+    **Documentation**: Store test results in `docs/compliance/testing/`
+  </Step>
+
+  <Step title="Documentation Review">
+    **Prepare for Audit**
+
+    - [ ] Security Risk Assessment
+    - [ ] Policies and Procedures Manual
+    - [ ] BAAs (all vendors)
+    - [ ] Workforce Training Records
+    - [ ] System Configuration Documentation
+    - [ ] Audit Log Samples
+    - [ ] Incident Response Plan
+    - [ ] Breach Notification Procedures
+    - [ ] Disaster Recovery Plan
+    - [ ] Penetration Test Results
+
+    **Organization**: Create compliance binder (physical or digital)
+  </Step>
+</Steps>
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Technical Safeguards" icon="shield" href="./technical-safeguards">
+    Review technical requirements
+  </Card>
+  <Card title="Breach Response" icon="bell-exclamation" href="./breach-response">
+    Prepare incident response plan
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to HIPAA overview
+  </Card>
+</CardGroup>

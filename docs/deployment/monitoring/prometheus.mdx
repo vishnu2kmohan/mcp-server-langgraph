@@ -1,0 +1,263 @@
+---
+title: "Prometheus Metrics"
+description: "Set up Prometheus for metrics collection, custom business metrics, and application monitoring"
+icon: "chart-bar"
+seoTitle: "Prometheus Metrics Setup - Production Monitoring"
+seoDescription: "Configure Prometheus and Grafana for comprehensive metrics collection, custom business metrics, and real-time application monitoring"
+keywords: ["Prometheus", "metrics", "monitoring", "Grafana", "observability", "application metrics", "custom metrics"]
+contentType: "how-to"
+---
+
+### Metrics with Prometheus
+
+#### Install Prometheus
+
+**Kubernetes**:
+```bash
+## Add Prometheus Helm repo
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+## Install Prometheus stack
+helm install prometheus prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --create-namespace \
+  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+```
+**Docker Compose**:
+```yaml
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+volumes:
+  prometheus-data:
+```
+#### Prometheus Configuration
+
+**prometheus.yml**:
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # MCP Server metrics
+  - job_name: 'mcp-server-langgraph'
+    static_configs:
+      - targets: ['mcp-server-langgraph:9090']
+    metrics_path: '/metrics'
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # PostgreSQL metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Keycloak metrics
+  - job_name: 'keycloak'
+    static_configs:
+      - targets: ['keycloak:8080']
+    metrics_path: '/metrics'
+
+  # Node exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+```
+#### Application Metrics
+
+**Instrument FastAPI with Prometheus**:
+
+```python
+from prometheus_client import Counter, Histogram, Gauge, generate_latest
+from fastapi import FastAPI, Request
+import time
+
+app = FastAPI()
+
+## Define metrics
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
+)
+
+http_request_duration_seconds = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request latency',
+    ['method', 'endpoint']
+)
+
+llm_requests_total = Counter(
+    'llm_requests_total',
+    'Total LLM requests',
+    ['provider', 'model', 'status']
+)
+
+llm_tokens_total = Counter(
+    'llm_tokens_total',
+    'Total LLM tokens consumed',
+    ['provider', 'model', 'type']
+)
+
+active_sessions = Gauge(
+    'active_sessions',
+    'Number of active user sessions'
+)
+
+openfga_checks_total = Counter(
+    'openfga_checks_total',
+    'Total OpenFGA authorization checks',
+    ['result']
+)
+
+## Middleware to track metrics
+@app.middleware("http")
+async def track_metrics(request: Request, call_next):
+    start_time = time.time()
+
+    # Process request
+    response = await call_next(request)
+
+    # Record metrics
+    duration = time.time() - start_time
+
+    http_requests_total.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=response.status_code
+    ).inc()
+
+    http_request_duration_seconds.labels(
+        method=request.method,
+        endpoint=request.url.path
+    ).observe(duration)
+
+    return response
+
+## Metrics endpoint
+@app.get("/metrics")
+async def metrics():
+    return Response(
+        content=generate_latest(),
+        media_type="text/plain"
+    )
+```
+#### Custom Business Metrics
+
+```python
+from prometheus_client import Counter, Gauge
+
+## User metrics
+user_registrations_total = Counter(
+    'user_registrations_total',
+    'Total user registrations'
+)
+
+user_logins_total = Counter(
+    'user_logins_total',
+    'Total user logins',
+    ['provider']
+)
+
+## Conversation metrics
+conversations_created_total = Counter(
+    'conversations_created_total',
+    'Total conversations created'
+)
+
+messages_sent_total = Counter(
+    'messages_sent_total',
+    'Total messages sent',
+    ['role']
+)
+
+active_conversations = Gauge(
+    'active_conversations',
+    'Number of active conversations'
+)
+
+## Tool usage metrics
+tool_executions_total = Counter(
+    'tool_executions_total',
+    'Total tool executions',
+    ['tool_name', 'status']
+)
+
+tool_execution_duration = Histogram(
+    'tool_execution_duration_seconds',
+    'Tool execution duration',
+    ['tool_name']
+)
+
+## Usage in code
+@app.post("/auth/register")
+async def register(user_data: UserCreate):
+    # ... registration logic ...
+    user_registrations_total.inc()
+    return user
+
+@app.post("/chat")
+async def chat(query: str):
+    conversations_created_total.inc()
+    messages_sent_total.labels(role="user").inc()
+
+    # Execute LLM call
+    start_time = time.time()
+    response = await llm.ainvoke(query)
+    duration = time.time() - start_time
+
+    # Track LLM metrics
+    llm_requests_total.labels(
+        provider="anthropic",
+        model="claude-3-5-sonnet-20241022",
+        status="success"
+    ).inc()
+
+    llm_tokens_total.labels(
+        provider="anthropic",
+        model="claude-3-5-sonnet-20241022",
+        type="prompt"
+    ).inc(response.usage.prompt_tokens)
+
+    llm_tokens_total.labels(
+        provider="anthropic",
+        model="claude-3-5-sonnet-20241022",
+        type="completion"
+    ).inc(response.usage.completion_tokens)
+
+    messages_sent_total.labels(role="assistant").inc()
+
+    return response
+```
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Distributed Tracing" icon="route" href="./distributed-tracing">
+    Add distributed tracing with Jaeger
+  </Card>
+  <Card title="Grafana Dashboards" icon="gauge" href="./dashboards">
+    Create dashboards to visualize metrics
+  </Card>
+  <Card title="Alerting" icon="bell" href="./alerting">
+    Configure alerts based on metrics
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to monitoring overview
+  </Card>
+</CardGroup>

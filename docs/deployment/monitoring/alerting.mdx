@@ -1,0 +1,281 @@
+---
+title: "Alerting & Health Checks"
+description: "Configure Alertmanager, define SLOs, set up health checks, and implement monitoring best practices"
+icon: "bell"
+seoTitle: "Alerting & Health Checks - Proactive Monitoring"
+seoDescription: "Set up Alertmanager, configure alerts, implement health checks, and follow monitoring best practices for production systems"
+keywords: ["alerting", "Alertmanager", "health checks", "SLO", "monitoring", "best practices", "notifications", "incident response"]
+contentType: "how-to"
+---
+
+### Alerting with Alertmanager
+
+#### Configure Alerts
+
+**prometheus-rules.yaml**:
+```yaml
+groups:
+- name: langgraph_alerts
+  rules:
+  # High error rate
+  - alert: HighErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is {{ $value }} requests/second"
+
+  # High latency
+  - alert: HighLatency
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High API latency"
+      description: "P95 latency is {{ $value }}s"
+
+  # LLM failures
+  - alert: LLMFailures
+    expr: rate(llm_requests_total{status="error"}[5m]) > 0.1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "LLM requests failing"
+      description: "LLM error rate: {{ $value }}"
+
+  # Redis down
+  - alert: RedisDown
+    expr: up{job="redis"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Redis is down"
+      description: "Redis instance {{ $labels.instance }} is unreachable"
+
+  # High token usage
+  - alert: HighTokenUsage
+    expr: sum(rate(llm_tokens_total[1h])) > 1000000
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Unusually high token usage"
+      description: "Token usage: {{ $value }} tokens/hour"
+
+  # Low session count (possible issue)
+  - alert: NoActiveSessions
+    expr: active_sessions == 0
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "No active sessions"
+      description: "No users have active sessions for 30 minutes"
+```
+#### Alertmanager Configuration
+
+```yaml
+global:
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'slack-notifications'
+
+  routes:
+  - match:
+      severity: critical
+    receiver: 'pagerduty'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#alerts'
+    title: 'Alert: {{ .GroupLabels.alertname }}'
+    text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+- name: 'pagerduty'
+  pagerduty_configs:
+  - service_key: 'YOUR_PAGERDUTY_KEY'
+```
+### Health Checks
+
+#### Kubernetes Probes
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: agent
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 3
+
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 30
+```
+#### Health Check Implementation
+
+```python
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
+
+@app.get("/health/live")
+async def liveness():
+    """Liveness probe - is the application running?"""
+    return {"status": "alive"}
+
+@app.get("/health/ready")
+async def readiness():
+    """Readiness probe - can the application serve traffic?"""
+
+    checks = {}
+
+    # Check Redis
+    try:
+        await redis_client.ping()
+        checks["redis"] = "healthy"
+    except Exception as e:
+        checks["redis"] = f"unhealthy: {e}"
+
+    # Check Keycloak
+    try:
+        response = await httpx.get(f"{settings.keycloak_url}/health")
+        checks["keycloak"] = "healthy" if response.status_code == 200 else "unhealthy"
+    except Exception as e:
+        checks["keycloak"] = f"unhealthy: {e}"
+
+    # Check OpenFGA
+    try:
+        response = await httpx.get(f"{settings.openfga_url}/healthz")
+        checks["openfga"] = "healthy" if response.status_code == 200 else "unhealthy"
+    except Exception as e:
+        checks["openfga"] = f"unhealthy: {e}"
+
+    # Determine overall status
+    all_healthy = all(v == "healthy" for v in checks.values())
+
+    return JSONResponse(
+        content={"status": "ready" if all_healthy else "not_ready", "checks": checks},
+        status_code=status.HTTP_200_OK if all_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
+    )
+
+@app.get("/health/startup")
+async def startup():
+    """Startup probe - has the application finished starting?"""
+    # Check if initialization is complete
+    if not app_initialized:
+        return JSONResponse(
+            content={"status": "starting"},
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    return {"status": "started"}
+```
+### Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Structured Logging" icon="brackets-curly">
+    Always use structured JSON logging for easy parsing:
+
+    ```python
+    # Good
+    logger.info(
+        "User authenticated",
+        user_id=user_id,
+        provider="keycloak",
+        duration_ms=duration
+    )
+
+    # Bad
+    logger.info(f"User {user_id} authenticated via keycloak in {duration}ms")
+    ```
+  </Accordion>
+
+  <Accordion title="Track Business Metrics" icon="chart-mixed">
+    Monitor business KPIs, not just technical metrics:
+
+    - Conversations per user
+    - Average conversation length
+    - Token cost per user
+    - Tool usage patterns
+    - User retention
+  </Accordion>
+
+  <Accordion title="Set SLOs and Alerts" icon="bell">
+    Define Service Level Objectives:
+
+    - Availability: 99.9% uptime
+    - Latency: P95 < 2s
+    - Error rate: < 0.1%
+    - Token budget: < $1000/day
+  </Accordion>
+
+  <Accordion title="Use Correlation IDs" icon="link">
+    Track requests across all services:
+
+    ```python
+    # Generate once per request
+    request_id = str(uuid.uuid4())
+
+    # Pass to all downstream services
+    headers = {"X-Request-ID": request_id}
+
+    # Log with correlation ID
+    logger.info("Processing request", request_id=request_id)
+    ```
+  </Accordion>
+</AccordionGroup>
+
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Scaling" icon="arrow-up-right-dots" href="/deployment/scaling">
+    Auto-scaling configuration
+  </Card>
+  <Card title="Disaster Recovery" icon="life-ring" href="/deployment/disaster-recovery">
+    Backup and recovery
+  </Card>
+  <Card title="Dashboards" icon="gauge" href="./dashboards">
+    Create visualization dashboards
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to monitoring overview
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Monitoring Complete**: Comprehensive observability with metrics, traces, logs, and alerts!
+</Check>

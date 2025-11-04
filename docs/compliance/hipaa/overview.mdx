@@ -1,0 +1,84 @@
+---
+title: "HIPAA Compliance Overview"
+description: "Comprehensive HIPAA compliance guide for healthcare applications"
+icon: "shield-halved"
+seoTitle: "HIPAA Compliance Overview - Healthcare Security"
+seoDescription: "Complete guide to HIPAA compliance including technical safeguards, BAA requirements, and breach response procedures"
+keywords: ["HIPAA", "compliance", "healthcare", "PHI", "ePHI", "security", "privacy", "audit"]
+contentType: "reference"
+---
+
+## Overview
+
+This guide provides a comprehensive framework for deploying **HIPAA-compliant** AI agents using MCP Server with LangGraph. It covers technical controls, administrative safeguards, and documentation required for healthcare applications handling Protected Health Information (PHI).
+
+<Warning>
+**Legal Disclaimer**: This guide provides technical implementation guidance but is not legal advice. Consult with your legal counsel and compliance team before deploying healthcare applications. HIPAA compliance requires both technical and administrative controls, policies, and procedures.
+</Warning>
+
+---
+
+## HIPAA Readiness Overview
+
+MCP Server with LangGraph provides the **technical foundation** for HIPAA compliance, but achieving full compliance requires:
+
+1. **Technical Safeguards** (Covered in this guide)
+2. **Administrative Safeguards** (Policies, training, risk assessment)
+3. **Physical Safeguards** (Data center security, device management)
+4. **Business Associate Agreements** (BAAs with vendors)
+5. **Breach Notification Procedures**
+
+**Status**: MCP Server is **HIPAA-ready** (technical controls in place). You must implement administrative and physical safeguards based on your organization's requirements.
+
+---
+
+
+## Compliance Topics
+
+<CardGroup cols={2}>
+  <Card title="Technical Safeguards" icon="shield" href="./technical-safeguards">
+    Encryption, access controls, audit logging, and security measures
+  </Card>
+  <Card title="BAA Template" icon="file-contract" href="./baa-template">
+    Business Associate Agreement template and requirements
+  </Card>
+  <Card title="Compliance Checklist" icon="list-check" href="./compliance-checklist">
+    Comprehensive HIPAA compliance verification checklist
+  </Card>
+  <Card title="Deployment Architecture" icon="diagram-project" href="./deployment">
+    HIPAA-compliant deployment architecture and monitoring
+  </Card>
+  <Card title="Breach Response" icon="bell-exclamation" href="./breach-response">
+    Incident response procedures and FAQs
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="GDPR Compliance" icon="shield-halved" href="/compliance/gdpr-compliance">
+    European data protection requirements
+  </Card>
+  <Card title="SOC 2 Compliance" icon="file-shield" href="/compliance/soc2-compliance">
+    Security controls for service organizations
+  </Card>
+  <Card title="Production Deployment" icon="rocket" href="/deployment/kubernetes">
+    Deploy HIPAA-compliant infrastructure
+  </Card>
+  <Card title="Security Best Practices" icon="lock" href="/security/best-practices">
+    Additional security hardening
+  </Card>
+</CardGroup>
+
+---
+
+<Warning>
+**Final Reminder**: This guide provides technical implementation guidance. Achieving HIPAA compliance requires:
+- Legal review of policies and procedures
+- Workforce training and awareness
+- Regular security assessments and audits
+- Business Associate Agreements with all vendors
+- Incident response planning and testing
+
+Consult with legal counsel and compliance experts before handling PHI in production.
+</Warning>

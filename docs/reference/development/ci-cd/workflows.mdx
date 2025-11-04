@@ -1,0 +1,307 @@
+---
+title: "GitHub Actions Workflows"
+description: "GitHub Actions workflow configuration, deployment validation, and container builds"
+icon: "github"
+seoTitle: "GitHub Actions Workflows - CI/CD Reference"
+seoDescription: "Complete reference for GitHub Actions workflows, deployment validation, and Docker image builds"
+keywords: ["GitHub Actions", "workflows", "deployment validation", "Docker", "SBOM"]
+contentType: "reference"
+---
+
+### GitHub Actions Workflows
+
+#### Main CI Workflow
+
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+```
+
+##### Test Job
+
+```yaml
+test:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv sync
+
+    - name: Run unit tests
+      run: |
+        ENABLE_TRACING=false \
+        ENABLE_METRICS=false \
+        ENABLE_CONSOLE_EXPORT=false \
+        pytest -m unit --tb=line -q
+```
+
+**Purpose**: Ensures all unit tests pass before deployment
+
+**Environment Variables**:
+- `ENABLE_TRACING=false`: Disables OpenTelemetry tracing
+- `ENABLE_METRICS=false`: Disables metrics collection
+- `ENABLE_CONSOLE_EXPORT=false`: Disables console export
+
+##### Lint Job
+
+```yaml
+lint:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv pip install flake8 mypy
+
+    - name: Run flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 \
+          --show-source --statistics --exclude=.venv,tests
+
+    - name: Run mypy
+      run: mypy src/ --ignore-missing-imports
+      continue-on-error: true
+```
+
+**Purpose**: Enforces code quality standards
+
+**Checks**:
+- `flake8`: Python syntax errors and undefined names
+- `mypy`: Type checking (non-blocking)
+
+##### Security Check Job
+
+```yaml
+security-check:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Bandit
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv pip install bandit
+
+    - name: Run Bandit
+      run: bandit -r src/ -ll
+```
+
+**Purpose**: Identifies security vulnerabilities
+
+**Scanner**: Bandit with low-low severity threshold
+
+### Deployment Validation
+
+#### Validate Deployments Job
+
+```yaml
+validate-deployments:
+  name: Validate Deployment Configurations
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv pip install pyyaml jsonschema
+
+    - name: Run deployment validation script
+      run: python3 scripts/validation/validate_deployments.py
+
+    - name: Validate Docker Compose
+      run: docker compose -f docker-compose.yml config --quiet
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'v3.13.0'
+
+    - name: Validate Helm chart
+      run: |
+        helm lint deployments/helm/mcp-server-langgraph
+        helm template test-release deployments/helm/mcp-server-langgraph --dry-run > /dev/null
+
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Validate Kustomize overlays
+      run: |
+        for env in dev staging production; do
+          echo "Validating $env overlay..."
+          kubectl kustomize deployments/kustomize/overlays/$env > /dev/null
+        done
+```
+
+**Purpose**: Ensures all deployment configurations are valid before merge
+
+**Validations**:
+1. **Python Validation Script**: Comprehensive YAML and configuration checks
+2. **Docker Compose**: Syntax and structure validation
+3. **Helm Chart**: Linting and template rendering
+4. **Kustomize Overlays**: Validation for dev, staging, and production
+
+#### Validation Script
+
+**Location**: `scripts/validation/validate_deployments.py`
+
+**Features**:
+- YAML syntax validation
+- Kubernetes manifest validation
+- Cross-platform configuration consistency
+- Resource specifications validation
+- Environment variable completeness
+- Probe configuration validation
+
+**Usage**:
+```bash
+python3 scripts/validation/validate_deployments.py
+```
+
+**Example Output**:
+```
+✓ Validating YAML syntax...
+✓ Validating Kubernetes manifests...
+✓ Validating Docker Compose...
+✓ Validating Helm chart...
+✓ Validating configuration consistency...
+
+All validations passed!
+```
+
+### Build and Push
+
+#### Docker Image Build
+
+```yaml
+build-and-push:
+  needs: [test, lint, security-check, validate-deployments]
+  runs-on: ubuntu-latest
+  permissions:
+    contents: read
+    packages: write
+
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+```
+
+**Features**:
+- **Multi-architecture builds**: amd64 and arm64
+- **Automatic tagging**: Branch names, PRs, semantic versions, commit SHAs
+- **Layer caching**: GitHub Actions cache for faster builds
+- **Dependency**: Only runs after all validation jobs pass
+- **SBOM generation**: Automatic Software Bill of Materials creation
+
+**Image Tags**:
+- `main`: Latest stable version
+- `develop`: Development version
+- `v2.1.0`: Semantic version tags
+- `sha-abc1234`: Commit SHA tags
+
+### Software Bill of Materials (SBOM)
+
+Every release automatically generates an SBOM for supply chain security:
+
+**Format:** SPDX JSON
+**Tool:** Anchore SBOM Action
+**Location:** Attached to GitHub release
+
+**Usage:**
+```bash
+## Download SBOM from latest release
+gh release download v2.1.0 --pattern 'sbom-*.spdx.json'
+
+## Analyze with tools
+grype sbom:sbom-linux-amd64.spdx.json
+syft sbom-linux-amd64.spdx.json -o table
+```
+
+**Benefits:**
+- Supply chain transparency
+- Vulnerability tracking
+- License compliance
+- Security audits
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Testing Strategy" icon="flask" href="./testing">
+    Learn about testing procedures
+  </Card>
+  <Card title="Deployment" icon="rocket" href="./deployment">
+    Deploy to environments
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to CI/CD overview
+  </Card>
+</CardGroup>

@@ -1,0 +1,120 @@
+---
+title: "Business Associate Agreement (BAA) Template"
+description: "HIPAA Business Associate Agreement template and requirements"
+icon: "file-contract"
+seoTitle: "BAA Template - HIPAA Business Associate Agreement"
+seoDescription: "Complete Business Associate Agreement template for HIPAA compliance with covered entities"
+keywords: ["BAA", "Business Associate Agreement", "HIPAA", "compliance", "contract", "legal"]
+contentType: "reference"
+---
+
+## Business Associate Agreement (BAA) Template
+
+### Required BAAs
+
+You must obtain BAAs from all vendors that handle PHI:
+
+<Tabs>
+  <Tab title="Cloud Provider BAAs">
+    **Required Vendors:**
+
+    - ✅ **Google Cloud Platform** - [BAA available](https://cloud.google.com/terms/hipaa)
+    - ✅ **Amazon Web Services (AWS)** - [BAA available](https://aws.amazon.com/compliance/hipaa-compliance/)
+    - ✅ **Microsoft Azure** - [BAA available](https://azure.microsoft.com/en-us/support/legal/)
+
+    **LLM Provider BAAs:**
+
+    - ✅ **Anthropic (Claude)** - [BAA available for Enterprise](https://www.anthropic.com/hipaa)
+    - ✅ **Google (Gemini via Vertex AI)** - Covered under GCP BAA
+    - ⚠️ **OpenAI** - No BAA available (do not use for PHI)
+    - ⚠️ **AWS Bedrock** - BAA available (verify model-specific coverage)
+  </Tab>
+
+  <Tab title="BAA Template">
+    ```markdown
+    # Business Associate Agreement (BAA) Template
+
+    This Business Associate Agreement ("Agreement") is entered into as of [DATE]
+    by and between:
+
+    **Covered Entity**: [Healthcare Organization Name]
+    **Business Associate**: [Vendor Name]
+
+    ## 1. Definitions
+
+    Terms used, but not otherwise defined, shall have the same meaning as those
+    terms in HIPAA and the HIPAA Regulations.
+
+    ## 2. Obligations and Activities of Business Associate
+
+    Business Associate agrees to:
+
+    a) Not use or disclose PHI other than as permitted by this Agreement or as
+       required by law;
+
+    b) Use appropriate safeguards to prevent use or disclosure of PHI other than
+       as provided for by this Agreement;
+
+    c) Implement administrative, physical, and technical safeguards that reasonably
+       and appropriately protect the confidentiality, integrity, and availability
+       of ePHI;
+
+    d) Report to Covered Entity any use or disclosure of PHI not provided for by
+       this Agreement within 24 hours of discovery;
+
+    e) Ensure that any subcontractors that create, receive, maintain, or transmit
+       PHI on behalf of Business Associate agree to the same restrictions;
+
+    f) Make PHI available to individuals in accordance with 45 CFR § 164.524;
+
+    g) Make PHI available to the Secretary of HHS for purposes of determining
+       Covered Entity's compliance with HIPAA;
+
+    h) Return or destroy all PHI upon termination of this Agreement;
+
+    i) Maintain and make available audit logs for a minimum of seven (7) years.
+
+    ## 3. Permitted Uses and Disclosures
+
+    Business Associate may use or disclose PHI to perform functions, activities,
+    or services for, or on behalf of, Covered Entity as specified in the Services
+    Agreement.
+
+    ## 4. Term and Termination
+
+    **Term**: This Agreement shall become effective on [DATE] and shall terminate
+    on [DATE] or upon termination of the Services Agreement.
+
+    **Termination for Cause**: Covered Entity may immediately terminate this
+    Agreement if Business Associate violates a material term of this Agreement.
+
+    ## 5. Breach Notification
+
+    Business Associate shall notify Covered Entity within 24 hours of discovery
+    of any breach of unsecured PHI.
+
+    ---
+
+    Covered Entity: ________________________   Date: __________
+
+    Business Associate: ____________________   Date: __________
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Technical Safeguards" icon="shield" href="./technical-safeguards">
+    Implement required security measures
+  </Card>
+  <Card title="Compliance Checklist" icon="list-check" href="./compliance-checklist">
+    Verify BAA requirements
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to HIPAA overview
+  </Card>
+</CardGroup>

@@ -1,0 +1,109 @@
+---
+title: "CI/CD Pipeline Overview"
+description: "Continuous integration and deployment pipeline architecture overview"
+icon: "code"
+seoTitle: "CI/CD Pipeline Overview - Development Reference"
+seoDescription: "GitHub Actions-based CI/CD pipeline for automated testing, building, and deployment"
+keywords: ["CI/CD", "GitHub Actions", "pipeline", "automation", "deployment"]
+contentType: "reference"
+---
+
+
+This document describes the continuous integration and continuous deployment (CI/CD) pipeline for the LangGraph MCP Agent project.
+
+### Table of Contents
+
+- [Overview](#overview)
+- [Pipeline Architecture](#pipeline-architecture)
+- [GitHub Actions Workflows](#github-actions-workflows)
+- [Deployment Validation](#deployment-validation)
+- [Build and Push](#build-and-push)
+- [Testing Strategy](#testing-strategy)
+- [Deployment Procedures](#deployment-procedures)
+- [Rollback Procedures](#rollback-procedures)
+- [Secrets Management](#secrets-management)
+- [Troubleshooting](#troubleshooting)
+
+### Overview
+
+The CI/CD pipeline is implemented using GitHub Actions and provides:
+
+- **Automated Testing**: Unit, integration, and property-based tests
+- **Code Quality**: Linting, formatting, and security scanning
+- **Deployment Validation**: Kubernetes manifests, Helm charts, and Docker Compose configurations
+- **Container Builds**: Multi-architecture Docker images (amd64/arm64)
+- **Automated Deployments**: Environment-specific deployment workflows
+- **Rollback Capability**: Quick rollback to previous versions
+
+#### Pipeline Workflow
+
+```mermaid
+flowchart TB
+    A[Push to Branch] --> B[Test & Lint Jobs - Parallel]
+
+    subgraph parallel[" "]
+        B1[Test]
+        B2[Lint]
+        B3[Validate]
+    end
+
+    B --> parallel
+    parallel --> C{All Checks Pass?}
+
+    C -->|Yes| D[Build & Push]
+    C -->|No| E[Fail Build]
+
+    D --> F[Deploy<br/>main only]
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef testStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef buildStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef parallelStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class A startStyle
+    class B parallelStyle
+    class B1,B2,B3 testStyle
+    class C decisionStyle
+    class D buildStyle
+    class F successStyle
+    class E errorStyle
+
+    style parallel fill:#bebada,stroke:#7e5eb0
+```
+
+### Pipeline Architecture
+
+#### GitHub Actions Workflow File
+
+**Location**: `.github/workflows/ci.yaml`
+
+#### Jobs
+
+1. **test**: Runs pytest with unit tests
+2. **lint**: Runs flake8 and mypy
+3. **security-check**: Runs Bandit security scanner
+4. **validate-deployments**: Validates all deployment configurations
+5. **build-and-push**: Builds and pushes Docker images
+6. **deploy**: Deploys to target environment (main branch only)
+
+
+## Pipeline Topics
+
+<CardGroup cols={2}>
+  <Card title="GitHub Actions Workflows" icon="github" href="./workflows">
+    Workflow configuration, jobs, and deployment validation
+  </Card>
+  <Card title="Testing Strategy" icon="flask" href="./testing">
+    Unit, integration, property-based, and mutation testing
+  </Card>
+  <Card title="Deployment Procedures" icon="rocket" href="./deployment">
+    Deployment and rollback procedures
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="./troubleshooting">
+    Secrets management, debugging, and best practices
+  </Card>
+</CardGroup>

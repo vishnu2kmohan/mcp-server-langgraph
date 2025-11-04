@@ -1,0 +1,117 @@
+---
+title: "Monitoring & Observability Overview"
+description: "Comprehensive monitoring, metrics, and observability setup for MCP Server production deployments"
+icon: "chart-line"
+seoTitle: "Monitoring & Observability Overview - Production-Grade Deployment"
+seoDescription: "Deploy production-grade monitoring with Prometheus, Grafana, Jaeger, OpenTelemetry, and LangSmith for comprehensive observability"
+keywords: ["monitoring", "observability", "Prometheus", "Grafana", "Jaeger", "OpenTelemetry", "LangSmith", "metrics", "tracing", "logging"]
+contentType: "guide"
+---
+
+# Monitoring & Observability
+
+Production-grade monitoring and observability are essential for maintaining reliability, performance, and security. This guide covers the complete observability stack including metrics, traces, logs, and alerts.
+
+<Info>
+The MCP Server uses a dual observability stack: **OpenTelemetry** for infrastructure metrics and traces, plus **LangSmith** for LLM-specific observability.
+</Info>
+
+## Observability Stack
+
+<CardGroup cols={2}>
+  <Card title="Metrics" icon="chart-bar">
+    **Prometheus + Grafana**
+    - Resource utilization
+    - Request rates
+    - Error rates
+    - Custom business metrics
+  </Card>
+
+  <Card title="Distributed Tracing" icon="route">
+    **Jaeger + OpenTelemetry**
+    - Request flow visualization
+    - Latency breakdown
+    - Service dependencies
+    - Performance bottlenecks
+  </Card>
+
+  <Card title="Logging" icon="file-lines">
+    **Structured JSON Logging**
+    - Centralized log aggregation
+    - Correlation IDs
+    - Error tracking
+    - Audit trails
+  </Card>
+
+  <Card title="LLM Observability" icon="brain">
+    **LangSmith**
+    - Prompt tracking
+    - Token usage
+    - Model performance
+    - Chain visualization
+  </Card>
+</CardGroup>
+
+## Monitoring Topics
+
+Explore detailed guides for each monitoring component:
+
+<CardGroup cols={2}>
+  <Card title="Prometheus Metrics" icon="chart-bar" href="./prometheus">
+    Set up Prometheus for metrics collection, custom business metrics, and application monitoring
+  </Card>
+
+  <Card title="Distributed Tracing" icon="route" href="./distributed-tracing">
+    Configure Jaeger and OpenTelemetry for distributed tracing and performance analysis
+  </Card>
+
+  <Card title="Structured Logging" icon="file-lines" href="./logging">
+    Implement structured JSON logging with correlation IDs and centralized aggregation
+  </Card>
+
+  <Card title="LangSmith Integration" icon="brain" href="./langsmith">
+    Track LLM performance, prompts, and chain execution with LangSmith
+  </Card>
+
+  <Card title="Grafana Dashboards" icon="gauge" href="./dashboards">
+    Create comprehensive dashboards for metrics visualization and alerting
+  </Card>
+
+  <Card title="Alerting & SLOs" icon="bell" href="./alerting">
+    Configure Alertmanager, define SLOs, and set up health checks
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+For a rapid setup, follow this recommended order:
+
+1. **[Prometheus Metrics](./prometheus)** - Start with metrics collection
+2. **[Distributed Tracing](./distributed-tracing)** - Add tracing for request flow
+3. **[Structured Logging](./logging)** - Implement centralized logging
+4. **[Grafana Dashboards](./dashboards)** - Visualize metrics and traces
+5. **[Alerting & SLOs](./alerting)** - Set up alerts and health checks
+6. **[LangSmith Integration](./langsmith)** - Add LLM-specific observability
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Scaling" icon="arrow-up-right-dots" href="/deployment/scaling">
+    Auto-scaling configuration
+  </Card>
+  <Card title="Disaster Recovery" icon="life-ring" href="/deployment/disaster-recovery">
+    Backup and recovery
+  </Card>
+  <Card title="Alerting" icon="bell" href="./alerting">
+    Alert configuration with Alertmanager
+  </Card>
+  <Card title="Security Best Practices" icon="shield" href="/security/best-practices">
+    Security hardening guide
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Ready to Start**: Choose a monitoring component above to begin your observability setup!
+</Check>

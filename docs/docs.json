@@ -86,7 +86,11 @@
               "reference/development/ide-setup",
               "reference/development/github-actions",
               "reference/development/build-verification",
-              "reference/development/ci-cd",
+              "reference/development/ci-cd/overview",
+              "reference/development/ci-cd/workflows",
+              "reference/development/ci-cd/testing",
+              "reference/development/ci-cd/deployment",
+              "reference/development/ci-cd/troubleshooting",
               "reference/development/development"
             ]
           },
@@ -204,13 +208,24 @@
             ]
           },
           {
+            "group": "Monitoring & Observability",
+            "pages": [
+              "deployment/monitoring/overview",
+              "deployment/monitoring/prometheus",
+              "deployment/monitoring/distributed-tracing",
+              "deployment/monitoring/logging",
+              "deployment/monitoring/langsmith",
+              "deployment/monitoring/dashboards",
+              "deployment/monitoring/alerting"
+            ]
+          },
+          {
             "group": "Advanced",
             "pages": [
               "deployment/advanced/api-gateway",
               "deployment/kong-gateway",
               "deployment/keycloak-jwt-deployment",
               "deployment/vertex-ai-workload-identity",
-              "deployment/monitoring",
               "deployment/log-aggregation",
               "deployment/scaling",
               "deployment/cost-optimization",
@@ -408,11 +423,34 @@
         "tab": "Compliance",
         "groups": [
           {
-            "group": "Compliance Frameworks",
+            "group": "GDPR Compliance",
             "pages": [
-              "compliance/gdpr-compliance",
-              "compliance/hipaa-compliance",
-              "compliance/soc2-compliance"
+              "compliance/gdpr/overview",
+              "compliance/gdpr/data-protection-principles",
+              "compliance/gdpr/data-subject-rights",
+              "compliance/gdpr/data-protection-design",
+              "compliance/gdpr/dpia",
+              "compliance/gdpr/dpa-template"
+            ]
+          },
+          {
+            "group": "HIPAA Compliance",
+            "pages": [
+              "compliance/hipaa/overview",
+              "compliance/hipaa/technical-safeguards",
+              "compliance/hipaa/baa-template",
+              "compliance/hipaa/compliance-checklist",
+              "compliance/hipaa/deployment",
+              "compliance/hipaa/breach-response"
+            ]
+          },
+          {
+            "group": "SOC 2 Compliance",
+            "pages": [
+              "compliance/soc2/overview",
+              "compliance/soc2/trust-criteria",
+              "compliance/soc2/evidence-audit",
+              "compliance/soc2/readiness"
             ]
           }
         ]

@@ -1,0 +1,188 @@
+---
+title: "HIPAA Breach Response & FAQs"
+description: "Incident response procedures, breach notification requirements, and frequently asked questions"
+icon: "bell-exclamation"
+seoTitle: "HIPAA Breach Response - Incident Management"
+seoDescription: "HIPAA breach response procedures, notification requirements, and frequently asked questions about compliance"
+keywords: ["HIPAA", "breach response", "incident response", "notification", "FAQ", "security incident"]
+contentType: "how-to"
+---
+
+## Breach Response Procedure
+
+### Incident Response Plan
+
+<AccordionGroup>
+  <Accordion title="Step 1: Detection and Containment (< 1 hour)">
+    **Immediate Actions:**
+
+    1. **Detect**: Automated alert or manual discovery
+    2. **Isolate**: Quarantine affected systems immediately
+    3. **Preserve Evidence**: Take snapshots, preserve logs
+    4. **Notify**: Alert HIPAA Security Officer
+
+    **Technical Response:**
+    ```bash
+    # Isolate compromised pod
+    kubectl cordon node-123
+    kubectl drain node-123 --ignore-daemonsets
+
+    # Preserve evidence
+    kubectl logs pod-123 > incident-$(date +%Y%m%d-%H%M%S).log
+    kubectl exec pod-123 -- tar czf /tmp/forensics.tar.gz /var/log /app
+
+    # Revoke compromised credentials
+    kubectl delete secret compromised-secret
+    ```
+
+    **Documentation**: Create incident ticket in `incidents/INC-YYYYMMDD-001`
+  </Accordion>
+
+  <Accordion title="Step 2: Assessment (< 24 hours)">
+    **Determine Breach Scope:**
+
+    - Number of individuals affected
+    - Types of PHI involved (SSN, diagnosis, etc.)
+    - When breach occurred
+    - How breach occurred
+    - Who had unauthorized access
+
+    **Query Audit Logs:**
+    ```sql
+    -- Find all PHI accessed by unauthorized user
+    SELECT
+      resource->>'patient_id' as patient_id,
+      resource->>'type' as phi_type,
+      timestamp
+    FROM audit_logs
+    WHERE user->>'id' = 'compromised_user_id'
+      AND timestamp BETWEEN 'breach_start' AND 'breach_end'
+      AND event_type IN ('phi_read', 'phi_export');
+    ```
+
+    **Risk Assessment**: Determine if breach notification required
+  </Accordion>
+
+  <Accordion title="Step 3: Notification (< 60 days)">
+    **Notification Requirements (if ≥500 individuals affected):**
+
+    - **Individuals**: Written notification within 60 days
+    - **HHS**: Notification within 60 days
+    - **Media**: Notification if in same state/jurisdiction
+
+    **Notification Content Must Include:**
+    - Description of what happened
+    - Types of PHI involved
+    - Steps individuals should take
+    - What organization is doing
+    - Contact information for questions
+
+    **Template**: Use `docs/compliance/breach-notification-template.md`
+  </Accordion>
+
+  <Accordion title="Step 4: Remediation and Prevention">
+    **Root Cause Analysis:**
+
+    - Identify how breach occurred
+    - Document vulnerabilities exploited
+    - Assess control failures
+
+    **Corrective Actions:**
+
+    - Patch vulnerabilities
+    - Update access controls
+    - Enhance monitoring
+    - Additional training
+    - Policy updates
+
+    **Documentation**: Create post-incident report
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Is MCP Server HIPAA-certified?">
+    **No**. There is no official "HIPAA certification." HIPAA compliance is achieved by:
+
+    1. **Implementing technical safeguards** (MCP Server provides these)
+    2. **Establishing administrative controls** (your organization's responsibility)
+    3. **Maintaining physical security** (your data center / cloud provider)
+    4. **Obtaining BAAs** (your legal/procurement responsibility)
+
+    **MCP Server is HIPAA-ready**: We provide the technical foundation, but full compliance requires your organization's policies, procedures, and BAAs.
+  </Accordion>
+
+  <Accordion title="Which LLM providers can I use for PHI?">
+    **Safe for PHI (with BAA):**
+    - ✅ Anthropic Claude (Enterprise plan with BAA)
+    - ✅ Google Gemini via Vertex AI (covered under GCP BAA)
+    - ✅ AWS Bedrock models (verify specific model coverage in BAA)
+
+    **NOT safe for PHI:**
+    - ❌ OpenAI (no BAA available)
+    - ❌ Ollama/local models (unless you have proper controls)
+
+    **Recommendation**: Use Google Gemini via Vertex AI for HIPAA deployments (covered under GCP BAA, cost-effective).
+  </Accordion>
+
+  <Accordion title="What is the minimum retention period for audit logs?">
+    **HIPAA Requirement**: 7 years from date of creation or last effective date
+
+    **MCP Server Default**: 2,555 days (7 years) configured in `audit.yaml`
+
+    **Storage Recommendation**: Use encrypted S3/GCS with lifecycle policies for cost-effective long-term storage.
+  </Accordion>
+
+  <Accordion title="Do I need to encrypt PHI at the application level?">
+    **Not required, but strongly recommended.**
+
+    **HIPAA Addressable**: Encryption at rest is "addressable" (not mandatory if justified)
+
+    **Best Practice**: Use both database encryption AND application-level encryption for defense in depth:
+    - Database encryption protects against storage layer breaches
+    - Application encryption protects against database compromises
+
+    **MCP Server**: Provides application-level encryption utilities in `src/encryption/`
+  </Accordion>
+
+  <Accordion title="What happens if I have a breach?">
+    **Required Actions:**
+
+    1. **Contain** the breach immediately (< 1 hour)
+    2. **Assess** scope and risk (< 24 hours)
+    3. **Notify** affected individuals (< 60 days if ≥500 people)
+    4. **Report** to HHS (< 60 days if ≥500 people)
+    5. **Remediate** vulnerabilities
+    6. **Document** everything
+
+    **Penalties**: $100 to $50,000 per violation (up to $1.5M per year)
+
+    **Best Defense**: Prevention through proper controls and regular audits
+  </Accordion>
+</AccordionGroup>
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deployment Architecture" icon="diagram-project" href="./deployment">
+    Review monitoring and alerting
+  </Card>
+  <Card title="Compliance Checklist" icon="list-check" href="./compliance-checklist">
+    Verify incident response readiness
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to HIPAA overview
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**HIPAA Compliance**: Complete guide covering all technical, administrative, and physical safeguards!
+</Check>

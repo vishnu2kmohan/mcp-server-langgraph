@@ -1,0 +1,370 @@
+---
+title: "Data Protection Principles"
+description: "GDPR Article 5: Data protection principles including lawfulness, fairness, and transparency"
+icon: "scale-balanced"
+seoTitle: "GDPR Data Protection Principles - Article 5"
+seoDescription: "Implement GDPR data protection principles: lawfulness, fairness, transparency, purpose limitation, and data minimization"
+keywords: ["GDPR", "data protection", "Article 5", "principles", "lawfulness", "transparency", "data minimization"]
+contentType: "reference"
+---
+
+## Data Protection Principles (Article 5)
+
+### 1. Lawfulness, Fairness, and Transparency
+
+**Implementation:**
+
+```python
+# src/models/consent.py
+from enum import Enum
+from datetime import datetime
+from pydantic import BaseModel
+
+class LawfulBasis(str, Enum):
+    """GDPR Article 6 lawful bases for processing."""
+    CONSENT = "consent"  # Article 6(1)(a)
+    CONTRACT = "contract"  # Article 6(1)(b)
+    LEGAL_OBLIGATION = "legal_obligation"  # Article 6(1)(c)
+    VITAL_INTERESTS = "vital_interests"  # Article 6(1)(d)
+    PUBLIC_TASK = "public_task"  # Article 6(1)(e)
+    LEGITIMATE_INTERESTS = "legitimate_interests"  # Article 6(1)(f)
+
+class ConsentRecord(BaseModel):
+    """Record of user consent for GDPR compliance."""
+    user_id: str
+    lawful_basis: LawfulBasis
+    purpose: str
+    consent_given: bool
+    consent_timestamp: datetime
+    consent_version: str  # Privacy policy version
+    consent_method: str  # e.g., "web_form", "api", "explicit_opt_in"
+    can_withdraw: bool
+    withdrawal_method: str | None
+
+    # Special categories (Article 9)
+    special_category_data: bool = False
+    special_category_consent: bool | None = None
+
+class ConsentManager:
+    """Manage user consent for GDPR compliance."""
+
+    async def record_consent(
+        self,
+        user_id: str,
+        purpose: str,
+        lawful_basis: LawfulBasis,
+        privacy_policy_version: str
+    ) -> ConsentRecord:
+        """Record user consent with full audit trail."""
+        consent = ConsentRecord(
+            user_id=user_id,
+            lawful_basis=lawful_basis,
+            purpose=purpose,
+            consent_given=True,
+            consent_timestamp=datetime.utcnow(),
+            consent_version=privacy_policy_version,
+            consent_method="explicit_opt_in",
+            can_withdraw=True,
+            withdrawal_method="account_settings"
+        )
+
+        await self.db.consents.insert_one(consent.dict())
+        await self.audit_log.info(
+            event="consent_recorded",
+            user_id=user_id,
+            purpose=purpose,
+            lawful_basis=lawful_basis
+        )
+
+        return consent
+
+    async def check_consent(self, user_id: str, purpose: str) -> bool:
+        """Verify user has valid consent for processing purpose."""
+        consent = await self.db.consents.find_one({
+            "user_id": user_id,
+            "purpose": purpose,
+            "consent_given": True
+        })
+
+        return consent is not None
+
+    async def withdraw_consent(self, user_id: str, purpose: str):
+        """Allow user to withdraw consent (Article 7(3))."""
+        await self.db.consents.update_one(
+            {"user_id": user_id, "purpose": purpose},
+            {
+                "$set": {
+                    "consent_given": False,
+                    "withdrawal_timestamp": datetime.utcnow()
+                }
+            }
+        )
+
+        await self.audit_log.info(
+            event="consent_withdrawn",
+            user_id=user_id,
+            purpose=purpose
+        )
+
+        # Stop processing immediately
+        await self.stop_processing_for_purpose(user_id, purpose)
+```
+
+---
+
+### 2. Purpose Limitation (Article 5(1)(b))
+
+**Requirement**: Personal data collected for specified, explicit, and legitimate purposes.
+
+```python
+# config/processing_purposes.yaml
+processing_purposes:
+  # Define explicit purposes for data processing
+  - id: "agent_interaction"
+    name: "AI Agent Interactions"
+    description: "Process user queries to provide AI agent responses"
+    lawful_basis: "consent"
+    data_collected:
+      - user_query
+      - conversation_history
+      - user_preferences
+    retention_period: "30_days"
+    storage_location: "EU"
+
+  - id: "service_improvement"
+    name: "Service Quality Improvement"
+    description: "Analyze usage patterns to improve agent responses"
+    lawful_basis: "legitimate_interests"
+    data_collected:
+      - aggregated_usage_stats
+      - error_rates
+      - response_times
+    retention_period: "365_days"
+    storage_location: "EU"
+    legitimate_interest_assessment: "docs/gdpr/lia-service-improvement.pdf"
+
+  - id: "legal_compliance"
+    name: "Legal and Regulatory Compliance"
+    description: "Maintain records for legal obligations"
+    lawful_basis: "legal_obligation"
+    data_collected:
+      - audit_logs
+      - security_events
+    retention_period: "7_years"
+    storage_location: "EU"
+```
+
+---
+
+### 3. Data Minimization (Article 5(1)(c))
+
+**Requirement**: Personal data shall be adequate, relevant, and limited to what is necessary.
+
+```python
+# src/middleware/data_minimization.py
+from typing import Dict, Any, List
+
+class DataMinimization:
+    """Implement GDPR data minimization principle."""
+
+    # Define minimum required fields per purpose
+    MINIMAL_DATA = {
+        "agent_interaction": [
+            "query",  # User's question
+            "session_id",  # For conversation continuity
+            "timestamp"  # For rate limiting
+        ],
+        "service_improvement": [
+            "response_time",  # Performance metrics
+            "error_code",  # Error tracking
+            "model_used"  # Model performance comparison
+        ]
+    }
+
+    def minimize_data(
+        self,
+        data: Dict[str, Any],
+        purpose: str
+    ) -> Dict[str, Any]:
+        """Remove unnecessary fields based on processing purpose."""
+        allowed_fields = self.MINIMAL_DATA.get(purpose, [])
+
+        minimized = {
+            key: value
+            for key, value in data.items()
+            if key in allowed_fields
+        }
+
+        # Log if data was stripped (for transparency)
+        if len(minimized) < len(data):
+            removed_fields = set(data.keys()) - set(minimized.keys())
+            self.audit_log.info(
+                event="data_minimized",
+                purpose=purpose,
+                removed_fields=list(removed_fields)
+            )
+
+        return minimized
+
+    def anonymize_for_analytics(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Anonymize data for analytics (no longer personal data)."""
+        return {
+            "session_hash": self.hash_session_id(data.get("session_id")),
+            "response_time_ms": data.get("response_time"),
+            "model": data.get("model"),
+            "status": data.get("status"),
+            # Remove all personally identifiable information
+        }
+```
+
+---
+
+### 4. Accuracy (Article 5(1)(d))
+
+**Requirement**: Personal data shall be accurate and kept up to date.
+
+```python
+# src/services/data_accuracy.py
+from datetime import datetime, timedelta
+
+class DataAccuracy:
+    """Ensure personal data accuracy per GDPR."""
+
+    async def validate_data_freshness(self, user_id: str):
+        """Check if user data needs revalidation."""
+        user = await self.db.users.find_one({"id": user_id})
+
+        # Require revalidation after 12 months
+        if user["last_verified"] < datetime.utcnow() - timedelta(days=365):
+            await self.request_data_revalidation(user_id)
+
+    async def request_data_revalidation(self, user_id: str):
+        """Ask user to confirm data accuracy."""
+        await self.notifications.send(
+            user_id=user_id,
+            type="data_verification",
+            message="Please verify your personal information is accurate",
+            action_url="/account/verify"
+        )
+
+    async def update_data(self, user_id: str, updated_data: Dict[str, Any]):
+        """Update personal data with accuracy verification."""
+        # Validate data format
+        validated = self.validate_data_format(updated_data)
+
+        # Update with version tracking
+        await self.db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    **validated,
+                    "last_updated": datetime.utcnow(),
+                    "last_verified": datetime.utcnow(),
+                    "updated_by": user_id
+                }
+            }
+        )
+
+        await self.audit_log.info(
+            event="personal_data_updated",
+            user_id=user_id,
+            fields_updated=list(validated.keys())
+        )
+```
+
+---
+
+### 5. Storage Limitation (Article 5(1)(e))
+
+**Requirement**: Personal data kept only as long as necessary for the purposes.
+
+```yaml
+# config/retention_policy.yaml
+retention_policy:
+  # Automatic deletion schedules
+  data_types:
+    - type: "conversation_history"
+      retention: "30_days"
+      deletion_method: "automatic"
+      legal_basis: "no_longer_necessary"
+
+    - type: "user_preferences"
+      retention: "until_account_deletion"
+      deletion_method: "on_request"
+      legal_basis: "consent_withdrawn"
+
+    - type: "audit_logs"
+      retention: "7_years"
+      deletion_method: "automatic"
+      legal_basis: "legal_obligation"
+
+    - type: "aggregated_analytics"
+      retention: "indefinite"
+      deletion_method: "not_applicable"
+      legal_basis: "anonymized_no_personal_data"
+
+  # Automated cleanup jobs
+  cleanup_schedule: "daily"
+  cleanup_time: "02:00_UTC"
+```
+
+**Implementation:**
+
+```python
+# src/jobs/retention_cleanup.py
+from datetime import datetime, timedelta
+
+class RetentionCleanup:
+    """Automated data deletion per GDPR retention policy."""
+
+    async def run_cleanup(self):
+        """Run scheduled data cleanup job."""
+        retention_config = await self.load_retention_policy()
+
+        for data_type_config in retention_config["data_types"]:
+            if data_type_config["deletion_method"] == "automatic":
+                await self.cleanup_expired_data(data_type_config)
+
+    async def cleanup_expired_data(self, config: Dict[str, Any]):
+        """Delete data past retention period."""
+        data_type = config["type"]
+        retention_days = self.parse_retention_period(config["retention"])
+
+        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+
+        # Find expired records
+        expired = await self.db[data_type].count_documents({
+            "created_at": {"$lt": cutoff_date}
+        })
+
+        if expired > 0:
+            # Delete expired records
+            result = await self.db[data_type].delete_many({
+                "created_at": {"$lt": cutoff_date}
+            })
+
+            await self.audit_log.info(
+                event="automated_data_deletion",
+                data_type=data_type,
+                records_deleted=result.deleted_count,
+                retention_period=config["retention"],
+                legal_basis=config["legal_basis"]
+            )
+```
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Data Subject Rights" icon="user-shield" href="./data-subject-rights">
+    Implement data subject rights
+  </Card>
+  <Card title="Privacy by Design" icon="drafting-compass" href="./data-protection-design">
+    Apply privacy by design
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to GDPR overview
+  </Card>
+</CardGroup>

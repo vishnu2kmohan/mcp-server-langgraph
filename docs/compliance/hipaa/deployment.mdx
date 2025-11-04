@@ -1,0 +1,162 @@
+---
+title: "HIPAA Deployment Architecture"
+description: "HIPAA-compliant deployment architecture, monitoring, and alerting setup"
+icon: "diagram-project"
+seoTitle: "HIPAA Deployment Architecture - Secure Infrastructure"
+seoDescription: "Design and deploy HIPAA-compliant infrastructure with proper monitoring, alerting, and security controls"
+keywords: ["HIPAA", "deployment", "architecture", "monitoring", "alerting", "infrastructure", "security"]
+contentType: "how-to"
+---
+
+## Deployment Architecture for HIPAA
+
+### Reference Architecture
+
+```mermaid
+flowchart TB
+    subgraph "Public Internet"
+        User[Healthcare Provider]
+    end
+
+    subgraph "DMZ / Edge"
+        WAF[Web Application Firewall]
+        LB[Load Balancer - TLS 1.3]
+    end
+
+    subgraph "Private Network - GKE"
+        Ingress[NGINX Ingress Controller]
+
+        subgraph "MCP Server Pods"
+            API1[API Server Pod 1]
+            API2[API Server Pod 2]
+            Auth[Auth Service]
+        end
+
+        subgraph "Data Layer - Encrypted"
+            DB[(PostgreSQL<br/>Encrypted at Rest)]
+            Redis[(Redis<br/>Session Store)]
+            Secrets[Infisical<br/>Secrets Manager]
+        end
+
+        subgraph "Observability - Isolated"
+            Audit[(Audit Logs<br/>7-Year Retention)]
+            Prometheus[Prometheus]
+            Grafana[Grafana]
+        end
+    end
+
+    subgraph "LLM Provider"
+        Gemini[Google Gemini<br/>via Vertex AI<br/>BAA Required]
+    end
+
+    User -->|HTTPS TLS 1.3| WAF
+    WAF --> LB
+    LB --> Ingress
+    Ingress --> API1
+    Ingress --> API2
+    API1 --> Auth
+    API2 --> Auth
+    API1 --> DB
+    API2 --> DB
+    API1 --> Redis
+    API2 --> Redis
+    API1 --> Secrets
+    API2 --> Secrets
+    API1 -.Audit Logs.-> Audit
+    API2 -.Audit Logs.-> Audit
+    API1 -->|mTLS| Gemini
+    API2 -->|mTLS| Gemini
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef encrypted fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px
+    classDef monitored fill:#80b1d3,stroke:#3498db,stroke-width:2px
+    classDef external fill:#fdb462,stroke:#e67e22,stroke-width:2px
+
+    class DB,Redis,Secrets,Audit encrypted
+    class Prometheus,Grafana monitored
+    class Gemini external
+```
+
+---
+
+## Monitoring and Alerting
+
+### HIPAA-Specific Alerts
+
+```yaml
+# prometheus/alerts/hipaa.yaml
+groups:
+  - name: hipaa_compliance
+    interval: 60s
+    rules:
+      # Unauthorized access attempts
+      - alert: UnauthorizedPHIAccess
+        expr: rate(audit_log_events{event_type="phi_access_denied"}[5m]) > 5
+        for: 1m
+        annotations:
+          summary: "High rate of unauthorized PHI access attempts"
+          description: "{{ $value }} unauthorized access attempts in the last 5 minutes"
+        labels:
+          severity: critical
+          compliance: hipaa
+
+      # Failed authentication
+      - alert: FailedLoginAttempts
+        expr: rate(audit_log_events{event_type="failed_login_attempt"}[5m]) > 10
+        for: 2m
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "Possible brute force attack detected"
+        labels:
+          severity: warning
+          compliance: hipaa
+
+      # Audit log gaps
+      - alert: AuditLogGap
+        expr: absent_over_time(audit_log_events[10m])
+        for: 5m
+        annotations:
+          summary: "Audit logging not functioning"
+          description: "No audit logs received in the last 10 minutes"
+        labels:
+          severity: critical
+          compliance: hipaa
+
+      # Encryption failures
+      - alert: EncryptionFailure
+        expr: rate(encryption_errors_total[5m]) > 0
+        for: 1m
+        annotations:
+          summary: "PHI encryption failures detected"
+          description: "{{ $value }} encryption errors in the last 5 minutes"
+        labels:
+          severity: critical
+          compliance: hipaa
+
+      # Session timeout violations
+      - alert: SessionTimeoutViolation
+        expr: active_sessions_duration_seconds > 900  # 15 minutes
+        annotations:
+          summary: "Active session exceeds HIPAA timeout requirement"
+          description: "Session {{ $labels.session_id }} has been active for {{ $value }}s"
+        labels:
+          severity: warning
+          compliance: hipaa
+```
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Technical Safeguards" icon="shield" href="./technical-safeguards">
+    Implement security measures
+  </Card>
+  <Card title="Compliance Checklist" icon="list-check" href="./compliance-checklist">
+    Verify deployment compliance
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to HIPAA overview
+  </Card>
+</CardGroup>

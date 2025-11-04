@@ -1,0 +1,116 @@
+---
+title: "Structured Logging"
+description: "Implement structured JSON logging with correlation IDs and centralized aggregation"
+icon: "file-lines"
+seoTitle: "Structured Logging - Centralized Log Management"
+seoDescription: "Set up structured JSON logging with correlation IDs, centralized aggregation, and comprehensive error tracking"
+keywords: ["logging", "structured logging", "JSON logging", "correlation IDs", "log aggregation", "error tracking"]
+contentType: "how-to"
+---
+
+### Structured Logging
+
+#### Configure Structured JSON Logging
+
+```python
+import structlog
+from structlog.stdlib import BoundLogger
+import logging
+
+## Configure structlog
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.StackInfoRenderer(),
+        structlog.dev.set_exc_info,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.JSONRenderer()
+    ],
+    wrapper_class=BoundLogger,
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
+
+logger = structlog.get_logger()
+
+## Usage
+@app.post("/chat")
+async def chat(query: str, user_id: str):
+    logger.info(
+        "Chat request received",
+        user_id=user_id,
+        query_length=len(query),
+        endpoint="/chat"
+    )
+
+    try:
+        response = await llm.ainvoke(query)
+
+        logger.info(
+            "LLM response generated",
+            user_id=user_id,
+            model="claude-3-5-sonnet-20241022",
+            prompt_tokens=response.usage.prompt_tokens,
+            completion_tokens=response.usage.completion_tokens,
+            latency_ms=(time.time() - start_time) * 1000
+        )
+
+        return response
+
+    except Exception as e:
+        logger.error(
+            "Chat request failed",
+            user_id=user_id,
+            error=str(e),
+            error_type=type(e).__name__,
+            exc_info=True
+        )
+        raise
+```
+#### Correlation IDs
+
+Track requests across services:
+
+```python
+from contextvars import ContextVar
+import uuid
+
+request_id_var: ContextVar[str] = ContextVar("request_id", default="")
+
+@app.middleware("http")
+async def add_correlation_id(request: Request, call_next):
+    # Get or create correlation ID
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    request_id_var.set(request_id)
+
+    # Add to structlog context
+    structlog.contextvars.bind_contextvars(request_id=request_id)
+
+    # Process request
+    response = await call_next(request)
+
+    # Add to response headers
+    response.headers["X-Request-ID"] = request_id
+
+    return response
+```
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="LangSmith Integration" icon="brain" href="./langsmith">
+    Add LLM-specific observability
+  </Card>
+  <Card title="Distributed Tracing" icon="route" href="./distributed-tracing">
+    Correlate logs with traces
+  </Card>
+  <Card title="Alerting" icon="bell" href="./alerting">
+    Set up log-based alerts
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to monitoring overview
+  </Card>
+</CardGroup>

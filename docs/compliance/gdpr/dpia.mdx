@@ -1,0 +1,93 @@
+---
+title: "Data Protection Impact Assessment (DPIA)"
+description: "GDPR DPIA process, template, and risk assessment methodology"
+icon: "clipboard-check"
+seoTitle: "DPIA - Data Protection Impact Assessment Process"
+seoDescription: "Complete GDPR Data Protection Impact Assessment process with templates for risk assessment and mitigation"
+keywords: ["DPIA", "Data Protection Impact Assessment", "GDPR", "risk assessment", "privacy assessment"]
+contentType: "how-to"
+---
+
+## Data Protection Impact Assessment (DPIA)
+
+**Required for high-risk processing (Article 35):**
+
+### DPIA Template
+
+```markdown
+# Data Protection Impact Assessment (DPIA)
+
+## 1. Description of Processing Operation
+
+**Processing Activity**: AI Agent Query Processing
+**Purpose**: Provide AI-powered responses to user queries
+**Data Controller**: [Your Organization]
+**Data Processor**: MCP Server with LangGraph
+
+**Personal Data Processed**:
+- User queries (may contain personal information)
+- User preferences
+- Conversation history
+- Usage analytics
+
+## 2. Necessity and Proportionality Assessment
+
+**Is processing necessary?** Yes
+**Justification**: Required to provide core service functionality
+
+**Is data collection proportionate?** Yes
+**Data Minimization**: Only collect query text and minimal session data
+
+## 3. Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Unauthorized access to queries | Low | High | End-to-end encryption, access controls |
+| Data breach | Low | High | Encryption at rest, security monitoring |
+| Profiling without consent | Medium | Medium | Explicit opt-in required, transparency |
+| Third-party data sharing | Low | High | DPAs required, user consent |
+
+## 4. Measures to Address Risks
+
+**Technical Measures:**
+- Encryption in transit (TLS 1.3)
+- Encryption at rest (AES-256)
+- Pseudonymization of user identifiers
+- Access controls (OpenFGA)
+- Audit logging (7-year retention)
+
+**Organizational Measures:**
+- Privacy training for staff
+- Data protection policies
+- Breach notification procedures
+- Regular security audits
+
+## 5. Consultation with DPO
+
+**DPO Consulted**: [Name], [Date]
+**DPO Opinion**: Risks adequately mitigated with proposed measures
+**DPO Signature**: __________________
+
+## 6. Approval
+
+**Approved By**: [Data Controller]
+**Date**: [Date]
+**Review Date**: [Annual review]
+```
+
+---
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="DPA Template" icon="file-contract" href="./dpa-template">
+    Review Data Processing Agreement
+  </Card>
+  <Card title="Privacy by Design" icon="drafting-compass" href="./data-protection-design">
+    Implement privacy controls
+  </Card>
+  <Card title="Back to Overview" icon="arrow-left" href="./overview">
+    Return to GDPR overview
+  </Card>
+</CardGroup>
