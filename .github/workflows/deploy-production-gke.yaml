@@ -251,6 +251,33 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
+      - name: Verify External Secrets Operator
+        run: |
+          echo "Verifying External Secrets Operator is installed..."
+
+          # Check if ESO is running
+          if ! kubectl get deployment -n external-secrets-system external-secrets 2>/dev/null; then
+            echo "❌ External Secrets Operator not found!"
+            echo "Please install ESO before deploying to production"
+            exit 1
+          fi
+
+          # Verify CRDs exist
+          kubectl get crd secretstores.external-secrets.io
+          kubectl get crd externalsecrets.external-secrets.io
+          kubectl get crd clustersecretstores.external-secrets.io
+
+          # Verify ESO deployment is healthy
+          ESO_READY=$(kubectl get deployment -n external-secrets-system external-secrets -o jsonpath='{.status.readyReplicas}')
+          ESO_DESIRED=$(kubectl get deployment -n external-secrets-system external-secrets -o jsonpath='{.spec.replicas}')
+
+          if [ "$ESO_READY" != "$ESO_DESIRED" ]; then
+            echo "❌ External Secrets Operator not ready: $ESO_READY/$ESO_DESIRED replicas"
+            exit 1
+          fi
+
+          echo "✓ External Secrets Operator verified ($ESO_READY/$ESO_DESIRED replicas ready)"
+
       - name: Update Kustomization with new image tag
         run: |
           cd deployments/overlays/production-gke

@@ -77,12 +77,21 @@ jobs:
             echo "✅ No drift detected"
           fi
 
-      - name: Save drift plan
+      - name: Save drift plan (text)
         if: steps.plan.outputs.drift_detected == 'true'
         uses: actions/upload-artifact@v5
         with:
-          name: drift-plan-production
+          name: drift-plan-production-txt
           path: /tmp/drift-plan.txt
+          retention-days: 90
+
+      - name: Save drift plan (binary)
+        if: steps.plan.outputs.drift_detected == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: drift-plan-production-binary
+          path: terraform/environments/gcp-prod/tfplan
+          retention-days: 90
 
       - name: Create drift issue
         if: steps.plan.outputs.drift_detected == 'true'

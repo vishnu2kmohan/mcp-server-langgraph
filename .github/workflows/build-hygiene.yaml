@@ -85,3 +85,15 @@ jobs:
         run: |
           echo "✅ Build hygiene check passed"
           echo "No build artifacts found in repository"
+
+          # Write to step summary
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ## ✅ Build Hygiene Check Passed
+
+          All checks completed successfully:
+          - ✅ No \`__pycache__\` directories committed
+          - ✅ No \`.pyc\` files committed
+          - ✅ No \`.pyo\` files committed
+
+          Your repository is clean of Python build artifacts.
+          EOF

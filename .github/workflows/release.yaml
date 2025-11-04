@@ -4,6 +4,19 @@ name: Release
 # Release - Automated Release Publication
 # ==============================================================================
 #
+# WORKFLOW DEPENDENCY GRAPH:
+#
+#   create-release ──┬──> build-and-push (amd64, arm64) ──┬──> publish-helm
+#                    │                                      │
+#                    ├──> publish-pypi ─────────────────────┤
+#                    │                                      │
+#                    └──> update-mcp-registry ──────────────┴──> notify (all complete)
+#
+#   Jobs run in parallel after create-release:
+#   - build-and-push (matrix: platforms)
+#   - publish-pypi (for stable releases only)
+#   - update-mcp-registry
+#
 # Purpose:
 #   Automate the creation and publication of releases including GitHub releases,
 #   Docker images, Helm charts, PyPI packages, and registry updates.
@@ -82,12 +95,15 @@ jobs:
 
     - name: Extract CHANGELOG section
       id: extract_changelog
+      env:
+        REF_NAME: ${{ github.ref_name }}
+        REPOSITORY: ${{ github.repository }}
       run: |
         uv run python scripts/ci/extract-changelog.py \
-          ${{ github.ref_name }} \
+          "$REF_NAME" \
           --changelog CHANGELOG.md \
           --output release_notes.md \
-          --repository ${{ github.repository }}
+          --repository "$REPOSITORY"
 
         # Set output based on script exit code
         if [ $? -eq 0 ]; then
@@ -98,10 +114,12 @@ jobs:
 
     - name: Create Release
       id: create_release
+      env:
+        TAG_NAME: ${{ github.ref_name }}
       uses: ncipollo/release-action@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.ref_name }}
+        tag: ${{ env.TAG_NAME }}
         name: Release ${{ github.ref_name }}
         bodyFile: release_notes.md
         draft: false

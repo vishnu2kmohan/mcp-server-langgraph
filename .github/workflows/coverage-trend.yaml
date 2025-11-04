@@ -158,3 +158,19 @@ jobs:
 
     # Note: Alert on significant coverage drop is now handled by track-coverage.py
     # The script will exit with code 1 if coverage drops > 5%, failing the workflow
+
+    - name: Enforce minimum coverage threshold
+      env:
+        CURRENT_COVERAGE: ${{ steps.coverage.outputs.coverage }}
+        MIN_COVERAGE: "80.0"
+      run: |
+        echo "Current coverage: ${CURRENT_COVERAGE}%"
+        echo "Minimum threshold: ${MIN_COVERAGE}%"
+
+        if (( $(python -c "print(1 if float('$CURRENT_COVERAGE') < float('$MIN_COVERAGE') else 0)") )); then
+          echo "❌ Coverage ${CURRENT_COVERAGE}% is below minimum threshold ${MIN_COVERAGE}%"
+          echo "Please add tests to improve coverage before merging."
+          exit 1
+        else
+          echo "✅ Coverage ${CURRENT_COVERAGE}% meets minimum threshold ${MIN_COVERAGE}%"
+        fi

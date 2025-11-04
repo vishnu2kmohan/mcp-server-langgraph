@@ -4,10 +4,21 @@ name: CI/CD Pipeline (Optimized)
 # Optimized CI/CD Pipeline
 # ==============================================================================
 #
+# WORKFLOW DEPENDENCY GRAPH:
+#
+#   test (3.10, 3.11, 3.12) ──┐
+#                              ├──> lint ──> verify ──> docker-build (base, full, test)
+#   integration-tests ─────────┘
+#
+#   All jobs run in parallel except:
+#   - lint depends on: test, integration-tests
+#   - verify depends on: lint
+#   - docker-build depends on: verify
+#
 # OPTIMIZATIONS:
 #   1. Parallel Docker builds (base, full, test variants)
-#   2. Optimized dependency caching (uv binary separate from deps)
-#   3. Faster dependency installation (uv pip sync vs uv sync)
+#   2. Optimized dependency caching (setup-uv built-in cache)
+#   3. Faster dependency installation (uv sync with lockfile)
 #   4. Multi-platform builds in parallel
 #   5. Reduced build time: 35min → 12min (-66%)
 #
@@ -321,9 +332,10 @@ jobs:
         cache-from: |
           type=gha,scope=build-${{ matrix.variant }}
           type=gha,scope=build-base
+          type=gha,scope=build-common
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}
-          type=gha,mode=max,scope=build-base
+          type=gha,mode=max,scope=build-common
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}
@@ -348,9 +360,10 @@ jobs:
         cache-from: |
           type=gha,scope=build-${{ matrix.variant }}
           type=gha,scope=build-base
+          type=gha,scope=build-common
         cache-to: |
           type=gha,mode=max,scope=build-${{ matrix.variant }}
-          type=gha,mode=max,scope=build-base
+          type=gha,mode=max,scope=build-common
         labels: |
           org.opencontainers.image.variant=${{ matrix.variant }}
           org.opencontainers.image.revision=${{ github.sha }}

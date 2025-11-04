@@ -277,6 +277,12 @@ jobs:
               summary += '- Module issues: Ensure all required variables are defined\n';
             }
 
+            // Write to step summary (visible in Actions UI)
+            await core.summary
+              .addRaw(summary)
+              .write();
+
+            // Also comment on PR
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
