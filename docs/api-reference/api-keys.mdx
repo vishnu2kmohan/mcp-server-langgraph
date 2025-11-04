@@ -1,0 +1,666 @@
+---
+title: API Keys API
+description: 'API endpoints for managing API keys and long-lived authentication'
+icon: 'key-skeleton'
+---
+
+## Overview
+
+The API Keys API provides endpoints for creating and managing API keys - long-lived authentication credentials for programmatic access. API keys are ideal for scripts, automation, and integrations that need persistent authentication without interactive login.
+
+<Info>
+**v3.0** adds API key management with secure bcrypt hashing and Kong gateway integration for API key→JWT exchange.
+</Info>
+
+## Use Cases
+
+- **CLI Tools**: Command-line interfaces and developer tools
+- **Scripts & Automation**: Cron jobs, shell scripts, automated tasks
+- **CI/CD Integration**: Build pipelines, deployment automation
+- **Third-Party Integrations**: External systems that need API access
+- **Development & Testing**: Local development without SSO
+
+## API Key vs Service Principal
+
+<Tabs>
+  <Tab title="API Keys">
+    **User-scoped credentials**
+
+    - Tied to a specific user account
+    - Inherit user's permissions
+    - Limited to 5 keys per user
+    - Expire after configurable period (default: 365 days)
+    - Ideal for: CLI tools, scripts, personal automation
+
+    ```bash
+    curl https://api.yourdomain.com/message \
+      -H "X-API-Key: ak_abc123..."
+    ```
+  </Tab>
+
+  <Tab title="Service Principals">
+    **Machine identity credentials**
+
+    - Independent non-human identity
+    - Dedicated permissions (not user-based)
+    - No limit on number
+    - No expiration (manual rotation)
+    - Ideal for: Services, applications, microservices
+
+    ```bash
+    curl https://api.yourdomain.com/message \
+      -H "Authorization: Bearer eyJ0..."
+    ```
+
+    [See Service Principals API](/api-reference/service-principals)
+  </Tab>
+</Tabs>
+
+## Base URL
+
+```
+https://api.yourdomain.com/api/v1/api-keys
+```
+
+## Authentication
+
+All endpoints require user authentication:
+- `Authorization: Bearer {token}`
+- Users can only manage their own API keys
+
+---
+
+## Endpoints
+
+### POST /
+
+Create a new API key for the current user.
+
+Creates a cryptographically secure API key with bcrypt hashing. Maximum 5 keys per user - revoke an existing key before creating more.
+
+**Request Body**:
+
+<ParamField body="name" type="string" required>
+  Human-readable name for the API key (e.g., "Production CLI Tool")
+</ParamField>
+
+<ParamField body="expires_days" type="integer" default={365}>
+  Days until expiration (default: 365 days)
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.yourdomain.com/api/v1/api-keys/ \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Production CLI Tool",
+    "expires_days": 365
+  }'
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/api/v1/api-keys/",
+    headers={"Authorization": f"Bearer {token}"},
+    json={
+        "name": "Production CLI Tool",
+        "expires_days": 365
+    }
+)
+
+data = response.json()
+print(f"API Key: {data['api_key']}")
+print(f"Key ID: {data['key_id']}")
+# IMPORTANT: Save the api_key securely!
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.yourdomain.com/api/v1/api-keys/', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Production CLI Tool',
+    expires_days: 365
+  })
+});
+
+const data = await response.json();
+console.log('API Key:', data.api_key);
+console.log('Key ID:', data.key_id);
+// IMPORTANT: Save the api_key securely!
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "key_id": "key_abc123def456",
+  "name": "Production CLI Tool",
+  "created": "2025-10-29T10:00:00Z",
+  "expires_at": "2026-10-29T10:00:00Z",
+  "api_key": "ak_live_abc123def456xyz789...",
+  "message": "API key created successfully. Save it securely - it will not be shown again."
+}
+```
+
+<Warning>
+**Save the `api_key` securely** - it will not be shown again! Store it in a password manager or environment variable. The plain-text key is hashed with bcrypt before storage.
+</Warning>
+
+**Status Codes**:
+
+<ResponseField name="201" type="Created">
+  API key created successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid input or exceeded key limit
+  ```json
+  {
+    "error": "validation_error",
+    "message": "Maximum 5 API keys allowed per user. Revoke an existing key first."
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+---
+
+### GET /
+
+List all API keys for the current user.
+
+Returns metadata for all keys (name, created, expires, last_used). Does not include the actual API keys.
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl https://api.yourdomain.com/api/v1/api-keys/ \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+response = httpx.get(
+    "https://api.yourdomain.com/api/v1/api-keys/",
+    headers={"Authorization": f"Bearer {token}"}
+)
+
+api_keys = response.json()
+for key in api_keys:
+    print(f"{key['name']} (ID: {key['key_id']}) - Expires: {key['expires_at']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.yourdomain.com/api/v1/api-keys/', {
+  headers: {'Authorization': `Bearer ${token}`}
+});
+
+const apiKeys = await response.json();
+apiKeys.forEach(key => {
+  console.log(`${key.name} (ID: ${key.key_id}) - Expires: ${key.expires_at}`);
+});
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+[
+  {
+    "key_id": "key_abc123def456",
+    "name": "Production CLI Tool",
+    "created": "2025-10-29T10:00:00Z",
+    "expires_at": "2026-10-29T10:00:00Z",
+    "last_used": "2025-10-29T14:30:00Z"
+  },
+  {
+    "key_id": "key_xyz789",
+    "name": "Development Script",
+    "created": "2025-09-15T08:00:00Z",
+    "expires_at": "2026-09-15T08:00:00Z",
+    "last_used": null
+  }
+]
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  API keys retrieved successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+---
+
+### POST /{key_id}/rotate
+
+Rotate an API key.
+
+Generates a new API key while keeping the same `key_id`. The old key is invalidated immediately.
+
+**Path Parameters**:
+
+<ParamField path="key_id" type="string" required>
+  Unique identifier of the API key to rotate
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.yourdomain.com/api/v1/api-keys/key_abc123def456/rotate \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/api/v1/api-keys/key_abc123def456/rotate",
+    headers={"Authorization": f"Bearer {token}"}
+)
+
+data = response.json()
+print(f"New API Key: {data['new_api_key']}")
+# IMPORTANT: Update your client configuration immediately!
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.yourdomain.com/api/v1/api-keys/key_abc123def456/rotate',
+  {
+    method: 'POST',
+    headers: {'Authorization': `Bearer ${token}`}
+  }
+);
+
+const data = await response.json();
+console.log('New API Key:', data.new_api_key);
+// IMPORTANT: Update your client configuration immediately!
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "key_id": "key_abc123def456",
+  "new_api_key": "ak_live_newkey123...",
+  "message": "API key rotated successfully. Update your client configuration."
+}
+```
+
+<Warning>
+**Update your client configuration immediately!** The old API key is invalidated and will no longer work. Save the new `new_api_key` securely.
+</Warning>
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  API key rotated successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  API key not found or not owned by current user
+  ```json
+  {
+    "error": "not_found",
+    "message": "API key 'key_abc123def456' not found"
+  }
+  ```
+</ResponseField>
+
+---
+
+### DELETE /{key_id}
+
+Revoke an API key.
+
+Permanently deletes the API key. This action cannot be undone. Any clients using this key will immediately lose access.
+
+**Path Parameters**:
+
+<ParamField path="key_id" type="string" required>
+  Unique identifier of the API key to revoke
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://api.yourdomain.com/api/v1/api-keys/key_abc123def456 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+response = httpx.delete(
+    "https://api.yourdomain.com/api/v1/api-keys/key_abc123def456",
+    headers={"Authorization": f"Bearer {token}"}
+)
+
+if response.status_code == 204:
+    print("API key revoked successfully")
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.yourdomain.com/api/v1/api-keys/key_abc123def456',
+  {
+    method: 'DELETE',
+    headers: {'Authorization': `Bearer ${token}`}
+  }
+);
+
+if (response.status === 204) {
+  console.log('API key revoked successfully');
+}
+```
+</CodeGroup>
+
+**Response**:
+
+No content (HTTP 204)
+
+**Status Codes**:
+
+<ResponseField name="204" type="No Content">
+  API key revoked successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  API key not found
+</ResponseField>
+
+---
+
+### POST /validate
+
+Validate API key and return JWT (internal endpoint for Kong plugin).
+
+<Warning>
+**Internal Endpoint**: This endpoint is called by the Kong API gateway plugin and is not intended for direct client use. It is excluded from the public API schema.
+</Warning>
+
+This endpoint validates an API key and issues a JWT for the associated user. It implements the API key→JWT exchange pattern described in [ADR-0034](/architecture/adr-0034-api-key-jwt-exchange).
+
+**Headers**:
+
+<ParamField header="X-API-Key" type="string" required>
+  API key to validate
+</ParamField>
+
+**Request Example**:
+
+```bash
+curl -X POST https://api.yourdomain.com/api/v1/api-keys/validate \
+  -H "X-API-Key: ak_live_abc123def456xyz789..."
+```
+
+**Response**:
+
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "expires_in": 900,
+  "user_id": "user:alice",
+  "username": "alice"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  API key validated, JWT issued
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Missing X-API-Key header
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Invalid or expired API key
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Failed to issue JWT
+</ResponseField>
+
+---
+
+## Using API Keys
+
+### 1. Create API Key
+
+```bash
+# Login as user to get JWT
+curl -X POST https://api.yourdomain.com/auth/login \
+  -d '{"username": "alice", "password": "password123"}'
+
+# Create API key
+curl -X POST https://api.yourdomain.com/api/v1/api-keys/ \
+  -H "Authorization: Bearer $USER_TOKEN" \
+  -d '{"name": "My CLI Tool", "expires_days": 365}'
+
+# Save the api_key from response
+export API_KEY="ak_live_abc123def456xyz789..."
+```
+
+### 2. Use API Key (Direct)
+
+```bash
+# Make API requests with X-API-Key header
+curl https://api.yourdomain.com/message \
+  -H "X-API-Key: $API_KEY" \
+  -d '{"query": "Hello!"}'
+```
+
+### 3. Use API Key (via Kong Gateway)
+
+When Kong gateway is configured with the API key plugin:
+
+```bash
+# Kong validates API key and exchanges for JWT automatically
+curl https://api.yourdomain.com/message \
+  -H "X-API-Key: $API_KEY" \
+  -d '{"query": "Hello!"}'
+
+# Behind the scenes:
+# 1. Kong intercepts request
+# 2. Calls /api/v1/api-keys/validate with X-API-Key
+# 3. Receives JWT token
+# 4. Forwards request with Authorization: Bearer <JWT>
+```
+
+### 4. Environment-Based Configuration
+
+```bash
+# .env file
+API_KEY=ak_live_abc123def456xyz789...
+
+# Python script
+import os
+import httpx
+
+api_key = os.getenv("API_KEY")
+response = httpx.post(
+    "https://api.yourdomain.com/message",
+    headers={"X-API-Key": api_key},
+    json={"query": "Process data"}
+)
+```
+
+---
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Key Storage" icon="vault">
+    **Never hardcode API keys in code**
+
+    - Store in environment variables: `export API_KEY=ak_live_...`
+    - Use `.env` files (add to `.gitignore`)
+    - Use secret managers in production: HashiCorp Vault, AWS Secrets Manager
+    - Password managers for personal keys: 1Password, LastPass
+
+    **Never**:
+    - Commit API keys to Git
+    - Store in plain text files
+    - Share via email or chat
+    - Embed in client-side code
+  </Accordion>
+
+  <Accordion title="Key Rotation" icon="arrows-rotate">
+    **Rotate keys regularly**
+
+    - Quarterly rotation for production keys
+    - Immediately after security incidents
+    - When team members leave
+    - If key may have been exposed
+
+    **Zero-downtime rotation**:
+    1. Create new API key
+    2. Update client configuration
+    3. Test with new key
+    4. Revoke old key
+  </Accordion>
+
+  <Accordion title="Expiration Strategy" icon="calendar">
+    **Set appropriate expiration periods**
+
+    - **Short-lived** (30-90 days): Development, testing
+    - **Medium-lived** (180-365 days): Production tools, CLI
+    - **Long-lived** (1-2 years): Stable integrations (with rotation)
+
+    Monitor expiration and renew before expiry:
+    ```bash
+    # List keys and check expiration
+    curl https://api.yourdomain.com/api/v1/api-keys/ \
+      -H "Authorization: Bearer $TOKEN"
+    ```
+  </Accordion>
+
+  <Accordion title="Least Privilege" icon="shield-halved">
+    **API keys inherit user permissions**
+
+    - Create dedicated user accounts for automation
+    - Grant minimum required permissions
+    - Use service principals for broader access
+    - Monitor API key usage in audit logs
+  </Accordion>
+
+  <Accordion title="Key Limits & Monitoring" icon="gauge">
+    **5 key limit per user**
+
+    - Encourages key hygiene and rotation
+    - Prevents accumulation of unused keys
+    - Revoke unused keys regularly
+
+    **Monitor usage**:
+    - Track `last_used` timestamp
+    - Alert on dormant keys (unused > 30 days)
+    - Review keys quarterly
+    - Revoke keys for decommissioned tools
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Kong Gateway Integration
+
+When using Kong API Gateway with the custom API key plugin:
+
+<Steps>
+  <Step title="Kong receives request with X-API-Key">
+    Client sends request with `X-API-Key` header to Kong gateway
+  </Step>
+
+  <Step title="Kong validates API key">
+    Kong calls `/api/v1/api-keys/validate` (internal endpoint) with the API key
+  </Step>
+
+  <Step title="Backend issues JWT">
+    Backend validates API key and returns JWT token if valid
+  </Step>
+
+  <Step title="Kong forwards with JWT">
+    Kong replaces `X-API-Key` header with `Authorization: Bearer <JWT>` and forwards to backend
+  </Step>
+
+  <Step title="Backend processes request">
+    Backend receives JWT-authenticated request and processes normally
+  </Step>
+</Steps>
+
+This pattern provides:
+- ✅ Long-lived credentials (API keys) for clients
+- ✅ Short-lived tokens (JWT) for internal services
+- ✅ Centralized API key validation
+- ✅ Standard JWT-based authorization throughout system
+
+See [ADR-0034: API Key JWT Exchange](/architecture/adr-0034-api-key-jwt-exchange) for design details.
+
+---
+
+## Comparison with Other Auth Methods
+
+| Feature | API Keys | Service Principals | JWT Tokens | Sessions |
+|---------|----------|-------------------|------------|----------|
+| **Lifespan** | Days-Years | Permanent | Minutes-Hours | Hours-Days |
+| **Use Case** | Scripts, CLI | Services | User auth | Web apps |
+| **Identity** | User | Machine | User | User |
+| **Rotation** | Manual | Manual | Automatic | N/A |
+| **Limit** | 5 per user | Unlimited | N/A | Configurable |
+| **Revocation** | Immediate | Immediate | Wait for expiry | Immediate |
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="API Key Management Guide" icon="key-skeleton" href="/guides/api-key-management">
+    Complete API key setup and usage guide
+  </Card>
+  <Card title="Service Principals API" icon="robot" href="/api-reference/service-principals">
+    Machine-to-machine authentication
+  </Card>
+  <Card title="Authentication API" icon="key" href="/api-reference/authentication">
+    User authentication endpoints
+  </Card>
+  <Card title="Kong Integration" icon="gear" href="/deployment/kong-gateway">
+    Kong API gateway configuration
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Secure & Scalable**: API keys use bcrypt hashing and integrate seamlessly with Kong gateway!
+</Check>

@@ -104,6 +104,9 @@
             "pages": [
               "api-reference/introduction",
               "api-reference/authentication",
+              "api-reference/api-keys",
+              "api-reference/service-principals",
+              "api-reference/scim-provisioning",
               "api-reference/mcp-endpoints",
               "api-reference/gdpr-endpoints",
               "api-reference/health-checks"

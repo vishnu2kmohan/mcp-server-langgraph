@@ -1,0 +1,730 @@
+---
+title: Service Principals API
+description: 'API endpoints for managing service principals and machine-to-machine authentication'
+icon: 'robot'
+---
+
+## Overview
+
+The Service Principals API provides endpoints for creating and managing service principals - non-human identities for machine-to-machine authentication. Service principals enable automated processes, batch jobs, and integrations to authenticate securely without requiring user credentials.
+
+<Info>
+**v3.0** adds comprehensive service principal management with permission inheritance and OpenFGA integration.
+</Info>
+
+## Use Cases
+
+- **Batch Jobs**: ETL processes, data synchronization, scheduled tasks
+- **CI/CD Pipelines**: Automated deployments, testing, infrastructure provisioning
+- **Microservices**: Service-to-service authentication
+- **Integrations**: Third-party system integrations, webhooks
+
+## Authentication Modes
+
+<Tabs>
+  <Tab title="Client Credentials">
+    **Standard OAuth2 client credentials flow**
+
+    - Service authenticates with `service_id` + `client_secret`
+    - Receives JWT token for API access
+    - No user association required
+
+    ```bash
+    POST /auth/token
+    {
+      "grant_type": "client_credentials",
+      "client_id": "batch-etl-job",
+      "client_secret": "secret_abc123..."
+    }
+    ```
+  </Tab>
+
+  <Tab title="Service Account User">
+    **Permission inheritance from associated user**
+
+    - Service acts on behalf of a user
+    - Inherits all permissions from associated user
+    - Useful for automation that needs user-level permissions
+
+    ```bash
+    POST /api/v1/service-principals/
+    {
+      "authentication_mode": "service_account_user",
+      "associated_user_id": "user:alice",
+      "inherit_permissions": true
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Base URL
+
+```
+https://api.yourdomain.com/api/v1/service-principals
+```
+
+## Authentication
+
+All endpoints require user authentication:
+- `Authorization: Bearer {token}`
+- Users can only manage service principals they own
+
+---
+
+## Endpoints
+
+### POST /
+
+Create a new service principal.
+
+Creates a service principal with the specified authentication mode. The calling user becomes the owner of the service principal.
+
+**Request Body**:
+
+<ParamField body="name" type="string" required>
+  Human-readable name for the service (e.g., "Batch ETL Job")
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  Purpose/description of the service
+</ParamField>
+
+<ParamField body="authentication_mode" type="string" default="client_credentials">
+  Authentication mode: `client_credentials` or `service_account_user`
+</ParamField>
+
+<ParamField body="associated_user_id" type="string">
+  User ID to act as for permission inheritance (e.g., `user:alice`). Required if `authentication_mode` is `service_account_user`.
+</ParamField>
+
+<ParamField body="inherit_permissions" type="boolean" default={false}>
+  Whether to inherit permissions from associated user
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.yourdomain.com/api/v1/service-principals/ \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Batch ETL Job",
+    "description": "Nightly data processing pipeline",
+    "authentication_mode": "client_credentials",
+    "associated_user_id": "user:alice",
+    "inherit_permissions": true
+  }'
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/api/v1/service-principals/",
+    headers={"Authorization": f"Bearer {token}"},
+    json={
+        "name": "Batch ETL Job",
+        "description": "Nightly data processing pipeline",
+        "authentication_mode": "client_credentials",
+        "associated_user_id": "user:alice",
+        "inherit_permissions": True
+    }
+)
+
+data = response.json()
+print(f"Service ID: {data['service_id']}")
+print(f"Client Secret: {data['client_secret']}")
+# IMPORTANT: Save the client_secret securely!
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.yourdomain.com/api/v1/service-principals/', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Batch ETL Job',
+    description: 'Nightly data processing pipeline',
+    authentication_mode: 'client_credentials',
+    associated_user_id: 'user:alice',
+    inherit_permissions: true
+  })
+});
+
+const data = await response.json();
+console.log('Service ID:', data.service_id);
+console.log('Client Secret:', data.client_secret);
+// IMPORTANT: Save the client_secret securely!
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "service_id": "batch-etl-job",
+  "name": "Batch ETL Job",
+  "description": "Nightly data processing pipeline",
+  "authentication_mode": "client_credentials",
+  "associated_user_id": "user:alice",
+  "owner_user_id": "user:bob",
+  "inherit_permissions": true,
+  "enabled": true,
+  "created_at": "2025-10-29T10:00:00Z",
+  "client_secret": "sp_secret_abc123def456...",
+  "message": "Service principal created successfully. Save the client_secret securely."
+}
+```
+
+<Warning>
+**Save the `client_secret` securely** - it will not be shown again! Store it in a secret manager (e.g., HashiCorp Vault, AWS Secrets Manager, Azure Key Vault).
+</Warning>
+
+**Status Codes**:
+
+<ResponseField name="201" type="Created">
+  Service principal created successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid authentication mode or missing required fields
+  ```json
+  {
+    "error": "validation_error",
+    "message": "Invalid authentication_mode. Must be 'client_credentials' or 'service_account_user'"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="409" type="Conflict">
+  Service principal with this ID already exists
+  ```json
+  {
+    "error": "conflict",
+    "message": "Service principal with ID 'batch-etl-job' already exists"
+  }
+  ```
+</ResponseField>
+
+---
+
+### GET /
+
+List service principals owned by the current user.
+
+Returns all service principals where the current user is the owner. Does not include client secrets.
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl https://api.yourdomain.com/api/v1/service-principals/ \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+response = httpx.get(
+    "https://api.yourdomain.com/api/v1/service-principals/",
+    headers={"Authorization": f"Bearer {token}"}
+)
+
+service_principals = response.json()
+for sp in service_principals:
+    print(f"{sp['service_id']}: {sp['name']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.yourdomain.com/api/v1/service-principals/', {
+  headers: {'Authorization': `Bearer ${token}`}
+});
+
+const servicePrincipals = await response.json();
+servicePrincipals.forEach(sp => {
+  console.log(`${sp.service_id}: ${sp.name}`);
+});
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+[
+  {
+    "service_id": "batch-etl-job",
+    "name": "Batch ETL Job",
+    "description": "Nightly data processing pipeline",
+    "authentication_mode": "client_credentials",
+    "associated_user_id": "user:alice",
+    "owner_user_id": "user:bob",
+    "inherit_permissions": true,
+    "enabled": true,
+    "created_at": "2025-10-29T10:00:00Z"
+  },
+  {
+    "service_id": "ci-cd-pipeline",
+    "name": "CI/CD Pipeline",
+    "description": "Automated deployment service",
+    "authentication_mode": "service_account_user",
+    "associated_user_id": "user:bob",
+    "owner_user_id": "user:bob",
+    "inherit_permissions": true,
+    "enabled": true,
+    "created_at": "2025-10-28T15:00:00Z"
+  }
+]
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Service principals retrieved successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+---
+
+### GET /{service_id}
+
+Get details of a specific service principal.
+
+Returns service principal details if the current user is the owner.
+
+**Path Parameters**:
+
+<ParamField path="service_id" type="string" required>
+  Unique identifier of the service principal
+</ParamField>
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/api/v1/service-principals/batch-etl-job \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+**Response**:
+
+```json
+{
+  "service_id": "batch-etl-job",
+  "name": "Batch ETL Job",
+  "description": "Nightly data processing pipeline",
+  "authentication_mode": "client_credentials",
+  "associated_user_id": "user:alice",
+  "owner_user_id": "user:bob",
+  "inherit_permissions": true,
+  "enabled": true,
+  "created_at": "2025-10-29T10:00:00Z"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Service principal details retrieved
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  Not the owner of this service principal
+  ```json
+  {
+    "error": "forbidden",
+    "message": "You do not have permission to view this service principal"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Service principal not found
+  ```json
+  {
+    "error": "not_found",
+    "message": "Service principal 'batch-etl-job' not found"
+  }
+  ```
+</ResponseField>
+
+---
+
+### POST /{service_id}/rotate-secret
+
+Rotate service principal secret.
+
+Generates a new client secret for the service principal. The old secret is invalidated immediately.
+
+**Path Parameters**:
+
+<ParamField path="service_id" type="string" required>
+  Unique identifier of the service principal
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.yourdomain.com/api/v1/service-principals/batch-etl-job/rotate-secret \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/api/v1/service-principals/batch-etl-job/rotate-secret",
+    headers={"Authorization": f"Bearer {token}"}
+)
+
+data = response.json()
+print(f"New Client Secret: {data['client_secret']}")
+# IMPORTANT: Update your service configuration immediately!
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.yourdomain.com/api/v1/service-principals/batch-etl-job/rotate-secret',
+  {
+    method: 'POST',
+    headers: {'Authorization': `Bearer ${token}`}
+  }
+);
+
+const data = await response.json();
+console.log('New Client Secret:', data.client_secret);
+// IMPORTANT: Update your service configuration immediately!
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "service_id": "batch-etl-job",
+  "client_secret": "sp_secret_xyz789new...",
+  "message": "Secret rotated successfully. Update your service configuration."
+}
+```
+
+<Warning>
+**Update your service configuration immediately!** The old secret is invalidated and will no longer work. Save the new `client_secret` securely.
+</Warning>
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Secret rotated successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  Not the owner of this service principal
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Service principal not found
+</ResponseField>
+
+---
+
+### DELETE /{service_id}
+
+Delete a service principal.
+
+Permanently deletes the service principal from Keycloak and OpenFGA. This action cannot be undone.
+
+**Path Parameters**:
+
+<ParamField path="service_id" type="string" required>
+  Unique identifier of the service principal
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://api.yourdomain.com/api/v1/service-principals/batch-etl-job \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+response = httpx.delete(
+    "https://api.yourdomain.com/api/v1/service-principals/batch-etl-job",
+    headers={"Authorization": f"Bearer {token}"}
+)
+
+if response.status_code == 204:
+    print("Service principal deleted successfully")
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.yourdomain.com/api/v1/service-principals/batch-etl-job',
+  {
+    method: 'DELETE',
+    headers: {'Authorization': `Bearer ${token}`}
+  }
+);
+
+if (response.status === 204) {
+  console.log('Service principal deleted successfully');
+}
+```
+</CodeGroup>
+
+**Response**:
+
+No content (HTTP 204)
+
+**Status Codes**:
+
+<ResponseField name="204" type="No Content">
+  Service principal deleted successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  Not the owner of this service principal
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Service principal not found
+</ResponseField>
+
+---
+
+### POST /{service_id}/associate-user
+
+Associate service principal with a user for permission inheritance.
+
+Links a service principal to a user, optionally enabling permission inheritance. When `inherit_permissions` is true, the service principal can act on behalf of the user and inherit all their permissions.
+
+**Path Parameters**:
+
+<ParamField path="service_id" type="string" required>
+  Unique identifier of the service principal
+</ParamField>
+
+**Query Parameters**:
+
+<ParamField query="user_id" type="string" required>
+  User ID to associate (e.g., `user:alice`)
+</ParamField>
+
+<ParamField query="inherit_permissions" type="boolean" default={true}>
+  Whether to inherit permissions from the user
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://api.yourdomain.com/api/v1/service-principals/batch-etl-job/associate-user?user_id=user:alice&inherit_permissions=true' \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/api/v1/service-principals/batch-etl-job/associate-user",
+    headers={"Authorization": f"Bearer {token}"},
+    params={
+        "user_id": "user:alice",
+        "inherit_permissions": True
+    }
+)
+
+data = response.json()
+print(f"Associated with: {data['associated_user_id']}")
+```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  user_id: 'user:alice',
+  inherit_permissions: 'true'
+});
+
+const response = await fetch(
+  `https://api.yourdomain.com/api/v1/service-principals/batch-etl-job/associate-user?${params}`,
+  {
+    method: 'POST',
+    headers: {'Authorization': `Bearer ${token}`}
+  }
+);
+
+const data = await response.json();
+console.log('Associated with:', data.associated_user_id);
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "service_id": "batch-etl-job",
+  "name": "Batch ETL Job",
+  "description": "Nightly data processing pipeline",
+  "authentication_mode": "client_credentials",
+  "associated_user_id": "user:alice",
+  "owner_user_id": "user:bob",
+  "inherit_permissions": true,
+  "enabled": true,
+  "created_at": "2025-10-29T10:00:00Z"
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  User association updated successfully
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Not authenticated
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  Not the owner of this service principal
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Service principal not found
+</ResponseField>
+
+---
+
+## Using Service Principals
+
+### 1. Create Service Principal
+
+```bash
+# Create service principal
+curl -X POST https://api.yourdomain.com/api/v1/service-principals/ \
+  -H "Authorization: Bearer $USER_TOKEN" \
+  -d '{
+    "name": "My Batch Job",
+    "description": "Data processing service",
+    "authentication_mode": "client_credentials"
+  }'
+
+# Save the response (contains client_secret)
+```
+
+### 2. Authenticate as Service Principal
+
+```bash
+# Exchange credentials for JWT token
+curl -X POST https://api.yourdomain.com/auth/token \
+  -d grant_type=client_credentials \
+  -d client_id=my-batch-job \
+  -d client_secret=$CLIENT_SECRET
+
+# Response:
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+### 3. Make API Requests
+
+```bash
+# Use the access token for API requests
+curl https://api.yourdomain.com/message \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -d '{"query": "Process data"}'
+```
+
+---
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Secret Storage" icon="vault">
+    **Never hardcode secrets in code or configuration files**
+
+    - Use secret managers: HashiCorp Vault, AWS Secrets Manager, Azure Key Vault
+    - Inject secrets at runtime via environment variables
+    - Rotate secrets regularly (quarterly or after security incidents)
+    - Use separate service principals for different environments
+  </Accordion>
+
+  <Accordion title="Principle of Least Privilege" icon="shield-halved">
+    **Grant minimum required permissions**
+
+    - Create service principals with specific, limited scopes
+    - Use permission inheritance only when necessary
+    - Associate with users who have minimal required permissions
+    - Regularly audit service principal permissions
+  </Accordion>
+
+  <Accordion title="Secret Rotation" icon="arrows-rotate">
+    **Implement zero-downtime secret rotation**
+
+    1. Generate new secret using rotate-secret endpoint
+    2. Update service configuration with new secret
+    3. Restart service to use new credentials
+    4. Old secret is invalidated immediately
+
+    Automate rotation with tools like cert-manager or custom automation.
+  </Accordion>
+
+  <Accordion title="Monitoring & Auditing" icon="list-check">
+    **Track service principal activity**
+
+    - Enable audit logging for all service principal operations
+    - Monitor authentication attempts and failures
+    - Alert on unusual activity patterns
+    - Review service principal usage quarterly
+    - Disable unused service principals
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Service Principals Guide" icon="robot" href="/guides/service-principals">
+    Complete service principal setup guide
+  </Card>
+  <Card title="Permission Inheritance" icon="diagram-project" href="/architecture/adr-0039-openfga-permission-inheritance">
+    OpenFGA permission inheritance design
+  </Card>
+  <Card title="Authentication API" icon="key" href="/api-reference/authentication">
+    User authentication endpoints
+  </Card>
+  <Card title="Authorization Guide" icon="shield-halved" href="/getting-started/authorization">
+    OpenFGA authorization model
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Production Ready**: Service principals support enterprise authentication patterns with Keycloak and OpenFGA!
+</Check>

@@ -1,0 +1,810 @@
+---
+title: SCIM 2.0 Provisioning API
+description: 'API endpoints for automated user and group provisioning via SCIM 2.0 protocol'
+icon: 'users-gear'
+---
+
+## Overview
+
+The SCIM (System for Cross-domain Identity Management) 2.0 API provides standardized endpoints for automated user and group provisioning. SCIM enables identity providers and HR systems to synchronize user accounts, manage lifecycle events, and maintain group memberships automatically.
+
+<Info>
+**v3.0** implements SCIM 2.0 protocol ([RFC 7643](https://datatracker.ietf.org/doc/html/rfc7643), [RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644)) with Keycloak backend integration.
+</Info>
+
+## Use Cases
+
+- **Identity Provider (IdP) Provisioning**: Okta, Azure AD, OneLogin
+- **HR System Integration**: Workday, BambooHR, SAP SuccessFactors
+- **User Lifecycle Automation**: Onboarding, offboarding, role changes
+- **Group Management**: Automatic team/department synchronization
+- **Directory Synchronization**: Keep user data in sync across systems
+
+## SCIM 2.0 Standards Compliance
+
+<Tabs>
+  <Tab title="Supported Features">
+    ✅ **Core User Schema** ([RFC 7643 §4.1](https://datatracker.ietf.org/doc/html/rfc7643#section-4.1))
+    - userName, name, emails, active, password
+
+    ✅ **Core Group Schema** ([RFC 7643 §4.2](https://datatracker.ietf.org/doc/html/rfc7643#section-4.2))
+    - displayName, members
+
+    ✅ **CRUD Operations** ([RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644))
+    - Create (POST), Read (GET), Update (PUT/PATCH), Delete
+
+    ✅ **Filtering & Pagination**
+    - Basic filters (userName eq, email eq)
+    - Pagination (startIndex, count)
+
+    ✅ **PATCH Operations** ([RFC 7644 §3.5.2](https://datatracker.ietf.org/doc/html/rfc7644#section-3.5.2))
+    - replace, add (partial support)
+  </Tab>
+
+  <Tab title="Backend Integration">
+    **Keycloak Integration**:
+    - Users provisioned in Keycloak realm
+    - Groups mapped to Keycloak groups
+    - Attributes synchronized bidirectionally
+
+    **OpenFGA Integration**:
+    - User roles synced to authorization tuples
+    - Group permissions automatically configured
+    - Hierarchical group support
+
+    **Soft Delete**:
+    - DELETE deactivates users (sets enabled=false)
+    - Preserves user data for compliance
+  </Tab>
+</Tabs>
+
+## Base URL
+
+```
+https://api.yourdomain.com/scim/v2
+```
+
+## Authentication
+
+All SCIM endpoints require authentication:
+- `Authorization: Bearer {token}` (service account or admin user)
+- Requires SCIM provisioning permissions
+
+<Warning>
+SCIM endpoints should be called by identity providers or automation systems, not end users. Configure appropriate access controls.
+</Warning>
+
+---
+
+## User Endpoints
+
+### POST /Users
+
+Create a new user (SCIM 2.0).
+
+Provisions user in Keycloak and syncs roles to OpenFGA.
+
+**Request Body**:
+
+<ParamField body="schemas" type="array" required>
+  SCIM schema URIs (always `["urn:ietf:params:scim:schemas:core:2.0:User"]`)
+</ParamField>
+
+<ParamField body="userName" type="string" required>
+  Unique username or email address
+</ParamField>
+
+<ParamField body="name" type="object">
+  User's name:
+  - `givenName`: First name
+  - `familyName`: Last name
+  - `formatted`: Full name
+</ParamField>
+
+<ParamField body="emails" type="array">
+  Email addresses (array of `{value, primary}` objects)
+</ParamField>
+
+<ParamField body="active" type="boolean" default={true}>
+  Whether user account is active
+</ParamField>
+
+<ParamField body="password" type="string">
+  User's initial password (optional, can be set later)
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.yourdomain.com/scim/v2/Users \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+    "userName": "alice@example.com",
+    "name": {
+      "givenName": "Alice",
+      "familyName": "Smith",
+      "formatted": "Alice Smith"
+    },
+    "emails": [{
+      "value": "alice@example.com",
+      "primary": true
+    }],
+    "active": true,
+    "password": "SecurePassword123!"
+  }'
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.yourdomain.com/scim/v2/Users",
+    headers={
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/scim+json"
+    },
+    json={
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        "userName": "alice@example.com",
+        "name": {
+            "givenName": "Alice",
+            "familyName": "Smith",
+            "formatted": "Alice Smith"
+        },
+        "emails": [{"value": "alice@example.com", "primary": True}],
+        "active": True,
+        "password": "SecurePassword123!"
+    }
+)
+
+user = response.json()
+print(f"Created user: {user['id']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.yourdomain.com/scim/v2/Users', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/scim+json'
+  },
+  body: JSON.stringify({
+    schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+    userName: 'alice@example.com',
+    name: {
+      givenName: 'Alice',
+      familyName: 'Smith',
+      formatted: 'Alice Smith'
+    },
+    emails: [{value: 'alice@example.com', primary: true}],
+    active: true,
+    password: 'SecurePassword123!'
+  })
+});
+
+const user = await response.json();
+console.log('Created user:', user.id);
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "id": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
+  "userName": "alice@example.com",
+  "name": {
+    "givenName": "Alice",
+    "familyName": "Smith",
+    "formatted": "Alice Smith"
+  },
+  "emails": [
+    {
+      "value": "alice@example.com",
+      "primary": true
+    }
+  ],
+  "active": true,
+  "meta": {
+    "resourceType": "User",
+    "created": "2025-10-29T10:00:00Z",
+    "lastModified": "2025-10-29T10:00:00Z"
+  }
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="201" type="Created">
+  User created successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid SCIM schema or missing required fields
+  ```json
+  {
+    "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+    "status": 400,
+    "detail": "Invalid SCIM user schema",
+    "scimType": "invalidValue"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="409" type="Conflict">
+  User already exists
+  ```json
+  {
+    "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+    "status": 409,
+    "detail": "User with userName 'alice@example.com' already exists",
+    "scimType": "uniqueness"
+  }
+  ```
+</ResponseField>
+
+---
+
+### GET /Users/{user_id}
+
+Get user by ID (SCIM 2.0).
+
+Returns user in SCIM format.
+
+**Path Parameters**:
+
+<ParamField path="user_id" type="string" required>
+  Keycloak user ID (UUID)
+</ParamField>
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6bf6 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+**Response**: Same as POST /Users response
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  User retrieved successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  User not found
+  ```json
+  {
+    "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+    "status": 404,
+    "detail": "User f81d4fae-7dec-11d0-a765-00a0c91e6bf6 not found",
+    "scimType": "notFound"
+  }
+  ```
+</ResponseField>
+
+---
+
+### PUT /Users/{user_id}
+
+Replace user (SCIM 2.0 PUT).
+
+Replaces entire user resource. All fields must be provided.
+
+**Path Parameters**:
+
+<ParamField path="user_id" type="string" required>
+  Keycloak user ID (UUID)
+</ParamField>
+
+**Request Body**: Same as POST /Users
+
+**Request Example**:
+
+```bash
+curl -X PUT https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6bf6 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+    "userName": "alice@example.com",
+    "name": {
+      "givenName": "Alice",
+      "familyName": "Smith-Johnson",
+      "formatted": "Alice Smith-Johnson"
+    },
+    "emails": [{
+      "value": "alice.johnson@example.com",
+      "primary": true
+    }],
+    "active": true
+  }'
+```
+
+**Response**: Same as POST /Users response
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  User updated successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid SCIM schema
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  User not found
+</ResponseField>
+
+---
+
+### PATCH /Users/{user_id}
+
+Update user with PATCH operations (SCIM 2.0).
+
+Supports partial updates using SCIM PATCH operations.
+
+**Path Parameters**:
+
+<ParamField path="user_id" type="string" required>
+  Keycloak user ID (UUID)
+</ParamField>
+
+**Request Body**:
+
+<ParamField body="schemas" type="array" required>
+  `["urn:ietf:params:scim:api:messages:2.0:PatchOp"]`
+</ParamField>
+
+<ParamField body="Operations" type="array" required>
+  Array of PATCH operations:
+  - `op`: Operation type (`replace`, `add`, `remove`)
+  - `path`: Attribute path (e.g., `active`, `emails`)
+  - `value`: New value
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash Deactivate User
+curl -X PATCH https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6bf6 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+    "Operations": [
+      {
+        "op": "replace",
+        "path": "active",
+        "value": false
+      }
+    ]
+  }'
+```
+
+```bash Update Email
+curl -X PATCH https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6bf6 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+    "Operations": [
+      {
+        "op": "replace",
+        "path": "emails",
+        "value": [{"value": "newemail@example.com", "primary": true}]
+      }
+    ]
+  }'
+```
+
+```python Python
+import httpx
+
+# Deactivate user
+response = httpx.patch(
+    f"https://api.yourdomain.com/scim/v2/Users/{user_id}",
+    headers={
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/scim+json"
+    },
+    json={
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        "Operations": [
+            {"op": "replace", "path": "active", "value": False}
+        ]
+    }
+)
+```
+</CodeGroup>
+
+**Response**: Same as POST /Users response
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  User patched successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid PATCH operation
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  User not found
+</ResponseField>
+
+---
+
+### DELETE /Users/{user_id}
+
+Delete (deactivate) user (SCIM 2.0).
+
+Deactivates user in Keycloak (sets `enabled=false`) and removes OpenFGA authorization tuples. User data is preserved for compliance.
+
+**Path Parameters**:
+
+<ParamField path="user_id" type="string" required>
+  Keycloak user ID (UUID)
+</ParamField>
+
+**Request Example**:
+
+```bash
+curl -X DELETE https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6bf6 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+**Response**: No content (HTTP 204)
+
+<Note>
+**Soft Delete**: Users are deactivated (not permanently deleted) to comply with audit and compliance requirements. Hard deletion requires direct Keycloak admin access.
+</Note>
+
+**Status Codes**:
+
+<ResponseField name="204" type="No Content">
+  User deleted successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  User not found
+</ResponseField>
+
+---
+
+### GET /Users
+
+List/search users (SCIM 2.0).
+
+Supports basic filtering and pagination.
+
+**Query Parameters**:
+
+<ParamField query="filter" type="string">
+  SCIM filter expression (e.g., `userName eq "alice@example.com"`)
+
+  **Supported filters**:
+  - `userName eq "value"`
+  - `email eq "value"`
+</ParamField>
+
+<ParamField query="startIndex" type="integer" default={1}>
+  1-based start index for pagination (minimum: 1)
+</ParamField>
+
+<ParamField query="count" type="integer" default={100}>
+  Number of results to return (1-1000)
+</ParamField>
+
+**Request Example**:
+
+<CodeGroup>
+```bash List All Users
+curl 'https://api.yourdomain.com/scim/v2/Users?startIndex=1&count=100' \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```bash Filter by UserName
+curl 'https://api.yourdomain.com/scim/v2/Users?filter=userName%20eq%20%22alice@example.com%22' \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+```python Python
+import httpx
+
+# List users with pagination
+response = httpx.get(
+    "https://api.yourdomain.com/scim/v2/Users",
+    headers={"Authorization": f"Bearer {token}"},
+    params={"startIndex": 1, "count": 50}
+)
+
+users = response.json()
+print(f"Total users: {users['totalResults']}")
+```
+</CodeGroup>
+
+**Response**:
+
+```json
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+  "totalResults": 2,
+  "startIndex": 1,
+  "itemsPerPage": 2,
+  "Resources": [
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      "id": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
+      "userName": "alice@example.com",
+      "name": {
+        "givenName": "Alice",
+        "familyName": "Smith"
+      },
+      "emails": [{"value": "alice@example.com", "primary": true}],
+      "active": true
+    },
+    {
+      "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      "id": "9d3e2a1b-8c7f-4e6d-a5b4-3c2d1e0f9a8b",
+      "userName": "bob@example.com",
+      "name": {
+        "givenName": "Bob",
+        "familyName": "Johnson"
+      },
+      "emails": [{"value": "bob@example.com", "primary": true}],
+      "active": true
+    }
+  ]
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Users retrieved successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid filter or pagination parameters
+</ResponseField>
+
+---
+
+## Group Endpoints
+
+### POST /Groups
+
+Create a new group (SCIM 2.0).
+
+**Request Body**:
+
+<ParamField body="schemas" type="array" required>
+  `["urn:ietf:params:scim:schemas:core:2.0:Group"]`
+</ParamField>
+
+<ParamField body="displayName" type="string" required>
+  Group name (e.g., "Engineering", "Marketing")
+</ParamField>
+
+<ParamField body="members" type="array">
+  Array of group members:
+  - `value`: User ID (UUID)
+  - `display`: Display name (optional)
+</ParamField>
+
+**Request Example**:
+
+```bash
+curl -X POST https://api.yourdomain.com/scim/v2/Groups \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+    "displayName": "Engineering",
+    "members": [
+      {
+        "value": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
+        "display": "Alice Smith"
+      },
+      {
+        "value": "9d3e2a1b-8c7f-4e6d-a5b4-3c2d1e0f9a8b",
+        "display": "Bob Johnson"
+      }
+    ]
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+  "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "displayName": "Engineering",
+  "members": [
+    {
+      "value": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
+      "display": "Alice Smith"
+    },
+    {
+      "value": "9d3e2a1b-8c7f-4e6d-a5b4-3c2d1e0f9a8b",
+      "display": "Bob Johnson"
+    }
+  ],
+  "meta": {
+    "resourceType": "Group",
+    "created": "2025-10-29T10:00:00Z"
+  }
+}
+```
+
+**Status Codes**:
+
+<ResponseField name="201" type="Created">
+  Group created successfully
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Invalid SCIM schema
+</ResponseField>
+
+<ResponseField name="409" type="Conflict">
+  Group already exists
+</ResponseField>
+
+---
+
+### GET /Groups/{group_id}
+
+Get group by ID (SCIM 2.0).
+
+**Path Parameters**:
+
+<ParamField path="group_id" type="string" required>
+  Keycloak group ID (UUID)
+</ParamField>
+
+**Request Example**:
+
+```bash
+curl https://api.yourdomain.com/scim/v2/Groups/a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+**Response**: Same as POST /Groups response
+
+**Status Codes**:
+
+<ResponseField name="200" type="Success">
+  Group retrieved successfully
+</ResponseField>
+
+<ResponseField name="404" type="Not Found">
+  Group not found
+</ResponseField>
+
+---
+
+## Identity Provider Integration Examples
+
+### Okta SCIM Integration
+
+```yaml
+# Okta Application Settings
+SCIM Base URL: https://api.yourdomain.com/scim/v2
+Authentication: OAuth 2.0 Bearer Token
+Supported Features:
+  - Push New Users
+  - Push Profile Updates
+  - Push Groups
+  - Import New Users and Profile Updates
+
+Attribute Mappings:
+  userName: user.email
+  name.givenName: user.firstName
+  name.familyName: user.lastName
+  emails[0].value: user.email
+  active: user.status == "ACTIVE"
+```
+
+### Azure AD SCIM Integration
+
+```powershell
+# Azure AD Enterprise Application
+$AppId = "<your-app-id>"
+$TenantDomain = "https://api.yourdomain.com/scim/v2"
+
+Set-AzureADApplication -ObjectId $AppId `
+  -IdentifierUris $TenantDomain `
+  -ReplyUrls "$TenantDomain/Users","$TenantDomain/Groups"
+
+# Configure attribute mappings in Azure Portal
+# Provisioning > Mappings > User Mappings
+```
+
+### OneLogin SCIM Integration
+
+```json
+{
+  "scim_base_url": "https://api.yourdomain.com/scim/v2",
+  "authentication": "Bearer Token",
+  "scim_version": "2.0",
+  "user_provisioning": true,
+  "group_provisioning": true,
+  "attribute_mappings": {
+    "userName": "email",
+    "givenName": "firstname",
+    "familyName": "lastname"
+  }
+}
+```
+
+---
+
+## SCIM Testing & Validation
+
+### Test User Provisioning Flow
+
+```bash
+# 1. Create user
+USER_ID=$(curl -X POST https://api.yourdomain.com/scim/v2/Users \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+    "userName": "testuser@example.com",
+    "name": {"givenName": "Test", "familyName": "User"},
+    "emails": [{"value": "testuser@example.com", "primary": true}],
+    "active": true
+  }' | jq -r '.id')
+
+# 2. Get user
+curl https://api.yourdomain.com/scim/v2/Users/$USER_ID \
+  -H "Authorization: Bearer $TOKEN"
+
+# 3. Update user (deactivate)
+curl -X PATCH https://api.yourdomain.com/scim/v2/Users/$USER_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+    "Operations": [{"op": "replace", "path": "active", "value": false}]
+  }'
+
+# 4. Delete user
+curl -X DELETE https://api.yourdomain.com/scim/v2/Users/$USER_ID \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="SCIM Provisioning Guide" icon="users-gear" href="/guides/scim-provisioning">
+    Complete SCIM setup and integration guide
+  </Card>
+  <Card title="Keycloak Integration" icon="key" href="/deployment/keycloak-jwt-deployment">
+    Keycloak deployment and configuration
+  </Card>
+  <Card title="OpenFGA Authorization" icon="shield-halved" href="/getting-started/authorization">
+    Authorization model and permissions
+  </Card>
+  <Card title="SCIM Implementation ADR" icon="file-lines" href="/architecture/adr-0038-scim-implementation">
+    SCIM design decisions
+  </Card>
+</CardGroup>
+
+---
+
+<Check>
+**Standards Compliant**: Full SCIM 2.0 protocol implementation with Keycloak and OpenFGA integration!
+</Check>
