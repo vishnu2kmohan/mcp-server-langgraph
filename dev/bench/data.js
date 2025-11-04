@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762140259124,
+  "lastUpdate": 1762269839954,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -24710,6 +24710,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001824483826461487",
             "extra": "mean: 58.03718099839372 usec\nrounds: 4768"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "634e5b48a5d4f9d2ce5886046b5dbc244e2d88d0",
+          "message": "fix(ci/cd): comprehensive GitHub Actions workflow improvements\n\nThis commit addresses 13 critical and high-priority issues identified in the\nCI/CD pipeline review, significantly improving security, performance, and\ndeployment safety.\n\n## Critical Security Fixes\n\n### 1. Add job timeouts to prevent runaway processes\n- deploy-staging-gke.yaml: Added 20-45min timeouts to all jobs\n- gcp-drift-detection.yaml: Added 20-30min timeouts to all jobs\n- Prevents resource exhaustion and runaway deployments\n\n### 2. Remove hardcoded secrets (zero-trust approach)\n- deploy-production-gke.yaml: Removed 4 hardcoded fallbacks\n- deploy-staging-gke.yaml: Removed 4 hardcoded fallbacks\n- gcp-drift-detection.yaml: Removed 3 hardcoded fallbacks\n- Workflows now fail cleanly if secrets not configured\n- Eliminates credential exposure in repository\n\n### 3. Add drift auto-remediation safeguards\n- gcp-drift-detection.yaml: Added actor authorization check\n- Only authorized users can auto-remediate infrastructure drift\n- Prevents unauthorized Terraform changes\n\n## High Priority Optimizations\n\n### 4. Remove redundant caching\n- ci.yaml: Removed manual uv binary/dependency caching (lines 84-98)\n- Relies on setup-uv action's built-in caching\n- Eliminates cache conflicts and improves build speed\n\n### 5. Add concurrency controls (resource optimization)\n- security-validation.yml: Added concurrency group\n- build-hygiene.yaml: Added concurrency group\n- terraform-validate.yaml: Added concurrency group\n- validate-deployments.yaml: Added concurrency group\n- gcp-compliance-scan.yaml: Added concurrency group\n- stale.yaml: Added concurrency group\n- Prevents duplicate workflow runs, saves ~$100/month\n\n### 6. Update outdated action versions\n- clients/python/.github/workflows/python.yml: checkout@v4→v5, setup-python@v4→v6\n- security-validation.yml: checkout@v4→v5, setup-python@v5→v6\n- validate-deployments.yaml: checkout@v4→v5\n- Ensures latest security patches and features\n\n### 7. Reduce GCP compliance scan frequency\n- gcp-compliance-scan.yaml: Changed from daily to weekly (Sundays at 2 AM UTC)\n- Saves ~$150/month in compute costs\n- Still maintains adequate security posture\n\n### 8. Add workflow_dispatch triggers\n- security-validation.yml: Added manual trigger capability\n- build-hygiene.yaml: Added manual trigger capability\n- clients/python/.github/workflows/python.yml: Added manual trigger capability\n- Improves debugging and testing workflow\n\n## Medium Priority Improvements\n\n### 9. Upgrade Terraform version\n- terraform-validate.yaml: 1.5.0 → 1.6.6\n- gcp-drift-detection.yaml: 1.5.0 → 1.6.6\n- Access to latest Terraform features and security fixes\n\n## New Features\n\n### 10. Implement progressive canary deployment\n- deploy-production-gke.yaml: Added comprehensive canary strategy\n  * Deploy 10% of replicas as canary\n  * 5-minute health monitoring period (10 checks @ 30s intervals)\n  * Automated smoke tests on canary pods\n  * Full rollout only after canary validation\n  * Automatic rollback on canary failure\n- Reduces production incident risk by ~80%\n- Catches deployment issues before full rollout\n\n## Impact Summary\n\n**Security:**\n- ✅ Zero hardcoded credentials\n- ✅ Job timeout protection\n- ✅ Infrastructure change authorization\n- ✅ Latest action versions with security patches\n\n**Cost Savings:**\n- Compliance scans: ~$150/month\n- Concurrency controls: ~$100/month\n- Total estimated savings: ~$250/month (~$3,000/year)\n\n**Deployment Safety:**\n- Canary deployment with automated validation\n- Progressive rollout minimizes blast radius\n- Automated health monitoring and rollback\n\n**Developer Experience:**\n- Manual workflow dispatch for all critical workflows\n- Improved caching strategy\n- Faster, more reliable builds\n\n## Files Modified (10 workflows)\n\n- .github/workflows/deploy-production-gke.yaml\n- .github/workflows/deploy-staging-gke.yaml\n- .github/workflows/gcp-drift-detection.yaml\n- .github/workflows/security-validation.yml\n- .github/workflows/build-hygiene.yaml\n- .github/workflows/terraform-validate.yaml\n- .github/workflows/validate-deployments.yaml\n- .github/workflows/gcp-compliance-scan.yaml\n- .github/workflows/stale.yaml\n- clients/python/.github/workflows/python.yml\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T10:22:49-05:00",
+          "tree_id": "02ead07467f4bde92ad5d59656c85303ad09dba0",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/634e5b48a5d4f9d2ce5886046b5dbc244e2d88d0"
+        },
+        "date": 1762269838405,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.32011170608783,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010671659408253165",
+            "extra": "mean: 6.929041199999412 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.46072172056944,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011731378335360131",
+            "extra": "mean: 6.690721070312988 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44834.42422972541,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.304289999937055 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47493.82224126629,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.055369999913864 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46109.63765197626,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.687440000022207 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.6597006196173,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.244946870000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.415216328536953,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.50599318999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.950875614846208,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.49366896999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1439470.2749453944,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 694.6999999968284 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4848.487669424431,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 206.2498799999446 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2972.52780881536,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.4140099999702 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2966.782244590407,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.0655200001238 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59899.22036535891,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034632745960273495",
+            "extra": "mean: 16.69470810972897 usec\nrounds: 13416"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17305.325688833374,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017659671279076452",
+            "extra": "mean: 57.785679274748986 usec\nrounds: 5129"
           }
         ]
       }
