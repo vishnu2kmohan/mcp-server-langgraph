@@ -91,18 +91,7 @@ class LLMFactory:
         """
         model_lower = model_name.lower()
 
-        # Anthropic models
-        if any(x in model_lower for x in ["claude", "anthropic"]):
-            return "anthropic"
-
-        # OpenAI models
-        if any(x in model_lower for x in ["gpt-", "o1-", "davinci", "curie", "babbage"]):
-            return "openai"
-
-        # Google models
-        if any(x in model_lower for x in ["gemini", "palm", "text-bison", "chat-bison"]):
-            return "google"
-
+        # Check provider prefixes FIRST (azure/gpt-4 should be azure, not openai)
         # Azure (prefixed models)
         if model_lower.startswith("azure/"):
             return "azure"
@@ -114,6 +103,19 @@ class LLMFactory:
         # Ollama (local models)
         if model_lower.startswith("ollama/"):
             return "ollama"
+
+        # Then check model name patterns
+        # Anthropic models
+        if any(x in model_lower for x in ["claude", "anthropic"]):
+            return "anthropic"
+
+        # OpenAI models
+        if any(x in model_lower for x in ["gpt-", "o1-", "davinci", "curie", "babbage"]):
+            return "openai"
+
+        # Google models
+        if any(x in model_lower for x in ["gemini", "palm", "text-bison", "chat-bison"]):
+            return "google"
 
         # Default to current provider
         return self.provider
