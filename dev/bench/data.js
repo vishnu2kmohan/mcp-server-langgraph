@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762290913735,
+  "lastUpdate": 1762291186403,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -26906,6 +26906,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000025972448757510628",
             "extra": "mean: 59.67660502390926 usec\nrounds: 4618"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b6ac198c79248aeda34d43a341623dc4adea0066",
+          "message": "fix(terraform,ci/cd): resolve critical syntax errors and enhance validation\n\nThis commit fixes 3 critical Terraform syntax errors blocking multiple CI/CD\nworkflows and adds pre-commit validation to prevent future occurrences.\n\n## Critical Issues Fixed\n\n### 1. Terraform Module Syntax Errors (BLOCKING 3 WORKFLOWS)\n\n**gke-autopilot module:**\n- Fixed duplicate lifecycle blocks (lines 29 & 259) by merging into single block\n- Moved variable validation from variables.tf to lifecycle precondition\n- Invalid cross-variable validation: var.enable_master_authorized_networks in\n  master_authorized_networks_cidrs validation (Terraform doesn't allow this)\n- Solution: Removed from variable block, added as lifecycle precondition\n\n**memorystore module:**\n- Removed prevent_destroy = var.enable_deletion_protection (2 occurrences)\n- Terraform prevent_destroy meta-argument requires static boolean, not variables\n- Added comment explaining deletion protection should use TF Cloud/Enterprise policies\n\n**Files Modified:**\n- terraform/modules/gke-autopilot/main.tf:\n  - Merged lifecycle blocks (added ignore_changes to first block)\n  - Added master_authorized_networks precondition\n  - Removed duplicate lifecycle block at line 259\n- terraform/modules/gke-autopilot/variables.tf:\n  - Removed invalid cross-variable validation\n  - Updated description to note requirement\n- terraform/modules/memorystore/main.tf:\n  - Removed 2 instances of prevent_destroy with variable\n  - Added explanatory comments\n\n### 2. Security Validation False Positives\n\n**Problem:** Placeholder detection catching legitimate .example template files\n**Solution:** Added --exclude=\"*.example\" to grep commands in security-validation.yml\n\n**Files Modified:**\n- .github/workflows/security-validation.yml:\n  - Added --exclude=\"*.example\" to ACCOUNT_ID check (line 79)\n  - Added --exclude=\"*.example\" to PROJECT_ID check (line 86)\n  - Added --exclude=\"*.example\" to ENVIRONMENT check (line 93)\n\n### 3. Pre-commit Terraform Validation (PREVENTS FUTURE ERRORS)\n\n**Added terraform validation hooks to catch syntax errors before commit:**\n\n- terraform_fmt: Auto-format all .tf files\n- terraform_validate: Validate syntax with --backend=false for modules\n\n**Files Modified:**\n- .pre-commit-config.yaml:\n  - Added antonbabenko/pre-commit-terraform hooks\n  - Configured to validate all .tf files\n  - Uses retry-once-with-cleanup for reliability\n\n## Impact\n\n**Workflows Unblocked:**\n- terraform-validation.yaml (was failing on init)\n- security-validation.yml (was failing on placeholder detection)\n- deploy-staging-gke.yaml (depends on terraform validation)\n\n**Validation Results:**\n✅ terraform validate: gke-autopilot module - SUCCESS\n✅ terraform validate: memorystore module - SUCCESS\n✅ YAML syntax: security-validation.yml - VALID\n✅ Pre-commit hooks: terraform_fmt, terraform_validate - CONFIGURED\n\n## Prevention Measures\n\nGoing forward, all Terraform changes will be:\n1. Auto-formatted by terraform_fmt pre-commit hook\n2. Syntax-validated by terraform_validate pre-commit hook\n3. Prevented from commit if validation fails\n\nThis addresses the user's requirement: \"ensure we never have terraform syntax errors again\"\n\n## Related Issues\n\nResolves critical findings from upstream CI/CD failure analysis:\n- Issue #1: Duplicate lifecycle blocks in GKE autopilot\n- Issue #2: Invalid variable references in variable validation\n- Issue #3: prevent_destroy using variables (not allowed)\n- Issue #4: Security validation false positives on .example files\n\n## Testing\n\n- Ran terraform init -backend=false on both modules: SUCCESS\n- Ran terraform validate on both modules: SUCCESS\n- Validated YAML syntax: SUCCESS\n- Pre-commit hooks configured and ready\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T16:18:29-05:00",
+          "tree_id": "7c248a7aa2db4963aa59a7833ee1e32da1e50b8e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b6ac198c79248aeda34d43a341623dc4adea0066"
+        },
+        "date": 1762291184637,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 154.59909995557524,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001893225912231766",
+            "extra": "mean: 6.468342961164422 msec\nrounds: 103"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 142.27547510355055,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000478263896848802",
+            "extra": "mean: 7.028618244094302 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 46640.44230096721,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.440619999850696 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46628.285371025035,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.446209999851362 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 49241.67815639159,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.307999999999993 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 186.03913305629445,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.3752131800001735 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.426992562916414,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.47477133999985 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94012233126847,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.60238362000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1418963.0221603375,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 704.7399998327819 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5621.991882967765,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 177.8729000000112 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2629.525011542215,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 380.2968200000123 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2935.9752177862742,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.6023299999106 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 64559.00104609996,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000032516731325408827",
+            "extra": "mean: 15.489706838647102 usec\nrounds: 12181"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20731.573204183445,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022036903148351208",
+            "extra": "mean: 48.23560615256198 usec\nrounds: 4583"
           }
         ]
       }
