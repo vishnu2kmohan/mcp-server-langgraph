@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762278696458,
+  "lastUpdate": 1762278879975,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -26052,6 +26052,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000022021213208666466",
             "extra": "mean: 58.44842860052765 usec\nrounds: 4937"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "618f9d0de240d001f88c9bbc1ded754954a66e95",
+          "message": "docs: update Mintlify navigation for reorganized documentation\n\nUpdate docs.json to include newly reorganized MDX documentation\nin the Mintlify navigation structure.\n\nChanges:\n- Added getting-started/day-1-developer to Getting Started\n- Added security/remediation-guide to Security section\n- Added CI/CD tab with comprehensive organization\n- Added reports/CODEX_VALIDATION_GITHUB_ACTIONS.md\n\nThis ensures all newly converted MDX files are properly\ndiscoverable in the documentation portal.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-04T12:49:08-05:00",
+          "tree_id": "56d62134ced75f151cf6fb8abdf3ee806bdb36fd",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/618f9d0de240d001f88c9bbc1ded754954a66e95"
+        },
+        "date": 1762278878813,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.48310065752165,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00025385501536857787",
+            "extra": "mean: 7.067981938144193 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 144.59015660206327,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00021541287384612353",
+            "extra": "mean: 6.91610012396743 msec\nrounds: 121"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45279.88857523634,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.084860000006756 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48783.081637056035,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.49890999998638 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46109.25495750874,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.687619999966046 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.23414633186883,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.256679829999982 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.355042528264924,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.66612259000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.931857118126846,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.68610412999988 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1347945.0578390656,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 741.8699999561795 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4818.830989185913,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 207.51921000012885 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2948.131633370616,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.19787999991513 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2907.515733367225,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.93622999999707 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59907.54825222782,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000026060545585856695",
+            "extra": "mean: 16.692387339734147 usec\nrounds: 11548"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17052.82801013723,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002675361467676346",
+            "extra": "mean: 58.64129981288381 usec\nrounds: 4813"
           }
         ]
       }
