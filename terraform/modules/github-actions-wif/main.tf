@@ -15,8 +15,12 @@
 # ============================================================================
 
 locals {
-  # Full provider resource name
+  # Full provider resource name (for outputs and GitHub Actions)
   workload_identity_provider_name = "projects/${var.project_number}/locations/global/workloadIdentityPools/${var.pool_id}/providers/${var.provider_id}"
+
+  # Pool path for IAM bindings (WITHOUT /providers/PROVIDER segment)
+  # CRITICAL: principalSet members must use pool path only, not provider path
+  workload_identity_pool_name = "projects/${var.project_number}/locations/global/workloadIdentityPools/${var.pool_id}"
 }
 
 # ============================================================================
@@ -87,10 +91,11 @@ resource "google_service_account_iam_member" "github_actions_wif" {
   # Conditional access:
   # - If repository filter is specified, use it
   # - Otherwise, allow any repository from the configured owner
+  # CRITICAL: Use pool path (workload_identity_pool_name), NOT provider path
   member = each.value.repository_filter != null ? (
-    "principalSet://iam.googleapis.com/${local.workload_identity_provider_name}/attribute.repository/${var.github_repository_owner}/${each.value.repository_filter}"
+    "principalSet://iam.googleapis.com/${local.workload_identity_pool_name}/attribute.repository/${var.github_repository_owner}/${each.value.repository_filter}"
     ) : (
-    "principalSet://iam.googleapis.com/${local.workload_identity_provider_name}/attribute.repository_owner/${var.github_repository_owner}"
+    "principalSet://iam.googleapis.com/${local.workload_identity_pool_name}/attribute.repository_owner/${var.github_repository_owner}"
   )
 }
 
