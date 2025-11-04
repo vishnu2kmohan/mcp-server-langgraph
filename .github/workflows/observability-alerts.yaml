@@ -1,0 +1,300 @@
+name: Observability and Alerting
+
+# ==============================================================================
+# Advanced Observability Integration with Alerting
+# ==============================================================================
+#
+# Purpose:
+#   Integrate with observability platforms and send alerts for:
+#   - Deployment failures
+#   - Performance degradation
+#   - High error rates
+#   - Security vulnerabilities
+#
+# Integrations:
+#   - Slack (webhook)
+#   - PagerDuty (critical alerts)
+#   - Datadog (metrics)
+#   - Sentry (errors)
+#
+# ==============================================================================
+
+on:
+  workflow_run:
+    workflows:
+      - "Deploy to GKE Production"
+      - "Performance Regression Detection"
+      - "Security Scan"
+      - "DORA Metrics Tracking"
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  # ==========================================================================
+  # Collect Metrics
+  # ==========================================================================
+
+  collect-metrics:
+    name: Collect Workflow Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      workflow_name: ${{ steps.metadata.outputs.workflow_name }}
+      workflow_status: ${{ steps.metadata.outputs.workflow_status }}
+      workflow_conclusion: ${{ steps.metadata.outputs.workflow_conclusion }}
+      severity: ${{ steps.classify.outputs.severity }}
+
+    steps:
+      - name: Extract workflow metadata
+        id: metadata
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_STATUS: ${{ github.event.workflow_run.status }}
+          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          echo "workflow_name=$WORKFLOW_NAME" >> $GITHUB_OUTPUT
+          echo "workflow_status=$WORKFLOW_STATUS" >> $GITHUB_OUTPUT
+          echo "workflow_conclusion=$WORKFLOW_CONCLUSION" >> $GITHUB_OUTPUT
+
+      - name: Classify alert severity
+        id: classify
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          SEVERITY="info"
+
+          # Production deployment failures are critical
+          if [[ "$WORKFLOW_NAME" == *"Production"* ]] && [[ "$CONCLUSION" == "failure" ]]; then
+            SEVERITY="critical"
+          # Performance regressions are high priority
+          elif [[ "$WORKFLOW_NAME" == *"Performance"* ]] && [[ "$CONCLUSION" == "failure" ]]; then
+            SEVERITY="high"
+          # Security scan failures are high priority
+          elif [[ "$WORKFLOW_NAME" == *"Security"* ]] && [[ "$CONCLUSION" == "failure" ]]; then
+            SEVERITY="high"
+          # Other failures are medium priority
+          elif [[ "$CONCLUSION" == "failure" ]]; then
+            SEVERITY="medium"
+          fi
+
+          echo "severity=$SEVERITY" >> $GITHUB_OUTPUT
+
+  # ==========================================================================
+  # Send Slack Notification
+  # ==========================================================================
+
+  notify-slack:
+    name: Send Slack Alert
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: collect-metrics
+    if: secrets.SLACK_WEBHOOK_URL != ''
+
+    steps:
+      - name: Determine Slack message
+        id: message
+        env:
+          WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
+          CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
+          SEVERITY: ${{ needs.collect-metrics.outputs.severity }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          # Set emoji based on status
+          EMOJI="✅"
+          COLOR="good"
+          if [ "$CONCLUSION" = "failure" ]; then
+            EMOJI="❌"
+            COLOR="danger"
+          elif [ "$CONCLUSION" = "cancelled" ]; then
+            EMOJI="⚠️"
+            COLOR="warning"
+          fi
+
+          # Create message
+          MESSAGE="$EMOJI Workflow: $WORKFLOW_NAME\nStatus: $CONCLUSION\nSeverity: $SEVERITY"
+
+          echo "emoji=$EMOJI" >> $GITHUB_OUTPUT
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
+          CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
+          SEVERITY: ${{ needs.collect-metrics.outputs.severity }}
+          EMOJI: ${{ steps.message.outputs.emoji }}
+          COLOR: ${{ steps.message.outputs.color }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          curl -X POST "$SLACK_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"attachments\": [
+                {
+                  \"color\": \"$COLOR\",
+                  \"blocks\": [
+                    {
+                      \"type\": \"header\",
+                      \"text\": {
+                        \"type\": \"plain_text\",
+                        \"text\": \"$EMOJI $WORKFLOW_NAME\"
+                      }
+                    },
+                    {
+                      \"type\": \"section\",
+                      \"fields\": [
+                        {\"type\": \"mrkdwn\", \"text\": \"*Status:*\n$CONCLUSION\"},
+                        {\"type\": \"mrkdwn\", \"text\": \"*Severity:*\n$SEVERITY\"},
+                        {\"type\": \"mrkdwn\", \"text\": \"*Repository:*\n${{ github.repository }}\"},
+                        {\"type\": \"mrkdwn\", \"text\": \"*Branch:*\n${{ github.ref }}\"}
+                      ]
+                    },
+                    {
+                      \"type\": \"actions\",
+                      \"elements\": [
+                        {
+                          \"type\": \"button\",
+                          \"text\": {\"type\": \"plain_text\", \"text\": \"View Workflow Run\"},
+                          \"url\": \"$RUN_URL\"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }"
+
+  # ==========================================================================
+  # Send PagerDuty Alert (Critical Only)
+  # ==========================================================================
+
+  notify-pagerduty:
+    name: Send PagerDuty Alert
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: collect-metrics
+    if: |
+      secrets.PAGERDUTY_INTEGRATION_KEY != '' &&
+      needs.collect-metrics.outputs.severity == 'critical'
+
+    steps:
+      - name: Send PagerDuty event
+        env:
+          PAGERDUTY_KEY: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
+          WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
+          CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          curl -X POST https://events.pagerduty.com/v2/enqueue \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"routing_key\": \"$PAGERDUTY_KEY\",
+              \"event_action\": \"trigger\",
+              \"payload\": {
+                \"summary\": \"Critical: $WORKFLOW_NAME failed\",
+                \"severity\": \"critical\",
+                \"source\": \"GitHub Actions\",
+                \"component\": \"${{ github.repository }}\",
+                \"custom_details\": {
+                  \"workflow\": \"$WORKFLOW_NAME\",
+                  \"status\": \"$CONCLUSION\",
+                  \"branch\": \"${{ github.ref }}\",
+                  \"run_url\": \"$RUN_URL\"
+                }
+              },
+              \"links\": [
+                {
+                  \"href\": \"$RUN_URL\",
+                  \"text\": \"View Workflow Run\"
+                }
+              ]
+            }"
+
+  # ==========================================================================
+  # Send Metrics to Datadog
+  # ==========================================================================
+
+  send-datadog-metrics:
+    name: Send Metrics to Datadog
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: collect-metrics
+    if: secrets.DATADOG_API_KEY != ''
+
+    steps:
+      - name: Send workflow metrics
+        env:
+          DD_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
+          CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
+        run: |
+          # Convert conclusion to metric value
+          VALUE=0
+          if [ "$CONCLUSION" = "success" ]; then VALUE=1; fi
+
+          TIMESTAMP=$(date +%s)
+
+          curl -X POST "https://api.datadoghq.com/api/v1/series" \
+            -H "Content-Type: application/json" \
+            -H "DD-API-KEY: $DD_API_KEY" \
+            -d "{
+              \"series\": [
+                {
+                  \"metric\": \"github.workflow.status\",
+                  \"points\": [[\"$TIMESTAMP\", \"$VALUE\"]],
+                  \"type\": \"gauge\",
+                  \"tags\": [
+                    \"workflow:$WORKFLOW_NAME\",
+                    \"repository:${{ github.repository }}\",
+                    \"conclusion:$CONCLUSION\"
+                  ]
+                }
+              ]
+            }"
+
+  # ==========================================================================
+  # Summary
+  # ==========================================================================
+
+  create-summary:
+    name: Create Alert Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [collect-metrics, notify-slack, notify-pagerduty, send-datadog-metrics]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        env:
+          WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
+          CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
+          SEVERITY: ${{ needs.collect-metrics.outputs.severity }}
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          # Observability Alert Summary
+
+          ## Workflow Details
+
+          - **Workflow**: $WORKFLOW_NAME
+          - **Status**: $CONCLUSION
+          - **Severity**: $SEVERITY
+
+          ## Notifications Sent
+
+          - Slack: ${{ needs.notify-slack.result || 'Skipped' }}
+          - PagerDuty: ${{ needs.notify-pagerduty.result || 'Skipped' }}
+          - Datadog: ${{ needs.send-datadog-metrics.result || 'Skipped' }}
+
+          ## Configuration
+
+          To enable notifications, configure the following secrets:
+          - \`SLACK_WEBHOOK_URL\` - Slack incoming webhook
+          - \`PAGERDUTY_INTEGRATION_KEY\` - PagerDuty integration key (critical alerts)
+          - \`DATADOG_API_KEY\` - Datadog API key (metrics)
+
+          EOF

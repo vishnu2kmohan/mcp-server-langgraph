@@ -1,0 +1,266 @@
+name: Performance Regression Detection
+
+# ==============================================================================
+# Automatic Performance Regression Detection
+# ==============================================================================
+#
+# Purpose:
+#   Automatically detect performance regressions by:
+#   1. Running performance benchmarks
+#   2. Comparing against baseline
+#   3. Alerting on >50% degradation
+#   4. Creating issues for regressions
+#
+# Triggers:
+#   - Pull requests
+#   - Push to main/develop
+#   - Daily schedule
+#
+# Metrics Tracked:
+#   - API response times (p50, p95, p99)
+#   - Memory usage
+#   - CPU usage
+#   - Database query times
+#
+# ==============================================================================
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+
+concurrency:
+  group: performance-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  BASELINE_DIR: .perf-baseline
+
+jobs:
+  # ==========================================================================
+  # Run Performance Benchmarks
+  # ==========================================================================
+
+  run-benchmarks:
+    name: Run Performance Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      has_regression: ${{ steps.detect.outputs.has_regression }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install requests pytest pytest-benchmark
+
+      - name: Start test server
+        run: |
+          # Start the MCP server for benchmarking
+          python -m pip install -e ".[dev]"
+
+          # Start server in background
+          python -m mcp_server_langgraph.app &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+
+          # Wait for server to be ready
+          for i in {1..30}; do
+            if curl -f http://localhost:8000/health/live 2>/dev/null; then
+              echo "✅ Server ready"
+              break
+            fi
+            echo "Waiting for server... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run performance benchmarks
+        run: |
+          # Run pytest benchmarks
+          pytest tests/performance/ \
+            --benchmark-only \
+            --benchmark-json=benchmark-results.json \
+            --benchmark-min-rounds=10
+
+      - name: Process benchmark results
+        id: process
+        run: |
+          python scripts/ci/performance_regression.py \
+            --baseline ${{ env.BASELINE_DIR }}/baseline.json \
+            --current benchmark-results.json \
+            --threshold 50 \
+            --output performance-report.md || echo "has_regression=true" >> $GITHUB_OUTPUT
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v5
+        with:
+          name: performance-benchmarks
+          path: |
+            benchmark-results.json
+            performance-report.md
+          retention-days: 90
+
+      - name: Detect regressions
+        id: detect
+        run: |
+          if [ -f performance-report.md ] && grep -q "Regressions Detected" performance-report.md; then
+            echo "has_regression=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_regression=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Stop test server
+        if: always()
+        run: |
+          if [ -n "$SERVER_PID" ]; then
+            kill $SERVER_PID || true
+          fi
+
+  # ==========================================================================
+  # Report Regressions
+  # ==========================================================================
+
+  report-regression:
+    name: Report Performance Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: run-benchmarks
+    if: needs.run-benchmarks.outputs.has_regression == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Download benchmark results
+        uses: actions/download-artifact@v5
+        with:
+          name: performance-benchmarks
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('performance-report.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: Create issue for regression
+        if: github.event_name != 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('performance-report.md', 'utf8');
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Performance Regression Detected',
+              labels: ['performance', 'regression', 'urgent'],
+              body: report
+            });
+
+      - name: Add step summary
+        run: |
+          cat performance-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail workflow if critical regression
+        run: |
+          # Check if any critical regressions (>100% degradation)
+          if grep -q "Critical" performance-report.md; then
+            echo "❌ Critical performance regression detected"
+            exit 1
+          fi
+
+  # ==========================================================================
+  # Update Baseline (on improvements)
+  # ==========================================================================
+
+  update-baseline:
+    name: Update Performance Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: run-benchmarks
+    if: |
+      needs.run-benchmarks.outputs.has_regression == 'false' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Download benchmark results
+        uses: actions/download-artifact@v5
+        with:
+          name: performance-benchmarks
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Check for improvements
+        id: check
+        run: |
+          pip install requests
+
+          python scripts/ci/performance_regression.py \
+            --baseline ${{ env.BASELINE_DIR }}/baseline.json \
+            --current benchmark-results.json \
+            --check-improvement
+
+          # If significant improvement, update baseline
+          if [ $? -eq 2 ]; then
+            echo "update_baseline=true" >> $GITHUB_OUTPUT
+          else
+            echo "update_baseline=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update baseline
+        if: steps.check.outputs.update_baseline == 'true'
+        run: |
+          mkdir -p ${{ env.BASELINE_DIR }}
+          cp benchmark-results.json ${{ env.BASELINE_DIR }}/baseline.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add ${{ env.BASELINE_DIR }}/baseline.json
+          git commit -m "chore: update performance baseline [skip ci]"
+          git push
+
+      - name: Comment on improvement
+        if: steps.check.outputs.update_baseline == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: '🎉 Performance improved! Baseline updated.'
+            });

@@ -1,0 +1,263 @@
+name: DORA Metrics Tracking
+
+# ==============================================================================
+# DORA Metrics - DevOps Performance Measurement
+# ==============================================================================
+#
+# Purpose:
+#   Track and report the four key DORA (DevOps Research and Assessment) metrics:
+#   1. Deployment Frequency - How often code is deployed
+#   2. Lead Time for Changes - Time from commit to production
+#   3. Mean Time to Recovery (MTTR) - Time to recover from failures
+#   4. Change Failure Rate - Percentage of failed deployments
+#
+# Triggers:
+#   - Daily at 9 AM UTC
+#   - After each production deployment
+#   - Manual workflow dispatch
+#
+# Outputs:
+#   - Historical metrics stored in .dora-metrics/
+#   - Performance classification (Elite/High/Medium/Low)
+#   - Trend analysis and alerts
+#
+# ==============================================================================
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9 AM UTC
+  workflow_run:
+    workflows: ["Deploy to GKE Production"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Number of days to analyze'
+        required: false
+        default: '30'
+
+permissions:
+  contents: write  # To commit metrics history
+  pull-requests: write  # To comment on PRs
+  deployments: read  # To read deployment data
+
+concurrency:
+  group: dora-metrics
+  cancel-in-progress: false  # Don't cancel metrics calculation
+
+env:
+  METRICS_DIR: .dora-metrics
+
+jobs:
+  # ==========================================================================
+  # Calculate DORA Metrics
+  # ==========================================================================
+
+  calculate-metrics:
+    name: Calculate DORA Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      classification: ${{ steps.calculate.outputs.classification }}
+      deployment_frequency: ${{ steps.calculate.outputs.deployment_frequency }}
+      lead_time: ${{ steps.calculate.outputs.lead_time }}
+      mttr: ${{ steps.calculate.outputs.mttr }}
+      change_failure_rate: ${{ steps.calculate.outputs.change_failure_rate }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Full history for accurate metrics
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Calculate DORA metrics
+        id: calculate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DAYS: ${{ github.event.inputs.days || '30' }}
+        run: |
+          python scripts/ci/dora_metrics.py \
+            --repo ${{ github.repository }} \
+            --days $DAYS \
+            --output ${{ env.METRICS_DIR }}/metrics.json
+
+          # Extract metrics for outputs
+          METRICS=$(cat ${{ env.METRICS_DIR }}/metrics.json | tail -1)
+          echo "classification=$(echo $METRICS | jq -r '.classification')" >> $GITHUB_OUTPUT
+          echo "deployment_frequency=$(echo $METRICS | jq -r '.deployment_frequency_per_day')" >> $GITHUB_OUTPUT
+          echo "lead_time=$(echo $METRICS | jq -r '.lead_time_hours')" >> $GITHUB_OUTPUT
+          echo "mttr=$(echo $METRICS | jq -r '.mttr_hours')" >> $GITHUB_OUTPUT
+          echo "change_failure_rate=$(echo $METRICS | jq -r '.change_failure_rate')" >> $GITHUB_OUTPUT
+
+      - name: Upload metrics artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: dora-metrics
+          path: ${{ env.METRICS_DIR }}/metrics.json
+          retention-days: 90
+
+      - name: Commit metrics history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add ${{ env.METRICS_DIR }}/metrics.json
+          git commit -m "chore: update DORA metrics [skip ci]" || echo "No changes to commit"
+          git push || echo "Nothing to push"
+
+  # ==========================================================================
+  # Generate Report and Alerts
+  # ==========================================================================
+
+  report-metrics:
+    name: Generate DORA Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: calculate-metrics
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Download metrics
+        uses: actions/download-artifact@v5
+        with:
+          name: dora-metrics
+          path: ${{ env.METRICS_DIR }}
+
+      - name: Generate report summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          # DORA Metrics Report
+
+          **Performance Classification**: ${{ needs.calculate-metrics.outputs.classification }}
+
+          ## Key Metrics
+
+          | Metric | Value | Target (Elite) |
+          |--------|-------|----------------|
+          | 🚀 **Deployment Frequency** | ${{ needs.calculate-metrics.outputs.deployment_frequency }} per day | ≥1 per day |
+          | ⏱️ **Lead Time for Changes** | ${{ needs.calculate-metrics.outputs.lead_time }} hours | <1 hour |
+          | 🔧 **Mean Time to Recovery** | ${{ needs.calculate-metrics.outputs.mttr }} hours | <1 hour |
+          | ❌ **Change Failure Rate** | ${{ needs.calculate-metrics.outputs.change_failure_rate }}% | <15% |
+
+          ## Performance Levels
+
+          - 🟢 **Elite**: Top 10% of performers
+          - 🟡 **High**: Top 25% of performers
+          - 🟠 **Medium**: Top 50% of performers
+          - 🔴 **Low**: Bottom 50% of performers
+
+          ## Current Status
+
+          You are currently at **${{ needs.calculate-metrics.outputs.classification }}** performance level.
+
+          EOF
+
+      - name: Check for performance regression
+        id: check-regression
+        env:
+          CLASSIFICATION: ${{ needs.calculate-metrics.outputs.classification }}
+        run: |
+          # Load previous classification from history
+          if [ -f ${{ env.METRICS_DIR }}/metrics.json ]; then
+            PREV_CLASS=$(jq -r '.[-2].classification // "Unknown"' ${{ env.METRICS_DIR }}/metrics.json)
+
+            if [ "$PREV_CLASS" != "Unknown" ] && [ "$PREV_CLASS" != "$CLASSIFICATION" ]; then
+              echo "regression=true" >> $GITHUB_OUTPUT
+              echo "previous=$PREV_CLASS" >> $GITHUB_OUTPUT
+            else
+              echo "regression=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "regression=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create issue for performance regression
+        if: steps.check-regression.outputs.regression == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📉 DORA Metrics Performance Regression Detected',
+              labels: ['dora-metrics', 'performance', 'urgent'],
+              body: `## DORA Metrics Performance Regression
+
+              **Previous Classification**: ${{ steps.check-regression.outputs.previous }}
+              **Current Classification**: ${{ needs.calculate-metrics.outputs.classification }}
+
+              ### Metrics
+
+              - **Deployment Frequency**: ${{ needs.calculate-metrics.outputs.deployment_frequency }} per day
+              - **Lead Time**: ${{ needs.calculate-metrics.outputs.lead_time }} hours
+              - **MTTR**: ${{ needs.calculate-metrics.outputs.mttr }} hours
+              - **Change Failure Rate**: ${{ needs.calculate-metrics.outputs.change_failure_rate }}%
+
+              ### Recommended Actions
+
+              1. Review recent deployments for patterns
+              2. Analyze failed deployments
+              3. Check if lead time has increased
+              4. Investigate MTTR spikes
+
+              ### Resources
+
+              - [DORA Metrics History](${{ github.server_url }}/${{ github.repository }}/tree/main/.dora-metrics)
+              - [Recent Deployments](https://github.com/${{ github.repository }}/deployments)
+              `
+            });
+
+  # ==========================================================================
+  # Slack Notification (if configured)
+  # ==========================================================================
+
+  notify-slack:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [calculate-metrics, report-metrics]
+    if: always() && secrets.SLACK_WEBHOOK_URL != ''
+    steps:
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CLASSIFICATION: ${{ needs.calculate-metrics.outputs.classification }}
+        run: |
+          EMOJI="🟢"
+          if [ "$CLASSIFICATION" = "High" ]; then EMOJI="🟡"; fi
+          if [ "$CLASSIFICATION" = "Medium" ]; then EMOJI="🟠"; fi
+          if [ "$CLASSIFICATION" = "Low" ]; then EMOJI="🔴"; fi
+
+          curl -X POST "$SLACK_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"text\": \"$EMOJI DORA Metrics Update: $CLASSIFICATION\",
+              \"blocks\": [
+                {
+                  \"type\": \"header\",
+                  \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \"$EMOJI DORA Metrics: $CLASSIFICATION Performance\"
+                  }
+                },
+                {
+                  \"type\": \"section\",
+                  \"fields\": [
+                    {\"type\": \"mrkdwn\", \"text\": \"*Deployment Frequency:*\n${{ needs.calculate-metrics.outputs.deployment_frequency }} per day\"},
+                    {\"type\": \"mrkdwn\", \"text\": \"*Lead Time:*\n${{ needs.calculate-metrics.outputs.lead_time }} hours\"},
+                    {\"type\": \"mrkdwn\", \"text\": \"*MTTR:*\n${{ needs.calculate-metrics.outputs.mttr }} hours\"},
+                    {\"type\": \"mrkdwn\", \"text\": \"*Failure Rate:*\n${{ needs.calculate-metrics.outputs.change_failure_rate }}%\"}
+                  ]
+                }
+              ]
+            }"
