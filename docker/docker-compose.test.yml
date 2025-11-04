@@ -15,8 +15,6 @@
 #   - Isolated network (no conflicts with dev environment)
 #   - Auto-cleanup (no persistent volumes)
 
-version: '3.8'
-
 services:
   # Test Runner - Executes pytest inside container
   test-runner:
