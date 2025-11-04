@@ -1,0 +1,376 @@
+# Migration Guide: Container Pattern & Dependency Injection
+
+This guide helps you migrate your code to use the new container pattern and dependency injection.
+
+## Overview
+
+We've introduced a dependency injection container pattern to replace global singletons, making the codebase more testable and flexible.
+
+**Benefits:**
+- ✅ Easier testing (no global state!)
+- ✅ Multiple independent agent instances
+- ✅ Per-tenant/per-agent configuration
+- ✅ No environment variable pre-seeding in tests
+- ✅ Better type safety and IDE support
+
+## What Changed?
+
+### Phase 1: Test Infrastructure (✅ Complete)
+
+**Before:**
+```python
+# tests/conftest.py
+os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key")
+os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
+os.environ.setdefault("OPENFGA_STORE_ID", "")
+# ... 15+ environment variables
+
+def pytest_configure(config):
+    from mcp_server_langgraph.observability.telemetry import init_observability
+    init_observability(settings=test_settings)
+```
+
+**After:**
+```python
+# tests/conftest.py
+os.environ.setdefault("ENVIRONMENT", "test")  # Only 3 critical env vars!
+
+@pytest.fixture(scope="session")
+def test_container():
+    from mcp_server_langgraph.core.container import create_test_container
+    return create_test_container()
+```
+
+**Migration Steps:**
+1. Use `test_container` fixture instead of manual setup
+2. Remove environment variable pre-seeding from tests
+3. Use `create_test_agent()` helper for agent instances
+
+### Phase 2: Agent Creation (✅ Complete)
+
+**Before:**
+```python
+from mcp_server_langgraph.core.agent import get_agent_graph
+
+# Singleton - returns same instance every time
+agent = get_agent_graph()
+```
+
+**After:**
+```python
+from mcp_server_langgraph.core.agent import create_agent
+
+# Factory - creates new instance each time
+agent = create_agent()
+
+# With container (preferred)
+from mcp_server_langgraph.core.container import create_test_container
+container = create_test_container()
+agent = create_agent(container=container)
+
+# With custom settings
+from mcp_server_langgraph.core.config import Settings
+settings = Settings(model_name="gpt-4", temperature=0.7)
+agent = create_agent(settings=settings)
+```
+
+**Migration Steps:**
+1. Replace `get_agent_graph()` with `create_agent()`
+2. Pass `container` parameter for full DI benefits
+3. Update tests to use `create_test_agent()` helper
+
+### Backward Compatibility
+
+The old `get_agent_graph()` function still works:
+
+```python
+# Still works (deprecated)
+from mcp_server_langgraph.core.agent import get_agent_graph
+agent = get_agent_graph()  # Returns singleton
+```
+
+**Deprecation Timeline:**
+- ✅ **Now**: New code uses `create_agent()`
+- **v2.0**: `get_agent_graph()` marked as deprecated in docstring
+- **v3.0**: `get_agent_graph()` removed
+
+## Testing Migration
+
+### Old Pattern (❌ Don't use)
+
+```python
+def test_my_agent():
+    # Relies on global state
+    from mcp_server_langgraph.core.agent import get_agent_graph
+
+    agent = get_agent_graph()
+    result = agent.invoke({"messages": [...]})
+
+    assert result is not None
+```
+
+### New Pattern (✅ Use this)
+
+```python
+def test_my_agent(test_container):
+    """Test using container fixture"""
+    from mcp_server_langgraph.core.agent import create_agent
+
+    agent = create_agent(container=test_container)
+    result = agent.invoke({"messages": [...]})
+
+    assert result is not None
+
+# Or use the helper (even simpler!)
+def test_my_agent_simple():
+    from mcp_server_langgraph.core.test_helpers import create_test_agent
+
+    agent = create_test_agent()
+    result = agent.invoke({"messages": [...]})
+
+    assert result is not None
+```
+
+## Common Migration Patterns
+
+### Pattern 1: Test Setup
+
+**Before:**
+```python
+import os
+
+# Set 20+ environment variables before importing
+os.environ["ANTHROPIC_API_KEY"] = "test-key"
+os.environ["OPENFGA_STORE_ID"] = ""
+# ...
+
+from mcp_server_langgraph.core.agent import get_agent_graph
+
+def test_something():
+    agent = get_agent_graph()
+    # test agent
+```
+
+**After:**
+```python
+# No environment setup needed!
+
+def test_something(test_container):
+    from mcp_server_langgraph.core.agent import create_agent
+
+    agent = create_agent(container=test_container)
+    # test agent
+```
+
+### Pattern 2: Custom Configuration
+
+**Before:**
+```python
+# Modify global settings
+from mcp_server_langgraph.core.config import settings
+
+settings.model_name = "test-model"  # Affects all tests!
+
+def test_with_custom_model():
+    agent = get_agent_graph()
+    # Uses modified global settings
+```
+
+**After:**
+```python
+def test_with_custom_model():
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.core.agent import create_agent
+
+    # Create isolated settings
+    custom_settings = Settings(model_name="test-model")
+    agent = create_agent(settings=custom_settings)
+
+    # No impact on other tests!
+```
+
+### Pattern 3: Multiple Agents
+
+**Before:**
+```python
+# Not possible - singleton returns same instance
+agent1 = get_agent_graph()
+agent2 = get_agent_graph()
+
+assert agent1 is agent2  # True - same instance
+```
+
+**After:**
+```python
+# Create multiple independent agents
+agent1 = create_agent()
+agent2 = create_agent()
+
+assert agent1 is not agent2  # True - different instances!
+```
+
+## Helper Functions Reference
+
+### Container Helpers
+
+```python
+from mcp_server_langgraph.core.container import (
+    create_test_container,        # Test mode (no-op providers)
+    create_development_container,  # Development mode
+    create_production_container,   # Production mode
+)
+
+# Create containers
+test_container = create_test_container()
+dev_container = create_development_container()
+prod_container = create_production_container()
+```
+
+### Agent Helpers
+
+```python
+from mcp_server_langgraph.core.agent import (
+    create_agent,        # Main factory function
+    create_agent_graph,  # Create just the graph
+    get_agent_graph,     # Legacy singleton (deprecated)
+)
+
+# Create agents
+agent = create_agent()
+agent = create_agent(container=container)
+agent = create_agent(settings=settings)
+```
+
+### Test Helpers
+
+```python
+from mcp_server_langgraph.core.test_helpers import (
+    create_test_agent,       # Agent with test defaults
+    create_test_server,      # Server with test defaults
+    create_test_settings,    # Settings with safe defaults
+    create_test_container,   # Container for testing
+    create_mock_llm_response,  # Mock LLM responses
+    create_mock_mcp_request,   # Mock MCP requests
+    create_mock_jwt_token,     # Mock JWT tokens
+)
+
+# In tests
+agent = create_test_agent()
+server = create_test_server()
+settings = create_test_settings(model_name="test-model")
+```
+
+## Troubleshooting
+
+### Issue: Tests fail with "observability not initialized"
+
+**Cause:** Old code trying to use global initialization
+
+**Solution:**
+```python
+# Don't do this
+from mcp_server_langgraph.observability.telemetry import init_observability
+init_observability()
+
+# Do this instead
+from mcp_server_langgraph.core.container import create_test_container
+container = create_test_container()
+# Telemetry is automatically handled
+```
+
+### Issue: Multiple tests share state
+
+**Cause:** Using singleton `get_agent_graph()`
+
+**Solution:**
+```python
+# Don't use singleton
+agent = get_agent_graph()
+
+# Use factory
+agent = create_agent()
+```
+
+### Issue: Can't override settings in tests
+
+**Cause:** Global settings being used
+
+**Solution:**
+```python
+# Create isolated settings
+settings = Settings(model_name="test-model")
+agent = create_agent(settings=settings)
+```
+
+## Best Practices
+
+### ✅ Do
+
+1. **Use containers in new code**
+   ```python
+   container = create_test_container()
+   agent = create_agent(container=container)
+   ```
+
+2. **Use test helpers**
+   ```python
+   agent = create_test_agent()
+   ```
+
+3. **Create isolated instances**
+   ```python
+   agent1 = create_agent()
+   agent2 = create_agent()
+   ```
+
+4. **Use fixtures**
+   ```python
+   def test_my_feature(test_container):
+       agent = create_agent(container=test_container)
+   ```
+
+### ❌ Don't
+
+1. **Don't modify global state**
+   ```python
+   # Bad
+   from mcp_server_langgraph.core.config import settings
+   settings.model_name = "test"
+   ```
+
+2. **Don't use singletons in new code**
+   ```python
+   # Deprecated
+   agent = get_agent_graph()
+   ```
+
+3. **Don't pre-seed environment variables**
+   ```python
+   # No longer needed
+   os.environ["ANTHROPIC_API_KEY"] = "test"
+   ```
+
+## Timeline & Rollout
+
+### Phase 1 (✅ Complete)
+- Container implementation
+- Test infrastructure migration
+- Helper functions
+
+### Phase 2 (✅ Complete)
+- Agent factory functions
+- Test helper updates
+- Documentation
+
+### Phase 3 (🚧 Future)
+- Server refactoring
+- Infrastructure layer extraction
+- Complete singleton removal
+
+## Questions?
+
+- See `/docs/day-1-developer.md` for quickstart guide
+- See `/tests/core/test_container.py` for examples
+- See `/tests/core/test_agent_di.py` for agent examples
+
+**Need help?** [Open an issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)

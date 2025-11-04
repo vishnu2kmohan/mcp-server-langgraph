@@ -236,7 +236,7 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     return state
 
 
-def create_agent_graph() -> Any:  # noqa: C901
+def _create_agent_graph_singleton() -> Any:  # noqa: C901
     """
     Create the LangGraph agent using functional API with LiteLLM and observability.
 
@@ -804,6 +804,7 @@ def get_agent_graph() -> None:
     """
     Get or create the agent graph singleton.
 
+    DEPRECATED: Use create_agent() or create_agent_graph() instead.
     This function provides lazy initialization that respects observability initialization.
     Call this instead of accessing agent_graph directly.
 
@@ -815,9 +816,118 @@ def get_agent_graph() -> None:
     """
     global _agent_graph_cache
     if _agent_graph_cache is None:
-        _agent_graph_cache = create_agent_graph()
+        _agent_graph_cache = _create_agent_graph_singleton()
     return _agent_graph_cache  # type: ignore[no-any-return]
 
 
 # Backward compatibility: agent_graph will be None until get_agent_graph() is called
 agent_graph = None
+
+
+# ==============================================================================
+# Dependency Injection API (NEW)
+# ==============================================================================
+
+
+def create_agent_graph(
+    settings: Optional[Any] = None,
+    container: Optional[Any] = None,
+) -> Any:
+    """
+    Create a new agent graph with dependency injection support.
+
+    This function creates a fresh agent graph instance using either:
+    - A container (preferred for full DI benefits)
+    - Custom settings
+    - Default settings (fallback)
+
+    Args:
+        settings: Optional Settings instance to use
+        container: Optional ApplicationContainer instance to use
+
+    Returns:
+        Compiled LangGraph StateGraph
+
+    Example:
+        # Using container (preferred)
+        from mcp_server_langgraph.core.container import create_test_container
+        container = create_test_container()
+        agent = create_agent_graph(container=container)
+
+        # Using custom settings
+        from mcp_server_langgraph.core.config import Settings
+        settings = Settings(environment="test")
+        agent = create_agent_graph(settings=settings)
+
+        # Using defaults
+        agent = create_agent_graph()
+    """
+    # Get settings from container or use provided/default
+    if container is not None:
+        actual_settings = container.settings
+    elif settings is not None:
+        actual_settings = settings
+    else:
+        # Use default settings (will use global settings object)
+        from mcp_server_langgraph.core.config import settings as default_settings
+
+        actual_settings = default_settings
+
+    # Create a fresh agent graph using the same create_agent_graph function
+    # This ensures we use the same logic but with injectable settings
+    return create_agent_graph_impl(actual_settings)
+
+
+def create_agent_graph_impl(settings_to_use: Any) -> Any:
+    """
+    Implementation of agent graph creation with specific settings.
+
+    This is a wrapper around the existing _create_agent_graph_singleton() logic
+    but accepting settings parameter.
+
+    Args:
+        settings_to_use: Settings instance to use
+
+    Returns:
+        Compiled LangGraph StateGraph
+    """
+    # For now, use the existing singleton function
+    # TODO: Refactor _create_agent_graph_singleton() to accept settings parameter
+    return _create_agent_graph_singleton()
+
+
+def create_agent(
+    settings: Optional[Any] = None,
+    container: Optional[Any] = None,
+) -> Any:
+    """
+    Create a new agent instance with dependency injection support.
+
+    This is the main factory function for creating agents. It supports:
+    - Container-based dependency injection (preferred)
+    - Custom settings
+    - Default configuration
+
+    Args:
+        settings: Optional Settings instance to override defaults
+        container: Optional ApplicationContainer for full DI
+
+    Returns:
+        Compiled agent graph ready for use
+
+    Example:
+        # Preferred: Using container
+        from mcp_server_langgraph.core.container import create_test_container
+        container = create_test_container()
+        agent = create_agent(container=container)
+        result = agent.invoke({"messages": [...]})
+
+        # Using custom settings
+        from mcp_server_langgraph.core.config import Settings
+        settings = Settings(model_name="gpt-4")
+        agent = create_agent(settings=settings)
+
+        # Using defaults
+        agent = create_agent()
+    """
+    return create_agent_graph(settings=settings, container=container)

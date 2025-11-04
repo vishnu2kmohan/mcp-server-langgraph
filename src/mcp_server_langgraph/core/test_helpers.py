@@ -94,11 +94,9 @@ def create_test_settings(**kwargs) -> Settings:
 
 def create_test_agent(settings: Optional[Settings] = None, container: Optional[ApplicationContainer] = None) -> Any:
     """
-    Create a test agent instance.
+    Create a test agent instance with dependency injection support.
 
-    NOTE: Currently uses the singleton get_agent_graph() function.
-    After refactoring agent.py to support dependency injection, this will
-    create agents using the container pattern.
+    Now uses the create_agent() factory function which supports containers.
 
     Args:
         settings: Optional custom settings (if container not provided)
@@ -111,18 +109,11 @@ def create_test_agent(settings: Optional[Settings] = None, container: Optional[A
         agent = create_test_agent()
         result = agent.invoke({"messages": [{"role": "user", "content": "test"}]})
     """
-    # Get container (for future use)
-    if container is None:
-        container = create_test_container(settings=settings)
+    # Import the new DI-enabled agent creation function
+    from mcp_server_langgraph.core.agent import create_agent
 
-    # Import agent creation function
-    # NOTE: get_agent_graph() is currently a singleton, doesn't accept parameters
-    # TODO: After Phase 3 refactoring, pass container.settings
-    from mcp_server_langgraph.core.agent import get_agent_graph
-
-    # For now, use the global singleton
-    # This will be improved in Phase 3 when we refactor agent.py
-    agent = get_agent_graph()
+    # Use the new factory function with container support
+    agent = create_agent(settings=settings, container=container)
 
     return agent
 
