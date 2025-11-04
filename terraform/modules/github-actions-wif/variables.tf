@@ -83,11 +83,11 @@ variable "service_accounts" {
   EOT
 
   type = map(object({
-    account_id      = string
-    display_name    = string
-    description     = string
+    account_id        = string
+    display_name      = string
+    description       = string
     repository_filter = optional(string)
-    project_roles   = optional(list(string), [])
+    project_roles     = optional(list(string), [])
 
     # Artifact Registry access
     artifact_registry_repositories = optional(list(object({

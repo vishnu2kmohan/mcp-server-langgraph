@@ -29,7 +29,7 @@ provider "google" {
 }
 
 locals {
-  name_prefix  = "mcp-prod"
+  name_prefix  = "production-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-gke"
 
   common_labels = {
@@ -51,26 +51,26 @@ module "project_services" {
   project_id = var.project_id
 
   # Core APIs (required for all GCP infrastructure)
-  enable_container_api = true  # Required for GKE
-  enable_compute_api   = true  # Required for VPC, subnets, and compute resources
+  enable_container_api = true # Required for GKE
+  enable_compute_api   = true # Required for VPC, subnets, and compute resources
 
   # Networking APIs
-  enable_service_networking_api = true  # Required for private service connection (Cloud SQL, Memorystore)
+  enable_service_networking_api = true # Required for private service connection (Cloud SQL, Memorystore)
 
   # GKE Feature APIs
-  enable_gke_backup_api         = true   # Required for backup_plan (enabled below)
-  enable_container_scanning_api = false  # Can be enabled for vulnerability scanning
+  enable_gke_backup_api         = true  # Required for backup_plan (enabled below)
+  enable_container_scanning_api = false # Can be enabled for vulnerability scanning
 
   # Secret Management APIs
-  enable_secret_manager_api = true  # Required for Workload Identity secret access
+  enable_secret_manager_api = true # Required for Workload Identity secret access
 
   # Database APIs
-  enable_sql_admin_api = true  # Required for Cloud SQL
-  enable_redis_api     = true  # Required for Memorystore
+  enable_sql_admin_api = true # Required for Cloud SQL
+  enable_redis_api     = true # Required for Memorystore
 
   # Monitoring & Logging APIs
-  enable_monitoring_api = true  # Required for monitoring alerts
-  enable_logging_api    = true  # Required for log exports
+  enable_monitoring_api = true # Required for monitoring alerts
+  enable_logging_api    = true # Required for log exports
 
   # Safety: Never disable APIs on destroy (can break existing resources)
   disable_on_destroy         = false
@@ -98,28 +98,28 @@ module "vpc" {
   routing_mode = "REGIONAL"
 
   # Cloud NAT configuration
-  nat_ip_allocate_option        = "MANUAL_ONLY"  # Static IPs for production
-  nat_ip_count                  = 2              # Redundancy
+  nat_ip_allocate_option         = "MANUAL_ONLY" # Static IPs for production
+  nat_ip_count                   = 2             # Redundancy
   enable_dynamic_port_allocation = true
-  nat_min_ports_per_vm          = 64
-  nat_max_ports_per_vm          = 32768
+  nat_min_ports_per_vm           = 64
+  nat_max_ports_per_vm           = 32768
 
   # VPC Flow Logs (with sampling for cost control)
-  enable_flow_logs                 = true
-  flow_logs_aggregation_interval   = "INTERVAL_5_SEC"
-  flow_logs_sampling               = 0.1  # 10% sampling
-  flow_logs_metadata               = "INCLUDE_ALL_METADATA"
+  enable_flow_logs               = true
+  flow_logs_aggregation_interval = "INTERVAL_5_SEC"
+  flow_logs_sampling             = 0.1 # 10% sampling
+  flow_logs_metadata             = "INCLUDE_ALL_METADATA"
 
   # Private Service Connection for Cloud SQL/Memorystore
   enable_private_service_connection = true
-  private_services_prefix_length    = 16  # /16 for managed services
+  private_services_prefix_length    = 16 # /16 for managed services
 
   # Cloud Armor (optional - enable for public-facing services)
-  enable_cloud_armor                      = var.enable_cloud_armor
-  cloud_armor_rate_limit_threshold        = 1000
-  cloud_armor_rate_limit_interval         = 60
-  cloud_armor_ban_duration_sec            = 600
-  enable_cloud_armor_adaptive_protection  = true
+  enable_cloud_armor                     = var.enable_cloud_armor
+  cloud_armor_rate_limit_threshold       = 1000
+  cloud_armor_rate_limit_interval        = 60
+  cloud_armor_ban_duration_sec           = 600
+  enable_cloud_armor_adaptive_protection = true
 
   labels = local.common_labels
 
@@ -183,7 +183,7 @@ module "gke" {
   security_posture_vulnerability_mode  = "VULNERABILITY_ENTERPRISE"
 
   # Networking
-  enable_dataplane_v2   = true  # eBPF-based networking
+  enable_dataplane_v2   = true # eBPF-based networking
   enable_network_policy = true
 
   # Observability
@@ -195,17 +195,17 @@ module "gke" {
   datapath_observability_relay_mode      = "INTERNAL_VPC_LB"
 
   # Monitoring alerts
-  enable_monitoring_alerts          = true
-  monitoring_notification_channels  = var.monitoring_notification_channels
+  enable_monitoring_alerts         = true
+  monitoring_notification_channels = var.monitoring_notification_channels
 
   # Backup
-  enable_backup_plan          = true
-  backup_schedule_cron        = "0 2 * * *"  # 2 AM daily
-  backup_retain_days          = 30
-  backup_delete_lock_days     = 7
-  backup_include_volume_data  = true
-  backup_include_secrets      = false
-  backup_namespace            = "*"
+  enable_backup_plan         = true
+  backup_schedule_cron       = "0 2 * * *" # 2 AM daily
+  backup_retain_days         = 30
+  backup_delete_lock_days    = 7
+  backup_include_volume_data = true
+  backup_include_secrets     = false
+  backup_namespace           = "*"
 
   # Fleet registration for Anthos
   enable_fleet_registration = var.enable_fleet_registration
@@ -214,13 +214,13 @@ module "gke" {
   enable_cost_allocation = true
 
   # Addons
-  enable_http_load_balancing           = true
-  enable_horizontal_pod_autoscaling    = true
-  enable_vertical_pod_autoscaling      = true
-  enable_dns_cache                     = true
+  enable_http_load_balancing            = true
+  enable_horizontal_pod_autoscaling     = true
+  enable_vertical_pod_autoscaling       = true
+  enable_dns_cache                      = true
   enable_gce_persistent_disk_csi_driver = true
-  enable_gcs_fuse_csi_driver           = true
-  enable_config_connector              = false
+  enable_gcs_fuse_csi_driver            = true
+  enable_config_connector               = false
 
   # Gateway API
   enable_gateway_api  = var.enable_gateway_api
@@ -249,19 +249,19 @@ module "cloudsql" {
   postgres_major_version = 15
 
   # High availability
-  tier               = var.cloudsql_tier
-  high_availability  = true
+  tier              = var.cloudsql_tier
+  high_availability = true
 
   # Storage
-  disk_type               = "PD_SSD"
-  disk_size_gb            = var.cloudsql_disk_size_gb
-  enable_disk_autoresize  = true
+  disk_type                = "PD_SSD"
+  disk_size_gb             = var.cloudsql_disk_size_gb
+  enable_disk_autoresize   = true
   disk_autoresize_limit_gb = var.cloudsql_disk_autoresize_limit_gb
 
   # Network (private IP only)
-  vpc_network_self_link             = module.vpc.network_self_link
-  enable_public_ip                  = false
-  require_ssl                       = true
+  vpc_network_self_link                 = module.vpc.network_self_link
+  enable_public_ip                      = false
+  require_ssl                           = true
   private_service_connection_dependency = module.vpc.private_service_connection_status
 
   # Backups
@@ -272,18 +272,18 @@ module "cloudsql" {
   backup_retention_count         = 30
 
   # Maintenance
-  maintenance_window_day  = 7  # Sunday
-  maintenance_window_hour = 3  # 3 AM UTC
+  maintenance_window_day  = 7 # Sunday
+  maintenance_window_hour = 3 # 3 AM UTC
 
   # Query Insights
-  enable_query_insights              = true
-  query_insights_plans_per_minute    = 5
-  query_insights_string_length       = 1024
-  query_insights_record_app_tags     = true
+  enable_query_insights                = true
+  query_insights_plans_per_minute      = 5
+  query_insights_string_length         = 1024
+  query_insights_record_app_tags       = true
   query_insights_record_client_address = true
 
   # Slow query logging
-  enable_slow_query_log  = true
+  enable_slow_query_log   = true
   slow_query_threshold_ms = "1000"
 
   # Database
@@ -300,16 +300,16 @@ module "cloudsql" {
   read_replica_regions = var.cloudsql_read_replica_regions
 
   # Security
-  enable_password_validation  = true
-  password_min_length         = 12
-  password_complexity         = "COMPLEXITY_DEFAULT"
+  enable_password_validation = true
+  password_min_length        = 12
+  password_complexity        = "COMPLEXITY_DEFAULT"
 
   # Monitoring
-  enable_monitoring_alerts          = true
-  monitoring_notification_channels  = var.monitoring_notification_channels
-  alert_cpu_threshold               = 80
-  alert_memory_threshold            = 80
-  alert_disk_threshold              = 80
+  enable_monitoring_alerts         = true
+  monitoring_notification_channels = var.monitoring_notification_channels
+  alert_cpu_threshold              = 80
+  alert_memory_threshold           = 80
+  alert_disk_threshold             = 80
 
   # Deletion protection
   enable_deletion_protection = true
@@ -340,25 +340,25 @@ module "memorystore" {
   read_replicas_mode = "READ_REPLICAS_ENABLED"
 
   # Network
-  vpc_network_id  = module.vpc.network_id
-  connect_mode    = "DIRECT_PEERING"
+  vpc_network_id = module.vpc.network_id
+  connect_mode   = "DIRECT_PEERING"
 
   # Security
   enable_transit_encryption = true
   enable_auth               = true
 
   # Persistence
-  enable_persistence    = true
-  persistence_mode      = "RDB"
-  rdb_snapshot_period   = "TWELVE_HOURS"
+  enable_persistence  = true
+  persistence_mode    = "RDB"
+  rdb_snapshot_period = "TWELVE_HOURS"
 
   # Redis configuration
   maxmemory_policy = "allkeys-lru"
   timeout_seconds  = 0
 
   # Maintenance
-  maintenance_window_day    = 7  # Sunday
-  maintenance_window_hour   = 3  # 3 AM UTC
+  maintenance_window_day    = 7 # Sunday
+  maintenance_window_hour   = 3 # 3 AM UTC
   maintenance_window_minute = 30
 
   # Cross-region replicas (optional for DR)
@@ -366,11 +366,11 @@ module "memorystore" {
   read_replica_regions        = var.redis_read_replica_regions
 
   # Monitoring
-  enable_monitoring_alerts          = true
-  monitoring_notification_channels  = var.monitoring_notification_channels
-  alert_memory_threshold            = 80
-  alert_cpu_threshold               = 80
-  alert_connections_threshold       = 5000
+  enable_monitoring_alerts         = true
+  monitoring_notification_channels = var.monitoring_notification_channels
+  alert_memory_threshold           = 80
+  alert_cpu_threshold              = 80
+  alert_connections_threshold      = 5000
 
   # Deletion protection
   enable_deletion_protection = true
@@ -421,8 +421,8 @@ module "workload_identity" {
         "roles/logging.logWriter",
         "roles/monitoring.metricWriter",
       ]
-      cloudsql_access = true
-      pubsub_topics = var.worker_pubsub_topics
+      cloudsql_access      = true
+      pubsub_topics        = var.worker_pubsub_topics
       pubsub_subscriptions = var.worker_pubsub_subscriptions
     }
   }

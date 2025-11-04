@@ -32,19 +32,19 @@ variable "cost_center" {
 variable "nodes_cidr" {
   description = "CIDR block for GKE nodes"
   type        = string
-  default     = "10.0.0.0/20"  # 4096 IPs
+  default     = "10.0.0.0/20" # 4096 IPs
 }
 
 variable "pods_cidr" {
   description = "CIDR block for GKE pods"
   type        = string
-  default     = "10.4.0.0/14"  # 262k IPs
+  default     = "10.4.0.0/14" # 262k IPs
 }
 
 variable "services_cidr" {
   description = "CIDR block for GKE services"
   type        = string
-  default     = "10.8.0.0/20"  # 4096 IPs
+  default     = "10.8.0.0/20" # 4096 IPs
 }
 
 variable "enable_cloud_armor" {
@@ -60,7 +60,7 @@ variable "enable_cloud_armor" {
 variable "enable_private_endpoint" {
   description = "Enable private endpoint (control plane only accessible via VPC)"
   type        = bool
-  default     = true  # Enabled for production security
+  default     = true # Enabled for production security
 }
 
 variable "master_ipv4_cidr_block" {
@@ -106,7 +106,7 @@ variable "max_cluster_memory" {
 variable "enable_binary_authorization" {
   description = "Enable Binary Authorization for image signing"
   type        = bool
-  default     = false  # Enable after setting up attestors
+  default     = false # Enable after setting up attestors
 }
 
 variable "enable_fleet_registration" {
@@ -128,7 +128,7 @@ variable "enable_gateway_api" {
 variable "cloudsql_tier" {
   description = "Cloud SQL machine type"
   type        = string
-  default     = "db-custom-4-15360"  # 4 vCPU, 15 GB RAM
+  default     = "db-custom-4-15360" # 4 vCPU, 15 GB RAM
 }
 
 variable "cloudsql_disk_size_gb" {
@@ -200,7 +200,7 @@ variable "redis_read_replica_regions" {
 variable "app_namespace" {
   description = "Kubernetes namespace for the application"
   type        = string
-  default     = "mcp-production"
+  default     = "production-mcp-server-langgraph"
 }
 
 variable "app_secret_ids" {

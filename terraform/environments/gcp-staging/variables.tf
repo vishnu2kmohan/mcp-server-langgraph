@@ -23,7 +23,7 @@ variable "team" {
 variable "app_namespace" {
   description = "Kubernetes namespace for the application"
   type        = string
-  default     = "mcp-staging"
+  default     = "staging-mcp-server-langgraph"
 }
 
 variable "enable_cloud_armor" {
@@ -35,7 +35,7 @@ variable "enable_cloud_armor" {
 variable "enable_master_authorized_networks" {
   description = "Enable master authorized networks"
   type        = bool
-  default     = false  # Open access for staging
+  default     = false # Open access for staging
 }
 
 variable "master_authorized_networks_cidrs" {
@@ -62,7 +62,7 @@ variable "enable_fleet_registration" {
 variable "enable_deletion_protection" {
   description = "Enable deletion protection"
   type        = bool
-  default     = false  # Allow easy teardown in staging
+  default     = false # Allow easy teardown in staging
 }
 
 variable "monitoring_notification_channels" {
@@ -90,7 +90,7 @@ variable "cloudsql_additional_users" {
 variable "cloudsql_read_replica_count" {
   description = "Number of read replicas"
   type        = number
-  default     = 0  # No replicas needed for staging
+  default     = 0 # No replicas needed for staging
 }
 
 variable "cloudsql_read_replica_regions" {

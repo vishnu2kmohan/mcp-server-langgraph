@@ -43,7 +43,7 @@ output "deployment_summary" {
   value = {
     environment = "staging"
     region      = var.region
-    cluster     = {
+    cluster = {
       name     = module.gke.cluster_name
       location = module.gke.cluster_location
       type     = "autopilot-regional"
@@ -69,10 +69,10 @@ output "deployment_summary" {
 output "github_secrets" {
   description = "GitHub Secrets to add to repository settings"
   value = {
-    GCP_WIF_PROVIDER          = module.github_actions_wif.workload_identity_provider_name
-    GCP_STAGING_SA_EMAIL      = module.github_actions_wif.service_account_emails["staging"]
-    GCP_TERRAFORM_SA_EMAIL    = module.github_actions_wif.service_account_emails["terraform"]
-    GCP_PRODUCTION_SA_EMAIL   = module.github_actions_wif.service_account_emails["production"]
+    GCP_WIF_PROVIDER        = module.github_actions_wif.workload_identity_provider_name
+    GCP_STAGING_SA_EMAIL    = module.github_actions_wif.service_account_emails["staging"]
+    GCP_TERRAFORM_SA_EMAIL  = module.github_actions_wif.service_account_emails["terraform"]
+    GCP_PRODUCTION_SA_EMAIL = module.github_actions_wif.service_account_emails["production"]
   }
   sensitive = false
 }

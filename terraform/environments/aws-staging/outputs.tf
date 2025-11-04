@@ -194,10 +194,10 @@ output "deployment_summary" {
     environment = "staging"
     region      = var.region
     vpc = {
-      id         = module.vpc.vpc_id
-      cidr       = module.vpc.vpc_cidr
-      azs        = module.vpc.availability_zones
-      nat_count  = length(module.vpc.nat_gateway_ids)
+      id        = module.vpc.vpc_id
+      cidr      = module.vpc.vpc_cidr
+      azs       = module.vpc.availability_zones
+      nat_count = length(module.vpc.nat_gateway_ids)
     }
     eks = {
       cluster_name = module.eks.cluster_name
@@ -210,10 +210,10 @@ output "deployment_summary" {
       multi_az = false
     }
     redis = {
-      endpoint    = module.redis.primary_endpoint_address
-      mode        = "standalone"
-      replicas    = 1
-      multi_az    = false
+      endpoint = module.redis.primary_endpoint_address
+      mode     = "standalone"
+      replicas = 1
+      multi_az = false
     }
   }
 }
@@ -226,34 +226,34 @@ output "estimated_monthly_cost" {
   description = "Estimated monthly cost (USD) - Staging Environment"
   value = {
     vpc = {
-      nat_gateways = "~$33 (1 x $32.85)"
+      nat_gateways  = "~$33 (1 x $32.85)"
       vpc_endpoints = "~$36 (5 endpoints)"
-      total = "~$69"
+      total         = "~$69"
     }
     eks = {
       control_plane = "$73 (1 cluster x $0.10/hour)"
       nodes_general = "~$75 (2 x t3.large on-demand)"
-      nodes_spot = "~$5 (1 x t3.large spot @ 70% discount)"
-      total = "~$153"
+      nodes_spot    = "~$5 (1 x t3.large spot @ 70% discount)"
+      total         = "~$153"
     }
     rds = {
       instance = "~$60 (db.t3.medium Single-AZ)"
-      storage = "~$6 (50GB gp3)"
-      backups = "~$2 (7-day retention)"
-      total = "~$68"
+      storage  = "~$6 (50GB gp3)"
+      backups  = "~$2 (7-day retention)"
+      total    = "~$68"
     }
     redis = {
-      nodes = "~$27 (2 x cache.t3.small: 1 primary + 1 replica)"
+      nodes   = "~$27 (2 x cache.t3.small: 1 primary + 1 replica)"
       backups = "~$1"
-      total = "~$28"
+      total   = "~$28"
     }
     cloudwatch = {
-      logs = "~$3"
+      logs    = "~$3"
       metrics = "~$2"
-      alarms = "~$1"
-      total = "~$6"
+      alarms  = "~$1"
+      total   = "~$6"
     }
     total_monthly = "~$324 (base infrastructure - 60% cheaper than production)"
-    notes = "Excludes data transfer, additional storage, and application-specific costs. Single-AZ and smaller instances for cost optimization."
+    notes         = "Excludes data transfer, additional storage, and application-specific costs. Single-AZ and smaller instances for cost optimization."
   }
 }

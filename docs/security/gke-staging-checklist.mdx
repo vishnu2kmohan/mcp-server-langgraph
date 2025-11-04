@@ -40,22 +40,22 @@ gcloud compute networks subnets describe staging-gke-subnet \
 **Verification:**
 ```bash
 ## Check cluster configuration
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format=yaml
 
 ## Verify private nodes
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(privateClusterConfig.enablePrivateNodes)'
 
 ## Verify Workload Identity
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(workloadIdentityConfig.workloadPool)'
 
 ## Verify Binary Authorization
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(binaryAuthorization.evaluationMode)'
 ```
@@ -69,11 +69,11 @@ gcloud container clusters describe mcp-staging-cluster \
 **Verification:**
 ```bash
 ## List network policies
-kubectl get networkpolicies -n mcp-staging
+kubectl get networkpolicies -n staging-mcp-server-langgraph
 
 ## Check specific policies
-kubectl describe networkpolicy default-deny-ingress -n mcp-staging
-kubectl describe networkpolicy allow-egress -n mcp-staging
+kubectl describe networkpolicy default-deny-ingress -n staging-mcp-server-langgraph
+kubectl describe networkpolicy allow-egress -n staging-mcp-server-langgraph
 ```
 
 #### Firewall Rules
@@ -114,7 +114,7 @@ gcloud iam service-accounts keys list \
 **Verification:**
 ```bash
 ## Check K8s service account annotation
-kubectl describe sa mcp-server-langgraph -n mcp-staging | grep iam.gke.io
+kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep iam.gke.io
 
 ## Test Workload Identity from pod
 kubectl run -it --rm test \
@@ -171,10 +171,10 @@ gcloud secrets get-iam-policy staging-jwt-secret
 kubectl get pods -n external-secrets-system
 
 ## Check ExternalSecret status
-kubectl get externalsecret mcp-staging-secrets -n mcp-staging
+kubectl get externalsecret mcp-staging-secrets -n staging-mcp-server-langgraph
 
 ## Verify secrets are synced
-kubectl get secret mcp-staging-secrets -n mcp-staging
+kubectl get secret mcp-staging-secrets -n staging-mcp-server-langgraph
 ```
 
 ### Container Security
@@ -188,7 +188,7 @@ kubectl get secret mcp-staging-secrets -n mcp-staging
 **Verification:**
 ```bash
 ## Check image source
-kubectl get deployment staging-mcp-server-langgraph -n mcp-staging \
+kubectl get deployment staging-mcp-server-langgraph -n staging-mcp-server-langgraph \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
 
 ## Check Binary Authorization policy
@@ -205,11 +205,11 @@ gcloud container binauthz policy export
 **Verification:**
 ```bash
 ## Check pod security context
-kubectl get pod -n mcp-staging -o json | \
+kubectl get pod -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.securityContext'
 
 ## Check for privileged containers
-kubectl get pods -n mcp-staging -o json | \
+kubectl get pods -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | select(.securityContext.privileged == true)'
 ```
 
@@ -222,7 +222,7 @@ kubectl get pods -n mcp-staging -o json | \
 **Verification:**
 ```bash
 ## Check Cloud SQL proxy container
-kubectl get pod -n mcp-staging -o json | \
+kubectl get pod -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | select(.name == "cloud-sql-proxy")'
 ```
 
@@ -292,7 +292,7 @@ gcloud redis instances describe mcp-staging-redis \
 ## Check recent logs
 gcloud logging read \
   "resource.type=k8s_container
-   resource.labels.cluster_name=mcp-staging-cluster" \
+   resource.labels.cluster_name=staging-mcp-server-langgraph-gke" \
   --limit=10 \
   --format=json
 
@@ -325,7 +325,7 @@ gcloud alpha monitoring policies list
 **Verification:**
 ```bash
 ## This is configured in OTel collector, check collector logs
-kubectl logs -n mcp-staging -l app=otel-collector
+kubectl logs -n staging-mcp-server-langgraph -l app=otel-collector
 ```
 
 ### Compliance & Governance
@@ -338,12 +338,12 @@ kubectl logs -n mcp-staging -l app=otel-collector
 **Verification:**
 ```bash
 ## Check GKE cluster labels
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(resourceLabels)'
 
 ## Check pods have labels
-kubectl get pods -n mcp-staging --show-labels
+kubectl get pods -n staging-mcp-server-langgraph --show-labels
 ```
 
 #### Resource Limits
@@ -355,14 +355,14 @@ kubectl get pods -n mcp-staging --show-labels
 **Verification:**
 ```bash
 ## Check container resources
-kubectl get pods -n mcp-staging -o json | \
+kubectl get pods -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | {name: .name, resources: .resources}'
 
 ## Check ResourceQuota
-kubectl get resourcequota -n mcp-staging
+kubectl get resourcequota -n staging-mcp-server-langgraph
 
 ## Check LimitRange
-kubectl get limitrange -n mcp-staging
+kubectl get limitrange -n staging-mcp-server-langgraph
 ```
 
 #### Backup & Disaster Recovery
@@ -403,8 +403,8 @@ gcloud sql backups list --instance=mcp-staging-postgres
 **Verification:**
 ```bash
 ## Check recent deployments in Cloud Console
-gcloud container clusters get-credentials mcp-staging-cluster --region=us-central1
-kubectl rollout history deployment/staging-mcp-server-langgraph -n mcp-staging
+gcloud container clusters get-credentials staging-mcp-server-langgraph-gke --region=us-central1
+kubectl rollout history deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 ```
 
 ### Security Scanning
@@ -446,8 +446,8 @@ gcloud artifacts docker images scan \
 **Test Rollback:**
 ```bash
 ## Manual rollback test
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n mcp-staging
-kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
+kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 ```
 
 ---

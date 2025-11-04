@@ -46,7 +46,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name_prefix  = "mcp-langgraph-dev"
+  name_prefix  = "dev-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-eks"
 
   common_tags = {
@@ -65,14 +65,14 @@ module "vpc" {
   name_prefix              = local.name_prefix
   vpc_cidr                 = var.vpc_cidr
   region                   = var.region
-  availability_zones_count = 2  # Only 2 AZs for dev
+  availability_zones_count = 2 # Only 2 AZs for dev
 
-  cluster_name             = local.cluster_name
+  cluster_name = local.cluster_name
 
   # Dev: Single NAT gateway for cost savings
   single_nat_gateway   = true
-  enable_vpc_endpoints = false  # Disabled to save costs
-  enable_flow_logs     = false  # Disabled for dev
+  enable_vpc_endpoints = false # Disabled to save costs
+  enable_flow_logs     = false # Disabled for dev
 
   tags = local.common_tags
 }
@@ -100,21 +100,21 @@ module "eks" {
   cluster_log_retention_days           = 1
 
   # General-purpose node group (minimal for dev)
-  enable_general_node_group        = true
-  general_node_group_desired_size  = 1
-  general_node_group_min_size      = 1
-  general_node_group_max_size      = 3
+  enable_general_node_group         = true
+  general_node_group_desired_size   = 1
+  general_node_group_min_size       = 1
+  general_node_group_max_size       = 3
   general_node_group_instance_types = var.general_node_instance_types
-  general_node_group_disk_size     = 30
+  general_node_group_disk_size      = 30
 
   # No compute-optimized nodes in dev
   enable_compute_node_group = false
 
   # Spot instances (primary for dev to save costs)
-  enable_spot_node_group        = var.enable_spot_nodes
-  spot_node_group_desired_size  = 1
-  spot_node_group_min_size      = 0
-  spot_node_group_max_size      = 2
+  enable_spot_node_group       = var.enable_spot_nodes
+  spot_node_group_desired_size = 1
+  spot_node_group_min_size     = 0
+  spot_node_group_max_size     = 2
   spot_node_group_instance_types = [
     "t3.medium", "t3a.medium",
     "t3.large", "t3a.large"
@@ -150,11 +150,11 @@ module "rds" {
   subnet_ids  = module.vpc.private_subnet_ids
 
   # Database configuration (minimal for dev)
-  engine_version    = var.postgres_engine_version
-  instance_class    = var.postgres_instance_class
-  allocated_storage = var.postgres_allocated_storage
+  engine_version        = var.postgres_engine_version
+  instance_class        = var.postgres_instance_class
+  allocated_storage     = var.postgres_allocated_storage
   max_allocated_storage = var.postgres_max_allocated_storage
-  storage_type      = "gp3"
+  storage_type          = "gp3"
 
   database_name   = var.postgres_database_name
   master_username = var.postgres_master_username
@@ -169,12 +169,12 @@ module "rds" {
   deletion_protection     = false
 
   # Monitoring (disabled for dev)
-  enable_enhanced_monitoring    = false
-  enable_performance_insights   = false
-  enable_slow_query_log         = false
+  enable_enhanced_monitoring  = false
+  enable_performance_insights = false
+  enable_slow_query_log       = false
 
   # Security
-  allowed_security_group_ids = [module.eks.node_security_group_id]
+  allowed_security_group_ids         = [module.eks.node_security_group_id]
   enable_iam_database_authentication = false # Disabled for dev simplicity
 
   # CloudWatch alarms (disabled for dev)
@@ -200,7 +200,7 @@ module "redis" {
   cluster_mode_enabled    = false
   node_type               = var.redis_node_type
   num_node_groups         = 1
-  replicas_per_node_group = 0  # No replicas for dev
+  replicas_per_node_group = 0 # No replicas for dev
 
   engine_version = var.redis_engine_version
 
@@ -218,7 +218,7 @@ module "redis" {
   enable_final_snapshot    = false
 
   # Monitoring
-  enable_slow_log = false
+  enable_slow_log    = false
   log_retention_days = 1
 
   # Security
@@ -283,7 +283,7 @@ resource "kubernetes_namespace" "mcp_server" {
     name = "mcp-server-langgraph"
 
     labels = {
-      name                                  = "mcp-server-langgraph"
+      name                                 = "mcp-server-langgraph"
       "pod-security.kubernetes.io/enforce" = "baseline" # Relaxed for dev
       "pod-security.kubernetes.io/audit"   = "restricted"
       "pod-security.kubernetes.io/warn"    = "restricted"

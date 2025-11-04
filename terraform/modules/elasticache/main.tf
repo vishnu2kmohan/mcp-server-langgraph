@@ -160,8 +160,8 @@ resource "aws_elasticache_replication_group" "cluster_mode" {
   security_group_ids   = concat([aws_security_group.redis.id], var.additional_security_group_ids)
 
   # Node configuration
-  node_type            = var.node_type
-  num_node_groups      = var.num_node_groups
+  node_type               = var.node_type
+  num_node_groups         = var.num_node_groups
   replicas_per_node_group = var.replicas_per_node_group
 
   # Multi-AZ and automatic failover
@@ -176,13 +176,13 @@ resource "aws_elasticache_replication_group" "cluster_mode" {
   kms_key_id                 = var.at_rest_encryption_enabled ? (var.kms_key_id != null ? var.kms_key_id : aws_kms_key.redis[0].arn) : null
 
   # Maintenance
-  maintenance_window       = var.maintenance_window
+  maintenance_window         = var.maintenance_window
   auto_minor_version_upgrade = var.auto_minor_version_upgrade
-  apply_immediately        = var.apply_immediately
+  apply_immediately          = var.apply_immediately
 
   # Backup
-  snapshot_retention_limit = var.enable_snapshot ? var.snapshot_retention_limit : 0
-  snapshot_window          = var.enable_snapshot ? var.snapshot_window : null
+  snapshot_retention_limit  = var.enable_snapshot ? var.snapshot_retention_limit : 0
+  snapshot_window           = var.enable_snapshot ? var.snapshot_window : null
   final_snapshot_identifier = var.enable_final_snapshot ? "${local.cluster_id}-final-${formatdate("YYYY-MM-DD-hhmm", timestamp())}" : null
 
   # Notifications
@@ -242,7 +242,7 @@ resource "aws_elasticache_replication_group" "standard" {
   security_group_ids   = concat([aws_security_group.redis.id], var.additional_security_group_ids)
 
   # Node configuration (non-cluster mode uses num_cache_clusters)
-  node_type         = var.node_type
+  node_type          = var.node_type
   num_cache_clusters = var.num_cache_clusters
 
   # Multi-AZ and automatic failover
@@ -257,13 +257,13 @@ resource "aws_elasticache_replication_group" "standard" {
   kms_key_id                 = var.at_rest_encryption_enabled ? (var.kms_key_id != null ? var.kms_key_id : aws_kms_key.redis[0].arn) : null
 
   # Maintenance
-  maintenance_window       = var.maintenance_window
+  maintenance_window         = var.maintenance_window
   auto_minor_version_upgrade = var.auto_minor_version_upgrade
-  apply_immediately        = var.apply_immediately
+  apply_immediately          = var.apply_immediately
 
   # Backup
-  snapshot_retention_limit = var.enable_snapshot ? var.snapshot_retention_limit : 0
-  snapshot_window          = var.enable_snapshot ? var.snapshot_window : null
+  snapshot_retention_limit  = var.enable_snapshot ? var.snapshot_retention_limit : 0
+  snapshot_window           = var.enable_snapshot ? var.snapshot_window : null
   final_snapshot_identifier = var.enable_final_snapshot ? "${local.cluster_id}-final-${formatdate("YYYY-MM-DD-hhmm", timestamp())}" : null
 
   # Notifications

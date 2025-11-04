@@ -32,8 +32,8 @@ concurrency:
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
   GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
-  GKE_CLUSTER: ${{ vars.GKE_STAGING_CLUSTER || 'mcp-staging-cluster' }}
-  NAMESPACE: ${{ vars.STAGING_NAMESPACE || 'mcp-staging' }}
+  GKE_CLUSTER: ${{ vars.GKE_STAGING_CLUSTER || 'staging-mcp-server-langgraph-gke' }}
+  NAMESPACE: ${{ vars.STAGING_NAMESPACE || 'staging-mcp-server-langgraph' }}
   DEPLOYMENT_NAME: staging-mcp-server-langgraph
 
 permissions:

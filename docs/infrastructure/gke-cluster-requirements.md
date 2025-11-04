@@ -8,7 +8,7 @@ The CI/CD pipeline requires GKE clusters to exist before deployment workflows ca
 
 ### Staging Cluster
 
-**Name:** `mcp-staging-cluster`
+**Name:** `staging-mcp-server-langgraph-gke`
 **Location:** `us-central1`
 **Project:** `vishnu-sandbox-20250310`
 **Type:** GKE Autopilot (recommended) or Standard
@@ -23,7 +23,7 @@ terraform apply
 
 **Manual Creation:**
 ```bash
-gcloud container clusters create-auto mcp-staging-cluster \
+gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310 \
   --release-channel=regular \
@@ -34,7 +34,7 @@ gcloud container clusters create-auto mcp-staging-cluster \
 
 ### Production Cluster
 
-**Name:** `mcp-prod-gke`
+**Name:** `production-mcp-server-langgraph-gke`
 **Location:** `us-central1`
 **Project:** `vishnu-sandbox-20250310`
 **Type:** GKE Autopilot
@@ -52,7 +52,7 @@ terraform apply
 ### deploy-staging-gke.yaml
 
 This workflow requires:
-- ✅ GKE cluster: `mcp-staging-cluster` in `us-central1`
+- ✅ GKE cluster: `staging-mcp-server-langgraph-gke` in `us-central1`
 - ✅ Service account: `github-actions-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com`
 - ✅ Artifact Registry: `mcp-staging` repository
 - ✅ GitHub variable: `ENABLE_STAGING_AUTODEPLOY=true`
@@ -62,7 +62,7 @@ This workflow requires:
 - Manual dispatch
 
 **Current Status:**
-❌ Cluster not found error: The cluster `mcp-staging-cluster` does not exist in the specified location.
+❌ Cluster not found error: The cluster `staging-mcp-server-langgraph-gke` does not exist in the specified location.
 
 **Resolution:**
 Create the cluster using one of the methods above, then re-run the workflow.
@@ -70,7 +70,7 @@ Create the cluster using one of the methods above, then re-run the workflow.
 ### deploy-production-gke.yaml
 
 This workflow requires:
-- ⚠️  GKE cluster: `mcp-prod-gke` in `us-central1`
+- ⚠️  GKE cluster: `production-mcp-server-langgraph-gke` in `us-central1`
 - ✅ Service account: `github-actions-production@vishnu-sandbox-20250310.iam.gserviceaccount.com`
 - ✅ Artifact Registry: `mcp-production` repository
 
@@ -84,17 +84,17 @@ After creating clusters, verify they're accessible:
 
 ```bash
 # Verify staging cluster
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
 # Verify production cluster
-gcloud container clusters describe mcp-prod-gke \
+gcloud container clusters describe production-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
 # Test GitHub Actions service account access
-gcloud container clusters get-credentials mcp-staging-cluster \
+gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
@@ -126,7 +126,7 @@ The GKE Autopilot module is located at:
 
 **Symptom:**
 ```
-Error: NOT_FOUND: projects/vishnu-sandbox-20250310/locations/us-central1/clusters/mcp-staging-cluster not found
+Error: NOT_FOUND: projects/vishnu-sandbox-20250310/locations/us-central1/clusters/staging-mcp-server-langgraph-gke not found
 ```
 
 **Solution:**

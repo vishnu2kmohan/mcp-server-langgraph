@@ -29,7 +29,7 @@ provider "google" {
 }
 
 locals {
-  name_prefix  = "mcp-dev"
+  name_prefix  = "dev-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-gke"
 
   common_labels = {
@@ -50,26 +50,26 @@ module "project_services" {
   project_id = var.project_id
 
   # Core APIs (required for all GCP infrastructure)
-  enable_container_api = true  # Required for GKE
-  enable_compute_api   = true  # Required for VPC, subnets, and compute resources
+  enable_container_api = true # Required for GKE
+  enable_compute_api   = true # Required for VPC, subnets, and compute resources
 
   # Networking APIs
-  enable_service_networking_api = true  # Required for private service connection (Cloud SQL, Memorystore)
+  enable_service_networking_api = true # Required for private service connection (Cloud SQL, Memorystore)
 
   # GKE Feature APIs
-  enable_gke_backup_api         = false  # Backup not enabled in dev
-  enable_container_scanning_api = false  # Vulnerability scanning not enabled in dev
+  enable_gke_backup_api         = false # Backup not enabled in dev
+  enable_container_scanning_api = false # Vulnerability scanning not enabled in dev
 
   # Secret Management APIs
-  enable_secret_manager_api = false  # Workload Identity doesn't use secrets in dev
+  enable_secret_manager_api = false # Workload Identity doesn't use secrets in dev
 
   # Database APIs
-  enable_sql_admin_api = true  # Required for Cloud SQL
-  enable_redis_api     = true  # Required for Memorystore
+  enable_sql_admin_api = true # Required for Cloud SQL
+  enable_redis_api     = true # Required for Memorystore
 
   # Monitoring & Logging APIs
-  enable_monitoring_api = true   # Required for optional monitoring alerts
-  enable_logging_api    = true   # Required for basic logging
+  enable_monitoring_api = true # Required for optional monitoring alerts
+  enable_logging_api    = true # Required for basic logging
 
   # Safety: Never disable APIs on destroy (can break existing resources)
   disable_on_destroy         = false
@@ -89,22 +89,22 @@ module "vpc" {
   cluster_name = local.cluster_name
 
   # Smaller CIDR blocks for dev
-  nodes_cidr    = "10.10.0.0/22"   # 1024 IPs
-  pods_cidr     = "10.12.0.0/16"   # 65k IPs
-  services_cidr = "10.13.0.0/22"   # 1024 IPs
+  nodes_cidr    = "10.10.0.0/22" # 1024 IPs
+  pods_cidr     = "10.12.0.0/16" # 65k IPs
+  services_cidr = "10.13.0.0/22" # 1024 IPs
 
   # Regional routing (cost optimization)
   routing_mode = "REGIONAL"
 
   # Auto NAT IPs (no static IPs needed for dev)
-  nat_ip_allocate_option        = "AUTO_ONLY"
+  nat_ip_allocate_option         = "AUTO_ONLY"
   enable_dynamic_port_allocation = true
-  nat_min_ports_per_vm          = 64
+  nat_min_ports_per_vm           = 64
 
   # Minimal flow logs (cost optimization)
-  enable_flow_logs                 = true
-  flow_logs_aggregation_interval   = "INTERVAL_5_MIN"
-  flow_logs_sampling               = 0.1  # 10% sampling
+  enable_flow_logs               = true
+  flow_logs_aggregation_interval = "INTERVAL_5_MIN"
+  flow_logs_sampling             = 0.1 # 10% sampling
 
   # Private Service Connection
   enable_private_service_connection = true
@@ -141,14 +141,14 @@ module "gke" {
 
   # Private cluster (but allow public endpoint for easier access)
   enable_private_nodes    = true
-  enable_private_endpoint = false  # Allow public access for dev
+  enable_private_endpoint = false # Allow public access for dev
   master_ipv4_cidr_block  = "172.16.0.0/28"
 
   # Open master access (dev only!)
   enable_master_authorized_networks = false
 
   # Release channel
-  release_channel = "REGULAR"  # Faster updates for dev
+  release_channel = "REGULAR" # Faster updates for dev
 
   # Maintenance window
   maintenance_start_time = "03:00"
@@ -179,7 +179,7 @@ module "gke" {
   # Observability (basic)
   monitoring_enabled_components = ["SYSTEM_COMPONENTS"]
   logging_enabled_components    = ["SYSTEM_COMPONENTS"]
-  enable_managed_prometheus     = false  # Cost savings
+  enable_managed_prometheus     = false # Cost savings
 
   # No advanced observability for dev
   enable_advanced_datapath_observability = false
@@ -197,13 +197,13 @@ module "gke" {
   enable_cost_allocation = true
 
   # Addons (minimal)
-  enable_http_load_balancing           = true
-  enable_horizontal_pod_autoscaling    = true
-  enable_vertical_pod_autoscaling      = false  # Not needed for dev
-  enable_dns_cache                     = true
+  enable_http_load_balancing            = true
+  enable_horizontal_pod_autoscaling     = true
+  enable_vertical_pod_autoscaling       = false # Not needed for dev
+  enable_dns_cache                      = true
   enable_gce_persistent_disk_csi_driver = true
-  enable_gcs_fuse_csi_driver           = false
-  enable_config_connector              = false
+  enable_gcs_fuse_csi_driver            = false
+  enable_config_connector               = false
 
   # No Gateway API for dev
   enable_gateway_api = false
@@ -231,13 +231,13 @@ module "cloudsql" {
   postgres_major_version = 15
 
   # Small instance (no HA for dev)
-  tier              = "db-custom-1-3840"  # 1 vCPU, 3.75 GB RAM
+  tier              = "db-custom-1-3840" # 1 vCPU, 3.75 GB RAM
   high_availability = false
 
   # Storage
-  disk_type               = "PD_SSD"
-  disk_size_gb            = 10  # Minimum
-  enable_disk_autoresize  = true
+  disk_type                = "PD_SSD"
+  disk_size_gb             = 10 # Minimum
+  enable_disk_autoresize   = true
   disk_autoresize_limit_gb = 100
 
   # Network
@@ -247,10 +247,10 @@ module "cloudsql" {
   private_service_connection_dependency = module.vpc.private_service_connection_status
 
   # Backups (minimal for dev)
-  enable_backups                 = true
-  backup_start_time              = "02:00"
-  enable_point_in_time_recovery  = false  # Cost savings
-  backup_retention_count         = 7
+  enable_backups                = true
+  backup_start_time             = "02:00"
+  enable_point_in_time_recovery = false # Cost savings
+  backup_retention_count        = 7
 
   # Maintenance
   maintenance_window_day  = 7
@@ -294,7 +294,7 @@ module "memorystore" {
 
   # Basic tier for cost savings (no HA)
   tier           = "BASIC"
-  memory_size_gb = 1  # Minimum
+  memory_size_gb = 1 # Minimum
   redis_version  = "REDIS_7_0"
 
   # No replicas for dev

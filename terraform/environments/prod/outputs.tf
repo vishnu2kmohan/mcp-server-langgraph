@@ -173,10 +173,10 @@ output "deployment_summary" {
     environment = "production"
     region      = var.region
     vpc = {
-      id         = module.vpc.vpc_id
-      cidr       = module.vpc.vpc_cidr
-      azs        = module.vpc.availability_zones
-      nat_count  = length(module.vpc.nat_gateway_ids)
+      id        = module.vpc.vpc_id
+      cidr      = module.vpc.vpc_cidr
+      azs       = module.vpc.availability_zones
+      nat_count = length(module.vpc.nat_gateway_ids)
     }
     eks = {
       cluster_name = module.eks.cluster_name
@@ -189,11 +189,11 @@ output "deployment_summary" {
       multi_az = true
     }
     redis = {
-      endpoint    = module.redis.primary_endpoint_address
-      mode        = "cluster"
-      num_shards  = 3
-      replicas    = 2
-      multi_az    = true
+      endpoint   = module.redis.primary_endpoint_address
+      mode       = "cluster"
+      num_shards = 3
+      replicas   = 2
+      multi_az   = true
     }
   }
 }
@@ -206,34 +206,34 @@ output "estimated_monthly_cost" {
   description = "Estimated monthly cost (USD)"
   value = {
     vpc = {
-      nat_gateways = "~$98 (3 x $32.85)"
+      nat_gateways  = "~$98 (3 x $32.85)"
       vpc_endpoints = "~$36 (5 endpoints)"
-      total = "~$134"
+      total         = "~$134"
     }
     eks = {
       control_plane = "$73 (1 cluster x $0.10/hour)"
       nodes_general = "~$220 (3 x t3.xlarge on-demand)"
-      nodes_spot = "~$30 (2 x t3.xlarge spot @ 70% discount)"
-      total = "~$323"
+      nodes_spot    = "~$30 (2 x t3.xlarge spot @ 70% discount)"
+      total         = "~$323"
     }
     rds = {
       instance = "~$140 (db.t3.large Multi-AZ)"
-      storage = "~$12 (100GB gp3)"
-      backups = "~$5 (30-day retention)"
-      total = "~$157"
+      storage  = "~$12 (100GB gp3)"
+      backups  = "~$5 (30-day retention)"
+      total    = "~$157"
     }
     redis = {
-      nodes = "~$170 (9 x cache.t3.medium: 3 shards x 3 nodes)"
+      nodes   = "~$170 (9 x cache.t3.medium: 3 shards x 3 nodes)"
       backups = "~$2"
-      total = "~$172"
+      total   = "~$172"
     }
     cloudwatch = {
-      logs = "~$10"
+      logs    = "~$10"
       metrics = "~$5"
-      alarms = "~$2"
-      total = "~$17"
+      alarms  = "~$2"
+      total   = "~$17"
     }
     total_monthly = "~$803 (base infrastructure)"
-    notes = "Excludes data transfer, additional storage, and application-specific costs"
+    notes         = "Excludes data transfer, additional storage, and application-specific costs"
   }
 }

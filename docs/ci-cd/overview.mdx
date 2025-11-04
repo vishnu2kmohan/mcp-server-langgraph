@@ -107,8 +107,8 @@ This repository contains 24 production-grade GitHub Actions workflows providing 
    ```bash
    gh variable set GCP_PROJECT_ID --body "your-project-id"
    gh variable set GCP_REGION --body "us-central1"
-   gh variable set GKE_PROD_CLUSTER --body "mcp-prod-gke"
-   gh variable set GKE_STAGING_CLUSTER --body "mcp-staging-cluster"
+   gh variable set GKE_PROD_CLUSTER --body "production-mcp-server-langgraph-gke"
+   gh variable set GKE_STAGING_CLUSTER --body "staging-mcp-server-langgraph-gke"
    ```
 
 3. **Observability Secrets** (optional but recommended):
@@ -290,10 +290,10 @@ python scripts/ci/performance_regression.py \
 gh run view --log
 
 # Check pod status
-kubectl get pods -n mcp-production -l app=mcp-server-langgraph
+kubectl get pods -n production-mcp-server-langgraph -l app=mcp-server-langgraph
 
 # View deployment events
-kubectl describe deployment production-mcp-server-langgraph -n mcp-production
+kubectl describe deployment production-mcp-server-langgraph -n production-mcp-server-langgraph
 ```
 
 **Tests Failed**:

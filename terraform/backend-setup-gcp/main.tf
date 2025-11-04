@@ -81,9 +81,9 @@ resource "google_storage_bucket" "terraform_state" {
 
   # Labels for resource management
   labels = {
-    managed_by = "terraform"
-    purpose    = "terraform-state-backend"
-    project    = "mcp-server-langgraph"
+    managed_by  = "terraform"
+    purpose     = "terraform-state-backend"
+    project     = "mcp-server-langgraph"
     environment = "infrastructure"
   }
 
@@ -131,9 +131,9 @@ resource "google_storage_bucket" "terraform_state_logs" {
 
   # Labels for resource management
   labels = {
-    managed_by = "terraform"
-    purpose    = "terraform-state-logs"
-    project    = "mcp-server-langgraph"
+    managed_by  = "terraform"
+    purpose     = "terraform-state-logs"
+    project     = "mcp-server-langgraph"
     environment = "infrastructure"
   }
 

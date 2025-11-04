@@ -74,7 +74,7 @@ variable "postgres_major_version" {
 variable "tier" {
   description = "Machine type tier (e.g., db-f1-micro, db-g1-small, db-n1-standard-1, db-custom-CPU-RAM)"
   type        = string
-  default     = "db-custom-2-7680"  # 2 vCPU, 7.5 GB RAM
+  default     = "db-custom-2-7680" # 2 vCPU, 7.5 GB RAM
 
   validation {
     condition     = can(regex("^db-(f1-micro|g1-small|n1-standard-\\d+|n1-highmem-\\d+|n1-highcpu-\\d+|custom-\\d+-\\d+)$", var.tier))
@@ -234,7 +234,7 @@ variable "backup_location" {
 variable "maintenance_window_day" {
   description = "Day of week for maintenance (1=Monday, 7=Sunday)"
   type        = number
-  default     = 7  # Sunday
+  default     = 7 # Sunday
 
   validation {
     condition     = var.maintenance_window_day >= 1 && var.maintenance_window_day <= 7
@@ -245,7 +245,7 @@ variable "maintenance_window_day" {
 variable "maintenance_window_hour" {
   description = "Hour of day for maintenance (0-23, UTC)"
   type        = number
-  default     = 3  # 3 AM UTC
+  default     = 3 # 3 AM UTC
 
   validation {
     condition     = var.maintenance_window_hour >= 0 && var.maintenance_window_hour <= 23
@@ -267,9 +267,9 @@ variable "maintenance_window_update_track" {
 variable "deny_maintenance_period" {
   description = "Period during which maintenance is denied"
   type = object({
-    start_date = string  # YYYY-MM-DD
-    end_date   = string  # YYYY-MM-DD
-    time       = string  # HH:MM:SS
+    start_date = string # YYYY-MM-DD
+    end_date   = string # YYYY-MM-DD
+    time       = string # HH:MM:SS
   })
   default = null
 }
@@ -333,7 +333,7 @@ variable "enable_slow_query_log" {
 variable "slow_query_threshold_ms" {
   description = "Slow query threshold in milliseconds"
   type        = string
-  default     = "1000"  # 1 second
+  default     = "1000" # 1 second
 }
 
 variable "log_statement_level" {
@@ -412,10 +412,10 @@ variable "default_user_password" {
 variable "additional_users" {
   description = "Map of additional users to create"
   type = map(object({
-    password = optional(string)  # null for auto-generated
-    type     = optional(string)  # BUILT_IN or CLOUD_IAM_SERVICE_ACCOUNT
+    password = optional(string) # null for auto-generated
+    type     = optional(string) # BUILT_IN or CLOUD_IAM_SERVICE_ACCOUNT
   }))
-  default = {}
+  default   = {}
   sensitive = true
 }
 
@@ -592,7 +592,7 @@ variable "alert_disk_threshold" {
 variable "alert_duration_seconds" {
   description = "Duration for alert conditions (seconds)"
   type        = number
-  default     = 300  # 5 minutes
+  default     = 300 # 5 minutes
 
   validation {
     condition     = var.alert_duration_seconds >= 60 && var.alert_duration_seconds <= 3600

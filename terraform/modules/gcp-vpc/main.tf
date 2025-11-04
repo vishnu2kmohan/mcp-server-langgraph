@@ -5,10 +5,10 @@
 resource "google_compute_network" "main" {
   name                            = "${var.name_prefix}-vpc"
   project                         = var.project_id
-  auto_create_subnetworks         = false  # We'll create custom subnets
+  auto_create_subnetworks         = false # We'll create custom subnets
   routing_mode                    = var.routing_mode
   delete_default_routes_on_create = false
-  mtu                             = 1460  # Recommended for GCP
+  mtu                             = 1460 # Recommended for GCP
 
   description = "VPC for ${var.name_prefix} - GKE ${var.cluster_name}"
 }
@@ -238,7 +238,7 @@ resource "google_compute_firewall" "allow_iap_ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = ["35.235.240.0/20"]  # IAP IP range
+  source_ranges = ["35.235.240.0/20"] # IAP IP range
   target_tags   = ["iap-ssh"]
 }
 
@@ -258,7 +258,7 @@ resource "google_compute_firewall" "allow_health_checks" {
   }
 
   source_ranges = [
-    "35.191.0.0/16",  # Google Cloud health check ranges
+    "35.191.0.0/16", # Google Cloud health check ranges
     "130.211.0.0/22",
   ]
 
@@ -402,9 +402,9 @@ resource "google_compute_security_policy" "cloud_armor" {
         }
       }
       rate_limit_options {
-        conform_action = "allow"
-        exceed_action  = "deny(429)"
-        enforce_on_key = "IP"
+        conform_action   = "allow"
+        exceed_action    = "deny(429)"
+        enforce_on_key   = "IP"
         ban_duration_sec = var.cloud_armor_ban_duration_sec
         rate_limit_threshold {
           count        = var.cloud_armor_rate_limit_threshold

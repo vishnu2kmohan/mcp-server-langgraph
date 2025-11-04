@@ -180,7 +180,7 @@ metadata:
 ```yaml
 - name: Deploy
   run: |
-    kubectl create namespace mcp-staging
+    kubectl create namespace staging-mcp-server-langgraph
     kubectl apply -k deployments/overlays/staging
 ```
 
@@ -188,7 +188,7 @@ metadata:
 ```yaml
 - name: Create namespace
   run: |
-    kubectl create namespace mcp-staging --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace staging-mcp-server-langgraph --dry-run=client -o yaml | kubectl apply -f -
 
 - name: Validate manifests
   run: |
@@ -268,7 +268,7 @@ resources:
    eksctl create iamserviceaccount \
      --name=mcp-server-langgraph \
      --namespace=mcp-staging \
-     --cluster=mcp-staging-cluster \
+     --cluster=staging-mcp-server-langgraph-gke \
      --attach-policy-arn=arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess \
      --approve
    ```
@@ -300,7 +300,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER: mcp-staging-cluster
+  EKS_CLUSTER: staging-mcp-server-langgraph-gke
   NAMESPACE: mcp-staging
   DEPLOYMENT_NAME: staging-mcp-server-langgraph
 
@@ -459,7 +459,7 @@ permissions:
 env:
   AZURE_SUBSCRIPTION_ID: SUB_ID
   RESOURCE_GROUP: mcp-staging-rg
-  AKS_CLUSTER: mcp-staging-cluster
+  AKS_CLUSTER: staging-mcp-server-langgraph-gke
   NAMESPACE: mcp-staging
   DEPLOYMENT_NAME: staging-mcp-server-langgraph
 
@@ -741,18 +741,18 @@ kubectl apply --dry-run=server -f /tmp/eks-manifests.yaml
 kubectl cluster-info
 
 # 2. Check namespace exists
-kubectl get namespace mcp-staging || kubectl create namespace mcp-staging
+kubectl get namespace staging-mcp-server-langgraph || kubectl create namespace staging-mcp-server-langgraph
 
 # 3. Verify External Secrets Operator
 kubectl get deployment -n external-secrets-system external-secrets
 kubectl api-resources | grep externalsecret
 
 # 4. Check RBAC permissions
-kubectl auth can-i create roles --namespace mcp-staging
-kubectl auth can-i create rolebindings --namespace mcp-staging
+kubectl auth can-i create roles --namespace staging-mcp-server-langgraph
+kubectl auth can-i create rolebindings --namespace staging-mcp-server-langgraph
 
 # 5. Validate resource quotas
-kubectl describe resourcequota -n mcp-staging
+kubectl describe resourcequota -n staging-mcp-server-langgraph
 ```
 
 ---

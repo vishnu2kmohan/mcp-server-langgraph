@@ -126,7 +126,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 #### Staging Cluster
 
 ```bash
-gcloud container clusters create mcp-staging-cluster \
+gcloud container clusters create staging-mcp-server-langgraph-gke \
   --project=$PROJECT_ID \
   --region=$GCP_REGION \
   --enable-autoscaling \
@@ -143,7 +143,7 @@ gcloud container clusters create mcp-staging-cluster \
 #### Production Cluster
 
 ```bash
-gcloud container clusters create mcp-production-cluster \
+gcloud container clusters create production-mcp-server-langgraph-gke \
   --project=$PROJECT_ID \
   --region=$GCP_REGION \
   --enable-autoscaling \
@@ -183,8 +183,8 @@ Configure the following secrets in your GitHub repository settings (`Settings` â
 | `GCP_REGION` | `us-central1` | GCP region for resources |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider` | Workload Identity Provider path |
 | `GCP_SERVICE_ACCOUNT` | `github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com` | Service account email |
-| `GKE_STAGING_CLUSTER` | `mcp-staging-cluster` | Staging GKE cluster name |
-| `GKE_PRODUCTION_CLUSTER` | `mcp-production-cluster` | Production GKE cluster name |
+| `GKE_STAGING_CLUSTER` | `staging-mcp-server-langgraph-gke` | Staging GKE cluster name |
+| `GKE_PRODUCTION_CLUSTER` | `production-mcp-server-langgraph-gke` | Production GKE cluster name |
 
 ### How to Get Values
 
@@ -203,8 +203,8 @@ echo "GCP_WORKLOAD_IDENTITY_PROVIDER: projects/${PROJECT_NUMBER}/locations/globa
 echo "GCP_SERVICE_ACCOUNT: github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
 
 # Cluster Names
-echo "GKE_STAGING_CLUSTER: mcp-staging-cluster"
-echo "GKE_PRODUCTION_CLUSTER: mcp-production-cluster"
+echo "GKE_STAGING_CLUSTER: staging-mcp-server-langgraph-gke"
+echo "GKE_PRODUCTION_CLUSTER: production-mcp-server-langgraph-gke"
 ```
 
 ---
@@ -377,7 +377,7 @@ Limit Workload Identity to specific branches:
 
 ```bash
 gcloud container node-pools create preemptible-pool \
-  --cluster=mcp-staging-cluster \
+  --cluster=staging-mcp-server-langgraph-gke \
   --region=$GCP_REGION \
   --preemptible \
   --num-nodes=1 \
@@ -389,7 +389,7 @@ gcloud container node-pools create preemptible-pool \
 Already enabled in cluster creation. Monitor usage:
 
 ```bash
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=$GCP_REGION \
   --format="value(autoscaling)"
 ```

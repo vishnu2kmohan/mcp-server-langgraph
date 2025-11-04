@@ -37,8 +37,8 @@ set -euo pipefail
 # Configuration
 readonly PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 readonly REGION="us-central1"
-readonly CLUSTER_NAME="mcp-staging-cluster"
-readonly NAMESPACE="mcp-server-langgraph-staging"
+readonly CLUSTER_NAME="staging-mcp-server-langgraph-gke"
+readonly NAMESPACE="staging-mcp-server-langgraph"
 readonly VPC_NAME="staging-vpc"
 readonly CLOUD_SQL_INSTANCE="mcp-staging-postgres"
 readonly REDIS_INSTANCE="mcp-staging-redis"

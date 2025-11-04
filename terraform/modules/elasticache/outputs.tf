@@ -123,14 +123,14 @@ output "kubernetes_secret_data" {
 output "cluster_info" {
   description = "Redis cluster information"
   value = {
-    mode              = var.cluster_mode_enabled ? "cluster" : "standard"
-    node_type         = var.node_type
-    engine_version    = var.engine_version
-    num_shards        = var.cluster_mode_enabled ? var.num_node_groups : null
-    replicas_per_shard = var.cluster_mode_enabled ? var.replicas_per_node_group : null
-    num_nodes         = var.cluster_mode_enabled ? null : var.num_cache_clusters
-    multi_az          = var.multi_az_enabled
-    encrypted_at_rest = var.at_rest_encryption_enabled
+    mode                 = var.cluster_mode_enabled ? "cluster" : "standard"
+    node_type            = var.node_type
+    engine_version       = var.engine_version
+    num_shards           = var.cluster_mode_enabled ? var.num_node_groups : null
+    replicas_per_shard   = var.cluster_mode_enabled ? var.replicas_per_node_group : null
+    num_nodes            = var.cluster_mode_enabled ? null : var.num_cache_clusters
+    multi_az             = var.multi_az_enabled
+    encrypted_at_rest    = var.at_rest_encryption_enabled
     encrypted_in_transit = var.transit_encryption_enabled
   }
 }
@@ -139,9 +139,9 @@ output "cluster_info" {
 output "cloudwatch_alarm_arns" {
   description = "CloudWatch alarm ARNs"
   value = {
-    cpu_alarm            = try(aws_cloudwatch_metric_alarm.cpu[0].arn, "")
-    memory_alarm         = try(aws_cloudwatch_metric_alarm.memory[0].arn, "")
-    evictions_alarm      = try(aws_cloudwatch_metric_alarm.evictions[0].arn, "")
+    cpu_alarm             = try(aws_cloudwatch_metric_alarm.cpu[0].arn, "")
+    memory_alarm          = try(aws_cloudwatch_metric_alarm.memory[0].arn, "")
+    evictions_alarm       = try(aws_cloudwatch_metric_alarm.evictions[0].arn, "")
     replication_lag_alarm = try(aws_cloudwatch_metric_alarm.replication_lag[0].arn, "")
   }
 }

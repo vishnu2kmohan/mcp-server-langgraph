@@ -1,9 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: mcp-server-langgraph-development
+namespace: dev-mcp-server-langgraph
 
-namePrefix: development-
+namePrefix: dev-
 
 # Fixed: 'bases' is deprecated, use 'resources' instead
 resources:

@@ -35,7 +35,7 @@ variable "cluster_endpoint_public_access_cidrs" {
   type        = list(string)
   # TODO: Replace with your actual corporate VPN or bastion host CIDR blocks
   # Example: ["203.0.113.0/24", "198.51.100.0/24"]
-  default     = ["10.0.0.0/16"] # Restricted to VPC CIDR - update with your specific network
+  default = ["10.0.0.0/16"] # Restricted to VPC CIDR - update with your specific network
 }
 
 variable "general_node_instance_types" {

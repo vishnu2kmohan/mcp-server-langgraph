@@ -24,7 +24,7 @@ set -euo pipefail
 PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 REGION="us-central1"
 ZONE="us-central1-a"
-CLUSTER_NAME="mcp-staging-cluster"
+CLUSTER_NAME="staging-mcp-server-langgraph-gke"
 VPC_NAME="staging-vpc"
 SUBNET_NAME="staging-gke-subnet"
 SERVICE_ACCOUNT_NAME="mcp-staging-sa"

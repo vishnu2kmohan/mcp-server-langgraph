@@ -75,7 +75,7 @@ This script will:
 
 ```bash
 # Get credentials for staging cluster
-gcloud container clusters get-credentials mcp-staging \
+gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
     --region=us-central1 \
     --project=your-project-id
 ```
@@ -318,7 +318,7 @@ Add to your workflow:
 - name: Run ESO RBAC Integration Tests
   run: |
     # Connect to GKE
-    gcloud container clusters get-credentials mcp-staging \
+    gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
       --region=us-central1 \
       --project=${{ env.GCP_PROJECT_ID }}
 
@@ -338,7 +338,7 @@ export GCP_PROJECT_ID="your-project-id"
 export GCP_SERVICE_ACCOUNT_EMAIL="github-actions-gke@your-project-id.iam.gserviceaccount.com"
 
 # Get cluster credentials
-gcloud container clusters get-credentials mcp-staging \
+gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
     --region=us-central1 \
     --project=$GCP_PROJECT_ID
 

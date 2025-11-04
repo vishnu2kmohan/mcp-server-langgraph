@@ -306,7 +306,7 @@ terraform/environments/
     nat_ip_count  = 2  # 2 static NAT IPs for egress
 
     # GKE
-    cluster_name     = "mcp-prod-gke"
+    cluster_name     = "production-mcp-server-langgraph-gke"
     regional_cluster = true  # 3 zones for HA
 
     # Security
@@ -602,7 +602,7 @@ variable "enable_binary_authorization" {
 | Variable | Dev | Staging | Prod |
 |----------|-----|---------|------|
 | `project_id` | mcp-dev | mcp-staging | mcp-prod |
-| `cluster_name` | mcp-dev-gke | mcp-staging-gke | mcp-prod-gke |
+| `cluster_name` | mcp-dev-gke | mcp-staging-gke | production-mcp-server-langgraph-gke |
 | `regional_cluster` | false | true | true |
 | `cloudsql_tier` | db-custom-1-3840 | db-custom-2-7680 | db-custom-4-15360 |
 | `redis_tier` | BASIC | STANDARD_HA | STANDARD_HA |
@@ -693,7 +693,7 @@ gcloud scheduler jobs create http scale-up-dev \
 
 ```bash
 # Monitor actual usage
-kubectl top pods -n mcp-staging --containers
+kubectl top pods -n staging-mcp-server-langgraph --containers
 
 # Adjust pod requests
 kubectl patch deployment mcp-server-langgraph \

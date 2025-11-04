@@ -214,26 +214,26 @@ output "cloud_armor_policy_self_link" {
 output "gke_network_config" {
   description = "Network configuration for GKE cluster module"
   value = {
-    network_name         = google_compute_network.main.name
-    subnet_name          = google_compute_subnetwork.nodes.name
-    pods_range_name      = google_compute_subnetwork.nodes.secondary_ip_range[0].range_name
-    services_range_name  = google_compute_subnetwork.nodes.secondary_ip_range[1].range_name
+    network_name        = google_compute_network.main.name
+    subnet_name         = google_compute_subnetwork.nodes.name
+    pods_range_name     = google_compute_subnetwork.nodes.secondary_ip_range[0].range_name
+    services_range_name = google_compute_subnetwork.nodes.secondary_ip_range[1].range_name
   }
 }
 
 output "network_summary" {
   description = "Summary of network configuration"
   value = {
-    vpc_name              = google_compute_network.main.name
-    region                = var.region
-    nodes_cidr            = google_compute_subnetwork.nodes.ip_cidr_range
-    pods_cidr             = google_compute_subnetwork.nodes.secondary_ip_range[0].ip_cidr_range
-    services_cidr         = google_compute_subnetwork.nodes.secondary_ip_range[1].ip_cidr_range
-    public_subnet_created = var.create_public_subnet
-    management_subnet_created = var.create_management_subnet
+    vpc_name                           = google_compute_network.main.name
+    region                             = var.region
+    nodes_cidr                         = google_compute_subnetwork.nodes.ip_cidr_range
+    pods_cidr                          = google_compute_subnetwork.nodes.secondary_ip_range[0].ip_cidr_range
+    services_cidr                      = google_compute_subnetwork.nodes.secondary_ip_range[1].ip_cidr_range
+    public_subnet_created              = var.create_public_subnet
+    management_subnet_created          = var.create_management_subnet
     private_service_connection_enabled = var.enable_private_service_connection
-    cloud_armor_enabled   = var.enable_cloud_armor
-    flow_logs_enabled     = var.enable_flow_logs
-    nat_type              = var.nat_ip_allocate_option
+    cloud_armor_enabled                = var.enable_cloud_armor
+    flow_logs_enabled                  = var.enable_flow_logs
+    nat_type                           = var.nat_ip_allocate_option
   }
 }

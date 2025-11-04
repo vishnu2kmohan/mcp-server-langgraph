@@ -29,7 +29,7 @@ provider "google" {
 }
 
 locals {
-  name_prefix  = "mcp-staging"
+  name_prefix  = "staging-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-gke"
 
   common_labels = {
@@ -50,26 +50,26 @@ module "project_services" {
   project_id = var.project_id
 
   # Core APIs (required for all GCP infrastructure)
-  enable_container_api = true  # Required for GKE
-  enable_compute_api   = true  # Required for VPC, subnets, and compute resources
+  enable_container_api = true # Required for GKE
+  enable_compute_api   = true # Required for VPC, subnets, and compute resources
 
   # Networking APIs
-  enable_service_networking_api = true  # Required for private service connection (Cloud SQL, Memorystore)
+  enable_service_networking_api = true # Required for private service connection (Cloud SQL, Memorystore)
 
   # GKE Feature APIs
-  enable_gke_backup_api         = true   # Required for backup_plan (enabled below)
-  enable_container_scanning_api = false  # Vulnerability scanning not enabled in staging
+  enable_gke_backup_api         = true  # Required for backup_plan (enabled below)
+  enable_container_scanning_api = false # Vulnerability scanning not enabled in staging
 
   # Secret Management APIs
-  enable_secret_manager_api = true  # Required for Workload Identity secret access
+  enable_secret_manager_api = true # Required for Workload Identity secret access
 
   # Database APIs
-  enable_sql_admin_api = true  # Required for Cloud SQL
-  enable_redis_api     = true  # Required for Memorystore
+  enable_sql_admin_api = true # Required for Cloud SQL
+  enable_redis_api     = true # Required for Memorystore
 
   # Monitoring & Logging APIs
-  enable_monitoring_api = true  # Required for monitoring alerts
-  enable_logging_api    = true  # Required for log exports
+  enable_monitoring_api = true # Required for monitoring alerts
+  enable_logging_api    = true # Required for log exports
 
   # Safety: Never disable APIs on destroy (can break existing resources)
   disable_on_destroy         = false
@@ -89,21 +89,21 @@ module "vpc" {
   cluster_name = local.cluster_name
 
   # Medium-sized CIDR blocks for staging
-  nodes_cidr    = "10.20.0.0/20"   # 4096 IPs
-  pods_cidr     = "10.24.0.0/15"   # 131k IPs
-  services_cidr = "10.26.0.0/20"   # 4096 IPs
+  nodes_cidr    = "10.20.0.0/20" # 4096 IPs
+  pods_cidr     = "10.24.0.0/15" # 131k IPs
+  services_cidr = "10.26.0.0/20" # 4096 IPs
 
   # Regional routing
   routing_mode = "REGIONAL"
 
   # Auto NAT IPs (staging doesn't need static)
-  nat_ip_allocate_option        = "AUTO_ONLY"
+  nat_ip_allocate_option         = "AUTO_ONLY"
   enable_dynamic_port_allocation = true
 
   # Flow logs with sampling
-  enable_flow_logs                 = true
-  flow_logs_aggregation_interval   = "INTERVAL_5_SEC"
-  flow_logs_sampling               = 0.2  # 20% sampling
+  enable_flow_logs               = true
+  flow_logs_aggregation_interval = "INTERVAL_5_SEC"
+  flow_logs_sampling             = 0.2 # 20% sampling
 
   # Private Service Connection
   enable_private_service_connection = true
@@ -184,10 +184,10 @@ module "gke" {
   monitoring_notification_channels = var.monitoring_notification_channels
 
   # Backup (weekly for staging)
-  enable_backup_plan          = true
-  backup_schedule_cron        = "0 2 * * 0"  # Sunday 2 AM
-  backup_retain_days          = 14
-  backup_include_volume_data  = true
+  enable_backup_plan         = true
+  backup_schedule_cron       = "0 2 * * 0" # Sunday 2 AM
+  backup_retain_days         = 14
+  backup_include_volume_data = true
 
   # Fleet registration
   enable_fleet_registration = var.enable_fleet_registration
@@ -196,12 +196,12 @@ module "gke" {
   enable_cost_allocation = true
 
   # Addons
-  enable_http_load_balancing           = true
-  enable_horizontal_pod_autoscaling    = true
-  enable_vertical_pod_autoscaling      = true
-  enable_dns_cache                     = true
+  enable_http_load_balancing            = true
+  enable_horizontal_pod_autoscaling     = true
+  enable_vertical_pod_autoscaling       = true
+  enable_dns_cache                      = true
   enable_gce_persistent_disk_csi_driver = true
-  enable_gcs_fuse_csi_driver           = true
+  enable_gcs_fuse_csi_driver            = true
 
   # Deletion protection (moderate for staging)
   enable_deletion_protection = var.enable_deletion_protection
@@ -226,13 +226,13 @@ module "cloudsql" {
   postgres_major_version = 15
 
   # Medium instance with HA
-  tier              = "db-custom-2-7680"  # 2 vCPU, 7.5 GB RAM
+  tier              = "db-custom-2-7680" # 2 vCPU, 7.5 GB RAM
   high_availability = true
 
   # Storage
-  disk_type               = "PD_SSD"
-  disk_size_gb            = 50
-  enable_disk_autoresize  = true
+  disk_type                = "PD_SSD"
+  disk_size_gb             = 50
+  enable_disk_autoresize   = true
   disk_autoresize_limit_gb = 500
 
   # Network
@@ -246,7 +246,7 @@ module "cloudsql" {
   backup_start_time              = "02:00"
   enable_point_in_time_recovery  = true
   transaction_log_retention_days = 7
-  backup_retention_count         = 14  # 2 weeks
+  backup_retention_count         = 14 # 2 weeks
 
   # Maintenance
   maintenance_window_day  = 7
@@ -354,7 +354,7 @@ module "workload_identity" {
         "roles/logging.logWriter",
         "roles/monitoring.metricWriter",
         "roles/cloudtrace.agent",
-        "roles/aiplatform.user",  # For Vertex AI
+        "roles/aiplatform.user", # For Vertex AI
       ]
       cloudsql_access = true
       secret_ids      = var.app_secret_ids

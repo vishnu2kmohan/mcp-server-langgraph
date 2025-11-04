@@ -18,7 +18,7 @@ variable "team" {
 variable "app_namespace" {
   description = "Kubernetes namespace for the application"
   type        = string
-  default     = "mcp-dev"
+  default     = "dev-mcp-server-langgraph"
 }
 
 variable "enable_monitoring_alerts" {

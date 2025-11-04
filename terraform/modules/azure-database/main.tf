@@ -29,9 +29,9 @@ resource "azurerm_postgresql_flexible_server" "main" {
   sku_name = var.sku_name
 
   # Storage
-  storage_mb                   = var.storage_mb
-  storage_tier                 = var.storage_tier
-  auto_grow_enabled            = var.auto_grow_enabled
+  storage_mb        = var.storage_mb
+  storage_tier      = var.storage_tier
+  auto_grow_enabled = var.auto_grow_enabled
 
   # High Availability
   dynamic "high_availability" {
@@ -117,14 +117,14 @@ resource "azurerm_postgresql_flexible_server_configuration" "configurations" {
     var.postgresql_configurations,
     {
       # Performance and monitoring defaults
-      "log_connections"           = var.enable_query_insights ? "on" : "off"
-      "log_disconnections"        = var.enable_query_insights ? "on" : "off"
-      "log_duration"              = var.enable_slow_query_log ? "on" : "off"
+      "log_connections"            = var.enable_query_insights ? "on" : "off"
+      "log_disconnections"         = var.enable_query_insights ? "on" : "off"
+      "log_duration"               = var.enable_slow_query_log ? "on" : "off"
       "log_min_duration_statement" = tostring(var.slow_query_threshold_ms)
-      "log_lock_waits"            = "on"
-      "shared_preload_libraries"  = "pg_stat_statements"
-      "track_activity_query_size" = "4096"
-      "track_io_timing"           = "on"
+      "log_lock_waits"             = "on"
+      "shared_preload_libraries"   = "pg_stat_statements"
+      "track_activity_query_size"  = "4096"
+      "track_io_timing"            = "on"
     }
   )
 
@@ -340,8 +340,8 @@ resource "azurerm_postgresql_flexible_server" "read_replicas" {
   location            = var.read_replica_locations[count.index % length(var.read_replica_locations)]
 
   # Source server for replication
-  create_mode           = "Replica"
-  source_server_id      = azurerm_postgresql_flexible_server.main.id
+  create_mode                = "Replica"
+  source_server_id           = azurerm_postgresql_flexible_server.main.id
   point_in_time_restore_time = null
 
   # SKU (can be different from primary)

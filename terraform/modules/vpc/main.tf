@@ -31,8 +31,8 @@ locals {
     var.tags,
     {
       "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-      ManagedBy                                     = "Terraform"
-      Module                                        = "vpc"
+      ManagedBy                                   = "Terraform"
+      Module                                      = "vpc"
     }
   )
 }
@@ -85,10 +85,10 @@ resource "aws_subnet" "public" {
   tags = merge(
     local.common_tags,
     {
-      Name                                            = "${var.name_prefix}-public-${local.azs[count.index]}"
-      "kubernetes.io/role/elb"                        = "1"
-      "kubernetes.io/cluster/${var.cluster_name}"     = "shared"
-      Tier                                            = "Public"
+      Name                                        = "${var.name_prefix}-public-${local.azs[count.index]}"
+      "kubernetes.io/role/elb"                    = "1"
+      "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+      Tier                                        = "Public"
     }
   )
 }
@@ -170,10 +170,10 @@ resource "aws_subnet" "private" {
   tags = merge(
     local.common_tags,
     {
-      Name                                            = "${var.name_prefix}-private-${local.azs[count.index]}"
-      "kubernetes.io/role/internal-elb"               = "1"
-      "kubernetes.io/cluster/${var.cluster_name}"     = "shared"
-      Tier                                            = "Private"
+      Name                                        = "${var.name_prefix}-private-${local.azs[count.index]}"
+      "kubernetes.io/role/internal-elb"           = "1"
+      "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+      Tier                                        = "Private"
     }
   )
 }

@@ -2,7 +2,7 @@
 # Creates a highly available PostgreSQL instance with automated backups, encryption, and monitoring
 
 locals {
-  instance_name = var.instance_name != "" ? var.instance_name : "${var.name_prefix}-postgres"
+  instance_name    = var.instance_name != "" ? var.instance_name : "${var.name_prefix}-postgres"
   database_version = var.postgres_major_version != null ? "POSTGRES_${var.postgres_major_version}" : var.database_version
 
   labels = merge(
@@ -28,10 +28,10 @@ resource "google_sql_database_instance" "main" {
   deletion_protection = var.enable_deletion_protection
 
   settings {
-    tier              = var.tier
-    availability_type = var.high_availability ? "REGIONAL" : "ZONAL"
-    disk_type         = var.disk_type
-    disk_size         = var.disk_size_gb
+    tier                  = var.tier
+    availability_type     = var.high_availability ? "REGIONAL" : "ZONAL"
+    disk_type             = var.disk_type
+    disk_size             = var.disk_size_gb
     disk_autoresize       = var.enable_disk_autoresize
     disk_autoresize_limit = var.disk_autoresize_limit_gb
 
@@ -80,15 +80,15 @@ resource "google_sql_database_instance" "main" {
         var.database_flags,
         {
           # Performance and monitoring defaults
-          "log_connections"           = var.enable_query_insights ? "on" : "off"
-          "log_disconnections"        = var.enable_query_insights ? "on" : "off"
-          "log_duration"              = var.enable_slow_query_log ? "on" : "off"
+          "log_connections"            = var.enable_query_insights ? "on" : "off"
+          "log_disconnections"         = var.enable_query_insights ? "on" : "off"
+          "log_duration"               = var.enable_slow_query_log ? "on" : "off"
           "log_min_duration_statement" = var.slow_query_threshold_ms
-          "log_lock_waits"            = "on"
-          "log_statement"             = var.log_statement_level
-          "shared_preload_libraries"  = "pg_stat_statements"
-          "track_activity_query_size" = "4096"
-          "track_io_timing"           = "on"
+          "log_lock_waits"             = "on"
+          "log_statement"              = var.log_statement_level
+          "shared_preload_libraries"   = "pg_stat_statements"
+          "track_activity_query_size"  = "4096"
+          "track_io_timing"            = "on"
         }
       )
       content {
@@ -164,7 +164,7 @@ resource "google_sql_database_instance" "main" {
   # Prevent accidental deletion via terraform destroy
   lifecycle {
     ignore_changes = [
-      settings[0].disk_size,  # Ignore disk size changes (autoresize handles this)
+      settings[0].disk_size, # Ignore disk size changes (autoresize handles this)
     ]
   }
 
@@ -265,7 +265,7 @@ resource "google_sql_database_instance" "read_replicas" {
 
   settings {
     tier              = var.read_replica_tier != null ? var.read_replica_tier : var.tier
-    availability_type = "ZONAL"  # Read replicas are always zonal
+    availability_type = "ZONAL" # Read replicas are always zonal
     disk_type         = var.disk_type
     disk_autoresize   = var.enable_disk_autoresize
 
@@ -343,7 +343,7 @@ resource "google_monitoring_alert_policy" "high_cpu" {
   notification_channels = var.monitoring_notification_channels
 
   alert_strategy {
-    auto_close = "86400s"  # 24 hours
+    auto_close = "86400s" # 24 hours
   }
 
   enabled = true

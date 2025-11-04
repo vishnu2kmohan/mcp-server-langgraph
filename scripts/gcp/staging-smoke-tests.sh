@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # Configuration
-NAMESPACE="${NAMESPACE:-mcp-staging}"
+NAMESPACE="${NAMESPACE:-staging-mcp-server-langgraph}"
 SERVICE_NAME="${SERVICE_NAME:-staging-mcp-server-langgraph}"
 TIMEOUT=30
 

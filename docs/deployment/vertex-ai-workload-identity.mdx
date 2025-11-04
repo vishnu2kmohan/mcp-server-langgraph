@@ -123,7 +123,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 
 ```bash
 kubectl annotate serviceaccount mcp-server-langgraph \
-  -n mcp-staging \
+  -n staging-mcp-server-langgraph \
   iam.gke.io/gcp-service-account=vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com \
   --overwrite
 ```
@@ -175,10 +175,10 @@ After running the setup script, deploy the updated configuration:
 kubectl apply -k deployments/overlays/staging-gke
 
 ## Wait for rollout
-kubectl rollout status deployment/mcp-server-langgraph -n mcp-staging
+kubectl rollout status deployment/mcp-server-langgraph -n staging-mcp-server-langgraph
 
 ## Verify pods are running
-kubectl get pods -n mcp-staging
+kubectl get pods -n staging-mcp-server-langgraph
 ```
 ### Verification
 
@@ -196,7 +196,7 @@ gcloud iam service-accounts get-iam-policy \
 
 ```bash
 ## Check service account annotation
-kubectl get serviceaccount mcp-server-langgraph -n mcp-staging \
+kubectl get serviceaccount mcp-server-langgraph -n staging-mcp-server-langgraph \
   -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
 
 ## Expected output:
@@ -206,10 +206,10 @@ kubectl get serviceaccount mcp-server-langgraph -n mcp-staging \
 
 ```bash
 ## Get a shell in the pod
-POD_NAME=$(kubectl get pods -n mcp-staging -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}')
+POD_NAME=$(kubectl get pods -n staging-mcp-server-langgraph -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}')
 
 ## Check active service account
-kubectl exec -it $POD_NAME -n mcp-staging -- gcloud auth list
+kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- gcloud auth list
 
 ## Expected output:
 ## ACTIVE  ACCOUNT
@@ -219,7 +219,7 @@ kubectl exec -it $POD_NAME -n mcp-staging -- gcloud auth list
 
 ```bash
 ## Test Vertex AI API access
-kubectl exec -it $POD_NAME -n mcp-staging -- python3 << 'EOF'
+kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- python3 << 'EOF'
 from google.cloud import aiplatform
 
 aiplatform.init(
@@ -236,7 +236,7 @@ EOF
 
 ```bash
 ## Test LLM integration
-kubectl exec -it $POD_NAME -n mcp-staging -- python3 << 'EOF'
+kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- python3 << 'EOF'
 from litellm import completion
 
 response = completion(
@@ -259,13 +259,13 @@ EOF
     **Solutions**:
     1. Verify Workload Identity is enabled on cluster:
        ```bash
-       gcloud container clusters describe mcp-staging-cluster \
+       gcloud container clusters describe staging-mcp-server-langgraph-gke \
          --region=us-central1 \
          --format="value(workloadIdentityConfig.workloadPool)"
        ```
     2. Check service account annotation:
        ```bash
-       kubectl describe sa mcp-server-langgraph -n mcp-staging | grep Annotations
+       kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep Annotations
        ```
     3. Verify IAM binding:
        ```bash
@@ -274,7 +274,7 @@ EOF
        ```
     4. Restart pods to pick up new annotation:
        ```bash
-       kubectl rollout restart deployment/mcp-server-langgraph -n mcp-staging
+       kubectl rollout restart deployment/mcp-server-langgraph -n staging-mcp-server-langgraph
        ```
   </Accordion>
 
@@ -335,12 +335,12 @@ EOF
     2. Check if annotation was applied before pod creation:
        ```bash
        # Delete and recreate pod
-       kubectl delete pod $POD_NAME -n mcp-staging
+       kubectl delete pod $POD_NAME -n staging-mcp-server-langgraph
        # Pod will be recreated by deployment
        ```
     3. Verify namespace has Workload Identity enabled:
        ```bash
-       kubectl get namespace mcp-staging -o yaml | grep workload-identity
+       kubectl get namespace staging-mcp-server-langgraph -o yaml | grep workload-identity
        ```
   </Accordion>
 </AccordionGroup>
@@ -479,10 +479,10 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
   <Step title="Verify Migration">
     ```bash
     # Check authentication
-    kubectl exec -it $POD_NAME -n mcp-staging -- gcloud auth list
+    kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- gcloud auth list
 
     # Test Vertex AI
-    kubectl logs -n mcp-staging $POD_NAME | grep "Vertex AI"
+    kubectl logs -n staging-mcp-server-langgraph $POD_NAME | grep "Vertex AI"
     ```
   </Step>
 </Steps>

@@ -212,7 +212,7 @@ flowchart TB
           --region us-central1 --project YOUR_PROJECT_ID
         gcloud container clusters get-credentials mcp-staging-gke \
           --region us-central1 --project YOUR_PROJECT_ID
-        gcloud container clusters get-credentials mcp-prod-gke \
+        gcloud container clusters get-credentials production-mcp-server-langgraph-gke \
           --region us-central1 --project YOUR_PROJECT_ID
 
         # Install argocd CLI
@@ -225,7 +225,7 @@ flowchart TB
         # Add clusters
         argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-dev-gke --name gcp-dev
         argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-staging-gke --name gcp-staging
-        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-prod-gke --name gcp-production
+        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_production-mcp-server-langgraph-gke --name gcp-production
         ```
       </Tab>
 
@@ -233,7 +233,7 @@ flowchart TB
         ```bash
         # Generate cluster secret YAML
         kubectl config view --minify --flatten \
-          --context=gke_YOUR_PROJECT_ID_us-central1_mcp-prod-gke > prod-cluster.yaml
+          --context=gke_YOUR_PROJECT_ID_us-central1_production-mcp-server-langgraph-gke > prod-cluster.yaml
 
         # Apply to ArgoCD namespace
         kubectl apply -f deployments/argocd/gcp-multi-cluster-setup.yaml
@@ -297,13 +297,13 @@ spec:
 
           - cluster: gcp-staging
             url: https://GCP_STAGING_ENDPOINT
-            namespace: mcp-staging
+            namespace: staging-mcp-server-langgraph
             overlay: staging-gke
             replicas: "2"
 
           - cluster: gcp-production
             url: https://GCP_PROD_ENDPOINT
-            namespace: mcp-production
+            namespace: production-mcp-server-langgraph
             overlay: production-gke
             replicas: "3"
 
@@ -612,7 +612,7 @@ apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
   name: mcp-server-canary
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   targetRef:
     apiVersion: apps/v1
@@ -696,10 +696,10 @@ spec:
     **Solution**:
     ```bash
     # Check pod status
-    kubectl get pods -n mcp-production
+    kubectl get pods -n production-mcp-server-langgraph
 
     # View pod events
-    kubectl describe pod POD_NAME -n mcp-production
+    kubectl describe pod POD_NAME -n production-mcp-server-langgraph
 
     # Check ArgoCD sync logs
     argocd app logs mcp-server-gcp-production

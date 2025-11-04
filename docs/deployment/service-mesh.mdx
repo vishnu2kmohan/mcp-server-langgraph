@@ -43,7 +43,7 @@ contentType: "how-to"
     kind: PeerAuthentication
     metadata:
       name: default
-      namespace: mcp-production
+      namespace: production-mcp-server-langgraph
     spec:
       mtls:
         mode: STRICT  # All traffic must be mTLS
@@ -91,7 +91,7 @@ contentType: "how-to"
 
 ```mermaid
 flowchart TB
-    subgraph "GKE Cluster (mcp-prod-gke)"
+    subgraph "GKE Cluster (production-mcp-server-langgraph-gke)"
         subgraph "Namespace: istio-system"
             CP[Istiod Control Plane<br/>Managed by Google]
         end
@@ -153,7 +153,7 @@ flowchart TB
   <Step title="Enable APIs & Fleet Registration">
     ```bash
     ./deployments/service-mesh/anthos/setup-anthos-service-mesh.sh \
-      PROJECT_ID mcp-prod-gke us-central1
+      PROJECT_ID production-mcp-server-langgraph-gke us-central1
     ```
 
     **What it does**:
@@ -182,18 +182,18 @@ flowchart TB
   <Step title="Enable Sidecar Injection">
     ```bash
     # Label namespace for automatic injection
-    kubectl label namespace mcp-production istio-injection=enabled
+    kubectl label namespace production-mcp-server-langgraph istio-injection=enabled
 
     # Restart deployments to inject sidecars
     kubectl rollout restart deployment/production-mcp-server-langgraph \
-      -n mcp-production
+      -n production-mcp-server-langgraph
     ```
   </Step>
 
   <Step title="Verify Sidecars Injected">
     ```bash
     # Check pods have 2 containers (app + envoy)
-    kubectl get pods -n mcp-production
+    kubectl get pods -n production-mcp-server-langgraph
 
     # Should show:
     # NAME                                   READY   STATUS
@@ -202,7 +202,7 @@ flowchart TB
     #                                    app + sidecar
 
     # Describe pod to see istio-proxy container
-    kubectl describe pod POD_NAME -n mcp-production | grep istio-proxy
+    kubectl describe pod POD_NAME -n production-mcp-server-langgraph | grep istio-proxy
     ```
   </Step>
 
@@ -213,7 +213,7 @@ flowchart TB
     kind: PeerAuthentication
     metadata:
       name: default
-      namespace: mcp-production
+      namespace: production-mcp-server-langgraph
     spec:
       mtls:
         mode: STRICT
@@ -226,7 +226,7 @@ flowchart TB
   <Step title="Verify mTLS">
     ```bash
     # Check Kiali dashboard or use istioctl
-    istioctl proxy-config secret -n mcp-production POD_NAME
+    istioctl proxy-config secret -n production-mcp-server-langgraph POD_NAME
 
     # Should show TLS certificates
     ```
@@ -247,7 +247,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: mcp-server
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   hosts:
   - mcp-server
@@ -277,7 +277,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: mcp-server
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   host: mcp-server
   trafficPolicy:
@@ -309,7 +309,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: postgres-proxy
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   host: postgres-proxy
   trafficPolicy:
@@ -375,7 +375,7 @@ spec:
     kind: PeerAuthentication
     metadata:
       name: default
-      namespace: mcp-production
+      namespace: production-mcp-server-langgraph
     spec:
       mtls:
         mode: STRICT
@@ -404,7 +404,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: deny-all
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec: {}  # Empty = deny all
 ```
 
@@ -415,7 +415,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: allow-mcp-server
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   selector:
     matchLabels:
@@ -537,7 +537,7 @@ kubectl port-forward svc/kiali -n istio-system 20001:20001
     kind: ServiceEntry
     metadata:
       name: external-staging-service
-      namespace: mcp-production
+      namespace: production-mcp-server-langgraph
     spec:
       hosts:
       - mcp-server.mcp-staging.svc.cluster.local
@@ -564,7 +564,7 @@ kubectl port-forward svc/kiali -n istio-system 20001:20001
     **Checks**:
     ```bash
     # Verify namespace labeled
-    kubectl get namespace mcp-production --show-labels
+    kubectl get namespace production-mcp-server-langgraph --show-labels
 
     # Should see: istio-injection=enabled
 
@@ -581,13 +581,13 @@ kubectl port-forward svc/kiali -n istio-system 20001:20001
     **Checks**:
     ```bash
     # Check PeerAuthentication
-    kubectl get peerauthentication -n mcp-production
+    kubectl get peerauthentication -n production-mcp-server-langgraph
 
     # Check DestinationRule
-    kubectl get destinationrule -n mcp-production
+    kubectl get destinationrule -n production-mcp-server-langgraph
 
     # Verify certificates
-    istioctl proxy-config secret POD_NAME -n mcp-production
+    istioctl proxy-config secret POD_NAME -n production-mcp-server-langgraph
     ```
 
     **Common fix**: Ensure both sides have sidecars injected
@@ -637,7 +637,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: default
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   mtls:
     mode: STRICT
@@ -714,8 +714,8 @@ data:
 
   <Step title="Enable Sidecar Injection">
     ```bash
-    kubectl label namespace mcp-production istio-injection=enabled
-    kubectl rollout restart deployment -n mcp-production
+    kubectl label namespace production-mcp-server-langgraph istio-injection=enabled
+    kubectl rollout restart deployment -n production-mcp-server-langgraph
     ```
   </Step>
 

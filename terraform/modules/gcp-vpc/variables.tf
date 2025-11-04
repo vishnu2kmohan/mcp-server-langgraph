@@ -71,7 +71,7 @@ variable "routing_mode" {
 variable "nodes_cidr" {
   description = "CIDR block for GKE nodes subnet"
   type        = string
-  default     = "10.0.0.0/20"  # 4096 IPs
+  default     = "10.0.0.0/20" # 4096 IPs
 
   validation {
     condition     = can(cidrhost(var.nodes_cidr, 0))
@@ -82,7 +82,7 @@ variable "nodes_cidr" {
 variable "pods_cidr" {
   description = "Secondary CIDR block for GKE pods"
   type        = string
-  default     = "10.4.0.0/14"  # 262k IPs (supports large clusters)
+  default     = "10.4.0.0/14" # 262k IPs (supports large clusters)
 
   validation {
     condition     = can(cidrhost(var.pods_cidr, 0))
@@ -93,7 +93,7 @@ variable "pods_cidr" {
 variable "services_cidr" {
   description = "Secondary CIDR block for GKE services"
   type        = string
-  default     = "10.8.0.0/20"  # 4096 IPs
+  default     = "10.8.0.0/20" # 4096 IPs
 
   validation {
     condition     = can(cidrhost(var.services_cidr, 0))
@@ -110,7 +110,7 @@ variable "create_public_subnet" {
 variable "public_cidr" {
   description = "CIDR block for public subnet (if enabled)"
   type        = string
-  default     = "10.1.0.0/24"  # 256 IPs
+  default     = "10.1.0.0/24" # 256 IPs
 
   validation {
     condition     = can(cidrhost(var.public_cidr, 0))
@@ -127,7 +127,7 @@ variable "create_management_subnet" {
 variable "management_cidr" {
   description = "CIDR block for management subnet (if enabled)"
   type        = string
-  default     = "10.2.0.0/24"  # 256 IPs
+  default     = "10.2.0.0/24" # 256 IPs
 
   validation {
     condition     = can(cidrhost(var.management_cidr, 0))
@@ -142,7 +142,7 @@ variable "management_cidr" {
 variable "cloud_router_asn" {
   description = "ASN for Cloud Router BGP"
   type        = number
-  default     = 64512  # Private ASN range
+  default     = 64512 # Private ASN range
 
   validation {
     condition     = (var.cloud_router_asn >= 64512 && var.cloud_router_asn <= 65534) || (var.cloud_router_asn >= 4200000000 && var.cloud_router_asn <= 4294967294)
@@ -229,7 +229,7 @@ variable "nat_logging_filter" {
 variable "nat_tcp_established_idle_timeout" {
   description = "Timeout for TCP established connections (seconds)"
   type        = number
-  default     = 1200  # 20 minutes
+  default     = 1200 # 20 minutes
 
   validation {
     condition     = var.nat_tcp_established_idle_timeout >= 30 && var.nat_tcp_established_idle_timeout <= 7200
@@ -240,7 +240,7 @@ variable "nat_tcp_established_idle_timeout" {
 variable "nat_tcp_time_wait_timeout" {
   description = "Timeout for TCP connections in TIME_WAIT state (seconds)"
   type        = number
-  default     = 120  # 2 minutes
+  default     = 120 # 2 minutes
 
   validation {
     condition     = var.nat_tcp_time_wait_timeout >= 30 && var.nat_tcp_time_wait_timeout <= 7200
@@ -338,14 +338,14 @@ variable "enable_deny_all_ingress" {
 variable "custom_firewall_rules" {
   description = "Map of custom firewall rules"
   type = map(object({
-    description        = string
-    priority           = number
-    direction          = string
-    allow              = optional(list(object({
+    description = string
+    priority    = number
+    direction   = string
+    allow = optional(list(object({
       protocol = string
       ports    = optional(list(string))
     })))
-    deny               = optional(list(object({
+    deny = optional(list(object({
       protocol = string
       ports    = optional(list(string))
     })))
@@ -370,7 +370,7 @@ variable "enable_private_service_connection" {
 variable "private_services_prefix_length" {
   description = "Prefix length for private services IP range"
   type        = number
-  default     = 16  # /16 = 65k IPs
+  default     = 16 # /16 = 65k IPs
 
   validation {
     condition     = var.private_services_prefix_length >= 16 && var.private_services_prefix_length <= 24
@@ -413,7 +413,7 @@ variable "cloud_armor_rate_limit_interval" {
 variable "cloud_armor_ban_duration_sec" {
   description = "Ban duration in seconds for rate-limited IPs"
   type        = number
-  default     = 600  # 10 minutes
+  default     = 600 # 10 minutes
 
   validation {
     condition     = var.cloud_armor_ban_duration_sec >= 60 && var.cloud_armor_ban_duration_sec <= 86400
@@ -424,11 +424,11 @@ variable "cloud_armor_ban_duration_sec" {
 variable "cloud_armor_rules" {
   description = "Custom Cloud Armor rules"
   type = list(object({
-    action             = string
-    priority           = number
-    description        = string
-    versioned_expr     = optional(string)
-    src_ip_ranges      = optional(list(string))
+    action         = string
+    priority       = number
+    description    = string
+    versioned_expr = optional(string)
+    src_ip_ranges  = optional(list(string))
     rate_limit_options = optional(object({
       conform_action   = string
       exceed_action    = string

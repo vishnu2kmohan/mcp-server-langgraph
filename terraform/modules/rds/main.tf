@@ -96,10 +96,10 @@ resource "aws_db_parameter_group" "main" {
 #######################
 
 resource "aws_db_option_group" "main" {
-  name_prefix          = "${local.db_identifier}-"
+  name_prefix              = "${local.db_identifier}-"
   option_group_description = "Option group for ${local.db_identifier}"
-  engine_name          = "postgres"
-  major_engine_version = split(".", var.engine_version)[0]
+  engine_name              = "postgres"
+  major_engine_version     = split(".", var.engine_version)[0]
 
   tags = merge(
     local.common_tags,
@@ -190,15 +190,15 @@ resource "aws_db_instance" "main" {
   enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
 
   # Monitoring
-  monitoring_interval             = var.enable_enhanced_monitoring ? var.monitoring_interval : 0
-  monitoring_role_arn             = var.enable_enhanced_monitoring ? aws_iam_role.rds_monitoring[0].arn : null
-  performance_insights_enabled    = var.enable_performance_insights
-  performance_insights_kms_key_id = var.enable_performance_insights ? (var.kms_key_id != null ? var.kms_key_id : aws_kms_key.rds[0].arn) : null
+  monitoring_interval                   = var.enable_enhanced_monitoring ? var.monitoring_interval : 0
+  monitoring_role_arn                   = var.enable_enhanced_monitoring ? aws_iam_role.rds_monitoring[0].arn : null
+  performance_insights_enabled          = var.enable_performance_insights
+  performance_insights_kms_key_id       = var.enable_performance_insights ? (var.kms_key_id != null ? var.kms_key_id : aws_kms_key.rds[0].arn) : null
   performance_insights_retention_period = var.enable_performance_insights ? var.performance_insights_retention_period : null
 
   # Security
-  publicly_accessible    = var.publicly_accessible
-  deletion_protection    = var.deletion_protection
+  publicly_accessible                 = var.publicly_accessible
+  deletion_protection                 = var.deletion_protection
   iam_database_authentication_enabled = var.enable_iam_database_authentication
 
   tags = merge(

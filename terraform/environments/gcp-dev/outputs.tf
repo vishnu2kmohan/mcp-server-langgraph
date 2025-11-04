@@ -38,7 +38,7 @@ output "deployment_summary" {
   value = {
     environment = "development"
     region      = var.region
-    cluster     = {
+    cluster = {
       name     = module.gke.cluster_name
       location = module.gke.cluster_location
       type     = "autopilot-zonal"

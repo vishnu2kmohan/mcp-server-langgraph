@@ -128,7 +128,7 @@ gcloud compute networks subnets create staging-gke-subnet \
 #### 1.2 Create GKE Cluster
 
 ```bash
-gcloud container clusters create-auto mcp-staging-cluster \
+gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --network=staging-vpc \
   --subnetwork=staging-gke-subnet \
@@ -233,7 +233,7 @@ For the first deployment, deploy manually to verify everything works:
 
 ```bash
 ## Get GKE credentials
-gcloud container clusters get-credentials mcp-staging-cluster \
+gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
   --region=us-central1
 
 ## Verify connection
@@ -243,10 +243,10 @@ kubectl cluster-info
 kubectl apply -k deployments/overlays/staging-gke
 
 ## Watch deployment
-kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
+kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 
 ## Verify pods
-kubectl get pods -n mcp-staging
+kubectl get pods -n staging-mcp-server-langgraph
 ```
 #### Automated Deployments (GitHub Actions)
 
@@ -289,7 +289,7 @@ Failed:       0
 
 ```bash
 ## Port-forward to service
-kubectl port-forward -n mcp-staging svc/staging-mcp-server-langgraph 8080:80
+kubectl port-forward -n staging-mcp-server-langgraph svc/staging-mcp-server-langgraph 8080:80
 
 ## Test endpoints
 curl http://localhost:8080/health
@@ -303,7 +303,7 @@ curl http://localhost:8080/health/live
 ```bash
 gcloud logging read \
   "resource.type=k8s_container
-   resource.labels.cluster_name=mcp-staging-cluster
+   resource.labels.cluster_name=staging-mcp-server-langgraph-gke
    resource.labels.namespace_name=mcp-staging" \
   --limit=50 \
   --format=json
@@ -311,7 +311,7 @@ gcloud logging read \
 **Kubectl logs**:
 
 ```bash
-kubectl logs -n mcp-staging -l app=mcp-server-langgraph --tail=100
+kubectl logs -n staging-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
 ```
 ### Security Features
 
@@ -324,7 +324,7 @@ kubectl logs -n mcp-staging -l app=mcp-server-langgraph --tail=100
 Verify network policies:
 
 ```bash
-kubectl get networkpolicies -n mcp-staging
+kubectl get networkpolicies -n staging-mcp-server-langgraph
 ```
 #### Workload Identity
 
@@ -332,7 +332,7 @@ Pods authenticate as GCP service accounts without keys:
 
 ```bash
 ## Verify Workload Identity annotation
-kubectl describe sa mcp-server-langgraph -n mcp-staging | grep iam.gke.io
+kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep iam.gke.io
 
 ## Test from pod
 kubectl run -it --rm test \
@@ -347,7 +347,7 @@ Only signed/approved images can be deployed:
 
 ```bash
 ## Check Binary Authorization status
-gcloud container clusters describe mcp-staging-cluster \
+gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(binaryAuthorization)'
 ```
@@ -360,7 +360,7 @@ Secrets are stored in GCP Secret Manager and synced via External Secrets:
 gcloud secrets list --filter="name:staging-*"
 
 ## View External Secrets sync status
-kubectl get externalsecrets -n mcp-staging
+kubectl get externalsecrets -n staging-mcp-server-langgraph
 ```
 ### Monitoring & Observability
 
@@ -397,7 +397,7 @@ Create alert policies for:
   <Accordion title="Pods not starting" icon="circle-exclamation">
     **Check pod status:**
     ```bash
-    kubectl describe pod <pod-name> -n mcp-staging
+    kubectl describe pod <pod-name> -n staging-mcp-server-langgraph
     ```
     **Common issues:**
     - Image pull errors: Check Artifact Registry permissions
@@ -408,7 +408,7 @@ Create alert policies for:
   <Accordion title="External Secrets not syncing" icon="shield-exclamation">
     **Check ExternalSecret status:**
     ```bash
-    kubectl describe externalsecret mcp-staging-secrets -n mcp-staging
+    kubectl describe externalsecret mcp-staging-secrets -n staging-mcp-server-langgraph
     ```
     **Common fixes:**
     - Verify Workload Identity binding
@@ -419,12 +419,12 @@ Create alert policies for:
   <Accordion title="Cloud SQL connection fails" icon="database">
     **Check Cloud SQL proxy logs:**
     ```bash
-    kubectl logs -n mcp-staging <pod-name> -c cloud-sql-proxy
+    kubectl logs -n staging-mcp-server-langgraph <pod-name> -c cloud-sql-proxy
     ```
     **Verify connection:**
     ```bash
     # From inside pod
-    kubectl exec -it <pod-name> -n mcp-staging -- \
+    kubectl exec -it <pod-name> -n staging-mcp-server-langgraph -- \
       nc -zv 127.0.0.1 5432
     ```
   </Accordion>
@@ -432,11 +432,11 @@ Create alert policies for:
   <Accordion title="Network policies blocking traffic" icon="network-wired">
     **List network policies:**
     ```bash
-    kubectl get networkpolicies -n mcp-staging
+    kubectl get networkpolicies -n staging-mcp-server-langgraph
     ```
     **Temporarily disable for testing:**
     ```bash
-    kubectl delete networkpolicy <policy-name> -n mcp-staging
+    kubectl delete networkpolicy <policy-name> -n staging-mcp-server-langgraph
     # Re-apply when done testing
     ```
   </Accordion>
@@ -452,14 +452,14 @@ GitHub Actions automatically rolls back on deployment failure.
 
 ```bash
 ## Rollback to previous version
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n mcp-staging
+kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 
 ## Rollback to specific revision
-kubectl rollout history deployment/staging-mcp-server-langgraph -n mcp-staging
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n mcp-staging --to-revision=3
+kubectl rollout history deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph --to-revision=3
 
 ## Verify rollback
-kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
+kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 ```
 ### Cost Optimization
 
@@ -483,7 +483,7 @@ kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
   <Card title="Rightsize Resources" icon="gauge">
     Review resource requests/limits:
     ```bash
-    kubectl top pods -n mcp-staging
+    kubectl top pods -n staging-mcp-server-langgraph
     ```
     Adjust in `deployment-patch.yaml` if needed.
   </Card>

@@ -46,7 +46,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name_prefix  = "mcp-langgraph-staging"
+  name_prefix  = "staging-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-eks"
 
   common_tags = {
@@ -102,21 +102,21 @@ module "eks" {
   cluster_log_retention_days           = 7
 
   # General-purpose node group (smaller for staging)
-  enable_general_node_group        = true
-  general_node_group_desired_size  = 2
-  general_node_group_min_size      = 1
-  general_node_group_max_size      = 5
+  enable_general_node_group         = true
+  general_node_group_desired_size   = 2
+  general_node_group_min_size       = 1
+  general_node_group_max_size       = 5
   general_node_group_instance_types = var.general_node_instance_types
-  general_node_group_disk_size     = 50
+  general_node_group_disk_size      = 50
 
   # No compute-optimized nodes in staging
   enable_compute_node_group = false
 
   # Spot instances (for cost savings)
-  enable_spot_node_group        = var.enable_spot_nodes
-  spot_node_group_desired_size  = 1
-  spot_node_group_min_size      = 0
-  spot_node_group_max_size      = 3
+  enable_spot_node_group       = var.enable_spot_nodes
+  spot_node_group_desired_size = 1
+  spot_node_group_min_size     = 0
+  spot_node_group_max_size     = 3
   spot_node_group_instance_types = [
     "t3.large", "t3a.large",
     "t3.xlarge", "t3a.xlarge"
@@ -152,11 +152,11 @@ module "rds" {
   subnet_ids  = module.vpc.private_subnet_ids
 
   # Database configuration (smaller for staging)
-  engine_version    = var.postgres_engine_version
-  instance_class    = var.postgres_instance_class
-  allocated_storage = var.postgres_allocated_storage
+  engine_version        = var.postgres_engine_version
+  instance_class        = var.postgres_instance_class
+  allocated_storage     = var.postgres_allocated_storage
   max_allocated_storage = var.postgres_max_allocated_storage
-  storage_type      = "gp3"
+  storage_type          = "gp3"
 
   database_name   = var.postgres_database_name
   master_username = var.postgres_master_username
@@ -171,13 +171,13 @@ module "rds" {
   deletion_protection     = false
 
   # Monitoring (basic for staging)
-  enable_enhanced_monitoring    = false
-  enable_performance_insights   = false
-  enable_slow_query_log         = true
-  slow_query_threshold_ms       = "2000"
+  enable_enhanced_monitoring  = false
+  enable_performance_insights = false
+  enable_slow_query_log       = true
+  slow_query_threshold_ms     = "2000"
 
   # Security
-  allowed_security_group_ids = [module.eks.node_security_group_id]
+  allowed_security_group_ids         = [module.eks.node_security_group_id]
   enable_iam_database_authentication = true
 
   # CloudWatch alarms
@@ -223,7 +223,7 @@ module "redis" {
   enable_final_snapshot    = false
 
   # Monitoring
-  enable_slow_log = true
+  enable_slow_log    = true
   log_retention_days = 7
 
   # Security
@@ -289,7 +289,7 @@ resource "kubernetes_namespace" "mcp_server" {
     name = "mcp-server-langgraph"
 
     labels = {
-      name                                  = "mcp-server-langgraph"
+      name                                 = "mcp-server-langgraph"
       "pod-security.kubernetes.io/enforce" = "restricted"
       "pod-security.kubernetes.io/audit"   = "restricted"
       "pod-security.kubernetes.io/warn"    = "restricted"

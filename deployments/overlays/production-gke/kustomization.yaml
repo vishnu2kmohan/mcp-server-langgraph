@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: mcp-server-langgraph
+namespace: production-mcp-server-langgraph
 
 namePrefix: production-
 
@@ -9,7 +9,6 @@ namePrefix: production-
 resources:
   - ../../base
   - network-policy.yaml
-  - external-secrets.yaml
   - pod-disruption-budget.yaml
   - resource-quotas.yaml
 

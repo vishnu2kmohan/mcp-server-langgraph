@@ -544,7 +544,7 @@ jobs:
     - name: Get GKE Credentials
       uses: google-github-actions/get-gke-credentials@v3
       with:
-        cluster_name: ${{ vars.GKE_CLUSTER || 'mcp-dev-cluster' }}
+        cluster_name: ${{ vars.GKE_CLUSTER || 'dev-mcp-server-langgraph-gke' }}
         location: ${{ vars.GCP_REGION || 'us-central1' }}
 
     - name: Set up kubectl
@@ -554,7 +554,7 @@ jobs:
       run: |
         # Use new consolidated structure
         kubectl apply -k deployments/overlays/dev
-        kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph-dev
+        kubectl rollout status deployment/dev-mcp-server-langgraph -n dev-mcp-server-langgraph
 
   # ============================================================================
   # DEPLOYMENT VERIFICATION (Smoke Tests)

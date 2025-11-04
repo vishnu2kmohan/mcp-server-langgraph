@@ -26,15 +26,15 @@ Configure these under `Settings` → `Secrets and variables` → `Actions` → *
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GKE_STAGING_CLUSTER` | No | `mcp-staging-cluster` | Staging GKE cluster name |
-| `GKE_PROD_CLUSTER` | No | `mcp-prod-gke` | Production GKE cluster name |
+| `GKE_STAGING_CLUSTER` | No | `staging-mcp-server-langgraph-gke` | Staging GKE cluster name |
+| `GKE_PROD_CLUSTER` | No | `production-mcp-server-langgraph-gke` | Production GKE cluster name |
 
 ### Namespace Configuration
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `STAGING_NAMESPACE` | No | `mcp-staging` | Kubernetes namespace for staging |
-| `PRODUCTION_NAMESPACE` | No | `mcp-production` | Kubernetes namespace for production |
+| `STAGING_NAMESPACE` | No | `staging-mcp-server-langgraph` | Kubernetes namespace for staging |
+| `PRODUCTION_NAMESPACE` | No | `production-mcp-server-langgraph` | Kubernetes namespace for production |
 
 ---
 

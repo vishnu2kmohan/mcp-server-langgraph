@@ -38,8 +38,8 @@ concurrency:
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
   GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
-  GKE_CLUSTER: ${{ vars.GKE_PROD_CLUSTER || 'mcp-prod-gke' }}
-  NAMESPACE: ${{ vars.PRODUCTION_NAMESPACE || 'mcp-production' }}
+  GKE_CLUSTER: ${{ vars.GKE_PROD_CLUSTER || 'production-mcp-server-langgraph-gke' }}
+  NAMESPACE: ${{ vars.PRODUCTION_NAMESPACE || 'production-mcp-server-langgraph' }}
   DEPLOYMENT_NAME: production-mcp-server-langgraph
   ARTIFACT_REGISTRY: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev
 

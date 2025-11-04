@@ -247,7 +247,7 @@ gh run list --workflow=gcp-compliance-scan.yaml
 
   <Accordion title="Verify Network Policies">
     ```bash
-    kubectl get networkpolicies -n mcp-production
+    kubectl get networkpolicies -n production-mcp-server-langgraph
     ```
 
     <Check>At least 2 policies should exist</Check>
@@ -376,7 +376,7 @@ kms_key_name = "projects/PROJECT/locations/REGION/keyRings/RING/cryptoKeys/KEY"
   <Step title="Containment">
     ```bash
     # Isolate affected pods
-    kubectl label pod SUSPICIOUS_POD quarantine=true -n mcp-production
+    kubectl label pod SUSPICIOUS_POD quarantine=true -n production-mcp-server-langgraph
 
     # Network policy to isolate
     kubectl apply -f - <<EOF
@@ -384,7 +384,7 @@ kms_key_name = "projects/PROJECT/locations/REGION/keyRings/RING/cryptoKeys/KEY"
     kind: NetworkPolicy
     metadata:
       name: isolate-suspicious-pod
-      namespace: mcp-production
+      namespace: production-mcp-server-langgraph
     spec:
       podSelector:
         matchLabels:
@@ -399,7 +399,7 @@ kms_key_name = "projects/PROJECT/locations/REGION/keyRings/RING/cryptoKeys/KEY"
   <Step title="Investigation">
     ```bash
     # Export logs
-    kubectl logs POD_NAME -n mcp-production --all-containers > incident-logs.txt
+    kubectl logs POD_NAME -n production-mcp-server-langgraph --all-containers > incident-logs.txt
 
     # Audit trail
     gcloud logging read \

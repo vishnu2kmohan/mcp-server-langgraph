@@ -197,7 +197,7 @@ This document summarizes the complete GKE staging environment implementation for
    ```
 4. **Deploy application**:
    ```bash
-   gcloud container clusters get-credentials mcp-staging-cluster --region=us-central1
+   gcloud container clusters get-credentials staging-mcp-server-langgraph-gke --region=us-central1
    kubectl apply -k deployments/overlays/staging-gke
    ```
 5. **Run smoke tests**:
@@ -255,12 +255,12 @@ Once GitHub Actions is configured, deployments are fully automated:
 ## Cloud Logging
 gcloud logging read \
   "resource.type=k8s_container
-   resource.labels.cluster_name=mcp-staging-cluster
+   resource.labels.cluster_name=staging-mcp-server-langgraph-gke
    resource.labels.namespace_name=mcp-staging" \
   --limit=50
 
 ## Kubectl
-kubectl logs -n mcp-staging -l app=mcp-server-langgraph --tail=100
+kubectl logs -n staging-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
 ```
 #### Metrics
 
@@ -287,20 +287,20 @@ Run the security checklist:
 
 1. **Pods not starting**:
    ```bash
-   kubectl describe pod <pod-name> -n mcp-staging
-   kubectl logs <pod-name> -n mcp-staging
+   kubectl describe pod <pod-name> -n staging-mcp-server-langgraph
+   kubectl logs <pod-name> -n staging-mcp-server-langgraph
    ```
 2. **External Secrets not syncing**:
    ```bash
-   kubectl describe externalsecret mcp-staging-secrets -n mcp-staging
+   kubectl describe externalsecret mcp-staging-secrets -n staging-mcp-server-langgraph
    ```
 3. **Cloud SQL connection fails**:
    ```bash
-   kubectl logs <pod-name> -n mcp-staging -c cloud-sql-proxy
+   kubectl logs <pod-name> -n staging-mcp-server-langgraph -c cloud-sql-proxy
    ```
 4. **Network policies blocking traffic**:
    ```bash
-   kubectl get networkpolicies -n mcp-staging
+   kubectl get networkpolicies -n staging-mcp-server-langgraph
    # Temporarily delete to test
    ```
 ### Rollback Procedures
@@ -308,8 +308,8 @@ Run the security checklist:
 #### Manual Rollback
 
 ```bash
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n mcp-staging
-kubectl rollout status deployment/staging-mcp-server-langgraph -n mcp-staging
+kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 ```
 
 #### Automatic Rollback

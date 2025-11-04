@@ -157,7 +157,7 @@ module "vpc" {
   project_id   = "my-project"
   name_prefix  = "mcp-prod"
   region       = "us-central1"
-  cluster_name = "mcp-prod-gke"
+  cluster_name = "production-mcp-server-langgraph-gke"
 
   nodes_cidr    = "10.0.0.0/20"   # 4096 IPs
   pods_cidr     = "10.4.0.0/14"   # 262k IPs
@@ -171,7 +171,7 @@ module "vpc" {
   project_id   = var.project_id
   name_prefix  = "mcp-prod"
   region       = "us-central1"
-  cluster_name = "mcp-prod-gke"
+  cluster_name = "production-mcp-server-langgraph-gke"
 
   # Network configuration
   nodes_cidr    = "10.0.0.0/20"
@@ -222,7 +222,7 @@ module "gke" {
   source = "../../modules/gke-autopilot"
 
   project_id   = var.project_id
-  cluster_name = "mcp-prod-gke"
+  cluster_name = "production-mcp-server-langgraph-gke"
   region       = "us-central1"
 
   # Network from VPC module
@@ -240,7 +240,7 @@ module "gke" {
   source = "../../modules/gke-autopilot"
 
   project_id   = var.project_id
-  cluster_name = "mcp-prod-gke"
+  cluster_name = "production-mcp-server-langgraph-gke"
   region       = "us-central1"
 
   # Network configuration
@@ -479,7 +479,7 @@ module "vpc" {
   project_id   = var.project_id
   name_prefix  = "mcp-prod"
   region       = "us-central1"
-  cluster_name = "mcp-prod-gke"
+  cluster_name = "production-mcp-server-langgraph-gke"
 
   nodes_cidr    = "10.0.0.0/20"
   pods_cidr     = "10.4.0.0/14"
@@ -493,7 +493,7 @@ module "gke" {
   source = "../../modules/gke-autopilot"
 
   project_id   = var.project_id
-  cluster_name = "mcp-prod-gke"
+  cluster_name = "production-mcp-server-langgraph-gke"
   region       = "us-central1"
 
   # Use VPC outputs

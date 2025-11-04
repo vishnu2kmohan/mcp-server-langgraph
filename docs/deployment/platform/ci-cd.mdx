@@ -94,11 +94,11 @@ jobs:
         env:
           LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
         run: |
-          langgraph deploy mcp-server-langgraph-staging --tag staging
+          langgraph deploy staging-mcp-server-langgraph --tag staging
 
       - name: Smoke Test Staging
         run: |
-          langgraph deployment invoke mcp-server-langgraph-staging \
+          langgraph deployment invoke staging-mcp-server-langgraph \
             --input '{"messages": [{"role": "user", "content": "test"}]}'
 
   deploy-production:
@@ -181,13 +181,13 @@ deploy-staging:
   image: python:${PYTHON_VERSION}
   environment:
     name: staging
-    url: https://mcp-server-langgraph-staging.langchain.com
+    url: https://staging-mcp-server-langgraph.langchain.com
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - uv tool install langgraph-cli
-    - langgraph deploy mcp-server-langgraph-staging --tag staging
+    - langgraph deploy staging-mcp-server-langgraph --tag staging
     - |
-      langgraph deployment invoke mcp-server-langgraph-staging \
+      langgraph deployment invoke staging-mcp-server-langgraph \
         --input '{"messages": [{"role": "user", "content": "test"}]}'
   only:
     - main
@@ -238,11 +238,11 @@ jobs:
       - run:
           name: Deploy to Staging
           command: |
-            langgraph deploy mcp-server-langgraph-staging --tag staging
+            langgraph deploy staging-mcp-server-langgraph --tag staging
       - run:
           name: Smoke Test
           command: |
-            langgraph deployment invoke mcp-server-langgraph-staging \
+            langgraph deployment invoke staging-mcp-server-langgraph \
               --input '{"messages": [{"role": "user", "content": "test"}]}'
 
   deploy-production:

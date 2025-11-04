@@ -2,7 +2,7 @@
 # Provides cost monitoring and optimization across cloud providers
 
 kubecostProductConfigs:
-  clusterName: mcp-production
+  clusterName: production-mcp-server-langgraph
 
   # Product key (optional - use for enterprise features)
   productKey: ""

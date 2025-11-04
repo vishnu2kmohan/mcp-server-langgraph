@@ -157,7 +157,7 @@ output "deployment_summary" {
   value = {
     environment = "production"
     region      = var.region
-    cluster     = {
+    cluster = {
       name     = module.gke.cluster_name
       location = module.gke.cluster_location
       type     = "autopilot"
@@ -169,15 +169,15 @@ output "deployment_summary" {
       replicas   = var.cloudsql_read_replica_count
     }
     cache = {
-      type    = "memorystore-redis"
-      host    = module.memorystore.instance_host
-      port    = module.memorystore.instance_port
-      tier    = "STANDARD_HA"
+      type = "memorystore-redis"
+      host = module.memorystore.instance_host
+      port = module.memorystore.instance_port
+      tier = "STANDARD_HA"
     }
     network = {
-      vpc            = module.vpc.network_name
-      private_nodes  = true
-      nat_ips        = module.vpc.nat_ip_addresses
+      vpc           = module.vpc.network_name
+      private_nodes = true
+      nat_ips       = module.vpc.nat_ip_addresses
     }
   }
 }

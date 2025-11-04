@@ -1,0 +1,391 @@
+# Infrastructure Naming Conventions
+
+## Overview
+
+This document defines the standardized naming conventions for all infrastructure resources across the MCP Server LangGraph project. All resources follow the pattern: `{environment}-mcp-server-langgraph-{resource-type}`.
+
+**Last Updated:** 2025-11-04
+**Status:** ✅ Standardized across GCP, AWS, and Azure
+
+---
+
+## Core Naming Pattern
+
+### Standard Format
+
+```
+{environment}-mcp-server-langgraph-{resource-type}
+```
+
+### Environments
+
+| Environment | Abbreviation | Use Case |
+|-------------|-------------|----------|
+| Development | `dev` | Local development, testing, CI/CD validation |
+| Staging | `staging` | Pre-production testing, integration validation |
+| Production | `production` | Live production workloads |
+
+### Resource Types
+
+| Resource | Suffix | Example |
+|----------|--------|---------|
+| GKE Cluster | `-gke` | `staging-mcp-server-langgraph-gke` |
+| EKS Cluster | `-eks` | `staging-mcp-server-langgraph-eks` |
+| AKS Cluster | `-aks` | `staging-mcp-server-langgraph-aks` |
+| Namespace | *(none)* | `staging-mcp-server-langgraph` |
+| Deployment | *(none)* | `staging-mcp-server-langgraph` |
+| Service | *(none)* | `staging-mcp-server-langgraph` |
+
+---
+
+## Platform-Specific Naming
+
+### Google Cloud Platform (GKE)
+
+#### Cluster Names
+```
+Development:  dev-mcp-server-langgraph-gke
+Staging:      staging-mcp-server-langgraph-gke
+Production:   production-mcp-server-langgraph-gke
+```
+
+#### Namespaces
+```
+Development:  dev-mcp-server-langgraph
+Staging:      staging-mcp-server-langgraph
+Production:   production-mcp-server-langgraph
+```
+
+#### Deployments (with Kustomize namePrefix)
+```
+Development:  dev-mcp-server-langgraph
+Staging:      staging-mcp-server-langgraph
+Production:   production-mcp-server-langgraph
+```
+
+#### Services
+```
+Main:         {env}-mcp-server-langgraph
+SSE:          {env}-mcp-server-langgraph-sse
+Headless:     {env}-mcp-server-langgraph-headless
+```
+
+#### Other GCP Resources
+
+| Resource | Pattern | Example |
+|----------|---------|---------|
+| VPC | `{env}-vpc` | `staging-vpc` |
+| Subnet | `{env}-{purpose}-subnet` | `staging-gke-subnet` |
+| Cloud SQL | `{name_prefix}-postgres` | `staging-mcp-server-langgraph-postgres` |
+| Memorystore | `{name_prefix}-redis` | `staging-mcp-server-langgraph-redis` |
+| Service Account | `{name_prefix}-{role}-sa` | `staging-mcp-server-langgraph-app-sa` |
+| Artifact Registry | `mcp-{env}` | `mcp-staging`, `mcp-production` |
+
+---
+
+### Amazon Web Services (EKS)
+
+#### Cluster Names
+```
+Development:  dev-mcp-server-langgraph-eks
+Staging:      staging-mcp-server-langgraph-eks
+Production:   production-mcp-server-langgraph-eks
+```
+
+#### Namespaces
+```
+(Same as GKE - platform-agnostic)
+Development:  dev-mcp-server-langgraph
+Staging:      staging-mcp-server-langgraph
+Production:   production-mcp-server-langgraph
+```
+
+#### Other AWS Resources
+
+| Resource | Pattern | Example |
+|----------|---------|---------|
+| VPC | `{name_prefix}-vpc` | `staging-mcp-server-langgraph-vpc` |
+| Subnet | `{name_prefix}-{az}-{type}` | `staging-mcp-server-langgraph-us-east-1a-private` |
+| RDS Instance | `{name_prefix}-db` | `staging-mcp-server-langgraph-db` |
+| ElastiCache | `{name_prefix}-redis` | `staging-mcp-server-langgraph-redis` |
+| IAM Role | `{cluster_name}-{purpose}` | `staging-mcp-server-langgraph-eks-cluster-role` |
+| ECR Repository | `mcp-server-langgraph` | *(environment in tags)* |
+
+---
+
+### Microsoft Azure (AKS)
+
+#### Cluster Names
+```
+Development:  dev-mcp-server-langgraph-aks
+Staging:      staging-mcp-server-langgraph-aks
+Production:   production-mcp-server-langgraph-aks
+```
+
+#### Namespaces
+```
+(Same as GKE/EKS - platform-agnostic)
+Development:  dev-mcp-server-langgraph
+Staging:      staging-mcp-server-langgraph
+Production:   production-mcp-server-langgraph
+```
+
+#### Other Azure Resources
+
+| Resource | Pattern | Example |
+|----------|---------|---------|
+| Resource Group | `{name_prefix}-rg` | `staging-mcp-server-langgraph-rg` |
+| Virtual Network | `{name_prefix}-vnet` | `staging-mcp-server-langgraph-vnet` |
+| PostgreSQL | `{name_prefix}-db` | `staging-mcp-server-langgraph-db` |
+| Redis Cache | `{name_prefix}-redis` | `staging-mcp-server-langgraph-redis` |
+
+---
+
+## Kubernetes Resources
+
+### Kustomize Configuration
+
+#### Base Resources
+```
+namespace: mcp-server-langgraph (generic base)
+```
+
+#### Environment Overlays
+```
+Development:
+  namespace: dev-mcp-server-langgraph
+  namePrefix: dev-
+
+Staging (GKE):
+  namespace: staging-mcp-server-langgraph
+  namePrefix: staging-
+
+Production (GKE):
+  namespace: production-mcp-server-langgraph
+  namePrefix: production-
+```
+
+### Generated Resource Names
+
+With `namePrefix` applied:
+
+| Base Name | Environment | Generated Name |
+|-----------|-------------|----------------|
+| `mcp-server-langgraph` (Deployment) | staging | `staging-mcp-server-langgraph` |
+| `mcp-server-langgraph` (Service) | staging | `staging-mcp-server-langgraph` |
+| `mcp-server-langgraph-config` (ConfigMap) | staging | `staging-mcp-server-langgraph-config` |
+| `mcp-server-langgraph-secrets` (Secret) | staging | `staging-mcp-server-langgraph-secrets` |
+
+---
+
+## Container Images
+
+### Repository Naming
+
+#### GitHub Container Registry (GHCR)
+```
+ghcr.io/vishnu2kmohan/mcp-server-langgraph
+```
+
+#### Google Artifact Registry (GAR)
+```
+Pattern: {region}-docker.pkg.dev/{project-id}/mcp-{env}/{image-name}
+
+Development:  ghcr.io/vishnu2kmohan/mcp-server-langgraph
+Staging:      us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/mcp-server-langgraph
+Production:   us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
+```
+
+#### AWS ECR
+```
+Pattern: {account-id}.dkr.ecr.{region}.amazonaws.com/mcp-server-langgraph
+
+All Environments: mcp-server-langgraph (environment in tags)
+```
+
+### Image Tags
+
+```
+Development:  2.8.0-dev, dev-latest, dev-{sha}
+Staging:      2.8.0-staging, staging-latest, staging-{sha}
+Production:   2.8.0, latest, {sha}
+```
+
+---
+
+## GitHub Actions Variables
+
+### Cluster Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GKE_CLUSTER` | `dev-mcp-server-langgraph-gke` | Development GKE cluster |
+| `GKE_STAGING_CLUSTER` | `staging-mcp-server-langgraph-gke` | Staging GKE cluster |
+| `GKE_PROD_CLUSTER` | `production-mcp-server-langgraph-gke` | Production GKE cluster |
+
+### Namespace Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STAGING_NAMESPACE` | `staging-mcp-server-langgraph` | Staging namespace |
+| `PRODUCTION_NAMESPACE` | `production-mcp-server-langgraph` | Production namespace |
+
+### Deployment Names
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `DEPLOYMENT_NAME` (staging) | `staging-mcp-server-langgraph` | Staging deployment |
+| `DEPLOYMENT_NAME` (production) | `production-mcp-server-langgraph` | Production deployment |
+
+---
+
+## Terraform Locals
+
+### Name Prefix Pattern
+
+```hcl
+locals {
+  # GCP Staging
+  name_prefix  = "staging-mcp-server-langgraph"
+  cluster_name = "${local.name_prefix}-gke"
+
+  # GCP Production
+  name_prefix  = "production-mcp-server-langgraph"
+  cluster_name = "${local.name_prefix}-gke"
+
+  # GCP Development
+  name_prefix  = "dev-mcp-server-langgraph"
+  cluster_name = "${local.name_prefix}-gke"
+
+  # AWS Development
+  name_prefix  = "dev-mcp-server-langgraph"
+  cluster_name = "${local.name_prefix}-eks"
+
+  # AWS Staging
+  name_prefix  = "staging-mcp-server-langgraph"
+  cluster_name = "${local.name_prefix}-eks"
+}
+```
+
+---
+
+## Scripts and CLI Tools
+
+### Environment Variables
+
+```bash
+# GCP Staging
+CLUSTER_NAME="staging-mcp-server-langgraph-gke"
+NAMESPACE="staging-mcp-server-langgraph"
+SERVICE_NAME="staging-mcp-server-langgraph"
+
+# GCP Production
+CLUSTER_NAME="production-mcp-server-langgraph-gke"
+NAMESPACE="production-mcp-server-langgraph"
+SERVICE_NAME="production-mcp-server-langgraph"
+
+# Development
+CLUSTER_NAME="dev-mcp-server-langgraph-gke"
+NAMESPACE="dev-mcp-server-langgraph"
+SERVICE_NAME="dev-mcp-server-langgraph"
+```
+
+---
+
+## Legacy Naming (Deprecated)
+
+### Old Patterns (DO NOT USE)
+
+| Old Pattern | New Pattern | Status |
+|-------------|-------------|--------|
+| `mcp-staging-cluster` | `staging-mcp-server-langgraph-gke` | ❌ Deprecated |
+| `mcp-prod-gke` | `production-mcp-server-langgraph-gke` | ❌ Deprecated |
+| `mcp-staging` | `staging-mcp-server-langgraph` | ❌ Deprecated |
+| `mcp-production` | `production-mcp-server-langgraph` | ❌ Deprecated |
+| `mcp-server-langgraph-staging` | `staging-mcp-server-langgraph` | ❌ Deprecated |
+| `mcp-dev-cluster` | `dev-mcp-server-langgraph-gke` | ❌ Deprecated |
+
+### Migration Status
+
+| Component | Migration Status | Updated Date |
+|-----------|-----------------|--------------|
+| GCP Terraform (staging, prod) | ✅ Complete | 2025-11-04 |
+| GCP Terraform (dev) | ✅ Complete | 2025-11-04 |
+| AWS Terraform (dev, staging) | ✅ Complete | 2025-11-04 |
+| Kustomization Overlays | ✅ Complete | 2025-11-04 |
+| GitHub Workflows | ✅ Complete | 2025-11-04 |
+| GCP Scripts | ✅ Complete | 2025-11-04 |
+| Documentation | 🟡 In Progress | 2025-11-04 |
+| E2E Tests | ⏳ Pending | - |
+
+---
+
+## Naming Rules and Guidelines
+
+### Rules
+
+1. **Environment-First**: Always start with the environment name (`dev`, `staging`, `production`)
+2. **Consistent Separators**: Use hyphens (`-`) for all multi-word names
+3. **Lowercase Only**: All infrastructure names must be lowercase
+4. **No Underscores**: Use hyphens instead of underscores (except in variable names)
+5. **Platform Suffix**: Add platform suffix (`-gke`, `-eks`, `-aks`) for cluster names
+6. **No Platform in Namespaces**: Namespaces are platform-agnostic
+
+### Exceptions
+
+- **Artifact Registry Repos**: Use `mcp-{env}` pattern for simplicity
+- **Legacy Service Accounts**: Some SA names may retain `mcp-{env}-*` pattern
+- **Generic Platform Overlays**: AWS/Azure Kustomize overlays use generic `mcp-server-langgraph` namespace
+
+---
+
+## Validation
+
+### Automated Checks
+
+Add to `.github/workflows/validate.yaml`:
+
+```yaml
+- name: Validate Naming Conventions
+  run: |
+    # Check for deprecated naming patterns
+    if grep -r "mcp-staging-cluster\|mcp-prod-gke" terraform/ deployments/ scripts/; then
+      echo "❌ Found deprecated naming patterns"
+      exit 1
+    fi
+```
+
+### Manual Verification
+
+```bash
+# Verify Terraform
+grep -r "name_prefix" terraform/environments/
+
+# Verify Kustomization
+grep "namespace:" deployments/overlays/*/kustomization.yaml
+
+# Verify Workflows
+grep "GKE_CLUSTER\|NAMESPACE" .github/workflows/*.yaml
+```
+
+---
+
+## References
+
+- **Terraform**: `terraform/environments/{platform}-{env}/main.tf`
+- **Kustomization**: `deployments/overlays/{platform}/kustomization.yaml`
+- **Workflows**: `.github/workflows/deploy-{env}-{platform}.yaml`
+- **Scripts**: `scripts/{platform}/*.sh`
+- **Secrets**: `SECRETS.md`
+
+---
+
+## Support
+
+For questions or clarifications:
+1. Review this document first
+2. Check implementation in Terraform/Kustomization files
+3. Consult team leads for approval before deviating
+
+**Maintained By**: Platform Team
+**Review Frequency**: Quarterly or when adding new platforms/environments

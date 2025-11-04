@@ -22,7 +22,7 @@ output "backend_config" {
   description = "Backend configuration for environment modules - use this in terraform backend block"
   value = {
     bucket  = google_storage_bucket.terraform_state.name
-    prefix  = "env"  # This will be overridden per environment (e.g., "env/dev", "env/staging", "env/prod")
+    prefix  = "env" # This will be overridden per environment (e.g., "env/dev", "env/staging", "env/prod")
     project = var.project_id
     region  = var.region
   }
@@ -30,7 +30,7 @@ output "backend_config" {
 
 output "backend_config_hcl" {
   description = "HCL-formatted backend configuration for easy copy-paste"
-  value = <<-EOT
+  value       = <<-EOT
     terraform {
       backend "gcs" {
         bucket  = "${google_storage_bucket.terraform_state.name}"
@@ -42,7 +42,7 @@ output "backend_config_hcl" {
 
 output "setup_instructions" {
   description = "Instructions for using this backend in other Terraform configurations"
-  value = <<-EOT
+  value       = <<-EOT
 
     Terraform Backend Setup Complete!
 

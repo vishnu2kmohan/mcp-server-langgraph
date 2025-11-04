@@ -96,10 +96,10 @@ resource "google_storage_bucket_iam_member" "buckets" {
     for binding in flatten([
       for sa_name, sa_config in var.service_accounts : [
         for bucket_config in lookup(sa_config, "bucket_access", []) : {
-          key        = "${sa_name}-${bucket_config.bucket_name}"
-          sa_name    = sa_name
-          bucket     = bucket_config.bucket_name
-          role       = bucket_config.role
+          key     = "${sa_name}-${bucket_config.bucket_name}"
+          sa_name = sa_name
+          bucket  = bucket_config.bucket_name
+          role    = bucket_config.role
         }
       ]
     ]) : binding.key => binding

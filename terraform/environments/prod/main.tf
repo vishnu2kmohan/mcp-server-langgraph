@@ -103,18 +103,18 @@ module "eks" {
   cluster_log_retention_days           = 90
 
   # General-purpose node group (for application workloads)
-  enable_general_node_group        = true
-  general_node_group_desired_size  = 3
-  general_node_group_min_size      = 2
-  general_node_group_max_size      = 10
+  enable_general_node_group         = true
+  general_node_group_desired_size   = 3
+  general_node_group_min_size       = 2
+  general_node_group_max_size       = 10
   general_node_group_instance_types = var.general_node_instance_types
-  general_node_group_disk_size     = 100
+  general_node_group_disk_size      = 100
 
   # Compute-optimized node group (for LLM processing - optional)
-  enable_compute_node_group        = var.enable_compute_nodes
-  compute_node_group_desired_size  = 0
-  compute_node_group_min_size      = 0
-  compute_node_group_max_size      = 20
+  enable_compute_node_group         = var.enable_compute_nodes
+  compute_node_group_desired_size   = 0
+  compute_node_group_min_size       = 0
+  compute_node_group_max_size       = 20
   compute_node_group_instance_types = ["c6i.4xlarge", "c6a.4xlarge"]
   compute_node_group_labels = {
     workload = "llm-processing"
@@ -128,10 +128,10 @@ module "eks" {
   ]
 
   # Spot instances (for fault-tolerant workloads)
-  enable_spot_node_group        = var.enable_spot_nodes
-  spot_node_group_desired_size  = 2
-  spot_node_group_min_size      = 0
-  spot_node_group_max_size      = 10
+  enable_spot_node_group       = var.enable_spot_nodes
+  spot_node_group_desired_size = 2
+  spot_node_group_min_size     = 0
+  spot_node_group_max_size     = 10
   spot_node_group_instance_types = [
     "t3.xlarge", "t3a.xlarge",
     "t3.2xlarge", "t3a.2xlarge"
@@ -167,11 +167,11 @@ module "rds" {
   subnet_ids  = module.vpc.private_subnet_ids
 
   # Database configuration
-  engine_version    = var.postgres_engine_version
-  instance_class    = var.postgres_instance_class
-  allocated_storage = var.postgres_allocated_storage
+  engine_version        = var.postgres_engine_version
+  instance_class        = var.postgres_instance_class
+  allocated_storage     = var.postgres_allocated_storage
   max_allocated_storage = var.postgres_max_allocated_storage
-  storage_type      = "gp3"
+  storage_type          = "gp3"
 
   database_name   = var.postgres_database_name
   master_username = var.postgres_master_username
@@ -186,13 +186,13 @@ module "rds" {
   deletion_protection     = true
 
   # Monitoring
-  enable_enhanced_monitoring    = true
-  enable_performance_insights   = true
-  enable_slow_query_log         = true
-  slow_query_threshold_ms       = "1000"
+  enable_enhanced_monitoring  = true
+  enable_performance_insights = true
+  enable_slow_query_log       = true
+  slow_query_threshold_ms     = "1000"
 
   # Security
-  allowed_security_group_ids = [module.eks.node_security_group_id]
+  allowed_security_group_ids         = [module.eks.node_security_group_id]
   enable_iam_database_authentication = true
 
   # CloudWatch alarms
@@ -238,7 +238,7 @@ module "redis" {
   enable_final_snapshot    = true
 
   # Monitoring
-  enable_slow_log = true
+  enable_slow_log    = true
   log_retention_days = 30
 
   # Security
@@ -304,7 +304,7 @@ resource "kubernetes_namespace" "mcp_server" {
     name = "mcp-server-langgraph"
 
     labels = {
-      name                                  = "mcp-server-langgraph"
+      name                                 = "mcp-server-langgraph"
       "pod-security.kubernetes.io/enforce" = "restricted"
       "pod-security.kubernetes.io/audit"   = "restricted"
       "pod-security.kubernetes.io/warn"    = "restricted"
