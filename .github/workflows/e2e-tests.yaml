@@ -141,7 +141,7 @@ jobs:
 
     - name: Upload E2E coverage artifact
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-e2e
         path: coverage-e2e.xml

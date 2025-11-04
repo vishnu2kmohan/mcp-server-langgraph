@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload property test coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-property
           path: coverage-property.xml
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload contract test coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-contract
           path: coverage-contract.xml
@@ -175,7 +175,7 @@ jobs:
 
       - name: Upload regression test coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-regression
           path: coverage-regression.xml
