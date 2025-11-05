@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762371985458,
+  "lastUpdate": 1762372227123,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -30810,6 +30810,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000026228369416446777",
             "extra": "mean: 59.60708346744218 usec\nrounds: 4972"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "0391dfbe5bcd795b8f67dd60c095e72be56798db",
+          "message": "fix(ci/cd): add inline template comment to argocd image-list\n\nMove template comment to inline position so grep -v \"#\" filters correctly.\n\n## Fix\n\n- **Root Cause**: Template comment on separate line doesn't get filtered by grep -v \"#\"\n- **Fix**: Move comment inline with the annotation\n- **File**: deployments/argocd/gcp-multi-cluster-setup.yaml:192\n- **Pattern**: `key: value  # TEMPLATE: comment` (inline, not separate line)\n- **Impact**: Placeholder detection will now filter this template correctly\n\n## Grep Filtering Logic\n\n```bash\ngrep -v \"#\"  # Filters lines containing # anywhere on that line\n```\n\nFor this to work, the # must be on the SAME line as the placeholder.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T14:49:19-05:00",
+          "tree_id": "5bd7e1fffc9e9095055817076bacc3a88c0b5c60",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/0391dfbe5bcd795b8f67dd60c095e72be56798db"
+        },
+        "date": 1762372225633,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.69779277750953,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001657943066846793",
+            "extra": "mean: 6.959049131313534 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.32121586567536,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001351732796676675",
+            "extra": "mean: 6.742123803149196 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45990.16362381637,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.743779999994217 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48602.64952476498,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.575010000030147 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45249.79015399616,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.099550000049817 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.66461541792683,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.244811669999976 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.34354850564805,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.69682283000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.937164252764337,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.63233076999992 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1433280.7797852058,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 697.6999999608324 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5048.75456060139,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 198.06865000006724 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2935.847906637418,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.6171000000313 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2952.0135728867704,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.7518299999215 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58858.92446200143,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020379765525000792",
+            "extra": "mean: 16.989776981833693 usec\nrounds: 12703"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17428.562000502377,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020654984121979515",
+            "extra": "mean: 57.37708021873377 usec\nrounds: 4388"
           }
         ]
       }
