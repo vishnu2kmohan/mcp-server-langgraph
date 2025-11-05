@@ -9,9 +9,21 @@ from typing import Any
 
 from langchain_core.tools import BaseTool
 
+from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.tools.calculator_tools import add, calculator, divide, multiply, subtract
 from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_file, search_files
 from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
+
+# Code execution tools (conditional on configuration)
+CODE_EXECUTION_TOOLS = []
+if settings.enable_code_execution:
+    try:
+        from mcp_server_langgraph.tools.code_execution_tools import execute_python
+
+        CODE_EXECUTION_TOOLS = [execute_python]
+    except ImportError:
+        # Code execution dependencies not installed
+        pass
 
 # Tool registry - all available tools for the agent
 ALL_TOOLS: list[BaseTool] = [
@@ -28,6 +40,8 @@ ALL_TOOLS: list[BaseTool] = [
     read_file,
     list_directory,
     search_files,
+    # Code execution tools (conditional)
+    *CODE_EXECUTION_TOOLS,
 ]
 
 # Tool groups for conditional loading

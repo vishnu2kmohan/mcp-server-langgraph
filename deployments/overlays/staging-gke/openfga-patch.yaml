@@ -17,7 +17,7 @@ spec:
           - "--structured-logs"
           - "--port=5432"
           - "--private-ip"
-          - "vishnu-sandbox-20250310:us-central1:mcp-staging-postgres"
+          - "vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres"
 
         securityContext:
           runAsNonRoot: true

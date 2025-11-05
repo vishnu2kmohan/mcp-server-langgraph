@@ -1,0 +1,159 @@
+version: '3.8'
+
+# Development Docker Compose configuration
+# Provides full local development stack with all dependencies
+
+services:
+  # MCP Server with Code Execution
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Environment
+      ENVIRONMENT: development
+
+      # Code Execution (enabled for development)
+      ENABLE_CODE_EXECUTION: "true"
+      CODE_EXECUTION_BACKEND: docker-engine
+      CODE_EXECUTION_TIMEOUT: 300  # 5 minutes for debugging
+      CODE_EXECUTION_MEMORY_LIMIT_MB: 2048  # 2GB for dev
+      CODE_EXECUTION_CPU_QUOTA: 2.0
+      CODE_EXECUTION_NETWORK_MODE: unrestricted  # Full network for dev
+      CODE_EXECUTION_DOCKER_SOCKET: /var/run/docker.sock
+
+      # Redis
+      CHECKPOINT_BACKEND: redis
+      CHECKPOINT_REDIS_URL: redis://redis:6379/1
+      REDIS_URL: redis://redis:6379/0
+
+      # PostgreSQL
+      GDPR_STORAGE_BACKEND: postgres
+      GDPR_POSTGRES_URL: postgresql://postgres:postgres@postgres:5432/gdpr
+
+      # OpenFGA
+      OPENFGA_API_URL: http://openfga:8080
+      OPENFGA_STORE_ID: ${OPENFGA_STORE_ID:-}
+      OPENFGA_MODEL_ID: ${OPENFGA_MODEL_ID:-}
+
+      # Qdrant
+      QDRANT_URL: qdrant
+      QDRANT_PORT: 6333
+
+      # Auth (development mode - mock auth enabled)
+      AUTH_PROVIDER: inmemory
+      JWT_SECRET_KEY: dev-secret-change-in-production
+      ENABLE_MOCK_AUTHORIZATION: "true"
+
+      # LLM (configure with your API keys)
+      LLM_PROVIDER: ${LLM_PROVIDER:-google}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+
+    volumes:
+      # Mount Docker socket for code execution
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount source for live reload
+      - ./src:/app/src
+      # Optional: workspace for code execution
+      - ./workspace:/app/workspace
+
+    ports:
+      - "8000:8000"  # HTTP/StreamableHTTP
+      - "8001:8001"  # Health check
+
+    depends_on:
+      - redis
+      - postgres
+      - openfga
+      - qdrant
+
+    networks:
+      - mcp-network
+
+  # Redis (sessions + checkpoints)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # PostgreSQL (GDPR/compliance storage)
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gdpr
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # OpenFGA (authorization)
+  openfga:
+    image: openfga/openfga:latest
+    command: run
+    environment:
+      OPENFGA_DATASTORE_ENGINE: memory  # Use memory for dev (postgres for prod)
+    ports:
+      - "8080:8080"  # HTTP
+      - "8081:8081"  # gRPC
+      - "3000:3000"  # Playground
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Qdrant (vector database for context loading)
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"  # HTTP
+      - "6334:6334"  # gRPC
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:6333/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Jaeger (OpenTelemetry traces - optional)
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+      - "16686:16686"  # Jaeger UI
+    networks:
+      - mcp-network
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  qdrant-data:

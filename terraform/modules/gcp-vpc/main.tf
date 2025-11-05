@@ -47,7 +47,7 @@ resource "google_compute_subnetwork" "nodes" {
       aggregation_interval = var.flow_logs_aggregation_interval
       flow_sampling        = var.flow_logs_sampling
       metadata             = var.flow_logs_metadata
-      filter_expr          = var.flow_logs_filter
+      filter_expr          = var.flow_logs_filter != "" ? var.flow_logs_filter : null
     }
   }
 
@@ -152,12 +152,14 @@ resource "google_compute_router_nat" "main" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 
   # Enable endpoint-independent mapping for better NAT behavior
-  enable_endpoint_independent_mapping = true
+  # Note: Cannot be enabled with dynamic port allocation
+  enable_endpoint_independent_mapping = var.enable_dynamic_port_allocation ? false : true
 
   # Enable dynamic port allocation for high connection scenarios
+  # Note: Conflicts with endpoint_independent_mapping
   enable_dynamic_port_allocation = var.enable_dynamic_port_allocation
-  min_ports_per_vm               = var.nat_min_ports_per_vm
-  max_ports_per_vm               = var.nat_max_ports_per_vm
+  min_ports_per_vm               = var.enable_dynamic_port_allocation ? var.nat_min_ports_per_vm : null
+  max_ports_per_vm               = var.enable_dynamic_port_allocation ? var.nat_max_ports_per_vm : null
 
   # Logging configuration
   log_config {
