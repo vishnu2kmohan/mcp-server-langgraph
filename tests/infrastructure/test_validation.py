@@ -305,11 +305,13 @@ class TestDocumentation:
 
     def test_implementation_guide_exists(self):
         """Test implementation guide exists."""
-        assert os.path.exists("docs/kubernetes-best-practices-implementation.md")
+        assert os.path.exists("docs/kubernetes-best-practices-implementation.md") or \
+               os.path.exists("docs/kubernetes-best-practices-implementation.mdx")
 
     def test_implementation_summary_exists(self):
         """Test implementation summary exists."""
-        assert os.path.exists("docs/IMPLEMENTATION_SUMMARY.md")
+        assert os.path.exists("docs/IMPLEMENTATION_SUMMARY.md") or \
+               os.path.exists("docs/execution/IMPLEMENTATION_SUMMARY.md")
 
     def test_restore_procedure_exists(self):
         """Test restore procedure documentation exists."""
@@ -326,6 +328,9 @@ class TestYAMLSyntax:
         # Find all YAML files
         for pattern in ["deployments/**/*.yaml", "deployments/**/*.yml"]:
             yaml_files.extend(glob.glob(pattern, recursive=True))
+
+        # Exclude Helm templates (they contain Go template syntax, not valid standalone YAML)
+        yaml_files = [f for f in yaml_files if "/helm/" not in f or "/templates/" not in f]
 
         errors = []
         for yaml_file in yaml_files:

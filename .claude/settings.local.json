@@ -29,7 +29,8 @@
       "WebFetch(domain:openapi-generator.tech)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:peps.python.org)",
-      "WebFetch(domain:docs.astral.sh)"
+      "WebFetch(domain:docs.astral.sh)",
+      "WebFetch(domain:cwe.mitre.org)"
     ],
     "defaultMode": "acceptEdits"
   },

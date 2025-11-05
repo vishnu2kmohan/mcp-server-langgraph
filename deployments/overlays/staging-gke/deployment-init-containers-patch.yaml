@@ -1,0 +1,35 @@
+---
+# Fix init container service name references for staging environment
+# The base deployment uses unprefixed names, but Kustomize applies staging- prefix
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-langgraph
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-openfga
+        args:
+        - |
+          until nc -z staging-openfga 8080; do
+            echo "Waiting for OpenFGA..."
+            sleep 2
+          done
+          echo "OpenFGA is ready!"
+      - name: wait-for-keycloak
+        args:
+        - |
+          until nc -z staging-keycloak 8080; do
+            echo "Waiting for Keycloak..."
+            sleep 2
+          done
+          echo "Keycloak is ready!"
+      - name: wait-for-redis
+        args:
+        - |
+          until nc -z staging-redis-session 6379; do
+            echo "Waiting for Redis session store..."
+            sleep 2
+          done
+          echo "Redis is ready!"

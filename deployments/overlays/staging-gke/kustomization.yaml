@@ -125,6 +125,12 @@ patches:
       kind: Deployment
       name: mcp-server-langgraph
 
+  # Init containers patch (fix service names for staging environment)
+  - path: deployment-init-containers-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
   # ConfigMap patches
   - path: configmap-patch.yaml
     target:
