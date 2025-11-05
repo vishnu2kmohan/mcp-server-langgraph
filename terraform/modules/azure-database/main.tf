@@ -340,9 +340,8 @@ resource "azurerm_postgresql_flexible_server" "read_replicas" {
   location            = var.read_replica_locations[count.index % length(var.read_replica_locations)]
 
   # Source server for replication
-  create_mode                = "Replica"
-  source_server_id           = azurerm_postgresql_flexible_server.main.id
-  point_in_time_restore_time = null
+  create_mode      = "Replica"
+  source_server_id = azurerm_postgresql_flexible_server.main.id
 
   # SKU (can be different from primary)
   sku_name = var.read_replica_sku_name != "" ? var.read_replica_sku_name : var.sku_name

@@ -35,7 +35,7 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          pip install pytest pyyaml hypothesis langchain-core
+          pip install pytest pyyaml hypothesis langchain-core opentelemetry-sdk
 
       - name: Run Terraform security tests
         run: |
@@ -58,7 +58,7 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          pip install pytest pyyaml hypothesis langchain-core
+          pip install pytest pyyaml hypothesis langchain-core opentelemetry-sdk
 
       - name: Run Kubernetes security tests
         run: |

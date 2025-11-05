@@ -38,7 +38,7 @@ configMapGenerator:
 # Or comment out this section to use the default GitHub Container Registry image
 images:
   - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
-    newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/mcp-server-langgraph
+    newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/mcp-server-langgraph  # TEMPLATE: Replace ACCOUNT_ID and REGION
     newTag: latest
 
 # Replica count adjustments (override in environment-specific overlays)
