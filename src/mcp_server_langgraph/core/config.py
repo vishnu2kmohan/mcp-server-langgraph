@@ -2,7 +2,7 @@
 Configuration management with Infisical secrets integration
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -331,6 +331,18 @@ class Settings(BaseSettings):  # type: ignore[misc]
         extra="ignore",  # Ignore extra environment variables
     )
 
+    def model_post_init(self, __context: Any) -> None:
+        """
+        Pydantic v2 hook called after model initialization.
+
+        Performs security validation to ensure production configuration is secure.
+        """
+        # Validate production security configuration
+        self.validate_production_config()
+
+        # Validate CORS configuration
+        self.validate_cors_config()
+
     @field_validator("cors_allowed_origins", "code_execution_allowed_domains", "code_execution_allowed_imports", mode="before")
     @classmethod
     def parse_comma_separated_list(cls, v):
@@ -339,6 +351,66 @@ class Settings(BaseSettings):  # type: ignore[misc]
             # Split by comma and strip whitespace
             return [item.strip() for item in v.split(",") if item.strip()]
         return v
+
+    def validate_production_config(self) -> None:
+        """
+        Validate that production configuration is secure.
+
+        SECURITY: Prevents CWE-1188 (Initialization with Insecure Default) by
+        enforcing secure configuration in production environments.
+
+        Raises:
+            ValueError: If production configuration is insecure
+        """
+        # Only validate in production/staging environments
+        if self.environment.lower() not in ("production", "staging", "prod", "stg"):
+            return
+
+        errors = []
+
+        # Check 1: Auth provider must not be inmemory in production
+        if self.auth_provider.lower() == "inmemory":
+            errors.append(
+                "AUTH_PROVIDER=inmemory is not allowed in production. "
+                "Use AUTH_PROVIDER=keycloak or another production-grade provider."
+            )
+
+        # Check 2: Mock authorization must be explicitly disabled
+        if self.get_mock_authorization_enabled():
+            errors.append(
+                "Mock authorization must be disabled in production. "
+                "Set ENABLE_MOCK_AUTHORIZATION=false"
+            )
+
+        # Check 3: JWT secret key must be set
+        if not self.jwt_secret_key or self.jwt_secret_key == "change-this-in-production":
+            errors.append(
+                "JWT_SECRET_KEY must be set to a secure value in production. "
+                "Generate a strong secret key and set it via environment variable."
+            )
+
+        # Check 4: GDPR storage must use database in production
+        if self.gdpr_storage_backend == "memory":
+            errors.append(
+                "GDPR_STORAGE_BACKEND=memory is not allowed in production. "
+                "Use GDPR_STORAGE_BACKEND=postgres for compliance."
+            )
+
+        # Check 5: Code execution should be explicitly enabled if needed
+        # (Already disabled by default, but log warning if enabled without proper config)
+        if self.enable_code_execution and self.code_execution_backend not in ("kubernetes", "docker-engine"):
+            errors.append(
+                "Code execution is enabled but backend is not set to kubernetes or docker-engine. "
+                f"Current: {self.code_execution_backend}"
+            )
+
+        if errors:
+            error_msg = (
+                "PRODUCTION CONFIGURATION SECURITY ERRORS:\n\n"
+                + "\n\n".join(f"  {i+1}. {err}" for i, err in enumerate(errors))
+                + "\n\nProduction deployment blocked to prevent security vulnerabilities."
+            )
+            raise ValueError(error_msg)
 
     def get_mock_authorization_enabled(self) -> bool:
         """

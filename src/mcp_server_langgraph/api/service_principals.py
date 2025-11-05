@@ -75,6 +75,55 @@ class RotateSecretResponse(BaseModel):
     message: str = Field(default="Secret rotated successfully. Update your service configuration.")
 
 
+# Authorization Helpers
+
+
+async def _validate_user_association_permission(
+    current_user: Dict[str, Any],
+    target_user_id: str,
+) -> None:
+    """
+    Validate that the current user has permission to create service principals
+    that act as the target user.
+
+    SECURITY: Prevents CWE-269 (Improper Privilege Management) by enforcing
+    authorization checks before allowing user impersonation.
+
+    Authorization rules:
+    1. Users can create SPs that act as themselves
+    2. Admin users can create SPs for any user
+    3. All other cases are denied
+
+    Args:
+        current_user: The authenticated user making the request
+        target_user_id: The user ID to associate with the service principal
+
+    Raises:
+        HTTPException: 403 Forbidden if user is not authorized
+
+    TODO: Integrate with OpenFGA for fine-grained permission checks
+          (e.g., check for 'can_impersonate' relation)
+    """
+    # Rule 1: Users can create SPs for themselves
+    if current_user["user_id"] == target_user_id:
+        return  # Authorized
+
+    # Rule 2: Admin users can create SPs for anyone
+    user_roles = current_user.get("roles", [])
+    if "admin" in user_roles:
+        return  # Authorized
+
+    # Rule 3: All other cases are denied
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=(
+            f"You are not authorized to create service principals that act as '{target_user_id}'. "
+            f"You can only create service principals for yourself ('{current_user['user_id']}') "
+            f"unless you have admin privileges."
+        ),
+    )
+
+
 # API Endpoints
 
 
@@ -109,6 +158,15 @@ async def create_service_principal(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid authentication_mode. Must be 'client_credentials' or 'service_account_user'",
+        )
+
+    # SECURITY FIX (CWE-269): Validate user association authorization
+    # Prevent privilege escalation by validating that the caller has permission
+    # to create service principals that act as the specified user
+    if request.associated_user_id and request.inherit_permissions:
+        await _validate_user_association_permission(
+            current_user=current_user,
+            target_user_id=request.associated_user_id,
         )
 
     # Generate service ID from name
@@ -325,6 +383,14 @@ async def associate_service_principal_with_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to modify this service principal",
+        )
+
+    # SECURITY FIX (CWE-269): Validate user association authorization
+    # Prevent privilege escalation by validating permission to associate with target user
+    if inherit_permissions:
+        await _validate_user_association_permission(
+            current_user=current_user,
+            target_user_id=user_id,
         )
 
     # Associate with user

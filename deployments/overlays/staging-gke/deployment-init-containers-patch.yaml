@@ -1,6 +1,7 @@
 ---
 # Fix init container service name references for staging environment
 # The base deployment uses unprefixed names, but Kustomize applies staging- prefix
+# Note: wait-for-redis is removed because staging uses cloud-managed Redis (Memorystore)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,11 +26,3 @@ spec:
             sleep 2
           done
           echo "Keycloak is ready!"
-      - name: wait-for-redis
-        args:
-        - |
-          until nc -z staging-redis-session 6379; do
-            echo "Waiting for Redis session store..."
-            sleep 2
-          done
-          echo "Redis is ready!"

@@ -13,11 +13,13 @@ Example:
     uvicorn mcp_server_langgraph.builder.api.server:app --reload
 """
 
+import os
+from pathlib import Path
 from typing import Any, Dict, List, Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from ..codegen import CodeGenerator, WorkflowDefinition
 from ..workflow import WorkflowBuilder
@@ -61,12 +63,108 @@ class SaveWorkflowRequest(BaseModel):
     workflow: Dict[str, Any]
     output_path: str
 
+    @field_validator("output_path")
+    @classmethod
+    def validate_output_path(cls, v: str) -> str:
+        """
+        Validate output path for security.
+
+        SECURITY: Prevents CWE-73 (External Control of File Name or Path) and
+        CWE-434 (Unrestricted Upload of File with Dangerous Type) by enforcing
+        strict path validation.
+
+        Only allows paths within designated safe directories.
+        """
+        # Convert to Path for normalization
+        path = Path(v).resolve()
+
+        # Define allowed base directories (configurable via environment)
+        allowed_base = os.getenv("BUILDER_OUTPUT_DIR", "/tmp/workflows")
+        allowed_base_path = Path(allowed_base).resolve()
+
+        # Check if path is within allowed directory
+        try:
+            path.relative_to(allowed_base_path)
+        except ValueError:
+            raise ValueError(
+                f"Invalid output path. Must be within allowed directory: {allowed_base}. "
+                f"Use BUILDER_OUTPUT_DIR environment variable to configure safe directory."
+            )
+
+        # Additional checks for common attack patterns
+        path_str = str(path)
+        if ".." in path_str or path_str.startswith("/etc/") or path_str.startswith("/sys/"):
+            raise ValueError("Path traversal detected. Invalid output path.")
+
+        # Ensure .py extension
+        if not path.suffix == ".py":
+            raise ValueError("Output path must have .py extension")
+
+        return str(path)
+
 
 class ImportWorkflowRequest(BaseModel):
     """Request to import Python code into workflow."""
 
     code: str
     layout: Literal["hierarchical", "force", "grid"] = "hierarchical"
+
+
+# ==============================================================================
+# Security & Authentication
+# ==============================================================================
+
+
+def verify_builder_auth(authorization: str = Header(None)) -> None:
+    """
+    Verify authentication for builder endpoints.
+
+    SECURITY: Prevents unauthenticated access to code generation and file write endpoints.
+    Addresses OWASP A01:2021 - Broken Access Control.
+
+    In production, this should integrate with your main authentication system.
+    For now, we use a simple bearer token approach.
+
+    Args:
+        authorization: Authorization header (Bearer token)
+
+    Raises:
+        HTTPException: 401 if not authenticated
+
+    TODO: Integrate with main auth system (Keycloak, etc.)
+    """
+    # Allow unauthenticated access in development (local testing)
+    environment = os.getenv("ENVIRONMENT", "development")
+    if environment == "development" and not authorization:
+        # Log warning but allow
+        print("WARNING: Builder accessed without auth in development mode")
+        return
+
+    # In production, require authentication
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Provide Bearer token in Authorization header.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Validate bearer token
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization header format. Expected: Bearer <token>",
+        )
+
+    token = authorization[7:]  # Remove "Bearer " prefix
+
+    # TODO: Validate token against your auth system
+    # For now, we check against environment variable
+    expected_token = os.getenv("BUILDER_AUTH_TOKEN")
+    if expected_token and token != expected_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token",
+        )
 
 
 # ==============================================================================
@@ -111,7 +209,10 @@ def root() -> Dict[str, Any]:
 
 
 @app.post("/api/builder/generate", response_model=GenerateCodeResponse)  # type: ignore[misc]
-async def generate_code(request: GenerateCodeRequest) -> GenerateCodeResponse:
+async def generate_code(
+    request: GenerateCodeRequest,
+    _auth: None = Depends(verify_builder_auth),
+) -> GenerateCodeResponse:
     """
     Generate Python code from visual workflow.
 
@@ -224,7 +325,10 @@ async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflo
 
 
 @app.post("/api/builder/save")  # type: ignore[misc]
-async def save_workflow(request: SaveWorkflowRequest) -> Dict[str, Any]:
+async def save_workflow(
+    request: SaveWorkflowRequest,
+    _auth: None = Depends(verify_builder_auth),
+) -> Dict[str, Any]:
     """
     Save workflow to Python file.
 
@@ -246,11 +350,18 @@ async def save_workflow(request: SaveWorkflowRequest) -> Dict[str, Any]:
         workflow = WorkflowDefinition(**request.workflow)
         generator = CodeGenerator()
 
+        # SECURITY: Ensure directory exists and is writable (but path is already validated)
+        output_path = Path(request.output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
         # Generate and save
-        generator.generate_to_file(workflow, request.output_path)
+        generator.generate_to_file(workflow, str(output_path))
 
         return {"success": True, "message": f"Workflow saved to {request.output_path}", "path": request.output_path}
 
+    except ValueError as e:
+        # Path validation errors
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
 
@@ -335,7 +446,10 @@ async def get_template(template_id: str) -> Dict[str, Any]:
 
 
 @app.post("/api/builder/import")  # type: ignore[misc]
-async def import_workflow(request: ImportWorkflowRequest) -> Dict[str, Any]:
+async def import_workflow(
+    request: ImportWorkflowRequest,
+    _auth: None = Depends(verify_builder_auth),
+) -> Dict[str, Any]:
     """
     Import Python code into visual workflow.
 

@@ -64,6 +64,46 @@ def scim_error(status_code: int, detail: str, scim_type: Optional[str] = None) -
     )
 
 
+# Authorization Helpers
+
+
+def _require_admin_or_scim_role(current_user: Dict[str, Any]) -> None:
+    """
+    Validate that the current user has admin or SCIM provisioner role.
+
+    SECURITY: Prevents CWE-862 (Missing Authorization) by enforcing role-based
+    access control for SCIM identity management endpoints.
+
+    Authorization rules:
+    1. Users with 'admin' role can perform SCIM operations
+    2. Service accounts with 'scim-provisioner' role can perform SCIM operations
+    3. All other users are denied
+
+    Args:
+        current_user: The authenticated user making the request
+
+    Raises:
+        HTTPException: 403 Forbidden if user lacks required role
+
+    TODO: Integrate with OpenFGA for fine-grained permission checks
+          (e.g., check for 'scim:write' relation on tenant resource)
+    """
+    user_roles = current_user.get("roles", [])
+
+    # Check for admin or SCIM provisioner role
+    if "admin" in user_roles or "scim-provisioner" in user_roles:
+        return  # Authorized
+
+    # Deny access
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=(
+            "SCIM identity management operations require admin privileges or SCIM provisioner role. "
+            f"Your roles: {user_roles}. Required: ['admin'] or ['scim-provisioner']."
+        ),
+    )
+
+
 # User Endpoints
 
 
@@ -96,6 +136,9 @@ async def create_user(
         }
         ```
     """
+    # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
+    _require_admin_or_scim_role(current_user)
+
     try:
         # Validate SCIM schema
         scim_user = validate_scim_user(user_data)
@@ -172,6 +215,9 @@ async def replace_user(
 
     Replaces entire user resource.
     """
+    # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
+    _require_admin_or_scim_role(current_user)
+
     try:
         # Validate SCIM schema
         scim_user = validate_scim_user(user_data)
@@ -222,6 +268,9 @@ async def update_user(
         }
         ```
     """
+    # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
+    _require_admin_or_scim_role(current_user)
+
     try:
         # Get current user
         keycloak_user = await keycloak.get_user(user_id)
@@ -265,6 +314,9 @@ async def delete_user(
 
     Deactivates user in Keycloak and removes OpenFGA tuples.
     """
+    # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
+    _require_admin_or_scim_role(current_user)
+
     try:
         # Soft delete - disable user
         await keycloak.update_user(user_id, {"enabled": False})
@@ -352,6 +404,9 @@ async def create_group(
         }
         ```
     """
+    # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
+    _require_admin_or_scim_role(current_user)
+
     try:
         # Validate SCIM schema
         scim_group = validate_scim_group(group_data)
