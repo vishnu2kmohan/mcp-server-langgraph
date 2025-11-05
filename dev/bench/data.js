@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762370762476,
+  "lastUpdate": 1762371878656,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -30566,6 +30566,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000020949042576691784",
             "extra": "mean: 57.77684266652217 usec\nrounds: 4875"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "5e065c4193c8d48ae3aa591bb823565c91d89605",
+          "message": "fix(ci/cd): improve placeholder detection and cleanup templates\n\nComprehensive fix for placeholder detection by removing backup files,\nimproving detection logic, and adding template markers to all placeholders.\n\n## Fixes\n\n### 1. Removed All .naming-bak Backup Files (6 files)\n- deployments/argocd/README.md.naming-bak\n- deployments/argocd/setup-argocd-gcp.sh.naming-bak\n- deployments/disaster-recovery/gcp-dr-automation.sh.naming-bak\n- deployments/overlays/staging/kustomization.yaml.naming-bak\n- deployments/security/binary-authorization/setup-binary-auth.sh.naming-bak\n- deployments/service-mesh/anthos/setup-anthos-service-mesh.sh.naming-bak\n- **Impact**: Eliminates false positives from backup files\n\n### 2. Improved PROJECT_ID Placeholder Detection\n- **Added Exclusions**:\n  - Shell scripts (*.sh) - PROJECT_ID is a legitimate shell variable\n  - Binary files (-I flag)\n  - .terraform directories\n  - *.bak files\n  - GCP_PROJECT_ID and INFISICAL_PROJECT_ID (valid YAML variable names)\n- **Files**: .github/workflows/security-validation.yml:92-110\n- **Impact**: Only detects actual hardcoded placeholders, not valid usage\n\n### 3. Added Template Markers to All PROJECT_ID Placeholders\nEnsures grep -v \"#\" filters template placeholders:\n\n- **CloudRun service.yaml**:\n  - Line 37: image with PROJECT_ID → added # TEMPLATE comment\n  - Line 126: GOOGLE_CLOUD_PROJECT env var → added # TEMPLATE comment\n\n- **ArgoCD gcp-multi-cluster-setup.yaml**:\n  - Header: Added TEMPLATE FILE notice\n  - Lines 22,26,30,34,38,42: Added # TEMPLATE comments to YOUR_PROJECT_ID\n  - Line 193: Image updater with PROJECT_ID → added # TEMPLATE comment\n\n- **production-gke kustomization.yaml**:\n  - Line 69: Image name with PROJECT_ID → added # TEMPLATE comment\n\n- **production-gke otel-collector-config.yaml**:\n  - Line 66: googlecloud/logs project → added # Replace comment\n\n## Placeholder Detection Logic\n\n```bash\ngrep -rI \"PROJECT_ID\" terraform/ deployments/ \\\n  --exclude-dir=.git \\\n  --exclude-dir=.terraform \\\n  --exclude=\"*.md\" \\\n  --exclude=\"*.sh\" \\\n  --exclude=\"*.bak\" \\\n  2>/dev/null \\\n  | grep -v \"#\" \\               # Filter template comments\n  | grep -v \"GCP_PROJECT_ID\"    # Valid YAML var names\n```\n\n## Expected Results\n\nSecurity Validation sub-checks:\n- ✅ Terraform Security Validation (uv --system fixes)\n- ✅ Kubernetes Security Validation (uv --system fixes)\n- ✅ Detect Placeholder Values → PASS (improved logic + comments)\n- ✅ Terraform Validate and Format Check → PASS (EKS environment var added)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T14:43:31-05:00",
+          "tree_id": "1c6db52e965f576338b22b41f2f8d8c0a74ddcee",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/5e065c4193c8d48ae3aa591bb823565c91d89605"
+        },
+        "date": 1762371876904,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.1498956384042,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010882843208093912",
+            "extra": "mean: 6.937223197916638 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.30455052260956,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013939275363516053",
+            "extra": "mean: 6.742881431999933 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45521.814281024075,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.967489999994427 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 49341.488494523415,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.266920000011623 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46779.24872529419,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.37699999998688 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.911804668329,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.238020779999957 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.388057641007908,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.57814250999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94408800583038,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.56226367000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1141252.8674125352,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 876.2299999887091 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4890.300773059246,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 204.48639999997908 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2962.3305602462738,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.5720500000057 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2944.661304026302,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.5976299999859 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59568.61460608582,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024407833830636456",
+            "extra": "mean: 16.7873637252231 usec\nrounds: 12273"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16743.872806061267,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018188841647033445",
+            "extra": "mean: 59.72333949156619 usec\nrounds: 5034"
           }
         ]
       }
