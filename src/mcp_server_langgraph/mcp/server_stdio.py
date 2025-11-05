@@ -111,12 +111,13 @@ class MCPAgentServer:
         # Initialize OpenFGA client
         self.openfga = openfga_client or self._create_openfga_client()
 
-        # Validate JWT secret is configured (fail-closed security pattern)
-        if not settings.jwt_secret_key:
+        # Validate JWT secret is configured for in-memory auth provider
+        # Keycloak uses RS256 with JWKS (public key crypto) and doesn't need JWT_SECRET_KEY
+        if settings.auth_provider == "inmemory" and not settings.jwt_secret_key:
             raise ValueError(
-                "CRITICAL: JWT secret key not configured. "
+                "CRITICAL: JWT secret key not configured for in-memory auth provider. "
                 "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
-                "The service cannot start without a secure secret key."
+                "The in-memory auth provider requires a secure secret key for HS256 token signing."
             )
 
         # SECURITY: Fail-closed pattern - require OpenFGA in production
@@ -133,15 +134,28 @@ class MCPAgentServer:
 
         self._setup_handlers()
 
-    def _create_openfga_client(self) -> OpenFGAClient | None:
-        """Create OpenFGA client from settings"""
-        if settings.openfga_store_id and settings.openfga_model_id:
+    def _create_openfga_client(self, settings_override: Settings | None = None) -> OpenFGAClient | None:
+        """
+        Create OpenFGA client from settings.
+
+        Args:
+            settings_override: Optional settings override for testing/dependency injection.
+                              If None, uses global settings.
+
+        Returns:
+            OpenFGAClient instance or None if not configured
+        """
+        _settings = settings_override or settings
+
+        if _settings.openfga_store_id and _settings.openfga_model_id:
             logger.info(
                 "Initializing OpenFGA client",
-                extra={"store_id": settings.openfga_store_id, "model_id": settings.openfga_model_id},
+                extra={"store_id": _settings.openfga_store_id, "model_id": _settings.openfga_model_id},
             )
             return OpenFGAClient(
-                api_url=settings.openfga_api_url, store_id=settings.openfga_store_id, model_id=settings.openfga_model_id
+                api_url=_settings.openfga_api_url,
+                store_id=_settings.openfga_store_id,
+                model_id=_settings.openfga_model_id,
             )
         else:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
@@ -724,11 +738,13 @@ class MCPAgentServer:
             )
 
             # Execute search_tools
-            result = search_tools.invoke({
-                "query": query,
-                "category": category,
-                "detail_level": detail_level,
-            })
+            result = search_tools.invoke(
+                {
+                    "query": query,
+                    "category": category,
+                    "detail_level": detail_level,
+                }
+            )
 
             span.set_attribute("tools.query", query or "")
             span.set_attribute("tools.category", category or "")
@@ -767,9 +783,7 @@ class MCPAgentServer:
             span.set_attribute("code.execution_time", execution_time)
             span.set_attribute("code.success", "success" in result.lower())
 
-            metrics.code_executions.add(
-                1, {"user_id": user_id, "success": "success" in result.lower()}
-            )
+            metrics.code_executions.add(1, {"user_id": user_id, "success": "success" in result.lower()})
 
             return [TextContent(type="text", text=result)]
 

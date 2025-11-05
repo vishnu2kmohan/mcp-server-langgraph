@@ -272,6 +272,125 @@ def frozen_time():
         yield
 
 
+# ==============================================================================
+# E2E FastAPI App Fixtures
+# ==============================================================================
+
+
+@pytest.fixture
+def test_app_settings(test_infrastructure_ports):
+    """
+    Create test settings configured to use test infrastructure services.
+
+    Returns Settings object pointing to test ports (offset by 1000).
+    """
+    from mcp_server_langgraph.core.config import Settings
+
+    return Settings(
+        environment="test",
+        service_name="test-mcp-server",
+        # Database settings
+        postgres_host="localhost",
+        postgres_port=test_infrastructure_ports["postgres"],
+        postgres_db="openfga_test",
+        postgres_user="postgres",
+        postgres_password="postgres",
+        # Redis settings
+        redis_host="localhost",
+        redis_port=test_infrastructure_ports["redis_checkpoints"],
+        redis_sessions_port=test_infrastructure_ports["redis_sessions"],
+        # OpenFGA settings
+        openfga_api_url=f"http://localhost:{test_infrastructure_ports['openfga_http']}",
+        openfga_store_id=None,  # Will be created dynamically in tests
+        openfga_model_id=None,
+        # Keycloak settings
+        keycloak_url=f"http://localhost:{test_infrastructure_ports['keycloak']}",
+        keycloak_realm="master",  # Use master realm for tests
+        keycloak_client_id="admin-cli",
+        keycloak_admin_username="admin",
+        keycloak_admin_password="admin",
+        # Qdrant settings
+        qdrant_url="localhost",
+        qdrant_port=test_infrastructure_ports["qdrant"],
+        # Security settings
+        jwt_secret_key="test-jwt-secret-key-for-e2e-testing-only",
+        hipaa_integrity_secret="test-hipaa-secret-for-e2e-testing-only",
+        # Test-specific settings
+        log_level="DEBUG",
+        log_format="text",
+        enable_file_logging=False,
+        langsmith_tracing=False,
+        observability_backend="opentelemetry",
+    )
+
+
+@pytest.fixture
+async def test_fastapi_app(test_infrastructure, test_app_settings):
+    """
+    Create FastAPI app instance configured for E2E testing.
+
+    This fixture:
+    1. Waits for test infrastructure to be ready
+    2. Creates app with test settings
+    3. Yields app for testing
+    4. Cleans up after tests
+
+    Usage:
+        @pytest.mark.e2e
+        async def test_api_endpoint(test_fastapi_app):
+            from fastapi.testclient import TestClient
+            client = TestClient(test_fastapi_app)
+            response = client.get("/health")
+            assert response.status_code == 200
+    """
+    # Ensure infrastructure is ready
+    assert test_infrastructure["ready"], "Test infrastructure not ready"
+
+    # Override settings with test configuration
+    with patch("mcp_server_langgraph.core.config.settings", test_app_settings):
+        # Import and create app with patched settings
+        from mcp_server_langgraph.app import create_app
+
+        app = create_app()
+
+        yield app
+
+        # Cleanup: No explicit cleanup needed as infrastructure handles it
+
+
+@pytest.fixture
+def test_client(test_fastapi_app):
+    """
+    Create FastAPI TestClient for synchronous E2E testing.
+
+    Usage:
+        @pytest.mark.e2e
+        def test_endpoint(test_client):
+            response = test_client.get("/api/v1/health")
+            assert response.status_code == 200
+    """
+    from fastapi.testclient import TestClient
+
+    return TestClient(test_fastapi_app)
+
+
+@pytest.fixture
+async def test_async_client(test_fastapi_app):
+    """
+    Create httpx AsyncClient for asynchronous E2E testing.
+
+    Usage:
+        @pytest.mark.e2e
+        async def test_async_endpoint(test_async_client):
+            response = await test_async_client.get("/api/v1/health")
+            assert response.status_code == 200
+    """
+    import httpx
+
+    async with httpx.AsyncClient(app=test_fastapi_app, base_url="http://test") as client:
+        yield client
+
+
 # Container-based test fixtures (NEW APPROACH)
 # These replace the old global initialization pattern
 

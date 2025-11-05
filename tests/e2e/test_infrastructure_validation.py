@@ -1,0 +1,109 @@
+"""
+E2E Infrastructure Validation Tests
+
+TDD approach: These tests validate that the E2E infrastructure fixtures work correctly.
+Written FIRST to drive the implementation of the fixtures.
+
+Tests:
+1. Test infrastructure starts and provides healthy services
+2. FastAPI app can connect to test infrastructure services
+3. Settings are correctly configured for test environment
+"""
+
+import pytest
+
+
+@pytest.mark.e2e
+class TestE2EInfrastructure:
+    """Validate E2E test infrastructure setup"""
+
+    def test_infrastructure_is_ready(self, test_infrastructure):
+        """Test that infrastructure fixture provides ready services"""
+        assert test_infrastructure["ready"] is True
+        assert "ports" in test_infrastructure
+        assert "docker" in test_infrastructure
+
+        # Verify all required ports are defined
+        required_ports = ["postgres", "redis_checkpoints", "redis_sessions", "openfga_http", "keycloak", "qdrant"]
+        for port_name in required_ports:
+            assert port_name in test_infrastructure["ports"]
+            assert isinstance(test_infrastructure["ports"][port_name], int)
+
+    def test_app_settings_configured_for_test_infrastructure(self, test_app_settings, test_infrastructure_ports):
+        """Test that app settings point to test infrastructure"""
+        assert test_app_settings.environment == "test"
+        assert test_app_settings.postgres_port == test_infrastructure_ports["postgres"]
+        assert test_app_settings.redis_port == test_infrastructure_ports["redis_checkpoints"]
+        assert test_app_settings.openfga_api_url == f"http://localhost:{test_infrastructure_ports['openfga_http']}"
+
+    def test_fastapi_app_health_endpoint(self, test_client):
+        """
+        Test that FastAPI app is created and health endpoint works.
+
+        TDD: This test drives the implementation of test_fastapi_app fixture.
+        """
+        response = test_client.get("/health")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "service" in data
+
+    async def test_async_client_works(self, test_async_client):
+        """
+        Test that async client can make requests to the app.
+
+        TDD: This test validates async client fixture implementation.
+        """
+        response = await test_async_client.get("/health")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+
+    def test_database_connection_available(self, test_infrastructure, test_app_settings):
+        """
+        Test that PostgreSQL connection is available through test infrastructure.
+
+        TDD: This test will drive database connection validation.
+        """
+        import socket
+
+        # Test TCP connection to PostgreSQL
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex(("localhost", test_app_settings.postgres_port))
+        sock.close()
+
+        assert result == 0, f"PostgreSQL not available on port {test_app_settings.postgres_port}"
+
+    def test_redis_connection_available(self, test_infrastructure, test_app_settings):
+        """
+        Test that Redis connection is available through test infrastructure.
+
+        TDD: This test validates Redis connectivity.
+        """
+        import socket
+
+        # Test TCP connection to Redis
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex(("localhost", test_app_settings.redis_port))
+        sock.close()
+
+        assert result == 0, f"Redis not available on port {test_app_settings.redis_port}"
+
+    def test_keycloak_connection_available(self, test_infrastructure, test_app_settings):
+        """
+        Test that Keycloak is available through test infrastructure.
+
+        TDD: This test validates Keycloak connectivity.
+        """
+        import httpx
+
+        # Test HTTP connection to Keycloak
+        try:
+            response = httpx.get(f"{test_app_settings.keycloak_url}/health/ready", timeout=5.0)
+            assert response.status_code == 200
+        except Exception as e:
+            pytest.fail(f"Keycloak not available: {e}")
