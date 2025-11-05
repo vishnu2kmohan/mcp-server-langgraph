@@ -82,6 +82,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     logger.info("Application shutdown initiated")
 
+    # Cleanup checkpointer resources (Redis connections, etc.)
+    try:
+        from mcp_server_langgraph.core.agent import cleanup_checkpointer
+
+        agent_graph = get_agent_graph()
+        if agent_graph and hasattr(agent_graph, 'checkpointer') and agent_graph.checkpointer:
+            cleanup_checkpointer(agent_graph.checkpointer)
+            logger.info("Checkpointer resources cleaned up")
+    except Exception as e:
+        logger.warning(f"Error cleaning up checkpointer: {e}")
+
     # Shutdown observability (flush spans, close exporters)
     shutdown_observability()
 

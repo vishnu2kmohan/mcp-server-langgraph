@@ -281,6 +281,8 @@ class Settings(BaseSettings):  # type: ignore[misc]
     # Session Management
     session_backend: str = "memory"  # "memory", "redis"
     redis_url: str = "redis://localhost:6379/0"
+    redis_host: str = "localhost"  # Redis host for rate limiting and cache
+    redis_port: int = 6379  # Redis port for rate limiting and cache
     redis_password: Optional[str] = None
     redis_ssl: bool = False
     session_ttl_seconds: int = 86400  # 24 hours

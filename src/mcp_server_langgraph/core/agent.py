@@ -106,14 +106,20 @@ def _initialize_pydantic_agent() -> None:
         return None
 
 
-def _create_checkpointer() -> BaseCheckpointSaver[Any]:
+def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpointSaver[Any]:
     """
     Create checkpointer backend based on configuration
+
+    Args:
+        settings_to_use: Optional Settings object to use. If None, uses global settings.
 
     Returns:
         BaseCheckpointSaver: Configured checkpointer (MemorySaver or RedisSaver)
     """
-    backend = settings.checkpoint_backend.lower()
+    # Use provided settings or fall back to global settings
+    effective_settings = settings_to_use if settings_to_use is not None else settings
+
+    backend = effective_settings.checkpoint_backend.lower()
 
     if backend == "redis":
         if not REDIS_CHECKPOINTER_AVAILABLE:
@@ -128,8 +134,8 @@ def _create_checkpointer() -> BaseCheckpointSaver[Any]:
             logger.info(
                 "Initializing Redis checkpointer for distributed conversation state",
                 extra={
-                    "redis_url": settings.checkpoint_redis_url,
-                    "ttl_seconds": settings.checkpoint_redis_ttl,
+                    "redis_url": effective_settings.checkpoint_redis_url,
+                    "ttl_seconds": effective_settings.checkpoint_redis_ttl,
                 },
             )
 
@@ -137,7 +143,7 @@ def _create_checkpointer() -> BaseCheckpointSaver[Any]:
             # Note: RedisSaver.from_conn_string expects redis_url (not conn_string)
             # and returns a context manager in langgraph-checkpoint-redis 0.1.2+
             checkpointer_ctx = RedisSaver.from_conn_string(
-                redis_url=settings.checkpoint_redis_url,
+                redis_url=effective_settings.checkpoint_redis_url,
             )
 
             # Enter the context manager to get the actual RedisSaver instance
@@ -187,22 +193,9 @@ def create_checkpointer(settings_override: Optional[Any] = None) -> BaseCheckpoi
         test_settings = Settings(checkpoint_backend="memory")
         checkpointer = create_checkpointer(test_settings)
     """
-    if settings_override is not None:
-        # Temporarily override global settings for checkpointer creation
-        original_backend = settings.checkpoint_backend
-        original_redis_url = settings.checkpoint_redis_url
-
-        try:
-            settings.checkpoint_backend = settings_override.checkpoint_backend
-            if hasattr(settings_override, 'checkpoint_redis_url'):
-                settings.checkpoint_redis_url = settings_override.checkpoint_redis_url
-            return _create_checkpointer()
-        finally:
-            # Restore original settings
-            settings.checkpoint_backend = original_backend
-            settings.checkpoint_redis_url = original_redis_url
-    else:
-        return _create_checkpointer()
+    # Pass settings directly to avoid global state mutation
+    # This eliminates race conditions in concurrent environments
+    return _create_checkpointer(settings_to_use=settings_override)
 
 
 def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:

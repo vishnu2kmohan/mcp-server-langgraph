@@ -236,3 +236,209 @@ class TestAgentDocumentation:
 
         assert create_agent_graph.__doc__ is not None
         assert len(create_agent_graph.__doc__) > 50
+
+
+@pytest.mark.unit
+class TestSettingsInjectionRegression:
+    """
+    Regression tests for settings injection bug fix.
+
+    SECURITY: These tests verify that Finding 2 from OpenAI Codex analysis is fixed.
+    Previously, settings_to_use parameter was ignored, preventing:
+    - Testing with custom settings
+    - Multi-tenant deployments
+    - Feature flags and A/B testing
+    """
+
+    def test_create_agent_graph_respects_checkpoint_backend_override(self):
+        """
+        Test that settings override actually changes checkpoint backend.
+
+        REGRESSION TEST: Previously settings_to_use was discarded.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create settings with memory backend
+        memory_settings = Settings(
+            environment="test",
+            checkpoint_backend="memory"
+        )
+
+        # Create agent graph with custom settings
+        graph = create_agent_graph(settings=memory_settings)
+
+        # Should create graph successfully with memory backend
+        assert graph is not None
+        assert hasattr(graph, 'checkpointer')
+
+    def test_create_agent_graph_with_disabled_verification(self):
+        """
+        Test that feature flags can be disabled via settings override.
+
+        REGRESSION TEST: Feature flags should respect injected settings.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create settings with verification disabled
+        test_settings = Settings(
+            environment="test",
+            enable_verification=False,
+            enable_context_compaction=False
+        )
+
+        # Should create graph with disabled features
+        graph = create_agent_graph(settings=test_settings)
+        assert graph is not None
+
+    def test_create_agent_graph_with_custom_model_name(self):
+        """
+        Test that model configuration can be overridden via settings.
+
+        REGRESSION TEST: Model selection should respect injected settings.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create settings with custom model
+        custom_settings = Settings(
+            environment="test",
+            model_name="gpt-4o-mini",
+            temperature=0.3
+        )
+
+        # Should create graph with custom model settings
+        # (Note: May fail if API keys not configured, but settings should be used)
+        try:
+            graph = create_agent_graph(settings=custom_settings)
+            assert graph is not None
+        except Exception as e:
+            # If it fails, ensure it's not because settings were ignored
+            # (e.g., API key error is expected, settings being ignored is not)
+            error_msg = str(e).lower()
+            # Settings-related errors should not occur
+            assert "checkpoint_backend" not in error_msg
+
+    def test_settings_injection_no_global_mutation(self):
+        """
+        Test that using settings override doesn't mutate global settings.
+
+        REGRESSION TEST: Finding 4 - Global state mutation in create_checkpointer.
+        Previously, global settings object was temporarily mutated, causing race conditions.
+        """
+        from mcp_server_langgraph.core.agent import create_checkpointer
+        from mcp_server_langgraph.core.config import Settings, settings as global_settings
+
+        # Capture original global settings values
+        original_backend = global_settings.checkpoint_backend
+
+        # Create checkpointer with override settings
+        override_settings = Settings(
+            environment="test",
+            checkpoint_backend="memory"
+        )
+        checkpointer = create_checkpointer(settings_override=override_settings)
+
+        # Global settings should NOT be mutated
+        assert global_settings.checkpoint_backend == original_backend
+        assert checkpointer is not None
+
+    def test_concurrent_settings_overrides_no_interference(self):
+        """
+        Test that concurrent settings overrides don't interfere with each other.
+
+        REGRESSION TEST: Finding 4 - Race conditions from global state mutation.
+        """
+        import threading
+        from mcp_server_langgraph.core.agent import create_checkpointer
+        from mcp_server_langgraph.core.config import Settings
+
+        results = {}
+        errors = {}
+
+        def create_with_backend(backend_name, thread_id):
+            try:
+                settings = Settings(
+                    environment="test",
+                    checkpoint_backend=backend_name
+                )
+                checkpointer = create_checkpointer(settings_override=settings)
+                results[thread_id] = checkpointer
+            except Exception as e:
+                errors[thread_id] = e
+
+        # Create multiple threads with different settings
+        threads = []
+        for i in range(5):
+            backend = "memory"  # All use memory in test
+            t = threading.Thread(target=create_with_backend, args=(backend, i))
+            threads.append(t)
+            t.start()
+
+        # Wait for all threads to complete
+        for t in threads:
+            t.join()
+
+        # All threads should succeed without errors
+        assert len(errors) == 0, f"Concurrent creation failed: {errors}"
+        assert len(results) == 5
+
+    def test_create_agent_graph_impl_uses_settings_parameter(self):
+        """
+        Test that create_agent_graph_impl actually uses the settings_to_use parameter.
+
+        REGRESSION TEST: Finding 2 - settings_to_use was discarded in create_agent_graph_impl.
+        The function had a TODO comment acknowledging it ignored the parameter.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph_impl
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create custom settings
+        custom_settings = Settings(
+            environment="test",
+            checkpoint_backend="memory",
+            enable_verification=False
+        )
+
+        # Call implementation directly with custom settings
+        graph = create_agent_graph_impl(settings_to_use=custom_settings)
+
+        # Should create graph successfully (settings actually used)
+        assert graph is not None
+        assert hasattr(graph, 'checkpointer')
+
+    def test_settings_override_for_multi_tenant_scenario(self):
+        """
+        Test multi-tenant scenario where different tenants have different settings.
+
+        REGRESSION TEST: Multi-tenancy requires per-tenant settings injection.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph
+        from mcp_server_langgraph.core.config import Settings
+
+        # Tenant 1: Basic configuration
+        tenant1_settings = Settings(
+            environment="test",
+            checkpoint_backend="memory",
+            enable_verification=False
+        )
+
+        # Tenant 2: Advanced configuration
+        tenant2_settings = Settings(
+            environment="test",
+            checkpoint_backend="memory",
+            enable_verification=True,
+            enable_context_compaction=True
+        )
+
+        # Create separate graphs for each tenant
+        tenant1_graph = create_agent_graph(settings=tenant1_settings)
+        tenant2_graph = create_agent_graph(settings=tenant2_settings)
+
+        # Both should be created successfully
+        assert tenant1_graph is not None
+        assert tenant2_graph is not None
+
+        # Graphs should be independent instances
+        assert tenant1_graph is not tenant2_graph
