@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762369458014,
+  "lastUpdate": 1762369642990,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -30078,6 +30078,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019835229806829052",
             "extra": "mean: 59.155579380001804 usec\nrounds: 5354"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9f2394cd263face6a4a57bfe8a4351d3626d7aec",
+          "message": "fix(ci/cd): add missing package install and EKS environment variable\n\nFix remaining security validation failures by installing the package\nand adding missing Terraform variable declaration.\n\n## Fixes\n\n### 1. Package Installation for Tests\n- **Root Cause**: conftest.py imports mcp_server_langgraph modules but package not installed\n- **Fix**: Install package in editable mode (--no-deps) before running tests\n- **Files**: .github/workflows/security-validation.yml:37-39,61-63\n- **Impact**: Tests can import from main package without full dependency install\n\n### 2. EKS Module Environment Variable\n- **Root Cause**: variables.tf references var.environment in validation but doesn't declare it\n- **Fix**: Add environment variable declaration with validation\n- **Files**: terraform/modules/eks/variables.tf:27-36\n- **Details**:\n  - Default: \"production\"\n  - Validation: Must be dev|staging|production\n  - Used in cluster_endpoint_public_access_cidrs validation (line 70)\n- **Impact**: EKS module validation will succeed\n\n## Test Commands Used\n\n```bash\n# Package install test\npip install -e . --no-deps\npip install pytest pyyaml hypothesis langchain-core opentelemetry-sdk\n\n# Terraform validation\nterraform fmt -check terraform/modules/eks/variables.tf\n```\n\n## Expected Results\n\nSecurity Validation sub-checks:\n- Terraform Security Validation: ✅ (package imports work)\n- Kubernetes Manifest Security Validation: ✅ (package imports work)\n- Terraform Validate and Format Check: ✅ (environment variable declared)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T14:06:14-05:00",
+          "tree_id": "69a16dd07978111af90407ae3471d2718bc26366",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9f2394cd263face6a4a57bfe8a4351d3626d7aec"
+        },
+        "date": 1762369641281,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.82146780041992,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010646043523396518",
+            "extra": "mean: 6.857700824741803 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.72718879191905,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001291475845418244",
+            "extra": "mean: 6.723720176000086 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44972.744268302886,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.23569000001646 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47236.23170135485,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.170189999963895 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45351.000873874385,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.050230000019155 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.64494284319883,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.245352879999956 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.382387517292162,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.59323117999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.939975604500775,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.60386863999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1465265.8724599278,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 682.4700000152006 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4916.553549061341,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 203.3945099999812 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3010.9634297107873,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 332.1196100000634 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2987.200711240941,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.7615699999551 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59330.619692521934,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001980662035736965",
+            "extra": "mean: 16.85470344288416 usec\nrounds: 12925"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16946.34433065458,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021292418296990655",
+            "extra": "mean: 59.009777004889486 usec\nrounds: 5175"
           }
         ]
       }
