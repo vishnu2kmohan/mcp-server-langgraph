@@ -187,7 +187,7 @@ defaultAdmissionRule:
   - projects/$PROJECT_ID/attestors/$ATTESTOR_ID
 
 clusterAdmissionRules:
-  us-central1.production-mcp-server-langgraph-gke:
+  us-central1.mcp-prod-gke:
     evaluationMode: REQUIRE_ATTESTATION
     enforcementMode: ENFORCED_BLOCK_AND_AUDIT_LOG
     requireAttestationsBy:

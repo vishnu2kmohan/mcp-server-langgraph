@@ -29,7 +29,7 @@
 # Daily health check routine
 
 PROJECT_ID="YOUR_PROJECT_ID"
-CLUSTER="production-mcp-server-langgraph-gke"
+CLUSTER="mcp-prod-gke"
 REGION="us-central1"
 NAMESPACE="mcp-production"
 
@@ -406,7 +406,7 @@ kubectl patch hpa production-mcp-server-langgraph \
 **Check current usage**:
 ```bash
 # GKE resource usage
-gcloud container clusters describe production-mcp-server-langgraph-gke \
+gcloud container clusters describe mcp-prod-gke \
   --region=us-central1 \
   --format="yaml(resourceUsageExportConfig, currentMasterVersion)"
 
@@ -585,7 +585,7 @@ gcloud monitoring time-series list \
 
 **Check upgrade status**:
 ```bash
-gcloud container clusters describe production-mcp-server-langgraph-gke \
+gcloud container clusters describe mcp-prod-gke \
   --region=us-central1 \
   --format="yaml(currentMasterVersion,releaseChannel)"
 ```
@@ -596,7 +596,7 @@ gcloud container clusters describe production-mcp-server-langgraph-gke \
 gcloud container get-server-config --region=us-central1
 
 # Upgrade cluster
-gcloud container clusters upgrade production-mcp-server-langgraph-gke \
+gcloud container clusters upgrade mcp-prod-gke \
   --region=us-central1 \
   --cluster-version=VERSION \
   --project=PROJECT_ID

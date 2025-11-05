@@ -6,7 +6,7 @@
 set -euo pipefail
 
 PROJECT_ID="${1:-}"
-CLUSTER_NAME="${2:-production-mcp-server-langgraph-gke}"
+CLUSTER_NAME="${2:-mcp-prod-gke}"
 REGION="${3:-us-central1}"
 
 if [ -z "$PROJECT_ID" ]; then

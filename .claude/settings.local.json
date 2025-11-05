@@ -25,7 +25,11 @@
       "WebFetch(domain:mermaid.js.org)",
       "WebFetch(domain:www.langchain.com)",
       "WebFetch(domain:ai.google.dev)",
-      "WebFetch(domain:platform.openai.com)"
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:openapi-generator.tech)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:peps.python.org)",
+      "WebFetch(domain:docs.astral.sh)"
     ],
     "defaultMode": "acceptEdits"
   },

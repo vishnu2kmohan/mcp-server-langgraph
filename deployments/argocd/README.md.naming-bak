@@ -220,7 +220,7 @@ spec:
   source:
     targetRevision: release  # release branch
   destination:
-    namespace: staging-mcp-server-langgraph
+    namespace: mcp-server-langgraph-staging
   syncPolicy:
     automated:
       prune: true

@@ -34,8 +34,8 @@ if [ -z "$PRIMARY_PROJECT" ]; then
 fi
 
 # Cluster names
-PRIMARY_CLUSTER="production-mcp-server-langgraph-gke"
-DR_CLUSTER="production-mcp-server-langgraph-gke-dr"
+PRIMARY_CLUSTER="mcp-prod-gke"
+DR_CLUSTER="mcp-prod-gke-dr"
 
 # Database names
 PRIMARY_DB="mcp-prod-postgres"

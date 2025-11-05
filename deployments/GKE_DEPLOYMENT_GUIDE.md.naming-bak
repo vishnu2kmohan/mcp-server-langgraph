@@ -336,7 +336,7 @@ terraform apply tfplan
 Apply complete! Resources: 25+ added, 0 changed, 0 destroyed.
 
 Outputs:
-cluster_name = "production-mcp-server-langgraph-gke"
+cluster_name = "mcp-prod-gke"
 kubectl_config_command = "gcloud container clusters get-credentials..."
 cloudsql_connection_name = "PROJECT_ID:us-central1:mcp-prod-postgres"
 redis_host = "10.x.x.x"
@@ -553,7 +553,7 @@ terraform apply -auto-approve
 Access cluster:
 ```bash
 # From within VPC (bastion host or Cloud Shell)
-gcloud container clusters get-credentials production-mcp-server-langgraph-gke \
+gcloud container clusters get-credentials mcp-prod-gke \
   --region=us-central1 \
   --internal-ip
 ```
