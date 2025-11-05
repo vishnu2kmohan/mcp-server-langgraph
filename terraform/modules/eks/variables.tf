@@ -24,6 +24,17 @@ variable "region" {
   type        = string
 }
 
+variable "environment" {
+  description = "Environment name (e.g., dev, staging, production)"
+  type        = string
+  default     = "production"
+
+  validation {
+    condition     = contains(["dev", "staging", "production"], var.environment)
+    error_message = "Environment must be one of: dev, staging, production."
+  }
+}
+
 variable "vpc_id" {
   description = "VPC ID where EKS cluster will be created"
   type        = string

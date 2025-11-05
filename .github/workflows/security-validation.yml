@@ -33,8 +33,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install test dependencies
+      - name: Install package and test dependencies
         run: |
+          pip install -e . --no-deps  # Install package without dependencies
           pip install pytest pyyaml hypothesis langchain-core opentelemetry-sdk
 
       - name: Run Terraform security tests
@@ -56,8 +57,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install test dependencies
+      - name: Install package and test dependencies
         run: |
+          pip install -e . --no-deps  # Install package without dependencies
           pip install pytest pyyaml hypothesis langchain-core opentelemetry-sdk
 
       - name: Run Kubernetes security tests
