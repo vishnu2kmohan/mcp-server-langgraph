@@ -11,7 +11,7 @@
 [![Security Scan](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/security-scan.yaml)
 [![Code Quality](https://img.shields.io/badge/code%20quality-9.6%2F10-brightgreen.svg)](#quality-practices)
 
-> **Full CI/CD status & all badges**: [docs/ci-cd/badges.md](docs/ci-cd/badges.md)
+> **Full CI/CD status & all badges**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx)
 
 A **production-ready cookie-cutter template** for building MCP servers with LangGraph's Functional API. Features comprehensive authentication (JWT), fine-grained authorization (OpenFGA), secrets management (Infisical), and OpenTelemetry-based observability.
 
@@ -25,11 +25,11 @@ Pick the quickstart that matches your needs:
 
 | Path | Time | What You Get | Best For |
 |------|------|-------------|----------|
-| **[Quickstart (Zero Infrastructure)](docs/day-1-developer.md#quickstart-zero-infrastructure)** | < 2 min | In-memory agent, no Docker, free LLM tier | Learning, prototyping, exploring |
-| **[Local Development](docs/day-1-developer.md#local-development-minimal-infrastructure)** | ~5 min | Redis + PostgreSQL, persistence, dev mode | Feature development, integration testing |
-| **[Full Production](docs/day-1-developer.md#full-production-setup)** | ~20 min | Complete stack: auth, observability, compliance | Production deployment, enterprise features |
+| **[Quickstart (Zero Infrastructure)](docs/getting-started/day-1-developer.mdx#quickstart-zero-infrastructure)** | < 2 min | In-memory agent, no Docker, free LLM tier | Learning, prototyping, exploring |
+| **[Local Development](docs/getting-started/day-1-developer.mdx#local-development-minimal-infrastructure)** | ~5 min | Redis + PostgreSQL, persistence, dev mode | Feature development, integration testing |
+| **[Full Production](docs/getting-started/day-1-developer.mdx#full-production-setup)** | ~20 min | Complete stack: auth, observability, compliance | Production deployment, enterprise features |
 
-**New here?** → Start with **[Day-1 Developer Guide](docs/day-1-developer.md)** for step-by-step instructions
+**New here?** → Start with **[Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx)** for step-by-step instructions
 
 ---
 
@@ -37,24 +37,24 @@ Pick the quickstart that matches your needs:
 
 This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GCP) Workload Identity Federation for secure deployments.
 
-**Quick setup**: [SECRETS.md](SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.md](docs/ci-cd/badges.md) | **Workflow details**: [.github/WORKFLOW_AUDIT_REMAINING.md](.github/WORKFLOW_AUDIT_REMAINING.md)
+**Quick setup**: [SECRETS.md](SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Workflow details**: [.github/WORKFLOW_AUDIT_REMAINING.md](.github/WORKFLOW_AUDIT_REMAINING.md)
 
 ---
 
 ## 📑 Table of Contents
 
 **Quick Links**:
-- 🚀 [Use as Template](#-use-this-template) - Generate your own MCP server project
+- 🚀 [Use as Template](#use-this-template) - Generate your own MCP server project
 - ⚡ [Quick Start](#quick-start) - Get running in 2 minutes
 - 📦 [Installation](#installation) - Setup instructions
 - 🏗️ [Architecture](#architecture) - System design and agentic loop
-- 🔐 [Authentication](#authentication--authorization) - Security setup
+- 🔐 [Authentication](#authentication-authorization) - Security setup
 - 🚢 [Deployment](#deployment-options) - Production deployment guides
 
 **Main Sections**:
-- [Template vs Project Usage](#-template-vs-project-usage) - Choose your approach
+- [Template vs Project Usage](#template-vs-project-usage) - Choose your approach
 - [Features](#features) - Core capabilities and best practices
-- [Documentation](#-documentation) - Complete guides and references
+- [Documentation](#documentation) - Complete guides and references
 - [Requirements](#requirements) - System and service requirements
 - [Usage](#usage) - MCP server usage and client configuration
 - [Testing Strategy](#testing-strategy) - Multi-layered testing approach
@@ -62,7 +62,7 @@ This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GC
 - [Observability](#observability) - LangSmith and OpenTelemetry
 - [Configuration](#configuration) - Environment variables and settings
 - [Security Considerations](#security-considerations) - Production checklist
-- [API Gateway & Rate Limiting](#api-gateway--rate-limiting) - Kong integration
+- [API Gateway & Rate Limiting](#api-gateway-rate-limiting) - Kong integration
 - [Quality Practices](#quality-practices) - Code quality standards
 - [Contributing](#contributing) - Contribution guidelines
 - [Support](#support) - Get help and report issues
@@ -102,27 +102,14 @@ Choose the approach that matches your goals:
 
 ### ⭐ Anthropic Best Practices (9.8/10 Adherence)
 
-This project achieves **reference-quality implementation** of Anthropic's AI agent best practices:
+This project achieves **reference-quality implementation** of Anthropic's AI agent best practices with measurable improvements:
 
-- **🎯 Just-in-Time Context Loading**: Dynamic semantic search with Qdrant vector database
-  - Load only relevant context when needed (60% token reduction)
-  - Progressive discovery through iterative search
-  - Token-aware batch loading with configurable budgets
-- **⚡ Parallel Tool Execution**: Concurrent execution with automatic dependency resolution
-  - 1.5-2.5x latency reduction for independent operations
-  - Topological sorting for correct execution order
-  - Graceful error handling and recovery
+- **🎯 Just-in-Time Context Loading**: 60% token reduction via dynamic semantic search (Qdrant)
+- **⚡ Parallel Tool Execution**: 1.5-2.5x faster through concurrent execution with dependency resolution
 - **📝 Enhanced Structured Note-Taking**: LLM-based 6-category information extraction
-  - Automatic categorization: decisions, requirements, facts, action_items, issues, preferences
-  - Context preservation across multi-turn conversations
-  - Fallback to rule-based extraction for reliability
-- **✅ Complete Agentic Loop**: Full gather-action-verify-repeat cycle
-  - Context compaction (40-60% token reduction)
-  - LLM-as-judge verification (23% quality improvement)
-  - Iterative refinement (up to 3 attempts)
-  - Observable with full tracing
+- **✅ Complete Agentic Loop**: Gather-action-verify-repeat with 40-60% token reduction, 23% quality improvement
 
-**See**: [Anthropic Best Practices Assessment](reports/ANTHROPIC_BEST_PRACTICES_ASSESSMENT_20251017.md) | [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md) | [ADR-0024](adr/adr-0024-agentic-loop-implementation.md) | [ADR-0025](adr/adr-0025-anthropic-best-practices-enhancements.md) | [Examples](examples/README.md)
+**See**: [Complete Assessment](reports/ANTHROPIC_BEST_PRACTICES_ASSESSMENT_20251017.md) | [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md), [ADR-0024](adr/adr-0024-agentic-loop-implementation.md), [ADR-0025](adr/adr-0025-anthropic-best-practices-enhancements.md)
 
 ### 🎯 Core Capabilities
 - **Multi-LLM Support (LiteLLM)**: 100+ LLM providers - Anthropic, OpenAI, Google, Azure, AWS Bedrock, Ollama
@@ -154,70 +141,15 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
 
 ### 🔒 GDPR & Privacy Compliance
 
-Complete GDPR compliance implementation with production-ready PostgreSQL storage ([ADR-0041](adr/ADR-0041-postgresql-gdpr-storage.md)):
+Complete GDPR compliance with **6 API endpoints** (Articles 15-21) and **PostgreSQL storage backend**. Features include atomic deletions, 7-year audit logs, and 14x cost savings vs Redis. Covers GDPR, HIPAA §164.312/§164.316, and SOC2 CC6.6/PI1.4.
 
-- **Data Subject Rights API**: 6 endpoints implementing GDPR Articles 15-21
-  - **Right to Access** (Article 15): `GET /api/v1/users/me/data` - Complete data export
-  - **Right to Data Portability** (Article 20): `GET /api/v1/users/me/export` - JSON/CSV export
-  - **Right to Rectification** (Article 16): `PATCH /api/v1/users/me` - Update profile
-  - **Right to Erasure** (Article 17): `DELETE /api/v1/users/me` - Delete all data
-  - **Right to Object** (Article 21): `POST/GET /api/v1/users/me/consent` - Consent management
-  - See: [GDPR API Reference](docs/api-reference/gdpr-endpoints.mdx)
-
-- **PostgreSQL Storage Backend**: ACID-compliant, cost-effective compliance storage
-  - **5 Tables**: user_profiles, user_preferences, consent_records, conversations, audit_logs
-  - **Atomic Deletions**: Single transaction for GDPR Article 17 compliance
-  - **Retention Policies**: 7-year audit logs (HIPAA §164.316), 90-day conversations (GDPR Article 5)
-  - **14x Cost Savings**: $50/month vs $720/month for Redis (7-year storage)
-  - **5-10ms Latency**: Acceptable for user-initiated GDPR operations
-  - See: [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
-
-- **Audit Trail**: Complete compliance logging
-  - All GDPR operations logged with user_id, timestamp, IP address, GDPR article
-  - Anonymized audit logs after deletion (user_id → cryptographic hash)
-  - 7-year retention for HIPAA/SOC2 compliance
-
-- **Production Guard**: Runtime protection against data loss
-  - Blocks GDPR endpoints if using in-memory storage in production
-  - Prevents compliance violations from misconfiguration
-
-**Compliance Coverage**: GDPR (Articles 5, 7, 15-17, 20-21), HIPAA (§164.312, §164.316), SOC2 (CC6.6, PI1.4)
-
-**Documentation**:
-- [GDPR API Endpoints](docs/api-reference/gdpr-endpoints.mdx) - Complete API reference with examples
-- [ADR-0041: PostgreSQL GDPR Storage](adr/ADR-0041-postgresql-gdpr-storage.md) - Architecture decision
-- [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx) - Setup guide
-- [Database Migrations](docs/deployment/database-migrations.mdx) - Schema management
+**See**: [GDPR API Reference](docs/api-reference/gdpr-endpoints.mdx) | [ADR-0041: PostgreSQL Storage](adr/ADR-0041-postgresql-gdpr-storage.md) | [Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx) | [GDPR Compliance Guide](docs/compliance/gdpr/overview.mdx)
 
 ### 📦 Optional Dependencies
 
-The project supports optional feature sets that can be installed on demand:
+Install optional features on demand: **Secrets Management** (`[secrets]`), **Self-Hosted Embeddings** (`[embeddings]`), **All Features** (`[all]`). Production requires persistent storage (PostgreSQL/Redis) for GDPR compliance—in-memory mode is blocked.
 
-- **Secrets Management** (`[secrets]`): Infisical integration for centralized secrets
-  - Install: `uv sync --extra secrets`
-  - Fallback: Environment variables (`.env` file)
-  - Production: Recommended for secure secret rotation
-  - See: [Infisical Installation Guide](docs/deployment/infisical-installation.mdx)
-
-- **Self-Hosted Embeddings** (`[embeddings]`): sentence-transformers for local embedding generation
-  - Install: `uv sync --extra embeddings`
-  - Fallback: Google Gemini API (langchain-google-genai, installed by default)
-  - Production: Use API-based embeddings (lower latency, no GPU required)
-  - Note: Self-hosted embeddings require significant resources
-
-- **GDPR Storage Backend**: PostgreSQL or Redis for compliance data persistence
-  - **CRITICAL**: In-memory storage is NOT production-ready
-  - Required for: GDPR compliance endpoints (`/api/v1/users/me/*`)
-  - Config: Set `GDPR_STORAGE_BACKEND=postgres` or `redis` in production
-  - See: [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
-
-- **All Features** (`[all]`): Install all optional dependencies
-  - Install: `uv sync --all-extras`
-  - Use for: Development, testing, full feature evaluation
-
-**Development vs Production**:
-- Development: All features work with fallbacks (in-memory, env vars, API-based)
-- Production: Use persistent backends (Redis, PostgreSQL) and proper secret management
+**See**: [Installation Guide](docs/getting-started/installation.mdx#optional-dependencies) | [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
 
 ### 🧪 Quality & Testing
 - **Property-Based Testing**: 27+ Hypothesis tests discovering edge cases automatically
@@ -549,111 +481,18 @@ response = httpx.post("http://localhost:8000/message",
 
 **Production**: Use `AUTH_PROVIDER=keycloak` with proper SSO. See [Keycloak Integration Guide](integrations/keycloak.md) for setup.
 
-## CI/CD Pipeline Architecture
+## CI/CD Pipeline
 
-Our CI/CD pipeline implements a comprehensive, production-grade workflow with 16 specialized workflows organized into four categories:
+Production-grade pipeline with **19 GitHub Actions workflows** organized into four categories:
 
-```mermaid
-graph TB
-    %% Event Triggers
-    PR[Pull Request]
-    PUSH[Push to main/develop]
-    RELEASE[Release Published]
-    SCHEDULE[Scheduled Runs]
-    MANUAL[Manual Trigger]
+- **🔄 CI/CD**: Main pipeline (Python 3.10-3.12, multi-arch Docker), E2E tests, quality tests (property/contract/mutation), coverage tracking
+- **🔒 Security**: Trivy/CodeQL/secrets scanning, GCP compliance validation, drift detection (6-hour intervals)
+- **🚀 Deployment**: Automated staging deploys, manual production approval, version management
+- **🤖 Automation**: Dependabot auto-merge, link checking, stale issue management
 
-    %% CI/CD Pipeline Category
-    subgraph "🔄 CI/CD Pipeline"
-        CI[Main CI/CD Pipeline<br/>- Unit tests Python 3.10-3.12<br/>- Docker builds base/full/test<br/>- Multi-platform amd64/arm64]
-        E2E[E2E Tests<br/>- Full user journeys<br/>- Isolated test infra<br/>- Integration scenarios]
-        QUALITY[Quality Tests<br/>- Property tests Hypothesis<br/>- Contract tests MCP<br/>- Performance regression<br/>- Mutation testing]
-        COVERAGE[Coverage Tracking<br/>- Historical trends<br/>- Fail if drop >5%<br/>- PR comments]
-        BUILD_HYG[Build Hygiene<br/>- Artifact validation<br/>- Build reproducibility]
-        OPT_DEPS[Optional Deps Test<br/>- Test all combinations<br/>- Graceful degradation]
-    end
+**Key Metrics**: 12 min avg build (66% faster), 80%+ coverage enforced, ~$40/month cost, automated staging + manual prod approval
 
-    %% Security Category
-    subgraph "🔒 Security"
-        SECURITY[Security Scan<br/>- Trivy fs/image/config<br/>- Dependency check<br/>- CodeQL analysis<br/>- Secrets scan<br/>- SBOM generation]
-        GCP_COMPLIANCE[GCP Compliance<br/>- Terraform security<br/>- K8s manifest validation<br/>- CIS benchmarks<br/>- OPA policies]
-        GCP_DRIFT[GCP Drift Detection<br/>- Terraform drift check<br/>- Auto-remediation option<br/>- Issue creation]
-    end
-
-    %% Deployment Category
-    subgraph "🚀 Deployment"
-        RELEASE_WF[Release Workflow<br/>- Automated releases<br/>- Changelog generation<br/>- Multi-arch images]
-        DEPLOY_STAGING[Deploy Staging GKE<br/>- Auto-deploy main<br/>- Smoke tests<br/>- Rollback on failure]
-        DEPLOY_PROD[Deploy Production GKE<br/>- Manual approval<br/>- Pre-deploy validation<br/>- Security checks<br/>- Performance baseline]
-        VERSION_BUMP[Version Bump<br/>- Auto-update deployments<br/>- Kustomize overlays]
-    end
-
-    %% Automation Category
-    subgraph "🤖 Automation"
-        DEPENDABOT[Dependabot Auto-merge<br/>- Auto-approve patches<br/>- Run tests before merge]
-        LINK_CHECK[Link Checker<br/>- Validate docs links<br/>- Create issues if broken]
-        STALE[Stale Management<br/>- Auto-close inactive<br/>- Reminder comments]
-    end
-
-    %% Event flow
-    PR --> CI
-    PR --> E2E
-    PR --> QUALITY
-    PR --> COVERAGE
-    PR --> BUILD_HYG
-    PR --> SECURITY
-    PR --> LINK_CHECK
-
-    PUSH --> CI
-    PUSH --> E2E
-    PUSH --> QUALITY
-    PUSH --> COVERAGE
-    PUSH --> SECURITY
-    PUSH --> GCP_COMPLIANCE
-    PUSH --> DEPLOY_STAGING
-
-    RELEASE --> RELEASE_WF
-    RELEASE --> DEPLOY_PROD
-    RELEASE --> VERSION_BUMP
-
-    SCHEDULE --> QUALITY
-    SCHEDULE --> SECURITY
-    SCHEDULE --> GCP_COMPLIANCE
-    SCHEDULE --> GCP_DRIFT
-    SCHEDULE --> LINK_CHECK
-    SCHEDULE --> STALE
-    SCHEDULE --> OPT_DEPS
-
-    MANUAL --> CI
-    MANUAL --> SECURITY
-    MANUAL --> DEPLOY_PROD
-
-    %% Dependencies
-    CI -.-> DEPLOY_STAGING
-    RELEASE_WF -.-> DEPLOY_PROD
-    SECURITY -.-> DEPLOY_PROD
-
-    %% Styling
-    classDef cicd fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    classDef security fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef deployment fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    classDef automation fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef event fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-
-    class CI,E2E,QUALITY,COVERAGE,BUILD_HYG,OPT_DEPS cicd
-    class SECURITY,GCP_COMPLIANCE,GCP_DRIFT security
-    class RELEASE_WF,DEPLOY_STAGING,DEPLOY_PROD,VERSION_BUMP deployment
-    class DEPENDABOT,LINK_CHECK,STALE automation
-    class PR,PUSH,RELEASE,SCHEDULE,MANUAL event
-```
-
-**Key Metrics:**
-- **Build Time:** 12 min avg (66% faster than baseline)
-- **Cost:** ~$40/month GitHub Actions
-- **Coverage:** 80%+ code coverage enforced
-- **Security:** Daily scans + PR checks
-- **Deployment:** Automated staging, manual prod approval
-
-**Workflow Details:** See individual workflow files in `.github/workflows/` for complete configuration.
+**See**: [Complete CI/CD Documentation](docs/reference/development/ci-cd/overview.mdx) | [Workflow Details](docs/reference/development/ci-cd/workflows.mdx) | [CI/CD Status](docs/ci-cd/badges.mdx)
 
 ## Testing Strategy
 
@@ -698,73 +537,17 @@ FF_PYDANTIC_AI_CONFIDENCE_THRESHOLD=0.7 # Routing confidence (default: 0.7)
 
 ## Observability
 
-This project supports **dual observability**: OpenTelemetry for infrastructure metrics and LangSmith for LLM-specific tracing.
+**Dual observability stack**: OpenTelemetry for infrastructure + LangSmith for LLM-specific tracing.
 
-### LangSmith Tracing (LLM Observability)
+### LangSmith (LLM Observability)
+Set `LANGSMITH_API_KEY` for automatic tracing of all LLM calls. Features: prompt engineering, evaluations, user feedback, cost tracking, debugging. View at [smith.langchain.com](https://smith.langchain.com/).
 
-LangSmith provides comprehensive LLM and agent observability:
+### OpenTelemetry (Infrastructure)
+End-to-end distributed tracing with Jaeger (http://localhost:16686), metrics with Prometheus (http://localhost:9090), structured JSON logging with trace correlation. Automatic collection of 30+ metrics (tool calls, auth failures, response duration).
 
-**Setup**:
-```bash
-# Add to .env
-LANGSMITH_API_KEY=your-key-from-smith.langchain.com
-LANGSMITH_TRACING=true
-LANGSMITH_PROJECT=mcp-server-langgraph
-```
+**Quick Start**: Run `docker compose up` to launch full observability stack (Jaeger, Prometheus, Grafana).
 
-**Features**:
-- 🔍 **Automatic Tracing**: All LLM calls and agent steps traced
-- 🎯 **Prompt Engineering**: Iterate on prompts with production data
-- 📊 **Evaluations**: Compare model performance on datasets
-- 💬 **User Feedback**: Collect and analyze user ratings
-- 💰 **Cost Tracking**: Monitor LLM API costs per user/session
-- 🐛 **Debugging**: Root cause analysis with full context
-
-**View traces**: https://smith.langchain.com/
-
-See **[LangSmith Integration Guide](integrations/langsmith.md)** for complete setup guide.
-
-### OpenTelemetry Tracing (Infrastructure)
-
-Every request is traced end-to-end with OpenTelemetry:
-
-```python
-from mcp_server_langgraph.observability.telemetry import tracer
-
-with tracer.start_as_current_span("my_operation") as span:
-    span.set_attribute("custom.attribute", "value")
-    # Your code here
-```
-
-View traces in Jaeger: http://localhost:16686
-
-### Metrics
-
-Standard metrics are automatically collected:
-
-- `agent.tool.calls`: Tool invocation counter
-- `agent.calls.successful`: Successful operation counter
-- `agent.calls.failed`: Failed operation counter
-- `auth.failures`: Authentication failure counter
-- `authz.failures`: Authorization failure counter
-- `agent.response.duration`: Response time histogram
-
-View metrics in Prometheus: http://localhost:9090
-
-### Logging
-
-Structured logging with trace context:
-
-```python
-from mcp_server_langgraph.observability.telemetry import logger
-
-logger.info("Event occurred", extra={
-    "user_id": "user_123",
-    "custom_field": "value"
-})
-```
-
-Logs include trace_id and span_id for correlation with traces.
+**See**: [Complete Observability Guide](docs/guides/observability.mdx) | [LangSmith Integration](integrations/langsmith.md) | [Monitoring Setup](docs/deployment/monitoring/overview.mdx)
 
 ## LangGraph Agent
 
@@ -790,60 +573,15 @@ workflow.add_edge("router", "custom_tool")
 
 ## Configuration
 
-All settings via environment variables, Infisical, or `.env` file:
+All settings via environment variables, Infisical, or `.env` file. Key variable categories:
 
-### Core Configuration
+- **LLM**: `ANTHROPIC_API_KEY`, `MODEL_NAME` (Claude Sonnet 4.5 default), `GOOGLE_API_KEY`
+- **Auth/Session**: `JWT_SECRET_KEY`, `OPENFGA_STORE_ID`, `OPENFGA_MODEL_ID`, `AUTH_PROVIDER` (inmemory/keycloak)
+- **Observability**: `OTLP_ENDPOINT`, `LANGSMITH_API_KEY`, `LOG_LEVEL`
+- **Anthropic Features**: Dynamic context loading, parallel execution, verification (all disabled by default)
+- **Secrets Loading**: Infisical (preferred) → Environment variables → Defaults
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SERVICE_NAME` | Service identifier | `mcp-server-langgraph` |
-| `OTLP_ENDPOINT` | OpenTelemetry collector | `http://localhost:4317` |
-| `JWT_SECRET_KEY` | Secret for JWT signing | (loaded from Infisical) |
-| `ANTHROPIC_API_KEY` | Anthropic API key | (loaded from Infisical) |
-| `MODEL_NAME` | Claude model to use | `claude-sonnet-4-5` |
-| `LOG_LEVEL` | Logging level | `INFO` |
-| `OPENFGA_API_URL` | OpenFGA server URL | `http://localhost:8080` |
-| `OPENFGA_STORE_ID` | OpenFGA store ID | (from setup) |
-| `OPENFGA_MODEL_ID` | OpenFGA model ID | (from setup) |
-| `INFISICAL_CLIENT_ID` | Infisical auth client ID | (optional) |
-| `INFISICAL_CLIENT_SECRET` | Infisical auth secret | (optional) |
-| `INFISICAL_PROJECT_ID` | Infisical project ID | (optional) |
-
-### Anthropic Best Practices Configuration
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| **Dynamic Context Loading** | | |
-| `ENABLE_DYNAMIC_CONTEXT_LOADING` | Enable just-in-time context loading | `false` |
-| `QDRANT_URL` | Qdrant server URL | `localhost` |
-| `QDRANT_PORT` | Qdrant server port | `6333` |
-| `QDRANT_COLLECTION_NAME` | Collection name for contexts | `mcp_context` |
-| `DYNAMIC_CONTEXT_MAX_TOKENS` | Max tokens per context load | `2000` |
-| `DYNAMIC_CONTEXT_TOP_K` | Number of contexts to retrieve | `3` |
-| `EMBEDDING_MODEL` | SentenceTransformer model | `all-MiniLM-L6-v2` |
-| `CONTEXT_CACHE_SIZE` | LRU cache size | `100` |
-| **Parallel Execution** | | |
-| `ENABLE_PARALLEL_EXECUTION` | Enable parallel tool execution | `false` |
-| `MAX_PARALLEL_TOOLS` | Max concurrent tool executions | `5` |
-| **Enhanced Note-Taking** | | |
-| `ENABLE_LLM_EXTRACTION` | Enable LLM-based extraction | `false` |
-| **Context Management** | | |
-| `ENABLE_CONTEXT_COMPACTION` | Enable context compaction | `true` |
-| `COMPACTION_THRESHOLD` | Token count triggering compaction | `8000` |
-| `TARGET_AFTER_COMPACTION` | Target tokens after compaction | `4000` |
-| `RECENT_MESSAGE_COUNT` | Messages to keep uncompacted | `5` |
-| **Verification** | | |
-| `ENABLE_VERIFICATION` | Enable response verification | `true` |
-| `VERIFICATION_QUALITY_THRESHOLD` | Quality score threshold | `0.7` |
-| `MAX_REFINEMENT_ATTEMPTS` | Max refinement iterations | `3` |
-
-See `src/mcp_server_langgraph/core/config.py` for all options and `.env.example` for complete examples.
-
-### Secrets Loading Priority
-
-1. **Infisical** (if configured)
-2. **Environment variables** (fallback)
-3. **Default values** (last resort)
+**See**: [Complete Configuration Reference](docs/reference/environment-variables.mdx) | [Config Source Code](src/mcp_server_langgraph/core/config.py) | [Example .env](.env.example)
 
 ## Monitoring Dashboard
 
@@ -877,119 +615,34 @@ Example queries:
 
 ## Deployment Options
 
-### LangGraph Platform (Managed Cloud)
+Choose your deployment platform based on operational needs:
 
-Deploy to LangGraph Platform for fully managed, serverless hosting:
+| Platform | Deploy Time | Best For | Key Features | Guide |
+|----------|------------|----------|--------------|-------|
+| **LangGraph Platform** | `uvx langgraph-cli deploy` | Zero-ops, full observability | Managed hosting, auto-scaling, integrated LangSmith | [Guide](docs/deployment/langgraph-platform.mdx) |
+| **Google Cloud Run** | ~5 min | Serverless, pay-per-use | 0-100+ instances, auto HTTPS, Secret Manager | [Guide](docs/deployment/cloud-run.mdx) |
+| **Kubernetes (GKE)** | ~30 min | Production, multi-cloud | Full Terraform, 32 overlays, Workload Identity, 🟢 Prod Ready | [Guide](docs/deployment/kubernetes.mdx) |
+| **Kubernetes (EKS)** | ~30 min | AWS production | Full Terraform, Karpenter, IRSA, RDS/ElastiCache, 🟢 Prod Ready | [Guide](docs/deployment/kubernetes/eks-production.mdx) |
+| **Kubernetes (AKS)** | ~45 min | Azure production | Manual deployment, 🔴 Alpha (Terraform in dev) | [Guide](docs/deployment/kubernetes/aks.mdx) |
+| **Docker Compose** | 2 min | Local development | Full stack with observability, quick iteration | [Guide](docs/deployment/docker.mdx) |
+| **Helm Charts** | 10 min | K8s with customization | Flexible values, multi-environment support | [Guide](docs/deployment/helm.mdx) |
 
+**Kubernetes Platform Maturity**:
+- **GKE**: Full automation (dev/staging/prod), 32 Kustomize overlays, Cloud SQL, Workload Identity
+- **EKS**: Full automation (dev/staging/prod), Karpenter autoscaling, IRSA, RDS/ElastiCache
+- **AKS**: Manual deployment only, Terraform automation under development
+- **Rancher/Tanzu**: Generic manifests, community-supported
+
+**Quick Kubernetes Deploy**:
 ```bash
-# Login (uvx runs langgraph-cli without installing it)
-uvx langgraph-cli login
+# Helm deployment
+helm install langgraph-agent ./deployments/helm/langgraph-agent --set image.tag=v1.0.0
 
-# Deploy
-uvx langgraph-cli deploy
-```
-
-**Benefits**:
-- ✅ Zero infrastructure management
-- ✅ Integrated LangSmith observability
-- ✅ Automatic versioning and rollbacks
-- ✅ Built-in scaling and load balancing
-- ✅ One-command deployment
-
-See **[LangGraph Platform Guide](docs/deployment/langgraph-platform.mdx)** for complete platform deployment guide.
-
-### Google Cloud Run (Serverless)
-
-Deploy to Google Cloud Run for fully managed, serverless deployment:
-
-```bash
-# Quick deploy
-cd cloudrun
-./deploy.sh --setup
-
-# Or use gcloud directly
-gcloud run deploy mcp-server-langgraph \
-  --source . \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-
-**Benefits**:
-- ✅ Serverless autoscaling (0 to 100+ instances)
-- ✅ Pay only for actual usage
-- ✅ Automatic HTTPS and SSL certificates
-- ✅ Integrated with Google Secret Manager
-- ✅ Built-in monitoring and logging
-
-See **[Cloud Run Deployment Guide](docs/deployment/cloud-run.mdx)** for complete Cloud Run deployment guide.
-
-### Kubernetes Deployment
-
-The agent is fully containerized and ready for Kubernetes deployment. Platform automation maturity:
-
-| Platform | Terraform Automation | Deployment Overlays | Maturity Status |
-|----------|---------------------|---------------------|-----------------|
-| **Google Kubernetes Engine (GKE)** | ✅ Complete (dev/staging/prod) | ✅ Rich (32 files) | 🟢 **Production Ready** |
-| **Amazon Elastic Kubernetes Service (EKS)** | ✅ Complete (dev/staging/prod) | ⚠️ Minimal (2 files) | 🟢 **Production Ready** |
-| **Azure Kubernetes Service (AKS)** | ❌ Manual only | ⚠️ Minimal (3 files) | 🔴 **Alpha** (Manual deployment) |
-| **Rancher** | ⚠️ Generic manifests | ✅ Base manifests | 🟡 **Community** |
-| **VMware Tanzu** | ⚠️ Generic manifests | ✅ Base manifests | 🟡 **Community** |
-
-**Platform-Specific Features**:
-- **GKE**: Full Terraform automation, Cloud SQL integration, Workload Identity, GCP monitoring, dev/staging/production environments
-- **EKS**: Full Terraform automation (dev/staging/prod), complete modules, Karpenter autoscaling, IRSA support, RDS & ElastiCache integration
-- **AKS**: Manual deployment only, requires Azure CLI setup (Terraform automation in development)
-
-**Quick Deploy**:
-
-```bash
-# Build and push image
-docker build -t your-registry/langgraph-agent:v1.0.0 .
-docker push your-registry/langgraph-agent:v1.0.0
-
-# Deploy with Helm
-helm install langgraph-agent ./deployments/helm/langgraph-agent \
-  --namespace langgraph-agent \
-  --create-namespace \
-  --set image.repository=your-registry/langgraph-agent \
-  --set image.tag=v1.0.0
-
-# Or deploy with Kustomize
+# Or Kustomize
 kubectl apply -k deployments/kustomize/overlays/production
 ```
 
-See **[Kubernetes Deployment Guide](docs/deployment/kubernetes.mdx)** for complete deployment guide.
-
-### GKE Staging Environment (Production-Grade)
-
-Deploy to a secure, production-ready staging environment on Google Kubernetes Engine:
-
-```bash
-# One-time infrastructure setup
-./scripts/gcp/setup-staging-infrastructure.sh
-
-# Deploy application
-kubectl apply -k deployments/overlays/staging-gke
-
-# Run smoke tests
-./scripts/gcp/staging-smoke-tests.sh
-```
-
-**Security Features**:
-- ✅ **Network Isolation**: Separate VPC from production
-- ✅ **Workload Identity**: Keyless authentication (no service account keys)
-- ✅ **Private GKE**: Private nodes with shielded boot
-- ✅ **Binary Authorization**: Only approved images deployed
-- ✅ **Network Policies**: Restrict pod-to-pod traffic
-- ✅ **Secret Manager**: Centralized secret management
-
-**Automated Deployments**:
-- GitHub Actions with Workload Identity Federation
-- Automated smoke tests and validation
-- Auto-rollback on failure
-- Approval gates before deployment
-
-See **[GKE Staging Guide](docs/deployment/kubernetes/gke-staging.mdx)** for complete setup guide.
+**See**: [Complete Deployment Guide](docs/deployment/overview.mdx) | [Production Checklist](docs/deployment/production-checklist.mdx) | [GKE Staging Setup](docs/deployment/kubernetes/gke-staging.mdx)
 
 ## API Gateway & Rate Limiting
 
