@@ -6,7 +6,7 @@ project_number = "1024691643349"
 region         = "us-central1"
 team           = "platform"
 
-app_namespace = "mcp-staging"
+app_namespace = "staging-mcp-server-langgraph"
 
 # Monitoring (no channels configured yet)
 monitoring_notification_channels = []

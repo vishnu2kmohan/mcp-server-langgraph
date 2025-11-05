@@ -25,9 +25,9 @@ PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 REGION="us-central1"
 ZONE="us-central1-a"
 CLUSTER_NAME="staging-mcp-server-langgraph-gke"
-VPC_NAME="staging-vpc"
-SUBNET_NAME="staging-gke-subnet"
-SERVICE_ACCOUNT_NAME="mcp-staging-sa"
+VPC_NAME="staging-mcp-slg-vpc"
+SUBNET_NAME="staging-mcp-slg-nodes-us-central1"
+SERVICE_ACCOUNT_NAME="staging-mcp-slg-sa"
 
 # GitHub configuration (update these)
 GITHUB_ORG="vishnu2kmohan"
@@ -366,7 +366,7 @@ setup_github_workload_identity() {
 create_cloud_sql() {
     log_info "Creating Cloud SQL PostgreSQL instance for staging..."
 
-    INSTANCE_NAME="mcp-staging-postgres"
+    INSTANCE_NAME="staging-mcp-slg-postgres"
 
     # Check if instance already exists
     if gcloud sql instances describe "$INSTANCE_NAME" &> /dev/null; then
@@ -438,7 +438,7 @@ create_cloud_sql() {
 create_memorystore_redis() {
     log_info "Creating Memorystore Redis instance for staging..."
 
-    INSTANCE_NAME="mcp-staging-redis"
+    INSTANCE_NAME="staging-mcp-slg-redis"
 
     # Check if instance already exists
     if gcloud redis instances describe "$INSTANCE_NAME" --region="$REGION" &> /dev/null; then
