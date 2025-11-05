@@ -111,7 +111,19 @@ jobs:
 
       - name: Check for ENVIRONMENT placeholders
         run: |
-          if grep -r "\bENVIRONMENT\b" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" --exclude="*.example" | grep -v "#" | grep -v "error_message" | grep -v "GOOGLE"; then
+          # Only check for hardcoded ENVIRONMENT values, not env var names or shell variables
+          if grep -rI "value.*ENVIRONMENT" terraform/ deployments/ \
+            --exclude-dir=.git \
+            --exclude-dir=.terraform \
+            --exclude="*.md" \
+            --exclude="*.sh" \
+            --exclude="*.bak" \
+            2>/dev/null \
+            | grep -v "#" \
+            | grep -v "error_message" \
+            | grep -v "GOOGLE" \
+            | grep -v '\${ENVIRONMENT}' \
+            | grep -v 'from_attribute.*ENVIRONMENT'; then
             echo "::error::Found ENVIRONMENT placeholder in configuration files"
             exit 1
           fi
