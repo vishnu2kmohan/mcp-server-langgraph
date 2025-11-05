@@ -15,6 +15,7 @@ from mcp_server_langgraph.auth.middleware import (
     set_global_auth_middleware,
     verify_token,
 )
+from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider, UserData
 
 
 @pytest.mark.unit
@@ -661,3 +662,310 @@ class TestGetCurrentUser:
         assert user["username"] == "dave"
         assert user["user_id"] == "user:dave"  # Normalized format
         assert user["user_id"].startswith("user:")  # Always has prefix
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+class TestAuthFallbackWithExternalProviders:
+    """
+    Test authorization fallback logic with external providers (Keycloak, etc.)
+
+    SECURITY: This addresses the critical bug where Keycloak users were denied
+    all access when OpenFGA was down, because the fallback logic only checked
+    InMemoryUserProvider's users_db (which is empty for Keycloak).
+
+    The fix ensures fallback authorization queries the user provider for roles
+    instead of relying on in-memory user database.
+    """
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_keycloak_admin_user(self):
+        """
+        Test fallback authorization grants admin access for Keycloak users.
+
+        REGRESSION TEST: Previously failed because users_db was empty for Keycloak.
+        """
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+
+        # Mock get_user_by_username to return admin user
+        admin_user = UserData(
+            user_id="user:keycloak_admin",
+            username="keycloak_admin",
+            email="admin@keycloak.com",
+            roles=["admin", "user"],
+            active=True
+        )
+        mock_keycloak.get_user_by_username.return_value = admin_user
+
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
+        auth = AuthMiddleware(user_provider=mock_keycloak)
+
+        # Test: Admin should have access to everything
+        result = await auth.authorize(
+            user_id="user:keycloak_admin",
+            relation="executor",
+            resource="tool:chat"
+        )
+
+        assert result is True
+        mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_admin")
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_keycloak_premium_user(self):
+        """
+        Test fallback authorization for Keycloak premium user.
+
+        REGRESSION TEST: Previously denied access because users_db was empty.
+        """
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+
+        # Mock get_user_by_username to return premium user
+        premium_user = UserData(
+            user_id="user:keycloak_alice",
+            username="keycloak_alice",
+            email="alice@keycloak.com",
+            roles=["user", "premium"],
+            active=True
+        )
+        mock_keycloak.get_user_by_username.return_value = premium_user
+
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
+        auth = AuthMiddleware(user_provider=mock_keycloak)
+
+        # Test: Premium user should have executor access to tools
+        result = await auth.authorize(
+            user_id="user:keycloak_alice",
+            relation="executor",
+            resource="tool:chat"
+        )
+
+        assert result is True
+        mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_alice")
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_keycloak_standard_user(self):
+        """Test fallback authorization for Keycloak standard user."""
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+
+        # Mock get_user_by_username to return standard user
+        standard_user = UserData(
+            user_id="user:keycloak_bob",
+            username="keycloak_bob",
+            email="bob@keycloak.com",
+            roles=["user"],  # Standard user role
+            active=True
+        )
+        mock_keycloak.get_user_by_username.return_value = standard_user
+
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
+        auth = AuthMiddleware(user_provider=mock_keycloak)
+
+        # Test: Standard user should have executor access to tools
+        result = await auth.authorize(
+            user_id="user:keycloak_bob",
+            relation="executor",
+            resource="tool:chat"
+        )
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_keycloak_user_not_found(self):
+        """
+        Test fallback authorization denies access for non-existent Keycloak user.
+
+        REGRESSION TEST: Previously failed with same denial, but now logs correctly.
+        """
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+
+        # Mock get_user_by_username to return None (user not found)
+        mock_keycloak.get_user_by_username.return_value = None
+
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
+        auth = AuthMiddleware(user_provider=mock_keycloak)
+
+        # Test: Non-existent user should be denied
+        result = await auth.authorize(
+            user_id="user:nonexistent",
+            relation="executor",
+            resource="tool:chat"
+        )
+
+        assert result is False
+        mock_keycloak.get_user_by_username.assert_called_once_with("nonexistent")
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_keycloak_provider_error(self):
+        """
+        Test fallback authorization fails closed when provider lookup fails.
+
+        SECURITY: When we can't verify user roles, deny access (fail closed).
+        """
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+
+        # Mock get_user_by_username to raise exception (provider error)
+        mock_keycloak.get_user_by_username.side_effect = Exception("Keycloak connection error")
+
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
+        auth = AuthMiddleware(user_provider=mock_keycloak)
+
+        # Test: Provider error should deny access (fail closed)
+        result = await auth.authorize(
+            user_id="user:alice",
+            relation="executor",
+            resource="tool:chat"
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_keycloak_conversation_ownership(self):
+        """
+        Test fallback authorization respects conversation ownership for Keycloak users.
+
+        SECURITY: Users should only access their own conversations in fallback mode.
+        """
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+
+        # Mock get_user_by_username to return user
+        user = UserData(
+            user_id="user:keycloak_alice",
+            username="keycloak_alice",
+            email="alice@keycloak.com",
+            roles=["user"],
+            active=True
+        )
+        mock_keycloak.get_user_by_username.return_value = user
+
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
+        auth = AuthMiddleware(user_provider=mock_keycloak)
+
+        # Test 1: User can access their own conversation
+        result = await auth.authorize(
+            user_id="user:keycloak_alice",
+            relation="viewer",
+            resource="conversation:keycloak_alice_thread1"
+        )
+        assert result is True
+
+        # Test 2: User can access default conversation
+        result = await auth.authorize(
+            user_id="user:keycloak_alice",
+            relation="viewer",
+            resource="conversation:default"
+        )
+        assert result is True
+
+        # Test 3: User CANNOT access another user's conversation
+        result = await auth.authorize(
+            user_id="user:keycloak_alice",
+            relation="viewer",
+            resource="conversation:keycloak_bob_private"
+        )
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_keycloak_user_without_required_role(self):
+        """Test fallback authorization denies access when user lacks required role."""
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+
+        # Mock get_user_by_username to return user WITHOUT user/premium roles
+        limited_user = UserData(
+            user_id="user:keycloak_limited",
+            username="keycloak_limited",
+            email="limited@keycloak.com",
+            roles=["viewer"],  # Only viewer role, no user/premium
+            active=True
+        )
+        mock_keycloak.get_user_by_username.return_value = limited_user
+
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
+        auth = AuthMiddleware(user_provider=mock_keycloak)
+
+        # Test: User without user/premium role should be denied executor access
+        result = await auth.authorize(
+            user_id="user:keycloak_limited",
+            relation="executor",
+            resource="tool:chat"
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_inmemory_provider_still_works(self):
+        """
+        Test that InMemoryUserProvider fallback still works (fast path).
+
+        REGRESSION TEST: Ensure the fix didn't break existing InMemory behavior.
+        """
+        # Create AuthMiddleware with InMemoryUserProvider (default, no OpenFGA)
+        auth = AuthMiddleware(secret_key="test-secret")
+
+        # Test: InMemory admin user should have access
+        result = await auth.authorize(
+            user_id="user:admin",
+            relation="executor",
+            resource="tool:chat"
+        )
+        assert result is True
+
+        # Test: InMemory premium user should have access
+        result = await auth.authorize(
+            user_id="user:alice",
+            relation="executor",
+            resource="tool:chat"
+        )
+        assert result is True
+
+        # Test: InMemory unknown user should be denied
+        result = await auth.authorize(
+            user_id="user:unknown",
+            relation="executor",
+            resource="tool:chat"
+        )
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_authorize_openfga_takes_precedence_over_fallback(self):
+        """
+        Test that OpenFGA is used when available (fallback only when OpenFGA down).
+
+        SECURITY: Fallback should ONLY be used when OpenFGA is unavailable.
+        """
+        # Mock Keycloak provider
+        mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
+        mock_keycloak.get_user_by_username.return_value = UserData(
+            user_id="user:alice",
+            username="alice",
+            email="alice@keycloak.com",
+            roles=["user"],
+            active=True
+        )
+
+        # Mock OpenFGA client
+        mock_openfga = AsyncMock()
+        mock_openfga.check_permission.return_value = True
+
+        # Create AuthMiddleware with BOTH Keycloak AND OpenFGA
+        auth = AuthMiddleware(user_provider=mock_keycloak, openfga_client=mock_openfga)
+
+        # Test: Should use OpenFGA, NOT fallback
+        result = await auth.authorize(
+            user_id="user:alice",
+            relation="executor",
+            resource="tool:chat"
+        )
+
+        # Assert: OpenFGA was called
+        assert result is True
+        mock_openfga.check_permission.assert_called_once()
+
+        # Assert: Keycloak provider was NOT called (because OpenFGA worked)
+        mock_keycloak.get_user_by_username.assert_not_called()

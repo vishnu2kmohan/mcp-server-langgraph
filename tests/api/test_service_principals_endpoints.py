@@ -45,7 +45,7 @@ def mock_sp_manager():
         description="Nightly data processing",
         authentication_mode="client_credentials",
         associated_user_id="user:alice",
-        owner_user_id="user123",
+        owner_user_id="user:alice",  # OpenFGA format from shared fixture
         inherit_permissions=True,
         enabled=True,
         created_at=datetime.now(timezone.utc).isoformat(),
@@ -60,7 +60,7 @@ def mock_sp_manager():
             description="Nightly data processing",
             authentication_mode="client_credentials",
             associated_user_id="user:alice",
-            owner_user_id="user123",
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=True,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -71,7 +71,7 @@ def mock_sp_manager():
             description="Health checks and monitoring",
             authentication_mode="service_account_user",
             associated_user_id=None,
-            owner_user_id="user123",
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=False,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -95,14 +95,11 @@ def mock_sp_manager():
 
 
 @pytest.fixture
-def mock_current_user():
-    """Mock current user from JWT authentication"""
-    return {
-        "user_id": "user123",
-        "username": "alice",
-        "email": "alice@example.com",
-        "roles": ["admin"],  # Give admin role for testing (allows creating SPs for other users)
-    }
+def mock_admin_user(mock_current_user):
+    """Mock current user with admin role for tests that need elevated permissions"""
+    admin_user = mock_current_user.copy()
+    admin_user["roles"] = ["admin"]
+    return admin_user
 
 
 @pytest.fixture
@@ -120,6 +117,25 @@ def test_client(mock_sp_manager, mock_current_user):
     # Override dependencies with actual function references
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_current_user] = lambda: mock_current_user
+
+    return TestClient(app)
+
+
+@pytest.fixture
+def admin_test_client(mock_sp_manager, mock_admin_user):
+    """FastAPI TestClient with admin user for tests requiring elevated permissions"""
+    from fastapi import FastAPI
+
+    from mcp_server_langgraph.api.service_principals import router
+    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.core.dependencies import get_service_principal_manager
+
+    app = FastAPI()
+    app.include_router(router)
+
+    # Override dependencies with admin user
+    app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
+    app.dependency_overrides[get_current_user] = lambda: mock_admin_user
 
     return TestClient(app)
 
@@ -156,7 +172,7 @@ class TestCreateServicePrincipal:
         assert data["description"] == "Nightly data processing"
         assert data["authentication_mode"] == "client_credentials"
         assert data["associated_user_id"] == "user:alice"
-        assert data["owner_user_id"] == "user123"
+        assert data["owner_user_id"] == "user:alice"  # OpenFGA format
         assert data["inherit_permissions"] is True
         assert data["enabled"] is True
         assert "created_at" in data
@@ -228,7 +244,7 @@ class TestCreateServicePrincipal:
             description="Already exists",
             authentication_mode="client_credentials",
             associated_user_id=None,
-            owner_user_id="user123",
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=False,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -254,7 +270,7 @@ class TestCreateServicePrincipal:
             description="No secret",
             authentication_mode="client_credentials",
             associated_user_id=None,
-            owner_user_id="user123",
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=False,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -304,7 +320,7 @@ class TestListServicePrincipals:
         assert "client_secret" not in data[0]
 
         # Verify manager was called with current user
-        mock_sp_manager.list_service_principals.assert_called_once_with(owner_user_id="user123")
+        mock_sp_manager.list_service_principals.assert_called_once_with(owner_user_id="user:alice")  # OpenFGA format
 
     def test_list_service_principals_empty(self, test_client, mock_sp_manager):
         """Test listing when user has no service principals"""
@@ -338,7 +354,7 @@ class TestGetServicePrincipal:
             description="Nightly data processing",
             authentication_mode="client_credentials",
             associated_user_id=None,
-            owner_user_id="user123",
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=False,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -354,7 +370,7 @@ class TestGetServicePrincipal:
         # Verify response structure
         assert data["service_id"] == "batch-etl-job"
         assert data["name"] == "Batch ETL Job"
-        assert data["owner_user_id"] == "user123"
+        assert data["owner_user_id"] == "user:alice"  # OpenFGA format
 
         # Verify client_secret is NOT included
         assert "client_secret" not in data
@@ -411,7 +427,7 @@ class TestRotateServicePrincipalSecret:
             description="Nightly data processing",
             authentication_mode="client_credentials",
             associated_user_id=None,
-            owner_user_id="user123",  # Matches mock_current_user fixture
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=False,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -482,7 +498,7 @@ class TestDeleteServicePrincipal:
             description="Nightly data processing",
             authentication_mode="client_credentials",
             associated_user_id=None,
-            owner_user_id="user123",  # Matches mock_current_user fixture
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=False,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -535,8 +551,8 @@ class TestDeleteServicePrincipal:
 class TestAssociateServicePrincipalWithUser:
     """Tests for POST /api/v1/service-principals/{service_id}/associate-user"""
 
-    def test_associate_with_user_success(self, test_client, mock_sp_manager):
-        """Test successful user association"""
+    def test_associate_with_user_success(self, admin_test_client, mock_sp_manager):
+        """Test successful user association (requires admin role)"""
         # Mock updated SP after association
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
             service_id="batch-etl-job",
@@ -544,13 +560,13 @@ class TestAssociateServicePrincipalWithUser:
             description="Now associated",
             authentication_mode="client_credentials",
             associated_user_id="user:bob",  # Updated
-            owner_user_id="user123",
+            owner_user_id="user:alice",  # OpenFGA format from shared fixture
             inherit_permissions=True,
             enabled=True,
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
-        response = test_client.post(
+        response = admin_test_client.post(
             "/api/v1/service-principals/batch-etl-job/associate-user",
             params={
                 "user_id": "user:bob",
@@ -604,8 +620,8 @@ class TestAssociateServicePrincipalWithUser:
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_associate_with_user_update_fails(self, test_client, mock_sp_manager):
-        """Test error when retrieving updated SP fails after association"""
+    def test_associate_with_user_update_fails(self, admin_test_client, mock_sp_manager):
+        """Test error when retrieving updated SP fails after association (requires admin role)"""
         # First call returns existing SP, second call (after update) returns None
         mock_sp_manager.get_service_principal.side_effect = [
             MockServicePrincipal(
@@ -614,7 +630,7 @@ class TestAssociateServicePrincipalWithUser:
                 description="Test",
                 authentication_mode="client_credentials",
                 associated_user_id=None,
-                owner_user_id="user123",
+                owner_user_id="user:alice",  # OpenFGA format from shared fixture
                 inherit_permissions=False,
                 enabled=True,
                 created_at=datetime.now(timezone.utc).isoformat(),
@@ -622,7 +638,7 @@ class TestAssociateServicePrincipalWithUser:
             None,  # Second call fails
         ]
 
-        response = test_client.post(
+        response = admin_test_client.post(
             "/api/v1/service-principals/batch-etl-job/associate-user",
             params={"user_id": "user:bob"},
         )

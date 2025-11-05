@@ -30,6 +30,17 @@ pytestmark = [pytest.mark.e2e, pytest.mark.scim]
 
 
 @pytest.fixture(scope="module")
+async def api_server_available() -> bool:
+    """Check if API server is available for E2E tests"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{API_BASE_URL}/health", timeout=5.0)
+            return response.status_code == 200
+    except (httpx.ConnectError, httpx.TimeoutException):
+        return False
+
+
+@pytest.fixture(scope="module")
 async def keycloak_available() -> bool:
     """Check if Keycloak is available for E2E tests"""
     try:
@@ -41,11 +52,18 @@ async def keycloak_available() -> bool:
 
 
 @pytest.fixture(scope="module")
-def skip_if_no_services(keycloak_available: bool) -> None:
+def skip_if_no_services(api_server_available: bool, keycloak_available: bool) -> None:
     """Skip E2E tests if required services aren't running"""
+    missing_services = []
+    if not api_server_available:
+        missing_services.append(f"API server ({API_BASE_URL})")
     if not keycloak_available:
+        missing_services.append(f"Keycloak ({KEYCLOAK_TEST_URL})")
+
+    if missing_services:
         pytest.skip(
-            "E2E tests require running services. " "Start with: docker-compose -f docker-compose.keycloak-test.yml up -d"
+            f"E2E tests require running services. Missing: {', '.join(missing_services)}. "
+            "Start with: docker-compose -f docker-compose.keycloak-test.yml up -d"
         )
 
 

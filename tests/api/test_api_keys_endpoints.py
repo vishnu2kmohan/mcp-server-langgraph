@@ -85,17 +85,6 @@ def mock_keycloak_client():
 
 
 @pytest.fixture
-def mock_current_user():
-    """Mock current user from JWT authentication"""
-    return {
-        "user_id": "user:alice",  # OpenFGA format
-        "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",  # Keycloak UUID
-        "username": "alice",
-        "email": "alice@example.com",
-    }
-
-
-@pytest.fixture
 def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     """FastAPI TestClient with mocked dependencies"""
     from fastapi import FastAPI
@@ -149,7 +138,7 @@ class TestCreateAPIKey:
 
         # Verify manager was called correctly
         mock_api_key_manager.create_api_key.assert_called_once_with(
-            user_id="user123",
+            user_id="8c7b4e5d-1234-5678-abcd-ef1234567890",  # keycloak_id from fixture
             name="Test Key",
             expires_days=365,
         )
@@ -168,7 +157,7 @@ class TestCreateAPIKey:
 
         # Verify custom expiration was passed
         mock_api_key_manager.create_api_key.assert_called_once_with(
-            user_id="user123",
+            user_id="8c7b4e5d-1234-5678-abcd-ef1234567890",  # keycloak_id from fixture
             name="Short-lived Key",
             expires_days=30,
         )
@@ -250,7 +239,7 @@ class TestListAPIKeys:
         assert data[1]["last_used"] is not None
 
         # Verify manager was called correctly
-        mock_api_key_manager.list_api_keys.assert_called_once_with("user123")
+        mock_api_key_manager.list_api_keys.assert_called_once_with("8c7b4e5d-1234-5678-abcd-ef1234567890")  # keycloak_id from fixture
 
     def test_list_api_keys_empty(self, test_client, mock_api_key_manager):
         """Test listing when user has no API keys"""
@@ -291,7 +280,7 @@ class TestRotateAPIKey:
 
         # Verify manager was called correctly
         mock_api_key_manager.rotate_api_key.assert_called_once_with(
-            user_id="user123",
+            user_id="8c7b4e5d-1234-5678-abcd-ef1234567890",  # keycloak_id from fixture
             key_id="key_12345",
         )
 
@@ -332,7 +321,7 @@ class TestRevokeAPIKey:
 
         # Verify manager was called correctly
         mock_api_key_manager.revoke_api_key.assert_called_once_with(
-            user_id="user123",
+            user_id="8c7b4e5d-1234-5678-abcd-ef1234567890",  # keycloak_id from fixture
             key_id="key_12345",
         )
 
@@ -371,14 +360,14 @@ class TestValidateAPIKey:
         assert "access_token" in data
         assert data["access_token"].startswith("eyJ")  # JWT format
         assert data["expires_in"] == 900
-        assert data["user_id"] == "user123"
+        assert data["user_id"] == "user:alice"  # OpenFGA format from user_info["user_id"]
         assert data["username"] == "alice"
 
         # Verify validation was called
         mock_api_key_manager.validate_and_get_user.assert_called_once_with("mcp_test_key_abcdef123456")
 
-        # Verify JWT was issued
-        mock_keycloak_client.issue_token_for_user.assert_called_once_with("user123")
+        # Verify JWT was issued with keycloak_id (UUID)
+        mock_keycloak_client.issue_token_for_user.assert_called_once_with("8c7b4e5d-1234-5678-abcd-ef1234567890")
 
     def test_validate_api_key_missing_header(self, test_client):
         """Test validation without X-API-Key header"""

@@ -245,18 +245,73 @@ class AuthMiddleware:
             # Extract username from user_id
             username = user_id.split(":")[-1] if ":" in user_id else user_id
 
-            if username not in self.users_db:
-                return False
+            # Get user data - try in-memory first, then query provider
+            user_data = None
+            user_roles = []
 
-            user = self.users_db[username]
+            if isinstance(self.user_provider, InMemoryUserProvider):
+                # Fast path: Use in-memory users_db
+                if username not in self.users_db:
+                    logger.warning(
+                        "Fallback authorization denied - user not found",
+                        extra={"user_id": user_id, "username": username, "provider": "InMemory"},
+                    )
+                    return False
+                user = self.users_db[username]
+                user_roles = user["roles"]
+
+            else:
+                # For external providers (Keycloak, etc.): Query the provider
+                try:
+                    user_data = await self.user_provider.get_user_by_username(username)
+                    if not user_data:
+                        logger.warning(
+                            "Fallback authorization denied - user not found in provider",
+                            extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
+                        )
+                        return False
+                    user_roles = user_data.roles
+                    logger.info(
+                        "Fetched user from provider for fallback authorization",
+                        extra={
+                            "user_id": user_id,
+                            "username": username,
+                            "provider": type(self.user_provider).__name__,
+                            "roles": user_roles,
+                        },
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to fetch user from provider for fallback authorization: {e}",
+                        extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
+                        exc_info=True,
+                    )
+                    # Fail closed - deny access if we can't verify user
+                    return False
 
             # Admin users have access to everything
-            if "admin" in user["roles"]:
+            if "admin" in user_roles:
+                logger.info(
+                    "Fallback authorization granted - admin user",
+                    extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
+                )
                 return True
 
             # Basic resource-based checks
             if relation == "executor" and resource.startswith("tool:"):
-                return "premium" in user["roles"] or "user" in user["roles"]
+                authorized = "premium" in user_roles or "user" in user_roles
+                if authorized:
+                    logger.info(
+                        "Fallback authorization granted - tool executor",
+                        extra={
+                            "user_id": user_id,
+                            "username": username,
+                            "relation": relation,
+                            "resource": resource,
+                            "roles": user_roles,
+                        },
+                    )
+                return authorized
 
             if relation in ("viewer", "editor") and resource.startswith("conversation:"):
                 # SECURITY: Scope conversation access by ownership in fallback mode
@@ -268,16 +323,28 @@ class AuthMiddleware:
                 # 2. Thread explicitly belongs to this user (prefixed with username)
                 # 3. User is accessing their own user-scoped conversations
                 if thread_id == "default" or thread_id == "":
+                    logger.info(
+                        "Fallback authorization granted - default conversation",
+                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
+                    )
                     return True
 
                 # Check if conversation belongs to this user
                 # Format: "conversation:username_thread" or "conversation:user:username_thread"
                 if thread_id.startswith(f"{username}_"):
+                    logger.info(
+                        "Fallback authorization granted - user-owned conversation",
+                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
+                    )
                     return True
 
                 # Also support user:username prefix in thread_id
                 user_id_normalized = user_id.split(":")[-1] if ":" in user_id else user_id
                 if thread_id.startswith(f"{user_id_normalized}_"):
+                    logger.info(
+                        "Fallback authorization granted - user-owned conversation (normalized)",
+                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
+                    )
                     return True
 
                 # Deny access to conversations not owned by this user
@@ -293,6 +360,11 @@ class AuthMiddleware:
                 )
                 return False
 
+            # Default deny
+            logger.warning(
+                "Fallback authorization denied - no matching rule",
+                extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource, "roles": user_roles},
+            )
             return False
 
     def _get_mock_resources(self, user_id: str, relation: str, resource_type: str) -> list[str]:

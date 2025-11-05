@@ -273,7 +273,7 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     return state
 
 
-def _create_agent_graph_singleton() -> Any:  # noqa: C901
+def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> Any:  # noqa: C901
     """
     Create the LangGraph agent using functional API with LiteLLM and observability.
 
@@ -282,10 +282,17 @@ def _create_agent_graph_singleton() -> Any:  # noqa: C901
     2. Take Action: route_input → use_tools → generate_response
     3. Verify Work: verify_response node
     4. Repeat: refine_response loop (max 3 iterations)
+
+    Args:
+        settings_override: Optional Settings instance to override global settings.
+                          If None, uses the global settings object.
     """
 
+    # Use override settings if provided, otherwise use global settings
+    effective_settings = settings_override if settings_override is not None else settings
+
     # Initialize the model via LiteLLM factory
-    model = create_llm_from_config(settings)
+    model = create_llm_from_config(effective_settings)
 
     # Initialize Pydantic AI agent if available
     pydantic_agent = _initialize_pydantic_agent()  # type: ignore[func-returns-value]
@@ -297,7 +304,7 @@ def _create_agent_graph_singleton() -> Any:  # noqa: C901
     output_verifier = OutputVerifier(quality_threshold=0.7)
 
     # Initialize dynamic context loader if enabled
-    enable_dynamic_loading = getattr(settings, "enable_dynamic_context_loading", False)
+    enable_dynamic_loading = getattr(effective_settings, "enable_dynamic_context_loading", False)
     context_loader = None
     if enable_dynamic_loading and DYNAMIC_CONTEXT_AVAILABLE:
         try:
@@ -308,9 +315,9 @@ def _create_agent_graph_singleton() -> Any:  # noqa: C901
             enable_dynamic_loading = False
 
     # Feature flags for new capabilities
-    enable_context_compaction = getattr(settings, "enable_context_compaction", True)
-    enable_verification = getattr(settings, "enable_verification", True)
-    max_refinement_attempts = getattr(settings, "max_refinement_attempts", 3)
+    enable_context_compaction = getattr(effective_settings, "enable_context_compaction", True)
+    enable_verification = getattr(effective_settings, "enable_verification", True)
+    max_refinement_attempts = getattr(effective_settings, "max_refinement_attempts", 3)
 
     # Define node functions
 
@@ -334,8 +341,8 @@ def _create_agent_graph_singleton() -> Any:  # noqa: C901
                 loaded_contexts = await search_and_load_context(
                     query=query,
                     loader=context_loader,
-                    top_k=getattr(settings, "dynamic_context_top_k", 3),
-                    max_tokens=getattr(settings, "dynamic_context_max_tokens", 2000),
+                    top_k=getattr(effective_settings, "dynamic_context_top_k", 3),
+                    max_tokens=getattr(effective_settings, "dynamic_context_max_tokens", 2000),
                 )
 
                 if loaded_contexts:
@@ -919,8 +926,8 @@ def create_agent_graph_impl(settings_to_use: Any) -> Any:
     """
     Implementation of agent graph creation with specific settings.
 
-    This is a wrapper around the existing _create_agent_graph_singleton() logic
-    but accepting settings parameter.
+    This properly threads the settings through to the agent graph creation,
+    enabling dependency injection for testing and multi-tenant deployments.
 
     Args:
         settings_to_use: Settings instance to use
@@ -928,9 +935,8 @@ def create_agent_graph_impl(settings_to_use: Any) -> Any:
     Returns:
         Compiled LangGraph StateGraph
     """
-    # For now, use the existing singleton function
-    # TODO: Refactor _create_agent_graph_singleton() to accept settings parameter
-    return _create_agent_graph_singleton()
+    # Pass settings to the singleton function for proper dependency injection
+    return _create_agent_graph_singleton(settings_override=settings_to_use)
 
 
 def create_agent(

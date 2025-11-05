@@ -96,6 +96,33 @@ def container(test_container):
     return create_test_container()
 
 
+# ==============================================================================
+# Shared Authentication Fixtures
+# ==============================================================================
+
+
+@pytest.fixture
+def mock_current_user():
+    """
+    Shared mock current user fixture for API endpoint tests.
+
+    Provides a consistent user identity with both OpenFGA and Keycloak formats:
+    - user_id: OpenFGA format (user:{username})
+    - keycloak_id: Keycloak UUID format
+    - username: Plain username
+    - email: User email
+
+    This fixture ensures consistency across all API tests and matches the
+    actual identity model used in production.
+    """
+    return {
+        "user_id": "user:alice",  # OpenFGA format
+        "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",  # Keycloak UUID
+        "username": "alice",
+        "email": "alice@example.com",
+    }
+
+
 # Legacy observability initialization (DEPRECATED - will be removed after migration)
 # Kept temporarily for backward compatibility with existing tests
 def pytest_configure(config):
