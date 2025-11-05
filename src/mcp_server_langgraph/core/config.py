@@ -289,6 +289,13 @@ class Settings(BaseSettings):  # type: ignore[misc]
     session_sliding_window: bool = True
     session_max_concurrent: int = 5  # Max concurrent sessions per user
 
+    # API Key Cache Configuration (ADR-0034: Redis-backed API key lookup)
+    # Improves API key validation from O(users×keys) to O(1)
+    # Redis DB allocation: 0=sessions, 1=checkpoints, 2=api-key-cache, 3=rate-limiting
+    api_key_cache_enabled: bool = True  # Enable Redis cache for API key validation
+    api_key_cache_db: int = 2  # Redis database number for API key cache
+    api_key_cache_ttl: int = 3600  # Cache TTL in seconds (1 hour)
+
     # Storage Backend Configuration (for compliance data retention)
     # Conversation Storage (uses checkpoint backend by default)
     conversation_storage_backend: str = "checkpoint"  # "checkpoint" (uses checkpoint_backend), "database"

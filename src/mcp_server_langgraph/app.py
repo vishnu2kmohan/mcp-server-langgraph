@@ -39,18 +39,19 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
-    # CORS middleware - use settings configuration
-    # Only enable CORS if origins are configured (secure by default)
-    if settings.cors_allowed_origins:
+    # CORS middleware - use settings configuration with environment-aware defaults
+    # get_cors_origins() provides localhost origins in dev, empty list in production
+    cors_origins = settings.get_cors_origins()
+    if cors_origins:
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=settings.cors_allowed_origins,
+            allow_origins=cors_origins,
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
         try:
-            logger.info(f"CORS enabled for origins: {settings.cors_allowed_origins}")
+            logger.info(f"CORS enabled for origins: {cors_origins}")
         except RuntimeError:
             # Observability not initialized yet
             pass

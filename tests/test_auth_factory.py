@@ -109,6 +109,14 @@ class TestCreateUserProvider:
         with pytest.raises(ValueError, match="Keycloak client secret required"):
             create_user_provider(mock_settings)
 
+    def test_create_keycloak_provider_missing_admin_password(self, mock_settings):
+        """Test error when Keycloak admin password missing"""
+        mock_settings.auth_provider = "keycloak"
+        mock_settings.keycloak_admin_password = None
+
+        with pytest.raises(ValueError, match="Keycloak admin password required"):
+            create_user_provider(mock_settings)
+
     def test_create_provider_invalid_type(self, mock_settings):
         """Test error for unknown provider type"""
         mock_settings.auth_provider = "invalid_provider"

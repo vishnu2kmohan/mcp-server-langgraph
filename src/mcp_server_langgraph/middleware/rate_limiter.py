@@ -44,8 +44,9 @@ def get_user_id_from_jwt(request: Request) -> Optional[str]:
     """
     Extract user ID from JWT token in request.
 
-    Uses the auth middleware's verified user if available, or attempts
-    to verify the token using the KeycloakClient for RS256 tokens.
+    IMPORTANT: This function is synchronous and relies on request.state.user
+    being set by AuthMiddleware. It does NOT attempt async token verification
+    to avoid event loop issues in slowapi's synchronous context.
 
     Args:
         request: FastAPI request object
@@ -58,34 +59,8 @@ def get_user_id_from_jwt(request: Request) -> Optional[str]:
         if hasattr(request.state, "user") and request.state.user:
             return request.state.user.get("user_id")  # type: ignore[no-any-return]
 
-        # Try to validate token with auth middleware
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return None
-
-        token = auth_header.replace("Bearer ", "")
-
-        # Import auth middleware for token verification
-        try:
-            from mcp_server_langgraph.auth.middleware import get_auth_middleware
-
-            auth = get_auth_middleware()
-            # Use asyncio to run async verification in sync context
-            import asyncio
-
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                # No event loop in current thread, create new one
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
-            verification = loop.run_until_complete(auth.verify_token(token))
-            if verification.valid and verification.payload:
-                return verification.payload.get("sub") or verification.payload.get("user_id")  # type: ignore[no-any-return]
-        except Exception as e:
-            logger.debug(f"Auth middleware verification failed, falling back: {e}")
-
+        # No fallback to token verification - auth middleware must run first
+        # This avoids event loop issues with slowapi's synchronous key_func
         return None
 
     except Exception as e:
@@ -97,8 +72,9 @@ def get_user_tier(request: Request) -> str:
     """
     Determine user tier from JWT claims.
 
-    Uses the auth middleware's verified user if available, or attempts
-    to verify the token using the KeycloakClient for RS256 tokens.
+    IMPORTANT: This function is synchronous and relies on request.state.user
+    being set by AuthMiddleware. It does NOT attempt async token verification
+    to avoid event loop issues in slowapi's synchronous context.
 
     Args:
         request: FastAPI request object
@@ -125,37 +101,8 @@ def get_user_tier(request: Request) -> str:
             tier = user.get("tier") or user.get("plan") or "free"
             return tier if tier in RATE_LIMITS else "free"
 
-        # Try to validate token with auth middleware
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return "anonymous"
-
-        token = auth_header.replace("Bearer ", "")
-
-        # Import auth middleware for token verification
-        try:
-            from mcp_server_langgraph.auth.middleware import get_auth_middleware
-
-            auth = get_auth_middleware()
-            # Use asyncio to run async verification in sync context
-            import asyncio
-
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                # No event loop in current thread, create new one
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
-            verification = loop.run_until_complete(auth.verify_token(token))
-            if verification.valid and verification.payload:
-                payload = verification.payload
-                # Extract tier from JWT payload
-                tier = payload.get("tier") or payload.get("plan") or "free"
-                return tier if tier in RATE_LIMITS else "free"
-        except Exception as e:
-            logger.debug(f"Auth middleware verification failed, falling back to anonymous: {e}")
-
+        # No fallback to token verification - auth middleware must run first
+        # This avoids event loop issues with slowapi's synchronous default_limits
         return "anonymous"
 
     except Exception as e:
@@ -257,7 +204,7 @@ limiter = Limiter(
 )
 
 
-def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):  # type: ignore[no-untyped-def]
+async def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):  # type: ignore[no-untyped-def]
     """
     Custom handler for rate limit exceeded errors.
 

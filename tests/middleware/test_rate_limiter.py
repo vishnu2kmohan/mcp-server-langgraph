@@ -111,7 +111,23 @@ class TestRateLimitConstants:
 
 
 class TestUserIDExtraction:
-    """Test user ID extraction from JWT"""
+    """
+    Test user ID extraction from JWT
+
+    NOTE: get_user_id_from_jwt() relies on request.state.user being set by
+    AuthMiddleware to avoid event loop issues in slowapi's synchronous context.
+    """
+
+    def test_get_user_id_from_request_state(self):
+        """Test extracting user ID from request.state.user (preferred method)"""
+        # Test using request.state.user (already authenticated)
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice"}
+        request.headers = {}
+
+        user_id = get_user_id_from_jwt(request)
+        assert user_id == "user:alice"
 
     def test_get_user_id_from_valid_jwt(self):
         """Test extracting user ID from valid JWT"""
@@ -172,7 +188,23 @@ class TestUserIDExtraction:
 
 
 class TestUserTierExtraction:
-    """Test user tier extraction from JWT"""
+    """
+    Test user tier extraction from JWT
+
+    NOTE: get_user_tier() relies on request.state.user being set by
+    AuthMiddleware to avoid event loop issues in slowapi's synchronous context.
+    """
+
+    def test_get_tier_from_request_state(self):
+        """Test extracting tier from request.state.user (preferred method)"""
+        # Test using request.state.user (already authenticated)
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {"roles": ["premium"]}
+        request.headers = {}
+
+        tier = get_user_tier(request)
+        assert tier == "premium"
 
     def test_get_tier_from_valid_jwt(self):
         """Test extracting tier from valid JWT"""

@@ -551,3 +551,151 @@ class TestAPIKeyValidationPagination:
 
         # Should only call search_users once (found on first page)
         assert mock_keycloak_client.search_users.call_count == 1, "Should stop on first match"
+
+
+@pytest.mark.unit
+class TestAPIKeyRedisCache:
+    """Test Redis caching for API key validation (performance optimization)"""
+
+    @pytest.fixture
+    def mock_redis_client(self):
+        """Mock Redis client"""
+        redis_mock = AsyncMock()
+        redis_mock.get = AsyncMock(return_value=None)
+        redis_mock.setex = AsyncMock()
+        redis_mock.delete = AsyncMock()
+        return redis_mock
+
+    @pytest.fixture
+    def api_key_manager_with_cache(self, mock_keycloak_client, mock_redis_client):
+        """Create APIKeyManager with Redis cache enabled"""
+        return APIKeyManager(
+            keycloak_client=mock_keycloak_client,
+            redis_client=mock_redis_client,
+            cache_ttl=3600,
+            cache_enabled=True,
+        )
+
+    @pytest.mark.asyncio
+    async def test_cache_hit_skips_keycloak_lookup(self, api_key_manager_with_cache, mock_keycloak_client, mock_redis_client):
+        """Test that cache hit avoids expensive Keycloak pagination"""
+        import json
+
+        # Arrange
+        api_key = "mcpkey_live_test123"
+        cached_user_info = {
+            "user_id": "user:alice",
+            "keycloak_id": "uuid-123",
+            "username": "alice",
+            "email": "alice@example.com",
+            "key_id": "abc123",
+            "expires_at": "2099-12-31T23:59:59",
+        }
+
+        # Mock Redis cache hit
+        mock_redis_client.get.return_value = json.dumps(cached_user_info).encode()
+
+        # Act
+        result = await api_key_manager_with_cache.validate_and_get_user(api_key)
+
+        # Assert - should return cached data
+        assert result == cached_user_info
+        # Should NOT call Keycloak
+        mock_keycloak_client.search_users.assert_not_called()
+        # Should have called Redis get
+        mock_redis_client.get.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_cache_miss_falls_back_to_keycloak(self, api_key_manager_with_cache, mock_keycloak_client, mock_redis_client):
+        """Test that cache miss falls back to Keycloak and caches result"""
+        # Arrange
+        api_key = "mcpkey_live_test123"
+        key_hash = api_key_manager_with_cache.hash_api_key(api_key)
+
+        # Mock Keycloak user with API key
+        mock_user = {
+            "id": "uuid-123",
+            "username": "alice",
+            "email": "alice@example.com",
+            "attributes": {
+                "apiKeys": [f"key:abc123:{key_hash}"],
+                "apiKey_abc123_expiresAt": "2099-12-31T23:59:59",
+            },
+        }
+
+        # Mock Redis cache miss
+        mock_redis_client.get.return_value = None
+
+        # Mock Keycloak search
+        mock_keycloak_client.search_users = AsyncMock(return_value=[mock_user])
+        mock_keycloak_client.update_user_attributes = AsyncMock()
+
+        # Act
+        result = await api_key_manager_with_cache.validate_and_get_user(api_key)
+
+        # Assert
+        assert result is not None
+        assert result["username"] == "alice"
+        # Should have called Keycloak
+        mock_keycloak_client.search_users.assert_called()
+        # Should have cached the result
+        mock_redis_client.setex.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_revoke_invalidates_cache(self, api_key_manager_with_cache, mock_keycloak_client, mock_redis_client):
+        """Test that revoking API key invalidates Redis cache"""
+        # Arrange
+        user_id = "user:alice"
+        key_id = "abc123"
+        cache_hash = "sha256hash123"
+
+        mock_keycloak_client.get_user_attributes = AsyncMock(
+            return_value={
+                "apiKeys": [f"key:{key_id}:bcrypthash"],
+                f"apiKey_{key_id}_cacheHash": cache_hash,
+                f"apiKey_{key_id}_name": "Test Key",
+                f"apiKey_{key_id}_created": "2024-01-01T00:00:00",
+                f"apiKey_{key_id}_expiresAt": "2025-01-01T00:00:00",
+            }
+        )
+        mock_keycloak_client.update_user_attributes = AsyncMock()
+
+        # Act
+        await api_key_manager_with_cache.revoke_api_key(user_id, key_id)
+
+        # Assert - should have invalidated cache
+        mock_redis_client.delete.assert_called_once_with(f"apikey:{cache_hash}")
+
+    @pytest.mark.asyncio
+    async def test_cache_disabled_skips_redis(self, mock_keycloak_client, mock_redis_client):
+        """Test that disabling cache skips Redis operations"""
+        # Arrange - cache disabled
+        manager = APIKeyManager(
+            keycloak_client=mock_keycloak_client,
+            redis_client=mock_redis_client,
+            cache_enabled=False,
+        )
+
+        api_key = "mcpkey_live_test123"
+        key_hash = manager.hash_api_key(api_key)
+
+        mock_user = {
+            "id": "uuid-123",
+            "username": "alice",
+            "attributes": {
+                "apiKeys": [f"key:abc123:{key_hash}"],
+                "apiKey_abc123_expiresAt": "2099-12-31T23:59:59",
+            },
+        }
+
+        mock_keycloak_client.search_users = AsyncMock(return_value=[mock_user])
+        mock_keycloak_client.update_user_attributes = AsyncMock()
+
+        # Act
+        result = await manager.validate_and_get_user(api_key)
+
+        # Assert
+        assert result is not None
+        # Should NOT have called Redis
+        mock_redis_client.get.assert_not_called()
+        mock_redis_client.setex.assert_not_called()

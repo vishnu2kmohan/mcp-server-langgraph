@@ -129,8 +129,8 @@ class TestMCPAgentServerInitialization:
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.OpenFGAClient")
-    def test_init_fails_without_jwt_secret(self, mock_openfga_class, mock_settings_patch):
-        """Test initialization fails without JWT secret (fail-closed security)"""
+    def test_init_fails_without_jwt_secret_inmemory(self, mock_openfga_class, mock_settings_patch):
+        """Test initialization fails without JWT secret for in-memory auth provider"""
         from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
         # Properly configure mock settings with actual values
@@ -139,13 +139,38 @@ class TestMCPAgentServerInitialization:
         mock_settings_patch.openfga_store_id = "test-store"
         mock_settings_patch.openfga_model_id = "test-model"
         mock_settings_patch.openfga_api_url = "http://localhost:8080"  # String, not Mock
-        mock_settings_patch.auth_provider = "in_memory"
+        mock_settings_patch.auth_provider = "inmemory"
 
         # Mock OpenFGA client to prevent actual initialization
         mock_openfga_class.return_value = AsyncMock()
 
-        with pytest.raises(ValueError, match="JWT secret key not configured"):
+        with pytest.raises(ValueError, match="JWT secret key not configured for in-memory auth provider"):
             MCPAgentServer()
+
+    @patch("mcp_server_langgraph.mcp.server_stdio.settings")
+    @patch("mcp_server_langgraph.mcp.server_stdio.OpenFGAClient")
+    def test_init_succeeds_without_jwt_secret_keycloak(self, mock_openfga_class, mock_settings_patch):
+        """Test initialization succeeds without JWT secret when using Keycloak (uses RS256)"""
+        from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
+
+        # Configure mock settings for Keycloak
+        mock_settings_patch.jwt_secret_key = ""  # Not required for Keycloak
+        mock_settings_patch.environment = "development"
+        mock_settings_patch.openfga_store_id = "test-store"
+        mock_settings_patch.openfga_model_id = "test-model"
+        mock_settings_patch.openfga_api_url = "http://localhost:8080"
+        mock_settings_patch.auth_provider = "keycloak"
+
+        # Mock OpenFGA client
+        mock_openfga_class.return_value = AsyncMock()
+
+        # Should succeed without JWT_SECRET_KEY for Keycloak
+        try:
+            server = MCPAgentServer()
+            assert server is not None
+        except ValueError as e:
+            if "JWT secret key" in str(e):
+                pytest.fail(f"Should not require JWT_SECRET_KEY for Keycloak auth: {e}")
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     def test_init_fails_production_without_openfga(self, mock_settings_patch):

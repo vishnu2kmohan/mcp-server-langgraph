@@ -22,7 +22,7 @@ from pydantic import AnyUrl, BaseModel, Field
 from mcp_server_langgraph.auth.factory import create_auth_middleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
-from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 from mcp_server_langgraph.utils.response_optimizer import format_response
 

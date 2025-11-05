@@ -80,6 +80,13 @@ def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGACli
         if not settings.keycloak_client_secret:
             raise ValueError("CRITICAL: Keycloak client secret required. " "Set KEYCLOAK_CLIENT_SECRET environment variable.")
 
+        if not settings.keycloak_admin_password:
+            raise ValueError(
+                "CRITICAL: Keycloak admin password required for admin API operations. "
+                "Set KEYCLOAK_ADMIN_PASSWORD environment variable. "
+                "This is needed for user management, API key operations, and attribute updates."
+            )
+
         # Build Keycloak configuration from settings
         keycloak_config = KeycloakConfig(
             server_url=settings.keycloak_server_url,

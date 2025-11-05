@@ -11,11 +11,16 @@ See ADR-0034 for API key to JWT exchange pattern.
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import bcrypt
+import redis.asyncio as redis
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
+from mcp_server_langgraph.observability.telemetry import logger
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
 
 
 @dataclass
@@ -37,14 +42,26 @@ class APIKeyManager:
     MAX_KEYS_PER_USER = 5
     BCRYPT_ROUNDS = 12
 
-    def __init__(self, keycloak_client: KeycloakClient):
+    def __init__(
+        self,
+        keycloak_client: KeycloakClient,
+        redis_client: Optional["Redis"] = None,
+        cache_ttl: int = 3600,
+        cache_enabled: bool = True,
+    ):
         """
         Initialize API key manager
 
         Args:
             keycloak_client: Keycloak client for user attribute storage
+            redis_client: Optional Redis client for API key lookup cache
+            cache_ttl: Cache TTL in seconds (default: 3600 = 1 hour)
+            cache_enabled: Enable/disable Redis caching (default: True)
         """
         self.keycloak = keycloak_client
+        self.redis = redis_client
+        self.cache_ttl = cache_ttl
+        self.cache_enabled = cache_enabled and redis_client is not None
 
     def generate_api_key(self, prefix: str = DEFAULT_PREFIX) -> str:
         """
@@ -122,8 +139,11 @@ class APIKeyManager:
         # Generate new API key
         api_key = self.generate_api_key()
 
-        # Hash for storage
+        # Hash for storage (bcrypt for security verification)
         key_hash = self.hash_api_key(api_key)
+
+        # Hash for cache invalidation (SHA256 for fast lookup)
+        cache_hash = self._hash_api_key_for_cache(api_key)
 
         # Generate key ID
         key_id = secrets.token_hex(8)
@@ -138,6 +158,7 @@ class APIKeyManager:
         attributes[f"apiKey_{key_id}_name"] = name
         attributes[f"apiKey_{key_id}_created"] = created_at.isoformat()
         attributes[f"apiKey_{key_id}_expiresAt"] = expires_at.isoformat()
+        attributes[f"apiKey_{key_id}_cacheHash"] = cache_hash  # For cache invalidation on revoke
 
         await self.keycloak.update_user_attributes(user_id, attributes)
 
@@ -147,6 +168,86 @@ class APIKeyManager:
             "name": name,
             "expires_at": expires_at.isoformat(),
         }
+
+    async def _get_from_cache(self, api_key_hash: str) -> Optional[Dict[str, Any]]:
+        """
+        Get user info from Redis cache using API key hash
+
+        Args:
+            api_key_hash: SHA256 hash of the API key (for cache key)
+
+        Returns:
+            Cached user info dict or None if not found
+        """
+        if not self.cache_enabled or not self.redis:
+            return None
+
+        try:
+            cache_key = f"apikey:{api_key_hash}"
+            cached_data = await self.redis.get(cache_key)
+            if cached_data:
+                import json
+
+                logger.debug(f"API key cache hit for hash: {api_key_hash[:16]}...")
+                return json.loads(cached_data)  # type: ignore[no-any-return]
+        except Exception as e:
+            logger.warning(f"Redis cache read failed: {e}")
+
+        return None
+
+    async def _set_in_cache(self, api_key_hash: str, user_info: Dict[str, Any]) -> None:
+        """
+        Store user info in Redis cache
+
+        Args:
+            api_key_hash: SHA256 hash of the API key (for cache key)
+            user_info: User information to cache
+        """
+        if not self.cache_enabled or not self.redis:
+            return
+
+        try:
+            import json
+
+            cache_key = f"apikey:{api_key_hash}"
+            await self.redis.setex(cache_key, self.cache_ttl, json.dumps(user_info))
+            logger.debug(f"API key cached for hash: {api_key_hash[:16]}...")
+        except Exception as e:
+            logger.warning(f"Redis cache write failed: {e}")
+
+    async def _invalidate_cache(self, api_key_hash: str) -> None:
+        """
+        Invalidate cached user info for an API key
+
+        Args:
+            api_key_hash: SHA256 hash of the API key
+        """
+        if not self.cache_enabled or not self.redis:
+            return
+
+        try:
+            cache_key = f"apikey:{api_key_hash}"
+            await self.redis.delete(cache_key)
+            logger.debug(f"API key cache invalidated for hash: {api_key_hash[:16]}...")
+        except Exception as e:
+            logger.warning(f"Redis cache invalidation failed: {e}")
+
+    def _hash_api_key_for_cache(self, api_key: str) -> str:
+        """
+        Create a deterministic hash of API key for cache lookup
+
+        Uses SHA256 for fast, deterministic hashing (not for security).
+        bcrypt is still used for secure storage verification.
+
+        Args:
+            api_key: Plain API key
+
+        Returns:
+            SHA256 hex digest
+        """
+        import hashlib
+
+        return hashlib.sha256(api_key.encode()).hexdigest()
 
     async def validate_and_get_user(self, api_key: str) -> Optional[Dict[str, Any]]:
         """
@@ -159,10 +260,26 @@ class APIKeyManager:
             Dictionary with user_id, username, email, key_id if valid, None otherwise
 
         Note:
-            This implementation paginates through all users to find matching API keys.
-            For production deployments with >1000 users, consider implementing a
-            Redis-backed lookup cache (see ADR-0034 for details).
+            This implementation uses Redis cache for O(1) lookups when enabled.
+            Falls back to paginating through all users if cache miss occurs.
+            See ADR-0034 for Redis-backed API key cache design.
         """
+        # Try cache first (O(1) lookup)
+        api_key_hash = self._hash_api_key_for_cache(api_key)
+        cached_user = await self._get_from_cache(api_key_hash)
+        if cached_user:
+            # Verify expiration from cache
+            expires_at_str = cached_user.get("expires_at")
+            if expires_at_str:
+                expires_at = datetime.fromisoformat(expires_at_str)
+                if datetime.utcnow() > expires_at:
+                    # Expired, invalidate cache and continue to full search
+                    await self._invalidate_cache(api_key_hash)
+                else:
+                    return cached_user
+
+            # No expiration or still valid
+            return cached_user
         # Paginate through all users to find matching key hash
         first = 0
         max_per_page = 100
@@ -201,13 +318,19 @@ class APIKeyManager:
                         attributes[f"apiKey_{key_id}_lastUsed"] = datetime.utcnow().isoformat()
                         await self.keycloak.update_user_attributes(user["id"], attributes)
 
-                        return {
+                        user_info = {
                             "user_id": f"user:{user['username']}",  # OpenFGA format
                             "keycloak_id": user["id"],  # Raw UUID for Keycloak Admin API
                             "username": user["username"],
                             "email": user.get("email"),
                             "key_id": key_id,
+                            "expires_at": expires_at_str,  # Store for cache validation
                         }
+
+                        # Cache for future lookups (O(1) next time)
+                        await self._set_in_cache(api_key_hash, user_info)
+
+                        return user_info
 
             # Move to next page
             first += max_per_page
@@ -226,6 +349,11 @@ class APIKeyManager:
         attributes = await self.keycloak.get_user_attributes(user_id)
         api_keys = attributes.get("apiKeys", [])
 
+        # Invalidate cache if hash is stored
+        cache_hash = attributes.get(f"apiKey_{key_id}_cacheHash")
+        if cache_hash:
+            await self._invalidate_cache(cache_hash)
+
         # Remove key entry
         attributes["apiKeys"] = [key for key in api_keys if not key.startswith(f"key:{key_id}:")]
 
@@ -234,6 +362,7 @@ class APIKeyManager:
         attributes.pop(f"apiKey_{key_id}_created", None)
         attributes.pop(f"apiKey_{key_id}_expiresAt", None)
         attributes.pop(f"apiKey_{key_id}_lastUsed", None)
+        attributes.pop(f"apiKey_{key_id}_cacheHash", None)
 
         await self.keycloak.update_user_attributes(user_id, attributes)
 
