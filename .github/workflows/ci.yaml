@@ -169,9 +169,12 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
+
     - name: Install coverage tools
       run: |
-        pip install coverage[toml]
+        uv pip install coverage[toml]
 
     - name: Download unit test coverage
       uses: actions/download-artifact@v6

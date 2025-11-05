@@ -66,14 +66,17 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Install dependencies
         run: |
-          pip install requests pytest pytest-benchmark
+          uv pip install requests pytest pytest-benchmark
 
       - name: Start test server
         run: |
           # Start the MCP server for benchmarking
-          python -m pip install -e ".[dev]"
+          uv pip install -e ".[dev]"
 
           # Start server in background
           python -m mcp_server_langgraph.app &
@@ -223,10 +226,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Check for improvements
         id: check
         run: |
-          pip install requests
+          uv pip install requests
 
           python scripts/ci/performance_regression.py \
             --baseline ${{ env.BASELINE_DIR }}/baseline.json \

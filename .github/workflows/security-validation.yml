@@ -33,10 +33,13 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Install package and test dependencies
         run: |
-          pip install -e .  # Install package with all dependencies
-          pip install pytest pyyaml hypothesis  # Additional test dependencies
+          uv pip install -e .  # Install package with all dependencies
+          uv pip install pytest pyyaml hypothesis  # Additional test dependencies
 
       - name: Run Terraform security tests
         run: |
@@ -57,10 +60,13 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Install package and test dependencies
         run: |
-          pip install -e .  # Install package with all dependencies
-          pip install pytest pyyaml hypothesis  # Additional test dependencies
+          uv pip install -e .  # Install package with all dependencies
+          uv pip install pytest pyyaml hypothesis  # Additional test dependencies
 
       - name: Run Kubernetes security tests
         run: |
