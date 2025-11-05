@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762358420525,
+  "lastUpdate": 1762359108407,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -28736,6 +28736,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018979839741513185",
             "extra": "mean: 59.59884387020441 usec\nrounds: 5457"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "857a8e3194def5dc46adbcfe163e3aa2a01683a5",
+          "message": "docs(infrastructure): add comprehensive deployment checklist for reproducibility\n\nCreate authoritative deployment checklist ensuring reproducible and idempotent infrastructure-as-code deployments with standardized naming.\n\n## Purpose\n\nPrevent recurrence of deployment issues by documenting:\n- Complete deployment procedure with new naming\n- Common failure modes and resolutions\n- Validation steps at each phase\n- Idempotency testing procedures\n\n## Contents\n\n### Deployment Phases\n1. **Pre-Deployment Validation** - Naming convention compliance checks\n2. **Terraform Infrastructure** - IaC provisioning with expected naming\n3. **Manual Resource Creation** - Workarounds for Terraform module bugs\n4. **Database Setup** - Required databases and users\n5. **Kubernetes Configuration** - External Secrets, Workload Identity\n6. **Application Deployment** - Via GitHub Actions or kubectl\n\n### Issue Resolution Guides\n1. **Pod Crashes - Database Connection**: Missing databases/users/passwords\n2. **External Secrets Not Syncing**: Workload Identity misconfiguration\n3. **MCP Server Stuck in Init**: Missing Redis service\n4. **Legacy Naming in Resources**: Detection and remediation\n\n### Persistence Mechanisms\n- ✅ All configuration in version control (Terraform, Kustomize, workflows)\n- ✅ Automated validation scripts for naming compliance\n- ✅ GitHub Actions pre-commit hooks (proposed)\n- ✅ Terraform state management for resource tracking\n- ✅ Complete audit trail via git commits\n\n## Key Learnings Captured\n\n### Critical Configuration Points\n1. **External Secrets Workload Identity**: Must use correct namespace\n   - ✅ Fixed: `staging-mcp-server-langgraph` (not `mcp-staging`)\n   - ✅ Fixed: Cluster name `staging-mcp-server-langgraph-gke`\n\n2. **Database Requirements**:\n   - ✅ Must create: `openfga`, `keycloak`, `mcp_langgraph_staging` databases\n   - ✅ Must create users: `postgres`, `openfga`, `keycloak`\n   - ✅ Kustomize patches must reference: `staging-mcp-slg-postgres`\n\n3. **Redis Service**:\n   - ✅ Must create ExternalName service pointing to Memorystore IP\n   - ✅ Service name: `redis-session`\n\n### Reproducibility Validation\n- Terraform plan shows expected resource names\n- kubectl apply is idempotent\n- GitHub Actions deployments are repeatable\n- All steps documented and tested\n\n## Impact\n\nThis checklist ensures:\n- ✅ **Zero configuration drift** - Everything in git\n- ✅ **Reproducible builds** - Same steps → same result\n- ✅ **Idempotent operations** - Safe to re-run\n- ✅ **Fast debugging** - Common issues documented\n- ✅ **Onboarding guide** - New team members can deploy confidently\n\n**Validated**: 2025-11-05 (staging environment torn down and rebuilt successfully)\n\nINFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T11:10:47-05:00",
+          "tree_id": "696ba58827f33d27dcec2785dc76280aa4e075b2",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/857a8e3194def5dc46adbcfe163e3aa2a01683a5"
+        },
+        "date": 1762359107304,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 137.1160999153579,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0009135224095839698",
+            "extra": "mean: 7.293089583333412 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 143.02956387899644,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007895147636466964",
+            "extra": "mean: 6.9915615546867205 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45554.37164781065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.95179000011649 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47915.98985277695,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.869860000232165 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 23515.142223131497,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 42.52578999995649 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.4459150288898,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.278551399999856 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.37331939650826,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.617380560000186 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936390069601057,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.64017143000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1442585.1126386519,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 693.1999999437721 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5086.91321883779,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 196.5828699999861 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2985.57727330884,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.9435999999173 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2946.3772597433835,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.3998499998929 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59709.15196737118,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019382203796369042",
+            "extra": "mean: 16.747851326819422 usec\nrounds: 12551"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 15918.716010778784,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021908694862198116",
+            "extra": "mean: 62.81913687780385 usec\nrounds: 4420"
           }
         ]
       }
