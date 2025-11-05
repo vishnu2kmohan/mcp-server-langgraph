@@ -35,8 +35,8 @@ jobs:
 
       - name: Install package and test dependencies
         run: |
-          pip install -e . --no-deps  # Install package without dependencies
-          pip install pytest pyyaml hypothesis langchain-core opentelemetry-sdk
+          pip install -e .  # Install package with all dependencies
+          pip install pytest pyyaml hypothesis  # Additional test dependencies
 
       - name: Run Terraform security tests
         run: |
@@ -59,8 +59,8 @@ jobs:
 
       - name: Install package and test dependencies
         run: |
-          pip install -e . --no-deps  # Install package without dependencies
-          pip install pytest pyyaml hypothesis langchain-core opentelemetry-sdk
+          pip install -e .  # Install package with all dependencies
+          pip install pytest pyyaml hypothesis  # Additional test dependencies
 
       - name: Run Kubernetes security tests
         run: |
