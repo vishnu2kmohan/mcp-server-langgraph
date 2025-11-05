@@ -174,7 +174,7 @@ jobs:
 
     - name: Install coverage tools
       run: |
-        uv pip install coverage[toml]
+        uv pip install --system coverage[toml]
 
     - name: Download unit test coverage
       uses: actions/download-artifact@v6

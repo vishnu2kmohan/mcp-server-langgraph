@@ -71,12 +71,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install requests pytest pytest-benchmark
+          uv pip install --system requests pytest pytest-benchmark
 
       - name: Start test server
         run: |
           # Start the MCP server for benchmarking
-          uv pip install -e ".[dev]"
+          uv pip install --system -e ".[dev]"
 
           # Start server in background
           python -m mcp_server_langgraph.app &
@@ -232,7 +232,7 @@ jobs:
       - name: Check for improvements
         id: check
         run: |
-          uv pip install requests
+          uv pip install --system requests
 
           python scripts/ci/performance_regression.py \
             --baseline ${{ env.BASELINE_DIR }}/baseline.json \

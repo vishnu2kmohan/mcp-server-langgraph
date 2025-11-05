@@ -88,7 +88,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install requests
+          uv pip install --system requests
 
       - name: Calculate DORA metrics
         id: calculate

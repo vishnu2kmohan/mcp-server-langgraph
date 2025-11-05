@@ -38,8 +38,8 @@ jobs:
 
       - name: Install package and test dependencies
         run: |
-          uv pip install -e .  # Install package with all dependencies
-          uv pip install pytest pyyaml hypothesis  # Additional test dependencies
+          uv pip install --system -e .  # Install package with all dependencies
+          uv pip install --system pytest pyyaml hypothesis  # Additional test dependencies
 
       - name: Run Terraform security tests
         run: |
@@ -65,8 +65,8 @@ jobs:
 
       - name: Install package and test dependencies
         run: |
-          uv pip install -e .  # Install package with all dependencies
-          uv pip install pytest pyyaml hypothesis  # Additional test dependencies
+          uv pip install --system -e .  # Install package with all dependencies
+          uv pip install --system pytest pyyaml hypothesis  # Additional test dependencies
 
       - name: Run Kubernetes security tests
         run: |
