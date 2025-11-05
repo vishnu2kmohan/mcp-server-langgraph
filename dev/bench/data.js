@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762376204320,
+  "lastUpdate": 1762376710031,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -31298,6 +31298,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018234882653752536",
             "extra": "mean: 59.75496651521589 usec\nrounds: 5286"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f41cb6c5734c6c7d3a26609a550a7951c1eb24fb",
+          "message": "fix(security): resolve 4 critical security/reliability findings from OpenAI Codex analysis\n\nImplements comprehensive fixes for security vulnerabilities and reliability issues\nidentified through automated security analysis. All fixes validated with 16 new tests.\n\n## Critical Fixes (P0)\n\n### 1. Auth Fallback Keycloak Bug (middleware.py)\n**Issue**: Complete service outage when OpenFGA down + Keycloak auth\n- Fallback logic checked empty users_db for Keycloak users\n- ALL Keycloak requests denied during OpenFGA failures\n- **Fix**: Provider-aware fallback queries KeycloakUserProvider for roles\n- **Impact**: Prevents production outages during OpenFGA degradation\n- **Tests**: 9 integration tests covering all provider scenarios\n\nFiles changed:\n- src/mcp_server_langgraph/auth/middleware.py (lines 242-368)\n- tests/test_auth.py (9 new tests in TestAuthFallbackWithExternalProviders)\n\n## High Priority Fixes (P1)\n\n### 2. Settings Injection No-Op (agent.py)\n**Issue**: settings_to_use parameter completely ignored\n- Blocked testing with custom settings\n- Blocked multi-tenant deployments\n- Blocked feature flags and A/B testing\n- **Fix**: Thread settings through _create_agent_graph_singleton()\n- **Impact**: Enables dependency injection for all use cases\n- **Tests**: 7 regression tests verify settings override works\n\nFiles changed:\n- src/mcp_server_langgraph/core/agent.py (lines 276-939)\n- tests/core/test_agent_di.py (7 new tests in TestSettingsInjectionRegression)\n\n### 3. Global State Mutation (agent.py)\n**Issue**: create_checkpointer() mutated global settings object\n- Race conditions in concurrent environments\n- Flaky tests due to shared state\n- **Fix**: Pass settings as parameter, no global mutation\n- **Impact**: Thread-safe checkpointer creation\n- **Tests**: Concurrent test verifies no race conditions\n\nFiles changed:\n- src/mcp_server_langgraph/core/agent.py (lines 109-198)\n\n## Medium Priority Fixes (P2)\n\n### 4. Resource Leak (server_streamable.py)\n**Issue**: Redis connections never cleaned up on shutdown\n- File descriptor exhaustion over time\n- Connection pool exhaustion\n- **Fix**: Call cleanup_checkpointer() in lifespan shutdown\n- **Impact**: Proper resource cleanup prevents leaks\n\nFiles changed:\n- src/mcp_server_langgraph/mcp/server_streamable.py (lines 85-94)\n\n### 5. Configuration Consistency (config.py)\n**Issue**: redis_host/redis_port used but not defined\n- Rate limiter and cache couldn't configure Redis\n- **Fix**: Add redis_host and redis_port to Settings class\n- **Impact**: Standardized Redis configuration\n\nFiles changed:\n- src/mcp_server_langgraph/core/config.py (lines 284-285)\n- .env.example (lines 104-106)\n\n## Test Results\n- Auth tests: 77/78 passing (98.7%)\n- New tests: 16 comprehensive regression tests\n- All critical fixes validated\n\n## Validation\nAll findings from OpenAI Codex security analysis validated and resolved:\n- Finding 1 (Rate limiter): False positive (architectural improvement made)\n- Finding 2 (Settings injection): ✅ Fixed with 7 regression tests\n- Finding 3 (Auth fallback): ✅ Fixed with 9 integration tests\n- Finding 4 (Global mutation): ✅ Fixed with concurrency tests\n- Finding 5 (Resource leak): ✅ Fixed with cleanup implementation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T16:04:04-05:00",
+          "tree_id": "46959cca667a974f331584d98ab4fb4ad01d4f0c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f41cb6c5734c6c7d3a26609a550a7951c1eb24fb"
+        },
+        "date": 1762376708915,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.985669269088,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001076109356255471",
+            "extra": "mean: 6.897233395833331 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.33695238992576,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011647971934722119",
+            "extra": "mean: 6.696266289062558 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44970.25667221342,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.23692000001165 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46923.925524290375,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.311089999969113 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45228.42389347331,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.10998999998992 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.7704238768116,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.241902699999983 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.41574586436983,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.50458843999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.951378487204304,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.48859073000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1385137.4748688776,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 721.9500000132939 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4948.27934719295,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 202.09045000001424 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3001.33109033819,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 333.18550000004166 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2940.869841659999,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.03544999990254 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58743.68418835964,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006237665989226456",
+            "extra": "mean: 17.02310663378779 usec\nrounds: 13823"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17571.656143273067,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017886650542598592",
+            "extra": "mean: 56.90983205261666 usec\nrounds: 5335"
           }
         ]
       }
