@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762357531705,
+  "lastUpdate": 1762358420525,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -28614,6 +28614,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016941132329513374",
             "extra": "mean: 58.119835508529846 usec\nrounds: 5593"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "2d465a8e62b81d6675e447079fd1096b395a20fa",
+          "message": "fix(infrastructure): complete naming standardization and fix critical deployment issues\n\nFix all remaining naming convention violations and resolve pod crash issues in staging environment.\n\n## Critical Infrastructure Fixes\n\n### External Secrets Configuration\n- **Fixed**: `external-secrets.yaml` namespace from `mcp-server-langgraph-staging` → `staging-mcp-server-langgraph`\n- **Fixed**: Cluster name from `staging-mcp-server-langgraph-cluster` → `staging-mcp-server-langgraph-gke`\n- **Fixed**: SecretStore naming from `gcp-secret-store` → `staging-gcp-secret-store`\n- **Fixed**: ClusterSecretStore naming → `staging-gcp-cluster-secret-store`\n\ndeployments/overlays/staging-gke/external-secrets.yaml:6-7,15,29,106\n\n### Workload Identity\n- **Fixed**: IAM binding for External Secrets service account\n  - Removed: `serviceAccount:vishnu-sandbox-20250310.svc.id.goog[mcp-staging/staging-external-secrets-operator]`\n  - Added: `serviceAccount:vishnu-sandbox-20250310.svc.id.goog[staging-mcp-server-langgraph/staging-external-secrets-operator]`\n\n### Database Infrastructure\n- **Created**: Cloud SQL databases in `staging-mcp-slg-postgres`\n  - `openfga` database\n  - `keycloak` database\n  - `mcp_langgraph_staging` database\n- **Created**: Database users\n  - `postgres` (owner)\n  - `openfga` (with password)\n  - `keycloak` (with password)\n\n### Redis Configuration\n- **Created**: Service `redis-session` pointing to Memorystore instance\n  - Type: ExternalName\n  - Target: `staging-mcp-slg-redis` (10.243.246.4)\n  - Port: 6379\n\n### Batch Naming Fixes\nUpdated 8 files with remaining naming violations:\n- deployments/service-mesh/anthos/setup-anthos-service-mesh.sh\n- deployments/security/binary-authorization/setup-binary-auth.sh\n- deployments/disaster-recovery/gcp-dr-automation.sh\n- deployments/argocd/setup-argocd-gcp.sh\n- deployments/GKE_OPERATIONAL_RUNBOOKS.md\n- deployments/GKE_DEPLOYMENT_GUIDE.md\n- deployments/argocd/README.md\n- deployments/overlays/staging/kustomization.yaml\n\n## Infrastructure Status (All New Naming)\n\n✅ **GKE Cluster**: `staging-mcp-server-langgraph-gke` (RUNNING)\n✅ **Namespace**: `staging-mcp-server-langgraph` (Active)\n✅ **Cloud SQL**: `staging-mcp-slg-postgres` (RUNNABLE, IP: 10.178.0.3)\n✅ **Redis**: `staging-mcp-slg-redis` (READY, IP: 10.243.246.4)\n✅ **VPC**: `staging-mcp-slg-vpc` (with private service connection)\n✅ **Databases**: openfga, keycloak, mcp_langgraph_staging\n✅ **Users**: postgres, openfga, keycloak\n✅ **Redis Service**: redis-session → 10.243.246.4:6379\n\n## Pod Crash Resolution\n\n**Root Cause Fixed**:\n- Workload Identity namespace mismatch → RESOLVED\n- Missing databases (openfga, keycloak) → CREATED\n- Missing Redis service → CREATED\n- Wrong cluster name in SecretStore → FIXED\n\n**Expected Outcome**:\n- External Secrets should now sync (pending GCP Secret Manager secrets creation)\n- OpenFGA can connect to database\n- Keycloak can connect to database\n- MCP Server can proceed through init containers\n\n## Persistence\n\nAll fixes are now in version control and will persist across deployments:\n- Kustomize patches updated\n- External Secrets config corrected\n- Database infrastructure created via gcloud (needs Terraform import)\n- Workload Identity IAM bindings corrected\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T10:59:20-05:00",
+          "tree_id": "1072f03b72d5f46b499f55e249c29b6ff80d5808",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/2d465a8e62b81d6675e447079fd1096b395a20fa"
+        },
+        "date": 1762358419465,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.2433601387813,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011386512997430004",
+            "extra": "mean: 6.884996319587286 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.81652701595482,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012216738345982727",
+            "extra": "mean: 6.674831007753265 msec\nrounds: 129"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45952.52460870207,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.76159000001121 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48110.55420455588,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.78546000007009 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46420.14782962065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.542369999991706 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.79905955448655,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.241115980000046 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.376077234206445,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.61003374999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.951499029880457,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.48737351 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1402072.262799824,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 713.2300000023406 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4986.461756332009,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 200.54299999998193 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2908.8731772891215,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.7757300000044 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2930.9855201401974,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.1821699999962 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60007.1685842407,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033765939349165627",
+            "extra": "mean: 16.664675631148235 usec\nrounds: 13386"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16778.848968577655,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018979839741513185",
+            "extra": "mean: 59.59884387020441 usec\nrounds: 5457"
           }
         ]
       }
