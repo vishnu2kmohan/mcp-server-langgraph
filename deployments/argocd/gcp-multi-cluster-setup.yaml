@@ -189,8 +189,7 @@ metadata:
   namespace: argocd
   annotations:
     # Image updater annotations
-    # TEMPLATE: Replace PROJECT_ID with your GCP project ID
-    argocd-image-updater.argoproj.io/image-list: mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
+    argocd-image-updater.argoproj.io/image-list: mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph  # TEMPLATE: Replace PROJECT_ID
     argocd-image-updater.argoproj.io/mcp-server.update-strategy: semver
     argocd-image-updater.argoproj.io/mcp-server.allow-tags: regexp:^v?[0-9]+\.[0-9]+\.[0-9]+$
     argocd-image-updater.argoproj.io/write-back-method: git
