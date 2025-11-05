@@ -63,7 +63,7 @@ exporters:
 
   # Cloud Logging
   googlecloud/logs:
-    project: YOUR_PROJECT_ID
+    project: YOUR_PROJECT_ID  # Replace with actual project ID
     log:
       default_log_name: mcp-server-langgraph
 

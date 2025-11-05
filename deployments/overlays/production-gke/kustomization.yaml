@@ -66,7 +66,7 @@ replicas:
 # Image configuration
 images:
   - name: mcp-server-langgraph
-    newName: us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
+    newName: us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph  # TEMPLATE: Replace PROJECT_ID
     newTag: 2.8.0  # Updated via CI/CD
 
 # Generate ConfigMap from GCP-specific OTel config

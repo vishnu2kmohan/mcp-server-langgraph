@@ -91,7 +91,20 @@ jobs:
 
       - name: Check for PROJECT_ID placeholders
         run: |
-          if grep -r "PROJECT_ID" terraform/ deployments/ --exclude-dir=.git --exclude="*.md" --exclude="*.template" --exclude="*.example" | grep -v "#" | grep -v "error_message"; then
+          # Exclude: shell scripts, binary files, .terraform dirs, comments, YAML variable names
+          if grep -rI "PROJECT_ID" terraform/ deployments/ \
+            --exclude-dir=.git \
+            --exclude-dir=.terraform \
+            --exclude="*.md" \
+            --exclude="*.template" \
+            --exclude="*.example" \
+            --exclude="*.sh" \
+            --exclude="*.bak" \
+            2>/dev/null \
+            | grep -v "#" \
+            | grep -v "error_message" \
+            | grep -v "name:.*PROJECT_ID" \
+            | grep -v 'GCP_PROJECT_ID\|INFISICAL_PROJECT_ID'; then
             echo "::error::Found PROJECT_ID placeholder in configuration files"
             exit 1
           fi

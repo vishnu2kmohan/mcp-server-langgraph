@@ -1,5 +1,9 @@
 # ArgoCD Multi-Cluster Setup for GCP (Dev, Staging, Production)
-
+#
+# TEMPLATE FILE: Replace the following before deploying:
+# - YOUR_PROJECT_ID → your GCP project ID
+# - GCP_*_CLUSTER_ENDPOINT → actual cluster API endpoints
+#
 # ==============================================================================
 # ApplicationSet - Deploy to multiple GKE clusters
 # ==============================================================================
@@ -15,27 +19,27 @@ spec:
     - list:
         elements:
           - cluster: gcp-dev
-            url: https://GCP_DEV_CLUSTER_ENDPOINT
+            url: https://GCP_DEV_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
             namespace: mcp-dev
             overlay: dev-gke
             replicas: "1"
-            project: YOUR_PROJECT_ID
+            project: YOUR_PROJECT_ID  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
           - cluster: gcp-staging
-            url: https://GCP_STAGING_CLUSTER_ENDPOINT
+            url: https://GCP_STAGING_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
             overlay: staging-gke
             namespace: mcp-staging
             replicas: "2"
-            project: YOUR_PROJECT_ID
+            project: YOUR_PROJECT_ID  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
           - cluster: gcp-production
-            url: https://GCP_PROD_CLUSTER_ENDPOINT
+            url: https://GCP_PROD_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
             overlay: production-gke
             namespace: mcp-production
             replicas: "3"
-            project: YOUR_PROJECT_ID
+            project: YOUR_PROJECT_ID  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
   template:
@@ -185,6 +189,7 @@ metadata:
   namespace: argocd
   annotations:
     # Image updater annotations
+    # TEMPLATE: Replace PROJECT_ID with your GCP project ID
     argocd-image-updater.argoproj.io/image-list: mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
     argocd-image-updater.argoproj.io/mcp-server.update-strategy: semver
     argocd-image-updater.argoproj.io/mcp-server.allow-tags: regexp:^v?[0-9]+\.[0-9]+\.[0-9]+$

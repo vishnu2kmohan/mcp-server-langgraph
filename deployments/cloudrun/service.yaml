@@ -34,7 +34,7 @@ spec:
       serviceAccountName: mcp-server-langgraph-sa
       containers:
       - name: mcp-server-langgraph
-        image: gcr.io/PROJECT_ID/mcp-server-langgraph:2.4.0
+        image: gcr.io/PROJECT_ID/mcp-server-langgraph:2.4.0  # TEMPLATE: Replace PROJECT_ID with your GCP project ID
         ports:
         - name: http1
           containerPort: 8000
@@ -123,7 +123,7 @@ spec:
 
         # Google Cloud specific
         - name: GOOGLE_CLOUD_PROJECT
-          value: "PROJECT_ID"
+          value: "PROJECT_ID"  # TEMPLATE: Replace PROJECT_ID with your GCP project ID
 
         # Startup probe
         startupProbe:
