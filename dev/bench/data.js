@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762368864080,
+  "lastUpdate": 1762369149231,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -29834,6 +29834,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000022636813079225833",
             "extra": "mean: 59.63884261221419 usec\nrounds: 4257"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8d9e1c8c6be2382f68694c76faf3428de264c006",
+          "message": "fix(ci/cd): resolve security validation workflow failures\n\nFix 3 critical issues in security validation workflow that were causing failures:\n\n## Fixes\n\n### 1. Missing langchain-core Dependency\n- **Root Cause**: conftest.py imports langchain_core but workflow only installs pytest/pyyaml/hypothesis\n- **Fix**: Add langchain-core to pip install in both Terraform and Kubernetes security test jobs\n- **Files**: .github/workflows/security-validation.yml:38,61\n- **Impact**: Tests can now import required dependencies\n\n### 2. ACCOUNT_ID Placeholder in .old File\n- **Root Cause**: kustomization.yaml.old backup file contains ACCOUNT_ID placeholder\n- **Fix**: Remove kustomization.yaml.old file\n- **Files**: deployments/kubernetes/overlays/aws/kustomization.yaml.old (deleted)\n- **Impact**: Placeholder detection check will pass\n\n### 3. Terraform Version Mismatch\n- **Root Cause**: Workflow uses Terraform 1.6.0, azure-database module requires >=1.7\n- **Fix**: Update workflow to use Terraform 1.9.0\n- **Files**: .github/workflows/security-validation.yml:116\n- **Impact**: Module validation will succeed without version constraint errors\n\n## Test Results\n\n- Verified langchain-core resolves import error\n- Confirmed no remaining .old files with placeholders\n- Terraform 1.9.0 compatible with all modules (>=1.5, >=1.7 requirements)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T13:57:58-05:00",
+          "tree_id": "44db9168f1ac2be5189a3574bdaa3665949ad706",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8d9e1c8c6be2382f68694c76faf3428de264c006"
+        },
+        "date": 1762369148226,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.53442461270507,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00039986323424641445",
+            "extra": "mean: 6.918766948978441 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.6293953804289,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001987732568058275",
+            "extra": "mean: 6.683178779527417 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45859.08512060444,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.805929999914042 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48098.359220569466,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.790730000044277 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46676.1668224424,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.424210000020594 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.82718709972957,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.24034345000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.458559646857196,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.39126524000005 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.953473079336254,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.46744407999995 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1402249.2078090948,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 713.1399999593668 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4949.937323895559,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 202.02275999992025 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3002.3293271861085,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 333.07471999989957 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2916.8074877026356,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.84058999986655 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59739.374603824675,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019974149006396653",
+            "extra": "mean: 16.739378452347864 usec\nrounds: 13505"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17269.747130277432,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018656056262498087",
+            "extra": "mean: 57.90472740893777 usec\nrounds: 5334"
           }
         ]
       }
