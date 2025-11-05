@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762353275863,
+  "lastUpdate": 1762354520446,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -28370,6 +28370,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018334527979294024",
             "extra": "mean: 47.8656256571261 usec\nrounds: 4755"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "410ae572c30d613dc4ee543d885d717e2a43316e",
+          "message": "fix(infrastructure): update Kustomize patches and fix VPC/Redis config for new naming\n\nUpdate all Cloud SQL proxy references to use new database instance naming and fix VPC/Redis configuration issues.\n\n## Kustomize Patch Updates\n\n### Cloud SQL Instance Name Changes\n- **Old**: `vishnu-sandbox-20250310:us-central1:mcp-staging-postgres`\n- **New**: `vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres`\n\n**Updated Files:**\n- deployments/overlays/staging-gke/deployment-patch.yaml:126\n- deployments/overlays/staging-gke/keycloak-patch.yaml:37\n- deployments/overlays/staging-gke/openfga-patch.yaml:20\n\n## Terraform Configuration Fixes\n\n### VPC Module (terraform/modules/gcp-vpc/main.tf)\n- **Fixed**: Flow log filter expression - use `null` instead of empty string\n- **Fixed**: RouterNat endpoint-independent mapping conflict with dynamic port allocation\n  - Made them mutually exclusive (cannot both be enabled)\n  - Added conditional logic to disable endpoint-independent when dynamic ports enabled\n\n### Redis Configuration (terraform/environments/gcp-staging/main.tf)\n- **Updated**: Memory size from 3GB to 5GB (minimum for read replicas)\n\n### CloudSQL Module (terraform/modules/cloudsql/main.tf)\n- **Fixed**: `additional_users` for_each with `nonsensitive()` wrapper\n- **Fixed**: Password handling with `sensitive()` wrapper for security\n\n## Infrastructure Created\n\n✅ **VPC**: `staging-mcp-slg-vpc` (with private service connection)\n✅ **Subnet**: `staging-mcp-slg-nodes-us-central1`\n✅ **NAT**: `staging-mcp-slg-nat-us-central1`\n✅ **Firewall Rules**: `staging-mcp-slg-allow-*`\n⏳ **Cloud SQL**: `staging-mcp-slg-postgres` (PENDING_CREATE)\n⏳ **Redis**: `staging-mcp-slg-redis` (CREATING)\n\n## Test Results\n\n- ✅ Terraform plan: **75 resources, no errors**\n- ✅ Kustomize validation: **All overlays valid**\n- ✅ Builder tests: **18/18 passing**\n\nterraform/modules/gcp-vpc/main.tf:50,156,160-162\nterraform/modules/cloudsql/main.tf:221,234\nterraform/environments/gcp-staging/main.tf:300\ndeployments/overlays/staging-gke/*.yaml\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T09:54:16-05:00",
+          "tree_id": "a6661187143d67bc07a2a807c1a25af0a4b78768",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/410ae572c30d613dc4ee543d885d717e2a43316e"
+        },
+        "date": 1762354519407,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.49866518482256,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011889678339123153",
+            "extra": "mean: 6.872915285715716 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.68292388596754,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001265481925618189",
+            "extra": "mean: 6.680788790322047 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44991.298682827044,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.226520000003802 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48431.333329273584,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.647789999941324 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46373.82216304591,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.563889999924868 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.85138903892926,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.239678920000017 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.416222394034165,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.50332437000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93730421313935,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.63091342999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1426309.7086127105,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 701.1100001363957 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5106.528569111485,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 195.82775000003494 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2951.826225515997,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.77333000020826 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2931.382033478228,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.13601999990806 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58423.3845056439,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000042101575100731804",
+            "extra": "mean: 17.116433915316843 usec\nrounds: 12832"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17106.522442433543,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019932297813282453",
+            "extra": "mean: 58.45723485677325 usec\nrounds: 5382"
           }
         ]
       }
