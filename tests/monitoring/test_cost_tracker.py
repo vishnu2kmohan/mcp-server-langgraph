@@ -451,7 +451,11 @@ def cost_api_client():
     return TestClient(app)
 
 
-@pytest.mark.skip(reason="Cost API endpoints not implemented yet")
+@pytest.mark.xfail(
+    strict=True,
+    reason="Cost API endpoints not implemented yet. "
+    "When cost tracking API is implemented, this test will XPASS and fail CI."
+)
 @pytest.mark.unit
 def test_get_cost_summary_returns_aggregated_data(cost_api_client):
     """Test GET /api/cost/summary returns aggregated cost data."""

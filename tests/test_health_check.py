@@ -236,7 +236,11 @@ class TestHealthCheckEndpoints:
 class TestHealthCheckIntegration:
     """Integration tests for health checks"""
 
-    @pytest.mark.skip(reason="Requires full infrastructure stack")
+    @pytest.mark.xfail(
+        strict=True,
+        reason="Requires full infrastructure stack. "
+        "Once test_infrastructure provides running FastAPI app, this will XPASS."
+    )
     def test_full_health_check_with_infrastructure(self, test_client: TestClient) -> None:
         """Test health checks with real infrastructure components"""
         # This test would run with actual OpenFGA, Infisical, etc.

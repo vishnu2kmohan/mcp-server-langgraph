@@ -141,13 +141,24 @@ class TestAgentPerformance:
     """Performance regression tests for agent"""
 
     @pytest.mark.slow
-    @pytest.mark.skip(reason="Requires complex mocking of LangGraph checkpointing - skipping for now")
+    @pytest.mark.xfail(
+        strict=True,
+        reason="Requires LangGraph-compatible LLM mocking - msgpack serialization blocker. "
+        "MagicMock objects cannot be serialized by msgpack. When fixed, this test will "
+        "XPASS and fail CI, forcing removal of this marker to activate the regression test."
+    )
     def test_agent_response_time_p95(self):
         """Agent response p95 should be under 5 seconds"""
-        # This test is skipped because it requires mocking LLM responses in a way that's
-        # compatible with LangGraph's checkpoint serialization. The MagicMock objects
-        # cannot be serialized by msgpack, causing TypeError.
-        # TODO: Implement proper LLM mocking that works with LangGraph checkpointing
+        # This test requires mocking LLM responses in a way that's compatible with
+        # LangGraph's checkpoint serialization. The MagicMock objects cannot be
+        # serialized by msgpack, causing TypeError.
+        #
+        # When someone implements proper LLM mocking (e.g., using a serializable
+        # mock class or fixture), this test will start passing and XPASS,
+        # which will fail the test suite. The developer should then:
+        # 1. Remove the @pytest.mark.xfail decorator
+        # 2. Verify the test passes
+        # 3. Commit the change - activating performance regression testing
         pass
 
     @pytest.mark.slow

@@ -81,6 +81,10 @@ dev = [
     "pytest-benchmark>=4.0.0",
     "pytest-xdist>=3.5.0",  # Parallel test execution for faster test runs
     "pytest-testmon>=2.1.0",  # Selective test execution based on code changes
+    # Docker infrastructure management
+    "pytest-docker-compose-v2>=0.1.2",  # Automated docker-compose lifecycle for E2E tests
+    # Time mocking for deterministic tests
+    "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing
     # Property-based testing
     "hypothesis>=6.142.1",
     "hypothesis-jsonschema>=0.22.1",

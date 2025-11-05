@@ -3,13 +3,16 @@
 import asyncio
 import logging
 import os
+import socket
 import sys
+import time
 import warnings
 from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from freezegun import freeze_time
 from hypothesis import settings
 from langchain_core.messages import HumanMessage
 from opentelemetry import trace
@@ -57,6 +60,216 @@ settings.register_profile(
 # Load appropriate profile based on environment
 # CI sets HYPOTHESIS_PROFILE=ci, defaults to dev otherwise
 settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
+
+
+# ==============================================================================
+# Docker Infrastructure Fixtures (Automated Lifecycle Management)
+# ==============================================================================
+
+
+def _wait_for_port(host: str, port: int, timeout: float = 30.0) -> bool:
+    """
+    Wait for a TCP port to become available.
+
+    Returns True if port is available, False if timeout is reached.
+    """
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex((host, port))
+            sock.close()
+            if result == 0:
+                return True
+        except socket.error:
+            pass
+        time.sleep(0.5)
+    return False
+
+
+def _check_http_health(url: str, timeout: float = 2.0) -> bool:
+    """Check if HTTP endpoint is healthy."""
+    try:
+        import httpx
+        response = httpx.get(url, timeout=timeout)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="session")
+def docker_compose_file():
+    """
+    Provide path to docker-compose.test.yml for pytest-docker-compose-v2.
+
+    This enables automated docker-compose lifecycle management:
+    - Services start automatically before test session
+    - Services stop automatically after test session
+    - No manual docker-compose commands needed
+    """
+    return os.path.join(os.path.dirname(__file__), "..", "docker-compose.test.yml")
+
+
+@pytest.fixture(scope="session")
+def docker_services_available(docker_compose_file):
+    """
+    Check if Docker is available and docker-compose.test.yml exists.
+
+    This is a lightweight check that runs before attempting to start services.
+    """
+    # Check if docker-compose file exists
+    if not os.path.exists(docker_compose_file):
+        pytest.skip(f"Docker compose file not found: {docker_compose_file}")
+
+    # Check if Docker is available
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["docker", "info"],
+            capture_output=True,
+            timeout=5
+        )
+        if result.returncode != 0:
+            pytest.skip("Docker daemon not available")
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pytest.skip("Docker not installed or not responding")
+
+    return True
+
+
+@pytest.fixture(scope="session")
+def test_infrastructure_ports():
+    """
+    Define test infrastructure ports (offset by 1000 from production).
+
+    These match the ports defined in docker-compose.test.yml.
+    """
+    return {
+        "postgres": 9432,
+        "redis_checkpoints": 9379,
+        "redis_sessions": 9380,
+        "qdrant": 9333,
+        "qdrant_grpc": 9334,
+        "openfga_http": 9080,
+        "openfga_grpc": 9081,
+        "keycloak": 9082,
+    }
+
+
+@pytest.fixture(scope="session")
+def test_infrastructure(docker_services_available, docker_compose_file, test_infrastructure_ports):
+    """
+    Automated test infrastructure lifecycle management.
+
+    This fixture:
+    1. Starts all services via docker-compose.test.yml
+    2. Waits for health checks to pass
+    3. Yields control to tests
+    4. Automatically tears down services after session
+
+    Replaces manual:
+        docker compose -f docker-compose.test.yml up -d
+        docker compose -f docker-compose.test.yml down -v
+
+    Usage:
+        @pytest.mark.e2e
+        def test_with_infrastructure(test_infrastructure):
+            # All services are running and healthy
+            ...
+    """
+    # Set TESTING environment variable for services
+    os.environ["TESTING"] = "true"
+
+    try:
+        # Start services using python-on-whales (used by pytest-docker-compose-v2)
+        from python_on_whales import DockerClient
+
+        docker = DockerClient(compose_files=[docker_compose_file])
+
+        # Start services
+        logging.info("Starting test infrastructure via docker-compose...")
+        docker.compose.up(detach=True, wait=False)
+
+        # Wait for critical services to be ready
+        logging.info("Waiting for test infrastructure health checks...")
+
+        # PostgreSQL
+        if not _wait_for_port("localhost", test_infrastructure_ports["postgres"], timeout=30):
+            pytest.fail("PostgreSQL test service did not become ready in time")
+        logging.info("✓ PostgreSQL ready")
+
+        # Redis (checkpoints)
+        if not _wait_for_port("localhost", test_infrastructure_ports["redis_checkpoints"], timeout=20):
+            pytest.fail("Redis checkpoints test service did not become ready in time")
+        logging.info("✓ Redis (checkpoints) ready")
+
+        # Redis (sessions)
+        if not _wait_for_port("localhost", test_infrastructure_ports["redis_sessions"], timeout=20):
+            pytest.fail("Redis sessions test service did not become ready in time")
+        logging.info("✓ Redis (sessions) ready")
+
+        # OpenFGA HTTP
+        if not _wait_for_port("localhost", test_infrastructure_ports["openfga_http"], timeout=40):
+            pytest.fail("OpenFGA test service did not become ready in time")
+        # Additional check for OpenFGA
+        if not _check_http_health("http://localhost:9080/healthz", timeout=5):
+            pytest.fail("OpenFGA health check failed")
+        logging.info("✓ OpenFGA ready")
+
+        # Keycloak (takes longer to start)
+        if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
+            pytest.fail("Keycloak test service did not become ready in time")
+        # Additional check for Keycloak
+        if not _check_http_health("http://localhost:9082/health/ready", timeout=10):
+            pytest.fail("Keycloak health check failed")
+        logging.info("✓ Keycloak ready")
+
+        # Qdrant
+        if not _wait_for_port("localhost", test_infrastructure_ports["qdrant"], timeout=30):
+            pytest.fail("Qdrant test service did not become ready in time")
+        logging.info("✓ Qdrant ready")
+
+        logging.info("✅ All test infrastructure services ready")
+
+        # Return infrastructure info
+        yield {
+            "ports": test_infrastructure_ports,
+            "docker": docker,
+            "ready": True
+        }
+
+    finally:
+        # Cleanup: Stop and remove services
+        logging.info("Tearing down test infrastructure...")
+        try:
+            docker.compose.down(volumes=True, remove_orphans=True, timeout=30)
+            logging.info("✅ Test infrastructure cleaned up")
+        except Exception as e:
+            logging.error(f"Error during infrastructure cleanup: {e}")
+
+
+# ==============================================================================
+# Fixed Time Fixture for Deterministic Tests
+# ==============================================================================
+
+
+@pytest.fixture
+def frozen_time():
+    """
+    Freeze time for deterministic timestamp testing.
+
+    All datetime.now(), time.time(), etc. calls will return the fixed time.
+    This eliminates test flakiness caused by time-dependent assertions.
+
+    Usage:
+        @pytest.mark.usefixtures("frozen_time")
+        def test_timestamps():
+            # datetime.now() will always return 2024-01-01T00:00:00Z
+            assert datetime.now(timezone.utc).isoformat() == "2024-01-01T00:00:00+00:00"
+    """
+    with freeze_time("2024-01-01 00:00:00", tz_offset=0):
+        yield
 
 
 # Container-based test fixtures (NEW APPROACH)
@@ -212,9 +425,18 @@ def mock_openfga_response():
 
 
 @pytest.fixture
-def integration_test_env():
-    """Check if running in integration test environment (Docker)"""
-    return os.getenv("TESTING") == "true"
+def integration_test_env(test_infrastructure):
+    """
+    Check if running in integration test environment (Docker).
+
+    DEPRECATED: Use test_infrastructure fixture directly for new tests.
+    This fixture is kept for backward compatibility with existing tests.
+
+    The test_infrastructure fixture now automatically manages the full
+    docker-compose lifecycle, so this fixture will always return True
+    when test_infrastructure is active.
+    """
+    return test_infrastructure["ready"]
 
 
 @pytest.fixture(scope="session")
@@ -367,15 +589,19 @@ def mock_infisical_response():
 
 @pytest.fixture
 def mock_jwt_token():
-    """Generate a mock JWT token"""
-    from datetime import datetime, timedelta
+    """
+    Generate a mock JWT token with deterministic timestamps.
 
+    Uses fixed time: 2024-01-01T00:00:00Z
+    """
     import jwt
+
+    FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
     payload = {
         "sub": "alice",
-        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        "iat": datetime.now(timezone.utc),
+        "exp": FIXED_TIME + timedelta(hours=1),
+        "iat": FIXED_TIME,
     }
     return jwt.encode(payload, "test-secret-key", algorithm="HS256")
 

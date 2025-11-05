@@ -633,7 +633,7 @@ class TestAssociateServicePrincipalWithUser:
                 owner_user_id="user:alice",  # OpenFGA format from shared fixture
                 inherit_permissions=False,
                 enabled=True,
-                created_at=datetime.now(timezone.utc).isoformat(),
+                created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc).isoformat(),
             ),
             None,  # Second call fails
         ]
@@ -662,7 +662,12 @@ class TestServicePrincipalEndpointsIntegration:
     These tests require docker-compose.test.yml to be running.
     """
 
-    @pytest.mark.skip(reason="Requires full test infrastructure setup")
+    @pytest.mark.xfail(
+        strict=True,
+        reason="E2E infrastructure fixture not yet implemented. "
+        "Once test_infrastructure fixture with FastAPI app integration is ready, "
+        "this test will start passing and fail CI, requiring marker removal."
+    )
     async def test_full_service_principal_lifecycle(self):
         """
         Test complete service principal lifecycle:
@@ -674,5 +679,7 @@ class TestServicePrincipalEndpointsIntegration:
         6. Authenticate with new secret
         7. Delete service principal
         """
-        # TODO: Implement when E2E infrastructure is ready
+        # Implementation pending - needs test_infrastructure with FastAPI app
+        # The test_infrastructure fixture provides docker services, but we also need
+        # the FastAPI app running with those services for full E2E testing.
         pass

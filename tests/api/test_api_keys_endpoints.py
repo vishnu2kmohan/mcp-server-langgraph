@@ -18,16 +18,25 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def mock_api_key_manager():
-    """Mock APIKeyManager for testing endpoints without real Keycloak"""
+    """
+    Mock APIKeyManager for testing endpoints without real Keycloak.
+
+    Uses deterministic timestamps for reproducible tests.
+    Fixed reference time: 2024-01-01T00:00:00Z
+    """
     manager = AsyncMock()
+
+    # Use deterministic timestamps instead of datetime.now()
+    # This eliminates test flakiness and makes test data reproducible
+    FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
     # Mock create_api_key
     manager.create_api_key.return_value = {
         "key_id": "key_12345",
         "api_key": "mcp_test_key_abcdef123456",  # gitleaks:allow - test fixture
         "name": "Test Key",
-        "created": datetime.now(timezone.utc).isoformat(),
-        "expires_at": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+        "created": FIXED_TIME.isoformat(),
+        "expires_at": (FIXED_TIME + timedelta(days=365)).isoformat(),
     }
 
     # Mock list_api_keys
@@ -35,16 +44,16 @@ def mock_api_key_manager():
         {
             "key_id": "key_12345",
             "name": "Test Key",
-            "created": datetime.now(timezone.utc).isoformat(),
-            "expires_at": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+            "created": FIXED_TIME.isoformat(),
+            "expires_at": (FIXED_TIME + timedelta(days=365)).isoformat(),
             "last_used": None,
         },
         {
             "key_id": "key_67890",
             "name": "Production Key",
-            "created": (datetime.now(timezone.utc) - timedelta(days=30)).isoformat(),
-            "expires_at": (datetime.now(timezone.utc) + timedelta(days=335)).isoformat(),
-            "last_used": datetime.now(timezone.utc).isoformat(),
+            "created": (FIXED_TIME - timedelta(days=30)).isoformat(),
+            "expires_at": (FIXED_TIME + timedelta(days=335)).isoformat(),
+            "last_used": FIXED_TIME.isoformat(),
         },
     ]
 
