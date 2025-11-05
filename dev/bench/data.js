@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762372443668,
+  "lastUpdate": 1762373352084,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -31054,6 +31054,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016952901430294903",
             "extra": "mean: 57.91683888102964 usec\nrounds: 5648"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "865af6e9f11abdef8a0e285fde24ed990a896a55",
+          "message": "fix(terraform,scripts): enforce consistent naming convention across infrastructure\n\n## Problem\nPrevious commit (e148edf, now reverted) encoded REVERSED naming pattern into\nTerraform, violating the established naming convention. Analysis revealed:\n\n**Established Pattern (Correct):**\n- K8s resources: `staging-{service}` (e.g., staging-keycloak)\n- GCP resources: `staging-{service}` OR `staging-mcp-slg-{type}` (length-limited)\n\n**Previous Violation:**\n- GCP service accounts used REVERSED pattern: `{service}-staging`\n- Examples: keycloak-staging, openfga-staging, mcp-staging-sa\n\nThis created inconsistency between K8s SA names and GCP SA names, making\ninfrastructure harder to understand and maintain.\n\n## Root Cause\n1. Terraform configuration in main.tf (lines 352-386) specified wrong GCP SA names\n2. Setup script used old/inconsistent naming patterns\n3. No naming convention validation in CI/CD\n\n## Changes\n\n### Terraform Configuration\n**File:** `terraform/environments/gcp-staging/main.tf`\n- Fixed Workload Identity service account definitions (lines 352-386)\n- Replaced old definitions:\n  * \"mcp-server-sa\" → \"staging-mcp-server-langgraph\"\n  * \"worker-sa\" → removed (unused)\n- Added correctly-named service accounts:\n  * \"staging-keycloak\" with GCP SA \"staging-keycloak\"\n  * \"staging-openfga\" with GCP SA \"staging-openfga\"\n  * \"staging-mcp-server-langgraph\" with GCP SA \"staging-mcp-slg-sa\" (abbreviated)\n\n**File:** `terraform/environments/gcp-staging/terraform.tfvars`\n- Fixed app_namespace: \"mcp-staging\" → \"staging-mcp-server-langgraph\"\n\n### Setup Script\n**File:** `scripts/gcp/setup-staging-infrastructure.sh`\n- Line 28: VPC_NAME=\"staging-mcp-slg-vpc\" (was \"staging-vpc\")\n- Line 29: SUBNET_NAME=\"staging-mcp-slg-nodes-us-central1\" (was \"staging-gke-subnet\")\n- Line 30: SERVICE_ACCOUNT_NAME=\"staging-mcp-slg-sa\" (was \"mcp-staging-sa\")\n- Line 369: INSTANCE_NAME=\"staging-mcp-slg-postgres\" (was \"mcp-staging-postgres\")\n- Line 441: INSTANCE_NAME=\"staging-mcp-slg-redis\" (was \"mcp-staging-redis\")\n\n## GCP Service Account Migrations (via gcloud)\n**Created new correctly-named SAs:**\n- staging-keycloak@vishnu-sandbox-20250310.iam.gserviceaccount.com\n- staging-openfga@vishnu-sandbox-20250310.iam.gserviceaccount.com\n- staging-mcp-slg-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com\n\n**Deleted old incorrectly-named SAs:**\n- keycloak-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com\n- openfga-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com\n- mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com\n\n**Updated Kubernetes SA annotations:**\n```bash\nkubectl annotate sa staging-keycloak iam.gke.io/gcp-service-account=staging-keycloak@PROJECT.iam.gserviceaccount.com --overwrite\nkubectl annotate sa staging-openfga iam.gke.io/gcp-service-account=staging-openfga@PROJECT.iam.gserviceaccount.com --overwrite\nkubectl annotate sa staging-mcp-server-langgraph iam.gke.io/gcp-service-account=staging-mcp-slg-sa@PROJECT.iam.gserviceaccount.com --overwrite\n```\n\n**Workload Identity bindings created:**\n```\nserviceAccount:PROJECT.svc.id.goog[staging-mcp-server-langgraph/staging-keycloak]\nserviceAccount:PROJECT.svc.id.goog[staging-mcp-server-langgraph/staging-openfga]\nserviceAccount:PROJECT.svc.id.goog[staging-mcp-server-langgraph/staging-mcp-server-langgraph]\n```\n\n## Naming Convention Reference\n\n### Full Names (No Length Limit)\n**Pattern:** `staging-mcp-server-langgraph-{resource}`\n- GKE Cluster: staging-mcp-server-langgraph-gke\n- K8s Namespace: staging-mcp-server-langgraph\n- K8s Service Accounts: staging-keycloak, staging-openfga, staging-mcp-server-langgraph\n\n### Abbreviated Names (20-30 char limit)\n**Pattern:** `staging-mcp-slg-{resource}`\n- VPC: staging-mcp-slg-vpc\n- Cloud SQL: staging-mcp-slg-postgres\n- Redis: staging-mcp-slg-redis\n- Service Accounts: staging-mcp-slg-sa (when full name >30 chars)\n\n## Verification\n- Verified new GCP SAs created successfully\n- Confirmed Workload Identity bindings work correctly\n- Tested Cloud SQL Proxy authentication succeeds\n- Pods restarted and picking up new credentials\n- Terraform configuration now matches deployed infrastructure\n\n## Impact\n✅ Naming consistency enforced across all infrastructure\n✅ K8s and GCP service accounts now follow same pattern\n✅ Infrastructure-as-code synchronized with reality\n✅ Setup script updated for future deployments\n✅ No breaking changes (blue-green migration completed)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T15:07:55-05:00",
+          "tree_id": "808be6ef7243bd78732b80a149d20de2bb642baf",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/865af6e9f11abdef8a0e285fde24ed990a896a55"
+        },
+        "date": 1762373350922,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 136.38252511375595,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008016833290765186",
+            "extra": "mean: 7.3323176790128 msec\nrounds: 81"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 141.43928834033707,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008688673511280021",
+            "extra": "mean: 7.070171320388424 msec\nrounds: 103"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44889.62986709274,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.27685999997675 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47339.72072411521,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.123909999971602 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 40048.41051869307,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 24.969779999963748 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.69997143573718,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.271482079999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.395122138109055,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.55935563999989 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.940393939674655,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.59963479000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1404849.5400685482,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 711.8200002764752 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5089.545203841984,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 196.48120999988805 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2989.757390155463,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.4753000001788 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2842.5820958325394,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 351.79282999990846 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58983.23521910217,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023391887007707158",
+            "extra": "mean: 16.953969993089533 usec\nrounds: 12797"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16875.912154884634,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000029554000945287118",
+            "extra": "mean: 59.256056254746255 usec\nrounds: 5244"
           }
         ]
       }
