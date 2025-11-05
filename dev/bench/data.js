@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762371878656,
+  "lastUpdate": 1762371985458,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -30688,6 +30688,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018188841647033445",
             "extra": "mean: 59.72333949156619 usec\nrounds: 5034"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "e148edf7b91f5cc920d3aa37ff3a0b95961befae",
+          "message": "fix(terraform): correct Workload Identity namespace and service account mappings for staging\n\n## Problem\nPods in staging-mcp-server-langgraph namespace were crashing due to Workload Identity\nmisconfiguration. The IAM bindings pointed to wrong namespace (mcp-staging instead of\nstaging-mcp-server-langgraph) causing Cloud SQL Proxy authentication failures.\n\n## Root Cause Analysis\n- Keycloak, OpenFGA, and MCP Server pods all experiencing CrashLoopBackOff\n- Cloud SQL Proxy getting 403 Forbidden errors with message:\n  \"Permission 'iam.serviceAccounts.getAccessToken' denied\"\n- IAM bindings configured for namespace \"mcp-staging\"\n- Actual K8s namespace is \"staging-mcp-server-langgraph\"\n- Service account names didn't match deployed resources\n\n## Changes\n1. Fixed app_namespace in terraform.tfvars:\n   - Changed from \"mcp-staging\" to \"staging-mcp-server-langgraph\"\n\n2. Updated service account definitions in main.tf to match deployed K8s resources:\n   - Replaced generic \"mcp-server-sa\"/\"worker-sa\"\n   - Added actual deployed SAs with correct names:\n     * \"staging-keycloak\" -> keycloak-staging (GCP SA)\n     * \"staging-openfga\" -> openfga-staging (GCP SA)\n     * \"staging-mcp-server-langgraph\" -> mcp-staging-sa (GCP SA)\n\n3. Correct IAM bindings now use:\n   - serviceAccount:vishnu-sandbox-20250310.svc.id.goog[staging-mcp-server-langgraph/staging-keycloak]\n   - serviceAccount:vishnu-sandbox-20250310.svc.id.goog[staging-mcp-server-langgraph/staging-openfga]\n   - serviceAccount:vishnu-sandbox-20250310.svc.id.goog[staging-mcp-server-langgraph/staging-mcp-server-langgraph]\n\n## Impact\n- Workload Identity IAM bindings now correctly map K8s SAs to GCP SAs\n- Cloud SQL Proxy can authenticate successfully\n- Terraform configuration matches actual deployment\n- Infrastructure-as-code is now in sync with reality\n\n## Verification\n- Verified IAM bindings with:\n  ```\n  gcloud iam service-accounts get-iam-policy keycloak-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com\n  gcloud iam service-accounts get-iam-policy openfga-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com\n  gcloud iam service-accounts get-iam-policy mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com\n  ```\n- Confirmed namespace matches deployed K8s resources\n- Terraform plan validates correct serviceAccount member format\n\n## Related Fixes\nAlso applied manual fixes via gcloud to immediately restore service:\n- Added correct Workload Identity bindings\n- Removed old incorrect bindings\n- Created missing mcp-staging-sa service account\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T14:45:03-05:00",
+          "tree_id": "8ed02994420d9b186946c1973d5e3bad4da3b95a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/e148edf7b91f5cc920d3aa37ff3a0b95961befae"
+        },
+        "date": 1762371984333,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 142.28593828698214,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016242763670637115",
+            "extra": "mean: 7.028101385416319 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 145.90653605933863,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001844763429711202",
+            "extra": "mean: 6.853702561983313 msec\nrounds: 121"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43926.21274780977,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.765450000008514 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46628.7636988472,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.445990000046322 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46489.983035774305,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.51001000001429 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.14881217174414,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.2590389000000215 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.3094344071965,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.78815593000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934746968507932,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.65681624 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1452475.0174728152,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 688.4799999795632 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4764.929130493658,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 209.86671000002843 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2982.663833175595,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.27077000002237 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2871.253179697779,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 348.2799799999725 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60083.42264756742,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025279769159372004",
+            "extra": "mean: 16.643525883432453 usec\nrounds: 11687"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16776.529597295383,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026228369416446777",
+            "extra": "mean: 59.60708346744218 usec\nrounds: 4972"
           }
         ]
       }
