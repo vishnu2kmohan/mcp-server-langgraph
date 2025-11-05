@@ -395,6 +395,54 @@ class MCPAgentStreamableServer:
                     ),
                 ]
 
+            # Add search_tools for progressive discovery (Anthropic best practice)
+            tools.append(
+                Tool(
+                    name="search_tools",
+                    description=(
+                        "Search and discover available tools using progressive disclosure. "
+                        "Query by keyword or category instead of loading all tool definitions. "
+                        "Saves 98%+ tokens compared to list-all approach. "
+                        "Detail levels: minimal (name+desc), standard (+params), full (+schema). "
+                        "Categories: calculator, search, filesystem, execution. "
+                        "Response time: <1 second."
+                    ),
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {"type": "string", "description": "Search query (keyword)"},
+                            "category": {"type": "string", "description": "Tool category filter"},
+                            "detail_level": {
+                                "type": "string",
+                                "enum": ["minimal", "standard", "full"],
+                                "description": "Level of detail in results",
+                            },
+                        },
+                    },
+                )
+            )
+
+            # Add execute_python if code execution is enabled
+            if settings.enable_code_execution:
+                from mcp_server_langgraph.tools.code_execution_tools import ExecutePythonInput
+
+                tools.append(
+                    Tool(
+                        name="execute_python",
+                        description=(
+                            "Execute Python code in a secure sandboxed environment. "
+                            "Security: Import whitelist, no eval/exec, resource limits (CPU, memory, timeout). "
+                            "Backends: docker-engine (local/dev) or kubernetes (production). "
+                            "Network: Configurable isolation (none/allowlist/unrestricted). "
+                            "Response time: 1-30 seconds depending on code complexity. "
+                            "Use for data processing, calculations, and Python-specific tasks."
+                        ),
+                        inputSchema=ExecutePythonInput.model_json_schema(),
+                    )
+                )
+
+            return tools
+
         # Store reference to handler for public API
         self._list_tools_handler = list_tools
 
@@ -471,6 +519,10 @@ class MCPAgentStreamableServer:
                     return await self._handle_get_conversation(arguments, span, user_id)
                 elif name == "conversation_search" or name == "list_conversations":
                     return await self._handle_search_conversations(arguments, span, user_id)
+                elif name == "search_tools":
+                    return await self._handle_search_tools(arguments, span)
+                elif name == "execute_python":
+                    return await self._handle_execute_python(arguments, span, user_id)
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
@@ -815,6 +867,76 @@ class MCPAgentStreamableServer:
             )
 
             return [TextContent(type="text", text=response_text)]
+
+    async def _handle_search_tools(self, arguments: dict[str, Any], span: Any) -> list[TextContent]:
+        """
+        Handle search_tools invocation for progressive tool discovery.
+
+        Implements Anthropic best practice for token-efficient tool discovery.
+        """
+        with tracer.start_as_current_span("tools.search"):
+            from mcp_server_langgraph.tools.tool_discovery import search_tools
+
+            # Extract arguments
+            query = arguments.get("query")
+            category = arguments.get("category")
+            detail_level = arguments.get("detail_level", "minimal")
+
+            logger.info(
+                "Searching tools",
+                extra={"query": query, "category": category, "detail_level": detail_level},
+            )
+
+            # Execute search_tools
+            result = search_tools.invoke({
+                "query": query,
+                "category": category,
+                "detail_level": detail_level,
+            })
+
+            span.set_attribute("tools.query", query or "")
+            span.set_attribute("tools.category", category or "")
+            span.set_attribute("tools.detail_level", detail_level)
+
+            return [TextContent(type="text", text=result)]
+
+    async def _handle_execute_python(self, arguments: dict[str, Any], span: Any, user_id: str) -> list[TextContent]:
+        """
+        Handle execute_python invocation for secure code execution.
+
+        Implements sandboxed Python execution with validation and resource limits.
+        """
+        with tracer.start_as_current_span("code.execute"):
+            import time
+            from mcp_server_langgraph.tools.code_execution_tools import execute_python
+
+            # Extract arguments
+            code = arguments.get("code", "")
+            timeout = arguments.get("timeout")
+
+            logger.info(
+                "Executing Python code",
+                extra={
+                    "user_id": user_id,
+                    "code_length": len(code),
+                    "timeout": timeout,
+                },
+            )
+
+            # Execute code
+            start_time = time.time()
+            result = execute_python.invoke({"code": code, "timeout": timeout})
+            execution_time = time.time() - start_time
+
+            span.set_attribute("code.length", len(code))
+            span.set_attribute("code.execution_time", execution_time)
+            span.set_attribute("code.success", "success" in result.lower())
+
+            metrics.code_executions.add(
+                1, {"user_id": user_id, "success": "success" in result.lower()}
+            )
+
+            return [TextContent(type="text", text=result)]
 
 
 # ============================================================================
