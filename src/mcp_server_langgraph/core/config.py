@@ -331,6 +331,15 @@ class Settings(BaseSettings):  # type: ignore[misc]
         extra="ignore",  # Ignore extra environment variables
     )
 
+    @field_validator("cors_allowed_origins", "code_execution_allowed_domains", "code_execution_allowed_imports", mode="before")
+    @classmethod
+    def parse_comma_separated_list(cls, v):
+        """Parse comma-separated strings from environment variables into lists"""
+        if isinstance(v, str):
+            # Split by comma and strip whitespace
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
+
     def get_mock_authorization_enabled(self) -> bool:
         """
         Get the effective value of enable_mock_authorization based on environment.

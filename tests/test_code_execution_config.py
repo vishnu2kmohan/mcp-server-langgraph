@@ -143,15 +143,17 @@ class TestCodeExecutionSettingsFromEnv:
         assert settings.code_execution_memory_limit_mb == 1024
 
     def test_code_execution_allowed_domains_from_env(self, monkeypatch):
-        """Test setting allowed domains via environment"""
-        monkeypatch.setenv("CODE_EXECUTION_ALLOWED_DOMAINS", "api.example.com,data.example.com")
+        """Test setting allowed domains via environment (JSON format)"""
+        # Pydantic Settings v2 expects JSON format for list environment variables
+        monkeypatch.setenv("CODE_EXECUTION_ALLOWED_DOMAINS", '["api.example.com", "data.example.com"]')
         settings = Settings()
         assert "api.example.com" in settings.code_execution_allowed_domains
         assert "data.example.com" in settings.code_execution_allowed_domains
 
     def test_code_execution_allowed_imports_from_env(self, monkeypatch):
-        """Test setting allowed imports via environment"""
-        monkeypatch.setenv("CODE_EXECUTION_ALLOWED_IMPORTS", "pandas,numpy,json,datetime")
+        """Test setting allowed imports via environment (JSON format)"""
+        # Pydantic Settings v2 expects JSON format for list environment variables
+        monkeypatch.setenv("CODE_EXECUTION_ALLOWED_IMPORTS", '["pandas", "numpy", "json", "datetime"]')
         settings = Settings()
         assert "pandas" in settings.code_execution_allowed_imports
         assert "numpy" in settings.code_execution_allowed_imports

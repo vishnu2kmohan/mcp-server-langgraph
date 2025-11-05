@@ -134,6 +134,14 @@ builder = [
     "ast-comments>=1.2.0",  # AST manipulation for code import
 ]
 
+code-execution = [
+    # Code execution sandbox dependencies
+    # Supports both Docker Engine (local/dev) and Kubernetes (production)
+    "docker>=7.1.0",  # Docker Python SDK for container management
+    "kubernetes>=31.0.0",  # Kubernetes Python client for K8s Jobs
+    "psutil>=6.1.0",  # Process and system monitoring
+]
+
 # ==============================================================================
 # EMBEDDING OPTIONS - Choose based on deployment strategy
 # ==============================================================================
