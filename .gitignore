@@ -227,4 +227,4 @@ _site/
 *.code-workspace
 .idea/workspace.xml
 .idea/tasks.xml
-.poetry.lock
+poetry.lock
