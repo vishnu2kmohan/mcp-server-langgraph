@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762368583153,
+  "lastUpdate": 1762368864080,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -29712,6 +29712,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017096345670877925",
             "extra": "mean: 59.466043564006185 usec\nrounds: 5578"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "3a40e79ef13ec0d106f4b21f326bf3dfaf49e7f5",
+          "message": "fix(ci/cd): resolve 8 critical GitHub Actions workflow failures\n\nComprehensive fix for all critical and high-priority CI/CD failures identified\nin GitHub Actions workflows. All changes validated with local testing following\nTDD best practices.\n\n## Critical Fixes\n\n### 1. GKE Staging Deployment Timeout\n- **Root Cause**: Init container waiting for deleted redis-session service\n- **Fix**: Remove wait-for-redis init container (staging uses Memorystore Redis)\n- **Files**:\n  - deployments/overlays/staging-gke/deployment-patch.yaml:200-214\n- **Impact**: Deployment will now succeed instead of 10-minute timeout\n\n### 2. Terraform Formatting & Validation\n- **Root Cause**: Unformatted files, service account naming violations\n- **Fixes**:\n  - Ran `terraform fmt -recursive terraform/`\n  - Changed service account names from name_prefix to short_prefix\n- **Files**:\n  - terraform/environments/gcp-dev/main.tf:355\n  - terraform/environments/gcp-prod/main.tf:400,421 (2 service accounts)\n  - terraform/environments/gcp-staging/main.tf\n  - terraform/modules/aws-secrets/main.tf\n  - terraform/modules/azure-secrets/main.tf\n  - terraform/modules/cloudsql/variables.tf\n- **Validation**: All environments (gcp-dev, gcp-prod, gcp-staging) validate successfully\n- **Impact**: Terraform validation workflow will pass all checks\n\n### 3. Azure Terraform Module Crash\n- **Root Cause**: Terraform 1.6.6 bug with sensitive values\n- **Fix**: Update minimum version requirement from 1.5 to 1.7\n- **Files**: terraform/modules/azure-database/versions.tf:2\n- **Impact**: Prevents Terraform crash on marked value handling\n\n### 4. Security Validation Dependencies\n- **Root Cause**: Missing hypothesis dependency in test workflows\n- **Fix**: Add hypothesis to pip install commands\n- **Files**: .github/workflows/security-validation.yml:38,61\n- **Testing**: All security tests pass locally (7 terraform, 8 kubernetes)\n- **Impact**: Security validation workflow will execute successfully\n\n### 5. E2E Test Timeout\n- **Root Cause**: 3-minute timeout insufficient for slow GitHub Actions runners\n- **Fix**: Increase timeout from 3 to 5 minutes (60→100 iterations)\n- **Files**: .github/workflows/e2e-tests.yaml:107,109,111,117,124,125\n- **Impact**: E2E tests will have adequate time for Docker service startup\n\n### 6. Performance Regression Script\n- **Root Cause**: Missing --check-improvement argument\n- **Fix**: Add --check-improvement flag and implementation\n- **Files**: scripts/ci/performance_regression.py:367-368,404-411\n- **Testing**: Verified with test baseline/current JSON files\n- **Impact**: Performance regression workflow will execute without errors\n\n### 7. Placeholder Cleanup\n- **Fixes**:\n  - Added clear template comments for AWS ACCOUNT_ID/REGION placeholders\n  - Removed .naming-bak backup files\n- **Files**:\n  - deployments/kubernetes/overlays/aws/kustomization.yaml:35-42\n  - deployments/GKE_DEPLOYMENT_GUIDE.md.naming-bak (deleted)\n  - deployments/GKE_OPERATIONAL_RUNBOOKS.md.naming-bak (deleted)\n- **Impact**: Security validation placeholder detection will pass\n\n## Test Results (TDD Validation)\n\n✅ Terraform validation: PASS (all environments)\n✅ Security tests: PASS (15/15 tests)\n✅ Kubernetes manifests: PASS (kustomize build successful)\n✅ Unit tests: PASS (22/22 tests)\n✅ Performance regression script: PASS (both modes tested)\n\n## Expected Workflow Status Changes\n\n- Deploy to GKE Staging: ❌ → ✅\n- Terraform Validation: ❌ → ✅\n- Security Validation: ❌ → ✅\n- E2E Tests: ❌ → ✅\n- Performance Regression: ❌ → ✅\n\n## Service Account Name Examples\n\n- **Before**: `production-mcp-server-langgraph-app-sa` (38 chars) ❌\n- **After**: `production-mcp-slg-app-sa` (25 chars) ✅\n- **GCP Limit**: 30 characters maximum\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T13:52:53-05:00",
+          "tree_id": "3b6227f81a76c4b87c59d07cd557246c6a1ace2a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/3a40e79ef13ec0d106f4b21f326bf3dfaf49e7f5"
+        },
+        "date": 1762368863032,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.87216692769138,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009866797832528395",
+            "extra": "mean: 6.950614711340167 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.69724708589783,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00021762172138620794",
+            "extra": "mean: 6.770606898437448 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45383.52024538034,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.034429999990834 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47480.179399056535,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.061420000023645 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45673.00775478419,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.89477000001716 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.27619026652508,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.255518299999977 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.372323960563065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.620032889999976 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938111199602883,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.62274207999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1457534.7258509875,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 686.0899999594494 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5057.893918263389,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 197.71074999994198 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2982.7767312877413,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.2580799999316 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2994.0233605085828,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 333.99872999993363 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59234.12120084479,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025523088173545077",
+            "extra": "mean: 16.882161492854866 usec\nrounds: 11468"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16767.595684279717,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022636813079225833",
+            "extra": "mean: 59.63884261221419 usec\nrounds: 4257"
           }
         ]
       }
