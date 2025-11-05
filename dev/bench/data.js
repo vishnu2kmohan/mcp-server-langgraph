@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762373352084,
+  "lastUpdate": 1762376204320,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -31176,6 +31176,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000029554000945287118",
             "extra": "mean: 59.256056254746255 usec\nrounds: 5244"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "bf8157b978451cf54a1d161646f66ab5e7275f46",
+          "message": "test: fix critical test issues and add comprehensive GDPR endpoint coverage\n\n## Overview\nAddressed all critical test findings from OpenAI Codex analysis, following TDD\nbest practices and industry standards. All changes validated against pytest,\nGDPR compliance requirements, and OpenFGA/Keycloak integration patterns.\n\n## High Priority Fixes (Phase 1)\n\n### API Key Test Assertions - User Identifier Mismatch ✅\n- **Issue**: Tests asserted `user_id=\"user123\"` but handler uses `keycloak_id` (UUID)\n- **Fix**: Updated 6 assertions to use correct Keycloak UUID format\n  - `tests/api/test_api_keys_endpoints.py`: lines 151-155, 253, 294-335, 374-381\n- **Validation**: Response `user_id` uses OpenFGA format (`user:alice`)\n  while Keycloak calls use UUID (`8c7b4e5d-1234-5678-abcd-ef1234567890`)\n- **Result**: All 20 API key tests passing\n\n### SCIM Health Check Enhancement ✅\n- **Issue**: Tests only checked Keycloak availability, not API server\n- **Fix**: Added `api_server_available()` fixture\n- **Impact**: Clear skip messages instead of confusing connection errors\n- **Files**: `tests/e2e/test_scim_provisioning.py`\n\n### Standardized User Identity Fixtures ✅\n- **Issue**: Inconsistent user ID formats across test files\n- **Fix**: Created shared `mock_current_user()` fixture in `tests/conftest.py`\n- **Format**: Dual identity support\n  - `user_id`: \"user:alice\" (OpenFGA format per best practices)\n  - `keycloak_id`: \"8c7b4e5d-1234-5678-abcd-ef1234567890\" (Keycloak UUID)\n- **Removed**: Duplicate local fixtures from API key and service principal tests\n- **Added**: `mock_admin_user()` and `admin_test_client()` for elevated permissions\n\n### Service Principals Test Fixes ✅\n- **Issue**: Hardcoded \"user123\" instead of OpenFGA format\n- **Fix**: Updated 13 occurrences to use \"user:alice\" (OpenFGA format)\n- **Added**: Admin-specific test client for tests requiring role permissions\n- **Result**: All 21 service principal tests passing\n\n## Medium Priority Fixes (Phase 2)\n\n### GDPR API Endpoint Tests ✅\n- **Issue**: All 8 GDPR endpoint tests skipped (class-level decorator)\n- **Fix**: Implemented comprehensive test suite using auth mocking patterns\n- **Coverage**: 11 tests covering all GDPR Articles\n  - Article 15: Right to Access (`test_get_user_data_endpoint`)\n  - Article 16: Right to Rectification (`test_update_user_profile`)\n  - Article 17: Right to Erasure (`test_delete_user_account_*`)\n  - Article 20: Right to Data Portability (`test_export_user_data_*`)\n  - Article 21: Right to Object (`test_update_consent_*`)\n- **Validation**: Machine-readable exports (JSON/CSV), consent management, audit logs\n- **Files**: `tests/test_gdpr.py`\n- **Note**: 1 test skipped due to complex async mock interaction (documented for future)\n\n## Test Results Summary\n\n```\n✅ API Keys:              20 passed\n✅ Service Principals:    21 passed\n✅ GDPR Endpoints:        11 passed, 1 skipped\n✅ Total:                 153 passed, 7 skipped\n```\n\n## Industry Standards Compliance\n\nAll fixes validated against:\n- ✅ Pytest best practices (assert_called_once_with with exact parameters)\n- ✅ OpenFGA identity format (user:{username} + Keycloak UUID)\n- ✅ GDPR requirements (machine-readable export, 30-day deletion, audit logs)\n- ✅ Fixture scopes (session/module/function for proper isolation)\n- ✅ TDD principles (red-green-refactor, failing tests fixed first)\n\n## Remaining Work (Tracked for Future)\n\n1. **E2E Test Strategy**: Decide between real infrastructure (docker-compose.test.yml)\n   vs contract/unit test reclassification\n2. **Container Migration**: Complete migration from deprecated `pytest_configure`\n   to container fixtures\n3. **Documentation**: Create TESTING.md with fixture standards and conventions\n4. **GDPR Deletion Test**: Fix complex async mock interaction in account deletion test\n\n## Breaking Changes\nNone - all changes are test-only improvements\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T15:55:33-05:00",
+          "tree_id": "60bb08a36e88219aa33754f1815ec6eb611464f7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/bf8157b978451cf54a1d161646f66ab5e7275f46"
+        },
+        "date": 1762376202484,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.0675833847659,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009907431395246074",
+            "extra": "mean: 6.989703581632468 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.59002398741598,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012856740853308912",
+            "extra": "mean: 6.775525696000045 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 46149.02535577125,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.668929999947295 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48288.323786751374,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.70893999999157 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46563.670930879816,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.475969999968925 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.6467837602565,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.245302229999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.36329137350694,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.64411259999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936939245500987,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.63460943999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1484163.9704988874,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 673.7799999712024 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4963.269325357746,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 201.48009999999772 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2989.9932103229116,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.44892000005666 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2867.1587437413295,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 348.7773400000549 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60666.36297473307,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002024828725451207",
+            "extra": "mean: 16.483598998945922 usec\nrounds: 12187"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16735.01063288793,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018234882653752536",
+            "extra": "mean: 59.75496651521589 usec\nrounds: 5286"
           }
         ]
       }
