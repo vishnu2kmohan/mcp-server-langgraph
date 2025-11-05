@@ -1,9 +1,11 @@
 # OpenAPI Generator configuration for Python client
-# Generates flake8 and mypy compliant code
+# Generates uv-native, flake8 and mypy compliant code
+# Uses custom template to generate PEP 735 dependency groups instead of Poetry
 
 generatorName: python
-inputSpec: ../openapi.json
-outputDir: ../clients/python
+inputSpec: openapi.json
+outputDir: clients/python
+templateDir: generators/templates/python
 packageName: mcp_server_langgraph_client
 projectName: mcp-server-langgraph-client
 packageVersion: "2.8.0"

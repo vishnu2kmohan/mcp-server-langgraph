@@ -1,24 +1,89 @@
+{{#poetry1}}
+[tool.poetry]
+{{/poetry1}}
+{{^poetry1}}
 [project]
-name = "mcp_server_langgraph_client"
-version = "2.8.0"
-description = "MCP Server with LangGraph"
+{{/poetry1}}
+name = "{{{packageName}}}"
+version = "{{{packageVersion}}}"
+description = "{{{appName}}}"
+{{#poetry1}}
+authors = ["{{infoName}}{{^infoName}}OpenAPI Generator Community{{/infoName}} <{{infoEmail}}{{^infoEmail}}team@openapitools.org{{/infoEmail}}>"]
+{{/poetry1}}
+{{^poetry1}}
 authors = [
-  {name = "OpenAPI Generator Community",email = "team@openapitools.org"},
+  {name = "{{infoName}}{{^infoName}}OpenAPI Generator Community{{/infoName}}",email = "{{infoEmail}}{{^infoEmail}}team@openapitools.org{{/infoEmail}}"},
 ]
+{{/poetry1}}
+{{#licenseInfo}}
+{{#poetry1}}
+license = "{{{licenseInfo}}}"
+{{/poetry1}}
+{{^poetry1}}
+license = { text = "{{{licenseInfo}}}" }
+{{/poetry1}}
+{{/licenseInfo}}
 readme = "README.md"
-keywords = ["OpenAPI", "OpenAPI-Generator", "MCP Server with LangGraph"]
+{{#poetry1}}
+repository = "https://{{{gitHost}}}/{{{gitUserId}}}/{{{gitRepoId}}}"
+{{/poetry1}}
+keywords = ["OpenAPI", "OpenAPI-Generator", "{{{appName}}}"]
+{{#poetry1}}
+include = ["{{packageName}}/py.typed"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+urllib3 = ">= 2.1.0, < 3.0.0"
+python-dateutil = ">= 2.8.2"
+{{#asyncio}}
+aiohttp = ">= 3.8.4"
+aiohttp-retry = ">= 2.8.3"
+{{/asyncio}}
+{{#httpx}}
+httpx = ">= 0.28.1"
+{{/httpx}}
+{{#tornado}}
+tornado = ">=4.2, <5"
+{{/tornado}}
+{{#hasHttpSignatureMethods}}
+pem = ">= 19.3.0"
+pycryptodome = ">= 3.9.0"
+{{/hasHttpSignatureMethods}}
+pydantic = ">= 2"
+typing-extensions = ">= 4.7.1"
+{{#lazyImports}}
+lazy-imports = ">= 1, < 2"
+{{/lazyImports}}
+{{/poetry1}}
+{{^poetry1}}
 requires-python = ">=3.9"
 
 dependencies = [
   "urllib3 (>=2.1.0,<3.0.0)",
   "python-dateutil (>=2.8.2)",
+{{#async}}
+  "aiohttp (>=3.8.4)",
+  "aiohttp-retry (>=2.8.3)",
+{{/async}}
+{{#tornado}}
+  "tornado (>=4.2,<5)",
+{{/tornado}}
+{{#hasHttpSignatureMethods}}
+  "pem (>=19.3.0)",
+  "pycryptodome (>=3.9.0)",
+{{/hasHttpSignatureMethods}}
   "pydantic (>=2)",
   "typing-extensions (>=4.7.1)",
+{{#lazyImports}}
+  "lazy-imports (>=1,<2)"
+{{/lazyImports}}
 ]
 
 [project.urls]
-Repository = "https://github.com/GIT_USER_ID/GIT_REPO_ID"
+Repository = "https://{{{gitHost}}}/{{{gitUserId}}}/{{{gitRepoId}}}"
 
+{{/poetry1}}
+{{^poetry1}}
 # uv-native dependency groups (PEP 735)
 # Use: uv sync, uv sync --group dev, uv run pytest
 [dependency-groups]
@@ -30,7 +95,19 @@ dev = [
   "types-python-dateutil >=2.8.19.14",
   "mypy >=1.5",
 ]
+{{/poetry1}}
 
+{{#poetry1}}
+[tool.poetry.dev-dependencies]
+{{/poetry1}}
+{{#poetry1}}
+pytest = ">= 7.2.1"
+pytest-cov = ">= 2.8.1"
+tox = ">= 3.9.0"
+flake8 = ">= 4.0.0"
+types-python-dateutil = ">= 2.8.19.14"
+mypy = ">= 1.5"
+{{/poetry1}}
 
 
 [build-system]
@@ -42,7 +119,7 @@ extension-pkg-whitelist = "pydantic"
 
 [tool.mypy]
 files = [
-  "mcp_server_langgraph_client",
+  "{{{packageName}}}",
   #"test",  # auto-generated tests
   "tests", # hand-written tests
 ]
@@ -80,7 +157,7 @@ disallow_any_generics = true
 
 [[tool.mypy.overrides]]
 module = [
-  "mcp_server_langgraph_client.configuration",
+  "{{{packageName}}}.configuration",
 ]
 warn_unused_ignores = true
 strict_equality = true
