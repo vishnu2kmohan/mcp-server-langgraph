@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762370199134,
+  "lastUpdate": 1762370762476,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -30444,6 +30444,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017945685434312717",
             "extra": "mean: 57.94595741935163 usec\nrounds: 5425"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "a4695f52bbbc919438b8234d3362eae83b8a703d",
+          "message": "fix(ci/cd): add --system flag to all uv pip install commands\n\nFix uv pip install failures by adding --system flag to install into the\nGitHub Actions Python environment rather than requiring a virtual environment.\n\n## Root Cause\n\n`uv pip install` requires either:\n- A virtual environment (created with `uv venv`), OR\n- The `--system` flag to install into system/global Python\n\nGitHub Actions uses actions/setup-python which provides a global Python\nenvironment, not a virtual environment, so --system is required.\n\n## Error\n\n```\nerror: No virtual environment found; run `uv venv` to create an environment,\nor pass `--system` to install into a non-virtual environment\n```\n\n## Fix\n\nAdded `--system` flag to all `uv pip install` commands across 4 workflows:\n\n### 1. security-validation.yml (4 commands)\n- Terraform Security Validation: 2 commands\n- Kubernetes Manifest Security Validation: 2 commands\n- Pattern: `uv pip install --system -e .` and `uv pip install --system pytest ...`\n\n### 2. ci.yaml (1 command)\n- Coverage tools installation\n- Pattern: `uv pip install --system coverage[toml]`\n\n### 3. dora-metrics.yaml (1 command)\n- Dependencies installation\n- Pattern: `uv pip install --system requests`\n\n### 4. performance-regression.yaml (3 commands)\n- Benchmark dependencies\n- Test server installation\n- Improvement check dependencies\n- Pattern: `uv pip install --system <packages>`\n\n## Verification\n\n```bash\n# All uv pip install commands now have --system\ngrep -r \"uv pip install\" .github/workflows/ | grep -v \"#\" | grep -v \"\\-\\-system\"\n# Result: Only documentation comments remain\n```\n\n## Expected Impact\n\n- ✅ Performance Regression Detection: Will pass\n- ✅ Security Validation: Will pass (when triggered)\n- ✅ CI/CD Pipeline: Coverage merge will pass\n- ✅ DORA Metrics: Will pass (when secrets configured)\n\n## Testing\n\nVerified pattern:\n```yaml\n- name: Set up uv\n  uses: astral-sh/setup-uv@v5\n\n- name: Install dependencies\n  run: |\n    uv pip install --system <packages>\n```\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T14:24:56-05:00",
+          "tree_id": "96e81cca11df7737b078d7217a4a229fcd450d0a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/a4695f52bbbc919438b8234d3362eae83b8a703d"
+        },
+        "date": 1762370761203,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 140.5912557645843,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016485174548101355",
+            "extra": "mean: 7.112817895833216 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 140.26129443403795,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003636993848948359",
+            "extra": "mean: 7.129550629309782 msec\nrounds: 116"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43898.233359426,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.77996000003668 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48032.3545939903,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.81930000002785 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46750.03132246312,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.390360000026476 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.27779559901816,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.283239890000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.317594484722,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.76627973999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93605669493124,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.64354811000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1448037.1856441807,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 690.5899999765097 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5084.599860549849,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 196.67230999999674 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2967.0383109628037,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.0364299999551 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2878.3323172825235,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 347.4233999999399 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59430.495161485516,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002079037753598831",
+            "extra": "mean: 16.826378398544108 usec\nrounds: 12101"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17307.97243061247,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020949042576691784",
+            "extra": "mean: 57.77684266652217 usec\nrounds: 4875"
           }
         ]
       }
