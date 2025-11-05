@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762359741184,
+  "lastUpdate": 1762364893219,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -29102,6 +29102,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002451665230112806",
             "extra": "mean: 58.50638086886906 usec\nrounds: 4558"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "347ab14fca4df220a7a781a68a5777772e329754",
+          "message": "feat(terraform): add GCP Secret Manager module for reproducible secret management\n\nCreate Terraform module to manage GCP Secret Manager secrets, ensuring reproducible and idempotent secret provisioning across environments.\n\n## Purpose\n\nPrevent manual secret creation by managing secrets via Infrastructure as Code. Ensures secrets configuration is:\n- Reproducible (can recreate identical setup)\n- Idempotent (safe to re-apply)\n- Version controlled (all configuration in git)\n- Auditable (Terraform state tracks changes)\n\n## Module Features\n\n- **Manages 9 application secrets** per environment:\n  - API keys (Anthropic, Google)\n  - Authentication (JWT secret)\n  - Database credentials (postgres, keycloak, openfga, gdpr)\n  - Cache credentials (Redis host, password)\n\n- **IAM Policy Management**:\n  - Grants External Secrets Operator access to all secrets\n  - Optional application service account access\n  - Role: roles/secretmanager.secretAccessor\n\n- **Multi-Environment Support**:\n  - Uses environment prefix (staging-, production-, dev-)\n  - Consistent naming across all environments\n\n## Usage\n\n```hcl\nmodule \"secrets\" {\n  source = \"../../modules/gcp-secrets\"\n\n  project_id  = \"vishnu-sandbox-20250310\"\n  environment = \"staging\"\n\n  external_secrets_service_account = \"external-secrets-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com\"\n}\n```\n\n## Import Existing Secrets\n\nSince secrets were created manually in staging, import them:\n\n```bash\ncd terraform/environments/gcp-staging\n\nterraform import 'module.secrets.google_secret_manager_secret.secrets[\"staging-anthropic-api-key\"]'   projects/vishnu-sandbox-20250310/secrets/staging-anthropic-api-key\n\n# Repeat for all 9 secrets...\n```\n\n## Impact\n\n- ✅ Secrets now managed via Terraform (not manual gcloud commands)\n- ✅ IAM bindings automated and reproducible\n- ✅ New environments can replicate secret structure instantly\n- ✅ Documented in README with import procedures\n\nterraform/modules/gcp-secrets/main.tf\nterraform/modules/gcp-secrets/variables.tf\nterraform/modules/gcp-secrets/outputs.tf\nterraform/modules/gcp-secrets/README.md\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com)",
+          "timestamp": "2025-11-05T12:47:07-05:00",
+          "tree_id": "929f6358b18e3309f26cecf11caba1250159879e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/347ab14fca4df220a7a781a68a5777772e329754"
+        },
+        "date": 1762364891424,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 163.78314405968894,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008944796326352053",
+            "extra": "mean: 6.105634409091336 msec\nrounds: 110"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 166.27347634795964,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014853839589227207",
+            "extra": "mean: 6.014188323742658 msec\nrounds: 139"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51749.81654673643,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.323740000061207 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53479.65366636788,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.69869999978846 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 52041.6458065095,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.2153800000483 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.39556582103057,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.2247814399999015 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.60243282351591,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.01407610999985 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93836395922824,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.62018297000009 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1467050.0557865277,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 681.6399999820533 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6474.915916745391,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 154.44215999991684 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2910.8654573536905,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.54043999996975 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3129.9880271686343,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 319.4900400001188 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66196.82586430247,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013890879853421974",
+            "extra": "mean: 15.106464501030759 usec\nrounds: 12775"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20626.807298805514,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002076168506463923",
+            "extra": "mean: 48.48060029425442 usec\nrounds: 5439"
           }
         ]
       }
