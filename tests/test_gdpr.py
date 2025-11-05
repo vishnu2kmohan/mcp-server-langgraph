@@ -352,7 +352,8 @@ class TestGDPREndpoints:
 
         # Mock audit logs
         mock_gdpr_storage.audit_logs = AsyncMock()
-        mock_gdpr_storage.audit_logs.create.return_value = "deletion_test_123"  # Returns the audit record ID
+        mock_gdpr_storage.audit_logs.log.return_value = "deletion_test_123"  # Returns the audit record ID
+        mock_gdpr_storage.audit_logs.create.return_value = "deletion_test_123"  # Also mock create for consistency
         mock_gdpr_storage.audit_logs.anonymize_user_logs.return_value = 0
 
         # Mock preferences deletion
@@ -476,11 +477,6 @@ class TestGDPREndpoints:
 
     def test_delete_user_account(self, test_client, mock_current_user):
         """Test DELETE /api/v1/users/me?confirm=true - GDPR Article 17 (Right to Erasure)"""
-        # Note: This test currently fails due to mock complexity with nested async calls
-        # Skip for now to allow other tests to pass - this is tracked for future improvement
-        import pytest
-        pytest.skip("Skipping due to complex mock async interaction - tracked for improvement")
-
         response = test_client.delete("/api/v1/users/me?confirm=true")
 
         assert response.status_code == 200
