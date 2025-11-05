@@ -3,6 +3,11 @@
   path: /spec/template/spec/serviceAccountName
   value: staging-openfga
 
+# Fix secret reference to use staging-prefixed secret name
+- op: replace
+  path: /spec/template/spec/containers/1/env/1/valueFrom/secretKeyRef/name
+  value: staging-mcp-server-langgraph-secrets
+
 # Remove init container - OpenFGA will wait for DB internally
 - op: remove
   path: /spec/template/spec/initContainers/0
