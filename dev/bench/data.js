@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762372227123,
+  "lastUpdate": 1762372443668,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -30932,6 +30932,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000020654984121979515",
             "extra": "mean: 57.37708021873377 usec\nrounds: 4388"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f6b90dd252aaa579ef6736d818d14d30b2ca572b",
+          "message": "fix(ci/cd): improve ENVIRONMENT placeholder detection logic\n\nNarrow ENVIRONMENT check to only find hardcoded values, not environment\nvariable names or shell variables.\n\n## Fix\n\n- **Root Cause**: Check was too broad, flagging valid uses like `- name: ENVIRONMENT`\n- **Fix**: Only check for `value.*ENVIRONMENT` pattern (hardcoded values)\n- **Files**: .github/workflows/security-validation.yml:112-129\n- **Exclusions Added**:\n  - Shell scripts (*.sh)\n  - Binary files (-I)\n  - .terraform directories\n  - ${ENVIRONMENT} (variable substitution)\n  - from_attribute.*ENVIRONMENT (OTel config)\n\n## Detection Logic\n\n```bash\n# Only match hardcoded values, not env var names\ngrep -rI \"value.*ENVIRONMENT\" terraform/ deployments/ \\\n  | grep -v \"#\" \\                           # Filter templates\n  | grep -v '\\${ENVIRONMENT}' \\             # Filter variable refs\n  | grep -v 'from_attribute.*ENVIRONMENT'   # Filter OTel config\n```\n\n## Valid Uses (Not Flagged)\n\n✅ `- name: ENVIRONMENT` (env var name in YAML)\n✅ `value: \"${ENVIRONMENT}\"` (variable substitution)\n✅ `from_attribute: ENVIRONMENT` (OTel processor)\n✅ `ENVIRONMENT=\"$2\"` (shell script variable)\n\n## Invalid Uses (Flagged)\n\n❌ `value: ENVIRONMENT` (hardcoded placeholder without quotes/substitution)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T14:53:03-05:00",
+          "tree_id": "e02bf7efaa91d6f18a571232942635146b3cceed",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f6b90dd252aaa579ef6736d818d14d30b2ca572b"
+        },
+        "date": 1762372442540,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.69428957162614,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008630021481995936",
+            "extra": "mean: 6.91112277450993 msec\nrounds: 102"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.24387473901461,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000136587385007029",
+            "extra": "mean: 6.700442492187486 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45481.37946840779,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.987020000011626 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47541.50968060872,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.0342500000138 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46462.01080136848,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.52296000005549 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 189.85555123269174,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.267162290000016 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.382603034282067,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.592657509999924 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.954153085073791,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.46058076999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1021941.0748801391,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 978.5299999975904 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5111.918294368563,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 195.6212800000401 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2991.9440410726165,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.23084999995467 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2940.269138122983,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.10492000007275 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59848.84023221777,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002000903818328451",
+            "extra": "mean: 16.70876154191006 usec\nrounds: 13516"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17266.135709757196,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016952901430294903",
+            "extra": "mean: 57.91683888102964 usec\nrounds: 5648"
           }
         ]
       }
