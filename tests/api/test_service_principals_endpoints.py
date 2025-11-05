@@ -101,6 +101,7 @@ def mock_current_user():
         "user_id": "user123",
         "username": "alice",
         "email": "alice@example.com",
+        "roles": ["admin"],  # Give admin role for testing (allows creating SPs for other users)
     }
 
 
