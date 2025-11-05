@@ -104,24 +104,25 @@ jobs:
         docker compose -f docker-compose.test.yml up -d
 
         echo "Waiting for all services to report healthy..."
-        echo "This may take up to 3 minutes for Keycloak to initialize..."
+        echo "This may take up to 5 minutes for Keycloak to initialize..."
 
-        # Wait for all services to be healthy (max 3 minutes = 180 seconds)
+        # Wait for all services to be healthy (max 5 minutes = 300 seconds)
         # Keycloak needs 45s start_period + up to 40 retries * 5s = ~3 min worst case
-        for i in {1..60}; do
+        # Increased timeout to 5 minutes to accommodate slower GitHub Actions runners
+        for i in {1..100}; do
           # Count healthy services using grep on ps output (more reliable than JSON parsing)
           HEALTHY=$(docker compose -f docker-compose.test.yml ps --status running --filter "health=healthy" --format "table {{.Service}}" | tail -n +2 | wc -l | tr -d ' ')
           TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
 
-          echo "Attempt $i/60: $HEALTHY/$TOTAL services healthy"
+          echo "Attempt $i/100: $HEALTHY/$TOTAL services healthy"
 
           if [ "$HEALTHY" -eq "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
             echo "✅ All $TOTAL services are healthy!"
             break
           fi
 
-          if [ $i -eq 60 ]; then
-            echo "❌ Timeout waiting for services after 3 minutes. Current status:"
+          if [ $i -eq 100 ]; then
+            echo "❌ Timeout waiting for services after 5 minutes. Current status:"
             docker compose -f docker-compose.test.yml ps
             echo ""
             echo "Showing logs for all services:"

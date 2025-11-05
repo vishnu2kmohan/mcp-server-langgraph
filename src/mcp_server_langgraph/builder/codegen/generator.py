@@ -34,8 +34,14 @@ Example:
 
 from typing import Any, Dict, List, Optional
 
-import black
 from pydantic import BaseModel, Field
+
+# Optional black formatter - gracefully degrade if not available
+try:
+    import black
+    BLACK_AVAILABLE = True
+except ImportError:
+    BLACK_AVAILABLE = False
 
 
 class NodeDefinition(BaseModel):
@@ -355,6 +361,30 @@ if __name__ == "__main__":
 
         return "\n".join(lines)
 
+    def _sanitize_workflow_name(self, name: str) -> str:
+        """
+        Sanitize workflow name to prevent code injection.
+
+        SECURITY: Prevents code injection via malicious workflow names.
+        Only allows alphanumeric characters and underscores.
+
+        Args:
+            name: Raw workflow name from user input
+
+        Returns:
+            Sanitized workflow name safe for code generation
+        """
+        import re
+        # Remove all non-alphanumeric characters except underscores
+        sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+        # Ensure it starts with a letter
+        if sanitized and not sanitized[0].isalpha():
+            sanitized = 'workflow_' + sanitized
+        # Fallback if completely empty
+        if not sanitized:
+            sanitized = 'workflow'
+        return sanitized
+
     def generate(self, workflow: WorkflowDefinition) -> str:
         """
         Generate production-ready Python code from workflow.
@@ -374,8 +404,11 @@ if __name__ == "__main__":
             >>> code = generator.generate(workflow)
             >>> print(code)
         """
+        # SECURITY: Sanitize workflow name to prevent code injection
+        sanitized_name = self._sanitize_workflow_name(workflow.name)
+
         # Generate components
-        class_name = "".join(word.capitalize() for word in workflow.name.split("_"))
+        class_name = "".join(word.capitalize() for word in sanitized_name.split("_"))
         state_fields = self._generate_state_fields(workflow.state_schema)
 
         # Generate node functions
@@ -398,23 +431,27 @@ if __name__ == "__main__":
         # Generate graph construction
         graph_construction = self._generate_graph_construction(workflow)
 
-        # Fill template
+        # Fill template (use sanitized name)
         code = self.AGENT_TEMPLATE.format(
-            description=workflow.description or f"{workflow.name} workflow",
+            description=workflow.description or f"{sanitized_name} workflow",
             class_name=class_name,
-            workflow_name=workflow.name,
+            workflow_name=sanitized_name,
             state_fields=state_fields,
             node_functions=node_functions_code,
             routing_functions=routing_functions_code,
             graph_construction=graph_construction,
         )
 
-        # Format with black
-        try:
-            formatted_code = black.format_str(code, mode=black.FileMode())
-            return formatted_code
-        except Exception:
-            # If black formatting fails, return unformatted
+        # Format with black (if available)
+        if BLACK_AVAILABLE:
+            try:
+                formatted_code = black.format_str(code, mode=black.FileMode())
+                return formatted_code
+            except Exception:
+                # If black formatting fails, return unformatted
+                return code
+        else:
+            # Black not available, return unformatted code
             return code
 
     def generate_to_file(self, workflow: WorkflowDefinition, output_path: str) -> None:

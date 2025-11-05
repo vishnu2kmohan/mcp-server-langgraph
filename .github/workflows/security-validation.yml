@@ -35,7 +35,7 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          pip install pytest pyyaml
+          pip install pytest pyyaml hypothesis
 
       - name: Run Terraform security tests
         run: |
@@ -58,7 +58,7 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          pip install pytest pyyaml
+          pip install pytest pyyaml hypothesis
 
       - name: Run Kubernetes security tests
         run: |

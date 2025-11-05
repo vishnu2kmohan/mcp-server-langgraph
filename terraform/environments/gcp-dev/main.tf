@@ -352,7 +352,7 @@ module "workload_identity" {
   service_accounts = {
     # Main application service account
     "mcp-server-sa" = {
-      gcp_sa_name  = "${local.name_prefix}-app-sa"
+      gcp_sa_name  = "${local.short_prefix}-app-sa"
       display_name = "MCP Server Dev Application SA"
       roles = [
         "roles/logging.logWriter",

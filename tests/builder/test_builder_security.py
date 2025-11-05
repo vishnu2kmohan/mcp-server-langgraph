@@ -93,14 +93,15 @@ class TestBuilderAuthentication:
 class TestPathTraversalProtection:
     """Test protection against path traversal attacks"""
 
-    @pytest.mark.asyncio
-    async def test_prevent_path_traversal_absolute_path(self):
+    def test_prevent_path_traversal_absolute_path(self):
         """
         SECURITY TEST: Prevent writing to arbitrary absolute paths.
 
         CWE-73: External Control of File Name or Path
         """
         # Given: Malicious workflow save request with absolute path
+        from pydantic import ValidationError
+
         workflow_data = {
             "name": "malicious",
             "nodes": [],
@@ -108,24 +109,22 @@ class TestPathTraversalProtection:
             "entry_point": "start",
         }
 
-        request = SaveWorkflowRequest(
-            workflow=workflow_data,
-            output_path="/etc/passwd",  # Path traversal attack
-        )
+        # When: Attempting to create request with malicious path
+        # Then: Should be REJECTED at validation level (before reaching endpoint)
+        with pytest.raises(ValidationError) as exc_info:
+            request = SaveWorkflowRequest(
+                workflow=workflow_data,
+                output_path="/etc/passwd",  # Path traversal attack
+            )
 
-        # When: Attempting to save to system file
-        # Then: Should be REJECTED
-        with pytest.raises(HTTPException) as exc_info:
-            await save_workflow(request)
+        assert "Invalid output path" in str(exc_info.value) or "allowed directory" in str(exc_info.value)
 
-        assert exc_info.value.status_code == 400
-        assert "invalid" in exc_info.value.detail.lower() or "path" in exc_info.value.detail.lower()
-
-    @pytest.mark.asyncio
-    async def test_prevent_path_traversal_relative_path(self):
+    def test_prevent_path_traversal_relative_path(self):
         """
         SECURITY TEST: Prevent directory traversal with ../
         """
+        from pydantic import ValidationError
+
         workflow_data = {
             "name": "malicious",
             "nodes": [],
@@ -133,23 +132,22 @@ class TestPathTraversalProtection:
             "entry_point": "start",
         }
 
-        request = SaveWorkflowRequest(
-            workflow=workflow_data,
-            output_path="../../../etc/passwd",  # Relative path traversal
-        )
-
         # When: Attempting directory traversal
-        # Then: Should be REJECTED
-        with pytest.raises(HTTPException) as exc_info:
-            await save_workflow(request)
+        # Then: Should be REJECTED at validation level
+        with pytest.raises(ValidationError) as exc_info:
+            request = SaveWorkflowRequest(
+                workflow=workflow_data,
+                output_path="../../../etc/passwd",  # Relative path traversal
+            )
 
-        assert exc_info.value.status_code == 400
+        assert "allowed directory" in str(exc_info.value)
 
-    @pytest.mark.asyncio
-    async def test_prevent_overwriting_application_code(self):
+    def test_prevent_overwriting_application_code(self):
         """
         SECURITY TEST: Prevent overwriting application source code.
         """
+        from pydantic import ValidationError
+
         workflow_data = {
             "name": "malicious",
             "nodes": [],
@@ -157,23 +155,23 @@ class TestPathTraversalProtection:
             "entry_point": "start",
         }
 
-        request = SaveWorkflowRequest(
-            workflow=workflow_data,
-            output_path="src/mcp_server_langgraph/__init__.py",  # Application code
-        )
-
         # When: Attempting to overwrite app code
-        # Then: Should be REJECTED
-        with pytest.raises(HTTPException) as exc_info:
-            await save_workflow(request)
+        # Then: Should be REJECTED at validation level
+        with pytest.raises(ValidationError) as exc_info:
+            request = SaveWorkflowRequest(
+                workflow=workflow_data,
+                output_path="src/mcp_server_langgraph/__init__.py",  # Application code
+            )
 
-        assert exc_info.value.status_code == 400
+        assert "allowed directory" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_allow_safe_paths_only(self):
         """
         Only paths within a designated safe directory should be allowed.
         """
+        import os
+
         workflow_data = {
             "name": "safe_workflow",
             "description": "Safe workflow",
@@ -182,21 +180,26 @@ class TestPathTraversalProtection:
             "entry_point": "start",
         }
 
-        # Create temporary safe directory
-        with tempfile.TemporaryDirectory() as tmpdir:
-            safe_path = os.path.join(tmpdir, "workflows", "my_workflow.py")
+        # Use the default safe directory from environment
+        default_dir = os.getenv("BUILDER_OUTPUT_DIR", "/tmp/workflows")
+        os.makedirs(default_dir, exist_ok=True)
+        safe_path = os.path.join(default_dir, "my_workflow.py")
 
-            request = SaveWorkflowRequest(
-                workflow=workflow_data,
-                output_path=safe_path,
-            )
+        request = SaveWorkflowRequest(
+            workflow=workflow_data,
+            output_path=safe_path,
+        )
 
-            # When: Saving to whitelisted directory
-            # Then: Should SUCCEED
-            result = await save_workflow(request)
+        # When: Saving to whitelisted directory
+        # Then: Should SUCCEED
+        result = await save_workflow(request)
 
-            assert result["success"] is True
-            assert os.path.exists(safe_path)
+        assert result["success"] is True
+        assert os.path.exists(safe_path)
+
+        # Cleanup
+        if os.path.exists(safe_path):
+            os.remove(safe_path)
 
 
 class TestCodeGenerationSecurity:

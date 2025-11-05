@@ -364,6 +364,8 @@ def main():
     parser.add_argument("--threshold", type=float, default=50.0,
                         help="Regression threshold percentage (default: 50)")
     parser.add_argument("--output", type=Path, help="Output file for report")
+    parser.add_argument("--check-improvement", action="store_true",
+                        help="Check for performance improvements and suggest baseline update")
 
     args = parser.parse_args()
 
@@ -398,6 +400,15 @@ def main():
     if args.output:
         args.output.write_text(report)
         print(f"\n✅ Report saved to {args.output}")
+
+    # Check for improvements if requested
+    if args.check_improvement:
+        if should_update_baseline(baseline, current):
+            print("\n🎉 Performance improvement detected (>20% improvement)")
+            print("💡 Consider updating the baseline with the current metrics")
+            print(f"   Command: cp {args.current or 'current.json'} {args.baseline}")
+        else:
+            print("\n✅ No significant performance improvement (threshold: 20%)")
 
     # Exit with error if regressions found
     if regressions:

@@ -32,6 +32,10 @@ configMapGenerator:
       - otel-collector.yaml=otel-collector-config.yaml
 
 # Images - override if using ECR
+# NOTE: This is a template configuration for AWS deployments
+# Before deploying, replace ACCOUNT_ID with your AWS account ID and REGION with your AWS region
+# Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/mcp-server-langgraph
+# Or comment out this section to use the default GitHub Container Registry image
 images:
   - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
     newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/mcp-server-langgraph

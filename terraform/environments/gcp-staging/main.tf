@@ -297,7 +297,7 @@ module "memorystore" {
 
   # Standard HA for staging
   tier           = "STANDARD_HA"
-  memory_size_gb = 5  # Minimum 5GB for read replicas
+  memory_size_gb = 5 # Minimum 5GB for read replicas
   redis_version  = "REDIS_7_0"
 
   # Read replica

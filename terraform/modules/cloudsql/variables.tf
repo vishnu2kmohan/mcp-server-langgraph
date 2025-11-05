@@ -416,7 +416,7 @@ variable "additional_users" {
     type     = optional(string) # BUILT_IN or CLOUD_IAM_SERVICE_ACCOUNT
   }))
   default   = {}
-  sensitive = false  # Can't be sensitive when used in for_each
+  sensitive = false # Can't be sensitive when used in for_each
 }
 
 variable "user_deletion_policy" {

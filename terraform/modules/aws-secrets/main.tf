@@ -4,15 +4,15 @@
 
 locals {
   secrets = {
-    "${var.environment}-anthropic-api-key"      = { description = "Anthropic API key for Claude LLM" }
-    "${var.environment}-google-api-key"         = { description = "Google AI API key" }
-    "${var.environment}-jwt-secret"             = { description = "JWT signing secret" }
-    "${var.environment}-postgres-username"      = { description = "PostgreSQL username" }
-    "${var.environment}-keycloak-db-password"   = { description = "Keycloak database password" }
-    "${var.environment}-openfga-db-password"    = { description = "OpenFGA database password" }
-    "${var.environment}-gdpr-db-password"       = { description = "GDPR database password" }
-    "${var.environment}-redis-host"             = { description = "Redis host address" }
-    "${var.environment}-redis-password"         = { description = "Redis password" }
+    "${var.environment}-anthropic-api-key"    = { description = "Anthropic API key for Claude LLM" }
+    "${var.environment}-google-api-key"       = { description = "Google AI API key" }
+    "${var.environment}-jwt-secret"           = { description = "JWT signing secret" }
+    "${var.environment}-postgres-username"    = { description = "PostgreSQL username" }
+    "${var.environment}-keycloak-db-password" = { description = "Keycloak database password" }
+    "${var.environment}-openfga-db-password"  = { description = "OpenFGA database password" }
+    "${var.environment}-gdpr-db-password"     = { description = "GDPR database password" }
+    "${var.environment}-redis-host"           = { description = "Redis host address" }
+    "${var.environment}-redis-password"       = { description = "Redis password" }
   }
 }
 

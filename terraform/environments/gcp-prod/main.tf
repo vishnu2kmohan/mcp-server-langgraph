@@ -397,7 +397,7 @@ module "workload_identity" {
   service_accounts = {
     # Main application service account
     "mcp-server-sa" = {
-      gcp_sa_name  = "${local.name_prefix}-app-sa"
+      gcp_sa_name  = "${local.short_prefix}-app-sa"
       display_name = "MCP Server Application Service Account"
       description  = "Service account for MCP Server application pods"
       roles = [
@@ -418,7 +418,7 @@ module "workload_identity" {
 
     # Background worker service account
     "worker-sa" = {
-      gcp_sa_name  = "${local.name_prefix}-worker-sa"
+      gcp_sa_name  = "${local.short_prefix}-worker-sa"
       display_name = "MCP Server Worker Service Account"
       description  = "Service account for background worker pods"
       roles = [
