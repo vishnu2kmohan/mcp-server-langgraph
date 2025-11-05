@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762365537584,
+  "lastUpdate": 1762367686277,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -29346,6 +29346,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002246071528068308",
             "extra": "mean: 48.75378835101095 usec\nrounds: 5065"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "498ca452cc7e2d0b68dacb1aea5c4887e8cb3ed6",
+          "message": "fix(infrastructure,tests): fix init containers, tests, and add cross-platform secrets modules\n\nComplete final infrastructure fixes including init container service names, test failures, and cross-platform secret management modules.\n\n## Init Container Fixes\n\n**Fixed**: MCP Server init containers now use correct service names with staging prefix\n- Created `deployment-init-containers-patch.yaml` to override base init containers\n- wait-for-openfga: openfga → staging-openfga\n- wait-for-keycloak: keycloak → staging-keycloak\n- wait-for-redis: redis-session → staging-redis-session\n\ndeployments/overlays/staging-gke/deployment-init-containers-patch.yaml (new)\ndeployments/overlays/staging-gke/kustomization.yaml:128-132\n\n## External Secrets Naming Fixes\n\n**Fixed**: Removed double-prefix issue (Kustomize applies namePrefix automatically)\n- SecretStore: staging-gcp-secret-store → gcp-secret-store (Kustomize adds prefix)\n- ClusterSecretStore: staging-gcp-cluster-secret-store → gcp-cluster-secret-store\n- ExternalSecret secretStoreRef updated to match\n\ndeployments/overlays/staging-gke/external-secrets.yaml:7,30,108\n\n## Test Fixes (100% Passing)\n\n**Fixed 3 failing tests:**\n\n1. **test_implementation_guide_exists**: Updated to check for .mdx files\n2. **test_implementation_summary_exists**: Created docs/IMPLEMENTATION_SUMMARY.md + check .mdx\n3. **test_all_yaml_files_valid**: Excluded Helm templates (require rendering, not standalone YAML)\n\ntests/infrastructure/test_validation.py:308-314,333\ndocs/IMPLEMENTATION_SUMMARY.md (new)\n\n## Cross-Platform Secrets Modules\n\n**Created AWS Secrets Manager module** (terraform/modules/aws-secrets/)\n- Manages 9 application secrets in AWS Secrets Manager\n- IAM policy for External Secrets Operator\n- IRSA role creation for EKS Workload Identity\n- Consistent with GCP module structure\n\n**Created Azure Key Vault module** (terraform/modules/azure-secrets/)\n- Manages 9 application secrets in Azure Key Vault\n- Role assignments for Managed Identity\n- Network ACLs configuration\n- Consistent with GCP/AWS modules\n\nterraform/modules/aws-secrets/{main,variables,outputs}.tf (new)\nterraform/modules/azure-secrets/{main,variables,outputs}.tf (new)\n\n## Test Results\n\n- ✅ Infrastructure tests: **30/30 passing (100%)**\n- ✅ Builder API tests: **18/18 passing (100%)**\n- ✅ Kustomize validation: All overlays valid\n- ✅ Naming compliance: Zero violations\n\n## Impact\n\n**Persistence Achieved:**\n- Init container fixes applied and committed\n- Test fixes ensure CI/CD validation works\n- Cross-platform secrets modules enable reproducible multi-cloud deployments\n- All secret management now via Terraform (GCP, AWS, Azure)\n\n**Reproducibility:**\n- Any environment can be recreated using Terraform modules\n- Secrets structure consistent across all platforms\n- Init containers automatically use correct service names per environment\n\nterraform/modules/{gcp,aws,azure}-secrets/ (3 modules)\ndeployments/overlays/staging-gke/ (patches updated)\ntests/infrastructure/test_validation.py (test improvements)\ndocs/IMPLEMENTATION_SUMMARY.md (new)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T13:33:40-05:00",
+          "tree_id": "5de5baa4cb569f2aafecfaabce2277bf627a4d8d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/498ca452cc7e2d0b68dacb1aea5c4887e8cb3ed6"
+        },
+        "date": 1762367684633,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.3768209105403,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008641955029479457",
+            "extra": "mean: 6.878675663263845 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.8746286241901,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012238297104132952",
+            "extra": "mean: 6.672243388889357 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45834.17744593872,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.81778000007739 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48447.54681008181,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.64087999997355 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46749.113403085794,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.390779999990173 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.7124992462798,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.243494810000016 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.417867516624014,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.498960899999986 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.955518390410731,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.44680355000011 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1500960.6148231418,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 666.2399999868285 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5092.975579638032,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 196.3488700000937 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2971.935036709338,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.4811100000509 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2990.7423067274376,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.3651499999112 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60512.55755379888,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002031415463041212",
+            "extra": "mean: 16.52549554050739 usec\nrounds: 12221"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17561.822147709736,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001801941974735373",
+            "extra": "mean: 56.9416995337475 usec\nrounds: 5791"
           }
         ]
       }
