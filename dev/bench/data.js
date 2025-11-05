@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762359210485,
+  "lastUpdate": 1762359741184,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -28980,6 +28980,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002115538944029578",
             "extra": "mean: 59.08052556968195 usec\nrounds: 5221"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ee93eed43109e9d44fee180c46563446b25e5df7",
+          "message": "feat(mcp): integrate execute_python and search_tools into MCP server\n\n## Summary\nRegister code execution and tool discovery endpoints in MCP server stdio transport.\nImplements Anthropic best practice for progressive tool discovery with 98%+ token savings.\n\n## Changes\n\n### MCP Server (server_stdio.py)\n- Add search_tools to tool list (progressive discovery)\n- Add execute_python to tool list (conditional on enable_code_execution)\n- Add _handle_search_tools handler (tool discovery)\n- Add _handle_execute_python handler (code execution)\n- Add OpenTelemetry tracing for both tools\n- Add metrics tracking (code_executions counter)\n- Import time module for execution timing\n\n### Tool Registration (tools/__init__.py)\n- Register CODE_EXECUTION_TOOLS group\n- Conditionally load execute_python based on settings\n\n### Tests (tests/integration/test_mcp_code_execution.py)\n- Add MCP integration tests for execute_python\n- Add MCP integration tests for search_tools\n- Test authorization requirements\n- Test conditional tool listing\n\n## Features\n✅ execute_python via MCP protocol\n✅ search_tools for progressive discovery\n✅ OpenFGA authorization (tool:execute_python)\n✅ Feature flag control (disabled by default)\n✅ OpenTelemetry tracing + metrics\n✅ Token-efficient tool discovery\n\n## Next Step\n- Update server_streamable.py with same changes\n\nAll 162 existing tests still passing.",
+          "timestamp": "2025-11-05T11:21:05-05:00",
+          "tree_id": "134abf1cc0d681262a4d1b08ef82320297c1ca2d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ee93eed43109e9d44fee180c46563446b25e5df7"
+        },
+        "date": 1762359739522,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.12517638399225,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00018580808253814183",
+            "extra": "mean: 7.085907884211009 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 142.74457873071918,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00031229213620155127",
+            "extra": "mean: 7.00551999166604 msec\nrounds: 120"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44199.2075966223,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.624839999991764 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 45897.28737879749,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.787779999868917 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46225.267748209924,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.633190000045488 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.4421441365285,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.250938570000017 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.28637922055758,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.85006415999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934350451426226,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.66083382999992 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1367876.7816202363,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 731.0600000209888 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4888.727669513631,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 204.55220000002328 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2951.7945095257055,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.7769700000831 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2838.153018565037,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 352.34182000010605 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59183.14464049764,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003575260673613545",
+            "extra": "mean: 16.89670270267666 usec\nrounds: 10952"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17092.152772896858,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002451665230112806",
+            "extra": "mean: 58.50638086886906 usec\nrounds: 4558"
           }
         ]
       }
