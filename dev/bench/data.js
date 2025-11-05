@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762376710031,
+  "lastUpdate": 1762376809867,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -31420,6 +31420,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017886650542598592",
             "extra": "mean: 56.90983205261666 usec\nrounds: 5335"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1e4986cd44afb701ec61cbe32aa89003b72158b5",
+          "message": "test: complete test validation, GDPR fixes, and comprehensive documentation\n\n## Summary\nFinal phase of test improvements completing all outstanding work from OpenAI Codex\nanalysis. All changes follow TDD best practices with 154 tests passing.\n\n## Changes\n\n### GDPR Deletion Test Fix ✅\n**Issue**: Deletion test was skipped due to async mock complexity\n**Root Cause**: Mock used `audit_logs.create()` but actual code calls `audit_logs.log()`\n**Fix**: Updated mock to handle both `log()` and `create()` methods\n**Files**: `tests/test_gdpr.py`\n**Result**: All 12 GDPR endpoint tests now passing (previously 11 passed, 1 skipped)\n\n### Comprehensive TESTING.md Documentation ✅\nCreated complete testing guide covering:\n\n**Test Organization**\n- Clear directory structure and file organization\n- Test categories (unit, api, integration, e2e)\n- When to use each category\n\n**Test Categories & Markers**\n- `@pytest.mark.unit` - Fast, isolated component tests\n- `@pytest.mark.api` - REST API endpoint tests with mocked dependencies\n- `@pytest.mark.integration` - Multi-component integration tests\n- `@pytest.mark.e2e` - Complete user journey tests\n\n**E2E Test Strategy Decision**\n- **Status**: Documented current state (mocks) and migration path (real infrastructure)\n- **Rationale**: Infrastructure checks exist but tests use mocks for now\n- **Plan**: Migrate incrementally as infrastructure matures\n- **Location**: Lines 61-98 in TESTING.md\n\n**Fixture Standards**\n- `mock_current_user` - Shared authenticated user fixture\n- Dual identity format (OpenFGA + Keycloak UUID)\n- Container fixtures (session/function scoped)\n- Admin permission fixtures\n\n**Identity & Authentication Patterns**\n- OpenFGA format: `user:alice` (authorization, API responses)\n- Keycloak UUID: `8c7b4e5d-...` (authentication, database)\n- ✅ Correct usage examples\n- ❌ Common mistakes to avoid\n\n**GDPR Testing Requirements**\n- Article 15: Right to Access (data export)\n- Article 16: Right to Rectification (profile update)\n- Article 17: Right to Erasure (account deletion + audit)\n- Article 20: Right to Data Portability (JSON/CSV export)\n- Article 21: Right to Object (consent management)\n\n**TDD Best Practices**\n- Red-Green-Refactor cycle examples\n- Test one thing at a time\n- Exact mock assertions with `assert_called_once_with`\n- Arrange-Act-Assert pattern\n- Error case testing\n- Descriptive test names\n\n**Common Patterns**\n- Testing async endpoints\n- Mocking async methods\n- Testing file downloads\n- Fixture scope selection\n\n**Running Tests**\n- Commands for all test categories\n- E2E infrastructure setup\n- Useful pytest flags\n- Troubleshooting guide\n\n### Container Migration Status ✅\n**Assessment**: Migration effectively complete\n- ✅ All new tests use shared fixtures from `conftest.py`\n- ✅ `pytest_configure` marked as deprecated with clear documentation\n- ✅ Only observability-specific tests use direct initialization (legitimate)\n- 📝 Documented in TESTING.md migration notes\n\n## Test Results\n\n```\nTotal Tests:          154 passed ✅\nAPI Keys:             20 passed\nService Principals:   21 passed\nGDPR Endpoints:       12 passed (was 11, fixed deletion test)\nGDPR Business Logic:  22 passed\nOther API Tests:      79 passed\nSkipped:              6 tests (valid skips)\nFailed:               2 tests (missing optional dependency: schemathesis)\n```\n\n## Validation\n\n### TDD Compliance ✅\n- Red-Green-Refactor: Failing GDPR test → fixed → verified\n- Exact assertions: All mocks validate parameters\n- Test isolation: Shared fixtures prevent state leakage\n- Error testing: Coverage of validation, authentication, authorization failures\n\n### Industry Standards ✅\n- GDPR compliance fully tested (all 5 articles)\n- OpenFGA identity format standardized\n- Pytest best practices documented and enforced\n- Async/await patterns correctly implemented\n\n### Documentation ✅\n- Complete TESTING.md (250+ lines)\n- Migration notes for deprecated patterns\n- Examples for all common scenarios\n- Troubleshooting guide included\n\n## Breaking Changes\nNone - all changes are test improvements and documentation\n\n## Future Work\nTracked in TESTING.md:\n- E2E tests: Migrate from mocks to real infrastructure (incremental)\n- Container migration: Complete (no action needed, documented as-is)\n- Optional: Install schemathesis for OpenAPI contract testing\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T16:05:08-05:00",
+          "tree_id": "8b9263f3d8a707ee61bda2e0a358de4a8fc55bc4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1e4986cd44afb701ec61cbe32aa89003b72158b5"
+        },
+        "date": 1762376807986,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.82584388038646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001227853770786686",
+            "extra": "mean: 6.952853346938506 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.28213124037185,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001324932241025565",
+            "extra": "mean: 6.743900911290223 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44767.72712454274,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.337520000021982 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47997.035703037065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.834620000016457 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46440.92969173575,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.532729999975686 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.70663056079027,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.243656170000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.366985695600537,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.63426129999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938360284945508,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.6202201699999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1382838.9684585908,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 723.1499999704738 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5123.390454869292,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 195.18324999992842 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2949.781590796952,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.0081499999553 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3006.6461010073895,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 332.59650999994506 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58535.09998832505,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000031516673031849318",
+            "extra": "mean: 17.083766837324138 usec\nrounds: 12695"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17101.79480599507,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018556806775210562",
+            "extra": "mean: 58.47339483043312 usec\nrounds: 5339"
           }
         ]
       }
