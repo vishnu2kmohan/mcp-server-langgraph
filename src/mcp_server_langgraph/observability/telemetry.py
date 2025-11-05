@@ -124,6 +124,7 @@ class ObservabilityConfig:
 
         trace.set_tracer_provider(provider)
 
+        self.tracer_provider = provider  # Store provider for shutdown
         self.tracer = trace.get_tracer(__name__)
         if OBSERVABILITY_VERBOSE:
             print(f"✓ Tracing configured: {self.service_name}")
@@ -155,6 +156,7 @@ class ObservabilityConfig:
         provider = MeterProvider(resource=resource, metric_readers=readers)
 
         otel_metrics.set_meter_provider(provider)
+        self.meter_provider = provider  # Store provider for shutdown
         self.meter = otel_metrics.get_meter(__name__)
 
         # Create common metrics

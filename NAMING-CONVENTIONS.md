@@ -17,6 +17,18 @@ This document defines the standardized naming conventions for all infrastructure
 {environment}-mcp-server-langgraph-{resource-type}
 ```
 
+### ⚠️ Dual-Prefix Strategy for GCP
+
+Due to GCP character limits on certain resources, we use a **dual-prefix approach**:
+
+1. **Full Prefix** (`{env}-mcp-server-langgraph`): For resources **without** length limits
+   - GKE Clusters, Kubernetes Namespaces, Deployments, Services
+
+2. **Short Prefix** (`{env}-mcp-slg`): For resources **with** GCP character limits
+   - VPC (20 char max), Cloud SQL, Memorystore Redis, Service Accounts (30 char max)
+
+**Rationale**: GCP enforces strict character limits (20-30 chars) on network and database resources, requiring abbreviated naming while maintaining consistency for Kubernetes resources.
+
 ### Environments
 
 | Environment | Abbreviation | Use Case |
@@ -70,16 +82,18 @@ SSE:          {env}-mcp-server-langgraph-sse
 Headless:     {env}-mcp-server-langgraph-headless
 ```
 
-#### Other GCP Resources
+#### Other GCP Resources (Using Short Prefix)
 
 | Resource | Pattern | Example |
 |----------|---------|---------|
-| VPC | `{env}-vpc` | `staging-vpc` |
-| Subnet | `{env}-{purpose}-subnet` | `staging-gke-subnet` |
-| Cloud SQL | `{name_prefix}-postgres` | `staging-mcp-server-langgraph-postgres` |
-| Memorystore | `{name_prefix}-redis` | `staging-mcp-server-langgraph-redis` |
-| Service Account | `{name_prefix}-{role}-sa` | `staging-mcp-server-langgraph-app-sa` |
+| VPC | `{short_prefix}-vpc` | `staging-mcp-slg-vpc` |
+| Subnet | `{short_prefix}-{purpose}-subnet` | `staging-mcp-slg-nodes-us-central1` |
+| Cloud SQL | `{short_prefix}-postgres` | `staging-mcp-slg-postgres` |
+| Memorystore | `{short_prefix}-redis` | `staging-mcp-slg-redis` |
+| Service Account | `{short_prefix}-{role}-sa` | `staging-mcp-slg-app-sa` |
 | Artifact Registry | `mcp-{env}` | `mcp-staging`, `mcp-production` |
+
+**Note**: Short prefix = `{env}-mcp-slg` (e.g., `staging-mcp-slg`, `production-mcp-slg`, `dev-mcp-slg`)
 
 ---
 

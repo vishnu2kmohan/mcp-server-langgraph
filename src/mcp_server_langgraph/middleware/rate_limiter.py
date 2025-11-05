@@ -44,6 +44,9 @@ def get_user_id_from_jwt(request: Request) -> Optional[str]:
     """
     Extract user ID from JWT token in request.
 
+    Uses the auth middleware's verified user if available, or attempts
+    to verify the token using the KeycloakClient for RS256 tokens.
+
     Args:
         request: FastAPI request object
 
@@ -51,26 +54,39 @@ def get_user_id_from_jwt(request: Request) -> Optional[str]:
         User ID if JWT is valid, None otherwise
     """
     try:
-        # Check Authorization header
+        # Check if auth middleware already validated user
+        if hasattr(request.state, "user") and request.state.user:
+            return request.state.user.get("user_id")  # type: ignore[no-any-return]
+
+        # Try to validate token with auth middleware
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return None
 
         token = auth_header.replace("Bearer ", "")
 
-        # Decode JWT to get user ID
-        import jwt
-
+        # Import auth middleware for token verification
         try:
-            payload = jwt.decode(
-                token,
-                settings.jwt_secret_key,  # type: ignore[arg-type]
-                algorithms=[settings.jwt_algorithm],
-                options={"verify_exp": False},  # Don't verify expiration for rate limiting
-            )
-            return payload.get("sub") or payload.get("user_id")  # type: ignore[no-any-return]
-        except jwt.InvalidTokenError:
-            return None
+            from mcp_server_langgraph.auth.middleware import get_auth_middleware
+
+            auth = get_auth_middleware()
+            # Use asyncio to run async verification in sync context
+            import asyncio
+
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                # No event loop in current thread, create new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            verification = loop.run_until_complete(auth.verify_token(token))
+            if verification.valid and verification.payload:
+                return verification.payload.get("sub") or verification.payload.get("user_id")  # type: ignore[no-any-return]
+        except Exception as e:
+            logger.debug(f"Auth middleware verification failed, falling back: {e}")
+
+        return None
 
     except Exception as e:
         logger.debug(f"Failed to extract user ID from JWT: {e}")
@@ -81,6 +97,9 @@ def get_user_tier(request: Request) -> str:
     """
     Determine user tier from JWT claims.
 
+    Uses the auth middleware's verified user if available, or attempts
+    to verify the token using the KeycloakClient for RS256 tokens.
+
     Args:
         request: FastAPI request object
 
@@ -88,30 +107,56 @@ def get_user_tier(request: Request) -> str:
         User tier (anonymous, free, standard, premium, enterprise)
     """
     try:
-        # Check Authorization header
+        # Check if auth middleware already validated user
+        if hasattr(request.state, "user") and request.state.user:
+            user = request.state.user
+            # Extract tier from roles or dedicated tier field
+            roles = user.get("roles", [])
+            # Check for premium/enterprise roles
+            if "enterprise" in roles:
+                return "enterprise"
+            elif "premium" in roles:
+                return "premium"
+            elif "standard" in roles:
+                return "standard"
+            elif "free" in roles:
+                return "free"
+            # Fallback to checking tier field
+            tier = user.get("tier") or user.get("plan") or "free"
+            return tier if tier in RATE_LIMITS else "free"
+
+        # Try to validate token with auth middleware
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return "anonymous"
 
         token = auth_header.replace("Bearer ", "")
 
-        # Decode JWT to get tier
-        import jwt
-
+        # Import auth middleware for token verification
         try:
-            payload = jwt.decode(
-                token,
-                settings.jwt_secret_key,  # type: ignore[arg-type]
-                algorithms=[settings.jwt_algorithm],
-                options={"verify_exp": False},
-            )
+            from mcp_server_langgraph.auth.middleware import get_auth_middleware
 
-            # Extract tier from JWT payload
-            tier = payload.get("tier") or payload.get("plan") or "free"
-            return tier if tier in RATE_LIMITS else "free"
+            auth = get_auth_middleware()
+            # Use asyncio to run async verification in sync context
+            import asyncio
 
-        except jwt.InvalidTokenError:
-            return "anonymous"
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                # No event loop in current thread, create new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            verification = loop.run_until_complete(auth.verify_token(token))
+            if verification.valid and verification.payload:
+                payload = verification.payload
+                # Extract tier from JWT payload
+                tier = payload.get("tier") or payload.get("plan") or "free"
+                return tier if tier in RATE_LIMITS else "free"
+        except Exception as e:
+            logger.debug(f"Auth middleware verification failed, falling back to anonymous: {e}")
+
+        return "anonymous"
 
     except Exception as e:
         logger.debug(f"Failed to extract tier from JWT: {e}")

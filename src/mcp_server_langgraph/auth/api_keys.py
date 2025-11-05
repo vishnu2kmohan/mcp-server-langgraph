@@ -157,41 +157,60 @@ class APIKeyManager:
 
         Returns:
             Dictionary with user_id, username, email, key_id if valid, None otherwise
+
+        Note:
+            This implementation paginates through all users to find matching API keys.
+            For production deployments with >1000 users, consider implementing a
+            Redis-backed lookup cache (see ADR-0034 for details).
         """
-        # Search all users for matching key hash
-        users = await self.keycloak.search_users()
+        # Paginate through all users to find matching key hash
+        first = 0
+        max_per_page = 100
 
-        for user in users:
-            attributes = user.get("attributes", {})
-            api_keys = attributes.get("apiKeys", [])
+        while True:
+            # Fetch page of users
+            users = await self.keycloak.search_users(first=first, max=max_per_page)
 
-            for key_entry in api_keys:
-                # Format: "key:key_id:hash"
-                parts = key_entry.split(":")
-                if len(parts) != 3:
-                    continue  # Invalid format
+            # No more users, key not found
+            if not users:
+                break
 
-                _, key_id, stored_hash = parts
+            # Search this page for matching key
+            for user in users:
+                attributes = user.get("attributes", {})
+                api_keys = attributes.get("apiKeys", [])
 
-                # Check if hash matches
-                if self.verify_api_key_hash(api_key, stored_hash):
-                    # Check expiration
-                    expires_at_str = attributes.get(f"apiKey_{key_id}_expiresAt")
-                    if expires_at_str:
-                        expires_at = datetime.fromisoformat(expires_at_str)
-                        if datetime.utcnow() > expires_at:
-                            continue  # Expired
+                for key_entry in api_keys:
+                    # Format: "key:key_id:hash"
+                    parts = key_entry.split(":")
+                    if len(parts) != 3:
+                        continue  # Invalid format
 
-                    # Update last used timestamp
-                    attributes[f"apiKey_{key_id}_lastUsed"] = datetime.utcnow().isoformat()
-                    await self.keycloak.update_user_attributes(user["id"], attributes)
+                    _, key_id, stored_hash = parts
 
-                    return {
-                        "user_id": f"user:{user['username']}",
-                        "username": user["username"],
-                        "email": user.get("email"),
-                        "key_id": key_id,
-                    }
+                    # Check if hash matches
+                    if self.verify_api_key_hash(api_key, stored_hash):
+                        # Check expiration
+                        expires_at_str = attributes.get(f"apiKey_{key_id}_expiresAt")
+                        if expires_at_str:
+                            expires_at = datetime.fromisoformat(expires_at_str)
+                            if datetime.utcnow() > expires_at:
+                                continue  # Expired
+
+                        # Update last used timestamp
+                        attributes[f"apiKey_{key_id}_lastUsed"] = datetime.utcnow().isoformat()
+                        await self.keycloak.update_user_attributes(user["id"], attributes)
+
+                        return {
+                            "user_id": f"user:{user['username']}",  # OpenFGA format
+                            "keycloak_id": user["id"],  # Raw UUID for Keycloak Admin API
+                            "username": user["username"],
+                            "email": user.get("email"),
+                            "key_id": key_id,
+                        }
+
+            # Move to next page
+            first += max_per_page
 
         return None  # Invalid key
 

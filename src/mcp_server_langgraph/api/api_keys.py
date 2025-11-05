@@ -94,7 +94,7 @@ async def create_api_key(
     """
     try:
         result = await api_key_manager.create_api_key(
-            user_id=current_user["user_id"],
+            user_id=current_user.get("keycloak_id") or current_user["user_id"],  # Use UUID for Keycloak
             name=request.name,
             expires_days=request.expires_days,
         )
@@ -125,7 +125,7 @@ async def list_api_keys(
     Returns metadata for all keys (name, created, expires, last_used).
     Does not include the actual API keys.
     """
-    keys = await api_key_manager.list_api_keys(current_user["user_id"])
+    keys = await api_key_manager.list_api_keys(current_user.get("keycloak_id") or current_user["user_id"])
 
     return [
         APIKeyResponse(
@@ -155,7 +155,7 @@ async def rotate_api_key(
     """
     try:
         result = await api_key_manager.rotate_api_key(
-            user_id=current_user["user_id"],
+            user_id=current_user.get("keycloak_id") or current_user["user_id"],  # Use UUID for Keycloak
             key_id=key_id,
         )
 
@@ -184,7 +184,7 @@ async def revoke_api_key(
     Any clients using this key will immediately lose access.
     """
     await api_key_manager.revoke_api_key(
-        user_id=current_user["user_id"],
+        user_id=current_user.get("keycloak_id") or current_user["user_id"],  # Use UUID for Keycloak
         key_id=key_id,
     )
 
@@ -227,7 +227,9 @@ async def validate_api_key(
     try:
         # Exchange for JWT using Keycloak
         # This simulates a user login to get a JWT
-        token_response = await keycloak.issue_token_for_user(user_info["user_id"])
+        # Use keycloak_id (UUID) for Admin API, fallback to user_id for backward compatibility
+        keycloak_user_id = user_info.get("keycloak_id") or user_info["user_id"]
+        token_response = await keycloak.issue_token_for_user(keycloak_user_id)
 
         return ValidateAPIKeyResponse(
             access_token=token_response["access_token"],

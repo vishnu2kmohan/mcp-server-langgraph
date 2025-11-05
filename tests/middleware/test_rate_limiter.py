@@ -563,3 +563,120 @@ class TestRateLimitErrorHandling:
             except Exception as e:
                 # Unexpected exception type - this might indicate a problem
                 pytest.fail(f"Unexpected exception type when JWT secret missing: {type(e).__name__}: {e}")
+
+
+class TestKeycloakIntegration:
+    """Integration tests for Keycloak RS256 token support"""
+
+    def test_get_user_id_from_request_state(self):
+        """Test user ID extraction from request.state.user (auth middleware)"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {
+            "user_id": "user:alice",
+            "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",
+            "username": "alice",
+            "roles": ["premium"],
+        }
+        request.headers = {}
+
+        user_id = get_user_id_from_jwt(request)
+        assert user_id == "user:alice"
+
+    def test_get_tier_from_request_state_roles(self):
+        """Test tier extraction from request.state.user roles"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {
+            "user_id": "user:alice",
+            "username": "alice",
+            "roles": ["premium", "user"],
+            "email": "alice@example.com",
+        }
+        request.headers = {}
+
+        tier = get_user_tier(request)
+        assert tier == "premium"
+
+    def test_get_tier_from_request_state_enterprise_role(self):
+        """Test tier extraction for enterprise role"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {
+            "user_id": "user:bob",
+            "username": "bob",
+            "roles": ["enterprise", "admin"],
+        }
+        request.headers = {}
+
+        tier = get_user_tier(request)
+        assert tier == "enterprise"
+
+    def test_get_tier_from_request_state_standard_role(self):
+        """Test tier extraction for standard role"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {
+            "user_id": "user:charlie",
+            "username": "charlie",
+            "roles": ["standard"],
+        }
+        request.headers = {}
+
+        tier = get_user_tier(request)
+        assert tier == "standard"
+
+    def test_get_tier_from_request_state_free_role(self):
+        """Test tier extraction for free role"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {
+            "user_id": "user:dave",
+            "username": "dave",
+            "roles": ["free", "user"],
+        }
+        request.headers = {}
+
+        tier = get_user_tier(request)
+        assert tier == "free"
+
+    def test_get_tier_fallback_to_tier_field(self):
+        """Test tier extraction falls back to tier field if no matching role"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {
+            "user_id": "user:eve",
+            "username": "eve",
+            "roles": ["user", "verified"],
+            "tier": "premium",
+        }
+        request.headers = {}
+
+        tier = get_user_tier(request)
+        assert tier == "premium"
+
+    def test_no_request_state_user_falls_back_to_anonymous(self):
+        """Test that missing request.state.user falls back to anonymous tier"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        # No user attribute
+        request.headers = {}
+
+        tier = get_user_tier(request)
+        assert tier == "anonymous"
+
+    def test_rate_limit_key_uses_request_state_user_id(self):
+        """Test rate limit key generation uses request.state.user"""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.user = {
+            "user_id": "user:alice",
+            "username": "alice",
+        }
+        request.headers = {}
+        request.client = Mock()
+        request.client.host = "192.168.1.1"
+
+        key = get_rate_limit_key(request)
+        # Should use user ID from state
+        assert "user:alice" in key or "alice" in key

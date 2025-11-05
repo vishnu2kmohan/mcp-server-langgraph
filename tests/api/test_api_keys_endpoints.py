@@ -59,7 +59,8 @@ def mock_api_key_manager():
 
     # Mock validate_and_get_user
     manager.validate_and_get_user.return_value = {
-        "user_id": "user123",
+        "user_id": "user:alice",  # OpenFGA format
+        "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",  # Keycloak UUID
         "username": "alice",
         "email": "alice@example.com",
     }
@@ -87,7 +88,8 @@ def mock_keycloak_client():
 def mock_current_user():
     """Mock current user from JWT authentication"""
     return {
-        "user_id": "user123",
+        "user_id": "user:alice",  # OpenFGA format
+        "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",  # Keycloak UUID
         "username": "alice",
         "email": "alice@example.com",
     }

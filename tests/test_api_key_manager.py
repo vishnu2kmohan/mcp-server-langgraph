@@ -421,3 +421,133 @@ class TestBcryptHashing:
 
         # Incorrect key should not verify
         assert api_key_manager.verify_api_key_hash("wrong_key", hashed) is False
+
+
+class TestAPIKeyValidationPagination:
+    """Test API key validation with pagination (>100 users)
+
+    Regression test for Finding #4 from OpenAI Codex security audit.
+    """
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_validate_api_key_beyond_first_page(self, api_key_manager, mock_keycloak_client):
+        """Test that API key validation works for users beyond first 100"""
+        # Arrange - Create 150 mock users, target user at index 120
+        api_key = "mcpkey_live_user120_key"
+        key_hash = api_key_manager.hash_api_key(api_key)
+
+        def mock_search_users(first=0, max=100):
+            """Mock paginated user search"""
+            all_users = []
+            # Create 150 users
+            for i in range(150):
+                user = {
+                    "id": f"uuid-{i}",
+                    "username": f"user{i}",
+                    "email": f"user{i}@example.com",
+                    "attributes": {},
+                }
+                # User 120 has the API key we're looking for
+                if i == 120:
+                    user["attributes"] = {
+                        "apiKeys": [f"key:target_key:{key_hash}"],
+                        "apiKey_target_key_name": "Target User Key",
+                        "apiKey_target_key_created": datetime.utcnow().isoformat(),
+                        "apiKey_target_key_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                    }
+                all_users.append(user)
+
+            # Return the requested page
+            return all_users[first : first + max]
+
+        mock_keycloak_client.search_users.side_effect = mock_search_users
+        mock_keycloak_client.update_user_attributes = AsyncMock()
+
+        # Act
+        result = await api_key_manager.validate_and_get_user(api_key)
+
+        # Assert
+        assert result is not None, "Should find API key on user 120 (beyond first page of 100)"
+        assert result["username"] == "user120"
+        assert result["user_id"] == "user:user120"
+        assert result["keycloak_id"] == "uuid-120"
+        assert result["key_id"] == "target_key"
+
+        # Verify pagination happened (should have called search_users multiple times)
+        assert mock_keycloak_client.search_users.call_count >= 2, "Should paginate through users"
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_validate_api_key_not_found_after_pagination(self, api_key_manager, mock_keycloak_client):
+        """Test that validation returns None after checking all pages"""
+
+        # Arrange - Create 150 users, none with matching key
+        def mock_search_users(first=0, max=100):
+            """Mock paginated user search"""
+            all_users = []
+            for i in range(150):
+                user = {
+                    "id": f"uuid-{i}",
+                    "username": f"user{i}",
+                    "email": f"user{i}@example.com",
+                    "attributes": {},  # No API keys
+                }
+                all_users.append(user)
+
+            # Return the requested page
+            return all_users[first : first + max]
+
+        mock_keycloak_client.search_users.side_effect = mock_search_users
+
+        # Act
+        result = await api_key_manager.validate_and_get_user("mcpkey_live_nonexistent")
+
+        # Assert
+        assert result is None, "Should return None when key not found in any page"
+
+        # Verify all pages were checked
+        assert mock_keycloak_client.search_users.call_count >= 2, "Should check all pages"
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_validate_api_key_pagination_stops_on_match(self, api_key_manager, mock_keycloak_client):
+        """Test that pagination stops immediately when key is found"""
+        # Arrange - Create 250 users, target at index 50 (first page)
+        api_key = "mcpkey_live_user50_key"
+        key_hash = api_key_manager.hash_api_key(api_key)
+
+        def mock_search_users(first=0, max=100):
+            """Mock paginated user search"""
+            all_users = []
+            for i in range(250):
+                user = {
+                    "id": f"uuid-{i}",
+                    "username": f"user{i}",
+                    "email": f"user{i}@example.com",
+                    "attributes": {},
+                }
+                # User 50 has the API key (first page)
+                if i == 50:
+                    user["attributes"] = {
+                        "apiKeys": [f"key:early_key:{key_hash}"],
+                        "apiKey_early_key_name": "Early User Key",
+                        "apiKey_early_key_created": datetime.utcnow().isoformat(),
+                        "apiKey_early_key_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                    }
+                all_users.append(user)
+
+            return all_users[first : first + max]
+
+        mock_keycloak_client.search_users.side_effect = mock_search_users
+        mock_keycloak_client.update_user_attributes = AsyncMock()
+
+        # Act
+        result = await api_key_manager.validate_and_get_user(api_key)
+
+        # Assert
+        assert result is not None
+        assert result["username"] == "user50"
+
+        # Should only call search_users once (found on first page)
+        assert mock_keycloak_client.search_users.call_count == 1, "Should stop on first match"

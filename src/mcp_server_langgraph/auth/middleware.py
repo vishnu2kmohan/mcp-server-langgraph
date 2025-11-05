@@ -717,10 +717,13 @@ if FASTAPI_AVAILABLE:  # noqa: C901
             if verification.valid and verification.payload:
                 # Extract username: prefer preferred_username (Keycloak) over sub
                 # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
+                # Extract Keycloak UUID from sub claim (required for Admin API calls)
+                keycloak_id = verification.payload.get("sub")
+
                 username = verification.payload.get("preferred_username")
                 if not username:
                     # Fallback to sub (for non-Keycloak IdPs)
-                    sub = verification.payload.get("sub", "unknown")
+                    sub = keycloak_id or "unknown"
                     # If sub is in "user:username" format, extract username
                     username = sub.replace("user:", "") if sub.startswith("user:") else sub
 
@@ -729,6 +732,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
                 user_data = {
                     "user_id": user_id,
+                    "keycloak_id": keycloak_id,  # Raw UUID for Keycloak Admin API
                     "username": username,
                     "roles": verification.payload.get("roles", []),
                     "email": verification.payload.get("email"),
