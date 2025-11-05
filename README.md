@@ -112,32 +112,14 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
 **See**: [Complete Assessment](reports/ANTHROPIC_BEST_PRACTICES_ASSESSMENT_20251017.md) | [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md), [ADR-0024](adr/adr-0024-agentic-loop-implementation.md), [ADR-0025](adr/adr-0025-anthropic-best-practices-enhancements.md)
 
 ### 🎯 Core Capabilities
-- **Multi-LLM Support (LiteLLM)**: 100+ LLM providers - Anthropic, OpenAI, Google, Azure, AWS Bedrock, Ollama
-- **Open-Source Models**: Llama 3.1, Qwen 2.5, Mistral, DeepSeek, and more via Ollama
-- **LangGraph Functional API**: Stateful agent with conditional routing and checkpointing
-- **MCP Server**: Standard protocol for exposing AI agents as tools (stdio, StreamableHTTP)
-- **Enterprise Authentication**: Pluggable auth providers (InMemory, Keycloak SSO)
-  - **JWT Authentication**: Token-based authentication with validation and expiration
-  - **Keycloak Integration**: Production-ready SSO with OIDC/OAuth2 ([integrations/keycloak.md](integrations/keycloak.md))
-  - **Token Refresh**: Automatic refresh token rotation
-  - **JWKS Verification**: Public key verification without shared secrets
-- **Session Management**: Flexible session storage backends
-  - **InMemory**: Fast in-memory sessions for development
-  - **Redis**: Persistent sessions with TTL, sliding windows, concurrent limits
-  - **Advanced Features**: Session lifecycle management, bulk revocation, user tracking
-- **Fine-Grained Authorization**: OpenFGA (Zanzibar-style) relationship-based access control
-  - **Role Mapping**: Declarative role mappings with YAML configuration
-  - **Keycloak Sync**: Automatic role/group synchronization to OpenFGA
-  - **Hierarchies**: Role inheritance and conditional mappings
-- **Secrets Management**: Infisical integration for secure secret storage and retrieval
-- **Feature Flags**: Gradual rollouts with environment-based configuration
-- **Dual Observability**: OpenTelemetry + LangSmith for comprehensive monitoring
-  - **OpenTelemetry**: Distributed tracing with Jaeger, metrics with Prometheus (30+ auth metrics)
-  - **LangSmith**: LLM-specific tracing, prompt engineering, evaluations
-- **Structured Logging**: JSON logging with trace context correlation
-- **Full Observability Stack**: Docker Compose setup with OpenFGA, Keycloak, Redis, Jaeger, Prometheus, Grafana, and Qdrant
-- **LangGraph Platform**: Deploy to managed LangGraph Cloud with one command
-- **Automatic Fallback**: Resilient multi-model fallback for high availability
+- **Multi-LLM Support**: 100+ providers via LiteLLM (Anthropic, OpenAI, Google, Azure, Bedrock, Ollama) + open-source models (Llama, Qwen, Mistral)
+- **MCP Protocol**: Standard stdio & StreamableHTTP transports for AI agent exposure
+- **Enterprise Auth**: JWT authentication, Keycloak SSO (OIDC/OAuth2), automatic token refresh, JWKS verification
+- **Session Management**: InMemory (dev) or Redis (prod) with TTL, sliding windows, lifecycle management
+- **Fine-Grained Authorization**: OpenFGA (Zanzibar-style) with role mapping, Keycloak sync, hierarchies
+- **Secrets Management**: Infisical integration + env var fallback
+- **Observability**: Dual stack (OpenTelemetry + LangSmith), Jaeger/Prometheus/Grafana, 30+ metrics, structured JSON logging
+- **LangGraph Platform**: One-command deploy to managed cloud
 
 ### 🔒 GDPR & Privacy Compliance
 
@@ -152,62 +134,22 @@ Install optional features on demand: **Secrets Management** (`[secrets]`), **Sel
 **See**: [Installation Guide](docs/getting-started/installation.mdx#optional-dependencies) | [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
 
 ### 🧪 Quality & Testing
-- **Property-Based Testing**: 27+ Hypothesis tests discovering edge cases automatically
-- **Contract Testing**: 20+ JSON Schema tests ensuring MCP protocol compliance
-- **Performance Regression Testing**: Automated latency tracking against baselines
-- **Mutation Testing**: Test effectiveness verification with mutmut (80%+ target)
-- **Strict Typing**: Gradual mypy strict mode rollout (3 modules complete)
-- **OpenAPI Validation**: Automated schema generation and breaking change detection
-- **Comprehensive Test Coverage**: Unit, integration, property-based, and contract tests. See [testing docs](docs/advanced/testing.mdx) for metrics.
+27+ property tests, 20+ contract tests, performance regression tracking, mutation testing (80%+ target), strict typing (gradual rollout), OpenAPI validation. See [Testing Strategy](docs/advanced/testing.mdx).
 
 ### 🚀 Production Deployment
-- **Kubernetes Ready**: Production manifests for GKE, EKS, AKS, Rancher, VMware Tanzu
-- **Helm Charts**: Flexible deployment with customizable values and dependencies
-- **Kustomize**: Environment-specific overlays (dev/staging/production)
-- **Multi-Platform**: Docker Compose, kubectl, Kustomize, Helm deployment options
-- **CI/CD Pipeline**: Automated testing, validation, build, and deployment with GitHub Actions
-- **Deployment Validation**: Comprehensive validation scripts for all deployment configurations
-- **E2E Testing**: Automated deployment tests with kind clusters
-- **High Availability**: Pod anti-affinity, HPA, PDB, rolling updates
-- **Monitoring**: 25+ Prometheus alerts, 4 Grafana dashboards, 9 operational runbooks
-- **Observability**: Full monitoring for Keycloak, Redis, sessions, and application
-- **Secrets**: External secrets operator support, sealed secrets compatible
-- **Service Mesh**: Compatible with Istio, Linkerd, and other service meshes
+Kubernetes-ready for GKE/EKS/AKS with Helm charts, Kustomize overlays, automated CI/CD, HA (anti-affinity, HPA, PDB), 25+ Prometheus alerts, 4 Grafana dashboards. Service mesh compatible. See [Deployment Guide](docs/deployment/overview.mdx).
 
 ## 📚 Documentation
 
-- **[📖 Mintlify Documentation](https://mcp-server-langgraph.mintlify.app)** - Complete online documentation with guides, tutorials, and references
-- **[API Documentation](http://localhost:8000/docs)** - Interactive OpenAPI/Swagger UI (when running locally)
-- **[Mintlify Deployment Guide](docs-internal/DEPLOYMENT.md)** - How to deploy documentation updates
+**Primary Resources**:
+- **[Mintlify Documentation](https://mcp-server-langgraph.mintlify.app)** - Complete guides, tutorials, API references
+- **[API Docs](http://localhost:8000/docs)** - Interactive OpenAPI/Swagger UI (local)
+- **[39 Architecture Decision Records](adr/README.md)** - Key ADRs: [0001-LiteLLM](adr/adr-0001-llm-multi-provider.md), [0002-OpenFGA](adr/adr-0002-openfga-authorization.md), [0023-Anthropic Tools](adr/adr-0023-anthropic-tool-design-best-practices.md), [0024-Agentic Loop](adr/adr-0024-agentic-loop-implementation.md)
 
-### 📖 Quality & Testing Guides
-- **[Mutation Testing Guide](docs-internal/testing/mutation-testing.md)** - Test effectiveness measurement and improvement
-- **[Strict Typing Guide](docs-internal/architecture/strict-typing-guide.md)** - Gradual mypy strict mode rollout
-- **[Architecture Decision Records](adr/)** - Documented architectural choices
+**Deployment & Operations**:
+- [Deployment Quickstart](deployments/QUICKSTART.md) | [CI/CD Pipeline](docs/reference/development/ci-cd/overview.mdx) | [Keycloak SSO](integrations/keycloak.md)
 
-### 🚀 Deployment & Operations
-- **[Deployment Quickstart](deployments/QUICKSTART.md)** - Quick deployment guide for all platforms
-- **[Deployment README](deployments/README.md)** - Comprehensive deployment documentation
-- **[CI/CD Guide](docs/reference/development/ci-cd.mdx)** - Continuous integration and deployment pipeline
-- **[Keycloak Integration](integrations/keycloak.md)** - Enterprise SSO setup and configuration
-
-### 📝 Architecture Decision Records (ADRs)
-- [0001: Multi-Provider LLM Support (LiteLLM)](adr/adr-0001-llm-multi-provider.md)
-- [0002: Fine-Grained Authorization (OpenFGA)](adr/adr-0002-openfga-authorization.md)
-- [0003: Dual Observability Strategy](adr/adr-0003-dual-observability.md)
-- [0004: MCP Transport Selection (StreamableHTTP)](adr/adr-0004-mcp-streamable-http.md)
-- [0005: Type-Safe Responses (Pydantic AI)](adr/adr-0005-pydantic-ai-integration.md)
-- [0023: Anthropic Tool Design Best Practices](adr/adr-0023-anthropic-tool-design-best-practices.md)
-- [0024: Agentic Loop Implementation](adr/adr-0024-agentic-loop-implementation.md)
-- [0025: Anthropic Best Practices - Advanced Enhancements](adr/adr-0025-anthropic-best-practices-enhancements.md)
-- [See all 39 ADRs](adr/README.md)
-
-### 💡 Examples & Tutorials
-- **[Examples Directory](examples/README.md)** - Comprehensive examples demonstrating all features
-  - [Dynamic Context Loading](examples/dynamic_context_usage.py) - Just-in-Time semantic search
-  - [Parallel Tool Execution](examples/parallel_execution_demo.py) - Concurrent execution patterns
-  - [Enhanced Note-Taking](examples/llm_extraction_demo.py) - LLM-based information extraction
-  - [Complete Workflow](examples/full_workflow_demo.py) - Full agentic loop demonstration
+**Examples**: [Examples Directory](examples/README.md) with demos for dynamic context loading, parallel execution, note-taking, and complete workflows
 
 ## Requirements
 
@@ -231,120 +173,35 @@ See [Production Checklist](docs/deployment/production-checklist.mdx) for detaile
 
 ## Installation
 
-### Quick Install
-
-**Using uv (recommended)**:
-
-This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable dependency management:
+Using [uv](https://github.com/astral-sh/uv) (10-100x faster than pip, reproducible builds):
 
 ```bash
-# Install from PyPI
+# From PyPI
 uv pip install mcp-server-langgraph
 
-# Or clone and develop locally (creates virtual environment automatically)
+# Or clone and develop
 git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp-server-langgraph
-uv sync  # Installs all dependencies from pyproject.toml and uv.lock
+uv sync  # Installs all dependencies from pyproject.toml + uv.lock
 ```
 
-**Why uv?**
-- ⚡ **10-100x faster** than pip
-- 🔒 **Reproducible builds** via uv.lock lockfile
-- 📦 **Single source of truth** in pyproject.toml
-- 🛡️ **Better dependency resolution**
+**Verify**: `python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__version__)"`
 
-> **Note**: requirements*.txt files are deprecated. Use `uv sync` instead.
-
-### Verify Installation
-```bash
-python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__version__)"
-```
-
-See [Installation Guide](docs/getting-started/installation.mdx) for complete instructions, including:
-- Docker installation
-- Virtual environment setup
-- Dependency management
-- Configuration options
+**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) for Docker, venv setup, optional dependencies, and configuration
 
 ## Architecture
 
-### System Architecture
+**System Flow**: MCP Client → Auth Middleware (JWT + OpenFGA) → LangGraph Agent → Observability Stack (Jaeger/Prometheus/Grafana)
 
-```mermaid
-flowchart TB
-    subgraph client["MCP Client"]
-        mcpclient["Claude Desktop<br/>or other MCP client"]
-    end
-
-    subgraph server["MCP Server<br/>(server_stdio.py / streamable.py)"]
-        auth["Auth Middleware<br/>• JWT Verification<br/>• OpenFGA Authorization"]
-        agent["LangGraph Agent<br/>• Context Compaction<br/>• Pydantic AI Routing<br/>• Tool Execution<br/>• Response Generation<br/>• Output Verification<br/>• Iterative Refinement"]
-    end
-
-    subgraph observability["Observability Stack"]
-        jaeger["Jaeger<br/>(Traces)"]
-        prometheus["Prometheus<br/>(Metrics)"]
-        grafana["Grafana<br/>(Dashboards)"]
-    end
-
-    mcpclient --> auth
-    auth --> agent
-    agent --> jaeger
-    agent --> prometheus
-    jaeger --> grafana
-    prometheus --> grafana
-
-    %% ColorBrewer2 Set3 palette - each component type uniquely colored
-    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef authStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef observabilityStyle fill:#fccde5,stroke:#ec7ab8,stroke-width:2px,color:#333
-
-    class mcpclient clientStyle
-    class auth authStyle
-    class agent agentStyle
-    class jaeger,prometheus,grafana observabilityStyle
-```
-
-### Agentic Loop (ADR-0024, ADR-0025)
-
-Our agent implements Anthropic's full **gather-action-verify-repeat** cycle with advanced enhancements:
-
-```mermaid
-flowchart TD
-    START([START]) --> load["0. Load Context<br/>(Dynamic)<br/><br/>Just-in-Time<br/>Semantic Search"]
-    load --> gather["1. Gather Context<br/>(Compact)<br/><br/>Compaction when<br/>approaching limits"]
-    gather --> action["2. Take Action<br/>(Route/Tools)<br/><br/>Route & Execute<br/>(Parallel if enabled)"]
-    action --> respond["Generate Response"]
-    respond --> verify{"3. Verify Work<br/>(Verify)<br/><br/>LLM-as-Judge<br/>Quality Check"}
-    verify -->|Passed| END([END])
-    verify -->|Failed| refine["4. Repeat<br/>(Refine)<br/><br/>Max 3×"]
-    refine --> respond
-
-    %% ColorBrewer2 Set3 palette - each component type uniquely colored
-    classDef startEndStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef processStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef responseStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
-    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
-    classDef refineStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
-
-    class START,END startEndStyle
-    class load,gather,action processStyle
-    class respond responseStyle
-    class verify decisionStyle
-    class refine refineStyle
-```
-
-**Key Features**:
+**Agentic Loop**: Implements Anthropic's **gather-action-verify-repeat** cycle with 6 enhancements:
 - **Just-in-Time Context Loading**: Dynamic semantic search (60% token reduction)
-- **Context Compaction**: Prevents overflow on long conversations (40-60% token reduction)
-- **Parallel Tool Execution**: Concurrent execution with dependency resolution (1.5-2.5x speedup)
-- **Enhanced Note-Taking**: LLM-based 6-category extraction for long-term context
-- **Output Verification**: LLM-as-judge pattern catches errors before users see them (23% quality improvement)
-- **Iterative Refinement**: Up to 3 self-correction attempts for quality
-- **Observable**: Full tracing of each loop component
+- **Context Compaction**: Prevents overflow (40-60% token reduction)
+- **Parallel Tool Execution**: Concurrent execution (1.5-2.5x speedup)
+- **Enhanced Note-Taking**: LLM-based 6-category extraction
+- **Output Verification**: LLM-as-judge pattern (23% quality improvement)
+- **Iterative Refinement**: Up to 3 self-correction attempts
 
-See [ADR-0024: Agentic Loop Implementation](adr/adr-0024-agentic-loop-implementation.md) and [ADR-0025: Advanced Enhancements](adr/adr-0025-anthropic-best-practices-enhancements.md) for details.
+**See**: [Architecture Overview](docs/getting-started/architecture.mdx) | [ADR-0024: Agentic Loop](adr/adr-0024-agentic-loop-implementation.md) | [ADR-0025: Enhancements](adr/adr-0025-anthropic-best-practices-enhancements.md) | [All ADRs](docs/architecture/overview.mdx)
 
 ## Quick Start
 
@@ -382,45 +239,16 @@ See [Docker Compose documentation](docs/deployment/docker.mdx) for details.
 
 ### 🐍 Local Python Development
 
-1. **Install dependencies**:
 ```bash
-uv sync  # Install all dependencies and create virtual environment
-# Note: Creates .venv automatically with all dependencies from pyproject.toml
+uv sync                              # Install dependencies
+cp .env.example .env                 # Configure (add GOOGLE_API_KEY)
+docker-compose up -d openfga postgres  # Start infrastructure
+python scripts/setup/setup_openfga.py  # Setup auth (save IDs to .env)
+python -m mcp_server_langgraph.mcp.server_streamable  # Run agent
+curl http://localhost:8000/health    # Test
 ```
 
-2. **Start infrastructure** (without agent):
-```bash
-# Start only supporting services
-docker-compose up -d openfga postgres otel-collector jaeger prometheus grafana
-```
-
-3. **Configure environment**:
-```bash
-cp .env.example .env
-# Edit .env with your API keys:
-# - GOOGLE_API_KEY (get from https://aistudio.google.com/apikey)
-# - ANTHROPIC_API_KEY or OPENAI_API_KEY (optional)
-```
-
-4. **Setup OpenFGA**:
-```bash
-python scripts/setup/setup_openfga.py
-# Save OPENFGA_STORE_ID and OPENFGA_MODEL_ID to .env
-```
-
-5. **Run the agent locally**:
-```bash
-python -m mcp_server_langgraph.mcp.server_streamable
-```
-
-6. **Test**:
-```bash
-# Test with example client
-python examples/client_stdio.py
-
-# Or curl
-curl http://localhost:8000/health
-```
+**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx)
 
 ## Usage
 
@@ -697,74 +525,15 @@ See **[MCP Registry Guide](reference/mcp-registry.md)** for registry deployment 
 
 ## Quality Practices
 
-This project maintains high code quality through:
+**Quality Score: 9.6/10** across 7 dimensions (Code Organization, Testing, Type Safety, Documentation, Error Handling, Observability, Security).
 
-### 📈 Current Quality Score: **9.6/10**
+**Quality Gates**: Pre-commit hooks (black, isort, flake8, mypy, bandit) + CI/CD (unit/integration/property/contract/regression/mutation tests, OpenAPI validation). All tests run on Python 3.10-3.12.
 
-Assessed across 7 dimensions:
-- ✅ **Code Organization**: 9/10 - Clear module structure, separation of concerns
-- ✅ **Testing**: 10/10 - Multi-layered testing (unit, integration, property, contract, regression, mutation)
-- ✅ **Type Safety**: 9/10 - Gradual strict mypy rollout (Phases 1-3 complete: 18+ modules strict, ~22 modules remaining)
-- ✅ **Documentation**: 10/10 - ADRs, guides, API docs, inline documentation
-- ✅ **Error Handling**: 9/10 - Comprehensive error handling, fallback modes
-- ✅ **Observability**: 10/10 - Dual observability (OpenTelemetry + LangSmith)
-- ✅ **Security**: 9/10 - JWT auth, fine-grained authz, secrets management, security scanning
+**Commands**: `make format`, `make lint`, `make test-unit`, `make test-all-quality`, `make test-coverage`
 
-### 🎯 Quality Gates
+**Development**: Branch protection, conventional commits, code review required, 25 ADRs documenting architectural decisions.
 
-**Pre-Commit**:
-- Code formatting (black, isort)
-- Linting (flake8, mypy)
-- Security scan (bandit)
-
-**CI/CD (GitHub Actions)**:
-- Unit tests (Python 3.10, 3.11, 3.12)
-- Integration tests
-- Property-based tests
-- Contract tests
-- Performance regression tests
-- OpenAPI validation
-- Mutation tests (weekly)
-
-**Commands**:
-```bash
-# Code quality checks
-make format           # Format code (black + isort)
-make lint             # Run linters (flake8 + mypy)
-make security-check   # Security scan (bandit)
-
-# Test suite
-make test-unit        # Fast unit tests
-make test-all-quality # Property + contract + regression
-make test-coverage    # Coverage report
-```
-
-### 📝 Development Workflow
-
-1. **Branch Protection**: All changes via Pull Requests
-2. **Conventional Commits**: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`
-3. **Code Review**: Required before merge
-4. **Quality Gates**: All tests must pass
-5. **Documentation**: ADRs for architectural decisions
-
-**See**: [.github/CLAUDE.md](.github/CLAUDE.md) for complete development guide
-
-### 🔄 Continuous Improvement
-
-**In Progress**:
-- Expanding strict mypy to all modules (3/11 complete)
-- Increasing mutation score to 80%+ on all critical modules
-- Adding more property-based tests for edge case discovery
-
-**Recent Improvements** (2025):
-- Implemented Anthropic's agentic loop (ADR-0024) with context compaction and verification
-- Adopted Anthropic's tool design best practices (ADR-0023)
-- Added 27+ property-based tests (Hypothesis)
-- Added 20+ contract tests (JSON Schema)
-- Implemented performance regression tracking
-- Set up mutation testing with mutmut
-- Created 25 Architecture Decision Records
-- Implemented feature flag system
+**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md)
 
 ## Contributors
 
