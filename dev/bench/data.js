@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762354520446,
+  "lastUpdate": 1762357531705,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -28492,6 +28492,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019932297813282453",
             "extra": "mean: 58.45723485677325 usec\nrounds: 5382"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f29fcbee2c7c552627ba1e17d6ecceda288de2e0",
+          "message": "chore: remove poetry.lock and fix gitignore for complete uv migration\n\nRemove poetry.lock from git tracking and fix .gitignore pattern.\nThis completes the migration to uv-only dependency management.\n\nChanges:\n- Remove poetry.lock from repository\n- Fix .gitignore pattern (poetry.lock instead of .poetry.lock)\n\nNote: clients/python/pyproject.toml still has [tool.poetry] section but this\nis an auto-generated OpenAPI client with its own independent build system.\nMain project is 100% uv-based.",
+          "timestamp": "2025-11-05T10:44:27-05:00",
+          "tree_id": "9b4953690efa52fe49d41804f19b86bbe30e14f4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f29fcbee2c7c552627ba1e17d6ecceda288de2e0"
+        },
+        "date": 1762357530348,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.56885595084847,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000864969313438839",
+            "extra": "mean: 6.8696012857149285 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.68523458265577,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011626484828200227",
+            "extra": "mean: 6.680685658730105 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45171.72936356884,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.137739999976702 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46857.4138268278,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.341340000020637 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45336.094603704376,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.05748000001506 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.7934862218524,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.241269079999995 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.40567351780962,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.53132145000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.953819336808193,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.46394918000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1380700.5676184678,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 724.2699999210345 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5062.284065108322,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 197.53929000003723 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3016.7546025503552,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 331.4820499998916 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2929.7239212755117,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.32908999993106 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60403.30422971097,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004211801730017802",
+            "extra": "mean: 16.555385715275545 usec\nrounds: 13217"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17205.829838476348,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016941132329513374",
+            "extra": "mean: 58.119835508529846 usec\nrounds: 5593"
           }
         ]
       }
