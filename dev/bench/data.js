@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762367686277,
+  "lastUpdate": 1762368231776,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -29468,6 +29468,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001801941974735373",
             "extra": "mean: 56.9416995337475 usec\nrounds: 5791"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "455ad75027ea2c5e6a9912884a86783c545bf721",
+          "message": "fix(security): address critical security vulnerabilities (CWE-269, CWE-862, CWE-73, CWE-434, CWE-1188)\n\nComprehensive security remediation based on OpenAI Codex security review findings.\nAddresses OWASP A01:2021 (Broken Access Control) and A05:2021 (Security Misconfiguration).\n\n## Critical Fixes (P0 - Production Down Risk)\n\n### 1. Service Principal Impersonation (CWE-269: Improper Privilege Management)\n- **Issue**: Any authenticated user could create service principals acting as admin\n- **Impact**: Complete authorization bypass → privilege escalation\n- **Fix**: Added authorization validation before creating `acts_as` relationships\n  - Users can only create SPs for themselves\n  - Admins can create SPs for any user\n  - All other cases rejected with 403 Forbidden\n- **Files**: `src/mcp_server_langgraph/api/service_principals.py`\n- **Tests**: `tests/api/test_service_principals_security.py`\n\n### 2. SCIM Endpoint Missing Authorization (CWE-862: Missing Authorization)\n- **Issue**: Any authenticated user could manage Keycloak users/groups via SCIM\n- **Impact**: Unauthorized identity management → account manipulation\n- **Fix**: Added role-based authorization to all SCIM endpoints\n  - Requires 'admin' or 'scim-provisioner' role\n  - Applied to create, update, delete, patch operations\n  - Supports SSO provisioning scenarios (Okta, Azure AD)\n- **Files**: `src/mcp_server_langgraph/api/scim.py`\n- **Tests**: `tests/api/test_scim_security.py`\n\n### 3. Visual Builder Path Traversal + RCE (CWE-73, CWE-434)\n- **Issue**: Unauthenticated file write with user-controlled paths\n- **Impact**: CRITICAL - Arbitrary file overwrite → Remote Code Execution\n- **Fix**:\n  - Added authentication requirement (bearer token)\n  - Implemented path validation and whitelisting\n  - Normalized paths and enforced .py extension\n  - Directory creation with safe defaults\n- **Files**: `src/mcp_server_langgraph/builder/api/server.py`\n- **Tests**: `tests/builder/test_builder_security.py`\n\n## Configuration Security (P1)\n\n### 4. Production Configuration Validation (CWE-1188)\n- **Issue**: Insecure defaults could deploy to production\n- **Impact**: Production systems running with dev credentials\n- **Fix**: Added `validate_production_config()` enforcement\n  - Blocks inmemory auth provider in production\n  - Requires secure JWT secrets\n  - Enforces database-backed GDPR storage\n  - Validates mock authorization is disabled\n- **Files**: `src/mcp_server_langgraph/core/config.py`\n\n## Test Coverage\n- 13 new security tests (10 passing, 3 TODO for OpenFGA integration)\n- All tests follow TDD best practices (tests written first)\n- Comprehensive coverage of authorization edge cases\n\n## References\n- OWASP Top 10:2021 - A01 (Broken Access Control) - Ranked #1\n- OWASP Top 10:2021 - A05 (Security Misconfiguration)\n- CWE-269 (Improper Privilege Management) - 2024 Top 25 #15\n- CWE-862 (Missing Authorization) - 2024 Top 25 #9\n- CWE-434 (Unrestricted Upload) - 2024 Top 25 #10\n- CWE-73 (External Control of File Name/Path)\n- CWE-1188 (Insecure Default Initialization)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T13:42:28-05:00",
+          "tree_id": "bf30494c5068984fbc71c5ac24a1c8c5604ade91",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/455ad75027ea2c5e6a9912884a86783c545bf721"
+        },
+        "date": 1762368230068,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.4880290267506,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009399081258483578",
+            "extra": "mean: 6.873417742267523 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.0100204907758,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014081551718141372",
+            "extra": "mean: 6.666221341270269 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44907.36956872949,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.268060000030232 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47700.54741147722,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.96412000000214 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 47024.34638508636,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.265580000005002 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.8419581732246,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.239937850000018 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.371570500018272,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.62204066000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.937809651297885,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.62579533000005 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1491780.290663799,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 670.3399999707926 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5205.72423519334,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 192.09622999994735 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2908.4008460418277,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.8315600000408 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2986.056281726434,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.8898699999836 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60428.89491706837,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002107819348770435",
+            "extra": "mean: 16.548374769592986 usec\nrounds: 13024"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17430.87808357031,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002159685684821785",
+            "extra": "mean: 57.369456386856506 usec\nrounds: 5480"
           }
         ]
       }
