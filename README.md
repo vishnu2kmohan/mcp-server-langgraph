@@ -111,6 +111,22 @@ This project achieves **reference-quality implementation** of Anthropic's AI age
 
 **See**: [Complete Assessment](reports/ANTHROPIC_BEST_PRACTICES_ASSESSMENT_20251017.md) | [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md), [ADR-0024](adr/adr-0024-agentic-loop-implementation.md), [ADR-0025](adr/adr-0025-anthropic-best-practices-enhancements.md)
 
+### 🐍 Secure Code Execution (NEW)
+
+Execute Python code securely with comprehensive validation and sandboxing:
+
+- **Dual Backend Support**: Docker Engine (local/dev) + Kubernetes Jobs (production)
+- **AST-Based Validation**: Import whitelist, blocks 30+ dangerous modules (os, subprocess, eval, etc.)
+- **Resource Limits**: CPU, memory, timeout, disk quotas with enforcement
+- **Network Isolation**: Configurable modes (none/allowlist/unrestricted)
+- **OWASP Top 10 Defenses**: 34 security tests covering injection, deserialization, privilege escalation
+- **Progressive Tool Discovery**: 98%+ token savings via `search_tools` endpoint (Anthropic best practice)
+- **Feature Flagged**: Disabled by default (fail-closed security)
+
+**Test Coverage**: 162 tests (100% passing) | **Security**: 96% code coverage | **Backends**: Docker + Kubernetes
+
+**See**: [Implementation Summary](docs/code-execution-implementation-summary.md) | [Anthropic MCP Guide](https://www.anthropic.com/engineering/code-execution-with-mcp)
+
 ### 🎯 Core Capabilities
 - **Multi-LLM Support**: 100+ providers via LiteLLM (Anthropic, OpenAI, Google, Azure, Bedrock, Ollama) + open-source models (Llama, Qwen, Mistral)
 - **MCP Protocol**: Standard stdio & StreamableHTTP transports for AI agent exposure
@@ -129,9 +145,11 @@ Complete GDPR compliance with **6 API endpoints** (Articles 15-21) and **Postgre
 
 ### 📦 Optional Dependencies
 
-Install optional features on demand: **Secrets Management** (`[secrets]`), **Self-Hosted Embeddings** (`[embeddings]`), **All Features** (`[all]`). Production requires persistent storage (PostgreSQL/Redis) for GDPR compliance—in-memory mode is blocked.
+Install optional features on demand: **Code Execution** (`[code-execution]`), **Secrets Management** (`[secrets]`), **Self-Hosted Embeddings** (`[embeddings]`), **All Features** (`[all]`). Production requires persistent storage (PostgreSQL/Redis) for GDPR compliance—in-memory mode is blocked.
 
-**See**: [Installation Guide](docs/getting-started/installation.mdx#optional-dependencies) | [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
+**Code Execution**: Requires Docker (local) or Kubernetes (production). Enable with `ENABLE_CODE_EXECUTION=true`.
+
+**See**: [Installation Guide](docs/getting-started/installation.mdx#optional-dependencies) | [Code Execution Summary](docs/code-execution-implementation-summary.md) | [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
 
 ### 🧪 Quality & Testing
 27+ property tests, 20+ contract tests, performance regression tracking, mutation testing (80%+ target), strict typing (gradual rollout), OpenAPI validation. See [Testing Strategy](docs/advanced/testing.mdx).
