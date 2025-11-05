@@ -350,9 +350,29 @@ module "workload_identity" {
   namespace  = var.app_namespace
 
   service_accounts = {
-    # Main application service account
-    "mcp-server-sa" = {
-      gcp_sa_name  = "${local.short_prefix}-app-sa"
+    # Keycloak service account
+    "staging-keycloak" = {
+      gcp_sa_name  = "keycloak-staging"
+      display_name = "Keycloak Staging SA"
+      roles = [
+        "roles/logging.logWriter",
+      ]
+      cloudsql_access = true
+    }
+
+    # OpenFGA service account
+    "staging-openfga" = {
+      gcp_sa_name  = "openfga-staging"
+      display_name = "OpenFGA Staging SA"
+      roles = [
+        "roles/logging.logWriter",
+      ]
+      cloudsql_access = true
+    }
+
+    # Main MCP Server application service account
+    "staging-mcp-server-langgraph" = {
+      gcp_sa_name  = "mcp-staging-sa"
       display_name = "MCP Server Staging Application SA"
       roles = [
         "roles/logging.logWriter",
@@ -362,17 +382,6 @@ module "workload_identity" {
       ]
       cloudsql_access = true
       secret_ids      = var.app_secret_ids
-    }
-
-    # Worker service account (if needed)
-    "worker-sa" = {
-      gcp_sa_name  = "${local.short_prefix}-worker-sa"
-      display_name = "MCP Server Staging Worker SA"
-      roles = [
-        "roles/logging.logWriter",
-        "roles/monitoring.metricWriter",
-      ]
-      cloudsql_access = true
     }
   }
 
