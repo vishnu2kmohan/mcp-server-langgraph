@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762350338137,
+  "lastUpdate": 1762353275863,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -28248,6 +28248,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000023243788688871862",
             "extra": "mean: 58.51781126071936 usec\nrounds: 5346"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6339c531ad9e02523de9286a949e91e3891e94a0",
+          "message": "fix(terraform): resolve GKE Autopilot and CloudSQL module configuration errors\n\nFix critical Terraform module errors to enable infrastructure provisioning with new naming conventions.\n\n## Module Fixes\n\n### GKE Autopilot Module (terraform/modules/gke-autopilot/main.tf)\n- **Removed**: `cluster_autoscaling` block (conflicts with Autopilot mode)\n- **Removed**: `network_policy` block (managed automatically by Autopilot)\n- **Removed**: `vertical_pod_autoscaling` block (managed automatically)\n- **Removed**: `network_policy_config` from addons (not configurable in Autopilot)\n- **Removed**: `dns_cache_config` from addons (enabled by default)\n- **Removed**: `gcp_filestore_csi_driver_config` (not available in Autopilot)\n\n**Rationale**: GKE Autopilot manages these settings automatically. Manual configuration causes \"conflicts with enable_autopilot\" errors.\n\n### CloudSQL Module (terraform/modules/cloudsql/main.tf)\n- **Fixed**: `encryption_key_name` - changed from dynamic block to direct attribute\n- **Fixed**: `additional_users` for_each - wrapped with `nonsensitive()` function\n- **Fixed**: User password handling - wrapped with `sensitive()` for security\n\n### CloudSQL Variables (terraform/modules/cloudsql/variables.tf)\n- **Fixed**: `user_deletion_policy` default from \"DELETE\" to \"\" (empty string)\n- **Fixed**: Validation to accept [\"ABANDON\", \"\"] per GCP API requirements\n- **Changed**: `additional_users` sensitive flag to false (required for for_each)\n\n### Memorystore Module (terraform/modules/memorystore/main.tf)\n- **Fixed**: `maintenance_window_day` conversion from number to string constant\n- **Added**: Lookup table to convert 1-7 to \"MONDAY\"-\"SUNDAY\"\n\n### Memorystore Variables (terraform/modules/memorystore/variables.tf)\n- **Fixed**: `read_replica_memory_size_gb` validation with `try()` for null handling\n\n## Test Results\n\n- ✅ Terraform plan: **75 resources to add, 0 to change, 0 to destroy**\n- ✅ Builder API tests: **18/18 passing**\n- ✅ Infrastructure tests: **28/30 passing** (2 pre-existing Helm issues)\n\n## New Resource Naming (From Terraform Plan)\n\n**Network:**\n- VPC: `staging-mcp-slg-vpc`\n- Subnet: `staging-mcp-slg-nodes-us-central1`\n- Router: `staging-mcp-slg-router-us-central1`\n- Firewall rules: `staging-mcp-slg-allow-*`\n\n**Databases** (to be created):\n- Cloud SQL: `staging-mcp-slg-postgres`\n- Memorystore: `staging-mcp-slg-redis`\n\n**IAM:**\n- Service Accounts: `staging-mcp-slg-app-sa`, `staging-mcp-slg-worker-sa`\n\nterraform/modules/gke-autopilot/main.tf:126-128,151-158,201-212\nterraform/modules/cloudsql/main.tf:150,221,234\nterraform/modules/cloudsql/variables.tf:422-430\nterraform/modules/memorystore/main.tf:47-50\nterraform/modules/memorystore/variables.tf:321\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-05T09:33:34-05:00",
+          "tree_id": "4ce8a8ed75e8fd31ba47996b952077b499e2086d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6339c531ad9e02523de9286a949e91e3891e94a0"
+        },
+        "date": 1762353274030,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 162.7703597345214,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015678001237725796",
+            "extra": "mean: 6.143624684684612 msec\nrounds: 111"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 166.8619227265026,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011562737611291395",
+            "extra": "mean: 5.992979007194254 msec\nrounds: 139"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51428.31869520806,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.444539999966537 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52452.90777954402,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.064719999946078 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51915.55415969487,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.26204999996628 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 186.02920485509068,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.375500049999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.44134021487023,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.43678310999995 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.929254367459958,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.71249692999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1506001.4156867978,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 664.0099999799531 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6422.665741547648,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 155.69858999995745 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2899.200565738022,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.9226700000452 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3184.3013434269883,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 314.0406300001075 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67054.6960149787,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011680772634341894",
+            "extra": "mean: 14.91319861888002 usec\nrounds: 13322"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20891.81926009407,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018334527979294024",
+            "extra": "mean: 47.8656256571261 usec\nrounds: 4755"
           }
         ]
       }
