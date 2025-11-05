@@ -420,13 +420,13 @@ variable "additional_users" {
 }
 
 variable "user_deletion_policy" {
-  description = "Deletion policy for users (ABANDON or DELETE)"
+  description = "Deletion policy for users (ABANDON or empty string)"
   type        = string
-  default     = "DELETE"
+  default     = ""
 
   validation {
-    condition     = contains(["ABANDON", "DELETE"], var.user_deletion_policy)
-    error_message = "User deletion policy must be ABANDON or DELETE."
+    condition     = contains(["ABANDON", ""], var.user_deletion_policy)
+    error_message = "User deletion policy must be ABANDON or empty string."
   }
 }
 

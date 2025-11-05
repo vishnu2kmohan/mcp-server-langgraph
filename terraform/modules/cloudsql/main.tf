@@ -218,12 +218,12 @@ resource "random_password" "default_user" {
 
 # Additional users
 resource "google_sql_user" "additional" {
-  for_each = var.additional_users
+  for_each = nonsensitive(var.additional_users)
 
   name     = each.key
   project  = var.project_id
   instance = google_sql_database_instance.main.name
-  password = each.value.password != null ? each.value.password : random_password.additional_users[each.key].result
+  password = sensitive(each.value.password != null ? each.value.password : random_password.additional_users[each.key].result)
   type     = lookup(each.value, "type", "BUILT_IN")
 
   deletion_policy = var.user_deletion_policy
@@ -231,10 +231,10 @@ resource "google_sql_user" "additional" {
 
 # Random passwords for additional users (if not provided)
 resource "random_password" "additional_users" {
-  for_each = {
+  for_each = nonsensitive({
     for name, user in var.additional_users : name => user
     if user.password == null
-  }
+  })
 
   length  = 32
   special = true

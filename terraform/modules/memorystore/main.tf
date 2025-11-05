@@ -44,7 +44,10 @@ resource "google_redis_instance" "main" {
       dynamic "weekly_maintenance_window" {
         for_each = var.maintenance_window_day != null ? [1] : []
         content {
-          day = var.maintenance_window_day
+          day = lookup({
+            1 = "MONDAY", 2 = "TUESDAY", 3 = "WEDNESDAY", 4 = "THURSDAY",
+            5 = "FRIDAY", 6 = "SATURDAY", 7 = "SUNDAY"
+          }, var.maintenance_window_day, "SUNDAY")
           start_time {
             hours   = var.maintenance_window_hour
             minutes = var.maintenance_window_minute

@@ -123,22 +123,9 @@ resource "google_container_cluster" "autopilot" {
     }
   }
 
-  # Cluster autoscaling (Autopilot manages this, but we can set limits)
-  cluster_autoscaling {
-    enabled = true
-
-    # Resource limits for the entire cluster
-    dynamic "resource_limits" {
-      for_each = var.cluster_resource_limits
-      content {
-        resource_type = resource_limits.value.resource_type
-        minimum       = resource_limits.value.minimum
-        maximum       = resource_limits.value.maximum
-      }
-    }
-
-    autoscaling_profile = var.autoscaling_profile
-  }
+  # Cluster autoscaling (managed automatically by Autopilot)
+  # Autopilot controls all scaling decisions
+  # Resource limits are enforced at the project level, not cluster level
 
   # Binary Authorization (image verification)
   dynamic "binary_authorization" {
@@ -148,19 +135,14 @@ resource "google_container_cluster" "autopilot" {
     }
   }
 
-  # Vertical Pod Autoscaling
-  vertical_pod_autoscaling {
-    enabled = var.enable_vertical_pod_autoscaling
-  }
+  # Vertical Pod Autoscaling (not configurable in Autopilot)
+  # Autopilot automatically manages VPA
 
   # Dataplane V2 (eBPF-based networking)
   datapath_provider = var.enable_dataplane_v2 ? "ADVANCED_DATAPATH" : "DATAPATH_PROVIDER_UNSPECIFIED"
 
-  # Network Policy
-  network_policy {
-    enabled  = var.enable_network_policy
-    provider = var.enable_network_policy ? "PROVIDER_UNSPECIFIED" : null
-  }
+  # Network Policy (not configurable in Autopilot)
+  # Autopilot enables network policy by default
 
   # Security posture (vulnerability scanning)
   dynamic "security_posture_config" {
@@ -220,21 +202,14 @@ resource "google_container_cluster" "autopilot" {
       disabled = !var.enable_horizontal_pod_autoscaling
     }
 
-    network_policy_config {
-      disabled = !var.enable_network_policy
-    }
-
-    dns_cache_config {
-      enabled = var.enable_dns_cache
-    }
+    # network_policy_config - Not configurable in Autopilot (enabled by default)
+    # dns_cache_config - Not configurable in Autopilot (enabled by default)
 
     gce_persistent_disk_csi_driver_config {
       enabled = var.enable_gce_persistent_disk_csi_driver
     }
 
-    gcp_filestore_csi_driver_config {
-      enabled = var.enable_gcp_filestore_csi_driver
-    }
+    # gcp_filestore_csi_driver_config - Not available in Autopilot
 
     gcs_fuse_csi_driver_config {
       enabled = var.enable_gcs_fuse_csi_driver

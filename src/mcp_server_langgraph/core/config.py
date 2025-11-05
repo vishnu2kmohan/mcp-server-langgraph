@@ -4,6 +4,7 @@ Configuration management with Infisical secrets integration
 
 from typing import List, Optional
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from mcp_server_langgraph.secrets.manager import get_secrets_manager
@@ -202,6 +203,40 @@ class Settings(BaseSettings):  # type: ignore[misc]
         "issues",
         "preferences",
     ]  # Categories for information extraction
+
+    # Code Execution Configuration (Anthropic Best Practice - Progressive Disclosure)
+    # SECURITY: Disabled by default - must be explicitly enabled
+    enable_code_execution: bool = False  # Enable sandboxed code execution
+    code_execution_backend: str = "docker-engine"  # Backend: docker-engine, kubernetes, process
+    code_execution_timeout: int = 30  # Execution timeout in seconds (1-600)
+    code_execution_memory_limit_mb: int = 512  # Memory limit in MB (64-8192)
+    code_execution_cpu_quota: float = 1.0  # CPU cores quota (0.1-8.0)
+    code_execution_disk_quota_mb: int = 100  # Disk quota in MB (1-10240)
+    code_execution_max_processes: int = 1  # Maximum processes (1-100)
+    code_execution_network_mode: str = "allowlist"  # Network mode: none, allowlist, unrestricted
+    code_execution_allowed_domains: List[str] = []  # Allowed domains for allowlist mode
+    code_execution_allowed_imports: List[str] = [
+        # Safe standard library modules
+        "json",
+        "math",
+        "datetime",
+        "statistics",
+        "collections",
+        "itertools",
+        "functools",
+        "typing",
+        # Data processing libraries
+        "pandas",
+        "numpy",
+    ]  # Allowed Python imports (whitelist)
+
+    # Docker-specific settings
+    code_execution_docker_image: str = "python:3.12-slim"  # Docker image for execution
+    code_execution_docker_socket: str = "/var/run/docker.sock"  # Docker socket path
+
+    # Kubernetes-specific settings
+    code_execution_k8s_namespace: str = "default"  # Kubernetes namespace for jobs
+    code_execution_k8s_job_ttl: int = 300  # Kubernetes job TTL in seconds (cleanup)
 
     # Conversation Checkpointing (for distributed state across replicas)
     checkpoint_backend: str = "memory"  # "memory", "redis"
