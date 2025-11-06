@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762441007104,
+  "lastUpdate": 1762441246940,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -32152,6 +32152,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018324025419044612",
             "extra": "mean: 57.86255545437669 usec\nrounds: 5491"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "2dcacfee8ada42180a210f5082ea83c21a1b93de",
+          "message": "feat(infra): add network policy validation to prevent DNS/HTTPS egress issues\n\n## Problem Statement\n\nGKE staging deployment failures were caused by network policy misconfigurations\nthat blocked:\n1. DNS resolution to GKE Dataplane V2 (169.254.20.10)\n2. HTTPS egress to sqladmin.googleapis.com for Cloud SQL Auth Proxy\n\nThese issues occurred multiple times across different pods (keycloak, openfga,\nmcp-server-langgraph), indicating a need for automated validation to prevent\nrecurrence.\n\n## TDD Approach - Prevention Strategy\n\nFollowing Test-Driven Development principles, we implement validation BEFORE\ndeployment to catch misconfigurations early:\n\n**Test First**: Validate network policies have required egress rules\n**Code Later**: Deploy only if validation passes\n**Never Again**: Automated checks prevent the same class of issues\n\n## Changes Implemented\n\n### Enhanced validate-deployment.sh\n\nAdded `validate_network_policies()` function that checks:\n\n1. **GKE Dataplane V2 DNS Egress** (169.254.0.0/16)\n   - Validates all critical policies: allow-egress, keycloak-network-policy, openfga-network-policy\n   - Ensures UDP/53 egress to link-local DNS range\n   - Prevents \"connection timed out; no servers could be reached\" errors\n\n2. **Cloud SQL Auth Proxy HTTPS Egress** (0.0.0.0/0)\n   - Validates keycloak-network-policy and openfga-network-policy\n   - Ensures TCP/443 egress to sqladmin.googleapis.com (public Google IPs)\n   - Prevents \"dial tcp: lookup sqladmin.googleapis.com: i/o timeout\" errors\n\n3. **Cloud SQL Proxy Health Endpoint Configuration**\n   - Validates --http-address=0.0.0.0 flag is present\n   - Prevents liveness/readiness probe failures\n   - Ensures health endpoints accessible to Kubelet\n\n### Validation Output\n\n```bash\n$ ./scripts/validate-deployment.sh staging-gke\n\n==================================================\nValidating Network Policy DNS & HTTPS Egress\n==================================================\n\nChecking GKE Dataplane V2 DNS egress (169.254.0.0/16)...\n  ✓ allow-egress: Has DNS egress to 169.254.0.0/16\n  ✓ keycloak-network-policy: Has DNS egress to 169.254.0.0/16\n  ✓ openfga-network-policy: Has DNS egress to 169.254.0.0/16\n\nChecking Cloud SQL Auth Proxy HTTPS egress (0.0.0.0/0)...\n  ✓ keycloak-network-policy: Has HTTPS egress to 0.0.0.0/0 (allows sqladmin.googleapis.com)\n  ✓ openfga-network-policy: Has HTTPS egress to 0.0.0.0/0 (allows sqladmin.googleapis.com)\n\nChecking Cloud SQL Proxy --http-address flag...\n  ✓ Cloud SQL Proxy has --http-address=0.0.0.0 flag\n\n✅ All validations PASSED\n```\n\n### Error Detection\n\nWhen validation fails, the script provides actionable fixes:\n\n```bash\n✗ keycloak-network-policy: MISSING DNS egress to 169.254.0.0/16 (GKE Dataplane V2)\n  This will cause DNS resolution failures for service discovery\n\n✗ keycloak-network-policy: MISSING HTTPS egress to 0.0.0.0/0\n  Cloud SQL Auth Proxy cannot reach sqladmin.googleapis.com (public Google IPs)\n  This will cause database connection failures\n\nCommon fixes:\n1. Add GKE Dataplane V2 DNS egress to all network policies:\n   - to:\n     - ipBlock:\n         cidr: 169.254.0.0/16\n     ports:\n     - protocol: UDP\n       port: 53\n\n2. Add Cloud SQL Auth Proxy HTTPS egress (for keycloak/openfga):\n   - to:\n     - ipBlock:\n         cidr: 0.0.0.0/0\n     ports:\n     - protocol: TCP\n       port: 443\n```\n\n## Integration into CI/CD\n\nThis validation runs BEFORE deployment:\n\n```bash\n# Pre-deployment check\n./scripts/validate-deployment.sh staging-gke\n\n# Only deploy if validation passes\nif [ $? -eq 0 ]; then\n    kubectl apply -k deployments/overlays/staging-gke\nelse\n    echo \"Validation failed, deployment aborted\"\n    exit 1\nfi\n```\n\n## Testing\n\nAll 28 deployment validation tests passed:\n- test_cloud_sql_proxy_config.py: 11 tests ✅\n- test_kustomize_build.py: 10 tests ✅\n- test_service_dependencies.py: 7 tests ✅\n\n## Impact\n\n- **Prevents** DNS resolution failures before deployment\n- **Prevents** Cloud SQL Auth Proxy connection failures before deployment\n- **Prevents** service discovery issues before deployment\n- **Reduces** debugging time from hours to minutes\n- **Ensures** consistent network policy configuration across all pods\n\n## References\n\n- Fixes validated with commits: d2dcc83, fc14aac\n- TDD principle: Test before deploy, catch issues early\n- Automation prevents human error in complex YAML configurations\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T09:59:25-05:00",
+          "tree_id": "928fe92af7b2382cb34acc5d0e081442bf724ba7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/2dcacfee8ada42180a210f5082ea83c21a1b93de"
+        },
+        "date": 1762441245237,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.39168747064784,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007282701982132786",
+            "extra": "mean: 6.925606435642505 msec\nrounds: 101"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.7958028086513,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011425784208040805",
+            "extra": "mean: 6.675754468751016 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44523.77591905419,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.459909999952288 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46868.28465374145,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.336389999930816 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46331.13044258187,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.583759999970198 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.9652320658854,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.236555310000028 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.417782774201957,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.49918565000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.955309019982199,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.44891605000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 833652.9002870825,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 1.1995399999875644 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4493.341182902303,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 222.55153999992672 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3019.668672290678,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 331.16215999996257 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2964.4525674405522,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.3304099999075 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59928.47768689068,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002042597644541846",
+            "extra": "mean: 16.686557686726445 usec\nrounds: 14076"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17050.74648020785,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016807311718776144",
+            "extra": "mean: 58.64845865609339 usec\nrounds: 5551"
           }
         ]
       }
