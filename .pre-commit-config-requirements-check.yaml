@@ -53,29 +53,31 @@
       description: |
         Prevents use of 'pip install' in Python files, shell scripts, and CI/CD configs.
         Use 'uv sync' or 'uv add' instead.
-      entry: bash -c '
-        violations=$(
-          grep -r "pip install" \
-            --include="*.py" \
-            --include="*.sh" \
-            --include="*.yml" \
-            --include="*.yaml" \
-            --exclude-dir=".venv" \
-            --exclude-dir="node_modules" \
-            --exclude-dir="docs" \
-            --exclude="uv-migration.mdx" \
-            . | grep -v "# DO NOT use pip install" || true
-        );
-        if [ -n "$violations" ]; then
-          echo "❌ ERROR: Found \"pip install\" in code:";
-          echo "$violations";
-          echo "";
-          echo "Replace with UV commands:";
-          echo "  pip install -r requirements.txt → uv sync";
-          echo "  pip install package → uv add package";
-          echo "  python -m pip install → uv run python";
-          exit 1;
-        fi
-      '
+      entry: bash
+      args:
+        - -c
+        - |
+          violations=$(
+            grep -r "pip install" \
+              --include="*.py" \
+              --include="*.sh" \
+              --include="*.yml" \
+              --include="*.yaml" \
+              --exclude-dir=".venv" \
+              --exclude-dir="node_modules" \
+              --exclude-dir="docs" \
+              --exclude="uv-migration.mdx" \
+              . | grep -v "# DO NOT use pip install" || true
+          );
+          if [ -n "$violations" ]; then
+            echo "ERROR: Found pip install in code:";
+            echo "$violations";
+            echo "";
+            echo "Replace with UV commands:";
+            echo "  pip install -r requirements.txt to uv sync";
+            echo "  pip install package to uv add package";
+            echo "  python -m pip install to uv run python";
+            exit 1;
+          fi
       language: system
       pass_filenames: false
