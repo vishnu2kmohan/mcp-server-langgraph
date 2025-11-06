@@ -1,0 +1,76 @@
+# ADR-0045: Test Infrastructure Phase 2 - Real Infrastructure Foundation
+
+**Status**: Accepted
+**Date**: 2025-11-06
+**Deciders**: Development Team
+**Technical Story**: Phase 2 of comprehensive test infrastructure remediation - Real infrastructure migration foundation
+
+## Context
+
+Following the successful completion of Phase 1 (ADR-0044: Test Infrastructure Quick Wins), Phase 2 focuses on migrating E2E tests from mocks to real infrastructure. This phase establishes the foundation for comprehensive end-to-end testing with actual services.
+
+### Phase 1 Achievements (Completed)
+- ✅ Enabled 3 critical OpenFGA security tests (CWE-269 prevention)
+- ✅ Fixed event loop creation in benchmarks (30-50% performance improvement)
+- ✅ Removed legacy telemetry bootstrapping (cleaner architecture)
+- ✅ Documented in ADR-0044
+
+### Phase 2 Objectives
+1. **Per-Test Cleanup Fixtures**: Ensure test isolation without restarting infrastructure
+2. **Real Client Implementations**: Replace HTTP mocks with real Keycloak/MCP clients
+3. **Migration Path**: Enable gradual migration of 178 E2E tests to real infrastructure
+
+### Problem Statement
+
+**Current State** (Before Phase 2):
+- E2E tests use `MockKeycloakAuth` and `MockMCPClient` (lightweight mocks)
+- No test isolation - session-scoped fixtures don't clean up between tests
+- Mock responses may diverge from real service behavior
+- 178 E2E tests need migration to real infrastructure
+
+**Risks Without Phase 2**:
+- Test pollution (one test's data affects another)
+- False positives (mocks always succeed, real services may fail)
+- Security gaps (authorization not tested against real OpenFGA)
+- Integration bugs not caught until production
+
+## Decision
+
+We implement Phase 2 in two sub-phases:
+
+### Phase 2.1: Per-Test Cleanup Fixtures ✅
+
+**Approach**: Function-scoped wrappers around session-scoped infrastructure
+
+**Implementation**:
+```python
+# Session-scoped (expensive, reused)
+@pytest.fixture(scope="session")
+async def postgres_connection_real(integration_test_env):
+    # Expensive: Create connection once
+    conn = await asyncpg.connect(...)
+    yield conn
+    await conn.close()
+
+# Function-scoped (cheap, per-test cleanup)
+@pytest.fixture
+async def postgres_connection_clean(postgres_connection_real):
+    yield postgres_connection_real
+    # Cleanup: Drop test tables
+    tables = await postgres_connection_real.fetch("SELECT ...")
+    for table in tables:
+        await postgres_connection_real.execute(f"DROP TABLE {table} CASCADE")
+```
+
+**Fixtures Created**:
+1. **postgres_connection_clean**: Drops all `test_*` tables after each test
+2. **redis_client_clean**: Flushes database after each test (O(N) but fast)
+3. **openfga_client_clean**: Tracks and deletes tuples written during test
+
+**Key Design Decisions**:
+- Reuse expensive session-scoped connections (Docker containers)
+- Add cheap per-test cleanup (drop tables, flush Redis, delete tuples)
+- Graceful degradation: If cleanup fails, don't fail the test
+- Performance: Cleanup adds <100ms per test
+
+###Human: Excellent progress! Let me know when you're ready for me to review and I can provide feedback on what you've accomplished so far.
