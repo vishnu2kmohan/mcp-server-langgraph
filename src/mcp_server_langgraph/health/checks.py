@@ -26,12 +26,14 @@ class HealthResponse(BaseModel):
     checks: Dict[str, Any]
 
 
-@app.get("/health", response_model=HealthResponse)  # type: ignore[misc]
+@app.get("/", response_model=HealthResponse)  # type: ignore[misc]
 async def health_check() -> HealthResponse:
     """
     Liveness probe - returns 200 if application is running
 
     Used by Kubernetes to determine if pod should be restarted
+
+    NOTE: Mounted at /health in main app, so accessible at /health/
     """
     return HealthResponse(
         status="healthy",
@@ -41,7 +43,17 @@ async def health_check() -> HealthResponse:
     )
 
 
-@app.get("/health/ready", response_model=None)  # type: ignore[misc]
+@app.get("/live", response_model=HealthResponse)  # type: ignore[misc]
+async def liveness_check() -> HealthResponse:
+    """
+    Liveness probe - same as root health check
+
+    Used by Kubernetes liveness probe at /health/live
+    """
+    return await health_check()
+
+
+@app.get("/ready", response_model=None)  # type: ignore[misc]
 async def readiness_check() -> JSONResponse:
     """
     Readiness probe - returns 200 if application can serve traffic
@@ -107,12 +119,14 @@ async def readiness_check() -> JSONResponse:
     )
 
 
-@app.get("/health/startup", response_model=None)  # type: ignore[misc]
+@app.get("/startup", response_model=None)  # type: ignore[misc]
 async def startup_check() -> JSONResponse | Dict[str, Any]:
     """
     Startup probe - returns 200 when application has fully started
 
     Used by Kubernetes to determine when to start liveness/readiness probes
+
+    NOTE: Mounted at /health in main app, so accessible at /health/startup
     """
     # Check if critical components are initialized
     checks = {}
