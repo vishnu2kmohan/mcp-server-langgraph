@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762451424793,
+  "lastUpdate": 1762451513036,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -33128,6 +33128,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016782598352124676",
             "extra": "mean: 56.90481832930416 usec\nrounds: 5543"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ac56836e3e08f4eadf5511eee20a706fed4cd1e9",
+          "message": "fix(infra): enable Cloud SQL Proxy health checks on port 9801\n\n## Problem\nCloud SQL Proxy sidecar continuously crashing, preventing MCP server pods from reaching READY 2/2 status.\n\n**Root Cause**: Liveness/readiness probes configured for port 9801 but proxy not running health check server.\n\n**Symptoms**:\n- Proxy logs: \"SIGTERM signal received. Shutting down...\"\n- Pod status: 1/2 READY (app container healthy, proxy failing)\n- Probe errors: \"connection refused\" on port 9801\n\n## Solution\n\n**File**: `deployments/overlays/staging-gke/deployment-patch.yaml`\n\nAdded required Cloud SQL Proxy v2.x health check flags:\n```yaml\nargs:\n  - \"--health-check\"       # Enable HTTP health check server\n  - \"--http-port=9801\"     # Listen on port 9801 (matches probe config)\n  - \"--http-address=0.0.0.0\"  # Listen on all interfaces (K8s requirement)\n```\n\n## Verification\n\nWith these flags, Cloud SQL Proxy exposes:\n- `GET /liveness` on port 9801 - Returns 200 if proxy is running\n- `GET /readiness` on port 9801 - Returns 200 if database connections are ready\n- `GET /startup` on port 9801 - Returns 200 when proxy is fully started\n\n## Current Status\n\n**MCP Server Application Container**: ✅ READY\n- Health checks passing: `/health/live` and `/health/ready` return 200\n- Observability initialization fixed\n- All application-level issues resolved\n\n**Cloud SQL Proxy Container**: 🔄 Awaiting deployment with health check flags\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T12:49:19-05:00",
+          "tree_id": "41759929ca59c24fe1c7f0743fdfc60d7e8105f6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ac56836e3e08f4eadf5511eee20a706fed4cd1e9"
+        },
+        "date": 1762451511052,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 159.57565501275127,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011235549340340298",
+            "extra": "mean: 6.266620055045945 msec\nrounds: 109"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 163.59638437687872,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012408529837450367",
+            "extra": "mean: 6.112604528571301 msec\nrounds: 140"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51778.54110846507,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.31302000002688 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54102.219651773055,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.483529999997472 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51497.60175648521,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.418380000075786 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 192.2843308708252,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.200631769999973 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.611403602960547,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 50.990740909999914 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.945230345486966,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.55071278 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1423325.4577241708,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 702.5799999382798 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6529.022254763108,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 153.16228999992632 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2912.4460469366963,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.35400000003347 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3139.918439362879,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 318.4796099999687 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67870.41059776097,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011510068044172836",
+            "extra": "mean: 14.733961253403551 usec\nrounds: 10659"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20412.38870734961,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019769054813335897",
+            "extra": "mean: 48.989856813766416 usec\nrounds: 5643"
           }
         ]
       }
