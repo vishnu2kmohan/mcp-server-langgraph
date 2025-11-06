@@ -10,19 +10,19 @@ Following TDD principles:
 These tests define the behavior we want from the container pattern.
 """
 
-import pytest
-from unittest.mock import Mock, patch
 from typing import Optional
+from unittest.mock import Mock, patch
 
+import pytest
 
 # Import the container module (doesn't exist yet - TDD Red phase)
 # We'll create this module after writing the tests
 from mcp_server_langgraph.core.container import (
     ApplicationContainer,
-    ContainerConfig,
-    TelemetryProvider,
     AuthProvider,
+    ContainerConfig,
     StorageProvider,
+    TelemetryProvider,
 )
 
 
@@ -151,7 +151,7 @@ class TestApplicationContainer:
             container = ApplicationContainer(config)
 
             # Get telemetry - should NOT call global init_observability
-            telemetry = container.get_telemetry()
+            _telemetry = container.get_telemetry()  # noqa: F841
 
             # The global init function should never be called for test containers
             mock_init.assert_not_called()
@@ -179,8 +179,8 @@ class TestTelemetryProvider:
 
     def test_production_telemetry_provider_initializes(self):
         """Test that production telemetry provider initializes correctly"""
-        from mcp_server_langgraph.core.container import ProductionTelemetryProvider
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.container import ProductionTelemetryProvider
 
         settings = Settings(environment="production", enable_tracing=True, enable_metrics=True)
 
@@ -245,8 +245,8 @@ class TestStorageProvider:
 
     def test_redis_storage_provider(self):
         """Test Redis storage provider configuration"""
-        from mcp_server_langgraph.core.container import RedisStorageProvider
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.container import RedisStorageProvider
 
         settings = Settings(environment="development", redis_host="localhost", redis_port=6379)
 
@@ -271,8 +271,8 @@ class TestContainerTestHelpers:
 
     def test_create_test_container_with_overrides(self):
         """Test that test container accepts overrides"""
-        from mcp_server_langgraph.core.container import create_test_container
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.container import create_test_container
 
         custom_settings = Settings(environment="test", log_level="DEBUG")
 

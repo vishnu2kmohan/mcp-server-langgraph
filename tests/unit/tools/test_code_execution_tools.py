@@ -5,13 +5,14 @@ Tests execute_python tool with mocked sandbox.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # This import will fail initially - that's expected in TDD!
 try:
-    from mcp_server_langgraph.tools.code_execution_tools import execute_python
     from mcp_server_langgraph.execution import ExecutionResult
+    from mcp_server_langgraph.tools.code_execution_tools import execute_python
 except ImportError:
     pytest.skip("Code execution tools not implemented yet", allow_module_level=True)
 
@@ -69,7 +70,12 @@ class TestExecutePythonTool:
         result = execute_python.invoke({"code": "import os; os.system('ls')"})
 
         # Should fail validation
-        assert "not allowed" in result.lower() or "blocked" in result.lower() or "invalid" in result.lower() or "validation failed" in result.lower()
+        assert (
+            "not allowed" in result.lower()
+            or "blocked" in result.lower()
+            or "invalid" in result.lower()
+            or "validation failed" in result.lower()
+        )
 
     @patch("mcp_server_langgraph.tools.code_execution_tools.settings")
     @patch("mcp_server_langgraph.tools.code_execution_tools._get_sandbox")
@@ -157,7 +163,7 @@ class TestExecutePythonTool:
         mock_settings.code_execution_allowed_imports = ["json", "math"]
         mock_get_sandbox.return_value = mock_sandbox
 
-        result = execute_python.invoke({"code": "print('test')", "timeout": 60})
+        _result = execute_python.invoke({"code": "print('test')", "timeout": 60})  # noqa: F841
 
         # Should execute successfully
         mock_get_sandbox.assert_called_once()
@@ -214,7 +220,7 @@ class TestCodeExecutionToolIntegration:
             mock_settings.enable_code_execution = True
             mock_settings.code_execution_backend = "docker-engine"
 
-            result = execute_python.invoke({"code": "print('test')"})
+            _result = execute_python.invoke({"code": "print('test')"})  # noqa: F841
 
             # Should use Docker sandbox
             mock_get_sandbox.assert_called_once()
@@ -232,7 +238,7 @@ class TestCodeExecutionToolIntegration:
             mock_settings.enable_code_execution = True
             mock_settings.code_execution_backend = "kubernetes"
 
-            result = execute_python.invoke({"code": "print('test')"})
+            _result = execute_python.invoke({"code": "print('test')"})  # noqa: F841
 
             # Should use Kubernetes sandbox
             mock_get_sandbox.assert_called_once()
