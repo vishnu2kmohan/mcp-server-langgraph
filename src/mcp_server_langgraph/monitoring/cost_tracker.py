@@ -338,9 +338,10 @@ class CostMetricsCollector:
         # Clean up PostgreSQL records
         if self._enable_persistence:
             try:
+                from sqlalchemy import delete
+
                 from mcp_server_langgraph.database import get_async_session
                 from mcp_server_langgraph.database.models import TokenUsageRecord
-                from sqlalchemy import delete
 
                 async with get_async_session(self._database_url) as session:
                     stmt = delete(TokenUsageRecord).where(TokenUsageRecord.timestamp < cutoff_time)

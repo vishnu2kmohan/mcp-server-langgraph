@@ -9,16 +9,15 @@ Separates infrastructure concerns from business logic.
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
-from typing import Optional, Any, AsyncIterator
 import logging
+from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator, Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from mcp_server_langgraph.core.container import ApplicationContainer, create_test_container
 from mcp_server_langgraph.core.config import Settings
-
+from mcp_server_langgraph.core.container import ApplicationContainer, create_test_container
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ def create_app(
         if environment == "test" or (settings and settings.environment == "test"):
             container = create_test_container(settings=settings)
         else:
-            from mcp_server_langgraph.core.container import ContainerConfig, ApplicationContainer
+            from mcp_server_langgraph.core.container import ApplicationContainer, ContainerConfig
 
             env = environment or (settings.environment if settings else "development")
             config = ContainerConfig(environment=env)

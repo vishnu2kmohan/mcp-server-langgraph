@@ -9,12 +9,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from mcp_server_langgraph.database.models import Base
 
@@ -84,9 +79,7 @@ def get_session_maker(database_url: str, echo: bool = False) -> async_sessionmak
 
 
 @asynccontextmanager
-async def get_async_session(
-    database_url: str, echo: bool = False
-) -> AsyncGenerator[AsyncSession, None]:
+async def get_async_session(database_url: str, echo: bool = False) -> AsyncGenerator[AsyncSession, None]:
     """
     Async context manager for database sessions.
 

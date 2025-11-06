@@ -386,10 +386,7 @@ class Settings(BaseSettings):  # type: ignore[misc]
 
         # Check 2: Mock authorization must be explicitly disabled
         if self.get_mock_authorization_enabled():
-            errors.append(
-                "Mock authorization must be disabled in production. "
-                "Set ENABLE_MOCK_AUTHORIZATION=false"
-            )
+            errors.append("Mock authorization must be disabled in production. " "Set ENABLE_MOCK_AUTHORIZATION=false")
 
         # Check 3: JWT secret key must be set
         if not self.jwt_secret_key or self.jwt_secret_key == "change-this-in-production":

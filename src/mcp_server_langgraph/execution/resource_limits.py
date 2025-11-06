@@ -104,9 +104,7 @@ class ResourceLimits:
         """Validate network configuration"""
         valid_modes: tuple[NetworkMode, ...] = ("none", "allowlist", "unrestricted")
         if self.network_mode not in valid_modes:
-            raise ResourceLimitError(
-                f"Network mode must be one of {valid_modes}, got '{self.network_mode}'"
-            )
+            raise ResourceLimitError(f"Network mode must be one of {valid_modes}, got '{self.network_mode}'")
 
         # Note: allowlist with empty domains is allowed (effectively blocks all network)
         # This allows configuring the profile first, then adding domains later

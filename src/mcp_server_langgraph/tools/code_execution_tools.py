@@ -32,9 +32,7 @@ class ExecutePythonInput(BaseModel):
     """Input schema for execute_python tool"""
 
     code: str = Field(description="Python code to execute in sandboxed environment")
-    timeout: Optional[int] = Field(
-        default=None, description="Optional timeout in seconds (overrides default)"
-    )
+    timeout: Optional[int] = Field(default=None, description="Optional timeout in seconds (overrides default)")
 
 
 def _is_execution_enabled() -> bool:
@@ -130,10 +128,7 @@ def execute_python(code: str, timeout: Optional[int] = None) -> str:
     """
     # Check if code execution is enabled
     if not _is_execution_enabled():
-        return (
-            "Error: Code execution is disabled. "
-            "Set ENABLE_CODE_EXECUTION=true in configuration to enable this feature."
-        )
+        return "Error: Code execution is disabled. " "Set ENABLE_CODE_EXECUTION=true in configuration to enable this feature."
 
     # Validate input
     if not code or not code.strip():

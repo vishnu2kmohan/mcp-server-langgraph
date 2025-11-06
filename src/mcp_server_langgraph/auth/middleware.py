@@ -363,7 +363,13 @@ class AuthMiddleware:
             # Default deny
             logger.warning(
                 "Fallback authorization denied - no matching rule",
-                extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource, "roles": user_roles},
+                extra={
+                    "user_id": user_id,
+                    "username": username,
+                    "relation": relation,
+                    "resource": resource,
+                    "roles": user_roles,
+                },
             )
             return False
 

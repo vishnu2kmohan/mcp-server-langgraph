@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field
 # Optional black formatter - gracefully degrade if not available
 try:
     import black
+
     BLACK_AVAILABLE = True
 except ImportError:
     BLACK_AVAILABLE = False
@@ -375,14 +376,15 @@ if __name__ == "__main__":
             Sanitized workflow name safe for code generation
         """
         import re
+
         # Remove all non-alphanumeric characters except underscores
-        sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+        sanitized = re.sub(r"[^a-zA-Z0-9_]", "_", name)
         # Ensure it starts with a letter
         if sanitized and not sanitized[0].isalpha():
-            sanitized = 'workflow_' + sanitized
+            sanitized = "workflow_" + sanitized
         # Fallback if completely empty
         if not sanitized:
-            sanitized = 'workflow'
+            sanitized = "workflow"
         return sanitized
 
     def generate(self, workflow: WorkflowDefinition) -> str:

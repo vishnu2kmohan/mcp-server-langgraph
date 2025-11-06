@@ -7,7 +7,6 @@ Supports resource limits, automatic cleanup with TTL, and pod security policies.
 
 import logging
 import time
-from typing import Optional
 
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
@@ -180,7 +179,8 @@ class KubernetesSandbox(Sandbox):
         import hashlib
 
         # Generate unique job name
-        code_hash = hashlib.md5(code.encode()).hexdigest()[:8]
+        # Use SHA-256 for better security hygiene (even though this is just for naming, not cryptographic security)
+        code_hash = hashlib.sha256(code.encode()).hexdigest()[:8]
         timestamp = int(time.time())
         job_name = f"code-exec-{timestamp}-{code_hash}"
 
@@ -311,9 +311,7 @@ class KubernetesSandbox(Sandbox):
         """
         try:
             # Find pod for job
-            pods = self.core_v1.list_namespaced_pod(
-                namespace=self.namespace, label_selector=f"job-name={job_name}"
-            )
+            pods = self.core_v1.list_namespaced_pod(namespace=self.namespace, label_selector=f"job-name={job_name}")
 
             if not pods.items:
                 return "", "Error: No pod found for job"

@@ -162,12 +162,16 @@ class PostgresUserProfileStore(UserProfileStore):
         # Add user_id as final parameter
         values.append(user_id)
 
+        # SECURITY: Safe from SQL injection because:
+        # 1. Field names are validated against allowlist (lines 150-157)
+        # 2. All values are passed as parameterized queries ($1, $2, etc.) via *values
+        # 3. Only SQL structure (not data) is constructed via f-string
         # SET clause is built from validated field names, values are passed as parameters
         query = f"""
             UPDATE user_profiles
             SET {', '.join(set_clauses)}
             WHERE user_id = ${param_num}
-        """  # nosec B608
+        """  # nosec B608 - See security comment above
 
         async with self.pool.acquire() as conn:
             result = await conn.execute(query, *values)
@@ -594,8 +598,12 @@ class PostgresConversationStore(ConversationStore):
             return False
 
         values.append(conversation_id)
+        # SECURITY: Safe from SQL injection because:
+        # 1. Field names are validated against allowlist (lines 584-595)
+        # 2. All values are passed as parameterized queries ($1, $2, etc.) via *values
+        # 3. Only SQL structure (not data) is constructed via f-string
         # Parameterized query, field names validated, values as parameters
-        query = f"""  # nosec B608
+        query = f"""  # nosec B608 - See security comment above
             UPDATE conversations
             SET {', '.join(set_clauses)}
             WHERE conversation_id = ${param_num}
@@ -750,8 +758,12 @@ class PostgresAuditLogStore(AuditLogStore):
             params.append(end_date)
             param_num += 1
 
+        # SECURITY: Safe from SQL injection because:
+        # 1. WHERE conditions are built programmatically (not from user input) with fixed field names
+        # 2. All values are passed as parameterized queries ($1, $2, etc.) via params list
+        # 3. Only SQL structure (not data) is constructed via f-string
         # Parameterized query with validated conditions and parameter placeholders
-        query = f"""  # nosec B608
+        query = f"""  # nosec B608 - See security comment above
             SELECT log_id, user_id, action, resource_type, resource_id, timestamp, ip_address, user_agent, metadata
             FROM audit_logs
             WHERE {' AND '.join(conditions)}

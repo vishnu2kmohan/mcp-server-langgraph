@@ -14,10 +14,11 @@ Example:
 """
 
 import os
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Literal
 
-from fastapi import FastAPI, HTTPException, Depends, Header, status
+from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 
@@ -79,8 +80,13 @@ class SaveWorkflowRequest(BaseModel):
         path = Path(v).resolve()
 
         # Define allowed base directories (configurable via environment)
-        allowed_base = os.getenv("BUILDER_OUTPUT_DIR", "/tmp/workflows")
+        # Use application-specific temp directory instead of hardcoded /tmp for better security
+        default_dir = Path(tempfile.gettempdir()) / "mcp-server-workflows"
+        allowed_base = os.getenv("BUILDER_OUTPUT_DIR", str(default_dir))
         allowed_base_path = Path(allowed_base).resolve()
+
+        # Ensure the allowed base directory exists with secure permissions
+        allowed_base_path.mkdir(mode=0o700, parents=True, exist_ok=True)
 
         # Check if path is within allowed directory
         try:

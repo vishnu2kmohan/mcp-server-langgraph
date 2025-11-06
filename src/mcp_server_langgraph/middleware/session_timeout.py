@@ -182,11 +182,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
 
                 # Try multiple possible session ID claim names
                 # Standard claims: 'sid' (session ID), 'jti' (JWT ID), or custom 'session_id'
-                session_id_from_jwt: Optional[str] = (
-                    payload.get("sid")
-                    or payload.get("session_id")
-                    or payload.get("jti")
-                )
+                session_id_from_jwt: Optional[str] = payload.get("sid") or payload.get("session_id") or payload.get("jti")
 
                 if session_id_from_jwt:
                     return str(session_id_from_jwt)

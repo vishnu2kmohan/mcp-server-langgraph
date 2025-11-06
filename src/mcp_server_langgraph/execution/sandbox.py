@@ -6,8 +6,10 @@ Defines the contract for all sandbox implementations (Docker, Kubernetes, Proces
 
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
+
+from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
 
 class SandboxError(Exception):
@@ -62,7 +64,7 @@ class Sandbox(ABC):
         >>> assert "Hello, World!" in result.stdout
     """
 
-    def __init__(self, limits: "ResourceLimits"):
+    def __init__(self, limits: ResourceLimits):
         """
         Initialize sandbox with resource limits.
 

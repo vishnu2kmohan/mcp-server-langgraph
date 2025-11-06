@@ -6,11 +6,12 @@ Provides reusable middleware creation functions for FastAPI applications.
 
 from __future__ import annotations
 
-from typing import Optional, Any
+from typing import Any, Optional
+
 from fastapi.middleware.cors import CORSMiddleware
 
-from mcp_server_langgraph.core.container import ApplicationContainer
 from mcp_server_langgraph.core.config import Settings
+from mcp_server_langgraph.core.container import ApplicationContainer
 
 
 def create_cors_middleware() -> type[CORSMiddleware]:

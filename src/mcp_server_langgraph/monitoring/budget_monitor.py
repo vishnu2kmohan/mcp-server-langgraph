@@ -22,7 +22,6 @@ Example:
 """
 
 import asyncio
-import json
 import logging
 import smtplib
 from datetime import datetime, timedelta, timezone
@@ -30,10 +29,13 @@ from decimal import Decimal
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import httpx
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
 # ==============================================================================
 # Configuration
@@ -262,11 +264,7 @@ class BudgetMonitor:
         all_records = await self._cost_collector.get_records(period="day")
 
         # Filter records by budget period
-        period_records = [
-            record
-            for record in all_records
-            if period_start <= record.timestamp <= period_end
-        ]
+        period_records = [record for record in all_records if period_start <= record.timestamp <= period_end]
 
         # Sum costs
         total_cost = sum(
@@ -464,9 +462,7 @@ class BudgetMonitor:
             except Exception as e:
                 logger.error(f"Failed to send webhook alert: {e}")
 
-    async def _send_email_alert(
-        self, level: str, message: str, budget_id: str, utilization: float
-    ) -> None:
+    async def _send_email_alert(self, level: str, message: str, budget_id: str, utilization: float) -> None:
         """Send email alert via SMTP."""
         subject = f"[{level.upper()}] Budget Alert: {budget_id}"
 
@@ -516,9 +512,7 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
                 server.login(self._smtp_username, self._smtp_password)
             server.send_message(msg)
 
-    async def _send_webhook_alert(
-        self, level: str, message: str, budget_id: str, utilization: float
-    ) -> None:
+    async def _send_webhook_alert(self, level: str, message: str, budget_id: str, utilization: float) -> None:
         """Send webhook notification via HTTP POST."""
         payload = {
             "alert_type": "budget",
@@ -540,9 +534,7 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
 
         logger.info(f"Webhook alert sent to {self._webhook_url}")
 
-    def _calculate_period_boundaries(
-        self, budget: Budget, current_time: datetime
-    ) -> tuple[datetime, datetime]:
+    def _calculate_period_boundaries(self, budget: Budget, current_time: datetime) -> tuple[datetime, datetime]:
         """
         Calculate the start and end boundaries for the current budget period.
 
@@ -580,15 +572,11 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
         elif budget.period == BudgetPeriod.QUARTERLY:
             # Find current quarter boundary
             quarter_month = ((current_time.month - 1) // 3) * 3 + 1
-            period_start = current_time.replace(
-                month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0
-            )
+            period_start = current_time.replace(month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0)
             period_end = period_start + timedelta(days=90)
         else:  # BudgetPeriod.YEARLY
             # Find current year boundary
-            period_start = current_time.replace(
-                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-            )
+            period_start = current_time.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
             period_end = period_start.replace(year=period_start.year + 1)
 
         return period_start, period_end

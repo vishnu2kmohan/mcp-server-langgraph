@@ -167,7 +167,7 @@ class MCPAgentServer:
 
         Returns the same tools list as the MCP protocol handler.
         """
-        return [
+        tools = [
             Tool(
                 name="agent_chat",
                 description=(
