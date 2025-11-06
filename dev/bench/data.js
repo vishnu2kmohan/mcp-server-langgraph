@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762459128705,
+  "lastUpdate": 1762460127969,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -33982,6 +33982,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002468503586231609",
             "extra": "mean: 58.70753792712909 usec\nrounds: 5181"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1ac2974d51869543964624ada5414200f27ca9cd",
+          "message": "feat(security): implement TDD-driven gitignore validation and prevent local config leaks\n\nCRITICAL FIX: Remove accidentally committed local configuration files and\nimplement comprehensive safeguards to prevent recurrence.\n\n## TDD Implementation (Red-Green-Refactor)\n\n### Red Phase (Test First) ✅\n- Created test_gitignore_validation.py with 9 comprehensive tests\n- Tests initially FAILED, confirming real issues:\n  * 2 .local. files tracked (.claude/settings.local.json, docs/.claude/settings.local.json)\n  * Missing .local.json patterns in .gitignore\n  * Missing explicit *.pyc pattern\n\n### Green Phase (Make Tests Pass) ✅\n- Updated .gitignore with explicit patterns:\n  * .claude/settings.local.json\n  * **/*.local.json\n  * *.local.json\n  * *.pyc (explicit in addition to *.py[cod])\n- Removed tracked local files: git rm --cached\n- All 9 tests now PASS\n\n### Refactor Phase (Improve & Prevent) ✅\n- Added pre-commit hook: prevent-local-config-commits\n- Hook runs validation tests on EVERY commit\n- Ensures local configs never reach version control again\n\n## Changes\n\n### Security (Critical)\n- .gitignore: Added explicit patterns for .local.json files\n- Removed from tracking:\n  * .claude/settings.local.json (per Claude Code documentation)\n  * docs/.claude/settings.local.json\n- Local files STILL EXIST locally (only removed from git tracking)\n\n### Testing (TDD)\n- tests/test_gitignore_validation.py: 9 comprehensive validation tests\n  * test_no_local_config_files_tracked\n  * test_no_claude_settings_local_tracked\n  * test_gitignore_has_local_patterns\n  * test_no_env_local_files_tracked\n  * test_no_personal_ide_configs_tracked\n  * test_gitignore_exists_and_valid\n  * test_no_backup_files_tracked\n  * test_has_python_patterns\n  * test_has_secret_patterns\n\n### Prevention (Pre-commit Hook)\n- .pre-commit-config.yaml: New hook \"prevent-local-config-commits\"\n  * Runs on EVERY commit (always_run: true)\n  * Executes all gitignore validation tests\n  * Blocks commits if local files detected\n\n### Project Updates\n- .mcp/manifest.json: Updated to src/ layout with local dev URLs\n- .mcp/registry.json: Set status to inactive pending assets\n- scripts/workflow/update-context-files.py: Enhanced test counting\n- .openai/: Updated file paths to reflect src/ structure\n\n## Why This Matters\n\nPer Claude Code official documentation:\n> \"settings.local.json contains settings that are NOT checked in,\n> useful for personal preferences and experimentation.\"\n\nCommitting these files:\n- ❌ Violates Claude Code best practices\n- ❌ Leaks personal preferences to version control\n- ❌ Can cause conflicts between developers\n- ❌ May expose machine-specific paths\n\n## Prevention Strategy\n\nThis implementation follows TDD principles ensuring this class of issues\ncan NEVER occur again:\n\n1. **Tests First**: Written before fixes (Red phase)\n2. **Minimal Fix**: Just enough to make tests pass (Green phase)\n3. **Safeguards**: Pre-commit hook prevents recurrence (Refactor phase)\n4. **Automated**: Runs on every commit, no manual checks needed\n\n## Validation\n\nAll tests pass:\n```\n✅ test_no_local_config_files_tracked\n✅ test_no_claude_settings_local_tracked\n✅ test_gitignore_has_local_patterns\n✅ test_no_env_local_files_tracked\n✅ test_no_personal_ide_configs_tracked\n✅ test_gitignore_exists_and_valid\n✅ test_no_backup_files_tracked\n✅ test_has_python_patterns\n✅ test_has_secret_patterns\n```\n\n## References\n- Claude Code Documentation: https://code.claude.com/docs/en/settings\n- TDD Best Practices: Red-Green-Refactor cycle\n- Security: Never commit local configurations\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T15:14:02-05:00",
+          "tree_id": "901da5dcdd69c9ec2d55c0ea1b258b6a99ca53c3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1ac2974d51869543964624ada5414200f27ca9cd"
+        },
+        "date": 1762460126382,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.11999355781634,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010563770296494151",
+            "extra": "mean: 6.9386625360820045 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.79736302615126,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016874041511458123",
+            "extra": "mean: 6.766020580645001 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43858.45648049092,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.800620000040794 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 49122.54847784076,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.357249999989335 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45903.312933777575,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.784920000058605 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.02866464588348,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.262363980000018 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.416231238216348,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.50330091000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.94043268279991,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.59924269999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1451610.562114615,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 688.8899999069054 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4856.959624871263,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 205.89012000002072 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2976.1766582269197,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.00156000005654 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2917.815070047526,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.72220000005404 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58054.06575882147,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004272463504729522",
+            "extra": "mean: 17.225322411601248 usec\nrounds: 12025"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17091.617180411376,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026109633631638014",
+            "extra": "mean: 58.508214257577414 usec\nrounds: 5078"
           }
         ]
       }
