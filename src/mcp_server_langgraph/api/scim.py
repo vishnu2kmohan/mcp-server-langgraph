@@ -340,25 +340,51 @@ async def list_users(
     """
     List/search users (SCIM 2.0)
 
-    Supports basic filtering (e.g., 'userName eq "alice@example.com"').
+    Supports SCIM filtering with 'eq' (equals) and 'sw' (startsWith) operators:
+    - userName eq "alice" - exact match
+    - userName sw "ali" - prefix match
+    - email eq "alice@example.com" - exact match
+    - email sw "alice@" - prefix match
     """
     try:
         # Parse filter (simple implementation)
         query = {}
         if filter:
             # SECURITY: Safe SCIM filter parsing with error handling (CWE-20 prevention)
-            # Format: "userName eq \"alice@example.com\"" or "email eq \"alice@example.com\""
+            # Supported filters:
+            # - "userName eq \"alice\"" - exact match
+            # - "userName sw \"ali\"" - startsWith (prefix match)
+            # - "email eq \"alice@example.com\"" - exact match
+            # - "email sw \"alice@\"" - startsWith (prefix match)
             try:
-                if "userName eq" in filter:
+                if "userName sw" in filter:
+                    # startsWith - use Keycloak prefix search
                     parts = filter.split('"')
                     if len(parts) >= 2:
                         username = parts[1]
                         query["username"] = username
-                elif "email eq" in filter:
+                        # No "exact" flag = prefix search in Keycloak
+                elif "userName eq" in filter:
+                    # equals - use exact match
+                    parts = filter.split('"')
+                    if len(parts) >= 2:
+                        username = parts[1]
+                        query["username"] = username
+                        query["exact"] = "true"
+                elif "email sw" in filter:
+                    # startsWith for email
                     parts = filter.split('"')
                     if len(parts) >= 2:
                         email = parts[1]
                         query["email"] = email
+                        # No "exact" flag = prefix search
+                elif "email eq" in filter:
+                    # equals for email
+                    parts = filter.split('"')
+                    if len(parts) >= 2:
+                        email = parts[1]
+                        query["email"] = email
+                        query["exact"] = "true"
             except (IndexError, ValueError):
                 # Malformed filter - continue with empty query (fail-safe, return no results)
                 # Don't raise - prevents DoS via malformed SCIM queries

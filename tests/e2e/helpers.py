@@ -1,10 +1,21 @@
 """
 E2E Test Helpers and HTTP Mocks
 
-Provides lightweight HTTP mocks for E2E tests until full infrastructure is implemented.
+TEMPORARY STATUS: These mocks are interim solutions for E2E tests.
 This follows the recommendation to "swap to HTTP mocks" for rapid E2E test activation.
 
-Usage:
+Current State:
+- E2E tests currently use HTTP mocks instead of real infrastructure
+- Tests marked with @pytest.mark.e2e run against these lightweight mocks
+- This allows E2E test development without requiring full docker-compose stack
+
+Migration Path:
+- Once test_infrastructure fixture is stable, E2E tests will be updated
+- Mocks will be replaced with real HTTP calls to docker-compose services
+- See tests/conftest.py::test_infrastructure for the real infrastructure setup
+- See tests/README.md for instructions on running tests with full infrastructure
+
+Usage (Current Mock-Based Approach):
     from tests.e2e.helpers import mock_keycloak_auth, mock_mcp_client
 
     async with mock_keycloak_auth() as auth:
@@ -13,9 +24,12 @@ Usage:
 
 import asyncio
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Dict, Any
+from typing import Any, AsyncGenerator, Dict
 from unittest.mock import AsyncMock, MagicMock
-import httpx
+
+import pytest
+
+httpx = pytest.importorskip("httpx", reason="httpx required for E2E tests")
 
 
 class MockKeycloakAuth:
@@ -36,7 +50,7 @@ class MockKeycloakAuth:
             "refresh_token": refresh_token,
             "expires_in": 900,
             "refresh_expires_in": 1800,
-            "token_type": "Bearer"
+            "token_type": "Bearer",
         }
 
         return self.tokens[username]
@@ -56,7 +70,7 @@ class MockKeycloakAuth:
                 "refresh_token": new_refresh,
                 "expires_in": 900,
                 "refresh_expires_in": 1800,
-                "token_type": "Bearer"
+                "token_type": "Bearer",
             }
 
             return self.tokens[username]
@@ -80,7 +94,7 @@ class MockKeycloakAuth:
                     "username": username,
                     "email": f"{username}@test.com",
                     "exp": 9999999999,
-                    "iat": 1000000000
+                    "iat": 1000000000,
                 }
 
         return {"active": False}
@@ -93,7 +107,7 @@ class MockMCPClient:
         self.tools = [
             {"name": "get_weather", "description": "Get weather for a location"},
             {"name": "search_web", "description": "Search the web"},
-            {"name": "calculate", "description": "Perform calculations"}
+            {"name": "calculate", "description": "Perform calculations"},
         ]
         self.conversations = {}
 
@@ -101,15 +115,8 @@ class MockMCPClient:
         """Mock MCP initialization"""
         return {
             "protocol_version": "2024-11-05",
-            "server_info": {
-                "name": "mcp-server-langgraph",
-                "version": "2.8.0"
-            },
-            "capabilities": {
-                "tools": True,
-                "prompts": True,
-                "resources": False
-            }
+            "server_info": {"name": "mcp-server-langgraph", "version": "2.8.0"},
+            "capabilities": {"tools": True, "prompts": True, "resources": False},
         }
 
     async def list_tools(self) -> Dict[str, Any]:
@@ -122,23 +129,12 @@ class MockMCPClient:
             raise ValueError(f"Tool {name} not found")
 
         # Simulate tool execution
-        return {
-            "content": [
-                {
-                    "type": "text",
-                    "text": f"Mock result for {name} with args {arguments}"
-                }
-            ]
-        }
+        return {"content": [{"type": "text", "text": f"Mock result for {name} with args {arguments}"}]}
 
     async def create_conversation(self, user_id: str) -> str:
         """Mock conversation creation"""
         conv_id = f"conv_{len(self.conversations) + 1}"
-        self.conversations[conv_id] = {
-            "id": conv_id,
-            "user_id": user_id,
-            "messages": []
-        }
+        self.conversations[conv_id] = {"id": conv_id, "user_id": user_id, "messages": []}
         return conv_id
 
     async def send_message(self, conv_id: str, message: str) -> Dict[str, Any]:
@@ -146,22 +142,13 @@ class MockMCPClient:
         if conv_id not in self.conversations:
             raise ValueError(f"Conversation {conv_id} not found")
 
-        self.conversations[conv_id]["messages"].append({
-            "role": "user",
-            "content": message
-        })
+        self.conversations[conv_id]["messages"].append({"role": "user", "content": message})
 
         # Mock AI response
         response = f"Mock AI response to: {message}"
-        self.conversations[conv_id]["messages"].append({
-            "role": "assistant",
-            "content": response
-        })
+        self.conversations[conv_id]["messages"].append({"role": "assistant", "content": response})
 
-        return {
-            "role": "assistant",
-            "content": response
-        }
+        return {"role": "assistant", "content": response}
 
     async def get_conversation(self, conv_id: str) -> Dict[str, Any]:
         """Mock conversation retrieval"""
@@ -176,11 +163,7 @@ class MockMCPClient:
         for conv_id, conv in self.conversations.items():
             if conv["user_id"] == user_id:
                 if query is None or query.lower() in str(conv).lower():
-                    results.append({
-                        "id": conv_id,
-                        "user_id": user_id,
-                        "message_count": len(conv["messages"])
-                    })
+                    results.append({"id": conv_id, "user_id": user_id, "message_count": len(conv["messages"])})
         return results
 
 
@@ -208,10 +191,7 @@ async def mock_mcp_client() -> AsyncGenerator[MockMCPClient, None]:
 
 
 async def mock_api_request(
-    method: str,
-    url: str,
-    headers: Dict[str, str] = None,
-    json: Dict[str, Any] = None
+    method: str, url: str, headers: Dict[str, str] = None, json: Dict[str, Any] = None
 ) -> httpx.Response:
     """
     Mock API request for testing without actual HTTP calls.
@@ -228,8 +208,8 @@ async def mock_api_request(
                     "api_key": "mcp_mock_key_xyz",
                     "name": json.get("name", "Test Key"),
                     "created": "2024-01-01T00:00:00Z",
-                    "expires_at": "2025-01-01T00:00:00Z"
-                }
+                    "expires_at": "2025-01-01T00:00:00Z",
+                },
             )
         elif method == "GET":
             return httpx.Response(
@@ -239,9 +219,9 @@ async def mock_api_request(
                         "key_id": "mock_key_123",
                         "name": "Test Key",
                         "created": "2024-01-01T00:00:00Z",
-                        "expires_at": "2025-01-01T00:00:00Z"
+                        "expires_at": "2025-01-01T00:00:00Z",
                     }
-                ]
+                ],
             )
 
     elif "/api/v1/service-principals" in url:
@@ -252,19 +232,12 @@ async def mock_api_request(
                     "service_id": "mock_sp_123",
                     "name": json.get("name", "Test SP"),
                     "client_secret": "mock_secret_xyz",
-                    "created_at": "2024-01-01T00:00:00Z"
-                }
+                    "created_at": "2024-01-01T00:00:00Z",
+                },
             )
         elif method == "GET":
             return httpx.Response(
-                status_code=200,
-                json=[
-                    {
-                        "service_id": "mock_sp_123",
-                        "name": "Test SP",
-                        "created_at": "2024-01-01T00:00:00Z"
-                    }
-                ]
+                status_code=200, json=[{"service_id": "mock_sp_123", "name": "Test SP", "created_at": "2024-01-01T00:00:00Z"}]
             )
 
     elif "/api/v1/users" in url and "/export" in url:
@@ -275,8 +248,8 @@ async def mock_api_request(
                 "user_id": "test_user",
                 "personal_data": {"name": "Test User", "email": "test@example.com"},
                 "conversations": [],
-                "api_keys": []
-            }
+                "api_keys": [],
+            },
         )
 
     # Default mock response

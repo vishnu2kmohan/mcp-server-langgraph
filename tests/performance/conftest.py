@@ -53,11 +53,14 @@ class PercentileBenchmark:
             self._times.append(end - start)
             return result
 
-        # Use pedantic mode to collect multiple samples
+        # Use pedantic mode to collect multiple samples for accurate percentile statistics
+        # NOTE: 100 iterations are intentional for statistical accuracy in percentile calculations.
+        # This is FAST because all benchmarks use mocked clients with simulated latency,
+        # avoiding real I/O operations. Typical runtime: < 5 seconds per benchmark.
         result = self._benchmark.pedantic(
             wrapper,
-            iterations=100,  # 100 samples for accurate percentile calculation
-            rounds=1,
+            iterations=100,  # 100 samples for accurate percentile calculation (p50, p95, p99)
+            rounds=1,  # Single round to avoid excessive repetition
         )
 
         return result
@@ -80,10 +83,7 @@ class PercentileBenchmark:
         value = self._calculate_percentile(percentile)
         label = f" ({description})" if description else ""
 
-        assert value < max_seconds, (
-            f"p{percentile}{label}: {value * 1000:.2f}ms "
-            f"(target: < {max_seconds * 1000:.0f}ms)"
-        )
+        assert value < max_seconds, f"p{percentile}{label}: {value * 1000:.2f}ms " f"(target: < {max_seconds * 1000:.0f}ms)"
 
     def _calculate_percentile(self, percentile: int) -> float:
         """

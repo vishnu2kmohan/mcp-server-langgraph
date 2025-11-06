@@ -803,7 +803,6 @@ class TestTokenValidatorErrorPaths:
 
 @pytest.mark.unit
 @pytest.mark.auth
-@pytest.mark.integration
 class TestKeycloakAdminClientManagement:
     """
     Test Keycloak Admin API client management methods.
@@ -962,7 +961,6 @@ class TestKeycloakAdminClientManagement:
 
 @pytest.mark.unit
 @pytest.mark.auth
-@pytest.mark.integration
 class TestKeycloakAdminUserManagement:
     """Test Keycloak Admin API user management methods"""
 

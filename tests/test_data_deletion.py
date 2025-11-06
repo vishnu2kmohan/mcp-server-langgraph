@@ -69,7 +69,6 @@ def gdpr_storage(
 
 
 @pytest.mark.integration
-@pytest.mark.unit
 class TestDataDeletionAuditLogging:
     """Test audit logging for data deletion operations"""
 

@@ -371,6 +371,16 @@ def test_agent_properties(message, user_id):
 ### Common Fixtures (conftest.py)
 
 ```python
+# FastAPI Application Fixtures (Reusable)
+@pytest.fixture
+def test_app_settings()         # Test-specific application settings
+@pytest.fixture
+def test_fastapi_app()          # Configured FastAPI app with test dependencies
+@pytest.fixture
+def test_client()               # Synchronous TestClient (use for most API tests)
+@pytest.fixture
+def test_async_client()         # Async HTTPX client for async endpoint testing
+
 # Mock fixtures
 @pytest.fixture
 def mock_llm_factory()
@@ -397,10 +407,29 @@ def sample_user_id()
 ### Using Fixtures
 
 ```python
-def test_with_fixture(mock_llm_factory):
+# Using FastAPI TestClient (recommended for API tests)
+def test_api_endpoint(test_client):
+    """Test API endpoint using shared TestClient fixture."""
+    response = test_client.get("/health/")
+    assert response.status_code == 200
+
+# Using async client for async endpoints
+async def test_async_endpoint(test_async_client):
+    """Test async API endpoint."""
+    response = await test_async_client.get("/api/v1/users")
+    assert response.status_code == 200
+
+# Using mock fixtures
+def test_with_mock(mock_llm_factory):
     """Test uses mock LLM factory from fixture."""
     assert mock_llm_factory is not None
 ```
+
+**Benefits of using shared fixtures:**
+- No need to create TestClient in each test file
+- Consistent dependency overrides across all tests
+- Easier to add authentication/authorization test permutations
+- Reduces boilerplate code
 
 ## Test Environment Variables
 
