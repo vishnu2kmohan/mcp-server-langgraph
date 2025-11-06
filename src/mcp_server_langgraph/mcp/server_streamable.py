@@ -87,7 +87,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         from mcp_server_langgraph.core.agent import cleanup_checkpointer
 
         agent_graph = get_agent_graph()
-        if agent_graph and hasattr(agent_graph, 'checkpointer') and agent_graph.checkpointer:
+        if agent_graph and hasattr(agent_graph, "checkpointer") and agent_graph.checkpointer:
             cleanup_checkpointer(agent_graph.checkpointer)
             logger.info("Checkpointer resources cleaned up")
     except Exception as e:
@@ -175,6 +175,10 @@ app.add_middleware(
 # Uses tiered rate limits (anonymous: 10/min, free: 60/min, premium: 1000/min, enterprise: unlimited)
 # Tracks by user ID (from JWT) > IP address > global anonymous
 # Fail-open: allows requests if Redis is down (graceful degradation)
+#
+# NOTE: Use standard logging.getLogger() here instead of observability logger
+# because this code runs at module import time, before lifespan initializes observability
+_module_logger = logging.getLogger(__name__)
 try:
     from slowapi.errors import RateLimitExceeded
 
@@ -184,18 +188,11 @@ try:
     # Register custom exception handler for rate limit exceeded
     app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 
-    logger.info(
-        "Rate limiting enabled",
-        extra={
-            "strategy": "fixed-window",
-            "tiers": ["anonymous", "free", "standard", "premium", "enterprise"],
-            "fail_open": True,
-        },
+    _module_logger.info(
+        "Rate limiting enabled - strategy: fixed-window, tiers: anonymous/free/standard/premium/enterprise, fail_open: True"
     )
 except Exception as e:
-    logger.warning(
-        f"Failed to initialize rate limiting: {e}. Requests will proceed without rate limits.", extra={"error": str(e)}
-    )
+    _module_logger.warning(f"Failed to initialize rate limiting: {e}. Requests will proceed without rate limits.")
 
 
 class ChatInput(BaseModel):
@@ -352,7 +349,7 @@ class MCPAgentStreamableServer:
             """
             with tracer.start_as_current_span("mcp.list_tools"):
                 logger.info("Listing available tools")
-                return [
+                tools = [
                     Tool(
                         name="agent_chat",
                         description=(
@@ -899,11 +896,13 @@ class MCPAgentStreamableServer:
             )
 
             # Execute search_tools
-            result = search_tools.invoke({
-                "query": query,
-                "category": category,
-                "detail_level": detail_level,
-            })
+            result = search_tools.invoke(
+                {
+                    "query": query,
+                    "category": category,
+                    "detail_level": detail_level,
+                }
+            )
 
             span.set_attribute("tools.query", query or "")
             span.set_attribute("tools.category", category or "")
@@ -919,6 +918,7 @@ class MCPAgentStreamableServer:
         """
         with tracer.start_as_current_span("code.execute"):
             import time
+
             from mcp_server_langgraph.tools.code_execution_tools import execute_python
 
             # Extract arguments
@@ -943,9 +943,7 @@ class MCPAgentStreamableServer:
             span.set_attribute("code.execution_time", execution_time)
             span.set_attribute("code.success", "success" in result.lower())
 
-            metrics.code_executions.add(
-                1, {"user_id": user_id, "success": "success" in result.lower()}
-            )
+            metrics.code_executions.add(1, {"user_id": user_id, "success": "success" in result.lower()})
 
             return [TextContent(type="text", text=result)]
 

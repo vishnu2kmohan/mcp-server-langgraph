@@ -206,6 +206,16 @@ spec:
     - protocol: TCP
       port: 9000  # Management endpoint for cluster health checks
   egress:
+  # Allow pod-to-pod for JGroups clustering
+  - to:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 7800  # JGroups cluster communication
+    - protocol: TCP
+      port: 9000  # Management endpoint for cluster health checks
   # Allow DNS to kube-system
   - to:
     - namespaceSelector:
