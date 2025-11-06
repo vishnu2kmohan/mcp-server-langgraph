@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762467274157,
+  "lastUpdate": 1762467427518,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -34836,6 +34836,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016227823048918613",
             "extra": "mean: 55.45212037837833 usec\nrounds: 5815"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "53ac0cc721bf81caec1296eaf0914842cb1547d5",
+          "message": "test(interrupts,cli): add comprehensive tests and fix critical bugs\n\n## Summary\nAdded 161 tests achieving 100% coverage for critical untested modules\n(interrupt handling and CLI commands). Following TDD best practices,\ntests were written FIRST and caught 2 production bugs before they\nreached users.\n\n## New Test Coverage\n\n### Interrupt Handling (100% coverage)\n- tests/core/interrupts/test_approval.py (44 tests)\n- tests/core/interrupts/test_interrupts.py (46 tests)\n- Covers approval workflows, interrupt management, state handling\n- Tests edge cases, error scenarios, and integration workflows\n\n### CLI Commands (100% coverage)\n- tests/cli/test_add_tool.py (28 tests)\n- tests/cli/test_create_agent.py (43 tests)\n- Covers tool/agent scaffolding, template generation, validation\n- Tests file creation, directory management, error handling\n\n## Critical Bugs Fixed (TDD Success)\n\n### Bug 1: Missing datetime import in interrupts.py\n- **File**: src/mcp_server_langgraph/core/interrupts/interrupts.py:13\n- **Issue**: NameError at runtime - datetime used but not imported\n- **Impact**: Would crash interrupt workflows on first use\n- **Fix**: Added `from datetime import datetime`\n- **Found by**: Unit tests written before implementation (TDD)\n\n### Bug 2: Unescaped template braces in create_agent.py\n- **File**: src/mcp_server_langgraph/cli/create_agent.py:144-148\n- **Issue**: KeyError when generating customer-support agents\n- **Impact**: Template generation fails for specific agent type\n- **Fix**: Escaped dictionary braces in template string\n- **Found by**: Comprehensive CLI tests\n\n## Test Optimizations\n\n### test_session.py - Removed real-time delays\n- Replaced asyncio.sleep() with freezegun.freeze_time()\n- Eliminated ~2.7 seconds of actual waiting per test run\n- Tests now run instantly while testing same behavior\n- Uses time mocking for expiration and timestamp tests\n\n## Test Metrics\n\n- **Total new tests**: 161\n- **All tests passing**: 161/161\n- **Line coverage**: 100% (123/123 statements)\n- **Branch coverage**: 100% (18/18 branches)\n- **Bugs prevented**: 2 critical runtime errors\n- **Execution time**: ~3 seconds (vs ~30s with sleeps)\n\n## TDD Best Practices Applied\n\n- Tests written FIRST, implementation validated SECOND\n- RED-GREEN-REFACTOR cycle followed rigorously\n- Tests caught bugs before code ever ran in production\n- 100% coverage on security-critical modules (approvals)\n- Comprehensive edge case and error scenario testing\n- Fast test execution via time mocking (no real sleeps)\n\n## Validation Summary\n\nAll findings from OpenAI Codex analysis have been validated:\n- Interrupt handling: 0% to 100% coverage\n- CLI commands: 0% to 100% coverage\n- Real-time sleeps: Optimized with freezegun\n- Stale __pycache__: Deleted tests/integrations/\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T17:14:44-05:00",
+          "tree_id": "b47e9ddc90ec98e22650905dd5a0367036d5c47c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/53ac0cc721bf81caec1296eaf0914842cb1547d5"
+        },
+        "date": 1762467425560,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 142.77080622617018,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011357315265711227",
+            "extra": "mean: 7.00423305319052 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.7165388362331,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013292250433108278",
+            "extra": "mean: 6.769722658534914 msec\nrounds: 123"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45764.49590366498,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.85100000019702 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47910.68681415719,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.872169999961443 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44942.70928141025,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.250549999967006 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.42565849725426,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.143354059999865 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.43252215271285,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.46012401999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.965930915047526,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.34185551999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1421625.771503458,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 703.4199998656732 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13333.255111600929,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 75.00043999982609 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2975.410582112544,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.08807000007346 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2934.418332556329,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.78303999990567 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58138.99153292169,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000025907444983904816",
+            "extra": "mean: 17.200160746402727 usec\nrounds: 11739"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17013.355303193144,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020479783334071167",
+            "extra": "mean: 58.777353566013836 usec\nrounds: 5272"
           }
         ]
       }
