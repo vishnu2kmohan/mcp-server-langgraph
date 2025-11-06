@@ -177,4 +177,4 @@ def test_sandbox_accepts_resource_limits_instance():
     assert limits_param.annotation is not inspect.Parameter.empty
 
     # Verify ResourceLimits class is available (create instance to confirm)
-    _ = ResourceLimits(max_execution_time=30, max_memory_mb=512, max_cpu_percent=50.0)
+    _ = ResourceLimits(timeout_seconds=30, memory_limit_mb=512, cpu_quota=0.5)

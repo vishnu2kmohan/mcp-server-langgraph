@@ -17,9 +17,11 @@ import os
 from typing import AsyncGenerator, Dict
 from uuid import uuid4
 
-import httpx
 import pytest
-from fastapi.testclient import TestClient
+
+httpx = pytest.importorskip("httpx", reason="httpx required for SCIM E2E tests")
+
+from fastapi.testclient import TestClient  # noqa: E402
 
 # Test configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")

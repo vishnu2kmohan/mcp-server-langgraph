@@ -18,11 +18,11 @@ References:
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-import os
+from typing import Any, Dict, List, Optional
 
 try:
     import requests
@@ -51,7 +51,7 @@ class GitHubClient:
             "per_page": 100,
         }
 
-        response = requests.get(url, headers=self.headers, params=params)
+        response = requests.get(url, headers=self.headers, params=params, timeout=30)
         response.raise_for_status()
 
         deployments = response.json()
@@ -65,7 +65,7 @@ class GitHubClient:
             if created_at >= since:
                 # Get deployment status
                 status_url = deployment["statuses_url"]
-                status_response = requests.get(status_url, headers=self.headers)
+                status_response = requests.get(status_url, headers=self.headers, timeout=30)
                 statuses = status_response.json() if status_response.ok else []
 
                 deployment["statuses"] = statuses
@@ -81,7 +81,7 @@ class GitHubClient:
             "per_page": 100,
         }
 
-        response = requests.get(url, headers=self.headers, params=params)
+        response = requests.get(url, headers=self.headers, params=params, timeout=30)
         response.raise_for_status()
 
         return response.json()
@@ -179,9 +179,9 @@ def classify_dora_performance(metrics: Dict[str, float]) -> str:
     freq = metrics["deployment_frequency_per_day"]
     if freq >= 1.0:  # Multiple per day or daily
         score += 4
-    elif freq >= 1/7:  # Weekly
+    elif freq >= 1 / 7:  # Weekly
         score += 3
-    elif freq >= 1/30:  # Monthly
+    elif freq >= 1 / 30:  # Monthly
         score += 2
     else:
         score += 1
@@ -243,13 +243,15 @@ def collect_deployment_data(repo: str, days: int = 30, token: Optional[str] = No
             latest_status = deployment["statuses"][0]
             status = "success" if latest_status.get("state") == "success" else "failed"
 
-        parsed_deployments.append({
-            "id": deployment["id"],
-            "environment": deployment["environment"],
-            "timestamp": deployment["created_at"],
-            "status": status,
-            "commits": [],  # Would need to parse from deployment payload
-        })
+        parsed_deployments.append(
+            {
+                "id": deployment["id"],
+                "environment": deployment["environment"],
+                "timestamp": deployment["created_at"],
+                "status": status,
+                "commits": [],  # Would need to parse from deployment payload
+            }
+        )
 
     return parsed_deployments
 
@@ -261,11 +263,13 @@ def collect_commit_data(repo: str, since: str, token: Optional[str] = None) -> L
 
     parsed_commits = []
     for commit in commits:
-        parsed_commits.append({
-            "sha": commit["sha"],
-            "timestamp": commit["commit"]["author"]["date"],
-            "message": commit["commit"]["message"],
-        })
+        parsed_commits.append(
+            {
+                "sha": commit["sha"],
+                "timestamp": commit["commit"]["author"]["date"],
+                "message": commit["commit"]["message"],
+            }
+        )
 
     return parsed_commits
 
@@ -338,9 +342,9 @@ def _get_performance_level(metrics: Dict, metric_name: str) -> str:
     if metric_name == "deployment_frequency_per_day":
         if value >= 1.0:
             return "🟢 Elite"
-        elif value >= 1/7:
+        elif value >= 1 / 7:
             return "🟡 High"
-        elif value >= 1/30:
+        elif value >= 1 / 30:
             return "🟠 Medium"
         else:
             return "🔴 Low"
@@ -393,8 +397,7 @@ def main():
     parser = argparse.ArgumentParser(description="Calculate DORA metrics")
     parser.add_argument("--repo", required=True, help="GitHub repository (owner/repo)")
     parser.add_argument("--days", type=int, default=30, help="Number of days to analyze")
-    parser.add_argument("--output", type=Path, default=Path(".dora-metrics/metrics.json"),
-                        help="Output file for metrics")
+    parser.add_argument("--output", type=Path, default=Path(".dora-metrics/metrics.json"), help="Output file for metrics")
     parser.add_argument("--token", help="GitHub token (or set GITHUB_TOKEN env var)")
 
     args = parser.parse_args()
@@ -434,9 +437,9 @@ def main():
     print("\n" + report)
 
     # Print classification
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Overall Performance: {metrics['classification']}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     return 0
 
