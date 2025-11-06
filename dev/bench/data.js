@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762460127969,
+  "lastUpdate": 1762460638457,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -34104,6 +34104,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000026109633631638014",
             "extra": "mean: 58.508214257577414 usec\nrounds: 5078"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "404ce64d571affced4134070b00ea53cb1e99978",
+          "message": "feat(test): implement Phase 1 test infrastructure quick wins\n\nThis commit implements critical test infrastructure improvements to prevent\nsecurity regressions, improve benchmark accuracy, and clean up technical debt.\n\n## Changes Summary\n\n### 1. Enable OpenFGA Security Tests (CWE-269 Prevention)\n- Removed pytest.skip() from 3 critical security tests\n- Implemented real OpenFGA authorization checks\n- Added test setup (write tuples) and cleanup (delete tuples)\n- Fixed OpenFGA test URL (port 8080 → 9080)\n\nFiles:\n- tests/api/test_service_principals_security.py:201 (test_openfga_check_before_user_association)\n- tests/api/test_service_principals_security.py:249 (test_prevent_privilege_escalation_via_service_principal_chain)\n- tests/api/test_scim_security.py:241 (test_openfga_admin_relation_check)\n- tests/conftest.py:622 (OpenFGA URL fix)\n\nSecurity Impact:\n- Prevents CWE-269 privilege escalation attacks\n- Validates authorization before privileged operations\n- Tests positive and negative authorization cases\n- Validates transitive permissions\n\n### 2. Fix Event Loop Creation in Benchmarks\n- Enhanced PercentileBenchmark to detect async functions\n- Reuse single event loop across 100 iterations (was creating 100 loops)\n- Removed asyncio.run() wrappers from 4 async benchmarks\n- Maintains backward compatibility with synchronous functions\n\nFiles:\n- tests/performance/conftest.py:38 (async detection in PercentileBenchmark)\n- tests/performance/test_benchmarks.py:148,169,219,283 (4 benchmarks refactored)\n\nPerformance Impact:\n- 30-50% faster benchmark execution\n- More accurate latency measurements (removes event loop overhead)\n- More stable percentile calculations (p95, p99)\n\n### 3. Remove Legacy Telemetry Bootstrapping\n- Deleted deprecated pytest_configure() function (22 lines)\n- Single initialization path via test_container fixture\n- No global state in tests (better isolation)\n\nFiles:\n- tests/conftest.py:455-477 (deleted deprecated code)\n\nArchitecture Impact:\n- Eliminates dual initialization paths\n- Cleaner dependency injection pattern\n- Better test isolation\n\n## Test Results\n\nSecurity Tests:\n✅ 3/3 OpenFGA security tests passing with real authorization\n✅ All security tests validate positive and negative cases\n✅ Proper cleanup after each test\n\nPerformance Tests:\n✅ All benchmark tests passing\n✅ Single event loop per benchmark (was 100)\n✅ 30-50% performance improvement\n\nContainer Tests:\n✅ 22/23 container tests passing\n✅ Single telemetry initialization path verified\n✅ No global state side effects\n\n## Documentation\n\nCreated ADR-0044: Test Infrastructure Quick Wins\n- Documents all changes with rationale\n- Includes before/after metrics\n- Security compliance details\n- References to related ADRs\n\n## TDD Compliance\n\nRED: Verified tests skipped, event loop pattern confirmed\nGREEN: Implemented fixes with real infrastructure\nREFACTOR: Updated all async benchmarks, added documentation\n\n## Breaking Changes\n\nNone. All changes are backward compatible.\n\n## Follow-up Work\n\nPhase 2: E2E Test Real Infrastructure (178 tests)\nPhase 3: Storage Backend Tests (PostgreSQL, Redis)\nPhase 4: Infrastructure Optimizations\nPhase 5: Documentation & Validation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T15:22:35-05:00",
+          "tree_id": "be294d013636c4384434eb5cc7a52259e9cbca36",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/404ce64d571affced4134070b00ea53cb1e99978"
+        },
+        "date": 1762460637183,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 134.4491325966999,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00021496428733106185",
+            "extra": "mean: 7.437757170212827 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 134.6374182834182,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023032908074582684",
+            "extra": "mean: 7.427355728813458 msec\nrounds: 118"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44326.025006082615,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.560110000000577 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47194.16529112049,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.189059999926485 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44747.49436404306,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.34762000000501 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 192.9154873903686,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.183616999999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.261094446065517,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.91812971999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.965171631475384,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.34950093999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1124517.8630537908,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 889.2699999307752 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13678.054969634548,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 73.1098100000338 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2964.977126832702,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.27072999994334 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2900.2307568601905,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.80014999999753 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57471.0904345846,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004113208926345456",
+            "extra": "mean: 17.400052660184542 usec\nrounds: 11014"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17094.301185611283,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002630832844849332",
+            "extra": "mean: 58.4990277836994 usec\nrounds: 4607"
           }
         ]
       }
