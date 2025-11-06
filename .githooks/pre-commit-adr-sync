@@ -5,9 +5,13 @@
 # Ensures that Architecture Decision Records (ADRs) are synchronized
 # between source (adr/*.md) and Mintlify docs (docs/architecture/*.mdx)
 #
-# Installation:
-#   ln -s ../../.githooks/pre-commit-adr-sync .git/hooks/pre-commit-adr-sync
-#   Or add to .pre-commit-config.yaml
+# Installation (using pre-commit framework - RECOMMENDED):
+#   Install pre-commit: pip install pre-commit
+#   Install hooks: pre-commit install
+#   This script is automatically called via .pre-commit-config.yaml
+#
+# Manual Installation (NOT recommended, for reference only):
+#   .git/hooks/pre-commit will be managed by pre-commit framework
 #
 
 set -e
@@ -29,9 +33,11 @@ if [ -z "$adr_source_files" ] && [ -z "$adr_docs_files" ]; then
     exit 0
 fi
 
-# Function to extract ADR number from filename
+# Function to extract ADR number from filename (macOS compatible)
 get_adr_number() {
-    basename "$1" | grep -oP 'adr-\K\d+'
+    # Extract ADR number using sed (portable across Linux/macOS)
+    # Matches patterns like: adr-0001-*.md or adr-0001-*.mdx
+    basename "$1" | sed -n 's/^adr-\([0-9]\+\)-.*/\1/p'
 }
 
 # Track issues
@@ -73,7 +79,7 @@ fi
 
 # Check for filename case consistency
 echo "📝 Checking filename case consistency..."
-for adr_file in adr/adr-*.md adr/ADR-*.md 2>/dev/null; do
+for adr_file in adr/adr-*.md adr/ADR-*.md; do
     [ -f "$adr_file" ] || continue
 
     if echo "$adr_file" | grep -q "ADR-"; then
@@ -81,7 +87,7 @@ for adr_file in adr/adr-*.md adr/ADR-*.md 2>/dev/null; do
         echo -e "   Rename to: $(echo "$adr_file" | sed 's/ADR-/adr-/')"
         issues_found=$((issues_found + 1))
     fi
-done
+done 2>/dev/null
 
 # Final result
 if [ $issues_found -gt 0 ]; then
