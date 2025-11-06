@@ -110,8 +110,8 @@ jobs:
         # Keycloak needs 45s start_period + up to 40 retries * 5s = ~3 min worst case
         # Increased timeout to 5 minutes to accommodate slower GitHub Actions runners
         for i in {1..100}; do
-          # Count healthy services using grep on ps output (more reliable than JSON parsing)
-          HEALTHY=$(docker compose -f docker-compose.test.yml ps --status running --filter "health=healthy" --format "table {{.Service}}" | tail -n +2 | wc -l | tr -d ' ')
+          # Count healthy services by checking health status directly (docker compose ps --filter only supports status, not health)
+          HEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health == "healthy") | .Service' | wc -l | tr -d ' ')
           TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
 
           echo "Attempt $i/100: $HEALTHY/$TOTAL services healthy"

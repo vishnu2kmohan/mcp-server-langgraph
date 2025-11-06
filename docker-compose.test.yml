@@ -65,6 +65,20 @@ services:
   # AUTHORIZATION SERVICES
   # ==============================================================================
 
+  openfga-migrate-test:
+    image: openfga/openfga:v1.10.2
+    container_name: mcp-openfga-migrate-test
+    command: migrate --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable
+    networks:
+      - mcp-test-network
+    restart: "no"  # Run once and exit
+
   openfga-test:
     image: openfga/openfga:v1.10.2
     container_name: mcp-openfga-test
@@ -72,6 +86,8 @@ services:
     depends_on:
       postgres-test:
         condition: service_healthy
+      openfga-migrate-test:
+        condition: service_completed_successfully
     ports:
       - "9080:8080"  # HTTP API
       - "9081:8081"  # gRPC API

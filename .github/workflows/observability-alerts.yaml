@@ -57,6 +57,7 @@ jobs:
     name: Collect Workflow Metrics
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: github.event_name == 'workflow_run'
     outputs:
       workflow_name: ${{ steps.metadata.outputs.workflow_name }}
       workflow_status: ${{ steps.metadata.outputs.workflow_status }}
@@ -77,6 +78,7 @@ jobs:
 
       - name: Classify alert severity
         id: classify
+        if: github.event_name == 'workflow_run'
         env:
           WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           CONCLUSION: ${{ github.event.workflow_run.conclusion }}
@@ -113,6 +115,7 @@ jobs:
     steps:
       - name: Determine Slack message
         id: message
+        if: github.event_name == 'workflow_run'
         env:
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
           CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
@@ -137,6 +140,7 @@ jobs:
           echo "color=$COLOR" >> $GITHUB_OUTPUT
 
       - name: Send Slack notification
+        if: github.event_name == 'workflow_run'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
@@ -199,6 +203,7 @@ jobs:
 
     steps:
       - name: Send PagerDuty event
+        if: github.event_name == 'workflow_run'
         env:
           PAGERDUTY_KEY: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}

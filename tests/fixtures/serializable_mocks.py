@@ -26,14 +26,14 @@ from typing import Any, Dict, List, Optional
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
+from pydantic import Field, PrivateAttr
 
 
-@dataclass
 class SerializableLLMMock(BaseChatModel):
     """
     Serializable LLM mock for LangGraph testing.
 
-    This class is msgpack-serializable (uses only primitive types and dataclasses)
+    This class is msgpack-serializable (uses Pydantic for compatibility with BaseChatModel)
     and can pass through LangGraph's checkpoint system.
 
     Attributes:
@@ -43,13 +43,25 @@ class SerializableLLMMock(BaseChatModel):
         _current_index: Internal index for cycling through responses
     """
 
-    responses: List[str] = field(default_factory=lambda: ["Mock LLM response"])
-    delay_seconds: float = 0.0
-    call_count: int = field(default=0, init=False)
-    _current_index: int = field(default=0, init=False)
+    responses: List[str] = Field(default_factory=lambda: ["Mock LLM response"])
+    delay_seconds: float = Field(default=0.0)
+
+    # Private attributes (not part of model schema, excluded from serialization)
+    _call_count: int = PrivateAttr(default=0)
+    _current_index: int = PrivateAttr(default=0)
 
     # LangChain required properties
-    model_name: str = "mock-llm"
+    model_name: str = Field(default="mock-llm")
+
+    @property
+    def call_count(self) -> int:
+        """Get the current call count."""
+        return self._call_count
+
+    @call_count.setter
+    def call_count(self, value: int) -> None:
+        """Set the call count."""
+        self._call_count = value
 
     @property
     def _llm_type(self) -> str:
@@ -83,7 +95,7 @@ class SerializableLLMMock(BaseChatModel):
         response = self._get_next_response()
 
         # Track call
-        self.call_count += 1
+        self._call_count += 1
 
         # Create AI message
         message = AIMessage(content=response)
@@ -121,7 +133,7 @@ class SerializableLLMMock(BaseChatModel):
         response = self._get_next_response()
 
         # Track call
-        self.call_count += 1
+        self._call_count += 1
 
         # Create AI message
         message = AIMessage(content=response)
@@ -145,7 +157,7 @@ class SerializableLLMMock(BaseChatModel):
 
     def reset(self) -> None:
         """Reset mock state (call count and response index)."""
-        self.call_count = 0
+        self._call_count = 0
         self._current_index = 0
 
     def __reduce__(self):
@@ -156,15 +168,26 @@ class SerializableLLMMock(BaseChatModel):
         """
         return (
             self.__class__,
-            (self.responses, self.delay_seconds),
-            {"call_count": self.call_count, "_current_index": self._current_index, "model_name": self.model_name},
+            (),
+            {
+                "responses": self.responses,
+                "delay_seconds": self.delay_seconds,
+                "model_name": self.model_name,
+                "_call_count": self._call_count,
+                "_current_index": self._current_index,
+            },
         )
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
         """Restore object state during deserialization."""
-        self.call_count = state.get("call_count", 0)
-        self._current_index = state.get("_current_index", 0)
+        # Restore public fields
+        self.responses = state.get("responses", ["Mock LLM response"])
+        self.delay_seconds = state.get("delay_seconds", 0.0)
         self.model_name = state.get("model_name", "mock-llm")
+
+        # Restore private attributes
+        self._call_count = state.get("_call_count", 0)
+        self._current_index = state.get("_current_index", 0)
 
 
 @dataclass

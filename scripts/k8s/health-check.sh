@@ -89,19 +89,23 @@ if [ -z "$POD_NAME" ]; then
             -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
     fi
 
-    # If still not found, find first ready pod with mcp-server label
+    # If still not found, find first ready pod with mcp-server label (excluding terminating pods)
     if [ -z "$POD_NAME" ]; then
         POD_NAME=$(kubectl get pods -n "$NAMESPACE" \
             -l "app=mcp-server-langgraph" \
             --field-selector=status.phase=Running \
-            -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+            -o json 2>/dev/null | \
+            jq -r '.items[] | select(.metadata.deletionTimestamp == null) | .metadata.name' | \
+            head -n 1 || echo "")
     fi
 
-    # Last resort: find any running pod in namespace
+    # Last resort: find any running pod in namespace (excluding terminating pods)
     if [ -z "$POD_NAME" ]; then
         POD_NAME=$(kubectl get pods -n "$NAMESPACE" \
             --field-selector=status.phase=Running \
-            -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+            -o json 2>/dev/null | \
+            jq -r '.items[] | select(.metadata.deletionTimestamp == null) | .metadata.name' | \
+            head -n 1 || echo "")
     fi
 
     if [ -z "$POD_NAME" ]; then

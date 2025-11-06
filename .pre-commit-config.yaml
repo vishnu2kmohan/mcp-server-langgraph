@@ -119,6 +119,17 @@ repos:
           - .env.local
           Per TDD best practices, this ensures local configs never reach version control.
 
+      - id: validate-github-workflows
+        name: Validate GitHub Actions Workflow Context Usage
+        entry: uv run python scripts/validate_github_workflows.py
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+        description: |
+          Validates that GitHub Actions workflows don't reference undefined
+          context variables (e.g., github.event.workflow_run.* when workflow_run
+          trigger is not enabled). Prevents CI/CD failures from context errors.
+
       - id: validate-dependency-injection
         name: Validate Dependency Injection Configuration
         entry: python3 .githooks/pre-commit-dependency-validation
