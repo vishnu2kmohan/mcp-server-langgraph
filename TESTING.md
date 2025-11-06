@@ -6,10 +6,12 @@ This document describes the testing strategy, conventions, and best practices fo
 
 - [Test Organization](#test-organization)
 - [Test Categories](#test-categories)
+  - [Deployment Configuration Tests](#deployment-configuration-tests-pytestmarkdeployment)
 - [Fixture Standards](#fixture-standards)
 - [Identity & Authentication](#identity--authentication)
 - [Running Tests](#running-tests)
 - [TDD Best Practices](#tdd-best-practices)
+- [Deployment Testing](#deployment-configuration-tests-pytestmarkdeployment)
 
 ---
 
@@ -79,6 +81,63 @@ tests/
 - Comment on line 115: "Use HTTP mock until real Keycloak is implemented"
 
 **Recommendation**: Keep mocks for now, migrate incrementally as infrastructure matures
+
+### Deployment Configuration Tests (`@pytest.mark.deployment`)
+- **Purpose**: Validate Helm charts, Kustomize overlays, and deployment manifests
+- **Dependencies**: File system, helm/kustomize CLI tools (optional)
+- **Speed**: Fast (<1s per test)
+- **Examples**: Secret key alignment, CORS security, version consistency
+- **Location**: `tests/deployment/`
+
+**Test Coverage** (11 tests, 91% coverage):
+- ✅ Helm secret template validation (missing keys detection)
+- ✅ CORS security (prevents wildcard + credentials vulnerability)
+- ✅ Hard-coded credential detection
+- ✅ Placeholder validation (YOUR_PROJECT_ID, REPLACE_ME, example.com)
+- ✅ ExternalSecrets key alignment
+- ✅ Namespace consistency across overlays
+- ✅ Version consistency across deployment methods
+- ✅ Resource limits and security contexts
+- ✅ Pod security standards compliance
+
+**Running Deployment Tests**:
+
+```bash
+# Run all deployment configuration tests
+pytest tests/deployment/ -v
+
+# Run unit tests (no helm/kustomize required)
+pytest tests/deployment/test_helm_configuration.py -v
+
+# Run E2E tests (requires helm/kustomize installed)
+pytest tests/deployment/test_deployment_e2e.py -v
+
+# Validate all deployment configs (comprehensive script)
+./scripts/validate-deployments.sh
+
+# Check deployed cluster health (requires kubectl)
+./scripts/check-deployment-health.sh production-mcp-server-langgraph mcp
+```
+
+**Pre-commit Validation**:
+
+Deployment tests run automatically on commit via pre-commit hooks:
+- `validate-deployment-secrets` - Secret key alignment
+- `validate-cors-security` - CORS configuration safety
+- `check-hardcoded-credentials` - Credential exposure prevention
+- `validate-redis-password-required` - Redis authentication enforcement
+- `check-dangerous-placeholders` - Placeholder leak detection
+
+**CI/CD Integration**:
+
+GitHub Actions workflow (`.github/workflows/validate-deployments.yml`) runs on every PR:
+- Helm chart linting and template rendering
+- Kustomize build validation across 5 environments (matrix)
+- YAML syntax validation
+- Security scanning (gitleaks, CORS, placeholders)
+- Version consistency checks
+
+See `adr/adr-0046-deployment-configuration-tdd-infrastructure.md` for full details.
 
 ---
 
