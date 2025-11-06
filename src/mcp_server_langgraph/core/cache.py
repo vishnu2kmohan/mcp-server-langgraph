@@ -76,6 +76,8 @@ class CacheService:
         l1_ttl: int = 60,
         redis_url: Optional[str] = None,
         redis_db: int = 2,
+        redis_password: Optional[str] = None,
+        redis_ssl: bool = False,
     ):
         """
         Initialize cache service.
@@ -83,8 +85,10 @@ class CacheService:
         Args:
             l1_maxsize: Max entries in L1 cache
             l1_ttl: Default TTL for L1 cache in seconds
-            redis_url: Redis connection URL
+            redis_url: Redis connection URL (e.g., "redis://host:port")
             redis_db: Redis database number (default: 2 for cache)
+            redis_password: Redis password for authentication
+            redis_ssl: Enable SSL/TLS for Redis connection
         """
         # L1: In-memory cache (per-instance)
         self.l1_cache = TTLCache(maxsize=l1_maxsize, ttl=l1_ttl)
@@ -92,14 +96,28 @@ class CacheService:
         self.l1_ttl = l1_ttl
 
         # L2: Redis cache (shared across instances)
-        redis_host = getattr(settings, "redis_host", "localhost")
-        redis_port = getattr(settings, "redis_port", 6379)
+        # Use redis.from_url() pattern (same as API key manager) instead of
+        # Redis(host=..., port=...) to properly handle password and SSL
+
+        # Get Redis config from settings if not provided
+        if redis_url is None:
+            redis_url = getattr(settings, "redis_url", "redis://localhost:6379")
+        if redis_password is None:
+            redis_password = getattr(settings, "redis_password", None)
+        if redis_ssl is False:
+            redis_ssl = getattr(settings, "redis_ssl", False)
 
         try:
-            self.redis = redis.Redis(
-                host=redis_host,
-                port=redis_port,
-                db=redis_db,
+            # Build Redis URL with database number
+            # Format: redis://[password@]host:port/db
+            redis_url_with_db = f"{redis_url}/{redis_db}"
+
+            # Create Redis client using from_url() with full configuration
+            # This matches the pattern in dependencies.py:120-125 (API key manager)
+            self.redis = redis.from_url(
+                redis_url_with_db,
+                password=redis_password,
+                ssl=redis_ssl,
                 decode_responses=False,  # Keep binary for pickle
                 socket_connect_timeout=2,
                 socket_timeout=2,
@@ -109,12 +127,12 @@ class CacheService:
             self.redis_available = True
             logger.info(
                 "Redis cache initialized",
-                extra={"host": redis_host, "port": redis_port, "db": redis_db},
+                extra={"redis_url": redis_url, "db": redis_db, "ssl": redis_ssl},
             )
         except Exception as e:
             logger.warning(
                 f"Redis cache unavailable, L2 cache disabled: {e}",
-                extra={"host": redis_host, "port": redis_port},
+                extra={"redis_url": redis_url},
             )
             self.redis = None  # type: ignore[assignment]
             self.redis_available = False
@@ -428,7 +446,10 @@ def get_cache() -> CacheService:
         _cache_service = CacheService(
             l1_maxsize=getattr(settings, "l1_cache_size", 1000),
             l1_ttl=getattr(settings, "l1_cache_ttl", 60),
+            redis_url=getattr(settings, "redis_url", "redis://localhost:6379"),
             redis_db=getattr(settings, "redis_cache_db", 2),
+            redis_password=getattr(settings, "redis_password", None),
+            redis_ssl=getattr(settings, "redis_ssl", False),
         )
     return _cache_service
 

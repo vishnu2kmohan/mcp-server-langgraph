@@ -607,6 +607,121 @@ async def openfga_client_real(integration_test_env):
     # Cleanup happens per-test
 
 
+# =============================================================================
+# PER-TEST CLEANUP FIXTURES
+# =============================================================================
+# These function-scoped fixtures wrap the session-scoped infrastructure
+# fixtures and provide automatic cleanup between tests for isolation.
+
+
+@pytest.fixture
+async def postgres_connection_clean(postgres_connection_real):
+    """
+    PostgreSQL connection with per-test cleanup.
+
+    Provides test isolation by cleaning up all test data after each test.
+    The expensive connection is reused (session-scoped), but data is cleaned.
+
+    Usage:
+        @pytest.mark.asyncio
+        async def test_my_feature(postgres_connection_clean):
+            await postgres_connection_clean.execute("INSERT INTO ...")
+            # Automatic cleanup after test
+    """
+    yield postgres_connection_real
+
+    # Cleanup: Drop all test tables
+    # This ensures complete isolation between tests
+    try:
+        # Get all table names in public schema
+        tables = await postgres_connection_real.fetch(
+            """
+            SELECT tablename FROM pg_tables
+            WHERE schemaname = 'public'
+            AND tablename LIKE 'test_%'
+            """
+        )
+
+        # Drop all test tables
+        for table in tables:
+            await postgres_connection_real.execute(f'DROP TABLE IF EXISTS {table["tablename"]} CASCADE')
+    except Exception:
+        # If cleanup fails, don't fail the test
+        # The session cleanup will handle it
+        pass
+
+
+@pytest.fixture
+async def redis_client_clean(redis_client_real):
+    """
+    Redis client with per-test cleanup.
+
+    Provides test isolation by flushing the database after each test.
+    The expensive connection is reused (session-scoped), but data is cleaned.
+
+    Usage:
+        @pytest.mark.asyncio
+        async def test_my_feature(redis_client_clean):
+            await redis_client_clean.set("key", "value")
+            # Automatic cleanup after test
+    """
+    yield redis_client_real
+
+    # Cleanup: Flush all keys in test database
+    # This is fast (O(N) where N is number of keys, but typically < 1ms for tests)
+    try:
+        await redis_client_real.flushdb()
+    except Exception:
+        # If cleanup fails, don't fail the test
+        pass
+
+
+@pytest.fixture
+async def openfga_client_clean(openfga_client_real):
+    """
+    OpenFGA client with per-test cleanup.
+
+    Provides test isolation by tracking and deleting tuples written during the test.
+    Uses a context manager pattern to track tuple operations.
+
+    Usage:
+        @pytest.mark.asyncio
+        async def test_my_feature(openfga_client_clean):
+            await openfga_client_clean.write_tuples([...])
+            # Automatic cleanup after test
+
+    Note: This fixture tracks tuples written during the test and deletes them.
+    For more complex scenarios, tests can manually delete tuples.
+    """
+    # Track tuples written during this test for cleanup
+    written_tuples = []
+
+    # Wrap write_tuples to track writes
+    original_write = openfga_client_real.write_tuples
+
+    async def tracked_write_tuples(tuples):
+        written_tuples.extend(tuples)
+        return await original_write(tuples)
+
+    # Monkey-patch for test duration
+    openfga_client_real.write_tuples = tracked_write_tuples
+
+    yield openfga_client_real
+
+    # Restore original method
+    openfga_client_real.write_tuples = original_write
+
+    # Cleanup: Delete all tuples written during test
+    if written_tuples:
+        try:
+            await openfga_client_real.delete_tuples(written_tuples)
+        except Exception:
+            # If cleanup fails, don't fail the test
+            # Tuples will be cleaned up eventually or won't affect other tests
+            # if using different object IDs
+            pass
+
+
 @pytest.fixture(scope="session")
 def qdrant_available():
     """Check if Qdrant is available for testing."""

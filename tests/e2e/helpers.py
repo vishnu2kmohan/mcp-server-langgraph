@@ -1,25 +1,43 @@
 """
-E2E Test Helpers and HTTP Mocks
+E2E Test Helpers - MIGRATED TO REAL INFRASTRUCTURE
 
-TEMPORARY STATUS: These mocks are interim solutions for E2E tests.
-This follows the recommendation to "swap to HTTP mocks" for rapid E2E test activation.
+STATUS: ✅ Migrated from mocks to real infrastructure (Phase 2.2 complete)
 
-Current State:
-- E2E tests currently use HTTP mocks instead of real infrastructure
-- Tests marked with @pytest.mark.e2e run against these lightweight mocks
-- This allows E2E test development without requiring full docker-compose stack
+New Approach (Real Infrastructure):
+- E2E tests now use real HTTP clients connecting to docker-compose.test.yml services
+- Real Keycloak on port 9082 for authentication
+- Real MCP server for protocol testing
+- Per-test cleanup fixtures ensure isolation
 
-Migration Path:
-- Once test_infrastructure fixture is stable, E2E tests will be updated
-- Mocks will be replaced with real HTTP calls to docker-compose services
-- See tests/conftest.py::test_infrastructure for the real infrastructure setup
-- See tests/README.md for instructions on running tests with full infrastructure
+Backwards Compatibility:
+- Mock classes/functions still exported but aliased to real implementations
+- Allows gradual migration of existing tests
+- Use `from tests.e2e.real_clients import real_keycloak_auth` for clarity
 
-Usage (Current Mock-Based Approach):
-    from tests.e2e.helpers import mock_keycloak_auth, mock_mcp_client
+Migration Complete:
+- ✅ RealKeycloakAuth implemented (connects to Keycloak on port 9082)
+- ✅ RealMCPClient implemented (connects to MCP server)
+- ✅ Per-test cleanup fixtures (postgres_connection_clean, redis_client_clean, openfga_client_clean)
+- ✅ Backwards compatibility maintained via aliases
 
-    async with mock_keycloak_auth() as auth:
-        token = await auth.login("user", "password")
+Usage (New Real Infrastructure Approach):
+    from tests.e2e.real_clients import real_keycloak_auth, real_mcp_client
+
+    @pytest.mark.e2e
+    @pytest.mark.integration
+    async def test_user_journey(test_infrastructure):
+        async with real_keycloak_auth() as auth:
+            # Real JWT token from Keycloak
+            token = await auth.login("alice", "password")
+
+        async with real_mcp_client(access_token=token["access_token"]) as client:
+            # Real MCP protocol communication
+            tools = await client.list_tools()
+
+For details, see:
+- tests/e2e/real_clients.py - Real client implementations
+- tests/conftest.py - Per-test cleanup fixtures
+- adr/adr-0044-test-infrastructure-quick-wins.md - Phase 1 improvements
 """
 
 import asyncio

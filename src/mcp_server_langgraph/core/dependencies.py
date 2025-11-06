@@ -4,7 +4,7 @@ FastAPI Dependencies
 Provides dependency injection for commonly used services.
 """
 
-from typing import TYPE_CHECKING, Optional
+from typing import Any, Optional
 
 from fastapi import Depends
 
@@ -13,9 +13,6 @@ from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.core.config import settings
-
-if TYPE_CHECKING:
-    import redis.asyncio as redis
 
 # Singleton instances (will be initialized on first use)
 _keycloak_client: Optional[KeycloakClient] = None
@@ -36,18 +33,35 @@ def get_keycloak_client() -> KeycloakClient:
             realm=settings.keycloak_realm,
             client_id=settings.keycloak_client_id,
             client_secret=settings.keycloak_client_secret,
+            admin_username=settings.keycloak_admin_username,
+            admin_password=settings.keycloak_admin_password,
         )
         _keycloak_client = KeycloakClient(config=keycloak_config)
 
     return _keycloak_client
 
 
-def get_openfga_client() -> OpenFGAClient:
-    """Get OpenFGA client instance (singleton)"""
+def get_openfga_client() -> Optional[OpenFGAClient]:
+    """
+    Get OpenFGA client instance (singleton)
+
+    Returns None if OpenFGA is not fully configured (store_id or model_id missing).
+    This allows graceful degradation when OpenFGA is intentionally disabled.
+    """
     global _openfga_client
 
     if _openfga_client is None:
         from mcp_server_langgraph.auth.openfga import OpenFGAConfig
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        # Validate that required configuration is present
+        if not settings.openfga_store_id or not settings.openfga_model_id:
+            logger.warning(
+                "OpenFGA configuration incomplete - authorization will be degraded. "
+                f"store_id: {settings.openfga_store_id}, model_id: {settings.openfga_model_id}. "
+                "Set OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables to enable OpenFGA."
+            )
+            return None
 
         openfga_config = OpenFGAConfig(
             api_url=settings.openfga_api_url,
@@ -108,7 +122,7 @@ def get_api_key_manager(
         #   - redis_url: Redis connection URL
         #   - redis_password: Redis password (optional)
         #   - redis_ssl: Use SSL for Redis connection (default: False)
-        redis_client: Optional["redis.Redis"] = None
+        redis_client: Optional[Any] = None
         if settings.api_key_cache_enabled and settings.redis_url:
             try:
                 import redis.asyncio as redis

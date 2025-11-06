@@ -39,13 +39,13 @@ class ServicePrincipal:
 class ServicePrincipalManager:
     """Manage service principal lifecycle"""
 
-    def __init__(self, keycloak_client: KeycloakClient, openfga_client: OpenFGAClient):
+    def __init__(self, keycloak_client: KeycloakClient, openfga_client: Optional[OpenFGAClient]):
         """
         Initialize service principal manager
 
         Args:
             keycloak_client: Keycloak client for user/client management
-            openfga_client: OpenFGA client for authorization tuples
+            openfga_client: OpenFGA client for authorization tuples (None if disabled)
         """
         self.keycloak = keycloak_client
         self.openfga = openfga_client
@@ -201,7 +201,15 @@ class ServicePrincipalManager:
         owner_user_id: Optional[str],
         inherit_permissions: bool,
     ) -> None:
-        """Sync service principal relationships to OpenFGA"""
+        """
+        Sync service principal relationships to OpenFGA
+
+        Gracefully handles disabled OpenFGA (when self.openfga is None).
+        """
+        # Guard: Skip OpenFGA sync if client is not available
+        if self.openfga is None:
+            return
+
         tuples = []
 
         # Permission inheritance via acts_as
@@ -251,7 +259,7 @@ class ServicePrincipalManager:
         )
 
         # Create OpenFGA tuple for permission inheritance
-        if inherit_permissions:
+        if inherit_permissions and self.openfga is not None:
             await self.openfga.write_tuples(
                 [
                     {
@@ -414,5 +422,6 @@ class ServicePrincipalManager:
             except Exception:
                 pass  # May not exist
 
-        # Remove from OpenFGA
-        await self.openfga.delete_tuples_for_object(f"service_principal:{service_id}")
+        # Remove from OpenFGA (if available)
+        if self.openfga is not None:
+            await self.openfga.delete_tuples_for_object(f"service_principal:{service_id}")

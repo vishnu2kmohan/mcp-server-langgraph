@@ -63,22 +63,30 @@ When working with this codebase, please:
 ## Project Structure
 
 ```
-mcp_server_langgraph/
-├── agent.py                    # LangGraph agent implementation
-├── mcp_server*.py              # MCP protocol servers (3 transports)
-├── auth.py                     # JWT authentication
-├── openfga_client.py          # Authorization client
-├── secrets_manager.py         # Infisical integration
-├── observability.py           # OpenTelemetry setup
-├── config.py                  # Configuration management
+mcp-server-langgraph/
+├── src/mcp_server_langgraph/  # Main source package
+│   ├── core/                  # Core components
+│   │   ├── agent.py           # LangGraph agent implementation
+│   │   └── config.py          # Configuration management
+│   ├── mcp/                   # MCP protocol servers
+│   │   ├── server_stdio.py    # stdio transport
+│   │   └── server_streamable.py  # HTTP/streamable transport
+│   ├── auth/                  # Authentication & authorization
+│   │   ├── jwt/               # JWT authentication
+│   │   └── openfga/           # OpenFGA authorization
+│   ├── secrets/               # Secrets management (Infisical)
+│   ├── observability/         # OpenTelemetry instrumentation
+│   ├── llm/                   # LLM factory and clients
+│   ├── compliance/            # GDPR/HIPAA/SOC2 compliance
+│   └── api/                   # FastAPI endpoints
 ├── tests/                     # Test suite
-│   ├── unit/
-│   ├── integration/
-│   └── performance/
+│   ├── unit/                  # Fast unit tests
+│   ├── integration/           # Integration tests
+│   └── deployment/            # Deployment validation
 ├── .vscode/                   # VSCode configuration
 ├── .cursor/                   # Cursor configuration
 ├── .github/                   # GitHub workflows & Copilot
-└── docs/                      # Documentation
+└── docs/                      # Mintlify documentation
 ```
 
 ## Common AI Assistant Queries
@@ -275,11 +283,13 @@ open http://localhost:3000
 - **Contributing**: See `CONTRIBUTING.md` and `docs/advanced/contributing.mdx`
 - **Mintlify Docs**: See `docs/docs.json` (100% coverage)
 
-## Current Project State (2025-10-14)
+## Current Project State (2025-11-06)
 
-- **LangGraph Version**: 0.6.10 (upgraded from 0.2.28 - all 15 Dependabot PRs merged)
+- **LangGraph Version**: 1.0.1 (latest stable release)
+- **Python Version**: 3.10-3.12 supported
 - **Documentation**: Mintlify integration complete with docs/ structure
-- **Production Ready**: Full observability, security, and compliance
+- **Production Ready**: Full observability, security, and compliance features
+- **Test Coverage**: 318+ comprehensive tests (unit, integration, deployment)
 
 ## Getting Help
 
