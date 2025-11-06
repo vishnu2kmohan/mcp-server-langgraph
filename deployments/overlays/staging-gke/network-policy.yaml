@@ -42,11 +42,18 @@ spec:
   policyTypes:
   - Egress
   egress:
-  # Allow DNS lookups
+  # Allow DNS to kube-system
   - to:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow DNS to GKE Dataplane V2 DNS server (entire link-local DNS range)
+  - to:
+    - ipBlock:
+        cidr: 169.254.0.0/16
     ports:
     - protocol: UDP
       port: 53
