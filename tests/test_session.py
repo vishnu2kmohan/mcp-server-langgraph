@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from freezegun import freeze_time
 
 from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore, SessionData, create_session_store
 
@@ -106,22 +107,23 @@ class TestInMemorySessionStore:
     @pytest.mark.unit
     async def test_refresh_session(self, store):
         """Test refreshing session expiration"""
-        session_id = await store.create(user_id="user:dave", username="dave", roles=["user"])
+        with freeze_time("2024-01-01 12:00:00") as frozen_time:
+            session_id = await store.create(user_id="user:dave", username="dave", roles=["user"])
 
-        # Get original expiry
-        session1 = await store.get(session_id)
-        original_expiry = session1.expires_at
+            # Get original expiry
+            session1 = await store.get(session_id)
+            original_expiry = session1.expires_at
 
-        # Wait a bit
-        await asyncio.sleep(0.1)
+            # Advance time by 1 second (instant, no actual sleep)
+            frozen_time.tick(delta=timedelta(seconds=1))
 
-        # Refresh
-        success = await store.refresh(session_id)
-        assert success is True
+            # Refresh
+            success = await store.refresh(session_id)
+            assert success is True
 
-        # Verify new expiry is later
-        session2 = await store.get(session_id)
-        assert session2.expires_at > original_expiry
+            # Verify new expiry is later
+            session2 = await store.get(session_id)
+            assert session2.expires_at > original_expiry
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -166,18 +168,19 @@ class TestInMemorySessionStore:
     @pytest.mark.unit
     async def test_session_expiration(self):
         """Test that expired sessions are not returned"""
-        store = InMemorySessionStore(default_ttl_seconds=1)  # 1 second TTL
+        with freeze_time("2024-01-01 12:00:00") as frozen_time:
+            store = InMemorySessionStore(default_ttl_seconds=1)  # 1 second TTL
 
-        session_id = await store.create(user_id="user:grace", username="grace", roles=["user"])
+            session_id = await store.create(user_id="user:grace", username="grace", roles=["user"])
 
-        # Should exist immediately
-        assert await store.get(session_id) is not None
+            # Should exist immediately
+            assert await store.get(session_id) is not None
 
-        # Wait for expiration (1s TTL + small buffer)
-        await asyncio.sleep(1.05)
+            # Advance time past expiration (1s TTL + buffer) - instant, no actual sleep
+            frozen_time.tick(delta=timedelta(seconds=1.05))
 
-        # Should be expired
-        assert await store.get(session_id) is None
+            # Should be expired
+            assert await store.get(session_id) is None
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -230,92 +233,96 @@ class TestInMemorySessionStore:
     @pytest.mark.unit
     async def test_concurrent_session_limit(self, store):
         """Test concurrent session limit enforcement"""
-        user_id = "user:jack"
+        with freeze_time("2024-01-01 12:00:00") as frozen_time:
+            user_id = "user:jack"
 
-        # Create max sessions (3)
-        session_id1 = await store.create(user_id, "jack", ["user"])
-        await asyncio.sleep(0.01)  # Ensure different timestamps
-        session_id2 = await store.create(user_id, "jack", ["user"])
-        await asyncio.sleep(0.01)
-        session_id3 = await store.create(user_id, "jack", ["user"])
+            # Create max sessions (3)
+            session_id1 = await store.create(user_id, "jack", ["user"])
+            frozen_time.tick(delta=timedelta(milliseconds=10))  # Ensure different timestamps (instant)
+            session_id2 = await store.create(user_id, "jack", ["user"])
+            frozen_time.tick(delta=timedelta(milliseconds=10))
+            session_id3 = await store.create(user_id, "jack", ["user"])
 
-        # All should exist
-        assert await store.get(session_id1) is not None
-        assert await store.get(session_id2) is not None
-        assert await store.get(session_id3) is not None
+            # All should exist
+            assert await store.get(session_id1) is not None
+            assert await store.get(session_id2) is not None
+            assert await store.get(session_id3) is not None
 
-        # Create 4th session - should remove oldest (session_id1)
-        await asyncio.sleep(0.01)
-        session_id4 = await store.create(user_id, "jack", ["user"])
+            # Create 4th session - should remove oldest (session_id1)
+            frozen_time.tick(delta=timedelta(milliseconds=10))
+            session_id4 = await store.create(user_id, "jack", ["user"])
 
-        # First session should be removed
-        assert await store.get(session_id1) is None
+            # First session should be removed
+            assert await store.get(session_id1) is None
 
-        # Others should still exist
-        assert await store.get(session_id2) is not None
-        assert await store.get(session_id3) is not None
-        assert await store.get(session_id4) is not None
+            # Others should still exist
+            assert await store.get(session_id2) is not None
+            assert await store.get(session_id3) is not None
+            assert await store.get(session_id4) is not None
 
     @pytest.mark.asyncio
     @pytest.mark.unit
     async def test_sliding_window_enabled(self):
         """Test sliding window expiration (refreshes on access)"""
-        store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=True)
+        with freeze_time("2024-01-01 12:00:00") as frozen_time:
+            store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=True)
 
-        session_id = await store.create(user_id="user:kate", username="kate", roles=["user"])
+            session_id = await store.create(user_id="user:kate", username="kate", roles=["user"])
 
-        # Get original last_accessed time
-        session1 = await store.get(session_id)
-        original_last_accessed = session1.last_accessed
+            # Get original last_accessed time
+            session1 = await store.get(session_id)
+            original_last_accessed = session1.last_accessed
 
-        # Wait a bit to ensure timestamp difference
-        await asyncio.sleep(0.01)
+            # Advance time to ensure timestamp difference (instant, no actual sleep)
+            frozen_time.tick(delta=timedelta(milliseconds=10))
 
-        # Access session (should update last_accessed due to sliding window)
-        session2 = await store.get(session_id)
+            # Access session (should update last_accessed due to sliding window)
+            session2 = await store.get(session_id)
 
-        # last_accessed should be updated (timestamp is ISO string, so lexicographic comparison works)
-        assert session2.last_accessed >= original_last_accessed
+            # last_accessed should be updated (timestamp is ISO string, so lexicographic comparison works)
+            assert session2.last_accessed >= original_last_accessed
 
     @pytest.mark.asyncio
     @pytest.mark.unit
     async def test_sliding_window_disabled(self):
         """Test that sliding window can be disabled"""
-        store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=False)
+        with freeze_time("2024-01-01 12:00:00") as frozen_time:
+            store = InMemorySessionStore(default_ttl_seconds=2, sliding_window=False)
 
-        session_id = await store.create(user_id="user:liam", username="liam", roles=["user"])
+            session_id = await store.create(user_id="user:liam", username="liam", roles=["user"])
 
-        # Get original last_accessed
-        session1 = await store.get(session_id)
-        original_last_accessed = session1.last_accessed
+            # Get original last_accessed
+            session1 = await store.get(session_id)
+            original_last_accessed = session1.last_accessed
 
-        # Wait a bit
-        await asyncio.sleep(0.5)
+            # Advance time (instant, no actual sleep)
+            frozen_time.tick(delta=timedelta(milliseconds=500))
 
-        # Access session (should NOT update last_accessed since sliding_window=False)
-        session2 = await store.get(session_id)
+            # Access session (should NOT update last_accessed since sliding_window=False)
+            session2 = await store.get(session_id)
 
-        # last_accessed should be same
-        assert session2.last_accessed == original_last_accessed
+            # last_accessed should be same
+            assert session2.last_accessed == original_last_accessed
 
     @pytest.mark.asyncio
     @pytest.mark.unit
     async def test_custom_ttl_per_session(self, store):
         """Test creating sessions with custom TTL"""
-        # Short TTL session
-        session_id1 = await store.create(user_id="user:mike", username="mike", roles=["user"], ttl_seconds=1)
+        with freeze_time("2024-01-01 12:00:00") as frozen_time:
+            # Short TTL session
+            session_id1 = await store.create(user_id="user:mike", username="mike", roles=["user"], ttl_seconds=1)
 
-        # Long TTL session
-        session_id2 = await store.create(user_id="user:nina", username="nina", roles=["user"], ttl_seconds=3600)
+            # Long TTL session
+            session_id2 = await store.create(user_id="user:nina", username="nina", roles=["user"], ttl_seconds=3600)
 
-        # Wait for first to expire (1s TTL + small buffer)
-        await asyncio.sleep(1.05)
+            # Advance time past first session's expiration (instant, no actual sleep)
+            frozen_time.tick(delta=timedelta(seconds=1.05))
 
-        # First should be expired
-        assert await store.get(session_id1) is None
+            # First should be expired
+            assert await store.get(session_id1) is None
 
-        # Second should still exist
-        assert await store.get(session_id2) is not None
+            # Second should still exist
+            assert await store.get(session_id2) is not None
 
 
 # ============================================================================

@@ -112,39 +112,39 @@ class StorageProvider(Protocol):
 class NoOpLogger:
     """No-op logger that doesn't output anything"""
 
-    def info(self, msg: str, *args, **kwargs) -> None:
+    def info(self, msg: str, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def debug(self, msg: str, *args, **kwargs) -> None:
+    def debug(self, msg: str, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def warning(self, msg: str, *args, **kwargs) -> None:
+    def warning(self, msg: str, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def error(self, msg: str, *args, **kwargs) -> None:
+    def error(self, msg: str, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def critical(self, msg: str, *args, **kwargs) -> None:
+    def critical(self, msg: str, *args: Any, **kwargs: Any) -> None:
         pass
 
 
 class NoOpMetrics:
     """No-op metrics that doesn't collect anything"""
 
-    def counter(self, name: str, value: int = 1, **kwargs) -> None:
+    def counter(self, name: str, value: int = 1, **kwargs: Any) -> None:
         pass
 
-    def gauge(self, name: str, value: float, **kwargs) -> None:
+    def gauge(self, name: str, value: float, **kwargs: Any) -> None:
         pass
 
-    def histogram(self, name: str, value: float, **kwargs) -> None:
+    def histogram(self, name: str, value: float, **kwargs: Any) -> None:
         pass
 
 
 class NoOpTracer:
     """No-op tracer that doesn't trace anything"""
 
-    def start_as_current_span(self, name: str, **kwargs) -> Any:
+    def start_as_current_span(self, name: str, **kwargs: Any) -> Any:
         """Context manager that does nothing"""
         from contextlib import nullcontext
 
@@ -248,7 +248,7 @@ class InMemoryAuthProvider:
     def __init__(self) -> None:
         self._tokens: Dict[str, Dict[str, Any]] = {}
 
-    def create_token(self, user_id: str, username: str, **kwargs) -> str:
+    def create_token(self, user_id: str, username: str, **kwargs: Any) -> str:
         """Create a simple token (NOT cryptographically secure - dev only!)"""
         import secrets
 

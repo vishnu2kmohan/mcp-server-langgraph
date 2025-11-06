@@ -6,7 +6,7 @@ Immutable configuration with validation and preset profiles.
 """
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 
 class ResourceLimitError(Exception):
@@ -109,7 +109,7 @@ class ResourceLimits:
         # Note: allowlist with empty domains is allowed (effectively blocks all network)
         # This allows configuring the profile first, then adding domains later
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert resource limits to dictionary"""
         return {
             "timeout_seconds": self.timeout_seconds,
@@ -122,7 +122,7 @@ class ResourceLimits:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ResourceLimits":
+    def from_dict(cls, data: dict[str, Any]) -> "ResourceLimits":
         """Create resource limits from dictionary"""
         # Convert allowed_domains list to tuple for immutability
         if "allowed_domains" in data and isinstance(data["allowed_domains"], list):

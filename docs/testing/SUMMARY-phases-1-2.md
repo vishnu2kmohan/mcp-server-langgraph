@@ -488,4 +488,4 @@ Successfully completed comprehensive test infrastructure improvements that addre
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Claude `<noreply@anthropic.com>`

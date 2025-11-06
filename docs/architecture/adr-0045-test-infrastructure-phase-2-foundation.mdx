@@ -81,7 +81,7 @@ async def postgres_connection_clean(postgres_connection_real):
 - Reuse expensive session-scoped connections (Docker containers)
 - Add cheap per-test cleanup (drop tables, flush Redis, delete tuples)
 - Graceful degradation: If cleanup fails, don't fail the test
-- Performance: Cleanup adds <100ms per test
+- Performance: Cleanup adds `<100ms` per test
 
 ### Phase 2.2: Real Client Implementations (In Progress)
 
@@ -230,7 +230,7 @@ async def openfga_client_clean(openfga_client_real):
 
 **Startup Time**:
 - Docker Compose startup: ~2 minutes (session-scoped, one-time)
-- Per-test overhead: <100ms (cleanup only)
+- Per-test overhead: `<100ms` (cleanup only)
 - Parallel test execution: Supported (per-test isolation)
 
 **Cleanup Performance**:
@@ -333,8 +333,8 @@ jobs:
 - Add database migrations for persistent storage
 
 ### Phase 4: Infrastructure Optimizations
-- Optimize docker-compose.test.yml startup (target: <2min)
-- Optimize CI/CD E2E test execution (target: <15min)
+- Optimize docker-compose.test.yml startup (target: `<2min`)
+- Optimize CI/CD E2E test execution (target: `<15min`)
 - Update performance baselines with real infrastructure
 
 ### Phase 5: Advanced Testing
@@ -360,7 +360,7 @@ jobs:
 
 ### After Phase 2.1 (Cleanup Fixtures)
 - **Test Isolation**: ✅ Complete (per-test cleanup)
-- **Cleanup Overhead**: <100ms per test
+- **Cleanup Overhead**: `<100ms` per test
 - **False Positives**: Reduced (real services catch errors)
 - **Security Validation**: Improved (real authorization checks)
 

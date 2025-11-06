@@ -141,11 +141,11 @@ def escalate(state: SupportState) -> SupportState:
 
 def route(state: SupportState) -> str:
     \"\"\"Route to appropriate handler.\"\"\"
-    intent_map = {
+    intent_map = {{
         "faq": "handle_faq",
         "technical": "handle_technical",
         "billing": "escalate",
-    }
+    }}
     return intent_map.get(state["intent"], "handle_faq")
 
 

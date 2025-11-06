@@ -22,6 +22,7 @@ validate_checkpoint_config(settings)
 ```
 """
 
+from typing import Any
 from urllib.parse import unquote
 
 from mcp_server_langgraph.observability.telemetry import logger
@@ -281,7 +282,7 @@ class CheckpointConfigValidator:
             )
 
 
-def validate_checkpoint_config(settings) -> None:
+def validate_checkpoint_config(settings: Any) -> None:
     """Validate checkpoint configuration at application startup.
 
     This function should be called during application initialization to

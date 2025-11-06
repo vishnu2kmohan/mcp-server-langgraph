@@ -320,7 +320,7 @@ class DockerSandbox(Sandbox):
         except Exception as e:
             logger.warning(f"Error during container cleanup: {e}")
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup on garbage collection"""
         try:
             if hasattr(self, "client"):
