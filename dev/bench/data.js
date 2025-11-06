@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762440636859,
+  "lastUpdate": 1762441007104,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -32030,6 +32030,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000406392836716369",
             "extra": "mean: 59.38335634228674 usec\nrounds: 3926"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "fc14aac401b69792707c9d835959a6c85c9fe606",
+          "message": "fix(infra): add GKE Dataplane V2 DNS egress for MCP Server pods\n\n## Problem Statement\n\nMCP Server pods stuck in Init:0/3 state because init containers could not\nresolve service names (staging-openfga, staging-keycloak, staging-redis-session).\nDNS queries resulted in \"connection timed out; no servers could be reached\" errors.\n\n## Root Cause\n\nThe `allow-egress` network policy for mcp-server-langgraph pods only allowed\nDNS queries to kube-system namespace, but did NOT allow queries to GKE Dataplane\nV2 DNS server (169.254.20.10) which is used in GKE clusters.\n\nThis is the same DNS egress restriction issue that was fixed for keycloak and\nopenfga pods in commit d2dcc83.\n\n## Changes Implemented\n\n### Network Policy Update (allow-egress for mcp-server-langgraph)\n\nAdded DNS egress rule for GKE Dataplane V2:\n\n```yaml\n# Allow DNS to GKE Dataplane V2 DNS server (entire link-local DNS range)\n- to:\n  - ipBlock:\n      cidr: 169.254.0.0/16\n  ports:\n  - protocol: UDP\n    port: 53\n```\n\n## Validation\n\n### Pre-Fix State\n```\nInit Container Logs:\nnc: bad address 'staging-openfga'\nWaiting for OpenFGA...\n\nDNS Test:\n$ nslookup staging-openfga\n;; connection timed out; no servers could be reached\n\nPod Status:\nstaging-mcp-server-langgraph: 4/4 pods stuck in Init:0/3\n```\n\n### Post-Fix State\n```\nPod Status:\nstaging-mcp-server-langgraph: 4/4 pods progressed to Init:1/3 ✅\n\nFirst init container (wait-for-openfga) successfully completed ✅\nDNS resolution working for service discovery ✅\n```\n\n## Impact\n\n- MCP Server pods can now resolve Kubernetes service names via DNS\n- Init containers progressed from Init:0/3 to Init:1/3\n- Service discovery operational for staging-openfga, staging-keycloak, staging-redis-session\n\n## Remaining Work\n\nInit containers are now waiting for Keycloak service endpoints. Keycloak pods\nare 1/2 ready (keycloak container ready, cloud-sql-proxy health probes failing),\nwhich means the service has no healthy endpoints yet. This is a separate issue\nrelated to Cloud SQL proxy readiness probe configuration.\n\n## Testing\n\n```bash\n# Verify network policy applied\nkubectl get networkpolicy allow-egress -n staging-mcp-server-langgraph -o jsonpath='{.spec.egress[1]}'\n\n# Should show:\n# {\"ports\":[{\"port\":53,\"protocol\":\"UDP\"}],\"to\":[{\"ipBlock\":{\"cidr\":\"169.254.0.0/16\"}}]}\n\n# Test DNS from init container\nkubectl exec <pod-name> -c wait-for-openfga -n staging-mcp-server-langgraph -- nslookup staging-openfga\n# Should resolve successfully\n```\n\n## Related Issues\n\n- Fixes same DNS egress issue as commit d2dcc83 (keycloak/openfga)\n- Part of comprehensive GKE Dataplane V2 DNS support across all pods\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T09:55:35-05:00",
+          "tree_id": "17e4f4c1c9dbc01b3c465516f8ed7cb98f515871",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/fc14aac401b69792707c9d835959a6c85c9fe606"
+        },
+        "date": 1762441005716,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.5853217612271,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009547113600870839",
+            "extra": "mean: 6.916331393939369 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.1588990701025,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013632885137140915",
+            "extra": "mean: 6.659611959016458 msec\nrounds: 122"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44523.63715374122,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.459979999993607 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48269.2575030716,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.717119999957845 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46707.320718596966,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.40992000001063 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.84962612138477,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.239727319999972 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.3873449142908,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.58003864999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.95113925347073,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.49100655999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1480691.7794431092,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 675.3599998887694 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5121.840387880738,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 195.24232000009079 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2959.4058010321937,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.9056700001115 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2880.2101309145437,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 347.1968899999922 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59857.481468205944,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021730382307858418",
+            "extra": "mean: 16.706349406484176 usec\nrounds: 13646"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17282.33383657722,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018324025419044612",
+            "extra": "mean: 57.86255545437669 usec\nrounds: 5491"
           }
         ]
       }
