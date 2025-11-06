@@ -23,12 +23,17 @@ from setuptools import find_packages, setup  # noqa: H301
 NAME = "mcp-client"
 VERSION = "2.8.0"
 PYTHON_REQUIRES = ">= 3.9"
-REQUIRES = [
-    "urllib3 >= 2.1.0, < 3.0.0",
-    "python-dateutil >= 2.8.2",
-    "pydantic >= 2",
-    "typing-extensions >= 4.7.1",
-]
+# Dependencies are defined in pyproject.toml (UV-native)
+# This setup.py reads from pyproject.toml instead of hardcoding dependencies
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
+# Read dependencies from pyproject.toml (single source of truth)
+with open("pyproject.toml", "rb") as f:
+    pyproject_data = tomllib.load(f)
+    REQUIRES = pyproject_data["project"]["dependencies"]
 
 setup(
     name=NAME,
