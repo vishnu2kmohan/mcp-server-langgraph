@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762460923778,
+  "lastUpdate": 1762461208727,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -34348,6 +34348,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000186235920508013",
             "extra": "mean: 59.80104304033275 usec\nrounds: 4763"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b223b971bc27270d16f8dbc9b9f2c495e8c320b1",
+          "message": "feat(test): Phase 2 - Real infrastructure foundation for E2E tests\n\nEstablishes foundation for migrating 178 E2E tests from mocks to real\ninfrastructure with proper test isolation and performance.\n\n## Phase 2.1: Per-Test Cleanup Fixtures\n\nImplemented function-scoped cleanup fixtures to ensure test isolation\nwithout restarting expensive Docker infrastructure.\n\n### Fixtures Created\n\n1. **postgres_connection_clean**\n   - Drops all test_* tables after each test\n   - Reuses session-scoped connection (fast)\n   - Cleanup time: ~10-50ms\n\n2. **redis_client_clean**\n   - Flushes database after each test\n   - O(N) operation but typically <1ms\n   - Prevents key pollution between tests\n\n3. **openfga_client_clean**\n   - Tracks and deletes tuples written during test\n   - Automatic cleanup of authorization data\n   - Prevents authorization pollution\n\n### TDD Implementation\n\n**RED Phase**:\n- Created tests/integration/test_fixture_cleanup.py\n- Tests demonstrate pollution without cleanup\n- Verified tests fail without fixtures\n\n**GREEN Phase**:\n- Implemented cleanup logic in tests/conftest.py\n- Tests now pass with proper isolation\n\n**REFACTOR Phase**:\n- Optimized cleanup performance (<100ms overhead)\n- Added graceful error handling\n- Comprehensive documentation\n\nFiles:\n- tests/conftest.py:617-724 (3 cleanup fixtures)\n- tests/integration/test_fixture_cleanup.py (TDD validation)\n- tests/integration/__init__.py (package marker)\n\n## Phase 2.2: Real Client Implementations\n\nReplaced E2E test mocks with real HTTP clients connecting to actual\ntest infrastructure (Keycloak, MCP server).\n\n### Real Clients Implemented\n\n1. **RealKeycloakAuth**\n   - Connects to Keycloak on port 9082\n   - Password grant flow authentication\n   - Real JWT token generation\n   - Methods: login(), refresh(), logout(), introspect()\n\n2. **RealMCPClient**\n   - Connects to MCP server\n   - Real HTTP/SSE transport\n   - Full MCP protocol support\n   - Methods: initialize(), list_tools(), call_tool(), create_conversation()\n\n### Migration Strategy\n\nMaintains backwards compatibility via aliases:\n```python\n# Old (mocks - still works)\nfrom tests.e2e.helpers import mock_keycloak_auth\n\n# New (real - preferred)\nfrom tests.e2e.real_clients import real_keycloak_auth\n```\n\nThis allows gradual migration of 178 E2E tests:\n- No breaking changes\n- Tests can migrate incrementally\n- Clear upgrade path documented\n\nFiles:\n- tests/e2e/real_clients.py (new, 280 lines)\n- tests/e2e/helpers.py (updated documentation)\n\n## Documentation\n\nCreated comprehensive documentation:\n\n1. **ADR-0045**: Test Infrastructure Phase 2 Foundation\n   - Per-test cleanup design rationale\n   - Real client implementation details\n   - Performance considerations\n   - Migration guidance\n\n2. **TEST_INFRASTRUCTURE_REMEDIATION_SUMMARY.md**\n   - Comprehensive summary of Phases 1 & 2\n   - Metrics and validation results\n   - TDD methodology examples\n   - Future work roadmap\n\nFiles:\n- adr/adr-0045-test-infrastructure-phase-2-foundation.md\n- TEST_INFRASTRUCTURE_REMEDIATION_SUMMARY.md\n\n## Benefits\n\n### Test Isolation\n✅ Tests no longer pollute each other\n✅ Deterministic test outcomes\n✅ Safe parallel execution\n\n### E2E Foundation\n✅ Real Keycloak authentication\n✅ Real MCP protocol communication\n✅ 178 tests ready for migration\n\n### Performance\n✅ Cleanup overhead <100ms per test\n✅ Session-scoped infrastructure reused\n✅ No unnecessary restarts\n\n## Validation\n\nAll changes follow strict TDD:\n- RED: Tests created that fail without implementation\n- GREEN: Implementation fixes the tests\n- REFACTOR: Code optimized and documented\n\n## Breaking Changes\n\nNone. All changes are backwards compatible via aliases.\n\n## Cumulative Impact (Phases 1 + 2)\n\nSecurity:\n- 3 OpenFGA tests enabled (CWE-269 prevention)\n- Real authorization checks in all security tests\n\nPerformance:\n- Benchmarks 30-50% faster (event loop optimization)\n- Test isolation with minimal overhead (<100ms)\n\nArchitecture:\n- Single telemetry initialization path\n- Per-test cleanup ensures reliability\n- Real infrastructure clients ready\n\n## Next Steps\n\nPhase 3: Storage backend tests (PostgreSQL, Redis)\nPhase 4: Infrastructure optimizations\nPhase 5: Final validation and documentation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T15:32:06-05:00",
+          "tree_id": "30555740fccdd6253d15c3f53b5f725e2d1e6e7b",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b223b971bc27270d16f8dbc9b9f2c495e8c320b1"
+        },
+        "date": 1762461207547,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.88615394947377,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001024942816906589",
+            "extra": "mean: 6.901970773195695 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.9506768335958,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012250402045921958",
+            "extra": "mean: 6.6688595284549885 msec\nrounds: 123"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45743.708067339,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.860929999988343 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48365.184225395205,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.676030000004175 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 36005.31150359543,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 27.77367999996727 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.3456539058633,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.145471379999975 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.447893888211542,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.41944962000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.973532332649475,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.26537906999991 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1447408.415378594,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 690.8899999302776 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12189.358762936567,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 82.03876999999693 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3026.031649084044,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 330.4658099999358 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2961.8327275933952,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 337.62879000008184 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59938.790950687646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002440618577798054",
+            "extra": "mean: 16.68368654320558 usec\nrounds: 13718"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16254.718396422362,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000238085691902945",
+            "extra": "mean: 61.52059824180642 usec\nrounds: 4209"
           }
         ]
       }
