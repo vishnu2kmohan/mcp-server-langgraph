@@ -19,7 +19,7 @@ spec:
   clusterIP: None  # Headless service - uses manual Endpoints
   selector: null   # No selector - endpoints are manually defined
   ports:
-  - name: redis
+  - name: memorystore-redis
     port: 6378          # Memorystore Redis port (not default 6379)
     protocol: TCP
     targetPort: 6378
