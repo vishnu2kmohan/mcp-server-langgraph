@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762461208727,
+  "lastUpdate": 1762466418288,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -34470,6 +34470,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000238085691902945",
             "extra": "mean: 61.52059824180642 usec\nrounds: 4209"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "161459e383525e726c64663abf7fb64ed185fb4c",
+          "message": "feat(quality): Phase 1 - Code quality improvements and test infrastructure\n\nThis commit completes Phase 1 of the comprehensive remediation effort,\nfocusing on immediate quality wins and test infrastructure foundations.\n\n## Type Safety Improvements (-102 MyPy Errors: 210 → 108)\n\n### Fix Smoke Test Marker (Phase 1.1)\n- Add missing 'smoke' marker to pytest configuration in pyproject.toml\n- Fixes collection error for 11 smoke tests\n- Enables smoke test suite execution in CI/CD\n\n### Remove Unused Type Ignores (Phase 1.2)\n- Remove 79 unused type:ignore comments across 20 files\n- Reduces MyPy errors by 79 (37% reduction)\n- Files cleaned across api, monitoring, builder, mcp, tools, core, health, auth, resilience\n\n### Add Return Type Annotations (Phase 1.3)\n- Add 18 missing return type annotations\n- Reduces MyPy errors by 29 additional errors\n- Files improved: core/container.py, infrastructure, checkpoint_validator\n\n**Total MyPy Error Reduction: -102 errors (-49% reduction)**\n\n## Test Infrastructure Foundation\n\n- Enable 3 critical OpenFGA security tests (prevents CWE-269)\n- Fix event loop creation (30-50% benchmark performance improvement)\n- Per-test cleanup fixtures for postgres, redis, openfga\n- Real client implementations with backwards compatibility\n\n## Deployment Configuration TDD Infrastructure (ADR-0046)\n\n- tests/deployment/test_helm_configuration.py (492 lines, 11 tests)\n- .github/workflows/validate-deployments.yml (209 lines)\n- Prevents regression of deployment security and configuration issues\n\n## Documentation Updates\n\nNew ADRs: 0042, 0044, 0045, 0046, 0048 (renumbered 0047, 0048)\nUpdated: README.md, ROADMAP.md, SECURITY.md\n\n## Validation\n\n✅ flake8, black, isort, bandit passing\n⚠️ mypy: 108 errors (non-blocking, down from 210)\n✅ Tests passing\n\n## TDD Compliance\n\nAll changes follow RED-GREEN-REFACTOR cycle\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T16:58:02-05:00",
+          "tree_id": "37c61cce2133f5aa00455ecdf0de030e8c1c6ddc",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/161459e383525e726c64663abf7fb64ed185fb4c"
+        },
+        "date": 1762466416808,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.65340193380084,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007957827653316018",
+            "extra": "mean: 6.913076268041314 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.04767137344518,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011676985228623819",
+            "extra": "mean: 6.709262820312423 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44428.272553158065,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.508190000039008 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47051.42815202743,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.25333999998702 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45783.24836727712,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.8420499999894 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.23195614116693,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.148483389999967 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.432925137589503,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.45905687999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.972841656421414,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.27232302000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1425699.661925912,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 701.4100000901635 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13752.033238114223,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 72.71652000000017 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2951.694922258272,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.78839999999855 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2880.5151928173436,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 347.1601199998986 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59415.33660759667,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002083529104921391",
+            "extra": "mean: 16.830671289542824 usec\nrounds: 12835"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16510.901377989183,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002039719055306684",
+            "extra": "mean: 60.56604525135787 usec\nrounds: 5370"
           }
         ]
       }
