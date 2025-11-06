@@ -10,14 +10,15 @@ Tests for:
 These tests validate authentication and path traversal protections.
 """
 
+import os
+import tempfile
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-import os
-import tempfile
 
-from mcp_server_langgraph.builder.api.server import app, save_workflow, SaveWorkflowRequest
+from mcp_server_langgraph.builder.api.server import SaveWorkflowRequest, app, save_workflow
 from mcp_server_langgraph.builder.codegen.generator import CodeGenerator, WorkflowDefinition
 
 
@@ -45,7 +46,7 @@ class TestBuilderAuthentication:
             "/api/builder/save",
             json={
                 "workflow": workflow_data,
-                "output_path": "/tmp/test.py",
+                "output_path": "/tmp/test.py",  # nosec B108 - Test data,
             },
         )
 
@@ -112,7 +113,7 @@ class TestPathTraversalProtection:
         # When: Attempting to create request with malicious path
         # Then: Should be REJECTED at validation level (before reaching endpoint)
         with pytest.raises(ValidationError) as exc_info:
-            request = SaveWorkflowRequest(
+            SaveWorkflowRequest(
                 workflow=workflow_data,
                 output_path="/etc/passwd",  # Path traversal attack
             )
@@ -135,7 +136,7 @@ class TestPathTraversalProtection:
         # When: Attempting directory traversal
         # Then: Should be REJECTED at validation level
         with pytest.raises(ValidationError) as exc_info:
-            request = SaveWorkflowRequest(
+            SaveWorkflowRequest(
                 workflow=workflow_data,
                 output_path="../../../etc/passwd",  # Relative path traversal
             )
@@ -158,7 +159,7 @@ class TestPathTraversalProtection:
         # When: Attempting to overwrite app code
         # Then: Should be REJECTED at validation level
         with pytest.raises(ValidationError) as exc_info:
-            request = SaveWorkflowRequest(
+            SaveWorkflowRequest(
                 workflow=workflow_data,
                 output_path="src/mcp_server_langgraph/__init__.py",  # Application code
             )
@@ -181,7 +182,7 @@ class TestPathTraversalProtection:
         }
 
         # Use the default safe directory from environment
-        default_dir = os.getenv("BUILDER_OUTPUT_DIR", "/tmp/workflows")
+        default_dir = os.getenv("BUILDER_OUTPUT_DIR", "/tmp/workflows")  # nosec B108 - Test fixture
         os.makedirs(default_dir, exist_ok=True)
         safe_path = os.path.join(default_dir, "my_workflow.py")
 

@@ -223,14 +223,10 @@ class TestCodeExecutionSettingsIntegration:
         """Test that settings can be used to create CodeValidator"""
         from mcp_server_langgraph.execution.code_validator import CodeValidator
 
-        settings = Settings(
-            code_execution_allowed_imports=["json", "math", "pandas", "numpy"]
-        )
+        settings = Settings(code_execution_allowed_imports=["json", "math", "pandas", "numpy"])
 
         # Should be able to create CodeValidator from settings
-        validator = CodeValidator(
-            allowed_imports=settings.code_execution_allowed_imports
-        )
+        validator = CodeValidator(allowed_imports=settings.code_execution_allowed_imports)
 
         assert "json" in validator.allowed_imports
         assert "math" in validator.allowed_imports

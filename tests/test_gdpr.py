@@ -297,6 +297,7 @@ class TestGDPREndpoints:
     def test_client(self, mock_current_user):
         """FastAPI TestClient with mocked auth and GDPR dependencies"""
         from unittest.mock import AsyncMock
+
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
 
@@ -314,7 +315,7 @@ class TestGDPREndpoints:
         mock_session_store.get_user_profile.return_value = {
             "user_id": mock_current_user["user_id"],
             "username": mock_current_user["username"],
-            "email": mock_current_user["email"]
+            "email": mock_current_user["email"],
         }
         mock_session_store.get_user_preferences.return_value = {"theme": "light", "language": "en"}
 
@@ -451,10 +452,7 @@ class TestGDPREndpoints:
 
     def test_update_user_profile(self, test_client, mock_current_user):
         """Test PATCH /api/v1/users/me - GDPR Article 16 (Right to Rectification)"""
-        update_data = {
-            "name": "Alice Updated",
-            "preferences": {"theme": "dark", "language": "en"}
-        }
+        update_data = {"name": "Alice Updated", "preferences": {"theme": "dark", "language": "en"}}
 
         response = test_client.patch("/api/v1/users/me", json=update_data)
 
@@ -509,10 +507,7 @@ class TestGDPREndpoints:
 
     def test_update_consent(self, test_client, mock_current_user):
         """Test POST /api/v1/users/me/consent - GDPR Article 21 (Right to Object)"""
-        consent_data = {
-            "consent_type": "analytics",
-            "granted": True
-        }
+        consent_data = {"consent_type": "analytics", "granted": True}
 
         response = test_client.post("/api/v1/users/me/consent", json=consent_data)
 
@@ -526,10 +521,7 @@ class TestGDPREndpoints:
 
     def test_update_consent_revoke(self, test_client):
         """Test revoking consent"""
-        consent_data = {
-            "consent_type": "marketing",
-            "granted": False  # Revoke consent
-        }
+        consent_data = {"consent_type": "marketing", "granted": False}  # Revoke consent
 
         response = test_client.post("/api/v1/users/me/consent", json=consent_data)
 

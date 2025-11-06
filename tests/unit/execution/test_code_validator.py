@@ -14,11 +14,7 @@ from hypothesis import strategies as st
 # This import will fail initially - that's expected in TDD!
 # We'll implement the module to make tests pass
 try:
-    from mcp_server_langgraph.execution.code_validator import (
-        CodeValidationError,
-        CodeValidator,
-        ValidationResult,
-    )
+    from mcp_server_langgraph.execution.code_validator import CodeValidationError, CodeValidator, ValidationResult
 except ImportError:
     pytest.skip("CodeValidator not implemented yet", allow_module_level=True)
 
@@ -114,7 +110,7 @@ result = math.sqrt(16)
 
     def test_reject_exec_usage(self, validator):
         """Test that exec() calls are blocked"""
-        code = 'exec("print(\'hello\')")'
+        code = "exec(\"print('hello')\")"
         result = validator.validate(code)
         assert result.is_valid is False
         assert any("exec" in str(error).lower() for error in result.errors)
@@ -272,7 +268,7 @@ def dangerous_func():
 
     def test_lambda_with_eval(self, validator):
         """Test detection of eval in lambda"""
-        code = 'dangerous = lambda x: eval(x)'
+        code = "dangerous = lambda x: eval(x)"
         result = validator.validate(code)
         assert result.is_valid is False
 
@@ -284,7 +280,7 @@ def dangerous_func():
 
     def test_dict_comprehension_safe(self, validator):
         """Test that safe dict comprehensions work"""
-        code = 'mapping = {str(i): i**2 for i in range(5)}'
+        code = "mapping = {str(i): i**2 for i in range(5)}"
         result = validator.validate(code)
         assert result.is_valid is True
 
@@ -454,11 +450,7 @@ class TestValidationResult:
 
     def test_validation_result_creation(self):
         """Test creating ValidationResult"""
-        result = ValidationResult(
-            is_valid=True,
-            errors=[],
-            warnings=["Minor warning"]
-        )
+        result = ValidationResult(is_valid=True, errors=[], warnings=["Minor warning"])
         assert result.is_valid is True
         assert result.errors == []
         assert len(result.warnings) == 1

@@ -11,9 +11,9 @@ import pytest
 
 # These imports will fail initially - that's expected in TDD!
 try:
-    from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
     from mcp_server_langgraph.execution.kubernetes_sandbox import KubernetesSandbox
     from mcp_server_langgraph.execution.resource_limits import ResourceLimits
+    from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
 except ImportError:
     pytest.skip("Sandbox modules not implemented yet", allow_module_level=True)
 
@@ -23,6 +23,7 @@ def kubernetes_available():
     """Check if Kubernetes is available"""
     try:
         from kubernetes import client, config
+
         config.load_kube_config()
         v1 = client.CoreV1Api()
         v1.list_namespace()
@@ -139,6 +140,7 @@ class TestKubernetesSandboxCleanup:
     def test_job_cleanup_on_success(self, kubernetes_available):
         """Test that Jobs are cleaned up after successful execution"""
         from kubernetes import client, config
+
         config.load_kube_config()
         batch_v1 = client.BatchV1Api()
 
@@ -152,6 +154,7 @@ class TestKubernetesSandboxCleanup:
 
         # Wait for TTL controller to clean up
         import time
+
         time.sleep(5)
 
         # Job should be cleaned up (or marked for cleanup)
@@ -162,6 +165,7 @@ class TestKubernetesSandboxCleanup:
     def test_job_cleanup_on_error(self, kubernetes_available):
         """Test that Jobs are cleaned up even on error"""
         from kubernetes import client, config
+
         config.load_kube_config()
         batch_v1 = client.BatchV1Api()
 
@@ -173,6 +177,7 @@ class TestKubernetesSandboxCleanup:
 
         # Cleanup should still happen
         import time
+
         time.sleep(5)
 
         # Verify jobs are being cleaned up

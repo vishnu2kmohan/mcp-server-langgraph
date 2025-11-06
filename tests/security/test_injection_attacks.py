@@ -74,7 +74,7 @@ class TestCodeInjection:
     def test_reject_eval_injection(self, validator):
         """Test blocking eval() injection"""
         malicious_codes = [
-            "eval('__import__(\"os\").system(\"ls\")')",
+            'eval(\'__import__("os").system("ls")\')',
             "result = eval(user_input)",
             "eval(f'{variable}')",
         ]

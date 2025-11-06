@@ -24,7 +24,7 @@ import statistics
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 try:
     import requests
@@ -95,11 +95,7 @@ def load_baseline(baseline_file: Path) -> Dict:
         return {}
 
 
-def detect_regression(
-    baseline: Dict,
-    current: Dict,
-    threshold_percent: float = 50.0
-) -> Dict:
+def detect_regression(baseline: Dict, current: Dict, threshold_percent: float = 50.0) -> Dict:
     """
     Detect performance regression
 
@@ -133,11 +129,7 @@ def detect_regression(
     return {"has_regression": False}
 
 
-def detect_all_regressions(
-    baseline: Dict,
-    current: Dict,
-    threshold_percent: float = 50.0
-) -> List[Dict]:
+def detect_all_regressions(baseline: Dict, current: Dict, threshold_percent: float = 50.0) -> List[Dict]:
     """Detect all performance regressions across all metrics"""
     regressions = []
 
@@ -152,13 +144,15 @@ def detect_all_regressions(
             degradation = ((current_value - baseline_value) / baseline_value) * 100
 
             if degradation > threshold_percent:
-                regressions.append({
-                    "has_regression": True,
-                    "metric": metric,
-                    "baseline": baseline_value,
-                    "current": current_value,
-                    "degradation_percent": degradation,
-                })
+                regressions.append(
+                    {
+                        "has_regression": True,
+                        "metric": metric,
+                        "baseline": baseline_value,
+                        "current": current_value,
+                        "degradation_percent": degradation,
+                    }
+                )
 
     return regressions
 
@@ -190,7 +184,7 @@ def run_benchmark(endpoint: str, base_url: str) -> Dict:
     return {
         "endpoint": endpoint,
         "response_time_ms": statistics.median(response_times),
-        "status_code": response.status_code if 'response' in locals() else 0,
+        "status_code": response.status_code if "response" in locals() else 0,
     }
 
 
@@ -311,11 +305,7 @@ _This issue was automatically created by the performance regression detection wo
     return body
 
 
-def should_update_baseline(
-    baseline: Dict,
-    current: Dict,
-    improvement_threshold: float = 20.0
-) -> bool:
+def should_update_baseline(baseline: Dict, current: Dict, improvement_threshold: float = 20.0) -> bool:
     """
     Determine if baseline should be updated after performance improvement
 
@@ -361,11 +351,11 @@ def main():
     parser.add_argument("--baseline", type=Path, required=True, help="Baseline metrics file")
     parser.add_argument("--current", type=Path, help="Current metrics file")
     parser.add_argument("--benchmark-url", help="URL to benchmark (if not using current file)")
-    parser.add_argument("--threshold", type=float, default=50.0,
-                        help="Regression threshold percentage (default: 50)")
+    parser.add_argument("--threshold", type=float, default=50.0, help="Regression threshold percentage (default: 50)")
     parser.add_argument("--output", type=Path, help="Output file for report")
-    parser.add_argument("--check-improvement", action="store_true",
-                        help="Check for performance improvements and suggest baseline update")
+    parser.add_argument(
+        "--check-improvement", action="store_true", help="Check for performance improvements and suggest baseline update"
+    )
 
     args = parser.parse_args()
 
@@ -380,10 +370,7 @@ def main():
         current = load_baseline(args.current)
     elif args.benchmark_url:
         print(f"Running benchmarks against {args.benchmark_url}...")
-        benchmarks = run_api_benchmarks(
-            args.benchmark_url,
-            endpoints=["/health", "/api/health"]
-        )
+        benchmarks = run_api_benchmarks(args.benchmark_url, endpoints=["/health", "/api/health"])
         current = establish_baseline(benchmarks)
     else:
         print("Error: Either --current or --benchmark-url must be specified")

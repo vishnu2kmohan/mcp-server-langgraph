@@ -103,8 +103,7 @@ class TestLangGraphPlatformDeployment:
             actual_fields = set(annotations.keys())
 
             assert expected_fields == actual_fields, (
-                f"AgentState should have fields {expected_fields}, "
-                f"but has {actual_fields}"
+                f"AgentState should have fields {expected_fields}, " f"but has {actual_fields}"
             )
         finally:
             if str(deployments_dir) in sys.path:
@@ -146,6 +145,7 @@ class TestLangGraphPlatformDeployment:
             pytest.skip("LLM_PROVIDER not configured, skipping integration test")
 
         from langchain_core.messages import HumanMessage
+
         from deployments.langgraph_platform.agent import graph
 
         initial_state = {

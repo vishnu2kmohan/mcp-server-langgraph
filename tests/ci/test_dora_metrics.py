@@ -11,10 +11,11 @@ Following TDD practices - tests written before implementation.
 """
 
 import json
-import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 
 class TestDORAMetricsCalculation:
@@ -31,6 +32,7 @@ class TestDORAMetricsCalculation:
 
         # When: calculating deployment frequency
         from scripts.ci.dora_metrics import calculate_deployment_frequency
+
         frequency = calculate_deployment_frequency(deployments, days=3)
 
         # Then: should return 1 deployment per day
@@ -45,6 +47,7 @@ class TestDORAMetricsCalculation:
         ]
 
         from scripts.ci.dora_metrics import calculate_deployment_frequency
+
         frequency = calculate_deployment_frequency(deployments, days=1)
 
         assert frequency == 3.0
@@ -60,6 +63,7 @@ class TestDORAMetricsCalculation:
 
         # When: calculating lead time
         from scripts.ci.dora_metrics import calculate_lead_time
+
         lead_time_hours = calculate_lead_time(commits, deployment)
 
         # Then: lead time should be from first commit to deployment (4 hours)
@@ -79,6 +83,7 @@ class TestDORAMetricsCalculation:
 
         # When: calculating MTTR
         from scripts.ci.dora_metrics import calculate_mttr
+
         mttr_hours = calculate_mttr(incident, recovery_deployment)
 
         # Then: MTTR should be 2.5 hours
@@ -97,6 +102,7 @@ class TestDORAMetricsCalculation:
 
         # When: calculating change failure rate
         from scripts.ci.dora_metrics import calculate_change_failure_rate
+
         failure_rate = calculate_change_failure_rate(deployments)
 
         # Then: failure rate should be 40% (2 out of 5)
@@ -110,6 +116,7 @@ class TestDORAMetricsCalculation:
         ]
 
         from scripts.ci.dora_metrics import calculate_change_failure_rate
+
         failure_rate = calculate_change_failure_rate(deployments)
 
         assert failure_rate == 0.0
@@ -126,6 +133,7 @@ class TestDORAMetricsCalculation:
 
         # When: classifying performance
         from scripts.ci.dora_metrics import classify_dora_performance
+
         classification = classify_dora_performance(metrics)
 
         # Then: should be classified as Elite
@@ -141,6 +149,7 @@ class TestDORAMetricsCalculation:
         }
 
         from scripts.ci.dora_metrics import classify_dora_performance
+
         classification = classify_dora_performance(metrics)
 
         assert classification == "High"
@@ -155,6 +164,7 @@ class TestDORAMetricsCalculation:
         }
 
         from scripts.ci.dora_metrics import classify_dora_performance
+
         classification = classify_dora_performance(metrics)
 
         assert classification == "Medium"
@@ -163,7 +173,7 @@ class TestDORAMetricsCalculation:
 class TestDORAMetricsCollection:
     """Test DORA metrics data collection from GitHub API"""
 
-    @patch('scripts.ci.dora_metrics.GitHubClient')
+    @patch("scripts.ci.dora_metrics.GitHubClient")
     def test_collect_deployment_data_from_github(self, mock_github):
         """Test collecting deployment data from GitHub deployments API"""
         # Given: mock GitHub API responses
@@ -178,6 +188,7 @@ class TestDORAMetricsCollection:
 
         # When: collecting deployment data
         from scripts.ci.dora_metrics import collect_deployment_data
+
         deployments = collect_deployment_data("owner/repo", days=30)
 
         # Then: should return parsed deployment data
@@ -185,7 +196,7 @@ class TestDORAMetricsCollection:
         assert deployments[0]["environment"] == "production"
         assert deployments[0]["status"] == "success"
 
-    @patch('scripts.ci.dora_metrics.GitHubClient')
+    @patch("scripts.ci.dora_metrics.GitHubClient")
     def test_collect_commit_data_from_github(self, mock_github):
         """Test collecting commit data from GitHub API"""
         mock_github.return_value.get_commits.return_value = [
@@ -199,6 +210,7 @@ class TestDORAMetricsCollection:
         ]
 
         from scripts.ci.dora_metrics import collect_commit_data
+
         commits = collect_commit_data("owner/repo", since="2025-01-01")
 
         assert len(commits) == 1
@@ -222,6 +234,7 @@ class TestDORAMetricsStorage:
 
         # When: saving to file
         from scripts.ci.dora_metrics import save_metrics
+
         output_file = tmp_path / "dora-metrics.json"
         save_metrics(metrics, output_file)
 
@@ -243,6 +256,7 @@ class TestDORAMetricsStorage:
 
         # When: loading historical data
         from scripts.ci.dora_metrics import load_historical_metrics
+
         history = load_historical_metrics(metrics_file)
 
         # Then: should return historical data
@@ -266,6 +280,7 @@ class TestDORAMetricsReporting:
 
         # When: generating markdown report
         from scripts.ci.dora_metrics import generate_markdown_report
+
         report = generate_markdown_report(metrics)
 
         # Then: report should contain metrics and classification
@@ -284,6 +299,7 @@ class TestDORAMetricsReporting:
 
         # When: generating chart data
         from scripts.ci.dora_metrics import generate_trend_data
+
         trend = generate_trend_data(history, "deployment_frequency_per_day")
 
         # Then: should return time series data

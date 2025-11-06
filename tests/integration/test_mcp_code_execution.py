@@ -5,8 +5,9 @@ Tests execute_python and search_tools integration with MCP server.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # These imports should work since MCP servers exist
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer

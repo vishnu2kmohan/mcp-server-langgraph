@@ -694,7 +694,7 @@ class TestAuthFallbackWithExternalProviders:
             username="keycloak_admin",
             email="admin@keycloak.com",
             roles=["admin", "user"],
-            active=True
+            active=True,
         )
         mock_keycloak.get_user_by_username.return_value = admin_user
 
@@ -702,11 +702,7 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(user_provider=mock_keycloak)
 
         # Test: Admin should have access to everything
-        result = await auth.authorize(
-            user_id="user:keycloak_admin",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:keycloak_admin", relation="executor", resource="tool:chat")
 
         assert result is True
         mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_admin")
@@ -727,7 +723,7 @@ class TestAuthFallbackWithExternalProviders:
             username="keycloak_alice",
             email="alice@keycloak.com",
             roles=["user", "premium"],
-            active=True
+            active=True,
         )
         mock_keycloak.get_user_by_username.return_value = premium_user
 
@@ -735,11 +731,7 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(user_provider=mock_keycloak)
 
         # Test: Premium user should have executor access to tools
-        result = await auth.authorize(
-            user_id="user:keycloak_alice",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:keycloak_alice", relation="executor", resource="tool:chat")
 
         assert result is True
         mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_alice")
@@ -756,7 +748,7 @@ class TestAuthFallbackWithExternalProviders:
             username="keycloak_bob",
             email="bob@keycloak.com",
             roles=["user"],  # Standard user role
-            active=True
+            active=True,
         )
         mock_keycloak.get_user_by_username.return_value = standard_user
 
@@ -764,11 +756,7 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(user_provider=mock_keycloak)
 
         # Test: Standard user should have executor access to tools
-        result = await auth.authorize(
-            user_id="user:keycloak_bob",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:keycloak_bob", relation="executor", resource="tool:chat")
 
         assert result is True
 
@@ -789,11 +777,7 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(user_provider=mock_keycloak)
 
         # Test: Non-existent user should be denied
-        result = await auth.authorize(
-            user_id="user:nonexistent",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:nonexistent", relation="executor", resource="tool:chat")
 
         assert result is False
         mock_keycloak.get_user_by_username.assert_called_once_with("nonexistent")
@@ -815,11 +799,7 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(user_provider=mock_keycloak)
 
         # Test: Provider error should deny access (fail closed)
-        result = await auth.authorize(
-            user_id="user:alice",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
 
         assert result is False
 
@@ -835,11 +815,7 @@ class TestAuthFallbackWithExternalProviders:
 
         # Mock get_user_by_username to return user
         user = UserData(
-            user_id="user:keycloak_alice",
-            username="keycloak_alice",
-            email="alice@keycloak.com",
-            roles=["user"],
-            active=True
+            user_id="user:keycloak_alice", username="keycloak_alice", email="alice@keycloak.com", roles=["user"], active=True
         )
         mock_keycloak.get_user_by_username.return_value = user
 
@@ -848,25 +824,17 @@ class TestAuthFallbackWithExternalProviders:
 
         # Test 1: User can access their own conversation
         result = await auth.authorize(
-            user_id="user:keycloak_alice",
-            relation="viewer",
-            resource="conversation:keycloak_alice_thread1"
+            user_id="user:keycloak_alice", relation="viewer", resource="conversation:keycloak_alice_thread1"
         )
         assert result is True
 
         # Test 2: User can access default conversation
-        result = await auth.authorize(
-            user_id="user:keycloak_alice",
-            relation="viewer",
-            resource="conversation:default"
-        )
+        result = await auth.authorize(user_id="user:keycloak_alice", relation="viewer", resource="conversation:default")
         assert result is True
 
         # Test 3: User CANNOT access another user's conversation
         result = await auth.authorize(
-            user_id="user:keycloak_alice",
-            relation="viewer",
-            resource="conversation:keycloak_bob_private"
+            user_id="user:keycloak_alice", relation="viewer", resource="conversation:keycloak_bob_private"
         )
         assert result is False
 
@@ -882,7 +850,7 @@ class TestAuthFallbackWithExternalProviders:
             username="keycloak_limited",
             email="limited@keycloak.com",
             roles=["viewer"],  # Only viewer role, no user/premium
-            active=True
+            active=True,
         )
         mock_keycloak.get_user_by_username.return_value = limited_user
 
@@ -890,11 +858,7 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(user_provider=mock_keycloak)
 
         # Test: User without user/premium role should be denied executor access
-        result = await auth.authorize(
-            user_id="user:keycloak_limited",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:keycloak_limited", relation="executor", resource="tool:chat")
 
         assert result is False
 
@@ -909,27 +873,15 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(secret_key="test-secret")
 
         # Test: InMemory admin user should have access
-        result = await auth.authorize(
-            user_id="user:admin",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:admin", relation="executor", resource="tool:chat")
         assert result is True
 
         # Test: InMemory premium user should have access
-        result = await auth.authorize(
-            user_id="user:alice",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
         assert result is True
 
         # Test: InMemory unknown user should be denied
-        result = await auth.authorize(
-            user_id="user:unknown",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:unknown", relation="executor", resource="tool:chat")
         assert result is False
 
     @pytest.mark.asyncio
@@ -942,11 +894,7 @@ class TestAuthFallbackWithExternalProviders:
         # Mock Keycloak provider
         mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
         mock_keycloak.get_user_by_username.return_value = UserData(
-            user_id="user:alice",
-            username="alice",
-            email="alice@keycloak.com",
-            roles=["user"],
-            active=True
+            user_id="user:alice", username="alice", email="alice@keycloak.com", roles=["user"], active=True
         )
 
         # Mock OpenFGA client
@@ -957,11 +905,7 @@ class TestAuthFallbackWithExternalProviders:
         auth = AuthMiddleware(user_provider=mock_keycloak, openfga_client=mock_openfga)
 
         # Test: Should use OpenFGA, NOT fallback
-        result = await auth.authorize(
-            user_id="user:alice",
-            relation="executor",
-            resource="tool:chat"
-        )
+        result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
 
         # Assert: OpenFGA was called
         assert result is True

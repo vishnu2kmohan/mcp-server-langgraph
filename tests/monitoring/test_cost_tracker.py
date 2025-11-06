@@ -415,8 +415,9 @@ async def test_budget_monitor_no_alert_below_threshold(sample_budget):
 @pytest.mark.asyncio
 async def test_budget_monitor_handles_budget_exceeded():
     """Test BudgetMonitor handles budget being exceeded."""
-    from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
     from datetime import datetime, timezone
+
+    from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
     monitor = BudgetMonitor()
 
@@ -454,7 +455,7 @@ def cost_api_client():
 @pytest.mark.xfail(
     strict=True,
     reason="Cost API endpoints not implemented yet. "
-    "When cost tracking API is implemented, this test will XPASS and fail CI."
+    "When cost tracking API is implemented, this test will XPASS and fail CI.",
 )
 @pytest.mark.unit
 def test_get_cost_summary_returns_aggregated_data(cost_api_client):

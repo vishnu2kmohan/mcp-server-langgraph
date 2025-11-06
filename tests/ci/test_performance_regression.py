@@ -11,9 +11,10 @@ Following TDD practices.
 """
 
 import json
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestPerformanceBaseline:
@@ -30,6 +31,7 @@ class TestPerformanceBaseline:
 
         # When: establishing baseline
         from scripts.ci.performance_regression import establish_baseline
+
         baseline = establish_baseline(benchmarks)
 
         # Then: baseline should be median of results
@@ -50,6 +52,7 @@ class TestPerformanceBaseline:
 
         # When: loading baseline
         from scripts.ci.performance_regression import load_baseline
+
         baseline = load_baseline(baseline_file)
 
         # Then: should return baseline data
@@ -67,6 +70,7 @@ class TestRegressionDetection:
 
         # When: detecting regression
         from scripts.ci.performance_regression import detect_regression
+
         regression = detect_regression(baseline, current, threshold_percent=50)
 
         # Then: should detect regression
@@ -82,6 +86,7 @@ class TestRegressionDetection:
 
         # When: detecting regression
         from scripts.ci.performance_regression import detect_regression
+
         regression = detect_regression(baseline, current, threshold_percent=50)
 
         # Then: should not detect regression
@@ -93,6 +98,7 @@ class TestRegressionDetection:
         current = {"memory_mb": 180.0}  # 80% increase
 
         from scripts.ci.performance_regression import detect_regression
+
         regression = detect_regression(baseline, current, threshold_percent=50)
 
         assert regression["has_regression"] is True
@@ -112,6 +118,7 @@ class TestRegressionDetection:
         }
 
         from scripts.ci.performance_regression import detect_all_regressions
+
         regressions = detect_all_regressions(baseline, current, threshold_percent=50)
 
         assert len(regressions) == 2
@@ -122,7 +129,7 @@ class TestRegressionDetection:
 class TestPerformanceBenchmarking:
     """Test performance benchmarking execution"""
 
-    @patch('scripts.ci.performance_regression.run_benchmark')
+    @patch("scripts.ci.performance_regression.run_benchmark")
     def test_run_api_benchmarks(self, mock_benchmark):
         """Test running API endpoint benchmarks"""
         # Given: mock benchmark results
@@ -134,6 +141,7 @@ class TestPerformanceBenchmarking:
 
         # When: running benchmarks
         from scripts.ci.performance_regression import run_api_benchmarks
+
         results = run_api_benchmarks(base_url="http://localhost:8000", endpoints=["/api/health"])
 
         # Then: should return benchmark results
@@ -147,6 +155,7 @@ class TestPerformanceBenchmarking:
 
         # When: calculating percentiles
         from scripts.ci.performance_regression import calculate_percentiles
+
         percentiles = calculate_percentiles(measurements)
 
         # Then: should return p50, p95, p99
@@ -173,6 +182,7 @@ class TestRegressionReporting:
 
         # When: generating report
         from scripts.ci.performance_regression import generate_regression_report
+
         report = generate_regression_report(regressions)
 
         # Then: report should contain regression details
@@ -194,6 +204,7 @@ class TestRegressionReporting:
 
         # When: creating issue
         from scripts.ci.performance_regression import create_regression_issue
+
         issue_body = create_regression_issue(regression)
 
         # Then: issue body should contain details
@@ -213,6 +224,7 @@ class TestBaselineUpdate:
 
         # When: updating baseline
         from scripts.ci.performance_regression import should_update_baseline
+
         should_update = should_update_baseline(baseline, current, improvement_threshold=20)
 
         # Then: should recommend baseline update
@@ -224,6 +236,7 @@ class TestBaselineUpdate:
         current = {"response_time_ms": 48.0}  # 4% faster (minor)
 
         from scripts.ci.performance_regression import should_update_baseline
+
         should_update = should_update_baseline(baseline, current, improvement_threshold=20)
 
         assert should_update is False
@@ -239,6 +252,7 @@ class TestBaselineUpdate:
 
         # When: saving baseline
         from scripts.ci.performance_regression import save_baseline
+
         baseline_file = tmp_path / "baseline.json"
         save_baseline(baseline, baseline_file)
 

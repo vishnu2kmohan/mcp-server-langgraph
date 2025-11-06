@@ -11,10 +11,7 @@ from hypothesis import strategies as st
 
 # This import will fail initially - that's expected in TDD!
 try:
-    from mcp_server_langgraph.execution.resource_limits import (
-        ResourceLimitError,
-        ResourceLimits,
-    )
+    from mcp_server_langgraph.execution.resource_limits import ResourceLimitError, ResourceLimits
 except ImportError:
     pytest.skip("ResourceLimits not implemented yet", allow_module_level=True)
 

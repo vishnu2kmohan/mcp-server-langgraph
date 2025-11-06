@@ -7,14 +7,15 @@ OWASP A01:2021 - Broken Access Control
 These tests validate that service principals cannot be used for privilege escalation.
 """
 
-import pytest
-from fastapi import HTTPException
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from fastapi import HTTPException
+
 from mcp_server_langgraph.api.service_principals import (
-    create_service_principal,
-    associate_service_principal_with_user,
     CreateServicePrincipalRequest,
+    associate_service_principal_with_user,
+    create_service_principal,
 )
 
 

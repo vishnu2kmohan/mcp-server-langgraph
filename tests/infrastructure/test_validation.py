@@ -305,13 +305,13 @@ class TestDocumentation:
 
     def test_implementation_guide_exists(self):
         """Test implementation guide exists."""
-        assert os.path.exists("docs/kubernetes-best-practices-implementation.md") or \
-               os.path.exists("docs/kubernetes-best-practices-implementation.mdx")
+        assert os.path.exists("docs/kubernetes-best-practices-implementation.md") or os.path.exists(
+            "docs/kubernetes-best-practices-implementation.mdx"
+        )
 
     def test_implementation_summary_exists(self):
         """Test implementation summary exists."""
-        assert os.path.exists("docs/IMPLEMENTATION_SUMMARY.md") or \
-               os.path.exists("docs/execution/IMPLEMENTATION_SUMMARY.md")
+        assert os.path.exists("docs/IMPLEMENTATION_SUMMARY.md") or os.path.exists("docs/execution/IMPLEMENTATION_SUMMARY.md")
 
     def test_restore_procedure_exists(self):
         """Test restore procedure documentation exists."""

@@ -10,8 +10,9 @@ Following TDD:
 3. Verify no regressions - REFACTOR
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestAppFactory:
@@ -29,8 +30,8 @@ class TestAppFactory:
 
     def test_create_app_with_container(self):
         """Test creating app with container"""
-        from mcp_server_langgraph.infrastructure.app_factory import create_app
         from mcp_server_langgraph.core.container import create_test_container
+        from mcp_server_langgraph.infrastructure.app_factory import create_app
 
         container = create_test_container()
         app = create_app(container=container)
@@ -39,8 +40,8 @@ class TestAppFactory:
 
     def test_create_app_with_settings(self):
         """Test creating app with custom settings"""
-        from mcp_server_langgraph.infrastructure.app_factory import create_app
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.infrastructure.app_factory import create_app
 
         settings = Settings(environment="test", service_name="test-service")
         app = create_app(settings=settings)
@@ -80,8 +81,8 @@ class TestMiddlewareFactory:
 
     def test_create_rate_limit_middleware(self):
         """Test creating rate limit middleware"""
-        from mcp_server_langgraph.infrastructure.middleware import create_rate_limit_middleware
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.infrastructure.middleware import create_rate_limit_middleware
 
         # Test mode returns None (no-op)
         settings = Settings(environment="test")
@@ -93,8 +94,8 @@ class TestMiddlewareFactory:
 
     def test_create_auth_middleware(self):
         """Test creating auth middleware"""
-        from mcp_server_langgraph.infrastructure.middleware import create_auth_middleware
         from mcp_server_langgraph.core.container import create_test_container
+        from mcp_server_langgraph.infrastructure.middleware import create_auth_middleware
 
         # Test mode returns None (no-op)
         container = create_test_container()
@@ -121,8 +122,8 @@ class TestLifespanManager:
     @pytest.mark.asyncio
     async def test_lifespan_with_container(self):
         """Test lifespan with container"""
-        from mcp_server_langgraph.infrastructure.app_factory import create_lifespan
         from mcp_server_langgraph.core.container import create_test_container
+        from mcp_server_langgraph.infrastructure.app_factory import create_lifespan
 
         container = create_test_container()
         lifespan = create_lifespan(container=container)
@@ -135,8 +136,9 @@ class TestOpenAPICustomization:
 
     def test_customize_openapi_schema(self):
         """Test OpenAPI schema customization"""
-        from mcp_server_langgraph.infrastructure.app_factory import customize_openapi
         from fastapi import FastAPI
+
+        from mcp_server_langgraph.infrastructure.app_factory import customize_openapi
 
         app = FastAPI()
         customized = customize_openapi(app)
@@ -145,8 +147,9 @@ class TestOpenAPICustomization:
 
     def test_openapi_includes_version(self):
         """Test that OpenAPI schema includes version"""
-        from mcp_server_langgraph.infrastructure.app_factory import customize_openapi
         from fastapi import FastAPI
+
+        from mcp_server_langgraph.infrastructure.app_factory import customize_openapi
 
         app = FastAPI()
         schema = customize_openapi(app)

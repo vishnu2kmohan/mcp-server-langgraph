@@ -10,8 +10,9 @@ Following TDD:
 3. Verify no regressions - REFACTOR
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestAgentFactory:
@@ -19,8 +20,8 @@ class TestAgentFactory:
 
     def test_create_agent_with_container(self):
         """Test creating agent using container"""
-        from mcp_server_langgraph.core.container import create_test_container
         from mcp_server_langgraph.core.agent import create_agent
+        from mcp_server_langgraph.core.container import create_test_container
 
         container = create_test_container()
         agent = create_agent(container=container)
@@ -31,8 +32,8 @@ class TestAgentFactory:
 
     def test_create_agent_with_settings(self):
         """Test creating agent with custom settings"""
-        from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.agent import create_agent
+        from mcp_server_langgraph.core.config import Settings
 
         settings = Settings(environment="test", model_name="test-model", log_level="DEBUG")
 
@@ -52,13 +53,13 @@ class TestAgentFactory:
 
     def test_create_agent_uses_container_telemetry(self):
         """Test that agent uses container's telemetry provider"""
-        from mcp_server_langgraph.core.container import create_test_container
         from mcp_server_langgraph.core.agent import create_agent
+        from mcp_server_langgraph.core.container import create_test_container
 
         container = create_test_container()
 
         # Container should use no-op telemetry in test mode
-        telemetry = container.get_telemetry()
+        _ = container.get_telemetry()  # noqa: F841
 
         # Agent creation should not raise errors with no-op telemetry
         agent = create_agent(container=container)
@@ -71,8 +72,8 @@ class TestAgentGraphFactory:
 
     def test_create_agent_graph_with_settings(self):
         """Test creating agent graph with settings"""
-        from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.agent import create_agent_graph
+        from mcp_server_langgraph.core.config import Settings
 
         settings = Settings(environment="test")
         graph = create_agent_graph(settings=settings)
@@ -81,8 +82,8 @@ class TestAgentGraphFactory:
 
     def test_create_agent_graph_with_container(self):
         """Test creating agent graph with container"""
-        from mcp_server_langgraph.core.container import create_test_container
         from mcp_server_langgraph.core.agent import create_agent_graph
+        from mcp_server_langgraph.core.container import create_test_container
 
         container = create_test_container()
         graph = create_agent_graph(container=container)
@@ -138,11 +139,8 @@ class TestAgentStateManagement:
     def test_agent_with_redis_checkpointer(self):
         """Test agent can use Redis checkpointer from container"""
         from mcp_server_langgraph.core.agent import create_agent
-        from mcp_server_langgraph.core.container import (
-            ContainerConfig,
-            ApplicationContainer,
-        )
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.container import ApplicationContainer, ContainerConfig
 
         # Create development container with Redis storage
         config = ContainerConfig(environment="development")
@@ -160,8 +158,8 @@ class TestAgentConfiguration:
     def test_agent_uses_container_settings(self):
         """Test that agent uses settings from container"""
         from mcp_server_langgraph.core.agent import create_agent
-        from mcp_server_langgraph.core.container import create_test_container
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.container import create_test_container
 
         custom_settings = Settings(environment="test", model_name="custom-test-model", temperature=0.5)
         container = create_test_container(settings=custom_settings)
@@ -260,17 +258,14 @@ class TestSettingsInjectionRegression:
         from mcp_server_langgraph.core.config import Settings
 
         # Create settings with memory backend
-        memory_settings = Settings(
-            environment="test",
-            checkpoint_backend="memory"
-        )
+        memory_settings = Settings(environment="test", checkpoint_backend="memory")
 
         # Create agent graph with custom settings
         graph = create_agent_graph(settings=memory_settings)
 
         # Should create graph successfully with memory backend
         assert graph is not None
-        assert hasattr(graph, 'checkpointer')
+        assert hasattr(graph, "checkpointer")
 
     def test_create_agent_graph_with_disabled_verification(self):
         """
@@ -282,11 +277,7 @@ class TestSettingsInjectionRegression:
         from mcp_server_langgraph.core.config import Settings
 
         # Create settings with verification disabled
-        test_settings = Settings(
-            environment="test",
-            enable_verification=False,
-            enable_context_compaction=False
-        )
+        test_settings = Settings(environment="test", enable_verification=False, enable_context_compaction=False)
 
         # Should create graph with disabled features
         graph = create_agent_graph(settings=test_settings)
@@ -302,11 +293,7 @@ class TestSettingsInjectionRegression:
         from mcp_server_langgraph.core.config import Settings
 
         # Create settings with custom model
-        custom_settings = Settings(
-            environment="test",
-            model_name="gpt-4o-mini",
-            temperature=0.3
-        )
+        custom_settings = Settings(environment="test", model_name="gpt-4o-mini", temperature=0.3)
 
         # Should create graph with custom model settings
         # (Note: May fail if API keys not configured, but settings should be used)
@@ -328,16 +315,14 @@ class TestSettingsInjectionRegression:
         Previously, global settings object was temporarily mutated, causing race conditions.
         """
         from mcp_server_langgraph.core.agent import create_checkpointer
-        from mcp_server_langgraph.core.config import Settings, settings as global_settings
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.config import settings as global_settings
 
         # Capture original global settings values
         original_backend = global_settings.checkpoint_backend
 
         # Create checkpointer with override settings
-        override_settings = Settings(
-            environment="test",
-            checkpoint_backend="memory"
-        )
+        override_settings = Settings(environment="test", checkpoint_backend="memory")
         checkpointer = create_checkpointer(settings_override=override_settings)
 
         # Global settings should NOT be mutated
@@ -351,6 +336,7 @@ class TestSettingsInjectionRegression:
         REGRESSION TEST: Finding 4 - Race conditions from global state mutation.
         """
         import threading
+
         from mcp_server_langgraph.core.agent import create_checkpointer
         from mcp_server_langgraph.core.config import Settings
 
@@ -359,10 +345,7 @@ class TestSettingsInjectionRegression:
 
         def create_with_backend(backend_name, thread_id):
             try:
-                settings = Settings(
-                    environment="test",
-                    checkpoint_backend=backend_name
-                )
+                settings = Settings(environment="test", checkpoint_backend=backend_name)
                 checkpointer = create_checkpointer(settings_override=settings)
                 results[thread_id] = checkpointer
             except Exception as e:
@@ -395,18 +378,14 @@ class TestSettingsInjectionRegression:
         from mcp_server_langgraph.core.config import Settings
 
         # Create custom settings
-        custom_settings = Settings(
-            environment="test",
-            checkpoint_backend="memory",
-            enable_verification=False
-        )
+        custom_settings = Settings(environment="test", checkpoint_backend="memory", enable_verification=False)
 
         # Call implementation directly with custom settings
         graph = create_agent_graph_impl(settings_to_use=custom_settings)
 
         # Should create graph successfully (settings actually used)
         assert graph is not None
-        assert hasattr(graph, 'checkpointer')
+        assert hasattr(graph, "checkpointer")
 
     def test_settings_override_for_multi_tenant_scenario(self):
         """
@@ -418,18 +397,11 @@ class TestSettingsInjectionRegression:
         from mcp_server_langgraph.core.config import Settings
 
         # Tenant 1: Basic configuration
-        tenant1_settings = Settings(
-            environment="test",
-            checkpoint_backend="memory",
-            enable_verification=False
-        )
+        tenant1_settings = Settings(environment="test", checkpoint_backend="memory", enable_verification=False)
 
         # Tenant 2: Advanced configuration
         tenant2_settings = Settings(
-            environment="test",
-            checkpoint_backend="memory",
-            enable_verification=True,
-            enable_context_compaction=True
+            environment="test", checkpoint_backend="memory", enable_verification=True, enable_context_compaction=True
         )
 
         # Create separate graphs for each tenant

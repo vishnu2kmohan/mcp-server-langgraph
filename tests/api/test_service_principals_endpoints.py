@@ -666,7 +666,7 @@ class TestServicePrincipalEndpointsIntegration:
         strict=True,
         reason="E2E infrastructure fixture not yet implemented. "
         "Once test_infrastructure fixture with FastAPI app integration is ready, "
-        "this test will start passing and fail CI, requiring marker removal."
+        "this test will start passing and fail CI, requiring marker removal.",
     )
     async def test_full_service_principal_lifecycle(self):
         """

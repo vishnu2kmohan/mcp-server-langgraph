@@ -248,7 +248,9 @@ class TestListAPIKeys:
         assert data[1]["last_used"] is not None
 
         # Verify manager was called correctly
-        mock_api_key_manager.list_api_keys.assert_called_once_with("8c7b4e5d-1234-5678-abcd-ef1234567890")  # keycloak_id from fixture
+        mock_api_key_manager.list_api_keys.assert_called_once_with(
+            "8c7b4e5d-1234-5678-abcd-ef1234567890"
+        )  # keycloak_id from fixture
 
     def test_list_api_keys_empty(self, test_client, mock_api_key_manager):
         """Test listing when user has no API keys"""

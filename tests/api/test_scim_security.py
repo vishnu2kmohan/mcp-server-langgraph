@@ -7,17 +7,12 @@ OWASP A01:2021 - Broken Access Control
 These tests validate that SCIM identity management endpoints require admin authorization.
 """
 
-import pytest
-from fastapi import HTTPException
 from unittest.mock import AsyncMock, MagicMock
 
-from mcp_server_langgraph.api.scim import (
-    create_user,
-    delete_user,
-    create_group,
-    update_user,
-    replace_user,
-)
+import pytest
+from fastapi import HTTPException
+
+from mcp_server_langgraph.api.scim import create_group, create_user, delete_user, replace_user, update_user
 
 
 class TestSCIMSecurityControls:
@@ -133,13 +128,9 @@ class TestSCIMSecurityControls:
         }
 
         # Mock SCIM PATCH request
-        from mcp_server_langgraph.scim.schema import SCIMPatchRequest, SCIMPatchOperation
+        from mcp_server_langgraph.scim.schema import SCIMPatchOperation, SCIMPatchRequest
 
-        patch_request = SCIMPatchRequest(
-            Operations=[
-                SCIMPatchOperation(op="replace", path="active", value=False)
-            ]
-        )
+        patch_request = SCIMPatchRequest(Operations=[SCIMPatchOperation(op="replace", path="active", value=False)])
 
         mock_keycloak = AsyncMock()
 
