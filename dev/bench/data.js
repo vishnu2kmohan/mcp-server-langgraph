@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762438068291,
+  "lastUpdate": 1762440636859,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -31908,6 +31908,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017953472779606143",
             "extra": "mean: 58.52129948689996 usec\nrounds: 5456"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d2dcc833aca82b7739b64c3933de8e79a87a35ac",
+          "message": "fix(infra): resolve Cloud SQL Auth Proxy network policy and health endpoint issues\n\n## Problem Statement\n\nGKE staging deployment suffered complete outage due to Cloud SQL Auth Proxy\nfailures. All keycloak, openfga, and mcp-server-langgraph pods were stuck in\nCrashLoopBackOff or Init:0/3 states. Investigation validated OpenAI Codex\nfindings that identified network policy egress restrictions blocking Cloud SQL\nAuth Proxy from reaching sqladmin.googleapis.com.\n\n## Root Causes Identified\n\n### 1. Network Policy Egress Restrictions (CRITICAL)\n- **Issue**: keycloak-network-policy and openfga-network-policy restricted\n  port 443 (HTTPS) egress to ONLY 10.0.0.0/8 CIDR\n- **Impact**: Cloud SQL Auth Proxy requires HTTPS access to sqladmin.googleapis.com\n  (public Google IPs: 142.250.x.x, 142.251.x.x ranges) for instance metadata\n  and authentication, even when using private IP connectivity\n- **Evidence**: Proxy logs showed \"dial tcp: lookup sqladmin.googleapis.com: i/o timeout\"\n- **Official Docs**: https://cloud.google.com/sql/docs/postgres/sql-proxy\n  > \"You must allow all egress TCP connections on port 443. Cloud SQL\n  > Connectors call APIs through the sqladmin.googleapis.com domain name,\n  > which doesn't have a fixed IP address.\"\n\n### 2. Cloud SQL Proxy Health Endpoint Inaccessibility\n- **Issue**: Missing `--http-address=0.0.0.0` flag in proxy configuration\n- **Impact**: Health endpoints (/liveness, /readiness) listened only on localhost,\n  making them unreachable by Kubelet for health probes\n- **Evidence**: Container restarts due to failed liveness probes on port 9801\n\n### 3. GKE Dataplane V2 DNS Resolution\n- **Issue**: Network policies didn't allow DNS queries to GKE Dataplane V2 DNS\n  server (169.254.20.10)\n- **Impact**: Intermittent DNS resolution failures for sqladmin.googleapis.com\n- **Evidence**: Logs showed \"lookup sqladmin.googleapis.com on 169.254.20.10:53:\n  read udp timeout\"\n\n### 4. Incorrect Namespace Configuration\n- **Issue**: Network policy YAML used namespace: mcp-staging instead of\n  staging-mcp-server-langgraph\n- **Impact**: Policies were not being applied to the correct pods\n\n## Changes Implemented\n\n### Network Policy Updates (network-policy.yaml)\n\n#### 1. Fixed Namespace\n```yaml\n# BEFORE\nnamespace: mcp-staging\n\n# AFTER\nnamespace: staging-mcp-server-langgraph\n```\n\n#### 2. Added DNS Egress for GKE Dataplane V2\n```yaml\n# NEW: Allow DNS to GKE Dataplane V2 DNS server (entire link-local DNS range)\n- to:\n  - ipBlock:\n      cidr: 169.254.0.0/16\n  ports:\n  - protocol: UDP\n    port: 53\n```\n\n#### 3. Split Cloud SQL Egress Rules (CRITICAL FIX)\n```yaml\n# BEFORE (BLOCKING sqladmin.googleapis.com)\n- to:\n  - ipBlock:\n      cidr: 10.0.0.0/8\n  ports:\n  - protocol: TCP\n    port: 3307  # Database port\n  - protocol: TCP\n    port: 443   # Control plane - WRONG: restricted to private IPs only!\n\n# AFTER (ALLOWS sqladmin.googleapis.com)\n# Allow Cloud SQL database connection (private IP)\n- to:\n  - ipBlock:\n      cidr: 10.0.0.0/8\n  ports:\n  - protocol: TCP\n    port: 3307  # Database port\n\n# Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)\n- to:\n  - ipBlock:\n      cidr: 0.0.0.0/0\n  ports:\n  - protocol: TCP\n    port: 443  # HTTPS to sqladmin.googleapis.com\n```\n\n**Applied to BOTH**: keycloak-network-policy AND openfga-network-policy\n\n### Cloud SQL Proxy Configuration Updates\n\n#### keycloak-patch.yaml\n```yaml\n# ADDED: --http-address=0.0.0.0 flag\nargs:\n  - \"--structured-logs\"\n  - \"--port=5432\"\n  - \"--http-port=9801\"\n  - \"--http-address=0.0.0.0\"  # NEW: Makes health endpoints accessible to Kubelet\n  - \"--health-check\"\n  - \"--private-ip\"\n  - \"vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres\"\n```\n\n#### openfga-patch.yaml\n```yaml\n# ADDED: Same --http-address=0.0.0.0 flag as keycloak\n```\n\n## Validation & Testing\n\n### Pre-Fix State\n```\nstaging-keycloak:  3/3 pods in CrashLoopBackOff (0/2 containers ready)\nstaging-openfga:   3/3 pods in CrashLoopBackOff (0/2 containers ready)\nstaging-mcp-slg:   4/4 pods stuck in Init:0/3\n```\n\n### Post-Fix State\n```\nstaging-openfga:   3/3 pods Running (2/2 containers ready) ✅\nCloud SQL Proxy:   Successfully connects to sqladmin.googleapis.com ✅\nOpenFGA Migrations: Completed successfully (revision 0 → 4) ✅\nHealth Endpoints:  Accessible on 0.0.0.0:9801 ✅\n```\n\n### Evidence of Success\n```json\n// Cloud SQL Proxy logs (POST-FIX)\n{\"severity\":\"INFO\",\"message\":\"The proxy has started successfully and is ready for new connections!\"}\n{\"severity\":\"INFO\",\"message\":\"Starting health check server at 0.0.0.0:9801\"}\n{\"severity\":\"INFO\",\"message\":\"[...] Accepted connection from 127.0.0.1:5432\"}\n\n// NO MORE TIMEOUT ERRORS ✅\n```\n\n## Remaining Work (Out of Scope)\n\n1. **Keycloak Clustering**: JGroups pod-to-pod communication requires additional\n   network policy tuning for port 7800 (clustering) - marked as future work\n2. **MCP Server Init Containers**: DNS resolution issues for service discovery\n   require CoreDNS/network policy investigation - separate ticket needed\n\n## Security Considerations\n\n### Port 443 Egress to 0.0.0.0/0\n- **Risk**: Pods can potentially send HTTPS traffic to any destination\n- **Mitigation**:\n  - Workload Identity restricts GCP API access via service accounts\n  - Cloud NAT + Cloud Router with egress firewall rules provide additional control\n  - VPC Flow Logs enabled for monitoring\n- **Alternative**: Implement Private Service Connect for googleapis.com (recommended\n  for production hardening)\n\n## References\n\n- OpenAI Codex Analysis: Identified root cause correctly\n- Google Cloud SQL Proxy Docs: https://cloud.google.com/sql/docs/postgres/sql-proxy\n- GKE Network Policy Best Practices: https://cloud.google.com/kubernetes-engine/docs/how-to/network-policy\n- Cloud SQL Auth Proxy v2 Migration Guide: https://github.com/GoogleCloudPlatform/cloud-sql-proxy/blob/main/migration-guide.md\n\n## Testing Commands\n\n```bash\n# Verify network policy applied\nkubectl get networkpolicy staging-keycloak-network-policy -n staging-mcp-server-langgraph -o jsonpath='{.spec.egress[5]}'\n\n# Check Cloud SQL proxy health\nkubectl logs <keycloak-pod> -c cloud-sql-proxy -n staging-mcp-server-langgraph --tail=20\n\n# Verify OpenFGA health\nkubectl get pods -l app=openfga -n staging-mcp-server-langgraph\n```\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T09:49:20-05:00",
+          "tree_id": "ba5b8196b529edb378293e51357711899e90e4e4",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d2dcc833aca82b7739b64c3933de8e79a87a35ac"
+        },
+        "date": 1762440635514,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 134.46117536671693,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001755551388886218",
+            "extra": "mean: 7.437091021052678 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 137.13988416195826,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002881901269134517",
+            "extra": "mean: 7.2918247387392325 msec\nrounds: 111"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44250.43088858655,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.59864999999195 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47295.79214059796,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.143530000031774 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45677.49314605688,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.892620000016905 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 188.47739701496505,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.305675990000012 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.306931615596543,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.79486932000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934303216011756,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.66131245000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1421241.8811800429,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 703.6099999879752 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4747.03073227643,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 210.65800000002355 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2890.415503588205,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 345.9710199999222 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2911.9656863291293,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.4106399998882 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59447.32626579455,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002425135046264346",
+            "extra": "mean: 16.82161440749928 usec\nrounds: 11966"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16839.735265820644,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000406392836716369",
+            "extra": "mean: 59.38335634228674 usec\nrounds: 3926"
           }
         ]
       }
