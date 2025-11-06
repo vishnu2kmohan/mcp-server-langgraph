@@ -1,0 +1,123 @@
+# Staging values for mcp-server-langgraph
+# Staging environment for testing before production deployment
+
+# Image configuration
+image:
+  repository: ghcr.io/vishnu2kmohan/mcp-server-langgraph
+  tag: "latest"  # Staging uses latest for testing
+  variant: "base"
+
+# Reduced replicas for staging
+replicaCount: 2
+
+# Resource limits for staging (lower than production)
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 384Mi
+
+# Autoscaling for staging
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: 70
+
+# External Secrets configuration for staging
+externalSecrets:
+  enabled: true
+  refreshInterval: 15m  # More frequent refresh in staging for testing
+  secretStore:
+    kind: SecretStore
+    provider: gcpsm
+    projectID: YOUR_STAGING_PROJECT_ID  # Replace with actual staging project ID
+
+  secrets:
+    - name: mcp-server-langgraph-secrets
+      remoteRefs:
+        - remoteKey: staging/anthropic-api-key
+          secretKey: anthropic-api-key
+        - remoteKey: staging/jwt-secret-key
+          secretKey: jwt-secret-key
+        - remoteKey: staging/openai-api-key
+          secretKey: openai-api-key
+
+# Database configuration (staging instance)
+database:
+  host: "postgres-staging.c.PROJECT_ID.internal"  # Replace with actual Cloud SQL instance
+  port: 5432
+  name: "mcp_server_langgraph_staging"
+  existingSecret: "mcp-server-langgraph-db-secrets"
+
+# Redis configuration (staging instance)
+redis:
+  host: "redis-staging.svc.cluster.local"
+  port: 6379
+  existingSecret: "mcp-server-langgraph-redis-secrets"
+  ssl: false  # Staging may use plain text for debugging
+
+# Keycloak configuration (staging)
+keycloak:
+  serverUrl: "https://auth-staging.example.com"
+  realm: "staging"
+  clientId: "mcp-server-langgraph-staging"
+  existingSecret: "mcp-server-langgraph-keycloak-secrets"
+
+# OpenFGA configuration (staging)
+openfga:
+  apiUrl: "http://openfga-staging.svc.cluster.local:8080"
+  storeId: "staging-store-id"
+  modelId: "staging-model-id"
+
+# Monitoring (enabled for testing)
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  opentelemetry:
+    enabled: true
+    exporters:
+      - otlp
+      - prometheus
+
+# Ingress for staging
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: staging-api.mcp-server-langgraph.com  # Replace with actual staging domain
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mcp-server-langgraph-staging-tls
+      hosts:
+        - staging-api.mcp-server-langgraph.com
+
+# Service account
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: mcp-server-langgraph-staging@PROJECT_ID.iam.gserviceaccount.com
+
+# Staging-specific configuration
+env:
+  ENVIRONMENT: "staging"
+  LOG_LEVEL: "debug"  # More verbose logging in staging
+  ENABLE_DEBUG: "true"  # Enable debug features
+  GDPR_STORAGE_BACKEND: "postgres"
+  CACHE_BACKEND: "redis"
+
+# Staging-specific settings
+staging:
+  enableStrictValidation: false  # More permissive for testing
+  requireTLS: false
+  enableAuditLogging: true
+  retentionDays: 30  # Shorter retention in staging

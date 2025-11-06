@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-vars
+  namespace: production-mcp-server-langgraph
+data:
+  # GCP Project ID - set via environment variable or CI/CD
+  # This ConfigMap is used as a source for Kustomize variable substitution
+  # Usage: export GCP_PROJECT_ID=my-project && kustomize build .
+  GCP_PROJECT_ID: "PLACEHOLDER_SET_VIA_ENV"

@@ -11,6 +11,7 @@ resources:
   - network-policy.yaml
   - pod-disruption-budget.yaml
   - resource-quotas.yaml
+  - environment-vars.yaml
 
 # GCP-specific annotations
 commonAnnotations:
@@ -66,8 +67,24 @@ replicas:
 # Image configuration
 images:
   - name: mcp-server-langgraph
-    newName: us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph  # TEMPLATE: Replace PROJECT_ID
+    newName: us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/mcp-production/mcp-server-langgraph
     newTag: 2.8.0  # Updated via CI/CD
+
+# Variable replacements for environment-specific values
+# Set GCP_PROJECT_ID environment variable before running kustomize build
+# Example: export GCP_PROJECT_ID=my-gcp-project && kustomize build .
+replacements:
+  - source:
+      kind: ConfigMap
+      name: environment-vars
+      fieldPath: data.GCP_PROJECT_ID
+    targets:
+      - select:
+          kind: ConfigMap
+        fieldPaths:
+          - data.GCP_PROJECT_ID
+        options:
+          create: true
 
 # Generate ConfigMap from GCP-specific OTel config
 configMapGenerator:

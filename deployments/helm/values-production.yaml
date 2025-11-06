@@ -1,0 +1,158 @@
+# Production values for mcp-server-langgraph
+# This file references External Secrets instead of inline secrets
+
+# IMPORTANT: This values file assumes External Secrets Operator is installed
+# See: https://external-secrets.io/latest/introduction/getting-started/
+
+# Image configuration
+image:
+  repository: ghcr.io/vishnu2kmohan/mcp-server-langgraph
+  tag: "2.8.0"
+  variant: "base"  # Production uses base variant (724MB)
+
+# High availability settings
+replicaCount: 3
+
+# Resource limits for production
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Autoscaling for production workloads
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# External Secrets configuration
+# DO NOT use secrets.anthropicApiKey or secrets.jwtSecretKey in production
+# Instead, use External Secrets to inject from cloud secret managers
+
+externalSecrets:
+  enabled: true
+  refreshInterval: 1h
+  secretStore:
+    # For AWS Secrets Manager
+    # kind: SecretStore
+    # provider: aws
+    # region: us-east-1
+
+    # For GCP Secret Manager
+    # kind: SecretStore
+    # provider: gcpsm
+    # projectID: YOUR_GCP_PROJECT_ID
+
+    # For Azure Key Vault
+    # kind: SecretStore
+    # provider: azurekv
+    # vaultUrl: https://YOUR_VAULT.vault.azure.net
+
+  secrets:
+    - name: mcp-server-langgraph-secrets
+      remoteRefs:
+        # Map remote secret names to Kubernetes secret keys
+        - remoteKey: anthropic-api-key
+          secretKey: anthropic-api-key
+        - remoteKey: jwt-secret-key
+          secretKey: jwt-secret-key
+        - remoteKey: openai-api-key
+          secretKey: openai-api-key
+        - remoteKey: google-api-key
+          secretKey: google-api-key
+
+# Database configuration (use cloud-managed instances in production)
+database:
+  host: "cloud-sql-proxy"  # Or direct connection to Cloud SQL/RDS/Azure Database
+  port: 5432
+  name: "mcp_server_langgraph_production"
+  # Credentials from External Secrets
+  existingSecret: "mcp-server-langgraph-db-secrets"
+
+# Redis configuration (use cloud-managed instances in production)
+redis:
+  host: "redis-cluster.production.svc.cluster.local"
+  port: 6379
+  # Credentials from External Secrets
+  existingSecret: "mcp-server-langgraph-redis-secrets"
+  ssl: true
+
+# Keycloak configuration
+keycloak:
+  serverUrl: "https://auth.example.com"
+  realm: "production"
+  clientId: "mcp-server-langgraph"
+  # Client secret from External Secrets
+  existingSecret: "mcp-server-langgraph-keycloak-secrets"
+
+# OpenFGA configuration
+openfga:
+  apiUrl: "https://openfga.production.svc.cluster.local:8080"
+  storeId: "production-store-id"
+  modelId: "production-model-id"
+
+# Monitoring and observability
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  opentelemetry:
+    enabled: true
+    exporters:
+      - otlp
+      - prometheus
+
+# Security settings
+security:
+  podSecurityStandards: restricted
+  networkPolicies: true
+  podSecurityPolicy: true
+
+# Ingress configuration for production
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: api.mcp-server-langgraph.com  # Replace with actual domain
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mcp-server-langgraph-tls
+      hosts:
+        - api.mcp-server-langgraph.com
+
+# Service account with cloud IAM bindings
+serviceAccount:
+  create: true
+  annotations:
+    # For GKE Workload Identity
+    iam.gke.io/gcp-service-account: mcp-server-langgraph@PROJECT_ID.iam.gserviceaccount.com
+    # For AWS EKS IRSA
+    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/mcp-server-langgraph-role
+    # For Azure AKS Workload Identity
+    # azure.workload.identity/client-id: "AZURE_CLIENT_ID"
+
+# Environment-specific configuration
+env:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "info"
+  ENABLE_DEBUG: "false"
+  GDPR_STORAGE_BACKEND: "postgres"
+  CACHE_BACKEND: "redis"
+
+# Production-specific settings
+production:
+  enableStrictValidation: true
+  requireTLS: true
+  enableAuditLogging: true
+  retentionDays: 90

@@ -51,7 +51,7 @@ processors:
 exporters:
   # Cloud Trace
   googlecloud:
-    project: YOUR_PROJECT_ID  # Replace with actual project ID
+    project: $(GCP_PROJECT_ID)  # Kustomize variable substitution
     trace:
       endpoint: cloudtrace.googleapis.com:443
     metric:
@@ -63,7 +63,7 @@ exporters:
 
   # Cloud Logging
   googlecloud/logs:
-    project: YOUR_PROJECT_ID  # Replace with actual project ID
+    project: $(GCP_PROJECT_ID)  # Kustomize variable substitution
     log:
       default_log_name: mcp-server-langgraph
 
