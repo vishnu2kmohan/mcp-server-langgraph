@@ -10,6 +10,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 - [Testing Requirements](#testing-requirements)
 - [Code Style](#code-style)
 - [Commit Guidelines](#commit-guidelines)
+- [Architecture Decision Records (ADRs)](#architecture-decision-records-adrs)
 
 ---
 
@@ -381,5 +382,195 @@ Be respectful, constructive, and collaborative. We're all here to build great so
 
 ---
 
-**Last Updated**: 2025-11-02
+## Architecture Decision Records (ADRs)
+
+### What are ADRs?
+
+Architecture Decision Records (ADRs) document significant architectural decisions made in the project. They provide context, rationale, and consequences of design choices.
+
+### When to Create an ADR
+
+Create an ADR when making decisions about:
+
+- **Core Architecture**: System design, patterns, frameworks
+- **Technology Choices**: Databases, libraries, cloud services
+- **Security**: Authentication, authorization, encryption
+- **Deployment**: Infrastructure, CI/CD, monitoring
+- **Compliance**: GDPR, HIPAA, SOC 2 requirements
+
+### ADR Creation Process
+
+#### 1. Create Source ADR
+
+```bash
+# Copy template
+cp adr/adr-0000-template.md adr/adr-NNNN-your-decision.md
+
+# Edit the ADR
+vim adr/adr-NNNN-your-decision.md
+```
+
+**Template structure**:
+```markdown
+# ADR-NNNN: Title
+
+## Status
+Proposed | Accepted | Deprecated | Superseded
+
+## Context
+What is the issue we're addressing?
+
+## Decision
+What are we doing to address it?
+
+## Consequences
+What are the positive and negative effects?
+
+## Alternatives Considered
+What other options did we evaluate?
+```
+
+#### 2. Create Mintlify Documentation Version
+
+```bash
+# Copy to docs/architecture/
+cp adr/adr-NNNN-your-decision.md docs/architecture/adr-NNNN-your-decision.mdx
+
+# Add frontmatter
+```
+
+**Frontmatter example**:
+```yaml
+---
+title: 'ADR-NNNN: Your Decision Title'
+description: 'Brief description of the decision'
+icon: 'lightbulb'
+seoTitle: "ADR-NNNN: Your Decision Title"
+seoDescription: "Architecture Decision Record NNNN: Brief description"
+keywords: ["ADR", "architecture decision", "keyword1", "keyword2"]
+contentType: "explanation"
+---
+```
+
+#### 3. Update Navigation
+
+Edit `docs/docs.json` and add your ADR to the appropriate section:
+
+```json
+{
+  "group": "Architecture Decisions",
+  "pages": [
+    "architecture/adr-NNNN-your-decision"
+  ]
+}
+```
+
+#### 4. Commit Both Files
+
+**IMPORTANT**: Always commit both the source ADR and the Mintlify version together.
+
+```bash
+git add adr/adr-NNNN-your-decision.md docs/architecture/adr-NNNN-your-decision.mdx docs/docs.json
+git commit -m "docs(adr): add ADR-NNNN for [decision topic]"
+```
+
+### ADR Sync Validation
+
+The project includes an automated pre-commit hook that validates ADR synchronization:
+
+**Hook location**: `.githooks/pre-commit-adr-sync`
+
+**What it checks**:
+- ✅ Every `adr/*.md` has a matching `docs/architecture/*.mdx`
+- ✅ Every `docs/architecture/*.mdx` has a matching `adr/*.md`
+- ✅ Filenames use lowercase (`adr-NNNN-*`, not `ADR-NNNN-*`)
+- ✅ ADR numbers match between source and docs
+
+**To install the hook**:
+```bash
+ln -s ../../.githooks/pre-commit-adr-sync .git/hooks/pre-commit-adr-sync
+```
+
+### ADR Naming Conventions
+
+- **Filename**: `adr-NNNN-kebab-case-title.md`
+  - Use lowercase `adr-` prefix
+  - Four-digit zero-padded number (e.g., `0001`, `0042`)
+  - Kebab-case title (hyphens, no spaces)
+
+- **Examples**:
+  - ✅ `adr-0001-llm-multi-provider.md`
+  - ✅ `adr-0042-visual-workflow-builder.md`
+  - ❌ `ADR-0001-llm-multi-provider.md` (uppercase)
+  - ❌ `adr-1-llm-provider.md` (not zero-padded)
+
+### ADR Lifecycle
+
+1. **Proposed**: Under discussion, not yet accepted
+2. **Accepted**: Decision is final and being/has been implemented
+3. **Deprecated**: No longer recommended, but still in use
+4. **Superseded**: Replaced by a newer ADR (link to replacement)
+
+### Updating Existing ADRs
+
+**For minor updates** (typos, clarifications):
+- Update both `adr/*.md` and `docs/architecture/*.mdx`
+- Commit with message: `docs(adr): update ADR-NNNN [description]`
+
+**For major changes** (reversing decision):
+- Create a new ADR that supersedes the old one
+- Update old ADR status to "Superseded by ADR-YYYY"
+
+### Example ADR Commit Messages
+
+```bash
+# New ADR
+git commit -m "docs(adr): add ADR-0044 for GraphQL API design"
+
+# Update existing ADR
+git commit -m "docs(adr): update ADR-0042 with implementation status"
+
+# Deprecate ADR
+git commit -m "docs(adr): deprecate ADR-0010, superseded by ADR-0044"
+```
+
+### Common Issues and Solutions
+
+#### Issue: Pre-commit hook fails with "missing docs version"
+
+**Solution**:
+```bash
+# Create the missing Mintlify version
+cp adr/adr-NNNN-title.md docs/architecture/adr-NNNN-title.mdx
+# Add frontmatter to .mdx file
+git add docs/architecture/adr-NNNN-title.mdx
+```
+
+#### Issue: Pre-commit hook fails with "missing source version"
+
+**Solution**:
+```bash
+# Create the missing source ADR
+cp docs/architecture/adr-NNNN-title.mdx adr/adr-NNNN-title.md
+# Remove frontmatter from .md file
+git add adr/adr-NNNN-title.md
+```
+
+#### Issue: Pre-commit hook fails with "Uppercase filename detected"
+
+**Solution**:
+```bash
+# Rename to lowercase
+git mv adr/ADR-0041-title.md adr/adr-0041-title.md
+```
+
+### Resources
+
+- **ADR Template**: `adr/adr-0000-template.md`
+- **Existing ADRs**: `adr/` directory (source) and `docs/architecture/` (Mintlify)
+- **ADR Best Practices**: [https://github.com/joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record)
+
+---
+
+**Last Updated**: 2025-11-06
 **Maintained By**: MCP Server LangGraph Team

@@ -1,0 +1,108 @@
+#!/bin/bash
+#
+# Pre-commit hook: ADR Sync Validation
+#
+# Ensures that Architecture Decision Records (ADRs) are synchronized
+# between source (adr/*.md) and Mintlify docs (docs/architecture/*.mdx)
+#
+# Installation:
+#   ln -s ../../.githooks/pre-commit-adr-sync .git/hooks/pre-commit-adr-sync
+#   Or add to .pre-commit-config.yaml
+#
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+echo "🔍 Checking ADR synchronization..."
+
+# Check if ADR files are being committed
+adr_source_files=$(git diff --cached --name-only --diff-filter=ACM | grep "^adr/adr-.*\.md$" || true)
+adr_docs_files=$(git diff --cached --name-only --diff-filter=ACM | grep "^docs/architecture/adr-.*\.mdx$" || true)
+
+if [ -z "$adr_source_files" ] && [ -z "$adr_docs_files" ]; then
+    echo "✅ No ADR files in this commit, skipping sync check"
+    exit 0
+fi
+
+# Function to extract ADR number from filename
+get_adr_number() {
+    basename "$1" | grep -oP 'adr-\K\d+'
+}
+
+# Track issues
+issues_found=0
+
+# Check source ADRs have corresponding docs
+if [ -n "$adr_source_files" ]; then
+    echo "📝 Checking source ADRs have docs versions..."
+    for source_file in $adr_source_files; do
+        adr_num=$(get_adr_number "$source_file")
+        docs_file="docs/architecture/adr-${adr_num}-$(basename "$source_file" .md | sed "s/adr-${adr_num}-//").mdx"
+
+        if [ ! -f "$docs_file" ]; then
+            echo -e "${RED}❌ ERROR: ${source_file} missing docs version${NC}"
+            echo -e "   Expected: ${docs_file}"
+            issues_found=$((issues_found + 1))
+        else
+            echo -e "${GREEN}✓${NC} ADR-${adr_num}: Source and docs both exist"
+        fi
+    done
+fi
+
+# Check docs ADRs have corresponding source
+if [ -n "$adr_docs_files" ]; then
+    echo "📝 Checking docs ADRs have source versions..."
+    for docs_file in $adr_docs_files; do
+        adr_num=$(get_adr_number "$docs_file")
+        source_file="adr/adr-${adr_num}-$(basename "$docs_file" .mdx | sed "s/adr-${adr_num}-//").md"
+
+        if [ ! -f "$source_file" ]; then
+            echo -e "${RED}❌ ERROR: ${docs_file} missing source version${NC}"
+            echo -e "   Expected: ${source_file}"
+            issues_found=$((issues_found + 1))
+        else
+            echo -e "${GREEN}✓${NC} ADR-${adr_num}: Docs and source both exist"
+        fi
+    done
+fi
+
+# Check for filename case consistency
+echo "📝 Checking filename case consistency..."
+for adr_file in adr/adr-*.md adr/ADR-*.md 2>/dev/null; do
+    [ -f "$adr_file" ] || continue
+
+    if echo "$adr_file" | grep -q "ADR-"; then
+        echo -e "${YELLOW}⚠️  WARNING: Uppercase filename detected: ${adr_file}${NC}"
+        echo -e "   Rename to: $(echo "$adr_file" | sed 's/ADR-/adr-/')"
+        issues_found=$((issues_found + 1))
+    fi
+done
+
+# Final result
+if [ $issues_found -gt 0 ]; then
+    echo ""
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}❌ ADR sync check FAILED with ${issues_found} issue(s)${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "To fix:"
+    echo "1. Ensure every adr/*.md has a matching docs/architecture/*.mdx"
+    echo "2. Ensure every docs/architecture/*.mdx has a matching adr/*.md"
+    echo "3. Use lowercase filenames (adr-NNNN-*, not ADR-NNNN-*)"
+    echo ""
+    echo "See CONTRIBUTING.md for ADR creation process"
+    echo ""
+    exit 1
+else
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}✅ ADR sync check PASSED${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    exit 0
+fi
