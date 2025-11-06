@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762443175939,
+  "lastUpdate": 1762444618180,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -32518,6 +32518,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017578778155205498",
             "extra": "mean: 57.11667238339908 usec\nrounds: 5131"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ced78276ca3b1ea2943d74450bd23f7d914ff939",
+          "message": "refactor(deps): COMPLETE requirements.txt elimination - UV-ONLY everywhere\n\nRemoved ALL requirements.txt files from repository. 100% UV-native.\n\n## Files Removed (3 files)\n- deployments/langgraph_platform/requirements.txt (38 lines)\n- clients/python/requirements.txt (12 lines)\n- clients/python/test-requirements.txt (14 lines)\n\n## Replacements\n\n### LangGraph Platform\n- Uses ../../pyproject.toml (UV-native)\n- Created deployments/langgraph_platform/README.md\n- LangGraph Platform supports pyproject.toml natively\n- Set \"dependencies\": [\".\"] in langgraph.json\n\n### Python Client Library\n- setup.py now reads from pyproject.toml dynamically\n- Uses tomllib (Python 3.11+) or tomli fallback\n- Single source of truth: pyproject.toml\n\n## Verification\n```bash\nfind . -name \"requirements*.txt\" | grep -v .venv\n# Returns: NOTHING - All eliminated!\n```\n\n## Policy\n**ZERO requirements.txt files in this repository.**\n\nException: Temporary files from uv export in Docker builds only.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T10:55:33-05:00",
+          "tree_id": "041e17927728aed26b1756217c5a95319489b15a",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ced78276ca3b1ea2943d74450bd23f7d914ff939"
+        },
+        "date": 1762444616848,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.32378741430912,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013565916902428981",
+            "extra": "mean: 7.075949621052607 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 145.62983788388885,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001726701722981528",
+            "extra": "mean: 6.86672466666689 msec\nrounds: 120"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45476.91182668193,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.989179999977182 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46865.78062231907,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.337529999954086 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45725.63612363365,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.869569999992677 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.28379579881673,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.255308240000005 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.344879530123507,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.69326583 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.93700332601678,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.63396047999987 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1460131.1199247318,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 684.8699999295604 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5116.219269491855,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 195.45683000004033 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2991.460278344175,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.28489999991484 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2866.290911215243,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 348.88293999998155 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60236.535574865484,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019027481420470234",
+            "extra": "mean: 16.60122034669709 usec\nrounds: 11019"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17524.91586074618,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018800861740231184",
+            "extra": "mean: 57.06161489995432 usec\nrounds: 5396"
           }
         ]
       }
