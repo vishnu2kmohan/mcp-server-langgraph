@@ -7,9 +7,8 @@ Supports resource limits, network isolation, and automatic cleanup.
 
 import logging
 import time
-from typing import Optional
 
-from docker.errors import APIError, DockerException, ImageNotFound, NotFound
+from docker.errors import ImageNotFound, NotFound
 from docker.models.containers import Container
 
 import docker

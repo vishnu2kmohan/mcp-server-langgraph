@@ -12,6 +12,12 @@ spec:
       # Main container array - merge with base
       containers:
       - name: keycloak
+        # Add management port for health endpoints
+        ports:
+        - name: management
+          containerPort: 9000
+          protocol: TCP
+
         env:
         # Update database connection to use Cloud SQL via localhost
         - name: KC_DB_URL
@@ -26,6 +32,34 @@ spec:
             secretKeyRef:
               name: staging-mcp-server-langgraph-secrets
               key: keycloak-db-password
+
+        # Fix health probes to use management port (9000) instead of http port (8080)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: management
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 60
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: management
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: management
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
 
       # Cloud SQL Proxy sidecar - append to containers array
       - name: cloud-sql-proxy

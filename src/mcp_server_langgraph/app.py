@@ -16,8 +16,9 @@ Usage:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from mcp_server_langgraph.api import api_keys_router, gdpr_router, scim_router, service_principals_router
+from mcp_server_langgraph.api import api_keys_router, gdpr_router, health_router, scim_router, service_principals_router
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
+from mcp_server_langgraph.api.health import run_startup_validation
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
@@ -74,12 +75,21 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
 
     # Include API routers
+    app.include_router(health_router)  # Health check first (doesn't require auth)
     app.include_router(api_keys_router)
     app.include_router(service_principals_router)
     app.include_router(gdpr_router)
     app.include_router(scim_router)
 
     logger.info("FastAPI application created with all routers mounted")
+
+    # Run startup validation to ensure all critical systems initialized correctly
+    # This prevents the app from starting if any of the OpenAI Codex findings recur
+    try:
+        run_startup_validation()
+    except Exception as e:
+        logger.critical(f"Startup validation failed: {e}")
+        raise
 
     return app
 
