@@ -16,6 +16,8 @@ spec:
         args:
           - "--structured-logs"
           - "--port=5432"
+          - "--http-port=9801"
+          - "--health-check"
           - "--private-ip"
           - "vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres"
 

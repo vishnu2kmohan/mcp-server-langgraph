@@ -13,6 +13,7 @@ resources:
   - serviceaccount-external-secrets.yaml
   - serviceaccount-keycloak.yaml
   - serviceaccount-openfga.yaml
+  - redis-session-endpoints.yaml
 
 # GCP-specific annotations
 commonAnnotations:
@@ -82,12 +83,8 @@ patches:
       kind: Deployment
       name: redis-session
 
-  - patch: |-
-      apiVersion: v1
-      kind: Service
-      metadata:
-        name: redis-session
-      $patch: delete
+  # Replace redis-session Service with headless service pointing to Memorystore Redis
+  - path: redis-session-service-patch.yaml
     target:
       kind: Service
       name: redis-session
