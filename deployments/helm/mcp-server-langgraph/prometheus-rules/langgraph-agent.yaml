@@ -25,7 +25,7 @@ spec:
             summary: "LangGraph Agent service is down"
             description: "The LangGraph Agent service has been down for more than 2 minutes."
             runbook_url: "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/runbooks/service-down.md"
-            dashboard_url: "https://grafana.example.com/d/langgraph-agent/overview"
+            dashboard_url: "https://grafana.your-domain.com  # TODO: Replace with actual domain/d/langgraph-agent/overview"
 
         - alert: HighErrorRate
           expr: |
