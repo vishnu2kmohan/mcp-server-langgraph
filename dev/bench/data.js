@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762455642951,
+  "lastUpdate": 1762456219156,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -33738,6 +33738,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018652811421251357",
             "extra": "mean: 59.34216431744555 usec\nrounds: 5392"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6942f4306d3c918160b2077c0127df8d97871a06",
+          "message": "feat(validation): add fail-fast startup validation for Redis checkpoint URLs\n\nImplement comprehensive startup validation to prevent production incidents\nlike staging-758b8f744 where malformed Redis URLs caused runtime crashes.\n\nTDD Implementation (RED-GREEN-REFACTOR):\n- RED: Created 17 tests (all failed initially)\n- GREEN: Implemented checkpoint_validator.py (all 17 tests pass)\n- REFACTOR: Integrated into app startup with fail-fast semantics\n\nFeatures:\n- Detects unencoded special characters (/, +, =, @, etc.)\n- Validates URL format and structure\n- Provides actionable error messages with fix examples\n- References production incident in error output\n- Optional Redis connection testing\n\nTest Coverage:\n- 17/17 unit tests passing\n- 59/59 total Redis tests passing\n- Validates production incident URL caught at startup\n- Tests error message quality and formatting\n\nIntegration:\n- Runs at application startup in lifespan context\n- Application refuses to start with invalid config\n- Memory backend bypasses validation\n\nPrevention: This would have PREVENTED staging-758b8f744 by detecting\nunencoded password at startup with clear error message.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T14:08:41-05:00",
+          "tree_id": "f01bbe17e242d05cd94f87ea943cfbb016ba105d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6942f4306d3c918160b2077c0127df8d97871a06"
+        },
+        "date": 1762456217188,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 163.12342850498808,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008459937972306534",
+            "extra": "mean: 6.130327256880953 msec\nrounds: 109"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 162.06096766478512,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0009467742407596271",
+            "extra": "mean: 6.170517271428671 msec\nrounds: 140"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51700.480504202336,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.342180000023745 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52253.6748700505,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.137410000098498 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 51910.94573437058,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.263760000001184 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.4783648959294,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.222522140000052 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.549134712983513,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.15315918999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.930870675937044,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.69610537000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1164496.8208297763,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 858.7400000692469 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6329.825428475307,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 157.98224000008076 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2938.907374779529,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.2625100000023 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3182.4202089275886,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 314.22626000008336 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67069.39937332725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010037834868621896",
+            "extra": "mean: 14.909929257510077 usec\nrounds: 11662"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20821.95212456288,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020380702447306893",
+            "extra": "mean: 48.02623663803057 usec\nrounds: 4771"
           }
         ]
       }
