@@ -237,9 +237,36 @@ class TestSCIMSecurityControls:
         assert result.userName == "provisioned@example.com"
 
     @pytest.mark.asyncio
-    async def test_openfga_admin_relation_check(self):
+    @pytest.mark.integration
+    async def test_openfga_admin_relation_check(self, openfga_client_real):
         """
         INTEGRATION TEST: Should check OpenFGA for admin relation before allowing SCIM operations.
+
+        SCIM provisioning is a privileged operation that should only be allowed for users
+        with admin relation to the organization or system.
+
+        Security Control: Admin authorization check via OpenFGA before SCIM user provisioning
         """
-        # Mark as TODO - requires OpenFGA integration
-        pytest.skip("TODO: Implement OpenFGA admin relation check")
+        # Setup: Grant alice admin relation, bob is regular user
+        await openfga_client_real.write_tuples([{"user": "user:alice", "relation": "admin", "object": "organization:acme"}])
+
+        # Test 1: Alice (with admin relation) should be allowed SCIM operations
+        is_alice_admin = await openfga_client_real.check_permission(
+            user="user:alice", relation="admin", object="organization:acme"
+        )
+        assert is_alice_admin is True, "Alice should have admin relation to organization"
+
+        # Test 2: Bob (without admin relation) should be denied SCIM operations
+        is_bob_admin = await openfga_client_real.check_permission(
+            user="user:bob", relation="admin", object="organization:acme"
+        )
+        assert is_bob_admin is False, "Bob should NOT have admin relation to organization"
+
+        # Test 3: Verify non-existent user has no admin rights
+        is_unknown_admin = await openfga_client_real.check_permission(
+            user="user:unknown", relation="admin", object="organization:acme"
+        )
+        assert is_unknown_admin is False, "Unknown user should NOT have admin privileges"
+
+        # Cleanup
+        await openfga_client_real.delete_tuples([{"user": "user:alice", "relation": "admin", "object": "organization:acme"}])

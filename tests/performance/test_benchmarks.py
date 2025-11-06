@@ -149,16 +149,16 @@ class TestOpenFGABenchmarks:
         """Benchmark OpenFGA authorization check.
 
         Requirement: Authorization check p95 < 60ms, p99 < 75ms (more stable than mean < 50ms).
+
+        Note: Uses async function directly - PercentileBenchmark creates a single event loop
+        for all iterations, preventing event loop creation overhead from inflating measurements.
         """
 
         async def check_authorization():
             return await mock_openfga_client.check(user="user:test-user", relation="viewer", object="document:test-doc")
 
-        # Run benchmark with asyncio wrapper
-        def run_async_check():
-            return asyncio.run(check_authorization())
-
-        result = percentile_benchmark(run_async_check)
+        # Run benchmark directly with async function (single event loop for all iterations)
+        result = percentile_benchmark(check_authorization)
 
         assert result["allowed"] is True
 
@@ -170,6 +170,9 @@ class TestOpenFGABenchmarks:
         """Benchmark batch authorization checks.
 
         Requirement: 10 batch checks p95 < 250ms, p99 < 300ms (more stable than mean < 200ms).
+
+        Note: Uses async function directly - PercentileBenchmark creates a single event loop
+        for all iterations, providing accurate measurements without event loop overhead.
         """
 
         async def batch_check():
@@ -181,11 +184,8 @@ class TestOpenFGABenchmarks:
                 results.append(result)
             return results
 
-        # Run benchmark with asyncio wrapper
-        def run_async_batch():
-            return asyncio.run(batch_check())
-
-        results = percentile_benchmark(run_async_batch)
+        # Run benchmark directly with async function (single event loop for all iterations)
+        results = percentile_benchmark(batch_check)
 
         assert len(results) == 10
         assert all(r["allowed"] for r in results)
@@ -220,6 +220,9 @@ class TestLLMBenchmarks:
         """Benchmark single LLM request.
 
         Requirement: LLM request handling overhead p95 < 15ms, p99 < 20ms (excluding actual LLM call).
+
+        Note: Uses async function directly - PercentileBenchmark creates a single event loop
+        for all iterations, providing accurate measurements.
         """
         timer = BenchmarkTimer()
 
@@ -232,11 +235,8 @@ class TestLLMBenchmarks:
                 # Simulate post-processing
                 return response["choices"][0]["message"]["content"]
 
-        # Run benchmark with asyncio wrapper
-        def run_async_request():
-            return asyncio.run(make_request())
-
-        result = percentile_benchmark(run_async_request)
+        # Run benchmark directly with async function (single event loop for all iterations)
+        result = percentile_benchmark(make_request)
 
         assert result == "Test response"
 
@@ -284,6 +284,9 @@ class TestAgentBenchmarks:
         """Benchmark message processing throughput.
 
         Requirement: Process 100 messages p95 < 1.2s, p99 < 1.5s (more stable than mean < 1s).
+
+        Note: Uses async function directly - PercentileBenchmark creates a single event loop
+        for all iterations, providing accurate measurements.
         """
 
         async def process_messages():
@@ -302,11 +305,8 @@ class TestAgentBenchmarks:
 
             return processed
 
-        # Run benchmark with asyncio wrapper
-        def run_async_processing():
-            return asyncio.run(process_messages())
-
-        results = percentile_benchmark(run_async_processing)
+        # Run benchmark directly with async function (single event loop for all iterations)
+        results = percentile_benchmark(process_messages)
 
         assert len(results) == 100
 

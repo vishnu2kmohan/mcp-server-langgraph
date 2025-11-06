@@ -452,30 +452,6 @@ def mock_current_user():
     }
 
 
-# Legacy observability initialization (DEPRECATED - will be removed after migration)
-# Kept temporarily for backward compatibility with existing tests
-def pytest_configure(config):
-    """
-    DEPRECATED: Use container fixtures instead.
-
-    Initialize observability system for tests (legacy approach).
-    New tests should use the container fixture.
-    """
-    from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-    # Only initialize if not already done
-    if not is_initialized():
-        test_settings = Settings(
-            environment="test",
-            log_format="text",
-            enable_file_logging=False,
-            langsmith_tracing=False,
-            observability_backend="opentelemetry",
-        )
-        init_observability(settings=test_settings, enable_file_logging=False)
-
-
 # Mock MCP server initialization at session level to prevent event loop issues
 @pytest.fixture(scope="session")
 def mock_mcp_modules():
@@ -618,8 +594,8 @@ async def openfga_client_real(integration_test_env):
 
     from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-    # OpenFGA URL from environment
-    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:8080")
+    # OpenFGA test URL - uses port 9080 for test environment (docker-compose.test.yml)
+    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
 
     client = OpenFGAClient(api_url=api_url, store_id=None, model_id=None)
 

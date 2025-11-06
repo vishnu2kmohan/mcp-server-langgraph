@@ -4,6 +4,8 @@ Performance Test Configuration and Fixtures
 Provides enhanced pytest-benchmark fixtures for percentile-based performance assertions.
 """
 
+import asyncio
+import inspect
 import time
 from typing import Callable, List
 
@@ -37,33 +39,69 @@ class PercentileBenchmark:
         """
         Benchmark a function and collect timing data.
 
+        Supports both synchronous and asynchronous functions. For async functions,
+        reuses a single event loop across all iterations for accurate benchmarking.
+
         Args:
-            func: Function to benchmark
+            func: Function to benchmark (sync or async)
             *args: Positional arguments for func
             **kwargs: Keyword arguments for func
 
         Returns:
             Result of the benchmarked function
         """
+        # Detect if function is async
+        is_async = inspect.iscoroutinefunction(func)
 
-        def wrapper():
-            start = time.perf_counter()
-            result = func(*args, **kwargs)
-            end = time.perf_counter()
-            self._times.append(end - start)
+        if is_async:
+            # For async functions: create ONE event loop and reuse it
+            # This prevents the overhead of creating/destroying 100 event loops
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            try:
+
+                def async_wrapper():
+                    start = time.perf_counter()
+                    result = loop.run_until_complete(func(*args, **kwargs))
+                    end = time.perf_counter()
+                    self._times.append(end - start)
+                    return result
+
+                # Use pedantic mode with SINGLE event loop (much faster and more accurate)
+                result = self._benchmark.pedantic(
+                    async_wrapper,
+                    iterations=100,  # 100 samples for accurate percentile calculation
+                    rounds=1,  # Single round to avoid excessive repetition
+                )
+
+                return result
+
+            finally:
+                # Clean up event loop after all iterations complete
+                loop.close()
+
+        else:
+            # Synchronous function: original implementation
+
+            def wrapper():
+                start = time.perf_counter()
+                result = func(*args, **kwargs)
+                end = time.perf_counter()
+                self._times.append(end - start)
+                return result
+
+            # Use pedantic mode to collect multiple samples for accurate percentile statistics
+            # NOTE: 100 iterations are intentional for statistical accuracy in percentile calculations.
+            # This is FAST because all benchmarks use mocked clients with simulated latency,
+            # avoiding real I/O operations. Typical runtime: < 5 seconds per benchmark.
+            result = self._benchmark.pedantic(
+                wrapper,
+                iterations=100,  # 100 samples for accurate percentile calculation (p50, p95, p99)
+                rounds=1,  # Single round to avoid excessive repetition
+            )
+
             return result
-
-        # Use pedantic mode to collect multiple samples for accurate percentile statistics
-        # NOTE: 100 iterations are intentional for statistical accuracy in percentile calculations.
-        # This is FAST because all benchmarks use mocked clients with simulated latency,
-        # avoiding real I/O operations. Typical runtime: < 5 seconds per benchmark.
-        result = self._benchmark.pedantic(
-            wrapper,
-            iterations=100,  # 100 samples for accurate percentile calculation (p50, p95, p99)
-            rounds=1,  # Single round to avoid excessive repetition
-        )
-
-        return result
 
     def assert_percentile(self, percentile: int, max_seconds: float, description: str = ""):
         """
