@@ -85,17 +85,42 @@ def get_api_key_manager(
     keycloak: KeycloakClient = Depends(get_keycloak_client),
 ) -> APIKeyManager:
     """
-    Get APIKeyManager instance
+    Get APIKeyManager instance with Redis caching if enabled
 
     Args:
         keycloak: Keycloak client (injected)
 
     Returns:
-        APIKeyManager instance
+        APIKeyManager instance configured with Redis cache if settings.api_key_cache_enabled=True
     """
     global _api_key_manager
 
     if _api_key_manager is None:
-        _api_key_manager = APIKeyManager(keycloak_client=keycloak)
+        # Wire Redis client for API key caching if enabled (OpenAI Codex Finding #5)
+        redis_client = None
+        if settings.api_key_cache_enabled and settings.redis_url:
+            try:
+                import redis.asyncio as redis
+
+                # Build Redis URL with correct database number
+                redis_url_with_db = f"{settings.redis_url}/{settings.api_key_cache_db}"
+
+                # Create Redis client with configured credentials
+                redis_client = redis.from_url(
+                    redis_url_with_db,
+                    password=settings.redis_password,
+                    ssl=settings.redis_ssl,
+                    decode_responses=True,
+                )
+            except ImportError:
+                # Redis not installed, disable caching gracefully
+                redis_client = None
+
+        _api_key_manager = APIKeyManager(
+            keycloak_client=keycloak,
+            redis_client=redis_client,
+            cache_ttl=settings.api_key_cache_ttl,
+            cache_enabled=settings.api_key_cache_enabled,
+        )
 
     return _api_key_manager

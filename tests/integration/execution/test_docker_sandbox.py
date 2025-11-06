@@ -11,9 +11,9 @@ import pytest
 
 # These imports will fail initially - that's expected in TDD!
 try:
-    from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
     from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
     from mcp_server_langgraph.execution.resource_limits import ResourceLimits
+    from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
 except ImportError:
     pytest.skip("Sandbox modules not implemented yet", allow_module_level=True)
 
@@ -23,6 +23,7 @@ def docker_available():
     """Check if Docker is available"""
     try:
         import docker
+
         client = docker.from_env()
         client.ping()
         return True
@@ -198,10 +199,7 @@ except Exception as e:
 
     def test_network_allowlist(self, docker_available):
         """Test network allowlist mode"""
-        limits = ResourceLimits(
-            network_mode="allowlist",
-            allowed_domains=tuple(["httpbin.org"])
-        )
+        limits = ResourceLimits(network_mode="allowlist", allowed_domains=tuple(["httpbin.org"]))
         sandbox = DockerSandbox(limits=limits)
 
         code = """
@@ -282,6 +280,7 @@ class TestDockerSandboxCleanup:
     def test_container_cleanup_on_success(self, docker_available):
         """Test that containers are cleaned up after successful execution"""
         import docker
+
         client = docker.from_env()
 
         initial_containers = len(client.containers.list(all=True))
@@ -294,6 +293,7 @@ class TestDockerSandboxCleanup:
 
         # Wait a moment for cleanup
         import time
+
         time.sleep(1)
 
         # Container should be removed
@@ -303,6 +303,7 @@ class TestDockerSandboxCleanup:
     def test_container_cleanup_on_error(self, docker_available):
         """Test that containers are cleaned up even on error"""
         import docker
+
         client = docker.from_env()
 
         initial_containers = len(client.containers.list(all=True))
@@ -315,6 +316,7 @@ class TestDockerSandboxCleanup:
 
         # Wait a moment for cleanup
         import time
+
         time.sleep(1)
 
         # Container should still be removed
@@ -324,6 +326,7 @@ class TestDockerSandboxCleanup:
     def test_container_cleanup_on_timeout(self, docker_available):
         """Test that containers are cleaned up on timeout"""
         import docker
+
         client = docker.from_env()
 
         initial_containers = len(client.containers.list(all=True))
@@ -336,6 +339,7 @@ class TestDockerSandboxCleanup:
 
         # Wait a moment for cleanup
         import time
+
         time.sleep(2)
 
         # Container should be removed
@@ -411,3 +415,259 @@ class TestDockerSandboxErrorHandling:
 
         assert result.success is False
         assert "empty" in result.stderr.lower() or result.stdout == ""
+
+
+# ============================================================================
+# TDD RED Phase: OpenAI Codex Finding #4 - Docker Sandbox Security
+# ============================================================================
+
+
+@pytest.mark.integration
+class TestDockerSandboxSecurity:
+    """
+    TDD RED phase tests for Docker sandbox security hardening (OpenAI Codex Finding #4).
+
+    ISSUES IDENTIFIED:
+    1. Root filesystem not read-only (read_only=False at line 240)
+    2. Network allowlist mode not fully implemented (TODO at line 271)
+    3. No validation of Docker socket access
+    4. Potential container escape vectors
+
+    EXPECTED: These tests will FAIL until security hardening is implemented.
+    """
+
+    @pytest.fixture
+    def sandbox(self, docker_available):
+        """Create Docker sandbox with default security settings"""
+        limits = ResourceLimits.testing()
+        return DockerSandbox(limits=limits)
+
+    def test_container_uses_readonly_root_filesystem(self, sandbox):
+        """
+        Test that Docker container uses read-only root filesystem.
+
+        RED: Will fail because docker_sandbox.py has read_only=False (line 240)
+        """
+        # Execute code - inspect the running container
+        code = """
+import os
+# Try to write to root filesystem (should fail if read-only)
+try:
+    with open('/test_write.txt', 'w') as f:
+        f.write('test')
+    print('WRITE_SUCCEEDED')
+except (IOError, OSError, PermissionError) as e:
+    print(f'WRITE_BLOCKED: {type(e).__name__}')
+"""
+        result = sandbox.execute(code)
+
+        # Root FS should be read-only, preventing writes outside /tmp
+        assert "WRITE_BLOCKED" in result.stdout, (
+            "Root filesystem should be read-only! "
+            "Container can write to /, which is a security risk. "
+            f"Output: {result.stdout}"
+        )
+        assert "WRITE_SUCCEEDED" not in result.stdout
+
+    def test_container_allows_tmp_directory_writes(self, sandbox):
+        """
+        Test that /tmp is writable (via tmpfs) even with read-only root FS.
+
+        GREEN: Should pass after implementing read-only FS with tmpfs for /tmp
+        """
+        code = """
+import tempfile
+import os
+
+# /tmp should be writable via tmpfs
+try:
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+        f.write('test data')
+        temp_path = f.name
+
+    # Verify we can read it back
+    with open(temp_path, 'r') as f:
+        data = f.read()
+
+    os.unlink(temp_path)
+    print('TMP_WRITABLE')
+except Exception as e:
+    print(f'TMP_FAILED: {e}')
+"""
+        result = sandbox.execute(code)
+
+        assert "TMP_WRITABLE" in result.stdout, "/tmp should be writable via tmpfs"  # nosec B108
+        assert "TMP_FAILED" not in result.stdout
+
+    def test_network_allowlist_mode_blocks_unlisted_domains(self, docker_available):
+        """
+        Test that network allowlist mode blocks access to unlisted domains.
+
+        RED: Will fail because allowlist filtering is not implemented (TODO at line 271)
+        """
+        limits = ResourceLimits(
+            network_mode="allowlist",
+            allowed_domains=["httpbin.org"],  # Only allow httpbin.org
+            timeout_seconds=10,
+        )
+        sandbox = DockerSandbox(limits=limits)
+
+        code = """
+import urllib.request
+import socket
+
+# Try to access unlisted domain (should be blocked)
+try:
+    urllib.request.urlopen('http://google.com', timeout=3)
+    print('BLOCKED_DOMAIN_ACCESSIBLE')
+except (urllib.error.URLError, socket.timeout, OSError) as e:
+    print(f'BLOCKED_DOMAIN_DENIED: {type(e).__name__}')
+
+# Try to access allowed domain (should succeed)
+try:
+    response = urllib.request.urlopen('http://httpbin.org/get', timeout=3)
+    print('ALLOWED_DOMAIN_ACCESSIBLE')
+except Exception as e:
+    print(f'ALLOWED_DOMAIN_FAILED: {e}')
+"""
+        result = sandbox.execute(code)
+
+        # Unlisted domain should be blocked
+        assert "BLOCKED_DOMAIN_DENIED" in result.stdout, (
+            "Network allowlist should block google.com. " f"Output: {result.stdout}"
+        )
+        assert "BLOCKED_DOMAIN_ACCESSIBLE" not in result.stdout
+
+        # Allowed domain should work
+        assert "ALLOWED_DOMAIN_ACCESSIBLE" in result.stdout, "Network allowlist should allow httpbin.org"
+
+    def test_container_has_security_options_enabled(self, sandbox):
+        """
+        Test that Docker container has proper security options.
+
+        Verifies:
+        - no-new-privileges is set
+        - All capabilities dropped
+        - Process limits enforced
+        """
+        import docker
+
+        client = docker.from_env()
+
+        # Create a simple container to inspect
+        code = "import time; time.sleep(1)"
+
+        # Execute in background to inspect running container
+        import threading
+
+        def execute_code():
+            sandbox.execute(code)
+
+        thread = threading.Thread(target=execute_code)
+        thread.start()
+
+        # Give container time to start
+        import time
+
+        time.sleep(0.5)
+
+        # Find our container
+        containers = client.containers.list()
+        sandbox_container = None
+        for container in containers:
+            if container.image.tags and "python" in str(container.image.tags):
+                sandbox_container = container
+                break
+
+        if sandbox_container:
+            # Inspect security settings
+            config = sandbox_container.attrs
+
+            # Check security_opt
+            security_opts = config["HostConfig"].get("SecurityOpt", [])
+            assert "no-new-privileges" in str(security_opts), "Container should have no-new-privileges enabled"
+
+            # Check capabilities
+            cap_drop = config["HostConfig"].get("CapDrop", [])
+            assert "ALL" in cap_drop, "Container should have all capabilities dropped"
+
+            # Check pids limit
+            pids_limit = config["HostConfig"].get("PidsLimit")
+            assert pids_limit is not None and pids_limit > 0, "Container should have process limits"
+
+        thread.join(timeout=5)
+
+    def test_network_none_mode_blocks_all_network_access(self, docker_available):
+        """
+        Test that network_mode='none' completely blocks network access.
+
+        GREEN: Should already work based on current implementation
+        """
+        limits = ResourceLimits(
+            network_mode="none",
+            timeout_seconds=10,
+        )
+        sandbox = DockerSandbox(limits=limits)
+
+        code = """
+import socket
+try:
+    socket.create_connection(('8.8.8.8', 53), timeout=2)
+    print('NETWORK_ACCESSIBLE')
+except (OSError, socket.timeout) as e:
+    print('NETWORK_BLOCKED')
+"""
+        result = sandbox.execute(code)
+
+        assert "NETWORK_BLOCKED" in result.stdout, "Network should be completely disabled"
+        assert "NETWORK_ACCESSIBLE" not in result.stdout
+
+    def test_container_resource_limits_enforced(self, docker_available):
+        """
+        Test that memory and CPU limits are actually enforced.
+
+        GREEN: Should already work based on current implementation
+        """
+        limits = ResourceLimits(
+            max_memory_mb=128,  # 128MB limit
+            max_cpu_percent=50,  # 50% CPU
+            timeout_seconds=10,
+        )
+        sandbox = DockerSandbox(limits=limits)
+
+        code = """
+import sys
+# Try to allocate more memory than limit (should be killed or fail)
+try:
+    # Allocate 256MB (exceeds 128MB limit)
+    big_list = [0] * (256 * 1024 * 1024 // 8)  # 256MB of integers
+    print('MEMORY_ALLOCATED')
+except MemoryError:
+    print('MEMORY_LIMITED')
+"""
+        result = sandbox.execute(code)
+
+        # Container should be killed or fail due to memory limit
+        # Result may vary: MemoryError, killed by OOM, or timeout
+        assert result.success is False or "MEMORY_LIMITED" in result.stdout, "Memory limits should be enforced"
+
+    @pytest.mark.skip(reason="Requires Docker rootless mode or additional configuration")
+    def test_docker_socket_not_exposed_in_container(self, sandbox):
+        """
+        Test that Docker socket is not accessible inside container.
+
+        This prevents container escape via Docker socket manipulation.
+
+        IMPORTANT: This test is aspirational - current implementation uses
+        host Docker socket, which is a known security risk.
+        """
+        code = """
+import os
+if os.path.exists('/var/run/docker.sock'):
+    print('DOCKER_SOCKET_EXPOSED')
+else:
+    print('DOCKER_SOCKET_NOT_EXPOSED')
+"""
+        result = sandbox.execute(code)
+
+        assert "DOCKER_SOCKET_NOT_EXPOSED" in result.stdout, "Docker socket should not be accessible inside container!"

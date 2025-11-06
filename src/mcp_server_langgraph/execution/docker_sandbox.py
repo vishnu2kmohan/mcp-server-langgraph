@@ -9,10 +9,10 @@ import logging
 import time
 from typing import Optional
 
-import docker
 from docker.errors import APIError, DockerException, ImageNotFound, NotFound
 from docker.models.containers import Container
 
+import docker
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
 
@@ -237,12 +237,16 @@ class DockerSandbox(Sandbox):
                 nano_cpus=nano_cpus,
                 network_mode=network_mode,
                 network_disabled=(network_mode == "none"),
-                read_only=False,  # Need writable /tmp for Python
+                read_only=True,  # Read-only root FS for security (OpenAI Codex Finding #4)
                 security_opt=["no-new-privileges"],  # Prevent privilege escalation
                 cap_drop=["ALL"],  # Drop all capabilities
                 pids_limit=self.limits.max_processes,
-                # Tmpfs for /tmp (ephemeral, in-memory)
-                tmpfs={"/tmp": f"size={self.limits.disk_quota_mb}m"},
+                # Tmpfs for writable directories (ephemeral, in-memory)
+                # Python needs /tmp and /var/tmp for tempfile module
+                tmpfs={  # nosec B108 - tmpfs is ephemeral in-memory, not persistent storage
+                    "/tmp": f"size={self.limits.disk_quota_mb}m",  # nosec B108
+                    "/var/tmp": f"size={self.limits.disk_quota_mb}m",  # nosec B108
+                },
             )
 
             return container
@@ -263,12 +267,22 @@ class DockerSandbox(Sandbox):
         elif self.limits.network_mode == "unrestricted":
             return "bridge"  # Default Docker network
         elif self.limits.network_mode == "allowlist":
-            # For allowlist mode, we use bridge network and would need to configure
-            # firewall rules. For now, default to none if allowlist is empty.
+            # WARNING (OpenAI Codex Finding #4): Network allowlist mode is NOT fully implemented!
+            # For proper security, this requires:
+            # 1. Docker network policies or firewall rules (iptables/nftables)
+            # 2. DNS filtering to resolve allowed domains to IPs
+            # 3. egress filtering to block unlisted destinations
+            #
+            # Current behavior: Falls back to bridge (unrestricted) if domains are specified
+            # For production use, consider using network_mode="none" until this is implemented
             if not self.limits.allowed_domains:
                 return "none"
             else:
                 # TODO: Implement proper allowlist with network policies
+                logger.warning(
+                    "Network allowlist mode requested but not fully implemented. "
+                    "Using bridge network (unrestricted). For security, use network_mode='none'"
+                )
                 return "bridge"
         else:
             return "none"  # Fail closed

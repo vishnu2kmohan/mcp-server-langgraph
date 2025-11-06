@@ -819,6 +819,14 @@ def get_session_store() -> SessionStore:
     Returns:
         SessionStore instance
 
+    Warning:
+        If no session store has been registered via set_session_store(), this function
+        creates a default in-memory store. This fallback behavior should only occur
+        during testing or if create_auth_middleware() hasn't been called yet.
+
+        In production, ensure create_auth_middleware() is called during app startup
+        to register the configured session store (Redis or Memory based on settings).
+
     Example:
         @app.get("/api/sessions")
         async def list_sessions(session_store: SessionStore = Depends(get_session_store)):
@@ -828,7 +836,13 @@ def get_session_store() -> SessionStore:
     global _session_store
 
     if _session_store is None:
-        # Create default in-memory session store
+        # Create default in-memory session store as fallback
+        # This should only happen during testing or before middleware initialization
+        logger.warning(
+            "Session store not registered globally, using fallback in-memory store. "
+            "This may indicate create_auth_middleware() was not called. "
+            "In production, register the session store via set_session_store()."
+        )
         _session_store = InMemorySessionStore()
 
     return _session_store

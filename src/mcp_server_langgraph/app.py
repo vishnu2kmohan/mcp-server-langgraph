@@ -20,7 +20,7 @@ from mcp_server_langgraph.api import api_keys_router, gdpr_router, scim_router, 
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
-from mcp_server_langgraph.observability.telemetry import logger
+from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
 def create_app() -> FastAPI:
@@ -30,6 +30,10 @@ def create_app() -> FastAPI:
     Returns:
         FastAPI: Configured application instance
     """
+    # Initialize observability FIRST before any logging (OpenAI Codex Finding #2)
+    # This prevents RuntimeError: "Observability not initialized" when logger is used
+    init_observability(settings)
+
     app = FastAPI(
         title="MCP Server LangGraph API",
         version="2.8.0",
@@ -50,17 +54,9 @@ def create_app() -> FastAPI:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        try:
-            logger.info(f"CORS enabled for origins: {cors_origins}")
-        except RuntimeError:
-            # Observability not initialized yet
-            pass
+        logger.info(f"CORS enabled for origins: {cors_origins}")
     else:
-        try:
-            logger.info("CORS disabled (no allowed origins configured)")
-        except RuntimeError:
-            # Observability not initialized yet
-            pass
+        logger.info("CORS disabled (no allowed origins configured)")
 
     # Rate limiting - setup function registers middleware and exception handlers
     setup_rate_limiting(app)
@@ -74,12 +70,7 @@ def create_app() -> FastAPI:
     app.include_router(gdpr_router)
     app.include_router(scim_router)
 
-    # Log app creation - handle case where observability not initialized yet
-    try:
-        logger.info("FastAPI application created with all routers mounted")
-    except RuntimeError:
-        # Observability not initialized yet, skip logging
-        pass
+    logger.info("FastAPI application created with all routers mounted")
 
     return app
 

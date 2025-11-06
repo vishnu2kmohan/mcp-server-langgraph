@@ -606,7 +606,9 @@ class TestAPIKeyRedisCache:
         mock_redis_client.get.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_cache_miss_falls_back_to_keycloak(self, api_key_manager_with_cache, mock_keycloak_client, mock_redis_client):
+    async def test_cache_miss_falls_back_to_keycloak(
+        self, api_key_manager_with_cache, mock_keycloak_client, mock_redis_client
+    ):
         """Test that cache miss falls back to Keycloak and caches result"""
         # Arrange
         api_key = "mcpkey_live_test123"
@@ -699,3 +701,205 @@ class TestAPIKeyRedisCache:
         # Should NOT have called Redis
         mock_redis_client.get.assert_not_called()
         mock_redis_client.setex.assert_not_called()
+
+
+# ============================================================================
+# TDD RED Phase: OpenAI Codex Finding #5 - Redis API Key Cache Not Wired
+# ============================================================================
+
+
+class TestRedisAPICacheConfiguration:
+    """
+    TDD RED phase tests for Redis API key cache configuration (OpenAI Codex Finding #5).
+
+    ISSUE: get_api_key_manager() in core/dependencies.py creates APIKeyManager
+    without passing redis_client, even though settings.api_key_cache_enabled=True
+    and settings.api_key_cache_ttl are configured.
+
+    IMPACT: API key cache is disabled, causing performance degradation and
+    unnecessary Keycloak queries on every API key validation.
+
+    These tests will FAIL until dependencies.py wires Redis client.
+    """
+
+    @pytest.mark.unit
+    def test_get_api_key_manager_uses_redis_when_enabled(self):
+        """
+        Test that get_api_key_manager passes Redis client when caching is enabled.
+
+        RED: Will fail because dependencies.py doesn't instantiate Redis client
+        """
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        # Create settings with Redis caching enabled
+        settings = Settings(
+            api_key_cache_enabled=True,
+            api_key_cache_ttl=3600,
+            api_key_cache_db=2,
+            redis_url="redis://localhost:6379",
+        )
+
+        mock_keycloak = MagicMock()
+
+        with patch("mcp_server_langgraph.core.dependencies.get_settings", return_value=settings):
+            with patch("mcp_server_langgraph.core.dependencies.redis.asyncio.from_url") as mock_redis_from_url:
+                mock_redis_client = AsyncMock()
+                mock_redis_from_url.return_value = mock_redis_client
+
+                # Act - get manager instance
+                manager = get_api_key_manager(keycloak=mock_keycloak)
+
+                # Assert - Redis client should be wired
+                assert manager.redis is not None, (
+                    "APIKeyManager.redis should be set when caching is enabled. "
+                    "This proves dependencies.py is not wiring Redis client."
+                )
+                assert manager.cache_enabled is True, "Caching should be enabled"
+                assert manager.cache_ttl == 3600, "Cache TTL should match settings"
+
+    @pytest.mark.unit
+    def test_get_api_key_manager_respects_cache_ttl_from_settings(self):
+        """
+        Test that cache TTL from settings is passed to APIKeyManager.
+
+        RED: Will fail because dependencies.py doesn't pass cache_ttl
+        """
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        custom_ttl = 7200  # 2 hours
+        settings = Settings(
+            api_key_cache_enabled=True,
+            api_key_cache_ttl=custom_ttl,
+            redis_url="redis://localhost:6379",
+        )
+
+        mock_keycloak = MagicMock()
+
+        with patch("mcp_server_langgraph.core.dependencies.get_settings", return_value=settings):
+            with patch("mcp_server_langgraph.core.dependencies.redis.asyncio.from_url"):
+                manager = get_api_key_manager(keycloak=mock_keycloak)
+
+                assert (
+                    manager.cache_ttl == custom_ttl
+                ), f"Cache TTL should be {custom_ttl} from settings, got {manager.cache_ttl}"
+
+    @pytest.mark.unit
+    def test_get_api_key_manager_uses_correct_redis_database(self):
+        """
+        Test that Redis client connects to correct database number.
+
+        RED: Will fail because dependencies.py doesn't use settings.api_key_cache_db
+        """
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        settings = Settings(
+            api_key_cache_enabled=True,
+            api_key_cache_db=5,  # Custom database number
+            redis_url="redis://localhost:6379",
+        )
+
+        mock_keycloak = MagicMock()
+
+        with patch("mcp_server_langgraph.core.dependencies.get_settings", return_value=settings):
+            with patch("mcp_server_langgraph.core.dependencies.redis.asyncio.from_url") as mock_from_url:
+                get_api_key_manager(keycloak=mock_keycloak)
+
+                # Verify from_url was called with correct database
+                mock_from_url.assert_called_once()
+                call_args = mock_from_url.call_args
+                redis_url_arg = call_args[0][0] if call_args[0] else call_args.kwargs.get("url")
+
+                assert "/5" in redis_url_arg or redis_url_arg.endswith(
+                    "/5"
+                ), f"Redis URL should include database /5, got: {redis_url_arg}"
+
+    @pytest.mark.unit
+    def test_get_api_key_manager_disables_cache_when_redis_url_missing(self):
+        """
+        Test that caching is disabled when redis_url is not configured.
+
+        GREEN: This should already work (graceful degradation)
+        """
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        settings = Settings(
+            api_key_cache_enabled=True,  # Enabled, but no redis_url
+            redis_url=None,
+        )
+
+        mock_keycloak = MagicMock()
+
+        with patch("mcp_server_langgraph.core.dependencies.get_settings", return_value=settings):
+            manager = get_api_key_manager(keycloak=mock_keycloak)
+
+            # Should gracefully disable caching
+            assert manager.cache_enabled is False, "Caching should be disabled without redis_url"
+            assert manager.redis is None, "Redis client should be None without redis_url"
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_api_key_validation_uses_redis_cache(self, mock_keycloak_client):
+        """
+        Integration test: Verify API key validation actually uses Redis cache.
+
+        RED: Will fail because dependencies.py doesn't wire Redis, so cache is never used
+        """
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        settings = Settings(
+            api_key_cache_enabled=True,
+            api_key_cache_ttl=3600,
+            redis_url="redis://localhost:6379/2",
+        )
+
+        # Create manager with Redis
+        with patch("mcp_server_langgraph.core.dependencies.get_settings", return_value=settings):
+            with patch("mcp_server_langgraph.core.dependencies.redis.asyncio.from_url") as mock_from_url:
+                mock_redis = AsyncMock()
+                mock_redis.get.return_value = None  # Cache miss first time
+                mock_redis.setex = AsyncMock()
+                mock_from_url.return_value = mock_redis
+
+                manager = get_api_key_manager(keycloak=mock_keycloak_client)
+
+                # Setup Keycloak to return a user with API key
+                api_key = manager.generate_api_key()
+                key_hash = manager.hash_api_key(api_key)
+
+                mock_user = {
+                    "id": "uuid-test",
+                    "username": "testuser",
+                    "attributes": {
+                        "apiKeys": [f"key:testkey:{key_hash}"],
+                        "apiKey_testkey_name": "Test Key",
+                        "apiKey_testkey_expiresAt": "2099-12-31T23:59:59",
+                    },
+                }
+                mock_keycloak_client.search_users.return_value = [mock_user]
+
+                # Act - validate API key (should cache result)
+                result = await manager.validate_and_get_user(api_key)
+
+                # Assert
+                assert result is not None, "Validation should succeed"
+
+                # CRITICAL: Verify Redis was used for caching
+                assert mock_redis.get.called, (
+                    "Redis get() should be called to check cache. " "This proves dependencies.py wired Redis client correctly."
+                )
+                assert mock_redis.setex.called, (
+                    "Redis setex() should be called to cache result. " "This proves caching is active."
+                )

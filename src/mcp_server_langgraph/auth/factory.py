@@ -192,6 +192,14 @@ def create_auth_middleware(settings: Settings, openfga_client: Optional[OpenFGAC
     # Create session store if using session-based auth
     session_store = create_session_store(settings)
 
+    # Register session store globally if created
+    # This ensures get_session_store() returns the configured store (Redis/Memory)
+    # instead of creating a fallback in-memory store (OpenAI Codex Finding #3)
+    if session_store is not None:
+        from mcp_server_langgraph.auth.session import set_session_store
+
+        set_session_store(session_store)
+
     # Build AuthMiddleware with all components
     auth = AuthMiddleware(
         secret_key=settings.jwt_secret_key,
