@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762441246940,
+  "lastUpdate": 1762442396369,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -32274,6 +32274,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016807311718776144",
             "extra": "mean: 58.64845865609339 usec\nrounds: 5551"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "454b417fd99d3e8567530d044eaa2afad943c2ee",
+          "message": "feat(security): add comprehensive health checks and preventative validation system\n\nAdded comprehensive health check system and preventative measures to ensure\nOpenAI Codex security findings can NEVER recur:\n\n## New Features\n\n### 1. Startup Validation System (src/mcp_server_langgraph/api/health.py)\n- run_startup_validation() - Validates all critical systems on app startup\n- Fails fast with SystemValidationError if any system misconfigured\n- Validates observability, session store, API key cache, Docker security\n- Called automatically in app.py during create_app()\n\n### 2. Health Check HTTP Endpoint\n- GET /api/v1/health - Returns health status of all systems\n- Returns healthy/degraded/unhealthy status\n- Provides detailed check results, errors, and warnings\n- Ready for Kubernetes liveness/readiness probes\n\n### 3. Comprehensive Test Suite (17 new tests)\n- TestObservabilityValidation (2 tests)\n- TestSessionStoreValidation (3 tests)\n- TestAPICacheValidation (4 tests)\n- TestStartupValidation (3 tests)\n- TestHealthCheckEndpoint (3 tests)\n- TestHealthCheckIntegration (2 tests)\n\n### 4. Fixed All Redis Cache Tests\n- Updated all 5 Redis cache tests to use correct mocking\n- Tests now properly patch settings module\n- All tests verified passing (29 total tests pass)\n\n### 5. Comprehensive Documentation\n- Created SECURITY_AUDIT_FIXES_2025-01-06.md (574 lines)\n- Documents all findings, fixes, preventative measures\n- Includes monitoring/alerting recommendations\n- Provides future roadmap for additional hardening\n\n## App Startup Flow\n1. init_observability(settings)\n2. Validation: logger works\n3. Create FastAPI app\n4. Mount routers (health router first)\n5. run_startup_validation() ← NEW - fails fast if misconfigured\n6. App ready to accept requests\n\n## Fail-Fast Behavior\nApp won't start if:\n- Observability not initialized\n- Session store not registered (GDPR compliance)\n- Redis cache misconfigured\n- Any critical system validation fails\n\n## Test Results\nAll 46 tests pass (29 security + 17 health):\n- Session store: 3/3 ✓\n- Observability: 4/4 ✓\n- Redis cache: 5/5 ✓\n- Health system: 17/17 ✓\n- Docker security: 7/7 ✓ (in previous commit)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T10:17:41-05:00",
+          "tree_id": "b68b55c8788063d0bdf11aab9567bfcf229833d6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/454b417fd99d3e8567530d044eaa2afad943c2ee"
+        },
+        "date": 1762442394880,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 146.27969035330483,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008227578989190062",
+            "extra": "mean: 6.836219010203882 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 151.20619173401707,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013237054093092888",
+            "extra": "mean: 6.613485787401314 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43729.343351438976,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.86793999999759 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47138.126495194294,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.214249999985668 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45522.49812901984,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.96716000000265 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.91976290728485,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.23780244000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.412641437637298,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.51282494 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.952068989637112,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.48161854999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1439283.8122925104,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 694.7900000398022 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4980.898503284697,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 200.7669900000053 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2982.6759321700274,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.26941000005195 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2924.738237390685,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.91093999993427 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57417.4925106934,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004696523061419804",
+            "extra": "mean: 17.416295213758428 usec\nrounds: 13309"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17402.405145794288,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018717535882945834",
+            "extra": "mean: 57.46332139851796 usec\nrounds: 4748"
           }
         ]
       }
