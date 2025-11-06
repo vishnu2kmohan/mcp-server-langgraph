@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762444618180,
+  "lastUpdate": 1762448691898,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -32640,6 +32640,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018800861740231184",
             "extra": "mean: 57.06161489995432 usec\nrounds: 5396"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "9c0c60525906e41b52766daccbca9a92a0cead0b",
+          "message": "fix(infra): resolve critical Kubernetes staging deployment failures\n\n## Critical Fixes\n\n### 1. Keycloak Clustering (Network Policy)\n**File**: `deployments/overlays/staging-gke/network-policy.yaml`\n**Issue**: JGroups clustering failing with SocketTimeoutException on TCP/7800\n**Root Cause**: Network policy allowed ingress but blocked egress for pod-to-pod communication\n**Fix**: Added egress rule allowing TCP/7800 and TCP/9000 to Keycloak pods\n**Impact**: Keycloak cluster now forms successfully, both pods READY (2/2)\n\n### 2. MCP Server Observability Initialization\n**File**: `src/mcp_server_langgraph/mcp/server_streamable.py` (lines 173-197)\n**Issue**: RuntimeError: Observability not initialized at module import\n**Root Cause**: Module-level logger usage before lifespan initialization\n**Fix**: Use standard logging.getLogger(__name__) for module-level logging\n**Impact**: Prevents pod crashes on startup with rev-25 images\n\n### 3. Undefined Variable Bug Fix\n**File**: `src/mcp_server_langgraph/mcp/server_streamable.py` (line 352)\n**Issue**: F821 flake8 error - undefined name 'tools'\n**Root Cause**: list_tools() function returned list literal but tried to append conditionally\n**Fix**: Changed `return [...]` to `tools = [...]` then `return tools`\n**Impact**: Fixes code execution bug, allows conditional tool registration\n\n## Verified Working\n\n- ✅ Keycloak: Both pods READY, cluster health UP, no SocketTimeoutException\n- ✅ Network Policy: Applied and configured correctly\n- ✅ Code: No module-level observability logger usage\n- ✅ Linting: All flake8 errors resolved\n\n## Deployment Manifest Status\n\n- ✅ GDPR environment variables already present in staging-gke patch\n- ✅ ConfigMap has correct gdpr_storage_backend=postgres\n- ✅ Dockerfile entrypoint correct: `python -m mcp_server_langgraph.mcp.server_streamable`\n\n## Testing\n\n- Added test: `tests/unit/test_server_streamable_init.py`\n- Verifies module can import without observability initialization\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T12:03:20-05:00",
+          "tree_id": "7c538453a791e461b11596c97a17ba2ef912ffd8",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/9c0c60525906e41b52766daccbca9a92a0cead0b"
+        },
+        "date": 1762448690156,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 146.03704337076138,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008062535968042911",
+            "extra": "mean: 6.8475776893208025 msec\nrounds: 103"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 151.05018908569457,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011630384351147357",
+            "extra": "mean: 6.620316108526517 msec\nrounds: 129"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44528.19703559899,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.457679999945412 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48163.54799685002,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.762589999918646 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45393.05849364458,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.02979999992749 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 191.0605592044501,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.233942600000034 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.361338575850485,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.64932145999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.95464419816349,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.45562453999992 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1485133.8103867073,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 673.3400000769052 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5015.369851678558,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 199.3870900000161 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2953.1222845118996,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.62464999998565 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2968.387504228792,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.8832399999633 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60442.8905421102,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000203694034751988",
+            "extra": "mean: 16.54454297322703 usec\nrounds: 13776"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17613.728701689754,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017071034175148883",
+            "extra": "mean: 56.773895915863974 usec\nrounds: 5803"
           }
         ]
       }
