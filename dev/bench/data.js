@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762380917187,
+  "lastUpdate": 1762437553397,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -31664,6 +31664,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002284578877470181",
             "extra": "mean: 57.95365548581159 usec\nrounds: 4621"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ebbb8a62bf6dc0b49cdea5a6fa832a726eeb5358",
+          "message": "fix(infra): resolve GKE staging deployment failures - Cloud SQL Proxy and Redis configuration\n\n## Critical Fixes\n\n### 1. Cloud SQL Proxy Health Check Configuration (P0)\n**Problem**: Cloud SQL Proxy sidecars missing `--http-port=9801` and `--health-check` flags\n**Impact**: 300-400 pod restarts over 16 hours, complete deployment failure\n**Root Cause**: Health check probes configured for port 9801 but proxy not exposing HTTP admin server\n**Fix**: Added `--http-port=9801` and `--health-check` flags to Cloud SQL Proxy args\n\nFiles changed:\n- deployments/overlays/staging-gke/keycloak-patch.yaml\n- deployments/overlays/staging-gke/openfga-patch.yaml\n\n### 2. Missing Redis Session Service (P0)\n**Problem**: Init containers waiting for non-existent `redis-session` service\n**Impact**: All MCP server pods stuck in Init:0/3 state indefinitely\n**Root Cause**: Self-hosted Redis deleted but no replacement service for Memorystore Redis\n**Fix**: Created headless Service + Endpoints pointing to Memorystore Redis (10.138.129.37:6378)\n\nFiles changed:\n- deployments/overlays/staging-gke/redis-session-service-patch.yaml (new)\n- deployments/overlays/staging-gke/redis-session-endpoints.yaml (new)\n- deployments/overlays/staging-gke/kustomization.yaml\n\n### 3. Service Name Mismatches in Init Containers (P1)\n**Problem**: Init containers referenced unprefixed names, but Kustomize applied staging- prefix\n**Impact**: DNS lookup failures causing init containers to loop forever\n**Fix**: Updated init container service references to use staging- prefix\n\nFiles changed:\n- deployments/overlays/staging-gke/deployment-init-containers-patch.yaml\n\n## Test-Driven Development\n\nAll 28 tests passing following strict TDD (RED-GREEN-REFACTOR):\n- tests/deployment/test_cloud_sql_proxy_config.py (11 tests)\n- tests/deployment/test_service_dependencies.py (7 tests)\n- tests/deployment/test_kustomize_build.py (10 tests)\n\n## Deployment Status\n\nBefore:\n- Keycloak: 0/2 ready (CrashLoopBackOff, 400+ restarts)\n- OpenFGA: 0/2 ready (CrashLoopBackOff, 427+ restarts)\n- MCP Server: 0/3 ready (Init:0/3, stuck 16h)\n\nAfter:\n- Cloud SQL Proxy health check server: ✅ Running on port 9801\n- Redis session service: ✅ Available at staging-redis-session\n- Init containers: ✅ Correctly reference prefixed services\n- New pods: ✅ Starting with fixed configuration\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T08:56:59-05:00",
+          "tree_id": "b5fcbdc1df68bd9b74a10c087aae2b16ed0aa991",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ebbb8a62bf6dc0b49cdea5a6fa832a726eeb5358"
+        },
+        "date": 1762437551608,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.45883269158645,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001371498994457935",
+            "extra": "mean: 6.92238737755107 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.8246477293755,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001300875169231694",
+            "extra": "mean: 6.674469222222201 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45131.36386082888,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.157539999980713 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47312.776247454996,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.135940000007736 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46638.528088065366,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.441499999994562 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.37854550151465,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.252692720000027 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.406689324424107,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.52862413999998 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.937220797726857,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.63175815000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1502765.0879407087,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 665.4399999206362 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5148.860243145479,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 194.2177400000844 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2940.6355666233544,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.06253999990577 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3009.1191959059493,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 332.32315999995876 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59692.20660468939,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021698675788163984",
+            "extra": "mean: 16.75260568975918 usec\nrounds: 12584"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17160.72185286784,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002173667863341123",
+            "extra": "mean: 58.27260697852774 usec\nrounds: 5216"
           }
         ]
       }
