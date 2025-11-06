@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-ingress
-  namespace: mcp-staging
+  namespace: staging-mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
@@ -34,7 +34,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-egress
-  namespace: mcp-staging
+  namespace: staging-mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
@@ -149,7 +149,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-ingress
-  namespace: mcp-staging
+  namespace: staging-mcp-server-langgraph
 spec:
   podSelector: {}
   policyTypes:
@@ -161,7 +161,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: keycloak-network-policy
-  namespace: mcp-staging
+  namespace: staging-mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
@@ -187,11 +187,18 @@ spec:
     - protocol: TCP
       port: 8080
   egress:
-  # Allow DNS
+  # Allow DNS to kube-system
   - to:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow DNS to GKE Dataplane V2 DNS server (entire link-local DNS range)
+  - to:
+    - ipBlock:
+        cidr: 169.254.0.0/16
     ports:
     - protocol: UDP
       port: 53
@@ -211,15 +218,20 @@ spec:
     ports:
     - protocol: TCP
       port: 988
-  # Allow Cloud SQL (database + control plane)
+  # Allow Cloud SQL database connection (private IP)
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
       port: 3307  # Database port
+  # Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
     - protocol: TCP
-      port: 443   # Control plane
+      port: 443  # HTTPS to sqladmin.googleapis.com
 
 ---
 # Network Policy: OpenFGA - Restrict access
@@ -227,7 +239,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: openfga-network-policy
-  namespace: mcp-staging
+  namespace: staging-mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
@@ -245,11 +257,18 @@ spec:
     - protocol: TCP
       port: 8080
   egress:
-  # Allow DNS
+  # Allow DNS to kube-system
   - to:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow DNS to GKE Dataplane V2 DNS server (entire link-local DNS range)
+  - to:
+    - ipBlock:
+        cidr: 169.254.0.0/16
     ports:
     - protocol: UDP
       port: 53
@@ -269,12 +288,17 @@ spec:
     ports:
     - protocol: TCP
       port: 988
-  # Allow Cloud SQL (database + control plane)
+  # Allow Cloud SQL database connection (private IP)
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
       port: 3307  # Database port
+  # Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
     - protocol: TCP
-      port: 443   # Control plane
+      port: 443  # HTTPS to sqladmin.googleapis.com
