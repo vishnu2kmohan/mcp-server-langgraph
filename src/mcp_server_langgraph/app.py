@@ -34,6 +34,15 @@ def create_app() -> FastAPI:
     # This prevents RuntimeError: "Observability not initialized" when logger is used
     init_observability(settings)
 
+    # Validation: Verify logger is now usable (prevent regression)
+    try:
+        logger.debug("Observability initialized successfully")
+    except RuntimeError as e:
+        raise RuntimeError(
+            "Observability initialization failed! Logger still raises RuntimeError. "
+            f"Error: {e}. This is a critical bug - logging will fail throughout the app."
+        )
+
     app = FastAPI(
         title="MCP Server LangGraph API",
         version="2.8.0",

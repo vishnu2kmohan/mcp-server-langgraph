@@ -196,9 +196,18 @@ def create_auth_middleware(settings: Settings, openfga_client: Optional[OpenFGAC
     # This ensures get_session_store() returns the configured store (Redis/Memory)
     # instead of creating a fallback in-memory store (OpenAI Codex Finding #3)
     if session_store is not None:
-        from mcp_server_langgraph.auth.session import set_session_store
+        from mcp_server_langgraph.auth.session import get_session_store, set_session_store
 
         set_session_store(session_store)
+
+        # Validation: Ensure registration succeeded (prevent regression)
+        registered_store = get_session_store()
+        if registered_store is not session_store:
+            raise RuntimeError(
+                "Session store registration failed! "
+                f"Expected {type(session_store).__name__} but got {type(registered_store).__name__}. "
+                "This is a critical bug - GDPR/session APIs will use wrong store."
+            )
 
     # Build AuthMiddleware with all components
     auth = AuthMiddleware(

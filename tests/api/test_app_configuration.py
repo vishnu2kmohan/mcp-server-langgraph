@@ -86,11 +86,7 @@ class TestCORSConfiguration:
 
             # Check that CORS middleware was not added
             # Count CORSMiddleware in middleware stack
-            cors_middleware_count = sum(
-                1
-                for middleware in app.user_middleware
-                if "CORS" in str(middleware)
-            )
+            cors_middleware_count = sum(1 for middleware in app.user_middleware if "CORS" in str(middleware))
 
             # With empty origins, CORS should not be added
             # Note: FastAPI might have default CORS, so we just check our config wasn't added
@@ -234,3 +230,82 @@ class TestAppIntegration:
 
         # But they should be different instances
         assert app1 is not app2
+
+
+# ============================================================================
+# TDD Tests: OpenAI Codex Finding #2 - Observability Initialization
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestObservabilityInitialization:
+    """
+    TDD tests for observability initialization (OpenAI Codex Finding #2).
+
+    Validates that create_app() calls init_observability() during startup
+    BEFORE any logging occurs, eliminating RuntimeError exceptions.
+    """
+
+    def test_create_app_calls_init_observability(self):
+        """Test that create_app calls init_observability during startup"""
+        with patch("mcp_server_langgraph.app.init_observability") as mock_init:
+            with patch("mcp_server_langgraph.app.setup_rate_limiting"):
+                with patch("mcp_server_langgraph.app.register_exception_handlers"):
+                    app = create_app()
+
+                    # CRITICAL: Verify observability was initialized
+                    mock_init.assert_called_once()
+                    assert mock_init.call_args is not None
+
+    def test_observability_initialized_before_first_log(self):
+        """Test that observability is initialized BEFORE first logger call"""
+        call_order = []
+
+        with patch("mcp_server_langgraph.app.init_observability") as mock_init:
+            with patch("mcp_server_langgraph.app.logger") as mock_logger:
+                with patch("mcp_server_langgraph.app.setup_rate_limiting"):
+                    with patch("mcp_server_langgraph.app.register_exception_handlers"):
+                        # Track call order
+                        mock_init.side_effect = lambda *args, **kwargs: call_order.append("init_observability")
+                        mock_logger.info.side_effect = lambda *args, **kwargs: call_order.append("logger.info")
+
+                        app = create_app()
+
+                        # init_observability must be called BEFORE any logger calls
+                        if len(call_order) >= 2:
+                            first_init = call_order.index("init_observability") if "init_observability" in call_order else -1
+                            first_log = call_order.index("logger.info") if "logger.info" in call_order else -1
+
+                            if first_log >= 0 and first_init >= 0:
+                                assert first_init < first_log, (
+                                    f"init_observability() must be called BEFORE logger.info(). " f"Call order: {call_order}"
+                                )
+
+    def test_no_try_except_workarounds_for_logger(self):
+        """Test that logger calls don't have try/except RuntimeError workarounds"""
+        # Read the app.py source to verify no try/except around logger calls
+        import inspect
+
+        from mcp_server_langgraph.app import create_app as app_func
+
+        source = inspect.getsource(app_func)
+
+        # Should not have try/except RuntimeError workarounds anymore
+        assert "except RuntimeError" not in source, (
+            "app.py still has try/except RuntimeError workarounds for logger! "
+            "These should be removed now that init_observability() is called."
+        )
+
+    def test_app_creation_does_not_raise_runtime_error(self):
+        """Test that app creation doesn't raise RuntimeError from uninitialized logger"""
+        # This should work without any RuntimeError
+        try:
+            app = create_app()
+            success = True
+            error = None
+        except RuntimeError as e:
+            success = False
+            error = str(e)
+
+        assert success, f"App creation raised RuntimeError: {error}"
+        assert isinstance(app, FastAPI)

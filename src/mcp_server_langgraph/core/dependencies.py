@@ -4,7 +4,7 @@ FastAPI Dependencies
 Provides dependency injection for commonly used services.
 """
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from fastapi import Depends
 
@@ -13,6 +13,9 @@ from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.core.config import settings
+
+if TYPE_CHECKING:
+    import redis.asyncio as redis
 
 # Singleton instances (will be initialized on first use)
 _keycloak_client: Optional[KeycloakClient] = None
@@ -97,7 +100,15 @@ def get_api_key_manager(
 
     if _api_key_manager is None:
         # Wire Redis client for API key caching if enabled (OpenAI Codex Finding #5)
-        redis_client = None
+        # IMPORTANT: This Redis client must be passed to APIKeyManager or caching will be disabled
+        # Settings used:
+        #   - api_key_cache_enabled: Enable/disable caching
+        #   - api_key_cache_db: Redis database number (default: 2)
+        #   - api_key_cache_ttl: Cache TTL in seconds (default: 3600)
+        #   - redis_url: Redis connection URL
+        #   - redis_password: Redis password (optional)
+        #   - redis_ssl: Use SSL for Redis connection (default: False)
+        redis_client: Optional["redis.Redis"] = None
         if settings.api_key_cache_enabled and settings.redis_url:
             try:
                 import redis.asyncio as redis
@@ -122,5 +133,14 @@ def get_api_key_manager(
             cache_ttl=settings.api_key_cache_ttl,
             cache_enabled=settings.api_key_cache_enabled,
         )
+
+        # Validation: Ensure cache is actually enabled if requested (prevent regression)
+        if settings.api_key_cache_enabled and settings.redis_url and not _api_key_manager.cache_enabled:
+            raise RuntimeError(
+                "API key caching configuration error! "
+                f"settings.api_key_cache_enabled=True but APIKeyManager.cache_enabled=False. "
+                f"Redis client: {redis_client}. "
+                "This indicates Redis client was not properly wired."
+            )
 
     return _api_key_manager

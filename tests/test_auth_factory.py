@@ -716,3 +716,98 @@ class TestMemorySessionStoreFix:
         assert store.default_ttl == 7200
         assert store.sliding_window is False
         assert store.max_concurrent == 10
+
+
+# ============================================================================
+# TDD Tests: OpenAI Codex Finding #3 - Session Store Registration
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestSessionStoreRegistration:
+    """
+    TDD tests for session store registration bug (OpenAI Codex Finding #3).
+
+    Validates that create_auth_middleware() registers the session store globally
+    via set_session_store() so GDPR/session APIs use the configured store.
+    """
+
+    def test_create_auth_middleware_registers_memory_session_store_globally(self, mock_settings):
+        """Test that memory session store is registered globally after middleware creation"""
+        import mcp_server_langgraph.auth.session as session_module
+        from mcp_server_langgraph.auth.session import get_session_store
+
+        # Reset global state
+        session_module._session_store = None
+
+        # Configure for memory sessions
+        mock_settings.auth_mode = "session"
+        mock_settings.session_backend = "memory"
+
+        # Create middleware
+        middleware = create_auth_middleware(mock_settings)
+
+        # Verify middleware has session store
+        assert middleware.session_store is not None
+        assert isinstance(middleware.session_store, InMemorySessionStore)
+
+        # CRITICAL: Verify session store was registered globally
+        global_store = get_session_store()
+        assert global_store is not None, "Session store not registered globally"
+        assert global_store is middleware.session_store, "Global store differs from middleware store"
+
+    @patch("mcp_server_langgraph.auth.factory.RedisSessionStore")
+    def test_create_auth_middleware_registers_redis_session_store_globally(self, mock_redis_class, mock_settings):
+        """Test that Redis session store is registered globally"""
+        import mcp_server_langgraph.auth.session as session_module
+        from mcp_server_langgraph.auth.session import get_session_store
+
+        # Reset global state
+        session_module._session_store = None
+
+        # Configure for Redis sessions
+        mock_settings.auth_mode = "session"
+        mock_settings.session_backend = "redis"
+        mock_redis_instance = MagicMock(spec=RedisSessionStore)
+        mock_redis_class.return_value = mock_redis_instance
+
+        # Create middleware
+        middleware = create_auth_middleware(mock_settings)
+
+        # Verify Redis store was registered globally
+        global_store = get_session_store()
+        assert global_store is not None, "Redis session store not registered globally"
+        assert global_store is mock_redis_instance
+
+    @pytest.mark.asyncio
+    async def test_session_persistence_across_middleware_and_gdpr_endpoints(self, mock_settings):
+        """Test session created via middleware is accessible via GDPR endpoints"""
+        import mcp_server_langgraph.auth.session as session_module
+        from mcp_server_langgraph.auth.session import get_session_store
+
+        # Reset global state
+        session_module._session_store = None
+
+        # Configure memory sessions
+        mock_settings.auth_mode = "session"
+        mock_settings.session_backend = "memory"
+
+        # Create middleware
+        middleware = create_auth_middleware(mock_settings)
+
+        # Create session via middleware's session store
+        session_id = await middleware.session_store.create(
+            user_id="user:gdpr_test",
+            username="gdpr_test",
+            roles=["user"],
+            metadata={"ip": "192.168.1.1"},
+        )
+
+        # Simulate GDPR endpoint retrieving the session
+        gdpr_store = get_session_store()
+        retrieved_session = await gdpr_store.get(session_id)
+
+        # CRITICAL: Session must be retrievable (same store instance)
+        assert retrieved_session is not None, "Session not found - stores are different instances"
+        assert retrieved_session.user_id == "user:gdpr_test"
+        assert retrieved_session.metadata["ip"] == "192.168.1.1"
