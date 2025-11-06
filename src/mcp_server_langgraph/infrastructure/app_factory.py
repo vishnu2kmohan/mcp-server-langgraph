@@ -126,8 +126,18 @@ async def create_lifespan(container: Optional[ApplicationContainer] = None) -> A
     """
     # Startup
     if container:
-        telemetry = container.get_telemetry()
+        _telemetry = container.get_telemetry()  # noqa: F841
         logger.info(f"Application starting (environment: {container.settings.environment})")
+
+        # Validate checkpoint configuration at startup (fail-fast)
+        from mcp_server_langgraph.core.checkpoint_validator import validate_checkpoint_config
+
+        try:
+            validate_checkpoint_config(container.settings)
+        except Exception as e:
+            logger.error(f"Checkpoint configuration validation failed: {e}")
+            # Re-raise to prevent application from starting with invalid config
+            raise
 
     yield
 
