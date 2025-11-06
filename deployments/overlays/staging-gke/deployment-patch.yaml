@@ -193,6 +193,9 @@ spec:
           - "--structured-logs"
           - "--port=5432"
           - "--private-ip"
+          - "--health-check"
+          - "--http-port=9801"
+          - "--http-address=0.0.0.0"
           - "vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres"
 
         securityContext:
