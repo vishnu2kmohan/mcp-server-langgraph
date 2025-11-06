@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762455378481,
+  "lastUpdate": 1762455642951,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -33616,6 +33616,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00003293334607842936",
             "extra": "mean: 61.23574133898634 usec\nrounds: 4272"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "93349b5ad3e07245d17d9465c95aa30654b6203c",
+          "message": "test(redis): add comprehensive integration and deployment validation tests\n\nAdd extensive test coverage to prevent regression of production incident\nstaging-758b8f744 where unencoded Redis passwords caused pod crashes.\n\nIntegration Tests (tests/integration/test_redis_checkpointer_url_encoding.py):\n- Parametrized tests for all RFC 3986 special characters in passwords\n- Verify checkpointer factory applies URL encoding before Redis connection\n- Test idempotent behavior (already-encoded URLs not double-encoded)\n- Validate production incident password encoding (test fixture, not real secret)\n- Test defense-in-depth safeguards (3-layer protection)\n- Regression tests to prevent ValueError on port casting\n\nDeployment Tests (tests/deployment/test_external_secrets_template_validation.py):\n- Validate External Secrets templates use | urlquery filter\n- Ensure consistency with database URL templates (established pattern)\n- Verify correct template variable usage (redisPassword)\n- Test Redis URL structure validity\n- Prevent accidental filter removal through regex validation\n- Multi-environment consistency checks\n\nTest Results:\n- 42 tests passing (13 unit + 23 integration + 6 deployment)\n- All pre-commit hooks passing (black, isort, flake8, bandit)\n- Gitleaks bypassed: test fixtures contain documented incident password (rotated)\n- Zero regressions in existing test suite\n\nRelated: 0684600 fix(redis): implement URL password encoding to prevent parsing errors\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T13:58:53-05:00",
+          "tree_id": "ab6a63320941ff729dad0e5fc6db7cc4a87ccab3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/93349b5ad3e07245d17d9465c95aa30654b6203c"
+        },
+        "date": 1762455640899,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 142.60310414290848,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009727516496717816",
+            "extra": "mean: 7.012470072165179 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.25834499581697,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012606598525399752",
+            "extra": "mean: 6.744982888000095 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45698.74291907125,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.882439999956205 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48011.41519391844,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.82838000006859 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45493.587223901784,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.981120000020837 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.48247676074723,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.249826740000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.383239127938594,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.590964410000026 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.938094116067859,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.6229150499999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1463100.6028141733,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 683.479999992187 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 4828.097752176035,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 207.1209100000715 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2985.5368057865967,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.9481400000798 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2969.190961973159,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.7920799999524 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58240.184284934374,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021292463799159116",
+            "extra": "mean: 17.17027533957651 usec\nrounds: 12145"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16851.424471992465,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018652811421251357",
+            "extra": "mean: 59.34216431744555 usec\nrounds: 5392"
           }
         ]
       }
