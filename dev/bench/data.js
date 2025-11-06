@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762437553397,
+  "lastUpdate": 1762438068291,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -31786,6 +31786,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002173667863341123",
             "extra": "mean: 58.27260697852774 usec\nrounds: 5216"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "89456142608b9a00db1dcc199ca3eb52b9097d90",
+          "message": "feat(ops): add comprehensive deployment validation and prevention measures\n\n## Prevention Measures\n\nTo ensure the classes of deployment failures experienced on 2025-11-06\ncan never occur again, this commit adds:\n\n### 1. Pre-Deployment Validation Script\n**File**: `scripts/validate-deployment.sh`\n\nAutomated validation that runs before every deployment:\n- ✅ Checks all dependencies (kubectl, python, pytest)\n- ✅ Validates Kustomize builds successfully\n- ✅ Runs all 28 deployment tests\n- ✅ Validates Cloud SQL Proxy configuration\n- ✅ Validates service dependencies\n- ✅ Validates Workload Identity annotations\n- ✅ Generates comprehensive validation report\n\n**Usage**:\n```bash\n./scripts/validate-deployment.sh staging-gke\n```\n\n**Enforcement**: Must pass before deployment proceeds.\n\n### 2. Comprehensive Deployment Runbook\n**File**: `docs/DEPLOYMENT_RUNBOOK.md`\n\nComplete operational procedures including:\n- Step-by-step deployment procedures\n- Pre-deployment validation checklists\n- Post-deployment validation procedures\n- Troubleshooting guide for common issues\n- Emergency rollback procedures\n- Best practices and lessons learned\n- Useful commands and queries\n\nPrevents human error through standardized procedures.\n\n### 3. Lessons Learned Documentation\n**File**: `docs/LESSONS_LEARNED.md`\n\nComprehensive analysis of the 16-hour outage:\n- Root cause analysis for all 3 critical issues\n- Timeline of incident and resolution\n- What went right and what went wrong\n- Prevention measures implemented\n- Metrics and impact analysis\n- Outstanding technical debt\n- Action items (immediate, short-term, long-term)\n\nEnsures organizational learning and prevents recurrence.\n\n## Impact\n\nThese measures create multiple layers of defense:\n\n1. **Automated Testing** (28 tests) - Catches configuration issues\n2. **Pre-Deployment Validation** - Prevents bad configs from deploying\n3. **Comprehensive Runbook** - Guides operators through safe deployments\n4. **Lessons Learned** - Organizational knowledge preservation\n\n## Test Coverage\n\nAll critical failure modes now covered by automated tests:\n- Cloud SQL Proxy health check configuration\n- Service dependency validation\n- Kustomize name transformation validation\n- Init container service references\n- External service endpoints\n- Workload Identity configuration\n\n## Files Changed\n\n- docs/DEPLOYMENT_RUNBOOK.md (new) - 450+ lines of operational procedures\n- docs/LESSONS_LEARNED.md (new) - Comprehensive incident analysis\n- scripts/validate-deployment.sh (new) - Automated validation script\n\n## Next Steps\n\nImmediate action required:\n- [ ] Resolve network connectivity to Google APIs (sqladmin.googleapis.com)\n- [ ] Integrate validation script into CI/CD pipeline\n- [ ] Set up monitoring and alerting for deployment failures\n- [ ] Create automated rollback on failure\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T09:05:30-05:00",
+          "tree_id": "fbdf39546a5d452334a61a0f947da5e700359fc0",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/89456142608b9a00db1dcc199ca3eb52b9097d90"
+        },
+        "date": 1762438066862,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.2417186125248,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008978440458271734",
+            "extra": "mean: 6.885074134022026 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.08335161087248,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001232888835978418",
+            "extra": "mean: 6.662964208000517 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44669.57912316008,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.386600000032786 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47183.87745759538,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.193680000095583 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45747.28649979872,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.85921999995344 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.98171106232869,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.2361034700000175 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.410221220162434,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.51924795999989 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.955075173783563,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.45127560999987 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1419426.2679198664,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 704.5099999913873 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5000.025250127933,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 199.99898999998322 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2946.695110525623,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.36323999995466 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2952.0181915182793,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.7512999998421 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59324.45635356326,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001925455947816086",
+            "extra": "mean: 16.856454512455656 usec\nrounds: 13806"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17087.795533724446,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017953472779606143",
+            "extra": "mean: 58.52129948689996 usec\nrounds: 5456"
           }
         ]
       }
