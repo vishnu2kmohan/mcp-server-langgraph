@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762466418288,
+  "lastUpdate": 1762466770906,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -34592,6 +34592,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002039719055306684",
             "extra": "mean: 60.56604525135787 usec\nrounds: 5370"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "eab9d5b574b377e6e2cb5266fb271b405eb03130",
+          "message": "fix(tests): improve smoke test reliability with module reloading\n\nFixes 2 critical smoke test failures by properly reloading configuration\nmodules after monkeypatching environment variables.\n\n## Problem\n\nSmoke tests were failing because:\n1. Settings are loaded as module-level singletons at import time\n2. Monkeypatching env vars after import had no effect\n3. FastAPI Depends() objects were passed directly to functions outside\n   FastAPI context instead of being resolved\n\n## Solution (TDD RED-GREEN-REFACTOR)\n\n### RED: Verified Failures\n- test_keycloak_client_factory_with_minimal_config: admin_password = None\n- test_all_dependency_singletons_initialize: sp_manager.openfga = Depends()\n\n### GREEN: Implemented Fixes\n1. **Module Reloading**: Use importlib.reload() to reload both config and\n   dependencies modules after monkeypatching environment variables\n2. **Explicit Dependencies**: Call dependency functions with explicit parameters\n   instead of relying on FastAPI's Depends() resolution in test context\n3. **Graceful Degradation**: Skip tests requiring observability initialization\n\n### REFACTOR: Documentation\n- Added comments explaining module reload requirement\n- Documented observability dependency limitations\n- Simplified test scope to focus on core dependencies\n\n## Results\n\n- ✅ 8/11 smoke tests passing (was 2/11)\n- ✅ 1 test skipped gracefully (observability not initialized)\n- ⚠️ 2 tests still require observability init (documented, acceptable)\n\n## Test Results\n\n```\ntests/smoke/test_ci_startup_smoke.py::TestCriticalStartupValidation\n  ✅ test_import_core_modules\n  ✅ test_settings_load_successfully\n  ✅ test_keycloak_client_factory_with_minimal_config (FIXED)\n  ⏭️ test_openfga_client_returns_none_when_disabled (SKIPPED)\n  ✅ test_service_principal_manager_handles_none_openfga\n  ✅ test_cache_service_accepts_redis_credentials\n\ntests/smoke/test_ci_startup_smoke.py::TestDependencyInjectionSmoke\n  ⚠️ test_all_dependency_singletons_initialize (needs observability)\n\ntests/smoke/test_ci_startup_smoke.py::TestGracefulDegradationSmoke\n  ⚠️ test_system_works_without_external_services (needs observability)\n```\n\n## Impact\n\n- Smoke tests now reliably validate dependency injection\n- Configuration reloading pattern established for testing\n- Reduced flakiness in CI/CD smoke test runs\n\n## Follow-up\n\n2 tests still require observability initialization. Options:\n1. Initialize observability in test setup (adds complexity)\n2. Mock observability (may hide real issues)\n3. Accept as known limitation (current approach)\n\nRecommendation: Accept current state, focus on higher-value improvements\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T17:04:41-05:00",
+          "tree_id": "2e159d2dc992d9adccd80974c3d8c71e7f67f389",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/eab9d5b574b377e6e2cb5266fb271b405eb03130"
+        },
+        "date": 1762466769481,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.25555389790355,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001054115086204104",
+            "extra": "mean: 7.079367659573784 msec\nrounds: 94"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 143.99022403007604,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001564378081300107",
+            "extra": "mean: 6.944915925619537 msec\nrounds: 121"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44331.153718349684,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.55749999996226 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47929.608659560756,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.863929999990205 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45367.6663734641,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.042129999988447 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.20575576021292,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.175829239999956 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.400663760884658,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.54462817999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.964627681243261,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.35497883000005 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1361525.9982380134,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 734.4700000544435 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13696.374925674887,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 73.01201999993623 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3000.414717321536,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 333.2872600000769 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2885.925344978332,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 346.50931000001606 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60186.39414403843,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002470834769632586",
+            "extra": "mean: 16.615050863602068 usec\nrounds: 11580"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17029.65825122442,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000253059895726487",
+            "extra": "mean: 58.72108443092807 usec\nrounds: 4252"
           }
         ]
       }
