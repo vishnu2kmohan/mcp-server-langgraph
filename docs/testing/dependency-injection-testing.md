@@ -8,7 +8,7 @@ icon: "shield-check"
 
 ## Overview
 
-This guide explains how to properly test dependency injection in the MCP Server LangGraph project to prevent critical production failures. These best practices were established after fixing 5 critical bugs identified by OpenAI Codex (see [ADR-0042](../../adr/adr-0042-dependency-injection-configuration-fixes.md)).
+This guide explains how to properly test dependency injection in the MCP Server LangGraph project to prevent critical production failures. These best practices were established after fixing 5 critical bugs identified by OpenAI Codex (see [ADR-0042](/architecture/adr-0042-dependency-injection-configuration-fixes)).
 
 ## Critical Bugs Prevented
 
@@ -486,9 +486,11 @@ When modifying existing `get_X_client()` functions:
 
 ## References
 
-- [ADR-0042: Dependency Injection Configuration Fixes](../../adr/adr-0042-dependency-injection-configuration-fixes.md)
-- [TDD Best Practices](../tdd-best-practices.md)
-- [Pre-commit Hooks Guide](../development/pre-commit-hooks.md)
+- [ADR-0042: Dependency Injection Configuration Fixes](/architecture/adr-0042-dependency-injection-configuration-fixes)
+<!-- TODO: Add the following documentation pages:
+- TDD Best Practices
+- Pre-commit Hooks Guide
+-->
 
 ## Checklist for New Dependencies
 

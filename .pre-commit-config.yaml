@@ -109,6 +109,22 @@ repos:
           Validates internal documentation links to prevent broken references.
           Checks ADR cross-references, GitHub links, and active documentation.
 
+      - id: validate-documentation-quality
+        name: Validate Documentation Quality (MDX Parsing, Links, ADRs)
+        entry: python -m pytest tests/meta/test_documentation_validation.py -v --tb=short
+        language: system
+        files: \.(md|mdx|json)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Comprehensive documentation validation tests (TDD):
+          - Prevents MDX parsing errors (unescaped < followed by digits)
+          - Validates frontmatter in all MDX files
+          - Checks ADR numbering consistency
+          - Verifies docs.json navigation references
+          - Detects orphaned documentation files
+          Regression prevention for issues fixed in documentation audit (2025-11-06).
+
       # Deployment Configuration Validation (TDD)
       - id: validate-deployment-secrets
         name: Validate deployment secret keys alignment

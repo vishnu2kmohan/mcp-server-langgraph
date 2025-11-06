@@ -23,99 +23,64 @@ class TestRateLimiterUserExtraction:
     """Test extracting user info from JWT tokens for rate limiting"""
 
     def test_get_user_id_from_jwt_with_valid_token(self):
-        """Test extracting user ID from valid JWT token"""
-        # Create mock request with JWT in Authorization header
+        """Test extracting user ID from request.state.user set by AuthMiddleware"""
+        # Create mock request with user already set by AuthMiddleware
         request = MagicMock(spec=Request)
 
-        # Create valid JWT
-        payload = {
-            "sub": "user:alice",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock request.state.user as it would be set by AuthMiddleware
+        request.state.user = {"user_id": "user:alice", "sub": "user:alice"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            user_id = get_user_id_from_jwt(request)
+        user_id = get_user_id_from_jwt(request)
 
         assert user_id == "user:alice"
 
     def test_get_user_id_from_jwt_with_user_id_claim(self):
-        """Test extracting user_id claim (fallback from sub)"""
+        """Test extracting user_id claim from request.state.user"""
         request = MagicMock(spec=Request)
 
-        # JWT with user_id instead of sub
-        payload = {
-            "user_id": "alice_123",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock request.state.user with user_id claim
+        request.state.user = {"user_id": "alice_123"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            user_id = get_user_id_from_jwt(request)
+        user_id = get_user_id_from_jwt(request)
 
         assert user_id == "alice_123"
 
     def test_get_user_id_from_jwt_with_expired_token(self):
-        """Test that expired tokens still work for rate limiting (by design)"""
+        """Test that user ID is extracted even with expired token data in state"""
         request = MagicMock(spec=Request)
 
-        # Create expired JWT
-        payload = {
-            "sub": "user:bob",
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1),  # Expired
-            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # AuthMiddleware would have set this even for expired tokens (by design for rate limiting)
+        request.state.user = {"user_id": "user:bob", "sub": "user:bob"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            # Should still extract user ID (verify_exp=False for rate limiting)
-            user_id = get_user_id_from_jwt(request)
+        user_id = get_user_id_from_jwt(request)
 
         assert user_id == "user:bob"
 
     def test_get_user_id_from_jwt_with_invalid_token(self):
-        """Test handling of invalid JWT token"""
+        """Test handling when AuthMiddleware didn't set user (invalid token)"""
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = "Bearer invalid.token.here"
+        # No user set in request.state (AuthMiddleware rejected the token)
+        request.state.user = None
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            user_id = get_user_id_from_jwt(request)
+        user_id = get_user_id_from_jwt(request)
 
         assert user_id is None
 
     def test_get_user_id_from_jwt_without_bearer_token(self):
-        """Test handling request without Authorization header"""
+        """Test handling request without user in state (no auth)"""
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = None
+        # No user attribute in request.state at all
+        delattr(request.state, "user") if hasattr(request.state, "user") else None
 
         user_id = get_user_id_from_jwt(request)
 
         assert user_id is None
 
     def test_get_user_id_from_jwt_with_malformed_header(self):
-        """Test handling malformed Authorization header"""
+        """Test handling when state.user is not set (malformed header)"""
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = "NotBearer sometoken"
+        # AuthMiddleware didn't set user due to malformed header
+        request.state.user = None
 
         user_id = get_user_id_from_jwt(request)
 

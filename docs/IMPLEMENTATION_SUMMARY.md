@@ -11,17 +11,17 @@ See detailed implementation guides:
 - **Kubernetes Best Practices**: [kubernetes-best-practices-implementation.mdx](./kubernetes-best-practices-implementation.mdx)
 - **GKE Staging Implementation**: [deployment/gke-staging-implementation-summary.mdx](./deployment/gke-staging-implementation-summary.mdx)
 - **Code Execution Implementation**: [code-execution-implementation-summary.md](./code-execution-implementation-summary.md)
-- **Infrastructure Deployment**: [INFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md](../INFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md)
+- **Infrastructure Deployment**: See INFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md in repository root
 
 ## Naming Conventions
 
 All infrastructure follows the standard: `{environment}-mcp-server-langgraph-{resource-type}`
 
-See [NAMING-CONVENTIONS.md](../NAMING-CONVENTIONS.md) for complete details.
+See NAMING-CONVENTIONS.md in repository root for complete details.
 
 ## Deployment
 
-For deployment procedures, see [INFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md](../INFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md).
+For deployment procedures, see INFRASTRUCTURE-DEPLOYMENT-CHECKLIST.md in repository root.
 
 ## Last Updated
 

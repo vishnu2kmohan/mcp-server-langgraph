@@ -18,6 +18,7 @@ set -euo pipefail
 # Configuration
 NAMESPACE="${NAMESPACE:-staging-mcp-server-langgraph}"
 SERVICE_NAME="${SERVICE_NAME:-staging-mcp-server-langgraph}"
+# shellcheck disable=SC2034  # TIMEOUT reserved for future timeout implementation
 TIMEOUT=30
 
 # Colors
@@ -75,7 +76,7 @@ setup_port_forward() {
 
     # Wait for port-forward to be ready
     log_info "Waiting for port-forward (PID: $PORT_FORWARD_PID)..."
-    for i in {1..10}; do
+    for _ in {1..10}; do
         if curl -s -f http://localhost:8080/health > /dev/null 2>&1; then
             log_info "Port-forward ready"
             return 0
@@ -196,7 +197,7 @@ test_response_time() {
     if (( $(echo "$RESPONSE_TIME < 1.0" | bc -l) )); then
         test_pass
     else
-        test_warn "Response time is ${RESPONSE_TIME}s (threshold: 1.0s)"
+        log_warn "Response time is ${RESPONSE_TIME}s (threshold: 1.0s)"
         # Don't fail, just warn
         test_pass
     fi
