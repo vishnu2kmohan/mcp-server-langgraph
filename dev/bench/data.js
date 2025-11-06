@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762448691898,
+  "lastUpdate": 1762448988120,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -32762,6 +32762,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017071034175148883",
             "extra": "mean: 56.773895915863974 usec\nrounds: 5803"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "84a0c28ddef98691b5d9e8896159eb45b3324686",
+          "message": "fix(infra): resolve Redis service duplicate port name validation error\n\nThe Service \"staging-redis-session\" is invalid: spec.ports[1].name: Duplicate value: \"redis\"\n\n**Root Cause**: Kustomize merges base service (port 6379 named \"redis\") with staging patch (port 6378 named \"redis\"), creating duplicate port names during manifest generation.\n\n**Fix**: Renamed staging port from \"redis\" to \"memorystore-redis\" to avoid conflict.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T12:08:30-05:00",
+          "tree_id": "f7ece7811c8651b4b09fed78e2fb530d93d19fc6",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/84a0c28ddef98691b5d9e8896159eb45b3324686"
+        },
+        "date": 1762448986924,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.49253640794558,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00027018864231576257",
+            "extra": "mean: 7.067510593752028 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.99336618303747,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015088189330669934",
+            "extra": "mean: 6.757059629032324 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45720.24240829433,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.872150000206148 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46918.15737341262,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.313710000185893 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44875.40791790241,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.2839199997793 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.05050846930527,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.261759139999924 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.325030433724667,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.74636093999993 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.934611701125759,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.6581867600002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1471973.6223724124,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 679.3599999355138 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5127.12422525325,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 195.04110999974955 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2968.577224167206,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.86170999999376 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2841.143243084803,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 351.9709899998702 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59161.49715527448,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003764784281830602",
+            "extra": "mean: 16.902885289995506 usec\nrounds: 12257"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16962.110195230725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002362998234323443",
+            "extra": "mean: 58.9549288673512 usec\nrounds: 5075"
           }
         ]
       }
