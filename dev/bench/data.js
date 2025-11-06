@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762448988120,
+  "lastUpdate": 1762450337348,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -32884,6 +32884,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002362998234323443",
             "extra": "mean: 58.9549288673512 usec\nrounds: 5075"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "4e38282303ab622b90ed7f18c7c1c0efd07b5b7d",
+          "message": "fix(health): standardize health check routes following FastAPI sub-app best practices\n\n## Problem\nHealth endpoints were inaccessible, causing all pods to fail startup/readiness/liveness probes.\n\n**Root Cause**: Double-path issue from improper FastAPI sub-app mounting.\n- Health app defined routes at `/health`, `/health/ready`, `/health/startup`\n- Main app mounted health app at `/health`\n- Resulted in double paths: `/health/health/ready` instead of `/health/ready`\n\n## Solution (TDD Approach)\n\n### RED Phase\n- Created `tests/unit/test_health_endpoints.py` with 4 comprehensive tests\n- Tests verified routes are at root level when mounted at `/health`\n- All tests FAILED ❌ confirming the bug\n\n### GREEN Phase\n- Fixed `src/mcp_server_langgraph/health/checks.py`:\n  - Changed `/health` → `/` (root route)\n  - Changed `/health/ready` → `/ready`\n  - Changed `/health/startup` → `/startup`\n  - Added `/live` endpoint for liveness probe\n- Updated `deployments/base/deployment.yaml`:\n  - Liveness probe: `/health` → `/health/live`\n- All tests PASS ✅\n\n## Verification\n\n```bash\ncurl http://pod:8000/health/         # 200 OK\ncurl http://pod:8000/health/ready    # 200/503\ncurl http://pod:8000/health/startup  # 200 OK\ncurl http://pod:8000/health/live     # 200 OK\n```\n\n## Prevention\n\nTests ensure:\n1. Routes are at root level (`/`, `/ready`, `/startup`, `/live`)\n2. Double paths (`/health/health/*`) return 404\n3. Kubernetes probe paths work correctly\n4. Mounted sub-app accessible at `/health/*`\n\n## Files Changed\n\n- `src/mcp_server_langgraph/health/checks.py` - Fixed route paths\n- `deployments/base/deployment.yaml` - Updated liveness probe path\n- `tests/unit/test_health_endpoints.py` - New comprehensive tests (4 tests)\n- `tests/unit/test_server_streamable_init.py` - Observability init tests (3 tests)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T12:30:44-05:00",
+          "tree_id": "b9776abd65d37c22fdea244cd2a8ec83ff8a71d0",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/4e38282303ab622b90ed7f18c7c1c0efd07b5b7d"
+        },
+        "date": 1762450335406,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.70800216119636,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009568309954604941",
+            "extra": "mean: 6.910467873684399 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.09080275237315,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000128487323246703",
+            "extra": "mean: 6.7073218571430795 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44182.13998831239,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.633580000075426 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48194.97760136961,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.749050000006264 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46636.24428987498,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.442550000045912 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 190.68084150414867,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.244365359999961 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.368586171011167,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.629994630000056 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.936508494927104,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.63897197999992 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1463122.0095347275,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 683.470000097941 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 5209.762490577068,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 191.9473299999197 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2982.9777270889153,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.23549000008757 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2930.6058614406666,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.2263699999585 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60257.76098818733,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002288763343041672",
+            "extra": "mean: 16.59537267234399 usec\nrounds: 11761"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17181.17268202405,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002470003775389602",
+            "extra": "mean: 58.20324482543957 usec\nrounds: 5073"
           }
         ]
       }
