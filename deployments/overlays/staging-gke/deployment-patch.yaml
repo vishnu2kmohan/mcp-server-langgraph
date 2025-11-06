@@ -95,6 +95,76 @@ spec:
               name: staging-mcp-server-langgraph-secrets
               key: keycloak-db-password
 
+        # GDPR Configuration
+        - name: GDPR_STORAGE_BACKEND
+          valueFrom:
+            configMapKeyRef:
+              name: staging-mcp-server-langgraph-config
+              key: gdpr_storage_backend
+        - name: GDPR_POSTGRES_URL
+          valueFrom:
+            configMapKeyRef:
+              name: staging-mcp-server-langgraph-config
+              key: gdpr_postgres_url
+
+        # OpenAPI/Additional API Keys
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: openai-api-key
+              optional: true
+
+        # OpenFGA Configuration (optional in staging - may not be configured yet)
+        - name: OPENFGA_STORE_ID
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: openfga-store-id
+              optional: true
+        - name: OPENFGA_MODEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: openfga-model-id
+              optional: true
+
+        # Keycloak Client Secret (optional in staging)
+        - name: KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: keycloak-client-secret
+              optional: true
+
+        # LangSmith (optional)
+        - name: LANGSMITH_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: langsmith-api-key
+              optional: true
+
+        # Infisical Secrets Management (optional)
+        - name: INFISICAL_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: infisical-client-id
+              optional: true
+        - name: INFISICAL_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: infisical-client-secret
+              optional: true
+        - name: INFISICAL_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: staging-mcp-server-langgraph-secrets
+              key: infisical-project-id
+              optional: true
+
         # Readiness probe
         readinessProbe:
           httpGet:

@@ -37,7 +37,5 @@ labels:
       app: mcp-server-langgraph
       managed-by: kustomize
 
-images:
-  - name: mcp-server-langgraph
-    newName: ghcr.io/vishnu2kmohan/mcp-server-langgraph
-    newTag: 2.8.0
+# Note: Image transformation should be done in overlays, not in base
+# Each environment (dev, staging, production) uses different registries

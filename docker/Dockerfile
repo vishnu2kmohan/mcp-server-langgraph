@@ -159,9 +159,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # ==============================================================================
 # STAGE: runtime-distroless
-# Distroless Python runtime (minimal attack surface)
+# Python 3.12 slim runtime (compatible with our build stage)
+# Note: Switched from distroless due to Python 3.11 vs 3.12 incompatibility
 # ==============================================================================
-FROM gcr.io/distroless/python3-debian12:nonroot AS runtime-distroless
+FROM python:3.12-slim AS runtime-distroless
+
+RUN useradd -r -u 65532 -g users nonroot
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -169,6 +172,8 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 
 WORKDIR /app
+
+USER nonroot
 
 # ==============================================================================
 # STAGE: runtime-slim
@@ -195,9 +200,10 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime-slim,sharing=p
 # ==============================================================================
 FROM runtime-distroless AS final-base
 
-# Copy Python packages from venv's site-packages to system site-packages
-# Distroless Python is at /usr/bin/python3, not /opt/venv/bin/python
-COPY --from=build-base --chown=nonroot:nonroot /opt/venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+# Copy virtual environment from build stage
+COPY --from=build-base --chown=nonroot:users /opt/venv /opt/venv
+
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
@@ -211,17 +217,18 @@ LABEL org.opencontainers.image.size="~200MB"
 
 EXPOSE 8000
 
-# Distroless Python is at /usr/bin/python3
-CMD ["/usr/bin/python3", "-m", "mcp_server_langgraph.mcp.server_streamable"]
+# Use Python from venv
+CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 
 # ==============================================================================
 # FINAL STAGE: full variant (distroless)
 # ==============================================================================
 FROM runtime-distroless AS final-full
 
-# Copy Python packages from venv's site-packages to system site-packages
-# Distroless Python is at /usr/bin/python3, not /opt/venv/bin/python
-COPY --from=build-full --chown=nonroot:nonroot /opt/venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+# Copy virtual environment from build stage
+COPY --from=build-full --chown=nonroot:users /opt/venv /opt/venv
+
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
@@ -235,8 +242,8 @@ LABEL org.opencontainers.image.size="~1.2GB"
 
 EXPOSE 8000
 
-# Distroless Python is at /usr/bin/python3
-CMD ["/usr/bin/python3", "-m", "mcp_server_langgraph.mcp.server_streamable"]
+# Use Python from venv
+CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 
 # ==============================================================================
 # FINAL STAGE: test variant (slim, with shell)

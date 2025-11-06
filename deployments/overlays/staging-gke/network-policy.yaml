@@ -185,6 +185,8 @@ spec:
     ports:
     - protocol: TCP
       port: 8080
+    - protocol: TCP
+      port: 9000  # Management/health endpoint
   # Allow from ingress
   - from:
     - namespaceSelector:
@@ -193,6 +195,16 @@ spec:
     ports:
     - protocol: TCP
       port: 8080
+  # Allow pod-to-pod for JGroups clustering
+  - from:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 7800  # JGroups cluster communication
+    - protocol: TCP
+      port: 9000  # Management endpoint for cluster health checks
   egress:
   # Allow DNS to kube-system
   - to:
