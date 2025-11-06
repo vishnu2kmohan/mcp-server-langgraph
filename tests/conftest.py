@@ -630,25 +630,37 @@ async def postgres_connection_clean(postgres_connection_real):
     """
     yield postgres_connection_real
 
-    # Cleanup: Drop all test tables
+    # Cleanup: Truncate all GDPR tables (faster than DROP, preserves schema)
     # This ensures complete isolation between tests
     try:
-        # Get all table names in public schema
-        tables = await postgres_connection_real.fetch(
+        # Truncate all GDPR schema tables (idempotent, fast)
+        await postgres_connection_real.execute(
             """
-            SELECT tablename FROM pg_tables
-            WHERE schemaname = 'public'
-            AND tablename LIKE 'test_%'
+            TRUNCATE TABLE
+                audit_logs,
+                consent_records,
+                conversations,
+                user_preferences,
+                user_profiles
+            CASCADE
             """
         )
-
-        # Drop all test tables
-        for table in tables:
-            await postgres_connection_real.execute(f'DROP TABLE IF EXISTS {table["tablename"]} CASCADE')
     except Exception:
-        # If cleanup fails, don't fail the test
-        # The session cleanup will handle it
-        pass
+        # Tables might not exist yet (before schema creation)
+        # Try dropping test tables as fallback
+        try:
+            tables = await postgres_connection_real.fetch(
+                """
+                SELECT tablename FROM pg_tables
+                WHERE schemaname = 'public'
+                AND tablename LIKE 'test_%'
+                """
+            )
+            for table in tables:
+                await postgres_connection_real.execute(f'DROP TABLE IF EXISTS {table["tablename"]} CASCADE')
+        except Exception:
+            # If cleanup fails, don't fail the test
+            pass
 
 
 @pytest.fixture
@@ -720,6 +732,43 @@ async def openfga_client_clean(openfga_client_real):
             # Tuples will be cleaned up eventually or won't affect other tests
             # if using different object IDs
             pass
+
+
+@pytest.fixture(scope="session")
+async def postgres_with_schema(postgres_connection_real):
+    """
+    PostgreSQL connection with GDPR schema initialized.
+
+    Runs the GDPR schema migration once per test session.
+    Required for testing PostgreSQL storage backends.
+
+    Usage:
+        @pytest.mark.asyncio
+        async def test_postgres_storage(postgres_with_schema):
+            # Schema already created (audit_logs, consent_records, etc.)
+    """
+    import os
+    from pathlib import Path
+
+    # Find schema file
+    project_root = Path(__file__).parent.parent
+    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
+
+    if not schema_file.exists():
+        pytest.skip(f"Schema file not found: {schema_file}")
+
+    # Read and execute schema
+    schema_sql = schema_file.read_text()
+
+    try:
+        await postgres_connection_real.execute(schema_sql)
+    except Exception:
+        # Schema might already exist (idempotent CREATE TABLE IF NOT EXISTS)
+        pass
+
+    yield postgres_connection_real
+
+    # No cleanup - schema persists for all tests in session
 
 
 @pytest.fixture(scope="session")

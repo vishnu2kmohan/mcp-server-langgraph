@@ -34,9 +34,12 @@ class TestPostgresAuditLogStore:
     """
 
     @pytest.fixture
-    async def audit_store(self, postgres_connection_clean):
-        """Create PostgresAuditLogStore with real database"""
+    async def audit_store(self, postgres_with_schema, postgres_connection_clean):
+        """Create PostgresAuditLogStore with real database and schema"""
         from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresAuditLogStore
+
+        # Ensure schema is initialized
+        _ = postgres_with_schema
 
         # Create a pool from the connection (simplified for testing)
         # In production, this would be a real connection pool
@@ -279,9 +282,12 @@ class TestPostgresConsentStore:
     """
 
     @pytest.fixture
-    async def consent_store(self, postgres_connection_clean):
-        """Create PostgresConsentStore with real database"""
+    async def consent_store(self, postgres_with_schema, postgres_connection_clean):
+        """Create PostgresConsentStore with real database and schema"""
         from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConsentStore
+
+        # Ensure schema is initialized
+        _ = postgres_with_schema
 
         class SimplePool:
             def __init__(self, conn):
