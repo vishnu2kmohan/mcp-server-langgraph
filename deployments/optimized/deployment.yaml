@@ -57,7 +57,7 @@ spec:
       - name: mcp-server-langgraph
         # Use base variant by default (200MB vs 530MB)
         # For local embeddings, use :full variant
-        image: mcp-server-langgraph:base
+        image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.8.0-base
         imagePullPolicy: IfNotPresent
 
         ports:

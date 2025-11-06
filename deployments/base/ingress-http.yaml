@@ -18,12 +18,15 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
     # Request size
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    # CORS
+    # CORS - SECURITY: Override with specific origins in overlays
+    # Development: Use "*" for local development only
+    # Staging/Production: MUST specify exact origins (e.g., "https://app.example.com,https://admin.example.com")
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.example.com"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,Accept"
     nginx.ingress.kubernetes.io/cors-expose-headers: "X-Request-ID,X-RateLimit-Limit,X-RateLimit-Remaining"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
 spec:
   ingressClassName: nginx
   tls:
@@ -72,11 +75,14 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
     # Keep-alive for SSE
     nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "86400"
-    # CORS
+    # CORS - SECURITY: Override with specific origins in overlays
+    # Development: Use "*" for local development only
+    # Staging/Production: MUST specify exact origins (e.g., "https://app.example.com,https://admin.example.com")
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.example.com"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
 spec:
   ingressClassName: nginx
   tls:

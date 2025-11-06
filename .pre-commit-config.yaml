@@ -98,6 +98,35 @@ repos:
         pass_filenames: false
         always_run: false
 
+      # Deployment Configuration Validation (TDD)
+      - id: validate-deployment-secrets
+        name: Validate deployment secret keys alignment
+        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_deployment_secret_keys_exist_in_template -v --tb=short
+        language: system
+        files: ^deployments/helm/.*\.(yaml|yml)$
+        pass_filenames: false
+
+      - id: validate-cors-security
+        name: Validate CORS security configuration
+        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_kong_cors_not_wildcard_with_credentials -v --tb=short
+        language: system
+        files: ^deployments/(kong|base)/.*\.(yaml|yml)$
+        pass_filenames: false
+
+      - id: check-hardcoded-credentials
+        name: Check for hard-coded credentials
+        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_no_hardcoded_credentials_in_configmap -v --tb=short
+        language: system
+        files: ^deployments/base/configmap\.yaml$
+        pass_filenames: false
+
+      - id: validate-redis-password-required
+        name: Ensure Redis password is mandatory
+        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_redis_password_not_optional -v --tb=short
+        language: system
+        files: ^deployments/base/redis-session-deployment\.yaml$
+        pass_filenames: false
+
       - id: check-mermaid-styling
         name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
         entry: python3 scripts/check_mermaid_styling.py

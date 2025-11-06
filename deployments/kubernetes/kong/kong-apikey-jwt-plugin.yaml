@@ -28,7 +28,7 @@ metadata:
 spec:
   ingressClassName: kong
   rules:
-  - host: legacy.mcp-langgraph.example.com
+  - host: legacy.mcp-langgraph.${DOMAIN}  # TODO: Replace
     http:
       paths:
       - path: /

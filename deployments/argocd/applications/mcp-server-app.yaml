@@ -41,10 +41,14 @@ spec:
         replicaCount: 3
 
         # Service account (with IRSA)
+        # TODO: Set eks.amazonaws.com/role-arn via:
+        # 1. Terraform: Use ArgoCD ApplicationSet with values from TF outputs
+        # 2. External ConfigMap: Reference from Kubernetes ConfigMap
+        # 3. Helm parameters file: Pass via --values argocd-values.yaml
         serviceAccount:
           create: true
           annotations:
-            eks.amazonaws.com/role-arn: "" # Set via Terraform output
+            eks.amazonaws.com/role-arn: "${EKS_SERVICE_ACCOUNT_ROLE_ARN}" # Substitute via Kustomize or Terraform
 
         # Resources
         resources:
@@ -56,17 +60,19 @@ spec:
             memory: 384Mi
 
         # PostgreSQL configuration (from Terraform)
+        # TODO: Set via Terraform outputs or external configuration
         postgresql:
           enabled: false
-          externalHost: "" # Set from Terraform output
+          externalHost: "${POSTGRES_HOST}" # e.g., postgres.example.com or RDS endpoint
           externalPort: 5432
           database: mcp_langgraph
           existingSecret: postgres-credentials
 
         # Redis configuration (from Terraform)
+        # TODO: Set via Terraform outputs or external configuration
         redis:
           enabled: false
-          externalHost: "" # Set from Terraform output
+          externalHost: "${REDIS_HOST}" # e.g., redis.example.com or ElastiCache endpoint
           externalPort: 6379
           cluster:
             enabled: true
@@ -87,6 +93,7 @@ spec:
           enabled: true
 
         # Ingress
+        # TODO: Replace example.com with actual domain
         ingress:
           enabled: true
           className: nginx
@@ -94,14 +101,14 @@ spec:
             cert-manager.io/cluster-issuer: letsencrypt-prod
             nginx.ingress.kubernetes.io/ssl-redirect: "true"
           hosts:
-            - host: mcp.example.com  # Replace with your domain
+            - host: "${APP_DOMAIN}"  # e.g., mcp.yourcompany.com
               paths:
                 - path: /
                   pathType: Prefix
           tls:
             - secretName: mcp-server-tls
               hosts:
-                - mcp.example.com
+                - "${APP_DOMAIN}"
 
   # Destination
   destination:

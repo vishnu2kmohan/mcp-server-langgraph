@@ -35,7 +35,7 @@ services:
               minute: 60
               hour: 1000
               policy: redis
-              redis_host: redis
+              redis_host: redis-session  # Updated to match actual service name
               redis_port: 6379
               fault_tolerant: true
               hide_client_headers: false
@@ -47,8 +47,15 @@ services:
 
           - name: cors
             config:
+              # SECURITY: Specify exact allowed origins. Wildcard (*) with credentials: true
+              # is a security vulnerability. Update this list for your environment:
+              # - Development: http://localhost:3000, http://localhost:8080
+              # - Staging: https://staging.yourcompany.com
+              # - Production: https://app.yourcompany.com, https://admin.yourcompany.com
+              # TODO: Replace with your actual domain names
               origins:
-                - "*"
+                - "https://app.${DOMAIN}"
+                - "https://admin.${DOMAIN}"
               methods:
                 - GET
                 - POST
@@ -61,6 +68,8 @@ services:
                 - Authorization
               credentials: true
               max_age: 3600
+              exposed_headers:
+                - X-Kong-Request-Id
 
           - name: prometheus
             config:
@@ -86,7 +95,7 @@ services:
               minute: 300
               hour: 10000
               policy: redis
-              redis_host: redis
+              redis_host: redis-session  # Updated to match actual service name
               redis_port: 6379
               fault_tolerant: true
 
@@ -110,7 +119,7 @@ services:
               minute: 1000
               hour: 100000
               policy: redis
-              redis_host: redis
+              redis_host: redis-session  # Updated to match actual service name
               redis_port: 6379
               fault_tolerant: true
 
@@ -118,7 +127,7 @@ consumers:
   - username: free-tier-user
     custom_id: free-tier
     keyauth_credentials:
-      - key: free-tier-api-key
+      - key: "REPLACE_WITH_ACTUAL_API_KEY"  # SECURITY: Replace with actual key from secrets
     plugins:
       - name: rate-limiting
         config:
@@ -128,7 +137,7 @@ consumers:
   - username: premium-tier-user
     custom_id: premium-tier
     keyauth_credentials:
-      - key: premium-tier-api-key
+      - key: "REPLACE_WITH_ACTUAL_API_KEY"  # SECURITY: Replace with actual key from secrets
     plugins:
       - name: rate-limiting
         config:
@@ -140,7 +149,7 @@ consumers:
     jwt_secrets:
       - key: enterprise-issuer
         algorithm: HS256
-        secret: enterprise-jwt-secret
+        secret: "REPLACE_WITH_ACTUAL_JWT_SECRET"  # SECURITY: Replace with actual secret from secrets
     plugins:
       - name: rate-limiting
         config:

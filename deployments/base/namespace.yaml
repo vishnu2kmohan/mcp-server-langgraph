@@ -4,7 +4,7 @@ metadata:
   name: mcp-server-langgraph
   labels:
     name: mcp-server-langgraph
-    environment: production
+    # Environment label should be set by overlays, not base
     # Enable Istio sidecar injection
     istio-injection: enabled
     # Pod Security Standards

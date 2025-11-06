@@ -65,14 +65,16 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: kubecost.example.com
+    # TODO: Replace with actual domain
+    - host: kubecost.${DOMAIN}
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: kubecost-tls
       hosts:
-        - kubecost.example.com
+        # TODO: Replace with actual domain
+        - kubecost.${DOMAIN}
 
 # Resource limits
 kubecostModel:

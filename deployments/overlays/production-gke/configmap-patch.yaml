@@ -87,7 +87,8 @@ data:
 
   # CORS (strict for production)
   cors_enabled: "true"
-  cors_allow_origins: "https://app.example.com"  # Update with your domain
+  # TODO: Update with your actual domain
+  cors_allow_origins: "https://app.${DOMAIN}"
   cors_allow_credentials: "true"
 
   # Security headers

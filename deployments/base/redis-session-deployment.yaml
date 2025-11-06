@@ -79,7 +79,8 @@ spec:
             secretKeyRef:
               name: mcp-server-langgraph-secrets
               key: redis-password
-              optional: true
+              # Security: Password is required for production deployments
+              optional: false
 
         volumeMounts:
         - name: config

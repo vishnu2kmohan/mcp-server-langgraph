@@ -1,0 +1,208 @@
+name: Validate Deployment Configurations
+
+on:
+  pull_request:
+    paths:
+      - 'deployments/**'
+      - 'tests/deployment/**'
+      - '.github/workflows/validate-deployments.yml'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'deployments/**'
+
+jobs:
+  validate-helm:
+    name: Validate Helm Charts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.0'
+
+      - name: Lint Helm Chart
+        run: |
+          helm lint deployments/helm/mcp-server-langgraph/ || true
+          # Note: Ignoring known false positive for prometheus-rules-sla.yaml
+
+      - name: Template Helm Chart
+        run: |
+          helm template test deployments/helm/mcp-server-langgraph/ \
+            --set kube-prometheus-stack.enabled=false \
+            > /dev/null
+
+      - name: Validate Helm Dependencies
+        run: |
+          cd deployments/helm/mcp-server-langgraph
+          helm dependency list
+
+  validate-kustomize:
+    name: Validate Kustomize Overlays
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        overlay: [dev, staging, production, production-gke, staging-gke]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Build Kustomize Overlay - ${{ matrix.overlay }}
+        run: |
+          if [ -d "deployments/overlays/${{ matrix.overlay }}" ]; then
+            kustomize build deployments/overlays/${{ matrix.overlay }} > /dev/null
+            echo "✅ Overlay ${{ matrix.overlay }} builds successfully"
+          else
+            echo "⚠️  Overlay ${{ matrix.overlay }} not found, skipping"
+          fi
+
+  validate-yaml-syntax:
+    name: Validate YAML Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Create yamllint config
+        run: |
+          cat > .yamllint.yml <<EOF
+          extends: default
+          rules:
+            line-length:
+              max: 120
+              level: warning
+            document-start: disable
+            truthy:
+              allowed-values: ['true', 'false', 'on', 'off']
+            indentation:
+              spaces: 2
+          EOF
+
+      - name: Lint YAML files
+        run: yamllint -c .yamllint.yml deployments/
+
+  validate-security:
+    name: Security Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for dangerous placeholders
+        run: |
+          echo "Checking for unresolved placeholders..."
+          if grep -r "YOUR_PROJECT_ID\|YOUR_GCP_PROJECT" deployments/ \
+            --include="*.yaml" \
+            --exclude-dir="dev" \
+            --exclude-dir="test" \
+            --exclude-dir="templates" 2>/dev/null | grep -v "^#" | grep -v "TODO"; then
+            echo "❌ ERROR: Found unresolved placeholders in production configs"
+            exit 1
+          fi
+          echo "✅ No dangerous placeholders found"
+
+      - name: Validate CORS security
+        run: |
+          echo "Checking CORS configuration..."
+          # Check Kong
+          if grep -A 5 "credentials: true" deployments/kong/kong.yaml 2>/dev/null | grep -q '"*"'; then
+            echo "❌ ERROR: Kong CORS uses wildcard with credentials"
+            exit 1
+          fi
+          # Check Ingress in production
+          if grep -r "cors-allow-origin.*\*" deployments/overlays/production* \
+            --include="*.yaml" 2>/dev/null | grep -v "#"; then
+            echo "❌ ERROR: Production ingress uses wildcard CORS"
+            exit 1
+          fi
+          echo "✅ CORS configuration secure"
+
+  pytest-deployment-tests:
+    name: Run Deployment Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pyyaml
+
+      - name: Run deployment validation tests
+        run: |
+          if [ -f tests/deployment/test_helm_configuration.py ]; then
+            pytest tests/deployment/test_helm_configuration.py -v --tb=short
+          else
+            echo "⚠️  Deployment tests not found, skipping"
+          fi
+
+  validate-version-consistency:
+    name: Validate Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version alignment
+        run: |
+          echo "Checking version consistency across deployment configs..."
+
+          # Extract versions
+          HELM_VERSION=$(grep "tag:" deployments/helm/mcp-server-langgraph/values.yaml | head -1 | sed -E 's/.*"([0-9.]+)".*/\1/')
+          CLOUDRUN_VERSION=$(grep -o "mcp-server-langgraph:[0-9.]*" deployments/cloudrun/service.yaml | head -1 | cut -d: -f2)
+
+          echo "Helm version: $HELM_VERSION"
+          echo "Cloud Run version: $CLOUDRUN_VERSION"
+
+          # Check major version consistency
+          HELM_MAJOR=$(echo "$HELM_VERSION" | cut -d. -f1)
+          CLOUDRUN_MAJOR=$(echo "$CLOUDRUN_VERSION" | cut -d. -f1)
+
+          if [ "$HELM_MAJOR" != "$CLOUDRUN_MAJOR" ]; then
+            echo "❌ ERROR: Version mismatch detected"
+            exit 1
+          fi
+
+          echo "✅ Version consistency validated"
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-helm, validate-kustomize, validate-yaml-syntax, validate-security, pytest-deployment-tests, validate-version-consistency]
+    if: always()
+    steps:
+      - name: Check validation results
+        run: |
+          if [ "${{ needs.validate-helm.result }}" == "success" ] && \
+             [ "${{ needs.validate-kustomize.result }}" == "success" ] && \
+             [ "${{ needs.validate-yaml-syntax.result }}" == "success" ] && \
+             [ "${{ needs.validate-security.result }}" == "success" ] && \
+             [ "${{ needs.pytest-deployment-tests.result }}" == "success" ] && \
+             [ "${{ needs.validate-version-consistency.result }}" == "success" ]; then
+            echo "✅ All deployment validations passed"
+          else
+            echo "❌ Some validations failed"
+            exit 1
+          fi

@@ -282,7 +282,9 @@ config:
   # CRITICAL: Must use "postgres" in production (never use "memory")
   # Retention: Audit logs & consents = 7 years, Conversations = 90 days
   gdprStorageBackend: "postgres"  # postgres (production), memory (dev/test ONLY)
-  gdprPostgresUrl: "postgresql://postgres:postgres@{{ .Release.Name }}-postgres:5432/gdpr"
+  # GDPR Postgres URL is constructed in deployment template from secrets
+  # See templates/deployment.yaml for environment variable construction
+  gdprPostgresUrl: ""  # Deprecated: Use secret-based env vars instead
 
 # Secrets configuration
 secrets:

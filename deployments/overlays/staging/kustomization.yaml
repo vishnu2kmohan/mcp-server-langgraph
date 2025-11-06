@@ -8,6 +8,7 @@ namePrefix: staging-
 # Fixed: 'bases' is deprecated, use 'resources' instead
 resources:
   - ../../base
+  - namespace.yaml
 
 # Fixed: 'commonLabels' is deprecated, use 'labels' instead
 labels:

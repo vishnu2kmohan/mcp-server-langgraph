@@ -39,7 +39,7 @@ spec:
                   - -c
                   - PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U postgres -d postgres -Fc > /tmp/backup.dump
                 onError: Fail
-                timeout: 5m
+                timeout: 30m  # Increased for large databases
           post:
             - exec:
                 container: postgres

@@ -41,7 +41,8 @@ data:
   keycloak_client_id: "langgraph-client"
   keycloak_verify_ssl: "true"
   keycloak_timeout: "30"
-  keycloak_hostname: "mcp-server-langgraph.example.com"
+  # TODO: Override in overlays with actual domain
+  keycloak_hostname: "mcp-server-langgraph.${DOMAIN}"
 
   # Session Management
   session_backend: "redis"  # memory, redis
@@ -94,5 +95,8 @@ data:
 
   # GDPR/HIPAA/SOC2 Compliance Storage (ADR-0041)
   # CRITICAL: Must use "postgres" in production (never use "memory")
+  # SECURITY: Credentials are injected from secrets via environment variables
   gdpr_storage_backend: "postgres"  # postgres (production), memory (dev/test only)
-  gdpr_postgres_url: "postgresql://postgres:postgres@postgres:5432/gdpr"
+  # Note: Connection string uses environment variable substitution - credentials come from secrets
+  # Format: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/gdpr
+  gdpr_postgres_url: ""  # Set via GDPR_POSTGRES_URL env var from deployment

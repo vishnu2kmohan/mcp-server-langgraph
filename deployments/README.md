@@ -30,22 +30,22 @@ deployments/
 
 ```bash
 # Install with default values
-helm install langgraph-agent ./deployments/helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/mcp-server-langgraph \
   --namespace langgraph-agent \
   --create-namespace
 
 # Install with custom values
-helm install langgraph-agent ./deployments/helm/langgraph-agent \
+helm install langgraph-agent ./deployments/helm/mcp-server-langgraph \
   --namespace langgraph-agent \
   --create-namespace \
   --values values-production.yaml
 
 # Upgrade deployment
-helm upgrade langgraph-agent ./deployments/helm/langgraph-agent \
+helm upgrade langgraph-agent ./deployments/helm/mcp-server-langgraph \
   --namespace langgraph-agent
 ```
 
-**Documentation**: See `helm/langgraph-agent/README.md`
+**Documentation**: See `helm/mcp-server-langgraph/README.md`
 
 ### 2. Kubernetes with Kustomize
 

@@ -28,10 +28,11 @@ spec:
   ingressClassName: kong
   tls:
   - hosts:
-    - mcp-server-langgraph.example.com
+    - mcp-server-langgraph.${DOMAIN}  # TODO: Replace
     secretName: mcp-server-langgraph-tls
   rules:
-  - host: mcp-server-langgraph.example.com
+  # TODO: Replace with actual domain
+  - host: mcp-server-langgraph.${DOMAIN}
     http:
       paths:
       - path: /
@@ -61,10 +62,10 @@ spec:
   ingressClassName: kong
   tls:
   - hosts:
-    - premium.mcp-server-langgraph.example.com
+    - premium.mcp-server-langgraph-${DOMAIN}  # TODO: Replace
     secretName: mcp-server-langgraph-premium-tls
   rules:
-  - host: premium.mcp-server-langgraph.example.com
+  - host: premium.mcp-server-langgraph-${DOMAIN}  # TODO: Replace
     http:
       paths:
       - path: /
@@ -94,10 +95,10 @@ spec:
   ingressClassName: kong
   tls:
   - hosts:
-    - enterprise.mcp-server-langgraph.example.com
+    - enterprise.mcp-server-langgraph.${DOMAIN}  # TODO: Replace
     secretName: mcp-server-langgraph-enterprise-tls
   rules:
-  - host: enterprise.mcp-server-langgraph.example.com
+  - host: enterprise.mcp-server-langgraph.${DOMAIN}  # TODO: Replace
     http:
       paths:
       - path: /

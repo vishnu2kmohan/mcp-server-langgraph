@@ -1,0 +1,23 @@
+# Development environment - Allow wildcard CORS for local development
+# This patch overrides the base ingress CORS configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-server-langgraph-streamable
+  namespace: dev-mcp-server-langgraph
+  annotations:
+    # Development only: Allow all origins for local testing
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    # Note: When using wildcard, credentials should be false for security
+    # If you need credentials, specify exact origins instead
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "false"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-server-langgraph-sse
+  namespace: dev-mcp-server-langgraph
+  annotations:
+    # Development only: Allow all origins for local testing
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "false"
