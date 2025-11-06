@@ -1,0 +1,119 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  dependency-validation:
+    name: Validate Dependency Injection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run dependency validation
+        run: |
+          python .githooks/pre-commit-dependency-validation
+
+      - name: Validation passed
+        if: success()
+        run: |
+          echo "✅ Dependency injection validation passed"
+          echo "All critical dependency wiring checks passed:"
+          echo "  1. Keycloak admin credentials wired"
+          echo "  2. OpenFGA returns Optional when disabled"
+          echo "  3. Service principal handles None OpenFGA"
+          echo "  4. Cache uses secure Redis configuration"
+          echo "  5. Required tests exist"
+
+  smoke-tests:
+    name: CI Smoke Tests
+    runs-on: ubuntu-latest
+    needs: dependency-validation
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio pytest-mock
+          pip install -e .
+
+      - name: Run smoke tests
+        run: |
+          python tests/smoke/test_ci_startup_smoke.py
+
+      - name: Smoke tests passed
+        if: success()
+        run: |
+          echo "✅ CI smoke tests passed on Python ${{ matrix.python-version }}"
+          echo "Safe to deploy - all critical startup validations passed"
+
+  startup-validation:
+    name: App Startup Validation
+    runs-on: ubuntu-latest
+    needs: dependency-validation
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio pytest-mock fastapi
+          pip install -e .
+
+      - name: Run startup validation tests
+        run: |
+          pytest tests/integration/test_app_startup_validation.py -v -m integration
+
+      - name: Startup validation passed
+        if: success()
+        run: |
+          echo "✅ App startup validation passed"
+          echo "FastAPI app starts successfully with various configurations"
+
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    needs: [dependency-validation, smoke-tests, startup-validation]
+    steps:
+      - name: All checks passed
+        run: |
+          echo "================================"
+          echo "✅ ALL SECURITY GATES PASSED"
+          echo "================================"
+          echo ""
+          echo "Safe to deploy - no critical bugs detected:"
+          echo "  ✓ Dependency injection properly wired"
+          echo "  ✓ Smoke tests passed"
+          echo "  ✓ App startup validation passed"
+          echo ""
+          echo "This prevents the following production outages:"
+          echo "  1. Keycloak admin API failures (400/401)"
+          echo "  2. OpenFGA SDK crashes (500 errors)"
+          echo "  3. Service principal AttributeErrors"
+          echo "  4. L2 cache fallback to L1-only"
+          echo "  5. Missing test coverage regressions"
+          echo ""
+          echo "See ADR-0042 for details."

@@ -314,13 +314,13 @@ secrets:
   # Redis
   redisPassword: ""
 
+  # LangSmith Observability (optional)
+  langsmithApiKey: ""
+
   # Secrets Management (optional)
   infisicalClientId: ""
   infisicalClientSecret: ""
   infisicalProjectId: ""
-
-  # LangSmith (optional)
-  langsmithApiKey: ""
 
 # External Secrets Operator integration
 externalSecrets:

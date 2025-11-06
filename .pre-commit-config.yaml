@@ -119,6 +119,22 @@ repos:
           - .env.local
           Per TDD best practices, this ensures local configs never reach version control.
 
+      - id: validate-dependency-injection
+        name: Validate Dependency Injection Configuration
+        entry: python3 .githooks/pre-commit-dependency-validation
+        language: system
+        pass_filenames: false
+        files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/unit/test_(dependencies_wiring|cache_redis_config)\.py)$
+        always_run: false  # Only run when relevant files change
+        description: |
+          Validates that dependency injection is properly configured to prevent:
+          1. Missing Keycloak admin credentials
+          2. OpenFGA client created with None store_id
+          3. Service principal crashes when OpenFGA disabled
+          4. L2 cache ignoring secure Redis settings
+          5. Missing critical test coverage
+          See ADR-0042 for details on these critical production bugs.
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
