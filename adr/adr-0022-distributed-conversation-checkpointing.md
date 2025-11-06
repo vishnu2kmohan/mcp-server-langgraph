@@ -99,6 +99,43 @@ CHECKPOINT_REDIS_URL=redis://localhost:6379/1
 CHECKPOINT_REDIS_TTL=604800  # 7 days
 ```
 
+### URL Encoding Requirements (IMPORTANT)
+
+**Critical Security & Reliability Requirement**: Redis connection URLs MUST have passwords percent-encoded per RFC 3986.
+
+**Background**: Production incident with staging revision `758b8f744` where an unencoded Redis password containing special characters (`/`, `+`, `=`) caused `ValueError: Port could not be cast to integer value` during `redis.connection.parse_url()`.
+
+**Example**: Password `Du0PmDvmqDWqDTgfGnmi6/SKyuQydi3z7cPTgEQoE+s=` contains:
+- `/` (forward slash) - treated as path delimiter
+- `+` (plus sign) - treated as space in some contexts
+- `=` (equals sign) - treated as query parameter delimiter
+
+**Solutions**:
+
+1. **Production (Kubernetes External Secrets)**: Use `| urlquery` filter in template:
+   ```yaml
+   # deployments/overlays/staging-gke/external-secrets.yaml
+   checkpoint-redis-url: "redis://:{{ .redisPassword | urlquery }}@{{ .redisHost }}:6379/1"
+   ```
+
+2. **Local Development**: Manually percent-encode passwords in `.env`:
+   ```bash
+   # If password is: pass/word+123=
+   # Encoded becomes: pass%2Fword%2B123%3D
+   CHECKPOINT_REDIS_URL=redis://:pass%2Fword%2B123%3D@localhost:6379/1
+   ```
+
+3. **Defense-in-Depth**: Application code includes automatic encoding safeguard:
+   ```python
+   # src/mcp_server_langgraph/core/agent.py
+   from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
+
+   encoded_redis_url = ensure_redis_password_encoded(settings.checkpoint_redis_url)
+   checkpointer_ctx = RedisSaver.from_conn_string(redis_url=encoded_redis_url)
+   ```
+
+**Testing**: Comprehensive test suite in `tests/unit/test_redis_url_encoding.py` validates encoding for all RFC 3986 special characters.
+
 ### Docker Compose
 
 ```yaml

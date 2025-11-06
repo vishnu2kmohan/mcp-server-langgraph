@@ -21,6 +21,7 @@ from langgraph.graph import END, START, StateGraph
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.context_manager import ContextManager
+from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
 from mcp_server_langgraph.llm.factory import create_llm_from_config
 from mcp_server_langgraph.llm.verifier import OutputVerifier
 from mcp_server_langgraph.observability.telemetry import logger
@@ -142,8 +143,10 @@ def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpoin
             # Create Redis checkpointer with TTL
             # Note: RedisSaver.from_conn_string expects redis_url (not conn_string)
             # and returns a context manager in langgraph-checkpoint-redis 0.1.2+
+            # Ensure password is URL-encoded to prevent parsing errors (defense-in-depth)
+            encoded_redis_url = ensure_redis_password_encoded(effective_settings.checkpoint_redis_url)
             checkpointer_ctx = RedisSaver.from_conn_string(
-                redis_url=effective_settings.checkpoint_redis_url,
+                redis_url=encoded_redis_url,
             )
 
             # Enter the context manager to get the actual RedisSaver instance
