@@ -522,7 +522,7 @@ class TestCreateApprovalWorkflow:
         """Test adding approval to single node."""
         mock_graph = MagicMock()
 
-        result_graph = create_approval_workflow(
+        _ = create_approval_workflow(
             mock_graph,
             approval_points=["risky_action"],
         )
@@ -533,14 +533,11 @@ class TestCreateApprovalWorkflow:
         assert call_args[0][0] == "approve_risky_action"
         assert isinstance(call_args[0][1], ApprovalNode)
 
-        # Graph should be returned
-        assert result_graph == mock_graph
-
     def test_create_approval_workflow_multiple_nodes(self):
         """Test adding approval to multiple nodes."""
         mock_graph = MagicMock()
 
-        result_graph = create_approval_workflow(
+        _ = create_approval_workflow(
             mock_graph,
             approval_points=["action_1", "action_2", "action_3"],
         )

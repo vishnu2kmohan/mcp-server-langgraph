@@ -175,7 +175,7 @@ class TestGenerateTool:
 
         # Verify test structure
         assert "import pytest" in content
-        assert f"from src.tools.processor_tool import" in content
+        assert "from src.tools.processor_tool import" in content
         assert "processor" in content
         assert "ProcessorInput" in content
         assert "ProcessorOutput" in content

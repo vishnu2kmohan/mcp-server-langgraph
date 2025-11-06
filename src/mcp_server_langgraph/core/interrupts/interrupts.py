@@ -190,8 +190,6 @@ def create_timeout_interrupt(node_name: str, timeout_seconds: int) -> InterruptC
 # ==============================================================================
 
 if __name__ == "__main__":
-    from datetime import datetime
-
     # Create handler
     handler = create_interrupt_handler()
 
