@@ -69,13 +69,13 @@ spec:
     - protocol: TCP
       port: 443   # Cloud SQL control plane & health checks
 
-  # Allow Redis connection (Memorystore private IP)
+  # Allow Redis connection (Memorystore private IP - port 6378)
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
-      port: 6379
+      port: 6378
 
   # Allow Keycloak
   - to:

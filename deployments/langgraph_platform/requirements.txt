@@ -1,13 +1,17 @@
 # LangGraph Platform Deployment Requirements
 # ============================================
 #
-# This is a SPECIALIZED requirements file for LangGraph Platform deployment.
-# It contains a lighter dependency set optimized for the managed platform.
+# EXCEPTION: This requirements.txt file exists for LangGraph Platform compatibility.
 #
-# Note: The main project uses uv/pyproject.toml. This file is maintained
-# separately for LangGraph Platform compatibility and has a reduced dependency set.
+# The main project uses uv/pyproject.toml as the source of truth.
+# This file contains a lighter dependency set optimized for the managed platform.
 #
+# DO NOT use this file for local development - use `uv sync` instead.
+#
+# Source of truth: ../../pyproject.toml
 # Sync with: src/mcp_server_langgraph when updating versions
+# Why this exists: LangGraph Platform requires requirements.txt format
+#
 # ============================================
 
 # Core LangGraph and LangChain

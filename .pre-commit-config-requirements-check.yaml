@@ -1,0 +1,81 @@
+# Pre-commit Hook for Requirements.txt Enforcement
+#
+# Add this to .pre-commit-config.yaml to prevent unauthorized requirements.txt files
+#
+# This hook ensures the UV-ONLY dependency management policy is enforced.
+
+- repo: local
+  hooks:
+    - id: check-unauthorized-requirements-files
+      name: Prevent unauthorized requirements.txt files
+      description: |
+        Ensures only authorized requirements.txt files exist.
+        Authorized locations:
+        - deployments/langgraph_platform/requirements.txt (LangGraph Platform)
+        - clients/python/requirements.txt (OpenAPI Generator)
+        - clients/python/test-requirements.txt (OpenAPI Generator)
+        - Temporary files from 'uv export' in Docker builds
+
+        All other locations should use pyproject.toml with 'uv sync'.
+      entry: bash -c '
+        unauthorized=$(
+          find . -name "requirements*.txt" \
+            -not -path "./.venv/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./.tox/*" \
+            -not -path "./deployments/langgraph_platform/requirements.txt" \
+            -not -path "./clients/python/requirements.txt" \
+            -not -path "./clients/python/test-requirements.txt" \
+            -not -path "*/tmp/*"
+        );
+        if [ -n "$unauthorized" ]; then
+          echo "❌ ERROR: Unauthorized requirements.txt file(s) found:";
+          echo "$unauthorized";
+          echo "";
+          echo "This project uses UV-ONLY dependency management.";
+          echo "DO NOT create requirements.txt files manually.";
+          echo "";
+          echo "Use instead:";
+          echo "  - Add dependency: uv add package-name";
+          echo "  - Install deps: uv sync";
+          echo "  - Export (Docker): uv export > requirements.txt";
+          echo "";
+          echo "See: docs/contributing/DEPENDENCY_MANAGEMENT.md";
+          exit 1;
+        fi
+      '
+      language: system
+      pass_filenames: false
+      files: 'requirements.*\.txt$'
+
+    - id: check-pip-install-in-code
+      name: Prevent 'pip install' in code/scripts
+      description: |
+        Prevents use of 'pip install' in Python files, shell scripts, and CI/CD configs.
+        Use 'uv sync' or 'uv add' instead.
+      entry: bash -c '
+        violations=$(
+          grep -r "pip install" \
+            --include="*.py" \
+            --include="*.sh" \
+            --include="*.yml" \
+            --include="*.yaml" \
+            --exclude-dir=".venv" \
+            --exclude-dir="node_modules" \
+            --exclude-dir="docs" \
+            --exclude="uv-migration.mdx" \
+            . | grep -v "# DO NOT use pip install" || true
+        );
+        if [ -n "$violations" ]; then
+          echo "❌ ERROR: Found \"pip install\" in code:";
+          echo "$violations";
+          echo "";
+          echo "Replace with UV commands:";
+          echo "  pip install -r requirements.txt → uv sync";
+          echo "  pip install package → uv add package";
+          echo "  python -m pip install → uv run python";
+          exit 1;
+        fi
+      '
+      language: system
+      pass_filenames: false
