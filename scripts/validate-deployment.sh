@@ -246,6 +246,107 @@ validate_workload_identity() {
     echo ""
 }
 
+validate_network_policies() {
+    echo "=================================================="
+    echo "Validating Network Policy DNS & HTTPS Egress"
+    echo "=================================================="
+
+    local manifests="/tmp/${OVERLAY}-manifests.yaml"
+    local validation_failed=0
+
+    # Required egress rules
+    local required_dns_cidr="169.254.0.0/16"  # GKE Dataplane V2
+    local required_https_cidr="0.0.0.0/0"      # sqladmin.googleapis.com
+
+    # Extract all NetworkPolicy resources
+    local policies
+    policies=$(grep -A 2 "^kind: NetworkPolicy" "$manifests" | grep "  name:" | awk '{print $2}' | sort -u || true)
+
+    if [ -z "$policies" ]; then
+        log_warn "No NetworkPolicy resources found in manifests"
+        echo ""
+        return 0
+    fi
+
+    log_info "Validating NetworkPolicy resources:"
+    echo "$policies" | while read -r policy; do
+        echo "  - $policy"
+    done
+    echo ""
+
+    # Validate GKE Dataplane V2 DNS egress for critical policies
+    log_info "Checking GKE Dataplane V2 DNS egress (169.254.0.0/16)..."
+    local dns_policies=("allow-egress" "keycloak-network-policy" "openfga-network-policy")
+
+    for policy in "${dns_policies[@]}"; do
+        if echo "$policies" | grep -q "^${policy}$"; then
+            # Extract DNS egress CIDR blocks for this policy
+            local policy_start
+            policy_start=$(grep -n "name: ${policy}" "$manifests" | cut -d: -f1 | head -1)
+            if [ -n "$policy_start" ]; then
+                local dns_egress
+                dns_egress=$(sed -n "${policy_start},/^---/p" "$manifests" | \
+                    grep -A 5 "port: 53" | grep -A 2 "ipBlock:" | grep "cidr:" | awk '{print $2}' || true)
+
+                if echo "$dns_egress" | grep -q "$required_dns_cidr"; then
+                    log_info "  ✓ ${policy}: Has DNS egress to ${required_dns_cidr}"
+                else
+                    log_error "  ✗ ${policy}: MISSING DNS egress to ${required_dns_cidr} (GKE Dataplane V2)"
+                    log_warn "    This will cause DNS resolution failures for service discovery"
+                    validation_failed=1
+                fi
+            fi
+        fi
+    done
+    echo ""
+
+    # Validate Cloud SQL Auth Proxy HTTPS egress
+    log_info "Checking Cloud SQL Auth Proxy HTTPS egress (0.0.0.0/0)..."
+    local https_policies=("keycloak-network-policy" "openfga-network-policy")
+
+    for policy in "${https_policies[@]}"; do
+        if echo "$policies" | grep -q "^${policy}$"; then
+            local policy_start
+            policy_start=$(grep -n "name: ${policy}" "$manifests" | cut -d: -f1 | head -1)
+            if [ -n "$policy_start" ]; then
+                local https_egress
+                https_egress=$(sed -n "${policy_start},/^---/p" "$manifests" | \
+                    grep -A 5 "port: 443" | grep -A 2 "ipBlock:" | grep "cidr:" | awk '{print $2}' || true)
+
+                if echo "$https_egress" | grep -q "$required_https_cidr"; then
+                    log_info "  ✓ ${policy}: Has HTTPS egress to ${required_https_cidr} (allows sqladmin.googleapis.com)"
+                else
+                    log_error "  ✗ ${policy}: MISSING HTTPS egress to ${required_https_cidr}"
+                    log_warn "    Cloud SQL Auth Proxy cannot reach sqladmin.googleapis.com (public Google IPs)"
+                    log_warn "    This will cause database connection failures"
+                    validation_failed=1
+                fi
+            fi
+        fi
+    done
+    echo ""
+
+    # Validate --http-address flag for Cloud SQL Proxy
+    log_info "Checking Cloud SQL Proxy --http-address flag..."
+    if grep -q "name: cloud-sql-proxy" "$manifests"; then
+        if grep -A 10 "name: cloud-sql-proxy" "$manifests" | grep -q -- "--http-address=0.0.0.0"; then
+            log_info "  ✓ Cloud SQL Proxy has --http-address=0.0.0.0 flag"
+        else
+            log_error "  ✗ Cloud SQL Proxy MISSING --http-address=0.0.0.0 flag"
+            log_warn "    Health endpoints will not be accessible to Kubelet"
+            log_warn "    This will cause liveness/readiness probe failures"
+            validation_failed=1
+        fi
+    fi
+    echo ""
+
+    if [ $validation_failed -ne 0 ]; then
+        log_error "Network policy validation FAILED"
+        log_warn "See fixes in: deployments/overlays/staging-gke/network-policy.yaml"
+        exit 1
+    fi
+}
+
 generate_validation_report() {
     echo "=================================================="
     echo "Validation Summary"
@@ -277,6 +378,7 @@ main() {
     validate_cloud_sql_proxy
     validate_service_dependencies
     validate_workload_identity
+    validate_network_policies
     generate_validation_report
 
     log_info "Pre-deployment validation completed successfully!"
