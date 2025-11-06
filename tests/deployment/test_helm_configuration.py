@@ -236,7 +236,7 @@ def test_no_dangerous_placeholders_in_production_configs(file_pattern, dangerous
     deployments_path = Path(__file__).parent.parent.parent / "deployments"
 
     # Skip dev/test overlays and template files
-    excluded_paths = ["dev", "test", "templates", "examples"]
+    excluded_paths = ["dev", "test", "templates", "examples", "prometheus-rules"]  # Helm templates
     excluded_files = ["Chart.yaml", "values.yaml"]  # Helm chart metadata and defaults
 
     for yaml_file in deployments_path.rglob(file_pattern):
