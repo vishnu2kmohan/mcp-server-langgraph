@@ -93,7 +93,7 @@ jobs:
       - name: Calculate DORA metrics
         id: calculate
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DAYS: ${{ github.event.inputs.days || '30' }}
         run: |
           python scripts/ci/dora_metrics.py \

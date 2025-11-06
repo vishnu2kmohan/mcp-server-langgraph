@@ -30,7 +30,11 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:peps.python.org)",
       "WebFetch(domain:docs.astral.sh)",
-      "WebFetch(domain:cwe.mitre.org)"
+      "WebFetch(domain:cwe.mitre.org)",
+      "WebFetch(domain:cli.github.com)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:cheatsheetseries.owasp.org)",
+      "WebFetch(domain:www.kenmuse.com)"
     ],
     "defaultMode": "acceptEdits"
   },

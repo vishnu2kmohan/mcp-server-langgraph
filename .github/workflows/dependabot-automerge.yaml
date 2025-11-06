@@ -146,7 +146,7 @@ jobs:
               exit 1
             fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve PR
         if: steps.check-update.outputs.auto_merge == 'true'
@@ -159,7 +159,7 @@ jobs:
           fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true  # Don't fail if already approved
 
       - name: Comment on manual review required
@@ -173,5 +173,5 @@ jobs:
           fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true  # Don't fail if commenting fails
